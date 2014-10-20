@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+
+# pyinfra
+# File: bin/pyinfra
+# Desc: __main__ for pyinfra
+
+'''
+pyinfra
+
+Usage:
+  pyinfra -c FILE -d FILE [--dry] [-vvv]
+  pyinfra --help
+  pyinfra --version
+
+Options:
+  -c --config FILE Config file.
+  -d --deploy FILE Deploy file.
+  --dry            Only print out commands.
+  -vvv             Change verbosity.
+  -h --help        Show this screen.
+  --version        Show version.
+'''
+
+import sys
+# You can't import me!
+if __name__ != '__main__':
+    sys.exit(1)
+
+import imp
+import logging
+
+import coloredlogs
+from gevent.pool import Pool
+from docopt import docopt
+
+import pyinfra
+from pyinfra import config, logger
+from pyinfra.api import ssh
+
+
+arguments = docopt(__doc__, version='pyinfra v{0}'.format(config.VERSION))
+
+# Setup logging
+V_TO_LOG = {
+    0: logging.CRITICAL,
+    1: logging.WARNING,
+    2: logging.INFO,
+    3: logging.DEBUG
+}
+log_args = {
+    'show_timestamps': False,
+    'show_hostname': False
+}
+coloredlogs.install(level=V_TO_LOG[arguments['-v']], **log_args)
+logger.info('Starting...')
+
+# Load the global config file into pyinfra
+logger.debug('Importing config.py')
+pyinfra.config = imp.load_source('pyinfra.config', arguments['--config'])
+
+# Connect to all the servers (synchronously)
+logger.info('Connecting to all servers...')
+
+# Create thread pool
+pyinfra.pool = Pool(size=len(pyinfra.config.HOSTS))
+
+# Build our deploy script for each server (synchronously)
+for server in pyinfra.config.HOSTS:
+    logger.debug('Building deploy script for {0}'.format(server))
+    # Setup internals
+    pyinfra._current_server = server
+    pyinfra._commands[server] = []
+    pyinfra._facts[server] = {}
+    # Call the deploy script
+    execfile(arguments['--deploy'])
+
+# Just printing?
+if arguments['--dry']:
+    for server, commands in pyinfra._commands.iteritems():
+        print '# Commands for: {0}'.format(server)
+        for command in commands:
+            print '    {0}'.format(command['command'])
+# Asynchronously run our command sets on each server
+else:
+    logger.info('Beginning command run...')
+    ssh.run_all()
+
+logger.debug('End, exiting...')
+sys.exit(0)
