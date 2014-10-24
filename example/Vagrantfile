@@ -1,0 +1,18 @@
+# pyinfra test VM's
+
+Vagrant.configure('2') do |config|
+    config.vm.define :ubuntu do |ubuntu|
+        ubuntu.vm.box = 'ubuntu/trusty64'
+        ubuntu.vm.network :private_network, ip: '20.20.20.20'
+    end
+
+    config.vm.define :centos do |centos|
+        centos.vm.box = 'chef/centos-6.5'
+        centos.vm.network :private_network, ip: '20.20.20.21'
+    end
+
+    config.vm.define :debian do |debian|
+        debian.vm.box = 'chef/debian-7.4'
+        debian.vm.network :private_network, ip: '20.20.20.22'
+    end
+end
