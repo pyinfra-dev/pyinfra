@@ -2,7 +2,8 @@
 # File: example/deploy.py
 # Desc: example deploy script
 
-from pyinfra import config, server, linux, apt, git, pip, venv, yum, file, template
+from pyinfra import config
+from pyinfra.modules import server, linux, apt, git, pip, venv, yum, files
 
 
 # Ensure the state of a user
@@ -35,7 +36,7 @@ linux.directory(
 )
 
 # Generate files from local templates
-template.generate(
+files.template(
     'filename.jn2',
     '/opt/wheverever/test.sh',
     **{
@@ -44,13 +45,13 @@ template.generate(
 )
 
 # Copy local files to remote host
-file.put(
+files.put(
     'filename.txt',
     '/home/ubuntu/filename.txt'
 )
 
 # Work with multiple linux distributions
-if server.fact('distribution') == 'CentOS':
+if server.fact('Distribution') == 'CentOS':
     # yum package manager
     yum.repo(
         'name',
@@ -101,6 +102,6 @@ with venv.enter(config.ENV_DIR):
 
 # Manage Linux services
 linux.service(
-    'nginx',
+    ['nginx', 'redis', 'rabbitmq'],
     restarted=True
 )
