@@ -2,3 +2,4 @@
 *.pyc
 pyinfra.egg-info
 dist/
+example/.vagrant/

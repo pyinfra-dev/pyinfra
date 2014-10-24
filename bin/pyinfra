@@ -8,71 +8,94 @@
 pyinfra
 
 Usage:
-  pyinfra -c FILE -d FILE [--dry] [-vvv]
+  pyinfra --config CONFIG_FILE DEPLOY_FILE [--dry] [--local] [-vv]
   pyinfra --help
-  pyinfra --version
 
 Options:
-  -c --config FILE Config file.
-  -d --deploy FILE Deploy file.
-  --dry            Only print out commands.
-  -vvv             Change verbosity.
-  -h --help        Show this screen.
-  --version        Show version.
+  DEPLOY_FILE             Deploy file.
+  -c --config CONFIG_FILE Config file.
+  --dry                   Only print out commands.
+  -vv                     Change verbosity.
+  -h --help               Show this screen.
+  --version               Show version.
 '''
 
-import sys
 # You can't import me!
+import sys
 if __name__ != '__main__':
     sys.exit(1)
+
+# Handle ctrl+c
+import signal
+def signal_handler(signum, frame):
+    print 'Exiting upon user request!'
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
+# Setup arguments
+from docopt import docopt
+from pyinfra import config
+arguments = docopt(__doc__, version='pyinfra v{0}'.format(config.VERSION))
+config_file = arguments['--config']
+deploy_file = arguments['DEPLOY_FILE']
+verbosity = arguments['-v']
 
 import imp
 import logging
 
-import coloredlogs
+from coloredlogs import ColoredStreamHandler
 from gevent.pool import Pool
-from docopt import docopt
 
 import pyinfra
-from pyinfra import config, logger
+from pyinfra import logger
 from pyinfra.api import ssh
 
-
-arguments = docopt(__doc__, version='pyinfra v{0}'.format(config.VERSION))
-
-# Setup logging
-V_TO_LOG = {
+# Setup logs
+VERBOSITY_TO_LOG = {
     0: logging.CRITICAL,
-    1: logging.WARNING,
-    2: logging.INFO,
-    3: logging.DEBUG
+    1: logging.INFO,
+    2: logging.DEBUG
 }
 log_args = {
     'show_timestamps': False,
     'show_hostname': False
 }
-coloredlogs.install(level=V_TO_LOG[arguments['-v']], **log_args)
+# Log handler
+handler = ColoredStreamHandler(level=VERBOSITY_TO_LOG[verbosity], **log_args)
+# Set root logger critical
+logging.getLogger().setLevel(logging.CRITICAL)
+# Set our logger to level
+logger.setLevel(logging.DEBUG)
+logger.addHandler(handler)
+
+
+# Let's do this!
 logger.info('Starting...')
 
 # Load the global config file into pyinfra
 logger.debug('Importing config.py')
-pyinfra.config = imp.load_source('pyinfra.config', arguments['--config'])
+config = pyinfra.config = imp.load_source('pyinfra.config', config_file)
 
-# Connect to all the servers (synchronously)
+# Connect to all the servers (old fashioned thread based)
 logger.info('Connecting to all servers...')
+ssh.connect_all()
 
-# Create thread pool
-pyinfra.pool = Pool(size=len(pyinfra.config.HOSTS))
+# Create greenlet pool
+pyinfra._pool = Pool(size=len(pyinfra.config.SSH_HOSTS))
 
-# Build our deploy script for each server (synchronously)
-for server in pyinfra.config.HOSTS:
-    logger.debug('Building deploy script for {0}'.format(server))
-    # Setup internals
+# Setup internals
+for server in config.SSH_HOSTS:
     pyinfra._current_server = server
     pyinfra._commands[server] = []
     pyinfra._facts[server] = {}
+
+# Build our deploy script for each server (synchronously)
+logger.info('Building deploy scripts...')
+for server in config.SSH_HOSTS:
+    logger.debug('Building deploy script for {0}'.format(server))
     # Call the deploy script
-    execfile(arguments['--deploy'])
+    execfile(deploy_file)
 
 # Just printing?
 if arguments['--dry']:
@@ -85,5 +108,5 @@ else:
     logger.info('Beginning command run...')
     ssh.run_all()
 
-logger.debug('End, exiting...')
+logger.info('Command run complete, exiting...')
 sys.exit(0)
