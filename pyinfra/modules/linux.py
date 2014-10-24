@@ -8,7 +8,7 @@ from pyinfra.api import command, server
 @command
 def user(name, present=True, home='/home/{0}', shell='/bin/bash', public_keys=None, delete_keys=False):
     commands = []
-    is_present = name in server.fact_list('users')
+    is_present = name in server.fact('Users')
 
     def _do_keys():
         pass

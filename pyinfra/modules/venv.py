@@ -16,7 +16,7 @@ class enter:
 
     @command
     def __enter__(self):
-        return '. {0}/bin/activate'.format(self.directory)
+        return 'source {0}/bin/activate'.format(self.directory)
 
     @command
     def __exit__(self, type, value, traceback):
