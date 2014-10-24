@@ -4,10 +4,6 @@
 
 import logging
 
-
-# Load the modules
-from .modules import *
-
 # Global logger
 logger = logging.getLogger('pyinfra')
 
