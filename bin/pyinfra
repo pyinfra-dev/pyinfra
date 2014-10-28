@@ -8,14 +8,14 @@
 pyinfra
 
 Usage:
-  pyinfra --config CONFIG_FILE DEPLOY_FILE [--dry] [--local] [-vv]
+  pyinfra --config CONFIG_FILE DEPLOY_FILE [--dry] [--local] [-v]
   pyinfra --help
 
 Options:
   DEPLOY_FILE             Deploy file.
   -c --config CONFIG_FILE Config file.
   --dry                   Only print out commands.
-  -vv                     Change verbosity.
+  -v                      Show debug output.
   -h --help               Show this screen.
   --version               Show version.
 '''
@@ -36,10 +36,15 @@ signal.signal(signal.SIGINT, signal_handler)
 # Setup arguments
 from docopt import docopt
 from pyinfra import config
-arguments = docopt(__doc__, version='pyinfra v{0}'.format(config.VERSION))
+version = 'pyinfra v{0}'.format(config.VERSION)
+arguments = docopt(__doc__, version=version)
 config_file = arguments['--config']
 deploy_file = arguments['DEPLOY_FILE']
 verbosity = arguments['-v']
+
+print ''
+print '=> Welcome to {0}'.format(version)
+print ''
 
 import imp
 import logging
@@ -53,13 +58,13 @@ from pyinfra.api import ssh
 
 # Setup logs
 VERBOSITY_TO_LOG = {
-    0: logging.CRITICAL,
-    1: logging.INFO,
-    2: logging.DEBUG
+    0: logging.INFO,
+    1: logging.DEBUG
 }
 log_args = {
     'show_timestamps': False,
-    'show_hostname': False
+    'show_hostname': False,
+    'show_name': False
 }
 # Log handler
 handler = ColoredStreamHandler(level=VERBOSITY_TO_LOG[verbosity], **log_args)
@@ -86,15 +91,19 @@ pyinfra._pool = Pool(size=len(pyinfra.config.SSH_HOSTS))
 
 # Setup internals
 for server in config.SSH_HOSTS:
-    pyinfra._current_server = server
     pyinfra._commands[server] = []
-    pyinfra._facts[server] = {}
+    facts = {
+        '_dirs': {},
+        '_files': {}
+    }
+    pyinfra._facts[server] = facts
 
 # Build our deploy script for each server (synchronously)
 logger.info('Building deploy scripts...')
 for server in config.SSH_HOSTS:
     logger.debug('Building deploy script for {0}'.format(server))
     # Call the deploy script
+    pyinfra._current_server = server
     execfile(deploy_file)
 
 # Just printing?
@@ -108,5 +117,8 @@ else:
     logger.info('Beginning command run...')
     ssh.run_all()
 
-logger.info('Command run complete, exiting...')
+print ''
+print '<= Thank you, goodbye'
+print ''
+
 sys.exit(0)
