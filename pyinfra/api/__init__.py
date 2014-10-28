@@ -4,3 +4,4 @@
 
 from . import server # noqa
 from .command import command # noqa
+from .exception import CommandError # noqa

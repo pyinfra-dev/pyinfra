@@ -22,4 +22,5 @@ def command(func):
                 'sudo': sudo,
                 'ignore_errors': ignore_errors
             }]
+
     return inner

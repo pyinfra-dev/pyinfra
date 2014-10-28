@@ -2,6 +2,7 @@
 # File: pyinfra/api/ssh.py
 # Desc: handle all SSH related stuff
 
+from time import sleep
 from threading import Thread
 
 from paramiko import RSAKey, SSHException
@@ -63,17 +64,18 @@ def connect_all():
             threads.append(thread)
 
         # Attempt to join threads
-        [t.join(0.1) for t in threads]
+        [t.join(0.001) for t in threads]
         # Weed out the complete threads
         threads = [t for t in threads if t is not None and t.isAlive()]
+        sleep(1)
 
     config.SSH_HOSTS = connected_servers
 
 
-def run_command(servers, *args, **kwargs):
+def run_command(*args, **kwargs):
     outs = [
         (server, pyinfra._pool.spawn(pyinfra._connections[server].exec_command, *args, **kwargs))
-        for server in servers
+        for server in config.SSH_HOSTS
     ]
 
     # Join
