@@ -4,11 +4,14 @@
 
 from pyinfra.modules import server
 
-# Get all facts
-print server.all_facts()
-
 # Get details about a directory
-print server.directory('/etc')
+server.directory('/etc')
+server.directory('/etc/missing')
 
 # Get details about a file
-print server.file('/etc/issue')
+server.file('/etc/issue')
+server.file('/var/log/syslog')
+
+
+# Get & print all facts (which excludes directories & files, hence above)
+print server.all_facts()

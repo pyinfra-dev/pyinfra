@@ -19,7 +19,7 @@ linux.user(
 linux.file(
     '/var/log/pyinfra.log',
     present=True,
-    owner='pyinfra',
+    user='pyinfra',
     group='pyinfra',
     permissions='644',
     sudo=True
@@ -27,12 +27,13 @@ linux.file(
 
 # Ensure the state of directories
 linux.directory(
-    '/opt/env',
+    config.ENV_DIR,
     present=True,
-    owner='pyinfra',
+    user='pyinfra',
     group='pyinfra',
     permissions='755',
-    sudo=True
+    sudo=True,
+    recursive=True
 )
 
 # Generate files from local templates
@@ -51,7 +52,7 @@ files.put(
 )
 
 # Work with multiple linux distributions
-if server.fact('Distribution') == 'CentOS':
+if server.fact('Distribution')['name'] == 'CentOS':
     # yum package manager
     yum.repo(
         'name',
@@ -81,7 +82,7 @@ server.shell(
 # Ensure the state of git repositories
 git.repo(
     'git@github.com:Fizzadar/pyinfra.git',
-    '/opt/pyinfra',
+    config.APP_DIR,
     update=True,
     branch='develop'
 )
@@ -102,6 +103,6 @@ with venv.enter(config.ENV_DIR):
 
 # Manage Linux services
 linux.service(
-    ['nginx', 'redis', 'rabbitmq'],
+    'nginx',
     restarted=True
 )

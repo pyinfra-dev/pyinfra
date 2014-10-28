@@ -2,16 +2,16 @@
 # File: example/config.py
 # Desc: example config script
 
+import requests
+
+
 #################### Required
 # SSH details
-SSH_HOSTS = [
-    '20.20.20.20',
-    '20.20.20.21',
-    '20.20.20.22'
-]
+servers = requests.get('http://grandcentral.edtd.net/infrastructure/api/servers').json()
+SSH_HOSTS = [server['hostname'] for server in servers]
 SSH_PORT = 22
-SSH_USER = 'vagrant'
-SSH_KEY = '/Users/nick/.vagrant.d/insecure_private_key'
+SSH_USER = 'ubuntu'
+SSH_KEY = '/Users/nick/.ssh/root.pem'
 SSH_KEY_PASS = None
 
 
@@ -26,4 +26,3 @@ IGNORE_ERRORS = False
 
 #################### Whatever you want
 ENV_DIR = '/opt/env'
-APP_DIR = '/opt/pyinfra'
