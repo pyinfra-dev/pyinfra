@@ -15,8 +15,14 @@ if __name__ == '__main__':
         author='Nick @ Oxygem',
         author_email='nick@oxygem.com',
         url='http://github.com/Fizzadar/pyinfra',
-        package_dir={ 'pyinfra': 'pyinfra' },
+        package_dir={
+            'pyinfra': 'pyinfra'
+        },
         scripts=[
             'bin/pyinfra'
+        ],
+        install_requires=[
+            'parallel-ssh',
+            'coloredlogs'
         ]
     )
