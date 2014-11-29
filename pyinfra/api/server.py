@@ -9,7 +9,8 @@ import sys
 import pyinfra
 from pyinfra import logger
 from .facts import FACTS
-from .ssh import run_command
+from .ssh import run_all_command
+
 
 # Get & return all facts
 def all_facts():
@@ -32,7 +33,7 @@ def fact(key):
 
     logger.info('Running fact {0}...'.format(key))
     # For each server, spawn a job on the pool to gather the fact
-    outs = run_command(FACTS[key].command)
+    outs = run_all_command(FACTS[key].command)
 
     # Process & assign each fact
     for (server, stdout, stderr) in outs:
@@ -45,9 +46,9 @@ def fact(key):
 
 
 # Regex to parse ls -ldp output
-ls_regex = r'[a-z-]?([-rwx]{9})\.? [0-9]+ ([a-zA-Z]+) ([a-zA-Z]+) ([0-9]+) [a-zA-Z]{3} [0-9]+ [0-9]{2}:[0-9]{2} (.*)\r'
+ls_regex = r'[a-z-]?([-rwx]{9})\.? [0-9]+ ([a-zA-Z]+) ([a-zA-Z]+) ([0-9]+) [a-zA-Z]{3} [0-9]+ [0-9]{2}:[0-9]{2}'
 
-def _matches_to_dict(matches):
+def _ls_matches_to_dict(matches):
     # Parse permissions into octal format (which is what we compare to deploy scripts)
     def parse_permissions(permissions):
         result = ''
@@ -88,14 +89,14 @@ def directory(name):
         return current_server_dirs[name]
 
     def parse_directory(name):
-        matches = re.search(ls_regex, name)
+        matches = re.match(ls_regex, name)
         if matches:
             if not name.startswith('d'):
                 return False # indicates not directory (ie file)
-            return _matches_to_dict(matches)
+            return _ls_matches_to_dict(matches)
 
     logger.info('Running directory fact on {0}...'.format(name))
-    outs = run_command('ls -ldp {0}'.format(name))
+    outs = run_all_command('ls -ldp {0}'.format(name))
     for (server, stdout, stderr) in outs:
         directory = parse_directory(stdout.read())
         pyinfra._facts[server]['_dirs'][name] = directory
@@ -113,14 +114,14 @@ def file(name):
         return current_server_files[name]
 
     def parse_file(name):
-        matches = re.search(ls_regex, name)
+        matches = re.match(ls_regex, name)
         if matches:
             if name.startswith('d'):
                 return False # indicates not file (ie dir)
-            return _matches_to_dict(matches)
+            return _ls_matches_to_dict(matches)
 
-    logger.debug('Running file fact on {0}...'.format(name))
-    outs = run_command('ls -ldp {0}'.format(name))
+    logger.info('Running file fact on {0}...'.format(name))
+    outs = run_all_command('ls -ldp {0}'.format(name))
     for (server, stdout, stderr) in outs:
         file = parse_file(stdout.read())
         pyinfra._facts[server]['_files'][name] = file

@@ -2,9 +2,7 @@
 # File: pyinfra/api/ssh.py
 # Desc: handle all SSH related stuff
 
-from time import sleep
-from threading import Thread
-
+from gevent import sleep
 from paramiko import RSAKey, SSHException
 from pssh import (
     SSHClient,
@@ -52,27 +50,18 @@ def connect_all():
             logger.critical('SSH error on: {0}, {1}'.format(server, e))
 
     # Connect to each server in a thread
-    servers = config.SSH_HOSTS
-    threads = []
-    while servers or threads:
-        # Max 20 threads/connections at once
-        while servers and len(threads) < 20:
-            server = servers.pop()
-            logger.debug('Connecting to {0}'.format(server))
-            thread = Thread(target=connect, args=(server,))
-            thread.start()
-            threads.append(thread)
+    outs = [
+        pyinfra._pool.spawn(connect, server)
+        for server in config.SSH_HOSTS
+    ]
+    # Wait until done
+    [out.join() for out in outs]
 
-        # Attempt to join threads
-        [t.join(0.001) for t in threads]
-        # Weed out the complete threads
-        threads = [t for t in threads if t is not None and t.isAlive()]
-        sleep(1)
-
+    # Assign working hosts to all hosts
     config.SSH_HOSTS = connected_servers
 
 
-def run_command(*args, **kwargs):
+def run_all_command(*args, **kwargs):
     outs = [
         (server, pyinfra._pool.spawn(pyinfra._connections[server].exec_command, *args, **kwargs))
         for server in config.SSH_HOSTS
@@ -83,13 +72,27 @@ def run_command(*args, **kwargs):
     # Get each data
     outs = [(out[0], out[1].get()) for out in outs]
 
-    # Process & assign each fact
+    # Return the useful info
     return [(server, stdout, stderr) for (server, (_, _, stdout, stderr)) in outs]
 
 
-def run_commands(commands):
-    pass
+def run_commands(server):
+    commands = pyinfra._commands[server]
+    connection = pyinfra._connections[server]
+
+    # Loop through each command, execute it on the server
+    for command in commands:
+        print 'COMMAND', command['command']
+        _, _, stdout, stderr = connection.exec_command(command['command'])
+        sleep(.1)
+        print 'STDOUT', stdout.read()
+        print 'STDERR', stderr.read()
+
 
 def run_all():
-    for host in config.SSH_HOSTS:
-        print host
+    outs = [
+        pyinfra._pool.spawn(run_commands, server)
+        for server in config.SSH_HOSTS
+    ]
+    # Wait until done
+    [out.join() for out in outs]

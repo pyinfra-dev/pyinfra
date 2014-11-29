@@ -7,8 +7,14 @@ import logging
 # Global logger
 logger = logging.getLogger('pyinfra')
 
-# Internal states
-_current_server = None
+# Internal connections
 _connections = {}
+
+# Current server host
+_current_server = None
+
+# Data for all hosts/servers
 _commands = {}
 _facts = {}
+_meta = {}
+_results = {}

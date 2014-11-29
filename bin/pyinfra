@@ -8,14 +8,16 @@
 pyinfra
 
 Usage:
-  pyinfra --config CONFIG_FILE DEPLOY_FILE [--dry] [--local] [-v]
+  pyinfra --config CONFIG_FILE DEPLOY_FILE [-v] [--dry]
+  pyinfra --config CONFIG_FILE --fact FACT_NAME
   pyinfra --help
 
 Options:
   DEPLOY_FILE             Deploy file.
   -c --config CONFIG_FILE Config file.
-  --dry                   Only print out commands.
+  --dry                   Only print proposed changes. Add -v to print commands.
   -v                      Show debug output.
+  --fact FACT_NAME        Name of fact to run/test.
   -h --help               Show this screen.
   --version               Show version.
 '''
@@ -24,6 +26,10 @@ Options:
 import sys
 if __name__ != '__main__':
     sys.exit(1)
+
+# Async things
+from gevent import monkey
+monkey.patch_all()
 
 # Handle ctrl+c
 import signal
@@ -41,9 +47,12 @@ arguments = docopt(__doc__, version=version)
 config_file = arguments['--config']
 deploy_file = arguments['DEPLOY_FILE']
 verbosity = arguments['-v']
+fact_name = arguments['--fact']
+dry = arguments['--dry']
+
 
 print ''
-print '=> Welcome to {0}'.format(version)
+print '-> Welcome to {0}'.format(version)
 print ''
 
 import imp
@@ -54,7 +63,7 @@ from gevent.pool import Pool
 
 import pyinfra
 from pyinfra import logger
-from pyinfra.api import ssh
+from pyinfra.api import ssh, server
 
 # Setup logs
 VERBOSITY_TO_LOG = {
@@ -82,43 +91,68 @@ logger.info('Starting...')
 logger.debug('Importing config.py')
 config = pyinfra.config = imp.load_source('pyinfra.config', config_file)
 
+# Create greenlet pool (max 100 greenlets)
+pyinfra._pool = Pool(size=min(len(pyinfra.config.SSH_HOSTS), 100))
+
 # Connect to all the servers (old fashioned thread based)
 logger.info('Connecting to all servers...')
 ssh.connect_all()
 
-# Create greenlet pool
-pyinfra._pool = Pool(size=len(pyinfra.config.SSH_HOSTS))
-
 # Setup internals
-for server in config.SSH_HOSTS:
-    pyinfra._commands[server] = []
-    facts = {
+for host in config.SSH_HOSTS:
+    pyinfra._commands[host] = []
+    pyinfra._facts[host] = {
         '_dirs': {},
         '_files': {}
     }
-    pyinfra._facts[server] = facts
+    pyinfra._meta[host] = {
+        'changes': 0,
+        'commands': 0
+    }
+    pyinfra._results[host] = {
+        'changes': 0,
+        'errors': 0,
+        'commands': 0
+    }
 
-# Build our deploy script for each server (synchronously)
-logger.info('Building deploy scripts...')
-for server in config.SSH_HOSTS:
-    logger.debug('Building deploy script for {0}'.format(server))
-    # Call the deploy script
-    pyinfra._current_server = server
-    execfile(deploy_file)
 
-# Just printing?
-if arguments['--dry']:
-    for server, commands in pyinfra._commands.iteritems():
-        print '# Commands for: {0}'.format(server)
-        for command in commands:
-            print '    {0}'.format(command['command'])
-# Asynchronously run our command sets on each server
+# No deploy file, we're getting a fact
+if deploy_file is None:
+    for host in config.SSH_HOSTS:
+        # Call the fact
+        pyinfra._current_server = host
+        print server.fact(fact_name)
 else:
-    logger.info('Beginning command run...')
-    ssh.run_all()
+    # Build our deploy script for each server (synchronously)
+    logger.info('Building deploy scripts...')
+    for host in config.SSH_HOSTS:
+        logger.debug('Building deploy script for {0}'.format(host))
+        # Call the deploy script
+        pyinfra._current_server = host
+        execfile(deploy_file)
+
+    # Just printing?
+    if dry:
+        if verbosity > 0:
+            logger.debug('--dry and -v, dumping raw commands:')
+            for host, commands in pyinfra._commands.iteritems():
+                print '\n######### Commands for: {0}'.format(host)
+                for command in commands:
+                    print '{0}'.format(command['command'])
+                print ''
+
+        logger.info('--dry set, displaying proposed commands:')
+        for host, meta in pyinfra._meta.iteritems():
+            logger.info('{0}\tChanges: {1}\tCommands: {2}'.format(host, meta['changes'], meta['commands']))
+
+    # Asynchronously run our command sets on each server
+    else:
+        logger.info('Beginning command run...')
+        ssh.run_all()
+
 
 print ''
-print '<= Thank you, goodbye'
+print '<- Thank you, goodbye'
 print ''
 
 sys.exit(0)

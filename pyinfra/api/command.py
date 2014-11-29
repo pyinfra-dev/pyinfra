@@ -16,11 +16,13 @@ def command(func):
         commands = commands if isinstance(commands, list) else [commands]
         if not commands: return
 
+        pyinfra._meta[pyinfra._current_server]['changes'] += 1
         for command in commands:
             pyinfra._commands[pyinfra._current_server] += [{
-                'command': command,
+                'command': command.strip(),
                 'sudo': sudo,
                 'ignore_errors': ignore_errors
             }]
+            pyinfra._meta[pyinfra._current_server]['commands'] += 1
 
     return inner
