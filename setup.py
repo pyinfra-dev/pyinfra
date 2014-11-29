@@ -22,6 +22,7 @@ if __name__ == '__main__':
             'bin/pyinfra'
         ],
         install_requires=[
+            'gevent>=1.0',
             'parallel-ssh',
             'coloredlogs'
         ]
