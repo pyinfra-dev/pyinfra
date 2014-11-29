@@ -12,6 +12,5 @@ server.directory('/etc/missing')
 server.file('/etc/issue')
 server.file('/var/log/syslog')
 
-
-# Get & print all facts (which excludes directories & files, hence above)
+# Get/print all facts (which excludes directories & files, hence above)
 print server.all_facts()

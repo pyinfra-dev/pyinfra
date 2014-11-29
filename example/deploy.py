@@ -12,7 +12,23 @@ linux.user(
     present=True,
     home='/home/pydepoy',
     shell='/bin/bash',
-    sudo=True
+    sudo=True,
+    public_keys=[
+        'abc',
+        'def'
+    ],
+    delete_keys=True
+)
+
+linux.user(
+    'vagrant',
+    present=True,
+    home='/home/vagrant',
+    shell='/bin/bash',
+    sudo=True,
+    public_keys=[
+        'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDmecJwEqI89wKjS6dndQnTQtK6aSLiQ8X5VquTmuDTh2tCA8qelCQloQi8o8IyVYx9qTwf0Nfpa6z8+mKiSMqQ38APJebc7TkGBjkYurDHAuZNSyY1Wv7M4TiOja2v0YU+7lqeGiYCQhx0/NgxYndwrlA4wB84KwLZd/IYBORdhCNclk+WzOEpaXMtaASnkjxQRfIzAROCeqQpsUj/dXKiuUV/2csUeEGEuM9k43yE+r7LruGsj0LqXVW4/7zpu1tIaIZz6X5ilmcTRbNh6u4EOdU/b3G1Xl6R50VzHe6vzGW8l2QZiVOZwvvDoySm3zBYVO2cADkfBuhVgfHD1JbH nick@oxygem.com'
+    ]
 )
 
 # Ensure the state of files
@@ -73,10 +89,21 @@ else:
         present=True
     )
 
-# Execute arbitrary shell
+# Execute arbitrary shell commands
 server.shell(
     'nginx || sudo nginx',
     ignore_errors=True
+)
+# and scripts
+server.script('''
+    #!/bin/sh
+
+    echo "Shell script!"
+    exit 0
+''')
+# and files
+server.script(
+    file='files/test.sh',
 )
 
 # Ensure the state of git repositories
