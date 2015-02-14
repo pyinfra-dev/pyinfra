@@ -2,7 +2,7 @@
 # File: pyinfra/modules/server.py
 # Desc: server module
 
-from pyinfra.api import command, server
+from pyinfra.api import server, operation
 
 
 def fact(key):
@@ -14,6 +14,16 @@ def directory(name):
 def file(name):
     return server.file(name)
 
-@command
+
+@operation
 def shell(code):
     return code
+
+
+@operation
+def script(code=None, file=None):
+    if code is not None:
+        return code
+
+    if file is not None:
+        return 'whaaa'

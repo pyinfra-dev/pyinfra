@@ -1,6 +1,6 @@
-from pyinfra.api import command
+from pyinfra.api import op
 
 
-@command
+@op
 def repo(source, target, branch='master', update=True):
-    return 'GIT'
+    return []

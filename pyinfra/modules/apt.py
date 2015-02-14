@@ -2,13 +2,13 @@
 # File: pyinfra/modules/apt.py
 # Desc: manage apt packages & repositories
 
-from pyinfra.api import command
+from pyinfra.api import op
 
 
-@command
+@op
 def repo(name, present=True):
-    return 'REPO'
+    return []
 
-@command
+@op
 def packages(packages, present=True):
-    return ['PACKAGES', True]
+    return []
