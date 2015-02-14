@@ -23,7 +23,9 @@ if __name__ == '__main__':
         ],
         install_requires=[
             'gevent>=1.0',
-            'parallel-ssh',
-            'coloredlogs'
+            'docopt',
+            'parallel-ssh>=0.70',
+            'coloredlogs',
+            'termcolor'
         ]
     )
