@@ -4,6 +4,7 @@
 
 import logging
 
+
 # Global logger
 logger = logging.getLogger('pyinfra')
 
@@ -14,7 +15,7 @@ _connections = {}
 _current_server = None
 
 # Data for all hosts/servers
-_commands = {}
+_ops = {}
 _facts = {}
 _meta = {}
 _results = {}

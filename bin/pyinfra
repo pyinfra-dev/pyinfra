@@ -8,18 +8,20 @@
 pyinfra
 
 Usage:
-  pyinfra --config CONFIG_FILE DEPLOY_FILE [-v] [--dry]
-  pyinfra --config CONFIG_FILE --fact FACT_NAME
-  pyinfra --help
+    pyinfra -c CONFIG_FILE DEPLOY_FILE
+    pyinfra -c CONFIG_FILE DEPLOY_FILE [-v] [--dry] [--serial]
+    pyinfra -c CONFIG_FILE --fact FACT_NAME
+    pyinfra --help
 
 Options:
-  DEPLOY_FILE             Deploy file.
-  -c --config CONFIG_FILE Config file.
-  --dry                   Only print proposed changes. Add -v to print commands.
-  -v                      Show debug output.
-  --fact FACT_NAME        Name of fact to run/test.
-  -h --help               Show this screen.
-  --version               Show version.
+    DEPLOY_FILE             Deploy file.
+    -c --config CONFIG_FILE Config file.
+    --dry                   Only print proposed changes. Add -v to print commands.
+    --serial                Run commands on one host at a time.
+    -v -vv                  Show debug output.
+    --fact FACT_NAME        Name of fact to run/test.
+    -h --help               Show this screen.
+    --version               Show version.
 '''
 
 # You can't import me!
@@ -48,6 +50,7 @@ config_file = arguments['--config']
 deploy_file = arguments['DEPLOY_FILE']
 verbosity = arguments['-v']
 fact_name = arguments['--fact']
+serial = arguments['--serial']
 dry = arguments['--dry']
 
 
@@ -59,6 +62,7 @@ import imp
 import logging
 
 from coloredlogs import ColoredStreamHandler
+from termcolor import colored
 from gevent.pool import Pool
 
 import pyinfra
@@ -78,7 +82,9 @@ log_args = {
 # Log handler
 handler = ColoredStreamHandler(level=VERBOSITY_TO_LOG[verbosity], **log_args)
 # Set root logger critical
-logging.getLogger().setLevel(logging.CRITICAL)
+logging.getLogger().disabled = True
+# Remove pSSH's host_logger
+logging.getLogger('host_logger').disabled = True
 # Set our logger to level
 logger.setLevel(logging.DEBUG)
 logger.addHandler(handler)
@@ -100,19 +106,20 @@ ssh.connect_all()
 
 # Setup internals
 for host in config.SSH_HOSTS:
-    pyinfra._commands[host] = []
+    pyinfra._ops[host] = []
     pyinfra._facts[host] = {
-        '_dirs': {},
-        '_files': {}
+        '_dirs': {}, # cache remote directory meta
+        '_files': {} # cache remote file meta
     }
     pyinfra._meta[host] = {
-        'changes': 0,
-        'commands': 0
+        'ops': 0, # one function call in a deploy file
+        'commands': 0 # actual # of commands to run
     }
     pyinfra._results[host] = {
-        'changes': 0,
-        'errors': 0,
-        'commands': 0
+        'success_ops': 0,
+        'error_ops': 0,
+        'success_commands': 0,
+        'error_commands': 0
     }
 
 
@@ -122,6 +129,7 @@ if deploy_file is None:
         # Call the fact
         pyinfra._current_server = host
         print server.fact(fact_name)
+
 else:
     # Build our deploy script for each server (synchronously)
     logger.info('Building deploy scripts...')
@@ -131,25 +139,44 @@ else:
         pyinfra._current_server = host
         execfile(deploy_file)
 
-    # Just printing?
     if dry:
-        if verbosity > 0:
-            logger.debug('--dry and -v, dumping raw commands:')
-            for host, commands in pyinfra._commands.iteritems():
-                print '\n######### Commands for: {0}'.format(host)
-                for command in commands:
-                    print '{0}'.format(command['command'])
-                print ''
+        print 'DO DRY SHIT'
+        print pyinfra._commands
 
-        logger.info('--dry set, displaying proposed commands:')
-        for host, meta in pyinfra._meta.iteritems():
-            logger.info('{0}\tChanges: {1}\tCommands: {2}'.format(host, meta['changes'], meta['commands']))
-
-    # Asynchronously run our command sets on each server
     else:
         logger.info('Beginning command run...')
-        ssh.run_all()
+        if serial:
+            ssh.run_serial()
+        else:
+            ssh.run_all()
 
+    # Always show meta output
+    logger.info('Proposed changes:')
+    for host, meta in pyinfra._meta.iteritems():
+        logger.info(
+            '{0}\tOperations: {1}\t    Commands: {2}'.format(
+                host, meta['ops'], meta['commands']
+            )
+        )
+
+    # Show results when run
+    if not dry:
+        logger.info('Results:')
+        for host, results in pyinfra._results.iteritems():
+            success_ops = colored(results['success_ops'], attrs=['bold'])
+            error_ops = results['error_ops']
+            error_ops = error_ops if error_ops == 0 else colored(error_ops, 'red')
+
+            success_commands = colored(results['success_commands'], attrs=['bold'])
+            error_commands = results['error_commands']
+            error_commands = error_commands if error_commands == 0 else colored(error_commands, 'red')
+
+            logger.info(
+                '{0}\tOperations: {1}/{2}\t    Commands: {3}/{4}'.format(
+                    host, success_ops, error_ops,
+                    success_commands, error_commands
+                )
+            )
 
 print ''
 print '<- Thank you, goodbye'

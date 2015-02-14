@@ -12,6 +12,18 @@ from .facts import FACTS
 from .ssh import run_all_command
 
 
+def _assign_facts(outs, key, processor, accessor=None):
+    for (server, channel, stdout, stderr) in outs:
+        result = processor(stdout)
+
+        if accessor is None:
+            pyinfra._facts[server][key] = result
+        else:
+            pyinfra._facts[server][accessor][key] = result
+
+        logger.debug('Fact {0} for {1} assigned to {2}'.format(key, server, result))
+
+
 # Get & return all facts
 def all_facts():
     for key in FACTS:
@@ -19,8 +31,8 @@ def all_facts():
 
     return pyinfra._facts[pyinfra._current_server]
 
-# Get a fact
 def fact(key):
+    '''Runs a fact on all hosts, and returns the fact relevant to the current host'''
     if key not in FACTS:
         logger.critical('Missing fact: {0}'.format(key))
         sys.exit(1)
@@ -35,21 +47,18 @@ def fact(key):
     # For each server, spawn a job on the pool to gather the fact
     outs = run_all_command(FACTS[key].command)
 
-    # Process & assign each fact
-    for (server, stdout, stderr) in outs:
-        result = FACTS[key].process(stdout.read())
-        pyinfra._facts[server][key] = result
-        logger.debug('Fact {0} for {1} assigned to {2}'.format(key, server, result))
+    # Process & assign each fact to pyinfra._facts
+    _assign_facts(outs, key, FACTS[key].process)
 
-    # Join, cache in _facts
+    # Return the fact
     return pyinfra._facts[pyinfra._current_server][key]
 
 
 # Regex to parse ls -ldp output
-ls_regex = r'[a-z-]?([-rwx]{9})\.? [0-9]+ ([a-zA-Z]+) ([a-zA-Z]+) ([0-9]+) [a-zA-Z]{3} [0-9]+ [0-9]{2}:[0-9]{2}'
+ls_regex = r'[a-z-]?([-rwx]{9})\.?\s+[0-9]+\s+([a-zA-Z]+)\s+([a-zA-Z]+)\s+([0-9]+)\s+[a-zA-Z]{3}\s+[0-9]+\s+[0-9]{2}:[0-9]{2}'
 
 def _ls_matches_to_dict(matches):
-    # Parse permissions into octal format (which is what we compare to deploy scripts)
+    '''Parse permissions into octal format (which is what we compare to deploy scripts)'''
     def parse_permissions(permissions):
         result = ''
         # owner, group, world
@@ -80,8 +89,9 @@ def _ls_matches_to_dict(matches):
         'size': matches.group(4)
     }
 
-# Get directory details
+
 def directory(name):
+    '''Like a fact, but for directory information'''
     current_server_dirs = pyinfra._facts[pyinfra._current_server]['_dirs']
 
     # Already got this directory?
@@ -93,20 +103,19 @@ def directory(name):
         if matches:
             if not name.startswith('d'):
                 return False # indicates not directory (ie file)
-            return _ls_matches_to_dict(matches)
+            directory = _ls_matches_to_dict(matches)
+            return directory
 
     logger.info('Running directory fact on {0}...'.format(name))
-    outs = run_all_command('ls -ldp {0}'.format(name))
-    for (server, stdout, stderr) in outs:
-        directory = parse_directory(stdout.read())
-        pyinfra._facts[server]['_dirs'][name] = directory
-        logger.debug('Directory {0} for {1} assigned to {2}'.format(name, server, directory))
+    outs = run_all_command('ls -ldp {0}'.format(name), join_output=True)
 
+    # Assign all & return current
+    _assign_facts(outs, name, parse_directory, '_dirs')
     return pyinfra._facts[pyinfra._current_server]['_dirs'][name]
 
 
-# Get file details
 def file(name):
+    '''Like a fact, but for file information'''
     current_server_files = pyinfra._facts[pyinfra._current_server]['_files']
 
     # Already got this file?
@@ -121,10 +130,8 @@ def file(name):
             return _ls_matches_to_dict(matches)
 
     logger.info('Running file fact on {0}...'.format(name))
-    outs = run_all_command('ls -ldp {0}'.format(name))
-    for (server, stdout, stderr) in outs:
-        file = parse_file(stdout.read())
-        pyinfra._facts[server]['_files'][name] = file
-        logger.debug('File {0} for {1} assigned to {2}'.format(name, server, file))
+    outs = run_all_command('ls -ldp {0}'.format(name), join_output=True)
 
+    # Assign & return current
+    _assign_facts(outs, name, parse_file, '_files')
     return pyinfra._facts[pyinfra._current_server]['_files'][name]

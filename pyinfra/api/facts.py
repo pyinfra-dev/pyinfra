@@ -6,9 +6,8 @@ import re
 from inspect import isclass
 
 
-# Returns the Linux distribution
-# Ubuntu, CentOS & Debian currently
 class fact_Distribution:
+    '''Returns the Linux distribution. Ubuntu, CentOS & Debian currently'''
     command = 'cat /etc/*-release'
     # Currently supported distros
     regexes = [
@@ -18,6 +17,8 @@ class fact_Distribution:
     ]
 
     def process(self, output):
+        output = '\n'.join(output)
+
         for regex in self.regexes:
             matches = re.search(regex, output)
             if matches:
@@ -30,13 +31,13 @@ class fact_Distribution:
         return {'name': 'Unknown'}
 
 
-# Returns a dict of users -> details
 class fact_Users:
+    '''Gets & returns a dict of users -> details'''
     command = 'cat /etc/passwd'
 
     def process(self, output):
         users = {}
-        for line in output.splitlines():
+        for line in output:
             name, _, uid, gid, _, home, shell = line.split(':')
             users[name] = {
                 'uid': uid,
@@ -48,14 +49,14 @@ class fact_Users:
         return users
 
 
-# Returns a dict of network devices -> details
 class fact_NetworkDevices:
+    '''Gets & returns a dict of network devices -> details'''
     command = 'cat /proc/net/dev'
     regex = r'\s+([a-zA-Z0-9]+):\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)'
 
     def process(self, output):
         devices = {}
-        for line in output.splitlines():
+        for line in output:
             matches = re.match(self.regex, line)
             if matches:
                 devices[matches.group(1)] = {
@@ -84,14 +85,14 @@ class fact_NetworkDevices:
         return devices
 
 
-# Returns a dict of (mounted, atm) block devices -> details
 class fact_BlockDevices:
+    '''Returns a dict of (mounted, atm) block devices -> details'''
     command = 'df -T'
     regex = r'([a-zA-Z0-9\/\-_]+)\s+([a-zA-Z0-9\/-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
 
     def process(self, output):
         devices = {}
-        for line in output.splitlines():
+        for line in output:
             matches = re.match(self.regex, line)
             if matches:
                 if matches.group(1) == 'none': continue
@@ -107,14 +108,14 @@ class fact_BlockDevices:
         return devices
 
 
-# Returns a dict of installed apt packages -> details
 class fact_DebPackages:
+    '''Returns a dict of installed dpkg packages -> details'''
     command = 'dpkg -l'
     regex = r'[a-z]+\s+([a-zA-Z0-9:\+\-\.]+)\s+([a-zA-Z0-9:~\.\-\+]+)\s+([a-z0-9]+)'
 
     def process(self, output):
         packages = {}
-        for line in output.splitlines():
+        for line in output:
             matches = re.match(self.regex, line)
             if matches:
                 packages[matches.group(1)] = {
@@ -124,14 +125,14 @@ class fact_DebPackages:
         return packages
 
 
-# Returns a dict of installed yum packages -> details
 class fact_RpmPackages:
+    '''Returns a dict of installed rpm packages -> details'''
     command = 'rpm -qa'
     regex = r'([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.([a-z0-9_]+)\.([a-z0-9_\.]+)'
 
     def process(self, output):
         packages = {}
-        for line in output.splitlines():
+        for line in output:
             matches = re.match(self.regex, line)
             if matches:
                 packages[matches.group(1)] = {

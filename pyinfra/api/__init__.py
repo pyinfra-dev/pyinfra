@@ -3,5 +3,5 @@
 # Desc: import some stuff
 
 from . import server # noqa
-from .command import command # noqa
+from .operation import operation # noqa
 from .exception import CommandError # noqa
