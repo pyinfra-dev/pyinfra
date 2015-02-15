@@ -47,11 +47,11 @@ def user(name, present=True, home='/home/{0}', shell='/bin/bash', public_keys=No
         user = server.fact('Users')[name]
         # Check homedir
         if user['home'] != home:
-            commands.append('usermod {0} --home {1}'.format(name, home))
+            commands.append('usermod --home {1} {0}'.format(name, home))
 
         # Check shell
         if user['shell'] != shell:
-            commands.append('usermod {0} --shell {1}'.format(name, shell))
+            commands.append('usermod --shell {1} {0}'.format(name, shell))
 
         # Add SSH keys
         do_keys()
