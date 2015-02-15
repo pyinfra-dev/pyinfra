@@ -1,5 +1,7 @@
 # pyinfra example
 
+The example requires a recent version of Vagrant to be installed (as test machines).
+
 ```sh
 vagrant up
 

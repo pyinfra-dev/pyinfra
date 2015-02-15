@@ -47,7 +47,7 @@ for module_filename in glob('./pyinfra/modules/*.py'):
             else:
                 arg_strings.append(arg)
 
-        doc_strings.append('\n#### {} {}'.format(module_name, name))
+        doc_strings.append('\n##### {} {}'.format(module_name, name))
         if type.__doc__:
             doc_strings.append('\n{}'.format(type.__doc__))
 

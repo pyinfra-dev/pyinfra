@@ -1,9 +1,12 @@
 # pyinfra
 
-pyinfra helps to automate service deployment. It does this by diffing the state of the server with the state defined in the deploy script. Deploys are generally asyncronous and highly performant. The deploy & config scripts are written in pure Python, allowing for infinite extendability.
+pyinfra helps to automate service deployment. It does this by diffing the state of the server with the state defined in the deploy script. Deploys are generally asyncronous and highly performant. The deploy & config scripts are written in pure Python, allowing for near-infinite extendability.
+
++ [Documentation](https://pyinfra.readthedocs.org)
++ [Example](./example)
 
 
-## Synopsis
+## Quick start
 
 + Install with `pip install pyinfra`
 + Create a `deploy.py` script:
@@ -18,15 +21,8 @@ linux.user(
     home='/home/pyinfra'
 )
 
-# Ensure the state of files
-linux.file(
-    '/var/log/pyinfra.log',
-    present=True,
-    user='pyinfra',
-    group='pyinfra',
-    permissions='644',
-    sudo=True
-)
+# Ensure the state of files, services, system packages
+# See docs/modules/
 ```
 
 + And a `config.py` script:
@@ -47,4 +43,4 @@ SSH_KEY = '/path/to/private_key'
 
 `pyinfra -c config.py deploy.py`
 
-Check out [the full example](./example).
+Check out [the full example](./example) and the [documentation](https://pyinfra.readthedocs.org).
