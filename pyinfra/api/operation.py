@@ -55,7 +55,10 @@ def operation(func):
         })
 
     # Allow the function to be called "inline" within other @op wrapped functions
-    decorated_function.inline = func
+    if hasattr(func, 'inline'):
+        decorated_function.inline = func.inline
+    else:
+        decorated_function.inline = func
     return decorated_function
 
 
@@ -67,5 +70,7 @@ def operation_env(**kwargs):
             return func(*args, **kwargs)
 
         decorated_function.env = kwargs
+
+        decorated_function.inline = func
         return decorated_function
     return decorator

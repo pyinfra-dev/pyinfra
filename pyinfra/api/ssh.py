@@ -16,7 +16,7 @@ from pyinfra import config, logger
 
 # Connect to all configured hosts
 def connect_all():
-    '''Connect to all the configured servers'''
+    '''Connect to all the configured servers.'''
     kwargs = {
         'user': config.SSH_USER,
         'port': config.SSH_PORT,
@@ -62,7 +62,7 @@ def connect_all():
 
 
 def run_all_command(*args, **kwargs):
-    '''Runs a single command on all hosts in parallel, used for collecting facts'''
+    '''Runs a single command on all hosts in parallel, used for collecting facts.'''
     join_output = kwargs.pop('join_output', False)
 
     outs = [
@@ -98,7 +98,7 @@ def _iterate_output(output, print_output=False):
             print line
 
 def run_ops(server, print_output=False):
-    '''Runs a set of generated commands for a single targer server'''
+    '''Runs a set of generated commands for a single targer server.'''
     logger.info('[{}] {}'.format(
         colored(server, attrs=['bold']),
         colored('Starting operations', 'blue')
@@ -191,7 +191,7 @@ def run_ops(server, print_output=False):
 
 
 def run_all_ops(**kwargs):
-    '''Shortcut to run all commands on all servers each in a greenlet'''
+    '''Shortcut to run all commands on all servers each in a greenlet.'''
     outs = {
         pyinfra._pool.spawn(run_ops, server, **kwargs): server
         for server in config.SSH_HOSTS
@@ -203,7 +203,7 @@ def run_all_ops(**kwargs):
 
     complete = 1
     while True:
-        complete_greenlets = wait(greenlets, timeout=0.5, count=complete)
+        complete_greenlets = wait(greenlets, timeout=0, count=complete)
         complete += len(complete_greenlets)
         incompletes = {
             outs[greenlet]: greenlet
@@ -217,8 +217,9 @@ def run_all_ops(**kwargs):
 
         print '\e[0K\rActive: {}'.format(', '.join(incompletes.keys()))
         print '\033[2A'
+        sleep(1)
 
 def run_serial_ops(**kwargs):
-    '''Shortcut to run all commands on all servers in serial'''
+    '''Shortcut to run all commands on all servers in serial.'''
     for server in config.SSH_HOSTS:
         run_ops(server, **kwargs)
