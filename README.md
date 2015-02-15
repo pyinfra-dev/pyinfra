@@ -5,8 +5,8 @@ pyinfra helps to automate service deployment. It does this by diffing the state 
 
 ## Synopsis
 
-1. Install with `pip install pyinfra`
-2. Create a `deploy.py` script:
++ Install with `pip install pyinfra`
++ Create a `deploy.py` script:
 
 ```py
 from pyinfra.modules import linux
@@ -29,7 +29,7 @@ linux.file(
 )
 ```
 
-3. And a `config.py` script:
++ And a `config.py` script:
 
 ```py
 # SSH details
@@ -43,7 +43,7 @@ SSH_USER = 'remote_user'
 SSH_KEY = '/path/to/private_key'
 ```
 
-4. And then run with:
++ And then run with:
 
 `pyinfra -c config.py deploy.py`
 
