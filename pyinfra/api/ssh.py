@@ -2,6 +2,7 @@
 # File: pyinfra/api/ssh.py
 # Desc: handle all SSH related stuff
 
+from termcolor import colored
 from paramiko import RSAKey, SSHException
 from pssh import (
     SSHClient,
@@ -19,7 +20,7 @@ def connect_all():
         'user': config.SSH_USER,
         'port': config.SSH_PORT,
         'num_retries': 0,
-        'timeout': 3
+        'timeout': 10
     }
 
     # Password auth (boo!)
@@ -90,8 +91,10 @@ def run_all_command(*args, **kwargs):
     return results
 
 
-def run_ops(server):
+def run_ops(server, print_output=False):
     '''Runs a set of generated commands for a single targer server'''
+    logger.info('Starting operations on {}'.format(colored(server, attrs=['bold'])))
+
     ops = pyinfra._ops[server]
     connection = pyinfra._connections[server]
 
@@ -108,40 +111,46 @@ def run_ops(server):
             stderr = [line for line in stderr]
 
             if channel.exit_status <= 0:
-                pyinfra._results[server]['success_commands'] += 1
-                logger.debug(stdout)
-                logger.debug(stderr)
+                pyinfra._results[server]['commands'] += 1
             else:
-                pyinfra._results[server]['error_commands'] += 1
-
-                if op['ignore_errors']:
-                    logger.warning('IGNORED ERROR! {} {}'.format(stdout, stderr))
-                else:
-                    print 'COMMAND: {}'.format(command)
-                    logger.critical('ERROR! {} {}'.format(stdout, stderr))
-                    logger.critical('STOPPING {}'.format(server))
-                    break
+                break
 
         # Op didn't break, so continue to the next one and ++success
         else:
             pyinfra._results[server]['success_ops'] += 1
+            logger.info('{} on {}: {}'.format(
+                colored('Operation success', 'green'),
+                colored(server, attrs=['bold']),
+                op['name']
+            ))
             continue
 
-        # Our op errored :(
-        print "OP ERROR"
+        # Op broke so has errored :(
         pyinfra._results[server]['error_ops'] += 1
+        logger.warning('Operation error on {}: {} (at command: {})'.format(server, op['name'], command))
+
+        # Break operation loop if not ignoring
+        if not op['ignore_errors']:
+            break
+
+    # No ops broke, so all good!
+    else:
+        logger.info('Operations complete on {}'.format(colored(server, attrs=['bold'])))
+        return
+
+    logger.critical('Operations incomplete on {}'.format(colored(server, attrs=['bold'])))
 
 
-def run_all():
+def run_all(**kwargs):
     '''Shortcut to run all commands on all servers each in a greenlet'''
     outs = [
-        pyinfra._pool.spawn(run_ops, server)
+        pyinfra._pool.spawn(run_ops, server, **kwargs)
         for server in config.SSH_HOSTS
     ]
     # Wait until done
     [out.join() for out in outs]
 
-def run_serial():
+def run_serial(**kwargs):
     '''Shortcut to run all commands on all servers in serial'''
     for server in config.SSH_HOSTS:
-        run_ops(server)
+        run_ops(server, **kwargs)
