@@ -39,7 +39,10 @@ def connect_all():
         try:
             pyinfra._connections[server] = SSHClient(server, **kwargs)
             connected_servers.append(server)
-            logger.info('[{}] Connected'.format(colored(server, attrs=['bold'])))
+            logger.info('[{}] {}'.format(
+                colored(server, attrs=['bold']),
+                colored('Connected', 'green')
+            ))
         except AuthenticationException:
             logger.critical('Auth error on: {0}'.format(server))
         except UnknownHostException:
@@ -112,7 +115,7 @@ def run_ops(server, print_output=False):
     for op in ops:
         logger.info('[{}] Operation: {}'.format(
             colored(server, attrs=['bold']),
-            op['name']
+            colored(op['name'], attrs=['bold'])
         ))
 
         try:
@@ -162,13 +165,16 @@ def run_ops(server, print_output=False):
                 pyinfra._results[server]['error_ops'] += 1
                 logger.info('[{}] {}: {} (command: {})'.format(
                     colored(server, attrs=['bold']),
-                    colored('Operation error', 'yellow'),
+                    colored('Operation error{}'.format(
+                        ' (ignored)' if op['ignore_errors'] else ''
+                    ), 'yellow'),
                     op['name'], command
                 ))
 
-                # Break operation loop if not ignoring
+                # Ignored, op "completes" w/ ignored error
                 if op['ignore_errors']:
                     pyinfra._results[server]['ops'] += 1
+                # Break operation loop if not ignoring
                 else:
                     break
 

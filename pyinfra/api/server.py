@@ -6,6 +6,8 @@
 import re
 import sys
 
+from termcolor import colored
+
 import pyinfra
 from pyinfra import logger
 from .facts import FACTS
@@ -43,7 +45,7 @@ def fact(key):
     if key in current_server_facts:
         return current_server_facts[key]
 
-    logger.info('Running fact {0}...'.format(key))
+    logger.info('Running fact {}...'.format(colored(key, attrs=['bold'])))
     # For each server, spawn a job on the pool to gather the fact
     outs = run_all_command(FACTS[key].command)
 
@@ -106,7 +108,7 @@ def directory(name):
             directory = _ls_matches_to_dict(matches)
             return directory
 
-    logger.info('Running directory fact on {0}...'.format(name))
+    logger.info('Running directory fact on {}...'.format(colored(name, attrs=['bold'])))
     outs = run_all_command('ls -ldp {0}'.format(name), join_output=True)
 
     # Assign all & return current
@@ -129,7 +131,7 @@ def file(name):
                 return False # indicates not file (ie dir)
             return _ls_matches_to_dict(matches)
 
-    logger.info('Running file fact on {0}...'.format(name))
+    logger.info('Running file fact on {}...'.format(colored(name, attrs=['bold'])))
     outs = run_all_command('ls -ldp {0}'.format(name), join_output=True)
 
     # Assign & return current
