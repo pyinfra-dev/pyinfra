@@ -1,6 +1,6 @@
-from pyinfra.api import op
+from pyinfra.api import operation
 
 
-@op
+@operation
 def repo(source, target, branch='master', update=True):
     return []

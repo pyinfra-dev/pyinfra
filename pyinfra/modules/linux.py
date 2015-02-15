@@ -6,7 +6,8 @@ from pyinfra.api import operation, server, CommandError
 
 
 @operation
-def user(name, present=True, home='/home/{0}', shell='/bin/bash', public_keys=None, delete_keys=False):
+def user(name, present=True, home=None, shell=None, public_keys=None, delete_keys=False):
+    '''Manage Linux users & their ssh `authorized_keys`.'''
     commands = []
     is_present = name in server.fact('Users')
 
@@ -67,6 +68,7 @@ def _chown(target, user, group, recursive=False):
 
 @operation
 def file(name, present=True, user=None, group=None, permissions=None, touch=False):
+    '''Manage the state of files.'''
     info = server.file(name)
     commands = []
 
@@ -104,6 +106,7 @@ def file(name, present=True, user=None, group=None, permissions=None, touch=Fals
 
 @operation
 def directory(name, present=True, user=None, group=None, permissions=None, recursive=False):
+    '''Manage the state of directories.'''
     info = server.directory(name)
     commands = []
 
@@ -138,6 +141,7 @@ def directory(name, present=True, user=None, group=None, permissions=None, recur
 
 @operation
 def init(name, running=True, restarted=False):
+    '''Manage the state of init.d services.'''
     if running:
         return ['/etc/init.d/{0} status || /etc/init.d/{0} start'.format(name)]
     else:
