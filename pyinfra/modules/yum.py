@@ -7,11 +7,13 @@ from pyinfra.api import operation, server
 
 @operation
 def repo(name, present=True):
+    '''[Not implemented] Manage yum sources.'''
     pass
 
 
 @operation
 def packages(packages, present=True, upgrade=False):
+    '''Manage yum packages & updates.'''
     commands = []
 
     current_packages = server.fact('RPMPackages')

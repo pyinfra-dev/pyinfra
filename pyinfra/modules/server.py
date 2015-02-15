@@ -17,11 +17,13 @@ def file(name):
 
 @operation
 def shell(code):
+    '''[Not implemented] Run raw shell code.'''
     return [code]
 
 
 @operation
 def script(code=None, file=None):
+    '''[Not implemented] Run a script or file.'''
     if code is not None:
         return code
 

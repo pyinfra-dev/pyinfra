@@ -7,7 +7,7 @@ from pyinfra.api import operation, operation_env, server
 
 @operation
 def repo(name, present=True):
-    '''Manage apt sources.'''
+    '''[Not implemented] Manage apt sources.'''
     pass
 
 
@@ -36,5 +36,5 @@ def packages(packages, present=True, update=False, upgrade=False):
 
 @operation
 def deb(deb_file, present=True):
-    '''Install/remove .deb packages with dpkg'''
+    '''[Not implemented] Install/remove .deb packages with dpkg'''
     pass
