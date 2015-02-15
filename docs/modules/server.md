@@ -1,6 +1,6 @@
 # Server
 
-#### server all_facts
+##### server all_facts
 
 ```py
 server.all_facts(
@@ -8,7 +8,7 @@ server.all_facts(
 )
 ```
 
-#### server directory
+##### server directory
 
 ```py
 server.directory(
@@ -16,7 +16,7 @@ server.directory(
 )
 ```
 
-#### server fact
+##### server fact
 
 ```py
 server.fact(
@@ -24,7 +24,7 @@ server.fact(
 )
 ```
 
-#### server file
+##### server file
 
 ```py
 server.file(
@@ -32,7 +32,7 @@ server.file(
 )
 ```
 
-#### server script
+##### server script
 
 [Not implemented] Run a script or file.
 
@@ -43,7 +43,7 @@ server.script(
 )
 ```
 
-#### server shell
+##### server shell
 
 [Not implemented] Run raw shell code.
 

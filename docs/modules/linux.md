@@ -1,6 +1,6 @@
 # Linux
 
-#### linux directory
+##### linux directory
 
 Manage the state of directories.
 
@@ -15,7 +15,7 @@ linux.directory(
 )
 ```
 
-#### linux file
+##### linux file
 
 Manage the state of files.
 
@@ -30,7 +30,7 @@ linux.file(
 )
 ```
 
-#### linux init
+##### linux init
 
 Manage the state of init.d services.
 
@@ -42,7 +42,7 @@ linux.init(
 )
 ```
 
-#### linux user
+##### linux user
 
 Manage Linux users & their ssh `authorized_keys`.
 

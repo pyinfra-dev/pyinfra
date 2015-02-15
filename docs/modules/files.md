@@ -1,6 +1,6 @@
 # Files
 
-#### files put
+##### files put
 
 [Not implemented] Copy a local file to the remote system.
 
@@ -11,7 +11,7 @@ files.put(
 )
 ```
 
-#### files template
+##### files template
 
 [Not implemented]Generate a template and write it to the remote system.
 

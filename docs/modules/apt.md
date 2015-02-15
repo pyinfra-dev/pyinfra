@@ -1,6 +1,6 @@
 # Apt
 
-#### apt deb
+##### apt deb
 
 [Not implemented] Install/remove .deb packages with dpkg
 
@@ -11,7 +11,7 @@ apt.deb(
 )
 ```
 
-#### apt packages
+##### apt packages
 
 Install/remove/upgrade packages & update apt.
 
@@ -24,7 +24,7 @@ apt.packages(
 )
 ```
 
-#### apt repo
+##### apt repo
 
 [Not implemented] Manage apt sources.
 

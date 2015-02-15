@@ -1,6 +1,6 @@
 # Yum
 
-#### yum packages
+##### yum packages
 
 Manage yum packages & updates.
 
@@ -12,7 +12,7 @@ yum.packages(
 )
 ```
 
-#### yum repo
+##### yum repo
 
 [Not implemented] Manage yum sources.
 
