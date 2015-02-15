@@ -137,11 +137,11 @@ def directory(name, present=True, user=None, group=None, permissions=None, recur
 
 
 @operation
-def service(name, running=True, restarted=False):
+def init(name, running=True, restarted=False):
     if running:
-        return 'service {0} status || service {0} start'.format(name)
+        return ['/etc/init.d/{0} status || /etc/init.d/{0} start'.format(name)]
     else:
-        return 'service {} stop'.format(name)
+        return ['/etc/init.d/{} stop'.format(name)]
 
     if restarted:
-        return 'service {} restart'.format(name)
+        return ['/etc/init.d/{} restart'.format(name)]
