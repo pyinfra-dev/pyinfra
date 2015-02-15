@@ -60,6 +60,7 @@ print ''
 
 import imp
 import logging
+from logging import Formatter
 
 from coloredlogs import ColoredStreamHandler
 from termcolor import colored
@@ -76,17 +77,18 @@ log_args = {
     'show_name': False
 }
 log_level = logging.DEBUG if verbosity == 2 else logging.INFO
+# Log formatter
+formatter = Formatter('\e[0K\r%(message)s              ') # TODO: remove spaces hack
 # Log handler
 handler = ColoredStreamHandler(level=log_level, **log_args)
+handler.setFormatter(formatter)
 # Set root logger critical
 logging.getLogger().setLevel(logging.CRITICAL)
 # Set our logger to level
 logger.setLevel(logging.DEBUG)
 logger.addHandler(handler)
-
-# Remove pSSH's host_logger unless verbose
-if verbosity == 0:
-    logging.getLogger('host_logger').disabled = True
+# Disable the pssh host logger
+logging.getLogger('host_logger').disabled = True
 
 
 # Let's do this!
@@ -141,11 +143,9 @@ else:
 
     if not dry:
         print
-        logger.info('Beginning command run...')
-        if serial:
-            ssh.run_serial(print_output=verbosity == 2)
-        else:
-            ssh.run_all(print_output=verbosity == 2)
+        logger.info('Beginning operation run...')
+        func = ssh.run_serial_ops if serial else ssh.run_all_ops
+        func(print_output=verbosity > 0)
 
     # Always show meta output
     print
@@ -175,11 +175,11 @@ else:
             else:
                 host_string = colored(host, 'red', attrs=['bold'])
 
-            logger.info('{0}\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}'.format(
+            logger.info('{0}\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}/{4}'.format(
                 host_string,
                 colored(success_ops, attrs=['bold']),
                 error_ops if error_ops == 0 else colored(error_ops, 'red', attrs=['bold']),
-                results['commands']
+                results['commands'], meta['commands']
             ))
 
 print ''
