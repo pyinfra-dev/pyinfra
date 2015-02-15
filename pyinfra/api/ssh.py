@@ -19,7 +19,7 @@ def connect_all():
     '''Connect to all the configured servers.'''
     kwargs = {
         'user': config.SSH_USER,
-        'port': config.SSH_PORT,
+        'port': getattr(config, 'SSH_PORT', 22),
         'num_retries': 0,
         'timeout': 10
     }
@@ -30,7 +30,7 @@ def connect_all():
     else:
         kwargs['pkey'] = RSAKey.from_private_key_file(
             filename=config.SSH_KEY,
-            password=config.SSH_KEY_PASS
+            password=getattr(config, 'SSH_KEY_PASS', None)
         )
 
     # New list to replace config list (removing non-connections)
