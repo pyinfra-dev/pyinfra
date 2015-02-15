@@ -2,6 +2,7 @@
 # File: pyinfra/api/ssh.py
 # Desc: handle all SSH related stuff
 
+from gevent import sleep
 from termcolor import colored
 from paramiko import RSAKey, SSHException
 from pssh import (
@@ -38,7 +39,7 @@ def connect_all():
         try:
             pyinfra._connections[server] = SSHClient(server, **kwargs)
             connected_servers.append(server)
-            logger.info('Connected to {0}'.format(server))
+            logger.info('[{}] Connected'.format(colored(server, attrs=['bold'])))
         except AuthenticationException:
             logger.critical('Auth error on: {0}'.format(server))
         except UnknownHostException:
@@ -93,13 +94,19 @@ def run_all_command(*args, **kwargs):
 
 def run_ops(server, print_output=False):
     '''Runs a set of generated commands for a single targer server'''
-    logger.info('Starting operations on {}'.format(colored(server, attrs=['bold'])))
+    logger.info('[{}] Starting operations'.format(colored(server, attrs=['bold'])))
+    sleep()
 
     ops = pyinfra._ops[server]
     connection = pyinfra._connections[server]
 
     # For each op...
     for op in ops:
+        logger.info('[{}] Operation: {}'.format(
+            colored(server, attrs=['bold']),
+            op['name']
+        ))
+
         try:
             op_status = False
             commands = op['commands']
@@ -137,21 +144,17 @@ def run_ops(server, print_output=False):
 
             # Op OK!
             if op_status is True:
-                # Count success, log
+                # Count success
                 pyinfra._results[server]['ops'] += 1
                 pyinfra._results[server]['success_ops'] += 1
-                logger.info('{} on {}: {}'.format(
-                    colored('Operation success', 'green'),
-                    colored(server, attrs=['bold']),
-                    op['name']
-                ))
 
             # If the op failed somewhere
             else:
                 # Count error, log
                 pyinfra._results[server]['error_ops'] += 1
-                logger.warning('Operation error on {}: {} (at command: {})'.format(
+                logger.info('[{}] {}: {} (command: {})'.format(
                     colored(server, attrs=['bold']),
+                    colored('Operation error', 'yellow'),
                     op['name'], command
                 ))
 
@@ -165,15 +168,18 @@ def run_ops(server, print_output=False):
         except Exception as e:
             # Op broke so has errored :(
             pyinfra._results[server]['error_ops'] += 1
-            logger.critical('Operation exception on {}: {} (at command: {}) {}'.format(server, op['name'], command, e))
+            logger.critical('[{}] Operation exception {} (at command: {}) {}'.format(server, op['name'], command, e))
             break
 
     # No ops broke, so all good!
     else:
-        logger.info('Operations complete on {}'.format(colored(server, attrs=['bold'])))
+        logger.info('[{}] {}'.format(
+            colored(server, attrs=['bold']),
+            colored('All operations complete', 'green')
+        ))
         return
 
-    logger.critical('Operations incomplete on {}'.format(colored(server, attrs=['bold'])))
+    logger.critical('[{}] Operations incomplete'.format(colored(server, attrs=['bold'])))
 
 
 def run_all(**kwargs):
