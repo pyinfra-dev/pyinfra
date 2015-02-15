@@ -139,7 +139,7 @@ def directory(name, present=True, user=None, group=None, permissions=None, recur
 @operation
 def service(name, running=True, restarted=False):
     if running:
-        return 'service {} status || service {} start'.format(name)
+        return 'service {0} status || service {0} start'.format(name)
     else:
         return 'service {} stop'.format(name)
 
