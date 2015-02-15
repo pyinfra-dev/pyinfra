@@ -115,6 +115,7 @@ for host in config.SSH_HOSTS:
         'commands': 0 # actual # of commands to run
     }
     pyinfra._results[host] = {
+        'ops': 0, # success_ops + failed ops w/ignore_errors
         'success_ops': 0,
         'error_ops': 0,
         'commands': 0
@@ -162,13 +163,23 @@ else:
         logger.info('Results:')
         for host, results in pyinfra._results.iteritems():
             meta = pyinfra._meta[host]
-            success_ops = colored(results['success_ops'], attrs=['bold'])
+            success_ops = results['success_ops']
             error_ops = results['error_ops']
-            error_ops = error_ops if error_ops == 0 else colored(error_ops, 'red')
-            commands = colored(results['commands'], attrs=['bold'])
 
-            logger.info('{0}\tOperations: {1}/{2}\t    Errors: {3}\t    Commands: {4}'.format(
-                host, success_ops, meta['ops'], error_ops, commands
+            # If all ops got complete (even with ignored_errors)
+            if results['ops'] == meta['ops']:
+                # Yellow if ignored any errors, else green
+                color = 'green' if error_ops == 0 else 'yellow'
+                host_string = colored(host, color)
+            # Ops did not complete!
+            else:
+                host_string = colored(host, 'red', attrs=['bold'])
+
+            logger.info('{0}\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}'.format(
+                host_string,
+                colored(success_ops, attrs=['bold']),
+                error_ops if error_ops == 0 else colored(error_ops, 'red', attrs=['bold']),
+                results['commands']
             ))
 
 print ''

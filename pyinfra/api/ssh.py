@@ -100,37 +100,72 @@ def run_ops(server, print_output=False):
 
     # For each op...
     for op in ops:
-        commands = op['commands']
-        # ...loop through each command, execute it on the server w/op-level preferences
-        for i, command in enumerate(commands):
-            logger.debug('Running command on {0}: "{1}"'.format(server, command))
-            channel, _, stdout, stderr = connection.exec_command(command, sudo=op['sudo'])
+        try:
+            op_status = False
+            commands = op['commands']
+            # ...loop through each command, execute it on the server w/op-level preferences
+            for i, command in enumerate(commands):
+                logger.debug('Running command on {0}: "{1}"'.format(server, command))
+                logger.debug('Command sudo?: {}, sudo user: {}, env: {}'.format(
+                    op['sudo'], op['sudo_user'], op['env']
+                ))
 
-            # Iterate the generators to get an exit status
-            stdout = [line for line in stdout]
-            stderr = [line for line in stderr]
+                # Use env & build our actual command
+                env_string = ' '.join([
+                    '{}={}'.format(key, value)
+                    for key, value in op['env'].iteritems()
+                ])
+                command = '{} {}'.format(env_string, command)
 
-            if channel.exit_status <= 0:
-                pyinfra._results[server]['commands'] += 1
+                # Run it!
+                channel, _, stdout, stderr = connection.exec_command(command,
+                    sudo=op['sudo'], user=op['sudo_user']
+                )
+
+                # Iterate the generators to get an exit status
+                stdout = [line for line in stdout]
+                stderr = [line for line in stderr]
+
+                if channel.exit_status <= 0:
+                    pyinfra._results[server]['commands'] += 1
+                else:
+                    break
+
+            # Op didn't break, so continue to the next one and ++success
             else:
-                break
+                op_status = True
 
-        # Op didn't break, so continue to the next one and ++success
-        else:
-            pyinfra._results[server]['success_ops'] += 1
-            logger.info('{} on {}: {}'.format(
-                colored('Operation success', 'green'),
-                colored(server, attrs=['bold']),
-                op['name']
-            ))
-            continue
+            # Op OK!
+            if op_status is True:
+                # Count success, log
+                pyinfra._results[server]['ops'] += 1
+                pyinfra._results[server]['success_ops'] += 1
+                logger.info('{} on {}: {}'.format(
+                    colored('Operation success', 'green'),
+                    colored(server, attrs=['bold']),
+                    op['name']
+                ))
 
-        # Op broke so has errored :(
-        pyinfra._results[server]['error_ops'] += 1
-        logger.warning('Operation error on {}: {} (at command: {})'.format(server, op['name'], command))
+            # If the op failed somewhere
+            else:
+                # Count error, log
+                pyinfra._results[server]['error_ops'] += 1
+                logger.warning('Operation error on {}: {} (at command: {})'.format(
+                    colored(server, attrs=['bold']),
+                    op['name'], command
+                ))
 
-        # Break operation loop if not ignoring
-        if not op['ignore_errors']:
+                # Break operation loop if not ignoring
+                if op['ignore_errors']:
+                    pyinfra._results[server]['ops'] += 1
+                else:
+                    break
+
+        # Exception? always break operation loop
+        except Exception as e:
+            # Op broke so has errored :(
+            pyinfra._results[server]['error_ops'] += 1
+            logger.critical('Operation exception on {}: {} (at command: {}) {}'.format(server, op['name'], command, e))
             break
 
     # No ops broke, so all good!
