@@ -1,19 +1,19 @@
 # Server
 
 
-## server.all_facts()
+#### server.all_facts()
 
 
-## server.directory(name)
+#### server.directory(name)
 
 
-## server.fact(key)
+#### server.fact(key)
 
 
-## server.file(name)
+#### server.file(name)
 
 
-## server.script(code=None, file=None)
+#### server.script(code=None, file=None)
 
 
-## server.shell(code)
+#### server.shell(code)
