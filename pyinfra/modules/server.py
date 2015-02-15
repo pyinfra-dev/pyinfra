@@ -17,7 +17,7 @@ def file(name):
 
 @operation
 def shell(code):
-    return code
+    return [code]
 
 
 @operation
