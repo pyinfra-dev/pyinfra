@@ -9,16 +9,16 @@ pyinfra
 
 Usage:
     pyinfra -c CONFIG_FILE DEPLOY_FILE
-    pyinfra -c CONFIG_FILE DEPLOY_FILE [-v] [--dry] [--serial]
+    pyinfra -c CONFIG_FILE DEPLOY_FILE [-vv] [--dry] [--serial]
     pyinfra -c CONFIG_FILE --fact FACT_NAME
     pyinfra --help
 
 Options:
     DEPLOY_FILE             Deploy file.
     -c --config CONFIG_FILE Config file.
-    --dry                   Only print proposed changes. Add -v to print commands.
+    --dry                   Only print proposed changes.
     --serial                Run commands on one host at a time.
-    -v -vv                  Show debug output.
+    -v -vv                  Show debug output, -vv for all remote output,
     --fact FACT_NAME        Name of fact to run/test.
     -h --help               Show this screen.
     --version               Show version.
@@ -70,24 +70,23 @@ from pyinfra import logger
 from pyinfra.api import ssh, server
 
 # Setup logs
-VERBOSITY_TO_LOG = {
-    0: logging.INFO,
-    1: logging.DEBUG
-}
 log_args = {
     'show_timestamps': False,
     'show_hostname': False,
     'show_name': False
 }
+log_level = logging.DEBUG if verbosity == 2 else logging.INFO
 # Log handler
-handler = ColoredStreamHandler(level=VERBOSITY_TO_LOG[verbosity], **log_args)
+handler = ColoredStreamHandler(level=log_level, **log_args)
 # Set root logger critical
-logging.getLogger().disabled = True
-# Remove pSSH's host_logger
-logging.getLogger('host_logger').disabled = True
+logging.getLogger().setLevel(logging.CRITICAL)
 # Set our logger to level
 logger.setLevel(logging.DEBUG)
 logger.addHandler(handler)
+
+# Remove pSSH's host_logger unless verbose
+if verbosity == 0:
+    logging.getLogger('host_logger').disabled = True
 
 
 # Let's do this!
@@ -118,8 +117,7 @@ for host in config.SSH_HOSTS:
     pyinfra._results[host] = {
         'success_ops': 0,
         'error_ops': 0,
-        'success_commands': 0,
-        'error_commands': 0
+        'commands': 0
     }
 
 
@@ -132,6 +130,7 @@ if deploy_file is None:
 
 else:
     # Build our deploy script for each server (synchronously)
+    print
     logger.info('Building deploy scripts...')
     for host in config.SSH_HOSTS:
         logger.debug('Building deploy script for {0}'.format(host))
@@ -139,18 +138,16 @@ else:
         pyinfra._current_server = host
         execfile(deploy_file)
 
-    if dry:
-        print 'DO DRY SHIT'
-        print pyinfra._commands
-
-    else:
+    if not dry:
+        print
         logger.info('Beginning command run...')
         if serial:
-            ssh.run_serial()
+            ssh.run_serial(print_output=verbosity == 2)
         else:
-            ssh.run_all()
+            ssh.run_all(print_output=verbosity == 2)
 
     # Always show meta output
+    print
     logger.info('Proposed changes:')
     for host, meta in pyinfra._meta.iteritems():
         logger.info(
@@ -161,22 +158,17 @@ else:
 
     # Show results when run
     if not dry:
+        print
         logger.info('Results:')
         for host, results in pyinfra._results.iteritems():
             success_ops = colored(results['success_ops'], attrs=['bold'])
             error_ops = results['error_ops']
             error_ops = error_ops if error_ops == 0 else colored(error_ops, 'red')
+            commands = colored(results['commands'], attrs=['bold'])
 
-            success_commands = colored(results['success_commands'], attrs=['bold'])
-            error_commands = results['error_commands']
-            error_commands = error_commands if error_commands == 0 else colored(error_commands, 'red')
-
-            logger.info(
-                '{0}\tOperations: {1}/{2}\t    Commands: {3}/{4}'.format(
-                    host, success_ops, error_ops,
-                    success_commands, error_commands
-                )
-            )
+            logger.info('{0}\tOperations: {1}/{2}\t    Commands: {3}'.format(
+                host, success_ops, error_ops, commands
+            ))
 
 print ''
 print '<- Thank you, goodbye'
