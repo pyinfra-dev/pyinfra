@@ -1,46 +1,57 @@
 # pyinfra
 
-pyinfra helps to automate service deployment. It does this by diffing the state of the server with the state defined in the deploy script. Deploys are generally asyncronous and highly performant. The deploy & config scripts are written in pure Python, allowing for near-infinite extendability.
+pyinfra helps to automate service deployment. It does this by diffing the state of the server with the state defined in the deploy script. Deploys are asyncronous and highly performant. The deploy & config scripts are written in pure Python, allowing for near-infinite extendability.
 
 + [Documentation](https://pyinfra.readthedocs.org)
 + [Example](./example)
 
 
-## Quick start
-
-+ Install with `pip install pyinfra`
-+ Create a `deploy.py` script:
+## Example deploy script
 
 ```py
-from pyinfra.modules import linux
+from pyinfra.modules import server, linux, apt, yum
 
 # Ensure the state of a user
 linux.user(
     'pyinfra',
-    present=True,
-    home='/home/pyinfra'
+    home='/home/pyinfra',
+    shell='/bin/bash',
+    public_keys=['abc'],
+    sudo=True
 )
 
-# Ensure the state of files, services, system packages
-# See docs/modules/
+# Ensure the state of files
+linux.file(
+    '/var/log/pyinfra.log',
+    user='pyinfra',
+    group='pyinfra',
+    permissions='644'
+)
+
+# Work with multiple linux distributions
+if server.fact('Distribution')['name'] == 'CentOS':
+    # yum package manager
+    yum.packages(
+        ['python-devel', 'git'],
+        sudo=True
+    )
+else:
+    # apt package manager
+    apt.packages(
+        ['python-dev', 'git', 'nginx'],
+        update=True,
+        sudo=True
+    )
+
+# Execute arbitrary shell commands
+server.shell(
+    'echo "hello"'
+)
+
+# Manage init.d services
+linux.init(
+    'cron',
+    restarted=True,
+    ignore_errors=True
+)
 ```
-
-+ And a `config.py` script:
-
-```py
-# SSH details
-SSH_HOSTS = [
-    '20.20.20.20',
-    '20.20.20.21',
-    '20.20.20.22'
-]
-SSH_PORT = 22
-SSH_USER = 'remote_user'
-SSH_KEY = '/path/to/private_key'
-```
-
-+ And then run with:
-
-`pyinfra -c config.py deploy.py`
-
-Check out [the full example](./example) and the [documentation](https://pyinfra.readthedocs.org).
