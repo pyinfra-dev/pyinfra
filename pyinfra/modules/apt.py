@@ -2,15 +2,16 @@
 # File: pyinfra/modules/apt.py
 # Desc: manage apt packages & repositories
 
-from pyinfra.api import operation, server
+from pyinfra.api import operation, operation_env, server
 
 
 @operation
 def repo(name, present=True):
-    return []
+    pass
 
 
 @operation
+@operation_env(DEBIAN_FRONTEND='noninteractive') # surpresses interactive prompts
 def packages(packages, present=True, update=False, upgrade=False):
     commands = []
 
