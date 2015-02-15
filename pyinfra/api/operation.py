@@ -10,11 +10,17 @@ def operation(func):
         # Local & globally configurable
         sudo = kwargs.pop('sudo', getattr(pyinfra.config, 'SUDO', False))
         ignore_errors = kwargs.pop('ignore_errors', getattr(pyinfra.config, 'IGNORE_ERRORS', False))
+        name = kwargs.pop('name', None)
+
+        # Auto-name the operation
+        if name is None:
+            module_bits = func.__module__.split('.')
+            module_name = module_bits[-1]
+            name = '{} / {}'.format(module_name.title(), func.__name__.title())
 
         # Get the commands
         commands = func(*args, **kwargs)
-        commands = commands if isinstance(commands, list) else [commands]
-        if not commands:
+        if not isinstance(commands, list):
             return
 
         # We're doing some commands, ops++
@@ -26,6 +32,7 @@ def operation(func):
 
         # Add the operation
         pyinfra._ops[pyinfra._current_server].append({
+            'name': name,
             'commands': commands,
             'sudo': sudo,
             'ignore_errors': ignore_errors

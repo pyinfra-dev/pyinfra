@@ -125,7 +125,7 @@ class fact_DebPackages:
         return packages
 
 
-class fact_RpmPackages:
+class fact_RPMPackages:
     '''Returns a dict of installed rpm packages -> details'''
     command = 'rpm -qa'
     regex = r'([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.([a-z0-9_]+)\.([a-z0-9_\.]+)'
