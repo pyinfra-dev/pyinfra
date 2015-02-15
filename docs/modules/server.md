@@ -34,6 +34,8 @@ server.file(
 
 #### server script
 
+[Not implemented] Run a script or file.
+
 ```py
 server.script(
     code=None,
@@ -42,6 +44,8 @@ server.script(
 ```
 
 #### server shell
+
+[Not implemented] Run raw shell code.
 
 ```py
 server.shell(

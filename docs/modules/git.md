@@ -2,6 +2,8 @@
 
 #### git repo
 
+[Not implemented] Manage git repositories.
+
 ```py
 git.repo(
     source,

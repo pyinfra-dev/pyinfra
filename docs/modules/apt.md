@@ -2,7 +2,7 @@
 
 #### apt deb
 
-Install/remove .deb packages with dpkg
+[Not implemented] Install/remove .deb packages with dpkg
 
 ```py
 apt.deb(
@@ -26,7 +26,7 @@ apt.packages(
 
 #### apt repo
 
-Manage apt sources.
+[Not implemented] Manage apt sources.
 
 ```py
 apt.repo(

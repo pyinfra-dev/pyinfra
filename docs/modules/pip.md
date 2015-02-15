@@ -2,6 +2,8 @@
 
 #### pip packages
 
+[Not implemented] Manage pip packages.
+
 ```py
 pip.packages(
     packages=None,
