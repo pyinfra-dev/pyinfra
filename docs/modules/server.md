@@ -1,19 +1,50 @@
 # Server
 
+#### server all_facts
 
-#### server.all_facts()
+```py
+server.all_facts(
+    
+)
+```
 
+#### server directory
 
-#### server.directory(name)
+```py
+server.directory(
+    name
+)
+```
 
+#### server fact
 
-#### server.fact(key)
+```py
+server.fact(
+    key
+)
+```
 
+#### server file
 
-#### server.file(name)
+```py
+server.file(
+    name
+)
+```
 
+#### server script
 
-#### server.script(code=None, file=None)
+```py
+server.script(
+    code=None,
+    file=None
+)
+```
 
+#### server shell
 
-#### server.shell(code)
+```py
+server.shell(
+    code
+)
+```

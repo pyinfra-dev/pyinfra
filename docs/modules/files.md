@@ -1,7 +1,19 @@
 # Files
 
+#### files put
 
-#### files.put(local_file, remote_file)
+```py
+files.put(
+    local_file,
+    remote_file
+)
+```
 
+#### files template
 
-#### files.template(template_name, remote_file)
+```py
+files.template(
+    template_name,
+    remote_file
+)
+```

@@ -1,4 +1,12 @@
 # Pip
 
+#### pip packages
 
-#### pip.packages(packages=None, requirements_file=None, present=True, upgrade=False)
+```py
+pip.packages(
+    packages=None,
+    requirements_file=None,
+    present=True,
+    upgrade=False
+)
+```

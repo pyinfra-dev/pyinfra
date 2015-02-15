@@ -1,4 +1,12 @@
 # Git
 
+#### git repo
 
-#### git.repo(source, target, branch=master, update=True)
+```py
+git.repo(
+    source,
+    target,
+    branch=master,
+    update=True
+)
+```

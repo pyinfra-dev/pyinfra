@@ -1,4 +1,10 @@
 # Venv
 
+#### venv env
 
-#### venv.env(directory, present=True)
+```py
+venv.env(
+    directory,
+    present=True
+)
+```
