@@ -13,6 +13,8 @@ from importlib import import_module
 from inspect import getmembers, isfunction, getargspec
 
 
+list_strings = ['# pyinfra modules\n']
+
 print '# Auto-building module docs...'
 for module_filename in glob('./pyinfra/modules/*.py'):
     module_name = path.basename(module_filename).split('.')[0]
@@ -20,7 +22,9 @@ for module_filename in glob('./pyinfra/modules/*.py'):
         continue
 
     print '# Importing module: {}'.format(module_name)
+    list_strings += ['+ [{0}](./modules/{0})'.format(module_name)]
     module = import_module('pyinfra.modules.{}'.format(module_name))
+
     operations = [
         (name, type)
         for (name, type) in getmembers(module, isfunction)
@@ -62,4 +66,8 @@ for module_filename in glob('./pyinfra/modules/*.py'):
     doc_file.write('\n'.join(doc_strings))
     doc_file.close()
 
+list_strings.append('')
+list_file = open('./docs/modules.md'.format(module_name), 'w')
+list_file.write('\n'.join(list_strings))
+list_file.close()
 print '# Done!'
