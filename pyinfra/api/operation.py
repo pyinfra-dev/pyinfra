@@ -54,11 +54,11 @@ def operation(func):
             'ignore_errors': ignore_errors
         })
 
-    # Allow the function to be called "inline" within other @op wrapped functions
-    if hasattr(func, 'inline'):
-        decorated_function.inline = func.inline
+    # Allow the function to be called "__decorated__" within other @op wrapped functions
+    if hasattr(func, '__decorated__'):
+        decorated_function.__decorated__ = func.__decorated__
     else:
-        decorated_function.inline = func
+        decorated_function.__decorated__ = func
     return decorated_function
 
 
@@ -71,6 +71,6 @@ def operation_env(**kwargs):
 
         decorated_function.env = kwargs
 
-        decorated_function.inline = func
+        decorated_function.__decorated__ = func
         return decorated_function
     return decorator
