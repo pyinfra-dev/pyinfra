@@ -3,13 +3,12 @@
 # Desc: example deploy script
 
 from pyinfra import config
-from pyinfra.modules import server, linux, apt, yum# , git, pip, venv, files
+from pyinfra.modules import server, linux, apt, yum, files
 
 
 # Ensure the state of a user
 linux.user(
     'pyinfra',
-    present=True,
     home='/home/pyinfra',
     shell='/bin/bash',
     public_keys=[
@@ -28,7 +27,6 @@ linux.user(
 # Ensure the state of files
 linux.file(
     '/var/log/pyinfra.log',
-    present=True,
     user='pyinfra',
     group='pyinfra',
     permissions='644',
@@ -38,7 +36,6 @@ linux.file(
 # Ensure the state of directories
 linux.directory(
     config.ENV_DIR,
-    present=True,
     user='pyinfra',
     group='pyinfra',
     permissions='755',
@@ -51,32 +48,30 @@ if server.fact('Distribution')['name'] == 'CentOS':
     # yum package manager
     yum.packages(
         ['python-devel', 'git'],
-        present=True,
         sudo=True
     )
 else:
     # apt package manager
     apt.packages(
         ['python-dev', 'git', 'nginx'],
-        present=True,
         update=True,
         sudo=True
     )
 
-# # Generate files from local templates
-# files.template(
-#     'filename.jn2',
-#     '/opt/wheverever/test.sh',
-#     **{
-#         'hello': 'world'
-#     }
-# )
+# Copy local files to remote host
+files.put(
+    'filename.txt',
+    '/home/ubuntu/filename.txt'
+)
 
-# # Copy local files to remote host
-# files.put(
-#     'filename.txt',
-#     '/home/ubuntu/filename.txt'
-# )
+# Generate files from local jinja2 templates
+files.template(
+    'filename.jn2',
+    '/opt/wheverever/test.sh',
+    **{
+        'hello': 'world'
+    }
+)
 
 # Execute arbitrary shell commands
 server.shell(
