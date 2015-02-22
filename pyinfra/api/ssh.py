@@ -2,66 +2,11 @@
 # File: pyinfra/api/ssh.py
 # Desc: handle all SSH related stuff
 
-from gevent import sleep, wait
 from termcolor import colored
-from paramiko import RSAKey, SSHException
-from pssh import (
-    SSHClient,
-    AuthenticationException, UnknownHostException, ConnectionErrorException
-)
+from paramiko import SSHClient, RSAKey, MissingHostKeyPolicy, SSHException, AuthenticationException
 
 import pyinfra
 from pyinfra import config, logger
-
-
-# Connect to all configured hosts
-def connect_all():
-    '''Connect to all the configured servers.'''
-    kwargs = {
-        'user': config.SSH_USER,
-        'port': getattr(config, 'SSH_PORT', 22),
-        'num_retries': 0,
-        'timeout': 10
-    }
-
-    # Password auth (boo!)
-    if hasattr(config, 'SSH_PASS'):
-        kwargs['password'] = config.SSH_PASS
-    else:
-        kwargs['pkey'] = RSAKey.from_private_key_file(
-            filename=config.SSH_KEY,
-            password=getattr(config, 'SSH_KEY_PASS', None)
-        )
-
-    # New list to replace config list (removing non-connections)
-    connected_servers = []
-    def connect(server):
-        try:
-            pyinfra._connections[server] = SSHClient(server, **kwargs)
-            connected_servers.append(server)
-            logger.info('[{}] {}'.format(
-                colored(server, attrs=['bold']),
-                colored('Connected', 'green')
-            ))
-        except AuthenticationException:
-            logger.critical('Auth error on: {0}'.format(server))
-        except UnknownHostException:
-            logger.critical('Host not found: {0}'.format(server))
-        except ConnectionErrorException:
-            logger.critical('Could not connect to: {0}'.format(server))
-        except SSHException as e:
-            logger.critical('SSH error on: {0}, {1}'.format(server, e))
-
-    # Connect to each server in a thread
-    outs = [
-        pyinfra._pool.spawn(connect, server)
-        for server in config.SSH_HOSTS
-    ]
-    # Wait until done
-    [out.join() for out in outs]
-
-    # Assign working hosts to all hosts
-    config.SSH_HOSTS = connected_servers
 
 
 def run_all_command(*args, **kwargs):
@@ -81,151 +26,216 @@ def run_all_command(*args, **kwargs):
     # Return the useful info
     results = [(
         server,
-        channel,
         [line for line in stdout],
         [line for line in stderr]
-    ) for (server, (channel, _, stdout, stderr)) in outs]
+    ) for (server, (_, stdout, stderr)) in outs]
 
     if join_output is True:
         results = [
-            (server, channel, '\n'.join(stdout), '\n'.join(stderr))
-            for (server, channel, stdout, stderr) in results
+            (server, '\n'.join(stdout), '\n'.join(stderr))
+            for (server, stdout, stderr) in results
         ]
 
     return results
 
 
-def _iterate_output(output, print_output=False):
-    for line in output:
-        if print_output:
-            print line
+def connect_all():
+    '''Connect to all the configured servers.'''
+    kwargs = {
+        'username': config.SSH_USER,
+        'port': getattr(config, 'SSH_PORT', 22),
+        'timeout': 10
+    }
 
-def run_ops(server, print_output=False):
-    '''Runs a set of generated commands for a single targer server.'''
-    logger.info('[{}] {}'.format(
-        colored(server, attrs=['bold']),
-        colored('Starting operations', 'blue')
-    ))
-    sleep()
-
-    ops = pyinfra._ops[server]
-    connection = pyinfra._connections[server]
-
-    # For each op...
-    for op in ops:
-        logger.info('[{}] Operation: {}'.format(
-            colored(server, attrs=['bold']),
-            colored(op['name'], attrs=['bold'])
-        ))
-
-        try:
-            op_status = False
-            commands = op['commands']
-            # ...loop through each command, execute it on the server w/op-level preferences
-            for i, command in enumerate(commands):
-                logger.debug('Running command on {0}: "{1}"'.format(server, command))
-                logger.debug('Command sudo?: {}, sudo user: {}, env: {}'.format(
-                    op['sudo'], op['sudo_user'], op['env']
-                ))
-
-                # Use env & build our actual command
-                env_string = ' '.join([
-                    '{}={}'.format(key, value)
-                    for key, value in op['env'].iteritems()
-                ])
-                command = '{} {}'.format(env_string, command)
-
-                # Run it!
-                channel, _, stdout, stderr = connection.exec_command(command,
-                    sudo=op['sudo'], user=op['sudo_user']
-                )
-
-                # Iterate the generators to get an exit status
-                _iterate_output(stdout, print_output=print_output)
-                _iterate_output(stderr, print_output=print_output)
-
-                if channel.exit_status <= 0:
-                    pyinfra._results[server]['commands'] += 1
-                else:
-                    break
-
-            # Op didn't break, so continue to the next one and ++success
-            else:
-                op_status = True
-
-            # Op OK!
-            if op_status is True:
-                # Count success
-                pyinfra._results[server]['ops'] += 1
-                pyinfra._results[server]['success_ops'] += 1
-
-            # If the op failed somewhere
-            else:
-                # Count error, log
-                pyinfra._results[server]['error_ops'] += 1
-                logger.info('[{}] {}: {} (command: {})'.format(
-                    colored(server, attrs=['bold']),
-                    colored('Operation error{}'.format(
-                        ' (ignored)' if op['ignore_errors'] else ''
-                    ), 'yellow'),
-                    op['name'], command
-                ))
-
-                # Ignored, op "completes" w/ ignored error
-                if op['ignore_errors']:
-                    pyinfra._results[server]['ops'] += 1
-                # Break operation loop if not ignoring
-                else:
-                    break
-
-        # Exception? always break operation loop
-        except Exception as e:
-            # Op broke so has errored :(
-            pyinfra._results[server]['error_ops'] += 1
-            logger.critical('[{}] Operation exception {} (at command: {}) {}'.format(server, op['name'], command, e))
-            break
-
-    # No ops broke, so all good!
+    # Password auth (boo!)
+    if hasattr(config, 'SSH_PASS'):
+        kwargs['password'] = config.SSH_PASS
     else:
-        logger.info('[{}] {}'.format(
-            colored(server, attrs=['bold']),
-            colored('All operations complete', 'green')
-        ))
+        kwargs['pkey'] = RSAKey.from_private_key_file(
+            filename=config.SSH_KEY,
+            password=getattr(config, 'SSH_KEY_PASS', None)
+        )
+
+    # New list to replace config list (removing non-connections)
+    connected_servers = []
+    def connect(server):
+        try:
+            # Create new client & connect to the host
+            client = SSHClient()
+            client.set_missing_host_key_policy(MissingHostKeyPolicy())
+            client.connect(server, **kwargs)
+
+            # Assign internally
+            pyinfra._connections[server] = client
+            connected_servers.append(server)
+            logger.info('[{}] {}'.format(
+                colored(server, attrs=['bold']),
+                colored('Connected', 'green')
+            ))
+        except AuthenticationException:
+            logger.critical('Auth error on: {0}'.format(server))
+        except SSHException as e:
+            logger.critical('SSH error on: {0}, {1}'.format(server, e))
+
+    # Connect to each server in a thread
+    outs = [
+        pyinfra._pool.spawn(connect, server)
+        for server in config.SSH_HOSTS
+    ]
+    # Wait until done
+    [out.join() for out in outs]
+
+    # Assign working hosts to all hosts
+    config.SSH_HOSTS = connected_servers
+
+
+def run_op(hostname, op_hash, print_output=False):
+    '''Runs a single operation on a remote server.'''
+    ops = pyinfra._ops[hostname]
+
+    if op_hash not in ops:
+        logger.debug('(Skipping) no op {} on {}'.format(op_hash, hostname))
         return
 
-    logger.critical('[{}] Operations incomplete'.format(colored(server, attrs=['bold'])))
+    connection = pyinfra._connections[hostname]
+    commands = pyinfra._ops[hostname][op_hash]
+    op_meta = pyinfra._op_meta[op_hash]
 
+    logger.debug('Starting operation {} on {}'.format(', '.join(op_meta['names']), hostname))
+    # ...loop through each command, execute it on the server w/op-level preferences
+    for i, command in enumerate(commands):
+        logger.debug('Running command on {0}: "{1}"'.format(hostname, command))
+        logger.debug('Command sudo?: {}, sudo user: {}, env: {}'.format(
+            op_meta['sudo'], op_meta['sudo_user'], op_meta['env']
+        ))
 
-def run_all_ops(**kwargs):
-    '''Shortcut to run all commands on all servers each in a greenlet.'''
-    outs = {
-        pyinfra._pool.spawn(run_ops, server, **kwargs): server
-        for server in config.SSH_HOSTS
-    }
-    greenlets = outs.keys()
+        # Use env & build our actual command
+        env_string = ' '.join([
+            '{}={}'.format(key, value)
+            for key, value in op_meta['env'].iteritems()
+        ])
+        command = '{} {}'.format(env_string, command)
 
-    print 'Active: {}'.format(', '.join(outs.values()))
-    print '\033[2A'
+        # Escape "'s
+        command = command.replace('"', '\\"')
 
-    complete = 1
-    while True:
-        complete_greenlets = wait(greenlets, timeout=0, count=complete)
-        complete += len(complete_greenlets)
-        incompletes = {
-            outs[greenlet]: greenlet
-            for greenlet in greenlets
-            if greenlet not in complete_greenlets
-        }
+        # No sudo, just bash wrap the command
+        if not op_meta['sudo']:
+            command = 'bash -c "{}"'.format(command)
+        # Otherwise, work out sudo
+        else:
+            # Sudo with a user, then bash
+            if op_meta['sudo_user']:
+                command = 'sudo -u {} -S bash -c "{}"'.format(op_meta['sudo_user'], command)
+            # Sudo then bash
+            else:
+                command = 'sudo -S bash -c "{}"'.format(command)
 
-        # We're done!
-        if len(incompletes) == 0:
+        print_prefix = '[{}] '.format(colored(hostname, attrs=['bold']))
+        if print_output:
+            print '{}>>> {}'.format(print_prefix, command)
+
+        # Run it! Get stdout, stderr & the underlying channel
+        _, stdout, stderr = connection.exec_command(command)
+        channel = stdout.channel
+
+        # Iterate through outputs to get an exit status
+        # this iterates as the socket data comes in, which gevent patches
+        for line in stdout:
+            if print_output:
+                print '{}{}'.format(print_prefix, line.strip())
+        for line in stderr:
+            if print_output:
+                print '{}{}'.format(print_prefix, line.strip())
+
+        if channel.exit_status <= 0:
+            pyinfra._results[hostname]['commands'] += 1
+        else:
             break
 
-        print '\e[0K\rActive: {}'.format(', '.join(incompletes.keys()))
-        print '\033[2A'
-        sleep(1)
+    # Commands didn't break, so count our successes & return True!
+    else:
+        # Count success
+        pyinfra._results[hostname]['ops'] += 1
+        pyinfra._results[hostname]['success_ops'] += 1
 
-def run_serial_ops(**kwargs):
-    '''Shortcut to run all commands on all servers in serial.'''
-    for server in config.SSH_HOSTS:
-        run_ops(server, **kwargs)
+        logger.info('[{}] {}'.format(
+            colored(hostname, attrs=['bold']),
+            colored('Success', 'green')
+        ))
+
+        return True
+
+    # If the op failed somewhere
+    pyinfra._results[hostname]['error_ops'] += 1
+    logger.info('[{}] {}: {}'.format(
+        colored(hostname, attrs=['bold']),
+        colored('Error{}'.format(
+            ' (ignored)' if op_meta['ignore_errors'] else ''
+        ), 'yellow'),
+        ', '.join(op_meta['names'])
+    ))
+
+    # Ignored, op "completes" w/ ignored error
+    if op_meta['ignore_errors']:
+        pyinfra._results[hostname]['ops'] += 1
+        return None
+
+    # Unignored failure => False
+    return False
+
+def _run_server_ops(hostname, print_output):
+    logger.debug('Running all ops on {}'.format(hostname))
+    for op_hash in pyinfra._op_order:
+        op_meta = pyinfra._op_meta[op_hash]
+
+        logger.info('{} {} on {}'.format(
+            colored('Starting operation:', 'blue'),
+            colored(', '.join(op_meta['names']), attrs=['bold']),
+            colored(hostname, attrs=['bold'])
+        ))
+
+        result = run_op(hostname, op_hash, print_output)
+        if result is False:
+            logger.critical('Error in operation {} on {}, exiting...'.format(', '.join(op_meta['names']), hostname))
+            return
+
+def run_ops(serial=False, nowait=False, print_output=False):
+    '''Runs all operations across all servers in a configurable manner.'''
+    # Run all ops, but server by server
+    if serial:
+        [_run_server_ops(hostname, print_output=print_output) for hostname in config.SSH_HOSTS]
+        return
+
+    # Run all the ops on each server in parallel (not waiting at each operation)
+    elif nowait:
+        # Spawn greenlet for each host to run *all* ops
+        greenlet_hosts = {
+            pyinfra._pool.spawn(_run_server_ops, hostname, print_output=print_output): hostname
+            for hostname in config.SSH_HOSTS
+        }
+        [greenlet.join() for greenlet in greenlet_hosts.keys()]
+        return
+
+    # Run all ops in order, waiting at each for all servers to complete
+    for op_hash in pyinfra._op_order:
+        op_meta = pyinfra._op_meta[op_hash]
+
+        logger.info('{} {}'.format(
+            colored('Starting operation:', 'blue'),
+            colored(', '.join(op_meta['names']), attrs=['bold']),
+        ))
+
+        # Spawn greenlet for each host
+        greenlet_hosts = {
+            pyinfra._pool.spawn(run_op, hostname, op_hash, print_output=print_output): hostname
+            for hostname in config.SSH_HOSTS
+        }
+
+        # Get all the results
+        results = [greenlet.get() for greenlet in greenlet_hosts.keys()]
+
+        # Any False = unignored error, so we stop everything here
+        if False in results:
+            logger.critical('Error in operation {}, exiting...'.format(', '.join(op_meta['names'])))
+            break

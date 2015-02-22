@@ -4,9 +4,10 @@
 
 import re
 from inspect import isclass
+from inflection import underscore
 
 
-class fact_Distribution:
+class Distribution:
     '''Returns the Linux distribution. Ubuntu, CentOS & Debian currently'''
     command = 'cat /etc/*-release'
     # Currently supported distros
@@ -31,7 +32,7 @@ class fact_Distribution:
         return {'name': 'Unknown'}
 
 
-class fact_Users:
+class Users:
     '''Gets & returns a dict of users -> details'''
     command = 'cat /etc/passwd'
 
@@ -49,7 +50,7 @@ class fact_Users:
         return users
 
 
-class fact_NetworkDevices:
+class NetworkDevices:
     '''Gets & returns a dict of network devices -> details'''
     command = 'cat /proc/net/dev'
     regex = r'\s+([a-zA-Z0-9]+):\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)'
@@ -85,7 +86,7 @@ class fact_NetworkDevices:
         return devices
 
 
-class fact_BlockDevices:
+class BlockDevices:
     '''Returns a dict of (mounted, atm) block devices -> details'''
     command = 'df -T'
     regex = r'([a-zA-Z0-9\/\-_]+)\s+([a-zA-Z0-9\/-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
@@ -108,7 +109,7 @@ class fact_BlockDevices:
         return devices
 
 
-class fact_DebPackages:
+class DebPackages:
     '''Returns a dict of installed dpkg packages -> details'''
     command = 'dpkg -l'
     regex = r'[a-z]+\s+([a-zA-Z0-9:\+\-\.]+)\s+([a-zA-Z0-9:~\.\-\+]+)\s+([a-z0-9]+)'
@@ -125,7 +126,7 @@ class fact_DebPackages:
         return packages
 
 
-class fact_RPMPackages:
+class RPMPackages:
     '''Returns a dict of installed rpm packages -> details'''
     command = 'rpm -qa'
     regex = r'([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.([a-z0-9_]+)\.([a-z0-9_\.]+)'
@@ -145,7 +146,7 @@ class fact_RPMPackages:
 
 # Build dynamic facts & fact lists dicts
 FACTS = {
-    name[5:]: class_def()
+    underscore(name): class_def()
     for name, class_def in locals().iteritems()
-    if name.startswith('fact_') and isclass(class_def)
+    if isclass(class_def) and class_def.__module__ == __name__
 }
