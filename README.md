@@ -9,10 +9,11 @@ pyinfra helps to automate service deployment. It does this by diffing the state 
 ## Example deploy script
 
 ```py
-from pyinfra.modules import server, linux, apt, yum
+from pyinfra import host
+from pyinfra.modules import server, apt, yum
 
 # Ensure the state of a user
-linux.user(
+server.user(
     'pyinfra',
     home='/home/pyinfra',
     shell='/bin/bash',
@@ -21,7 +22,7 @@ linux.user(
 )
 
 # Ensure the state of files
-linux.file(
+server.file(
     '/var/log/pyinfra.log',
     user='pyinfra',
     group='pyinfra',
@@ -29,7 +30,7 @@ linux.file(
 )
 
 # Work with multiple linux distributions
-if server.fact('Distribution')['name'] == 'CentOS':
+if host.distribution['name'] == 'CentOS':
     # yum package manager
     yum.packages(
         ['python-devel', 'git'],
@@ -49,7 +50,7 @@ server.shell(
 )
 
 # Manage init.d services
-linux.init(
+server.init(
     'cron',
     restarted=True,
     ignore_errors=True
