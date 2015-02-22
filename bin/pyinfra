@@ -9,7 +9,7 @@ pyinfra
 
 Usage:
     pyinfra -c CONFIG_FILE DEPLOY_FILE
-    pyinfra -c CONFIG_FILE DEPLOY_FILE [-vv] [--dry] [--serial]
+    pyinfra -c CONFIG_FILE DEPLOY_FILE [-v] [--dry] [--serial] [--nowait] [--debug]
     pyinfra -c CONFIG_FILE --fact FACT_NAME
     pyinfra --help
 
@@ -18,7 +18,9 @@ Options:
     -c --config CONFIG_FILE Config file.
     --dry                   Only print proposed changes.
     --serial                Run commands on one host at a time.
-    -v -vv                  Show debug output, -vv for all remote output,
+    --nowait                Don't wait for all hosts at each operation.
+    -v                      Prints out remote output in realtime.
+    --debug                 Print debug info.
     --fact FACT_NAME        Name of fact to run/test.
     -h --help               Show this screen.
     --version               Show version.
@@ -49,16 +51,19 @@ arguments = docopt(__doc__, version=version)
 config_file = arguments['--config']
 deploy_file = arguments['DEPLOY_FILE']
 verbosity = arguments['-v']
-fact_name = arguments['--fact']
-serial = arguments['--serial']
 dry = arguments['--dry']
+serial = arguments['--serial']
+nowait = arguments['--nowait']
+debug = arguments['--debug']
+fact_name = arguments['--fact']
 
 
-print ''
+print
 print '-> Welcome to {0}'.format(version)
-print ''
+print
 
 import imp
+import json
 import logging
 from logging import Formatter
 
@@ -68,7 +73,7 @@ from gevent.pool import Pool
 
 import pyinfra
 from pyinfra import logger
-from pyinfra.api import ssh, server
+from pyinfra.api import ssh, host
 
 # Setup logs
 log_args = {
@@ -76,9 +81,9 @@ log_args = {
     'show_hostname': False,
     'show_name': False
 }
-log_level = logging.DEBUG if verbosity == 2 else logging.INFO
+log_level = logging.DEBUG if debug else logging.INFO
 # Log formatter
-formatter = Formatter('\e[0K\r%(message)s              ') # TODO: remove spaces hack
+formatter = Formatter('\e[0K\r%(message)s                                                         ') # TODO: remove spaces hack
 # Log handler
 handler = ColoredStreamHandler(level=log_level, **log_args)
 handler.setFormatter(formatter)
@@ -106,17 +111,17 @@ logger.info('Connecting to all servers...')
 ssh.connect_all()
 
 # Setup internals
-for host in config.SSH_HOSTS:
-    pyinfra._ops[host] = []
-    pyinfra._facts[host] = {
+for hostname in config.SSH_HOSTS:
+    pyinfra._ops[hostname] = {}
+    pyinfra._facts[hostname] = {
         '_dirs': {}, # cache remote directory meta
         '_files': {} # cache remote file meta
     }
-    pyinfra._meta[host] = {
+    pyinfra._meta[hostname] = {
         'ops': 0, # one function call in a deploy file
         'commands': 0 # actual # of commands to run
     }
-    pyinfra._results[host] = {
+    pyinfra._results[hostname] = {
         'ops': 0, # success_ops + failed ops w/ignore_errors
         'success_ops': 0,
         'error_ops': 0,
@@ -126,34 +131,37 @@ for host in config.SSH_HOSTS:
 
 # No deploy file, we're getting a fact
 if deploy_file is None:
-    for host in config.SSH_HOSTS:
+    for hostname in config.SSH_HOSTS:
         # Call the fact
-        pyinfra._current_server = host
-        print server.fact(fact_name)
+        pyinfra._current_server = hostname
+        print host.fact(fact_name)
 
 else:
     # Build our deploy script for each server (synchronously)
     print
     logger.info('Building deploy scripts...')
-    for host in config.SSH_HOSTS:
-        logger.debug('Building deploy script for {0}'.format(host))
+    for hostname in config.SSH_HOSTS:
+        logger.debug('Building deploy script for {0}'.format(hostname))
         # Call the deploy script
-        pyinfra._current_server = host
+        pyinfra._current_server = hostname
         execfile(deploy_file)
 
     if not dry:
         print
         logger.info('Beginning operation run...')
-        func = ssh.run_serial_ops if serial else ssh.run_all_ops
-        func(print_output=verbosity > 0)
+        ssh.run_ops(
+            serial=serial,
+            nowait=nowait,
+            print_output=verbosity > 0
+        )
 
     # Always show meta output
     print
     logger.info('Proposed changes:')
-    for host, meta in pyinfra._meta.iteritems():
+    for hostname, meta in pyinfra._meta.iteritems():
         logger.info(
             '{0}\tOperations: {1}\t    Commands: {2}'.format(
-                host, meta['ops'], meta['commands']
+                hostname, meta['ops'], meta['commands']
             )
         )
 
@@ -161,8 +169,8 @@ else:
     if not dry:
         print
         logger.info('Results:')
-        for host, results in pyinfra._results.iteritems():
-            meta = pyinfra._meta[host]
+        for hostname, results in pyinfra._results.iteritems():
+            meta = pyinfra._meta[hostname]
             success_ops = results['success_ops']
             error_ops = results['error_ops']
 
@@ -170,10 +178,10 @@ else:
             if results['ops'] == meta['ops']:
                 # Yellow if ignored any errors, else green
                 color = 'green' if error_ops == 0 else 'yellow'
-                host_string = colored(host, color)
+                host_string = colored(hostname, color)
             # Ops did not complete!
             else:
-                host_string = colored(host, 'red', attrs=['bold'])
+                host_string = colored(hostname, 'red', attrs=['bold'])
 
             logger.info('{0}\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}/{4}'.format(
                 host_string,
@@ -182,8 +190,16 @@ else:
                 results['commands'], meta['commands']
             ))
 
-print ''
+    if dry and verbosity > 0:
+        print
+        logger.info('Proposed operations:')
+        print json.dumps(pyinfra._ops, indent=4)
+        print
+        logger.info('Operation order:')
+        print json.dumps(pyinfra._op_order, indent=4)
+
+print
 print '<- Thank you, goodbye'
-print ''
+print
 
 sys.exit(0)
