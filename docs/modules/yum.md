@@ -1,24 +1,38 @@
-# Yum
+## pyinfra.modules.yum
 
-##### yum packages
+
+##### pyinfra.modules.yum.packages
 
 Manage yum packages & updates.
 
 ```py
-yum.packages(
+packages(
     packages,
     present=True,
     upgrade=False
 )
 ```
 
-##### yum repo
+
+##### pyinfra.modules.yum.repo
 
 [Not implemented] Manage yum sources.
 
 ```py
-yum.repo(
+repo(
     name,
+    present=True
+)
+```
+
+
+##### pyinfra.modules.yum.rpm
+
+[Not implemented] Install/remove .rpm packages with rpm
+
+```py
+rpm(
+    rpm_file,
     present=True
 )
 ```

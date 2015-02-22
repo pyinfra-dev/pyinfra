@@ -1,54 +1,85 @@
-# Server
+## pyinfra.modules.server
 
-##### server all_facts
+
+##### pyinfra.modules.server.directory
+
+Manage the state of directories.
 
 ```py
-server.all_facts(
-    
+directory(
+    name,
+    present=True,
+    user=None,
+    group=None,
+    permissions=None,
+    recursive=False
 )
 ```
 
-##### server directory
+
+##### pyinfra.modules.server.file
+
+Manage the state of files.
 
 ```py
-server.directory(
-    name
+file(
+    name,
+    present=True,
+    user=None,
+    group=None,
+    permissions=None,
+    touch=False
 )
 ```
 
-##### server fact
+
+##### pyinfra.modules.server.init
+
+Manage the state of init.d services.
 
 ```py
-server.fact(
-    key
+init(
+    name,
+    running=True,
+    restarted=False
 )
 ```
 
-##### server file
 
-```py
-server.file(
-    name
-)
-```
-
-##### server script
+##### pyinfra.modules.server.script
 
 [Not implemented] Run a script or file.
 
 ```py
-server.script(
+script(
     code=None,
     file=None
 )
 ```
 
-##### server shell
+
+##### pyinfra.modules.server.shell
 
 [Not implemented] Run raw shell code.
 
 ```py
-server.shell(
+shell(
     code
+)
+```
+
+
+##### pyinfra.modules.server.user
+
+Manage Linux users & their ssh `authorized_keys`.
+
+```py
+user(
+    name,
+    present=True,
+    home=None,
+    shell=None,
+    public_keys=None,
+    delete_keys=False
 )
 ```

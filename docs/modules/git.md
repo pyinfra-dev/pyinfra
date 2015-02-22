@@ -1,14 +1,15 @@
-# Git
+## pyinfra.modules.git
 
-##### git repo
+
+##### pyinfra.modules.git.repo
 
 [Not implemented] Manage git repositories.
 
 ```py
-git.repo(
+repo(
     source,
     target,
-    branch=master,
+    branch='master',
     update=True
 )
 ```

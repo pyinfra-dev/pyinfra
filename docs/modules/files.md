@@ -1,23 +1,26 @@
-# Files
+## pyinfra.modules.files
 
-##### files put
+
+##### pyinfra.modules.files.put
 
 [Not implemented] Copy a local file to the remote system.
 
 ```py
-files.put(
+put(
     local_file,
     remote_file
 )
 ```
 
-##### files template
+
+##### pyinfra.modules.files.template
 
 [Not implemented]Generate a template and write it to the remote system.
 
 ```py
-files.template(
+template(
     template_name,
     remote_file
+    **data
 )
 ```

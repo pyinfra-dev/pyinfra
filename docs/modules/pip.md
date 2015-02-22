@@ -1,11 +1,12 @@
-# Pip
+## pyinfra.modules.pip
 
-##### pip packages
+
+##### pyinfra.modules.pip.packages
 
 [Not implemented] Manage pip packages.
 
 ```py
-pip.packages(
+packages(
     packages=None,
     requirements_file=None,
     present=True,
