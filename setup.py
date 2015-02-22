@@ -22,9 +22,10 @@ if __name__ == '__main__':
             'bin/pyinfra'
         ],
         install_requires=[
-            'gevent>=1.0',
+            'gevent',
+            'paramiko',
+            'inflection',
             'docopt',
-            'parallel-ssh>=0.70',
             'coloredlogs',
             'termcolor'
         ]
