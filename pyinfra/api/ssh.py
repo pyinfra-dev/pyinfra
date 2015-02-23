@@ -168,12 +168,11 @@ def run_op(hostname, op_hash, print_output=False):
 
     # If the op failed somewhere
     pyinfra._results[hostname]['error_ops'] += 1
-    logger.info('[{}] {}: {}'.format(
+    logger.info('[{}] {}'.format(
         colored(hostname, attrs=['bold']),
         colored('Error{}'.format(
             ' (ignored)' if op_meta['ignore_errors'] else ''
-        ), 'yellow'),
-        ', '.join(op_meta['names'])
+        ), 'yellow')
     ))
 
     # Ignored, op "completes" w/ ignored error
