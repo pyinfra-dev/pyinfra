@@ -26,8 +26,8 @@ def run_all_command(*args, **kwargs):
     # Return the useful info
     results = [(
         server,
-        [line for line in stdout],
-        [line for line in stderr]
+        [line.strip() for line in stdout],
+        [line.strip() for line in stderr]
     ) for (server, (_, stdout, stderr)) in outs]
 
     if join_output is True:
@@ -161,7 +161,7 @@ def run_op(hostname, op_hash, print_output=False):
 
         logger.info('[{}] {}'.format(
             colored(hostname, attrs=['bold']),
-            colored('Success', 'green')
+            colored('Success' if len(commands) > 0 else 'No changes', 'green')
         ))
 
         return True
