@@ -2,6 +2,13 @@
 # File: pyinfra/api/command.py
 # Desc: little wrapper to push output from command functions to pyinfra._ops
 
+'''
+Operations are the core of pyinfra. These wrappers mean that when you call an operation
+in a deploy script, what actually happens is we diff the remote server and build a list
+of commands to alter the diff to the specified arguments. This is then saved to be run
+later by pyinfra's __main__.
+'''
+
 from functools import wraps
 from copy import deepcopy
 

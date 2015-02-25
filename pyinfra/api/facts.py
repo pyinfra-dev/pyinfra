@@ -2,6 +2,12 @@
 # File: pyinfra/modules/apt.py
 # Desc: manage apt packages & repositories
 
+'''
+A list of classes for collecting state date on remote hosts. Each contains a
+command to run on the remote host, plus a method to handle parsing this data
+into a dict/list/whatever.
+'''
+
 import re
 from inspect import isclass
 from inflection import underscore

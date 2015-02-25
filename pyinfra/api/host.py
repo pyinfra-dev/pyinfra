@@ -4,7 +4,7 @@
 
 '''
 This file provides a class representing the current Linux server & it's state. When accessing
-methods or properties, remote checks are run and cached for all hosts for performance.
+methods or properties, remote checks are run on all remote hosts simultaneously & cached.
 '''
 
 import re
