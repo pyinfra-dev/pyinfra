@@ -2,7 +2,7 @@
 
 pyinfra helps to automate service deployment. It does this by diffing the state of the server with the state defined in the deploy script. Deploys are asyncronous and highly performant. The deploy & config scripts are written in pure Python, allowing for near-infinite extendability.
 
-+ [Documentation](https://pyinfra.readthedocs.org)
++ [Documentation](./docs/README.md)
 + [Example](./example)
 
 
