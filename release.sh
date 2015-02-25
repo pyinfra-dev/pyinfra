@@ -5,9 +5,10 @@ VERSION=`python setup.py --version`
 echo "Releasing v$VERSION..."
 
 echo "build & commit the docs..."
-python docs/buil.py
+python docs/build.py
 git add docs/modules/*.md
-git commit -m 'Documentation update'
+git add docs/api/*.md
+git commit -m "Documentation update for v$VERSION"
 git push
 
 echo "git..."
