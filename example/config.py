@@ -1,5 +1,5 @@
 # pyinfra
-# File: example/config.py
+# File: example/config
 # Desc: example config script
 
 #################### Required

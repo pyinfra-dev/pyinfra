@@ -6,8 +6,8 @@ The example requires a recent version of Vagrant to be installed (as test machin
 vagrant up
 
 # An example deploy script
-pyinfra -c config.py deploy.py
+pyinfra config.py deploy.py
 
 # Example fact output
-pyinfra -c config.py facts.py
+pyinfra config.py facts.py
 ```

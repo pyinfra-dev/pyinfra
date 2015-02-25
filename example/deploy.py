@@ -1,13 +1,16 @@
 # pyinfra
-# File: example/deploy.py
+# File: example/deploy
 # Desc: example deploy script
 
-from pyinfra import config
-from pyinfra.modules import server, linux, apt, yum, files
+# Config represents the config.py used in this deploy
+# & host represents the *current* server begin managed
+from pyinfra import config, host
+# Modules provide namespaced operations, which do the work
+from pyinfra.modules import server, apt, yum, files
 
 
 # Ensure the state of a user
-linux.user(
+server.user(
     'pyinfra',
     home='/home/pyinfra',
     shell='/bin/bash',
@@ -25,7 +28,7 @@ linux.user(
 )
 
 # Ensure the state of files
-linux.file(
+server.file(
     '/var/log/pyinfra.log',
     user='pyinfra',
     group='pyinfra',
@@ -34,7 +37,7 @@ linux.file(
 )
 
 # Ensure the state of directories
-linux.directory(
+server.directory(
     config.ENV_DIR,
     user='pyinfra',
     group='pyinfra',
@@ -44,18 +47,22 @@ linux.directory(
 )
 
 # Work with multiple linux distributions
-if server.fact('Distribution')['name'] == 'CentOS':
+if host.distribution['name'] == 'CentOS':
     # yum package manager
     yum.packages(
         ['python-devel', 'git'],
-        sudo=True
+        upgrade=True,
+        sudo=True,
+        op='core_packages' # this and below binds these two operations to run as one
     )
 else:
     # apt package manager
     apt.packages(
-        ['python-dev', 'git', 'nginx'],
+        ['python-dev', 'git', 'nginx', 'python-software-properties', 'software-properties-common'],
         update=True,
-        sudo=True
+        upgrade=True,
+        sudo=True,
+        op='core_packages' # this and above binds these two operations to run as one
     )
 
 # Copy local files to remote host
@@ -78,14 +85,14 @@ server.shell(
     'echo "hello"'
 )
 # # and scripts
-# server.script('''
+# linux.script('''
 #     #!/bin/sh
 
 #     echo "Shell script!"
 #     exit 0
 # ''')
 # # and files
-# server.script(
+# linux.script(
 #     file='files/test.sh',
 # )
 
@@ -112,8 +119,17 @@ server.shell(
 #     )
 
 # Manage init.d services
-linux.init(
-    'cron',
-    restarted=True,
-    ignore_errors=True
-)
+if host.distribution['name'] == 'CentOS':
+    server.init(
+        'crond',
+        op='cron_restart',
+        restarted=True,
+        ignore_errors=True
+    )
+else:
+    server.init(
+        'cron',
+        op='cron_restart',
+        restarted=True,
+        ignore_errors=True
+    )
