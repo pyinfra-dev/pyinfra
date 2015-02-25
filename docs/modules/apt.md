@@ -29,7 +29,7 @@ packages(
 
 ##### pyinfra.modules.apt.ppa
 
-[Not implemented] Shortcut for managing ppa apt sources.
+[Not complete] Shortcut for managing ppa apt sources.
 
 ```py
 ppa(
@@ -41,7 +41,7 @@ ppa(
 
 ##### pyinfra.modules.apt.repo
 
-[Not implemented] Manage apt sources.
+[Not complete] Manage apt sources.
 
 ```py
 repo(
