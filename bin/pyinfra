@@ -8,18 +8,18 @@
 pyinfra
 
 Usage:
-    pyinfra -c CONFIG_FILE DEPLOY_FILE
-    pyinfra -c CONFIG_FILE DEPLOY_FILE [-v] [--dry] [--serial] [--nowait] [--debug]
-    pyinfra -c CONFIG_FILE --fact FACT_NAME
+    pyinfra CONFIG_FILE DEPLOY_FILE
+    pyinfra CONFIG_FILE DEPLOY_FILE [-v] [--dry] [--serial] [--nowait] [--debug]
+    pyinfra CONFIG_FILE --fact FACT_NAME
     pyinfra --help
 
 Options:
-    DEPLOY_FILE             Deploy file.
-    -c --config CONFIG_FILE Config file.
+    DEPLOY_FILE             Deploy script.
+    CONFIG_FILE             Config script.
     --dry                   Only print proposed changes.
     --serial                Run commands on one host at a time.
     --nowait                Don't wait for all hosts at each operation.
-    -v                      Prints out remote output in realtime.
+    -v                      Prints remote input/output in realtime.
     --debug                 Print debug info.
     --fact FACT_NAME        Name of fact to run/test.
     -h --help               Show this screen.
@@ -46,10 +46,13 @@ signal.signal(signal.SIGINT, signal_handler)
 # Setup arguments
 from docopt import docopt
 from pyinfra import config
+
 version = 'pyinfra v{0}'.format(config.VERSION)
 arguments = docopt(__doc__, version=version)
-config_file = arguments['--config']
+
+config_file = arguments['CONFIG_FILE']
 deploy_file = arguments['DEPLOY_FILE']
+
 verbosity = arguments['-v']
 dry = arguments['--dry']
 serial = arguments['--serial']
@@ -65,11 +68,10 @@ print
 import imp
 import json
 import logging
-from logging import Formatter
 
-from coloredlogs import ColoredStreamHandler
-from termcolor import colored
 from gevent.pool import Pool
+from termcolor import colored
+from coloredlogs import ColoredStreamHandler
 
 import pyinfra
 from pyinfra import logger
@@ -82,11 +84,8 @@ log_args = {
     'show_name': False
 }
 log_level = logging.DEBUG if debug else logging.INFO
-# Log formatter
-formatter = Formatter('\e[0K\r%(message)s                                                         ') # TODO: remove spaces hack
 # Log handler
 handler = ColoredStreamHandler(level=log_level, **log_args)
-handler.setFormatter(formatter)
 # Set root logger critical
 logging.getLogger().setLevel(logging.CRITICAL)
 # Set our logger to level
