@@ -8,12 +8,12 @@ from pyinfra.api import operation, operation_env
 
 @operation
 def repo(name, present=True):
-    '''[Not implemented] Manage apt sources.'''
+    '''[Not complete] Manage apt sources.'''
     return ['apt-add-repository {} -y'.format(name)]
 
 @operation
 def ppa(name, **kwargs):
-    '''[Not implemented] Shortcut for managing ppa apt sources.'''
+    '''[Not complete] Shortcut for managing ppa apt sources.'''
     return repo.__decorated__('ppa:{}'.format(name), **kwargs)
 
 
@@ -30,13 +30,21 @@ def packages(packages, present=True, update=False, upgrade=False):
         commands.append('apt-get upgrade -y')
 
     current_packages = host.deb_packages
-    packages = [
-        package for package in packages
-        if package not in current_packages
-    ]
 
-    if packages:
-        commands.append('apt-get install -y {}'.format(' '.join(packages)))
+    if present is True:
+        # Packages specified but not installed
+        diff_packages = ' '.join([
+            package for package in packages
+            if package not in current_packages
+        ])
+        commands.append('apt-get install -y {}'.format(diff_packages))
+    else:
+        # Packages specified & installed
+        diff_packages = ' '.join([
+            package for package in packages
+            if package in current_packages
+        ])
+        commands.append('apt-get remove -y {}'.format(diff_packages))
 
     return commands
 

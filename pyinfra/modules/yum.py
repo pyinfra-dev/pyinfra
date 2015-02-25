@@ -22,13 +22,26 @@ def packages(packages, present=True, upgrade=False):
         commands.append('yum update -y')
 
     current_packages = host.rpm_packages
-    packages = [
-        package for package in packages
-        if package not in current_packages
-    ]
 
-    if packages:
-        commands.append('yum install -y {}'.format(' '.join(packages)))
+    if present is True:
+        # Packages specified but not installed
+        diff_packages = [
+            package for package in packages
+            if package not in current_packages
+        ]
+
+        if diff_packages:
+            commands.append('yum install -y {}'.format(' '.join(diff_packages)))
+
+    else:
+        # Packages specified & installed
+        diff_packages = [
+            package for package in packages
+            if package in current_packages
+        ]
+
+        if diff_packages:
+            commands.append('yum remove -y {}'.format(' '.join(diff_packages)))
 
     return commands
 
