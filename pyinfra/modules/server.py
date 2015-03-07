@@ -24,26 +24,35 @@ def script(code=None, file=None):
 
 @operation
 def user(name, present=True, home=None, shell=None, public_keys=None, delete_keys=False):
-    '''Manage Linux users & their ssh `authorized_keys`.'''
+    '''
+    Manage Linux users & their ssh `authorized_keys`.
+
+    # public_keys: list of public keys to attach to this user
+    # delete_keys: deletes existing keys when `public_keys` specified
+    '''
     commands = []
     is_present = name in host.users
 
     def do_keys():
-        if delete_keys:
-            commands.append('rm -f {0}/.ssh/authorized_keys*'.format(home))
+        if public_keys is None:
+            return
 
-        if not public_keys: return
-
-        # Ensure .ssh directory & authorized_keys file
+        # Ensure .ssh directory
         commands.extend(directory.__decorated__(
             name='{}/.ssh'.format(home), present=True
         ))
-        commands.extend(file.__decorated__(
-            name='{0}/.ssh/authorized_keys'.format(home), present=True
-        ))
+
+        filename = '{}/.ssh/authorized_keys'.format(home)
+        if delete_keys:
+            commands.extend([
+                # Delete all authorized_keys files
+                'rm -f {}*'.format(filename),
+                # Re-create just the one
+                'touch {}'.format(filename)
+            ])
 
         for key in public_keys:
-            commands.append('cat {1}/.ssh/authorized_keys | grep "{0}" || echo "{0}" >> {1}/.ssh/authorized_keys'.format(key, home))
+            commands.append('cat {0} | grep "{1}" || echo "{1}" >> {0}'.format(filename, key))
 
     # User exists but we don't want them?
     if is_present and not present:
