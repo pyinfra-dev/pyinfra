@@ -75,7 +75,8 @@ from coloredlogs import ColoredStreamHandler
 
 import pyinfra
 from pyinfra import logger
-from pyinfra.api import ssh, host
+from pyinfra.api.ssh import connect_all
+from pyinfra.api.operations import run_ops
 
 # Setup logs
 log_args = {
@@ -107,7 +108,7 @@ pyinfra._pool = Pool(size=min(len(pyinfra.config.SSH_HOSTS), 100))
 
 # Connect to all the servers (old fashioned thread based)
 logger.info('Connecting to all servers...')
-ssh.connect_all()
+connect_all()
 
 # Setup internals
 for hostname in config.SSH_HOSTS:
@@ -133,7 +134,10 @@ if deploy_file is None:
     for hostname in config.SSH_HOSTS:
         # Call the fact
         pyinfra._current_server = hostname
-        print host.fact(fact_name)
+        try:
+            print getattr(pyinfra.host, fact_name)
+        except AttributeError as e:
+            print e
 
 else:
     # Build our deploy script for each server (synchronously)
@@ -148,7 +152,7 @@ else:
     if not dry:
         print
         logger.info('Beginning operation run...')
-        ssh.run_ops(
+        run_ops(
             serial=serial,
             nowait=nowait,
             print_output=verbosity > 0
@@ -193,6 +197,9 @@ else:
         print
         logger.info('Proposed operations:')
         print json.dumps(pyinfra._ops, indent=4)
+        print
+        logger.info('Operation meta:')
+        print json.dumps(pyinfra._op_meta, indent=4)
         print
         logger.info('Operation order:')
         print json.dumps(pyinfra._op_order, indent=4)
