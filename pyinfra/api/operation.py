@@ -1,6 +1,6 @@
 # pyinfra
-# File: pyinfra/api/command.py
-# Desc: little wrapper to push output from command functions to pyinfra._ops
+# File: pyinfra/api/operation.py
+# Desc: wraps deploy script operations and puts commands -> pyinfra._ops
 
 '''
 Operations are the core of pyinfra. These wrappers mean that when you call an operation
@@ -82,18 +82,21 @@ def operation(func):
         commands = [command.strip() for command in commands]
         pyinfra._meta[pyinfra._current_server]['commands'] += len(commands)
 
-        # Add the server-relevant commands to the current server
-        pyinfra._ops[pyinfra._current_server][op_hash] = commands
+        # Add the server-relevant commands/env to the current server
+        pyinfra._ops[pyinfra._current_server][op_hash] = {
+            'commands': commands,
+            'env': env
+        }
 
         # Create/update shared (between servers) operation meta
         op_meta = pyinfra._op_meta.setdefault(op_hash, {
-            'names': set(),
+            'names': [],
             'sudo': sudo,
             'sudo_user': sudo_user,
-            'env': env,
             'ignore_errors': ignore_errors
         })
-        op_meta['names'].add(name)
+        if name not in op_meta['names']:
+            op_meta['names'].append(name)
 
     # Allow the function to be called "__decorated__" within other @op wrapped functions
     if hasattr(func, '__decorated__'):
