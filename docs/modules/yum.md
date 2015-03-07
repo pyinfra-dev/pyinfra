@@ -9,7 +9,8 @@ Manage yum packages & updates.
 packages(
     packages,
     present=True,
-    upgrade=False
+    upgrade=False,
+    clean=False
 )
 ```
 

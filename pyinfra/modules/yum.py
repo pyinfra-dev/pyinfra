@@ -13,10 +13,13 @@ def repo(name, present=True):
 
 
 @operation
-def packages(packages, present=True, upgrade=False):
+def packages(packages, present=True, upgrade=False, clean=False):
     '''Manage yum packages & updates.'''
     packages = packages if isinstance(packages, list) else [packages]
     commands = []
+
+    if clean:
+        commands.append('yum clean all')
 
     if upgrade:
         commands.append('yum update -y')
