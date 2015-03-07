@@ -52,6 +52,7 @@ if host.distribution['name'] == 'CentOS':
     yum.packages(
         ['python-devel', 'git'],
         upgrade=True,
+        clean=True,
         sudo=True,
         op='core_packages' # this and below binds these two operations to run as one
     )
@@ -64,6 +65,13 @@ else:
         sudo=True,
         op='core_packages' # this and above binds these two operations to run as one
     )
+
+# Will fail, but be ignored, on non-apt systems
+apt.packages(
+    'git',
+    sudo=True,
+    ignore_errors=True
+)
 
 # Copy local files to remote host
 files.put(
@@ -82,7 +90,7 @@ files.template(
 
 # Execute arbitrary shell commands
 server.shell(
-    'echo "hello"'
+    'echo "Shell command" && echo "Another!"'
 )
 # # and scripts
 # linux.script('''
@@ -112,24 +120,16 @@ server.shell(
 
 # # Enter a virtualenv
 # with venv.enter(config.ENV_DIR):
-#     # Manage pip packages within
+#     # and manage pip packages within
 #     pip.packages(
 #         requirements_file='/opt/pyinfra/requirements.pip',
 #         present=True
 #     )
 
 # Manage init.d services
-if host.distribution['name'] == 'CentOS':
-    server.init(
-        'crond',
-        op='cron_restart',
-        restarted=True,
-        ignore_errors=True
-    )
-else:
-    server.init(
-        'cron',
-        op='cron_restart',
-        restarted=True,
-        ignore_errors=True
-    )
+server.init(
+    'crond' if host.distribution['name'] == 'CentOS' else 'cron',
+    op='cron_restart',
+    restarted=True,
+    ignore_errors=True
+)
