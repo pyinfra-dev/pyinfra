@@ -73,6 +73,9 @@ shell(
 
 Manage Linux users & their ssh `authorized_keys`.
 
+# public_keys: list of public keys to attach to this user
+# delete_keys: deletes existing keys when `public_keys` specified
+
 ```py
 user(
     name,

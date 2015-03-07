@@ -2,7 +2,7 @@
 
 Install pyinfra with pip: `pip install pyinfra`.
 
-To get started you need a config script containing SSH details, for example:
+To get started you need a **config script** containing SSH details, for example:
 
 ```py
 SSH_HOSTS = ['20.20.20.20']
@@ -10,7 +10,7 @@ SSH_USER = 'remote_user'
 SSH_KEY = '/path/to/private_key'
 ```
 
-And then deploy script containing the state you wish to apply:
+And then **deploy script** containing the state you wish to apply:
 
 ```py
 # These modules contain operations, which provide ways to set desired state
@@ -46,4 +46,4 @@ server.directory(
 # etc... see ./modules or the full example!
 ```
 
-Documentation for each of the modules can be found under `./modules`.
+See the [module documentation](./modules).

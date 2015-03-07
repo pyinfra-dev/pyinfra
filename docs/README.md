@@ -9,5 +9,7 @@ pyinfra is a deployment tool. It's configured in Python; to make a deploy you ne
 
 Subject to _enormous change_ while pyinfra still very much conceptual.
 
++ [The deploy process](./deploy_process.md)
 + [Operations](./operations.md)
 + [Facts](./facts.md)
++ [API documentation](./api)
