@@ -10,8 +10,6 @@ repo(
     source,
     target,
     branch='master',
-    update=True,
-    *None,
-    **None
+    update=True
 )
 ```

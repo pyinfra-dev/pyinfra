@@ -9,9 +9,7 @@ Runs a single operation on a remote server.
 run_op(
     hostname,
     op_hash,
-    print_output=False,
-    *None,
-    **None
+    print_output=False
 )
 ```
 
@@ -24,8 +22,6 @@ Runs all operations across all servers in a configurable manner.
 run_ops(
     serial=False,
     nowait=False,
-    print_output=False,
-    *None,
-    **None
+    print_output=False
 )
 ```

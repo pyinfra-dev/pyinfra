@@ -10,8 +10,6 @@ packages(
     packages=None,
     requirements_file=None,
     present=True,
-    upgrade=False,
-    *None,
-    **None
+    upgrade=False
 )
 ```

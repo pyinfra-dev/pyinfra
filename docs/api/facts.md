@@ -9,9 +9,7 @@ into a dict/list/whatever.
 ```py
 BlockDevices.process(
     self,
-    output,
-    *None,
-    **None
+    output
 )
 ```
 
@@ -21,9 +19,7 @@ BlockDevices.process(
 ```py
 DebPackages.process(
     self,
-    output,
-    *None,
-    **None
+    output
 )
 ```
 
@@ -33,9 +29,7 @@ DebPackages.process(
 ```py
 Distribution.process(
     self,
-    output,
-    *None,
-    **None
+    output
 )
 ```
 
@@ -45,9 +39,7 @@ Distribution.process(
 ```py
 NetworkDevices.process(
     self,
-    output,
-    *None,
-    **None
+    output
 )
 ```
 
@@ -57,9 +49,7 @@ NetworkDevices.process(
 ```py
 RPMPackages.process(
     self,
-    output,
-    *None,
-    **None
+    output
 )
 ```
 
@@ -69,8 +59,6 @@ RPMPackages.process(
 ```py
 Users.process(
     self,
-    output,
-    *None,
-    **None
+    output
 )
 ```

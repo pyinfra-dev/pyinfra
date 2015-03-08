@@ -12,9 +12,7 @@ directory(
     user=None,
     group=None,
     permissions=None,
-    recursive=False,
-    *None,
-    **None
+    recursive=False
 )
 ```
 
@@ -30,9 +28,7 @@ file(
     user=None,
     group=None,
     permissions=None,
-    touch=False,
-    *None,
-    **None
+    touch=False
 )
 ```
 
@@ -45,9 +41,7 @@ Manage the state of init.d services.
 init(
     name,
     running=True,
-    restarted=False,
-    *None,
-    **None
+    restarted=False
 )
 ```
 
@@ -59,9 +53,7 @@ init(
 ```py
 script(
     code=None,
-    file=None,
-    *None,
-    **None
+    file=None
 )
 ```
 
@@ -72,9 +64,7 @@ script(
 
 ```py
 shell(
-    code,
-    *None,
-    **None
+    code
 )
 ```
 
@@ -90,8 +80,6 @@ user(
     home=None,
     shell=None,
     public_keys=None, # list of public keys to attach to this user
-    delete_keys=False, # deletes existing keys when `public_keys` specified
-    *None,
-    **None
+    delete_keys=False # deletes existing keys when `public_keys` specified
 )
 ```
