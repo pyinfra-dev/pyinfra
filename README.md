@@ -5,6 +5,7 @@ pyinfra helps to automate service deployment. It does this by diffing the state 
 + [Documentation](./docs/README.md)
 + [Example](./example)
 
+![](./example/example_deploy.png)
 
 ## Example deploy script
 
