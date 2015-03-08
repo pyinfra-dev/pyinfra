@@ -6,11 +6,22 @@ pyinfra helps to automate service deployment. It does this by diffing the state 
 + [Documentation](./docs/README.md)
 + [Full example](./example)
 
-When you run `pyinfra <config_file> <deploy_file>`, you'll see something like:
+When you run `pyinfra <config_script> <deploy_script>`, you'll see something like:
 
 ![](./docs/example_deploy.png)
 
-## Example deploy script
+A **config script** might look like:
+
+```py
+SSH_HOSTS = [
+    '20.20.20.20'
+]
+SSH_PORT = 22
+SSH_USER = 'vagrant'
+SSH_KEY = './files/insecure_private_key'
+```
+
+And a **deploy script** like:
 
 ```py
 from pyinfra import host
