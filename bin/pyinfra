@@ -96,9 +96,6 @@ logger.addHandler(handler)
 logging.getLogger('host_logger').disabled = True
 
 
-# Let's do this!
-logger.info('Starting...')
-
 # Load the global config file into pyinfra
 logger.debug('Importing config.py')
 config = pyinfra.config = imp.load_source('pyinfra.config', config_file)

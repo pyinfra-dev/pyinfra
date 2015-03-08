@@ -23,6 +23,18 @@ def script(code=None, file=None):
 
 
 @operation
+def init(name, running=True, restarted=False):
+    '''Manage the state of init.d services.'''
+    if running:
+        return ['/etc/init.d/{0} status || /etc/init.d/{0} start'.format(name)]
+    else:
+        return ['/etc/init.d/{} stop'.format(name)]
+
+    if restarted:
+        return ['/etc/init.d/{} restart'.format(name)]
+
+
+@operation
 def user(name, present=True, home=None, shell=None, public_keys=None, delete_keys=False):
     '''
     Manage Linux users & their ssh `authorized_keys`.
@@ -163,15 +175,3 @@ def directory(name, present=True, user=None, group=None, permissions=None, recur
             commands.append(_chown(name, user, group, recursive=recursive))
 
     return commands
-
-
-@operation
-def init(name, running=True, restarted=False):
-    '''Manage the state of init.d services.'''
-    if running:
-        return ['/etc/init.d/{0} status || /etc/init.d/{0} start'.format(name)]
-    else:
-        return ['/etc/init.d/{} stop'.format(name)]
-
-    if restarted:
-        return ['/etc/init.d/{} restart'.format(name)]
