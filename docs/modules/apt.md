@@ -8,7 +8,9 @@
 ```py
 deb(
     deb_file,
-    present=True
+    present=True,
+    *None,
+    **None
 )
 ```
 
@@ -22,7 +24,9 @@ packages(
     packages,
     present=True,
     update=False,
-    upgrade=False
+    upgrade=False,
+    *None,
+    **None
 )
 ```
 
@@ -33,7 +37,8 @@ packages(
 
 ```py
 ppa(
-    name
+    name,
+    *None,
     **kwargs
 )
 ```
@@ -46,6 +51,8 @@ ppa(
 ```py
 repo(
     name,
-    present=True
+    present=True,
+    *None,
+    **None
 )
 ```

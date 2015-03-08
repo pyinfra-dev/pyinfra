@@ -10,7 +10,9 @@ packages(
     packages,
     present=True,
     upgrade=False,
-    clean=False
+    clean=False,
+    *None,
+    **None
 )
 ```
 
@@ -22,7 +24,9 @@ packages(
 ```py
 repo(
     name,
-    present=True
+    present=True,
+    *None,
+    **None
 )
 ```
 
@@ -34,6 +38,8 @@ repo(
 ```py
 rpm(
     rpm_file,
-    present=True
+    present=True,
+    *None,
+    **None
 )
 ```

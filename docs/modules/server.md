@@ -12,7 +12,9 @@ directory(
     user=None,
     group=None,
     permissions=None,
-    recursive=False
+    recursive=False,
+    *None,
+    **None
 )
 ```
 
@@ -28,7 +30,9 @@ file(
     user=None,
     group=None,
     permissions=None,
-    touch=False
+    touch=False,
+    *None,
+    **None
 )
 ```
 
@@ -41,7 +45,9 @@ Manage the state of init.d services.
 init(
     name,
     running=True,
-    restarted=False
+    restarted=False,
+    *None,
+    **None
 )
 ```
 
@@ -53,7 +59,9 @@ init(
 ```py
 script(
     code=None,
-    file=None
+    file=None,
+    *None,
+    **None
 )
 ```
 
@@ -64,7 +72,9 @@ script(
 
 ```py
 shell(
-    code
+    code,
+    *None,
+    **None
 )
 ```
 
@@ -73,16 +83,15 @@ shell(
 
 Manage Linux users & their ssh `authorized_keys`.
 
-# public_keys: list of public keys to attach to this user
-# delete_keys: deletes existing keys when `public_keys` specified
-
 ```py
 user(
     name,
     present=True,
     home=None,
     shell=None,
-    public_keys=None,
-    delete_keys=False
+    public_keys=None, # list of public keys to attach to this user
+    delete_keys=False, # deletes existing keys when `public_keys` specified
+    *None,
+    **None
 )
 ```

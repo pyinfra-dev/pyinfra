@@ -8,7 +8,9 @@
 ```py
 put(
     local_file,
-    remote_file
+    remote_file,
+    *None,
+    **None
 )
 ```
 
@@ -20,7 +22,8 @@ put(
 ```py
 template(
     template_name,
-    remote_file
+    remote_file,
+    *None,
     **data
 )
 ```

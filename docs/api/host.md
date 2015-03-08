@@ -10,7 +10,9 @@ Like a fact, but for directory information.
 ```py
 Host.directory(
     self,
-    name
+    name,
+    *None,
+    **None
 )
 ```
 
@@ -22,6 +24,8 @@ Like a fact, but for file information.
 ```py
 Host.file(
     self,
-    name
+    name,
+    *None,
+    **None
 )
 ```

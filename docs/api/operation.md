@@ -12,7 +12,9 @@ to generate ID's for operations based on their name & arguments.
 
 ```py
 make_hash(
-    obj
+    obj,
+    *None,
+    **None
 )
 ```
 
@@ -24,7 +26,9 @@ consists of a list of commands + options (sudo, user, env)
 
 ```py
 operation(
-    func
+    func,
+    *None,
+    **None
 )
 ```
 

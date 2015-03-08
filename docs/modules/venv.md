@@ -6,7 +6,9 @@
 ```py
 enter.__init__(
     self,
-    directory
+    directory,
+    *None,
+    **None
 )
 ```
 
@@ -16,6 +18,8 @@ enter.__init__(
 ```py
 env(
     directory,
-    present=True
+    present=True,
+    *None,
+    **None
 )
 ```
