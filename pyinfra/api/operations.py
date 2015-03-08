@@ -67,13 +67,13 @@ def run_op(hostname, op_hash, print_output=False):
             line = line.strip()
             stdout_buffer.append(line)
             if print_output:
-                print '{}{}'.format(print_prefix, line)
+                print u'{}{}'.format(print_prefix, line)
 
         for line in stderr:
             line = line.strip()
             stderr_buffer.append(line)
             if print_output:
-                print '{}{}: {}'.format(
+                print u'{}{}: {}'.format(
                     print_prefix,
                     colored('stderr', 'red', attrs=['bold']),
                     line
@@ -100,7 +100,7 @@ def run_op(hostname, op_hash, print_output=False):
     # If the op failed somewhere, print stderr (if not already printed!)
     if not print_output:
         for line in stderr_buffer:
-            print '{}{}: {}'.format(
+            print u'{}{}: {}'.format(
                 print_prefix,
                 colored('stderr', 'red', attrs=['bold']),
                 line
