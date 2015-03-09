@@ -1,21 +1,22 @@
 #!/bin/sh
 
 VERSION=`python setup.py --version`
+echo "# Releasing pyinfra v$VERSION..."
 
-echo "Releasing v$VERSION..."
-
-echo "build & commit the docs..."
+echo "# Build the docs..."
 python docs/build.py
+
+echo "# Commit & push the docs..."
 git add docs/modules/*.md
 git add docs/api/*.md
 git commit -m "Documentation update for v$VERSION"
 git push
 
-echo "git..."
+echo "# Git tag & push..."
 git tag -a "v$VERSION" -m "v$VERSION"
 git push --tags
 
-echo "pypi..."
+echo "# Upload to pypi..."
 python setup.py sdist upload
 
-echo "Done!"
+echo "# All done!"
