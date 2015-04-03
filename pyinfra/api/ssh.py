@@ -11,8 +11,33 @@ import pyinfra
 from pyinfra import config, logger
 
 
+def _connect(hostname, **kwargs):
+    '''Connect to a single host. Returns the hostname if succesful.'''
+    try:
+        # Create new client & connect to the host
+        client = SSHClient()
+        client.set_missing_host_key_policy(MissingHostKeyPolicy())
+        client.connect(hostname, **kwargs)
+
+        # Assign internally
+        pyinfra._connections[hostname] = client
+        logger.info('[{}] {}'.format(
+            colored(hostname, attrs=['bold']),
+            colored('Connected', 'green')
+        ))
+
+        return hostname
+    except AuthenticationException as e:
+        logger.critical('Auth error on: {}, {}'.format(hostname, e))
+    except SSHException as e:
+        logger.critical('SSH error on: {}, {}'.format(hostname, e))
+    except socket_error as e:
+        logger.critical('Could not connect: {}, {}'.format(hostname, e))
+    except gaierror:
+        logger.critical('Could not resolve: {}'.format(hostname))
+
 def connect_all():
-    '''Connect to all the configured servers.'''
+    '''Connect to all the configured servers in parallel.'''
     kwargs = {
         'username': config.SSH_USER,
         'port': getattr(config, 'SSH_PORT', 22),
@@ -28,68 +53,67 @@ def connect_all():
             password=getattr(config, 'SSH_KEY_PASS', None)
         )
 
-    # New list to replace config list (removing non-connections)
-    connected_hosts = []
-    def connect(host):
-        try:
-            # Create new client & connect to the host
-            client = SSHClient()
-            client.set_missing_host_key_policy(MissingHostKeyPolicy())
-            client.connect(host, **kwargs)
-
-            # Assign internally
-            pyinfra._connections[host] = client
-            connected_hosts.append(host)
-            logger.info('[{}] {}'.format(
-                colored(host, attrs=['bold']),
-                colored('Connected', 'green')
-            ))
-        except AuthenticationException as e:
-            logger.critical('Auth error on: {}, {}'.format(host, e))
-        except SSHException as e:
-            logger.critical('SSH error on: {}, {}'.format(host, e))
-        except socket_error as e:
-            logger.critical('Could not connect: {}, {}'.format(host, e))
-        except gaierror:
-            logger.critical('Could not resolve: {}'.format(host))
-
     # Connect to each server in a thread
     outs = [
-        pyinfra._pool.spawn(connect, server)
+        pyinfra._pool.spawn(_connect, server, **kwargs)
         for server in config.SSH_HOSTS
     ]
-    # Wait until done
-    [out.join() for out in outs]
+    # Get the results
+    connected_hosts = [out.get() for out in outs]
 
     # Assign working hosts to all hosts
-    config.SSH_HOSTS = connected_hosts
+    config.SSH_HOSTS = [host for host in connected_hosts if host is not None]
 
 
-def run_all_command(*args, **kwargs):
-    '''Runs a single command on all hosts in parallel, used for collecting facts.'''
-    join_output = kwargs.pop('join_output', False)
+def run_command(
+    hostname, command,
+    sudo=False, sudo_user=None, env=None, print_output=False, print_prefix=''
+):
+    '''Execute a command on the specified host.'''
+    if env is None:
+        env = {}
 
-    outs = [
-        (server, pyinfra._pool.spawn(pyinfra._connections[server].exec_command, *args, **kwargs))
-        for server in config.SSH_HOSTS
-    ]
+    logger.debug('Running command on {0}: "{1}"'.format(hostname, command))
+    logger.debug('Command sudo?: {}, sudo user: {}, env: {}'.format(
+        sudo, sudo_user, env
+    ))
 
-    # Join
-    [out[1].join() for out in outs]
-    # Get each data
-    outs = [(out[0], out[1].get()) for out in outs]
+    # Use env & build our actual command
+    env_string = ' '.join([
+        '{}={}'.format(key, value)
+        for key, value in env.iteritems()
+    ])
+    command = '{} {}'.format(env_string, command)
 
-    # Return the useful info
-    results = [(
-        server,
-        [line.strip() for line in stdout],
-        [line.strip() for line in stderr]
-    ) for (server, (_, stdout, stderr)) in outs]
+    # Escape "'s
+    command = command.replace('"', '\\"')
 
-    if join_output is True:
-        results = [
-            (server, '\n'.join(stdout), '\n'.join(stderr))
-            for (server, stdout, stderr) in results
-        ]
+    # No sudo, just bash wrap the command
+    if not sudo:
+        command = 'bash -c "{}"'.format(command)
+    # Otherwise, work out sudo
+    else:
+        # Sudo with a user, then bash
+        if sudo_user:
+            command = 'sudo -u {} -S bash -c "{}"'.format(sudo_user, command)
+        # Sudo then bash
+        else:
+            command = 'sudo -S bash -c "{}"'.format(command)
 
-    return results
+    if print_output:
+        print '{}>>> {}'.format(print_prefix, command)
+
+    # Get the connection for this hostname
+    connection = pyinfra._connections[hostname]
+
+    # Run it! Get stdout, stderr & the underlying channel
+    _, stdout, stderr = connection.exec_command(command)
+    return stdout.channel, stdout, stderr
+
+
+def run_file(
+    hostname, local_file, remote_file,
+    sudo=False, sudo_user=None, print_output=False, print_prefix=''
+):
+    '''Upload/sync local/remote directories & files to the specified host.'''
+    pass

@@ -21,10 +21,15 @@ server.user(
     delete_keys=True,
 
     # Global options on all module functions (operations)
+    # these can be configured in config.py scripts
     sudo=True,
     sudo_user='root',
+    ignore_errors=False,
+
+    # Local options for all module functions
     name='Ensure user pyinfra',
-    ignore_errors=False
+    serial=False,
+    run_once=False
 )
 
 # Ensure the state of files
@@ -43,15 +48,15 @@ server.directory(
     group='pyinfra',
     permissions='755',
     recursive=True,
-    sudo=True
+    sudo=True,
+    serial=True
 )
 
 # Work with multiple linux distributions
 if host.distribution['name'] == 'CentOS':
     # yum package manager
     yum.packages(
-        ['python-devel', 'git'],
-        upgrade=True,
+        ['git'],
         clean=True,
         sudo=True,
         op='core_packages' # this and below binds these two operations to run as one
@@ -59,9 +64,8 @@ if host.distribution['name'] == 'CentOS':
 else:
     # apt package manager
     apt.packages(
-        ['python-dev', 'git', 'nginx', 'python-software-properties', 'software-properties-common'],
+        ['git'],
         update=True,
-        upgrade=True,
         sudo=True,
         op='core_packages' # this and above binds these two operations to run as one
     )

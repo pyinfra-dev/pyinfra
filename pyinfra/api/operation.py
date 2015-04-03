@@ -36,7 +36,7 @@ def make_hash(obj):
 def operation(func):
     '''
     Takes a simple module function and turn it into the internal operation representation
-    consists of a list of commands + options (sudo, user, env)
+    consists of a list of commands + options (sudo, user, env).
     '''
     @wraps(func)
     def decorated_function(*args, **kwargs):
@@ -44,6 +44,11 @@ def operation(func):
         sudo = kwargs.pop('sudo', getattr(pyinfra.config, 'SUDO', False))
         sudo_user = kwargs.pop('sudo_user', getattr(pyinfra.config, 'SUDO_USER', None))
         ignore_errors = kwargs.pop('ignore_errors', getattr(pyinfra.config, 'IGNORE_ERRORS', False))
+
+        # Forces serial mode for this operation (--serial for one op)
+        serial = kwargs.pop('serial', False)
+        # Only runs this operation once
+        run_once = kwargs.pop('run_once', False)
 
         # Operations can have "base_envs" via the operation_env decorator
         # then we extend by config.ENV, and finally kwargs['env']
@@ -93,7 +98,9 @@ def operation(func):
             'names': [],
             'sudo': sudo,
             'sudo_user': sudo_user,
-            'ignore_errors': ignore_errors
+            'ignore_errors': ignore_errors,
+            'serial': serial,
+            'run_once': run_once
         })
         if name not in op_meta['names']:
             op_meta['names'].append(name)
