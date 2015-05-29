@@ -8,7 +8,7 @@ pyinfra automates service deployment. It does this by diffing the state of the s
 
 When you run `pyinfra <config_script> <deploy_script>`, you'll see something like:
 
-![](./docs/example_deploy.png)
+![](./docs/example_deploy.gif)
 
 A **config script** might look like:
 
