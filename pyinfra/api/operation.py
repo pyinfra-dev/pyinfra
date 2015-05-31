@@ -11,7 +11,6 @@ later by pyinfra's __main__.
 
 from functools import wraps
 from copy import deepcopy
-from types import FunctionType
 
 import pyinfra
 
@@ -23,11 +22,6 @@ def make_hash(obj):
     '''
     if type(obj) in (set, tuple, list):
         return hash(tuple([make_hash(e) for e in obj]))
-
-    # Functions hashed by name as they might be re-defined each time the deploy script is executed
-    # this assumes no def name clashes in deploy scripts
-    elif isinstance(obj, FunctionType):
-        return hash(obj.__name__)
 
     elif not isinstance(obj, dict):
         return hash(obj)

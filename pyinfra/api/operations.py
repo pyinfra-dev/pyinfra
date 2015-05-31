@@ -17,7 +17,7 @@ def run_op(hostname, op_hash, print_output=False):
     '''Runs a single operation on a remote server.'''
     # Noop for this host?
     if op_hash not in pyinfra._ops[hostname]:
-        logger.debug('(Skipping) no op {} on {}'.format(op_hash, hostname))
+        logger.debug('(Skipping) no op {0} on {1}'.format(op_hash, hostname))
         return
 
     op_data = pyinfra._ops[hostname][op_hash]
@@ -26,14 +26,14 @@ def run_op(hostname, op_hash, print_output=False):
     # Op is run_once, have we run it elsewhere?
     if op_meta['run_once']:
         if op_hash in pyinfra._ops_run:
-            logger.debug('(Skipping) run_once op {} already started on {}'.format(op_hash, hostname))
+            logger.debug('(Skipping) run_once op {0} already started on {1}'.format(op_hash, hostname))
             return
 
     stdout_buffer = []
     stderr_buffer = []
     print_prefix = '[{}] '.format(colored(hostname, attrs=['bold']))
 
-    logger.debug('Starting operation {} on {}'.format(', '.join(op_meta['names']), hostname))
+    logger.debug('Starting operation {0} on {1}'.format(', '.join(op_meta['names']), hostname))
     if op_hash not in pyinfra._ops_run:
         pyinfra._ops_run.append(op_hash)
 
@@ -74,16 +74,15 @@ def run_op(hostname, op_hash, print_output=False):
                 line = line.strip()
                 stdout_buffer.append(line)
                 if print_output:
-                    print u'{}{}'.format(print_prefix, line)
+                    print u'{0}{1}'.format(print_prefix, line)
 
             for line in stderr:
                 line = line.strip()
                 stderr_buffer.append(line)
                 if print_output:
-                    print u'{}{}: {}'.format(
+                    print u'{0}{1}'.format(
                         print_prefix,
-                        colored('stderr', 'red', attrs=['bold']),
-                        line
+                        colored(line, 'red')
                     )
 
             status = channel.exit_status <= 0
@@ -99,7 +98,7 @@ def run_op(hostname, op_hash, print_output=False):
         pyinfra._results[hostname]['ops'] += 1
         pyinfra._results[hostname]['success_ops'] += 1
 
-        logger.info('[{}] {}'.format(
+        logger.info('[{0}] {1}'.format(
             colored(hostname, attrs=['bold']),
             colored('Success' if len(op_data['commands']) > 0 else 'No changes', 'green')
         ))
@@ -109,17 +108,16 @@ def run_op(hostname, op_hash, print_output=False):
     # If the op failed somewhere, print stderr (if not already printed!)
     if not print_output:
         for line in stderr_buffer:
-            print u'{}{}: {}'.format(
+            print u'{0}{1}'.format(
                 print_prefix,
-                colored('stderr', 'red', attrs=['bold']),
-                line
+                colored(line, 'red')
             )
 
     # Up error_ops & log
     pyinfra._results[hostname]['error_ops'] += 1
-    logger.info('[{}] {}'.format(
+    logger.info('[{0}] {1}'.format(
         colored(hostname, attrs=['bold']),
-        colored('Error{}'.format(
+        colored('Error{0}'.format(
             ' (ignored)' if op_meta['ignore_errors'] else ''
         ), 'yellow')
     ))
@@ -139,7 +137,7 @@ def run_server_ops(hostname, print_output):
     for op_hash in pyinfra._op_order:
         op_meta = pyinfra._op_meta[op_hash]
 
-        logger.info('{} {} on {}'.format(
+        logger.info('{0} {1} on {2}'.format(
             colored('Starting operation:', 'blue'),
             colored(', '.join(op_meta['names']), attrs=['bold']),
             colored(hostname, attrs=['bold'])
@@ -147,7 +145,7 @@ def run_server_ops(hostname, print_output):
 
         result = run_op(hostname, op_hash, print_output)
         if result is False:
-            logger.critical('Error in operation {} on {}, exiting...'.format(
+            logger.critical('Error in operation {0} on {1}, exiting...'.format(
                 ', '.join(op_meta['names']), hostname
             ))
             return
@@ -181,8 +179,8 @@ def run_ops(serial=False, nowait=False, print_output=False):
         if op_meta['run_once']:
             op_types.append('run once')
 
-        logger.info('{} {}'.format(
-            colored('Starting{}operation:'.format(
+        logger.info('{0} {1}'.format(
+            colored('Starting{0}operation:'.format(
                 ' {} '.format(', '.join(op_types)) if op_types else ' '
             ), 'blue'),
             colored(', '.join(op_meta['names']), attrs=['bold'])

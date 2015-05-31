@@ -107,13 +107,10 @@ pyinfra._pool = Pool(size=min(len(pyinfra.config.SSH_HOSTS), 100))
 logger.info('Connecting to all servers...')
 connect_all()
 
-# Setup internals
+# Setup internal meta info
 for hostname in config.SSH_HOSTS:
     pyinfra._ops[hostname] = {}
-    pyinfra._facts[hostname] = {
-        '_dirs': {}, # cache remote directory meta
-        '_files': {} # cache remote file meta
-    }
+    pyinfra._facts[hostname] = {}
     pyinfra._meta[hostname] = {
         'ops': 0, # one function call in a deploy file
         'commands': 0 # actual # of commands to run

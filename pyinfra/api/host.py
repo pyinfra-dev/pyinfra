@@ -60,6 +60,7 @@ def _assign_facts(outs, key, processor, accessor=None):
         if accessor is None:
             pyinfra._facts[server][key] = result
         else:
+            pyinfra._facts[server].setdefault(accessor, {})
             pyinfra._facts[server][accessor][key] = result
 
         logger.debug('Fact {0} for {1} assigned to {2}'.format(key, server, result))
@@ -76,17 +77,21 @@ def _run_all_command(*args, **kwargs):
 
     # Join
     [out[1].join() for out in outs]
-    # Get each data
+
+    # Get each data, overwritting greenlets
     outs = [(out[0], out[1].get()) for out in outs]
 
-    # Return the useful info
+    # Pull out server, stdout, stderr from nested tuple
+    buffer_results = [(server, stdout, stderr) for (server, (_, stdout, stderr)) in outs]
+
+    # Prepare "normal" results, always run to ensure stderr buffer is read (affects exit code)
     results = [(
         server,
         [line.strip() for line in stdout],
         [line.strip() for line in stderr]
-    ) for (server, (_, stdout, stderr)) in outs]
+    ) for (server, stdout, stderr) in buffer_results]
 
-    if join_output is True:
+    if join_output:
         results = [
             (server, '\n'.join(stdout), '\n'.join(stderr))
             for (server, stdout, stderr) in results
@@ -118,7 +123,7 @@ class Host(object):
 
     def directory(self, name):
         '''Like a fact, but for directory information.'''
-        current_server_dirs = pyinfra._facts[pyinfra._current_server]['_dirs']
+        current_server_dirs = pyinfra._facts[pyinfra._current_server].get('_dirs', {})
 
         # Already got this directory?
         if name in current_server_dirs:
@@ -141,7 +146,7 @@ class Host(object):
 
     def file(self, name):
         '''Like a fact, but for file information.'''
-        current_server_files = pyinfra._facts[pyinfra._current_server]['_files']
+        current_server_files = pyinfra._facts[pyinfra._current_server].get('_files', {})
 
         # Already got this file?
         if name in current_server_files:
