@@ -8,6 +8,7 @@ methods or properties, remote checks are run on all remote hosts simultaneously 
 '''
 
 import re
+import sys
 
 from termcolor import colored
 
@@ -161,6 +162,5 @@ class Host(object):
         return pyinfra._facts[pyinfra._current_server]['_files'][name]
 
 
-# Swap out this module with a Host instance
-# also add to pyinfra's global namespace for use in deploy scripts (pyinfra.api.server implies internal usage)
-pyinfra.host = Host()
+# Set pyinfra.host to a Host instance
+sys.modules['pyinfra.host'] = pyinfra.host = Host()
