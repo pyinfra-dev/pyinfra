@@ -126,10 +126,14 @@ server.init(
 )
 
 # Execute Python locally, mid-deploy
-def some_python(hostname):
-    print 'supplied hostname: {}, actual: {}'.format(hostname, host.hostname)
+def some_python(hostname, **kwargs):
+    print 'hostname: {0}, actual: {1}'.format(hostname, kwargs['actual_hostname'])
 
-python.execute(some_python)
+python.execute(
+    some_python,
+    # Host facts must be passed in
+    actual_hostname=host.hostname
+)
 
 # # Ensure the state of virtualenvs
 # venv.env(

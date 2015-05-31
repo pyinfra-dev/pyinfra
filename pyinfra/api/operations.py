@@ -41,19 +41,21 @@ def run_op(hostname, op_hash, print_output=False):
     for i, command in enumerate(op_data['commands']):
         status = True
 
-        # Functions mean callbacks to run
-        if isinstance(command, FunctionType):
-            # Assign _current_server (so that pyinfra.host works inside callbacks)
-            pyinfra._current_server = hostname
-            status = command(hostname)
+        # Tuples stand for callbacks & file uploads
+        if isinstance(command, tuple):
+            # If first element is function, it's a callback
+            if isinstance(command[0], FunctionType):
+                status = command[0](hostname, **command[1])
 
-        # Tuples mean files to copy
-        elif isinstance(command, tuple):
-            status = put_file(
-                hostname, *command,
-                sudo=op_meta['sudo'],
-                sudo_user=op_meta['sudo_user']
-            )
+            # Non-function mean files to copy
+            else:
+                status = put_file(
+                    hostname, *command,
+                    sudo=op_meta['sudo'],
+                    sudo_user=op_meta['sudo_user'],
+                    print_output=print_output,
+                    print_prefix=print_prefix
+                )
 
         # Must be a string/shell command: execute it on the server w/op-level preferences
         else:
