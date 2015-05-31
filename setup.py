@@ -27,6 +27,7 @@ if __name__ == '__main__':
             'inflection',
             'docopt',
             'coloredlogs',
-            'termcolor'
+            'termcolor',
+            'jinja2'
         ]
     )
