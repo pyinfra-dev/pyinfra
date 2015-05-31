@@ -8,22 +8,22 @@
 pyinfra
 
 Usage:
-    pyinfra CONFIG_FILE DEPLOY_FILE
-    pyinfra CONFIG_FILE DEPLOY_FILE [-v] [--dry] [--serial] [--nowait] [--debug]
-    pyinfra CONFIG_FILE --fact FACT_NAME
+    pyinfra -c <config_file> <deploy_file>
+    pyinfra -c <config_file> <deploy_file> [-v] [--dry] [--serial] [--nowait] [--debug]
+    pyinfra -c <config_file> --fact <fact_name>
     pyinfra --help
 
 Options:
-    DEPLOY_FILE             Deploy script.
-    CONFIG_FILE             Config script.
-    --dry                   Only print proposed changes.
-    --serial                Run commands on one host at a time.
-    --nowait                Don't wait for all hosts at each operation.
-    -v                      Prints remote input/output in realtime.
-    --debug                 Print debug info.
-    --fact FACT_NAME        Name of fact to run/test.
-    -h --help               Show this screen.
-    --version               Show version.
+    <deploy_file>              Deploy script filename.
+    -c --config <config_file>  Config script filename.
+    --dry                      Only print proposed changes.
+    --serial                   Run commands on one host at a time.
+    --nowait                   Don't wait for all hosts at each operation.
+    -v                         Prints remote input/output in realtime.
+    --debug                    Print debug info.
+    --fact <fact_name>         Name of fact to run/test.
+    -h --help                  Show this screen.
+    --version                  Show version.
 '''
 
 # You can't import me!
@@ -50,8 +50,8 @@ from pyinfra import config
 version = 'pyinfra v{0}'.format(config.VERSION)
 arguments = docopt(__doc__, version=version)
 
-config_file = arguments['CONFIG_FILE']
-deploy_file = arguments['DEPLOY_FILE']
+config_file = arguments['--config']
+deploy_file = arguments['<deploy_file>']
 
 verbosity = arguments['-v']
 dry = arguments['--dry']
@@ -142,7 +142,6 @@ else:
     logger.info('Building deploy scripts...')
     for hostname in config.SSH_HOSTS:
         logger.debug('Building deploy script for {0}'.format(hostname))
-        # Call the deploy script
         pyinfra._current_server = hostname
         execfile(deploy_file)
 
