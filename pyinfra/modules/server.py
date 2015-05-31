@@ -8,7 +8,7 @@ from pyinfra.api import operation, OperationError
 
 @operation
 def shell(code):
-    '''[Not implemented] Run raw shell code.'''
+    '''Run raw shell code.'''
     return [code]
 
 
@@ -25,8 +25,12 @@ def script(code=None, file=None):
 @operation
 def init(name, running=True, restarted=False):
     '''Manage the state of init.d services.'''
+
+    # Sadly there is little/no convention between init scripts as to what status exit codes mean
+    # some init scripts return 0 for stopped services. So sadly we have to always run stop/start,
+    # even if the service is already in the desired state.
     if running:
-        return ['/etc/init.d/{0} status || /etc/init.d/{0} start'.format(name)]
+        return ['/etc/init.d/{} start'.format(name)]
     else:
         return ['/etc/init.d/{} stop'.format(name)]
 
