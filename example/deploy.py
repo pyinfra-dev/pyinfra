@@ -120,9 +120,10 @@ server.shell(
 # Manage init.d services
 server.init(
     'crond' if host.distribution['name'] == 'CentOS' else 'cron',
+    # This ensures we generate only one operation for the two command variations above
     op='cron_restart',
     restarted=True,
-    ignore_errors=True
+    sudo=True
 )
 
 # Execute Python locally, mid-deploy
@@ -132,7 +133,9 @@ def some_python(hostname, **kwargs):
 python.execute(
     some_python,
     # Host facts must be passed in
-    actual_hostname=host.hostname
+    actual_hostname=host.hostname,
+    # This ensures we generate only one operation for 3 individual function calls
+    op='some_python'
 )
 
 # # Ensure the state of virtualenvs
