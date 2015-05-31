@@ -3,7 +3,7 @@
 # Desc: the base Linux module
 
 from pyinfra import host
-from pyinfra.api import operation, CommandError
+from pyinfra.api import operation, OperationError
 
 
 @operation
@@ -112,7 +112,7 @@ def file(name, present=True, user=None, group=None, permissions=None, touch=Fals
 
     # It's a directory?!
     if info is False:
-        raise CommandError('{} is a directory'.format(name))
+        raise OperationError('{} is a directory'.format(name))
 
     # Doesn't exist & we want it
     if info is None and present:
@@ -150,7 +150,7 @@ def directory(name, present=True, user=None, group=None, permissions=None, recur
 
     # It's a file?!
     if info is False:
-        raise CommandError('{} is a file'.format(name))
+        raise OperationError('{} is a file'.format(name))
 
     # Doesn't exist & we want it
     if info is None and present:
