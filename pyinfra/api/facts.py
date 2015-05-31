@@ -13,8 +13,15 @@ from inspect import isclass
 from inflection import underscore
 
 
+class Hostname:
+    command = 'hostname'
+
+    def process(self, output):
+        return output[0]
+
+
 class Distribution:
-    '''Returns the Linux distribution. Ubuntu, CentOS & Debian currently'''
+    '''Returns the Linux distribution. Ubuntu, CentOS & Debian currently.'''
     command = 'cat /etc/*-release'
     # Currently supported distros
     regexes = [
@@ -39,7 +46,7 @@ class Distribution:
 
 
 class Users:
-    '''Gets & returns a dict of users -> details'''
+    '''Gets & returns a dict of users -> details.'''
     command = 'cat /etc/passwd'
 
     def process(self, output):
@@ -57,7 +64,7 @@ class Users:
 
 
 class NetworkDevices:
-    '''Gets & returns a dict of network devices -> details'''
+    '''Gets & returns a dict of network devices -> details.'''
     command = 'cat /proc/net/dev'
     regex = r'\s+([a-zA-Z0-9]+):\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)'
 
@@ -93,7 +100,7 @@ class NetworkDevices:
 
 
 class BlockDevices:
-    '''Returns a dict of (mounted, atm) block devices -> details'''
+    '''Returns a dict of (mounted, atm) block devices -> details.'''
     command = 'df -T'
     regex = r'([a-zA-Z0-9\/\-_]+)\s+([a-zA-Z0-9\/-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
 
@@ -116,7 +123,7 @@ class BlockDevices:
 
 
 class DebPackages:
-    '''Returns a dict of installed dpkg packages -> details'''
+    '''Returns a dict of installed dpkg packages -> details.'''
     command = 'dpkg -l'
     regex = r'[a-z]+\s+([a-zA-Z0-9:\+\-\.]+)\s+([a-zA-Z0-9:~\.\-\+]+)\s+([a-z0-9]+)'
 
@@ -133,7 +140,7 @@ class DebPackages:
 
 
 class RPMPackages:
-    '''Returns a dict of installed rpm packages -> details'''
+    '''Returns a dict of installed rpm packages -> details.'''
     command = 'rpm -qa'
     regex = r'([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.([a-z0-9_]+)\.([a-z0-9_\.]+)'
 
