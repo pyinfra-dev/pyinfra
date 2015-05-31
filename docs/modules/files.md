@@ -15,7 +15,7 @@ put(
 
 ##### pyinfra.modules.files.template
 
-[Not implemented]Generate a template and write it to the remote system.
+[Not implemented] Generate a template and write it to the remote system.
 
 ```py
 template(

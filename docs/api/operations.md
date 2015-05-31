@@ -25,3 +25,15 @@ run_ops(
     print_output=False
 )
 ```
+
+
+##### pyinfra.api.operations.run_server_ops
+
+Runs all operations for a single server.
+
+```py
+run_server_ops(
+    hostname,
+    print_output
+)
+```

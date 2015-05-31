@@ -3,17 +3,40 @@
 
 ##### pyinfra.api.ssh.connect_all
 
-Connect to all the configured servers.
+Connect to all the configured servers in parallel.
 
 ```py
 connect_all()
 ```
 
 
-##### pyinfra.api.ssh.run_all_command
+##### pyinfra.api.ssh.put_file
 
-Runs a single command on all hosts in parallel, used for collecting facts.
+Upload/sync local/remote directories & files to the specified host.
 
 ```py
-run_all_command()
+put_file(
+    hostname,
+    file_io,
+    remote_file,
+    sudo=False,
+    sudo_user=None
+)
+```
+
+
+##### pyinfra.api.ssh.run_shell_command
+
+Execute a command on the specified host.
+
+```py
+run_shell_command(
+    hostname,
+    command,
+    sudo=False,
+    sudo_user=None,
+    env=None,
+    print_output=False,
+    print_prefix=''
+)
 ```

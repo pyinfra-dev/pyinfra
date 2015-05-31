@@ -1,8 +1,20 @@
 # Operations
 
-Operations are the lifeblood of pyinfra, they are namespaced under [modules](./modules) and are used to define the desired state of target servers. When called, they use [facts](./facts.md) to determine the difference between actual and desired state, and generate any commands needed to update to the desired state.
+Operations are the lifeblood of pyinfra, they are namespaced as [modules](./modules) and are used to define the desired state of target servers. When called, they use [facts](./facts.md) to determine the difference between actual and desired state. This diff is used to generate the required commands & file changes needed to align the server with our defined state.
 
-### Running order
+Using an operation in a deploy script is just like standard Python:
+
+```py
+from pyinfra.modules import server
+
+server.user(
+    'my_user',
+    home='/home/my_users_custom_home',
+    shell='/bin/bash'
+)
+```
+
+## Running order
 
 By default operations are run sequentially and, unless `ignore_errors=True`, will stop at the first failure. Although they are sequential, if an operation has multiple hosts to run on, this will be done in parallel (unless `--serial` is passed to pyinfra).
 

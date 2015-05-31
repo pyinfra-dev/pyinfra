@@ -20,7 +20,7 @@ make_hash(
 ##### pyinfra.api.operation.operation
 
 Takes a simple module function and turn it into the internal operation representation
-consists of a list of commands + options (sudo, user, env)
+consists of a list of commands + options (sudo, user, env).
 
 ```py
 operation(

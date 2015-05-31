@@ -34,10 +34,30 @@ Distribution.process(
 ```
 
 
+##### pyinfra.api.facts.Hostname.process
+
+```py
+Hostname.process(
+    self,
+    output
+)
+```
+
+
 ##### pyinfra.api.facts.NetworkDevices.process
 
 ```py
 NetworkDevices.process(
+    self,
+    output
+)
+```
+
+
+##### pyinfra.api.facts.Processes.process
+
+```py
+Processes.process(
     self,
     output
 )
