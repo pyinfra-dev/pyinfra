@@ -6,7 +6,7 @@
 # & host represents the *current* server begin managed
 from pyinfra import config, host
 # Modules provide namespaced operations, which do the work
-from pyinfra.modules import server, apt, yum, files
+from pyinfra.modules import server, apt, yum, files, python
 
 
 # Ensure the state of a user
@@ -52,6 +52,14 @@ server.directory(
     serial=True
 )
 
+# Will fail, but be ignored, on non-apt systems
+apt.packages(
+    'git',
+    sudo=True,
+    update=True,
+    ignore_errors=True
+)
+
 # Work with multiple linux distributions
 if host.distribution['name'] == 'CentOS':
     # yum package manager
@@ -65,28 +73,21 @@ else:
     # apt package manager
     apt.packages(
         ['git'],
-        update=True,
         sudo=True,
         op='core_packages' # this and above binds these two operations to run as one
     )
 
-# Will fail, but be ignored, on non-apt systems
-apt.packages(
-    'git',
-    sudo=True,
-    ignore_errors=True
-)
-
 # Copy local files to remote host
 files.put(
-    'filename.txt',
-    '/home/ubuntu/filename.txt'
+    'files/file.txt',
+    '/home/vagrant/file.txt'
 )
 
 # Generate files from local jinja2 templates
 files.template(
-    'filename.jn2',
-    '/opt/wheverever/test.sh',
+    'templates/template.txt.jn2',
+    '/root/template.txt',
+    sudo=True,
     **{
         'hello': 'world'
     }
@@ -116,6 +117,20 @@ server.shell(
 #     branch='develop'
 # )
 
+# Manage init.d services
+server.init(
+    'crond' if host.distribution['name'] == 'CentOS' else 'cron',
+    op='cron_restart',
+    restarted=True,
+    ignore_errors=True
+)
+
+# Execute Python locally, mid-deploy
+def some_python(hostname):
+    print 'supplied hostname: {}, actual: {}'.format(hostname, host.hostname)
+
+python.execute(some_python)
+
 # # Ensure the state of virtualenvs
 # venv.env(
 #     config.ENV_DIR,
@@ -129,11 +144,3 @@ server.shell(
 #         requirements_file='/opt/pyinfra/requirements.pip',
 #         present=True
 #     )
-
-# Manage init.d services
-server.init(
-    'crond' if host.distribution['name'] == 'CentOS' else 'cron',
-    op='cron_restart',
-    restarted=True,
-    ignore_errors=True
-)

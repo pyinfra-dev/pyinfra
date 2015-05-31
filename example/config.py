@@ -11,7 +11,7 @@ SSH_HOSTS = [
 ]
 SSH_PORT = 22
 SSH_USER = 'vagrant'
-SSH_KEY = './files/insecure_private_key'
+SSH_KEY = './insecure_private_key'
 
 
 #################### Optional (+ defaults)

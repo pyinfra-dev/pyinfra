@@ -1,7 +1,7 @@
 # pyinfra test VM's
 
 Vagrant.configure('2') do |config|
-    config.ssh.private_key_path = './files/insecure_private_key'
+    config.ssh.private_key_path = './insecure_private_key'
 
     config.vm.define :ubuntu do |ubuntu|
         ubuntu.vm.box = 'ubuntu/trusty64'
