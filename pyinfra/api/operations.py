@@ -2,12 +2,15 @@
 # File: pyinfra/api/operations.py
 # Desc: Runs operations from pyinfra._ops in various modes (parallel, parallel+nowait, serial)
 
+from types import FunctionType
+
+from gevent import joinall
 from termcolor import colored
 
 import pyinfra
 from pyinfra import config, logger
 
-from .ssh import run_command
+from .ssh import run_shell_command, put_file
 
 
 def run_op(hostname, op_hash, print_output=False):
@@ -34,39 +37,59 @@ def run_op(hostname, op_hash, print_output=False):
     if op_hash not in pyinfra._ops_run:
         pyinfra._ops_run.append(op_hash)
 
-    # ...loop through each command, execute it on the server w/op-level preferences
+    # ...loop through each command
     for i, command in enumerate(op_data['commands']):
-        channel, stdout, stderr = run_command(
-            hostname, command,
-            sudo=op_meta['sudo'],
-            sudo_user=op_meta['sudo_user'],
-            env=op_data['env'],
-            print_output=print_output,
-            print_prefix=print_prefix
-        )
+        status = True
 
-        # Iterate through outputs to get an exit status
-        # this iterates as the socket data comes in, which gevent patches
-        for line in stdout:
-            line = line.strip()
-            stdout_buffer.append(line)
-            if print_output:
-                print u'{}{}'.format(print_prefix, line)
+        # Functions mean callbacks to run
+        if isinstance(command, FunctionType):
+            # Assign _current_server (so that pyinfra.host works inside callbacks)
+            pyinfra._current_server = hostname
+            status = command(hostname)
 
-        for line in stderr:
-            line = line.strip()
-            stderr_buffer.append(line)
-            if print_output:
-                print u'{}{}: {}'.format(
-                    print_prefix,
-                    colored('stderr', 'red', attrs=['bold']),
-                    line
-                )
+        # Tuples mean files to copy
+        elif isinstance(command, tuple):
+            status = put_file(
+                hostname, *command,
+                sudo=op_meta['sudo'],
+                sudo_user=op_meta['sudo_user']
+            )
 
-        if channel.exit_status <= 0:
-            pyinfra._results[hostname]['commands'] += 1
+        # Must be a string/shell command: execute it on the server w/op-level preferences
         else:
+            channel, stdout, stderr = run_shell_command(
+                hostname, command.strip(),
+                sudo=op_meta['sudo'],
+                sudo_user=op_meta['sudo_user'],
+                env=op_data['env'],
+                print_output=print_output,
+                print_prefix=print_prefix
+            )
+
+            # Iterate through outputs to get an exit status
+            # this iterates as the socket data comes in, which gevent patches
+            for line in stdout:
+                line = line.strip()
+                stdout_buffer.append(line)
+                if print_output:
+                    print u'{}{}'.format(print_prefix, line)
+
+            for line in stderr:
+                line = line.strip()
+                stderr_buffer.append(line)
+                if print_output:
+                    print u'{}{}: {}'.format(
+                        print_prefix,
+                        colored('stderr', 'red', attrs=['bold']),
+                        line
+                    )
+
+            status = channel.exit_status <= 0
+
+        if status is False:
             break
+        else:
+            pyinfra._results[hostname]['commands'] += 1
 
     # Commands didn't break, so count our successes & return True!
     else:
@@ -108,7 +131,8 @@ def run_op(hostname, op_hash, print_output=False):
     return False
 
 
-def _run_server_ops(hostname, print_output):
+def run_server_ops(hostname, print_output):
+    '''Runs all operations for a single server.'''
     logger.debug('Running all ops on {}'.format(hostname))
     for op_hash in pyinfra._op_order:
         op_meta = pyinfra._op_meta[op_hash]
@@ -131,17 +155,18 @@ def run_ops(serial=False, nowait=False, print_output=False):
     '''Runs all operations across all servers in a configurable manner.'''
     # Run all ops, but server by server
     if serial:
-        [_run_server_ops(hostname, print_output=print_output) for hostname in config.SSH_HOSTS]
+        for hostname in config.SSH_HOSTS:
+            run_server_ops(hostname, print_output=print_output)
         return
 
     # Run all the ops on each server in parallel (not waiting at each operation)
     elif nowait:
         # Spawn greenlet for each host to run *all* ops
-        greenlet_hosts = {
-            pyinfra._pool.spawn(_run_server_ops, hostname, print_output=print_output): hostname
+        greenlets = [
+            pyinfra._pool.spawn(run_server_ops, hostname, print_output=print_output)
             for hostname in config.SSH_HOSTS
-        }
-        [greenlet.join() for greenlet in greenlet_hosts.keys()]
+        ]
+        joinall(greenlets)
         return
 
     # Run all ops in order, waiting at each for all servers to complete
@@ -169,16 +194,16 @@ def run_ops(serial=False, nowait=False, print_output=False):
                 result = run_op(hostname, op_hash, print_output=print_output)
                 results.append(result)
 
-                # If we faile,d break to be handled as op error
+                # If we failed break to be handled as op error
                 if result is False:
                     break
 
         else:
             # Spawn greenlet for each host
-            greenlet_hosts = {
-                pyinfra._pool.spawn(run_op, hostname, op_hash, print_output=print_output): hostname
+            greenlet_hosts = [
+                pyinfra._pool.spawn(run_op, hostname, op_hash, print_output=print_output)
                 for hostname in config.SSH_HOSTS
-            }
+            ]
 
             # Get all the results
             results = [greenlet.get() for greenlet in greenlet_hosts]

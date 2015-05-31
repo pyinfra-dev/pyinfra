@@ -82,9 +82,6 @@ def operation(func):
 
         # We're doing some commands, meta/ops++
         pyinfra._meta[pyinfra._current_server]['ops'] += 1
-
-        # Fixup the commands, & meta/commands++
-        commands = [command.strip() for command in commands]
         pyinfra._meta[pyinfra._current_server]['commands'] += len(commands)
 
         # Add the server-relevant commands/env to the current server

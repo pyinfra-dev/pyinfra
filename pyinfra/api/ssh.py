@@ -2,10 +2,12 @@
 # File: pyinfra/api/ssh.py
 # Desc: handle all SSH related stuff
 
+import time
+from hashlib import sha1
 from socket import error as socket_error, gaierror
 
 from termcolor import colored
-from paramiko import SSHClient, RSAKey, MissingHostKeyPolicy, SSHException, AuthenticationException
+from paramiko import SSHClient, SFTPClient, RSAKey, MissingHostKeyPolicy, SSHException, AuthenticationException
 
 import pyinfra
 from pyinfra import config, logger
@@ -65,7 +67,7 @@ def connect_all():
     config.SSH_HOSTS = [host for host in connected_hosts if host is not None]
 
 
-def run_command(
+def run_shell_command(
     hostname, command,
     sudo=False, sudo_user=None, env=None, print_output=False, print_prefix=''
 ):
@@ -111,9 +113,47 @@ def run_command(
     return stdout.channel, stdout, stderr
 
 
-def run_file(
-    hostname, local_file, remote_file,
-    sudo=False, sudo_user=None, print_output=False, print_prefix=''
-):
+def _get_sftp_connection(hostname):
+    if hostname in pyinfra._sftp_connections:
+        return pyinfra._sftp_connections[hostname]
+
+    ssh_connection = pyinfra._connections[hostname]
+    transport = ssh_connection.get_transport()
+    client = SFTPClient.from_transport(transport)
+
+    pyinfra._sftp_connections[hostname] = client
+
+    return client
+
+def _put_file(hostname, file_io, remote_location):
+    sftp = _get_sftp_connection(hostname)
+    sftp.putfo(file_io, remote_location)
+
+def put_file(hostname, file_io, remote_file, sudo=False, sudo_user=None):
     '''Upload/sync local/remote directories & files to the specified host.'''
-    pass
+    if not sudo:
+        _put_file(hostname, file_io, remote_file)
+    else:
+        # sudo is a little more complicated, as you can only sftp with the SSH user connected
+        # so upload to tmp and copy/chown w/sudo
+
+        # Get temp file location
+        hash_ = sha1()
+        hash_.update(remote_file)
+        hash_.update(str(time.time()))
+        temp_file = '/tmp/{0}'.format(hash_.hexdigest())
+
+        _put_file(hostname, file_io, temp_file)
+
+        # Execute run_shell_command w/sudo to mv/chown it
+        command = 'mv {0} {1} && chown {2}:{2} {1}'.format(
+            temp_file, remote_file, sudo_user or 'root'
+        )
+        channel, _, stderr = run_shell_command(
+            hostname, command,
+            sudo=sudo, sudo_user=sudo_user
+        )
+
+        if channel.exit_status > 0:
+            logger.critical('File error: {0}'.format(stderr))
+            return False
