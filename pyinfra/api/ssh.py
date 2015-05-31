@@ -129,7 +129,10 @@ def _put_file(hostname, file_io, remote_location):
     sftp = _get_sftp_connection(hostname)
     sftp.putfo(file_io, remote_location)
 
-def put_file(hostname, file_io, remote_file, sudo=False, sudo_user=None):
+def put_file(
+    hostname, file_io, remote_file,
+    sudo=False, sudo_user=None, print_output=False, print_prefix=''
+):
     '''Upload/sync local/remote directories & files to the specified host.'''
     if not sudo:
         _put_file(hostname, file_io, remote_file)
@@ -151,9 +154,14 @@ def put_file(hostname, file_io, remote_file, sudo=False, sudo_user=None):
         )
         channel, _, stderr = run_shell_command(
             hostname, command,
-            sudo=sudo, sudo_user=sudo_user
+            sudo=sudo, sudo_user=sudo_user,
+            print_output=print_output,
+            print_prefix=print_prefix
         )
 
         if channel.exit_status > 0:
             logger.critical('File error: {0}'.format(stderr))
             return False
+
+    if print_output:
+        print '{0} file uploaded: {1}'.format(print_prefix, remote_file)
