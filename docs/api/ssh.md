@@ -20,7 +20,9 @@ put_file(
     file_io,
     remote_file,
     sudo=False,
-    sudo_user=None
+    sudo_user=None,
+    print_output=False,
+    print_prefix=''
 )
 ```
 

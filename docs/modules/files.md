@@ -3,7 +3,7 @@
 
 ##### pyinfra.modules.files.put
 
-[Not implemented] Copy a local file to the remote system.
+Copy a local file to the remote system.
 
 ```py
 put(
@@ -15,11 +15,11 @@ put(
 
 ##### pyinfra.modules.files.template
 
-[Not implemented] Generate a template and write it to the remote system.
+Generate a template and write it to the remote system.
 
 ```py
 template(
-    template_name,
+    template_file,
     remote_file,
     **data
 )

@@ -5,6 +5,7 @@
 
 ```py
 execute(
-    callback
+    callback,
+    **kwargs
 )
 ```

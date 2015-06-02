@@ -60,7 +60,7 @@ script(
 
 ##### pyinfra.modules.server.shell
 
-[Not implemented] Run raw shell code.
+Run raw shell code.
 
 ```py
 shell(

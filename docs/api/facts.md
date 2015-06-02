@@ -54,16 +54,6 @@ NetworkDevices.process(
 ```
 
 
-##### pyinfra.api.facts.Processes.process
-
-```py
-Processes.process(
-    self,
-    output
-)
-```
-
-
 ##### pyinfra.api.facts.RPMPackages.process
 
 ```py
