@@ -54,7 +54,6 @@ server.directory(
 
 # Will fail, but be ignored, on non-apt systems
 apt.packages(
-    'git',
     sudo=True,
     update=True,
     ignore_errors=True
@@ -97,38 +96,24 @@ files.template(
 server.shell(
     'echo "Shell command" && echo "Another!"'
 )
-# # and scripts
-# linux.script('''
-#     #!/bin/sh
-
-#     echo "Shell script!"
-#     exit 0
-# ''')
-# # and files
-# linux.script(
-#     file='files/test.sh',
-# )
-
-# # Ensure the state of git repositories
-# git.repo(
-#     'git@github.com:Fizzadar/pyinfra.git',
-#     config.APP_DIR,
-#     update=True,
-#     branch='develop'
-# )
+# and scripts
+server.script(
+    'files/test.sh'
+)
 
 # Manage init.d services
 server.init(
-    'crond' if host.distribution['name'] == 'CentOS' else 'cron',
+    'cron',
     # This ensures we generate only one operation for the two command variations above
     op='cron_restart',
     restarted=True,
-    sudo=True
+    sudo=True,
+    ignore_errors=True
 )
 
 # Execute Python locally, mid-deploy
 def some_python(hostname, **kwargs):
-    print 'hostname: {0}, actual: {1}'.format(hostname, kwargs['actual_hostname'])
+    print 'connecting hostname: {0}, actual: {1}'.format(hostname, kwargs['actual_hostname'])
 
 python.execute(
     some_python,
@@ -138,16 +123,22 @@ python.execute(
     op='some_python'
 )
 
+# # Ensure the state of git repositories
+# git.repo(
+#     'git@github.com:Fizzadar/pyinfra.git',
+#     config.APP_DIR,
+#     update=True,
+#     branch='develop'
+# )
+
 # # Ensure the state of virtualenvs
 # venv.env(
-#     config.ENV_DIR,
-#     present=True
+#     config.ENV_DIR
 # )
 
 # # Enter a virtualenv
 # with venv.enter(config.ENV_DIR):
 #     # and manage pip packages within
 #     pip.packages(
-#         requirements_file='/opt/pyinfra/requirements.pip',
-#         present=True
+#         requirements_file='/opt/pyinfra/requirements.pip'
 #     )
