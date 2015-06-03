@@ -3,18 +3,29 @@
 Vagrant.configure('2') do |config|
     config.ssh.private_key_path = './insecure_private_key'
 
-    config.vm.define :ubuntu do |ubuntu|
+    config.vm.define :ubuntu14 do |ubuntu|
         ubuntu.vm.box = 'ubuntu/trusty64'
-        ubuntu.vm.network :private_network, ip: '20.20.20.20'
+        ubuntu.vm.network :private_network, ip: '20.20.20.21'
     end
 
-    config.vm.define :centos do |centos|
-        centos.vm.box = 'chef/centos-6.5'
-        centos.vm.network :private_network, ip: '20.20.20.21'
+    config.vm.define :centos6 do |centos|
+        centos.vm.box = 'chef/centos-6.6'
+        centos.vm.network :private_network, ip: '20.20.20.22'
     end
 
-    config.vm.define :debian do |debian|
-        debian.vm.box = 'chef/debian-7.4'
-        debian.vm.network :private_network, ip: '20.20.20.22'
+    config.vm.define :centos7 do |centos|
+        centos.vm.box = 'chef/centos-7.0'
+        centos.vm.network :private_network, ip: '20.20.20.23'
+    end
+
+    config.vm.define :debian7 do |debian|
+        debian.vm.box = 'chef/debian-7.7'
+        debian.vm.network :private_network, ip: '20.20.20.24'
+    end
+
+    # no support for ksh *yet* :(
+    config.vm.define :openbsd do |openbsd|
+        openbsd.vm.box = 'tmatilai/openbsd-5.6'
+        openbsd.vm.network :private_network, ip: '20.20.20.25'
     end
 end
