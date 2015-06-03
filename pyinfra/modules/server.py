@@ -2,8 +2,11 @@
 # File: pyinfra/modules/linux.py
 # Desc: the base Linux module
 
+from hashlib import sha1
+
 from pyinfra import host
 from pyinfra.api import operation, OperationError
+from pyinfra.modules import files
 
 
 @operation
@@ -13,29 +16,39 @@ def shell(code):
 
 
 @operation
-def script(code=None, file=None):
-    '''[Not implemented] Run a script or file.'''
-    if code is not None:
-        return code
+def script(filename):
+    '''Upload and execute a local script on the remote host.'''
+    commands = []
 
-    if file is not None:
-        return 'whaaa'
+    hash_ = sha1()
+    hash_.update(filename)
+    temp_file = '/tmp/{0}'.format(hash_.hexdigest())
+
+    commands.extend(files.put(filename, temp_file))
+
+    commands.append('chmod +x {0}'.format(temp_file))
+    commands.append(temp_file)
+
+    return commands
 
 
 @operation
-def init(name, running=True, restarted=False):
+def init(name, running=True, restarted=False, reloaded=False):
     '''Manage the state of init.d services.'''
+    commands = []
 
-    # Sadly there is little/no convention between init scripts as to what status exit codes mean
-    # some init scripts return 0 for stopped services. So sadly we have to always run stop/start,
-    # even if the service is already in the desired state.
     if running:
-        return ['/etc/init.d/{} start'.format(name)]
+        commands.append('/etc/init.d/{0} status || /etc/init.d/{0} start'.format(name))
     else:
-        return ['/etc/init.d/{} stop'.format(name)]
+        commands.append('/etc/init.d/{0} status && /etc/init.d/{0} stop'.format(name))
 
     if restarted:
-        return ['/etc/init.d/{} restart'.format(name)]
+        commands.append('/etc/init.d/{0} restart'.format(name))
+
+    if reloaded:
+        commands.append('/etc/init.d/{0} reload'.format(name))
+
+    return commands
 
 
 @operation
@@ -54,9 +67,7 @@ def user(name, present=True, home=None, shell=None, public_keys=None, delete_key
             return
 
         # Ensure .ssh directory
-        commands.extend(directory.__decorated__(
-            name='{}/.ssh'.format(home), present=True
-        ))
+        commands.extend(directory('{}/.ssh'.format(home), present=True))
 
         filename = '{}/.ssh/authorized_keys'.format(home)
         if delete_keys:
