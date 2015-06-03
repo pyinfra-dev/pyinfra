@@ -46,4 +46,10 @@ server.directory(
 # etc... see ./modules or the full example!
 ```
 
-See the [module documentation](./modules).
+And to run the deploy:
+
+`pyinfra -c config.py deploy.py`
+
+## What next?
+
+Check out the [module documentation](./modules/README.md).

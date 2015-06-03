@@ -1,29 +1,12 @@
 ## pyinfra.modules.apt
 
 
-##### pyinfra.modules.apt.deb
-
-[Not implemented] Install/remove .deb packages with dpkg
-
-```py
-deb(
-    deb_file,
-    present=True
-)
-```
-
-
 ##### pyinfra.modules.apt.packages
 
 Install/remove/upgrade packages & update apt.
 
 ```py
-packages(
-    packages,
-    present=True,
-    update=False,
-    upgrade=False
-)
+packages()
 ```
 
 
@@ -32,10 +15,7 @@ packages(
 [Not complete] Shortcut for managing ppa apt sources.
 
 ```py
-ppa(
-    name,
-    **kwargs
-)
+ppa()
 ```
 
 
@@ -44,8 +24,5 @@ ppa(
 [Not complete] Manage apt sources.
 
 ```py
-repo(
-    name,
-    present=True
-)
+repo()
 ```

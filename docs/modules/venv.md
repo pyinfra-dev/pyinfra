@@ -14,8 +14,5 @@ enter.__init__(
 ##### pyinfra.modules.venv.env
 
 ```py
-env(
-    directory,
-    present=True
-)
+env()
 ```

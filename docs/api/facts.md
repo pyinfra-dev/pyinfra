@@ -34,6 +34,16 @@ Distribution.process(
 ```
 
 
+##### pyinfra.api.facts.Home.process
+
+```py
+Home.process(
+    self,
+    output
+)
+```
+
+
 ##### pyinfra.api.facts.Hostname.process
 
 ```py
@@ -48,6 +58,16 @@ Hostname.process(
 
 ```py
 NetworkDevices.process(
+    self,
+    output
+)
+```
+
+
+##### pyinfra.api.facts.PipPackages.process
+
+```py
+PipPackages.process(
     self,
     output
 )
