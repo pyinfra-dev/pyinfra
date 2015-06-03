@@ -2,6 +2,8 @@
 # File: pyinfra/api/operations.py
 # Desc: Runs operations from pyinfra._ops in various modes (parallel, parallel+nowait, serial)
 
+from __future__ import division
+
 from types import FunctionType
 
 from gevent import joinall
@@ -170,6 +172,7 @@ def run_ops(serial=False, nowait=False, print_output=False):
         return
 
     # Run all ops in order, waiting at each for all servers to complete
+    remove_hosts = set()
     for op_hash in pyinfra._op_order:
         op_meta = pyinfra._op_meta[op_hash]
 
@@ -186,29 +189,48 @@ def run_ops(serial=False, nowait=False, print_output=False):
             colored(', '.join(op_meta['names']), attrs=['bold'])
         ))
 
-        results = []
+        op_hosts = set(config.SSH_HOSTS) - remove_hosts
+        successful_hosts = []
+        failed_hosts = []
 
         if op_meta['serial']:
             # For each host, run the op
-            for hostname in config.SSH_HOSTS:
+            for hostname in op_hosts:
                 result = run_op(hostname, op_hash, print_output=print_output)
-                results.append(result)
 
-                # If we failed break to be handled as op error
-                if result is False:
-                    break
-
+                if result:
+                    successful_hosts.append(hostname)
+                else:
+                    failed_hosts.append(hostname)
         else:
             # Spawn greenlet for each host
             greenlet_hosts = [
-                pyinfra._pool.spawn(run_op, hostname, op_hash, print_output=print_output)
-                for hostname in config.SSH_HOSTS
+                (hostname, pyinfra._pool.spawn(run_op, hostname, op_hash, print_output=print_output))
+                for hostname in op_hosts
             ]
 
             # Get all the results
-            results = [greenlet.get() for greenlet in greenlet_hosts]
+            for (hostname, greenlet) in greenlet_hosts:
+                if greenlet.get():
+                    successful_hosts.append(hostname)
+                else:
+                    failed_hosts.append(hostname)
 
-        # Any False = unignored error, so we stop everything here
-        if False in results:
-            logger.critical('Error in operation {}, exiting...'.format(', '.join(op_meta['names'])))
+        if op_meta['ignore_errors']:
+            continue
+
+        # Don't continue operations on failed/non-ignore hosts
+        for hostname in failed_hosts:
+            remove_hosts.add(hostname)
+
+        # Check we're not above the fail percent
+        if config.FAIL_PERCENT:
+            # % successful at this point must be greater than the inverse of fail percent
+            if (len(successful_hosts) / len(config.SSH_HOSTS)) * 100 > (100 - config.FAIL_PERCENT):
+                logger.critical('Over {0}% of hosts failed, exiting'.format(config.FAIL_PERCENT))
+                break
+
+        # No hosts left!
+        if not successful_hosts:
+            logger.critical('No hosts remaining, exiting...')
             break
