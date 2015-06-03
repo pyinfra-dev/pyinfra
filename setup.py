@@ -4,12 +4,12 @@
 
 from setuptools import setup
 
-from pyinfra import config
+from pyinfra.__version__ import VERSION
 
 
 if __name__ == '__main__':
     setup(
-        version=config.VERSION,
+        version=VERSION,
         name='pyinfra',
         description='Stateful deploy with Python.',
         author='Nick @ Oxygem',
