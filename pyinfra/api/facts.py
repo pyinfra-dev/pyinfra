@@ -13,6 +13,13 @@ from inspect import isclass
 from inflection import underscore
 
 
+class Home:
+    command = 'echo $HOME'
+
+    def process(self, output):
+        return output[0]
+
+
 class Hostname:
     command = 'hostname'
 
@@ -27,6 +34,7 @@ class Distribution:
     regexes = [
         r'(Ubuntu) ([0-9]{2})\.([0-9]{2})',
         r'(CentOS) release ([0-9]).([0-9])',
+        r'(CentOS) Linux release ([0-9]).([0-9])',
         r'(Debian) GNU/Linux ([0-9])()'
     ]
 
@@ -155,6 +163,15 @@ class RPMPackages:
                 }
 
         return packages
+
+
+class PipPackages:
+    '''Returns a dict of installed pip packages -> details.'''
+    command = 'pip list'
+
+    def process(self, output):
+        print output
+        return None
 
 
 # Build dynamic facts & fact lists dicts
