@@ -8,12 +8,13 @@ import logging
 # Global logger
 logger = logging.getLogger('pyinfra')
 
+# Current state during any run
+_current_server = None
+_in_op = False
+
 # Internal connections
 _connections = {}
 _sftp_connections = {}
-
-# Current server host
-_current_server = None
 
 # Central operation data
 _op_order = [] # list of operation hashes
