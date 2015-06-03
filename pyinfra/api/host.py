@@ -38,9 +38,9 @@ def _ls_matches_to_dict(matches):
         # owner, group, world
         for group in [permissions[0:3], permissions[3:6], permissions[6:9]]:
             if group in _symbol_to_octal_permissions:
-                result = '{}{}'.format(result, _symbol_to_octal_permissions[group])
+                result = '{0}{1}'.format(result, _symbol_to_octal_permissions[group])
             else:
-                result = '{}0'.format(result)
+                result = '{0}0'.format(result)
 
         return result
 
@@ -111,7 +111,7 @@ class Host(object):
         if key in current_server_facts:
             return current_server_facts[key]
 
-        logger.info('Running fact {}'.format(colored(key, attrs=['bold'])))
+        logger.info('Running fact {0}'.format(colored(key, attrs=['bold'])))
         # For each server, spawn a job on the pool to gather the fact
         outs = _run_all_command(FACTS[key].command)
 
@@ -137,7 +137,7 @@ class Host(object):
                 directory = _ls_matches_to_dict(matches)
                 return directory
 
-        logger.info('Running directory fact on {}'.format(colored(name, attrs=['bold'])))
+        logger.info('Running directory fact on {0}'.format(colored(name, attrs=['bold'])))
         outs = _run_all_command('ls -ldp {0}'.format(name), join_output=True)
 
         # Assign all & return current
@@ -159,7 +159,7 @@ class Host(object):
                     return False # indicates not file (ie dir)
                 return _ls_matches_to_dict(matches)
 
-        logger.info('Running file fact on {}'.format(colored(name, attrs=['bold'])))
+        logger.info('Running file fact on {0}'.format(colored(name, attrs=['bold'])))
         outs = _run_all_command('ls -ldp {0}'.format(name), join_output=True)
 
         # Assign & return current

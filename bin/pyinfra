@@ -45,9 +45,9 @@ signal.signal(signal.SIGINT, signal_handler)
 
 # Setup arguments
 from docopt import docopt
-from pyinfra import config
+from pyinfra.__version__ import VERSION
 
-version = 'pyinfra v{0}'.format(config.VERSION)
+version = 'pyinfra v{0}'.format(VERSION)
 arguments = docopt(__doc__, version=version)
 
 config_file = arguments['--config']
@@ -65,7 +65,6 @@ print
 print '-> Welcome to {0}'.format(version)
 print
 
-import imp
 import json
 import logging
 
@@ -98,7 +97,8 @@ logging.getLogger('host_logger').disabled = True
 
 # Load the global config file into pyinfra
 logger.debug('Importing config.py')
-config = pyinfra.config = imp.load_source('pyinfra.config', config_file)
+from pyinfra import config
+config.load_file(config_file)
 
 # Create greenlet pool (max 100 greenlets)
 pyinfra._pool = Pool(size=min(len(pyinfra.config.SSH_HOSTS), 100))
