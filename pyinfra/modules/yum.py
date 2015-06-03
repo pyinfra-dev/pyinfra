@@ -8,14 +8,18 @@ from pyinfra.api import operation
 
 @operation
 def repo(name, present=True):
-    '''[Not implemented] Manage yum sources.'''
+    '''[Not implemented] Manage yum repositories.'''
     pass
 
 
 @operation
-def packages(packages, present=True, upgrade=False, clean=False):
+def packages(packages=None, present=True, upgrade=False, clean=False):
     '''Manage yum packages & updates.'''
-    packages = packages if isinstance(packages, list) else [packages]
+    if packages is None:
+        packages = []
+    elif isinstance(packages, basestring):
+        packages = [packages]
+
     commands = []
 
     if clean:
@@ -47,9 +51,3 @@ def packages(packages, present=True, upgrade=False, clean=False):
             commands.append('yum remove -y {}'.format(' '.join(diff_packages)))
 
     return commands
-
-
-@operation
-def rpm(rpm_file, present=True):
-    '''[Not implemented] Install/remove .rpm packages with rpm'''
-    pass

@@ -9,19 +9,24 @@ from pyinfra.api import operation, operation_env
 @operation
 def repo(name, present=True):
     '''[Not complete] Manage apt sources.'''
-    return ['apt-add-repository {} -y'.format(name)]
+    return ['apt-add-repository {0} -y'.format(name)]
+
 
 @operation
 def ppa(name, **kwargs):
     '''[Not complete] Shortcut for managing ppa apt sources.'''
-    return repo.__decorated__('ppa:{}'.format(name), **kwargs)
+    return repo('ppa:{}'.format(name), **kwargs)
 
 
 @operation
 @operation_env(DEBIAN_FRONTEND='noninteractive') # surpresses interactive prompts
-def packages(packages, present=True, update=False, upgrade=False):
+def packages(packages=None, present=True, update=False, upgrade=False):
     '''Install/remove/upgrade packages & update apt.'''
-    packages = packages if isinstance(packages, list) else [packages]
+    if packages is None:
+        packages = []
+    elif isinstance(packages, basestring):
+        packages = [packages]
+
     commands = []
 
     if update:
@@ -47,9 +52,3 @@ def packages(packages, present=True, update=False, upgrade=False):
         commands.append('apt-get remove -y {}'.format(diff_packages))
 
     return commands
-
-
-@operation
-def deb(deb_file, present=True):
-    '''[Not implemented] Install/remove .deb packages with dpkg'''
-    pass
