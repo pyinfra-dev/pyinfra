@@ -70,8 +70,16 @@ def operation(func):
 
         op_hash = make_hash(op_hash)
 
-        # Get the commands
+        # If this op is being called inside another, just return here
+        # (any unwanted/op-related kwargs removed above)
+        if pyinfra._in_op:
+            return func(*args, **kwargs)
+
+        # Otherwise, flag as in-op and run it to get the commands
+        pyinfra._in_op = True
         commands = func(*args, **kwargs)
+        pyinfra._in_op = False
+
         # No commands, no op
         if not isinstance(commands, list):
             return
@@ -102,12 +110,6 @@ def operation(func):
         if name not in op_meta['names']:
             op_meta['names'].append(name)
 
-    # Allow the function to be called "__decorated__" within other @op wrapped functions
-    if hasattr(func, '__decorated__'):
-        # Case where we double-wrap a function (@operation_env)
-        decorated_function.__decorated__ = func.__decorated__
-    else:
-        decorated_function.__decorated__ = func
     return decorated_function
 
 
@@ -119,6 +121,5 @@ def operation_env(**kwargs):
             return func(*args, **kwargs)
 
         decorated_function.env = kwargs
-        decorated_function.__decorated__ = func
         return decorated_function
     return decorator

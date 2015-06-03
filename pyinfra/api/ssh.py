@@ -2,7 +2,6 @@
 # File: pyinfra/api/ssh.py
 # Desc: handle all SSH related stuff
 
-import time
 from hashlib import sha1
 from socket import error as socket_error, gaierror
 
@@ -23,20 +22,20 @@ def _connect(hostname, **kwargs):
 
         # Assign internally
         pyinfra._connections[hostname] = client
-        logger.info('[{}] {}'.format(
+        logger.info('[{0}] {1}'.format(
             colored(hostname, attrs=['bold']),
             colored('Connected', 'green')
         ))
 
         return hostname
     except AuthenticationException as e:
-        logger.critical('Auth error on: {}, {}'.format(hostname, e))
+        logger.critical('Auth error on: {0}, {1}'.format(hostname, e))
     except SSHException as e:
-        logger.critical('SSH error on: {}, {}'.format(hostname, e))
+        logger.critical('SSH error on: {0}, {1}'.format(hostname, e))
     except socket_error as e:
-        logger.critical('Could not connect: {}, {}'.format(hostname, e))
+        logger.critical('Could not connect: {0}, {1}'.format(hostname, e))
     except gaierror:
-        logger.critical('Could not resolve: {}'.format(hostname))
+        logger.critical('Could not resolve: {0}'.format(hostname))
 
 def connect_all():
     '''Connect to all the configured servers in parallel.'''
@@ -76,7 +75,7 @@ def run_shell_command(
         env = {}
 
     logger.debug('Running command on {0}: "{1}"'.format(hostname, command))
-    logger.debug('Command sudo?: {}, sudo user: {}, env: {}'.format(
+    logger.debug('Command sudo?: {0}, sudo user: {1}, env: {2}'.format(
         sudo, sudo_user, env
     ))
 
@@ -92,18 +91,18 @@ def run_shell_command(
 
     # No sudo, just bash wrap the command
     if not sudo:
-        command = 'bash -c "{}"'.format(command)
+        command = 'bash -c "{0}"'.format(command)
     # Otherwise, work out sudo
     else:
         # Sudo with a user, then bash
         if sudo_user:
-            command = 'sudo -u {} -S bash -c "{}"'.format(sudo_user, command)
+            command = 'sudo -u {0} -S bash -c "{1}"'.format(sudo_user, command)
         # Sudo then bash
         else:
-            command = 'sudo -S bash -c "{}"'.format(command)
+            command = 'sudo -S bash -c "{0}"'.format(command)
 
     if print_output:
-        print '{}>>> {}'.format(print_prefix, command)
+        print '{0}>>> {1}'.format(print_prefix, command)
 
     # Get the connection for this hostname
     connection = pyinfra._connections[hostname]
@@ -143,14 +142,13 @@ def put_file(
         # Get temp file location
         hash_ = sha1()
         hash_.update(remote_file)
-        hash_.update(str(time.time()))
         temp_file = '/tmp/{0}'.format(hash_.hexdigest())
 
         _put_file(hostname, file_io, temp_file)
 
         # Execute run_shell_command w/sudo to mv/chown it
         command = 'mv {0} {1} && chown {2}:{2} {1}'.format(
-            temp_file, remote_file, sudo_user or 'root'
+            temp_file, remote_file, sudo_user
         )
         channel, _, stderr = run_shell_command(
             hostname, command,
