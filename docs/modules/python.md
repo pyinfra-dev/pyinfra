@@ -4,5 +4,8 @@
 ##### pyinfra.modules.python.execute
 
 ```py
-execute()
+execute(
+    callback,
+    **kwargs
+)
 ```

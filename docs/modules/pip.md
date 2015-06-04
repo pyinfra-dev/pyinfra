@@ -6,5 +6,10 @@
 [Not implemented] Manage pip packages.
 
 ```py
-packages()
+packages(
+    packages=None,
+    requirements=None,
+    present=True,
+    upgrade=False
+)
 ```

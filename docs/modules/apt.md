@@ -6,7 +6,12 @@
 Install/remove/upgrade packages & update apt.
 
 ```py
-packages()
+packages(
+    packages=None,
+    present=True,
+    update=False,
+    upgrade=False
+)
 ```
 
 
@@ -15,7 +20,10 @@ packages()
 [Not complete] Shortcut for managing ppa apt sources.
 
 ```py
-ppa()
+ppa(
+    name,
+    **kwargs
+)
 ```
 
 
@@ -24,5 +32,8 @@ ppa()
 [Not complete] Manage apt sources.
 
 ```py
-repo()
+repo(
+    name,
+    present=True
+)
 ```

@@ -6,7 +6,12 @@
 Manage yum packages & updates.
 
 ```py
-packages()
+packages(
+    packages=None,
+    present=True,
+    upgrade=False,
+    clean=False
+)
 ```
 
 
@@ -15,5 +20,8 @@ packages()
 [Not implemented] Manage yum repositories.
 
 ```py
-repo()
+repo(
+    name,
+    present=True
+)
 ```

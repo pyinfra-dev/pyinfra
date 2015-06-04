@@ -6,5 +6,10 @@
 [Not implemented] Manage git repositories.
 
 ```py
-repo()
+repo(
+    source,
+    target,
+    branch='master',
+    update=True
+)
 ```

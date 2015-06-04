@@ -6,7 +6,14 @@
 Manage the state of directories.
 
 ```py
-directory()
+directory(
+    name,
+    present=True,
+    user=None,
+    group=None,
+    permissions=None,
+    recursive=False
+)
 ```
 
 
@@ -15,7 +22,14 @@ directory()
 Manage the state of files.
 
 ```py
-file()
+file(
+    name,
+    present=True,
+    user=None,
+    group=None,
+    permissions=None,
+    touch=False
+)
 ```
 
 
@@ -24,7 +38,12 @@ file()
 Manage the state of init.d services.
 
 ```py
-init()
+init(
+    name,
+    running=True,
+    restarted=False,
+    reloaded=False
+)
 ```
 
 
@@ -33,7 +52,9 @@ init()
 Upload and execute a local script on the remote host.
 
 ```py
-script()
+script(
+    filename
+)
 ```
 
 
@@ -42,7 +63,9 @@ script()
 Run raw shell code.
 
 ```py
-shell()
+shell(
+    code
+)
 ```
 
 
@@ -51,5 +74,12 @@ shell()
 Manage Linux users & their ssh `authorized_keys`.
 
 ```py
-user()
+user(
+    name,
+    present=True,
+    home=None,
+    shell=None,
+    public_keys=None, # list of public keys to attach to this user
+    delete_keys=False # deletes existing keys when `public_keys` specified
+)
 ```
