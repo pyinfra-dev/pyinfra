@@ -110,6 +110,7 @@ def operation(func):
         if name not in op_meta['names']:
             op_meta['names'].append(name)
 
+    decorated_function.__decorated__ = getattr(func, '__decorated__', func)
     return decorated_function
 
 
@@ -121,5 +122,6 @@ def operation_env(**kwargs):
             return func(*args, **kwargs)
 
         decorated_function.env = kwargs
+        decorated_function.__decorated__ = func
         return decorated_function
     return decorator
