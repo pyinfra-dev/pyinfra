@@ -1,7 +1,7 @@
 ## pyinfra.modules.apt
 
 
-##### pyinfra.modules.apt.packages
+##### function: packages
 
 Install/remove/upgrade packages & update apt.
 
@@ -15,7 +15,7 @@ packages(
 ```
 
 
-##### pyinfra.modules.apt.ppa
+##### function: ppa
 
 [Not complete] Shortcut for managing ppa apt sources.
 
@@ -27,7 +27,7 @@ ppa(
 ```
 
 
-##### pyinfra.modules.apt.repo
+##### function: repo
 
 [Not complete] Manage apt sources.
 

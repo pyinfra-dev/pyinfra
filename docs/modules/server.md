@@ -1,7 +1,9 @@
 ## pyinfra.modules.server
 
+The server module attempts to take care of os-level state. While it is primarily targetted towards
+Linux we try to stick to Unix as much as possible for greater compatability with BSD/etc.
 
-##### pyinfra.modules.server.directory
+##### function: directory
 
 Manage the state of directories.
 
@@ -17,7 +19,7 @@ directory(
 ```
 
 
-##### pyinfra.modules.server.file
+##### function: file
 
 Manage the state of files.
 
@@ -33,7 +35,7 @@ file(
 ```
 
 
-##### pyinfra.modules.server.init
+##### function: init
 
 Manage the state of init.d services.
 
@@ -47,7 +49,7 @@ init(
 ```
 
 
-##### pyinfra.modules.server.script
+##### function: script
 
 Upload and execute a local script on the remote host.
 
@@ -58,7 +60,7 @@ script(
 ```
 
 
-##### pyinfra.modules.server.shell
+##### function: shell
 
 Run raw shell code.
 
@@ -69,7 +71,7 @@ shell(
 ```
 
 
-##### pyinfra.modules.server.user
+##### function: user
 
 Manage Linux users & their ssh `authorized_keys`.
 

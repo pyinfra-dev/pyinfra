@@ -1,7 +1,7 @@
 ## pyinfra.api.ssh
 
 
-##### pyinfra.api.ssh.connect_all
+##### function: connect_all
 
 Connect to all the configured servers in parallel.
 
@@ -10,7 +10,7 @@ connect_all()
 ```
 
 
-##### pyinfra.api.ssh.put_file
+##### function: put_file
 
 Upload/sync local/remote directories & files to the specified host.
 
@@ -27,7 +27,7 @@ put_file(
 ```
 
 
-##### pyinfra.api.ssh.run_shell_command
+##### function: run_shell_command
 
 Execute a command on the specified host.
 

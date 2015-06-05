@@ -1,7 +1,7 @@
 ## pyinfra.modules.git
 
 
-##### pyinfra.modules.git.repo
+##### function: repo
 
 [Not implemented] Manage git repositories.
 

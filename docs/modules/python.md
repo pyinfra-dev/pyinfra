@@ -1,7 +1,7 @@
 ## pyinfra.modules.python
 
 
-##### pyinfra.modules.python.execute
+##### function: execute
 
 ```py
 execute(

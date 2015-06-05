@@ -1,7 +1,7 @@
 ## pyinfra.api.operations
 
 
-##### pyinfra.api.operations.run_op
+##### function: run_op
 
 Runs a single operation on a remote server.
 
@@ -14,7 +14,7 @@ run_op(
 ```
 
 
-##### pyinfra.api.operations.run_ops
+##### function: run_ops
 
 Runs all operations across all servers in a configurable manner.
 
@@ -27,7 +27,7 @@ run_ops(
 ```
 
 
-##### pyinfra.api.operations.run_server_ops
+##### function: run_server_ops
 
 Runs all operations for a single server.
 

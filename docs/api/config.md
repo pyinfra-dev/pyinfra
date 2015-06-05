@@ -1,7 +1,9 @@
 ## pyinfra.api.config
 
 
-##### pyinfra.api.config.Config.load_file
+### class: Config
+
+##### method: Config.load_file
 
 ```py
 Config.load_file(

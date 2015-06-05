@@ -1,7 +1,7 @@
 ## pyinfra.modules.files
 
 
-##### pyinfra.modules.files.put
+##### function: put
 
 Copy a local file to the remote system.
 
@@ -13,7 +13,7 @@ put(
 ```
 
 
-##### pyinfra.modules.files.template
+##### function: template
 
 Generate a template and write it to the remote system.
 

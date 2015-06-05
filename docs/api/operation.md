@@ -5,7 +5,7 @@ in a deploy script, what actually happens is we diff the remote server and build
 of commands to alter the diff to the specified arguments. This is then saved to be run
 later by pyinfra's __main__.
 
-##### pyinfra.api.operation.make_hash
+##### function: make_hash
 
 Make a hash from an arbitrary nested dictionary, list, tuple or set, used
 to generate ID's for operations based on their name & arguments.
@@ -17,7 +17,7 @@ make_hash(
 ```
 
 
-##### pyinfra.api.operation.operation
+##### function: operation
 
 Takes a simple module function and turn it into the internal operation representation
 consists of a list of commands + options (sudo, user, env).
@@ -29,7 +29,7 @@ operation(
 ```
 
 
-##### pyinfra.api.operation.operation_env
+##### function: operation_env
 
 Pre-wraps an operation with kwarg environment variables
 

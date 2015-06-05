@@ -1,7 +1,9 @@
 ## pyinfra.modules.venv
 
 
-##### pyinfra.modules.venv.enter.__init__
+### class: enter
+
+##### method: enter.__init__
 
 ```py
 enter.__init__(
@@ -11,7 +13,7 @@ enter.__init__(
 ```
 
 
-##### pyinfra.modules.venv.env
+##### function: env
 
 ```py
 env(

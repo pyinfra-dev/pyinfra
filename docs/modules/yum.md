@@ -1,7 +1,7 @@
 ## pyinfra.modules.yum
 
 
-##### pyinfra.modules.yum.packages
+##### function: packages
 
 Manage yum packages & updates.
 
@@ -15,7 +15,7 @@ packages(
 ```
 
 
-##### pyinfra.modules.yum.repo
+##### function: repo
 
 [Not implemented] Manage yum repositories.
 

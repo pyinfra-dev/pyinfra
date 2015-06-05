@@ -4,7 +4,9 @@ A list of classes for collecting state date on remote hosts. Each contains a
 command to run on the remote host, plus a method to handle parsing this data
 into a dict/list/whatever.
 
-##### pyinfra.api.facts.BlockDevices.process
+### class: BlockDevices
+
+##### method: BlockDevices.process
 
 ```py
 BlockDevices.process(
@@ -14,7 +16,9 @@ BlockDevices.process(
 ```
 
 
-##### pyinfra.api.facts.DebPackages.process
+### class: DebPackages
+
+##### method: DebPackages.process
 
 ```py
 DebPackages.process(
@@ -24,7 +28,9 @@ DebPackages.process(
 ```
 
 
-##### pyinfra.api.facts.Distribution.process
+### class: Distribution
+
+##### method: Distribution.process
 
 ```py
 Distribution.process(
@@ -34,17 +40,23 @@ Distribution.process(
 ```
 
 
-##### pyinfra.api.facts.Home.process
+### class: FactMeta
+
+##### method: FactMeta.__init__
 
 ```py
-Home.process(
-    self,
-    output
+FactMeta.__init__(
+    cls,
+    name,
+    bases,
+    attrs
 )
 ```
 
 
-##### pyinfra.api.facts.Hostname.process
+### class: Hostname
+
+##### method: Hostname.process
 
 ```py
 Hostname.process(
@@ -54,7 +66,9 @@ Hostname.process(
 ```
 
 
-##### pyinfra.api.facts.NetworkDevices.process
+### class: NetworkDevices
+
+##### method: NetworkDevices.process
 
 ```py
 NetworkDevices.process(
@@ -64,7 +78,9 @@ NetworkDevices.process(
 ```
 
 
-##### pyinfra.api.facts.PipPackages.process
+### class: PipPackages
+
+##### method: PipPackages.process
 
 ```py
 PipPackages.process(
@@ -74,7 +90,9 @@ PipPackages.process(
 ```
 
 
-##### pyinfra.api.facts.RPMPackages.process
+### class: RPMPackages
+
+##### method: RPMPackages.process
 
 ```py
 RPMPackages.process(
@@ -84,7 +102,9 @@ RPMPackages.process(
 ```
 
 
-##### pyinfra.api.facts.Users.process
+### class: Users
+
+##### method: Users.process
 
 ```py
 Users.process(
