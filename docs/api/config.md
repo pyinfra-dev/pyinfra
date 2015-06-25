@@ -3,11 +3,11 @@
 
 ### class: Config
 
-##### method: Config.load_file
+##### method: Config.__init__
 
 ```py
-Config.load_file(
-    cls,
-    config_file
+Config.__init__(
+    self,
+    **kwargs
 )
 ```

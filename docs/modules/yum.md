@@ -1,5 +1,10 @@
 ## pyinfra.modules.yum
 
+Manage yum packages and repositories. Note that yum package names are case-sensitive.
+
+Uses:
+
++ `yum`
 
 ##### function: packages
 

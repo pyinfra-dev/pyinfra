@@ -1,28 +1,26 @@
 ## pyinfra.api.host
 
-This file provides a class representing the current Linux server & it's state. When accessing
-methods or properties, remote checks are run on all remote hosts simultaneously & cached.
 
 ### class: Host
 
-##### method: Host.directory
-
-Like a fact, but for directory information.
+##### method: Host.__init__
 
 ```py
-Host.directory(
+Host.__init__(
     self,
-    name
+    ssh_hostname,
+    groups=None
 )
 ```
 
-##### method: Host.file
 
-Like a fact, but for file information.
+### class: HostModule
+
+##### method: HostModule.set
 
 ```py
-Host.file(
+HostModule.set(
     self,
-    name
+    host
 )
 ```

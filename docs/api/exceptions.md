@@ -2,3 +2,6 @@
 
 
 ### class: OperationError
+
+
+### class: PyinfraException

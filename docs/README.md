@@ -1,15 +1,10 @@
 # pyinfra
 
-pyinfra is a deployment tool. It's configured in Python; to make a deploy you need a `config.py` and `deploy.py`. Configs contain some basic information about the group of servers you wish to deploy to. The deploy script contains **operations**, which lie at the core of pyinfra.
+pyinfra is a deployment tool. Deploys can be executed via a [CLI](./quick_start.md) or [Python API](./api/README.md). In both cases a two things are needed: an **inventory** and a list of **operations**. The inventory manages and groups the target hosts/data, the operations definte the desired state of the target host. Using these a [two-pass deploy](./deploy_process.md) is executed.
+
+pyinfra targets POSIX compatability and is currently tested against Ubuntu, Debian, CentOS & OpenBSD.
 
 + [Quick start](./quick_start.md)
 + [Modules list](./modules/README.md)
-
-### API/Internals
-
-Subject to _enormous change_ while pyinfra still very much conceptual.
-
-+ [The deploy process](./deploy_process.md)
-+ [Operations](./operations.md)
-+ [Facts](./facts.md)
++ [Example deploy](../example)
 + [API documentation](./api)

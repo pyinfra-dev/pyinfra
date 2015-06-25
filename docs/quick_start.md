@@ -5,7 +5,7 @@ Install pyinfra with pip: `pip install pyinfra`.
 To get started you need a **config script** containing SSH details, for example:
 
 ```py
-SSH_HOSTS = ['20.20.20.20']
+SSH_HOSTS = ['myhost.net']
 SSH_USER = 'remote_user'
 SSH_KEY = '/path/to/private_key'
 ```
@@ -33,16 +33,6 @@ server.file(
     sudo=True
 )
 
-# Ensure the state of directories
-server.directory(
-    config.ENV_DIR,
-    user='pyinfra',
-    group='pyinfra',
-    permissions='755',
-    recursive=True,
-    sudo=True
-)
-
 # etc... see ./modules or the full example!
 ```
 
@@ -52,4 +42,4 @@ And to run the deploy:
 
 ## What next?
 
-Check out the [module documentation](./modules/README.md).
+Check out the [example deploy.py](../example/deploy.py) and [module documentation](./modules/README.md).

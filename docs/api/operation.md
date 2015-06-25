@@ -5,14 +5,15 @@ in a deploy script, what actually happens is we diff the remote server and build
 of commands to alter the diff to the specified arguments. This is then saved to be run
 later by pyinfra's __main__.
 
-##### function: make_hash
+##### function: add_op
 
-Make a hash from an arbitrary nested dictionary, list, tuple or set, used
-to generate ID's for operations based on their name & arguments.
+Prepare & add an operation to pyinfra.state by executing it on all hosts.
 
 ```py
-make_hash(
-    obj
+add_op(
+    op_func,
+    *args,
+    **kwargs
 )
 ```
 

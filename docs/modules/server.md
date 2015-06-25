@@ -1,7 +1,13 @@
 ## pyinfra.modules.server
 
-The server module attempts to take care of os-level state. While it is primarily targetted towards
-Linux we try to stick to Unix as much as possible for greater compatability with BSD/etc.
+The server module attempts to take care of os-level state. Targets POSIX compatability, tested on Linux/BSD.
+
+Uses POSIX commands:
+
++ `echo`, `cat`
++ `hostname`, `uname`
++ `touch`, `mkdir`, `chown`, `chmod`
++ `useradd`, `userdel`, `usermod`
 
 ##### function: directory
 
@@ -13,7 +19,7 @@ directory(
     present=True,
     user=None,
     group=None,
-    permissions=None,
+    mode=None,
     recursive=False
 )
 ```
@@ -29,22 +35,8 @@ file(
     present=True,
     user=None,
     group=None,
-    permissions=None,
+    mode=None,
     touch=False
-)
-```
-
-
-##### function: init
-
-Manage the state of init.d services.
-
-```py
-init(
-    name,
-    running=True,
-    restarted=False,
-    reloaded=False
 )
 ```
 
@@ -65,9 +57,7 @@ script(
 Run raw shell code.
 
 ```py
-shell(
-    code
-)
+shell()
 ```
 
 
@@ -81,7 +71,6 @@ user(
     present=True,
     home=None,
     shell=None,
-    public_keys=None, # list of public keys to attach to this user
-    delete_keys=False # deletes existing keys when `public_keys` specified
+    public_keys=None # list of public keys to attach to this user
 )
 ```

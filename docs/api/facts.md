@@ -1,39 +1,12 @@
 ## pyinfra.api.facts
 
-A list of classes for collecting state date on remote hosts. Each contains a
-command to run on the remote host, plus a method to handle parsing this data
-into a dict/list/whatever.
 
-### class: BlockDevices
+### class: FactBase
 
-##### method: BlockDevices.process
+##### method: FactBase.process
 
 ```py
-BlockDevices.process(
-    self,
-    output
-)
-```
-
-
-### class: DebPackages
-
-##### method: DebPackages.process
-
-```py
-DebPackages.process(
-    self,
-    output
-)
-```
-
-
-### class: Distribution
-
-##### method: Distribution.process
-
-```py
-Distribution.process(
+FactBase.process(
     self,
     output
 )
@@ -54,61 +27,41 @@ FactMeta.__init__(
 ```
 
 
-### class: Hostname
+##### function: get_fact
 
-##### method: Hostname.process
+Wrapper around get_facts returning facts for one host or a function that does.
 
 ```py
-Hostname.process(
-    self,
-    output
+get_fact(
+    hostname,
+    name
 )
 ```
 
 
-### class: NetworkDevices
-
-##### method: NetworkDevices.process
+##### function: get_fact_names
 
 ```py
-NetworkDevices.process(
-    self,
-    output
+get_fact_names()
+```
+
+
+##### function: get_facts
+
+```py
+get_facts(
+    name,
+    sudo=False,
+    sudo_user=None,
+    arg=None
 )
 ```
 
 
-### class: PipPackages
-
-##### method: PipPackages.process
+##### function: is_fact
 
 ```py
-PipPackages.process(
-    self,
-    output
-)
-```
-
-
-### class: RPMPackages
-
-##### method: RPMPackages.process
-
-```py
-RPMPackages.process(
-    self,
-    output
-)
-```
-
-
-### class: Users
-
-##### method: Users.process
-
-```py
-Users.process(
-    self,
-    output
+is_fact(
+    name
 )
 ```
