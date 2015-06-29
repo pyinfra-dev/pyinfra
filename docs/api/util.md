@@ -21,12 +21,12 @@ AttrDict.dict(
 ```
 
 
-### class: FallbackAttr
+### class: FallbackAttrDict
 
-##### method: FallbackAttr.__init__
+##### method: FallbackAttrDict.__init__
 
 ```py
-FallbackAttr.__init__(
+FallbackAttrDict.__init__(
     self,
     *datas
 )

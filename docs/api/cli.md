@@ -17,8 +17,7 @@ Builds a pyinfra.api.Inventory from the filesystem
 ```py
 make_inventory(
     inventory_filename,
-    limit=None,
-    deploy_dir=''
+    limit=None
 )
 ```
 

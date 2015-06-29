@@ -28,12 +28,3 @@ operation(
     func
 )
 ```
-
-
-##### function: operation_env
-
-Pre-wraps an operation with kwarg environment variables
-
-```py
-operation_env()
-```

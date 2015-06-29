@@ -28,6 +28,15 @@ State.__init__(
 
 ### class: StateModule
 
+##### method: StateModule.new
+
+```py
+StateModule.new(
+    self,
+    state
+)
+```
+
 ##### method: StateModule.reset
 
 ```py
@@ -36,11 +45,11 @@ StateModule.reset(
 )
 ```
 
-##### method: StateModule.set
+##### method: StateModule.set_dir
 
 ```py
-StateModule.set(
+StateModule.set_dir(
     self,
-    state
+    directory
 )
 ```

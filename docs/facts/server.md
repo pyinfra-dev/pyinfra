@@ -1,54 +1,12 @@
 ## pyinfra.facts.server
 
 
-### class: BlockDevices
+### class: Arch
 
-##### method: BlockDevices.process
-
-```py
-BlockDevices.process(
-    self,
-    output
-)
-```
-
-
-### class: Directory
-
-##### method: Directory.command
+##### method: Arch.process
 
 ```py
-Directory.command(
-    self,
-    name
-)
-```
-
-##### method: Directory.process
-
-```py
-Directory.process(
-    self,
-    output
-)
-```
-
-
-### class: File
-
-##### method: File.command
-
-```py
-File.command(
-    self,
-    name
-)
-```
-
-##### method: File.process
-
-```py
-File.process(
+Arch.process(
     self,
     output
 )
@@ -91,24 +49,24 @@ LinuxDistribution.process(
 ```
 
 
-### class: NetworkDevices
-
-##### method: NetworkDevices.process
-
-```py
-NetworkDevices.process(
-    self,
-    output
-)
-```
-
-
 ### class: Os
 
 ##### method: Os.process
 
 ```py
 Os.process(
+    self,
+    output
+)
+```
+
+
+### class: OsVersion
+
+##### method: OsVersion.process
+
+```py
+OsVersion.process(
     self,
     output
 )

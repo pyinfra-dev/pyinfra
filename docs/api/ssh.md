@@ -3,7 +3,7 @@
 
 ##### function: connect_all
 
-Connect to all the configured servers in parallel.
+Connect to all the configured servers in parallel. Reads/writes state.inventory.
 
 ```py
 connect_all()
@@ -12,7 +12,7 @@ connect_all()
 
 ##### function: put_file
 
-Upload/sync local/remote directories & files to the specified host.
+Upload file-ios to the specified host.
 
 ```py
 put_file(

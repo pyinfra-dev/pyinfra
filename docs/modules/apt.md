@@ -5,7 +5,6 @@ Manage apt packages and repositories.
 Uses:
 
 + `apt-get`
-+ `dpkg`
 + `apt-add-repository`
 
 ##### function: packages

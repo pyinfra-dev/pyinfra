@@ -1,24 +1,24 @@
 ## pyinfra.facts.mysql
 
 
-### class: MySQLDatabases
+### class: MysqlDatabases
 
-##### method: MySQLDatabases.process
+##### method: MysqlDatabases.process
 
 ```py
-MySQLDatabases.process(
+MysqlDatabases.process(
     self,
     output
 )
 ```
 
 
-### class: MySQLUsers
+### class: MysqlUsers
 
-##### method: MySQLUsers.process
+##### method: MysqlUsers.process
 
 ```py
-MySQLUsers.process(
+MysqlUsers.process(
     self,
     output
 )

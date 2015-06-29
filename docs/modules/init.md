@@ -13,3 +13,15 @@ d(
     reloaded=False
 )
 ```
+
+
+##### function: service
+
+```py
+service(
+    name,
+    running=True,
+    restarted=False,
+    reloaded=False
+)
+```

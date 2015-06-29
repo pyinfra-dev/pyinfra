@@ -8,7 +8,7 @@ Deploy folders should look something like this:
 + `inventories/*.py` or `inventory.py` - inventory script(s)
 + `group_vars/`
     * `all.py` - group variable script all hosts inherit
-    * `<environment>.py` - variable scripts for specific inventory groups
+    * `*.py` - variable scripts for specific inventory groups
 + `templates/` - Jinja2 templates for the deploy
 + `files/` - static files for the deploy
 

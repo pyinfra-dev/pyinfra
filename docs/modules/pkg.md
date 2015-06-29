@@ -4,7 +4,6 @@ Manage BSD packages and repositories. Note that BSD package names are case-sensi
 
 Uses:
 
-+ `pkg_info`
 + `pkg_add`
 + `pkg_delete`
 
