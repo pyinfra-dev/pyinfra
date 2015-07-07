@@ -1,18 +1,29 @@
 # pyinfra
-# File: pyinfra/modules/linux.py
-# Desc: the base Linux module
+# File: pyinfra/modules/server.py
+# Desc: the base os-level module
+
+'''
+The server module takes care of os-level state. Targets POSIX compatability, tested on Linux/BSD.
+
+Uses POSIX commands:
+
++ `echo`, `cat`
++ `hostname`, `uname`
++ `useradd`, `userdel`, `usermod`
+'''
 
 from hashlib import sha1
 
 from pyinfra import host
-from pyinfra.api import operation, OperationError
-from pyinfra.modules import files
+from pyinfra.api import operation, operation_facts
+
+from . import files
 
 
 @operation
-def shell(code):
+def shell(*commands):
     '''Run raw shell code.'''
-    return [code]
+    return list(commands)
 
 
 @operation
@@ -33,160 +44,67 @@ def script(filename):
 
 
 @operation
-def init(name, running=True, restarted=False, reloaded=False):
-    '''Manage the state of init.d services.'''
-    commands = []
-
-    if running:
-        commands.append('/etc/init.d/{0} status || /etc/init.d/{0} start'.format(name))
-    else:
-        commands.append('/etc/init.d/{0} status && /etc/init.d/{0} stop'.format(name))
-
-    if restarted:
-        commands.append('/etc/init.d/{0} restart'.format(name))
-
-    if reloaded:
-        commands.append('/etc/init.d/{0} reload'.format(name))
-
-    return commands
-
-
-@operation
-def user(name, present=True, home=None, shell=None, public_keys=None, delete_keys=False):
+@operation_facts('users')
+def user(name, present=True, home=None, shell=None, public_keys=None):
     '''
     Manage Linux users & their ssh `authorized_keys`.
 
     # public_keys: list of public keys to attach to this user
-    # delete_keys: deletes existing keys when `public_keys` specified
     '''
     commands = []
-    is_present = name in host.users
-
-    def do_keys():
-        if public_keys is None:
-            return
-
-        # Ensure .ssh directory
-        commands.extend(directory('{}/.ssh'.format(home), present=True))
-
-        filename = '{}/.ssh/authorized_keys'.format(home)
-        if delete_keys:
-            commands.extend([
-                # Delete all authorized_keys files
-                'rm -f {}*'.format(filename),
-                # Re-create just the one
-                'touch {}'.format(filename)
-            ])
-
-        for key in public_keys:
-            commands.append('cat {0} | grep "{1}" || echo "{1}" >> {0}'.format(filename, key))
+    users = host.users or {}
+    user = users.get(name)
 
     # User exists but we don't want them?
-    if is_present and not present:
+    if not present and user:
         commands.append('userdel {0}'.format(name))
+        return commands
 
     # User doesn't exist but we want them?
-    elif not is_present and present:
+    if present and user is None:
         # Create the user w/home/shell
-        commands.append('useradd {0} --home {home} --shell {shell}'.format(
-            name,
-            home=home,
-            shell=shell
-        ))
-        # Add SSH keys
-        do_keys()
+        commands.append('useradd -d {0} -s {1} {2}'.format(home, shell, name))
 
     # User exists and we want them, check home/shell/keys
     else:
-        user = host.users[name]
         # Check homedir
         if user['home'] != home:
-            commands.append('usermod --home {1} {0}'.format(name, home))
+            commands.append('usermod -d {0} {1}'.format(home, name))
 
         # Check shell
         if user['shell'] != shell:
-            commands.append('usermod --shell {1} {0}'.format(name, shell))
+            commands.append('usermod -s {0} {1}'.format(shell, name))
 
-        # Add SSH keys
-        do_keys()
+    # Ensure home directory ownership
+    commands.extend(files.directory(
+        home,
+        user=name,
+        group=name
+    ))
 
-    return commands
+    # Add SSH keys
+    if public_keys is not None:
+        # Ensure .ssh directory
+        # note that this always outputs commands unless the SSH user has access to the
+        # authorized_keys file, ie the SSH user is the user defined in this function
+        commands.extend(files.directory(
+            '{0}/.ssh'.format(home),
+            user=name,
+            group=name,
+            mode='700'
+        ))
 
+        filename = '{0}/.ssh/authorized_keys'.format(home)
 
-def _chmod(target, permissions, recursive=False):
-    return 'chmod {0}{1} {2}'.format(('-R ' if recursive else ''), permissions, target)
+        # Ensure authorized_keys
+        commands.extend(file(
+            filename,
+            user=name,
+            group=name,
+            mode='600'
+        ))
 
-def _chown(target, user, group, recursive=False):
-    return 'chown {0}{1}:{2} {3}'.format(('-R ' if recursive else ''), user, group, target)
-
-@operation
-def file(name, present=True, user=None, group=None, permissions=None, touch=False):
-    '''Manage the state of files.'''
-    info = host.file(name)
-    commands = []
-
-    # It's a directory?!
-    if info is False:
-        raise OperationError('{} is a directory'.format(name))
-
-    # Doesn't exist & we want it
-    if info is None and present:
-        commands.append('touch {}'.format(name))
-        if permissions:
-            commands.append(_chmod(name, permissions))
-        if user or group:
-            commands.append(_chown(name, user, group))
-
-    # It exists and we don't want it
-    elif not present:
-        commands.append('rm -f {}'.format(name))
-
-    # It exists & we want to ensure its state
-    else:
-        if touch:
-            commands.append('touch {}'.format(name))
-
-        # Check permissions
-        if permissions and info['permissions'] != permissions:
-            commands.append(_chmod(name, permissions))
-
-        # Check user/group
-        if user and group and (info['user'] != user or info['group'] != group):
-            commands.append(_chown(name, user, group))
-
-    return commands
-
-
-@operation
-def directory(name, present=True, user=None, group=None, permissions=None, recursive=False):
-    '''Manage the state of directories.'''
-    info = host.directory(name)
-    commands = []
-
-    # It's a file?!
-    if info is False:
-        raise OperationError('{} is a file'.format(name))
-
-    # Doesn't exist & we want it
-    if info is None and present:
-        commands.append('mkdir -p {}'.format(name))
-        if permissions:
-            commands.append(_chmod(name, permissions, recursive=recursive))
-        if user or group:
-            commands.append(_chown(name, user, group, recursive=recursive))
-
-    # It exists and we don't want it
-    elif not present:
-        commands.append('rm -rf {}'.format(name))
-
-    # It exists & we want to ensure its state
-    else:
-        # Check permissions
-        if permissions and info['permissions'] != permissions:
-            commands.append(_chmod(name, permissions, recursive=recursive))
-
-        # Check user/group
-        if user and group and (info['user'] != user or info['group'] != group):
-            commands.append(_chown(name, user, group, recursive=recursive))
+        for key in public_keys:
+            commands.append('cat {0} | grep "{1}" || echo "{1}" >> {0}'.format(filename, key))
 
     return commands
