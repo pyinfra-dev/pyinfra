@@ -1,6 +1,7 @@
 #!/bin/sh
 
 VERSION=`python setup.py --version`
+
 echo "# Releasing pyinfra v$VERSION..."
 
 echo "# Build the docs..."
@@ -9,6 +10,7 @@ python scripts/build_docs.py
 echo "# Commit & push the docs..."
 git add docs/modules/*.md
 git add docs/api/*.md
+git add README.md
 git commit -m "Documentation update for v$VERSION"
 git push
 
