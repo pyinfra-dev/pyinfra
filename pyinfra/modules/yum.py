@@ -1,9 +1,17 @@
 # pyinfra
-# File: pyinfra/modules/apt.py
-# Desc: manage apt packages & repositories
+# File: pyinfra/modules/yum.py
+# Desc: manage yum packages & repositories
+
+'''
+Manage yum packages and repositories. Note that yum package names are case-sensitive.
+
+Uses:
+
++ `yum`
+'''
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import operation, operation_facts, OperationError
 
 
 @operation
@@ -13,12 +21,11 @@ def repo(name, present=True):
 
 
 @operation
+@operation_facts('rpm_packages')
 def packages(packages=None, present=True, upgrade=False, clean=False):
     '''Manage yum packages & updates.'''
     if packages is None:
         packages = []
-    elif isinstance(packages, basestring):
-        packages = [packages]
 
     commands = []
 
@@ -28,7 +35,10 @@ def packages(packages=None, present=True, upgrade=False, clean=False):
     if upgrade:
         commands.append('yum update -y')
 
-    current_packages = host.rpm_packages
+    current_packages = host.rpm_packages or {}
+
+    if current_packages is None:
+        raise OperationError('yum is not installed')
 
     if present is True:
         # Packages specified but not installed
@@ -38,7 +48,7 @@ def packages(packages=None, present=True, upgrade=False, clean=False):
         ]
 
         if diff_packages:
-            commands.append('yum install -y {}'.format(' '.join(diff_packages)))
+            commands.append('yum install -y {0}'.format(' '.join(diff_packages)))
 
     else:
         # Packages specified & installed
@@ -48,6 +58,6 @@ def packages(packages=None, present=True, upgrade=False, clean=False):
         ]
 
         if diff_packages:
-            commands.append('yum remove -y {}'.format(' '.join(diff_packages)))
+            commands.append('yum remove -y {0}'.format(' '.join(diff_packages)))
 
     return commands

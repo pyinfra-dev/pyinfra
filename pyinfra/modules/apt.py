@@ -2,8 +2,17 @@
 # File: pyinfra/modules/apt.py
 # Desc: manage apt packages & repositories
 
+'''
+Manage apt packages and repositories.
+
+Uses:
+
++ `apt-get`
++ `apt-add-repository`
+'''
+
 from pyinfra import host
-from pyinfra.api import operation, operation_env
+from pyinfra.api import operation, operation_facts, OperationError
 
 
 @operation
@@ -19,36 +28,50 @@ def ppa(name, **kwargs):
 
 
 @operation
-@operation_env(DEBIAN_FRONTEND='noninteractive') # surpresses interactive prompts
+@operation_facts('deb_packages')
 def packages(packages=None, present=True, update=False, upgrade=False):
     '''Install/remove/upgrade packages & update apt.'''
     if packages is None:
         packages = []
-    elif isinstance(packages, basestring):
-        packages = [packages]
+
+    # apt packages are case-insensitive
+    packages = [package.lower() for package in packages]
 
     commands = []
 
     if update:
         commands.append('apt-get update')
-    if upgrade:
-        commands.append('apt-get upgrade -y')
 
-    current_packages = host.deb_packages
+    if upgrade:
+        commands.append('DEBIAN_FRONTEND=noninteractive apt-get upgrade -y')
+
+    current_packages = host.deb_packages or {}
+
+    if current_packages is None:
+        raise OperationError('apt is not installed')
 
     if present is True:
         # Packages specified but not installed
-        diff_packages = ' '.join([
+        diff_packages = [
             package for package in packages
             if package not in current_packages
-        ])
-        commands.append('apt-get install -y {}'.format(diff_packages))
+        ]
+
+        if diff_packages:
+            commands.append('DEBIAN_FRONTEND=noninteractive apt-get install -y {0}'.format(
+                ' '.join(diff_packages)
+            ))
+
     else:
         # Packages specified & installed
-        diff_packages = ' '.join([
+        diff_packages = [
             package for package in packages
             if package in current_packages
-        ])
-        commands.append('apt-get remove -y {}'.format(diff_packages))
+        ]
+
+        if diff_packages:
+            commands.append('DEBIAN_FRONTEND=noninteractive apt-get remove -y {0}'.format(
+                ' '.join(diff_packages)
+            ))
 
     return commands
