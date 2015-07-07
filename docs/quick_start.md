@@ -2,15 +2,16 @@
 
 Install pyinfra with pip: `pip install pyinfra`.
 
-To get started you need a **config script** containing SSH details, for example:
+To get started you need an **inventory** file (`inventory.py`) containing groups of hostnames:
 
 ```py
-SSH_HOSTS = ['myhost.net']
-SSH_USER = 'remote_user'
-SSH_KEY = '/path/to/private_key'
+# Any ALL_CAPS names are accepted
+GROUP = [
+    'my.hostname'
+]
 ```
 
-And then **deploy script** containing the state you wish to apply:
+And then a **deploy** file (`deploy.py`) containing the state you wish to apply:
 
 ```py
 # These modules contain operations, which provide ways to set desired state
@@ -32,13 +33,13 @@ server.file(
     permissions='644',
     sudo=True
 )
-
-# etc... see ./modules or the full example!
 ```
 
 And to run the deploy:
 
-`pyinfra -c config.py deploy.py`
+```
+pyinfra -i inventory.py deploy.py --user=vagrant --key=files/insecure_private_key
+```
 
 ## What next?
 

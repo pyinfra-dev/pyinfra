@@ -1,12 +1,48 @@
 ## pyinfra.facts.init
 
 
-### class: InitdServices
+### class: InitdStatus
 
-##### method: InitdServices.process
+##### method: InitdStatus.process
 
 ```py
-InitdServices.process(
+InitdStatus.process(
+    self,
+    output
+)
+```
+
+
+### class: RcdStatus
+
+##### method: RcdStatus.process
+
+```py
+RcdStatus.process(
+    self,
+    output
+)
+```
+
+
+### class: ServiceStatus
+
+##### method: ServiceStatus.process
+
+```py
+ServiceStatus.process(
+    self,
+    output
+)
+```
+
+
+### class: SystemctlStatus
+
+##### method: SystemctlStatus.process
+
+```py
+SystemctlStatus.process(
     self,
     output
 )
