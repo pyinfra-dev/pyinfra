@@ -1,171 +1,67 @@
 # pyinfra
-# File: api/host.py
-# Desc: a classmodule representing a single host/server
+# File: pyinfra/api/host.py
+# Desc: thin class that represents a target host in pyinfra, also creates classmodule on pyinfra.host
+#       which updates to the "current host" in-deploy
 
-'''
-This file provides a class representing the current Linux server & it's state. When accessing
-methods or properties, remote checks are run on all remote hosts simultaneously & cached.
-'''
-
-import re
 import sys
 
-from termcolor import colored
-
 import pyinfra
-from pyinfra import config, logger
+from pyinfra import state
 
-from .facts import FACTS
-
-LS_REGEX = re.compile(
-    '[a-z-]?([-rwx]{9})\.?\s+[0-9]+\s+([a-zA-Z]+)\s+([a-zA-Z]+)\s+([0-9]+)\s+[a-zA-Z]{3}\s+[0-9]+\s+[0-9]{2}:[0-9]{2}'
-)
-
-
-_symbol_to_octal_permissions = {
-    'rwx': '7',
-    'rw-': '6',
-    'r-x': '5',
-    'r--': '4',
-    '-wx': '3',
-    '-w-': '2',
-    '--x': '1'
-}
-def _ls_matches_to_dict(matches):
-    '''Parse permissions into octal format (which is what we compare to deploy scripts).'''
-    def parse_permissions(permissions):
-        result = ''
-        # owner, group, world
-        for group in [permissions[0:3], permissions[3:6], permissions[6:9]]:
-            if group in _symbol_to_octal_permissions:
-                result = '{0}{1}'.format(result, _symbol_to_octal_permissions[group])
-            else:
-                result = '{0}0'.format(result)
-
-        return result
-
-    return {
-        'permissions': parse_permissions(matches.group(1)),
-        'user': matches.group(2),
-        'group': matches.group(3),
-        'size': matches.group(4)
-    }
-
-
-def _assign_facts(outs, key, processor, accessor=None):
-    '''Process & assign facts to all servers.'''
-    for (server, stdout, stderr) in outs:
-        result = processor(stdout)
-
-        if accessor is None:
-            pyinfra._facts[server][key] = result
-        else:
-            pyinfra._facts[server].setdefault(accessor, {})
-            pyinfra._facts[server][accessor][key] = result
-
-        logger.debug('Fact {0} for {1} assigned to {2}'.format(key, server, result))
-
-
-def _run_all_command(*args, **kwargs):
-    '''Runs a single command on all hosts in parallel.'''
-    join_output = kwargs.pop('join_output', False)
-
-    outs = [
-        (server, pyinfra._pool.spawn(pyinfra._connections[server].exec_command, *args, **kwargs))
-        for server in config.SSH_HOSTS
-    ]
-
-    # Join
-    [out[1].join() for out in outs]
-
-    # Get each data, overwritting greenlets
-    outs = [(out[0], out[1].get()) for out in outs]
-
-    # Pull out server, stdout, stderr from nested tuple
-    buffer_results = [(server, stdout, stderr) for (server, (_, stdout, stderr)) in outs]
-
-    # Prepare "normal" results, always run to ensure stderr buffer is read (affects exit code)
-    results = [(
-        server,
-        [line.strip() for line in stdout],
-        [line.strip() for line in stderr]
-    ) for (server, stdout, stderr) in buffer_results]
-
-    if join_output:
-        results = [
-            (server, '\n'.join(stdout), '\n'.join(stderr))
-            for (server, stdout, stderr) in results
-        ]
-
-    return results
+from .facts import is_fact, get_fact
+from .attrs import FallbackAttrData, wrap_attr_data
 
 
 class Host(object):
+    '''Represents a target host. Thin class that links up to facts and host/group data.'''
+    _data = None
+
+    @property
+    def data(self):
+        if not self._data:
+            self._data = FallbackAttrData(
+                state.inventory.get_host_data(self.ssh_hostname),
+                state.inventory.get_groups_data(self.groups),
+                state.inventory.get_data(),
+                state.inventory.get_default_data()
+            )
+
+        return self._data
+
+    @property
+    def host_data(self):
+        return state.inventory.get_host_data(self.ssh_hostname)
+
+    @property
+    def group_data(self):
+        return state.inventory.get_groups_data(self.groups)
+
+    def __init__(self, ssh_hostname, groups=None):
+        self.ssh_hostname = ssh_hostname
+        self.groups = groups if groups else []
+
     def __getattr__(self, key):
-        if key not in FACTS:
+        if not is_fact(key):
             raise AttributeError('No such fact: {}'.format(key))
 
-        current_server_facts = pyinfra._facts[pyinfra._current_server]
-
-        # Already got this fact?
-        if key in current_server_facts:
-            return current_server_facts[key]
-
-        logger.info('Running fact {0}'.format(colored(key, attrs=['bold'])))
-        # For each server, spawn a job on the pool to gather the fact
-        outs = _run_all_command(FACTS[key].command)
-
-        # Process & assign each fact to pyinfra._facts
-        _assign_facts(outs, key, FACTS[key].process)
-
-        # Return the fact
-        return pyinfra._facts[pyinfra._current_server][key]
-
-    def directory(self, name):
-        '''Like a fact, but for directory information.'''
-        current_server_dirs = pyinfra._facts[pyinfra._current_server].get('_dirs', {})
-
-        # Already got this directory?
-        if name in current_server_dirs:
-            return current_server_dirs[name]
-
-        def parse_directory(name):
-            matches = re.match(LS_REGEX, name)
-            if matches:
-                if not name.startswith('d'):
-                    return False # indicates not directory (ie file)
-                directory = _ls_matches_to_dict(matches)
-                return directory
-
-        logger.info('Running directory fact on {0}'.format(colored(name, attrs=['bold'])))
-        outs = _run_all_command('ls -ldp {0}'.format(name), join_output=True)
-
-        # Assign all & return current
-        _assign_facts(outs, name, parse_directory, '_dirs')
-        return pyinfra._facts[pyinfra._current_server]['_dirs'][name]
-
-    def file(self, name):
-        '''Like a fact, but for file information.'''
-        current_server_files = pyinfra._facts[pyinfra._current_server].get('_files', {})
-
-        # Already got this file?
-        if name in current_server_files:
-            return current_server_files[name]
-
-        def parse_file(name):
-            matches = re.match(LS_REGEX, name)
-            if matches:
-                if name.startswith('d'):
-                    return False # indicates not file (ie dir)
-                return _ls_matches_to_dict(matches)
-
-        logger.info('Running file fact on {0}'.format(colored(name, attrs=['bold'])))
-        outs = _run_all_command('ls -ldp {0}'.format(name), join_output=True)
-
-        # Assign & return current
-        _assign_facts(outs, name, parse_file, '_files')
-        return pyinfra._facts[pyinfra._current_server]['_files'][name]
+        fact = get_fact(self.ssh_hostname, key)
+        return wrap_attr_data(key, fact)
 
 
-# Set pyinfra.host to a Host instance
-sys.modules['pyinfra.host'] = pyinfra.host = Host()
+class HostModule(object):
+    '''
+    A classmodule which binds to pyinfra.host. At any time inside a pyinfra deploy, pyinfra.host can
+    be set to any Host object above via this classmodule's set method.
+    '''
+    def set(self, host):
+        self.host = host
+        self.ssh_hostname = host.ssh_hostname
+        self.groups = host.groups
+        self.data = host.data
+        self.host_data = host.host_data
+        self.group_data = host.group_data
+
+    def __getattr__(self, key):
+        return getattr(self.host, key)
+
+sys.modules['pyinfra.host'] = pyinfra.host = HostModule()

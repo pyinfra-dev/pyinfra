@@ -9,25 +9,23 @@ from types import FunctionType
 from gevent import joinall
 from termcolor import colored
 
-import pyinfra
-from pyinfra import config, logger
+from pyinfra import state, logger
 
 from .ssh import run_shell_command, put_file
 
 
-def run_op(hostname, op_hash, print_output=False):
-    '''Runs a single operation on a remote server.'''
+def _run_op(hostname, op_hash, print_output=False):
     # Noop for this host?
-    if op_hash not in pyinfra._ops[hostname]:
+    if op_hash not in state.ops[hostname]:
         logger.debug('(Skipping) no op {0} on {1}'.format(op_hash, hostname))
-        return
+        return True
 
-    op_data = pyinfra._ops[hostname][op_hash]
-    op_meta = pyinfra._op_meta[op_hash]
+    op_data = state.ops[hostname][op_hash]
+    op_meta = state.op_meta[op_hash]
 
     # Op is run_once, have we run it elsewhere?
     if op_meta['run_once']:
-        if op_hash in pyinfra._ops_run:
+        if op_hash in state.ops_run:
             logger.debug('(Skipping) run_once op {0} already started on {1}'.format(op_hash, hostname))
             return
 
@@ -36,8 +34,8 @@ def run_op(hostname, op_hash, print_output=False):
     print_prefix = '[{}] '.format(colored(hostname, attrs=['bold']))
 
     logger.debug('Starting operation {0} on {1}'.format(', '.join(op_meta['names']), hostname))
-    if op_hash not in pyinfra._ops_run:
-        pyinfra._ops_run.append(op_hash)
+    if op_hash not in state.ops_run:
+        state.ops_run.append(op_hash)
 
     # ...loop through each command
     for i, command in enumerate(op_data['commands']):
@@ -47,7 +45,7 @@ def run_op(hostname, op_hash, print_output=False):
         if isinstance(command, tuple):
             # If first element is function, it's a callback
             if isinstance(command[0], FunctionType):
-                status = command[0](hostname, **command[1])
+                status = command[0](hostname, state.inventory[hostname])
 
             # Non-function mean files to copy
             else:
@@ -70,35 +68,23 @@ def run_op(hostname, op_hash, print_output=False):
                 print_prefix=print_prefix
             )
 
-            # Iterate through outputs to get an exit status
-            # this iterates as the socket data comes in, which gevent patches
-            for line in stdout:
-                line = line.strip()
-                stdout_buffer.append(line)
-                if print_output:
-                    print u'{0}{1}'.format(print_prefix, line)
-
-            for line in stderr:
-                line = line.strip()
-                stderr_buffer.append(line)
-                if print_output:
-                    print u'{0}{1}'.format(
-                        print_prefix,
-                        colored(line, 'red')
-                    )
+            # If not iterated, do so to get an exit status
+            if not print_output:
+                stdout_buffer.extend(stdout)
+                stderr_buffer.extend(stderr)
 
             status = channel.exit_status <= 0
 
         if status is False:
             break
         else:
-            pyinfra._results[hostname]['commands'] += 1
+            state.results[hostname]['commands'] += 1
 
     # Commands didn't break, so count our successes & return True!
     else:
         # Count success
-        pyinfra._results[hostname]['ops'] += 1
-        pyinfra._results[hostname]['success_ops'] += 1
+        state.results[hostname]['ops'] += 1
+        state.results[hostname]['success_ops'] += 1
 
         logger.info('[{0}] {1}'.format(
             colored(hostname, attrs=['bold']),
@@ -116,28 +102,33 @@ def run_op(hostname, op_hash, print_output=False):
             )
 
     # Up error_ops & log
-    pyinfra._results[hostname]['error_ops'] += 1
-    logger.info('[{0}] {1}'.format(
-        colored(hostname, attrs=['bold']),
-        colored('Error{0}'.format(
-            ' (ignored)' if op_meta['ignore_errors'] else ''
-        ), 'yellow')
-    ))
+    state.results[hostname]['error_ops'] += 1
+
+    error_text = '{0}{1}'.format(colored(''), print_prefix)
+    if op_meta['ignore_errors']:
+        logger.warning('{0}{1}'.format(
+            error_text,
+            colored('Error (ignored)', 'yellow')
+        ))
+    else:
+        logger.critical('{0}{1}'.format(
+            error_text,
+            colored('Error', 'red')
+        ))
 
     # Ignored, op "completes" w/ ignored error
     if op_meta['ignore_errors']:
-        pyinfra._results[hostname]['ops'] += 1
+        state.results[hostname]['ops'] += 1
         return None
 
     # Unignored error -> False
     return False
 
 
-def run_server_ops(hostname, print_output):
-    '''Runs all operations for a single server.'''
+def _run_server_ops(hostname, print_output):
     logger.debug('Running all ops on {}'.format(hostname))
-    for op_hash in pyinfra._op_order:
-        op_meta = pyinfra._op_meta[op_hash]
+    for op_hash in state.op_order:
+        op_meta = state.op_meta[op_hash]
 
         logger.info('{0} {1} on {2}'.format(
             colored('Starting operation:', 'blue'),
@@ -145,7 +136,7 @@ def run_server_ops(hostname, print_output):
             colored(hostname, attrs=['bold'])
         ))
 
-        result = run_op(hostname, op_hash, print_output)
+        result = _run_op(hostname, op_hash, print_output)
         if result is False:
             logger.critical('Error in operation {0} on {1}, exiting...'.format(
                 ', '.join(op_meta['names']), hostname
@@ -153,28 +144,30 @@ def run_server_ops(hostname, print_output):
             return
 
 
-def run_ops(serial=False, nowait=False, print_output=False):
+def run_ops(hosts=None, serial=False, nowait=False, print_output=False):
     '''Runs all operations across all servers in a configurable manner.'''
+    hosts = hosts or state.inventory
+
     # Run all ops, but server by server
     if serial:
-        for hostname in config.SSH_HOSTS:
-            run_server_ops(hostname, print_output=print_output)
+        for host in hosts:
+            _run_server_ops(host.ssh_hostname, print_output=print_output)
         return
 
     # Run all the ops on each server in parallel (not waiting at each operation)
     elif nowait:
         # Spawn greenlet for each host to run *all* ops
         greenlets = [
-            pyinfra._pool.spawn(run_server_ops, hostname, print_output=print_output)
-            for hostname in config.SSH_HOSTS
+            state.pool.spawn(_run_server_ops, host.ssh_hostname, print_output=print_output)
+            for host in hosts
         ]
         joinall(greenlets)
         return
 
     # Run all ops in order, waiting at each for all servers to complete
     remove_hosts = set()
-    for op_hash in pyinfra._op_order:
-        op_meta = pyinfra._op_meta[op_hash]
+    for op_hash in state.op_order:
+        op_meta = state.op_meta[op_hash]
 
         op_types = []
         if op_meta['serial']:
@@ -189,14 +182,14 @@ def run_ops(serial=False, nowait=False, print_output=False):
             colored(', '.join(op_meta['names']), attrs=['bold'])
         ))
 
-        op_hosts = set(config.SSH_HOSTS) - remove_hosts
+        op_hosts = set(list(host.ssh_hostname for host in hosts)) - remove_hosts
         successful_hosts = []
         failed_hosts = []
 
         if op_meta['serial']:
             # For each host, run the op
             for hostname in op_hosts:
-                result = run_op(hostname, op_hash, print_output=print_output)
+                result = _run_op(hostname, op_hash, print_output=print_output)
 
                 if result:
                     successful_hosts.append(hostname)
@@ -205,7 +198,7 @@ def run_ops(serial=False, nowait=False, print_output=False):
         else:
             # Spawn greenlet for each host
             greenlet_hosts = [
-                (hostname, pyinfra._pool.spawn(run_op, hostname, op_hash, print_output=print_output))
+                (hostname, state.pool.spawn(_run_op, hostname, op_hash, print_output=print_output))
                 for hostname in op_hosts
             ]
 
@@ -224,10 +217,13 @@ def run_ops(serial=False, nowait=False, print_output=False):
             remove_hosts.add(hostname)
 
         # Check we're not above the fail percent
-        if config.FAIL_PERCENT:
-            # % successful at this point must be greater than the inverse of fail percent
-            if (len(successful_hosts) / len(config.SSH_HOSTS)) * 100 > (100 - config.FAIL_PERCENT):
-                logger.critical('Over {0}% of hosts failed, exiting'.format(config.FAIL_PERCENT))
+        if state.config.FAIL_PERCENT:
+            percent_failed = (1 - len(successful_hosts) / len(hosts)) * 100
+
+            if percent_failed > state.config.FAIL_PERCENT:
+                logger.critical(
+                    'Over {0}% of hosts failed, exiting'.format(state.config.FAIL_PERCENT)
+                )
                 break
 
         # No hosts left!

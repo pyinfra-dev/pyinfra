@@ -2,14 +2,18 @@
 # File: pyinfra/api/ssh.py
 # Desc: handle all SSH related stuff
 
+from os import path
 from hashlib import sha1
 from socket import error as socket_error, gaierror
 
+import gevent
 from termcolor import colored
-from paramiko import SSHClient, SFTPClient, RSAKey, MissingHostKeyPolicy, SSHException, AuthenticationException
+from paramiko import (
+    SSHClient, SFTPClient, RSAKey,
+    MissingHostKeyPolicy, SSHException, AuthenticationException
+)
 
-import pyinfra
-from pyinfra import config, logger
+from pyinfra import state, logger
 
 
 def _connect(hostname, **kwargs):
@@ -20,14 +24,14 @@ def _connect(hostname, **kwargs):
         client.set_missing_host_key_policy(MissingHostKeyPolicy())
         client.connect(hostname, **kwargs)
 
-        # Assign internally
-        pyinfra._connections[hostname] = client
+        # Log
         logger.info('[{0}] {1}'.format(
             colored(hostname, attrs=['bold']),
             colored('Connected', 'green')
         ))
 
-        return hostname
+        return (hostname, client)
+
     except AuthenticationException as e:
         logger.critical('Auth error on: {0}, {1}'.format(hostname, e))
     except SSHException as e:
@@ -37,34 +41,63 @@ def _connect(hostname, **kwargs):
     except gaierror:
         logger.critical('Could not resolve: {0}'.format(hostname))
 
-def connect_all():
-    '''Connect to all the configured servers in parallel.'''
-    kwargs = {
-        'username': config.SSH_USER,
-        'port': getattr(config, 'SSH_PORT', 22),
-        'timeout': 10
-    }
 
-    # Password auth (boo!)
-    if hasattr(config, 'SSH_PASS'):
-        kwargs['password'] = config.SSH_PASS
-    else:
-        kwargs['pkey'] = RSAKey.from_private_key_file(
-            filename=config.SSH_KEY,
-            password=getattr(config, 'SSH_KEY_PASS', None)
+def connect_all():
+    '''Connect to all the configured servers in parallel. Reads/writes state.inventory.'''
+    greenlets = []
+
+    for host in state.inventory:
+        kwargs = {
+            'username': host.data.ssh_user,
+            'port': host.data.ssh_port,
+            'timeout': state.config.TIMEOUT
+        }
+
+        # Password auth (boo!)
+        if host.data.ssh_password:
+            kwargs['password'] = host.data.ssh_password
+        else:
+            if host.data.ssh_key[0] in ('/', '~'):
+                ssh_key = host.data.ssh_key
+            else:
+                ssh_key = path.join(state.deploy_dir, host.data.ssh_key)
+
+            kwargs['pkey'] = RSAKey.from_private_key_file(
+                filename=ssh_key,
+                password=host.data.ssh_key_password
+            )
+
+        greenlets.append(
+            state.pool.spawn(_connect, host.ssh_hostname, **kwargs)
         )
 
-    # Connect to each server in a thread
-    outs = [
-        pyinfra._pool.spawn(_connect, server, **kwargs)
-        for server in config.SSH_HOSTS
-    ]
-    # Get the results
-    connected_hosts = [out.get() for out in outs]
+    gevent.wait(greenlets)
 
-    # Assign working hosts to all hosts
-    config.SSH_HOSTS = [host for host in connected_hosts if host is not None]
+    # Get/set the results
+    results = [greenlet.get() for greenlet in greenlets]
+    hostname_clients = {
+        result[0]: result[1]
+        for result in results
+        if result
+    }
 
+    for hostname, client in hostname_clients.iteritems():
+        state.ssh_connections[hostname] = client
+
+    state.inventory.connected_hosts = set(filter(None, hostname_clients.keys()))
+
+
+def _read_buffer(buff, print_output=False, print_func=False):
+    out = []
+
+    for line in buff:
+        line = line.strip()
+        out.append(line)
+
+        if print_output and print_func:
+            print print_func(line)
+
+    return out
 
 def run_shell_command(
     hostname, command,
@@ -80,47 +113,72 @@ def run_shell_command(
     ))
 
     # Use env & build our actual command
-    env_string = ' '.join([
-        '{}={}'.format(key, value)
-        for key, value in env.iteritems()
-    ])
-    command = '{} {}'.format(env_string, command)
+    if env:
+        env_string = ' '.join([
+            '{0}={1}'.format(key, value)
+            for key, value in env.iteritems()
+        ])
+        command = '{0} {1}'.format(env_string, command)
 
     # Escape "'s
-    command = command.replace('"', '\\"')
+    command = command.replace("'", "\\'")
 
-    # No sudo, just bash wrap the command
+    # No sudo, just sh wrap the command
     if not sudo:
-        command = 'bash -c "{0}"'.format(command)
+        command = "sh -c '{0}'".format(command)
     # Otherwise, work out sudo
     else:
-        # Sudo with a user, then bash
+        # Sudo with a user, then sh
         if sudo_user:
-            command = 'sudo -u {0} -S bash -c "{1}"'.format(sudo_user, command)
-        # Sudo then bash
+            command = "sudo -H -u {0} -S sh -c '{1}'".format(sudo_user, command)
+        # Sudo then sh
         else:
-            command = 'sudo -S bash -c "{0}"'.format(command)
+            command = "sudo -H -S sh -c '{0}'".format(command)
 
     if print_output:
         print '{0}>>> {1}'.format(print_prefix, command)
 
     # Get the connection for this hostname
-    connection = pyinfra._connections[hostname]
+    connection = state.ssh_connections[hostname]
 
     # Run it! Get stdout, stderr & the underlying channel
-    _, stdout, stderr = connection.exec_command(command)
-    return stdout.channel, stdout, stderr
+    _, stdout_buffer, stderr_buffer = connection.exec_command(command)
+    channel = stdout_buffer.channel
+
+    # Iterate through outputs to get an exit status and generate desired list output, done in two
+    # greenlets so stdout isn't printed before stderr. Not attached to state.*_pool to avoid
+    # blocking it with 2x n-hosts greenlets.
+    stdout_reader = gevent.spawn(
+        _read_buffer, stdout_buffer,
+        print_output=print_output,
+        print_func=lambda line: u'{0}{1}'.format(print_prefix, line)
+    )
+    stderr_reader = gevent.spawn(
+        _read_buffer, stderr_buffer,
+        print_output=print_output,
+        print_func=lambda line: u'{0}{1}'.format(
+            print_prefix,
+            colored(line, 'red')
+        )
+    )
+
+    gevent.wait((stdout_reader, stderr_reader))
+    stdout = stdout_reader.get()
+    stderr = stderr_reader.get()
+
+    return channel, stdout, stderr
 
 
 def _get_sftp_connection(hostname):
-    if hostname in pyinfra._sftp_connections:
-        return pyinfra._sftp_connections[hostname]
+    # SFTP connections aren't *required* for deploys, so we create them on-demand
+    if hostname in state.sftp_connections:
+        return state.sftp_connections[hostname]
 
-    ssh_connection = pyinfra._connections[hostname]
+    ssh_connection = state.ssh_connections[hostname]
     transport = ssh_connection.get_transport()
     client = SFTPClient.from_transport(transport)
 
-    pyinfra._sftp_connections[hostname] = client
+    state.sftp_connections[hostname] = client
 
     return client
 
@@ -132,7 +190,7 @@ def put_file(
     hostname, file_io, remote_file,
     sudo=False, sudo_user=None, print_output=False, print_prefix=''
 ):
-    '''Upload/sync local/remote directories & files to the specified host.'''
+    '''Upload file-ios to the specified host.'''
     if not sudo:
         _put_file(hostname, file_io, remote_file)
     else:
@@ -147,9 +205,10 @@ def put_file(
         _put_file(hostname, file_io, temp_file)
 
         # Execute run_shell_command w/sudo to mv/chown it
-        command = 'mv {0} {1} && chown {2}:{2} {1}'.format(
-            temp_file, remote_file, sudo_user
-        )
+        command = 'mv {0} {1}'.format(temp_file, remote_file)
+        if sudo_user:
+            command = '{0} && chown {1} {2}'.format(command, sudo_user, remote_file)
+
         channel, _, stderr = run_shell_command(
             hostname, command,
             sudo=sudo, sudo_user=sudo_user,
@@ -158,8 +217,8 @@ def put_file(
         )
 
         if channel.exit_status > 0:
-            logger.critical('File error: {0}'.format(stderr))
+            logger.critical('File error: {0}'.format('\n'.join(stderr)))
             return False
 
     if print_output:
-        print '{0} file uploaded: {1}'.format(print_prefix, remote_file)
+        print u'{0}file uploaded: {1}'.format(print_prefix, remote_file)

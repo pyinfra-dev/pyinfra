@@ -10,27 +10,34 @@ later by pyinfra's __main__.
 '''
 
 from functools import wraps
-from copy import deepcopy
+from types import FunctionType
 
-import pyinfra
+from pyinfra import host, state
+
+from .util import make_hash
+from .attrs import AttrBase
 
 
-def make_hash(obj):
+def add_op(op_func, *args, **kwargs):
+    '''Prepare & add an operation to pyinfra.state by executing it on all hosts.'''
+    for host_obj in state.inventory:
+        host.set(host_obj)
+        op_func(*args, **kwargs)
+
+
+def operation_facts(*facts):
     '''
-    Make a hash from an arbitrary nested dictionary, list, tuple or set, used
-    to generate ID's for operations based on their name & arguments.
+    Allows a module to specify the facts an operation _will always_ use. This is used in CLI mode
+    to optimise performance by pre-gathering these facts in parallel.
     '''
-    if type(obj) in (set, tuple, list):
-        return hash(tuple([make_hash(e) for e in obj]))
+    def decorator(func):
+        @wraps(func)
+        def decorated_function(*args, **kwargs):
+            return func(*args, **kwargs)
 
-    elif not isinstance(obj, dict):
-        return hash(obj)
-
-    new_obj = deepcopy(obj)
-    for k, v in new_obj.items():
-        new_obj[k] = make_hash(v)
-
-    return hash(tuple(set(new_obj.items())))
+        decorated_function.facts = facts
+        return decorated_function
+    return decorator
 
 
 def operation(func):
@@ -41,19 +48,28 @@ def operation(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
         # Locally & globally configurable
-        sudo = kwargs.pop('sudo', getattr(pyinfra.config, 'SUDO', False))
-        sudo_user = kwargs.pop('sudo_user', getattr(pyinfra.config, 'SUDO_USER', None))
-        ignore_errors = kwargs.pop('ignore_errors', getattr(pyinfra.config, 'IGNORE_ERRORS', False))
+        sudo = kwargs.pop('sudo', state.config.SUDO)
+        sudo_user = kwargs.pop('sudo_user', state.config.SUDO_USER)
+        ignore_errors = kwargs.pop('ignore_errors', state.config.IGNORE_ERRORS)
+
+        # If we're in pre_run mode, we only need to pull out any .facts on this function (as set by
+        # the operation_facts decorator above) and attach to the state, ready to be pre-fetched.
+        if state.pre_run:
+            facts = getattr(func, 'facts', [])
+            if facts:
+                state.pre_run_facts.extend(
+                    (fact, sudo, sudo_user)
+                    for fact in facts
+                )
+            return
 
         # Forces serial mode for this operation (--serial for one op)
         serial = kwargs.pop('serial', False)
         # Only runs this operation once
         run_once = kwargs.pop('run_once', False)
 
-        # Operations can have "base_envs" via the operation_env decorator
-        # then we extend by config.ENV, and finally kwargs['env']
-        env = getattr(func, 'env', {})
-        env.update(getattr(pyinfra.config, 'ENV', {}))
+        # Config env followed by command-level env
+        env = state.config.ENV
         env.update(kwargs.pop('env', {}))
 
         # Name the operation
@@ -65,41 +81,64 @@ def operation(func):
 
         # Get/generate a hash for this op
         op_hash = kwargs.pop('op', None)
-        if op_hash is None:
-            op_hash = (name, sudo, sudo_user, ignore_errors, env, args, kwargs)
-
-        op_hash = make_hash(op_hash)
 
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above)
-        if pyinfra._in_op:
-            return func(*args, **kwargs)
+        if state.in_op:
+            return func(*args, **kwargs) or []
+
+        if op_hash is None:
+            # Convert any AttrBase items (returned by host.data) arg
+            # this means if one of the args is host.data.app_dir which is set to different values
+            # on different hosts it will still generate one operation.
+            hash_args = [
+                arg.pyinfra_attr_key if isinstance(arg, AttrBase) else
+                arg.__name__ if isinstance(arg, FunctionType) else arg
+                for arg in args
+            ]
+
+            hash_kwargs = {
+                key: arg.pyinfra_attr_key if isinstance(arg, AttrBase) else
+                arg.__name__ if isinstance(arg, FunctionType) else arg
+                for key, arg in kwargs.iteritems()
+            }
+
+            op_hash = (name, sudo, sudo_user, ignore_errors, env, hash_args, hash_kwargs)
+
+        op_hash = make_hash(op_hash)
 
         # Otherwise, flag as in-op and run it to get the commands
-        pyinfra._in_op = True
+        state.in_op = True
+        state.current_op_sudo = (sudo, sudo_user)
         commands = func(*args, **kwargs)
-        pyinfra._in_op = False
+        state.in_op = False
+        state.current_op_sudo = None
 
-        # No commands, no op
+        # No commands, no changes
         if not isinstance(commands, list):
-            return
+            commands = []
 
         # Add the hash to the operational order if not already in there
-        if op_hash not in pyinfra._op_order:
-            pyinfra._op_order.append(op_hash)
+        # we insert the hash at the current position for the current host, such that deploy scripts
+        # run in the order they are defined *for each host*. Using if statements without matching
+        # the operations within (by op_name and the number of them) will results in them not running
+        # in the order defined in the deploy script - but they will remain in-order per-host.
+        if op_hash not in state.op_order:
+            current_ops = state.meta[host.ssh_hostname]['ops']
+            state.op_order.insert(current_ops, op_hash)
 
         # We're doing some commands, meta/ops++
-        pyinfra._meta[pyinfra._current_server]['ops'] += 1
-        pyinfra._meta[pyinfra._current_server]['commands'] += len(commands)
+        state.meta[host.ssh_hostname]['ops'] += 1
+        state.meta[host.ssh_hostname]['commands'] += len(commands)
 
         # Add the server-relevant commands/env to the current server
-        pyinfra._ops[pyinfra._current_server][op_hash] = {
+        state.ops[host.ssh_hostname][op_hash] = {
             'commands': commands,
             'env': env
         }
 
         # Create/update shared (between servers) operation meta
-        op_meta = pyinfra._op_meta.setdefault(op_hash, {
+        op_meta = state.op_meta.setdefault(op_hash, {
             'names': [],
             'sudo': sudo,
             'sudo_user': sudo_user,
@@ -112,16 +151,3 @@ def operation(func):
 
     decorated_function.__decorated__ = getattr(func, '__decorated__', func)
     return decorated_function
-
-
-def operation_env(**kwargs):
-    '''Pre-wraps an operation with kwarg environment variables'''
-    def decorator(func):
-        @wraps(func)
-        def decorated_function(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        decorated_function.env = kwargs
-        decorated_function.__decorated__ = func
-        return decorated_function
-    return decorator

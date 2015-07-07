@@ -1,182 +1,114 @@
 # pyinfra
-# File: pyinfra/modules/apt.py
-# Desc: manage apt packages & repositories
+# File: pyinfra/api/facts.py
+# Desc: index fact classes for access via pyinfra.host
 
-'''
-A list of classes for collecting state date on remote hosts. Each contains a
-command to run on the remote host, plus a method to handle parsing this data
-into a dict/list/whatever.
-'''
+from gevent.lock import Semaphore
+from termcolor import colored
 
-import re
-from inspect import isclass
-from inflection import underscore
+from pyinfra import state, logger
+
+from .ssh import run_shell_command
+from .util import underscore, make_hash
 
 
-class Home:
-    command = 'echo $HOME'
+# Index of snake_case facts -> CamelCase classes
+facts = {}
+# Lock on getting facts
+fact_locks = {}
+print_facts = False
+
+def set_print_facts(to_print):
+    global print_facts
+    print_facts = to_print
+
+def is_fact(name):
+    return name in facts
+
+def get_fact_names():
+    return facts.keys()
+
+
+class FactMeta(type):
+    '''Metaclass to dynamically build the facts index.'''
+    def __init__(cls, name, bases, attrs):
+        global facts
+
+        # Get the an instance of the fact, attach to facts
+        facts[underscore(name)] = cls()
+
+class FactBase(object):
+    __metaclass__ = FactMeta
 
     def process(self, output):
         return output[0]
 
 
-class Hostname:
-    command = 'hostname'
+def get_facts(name, arg=None, sudo=False, sudo_user=None, print_output=False):
+    print_output = print_output or print_facts
+    fact = facts[name]
+    command = fact.command
 
-    def process(self, output):
-        return output[0]
+    if arg:
+        command = command(arg)
 
+    fact_hash = make_hash((name, command, sudo, sudo_user))
 
-class Distribution:
-    '''Returns the Linux distribution. Ubuntu, CentOS & Debian currently.'''
-    command = 'cat /etc/*-release'
-    # Currently supported distros
-    regexes = [
-        r'(Ubuntu) ([0-9]{2})\.([0-9]{2})',
-        r'(CentOS) release ([0-9]).([0-9])',
-        r'(CentOS) Linux release ([0-9]).([0-9])',
-        r'(Debian) GNU/Linux ([0-9])()'
-    ]
+    fact_locks.setdefault(fact_hash, Semaphore()).acquire()
 
-    def process(self, output):
-        output = '\n'.join(output)
+    if facts.get(fact_hash):
+        fact_locks[fact_hash].release()
+        return facts[fact_hash]
 
-        for regex in self.regexes:
-            matches = re.search(regex, output)
-            if matches:
-                return {
-                    'name': matches.group(1),
-                    'major': matches.group(2),
-                    'minor': matches.group(3)
-                }
+    # Execute the command for each state inventory in a greenlet
+    greenlets = {
+        host.ssh_hostname: state.fact_pool.spawn(
+            run_shell_command, host.ssh_hostname, command,
+            sudo=sudo, sudo_user=sudo_user, print_output=print_output,
+            print_prefix='[{}] '.format(colored(host.ssh_hostname, attrs=['bold']))
+        )
+        for host in state.inventory
+    }
 
-        return {'name': 'Unknown'}
+    hostname_facts = {}
 
+    for hostname, greenlet in greenlets.iteritems():
+        channel, stdout, stderr = greenlet.get()
+        data = fact.process(stdout) if stdout else None
+        hostname_facts[hostname] = data
 
-class Users:
-    '''Gets & returns a dict of users -> details.'''
-    command = 'cat /etc/passwd'
+    log_name = colored(name, attrs=['bold'])
+    if arg:
+        logger.info('Loaded fact {0}: {1}'.format(log_name, arg))
+    else:
+        logger.info('Loaded fact {0}'.format(log_name))
 
-    def process(self, output):
-        users = {}
-        for line in output:
-            name, _, uid, gid, _, home, shell = line.split(':')
-            users[name] = {
-                'uid': uid,
-                'gid': gid,
-                'home': home,
-                'shell': shell
-            }
-
-        return users
+    facts[fact_hash] = hostname_facts
+    fact_locks[fact_hash].release()
+    return hostname_facts
 
 
-class NetworkDevices:
-    '''Gets & returns a dict of network devices -> details.'''
-    command = 'cat /proc/net/dev'
-    regex = r'\s+([a-zA-Z0-9]+):\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)'
+def get_fact(hostname, name, print_output=False):
+    '''Wrapper around get_facts returning facts for one host or a function that does.'''
+    print_output = print_output or print_facts
+    sudo = False
+    sudo_user = None
 
-    def process(self, output):
-        devices = {}
-        for line in output:
-            matches = re.match(self.regex, line)
-            if matches:
-                devices[matches.group(1)] = {
-                    'receive': {
-                        'bytes': matches.group(2),
-                        'packets': matches.group(3),
-                        'errors': matches.group(4),
-                        'drop': matches.group(5),
-                        'fifo': matches.group(6),
-                        'frame': matches.group(7),
-                        'compressed': matches.group(8),
-                        'multicast': matches.group(9)
-                    },
-                    'transmit': {
-                        'bytes': matches.group(10),
-                        'packets': matches.group(11),
-                        'errors': matches.group(12),
-                        'drop': matches.group(13),
-                        'fifo': matches.group(14),
-                        'colls': matches.group(15),
-                        'carrier': matches.group(16),
-                        'compressed': matches.group(17)
-                    }
-                }
+    if state.current_op_sudo:
+        sudo, sudo_user = state.current_op_sudo
 
-        return devices
+    # Expecting a function to return
+    if callable(facts[name].command):
+        def wrapper(arg):
+            fact_data = get_facts(
+                name, arg,
+                sudo=sudo, sudo_user=sudo_user, print_output=print_output
+            )
+            return fact_data.get(hostname)
 
+        return wrapper
 
-class BlockDevices:
-    '''Returns a dict of (mounted, atm) block devices -> details.'''
-    command = 'df -T'
-    regex = r'([a-zA-Z0-9\/\-_]+)\s+([a-zA-Z0-9\/-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
-
-    def process(self, output):
-        devices = {}
-        for line in output:
-            matches = re.match(self.regex, line)
-            if matches:
-                if matches.group(1) == 'none': continue
-                devices[matches.group(1)] = {
-                    'type': matches.group(2),
-                    'blocks': matches.group(3),
-                    'used': matches.group(4),
-                    'available': matches.group(5),
-                    'used_percent': matches.group(6),
-                    'mount': matches.group(7)
-                }
-
-        return devices
-
-
-class DebPackages:
-    '''Returns a dict of installed dpkg packages -> details.'''
-    command = 'dpkg -l'
-    regex = r'[a-z]+\s+([a-zA-Z0-9:\+\-\.]+)\s+([a-zA-Z0-9:~\.\-\+]+)\s+([a-z0-9]+)'
-
-    def process(self, output):
-        packages = {}
-        for line in output:
-            matches = re.match(self.regex, line)
-            if matches:
-                packages[matches.group(1)] = {
-                    'version': matches.group(2)
-                }
-
-        return packages
-
-
-class RPMPackages:
-    '''Returns a dict of installed rpm packages -> details.'''
-    command = 'rpm -qa'
-    regex = r'([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.([a-z0-9_]+)\.([a-z0-9_\.]+)'
-
-    def process(self, output):
-        packages = {}
-        for line in output:
-            matches = re.match(self.regex, line)
-            if matches:
-                packages[matches.group(1)] = {
-                    'version': matches.group(2),
-                    'arch': matches.group(4)
-                }
-
-        return packages
-
-
-class PipPackages:
-    '''Returns a dict of installed pip packages -> details.'''
-    command = 'pip list'
-
-    def process(self, output):
-        print output
-        return None
-
-
-# Build dynamic facts & fact lists dicts
-FACTS = {
-    underscore(name): class_def()
-    for name, class_def in locals().iteritems()
-    if isclass(class_def) and class_def.__module__ == __name__
-}
+    # Expecting the fact as a return value
+    else:
+        # Get the fact
+        fact_data = get_facts(name, sudo=sudo, sudo_user=sudo_user, print_output=print_output)
+        return fact_data.get(hostname)

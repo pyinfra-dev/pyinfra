@@ -2,31 +2,23 @@
 # File: api/config.py
 # Desc: the default config
 
-import sys
-import imp
 
-import pyinfra
-
-
-class Config:
+class Config(object):
     # % of hosts which have to fail for all operations to stop
     FAIL_PERCENT = None
+    # Seconds to timeout SSH connections
+    TIMEOUT = 10
 
     # All these can be overridden inside module calls
     SUDO = False
-    SUDO_USER = 'root'
+    SUDO_USER = None
     IGNORE_ERRORS = False
 
-    @classmethod
-    def load_file(cls, config_file):
-        module = imp.load_source('', config_file)
+    def __init__(self, **kwargs):
+        # Always apply some env
+        env = kwargs.pop('env', {})
+        self.ENV = env
 
-        for attr in dir(module):
-            if attr.isupper():
-                setattr(cls, attr, getattr(module, attr))
-
-        return cls
-
-
-# Set pyinfra.config to a Config instance
-sys.modules['pyinfra.config'] = pyinfra.config = Config()
+        # Apply kwargs
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
