@@ -1,6 +1,15 @@
 ## pyinfra.api.cli
 
 
+##### function: json_encode
+
+```py
+json_encode(
+    obj
+)
+```
+
+
 ##### function: load_config
 
 Loads any local config.py file.

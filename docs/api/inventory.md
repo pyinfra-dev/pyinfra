@@ -9,6 +9,9 @@
 Inventory.__init__(
     self,
     hostnames_data,
+    ssh_user=None,
+    ssh_key=None,
+    ssh_port=None,
     **kwargs
 )
 ```

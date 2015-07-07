@@ -28,3 +28,13 @@ operation(
     func
 )
 ```
+
+
+##### function: operation_facts
+
+Allows a module to specify the facts an operation _will always_ use. This is used in CLI mode
+to optimise performance by pre-gathering these facts in parallel.
+
+```py
+operation_facts()
+```

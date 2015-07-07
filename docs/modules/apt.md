@@ -12,12 +12,7 @@ Uses:
 Install/remove/upgrade packages & update apt.
 
 ```py
-packages(
-    packages=None,
-    present=True,
-    update=False,
-    upgrade=False
-)
+packages()
 ```
 
 

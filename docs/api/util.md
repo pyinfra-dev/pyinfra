@@ -1,34 +1,13 @@
 ## pyinfra.api.util
 
 
-### class: AttrDict
+##### function: get_file_sha1
 
-##### method: AttrDict.__init__
-
-```py
-AttrDict.__init__(
-    self,
-    attrs
-)
-```
-
-##### method: AttrDict.dict
+Calculates the SHA1 of a file object using a buffer to handle larger files.
 
 ```py
-AttrDict.dict(
-    self
-)
-```
-
-
-### class: FallbackAttrDict
-
-##### method: FallbackAttrDict.__init__
-
-```py
-FallbackAttrDict.__init__(
-    self,
-    *datas
+get_file_sha1(
+    io
 )
 ```
 

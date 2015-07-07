@@ -10,8 +10,5 @@ Uses:
 ##### function: packages
 
 ```py
-packages(
-    packages=None,
-    present=True
-)
+packages()
 ```

@@ -34,7 +34,8 @@ Wrapper around get_facts returning facts for one host or a function that does.
 ```py
 get_fact(
     hostname,
-    name
+    name,
+    print_output=False
 )
 ```
 
@@ -51,9 +52,10 @@ get_fact_names()
 ```py
 get_facts(
     name,
+    arg=None,
     sudo=False,
     sudo_user=None,
-    arg=None
+    print_output=False
 )
 ```
 
@@ -63,5 +65,14 @@ get_facts(
 ```py
 is_fact(
     name
+)
+```
+
+
+##### function: set_print_facts
+
+```py
+set_print_facts(
+    to_print
 )
 ```

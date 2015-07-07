@@ -1,12 +1,11 @@
 ## pyinfra.modules.server
 
-The server module attempts to take care of os-level state. Targets POSIX compatability, tested on Linux/BSD.
+The server module takes care of os-level state. Targets POSIX compatability, tested on Linux/BSD.
 
 Uses POSIX commands:
 
 + `echo`, `cat`
 + `hostname`, `uname`
-+ `touch`, `mkdir`, `chown`, `chmod`
 + `useradd`, `userdel`, `usermod`
 
 ##### function: script
@@ -34,11 +33,5 @@ shell()
 Manage Linux users & their ssh `authorized_keys`.
 
 ```py
-user(
-    name,
-    present=True,
-    home=None,
-    shell=None,
-    public_keys=None # list of public keys to attach to this user
-)
+user()
 ```

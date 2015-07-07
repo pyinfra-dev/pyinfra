@@ -11,12 +11,7 @@ Uses:
 Manage yum packages & updates.
 
 ```py
-packages(
-    packages=None,
-    present=True,
-    upgrade=False,
-    clean=False
-)
+packages()
 ```
 
 
