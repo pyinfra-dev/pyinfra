@@ -33,28 +33,29 @@ inventory = Inventory(
         'ubuntu14.pyinfra',
         'debian7.pyinfra',
         'openbsd56.pyinfra'
-    ], {
-        # Global/ALL data can be attached
-        'ssh_user': 'vagrant',
-        'ssh_key': './files/insecure_private_key'
-    }), bsd=([
+    ], {}),
+    bsd=([
         'openbsd56.pyinfra'
     ], {
         # Group-specific data can be attached like so
         'app_dir': '/opt/pyinfra/bsd'
-    }), centos=([
+    }),
+    centos=([
         'centos6.pyinfra',
         'centos7.pyinfra'
-    ], {})
+    ], {}),
+    ssh_user='vagrant',
+    ssh_key='./files/insecure_private_key'
 )
 
 # Now we create a new config (w/optional args)
 config = Config(
-    FAIL_PERCENT=50
+    FAIL_PERCENT=50,
+    TIMEOUT=1
 )
 
 # Setup the pyinfra state for this deploy
-state.set(State(inventory, config))
+state.new(State(inventory, config))
 
 # Connect to all the hosts
 connect_all()
@@ -70,7 +71,7 @@ add_op(
 
 # Ensure the state of files
 add_op(
-    server.file,
+    files.file,
     '/var/log/pyinfra.log',
     user='pyinfra',
     group='pyinfra',
@@ -80,7 +81,7 @@ add_op(
 
 # Ensure the state of directories
 add_op(
-    server.directory,
+    files.directory,
     '/tmp/email',
     user='pyinfra',
     group='pyinfra',
@@ -99,5 +100,5 @@ add_op(
 run_ops()
 
 # We can also get facts for all the hosts
-facts = get_facts('linux_distribution')
+facts = get_facts('os')
 print json.dumps(facts, indent=4)

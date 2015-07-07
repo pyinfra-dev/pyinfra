@@ -1,10 +1,10 @@
 # pyinfra example
 
-The example requires a recent version of Vagrant to be installed (as test machines).
+The example requires a recent version of Vagrant to be installed (as test machines). Contents:
 
 ```sh
 vagrant up
 
-# An example deploy script
-pyinfra config.py deploy.py
+# An example config & deploy script
+pyinfra -c config.py deploy.py
 ```
