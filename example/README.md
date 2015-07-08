@@ -18,4 +18,3 @@ Key files:
 ## API Example
 
 + [**api_deploy.py**](api_deploy.py) API based example
-+
