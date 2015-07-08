@@ -5,7 +5,6 @@
 
 import sys
 
-import pyinfra
 from pyinfra import state
 
 from .facts import is_fact, get_fact
@@ -64,4 +63,6 @@ class HostModule(object):
     def __getattr__(self, key):
         return getattr(self.host, key)
 
+
+import pyinfra
 sys.modules['pyinfra.host'] = pyinfra.host = HostModule()

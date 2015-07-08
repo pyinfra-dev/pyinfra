@@ -6,7 +6,7 @@ import sys
 
 from gevent.pool import Pool
 
-import pyinfra
+from .config import Config
 
 
 class DefaultState(object):
@@ -40,9 +40,13 @@ class DefaultState(object):
 
 class State(DefaultState):
     '''Create a new state based on the default state.'''
-    def __init__(self, inventory, config):
+    def __init__(self, inventory, config=None):
         super(State, self).__init__()
         self.inventory = inventory
+
+        if config is None:
+            config = Config()
+
         self.config = config
 
         greenlets = len(inventory)
@@ -103,4 +107,5 @@ class StateModule(object):
         self.deploy_dir = directory
 
 
+import pyinfra
 sys.modules['pyinfra.state'] = pyinfra.state = StateModule()
