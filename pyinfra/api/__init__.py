@@ -3,7 +3,7 @@
 # Desc: import some stuff
 
 '''
-The pyinfra API allows you to dynamically build inventories and operations. Check out [the example](../../example/api_deploy.py).
+The pyinfra API allows you to dynamically build inventories and operations.
 '''
 
 # Triggers pyinfra.[host|state] module-class creation
