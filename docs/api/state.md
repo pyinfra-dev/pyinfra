@@ -20,7 +20,7 @@ DefaultState.__init__(
 State.__init__(
     self,
     inventory,
-    config
+    config=None
 )
 ```
 
