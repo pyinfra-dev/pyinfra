@@ -95,3 +95,5 @@ run_ops()
 
 + [CLI Example](example)
 + [API Example](example/api_deploy.py)
++ [Quick start](docs/quick_start.md)
++ [Documentation](docs/README.md)

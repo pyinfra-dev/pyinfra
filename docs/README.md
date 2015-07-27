@@ -8,4 +8,4 @@ pyinfra targets POSIX compatability and is currently tested against Ubuntu, Debi
 + [Quick start](./quick_start.md)
 + [Modules list](./modules/README.md)
 + [Example deploy](../example)
-+ [API documentation](./api/README.md)
++ [API Example](example/api_deploy.py)
