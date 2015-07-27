@@ -16,17 +16,16 @@ And then a **deploy** file (`deploy.py`) containing the state you wish to apply:
 ```py
 # These modules contain operations, which provide ways to set desired state
 # for the remove service.
-from pyinfra.modules import server, linux, yum
+from pyinfra.modules import server, files, yum
 
 # Ensure the state of a user
-linux.user(
+server.user(
     'pyinfra',
-    present=True,
     home='/home/pyinfra'
 )
 
 # Ensure the state of files
-server.file(
+files.file(
     '/var/log/pyinfra.log',
     user='pyinfra',
     group='pyinfra',
