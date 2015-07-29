@@ -54,7 +54,12 @@ def _chmod(target, mode, recursive=False):
     return 'chmod {0}{1} {2}'.format(('-R ' if recursive else ''), mode, target)
 
 def _chown(target, user, group, recursive=False):
-    return 'chown {0}{1}:{2} {3}'.format(('-R ' if recursive else ''), user, group, target)
+    if user and group:
+        user_group = '{0}:{1}'.format(user, group)
+    else:
+        user_group = user or group
+
+    return 'chown {0}{1} {2}'.format(('-R ' if recursive else ''), user_group, target)
 
 @operation
 def file(name, present=True, user=None, group=None, mode=None, touch=False):
@@ -88,7 +93,7 @@ def file(name, present=True, user=None, group=None, mode=None, touch=False):
             commands.append(_chmod(name, mode))
 
         # Check user/group
-        if user and group and (info['user'] != user or info['group'] != group):
+        if (user and info['user'] != user) or (group and info['group'] != group):
             commands.append(_chown(name, user, group))
 
     return commands
@@ -123,7 +128,7 @@ def directory(name, present=True, user=None, group=None, mode=None, recursive=Fa
             commands.append(_chmod(name, mode, recursive=recursive))
 
         # Check user/group
-        if user and group and (info['user'] != user or info['group'] != group):
+        if (user and info['user'] != user) or (group and info['group'] != group):
             commands.append(_chown(name, user, group, recursive=recursive))
 
     return commands

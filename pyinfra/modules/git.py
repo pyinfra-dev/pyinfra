@@ -11,8 +11,8 @@ from pyinfra.api import operation
 @operation
 def repo(source, target, branch='master', pull=True, rebase=False):
     '''Manage git repositories.'''
-    is_repo = host.file(path.join(target, '.git'))
-    command_prefix = 'cd {0} && git '.format(target)
+    is_repo = host.directory(path.join(target, '.git'))
+    command_prefix = 'cd {0} && git'.format(target)
     commands = []
 
     if not is_repo:
