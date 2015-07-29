@@ -57,9 +57,10 @@ def connect_all():
         if host.data.ssh_password:
             kwargs['password'] = host.data.ssh_password
         else:
-            if host.data.ssh_key[0] in ('/', '~'):
-                ssh_key = host.data.ssh_key
-            else:
+            ssh_key = path.expanduser(host.data.ssh_key)
+
+            # Handle relative files from the deploy directory
+            if not ssh_key.startswith('/'):
                 ssh_key = path.join(state.deploy_dir, host.data.ssh_key)
 
             kwargs['pkey'] = RSAKey.from_private_key_file(
