@@ -23,6 +23,7 @@ Options:
     --fact FACT          Name of fact to run/test.
     --user USER          SSH user.
     --key KEY_FILE       SSH private key.
+    --key-password PASS  SSH key password.
     --port PORT#         SSH port number.
     --sudo               Use sudo.
     --sudo-user USER     Which user to sudo to.
@@ -44,13 +45,13 @@ from docopt import docopt
 from coloredlogs import ColoredStreamHandler
 
 from pyinfra import state, host, logger
-from pyinfra.__version__ import VERSION
 from pyinfra.cli import make_inventory, load_config, print_meta, print_results, json_encode
 
 from pyinfra.api import State
 from pyinfra.api.ssh import connect_all
 from pyinfra.api.operations import run_ops
 from pyinfra.api.facts import facts, get_facts, set_print_facts
+from pyinfra.api.exceptions import PyinfraException
 
 
 # Handle ctrl+c
@@ -60,9 +61,9 @@ def signal_handler(signum, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
+
 # Setup arguments
-version = 'pyinfra v{0}'.format(VERSION)
-arguments = docopt(__doc__, version=version)
+arguments = docopt(__doc__, version='pyinfra')
 arguments = {
     'inventory': arguments['-i'],
     'deploy': arguments['DEPLOY'],
@@ -77,6 +78,7 @@ arguments = {
     'deploy_dir': arguments['--dir'],
     'user': arguments['--user'],
     'key': arguments['--key'],
+    'key_password': arguments['--key-password'],
     'port': arguments['--port'],
     'sudo': arguments['--sudo'],
     'sudo_user': arguments['--sudo-user']
@@ -100,7 +102,7 @@ logger.addHandler(handler)
 
 
 print
-print '-> Welcome to {0}'.format(version)
+print '-> Welcome to pyinfra'
 print
 
 
@@ -112,108 +114,112 @@ if arguments['list_facts']:
 
 
 # Now we're doing some work, either a dry or real run
+try:
+    # Setup our "working directory", taking --dir as default
+    if arguments['deploy_dir']:
+        state.set_dir(arguments['deploy_dir'])
+    # This is the most common case: we have a deploy file so use it's pathname
+    elif arguments['deploy'] is not None:
+        state.set_dir(path.dirname(arguments['deploy']))
 
-# Setup our "working directory", taking --dir as default
-if arguments['deploy_dir']:
-    state.set_dir(arguments['deploy_dir'])
-# This is the most common case: we have a deploy file so use it's pathname
-elif arguments['deploy'] is not None:
-    state.set_dir(path.dirname(arguments['deploy']))
+    # Load up the inventory from the filesystem
+    inventory = make_inventory(
+        arguments['inventory'],
+        limit=arguments['limit'],
+        ssh_user=arguments['user'],
+        ssh_key=arguments['key'],
+        ssh_key_password=arguments['key_password'],
+        ssh_port=arguments['port']
+    )
 
-# Load up the inventory from the filesystem
-inventory = make_inventory(
-    arguments['inventory'],
-    limit=arguments['limit'],
-    ssh_user=arguments['user'],
-    ssh_key=arguments['key'],
-    ssh_port=arguments['port']
-)
+    # Load up any config.py from the filesystem
+    config = load_config()
+    # Arg based overrides
+    if arguments['sudo']:
+        config.SUDO = True
+        if arguments['sudo_user']:
+            config.SUDO_USER = arguments['sudo_user']
 
-# Load up any config.py from the filesystem
-config = load_config()
-# Arg based overrides
-if arguments['sudo']:
-    config.SUDO = True
-    if arguments['sudo_user']:
-        config.SUDO_USER = arguments['sudo_user']
+    # Set the state
+    state.new(State(inventory, config))
 
-# Set the state
-state.new(State(inventory, config))
+    # Connect to all the servers
+    connect_all()
+    print
 
-# Connect to all the servers
-connect_all()
-print
+    # No deploy file, we're getting a fact
+    if arguments['deploy'] is None:
+        if ':' in arguments['fact']:
+            fact, arg = arguments['fact'].split(':')
+        else:
+            fact = arguments['fact']
+            arg = None
 
-# No deploy file, we're getting a fact
-if arguments['deploy'] is None:
-    if ':' in arguments['fact']:
-        fact, arg = arguments['fact'].split(':')
+        fact_data = get_facts(
+            fact, arg=arg,
+            sudo=arguments['sudo'], sudo_user=arguments['sudo_user'],
+            print_output=print_output
+        )
+        print json.dumps(fact_data, indent=4)
+
+        sys.exit(0)
+
+    # We're building a deploy!
+    logger.info('Building deploy scripts...')
+
+    # By building the deploy scripts with pre_run we can pre-empt the facts required for the deploy
+    state.pre_run = True
+    for host_obj in inventory:
+        host.set(host_obj)
+        execfile(arguments['deploy'])
+    state.pre_run = False
+
+    # Now get the facts we discovered above, *before* we build any ops
+    for (fact, sudo, sudo_user) in state.pre_run_facts:
+        gevent.spawn(
+            get_facts, fact, arg=None,
+            sudo=sudo, sudo_user=sudo_user, print_output=print_facts
+        )
+
+    # This actually does the op build
+    for host_obj in inventory:
+        host.set(host_obj)
+        execfile(arguments['deploy'])
+
+    # Always show meta output
+    print
+    logger.info('Proposed changes:')
+    print_meta()
+
+    # Not running the op?
+    if arguments['dry']:
+        if print_output:
+            print
+            logger.info('Proposed operations:')
+            print json.dumps(state.ops, indent=4, default=json_encode)
+            print
+            logger.info('Operation meta:')
+            print json.dumps(state.op_meta, indent=4)
+            print
+            logger.info('Operation order:')
+            print json.dumps(state.op_order, indent=4)
+
+    # Run the operations we generated with the deploy file
     else:
-        fact = arguments['fact']
-        arg = None
-
-    fact_data = get_facts(
-        fact, arg=arg,
-        sudo=arguments['sudo'], sudo_user=arguments['sudo_user'],
-        print_output=print_output
-    )
-    print json.dumps(fact_data, indent=4)
-
-    sys.exit(0)
-
-# We're building a deploy!
-logger.info('Building deploy scripts...')
-
-# By building the deploy scripts with pre_run we can pre-empt the facts required for the deploy
-state.pre_run = True
-for host_obj in inventory:
-    host.set(host_obj)
-    execfile(arguments['deploy'])
-state.pre_run = False
-
-# Now get the facts we discovered above, *before* we build any ops
-for (fact, sudo, sudo_user) in state.pre_run_facts:
-    gevent.spawn(
-        get_facts, fact, arg=None,
-        sudo=sudo, sudo_user=sudo_user, print_output=print_facts
-    )
-
-# This actually does the op build
-for host_obj in inventory:
-    host.set(host_obj)
-    execfile(arguments['deploy'])
-
-# Always show meta output
-print
-logger.info('Proposed changes:')
-print_meta()
-
-# Not running the op?
-if arguments['dry']:
-    if print_output:
         print
-        logger.info('Proposed operations:')
-        print json.dumps(state.ops, indent=4, default=json_encode)
-        print
-        logger.info('Operation meta:')
-        print json.dumps(state.op_meta, indent=4)
-        print
-        logger.info('Operation order:')
-        print json.dumps(state.op_order, indent=4)
+        logger.info('Beginning operation run...')
+        run_ops(
+            serial=arguments['serial'],
+            nowait=arguments['nowait'],
+            print_output=print_output
+        )
 
-# Run the operations we generated with the deploy file
-else:
-    print
-    logger.info('Beginning operation run...')
-    run_ops(
-        serial=arguments['serial'],
-        nowait=arguments['nowait'],
-        print_output=print_output
-    )
+        print
+        logger.info('Results:')
+        print_results()
 
-    print
-    logger.info('Results:')
-    print_results()
+except PyinfraException as e:
+    logger.critical(e)
 
 
 print

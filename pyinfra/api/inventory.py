@@ -13,7 +13,10 @@ class Inventory(object):
     '''
     connected_hosts = None
 
-    def __init__(self, hostnames_data, ssh_user=None, ssh_key=None, ssh_port=None, **kwargs):
+    def __init__(
+        self, hostnames_data,
+        ssh_user=None, ssh_key=None, ssh_key_password=None, ssh_port=None, **kwargs
+    ):
         hostnames, data = hostnames_data
 
         self.host_data = {}
@@ -24,6 +27,7 @@ class Inventory(object):
         self.default_data = AttrData({
             'ssh_user': ssh_user,
             'ssh_key': ssh_key,
+            'ssh_key_password': ssh_key_password,
             'ssh_port': ssh_port or 22
         })
 

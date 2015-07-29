@@ -1,6 +1,6 @@
 # pyinfra
-# File: pyinfra/api/cli.py
-# Desc: pyinfra CLI API
+# File: pyinfra/cli.py
+# Desc: pyinfra CLI helpers
 
 from os import path
 from imp import load_source
@@ -11,17 +11,38 @@ from termcolor import colored
 
 from pyinfra import state, logger
 from pyinfra.api import Config, Inventory
+from pyinfra.api.exceptions import PyinfraException
 
 
-def make_inventory(inventory_filename, limit=None, ssh_user=None, ssh_key=None, ssh_port=None):
-    '''Builds a pyinfra.api.Inventory from the filesystem.'''
-    module = load_source('', inventory_filename)
+class CliException(PyinfraException):
+    pass
 
-    groups = {
-        attr: getattr(module, attr)
-        for attr in dir(module)
-        if attr.isupper()
-    }
+
+def make_inventory(
+    inventory_filename, limit=None,
+    ssh_user=None, ssh_key=None, ssh_key_password=None, ssh_port=None
+):
+    '''Builds a pyinfra.api.Inventory from the filesystem (normally!).'''
+    if ssh_port is not None:
+        ssh_port = int(ssh_port)
+
+    try:
+        module = load_source('', inventory_filename)
+
+        groups = {
+            attr: getattr(module, attr)
+            for attr in dir(module)
+            if attr.isupper()
+        }
+    except IOError:
+        # If a /, definitely not a hostname
+        if '/' in inventory_filename:
+            raise CliException('Invalid inventory file: {0}'.format(inventory_filename))
+
+        # Otherwise we assume the inventory file is a single hostname
+        groups = {
+            'ALL': [inventory_filename]
+        }
 
     if 'ALL' in groups:
         all_hosts = groups.pop('ALL')
@@ -66,6 +87,7 @@ def make_inventory(inventory_filename, limit=None, ssh_user=None, ssh_key=None, 
         groups.pop('ALL'),
         ssh_user=ssh_user,
         ssh_key=ssh_key,
+        ssh_key_password=ssh_key_password,
         ssh_port=ssh_port,
         **groups
     )
