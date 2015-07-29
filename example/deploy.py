@@ -47,19 +47,30 @@ files.directory(
     serial=True
 )
 
+files.directory(
+    host.data.app_dir,
+    user='pyinfra',
+    group='pyinfra',
+    sudo=True
+)
+
 # Copy local files to remote host
 files.put(
     'files/file.txt',
     '/home/vagrant/file.txt'
 )
+# and sync directories
+files.sync(
+    'files',
+    '/home/vagrant/files'
+)
 
 # Generate files from local jinja2 templates
 files.template(
     'templates/template.txt.jn2',
-    '/root/template.txt',
+    '/home/vagrant/template.txt',
     # non-standard kwargs are passed to the template
-    hostname=host.hostname,
-    sudo=True
+    hostname=host.hostname
 )
 
 # Work with facts about the remote host
@@ -92,7 +103,7 @@ if host.os == 'Linux':
 elif 'bsd' in host.groups:
     # OpenBSD packages?
     pkg.packages(
-        ['py-pip'],
+        ['py-pip', 'git'],
         sudo=True,
         op='core_packages' # this and above binds these three operations to run as one
     )
@@ -129,10 +140,12 @@ python.execute(some_python)
 
 # Ensure the state of git repositories
 git.repo(
-    'git@github.com:Fizzadar/pyinfra.git',
+    'https://github.com/Fizzadar/pyinfra',
     host.data.app_dir,
-    update=True,
-    branch='develop'
+    branch='develop',
+    pull=True,
+    sudo=True,
+    sudo_user='pyinfra'
 )
 
 # Manage pip packages
@@ -153,4 +166,15 @@ pip.packages(
     venv=host.data.env_dir,
     sudo=True,
     sudo_user='pyinfra'
+)
+
+# Run things locally
+server.shell(
+    'echo "I am local!"',
+    local=True
+)
+
+# Wait for services
+server.wait(
+    port=22
 )
