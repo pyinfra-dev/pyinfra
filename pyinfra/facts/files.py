@@ -7,7 +7,7 @@ import re
 from pyinfra.api.facts import FactBase
 
 LS_REGEX = re.compile(
-    r'^[a-z-]?([-rwx]{9})\.?\s+[0-9]+\s+([a-zA-Z]+)\s+([a-zA-Z]+)\s+([0-9]+)\s+[a-zA-Z]{3}\s+[0-9]+\s+[0-9]{2}:[0-9]{2}\s+[a-zA-Z0-9\.]+$'
+    r'^[d\-]([\-rwx]{9})\.?\s+[0-9]+\s+([a-zA-Z]+)\s+([a-zA-Z]+)\s+([0-9]+)\s+[a-zA-Z]{3}\s+[0-9]+\s+[0-9]{2}:[0-9]{2}\s+[a-zA-Z0-9\/\.]+'
 )
 SYMBOL_TO_OCTAL_PERMISSIONS = {
     'rwx': '7',

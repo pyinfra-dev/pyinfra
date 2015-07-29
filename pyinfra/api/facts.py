@@ -64,7 +64,7 @@ def get_facts(name, arg=None, sudo=False, sudo_user=None, print_output=False):
         host.ssh_hostname: state.fact_pool.spawn(
             run_shell_command, host.ssh_hostname, command,
             sudo=sudo, sudo_user=sudo_user, print_output=print_output,
-            print_prefix='[{}] '.format(colored(host.ssh_hostname, attrs=['bold']))
+            print_prefix='[{0}] '.format(colored(host.ssh_hostname, attrs=['bold']))
         )
         for host in state.inventory
     }

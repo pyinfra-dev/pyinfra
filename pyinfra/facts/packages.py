@@ -10,7 +10,7 @@ from pyinfra.api import FactBase
 class DebPackages(FactBase):
     '''Returns a dict of installed dpkg packages -> version.'''
     command = 'dpkg -l'
-    regex = r'^[a-z]+\s+([a-zA-Z0-9:\+\-\.]+)\s+([a-zA-Z0-9:~\.\-\+]+)[a-z0-9\s]+$'
+    regex = r'^[a-z]+\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
 
     def process(self, output):
         packages = {}
