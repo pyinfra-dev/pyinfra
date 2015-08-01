@@ -21,6 +21,26 @@ from . import files
 
 
 @operation
+def wait(port=None):
+    '''
+    Waits for a port to come active on the target machine. Requires either netcat to be installed
+    or timeout & bash with magic sockets (/dev/tcp).
+
+    Will error if these are not present - works on all tested targets (see docs/README.md).
+    '''
+    return ['''
+        if [ $(which nc) ]; then
+            while ! nc -q 1 localhost {0} < /dev/null; do sleep 5; done
+        elif [ $(which timeout) ] && [ $(which bash) ]; then
+            while ! timeout 1 bash -c "echo > /dev/tcp/localhost/{0}"; do sleep 5; done
+        else
+            echo "No nc or timeout/bash!"
+            exit 1
+        fi
+    '''.format(port)]
+
+
+@operation
 def shell(*commands):
     '''Run raw shell code.'''
     return list(commands)
