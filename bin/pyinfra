@@ -160,7 +160,7 @@ try:
             sudo=arguments['sudo'], sudo_user=arguments['sudo_user'],
             print_output=print_output
         )
-        print json.dumps(fact_data, indent=4)
+        print json.dumps(fact_data, indent=4, default=json_encode)
 
         sys.exit(0)
 
@@ -199,10 +199,10 @@ try:
             print json.dumps(state.ops, indent=4, default=json_encode)
             print
             logger.info('Operation meta:')
-            print json.dumps(state.op_meta, indent=4)
+            print json.dumps(state.op_meta, indent=4, default=json_encode)
             print
             logger.info('Operation order:')
-            print json.dumps(state.op_order, indent=4)
+            print json.dumps(state.op_order, indent=4, default=json_encode)
 
     # Run the operations we generated with the deploy file
     else:

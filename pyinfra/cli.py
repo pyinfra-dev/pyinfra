@@ -123,22 +123,27 @@ def print_meta():
 
 def print_results():
     for hostname, results in state.results.iteritems():
-        meta = state.meta[hostname]
-        success_ops = results['success_ops']
-        error_ops = results['error_ops']
+        if hostname not in state.inventory.connected_hosts:
+            logger.info('{0}\tNo connection'.format(colored(hostname, 'red', attrs=['bold'])))
 
-        # If all ops got complete (even with ignored_errors)
-        if results['ops'] == meta['ops']:
-            # Yellow if ignored any errors, else green
-            color = 'green' if error_ops == 0 else 'yellow'
-            host_string = colored(hostname, color)
-        # Ops did not complete!
         else:
-            host_string = colored(hostname, 'red', attrs=['bold'])
+            meta = state.meta[hostname]
+            success_ops = results['success_ops']
+            error_ops = results['error_ops']
 
-        logger.info('{0}\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}/{4}'.format(
-            host_string,
-            colored(success_ops, attrs=['bold']),
-            error_ops if error_ops == 0 else colored(error_ops, 'red', attrs=['bold']),
-            results['commands'], meta['commands']
-        ))
+            # If all ops got complete (even with ignored_errors)
+            if results['ops'] == meta['ops']:
+                # Yellow if ignored any errors, else green
+                color = 'green' if error_ops == 0 else 'yellow'
+                host_string = colored(hostname, color)
+
+            # Ops did not complete!
+            else:
+                host_string = colored(hostname, 'red', attrs=['bold'])
+
+            logger.info('{0}\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}/{4}'.format(
+                host_string,
+                colored(success_ops, attrs=['bold']),
+                error_ops if error_ops == 0 else colored(error_ops, 'red', attrs=['bold']),
+                results['commands'], meta['commands']
+            ))
