@@ -51,7 +51,10 @@ def _run_op(hostname, op_hash, print_output=False):
         if isinstance(command, tuple):
             # If first element is function, it's a callback
             if isinstance(command[0], FunctionType):
-                status = command[0](hostname, state.inventory[hostname])
+                status = command[0](
+                    hostname, state.inventory[hostname],
+                    *command[1], **command[2]
+                )
 
             # Non-function mean files to copy
             else:
