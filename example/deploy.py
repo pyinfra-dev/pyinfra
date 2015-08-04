@@ -6,7 +6,7 @@
 from pyinfra import host
 
 # Modules provide namespaced operations, which do the work
-from pyinfra.modules import server, apt, yum, files, python, git, pip, pkg, init
+from pyinfra.modules import server, apt, yum, files, python, git, pip, pkg, init, local
 
 
 # Ensure the state of a user
@@ -15,16 +15,14 @@ server.user(
     home='/home/pyinfra',
     shell='/bin/bash',
 
-    # Global options on all module functions (operations)
-    # these can be configured in config.py scripts
+    # Options available for all operations
+    name='Ensure user pyinfra',
     sudo=True,
     sudo_user='root',
     ignore_errors=False,
-
-    # Local options for all module functions
-    name='Ensure user pyinfra',
     serial=False,
-    run_once=False
+    run_once=False,
+    timeout=30 # ignored for SFTP transfers
 )
 
 # Ensure the state of files
@@ -81,6 +79,7 @@ if host.os == 'Linux':
             ['git', 'python-pip'],
             sudo=True,
             update=True,
+            update_time=3600,
             op='core_packages' # this and below binds these three operations to run as one
         )
 
@@ -93,8 +92,10 @@ if host.os == 'Linux':
         )
 
         # yum doesn't, by default, have pip
+        if not host.file('/tmp/get-pip.py'):
+            server.shell('wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py')
+
         server.shell(
-            'wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py',
             'python /tmp/get-pip.py',
             sudo=True
         )
@@ -134,6 +135,7 @@ init.service(
 
 # Execute Python locally, mid-deploy
 def some_python(hostname, host):
+    print 'host arch: {0}'.format(host.arch)
     print 'connecting hostname: {0}, actual: {1}'.format(hostname, host.hostname)
 
 python.execute(some_python)
@@ -143,7 +145,6 @@ git.repo(
     'https://github.com/Fizzadar/pyinfra',
     host.data.app_dir,
     branch='develop',
-    pull=True,
     sudo=True,
     sudo_user='pyinfra'
 )
@@ -169,12 +170,13 @@ pip.packages(
 )
 
 # Run things locally
-server.shell(
+local.shell(
     'echo "I am local!"',
-    local=True
+    run_once=True
 )
 
 # Wait for services
 server.wait(
-    port=22
+    port=22,
+    timeout=5
 )
