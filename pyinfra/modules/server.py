@@ -5,11 +5,12 @@
 '''
 The server module takes care of os-level state. Targets POSIX compatability, tested on Linux/BSD.
 
-Uses POSIX commands:
+Uses (mostly POSIX) commands:
 
 + `echo`, `cat`
 + `hostname`, `uname`
 + `useradd`, `userdel`, `usermod`
++ `netstat` for server.wait
 '''
 
 from hashlib import sha1
@@ -22,21 +23,12 @@ from . import files
 
 @operation
 def wait(port=None):
-    '''
-    Waits for a port to come active on the target machine. Requires either netcat to be installed
-    or timeout & bash with magic sockets (/dev/tcp).
-
-    Will error if these are not present - works on all tested targets (see docs/README.md).
-    '''
+    '''Waits for a port to come active on the target machine. Requires netstat, checks every 1s.'''
     return ['''
-        if [ $(which nc) ]; then
-            while ! nc -q 1 localhost {0} < /dev/null; do sleep 5; done
-        elif [ $(which timeout) ] && [ $(which bash) ]; then
-            while ! timeout 1 bash -c "echo > /dev/tcp/localhost/{0}"; do sleep 5; done
-        else
-            echo "No nc or timeout/bash!"
-            exit 1
-        fi
+        while ! (netstat -an | grep LISTEN | grep -e "\.{0}" -e ":{0}"); do
+            echo "waiting for port {0}..."
+            sleep 1
+        done
     '''.format(port)]
 
 
