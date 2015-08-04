@@ -115,6 +115,9 @@ def json_encode(obj):
     elif isinstance(obj, datetime):
         return obj.isoformat()
 
+    elif isinstance(obj, file):
+        return str(obj.name)
+
     else:
         raise TypeError('Cannot serialize: {0}'.format(obj))
 
