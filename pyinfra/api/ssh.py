@@ -4,7 +4,10 @@
 
 from os import path
 from hashlib import sha1
-from socket import error as socket_error, gaierror
+from socket import (
+    gaierror,
+    error as socket_error, timeout as timeout_error
+)
 
 import gevent
 from termcolor import colored
@@ -102,7 +105,7 @@ def _read_buffer(buff, print_output=False, print_func=False):
 
 def run_shell_command(
     hostname, command,
-    sudo=False, sudo_user=None, env=None, print_output=False, print_prefix=''
+    sudo=False, sudo_user=None, env=None, timeout=None, print_output=False, print_prefix=''
 ):
     '''Execute a command on the specified host.'''
     if env is None:
@@ -157,16 +160,21 @@ def run_shell_command(
     stderr_reader = gevent.spawn(
         _read_buffer, stderr_buffer,
         print_output=print_output,
-        print_func=lambda line: u'{0}{1}'.format(
-            print_prefix,
-            colored(line, 'red')
-        )
+        print_func=lambda line: u'{0}{1}'.format(print_prefix, colored(line, 'red'))
     )
 
-    gevent.wait((stdout_reader, stderr_reader))
+    # Wait on output, with our timeout
+    greenlets = gevent.wait((stdout_reader, stderr_reader), timeout=timeout)
+
+    # Timeout doesn't raise an exception, but gevent.wait returns the greenlets which did
+    # complete. So if both haven't completed, we kill them and fail with a timeout.
+    if len(greenlets) != 2:
+        stdout_reader.kill()
+        stderr_reader.kill()
+        raise timeout_error()
+
     stdout = stdout_reader.get()
     stderr = stderr_reader.get()
-
     return channel, stdout, stderr
 
 

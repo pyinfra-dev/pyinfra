@@ -5,6 +5,7 @@
 from __future__ import division
 
 from types import FunctionType
+from socket import timeout as timeout_error
 
 from gevent import joinall
 from termcolor import colored
@@ -26,10 +27,15 @@ def _run_op(hostname, op_hash, print_output=False):
     # Op is run_once, have we run it elsewhere?
     if op_meta['run_once']:
         if op_hash in state.ops_run:
-            logger.debug('(Skipping) run_once op {0} already started on {1}'.format(op_hash, hostname))
-            return
+            logger.debug(
+                '(Skipping) run_once op {0} already started on {1}'.format(op_hash, hostname)
+            )
 
-    stdout_buffer = []
+            # Count as success
+            state.results[hostname]['ops'] += 1
+            state.results[hostname]['success_ops'] += 1
+            return True
+
     stderr_buffer = []
     print_prefix = '[{}] '.format(colored(hostname, attrs=['bold']))
 
@@ -59,21 +65,29 @@ def _run_op(hostname, op_hash, print_output=False):
 
         # Must be a string/shell command: execute it on the server w/op-level preferences
         else:
-            channel, stdout, stderr = run_shell_command(
-                hostname, command.strip(),
-                sudo=op_meta['sudo'],
-                sudo_user=op_meta['sudo_user'],
-                env=op_data['env'],
-                print_output=print_output,
-                print_prefix=print_prefix
-            )
+            try:
+                channel, _, stderr = run_shell_command(
+                    hostname, command.strip(),
+                    sudo=op_meta['sudo'],
+                    sudo_user=op_meta['sudo_user'],
+                    timeout=op_meta['timeout'],
+                    env=op_data['env'],
+                    print_output=print_output,
+                    print_prefix=print_prefix
+                )
 
-            # If not iterated, do so to get an exit status
-            if not print_output:
-                stdout_buffer.extend(stdout)
+                # Keep stderr in case of error
                 stderr_buffer.extend(stderr)
+                status = channel.exit_status <= 0
 
-            status = channel.exit_status <= 0
+            except timeout_error:
+                timeout_message = 'Operation timeout after {0}s'.format(op_meta['timeout'])
+                stderr_buffer.append(timeout_message)
+                status = False
+
+                # Print the timeout error as not printed by run_shell_command
+                if print_output:
+                    print u'{0}{1}'.format(print_prefix, timeout_message)
 
         if status is False:
             break

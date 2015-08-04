@@ -67,6 +67,8 @@ def operation(func):
         serial = kwargs.pop('serial', False)
         # Only runs this operation once
         run_once = kwargs.pop('run_once', False)
+        # Timeout on running the command
+        timeout = kwargs.pop('timeout', None)
 
         # Config env followed by command-level env
         env = state.config.ENV
@@ -144,7 +146,8 @@ def operation(func):
             'sudo_user': sudo_user,
             'ignore_errors': ignore_errors,
             'serial': serial,
-            'run_once': run_once
+            'run_once': run_once,
+            'timeout': timeout
         })
         if name not in op_meta['names']:
             op_meta['names'].append(name)
