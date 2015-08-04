@@ -28,7 +28,7 @@ def _connect(hostname, **kwargs):
         client.connect(hostname, **kwargs)
 
         # Log
-        logger.info('[{0}] {1}'.format(
+        logger.info(u'[{0}] {1}'.format(
             colored(hostname, attrs=['bold']),
             colored('Connected', 'green')
         ))
@@ -36,13 +36,13 @@ def _connect(hostname, **kwargs):
         return (hostname, client)
 
     except AuthenticationException as e:
-        logger.critical('Auth error on: {0}, {1}'.format(hostname, e))
+        logger.critical(u'Auth error on: {0}, {1}'.format(hostname, e))
     except SSHException as e:
-        logger.critical('SSH error on: {0}, {1}'.format(hostname, e))
+        logger.critical(u'SSH error on: {0}, {1}'.format(hostname, e))
     except socket_error as e:
-        logger.critical('Could not connect: {0}, {1}'.format(hostname, e))
+        logger.critical(u'Could not connect: {0}, {1}'.format(hostname, e))
     except gaierror:
-        logger.critical('Could not resolve: {0}'.format(hostname))
+        logger.critical(u'Could not resolve: {0}'.format(hostname))
 
 
 def connect_all():
@@ -111,8 +111,8 @@ def run_shell_command(
     if env is None:
         env = {}
 
-    logger.debug('Running command on {0}: "{1}"'.format(hostname, command))
-    logger.debug('Command sudo?: {0}, sudo user: {1}, env: {2}'.format(
+    logger.debug(u'Running command on {0}: "{1}"'.format(hostname, command))
+    logger.debug(u'Command sudo?: {0}, sudo user: {1}, env: {2}'.format(
         sudo, sudo_user, env
     ))
 
@@ -226,7 +226,7 @@ def put_file(
         )
 
         if channel.exit_status > 0:
-            logger.critical('File error: {0}'.format('\n'.join(stderr)))
+            logger.critical(u'File error: {0}'.format('\n'.join(stderr)))
             return False
 
     if print_output:
