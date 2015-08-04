@@ -55,12 +55,16 @@ files.directory(
 # Copy local files to remote host
 files.put(
     'files/file.txt',
-    '/home/vagrant/file.txt'
+    '/home/vagrant/file.txt',
+    mode='777'
 )
 # and sync directories
 files.sync(
     'files',
-    '/home/vagrant/files'
+    '/home/pyinfra/example_files',
+    user='pyinfra',
+    group='pyinfra',
+    sudo=True
 )
 
 # Generate files from local jinja2 templates
@@ -134,11 +138,11 @@ init.service(
 )
 
 # Execute Python locally, mid-deploy
-def some_python(hostname, host):
-    print 'host arch: {0}'.format(host.arch)
+def some_python(hostname, host, *args, **kwargs):
+    print 'args: {0}, kwargs: {1}'.format(args, kwargs)
     print 'connecting hostname: {0}, actual: {1}'.format(hostname, host.hostname)
 
-python.execute(some_python)
+python.execute(some_python, 'arg1', 'arg2', kwarg='hello world')
 
 # Ensure the state of git repositories
 git.repo(
