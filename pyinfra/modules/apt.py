@@ -11,6 +11,8 @@ Uses:
 + `apt-add-repository`
 '''
 
+from datetime import timedelta
+
 from pyinfra import host
 from pyinfra.api import operation, operation_facts, OperationError
 
@@ -29,7 +31,7 @@ def ppa(name, **kwargs):
 
 @operation
 @operation_facts('deb_packages')
-def packages(packages=None, present=True, update=False, upgrade=False):
+def packages(packages=None, present=True, update=False, update_time=None, upgrade=False):
     '''Install/remove/upgrade packages & update apt.'''
     if packages is None:
         packages = []
@@ -38,6 +40,15 @@ def packages(packages=None, present=True, update=False, upgrade=False):
     packages = [package.lower() for package in packages]
 
     commands = []
+
+    # If update_time check when apt was last updated, prevent updates if within time
+    if update_time:
+        cache_info = host.directory('/var/cache/apt')
+        # Time on files is not tz-aware, and will be the same tz as the server's time, so we can
+        # safely remove the tzinfo from host.date before comparison.
+        update_time = host.date.replace(tzinfo=None) - timedelta(seconds=update_time)
+        if cache_info['mtime'] and cache_info['mtime'] > update_time:
+            update = False
 
     if update:
         commands.append('apt-get update')

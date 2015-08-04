@@ -3,11 +3,12 @@
 # Desc: filesystem facts
 
 import re
+from datetime import datetime
 
 from pyinfra.api.facts import FactBase
 
 LS_REGEX = re.compile(
-    r'^[d\-]([\-rwx]{9})\.?\s+[0-9]+\s+([a-zA-Z]+)\s+([a-zA-Z]+)\s+([0-9]+)\s+[a-zA-Z]{3}\s+[0-9]+\s+[0-9]{2}:[0-9]{2}\s+[a-zA-Z0-9\/\.]+'
+    r'^[d\-]([\-rwx]{9})\.?\s+[0-9]+\s+([a-zA-Z]+)\s+([a-zA-Z]+)\s+([0-9]+)\s+([a-zA-Z]{3}\s+[0-9]+\s+[0-9:]{4,5})\s+[a-zA-Z0-9\/\.]+'
 )
 SYMBOL_TO_OCTAL_PERMISSIONS = {
     'rwx': '7',
@@ -19,7 +20,33 @@ SYMBOL_TO_OCTAL_PERMISSIONS = {
     '--x': '1'
 }
 
-def _parse_ls_output(output, directory=False):
+
+def _parse_mode(mode):
+    result = ''
+    # owner, group, world
+    for group in [mode[0:3], mode[3:6], mode[6:9]]:
+        if group in SYMBOL_TO_OCTAL_PERMISSIONS:
+            result = '{0}{1}'.format(result, SYMBOL_TO_OCTAL_PERMISSIONS[group])
+        else:
+            result = '{0}0'.format(result)
+
+    return result
+
+def _parse_time(time):
+    # Try matching with the hour/second format, ie within the current year
+    try:
+        dt = datetime.strptime(time, '%b %d %H:%M')
+        return dt.replace(year=datetime.now().year)
+    except ValueError:
+        pass
+
+    # Otherwise we're in the past, timed to the nearest day
+    try:
+        return datetime.strptime(time, '%b %d %Y')
+    except ValueError:
+        pass
+
+def _process_ls_output(output, directory=False):
     if output:
         matches = re.match(LS_REGEX, output)
         if matches:
@@ -28,42 +55,27 @@ def _parse_ls_output(output, directory=False):
             if directory != is_directory:
                 return False # stands for the wrong type
 
-            directory = _ls_matches_to_dict(matches)
-            return directory
-
-
-def _ls_matches_to_dict(matches):
-    '''Parse mode into octal format (which is what we compare to deploy scripts).'''
-    def parse_mode(mode):
-        result = ''
-        # owner, group, world
-        for group in [mode[0:3], mode[3:6], mode[6:9]]:
-            if group in SYMBOL_TO_OCTAL_PERMISSIONS:
-                result = '{0}{1}'.format(result, SYMBOL_TO_OCTAL_PERMISSIONS[group])
-            else:
-                result = '{0}0'.format(result)
-
-        return result
-
-    return {
-        'mode': parse_mode(matches.group(1)),
-        'user': matches.group(2),
-        'group': matches.group(3),
-        'size': matches.group(4)
-    }
+            out = {
+                'mode': _parse_mode(matches.group(1)),
+                'user': matches.group(2),
+                'group': matches.group(3),
+                'size': matches.group(4),
+                'mtime': _parse_time(matches.group(5))
+            }
+            return out
 
 
 class File(FactBase):
     def command(self, name):
-        return 'ls -ldp {0}'.format(name)
+        return 'ls -ld {0}'.format(name)
 
     def process(self, output):
-        return _parse_ls_output(output[0])
+        return _process_ls_output(output[0])
 
 
 class Directory(File):
     def process(self, output):
-        return _parse_ls_output(output[0], directory=True)
+        return _process_ls_output(output[0], directory=True)
 
 
 class Sha1File(FactBase):
@@ -81,3 +93,12 @@ class Sha1File(FactBase):
             matches = re.match(regex, output[0])
             if matches:
                 return matches.group(1)
+
+
+class FindFiles(FactBase):
+    '''Returns a list of files/dirs from a start point, recursively using find.'''
+    def command(self, name):
+        return 'find {0} -type f'.format(name)
+
+    def process(self, output):
+        return output

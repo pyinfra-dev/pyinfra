@@ -3,6 +3,7 @@
 # Desc: server/os related facts
 
 import re
+from datetime import datetime
 
 from pyinfra.api import FactBase
 
@@ -25,6 +26,14 @@ class OsVersion(FactBase):
 
 class Arch(FactBase):
     command = 'uname -p'
+
+
+class Date(FactBase):
+    '''Returns the current datetime on the server.'''
+    command = 'date'
+
+    def process(self, output):
+        return datetime.strptime(output[0], '%a %b %d %H:%M:%S %Z %Y')
 
 
 class Users(FactBase):
