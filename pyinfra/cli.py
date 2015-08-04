@@ -5,6 +5,7 @@
 from os import path
 from imp import load_source
 from fnmatch import fnmatch
+from datetime import datetime
 from types import FunctionType
 
 from termcolor import colored
@@ -110,6 +111,12 @@ def load_config():
 def json_encode(obj):
     if isinstance(obj, FunctionType):
         return obj.__name__
+
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
+
+    else:
+        raise TypeError('Cannot serialize: {0}'.format(obj))
 
 
 def print_meta():
