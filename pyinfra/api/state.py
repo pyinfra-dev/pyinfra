@@ -35,7 +35,6 @@ class DefaultState(object):
 
         self.ssh_connections = {}
         self.sftp_connections = {}
-        self.connected_hostnames = set()
 
 
 class State(DefaultState):

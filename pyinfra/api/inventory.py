@@ -11,7 +11,7 @@ class Inventory(object):
     Represents a collection of target hosts. Stores and provides access too group data, host data
     and default data for these hosts.
     '''
-    connected_hosts = None
+    connected_hosts = set()
 
     def __init__(
         self, hostnames_data,
