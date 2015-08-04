@@ -35,6 +35,10 @@ def _chown(target, user, group, recursive=False):
 
 @operation
 def sync(source, destination, user=None, group=None, mode=None, delete=False):
+    '''
+    Syncs a local directory with a remote one, with delete support. Note that delete will remove
+    extra files on the remote side, but not extra directories.
+    '''
     if not source.endswith(os.sep):
         source = '{0}{1}'.format(source, os.sep)
 
