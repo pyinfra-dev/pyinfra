@@ -77,8 +77,10 @@ def get_facts(name, arg=None, sudo=False, sudo_user=None, print_output=False):
         hostname_facts[hostname] = data
 
     log_name = colored(name, attrs=['bold'])
+
+    # We only log "top level" facts in "normal" mode
     if arg:
-        logger.info('Loaded fact {0}: {1}'.format(log_name, arg))
+        logger.debug('Loaded fact {0}: {1}'.format(log_name, arg))
     else:
         logger.info('Loaded fact {0}'.format(log_name))
 

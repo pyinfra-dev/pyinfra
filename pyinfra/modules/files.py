@@ -10,7 +10,8 @@ Uses POSIX commands:
 + `touch`, `mkdir`, `chown`, `chmod`, `rm`
 '''
 
-from os import path
+import os
+from os import path, walk
 from cStringIO import StringIO
 
 from jinja2 import Template
@@ -20,16 +21,102 @@ from pyinfra.api import operation, OperationError
 from pyinfra.api.util import get_file_sha1
 
 
+def _chmod(target, mode, recursive=False):
+    return 'chmod {0}{1} {2}'.format(('-R ' if recursive else ''), mode, target)
+
+def _chown(target, user, group, recursive=False):
+    if user and group:
+        user_group = '{0}:{1}'.format(user, group)
+    else:
+        user_group = user or group
+
+    return 'chown {0}{1} {2}'.format(('-R ' if recursive else ''), user_group, target)
+
+
 @operation
-def put(local_filename, remote_filename):
+def sync(source, destination, user=None, group=None, mode=None, delete=False):
+    if not source.endswith(os.sep):
+        source = '{0}{1}'.format(source, os.sep)
+
+    put_files = []
+    ensure_dirnames = []
+    for dirname, _, filenames in walk(source):
+        remote_dirname = dirname.replace(source, '')
+
+        if remote_dirname:
+            ensure_dirnames.append(remote_dirname)
+
+        for filename in filenames:
+            put_files.append((
+                path.join(dirname, filename),
+                path.join(destination, remote_dirname, filename)
+            ))
+
+    commands = []
+
+    # Ensure the destination directory
+    commands.extend(directory(destination, user=user, group=group, mode=mode))
+
+    # Ensure any remote dirnames
+    for dirname in ensure_dirnames:
+        commands.extend(directory(
+            '{0}/{1}'.format(destination, dirname),
+            user=user, group=group, mode=mode
+        ))
+
+    # Put each file combination
+    for local_filename, remote_filename in put_files:
+        commands.extend(put(
+            local_filename, remote_filename,
+            user=user, group=group, mode=mode
+        ))
+
+    # Delete any extra files
+    if delete:
+        remote_filenames = set(host.find_files(destination) or [])
+        wanted_filenames = set([remote_filename for _, remote_filename in put_files])
+        files_to_delete = remote_filenames - wanted_filenames
+        for filename in files_to_delete:
+            commands.extend(file(filename, present=False))
+
+    return commands
+
+
+@operation
+def put(local_filename, remote_filename, user=None, group=None, mode=None):
     '''Copy a local file to the remote system.'''
     local_file = open(path.join(state.deploy_dir, local_filename), 'r')
+    remote_file = host.file(remote_filename)
+    commands = []
 
-    local_sum = get_file_sha1(local_file)
-    remote_sum = host.sha1_file(remote_filename)
+    # No remote file, always upload and user/group/mode if supplied
+    if not remote_file:
+        commands.append((local_file, remote_filename))
 
-    if local_sum != remote_sum:
-        return [(local_file, remote_filename)]
+        if user or group:
+            commands.append(_chown(remote_filename, user, group))
+
+        if mode:
+            commands.append(_chmod(remote_filename, mode))
+
+    # File exists, check sum and check user/group/mode if supplied
+    else:
+        local_sum = get_file_sha1(local_file)
+        remote_sum = host.sha1_file(remote_filename)
+
+        # Check sha1sum, upload if needed
+        if local_sum != remote_sum:
+            commands.append((local_file, remote_filename))
+
+        # Check mode
+        if mode and remote_file['mode'] != mode:
+            commands.append(_chmod(remote_filename, mode))
+
+        # Check user/group
+        if (user and remote_file['user'] != user) or (group and remote_file['group'] != group):
+            commands.append(_chown(remote_filename, user, group))
+
+    return commands
 
 
 @operation
@@ -49,17 +136,6 @@ def template(template_filename, remote_filename, **data):
     if local_sum != remote_sum:
         return [(output_file, remote_filename)]
 
-
-def _chmod(target, mode, recursive=False):
-    return 'chmod {0}{1} {2}'.format(('-R ' if recursive else ''), mode, target)
-
-def _chown(target, user, group, recursive=False):
-    if user and group:
-        user_group = '{0}:{1}'.format(user, group)
-    else:
-        user_group = user or group
-
-    return 'chown {0}{1} {2}'.format(('-R ' if recursive else ''), user_group, target)
 
 @operation
 def file(name, present=True, user=None, group=None, mode=None, touch=False):

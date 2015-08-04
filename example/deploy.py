@@ -64,6 +64,7 @@ files.sync(
     '/home/pyinfra/example_files',
     user='pyinfra',
     group='pyinfra',
+    delete=True,
     sudo=True
 )
 
