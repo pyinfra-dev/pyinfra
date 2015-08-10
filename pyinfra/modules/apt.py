@@ -43,11 +43,11 @@ def packages(packages=None, present=True, update=False, update_time=None, upgrad
 
     # If update_time check when apt was last updated, prevent updates if within time
     if update_time:
-        cache_info = host.directory('/var/cache/apt')
+        cache_info = host.file('/var/cache/apt/pkgcache.bin')
         # Time on files is not tz-aware, and will be the same tz as the server's time, so we can
         # safely remove the tzinfo from host.date before comparison.
         update_time = host.date.replace(tzinfo=None) - timedelta(seconds=update_time)
-        if cache_info['mtime'] and cache_info['mtime'] > update_time:
+        if cache_info and cache_info['mtime'] and cache_info['mtime'] > update_time:
             update = False
 
     if update:
