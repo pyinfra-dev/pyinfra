@@ -25,7 +25,7 @@ class DefaultState(object):
     def __init__(self):
         self.op_order = [] # list of operation hashes
         self.op_meta = {} # maps operation hash -> names/etc
-        self.ops_run = [] # list of ops which have been started/run
+        self.ops_run = set() # list of ops which have been started/run
         self.ops = {} # maps hostnames ->  operation hashes -> operation
 
         self.pre_run_facts = []

@@ -24,35 +24,35 @@ def _run_op(hostname, op_hash, print_output=False):
     op_data = state.ops[hostname][op_hash]
     op_meta = state.op_meta[op_hash]
 
-    # Op is run_once, have we run it elsewhere?
-    if op_meta['run_once']:
-        if op_hash in state.ops_run:
-            logger.debug(
-                '(Skipping) run_once op {0} already started on {1}'.format(op_hash, hostname)
-            )
-
-            # Count as success
-            state.results[hostname]['ops'] += 1
-            state.results[hostname]['success_ops'] += 1
-            return True
-
     stderr_buffer = []
     print_prefix = '[{}] '.format(colored(hostname, attrs=['bold']))
 
-    logger.debug('Starting operation {0} on {1}'.format(', '.join(op_meta['names']), hostname))
-    if op_hash not in state.ops_run:
-        state.ops_run.append(op_hash)
+    skip = False
+
+    # If run once & already run, flag to skip
+    if op_meta['run_once'] and op_hash in state.ops_run:
+        skip = True
+        logger.debug('Skipping {0} on {1}, run once'.format(op_hash, hostname))
+    else:
+        logger.debug('Starting operation {0} on {1}'.format(', '.join(op_meta['names']), hostname))
+
+    state.ops_run.add(op_hash)
 
     # ...loop through each command
     for i, command in enumerate(op_data['commands']):
         status = True
 
+        if skip:
+            continue
+
         # Tuples stand for callbacks & file uploads
-        if isinstance(command, tuple):
+        elif isinstance(command, tuple):
             # If first element is function, it's a callback
             if isinstance(command[0], FunctionType):
                 status = command[0](
                     hostname, state.inventory[hostname],
+                    print_output=print_output,
+                    print_prefix=print_prefix,
                     *command[1], **command[2]
                 )
 
@@ -103,10 +103,11 @@ def _run_op(hostname, op_hash, print_output=False):
         state.results[hostname]['ops'] += 1
         state.results[hostname]['success_ops'] += 1
 
-        logger.info('[{0}] {1}'.format(
-            colored(hostname, attrs=['bold']),
-            colored('Success' if len(op_data['commands']) > 0 else 'No changes', 'green')
-        ))
+        if not skip:
+            logger.info('[{0}] {1}'.format(
+                colored(hostname, attrs=['bold']),
+                colored('Success' if len(op_data['commands']) > 0 else 'No changes', 'green')
+            ))
 
         return True
 
