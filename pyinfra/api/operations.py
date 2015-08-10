@@ -43,7 +43,8 @@ def _run_op(hostname, op_hash, print_output=False):
         status = True
 
         if skip:
-            continue
+            # Not continue because we need to +commands below
+            pass
 
         # Tuples stand for callbacks & file uploads
         elif isinstance(command, tuple):
