@@ -10,19 +10,28 @@ from pyinfra.api import operation
 
 @operation
 def repo(source, target, branch='master', pull=True, rebase=False):
-    '''Manage git repositories. Note: branch switching not implemented yet'''
+    '''Manage git repositories.'''
     is_repo = host.directory(path.join(target, '.git'))
-    command_prefix = 'cd {0} && git'.format(target)
     commands = []
 
+    # Cloning new repo?
     if not is_repo:
-        commands.append('{0} clone {1} .'.format(command_prefix, source))
+        commands.append('clone {0} --branch {1} .'.format(source, branch))
 
+    # Ensuring existing repo
     else:
+        current_branch = host.git_branch(target)
+        if current_branch != branch:
+            commands.append('checkout {0}'.format(branch))
+
         if pull:
             if rebase:
-                commands.append('{0} pull --rebase'.format(command_prefix))
+                commands.append('pull --rebase')
             else:
-                commands.append('{0} pull'.format(command_prefix))
+                commands.append('pull')
+
+    # Attach prefixes for directory
+    command_prefix = 'cd {0} && git'.format(target)
+    commands = ['{0} {1}'.format(command_prefix, command) for command in commands]
 
     return commands
