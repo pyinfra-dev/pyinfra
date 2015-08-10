@@ -140,7 +140,6 @@ init.service(
 
 # Execute Python locally, mid-deploy
 def some_python(hostname, host, *args, **kwargs):
-    print 'args: {0}, kwargs: {1}'.format(args, kwargs)
     print 'connecting hostname: {0}, actual: {1}'.format(hostname, host.hostname)
 
 python.execute(some_python, 'arg1', 'arg2', kwarg='hello world')
