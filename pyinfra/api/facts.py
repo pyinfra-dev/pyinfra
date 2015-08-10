@@ -15,11 +15,13 @@ from .util import underscore, make_hash
 facts = {}
 # Lock on getting facts
 fact_locks = {}
-print_facts = False
+print_fact_info = False
+print_fact_output = False
 
-def set_print_facts(to_print):
-    global print_facts
-    print_facts = to_print
+def set_print_facts(to_print_output, to_print_info):
+    global print_fact_info, print_fact_output
+    print_fact_info = to_print_info
+    print_fact_output = to_print_output
 
 def is_fact(name):
     return name in facts
@@ -44,7 +46,7 @@ class FactBase(object):
 
 
 def get_facts(name, arg=None, sudo=False, sudo_user=None, print_output=False):
-    print_output = print_output or print_facts
+    print_output = print_output or print_fact_output
     fact = facts[name]
     command = fact.command
 
@@ -79,9 +81,14 @@ def get_facts(name, arg=None, sudo=False, sudo_user=None, print_output=False):
     log_name = colored(name, attrs=['bold'])
 
     if arg:
-        logger.info('Loaded fact {0}: {1}'.format(log_name, arg))
+        log = 'Loaded fact {0}: {1}'.format(log_name, arg)
     else:
-        logger.info('Loaded fact {0}'.format(log_name))
+        log = 'Loaded fact {0}'.format(log_name)
+
+    if print_fact_info:
+        logger.info(log)
+    else:
+        logger.debug(log)
 
     facts[fact_hash] = hostname_facts
     fact_locks[fact_hash].release()
@@ -90,7 +97,7 @@ def get_facts(name, arg=None, sudo=False, sudo_user=None, print_output=False):
 
 def get_fact(hostname, name, print_output=False):
     '''Wrapper around get_facts returning facts for one host or a function that does.'''
-    print_output = print_output or print_facts
+    print_output = print_output or print_fact_output
     sudo = False
     sudo_user = None
 

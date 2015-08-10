@@ -42,6 +42,7 @@ from os import path
 
 import gevent
 from docopt import docopt
+from termcolor import colored
 from coloredlogs import ColoredStreamHandler
 
 from pyinfra import state, host, logger
@@ -86,7 +87,7 @@ arguments = {
 
 print_output = arguments['verbose'] > 0
 print_facts = print_output if arguments['deploy'] is None else arguments['verbose'] > 1
-set_print_facts(print_facts)
+set_print_facts(print_facts, print_output)
 
 # Setup logs
 logging.getLogger().setLevel(logging.CRITICAL)
@@ -185,6 +186,10 @@ try:
     for host_obj in inventory:
         host.set(host_obj)
         execfile(arguments['deploy'])
+        logger.info('{0} {1}'.format(
+            '[{}]'.format(colored(host_obj.ssh_hostname, attrs=['bold'])),
+            colored('Ready', 'green')
+        ))
 
     # Always show meta output
     print
