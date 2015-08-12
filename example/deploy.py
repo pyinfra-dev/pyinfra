@@ -22,7 +22,7 @@ server.user(
     ignore_errors=False,
     serial=False,
     run_once=False,
-    timeout=30 # ignored for SFTP transfers
+    timeout=30 # only applies to commands on the remote host (not SFTP, local Python)
 )
 
 # Ensure the state of files
