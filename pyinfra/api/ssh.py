@@ -17,6 +17,7 @@ from paramiko import (
 )
 
 from pyinfra import state, logger
+from pyinfra.api.util import read_buffer
 
 
 def _connect(hostname, **kwargs):
@@ -91,18 +92,6 @@ def connect_all():
     state.inventory.connected_hosts = set(filter(None, hostname_clients.keys()))
 
 
-def _read_buffer(buff, print_output=False, print_func=False):
-    out = []
-
-    for line in buff:
-        line = line.strip()
-        out.append(line)
-
-        if print_output and print_func:
-            print print_func(line)
-
-    return out
-
 def run_shell_command(
     hostname, command,
     sudo=False, sudo_user=None, env=None, timeout=None, print_output=False, print_prefix=''
@@ -153,12 +142,12 @@ def run_shell_command(
     # greenlets so stdout isn't printed before stderr. Not attached to state.*_pool to avoid
     # blocking it with 2x n-hosts greenlets.
     stdout_reader = gevent.spawn(
-        _read_buffer, stdout_buffer,
+        read_buffer, stdout_buffer,
         print_output=print_output,
         print_func=lambda line: u'{0}{1}'.format(print_prefix, line)
     )
     stderr_reader = gevent.spawn(
-        _read_buffer, stderr_buffer,
+        read_buffer, stderr_buffer,
         print_output=print_output,
         print_func=lambda line: u'{0}{1}'.format(print_prefix, colored(line, 'red'))
     )

@@ -45,3 +45,17 @@ def get_file_sha1(io):
     # Reset the IO read
     io.seek(0)
     return hasher.hexdigest()
+
+
+def read_buffer(buff, print_output=False, print_func=False):
+    '''Reads a file-like buffer object into lines and optionally prints the output.'''
+    out = []
+
+    for line in buff:
+        line = line.strip()
+        out.append(line)
+
+        if print_output and print_func:
+            print print_func(line)
+
+    return out
