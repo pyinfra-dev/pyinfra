@@ -4,7 +4,6 @@
 
 # Required
 ssh_user = 'vagrant'
-# Without a ~ or / at the start, this is relative to the deploy(.py) file
 ssh_key = 'files/insecure_private_key'
 
 # Anything else

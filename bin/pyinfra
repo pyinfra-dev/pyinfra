@@ -148,6 +148,7 @@ try:
     state.new(State(inventory, config))
 
     # Connect to all the servers
+    logger.info('Connecting to hosts...')
     connect_all()
 
     # Check we've connected to something
