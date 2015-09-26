@@ -44,8 +44,8 @@ def packages(packages=None, present=True, update=False, update_time=None, upgrad
     # If update_time check when apt was last updated, prevent updates if within time
     if update_time:
         cache_info = host.file('/var/cache/apt/pkgcache.bin')
-        # Time on files is not tz-aware, and will be the same tz as the server's time, so we can
-        # safely remove the tzinfo from host.date before comparison.
+        # Time on files is not tz-aware, and will be the same tz as the server's time,
+        # so we can safely remove the tzinfo from host.date before comparison.
         update_time = host.date.replace(tzinfo=None) - timedelta(seconds=update_time)
         if cache_info and cache_info['mtime'] and cache_info['mtime'] > update_time:
             update = False
@@ -69,9 +69,11 @@ def packages(packages=None, present=True, update=False, update_time=None, upgrad
         ]
 
         if diff_packages:
-            commands.append('DEBIAN_FRONTEND=noninteractive apt-get install -y {0}'.format(
-                ' '.join(diff_packages)
-            ))
+            commands.append(
+                'DEBIAN_FRONTEND=noninteractive apt-get install -y {0}'.format(
+                    ' '.join(diff_packages)
+                )
+            )
 
     else:
         # Packages specified & installed
@@ -81,8 +83,10 @@ def packages(packages=None, present=True, update=False, update_time=None, upgrad
         ]
 
         if diff_packages:
-            commands.append('DEBIAN_FRONTEND=noninteractive apt-get remove -y {0}'.format(
-                ' '.join(diff_packages)
-            ))
+            commands.append(
+                'DEBIAN_FRONTEND=noninteractive apt-get remove -y {0}'.format(
+                    ' '.join(diff_packages)
+                )
+            )
 
     return commands

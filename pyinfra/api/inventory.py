@@ -8,8 +8,8 @@ from .attrs import AttrData
 
 class Inventory(object):
     '''
-    Represents a collection of target hosts. Stores and provides access too group data, host data
-    and default data for these hosts.
+    Represents a collection of target hosts. Stores and provides access too group data,
+    host data and default data for these hosts.
     '''
     connected_hosts = set()
 
@@ -83,8 +83,8 @@ class Inventory(object):
 
     def get_groups_data(self, groups):
         '''
-        Gets aggregated data from a list of groups. Vars are collected in order so, for any groups
-        which define the same var twice, the last group's value will hold.
+        Gets aggregated data from a list of groups. Vars are collected in order so, for
+        any groups which define the same var twice, the last group's value will hold.
         '''
         data = {}
         for group in groups:

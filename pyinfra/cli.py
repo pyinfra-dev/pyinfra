@@ -35,6 +35,7 @@ def make_inventory(
             for attr in dir(module)
             if attr.isupper()
         }
+
     except IOError:
         # If a /, definitely not a hostname
         if '/' in inventory_filename:
@@ -71,7 +72,9 @@ def make_inventory(
     # For each group load up any data
     for name, hosts in groups.iteritems():
         data = {}
-        data_filename = path.join(state.deploy_dir, 'group_data', '{0}.py'.format(name.lower()))
+        data_filename = path.join(
+            state.deploy_dir, 'group_data', '{0}.py'.format(name.lower())
+        )
 
         if path.exists(data_filename):
             module = load_source('', data_filename)

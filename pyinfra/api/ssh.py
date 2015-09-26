@@ -60,13 +60,10 @@ def connect_all():
         # Password auth (boo!)
         if host.data.ssh_password:
             kwargs['password'] = host.data.ssh_password
-        else:
+
+        # Key auth!
+        elif host.data.ssh_key:
             ssh_key = path.expanduser(host.data.ssh_key)
-
-            # Handle relative files from the deploy directory
-            if not ssh_key.startswith('/'):
-                ssh_key = path.join(state.deploy_dir, host.data.ssh_key)
-
             kwargs['pkey'] = RSAKey.from_private_key_file(
                 filename=ssh_key,
                 password=host.data.ssh_key_password
@@ -138,9 +135,9 @@ def run_shell_command(
     _, stdout_buffer, stderr_buffer = connection.exec_command(command)
     channel = stdout_buffer.channel
 
-    # Iterate through outputs to get an exit status and generate desired list output, done in two
-    # greenlets so stdout isn't printed before stderr. Not attached to state.*_pool to avoid
-    # blocking it with 2x n-hosts greenlets.
+    # Iterate through outputs to get an exit status and generate desired list output,
+    # done in two greenlets so stdout isn't printed before stderr. Not attached to
+    # state.*_pool to avoid blocking it with 2x n-hosts greenlets.
     stdout_reader = gevent.spawn(
         read_buffer, stdout_buffer,
         print_output=print_output,
