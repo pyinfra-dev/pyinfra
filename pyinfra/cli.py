@@ -27,6 +27,8 @@ def make_inventory(
     if ssh_port is not None:
         ssh_port = int(ssh_port)
 
+    file_groupname = None
+
     try:
         module = load_source('', inventory_filename)
 
@@ -35,6 +37,10 @@ def make_inventory(
             for attr in dir(module)
             if attr.isupper()
         }
+
+        # Used to set all the hosts to an additional group - that of the filename
+        # ie inventories/dev.py means all the hosts are in the dev group, if not present
+        file_groupname = path.basename(inventory_filename).split('.')[0].upper()
 
     except IOError:
         # If a /, definitely not a hostname
@@ -68,6 +74,10 @@ def make_inventory(
         ]
 
     groups['ALL'] = all_hosts
+
+    # Apply the filename group if not already defined
+    if file_groupname and file_groupname not in groups:
+        groups[file_groupname] = all_hosts
 
     # For each group load up any data
     for name, hosts in groups.iteritems():
