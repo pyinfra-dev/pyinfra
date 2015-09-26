@@ -3,3 +3,5 @@
 pyinfra.egg-info
 dist/
 example/.vagrant/
+.venv
+
