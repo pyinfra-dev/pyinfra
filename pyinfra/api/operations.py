@@ -243,10 +243,10 @@ def run_ops(hosts=None, serial=False, nowait=False, print_output=False, print_li
                 remove_hosts.add(hostname)
 
             # Check we're not above the fail percent
-            if state.config.FAIL_PERCENT:
+            if state.config.FAIL_PERCENT is not None:
                 percent_failed = (1 - len(successful_hosts) / len(hosts)) * 100
 
-                if percent_failed > state.config.FAIL_PERCENT:
+                if percent_failed >= state.config.FAIL_PERCENT:
                     logger.critical('Over {0}% of hosts failed, exiting'.format(
                         state.config.FAIL_PERCENT
                     ))

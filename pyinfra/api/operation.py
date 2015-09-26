@@ -25,9 +25,9 @@ def add_op(op_func, *args, **kwargs):
         op_func(*args, **kwargs)
 
 
-def operation_facts(*facts):
+def operation_facts(*facts, **arg_facts):
     '''
-    Allows a module to specify the facts an operation _will always_ use. This is used in CLI mode
+    Allows a module to specify the facts an operation will use. This is used in CLI mode
     to optimise performance by pre-gathering these facts in parallel.
     '''
     def decorator(func):
@@ -52,8 +52,9 @@ def operation(func):
         sudo_user = kwargs.pop('sudo_user', state.config.SUDO_USER)
         ignore_errors = kwargs.pop('ignore_errors', state.config.IGNORE_ERRORS)
 
-        # If we're in pre_run mode, we only need to pull out any .facts on this function (as set by
-        # the operation_facts decorator above) and attach to the state, ready to be pre-fetched.
+        # If we're in pre_run mode, we only need to pull out any .facts on this function
+        # (as set by the operation_facts decorator above) and attach to the state, ready
+        # to be pre-fetched.
         if state.pre_run:
             facts = getattr(func, 'facts', [])
             if facts:
@@ -91,8 +92,8 @@ def operation(func):
 
         if op_hash is None:
             # Convert any AttrBase items (returned by host.data) arg
-            # this means if one of the args is host.data.app_dir which is set to different values
-            # on different hosts it will still generate one operation.
+            # this means if one of the args is host.data.app_dir which is set to different
+            # values on different hosts it will still generate one operation.
             hash_args = [
                 arg.pyinfra_attr_key if isinstance(arg, AttrBase) else
                 arg.__name__ if isinstance(arg, FunctionType) else arg
@@ -121,10 +122,11 @@ def operation(func):
             commands = []
 
         # Add the hash to the operational order if not already in there
-        # we insert the hash at the current position for the current host, such that deploy scripts
-        # run in the order they are defined *for each host*. Using if statements without matching
-        # the operations within (by op_name and the number of them) will results in them not running
-        # in the order defined in the deploy script - but they will remain in-order per-host.
+        # we insert the hash at the current position for the current host, such that
+        # deploy scripts run in the order they are defined *for each host*. Using if
+        # statements without matching the operations within (by op_name and the number of
+        # them) will results in them not running in the order defined in the deploy script,
+        # but they will remain in-order per-host.
         if op_hash not in state.op_order:
             current_ops = state.meta[host.ssh_hostname]['ops']
             state.op_order.insert(current_ops, op_hash)
@@ -152,5 +154,7 @@ def operation(func):
         if name not in op_meta['names']:
             op_meta['names'].append(name)
 
+    # Add __decorated__ for pydocs
     decorated_function.__decorated__ = getattr(func, '__decorated__', func)
+
     return decorated_function

@@ -11,14 +11,13 @@ class Inventory(object):
     Represents a collection of target hosts. Stores and provides access too group data,
     host data and default data for these hosts.
     '''
-    connected_hosts = set()
-
     def __init__(
         self, hostnames_data,
         ssh_user=None, ssh_key=None, ssh_key_password=None, ssh_port=None, **kwargs
     ):
         hostnames, data = hostnames_data
 
+        self.connected_hosts = set()
         self.host_data = {}
         self.group_data = {}
 

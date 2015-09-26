@@ -31,6 +31,8 @@ Options:
     --dir DEPLOY_DIR     Sets the directory to look for group_data/files/etc.
 '''
 
+from __future__ import division
+
 from gevent import monkey
 monkey.patch_all()
 
@@ -147,6 +149,20 @@ try:
 
     # Connect to all the servers
     connect_all()
+
+    # Check we've connected to something
+    n_connected_hosts = len(state.inventory.connected_hosts)
+    if n_connected_hosts == 0:
+        raise PyinfraException('No hosts connected, exiting')
+
+    # Check we've not failed
+    if state.config.FAIL_PERCENT is not None:
+        percent_failed = (1 - n_connected_hosts / len(state.inventory)) * 100
+        if percent_failed >= state.config.FAIL_PERCENT:
+            raise PyinfraException('Over {0}% of hosts failed, exiting'.format(
+                state.config.FAIL_PERCENT
+            ))
+
     print
 
     # No deploy file, we're getting a fact
@@ -169,7 +185,8 @@ try:
     # We're building a deploy!
     logger.info('Building deploy scripts...')
 
-    # By building the deploy scripts with pre_run we can pre-empt the facts required for the deploy
+    # By building the deploy scripts with pre_run we can pre-empt the facts required for
+    # the deploy. Unfortunately this does require some nasty state based hacks :/
     state.pre_run = True
     for host_obj in inventory:
         host.set(host_obj)

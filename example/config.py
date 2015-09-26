@@ -4,3 +4,4 @@
 #       see: pyinfra/api/config.py for defaults
 
 TIMEOUT = 1
+FAIL_PERCENT = 75
