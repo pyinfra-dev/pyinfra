@@ -33,7 +33,10 @@ class Date(FactBase):
     command = 'date'
 
     def process(self, output):
-        return datetime.strptime(output[0], '%a %b %d %H:%M:%S %Z %Y')
+        # Remove the timezone as local Python might not be aware (Python fail right there)
+        bits = output[0].split(' ')
+        datestring_no_tz = u' '.join(bits[0:4] + [bits[5]])
+        return datetime.strptime(datestring_no_tz, '%a %b %d %H:%M:%S %Y')
 
 
 class Users(FactBase):
