@@ -10,7 +10,6 @@ Uses POSIX commands:
 + `touch`, `mkdir`, `chown`, `chmod`, `rm`
 '''
 
-import os
 from os import path, walk
 from cStringIO import StringIO
 
@@ -36,16 +35,21 @@ def _chown(target, user, group, recursive=False):
 @operation
 def sync(source, destination, user=None, group=None, mode=None, delete=False):
     '''
-    Syncs a local directory with a remote one, with delete support. Note that delete will remove
-    extra files on the remote side, but not extra directories.
+    Syncs a local directory with a remote one, with delete support. Note that delete will
+    remove extra files on the remote side, but not extra directories.
     '''
-    if not source.endswith(os.sep):
-        source = '{0}{1}'.format(source, os.sep)
+    # If we don't enforce the source ending with /, remote_dirname below might start with
+    # a /, which makes the path.join cut off the destination bit.
+    if not source.endswith(path.sep):
+        source = '{0}{1}'.format(source, path.sep)
+
+    # Source relative to deploy.py
+    source_dir = path.join(state.deploy_dir, source)
 
     put_files = []
     ensure_dirnames = []
-    for dirname, _, filenames in walk(source):
-        remote_dirname = dirname.replace(source, '')
+    for dirname, _, filenames in walk(source_dir):
+        remote_dirname = dirname.replace(source_dir, '')
 
         if remote_dirname:
             ensure_dirnames.append(remote_dirname)
@@ -72,7 +76,8 @@ def sync(source, destination, user=None, group=None, mode=None, delete=False):
     for local_filename, remote_filename in put_files:
         commands.extend(put(
             local_filename, remote_filename,
-            user=user, group=group, mode=mode
+            user=user, group=group, mode=mode,
+            add_deploy_dir=False
         ))
 
     # Delete any extra files
@@ -87,9 +92,15 @@ def sync(source, destination, user=None, group=None, mode=None, delete=False):
 
 
 @operation
-def put(local_filename, remote_filename, user=None, group=None, mode=None):
+def put(
+    local_filename, remote_filename,
+    user=None, group=None, mode=None, add_deploy_dir=True
+):
     '''Copy a local file to the remote system.'''
-    local_file = open(path.join(state.deploy_dir, local_filename), 'r')
+    if add_deploy_dir:
+        local_filename = path.join(state.deploy_dir, local_filename)
+
+    local_file = open(local_filename, 'r')
     remote_file = host.file(remote_filename)
     commands = []
 
