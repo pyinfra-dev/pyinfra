@@ -119,6 +119,7 @@ try:
     # Setup our "working directory", taking --dir as default
     if arguments['deploy_dir']:
         state.set_dir(arguments['deploy_dir'])
+
     # This is the most common case: we have a deploy file so use it's pathname
     elif arguments['deploy'] is not None:
         state.set_dir(path.dirname(arguments['deploy']))
@@ -216,10 +217,10 @@ try:
         run_ops(
             serial=arguments['serial'],
             nowait=arguments['nowait'],
-            print_output=print_output
+            print_output=print_output,
+            print_lines=True
         )
 
-        print
         logger.info('Results:')
         print_results()
 

@@ -1,6 +1,6 @@
 # pyinfra
 # File: pyinfra/api/operations.py
-# Desc: Runs operations from pyinfra._ops in various modes (parallel, parallel+nowait, serial)
+# Desc: Runs operations from pyinfra._ops in various modes (parallel, nowait, serial)
 
 from __future__ import division
 
@@ -144,7 +144,7 @@ def _run_op(hostname, op_hash, print_output=False):
     return False
 
 
-def _run_server_ops(hostname, print_output):
+def _run_server_ops(hostname, print_output, print_lines):
     logger.debug('Running all ops on {}'.format(hostname))
     for op_hash in state.op_order:
         op_meta = state.op_meta[op_hash]
@@ -162,22 +162,31 @@ def _run_server_ops(hostname, print_output):
             ))
             return
 
+        if print_lines:
+            print
 
-def run_ops(hosts=None, serial=False, nowait=False, print_output=False):
+
+def run_ops(hosts=None, serial=False, nowait=False, print_output=False, print_lines=False):
     '''Runs all operations across all servers in a configurable manner.'''
     hosts = hosts or state.inventory
 
     # Run all ops, but server by server
     if serial:
         for host in hosts:
-            _run_server_ops(host.ssh_hostname, print_output=print_output)
+            _run_server_ops(
+                host.ssh_hostname,
+                print_output=print_output, print_lines=print_lines
+            )
         return
 
     # Run all the ops on each server in parallel (not waiting at each operation)
     elif nowait:
         # Spawn greenlet for each host to run *all* ops
         greenlets = [
-            state.pool.spawn(_run_server_ops, host.ssh_hostname, print_output=print_output)
+            state.pool.spawn(
+                _run_server_ops, host.ssh_hostname,
+                print_output=print_output, print_lines=print_lines
+            )
             for host in hosts
         ]
         joinall(greenlets)
@@ -228,24 +237,25 @@ def run_ops(hosts=None, serial=False, nowait=False, print_output=False):
                 else:
                     failed_hosts.append(hostname)
 
-        if op_meta['ignore_errors']:
-            continue
+        if not op_meta['ignore_errors']:
+            # Don't continue operations on failed/non-ignore hosts
+            for hostname in failed_hosts:
+                remove_hosts.add(hostname)
 
-        # Don't continue operations on failed/non-ignore hosts
-        for hostname in failed_hosts:
-            remove_hosts.add(hostname)
+            # Check we're not above the fail percent
+            if state.config.FAIL_PERCENT:
+                percent_failed = (1 - len(successful_hosts) / len(hosts)) * 100
 
-        # Check we're not above the fail percent
-        if state.config.FAIL_PERCENT:
-            percent_failed = (1 - len(successful_hosts) / len(hosts)) * 100
+                if percent_failed > state.config.FAIL_PERCENT:
+                    logger.critical('Over {0}% of hosts failed, exiting'.format(
+                        state.config.FAIL_PERCENT
+                    ))
+                    break
 
-            if percent_failed > state.config.FAIL_PERCENT:
-                logger.critical(
-                    'Over {0}% of hosts failed, exiting'.format(state.config.FAIL_PERCENT)
-                )
+            # No hosts left!
+            if not successful_hosts:
+                logger.critical('No hosts remaining, exiting...')
                 break
 
-        # No hosts left!
-        if not successful_hosts:
-            logger.critical('No hosts remaining, exiting...')
-            break
+        if print_lines:
+            print
