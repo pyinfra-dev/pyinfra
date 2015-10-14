@@ -141,6 +141,9 @@ def template(template_filename, remote_filename, **data):
     template_file = open(path.join(state.deploy_dir, template_filename), 'r')
     template = Template(template_file.read())
 
+    # Ensure host is always available inside templates
+    data['host'] = host
+
     # Render and make file-like it's output
     output = template.render(data)
     output_file = StringIO(output)
