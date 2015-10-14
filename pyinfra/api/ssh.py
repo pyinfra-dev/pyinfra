@@ -63,11 +63,20 @@ def connect_all():
 
         # Key auth!
         elif host.data.ssh_key:
-            ssh_key = path.expanduser(host.data.ssh_key)
-            kwargs['pkey'] = RSAKey.from_private_key_file(
-                filename=ssh_key,
-                password=host.data.ssh_key_password
-            )
+            ssh_key_filenames = [
+                # Global from executed directory
+                path.expanduser(host.data.ssh_key),
+                # Relative to the deploy
+                path.join(state.deploy_dir, host.data.ssh_key)
+            ]
+
+            for filename in ssh_key_filenames:
+                if path.isfile(filename):
+                    kwargs['pkey'] = RSAKey.from_private_key_file(
+                        filename=filename,
+                        password=host.data.ssh_key_password
+                    )
+                    break
 
         greenlets.append(
             state.pool.spawn(_connect, host.ssh_hostname, **kwargs)
