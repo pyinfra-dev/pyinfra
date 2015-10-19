@@ -21,6 +21,80 @@ class CliException(PyinfraException):
     pass
 
 
+def run_hook(state, config, hook_name, hook_data):
+    if hasattr(config, hook_name):
+        logger.info('Running {0} hook'.format(colored(hook_name, attrs=['bold'])))
+        getattr(config, hook_name)(hook_data, state)
+
+    print
+
+
+def json_encode(obj):
+    if isinstance(obj, FunctionType):
+        return obj.__name__
+
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
+
+    elif isinstance(obj, file):
+        return str(obj.name)
+
+    else:
+        raise TypeError('Cannot serialize: {0}'.format(obj))
+
+
+def print_meta(state):
+    for hostname, meta in state.meta.iteritems():
+        logger.info(
+            '{0}\tOperations: {1}\t    Commands: {2}'.format(
+                hostname, meta['ops'], meta['commands']
+            )
+        )
+
+
+def print_results(state):
+    for hostname, results in state.results.iteritems():
+        if hostname not in state.inventory.connected_hosts:
+            logger.info('{0}\tNo connection'.format(colored(hostname, 'red', attrs=['bold'])))
+
+        else:
+            meta = state.meta[hostname]
+            success_ops = results['success_ops']
+            error_ops = results['error_ops']
+
+            # If all ops got complete (even with ignored_errors)
+            if results['ops'] == meta['ops']:
+                # Yellow if ignored any errors, else green
+                color = 'green' if error_ops == 0 else 'yellow'
+                host_string = colored(hostname, color)
+
+            # Ops did not complete!
+            else:
+                host_string = colored(hostname, 'red', attrs=['bold'])
+
+            logger.info('{0}\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}/{4}'.format(
+                host_string,
+                colored(success_ops, attrs=['bold']),
+                error_ops if error_ops == 0 else colored(error_ops, 'red', attrs=['bold']),
+                results['commands'], meta['commands']
+            ))
+
+
+def load_config(deploy_dir):
+    '''Loads any local config.py file.'''
+    config = Config()
+    config_filename = path.join(deploy_dir, 'config.py')
+
+    if path.exists(config_filename):
+        module = load_source('', config_filename)
+
+        for attr in dir(module):
+            if hasattr(config, attr) or attr in HOOK_NAMES:
+                setattr(config, attr, getattr(module, attr))
+
+    return config
+
+
 def make_inventory(
     inventory_filename, deploy_dir=None, limit=None,
     ssh_user=None, ssh_key=None, ssh_key_password=None, ssh_port=None
@@ -107,77 +181,3 @@ def make_inventory(
         ssh_port=ssh_port,
         **groups
     ), file_groupname and file_groupname.lower()
-
-
-def load_config(deploy_dir):
-    '''Loads any local config.py file.'''
-    config = Config()
-    config_filename = path.join(deploy_dir, 'config.py')
-
-    if path.exists(config_filename):
-        module = load_source('', config_filename)
-
-        for attr in dir(module):
-            if hasattr(config, attr) or attr in HOOK_NAMES:
-                setattr(config, attr, getattr(module, attr))
-
-    return config
-
-
-def run_hook(state, config, hook_name, hook_data):
-    if hasattr(config, hook_name):
-        logger.info('Running {0} hook'.format(colored(hook_name, attrs=['bold'])))
-        getattr(config, hook_name)(hook_data, state)
-
-    print
-
-
-def json_encode(obj):
-    if isinstance(obj, FunctionType):
-        return obj.__name__
-
-    elif isinstance(obj, datetime):
-        return obj.isoformat()
-
-    elif isinstance(obj, file):
-        return str(obj.name)
-
-    else:
-        raise TypeError('Cannot serialize: {0}'.format(obj))
-
-
-def print_meta(state):
-    for hostname, meta in state.meta.iteritems():
-        logger.info(
-            '{0}\tOperations: {1}\t    Commands: {2}'.format(
-                hostname, meta['ops'], meta['commands']
-            )
-        )
-
-
-def print_results(state):
-    for hostname, results in state.results.iteritems():
-        if hostname not in state.inventory.connected_hosts:
-            logger.info('{0}\tNo connection'.format(colored(hostname, 'red', attrs=['bold'])))
-
-        else:
-            meta = state.meta[hostname]
-            success_ops = results['success_ops']
-            error_ops = results['error_ops']
-
-            # If all ops got complete (even with ignored_errors)
-            if results['ops'] == meta['ops']:
-                # Yellow if ignored any errors, else green
-                color = 'green' if error_ops == 0 else 'yellow'
-                host_string = colored(hostname, color)
-
-            # Ops did not complete!
-            else:
-                host_string = colored(hostname, 'red', attrs=['bold'])
-
-            logger.info('{0}\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}/{4}'.format(
-                host_string,
-                colored(success_ops, attrs=['bold']),
-                error_ops if error_ops == 0 else colored(error_ops, 'red', attrs=['bold']),
-                results['commands'], meta['commands']
-            ))
