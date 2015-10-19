@@ -6,7 +6,7 @@
 from pyinfra import host
 
 # Modules provide namespaced operations, which do the work
-from pyinfra.modules import server, apt, yum, files, python, git, pip, pkg, init, local
+from pyinfra.modules import server, apt, yum, files, python, git, pip, pkg, init
 
 
 # Ensure the state of a user
@@ -84,7 +84,7 @@ if host.os == 'Linux':
             ['git', 'python-pip'],
             sudo=True,
             update=True,
-            update_time=3600,
+            cache_time=3600,
             op='core_packages' # this and below binds these three operations to run as one
         )
 
@@ -139,7 +139,7 @@ init.service(
 )
 
 # Execute Python locally, mid-deploy
-def some_python(hostname, host, *args, **kwargs):
+def some_python(state, host, hostname, *args, **kwargs):
     print 'connecting hostname: {0}, actual: {1}'.format(hostname, host.hostname)
 
 python.execute(some_python, 'arg1', 'arg2', kwarg='hello world')
@@ -171,12 +171,6 @@ pip.packages(
     venv=host.data.env_dir,
     sudo=True,
     sudo_user='pyinfra'
-)
-
-# Run things locally
-local.shell(
-    'echo "I am local!"',
-    run_once=True
 )
 
 # Wait for services

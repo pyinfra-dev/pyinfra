@@ -149,6 +149,10 @@ try:
     state.deploy_dir = deploy_dir
     pseudo_state.set(state)
 
+    # Run the before_deploy hook if provided
+    if hasattr(config, 'before_deploy'):
+        config.before_deploy(state)
+
     # Connect to all the servers
     logger.info('Connecting to hosts...')
     connect_all(state)
@@ -229,6 +233,10 @@ try:
 
         logger.info('Results:')
         print_results(state)
+
+        # Run the after_deploy hook if provided
+        if hasattr(config, 'after_deploy'):
+            config.after_deploy(state)
 
 except PyinfraException as e:
     logger.critical(e)

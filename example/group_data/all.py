@@ -9,3 +9,4 @@ ssh_key = 'files/insecure_private_key'
 # Anything else
 env_dir = '/opt/env'
 app_dir = '/opt/pyinfra'
+app_branch = 'develop'

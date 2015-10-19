@@ -115,7 +115,7 @@ def load_config():
         module = load_source('', 'config.py')
 
         for attr in dir(module):
-            if attr.isupper():
+            if hasattr(config, attr) or attr in ('before_deploy', 'after_deploy'):
                 setattr(config, attr, getattr(module, attr))
 
     return config
