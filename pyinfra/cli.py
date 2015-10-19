@@ -14,6 +14,8 @@ from pyinfra import logger
 from pyinfra.api import Config, Inventory
 from pyinfra.api.exceptions import PyinfraException
 
+HOOK_NAMES = ('before_connect', 'before_deploy', 'after_deploy')
+
 
 class CliException(PyinfraException):
     pass
@@ -104,21 +106,30 @@ def make_inventory(
         ssh_key_password=ssh_key_password,
         ssh_port=ssh_port,
         **groups
-    )
+    ), file_groupname and file_groupname.lower()
 
 
-def load_config():
+def load_config(deploy_dir):
     '''Loads any local config.py file.'''
     config = Config()
+    config_filename = path.join(deploy_dir, 'config.py')
 
-    if path.exists('config.py'):
-        module = load_source('', 'config.py')
+    if path.exists(config_filename):
+        module = load_source('', config_filename)
 
         for attr in dir(module):
-            if hasattr(config, attr) or attr in ('before_deploy', 'after_deploy'):
+            if hasattr(config, attr) or attr in HOOK_NAMES:
                 setattr(config, attr, getattr(module, attr))
 
     return config
+
+
+def run_hook(state, config, hook_name, hook_data):
+    if hasattr(config, hook_name):
+        logger.info('Running {0} hook'.format(colored(hook_name, attrs=['bold'])))
+        getattr(config, hook_name)(hook_data, state)
+
+    print
 
 
 def json_encode(obj):

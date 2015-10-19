@@ -48,6 +48,9 @@ class AttrData(object):
     def __getattr__(self, key):
         return self.get(key)
 
+    def __str__(self):
+        return str(self.attrs)
+
     def get(self, key):
         return wrap_attr_data(key, self.attrs.get(key))
 
@@ -62,6 +65,9 @@ class FallbackAttrData(object):
 
     def __getattr__(self, key):
         for data in self.datas:
-            attr = getattr(data, key)
+            attr = getattr(data, key, None)
             if attr:
                 return attr
+
+    def __str__(self):
+        return str(self.datas)

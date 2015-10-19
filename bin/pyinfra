@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 
 # pyinfra
@@ -47,11 +48,16 @@ from termcolor import colored
 from coloredlogs import ColoredStreamHandler
 
 from pyinfra import host, logger, state as pseudo_state
-from pyinfra.cli import make_inventory, load_config, print_meta, print_results, json_encode
+from pyinfra.cli import (
+    make_inventory, load_config,
+    print_meta, print_results,
+    json_encode, run_hook
+)
 
 from pyinfra.api import State
 from pyinfra.api.ssh import connect_all
 from pyinfra.api.operations import run_ops
+from pyinfra.api.attrs import FallbackAttrData
 from pyinfra.api.facts import facts, get_facts, set_print_facts
 from pyinfra.api.exceptions import PyinfraException
 
@@ -126,7 +132,7 @@ try:
         deploy_dir = path.dirname(arguments['deploy'])
 
     # Load up the inventory from the filesystem
-    inventory = make_inventory(
+    inventory, inventory_group = make_inventory(
         arguments['inventory'],
         deploy_dir=deploy_dir,
         limit=arguments['limit'],
@@ -137,7 +143,7 @@ try:
     )
 
     # Load up any config.py from the filesystem
-    config = load_config()
+    config = load_config(deploy_dir)
     # Arg based overrides
     if arguments['sudo']:
         config.SUDO = True
@@ -149,9 +155,15 @@ try:
     state.deploy_dir = deploy_dir
     pseudo_state.set(state)
 
-    # Run the before_deploy hook if provided
-    if hasattr(config, 'before_deploy'):
-        config.before_deploy(state)
+    # Setup the data to be passed to config hooks
+    hook_data = FallbackAttrData(
+        state.inventory.get_group_data(inventory_group),
+        state.inventory.get_data(),
+        state.inventory.get_default_data()
+    )
+
+    # Run the before_connect hook if provided
+    run_hook(state, config, 'before_connect', hook_data)
 
     # Connect to all the servers
     logger.info('Connecting to hosts...')
@@ -222,6 +234,10 @@ try:
     # Run the operations we generated with the deploy file
     else:
         print
+
+        # Run the before_deploy hook if provided
+        run_hook(state, config, 'before_deploy', hook_data)
+
         logger.info('Beginning operation run...')
         run_ops(
             state,
@@ -231,12 +247,11 @@ try:
             print_lines=True
         )
 
+        # Run the after_deploy hook if provided
+        run_hook(state, config, 'after_deploy', hook_data)
+
         logger.info('Results:')
         print_results(state)
-
-        # Run the after_deploy hook if provided
-        if hasattr(config, 'after_deploy'):
-            config.after_deploy(state)
 
 except PyinfraException as e:
     logger.critical(e)
