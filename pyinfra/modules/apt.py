@@ -13,25 +13,23 @@ Uses:
 
 from datetime import timedelta
 
-from pyinfra import host
-from pyinfra.api import operation, operation_facts, OperationError
+from pyinfra.api import operation, OperationError
 
 
 @operation
-def repo(name, present=True):
+def repo(state, host, name, present=True):
     '''[Not complete] Manage apt sources.'''
     return ['apt-add-repository {0} -y'.format(name)]
 
 
 @operation
-def ppa(name, **kwargs):
+def ppa(state, host, name, **kwargs):
     '''[Not complete] Shortcut for managing ppa apt sources.'''
     return repo('ppa:{}'.format(name), **kwargs)
 
 
 @operation
-@operation_facts('deb_packages')
-def packages(packages=None, present=True, update=False, update_time=None, upgrade=False):
+def packages(state, host, packages=None, present=True, update=False, cache_time=None, upgrade=False):
     '''Install/remove/upgrade packages & update apt.'''
     if packages is None:
         packages = []
@@ -41,13 +39,13 @@ def packages(packages=None, present=True, update=False, update_time=None, upgrad
 
     commands = []
 
-    # If update_time check when apt was last updated, prevent updates if within time
-    if update_time:
+    # If cache_time check when apt was last updated, prevent updates if within time
+    if cache_time:
         cache_info = host.file('/var/cache/apt/pkgcache.bin')
         # Time on files is not tz-aware, and will be the same tz as the server's time,
         # so we can safely remove the tzinfo from host.date before comparison.
-        update_time = host.date.replace(tzinfo=None) - timedelta(seconds=update_time)
-        if cache_info and cache_info['mtime'] and cache_info['mtime'] > update_time:
+        cache_time = host.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
+        if cache_info and cache_info['mtime'] and cache_info['mtime'] > cache_time:
             update = False
 
     if update:

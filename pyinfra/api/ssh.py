@@ -16,7 +16,7 @@ from paramiko import (
     MissingHostKeyPolicy, SSHException, AuthenticationException
 )
 
-from pyinfra import state, logger
+from pyinfra import logger
 from pyinfra.api.util import read_buffer
 
 
@@ -40,13 +40,15 @@ def _connect(hostname, **kwargs):
         logger.critical(u'Auth error on: {0}, {1}'.format(hostname, e))
     except SSHException as e:
         logger.critical(u'SSH error on: {0}, {1}'.format(hostname, e))
-    except socket_error as e:
-        logger.critical(u'Could not connect: {0}, {1}'.format(hostname, e))
     except gaierror:
         logger.critical(u'Could not resolve: {0}'.format(hostname))
+    except socket_error as e:
+        logger.critical(u'Could not connect: {0}:{1}, {2}'.format(
+            hostname, kwargs.get('port', 22), e)
+        )
 
 
-def connect_all():
+def connect_all(state):
     '''Connect to all the configured servers in parallel. Reads/writes state.inventory.'''
     greenlets = []
 
@@ -65,10 +67,14 @@ def connect_all():
         elif host.data.ssh_key:
             ssh_key_filenames = [
                 # Global from executed directory
-                path.expanduser(host.data.ssh_key),
-                # Relative to the deploy
-                path.join(state.deploy_dir, host.data.ssh_key)
+                path.expanduser(host.data.ssh_key)
             ]
+
+            # Relative to the deploy
+            if state.deploy_dir:
+                ssh_key_filenames.append(
+                    path.join(state.deploy_dir, host.data.ssh_key)
+                )
 
             for filename in ssh_key_filenames:
                 if path.isfile(filename):
@@ -99,7 +105,7 @@ def connect_all():
 
 
 def run_shell_command(
-    hostname, command,
+    state, hostname, command,
     sudo=False, sudo_user=None, env=None, timeout=None, print_output=False, print_prefix=''
 ):
     '''Execute a command on the specified host.'''
@@ -146,7 +152,7 @@ def run_shell_command(
 
     # Iterate through outputs to get an exit status and generate desired list output,
     # done in two greenlets so stdout isn't printed before stderr. Not attached to
-    # state.*_pool to avoid blocking it with 2x n-hosts greenlets.
+    # state.pool to avoid blocking it with 2x n-hosts greenlets.
     stdout_reader = gevent.spawn(
         read_buffer, stdout_buffer,
         print_output=print_output,
@@ -173,7 +179,7 @@ def run_shell_command(
     return channel, stdout, stderr
 
 
-def _get_sftp_connection(hostname):
+def _get_sftp_connection(state, hostname):
     # SFTP connections aren't *required* for deploys, so we create them on-demand
     if hostname in state.sftp_connections:
         return state.sftp_connections[hostname]
@@ -186,17 +192,17 @@ def _get_sftp_connection(hostname):
 
     return client
 
-def _put_file(hostname, file_io, remote_location):
-    sftp = _get_sftp_connection(hostname)
+def _put_file(state, hostname, file_io, remote_location):
+    sftp = _get_sftp_connection(state, hostname)
     sftp.putfo(file_io, remote_location)
 
 def put_file(
-    hostname, file_io, remote_file,
+    state, hostname, file_io, remote_file,
     sudo=False, sudo_user=None, print_output=False, print_prefix=''
 ):
     '''Upload file-ios to the specified host.'''
     if not sudo:
-        _put_file(hostname, file_io, remote_file)
+        _put_file(state, hostname, file_io, remote_file)
     else:
         # sudo is a little more complicated, as you can only sftp with the SSH user connected
         # so upload to tmp and copy/chown w/sudo
@@ -206,7 +212,7 @@ def put_file(
         hash_.update(remote_file)
         temp_file = '/tmp/{0}'.format(hash_.hexdigest())
 
-        _put_file(hostname, file_io, temp_file)
+        _put_file(state, hostname, file_io, temp_file)
 
         # Execute run_shell_command w/sudo to mv/chown it
         command = 'mv {0} {1}'.format(temp_file, remote_file)
@@ -214,7 +220,7 @@ def put_file(
             command = '{0} && chown {1} {2}'.format(command, sudo_user, remote_file)
 
         channel, _, stderr = run_shell_command(
-            hostname, command,
+            state, hostname, command,
             sudo=sudo, sudo_user=sudo_user,
             print_output=print_output,
             print_prefix=print_prefix

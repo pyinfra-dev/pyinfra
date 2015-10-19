@@ -14,17 +14,17 @@ Usage:
 
 Options:
     DEPLOY               Deploy script filename.
-    -i INVENTORY         Inventory script filename.
+    -i INVENTORY         Inventory script filename or single hostname.
     --limit HOSTNAME     Limit the inventory at runtime, supports *wildcards.
     --serial             Run commands on one host at a time.
     --nowait             Don't wait for all hosts at each operation.
     -v                   Prints remote input/output in realtime. -vv prints facts.
     --dry                Only print proposed changes.
     --fact FACT          Name of fact to run/test.
-    --user USER          SSH user.
+    -p --port PORT#      SSH port number.
+    -u --user USER       SSH user.
     --key KEY_FILE       SSH private key.
     --key-password PASS  SSH key password.
-    --port PORT#         SSH port number.
     --sudo               Use sudo.
     --sudo-user USER     Which user to sudo to.
     --debug              Print debug info.
@@ -42,12 +42,11 @@ import signal
 import logging
 from os import path
 
-import gevent
 from docopt import docopt
 from termcolor import colored
 from coloredlogs import ColoredStreamHandler
 
-from pyinfra import state, host, logger
+from pyinfra import host, logger, state as pseudo_state
 from pyinfra.cli import make_inventory, load_config, print_meta, print_results, json_encode
 
 from pyinfra.api import State
@@ -120,15 +119,16 @@ if arguments['list_facts']:
 try:
     # Setup our "working directory", taking --dir as default
     if arguments['deploy_dir']:
-        state.set_dir(arguments['deploy_dir'])
+        deploy_dir = arguments['deploy_dir']
 
     # This is the most common case: we have a deploy file so use it's pathname
     elif arguments['deploy'] is not None:
-        state.set_dir(path.dirname(arguments['deploy']))
+        deploy_dir = path.dirname(arguments['deploy'])
 
     # Load up the inventory from the filesystem
     inventory = make_inventory(
         arguments['inventory'],
+        deploy_dir=deploy_dir,
         limit=arguments['limit'],
         ssh_user=arguments['user'],
         ssh_key=arguments['key'],
@@ -144,12 +144,14 @@ try:
         if arguments['sudo_user']:
             config.SUDO_USER = arguments['sudo_user']
 
-    # Set the state
-    state.new(State(inventory, config))
+    # Create/set the state
+    state = State(inventory, config)
+    state.deploy_dir = deploy_dir
+    pseudo_state.set(state)
 
     # Connect to all the servers
     logger.info('Connecting to hosts...')
-    connect_all()
+    connect_all(state)
 
     # Check we've connected to something
     n_connected_hosts = len(state.inventory.connected_hosts)
@@ -186,21 +188,6 @@ try:
     # We're building a deploy!
     logger.info('Building deploy scripts...')
 
-    # By building the deploy scripts with pre_run we can pre-empt the facts required for
-    # the deploy. Unfortunately this does require some nasty state based hacks :/
-    state.pre_run = True
-    for host_obj in inventory:
-        host.set(host_obj)
-        execfile(arguments['deploy'])
-    state.pre_run = False
-
-    # Now get the facts we discovered above, *before* we build any ops
-    for (fact, sudo, sudo_user) in state.pre_run_facts:
-        gevent.spawn(
-            get_facts, fact, arg=None,
-            sudo=sudo, sudo_user=sudo_user, print_output=print_facts
-        )
-
     # This actually does the op build
     for host_obj in inventory:
         host.set(host_obj)
@@ -213,7 +200,7 @@ try:
     # Always show meta output
     print
     logger.info('Proposed changes:')
-    print_meta()
+    print_meta(state)
 
     # Not running the op?
     if arguments['dry']:
@@ -233,6 +220,7 @@ try:
         print
         logger.info('Beginning operation run...')
         run_ops(
+            state,
             serial=arguments['serial'],
             nowait=arguments['nowait'],
             print_output=print_output,
@@ -240,7 +228,7 @@ try:
         )
 
         logger.info('Results:')
-        print_results()
+        print_results(state)
 
 except PyinfraException as e:
     logger.critical(e)

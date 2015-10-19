@@ -10,19 +10,17 @@ Uses:
 + `yum`
 '''
 
-from pyinfra import host
-from pyinfra.api import operation, operation_facts, OperationError
+from pyinfra.api import operation, OperationError
 
 
 @operation
-def repo(name, present=True):
+def repo(state, host, name, present=True):
     '''[Not implemented] Manage yum repositories.'''
     pass
 
 
 @operation
-@operation_facts('rpm_packages')
-def packages(packages=None, present=True, upgrade=False, clean=False):
+def packages(state, host, packages=None, present=True, upgrade=False, clean=False):
     '''Manage yum packages & updates.'''
     if packages is None:
         packages = []

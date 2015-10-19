@@ -15,14 +15,13 @@ Uses (mostly POSIX) commands:
 
 from hashlib import sha1
 
-from pyinfra import host
-from pyinfra.api import operation, operation_facts
+from pyinfra.api import operation
 
 from . import files
 
 
 @operation
-def wait(port=None):
+def wait(state, host, port=None):
     '''Waits for a port to come active on the target machine. Requires netstat, checks every 1s.'''
     return ['''
         while ! (netstat -an | grep LISTEN | grep -e "\.{0}" -e ":{0}"); do
@@ -33,13 +32,13 @@ def wait(port=None):
 
 
 @operation
-def shell(*commands):
+def shell(state, host, *commands):
     '''Run raw shell code.'''
     return list(commands)
 
 
 @operation
-def script(filename):
+def script(state, host, filename):
     '''Upload and execute a local script on the remote host.'''
     commands = []
 
@@ -56,8 +55,7 @@ def script(filename):
 
 
 @operation
-@operation_facts('users')
-def user(name, present=True, home=None, shell=None, public_keys=None):
+def user(state, host, name, present=True, home=None, shell=None, public_keys=None):
     '''
     Manage Linux users & their ssh `authorized_keys`.
 
@@ -89,6 +87,7 @@ def user(name, present=True, home=None, shell=None, public_keys=None):
 
     # Ensure home directory ownership
     commands.extend(files.directory(
+        state, host,
         home,
         user=name,
         group=name
@@ -100,6 +99,7 @@ def user(name, present=True, home=None, shell=None, public_keys=None):
         # note that this always outputs commands unless the SSH user has access to the
         # authorized_keys file, ie the SSH user is the user defined in this function
         commands.extend(files.directory(
+            state, host,
             '{0}/.ssh'.format(home),
             user=name,
             group=name,
@@ -109,7 +109,8 @@ def user(name, present=True, home=None, shell=None, public_keys=None):
         filename = '{0}/.ssh/authorized_keys'.format(home)
 
         # Ensure authorized_keys
-        commands.extend(file(
+        commands.extend(files.file(
+            state, host,
             filename,
             user=name,
             group=name,
@@ -117,6 +118,8 @@ def user(name, present=True, home=None, shell=None, public_keys=None):
         ))
 
         for key in public_keys:
-            commands.append('cat {0} | grep "{1}" || echo "{1}" >> {0}'.format(filename, key))
+            commands.append('cat {0} | grep "{1}" || echo "{1}" >> {0}'.format(
+                filename, key
+            ))
 
     return commands

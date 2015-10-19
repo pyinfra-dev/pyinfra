@@ -5,7 +5,7 @@
 from gevent.lock import Semaphore
 from termcolor import colored
 
-from pyinfra import state, logger
+from pyinfra import logger
 
 from .ssh import run_shell_command
 from .util import underscore, make_hash
@@ -45,7 +45,7 @@ class FactBase(object):
         return output[0]
 
 
-def get_facts(name, arg=None, sudo=False, sudo_user=None, print_output=False):
+def get_facts(state, name, arg=None, sudo=False, sudo_user=None, print_output=False):
     print_output = print_output or print_fact_output
     fact = facts[name]
     command = fact.command
@@ -63,8 +63,8 @@ def get_facts(name, arg=None, sudo=False, sudo_user=None, print_output=False):
 
     # Execute the command for each state inventory in a greenlet
     greenlets = {
-        host.ssh_hostname: state.fact_pool.spawn(
-            run_shell_command, host.ssh_hostname, command,
+        host.ssh_hostname: state.pool.spawn(
+            run_shell_command, state, host.ssh_hostname, command,
             sudo=sudo, sudo_user=sudo_user, print_output=print_output,
             print_prefix='[{0}] '.format(colored(host.ssh_hostname, attrs=['bold']))
         )
@@ -95,7 +95,7 @@ def get_facts(name, arg=None, sudo=False, sudo_user=None, print_output=False):
     return hostname_facts
 
 
-def get_fact(hostname, name, print_output=False):
+def get_fact(state, hostname, name, print_output=False):
     '''Wrapper around get_facts returning facts for one host or a function that does.'''
     print_output = print_output or print_fact_output
     sudo = False
@@ -108,8 +108,9 @@ def get_fact(hostname, name, print_output=False):
     if callable(facts[name].command):
         def wrapper(arg):
             fact_data = get_facts(
-                name, arg,
-                sudo=sudo, sudo_user=sudo_user, print_output=print_output
+                state, name, arg,
+                sudo=sudo, sudo_user=sudo_user,
+                print_output=print_output
             )
             return fact_data.get(hostname)
 
@@ -118,5 +119,9 @@ def get_fact(hostname, name, print_output=False):
     # Expecting the fact as a return value
     else:
         # Get the fact
-        fact_data = get_facts(name, sudo=sudo, sudo_user=sudo_user, print_output=print_output)
+        fact_data = get_facts(
+            state, name,
+            sudo=sudo, sudo_user=sudo_user,
+            print_output=print_output
+        )
         return fact_data.get(hostname)

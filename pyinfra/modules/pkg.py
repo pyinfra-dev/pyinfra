@@ -11,13 +11,11 @@ Uses:
 + `pkg_delete`
 '''
 
-from pyinfra import host
-from pyinfra.api import operation, operation_facts, OperationError
+from pyinfra.api import operation, OperationError
 
 
 @operation
-@operation_facts('pkg_packages', 'os_version', 'arch', 'os')
-def packages(packages=None, present=True):
+def packages(state, host, packages=None, present=True):
     if packages is None:
         packages = []
 

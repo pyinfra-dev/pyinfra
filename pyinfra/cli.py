@@ -10,7 +10,7 @@ from types import FunctionType
 
 from termcolor import colored
 
-from pyinfra import state, logger
+from pyinfra import logger
 from pyinfra.api import Config, Inventory
 from pyinfra.api.exceptions import PyinfraException
 
@@ -20,7 +20,7 @@ class CliException(PyinfraException):
 
 
 def make_inventory(
-    inventory_filename, limit=None,
+    inventory_filename, deploy_dir=None, limit=None,
     ssh_user=None, ssh_key=None, ssh_key_password=None, ssh_port=None
 ):
     '''Builds a pyinfra.api.Inventory from the filesystem (normally!).'''
@@ -83,7 +83,7 @@ def make_inventory(
     for name, hosts in groups.iteritems():
         data = {}
         data_filename = path.join(
-            state.deploy_dir, 'group_data', '{0}.py'.format(name.lower())
+            deploy_dir, 'group_data', '{0}.py'.format(name.lower())
         )
 
         if path.exists(data_filename):
@@ -135,7 +135,7 @@ def json_encode(obj):
         raise TypeError('Cannot serialize: {0}'.format(obj))
 
 
-def print_meta():
+def print_meta(state):
     for hostname, meta in state.meta.iteritems():
         logger.info(
             '{0}\tOperations: {1}\t    Commands: {2}'.format(
@@ -144,7 +144,7 @@ def print_meta():
         )
 
 
-def print_results():
+def print_results(state):
     for hostname, results in state.results.iteritems():
         if hostname not in state.inventory.connected_hosts:
             logger.info('{0}\tNo connection'.format(colored(hostname, 'red', attrs=['bold'])))

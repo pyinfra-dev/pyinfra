@@ -4,6 +4,8 @@
 
 
 class Config(object):
+    state = None
+
     # % of hosts which have to fail for all operations to stop
     FAIL_PERCENT = None
     # Seconds to timeout SSH connections

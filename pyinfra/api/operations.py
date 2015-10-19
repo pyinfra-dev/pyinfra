@@ -10,12 +10,12 @@ from socket import timeout as timeout_error
 from gevent import joinall
 from termcolor import colored
 
-from pyinfra import state, logger
+from pyinfra import logger
 
 from .ssh import run_shell_command, put_file
 
 
-def _run_op(hostname, op_hash, print_output=False):
+def _run_op(state, hostname, op_hash, print_output=False):
     # Noop for this host?
     if op_hash not in state.ops[hostname]:
         logger.debug('(Skipping) no op {0} on {1}'.format(op_hash, hostname))
@@ -34,7 +34,9 @@ def _run_op(hostname, op_hash, print_output=False):
         skip = True
         logger.debug('Skipping {0} on {1}, run once'.format(op_hash, hostname))
     else:
-        logger.debug('Starting operation {0} on {1}'.format(', '.join(op_meta['names']), hostname))
+        logger.debug('Starting operation {0} on {1}'.format(
+            ', '.join(op_meta['names']), hostname
+        ))
 
     state.ops_run.add(op_hash)
 
@@ -51,7 +53,7 @@ def _run_op(hostname, op_hash, print_output=False):
             # If first element is function, it's a callback
             if isinstance(command[0], FunctionType):
                 status = command[0](
-                    hostname, state.inventory[hostname],
+                    state, state.inventory[hostname], hostname,
                     print_output=print_output,
                     print_prefix=print_prefix,
                     *command[1], **command[2]
@@ -60,7 +62,7 @@ def _run_op(hostname, op_hash, print_output=False):
             # Non-function mean files to copy
             else:
                 status = put_file(
-                    hostname, *command,
+                    state, hostname, *command,
                     sudo=op_meta['sudo'],
                     sudo_user=op_meta['sudo_user'],
                     print_output=print_output,
@@ -71,7 +73,7 @@ def _run_op(hostname, op_hash, print_output=False):
         else:
             try:
                 channel, _, stderr = run_shell_command(
-                    hostname, command.strip(),
+                    state, hostname, command.strip(),
                     sudo=op_meta['sudo'],
                     sudo_user=op_meta['sudo_user'],
                     timeout=op_meta['timeout'],
@@ -107,7 +109,10 @@ def _run_op(hostname, op_hash, print_output=False):
         if not skip:
             logger.info('[{0}] {1}'.format(
                 colored(hostname, attrs=['bold']),
-                colored('Success' if len(op_data['commands']) > 0 else 'No changes', 'green')
+                colored(
+                    'Success' if len(op_data['commands']) > 0 else 'No changes',
+                    'green'
+                )
             ))
 
         return True
@@ -144,7 +149,7 @@ def _run_op(hostname, op_hash, print_output=False):
     return False
 
 
-def _run_server_ops(hostname, print_output, print_lines):
+def _run_server_ops(state, hostname, print_output, print_lines):
     logger.debug('Running all ops on {}'.format(hostname))
     for op_hash in state.op_order:
         op_meta = state.op_meta[op_hash]
@@ -166,7 +171,7 @@ def _run_server_ops(hostname, print_output, print_lines):
             print
 
 
-def run_ops(hosts=None, serial=False, nowait=False, print_output=False, print_lines=False):
+def run_ops(state, hosts=None, serial=False, nowait=False, print_output=False, print_lines=False):
     '''Runs all operations across all servers in a configurable manner.'''
     hosts = hosts or state.inventory
 
@@ -174,7 +179,7 @@ def run_ops(hosts=None, serial=False, nowait=False, print_output=False, print_li
     if serial:
         for host in hosts:
             _run_server_ops(
-                host.ssh_hostname,
+                state, host.ssh_hostname,
                 print_output=print_output, print_lines=print_lines
             )
         return
@@ -184,7 +189,7 @@ def run_ops(hosts=None, serial=False, nowait=False, print_output=False, print_li
         # Spawn greenlet for each host to run *all* ops
         greenlets = [
             state.pool.spawn(
-                _run_server_ops, host.ssh_hostname,
+                _run_server_ops, state, host.ssh_hostname,
                 print_output=print_output, print_lines=print_lines
             )
             for host in hosts
@@ -217,7 +222,7 @@ def run_ops(hosts=None, serial=False, nowait=False, print_output=False, print_li
         if op_meta['serial']:
             # For each host, run the op
             for hostname in op_hosts:
-                result = _run_op(hostname, op_hash, print_output=print_output)
+                result = _run_op(state, hostname, op_hash, print_output=print_output)
 
                 if result:
                     successful_hosts.append(hostname)
@@ -226,7 +231,9 @@ def run_ops(hosts=None, serial=False, nowait=False, print_output=False, print_li
         else:
             # Spawn greenlet for each host
             greenlet_hosts = [
-                (hostname, state.pool.spawn(_run_op, hostname, op_hash, print_output=print_output))
+                (hostname, state.pool.spawn(
+                    _run_op, state, hostname, op_hash, print_output=print_output
+                ))
                 for hostname in op_hosts
             ]
 

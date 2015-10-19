@@ -14,21 +14,20 @@ class DefaultState(object):
     inventory = None # a pyinfra.api.Inventory which stores all our pyinfra.api.Host's
     config = None # a pyinfra.api.Config
 
-    pool = None # main gevent pool for connecting/operations
-    fact_pool = None # gevent pool for fact gathering
+    pool = None # main gevent pool
 
     in_op = False # whether we are in an @operation (so inner ops aren't wrapped)
     current_op_sudo = None # current @operation args tuple (sudo, sudo_user) for use w/facts
 
     pre_run = False
 
+    deploy_dir = None
+
     def __init__(self):
         self.op_order = [] # list of operation hashes
         self.op_meta = {} # maps operation hash -> names/etc
         self.ops_run = set() # list of ops which have been started/run
         self.ops = {} # maps hostnames ->  operation hashes -> operation
-
-        self.pre_run_facts = []
 
         self.meta = {}
         self.results = {}
@@ -41,16 +40,19 @@ class State(DefaultState):
     '''Create a new state based on the default state.'''
     def __init__(self, inventory, config=None):
         super(State, self).__init__()
-        self.inventory = inventory
 
         if config is None:
             config = Config()
 
+        # Assign inventory/config
+        self.inventory = inventory
         self.config = config
 
-        greenlets = len(inventory)
-        self.pool = Pool(greenlets) # for running one operation per host at once
-        self.fact_pool = Pool(greenlets) # allows us to fetch two facts per host at once
+        # Assign self to inventory & config
+        inventory.state = config.state = self
+
+        # Setup greenlet pool
+        self.pool = Pool(len(inventory))
 
         hostnames = [host.ssh_hostname for host in inventory]
 
@@ -83,14 +85,16 @@ class State(DefaultState):
 
 
 class StateModule(object):
-    '''A classmodule which binds to pyinfra.state. New state can be swapped in/out as desired.'''
+    '''
+    A classmodule which binds to pyinfra.state. New state can be swapped in/out as desired.
+    '''
     ok_attrs = [attr for attr in dir(DefaultState()) if not attr.startswith('_')]
 
     # deploy_dir is defined outside of the State class because it's sometimes needed before we set
     # a new state with StateModule.new (ie in Inventory creation).
     deploy_dir = ''
 
-    def new(self, state):
+    def set(self, state):
         for attr in self.ok_attrs:
             # Set the attribute on self from the state arg
             setattr(self, attr, getattr(state, attr))
@@ -98,9 +102,7 @@ class StateModule(object):
     def reset(self):
         # Create a temporary DefaultState and apply it's attributes
         defaults = DefaultState()
-        self.new(defaults)
-        # Reset deploy_dir
-        self.deploy_dir = ''
+        self.set(defaults)
 
     def set_dir(self, directory):
         self.deploy_dir = directory

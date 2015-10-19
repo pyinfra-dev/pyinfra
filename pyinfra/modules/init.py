@@ -10,8 +10,7 @@ Uses:
 + `service`
 '''
 
-from pyinfra import host
-from pyinfra.api.operation import operation, operation_facts
+from pyinfra.api.operation import operation
 
 
 def _handle_service_control(
@@ -41,8 +40,7 @@ def _handle_service_control(
 
 
 @operation
-@operation_facts('initd_status')
-def d(name, **kwargs):
+def d(state, host, name, **kwargs):
     '''
     Manage the state of /etc/init.d service scripts.
     '''
@@ -56,8 +54,7 @@ def d(name, **kwargs):
 
 
 @operation
-@operation_facts('rcd_status')
-def rc(name, **kwargs):
+def rc(state, host, name, **kwargs):
     '''Manage the state of /etc/rc.d service scripts.'''
     status = host.rcd_status or {}
     status = status.get(name, None)
@@ -69,8 +66,7 @@ def rc(name, **kwargs):
 
 
 @operation
-@operation_facts('service_status')
-def service(name, **kwargs):
+def service(state, host, name, **kwargs):
     '''Manage the state of "service" managed services.'''
     status = host.service_status or {}
     status = status.get(name, None)

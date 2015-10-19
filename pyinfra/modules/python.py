@@ -6,5 +6,5 @@ from pyinfra.api import operation
 
 
 @operation
-def execute(callback, *args, **kwargs):
+def execute(state, host, callback, *args, **kwargs):
     return [(callback, args, kwargs)]

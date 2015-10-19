@@ -8,8 +8,6 @@ monkey.patch_all() # async things (speed++, optional)
 import json
 import logging
 
-from pyinfra import state
-
 from pyinfra.api import Inventory, Config, State
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
@@ -55,14 +53,14 @@ config = Config(
 )
 
 # Setup the pyinfra state for this deploy
-state.new(State(inventory, config))
+state = State(inventory, config)
 
 # Connect to all the hosts
-connect_all()
+connect_all(state)
 
 # Now we can build up a list of operations to run (running facts as required)
 add_op(
-    server.user,
+    state, server.user,
     'pyinfra',
     home='/home/pyinfra',
     shell='/bin/bash',
@@ -71,7 +69,7 @@ add_op(
 
 # Ensure the state of files
 add_op(
-    files.file,
+    state, files.file,
     '/var/log/pyinfra.log',
     user='pyinfra',
     group='pyinfra',
@@ -81,7 +79,7 @@ add_op(
 
 # Ensure the state of directories
 add_op(
-    files.directory,
+    state, files.directory,
     '/tmp/email',
     user='pyinfra',
     group='pyinfra',
@@ -91,14 +89,14 @@ add_op(
 
 # Copy local files to remote host
 add_op(
-    files.put,
+    state, files.put,
     'files/file.txt',
     '/home/vagrant/file.txt'
 )
 
 # And finally we run the ops
-run_ops()
+run_ops(state)
 
 # We can also get facts for all the hosts
-facts = get_facts('os')
+facts = get_facts(state, 'os')
 print json.dumps(facts, indent=4)

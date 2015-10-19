@@ -12,32 +12,21 @@ later by pyinfra's __main__.
 from functools import wraps
 from types import FunctionType
 
-from pyinfra import host, state
+from pyinfra import (
+    state as pseudo_state,
+    host as pseudo_host
+)
 
+from .host import Host, HostModule
+from .state import State, StateModule
 from .util import make_hash
 from .attrs import AttrBase
 
 
-def add_op(op_func, *args, **kwargs):
+def add_op(state, op_func, *args, **kwargs):
     '''Prepare & add an operation to pyinfra.state by executing it on all hosts.'''
-    for host_obj in state.inventory:
-        host.set(host_obj)
-        op_func(*args, **kwargs)
-
-
-def operation_facts(*facts, **arg_facts):
-    '''
-    Allows a module to specify the facts an operation will use. This is used in CLI mode
-    to optimise performance by pre-gathering these facts in parallel.
-    '''
-    def decorator(func):
-        @wraps(func)
-        def decorated_function(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        decorated_function.facts = facts
-        return decorated_function
-    return decorator
+    for host in state.inventory:
+        op_func(state, host, *args, **kwargs)
 
 
 def operation(func):
@@ -47,22 +36,25 @@ def operation(func):
     '''
     @wraps(func)
     def decorated_function(*args, **kwargs):
+        # If we're in CLI mode, there's no state/host passed down, we need to use the
+        # global "pseudo" modules.
+        if len(args) < 2 or not (
+            isinstance(args[0], (State, StateModule))
+            and isinstance(args[1], (Host, HostModule))
+        ):
+            state = pseudo_state
+            host = pseudo_host
+
+        # Otherwise (API mode) we just trim off the commands
+        else:
+            args_copy = list(args)
+            state, host = args[0], args[1]
+            args = args_copy[2:]
+
         # Locally & globally configurable
         sudo = kwargs.pop('sudo', state.config.SUDO)
         sudo_user = kwargs.pop('sudo_user', state.config.SUDO_USER)
         ignore_errors = kwargs.pop('ignore_errors', state.config.IGNORE_ERRORS)
-
-        # If we're in pre_run mode, we only need to pull out any .facts on this function
-        # (as set by the operation_facts decorator above) and attach to the state, ready
-        # to be pre-fetched.
-        if state.pre_run:
-            facts = getattr(func, 'facts', [])
-            if facts:
-                state.pre_run_facts.extend(
-                    (fact, sudo, sudo_user)
-                    for fact in facts
-                )
-            return
 
         # Forces serial mode for this operation (--serial for one op)
         serial = kwargs.pop('serial', False)
@@ -88,7 +80,7 @@ def operation(func):
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above)
         if state.in_op:
-            return func(*args, **kwargs) or []
+            return func(state, host, *args, **kwargs) or []
 
         if op_hash is None:
             # Convert any AttrBase items (returned by host.data) arg
@@ -113,7 +105,7 @@ def operation(func):
         # Otherwise, flag as in-op and run it to get the commands
         state.in_op = True
         state.current_op_sudo = (sudo, sudo_user)
-        commands = func(*args, **kwargs)
+        commands = func(state, host, *args, **kwargs)
         state.in_op = False
         state.current_op_sudo = None
 

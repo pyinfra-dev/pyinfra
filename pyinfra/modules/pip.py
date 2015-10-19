@@ -10,12 +10,11 @@ Uses:
 + `pip`
 '''
 
-from pyinfra import host
 from pyinfra.api import operation
 
 
 @operation
-def packages(packages=None, present=True, requirements=None, venv=None):
+def packages(state, host, packages=None, present=True, requirements=None, venv=None):
     '''
     Manage pip packages.
 

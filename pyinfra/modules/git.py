@@ -4,12 +4,11 @@
 
 from os import path
 
-from pyinfra import host
 from pyinfra.api import operation
 
 
 @operation
-def repo(source, target, branch='master', pull=True, rebase=False):
+def repo(state, host, source, target, branch='master', pull=True, rebase=False):
     '''Manage git repositories.'''
     is_repo = host.directory(path.join(target, '.git'))
     commands = []

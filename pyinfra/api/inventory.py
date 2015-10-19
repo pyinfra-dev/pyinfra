@@ -11,6 +11,9 @@ class Inventory(object):
     Represents a collection of target hosts. Stores and provides access too group data,
     host data and default data for these hosts.
     '''
+
+    state = None
+
     def __init__(
         self, hostnames_data,
         ssh_user=None, ssh_key=None, ssh_key_password=None, ssh_port=None, **kwargs
@@ -51,7 +54,7 @@ class Inventory(object):
 
             self.host_data[hostname] = AttrData(host_data)
 
-            hosts[hostname] = Host(hostname, hostnames_to_groups.get(hostname))
+            hosts[hostname] = Host(self, hostname, hostnames_to_groups.get(hostname))
 
         self.hosts = hosts
 

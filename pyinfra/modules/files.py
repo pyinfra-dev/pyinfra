@@ -15,7 +15,6 @@ from cStringIO import StringIO
 
 from jinja2 import Template
 
-from pyinfra import host, state
 from pyinfra.api import operation, OperationError
 from pyinfra.api.util import get_file_sha1
 
@@ -33,7 +32,7 @@ def _chown(target, user, group, recursive=False):
 
 
 @operation
-def sync(source, destination, user=None, group=None, mode=None, delete=False):
+def sync(state, host, source, destination, user=None, group=None, mode=None, delete=False):
     '''
     Syncs a local directory with a remote one, with delete support. Note that delete will
     remove extra files on the remote side, but not extra directories.
@@ -93,11 +92,11 @@ def sync(source, destination, user=None, group=None, mode=None, delete=False):
 
 @operation
 def put(
-    local_filename, remote_filename,
+    state, host, local_filename, remote_filename,
     user=None, group=None, mode=None, add_deploy_dir=True
 ):
     '''Copy a local file to the remote system.'''
-    if add_deploy_dir:
+    if state.deploy_dir and add_deploy_dir:
         local_filename = path.join(state.deploy_dir, local_filename)
 
     local_file = open(local_filename, 'r')
@@ -135,7 +134,7 @@ def put(
 
 
 @operation
-def template(template_filename, remote_filename, **data):
+def template(state, host, template_filename, remote_filename, **data):
     '''Generate a template and write it to the remote system.'''
     # Load the template from file
     template_file = open(path.join(state.deploy_dir, template_filename), 'r')
@@ -156,7 +155,7 @@ def template(template_filename, remote_filename, **data):
 
 
 @operation
-def file(name, present=True, user=None, group=None, mode=None, touch=False):
+def file(state, host, name, present=True, user=None, group=None, mode=None, touch=False):
     '''Manage the state of files.'''
     info = host.file(name)
     commands = []
@@ -194,7 +193,7 @@ def file(name, present=True, user=None, group=None, mode=None, touch=False):
 
 
 @operation
-def directory(name, present=True, user=None, group=None, mode=None, recursive=False):
+def directory(state, host, name, present=True, user=None, group=None, mode=None, recursive=False):
     '''Manage the state of directories.'''
     info = host.directory(name)
     commands = []
