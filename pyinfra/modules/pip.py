@@ -4,10 +4,6 @@
 
 '''
 Manage pip packages. Compatible globally or inside a virtualenv.
-
-Uses:
-
-+ `pip`
 '''
 
 from pyinfra.api import operation
@@ -16,12 +12,19 @@ from pyinfra.api import operation
 @operation
 def packages(state, host, packages=None, present=True, requirements=None, venv=None):
     '''
-    Manage pip packages.
+    Manage pip packages. Options:
 
-    # venv: a virtualenv root directory
+    + packages: list of packages to ensure
+    + present: whether the packages should be installed
+    + requirements: location of requirements file to install
+    + venv: root directory of virtualenv to work in
     '''
+
     if packages is None:
         packages = []
+
+    if isinstance(packages, basestring):
+        packages = [packages]
 
     # pip packages are case-insensitive
     packages = [package.lower() for package in packages]
@@ -31,7 +34,7 @@ def packages(state, host, packages=None, present=True, requirements=None, venv=N
     if requirements is not None:
         commands.append('pip install -r {0}'.format(requirements))
 
-    current_packages = host.venv_pip_packages(venv) if venv else host.pip_packages
+    current_packages = host.pip_packages_venv(venv) if venv else host.pip_packages
     current_packages = current_packages or {}
 
     if present is True:

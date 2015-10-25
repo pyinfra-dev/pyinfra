@@ -27,6 +27,7 @@ def is_fact(name):
     return name in facts
 
 def get_fact_names():
+    '''Returns a list of available facts in camel_case format.'''
     return facts.keys()
 
 
@@ -46,6 +47,9 @@ class FactBase(object):
 
 
 def get_facts(state, name, arg=None, sudo=False, sudo_user=None, print_output=False):
+    '''
+    Get a single fact for all hosts in the state.
+    '''
     print_output = print_output or print_fact_output
     fact = facts[name]
     command = fact.command
@@ -97,6 +101,7 @@ def get_facts(state, name, arg=None, sudo=False, sudo_user=None, print_output=Fa
 
 def get_fact(state, hostname, name, print_output=False):
     '''Wrapper around get_facts returning facts for one host or a function that does.'''
+
     print_output = print_output or print_fact_output
     sudo = False
     sudo_user = None

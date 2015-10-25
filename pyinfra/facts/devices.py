@@ -10,12 +10,12 @@ from pyinfra.api import FactBase
 class BlockDevices(FactBase):
     '''Returns a dict of (mounted) block devices -> details.'''
     command = 'df'
-    regex = r'([a-zA-Z0-9\/\-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
+    _regex = r'([a-zA-Z0-9\/\-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
 
     def process(self, output):
         devices = {}
         for line in output:
-            matches = re.match(self.regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 if matches.group(1) == 'none': continue
                 devices[matches.group(1)] = {
@@ -32,12 +32,12 @@ class BlockDevices(FactBase):
 class NetworkDevices():
     '''[Broken (no baseclass)] Gets & returns a dict of network devices -> details.'''
     command = 'ifconfig'
-    regex = r'\s+([a-zA-Z0-9]+):\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)'
+    _regex = r'\s+([a-zA-Z0-9]+):\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)'
 
     def process(self, output):
         devices = {}
         for line in output:
-            matches = re.match(self.regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 devices[matches.group(1)] = {
                     'receive': {

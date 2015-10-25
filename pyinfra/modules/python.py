@@ -4,6 +4,9 @@
 
 from pyinfra.api import operation
 
+'''
+The Python module allows you to execute Python code within the context of a deploy.
+'''
 
 @operation
 def execute(state, host, callback, *args, **kwargs):

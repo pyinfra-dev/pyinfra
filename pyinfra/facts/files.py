@@ -80,7 +80,7 @@ class Directory(File):
 
 class Sha1File(FactBase):
     '''Returns a SHA1 hash of a file. Works with both sha1sum and sha1.'''
-    regexes = [
+    _regexes = [
         r'^([a-zA-Z0-9]+)\s+[a-zA-Z0-9_\/\.\-]+$',
         r'^SHA1 \([a-zA-Z0-9_\/\.\-]+\)\s+=\s+([a-zA-Z0-9]+)$'
     ]
@@ -89,7 +89,7 @@ class Sha1File(FactBase):
         return 'sha1sum {0} || sha1 {0}'.format(name)
 
     def process(self, output):
-        for regex in self.regexes:
+        for regex in self._regexes:
             matches = re.match(regex, output[0])
             if matches:
                 return matches.group(1)

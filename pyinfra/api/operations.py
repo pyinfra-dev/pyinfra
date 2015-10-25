@@ -171,9 +171,19 @@ def _run_server_ops(state, hostname, print_output, print_lines):
             print
 
 
-def run_ops(state, hosts=None, serial=False, nowait=False, print_output=False, print_lines=False):
-    '''Runs all operations across all servers in a configurable manner.'''
-    hosts = hosts or state.inventory
+def run_ops(
+    state, serial=False, nowait=False,
+    print_output=False, print_lines=False
+):
+    '''
+    Runs all operations across all servers in a configurable manner.
+
+    Args:
+        state (``pyinfra.api.State`` obj): the deploy state to execute
+        serial (boolean): whether to run operations host by host
+        nowait (boolean): whether to wait for all hosts between operations
+    '''
+    hosts = state.inventory
 
     # Run all ops, but server by server
     if serial:

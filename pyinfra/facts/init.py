@@ -10,13 +10,13 @@ from pyinfra.api import FactBase
 class SystemctlStatus(FactBase):
     '''Returns a dict of name -> status for systemd managed services.'''
     command = 'systemctl -alt service list-units'
-    regex = r'^([a-z\-]+)\.service\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
+    _regex = r'^([a-z\-]+)\.service\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
 
     def process(self, output):
         services = {}
 
         for line in output:
-            matches = re.match(self.regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 services[matches.group(1)] = matches.group(2) == 'running'
 
@@ -27,7 +27,7 @@ class ServiceStatus(FactBase):
     '''Returns a dict of name -> status for services listed by "service".'''
     command = 'service --status-all'
 
-    regexes = [
+    _regexes = [
         # [ <status> ] <name>
         (r'^\[ ([+-\?]) \]\s+([a-zA-Z0-9\-\.]+)$', lambda matches: (
             matches.group(2),
@@ -43,7 +43,7 @@ class ServiceStatus(FactBase):
         services = {}
 
         for line in output:
-            for (regex, handler) in self.regexes:
+            for (regex, handler) in self._regexes:
                 matches = re.match(regex, line)
                 if matches:
                     name, status = handler(matches)
@@ -73,13 +73,13 @@ class InitdStatus(FactBase):
             fi
         done
     '''
-    regex = r'([a-zA-Z0-9]+)=([0-9]+)'
+    _regex = r'([a-zA-Z0-9]+)=([0-9]+)'
 
     def process(self, output):
         services = {}
 
         for line in output:
-            matches = re.match(self.regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 status = int(matches.group(2))
                 # Exit code 0 = OK/running

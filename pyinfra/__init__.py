@@ -2,6 +2,10 @@
 # File: pyinfra/__init__.py
 # Desc: some global state for pyinfra
 
+'''
+Welcome to pyinfra.
+'''
+
 import logging
 
 

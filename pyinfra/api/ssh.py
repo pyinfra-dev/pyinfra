@@ -22,6 +22,9 @@ from pyinfra.api.util import read_buffer
 
 def _connect(hostname, **kwargs):
     '''Connect to a single host. Returns the hostname if succesful.'''
+
+    logger.debug('Connecting to: {0} ({1})'.format(hostname, kwargs))
+
     try:
         # Create new client & connect to the host
         client = SSHClient()
@@ -49,7 +52,12 @@ def _connect(hostname, **kwargs):
 
 
 def connect_all(state):
-    '''Connect to all the configured servers in parallel. Reads/writes state.inventory.'''
+    '''
+    Connect to all the configured servers in parallel. Reads/writes state.inventory.
+
+    Args:
+        state (``pyinfra.api.State`` obj): the state containing an inventory to connect to
+    '''
     greenlets = []
 
     for host in state.inventory:
@@ -108,7 +116,25 @@ def run_shell_command(
     state, hostname, command,
     sudo=False, sudo_user=None, env=None, timeout=None, print_output=False, print_prefix=''
 ):
-    '''Execute a command on the specified host.'''
+    '''
+    Execute a command on the specified host.
+
+    Args:
+        state (``pyinfra.api.State`` obj): state object for this command
+        hostname (string): hostname of the target
+        command (string): actual command to execute
+        sudo (boolean): whether to wrap the command with sudo
+        sudo_user (string): user to sudo to
+        env (dict): envrionment variables to set
+        timeout (int): timeout for this command to complete before erroring
+
+    Returns:
+        tuple: (channel, stdout, stderr)
+
+        Channel is a Paramiko channel object, mainly used for it's ``.exit_code`` attribute.
+
+        stdout and stderr are both lists of strings from each buffer.
+    '''
     if env is None:
         env = {}
 
@@ -204,8 +230,8 @@ def put_file(
     if not sudo:
         _put_file(state, hostname, file_io, remote_file)
     else:
-        # sudo is a little more complicated, as you can only sftp with the SSH user connected
-        # so upload to tmp and copy/chown w/sudo
+        # sudo is a little more complicated, as you can only sftp with the SSH user
+        # connected,  so upload to tmp and copy/chown w/sudo
 
         # Get temp file location
         hash_ = sha1()

@@ -3,19 +3,15 @@
 # Desc: wraps deploy script operations and puts commands -> pyinfra._ops
 
 '''
-Operations are the core of pyinfra. These wrappers mean that when you call an operation
-in a deploy script, what actually happens is we diff the remote server and build a list
-of commands to alter the diff to the specified arguments. This is then saved to be run
-later by pyinfra's __main__.
+Operations are the core of pyinfra. The ``@operation`` wrapper intercepts calls to the
+function and instead diff against the remote server, outputting commands to the deploy
+state. This is then run later by pyinfra's ``__main__`` or the :doc:`./operations`.
 '''
 
 from functools import wraps
 from types import FunctionType
 
-from pyinfra import (
-    state as pseudo_state,
-    host as pseudo_host
-)
+from pyinfra import pseudo_state, pseudo_host
 
 from .host import Host, HostModule
 from .state import State, StateModule
@@ -24,15 +20,23 @@ from .attrs import AttrBase
 
 
 def add_op(state, op_func, *args, **kwargs):
-    '''Prepare & add an operation to pyinfra.state by executing it on all hosts.'''
+    '''
+    Prepare & add an operation to pyinfra.state by executing it on all hosts.
+
+    Args:
+        state (``pyinfra.api.State`` obj): the deploy state to add the operation to
+        op_func (function): the operation function from one of the modules, ie \
+            ``server.user``
+        args/kwargs: passed to the operation function
+    '''
     for host in state.inventory:
         op_func(state, host, *args, **kwargs)
 
 
 def operation(func):
     '''
-    Takes a simple module function and turn it into the internal operation representation
-    consists of a list of commands + options (sudo, user, env).
+    Decorator that takes a simple module function and turn it into the internal operation
+    representation that consists of a list of commands + options (sudo, user, env).
     '''
     @wraps(func)
     def decorated_function(*args, **kwargs):

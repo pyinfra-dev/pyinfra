@@ -3,28 +3,12 @@
 # Desc: helpers to manage "wrapped attributes"
 
 '''
-This file contains helpers/classes which allow us to have base type (str, int, etc) like operation
-arguments while also being able to keep track of the original reference (ie the 'x' in host.data.x).
-This means we can generate one operation hash based on an argument host.data.x where host.data.x
-changes between hosts. The same logic is applied to facts.
+This file contains helpers/classes which allow us to have base type (``str``, ``int``, etc)
+like operation arguments while also being able to keep track of the original reference (ie
+the ``x`` in ``host.data.x``). This means we can generate one operation hash based on an
+argument ``host.data.x`` where ``host.data.x`` changes between hosts. The same logic is
+applied to facts.
 '''
-
-
-class AttrBase:
-    '''Subclasses of this represent core Python types with an extra 'host_key' attribute.'''
-    pyinfra_attr_key = None
-
-class AttrDataStr(AttrBase, str):
-    def __new__(cls, key, obj):
-        obj = super(AttrDataStr, cls).__new__(cls, obj)
-        setattr(obj, 'pyinfra_attr_key', key)
-        return obj
-
-class AttrDataInt(AttrBase, int):
-    def __new__(cls, key, obj):
-        obj = super(AttrDataInt, cls).__new__(cls, obj)
-        setattr(obj, 'pyinfra_attr_key', key)
-        return obj
 
 
 def wrap_attr_data(key, attr):
@@ -35,6 +19,27 @@ def wrap_attr_data(key, attr):
         return AttrDataInt(key, attr)
 
     return attr
+
+
+class AttrBase:
+    '''
+    Subclasses of this represent core Python types with an extra 'host_key' attribute.
+    '''
+    pyinfra_attr_key = None
+
+
+class AttrDataStr(AttrBase, str):
+    def __new__(cls, key, obj):
+        obj = super(AttrDataStr, cls).__new__(cls, obj)
+        setattr(obj, 'pyinfra_attr_key', key)
+        return obj
+
+
+class AttrDataInt(AttrBase, int):
+    def __new__(cls, key, obj):
+        obj = super(AttrDataInt, cls).__new__(cls, obj)
+        setattr(obj, 'pyinfra_attr_key', key)
+        return obj
 
 
 class AttrData(object):
@@ -59,7 +64,7 @@ class AttrData(object):
 
 
 class FallbackAttrData(object):
-    '''Combines multiple AttrDatas to search for attributes.'''
+    '''Combines multiple AttrData's to search for attributes.'''
     def __init__(self, *datas):
         self.datas = datas
 

@@ -1,7 +1,12 @@
 .DS_Store
 *.pyc
 pyinfra.egg-info
+
 dist/
+
 example/.vagrant/
+
 .venv
 
+.docstmp
+docs/_html/

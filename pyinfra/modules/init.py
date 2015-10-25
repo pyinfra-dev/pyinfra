@@ -4,18 +4,13 @@
 
 '''
 Manages the state and configuration of init services.
-
-Uses:
-
-+ `service`
 '''
 
 from pyinfra.api.operation import operation
 
 
 def _handle_service_control(
-    formatter, name, status,
-    running=True, restarted=False, reloaded=False, command=''
+    formatter, name, status, running, restarted, reloaded, command
 ):
     commands = []
 
@@ -40,7 +35,10 @@ def _handle_service_control(
 
 
 @operation
-def d(state, host, name, **kwargs):
+def d(
+    state, host, name,
+    running=True, restarted=False, reloaded=False, command=None
+):
     '''
     Manage the state of /etc/init.d service scripts.
     '''
@@ -49,29 +47,38 @@ def d(state, host, name, **kwargs):
 
     return _handle_service_control(
         '/etc/init.d/{0} {1}',
-        name, status, **kwargs
+        name, status,
+        running=running, restarted=restarted, reloaded=reloaded, command=command
     )
 
 
 @operation
-def rc(state, host, name, **kwargs):
+def rc(
+    state, host, name,
+    running=True, restarted=False, reloaded=False, command=None
+):
     '''Manage the state of /etc/rc.d service scripts.'''
     status = host.rcd_status or {}
     status = status.get(name, None)
 
     return _handle_service_control(
         '/etc/rc.d/{0} {1}',
-        name, status, **kwargs
+        name, status,
+        running=running, restarted=restarted, reloaded=reloaded, command=command
     )
 
 
 @operation
-def service(state, host, name, **kwargs):
+def service(
+    state, host, name,
+    running=True, restarted=False, reloaded=False, command=None
+):
     '''Manage the state of "service" managed services.'''
     status = host.service_status or {}
     status = status.get(name, None)
 
     return _handle_service_control(
         'service {0} {1}',
-        name, status, **kwargs
+        name, status,
+        running=running, restarted=restarted, reloaded=reloaded, command=command
     )
