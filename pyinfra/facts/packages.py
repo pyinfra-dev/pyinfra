@@ -70,7 +70,7 @@ class PipPackages(FactBase):
 
         return packages
 
-class VenvPipPackages(PipPackages):
+class PipPackagesVenv(PipPackages):
     def command(self, venv):
         # Remove any trailing slash
         venv = venv.rstrip('/')
