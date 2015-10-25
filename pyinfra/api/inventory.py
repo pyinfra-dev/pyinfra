@@ -16,7 +16,8 @@ class Inventory(object):
 
     def __init__(
         self, hostnames_data,
-        ssh_user=None, ssh_key=None, ssh_key_password=None, ssh_port=None, **kwargs
+        ssh_user=None, ssh_port=None, ssh_key=None,
+        ssh_key_password=None, ssh_password=None, **kwargs
     ):
         hostnames, data = hostnames_data
 
@@ -24,9 +25,8 @@ class Inventory(object):
         self.host_data = {}
         self.group_data = {}
 
-        # THIS STUFF (--user, --key, --port)/api-shortcut SHOULD OVERRIDE BELOW
-        # so no default, but update data before -> AttrData
-        self.default_data = AttrData({
+        # In CLI mode these are --user, --key, etc
+        self.override_data = AttrData({
             'ssh_user': ssh_user,
             'ssh_key': ssh_key,
             'ssh_key_password': ssh_key_password,
@@ -74,8 +74,8 @@ class Inventory(object):
     def get_data(self):
         return self.data
 
-    def get_default_data(self):
-        return self.default_data
+    def get_override_data(self):
+        return self.override_data
 
     def get_host_data(self, hostname):
         return self.host_data[hostname]

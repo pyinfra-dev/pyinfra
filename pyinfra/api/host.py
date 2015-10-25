@@ -1,7 +1,7 @@
 # pyinfra
 # File: pyinfra/api/host.py
-# Desc: thin class that represents a target host in pyinfra, also creates classmodule on pyinfra.host
-#       which updates to the "current host" in-deploy
+# Desc: thin class that represents a target host in pyinfra, also creates classmodule on
+#       pyinfra.host which updates to the "current host" in-deploy
 
 import sys
 
@@ -17,10 +17,10 @@ class Host(object):
     def data(self):
         if not self._data:
             self._data = FallbackAttrData(
+                self.inventory.get_override_data(),
                 self.inventory.get_host_data(self.ssh_hostname),
                 self.inventory.get_groups_data(self.groups),
-                self.inventory.get_data(),
-                self.inventory.get_default_data()
+                self.inventory.get_data()
             )
 
         return self._data
@@ -48,10 +48,17 @@ class Host(object):
 
 class HostModule(object):
     '''
-    A classmodule which binds to pyinfra.host. At any time inside a pyinfra deploy, pyinfra.host can
-    be set to any Host object above via this classmodule's set method.
+    A classmodule which binds to ``pyinfra.pseudo_host``. Used in CLI deploys as deploy
+    files can't access the host themselves. Additionally binds to pyinfra.host as a nicer
+    looking alternative for deploy scripts: (``host.data.x`` > ``pseudo_host.data.x``)
     '''
     def set(self, host):
+        '''
+        Bind a new host object.
+
+        Args:
+            host (``pyinfra.api.Host`` obj): host object to bind to
+        '''
         self.host = host
         self.ssh_hostname = host.ssh_hostname
         self.groups = host.groups
@@ -64,4 +71,6 @@ class HostModule(object):
 
 
 import pyinfra
-sys.modules['pyinfra.host'] = pyinfra.host = HostModule()
+sys.modules['pyinfra.pseudo_host'] = sys.modules['pyinfra.host'] = \
+    pyinfra.pseudo_host = pyinfra.host = \
+    HostModule()
