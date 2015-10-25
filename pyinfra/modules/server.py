@@ -4,13 +4,6 @@
 
 '''
 The server module takes care of os-level state. Targets POSIX compatability, tested on Linux/BSD.
-
-Uses (mostly POSIX) commands:
-
-+ `echo`, `cat`
-+ `hostname`, `uname`
-+ `useradd`, `userdel`, `usermod`
-+ `netstat` for server.wait
 '''
 
 from hashlib import sha1
@@ -57,9 +50,9 @@ def script(state, host, filename):
 @operation
 def user(state, host, name, present=True, home=None, shell=None, public_keys=None):
     '''
-    Manage Linux users & their ssh `authorized_keys`.
+    Manage Linux users & their ssh `authorized_keys`. Options:
 
-    # public_keys: list of public keys to attach to this user
+    + public_keys: list of public keys to attach to this user
     '''
     commands = []
     users = host.users or {}
@@ -73,25 +66,32 @@ def user(state, host, name, present=True, home=None, shell=None, public_keys=Non
     # User doesn't exist but we want them?
     if present and user is None:
         # Create the user w/home/shell
-        commands.append('useradd -d {0} -s {1} {2}'.format(home, shell, name))
+        args = []
+
+        if home:
+            args.append('-d {0}'.format(home))
+
+        if shell:
+            args.append('-s {0}'.format(shell))
+
+        commands.append('useradd {0} {1}'.format(' '.join(args), name))
 
     # User exists and we want them, check home/shell/keys
     else:
         # Check homedir
-        if user['home'] != home:
+        if home and user['home'] != home:
             commands.append('usermod -d {0} {1}'.format(home, name))
 
         # Check shell
-        if user['shell'] != shell:
+        if shell and user['shell'] != shell:
             commands.append('usermod -s {0} {1}'.format(shell, name))
 
     # Ensure home directory ownership
-    commands.extend(files.directory(
-        state, host,
-        home,
-        user=name,
-        group=name
-    ))
+    if home:
+        commands.extend(files.directory(
+            state, host, home,
+            user=name, group=name
+        ))
 
     # Add SSH keys
     if public_keys is not None:
@@ -101,8 +101,7 @@ def user(state, host, name, present=True, home=None, shell=None, public_keys=Non
         commands.extend(files.directory(
             state, host,
             '{0}/.ssh'.format(home),
-            user=name,
-            group=name,
+            user=name, group=name,
             mode='700'
         ))
 
@@ -110,10 +109,8 @@ def user(state, host, name, present=True, home=None, shell=None, public_keys=Non
 
         # Ensure authorized_keys
         commands.extend(files.file(
-            state, host,
-            filename,
-            user=name,
-            group=name,
+            state, host, filename,
+            user=name, group=name,
             mode='600'
         ))
 
