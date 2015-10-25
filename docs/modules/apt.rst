@@ -10,16 +10,13 @@ Manage apt packages and repositories.
 
     apt.packages(packages=None, present=True, update=False, cache_time=None, upgrade=False)
 
-Install/remove/upgrade packages & update apt.
+Install/remove/upgrade packages & update apt. Options:
 
-
-:code:`apt.ppa`
-~~~~~~~~~~~~~~~
-.. code:: python
-
-    apt.ppa(name)
-
-[Not complete] Shortcut for managing ppa apt sources.
++ **packages**: list of packages to ensure
++ **present**: whether the packages should be installed
++ **update**: run apt update
++ **cache_time**: when used with update, cache for this many seconds
++ **upgrade**: run apt upgrade
 
 
 :code:`apt.repo`
@@ -28,5 +25,8 @@ Install/remove/upgrade packages & update apt.
 
     apt.repo(name, present=True)
 
-[Not complete] Manage apt sources.
+Manage apt source repositories. Options:
+
++ **name**: apt line, repo url or PPA
++ **present**: whether the repo should exist on the system
 

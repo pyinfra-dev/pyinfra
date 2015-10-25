@@ -4,6 +4,15 @@ Facts Index
 .. include:: _facts.rst
 
 
+Apt
+---
+
+:code:`apt_sources`
+~~~~~~~~~~~~~~~~~~~
+
+Returns a dict of installed apt sources -> version.
+
+
 Devices
 -------
 
