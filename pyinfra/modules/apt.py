@@ -4,16 +4,11 @@
 
 '''
 Manage apt packages and repositories.
-
-Uses:
-
-+ `apt-get`
-+ `apt-add-repository`
 '''
 
 from datetime import timedelta
 
-from pyinfra.api import operation, OperationError
+from pyinfra.api import operation, OperationException
 
 
 @operation
@@ -31,8 +26,12 @@ def ppa(state, host, name, **kwargs):
 @operation
 def packages(state, host, packages=None, present=True, update=False, cache_time=None, upgrade=False):
     '''Install/remove/upgrade packages & update apt.'''
+
     if packages is None:
         packages = []
+
+    if isinstance(packages, basestring):
+        packages = [packages]
 
     # apt packages are case-insensitive
     packages = [package.lower() for package in packages]
@@ -57,7 +56,7 @@ def packages(state, host, packages=None, present=True, update=False, cache_time=
     current_packages = host.deb_packages or {}
 
     if current_packages is None:
-        raise OperationError('apt is not installed')
+        raise OperationException('apt is not installed')
 
     if present is True:
         # Packages specified but not installed

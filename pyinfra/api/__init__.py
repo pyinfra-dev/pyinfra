@@ -7,13 +7,13 @@
 The pyinfra API allows you to dynamically build inventories and operations.
 '''
 
-# Triggers pyinfra.[host|state] module-class creation
+# Triggers pyinfra.pseudo_[host|state] module-class creation
 from . import state
 from . import host
 
 # Operations API
 from .operation import operation
-from .exceptions import OperationError
+from .exceptions import OperationException
 
 # Facts API
 from .facts import FactBase

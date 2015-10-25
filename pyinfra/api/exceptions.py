@@ -5,5 +5,8 @@
 class PyinfraException(Exception):
     pass
 
-class OperationError(PyinfraException):
+class OperationException(PyinfraException):
+    pass
+
+class HookException(PyinfraException):
     pass

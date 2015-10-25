@@ -4,13 +4,9 @@
 
 '''
 Manage yum packages and repositories. Note that yum package names are case-sensitive.
-
-Uses:
-
-+ `yum`
 '''
 
-from pyinfra.api import operation, OperationError
+from pyinfra.api import operation, OperationException
 
 
 @operation
@@ -22,8 +18,12 @@ def repo(state, host, name, present=True):
 @operation
 def packages(state, host, packages=None, present=True, upgrade=False, clean=False):
     '''Manage yum packages & updates.'''
+
     if packages is None:
         packages = []
+
+    if isinstance(packages, basestring):
+        packages = [packages]
 
     commands = []
 
@@ -36,7 +36,7 @@ def packages(state, host, packages=None, present=True, upgrade=False, clean=Fals
     current_packages = host.rpm_packages or {}
 
     if current_packages is None:
-        raise OperationError('yum is not installed')
+        raise OperationException('yum is not installed')
 
     if present is True:
         # Packages specified but not installed

@@ -4,10 +4,6 @@
 
 '''
 The files module handles filesystem state, file uploads and template generation.
-
-Uses POSIX commands:
-
-+ `touch`, `mkdir`, `chown`, `chmod`, `rm`
 '''
 
 from os import path, walk
@@ -15,7 +11,7 @@ from cStringIO import StringIO
 
 from jinja2 import Template
 
-from pyinfra.api import operation, OperationError
+from pyinfra.api import operation, OperationException
 from pyinfra.api.util import get_file_sha1
 
 
@@ -162,7 +158,7 @@ def file(state, host, name, present=True, user=None, group=None, mode=None, touc
 
     # It's a directory?!
     if info is False:
-        raise OperationError('{0} is a directory'.format(name))
+        raise OperationException('{0} is a directory'.format(name))
 
     # Doesn't exist & we want it
     if info is None and present:
@@ -200,7 +196,7 @@ def directory(state, host, name, present=True, user=None, group=None, mode=None,
 
     # It's a file?!
     if info is False:
-        raise OperationError('{0} is a file'.format(name))
+        raise OperationException('{0} is a file'.format(name))
 
     # Doesn't exist & we want it
     if info is None and present:

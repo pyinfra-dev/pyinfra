@@ -4,14 +4,9 @@
 
 '''
 Manage BSD packages and repositories. Note that BSD package names are case-sensitive.
-
-Uses:
-
-+ `pkg_add`
-+ `pkg_delete`
 '''
 
-from pyinfra.api import operation, OperationError
+from pyinfra.api import operation, OperationException
 
 
 @operation
@@ -24,7 +19,7 @@ def packages(state, host, packages=None, present=True):
     current_packages = host.pkg_packages or {}
 
     if current_packages is None:
-        raise OperationError('pkg_* are not installed')
+        raise OperationException('pkg_* are not installed')
 
     if present is True:
         # We have to set the pkg_path manually as the env var (seemingly, OpenBSD 5.6) isn't created
