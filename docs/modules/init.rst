@@ -1,6 +1,9 @@
 Init
 ----
 
+
+Manages the state and configuration of init services.
+
 :code:`init.d`
 ~~~~~~~~~~~~~~
 .. code:: python

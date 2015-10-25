@@ -1,6 +1,9 @@
 Yum
 ---
 
+
+Manage yum packages and repositories. Note that yum package names are case-sensitive.
+
 :code:`yum.packages`
 ~~~~~~~~~~~~~~~~~~~~
 .. code:: python

@@ -29,6 +29,9 @@ def build_facts():
         lines.append(_title_line('-', module_name))
         lines.append('')
 
+        if module.__doc__:
+            lines.append(module.__doc__)
+
         operation_functions = [
             (key, value.__decorated__)
             for key, value in getmembers(module)

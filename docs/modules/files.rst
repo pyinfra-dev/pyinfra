@@ -1,6 +1,9 @@
 Files
 -----
 
+
+The files module handles filesystem state, file uploads and template generation.
+
 :code:`files.directory`
 ~~~~~~~~~~~~~~~~~~~~~~~
 .. code:: python

@@ -1,6 +1,9 @@
 Pip
 ---
 
+
+Manage pip packages. Compatible globally or inside a virtualenv.
+
 :code:`pip.packages`
 ~~~~~~~~~~~~~~~~~~~~
 .. code:: python

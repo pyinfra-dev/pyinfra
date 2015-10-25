@@ -12,7 +12,5 @@ import logging
 # Global pyinfra logger
 logger = logging.getLogger('pyinfra')
 
-# Builds facts index
-from . import facts # noqa
-
-from . import api # noqa
+# Make everything available
+from . import facts, modules, api # noqa

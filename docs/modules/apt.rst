@@ -1,6 +1,9 @@
 Apt
 ---
 
+
+Manage apt packages and repositories.
+
 :code:`apt.packages`
 ~~~~~~~~~~~~~~~~~~~~
 .. code:: python

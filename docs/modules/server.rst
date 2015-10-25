@@ -1,6 +1,9 @@
 Server
 ------
 
+
+The server module takes care of os-level state. Targets POSIX compatability, tested on Linux/BSD.
+
 :code:`server.script`
 ~~~~~~~~~~~~~~~~~~~~~
 .. code:: python
