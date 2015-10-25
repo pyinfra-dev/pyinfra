@@ -1,35 +1,38 @@
-
 #!/usr/bin/env python
-
 # pyinfra
 # File: bin/pyinfra
 # Desc: __main__ for pyinfra
 
 '''
 pyinfra
+Docs: pyinfra.readthedocs.org/en/develop
 
 Usage:
-    pyinfra -i INVENTORY DEPLOY [options] [-v | -vv]
-    pyinfra -i INVENTORY --fact FACT [options] [-v]
+    pyinfra -i INVENTORY DEPLOY [-v -vv options]
+    pyinfra -i INVENTORY --run OP ARGS [-v -vv options]
+    pyinfra -i INVENTORY --fact FACT [-v options]
     pyinfra (--facts | --help | --version)
 
-Options:
+Deploy options:
     DEPLOY               Deploy script filename.
     -i INVENTORY         Inventory script filename or single hostname.
+    --run OP ARGS        Run a single operation with args.
+    --fact FACT          Name of fact to run/test.
     --limit HOSTNAME     Limit the inventory at runtime, supports *wildcards.
     --serial             Run commands on one host at a time.
     --nowait             Don't wait for all hosts at each operation.
-    -v                   Prints remote input/output in realtime. -vv prints facts.
+    -v -vv               Prints remote input/output in realtime. -vv prints facts output.
     --dry                Only print proposed changes.
-    --fact FACT          Name of fact to run/test.
-    -p --port PORT#      SSH port number.
+    --debug              Print debug info.
+
+Config options:
+    -p --port PORT       SSH port number.
     -u --user USER       SSH user.
     --key KEY_FILE       SSH private key.
     --key-password PASS  SSH key password.
     --sudo               Use sudo.
     --sudo-user USER     Which user to sudo to.
-    --debug              Print debug info.
-    --dir DEPLOY_DIR     Sets the directory to look for group_data/files/etc.
+    --password PASS      SSH password auth (bad).
 '''
 
 from __future__ import division
@@ -38,67 +41,58 @@ from gevent import monkey
 monkey.patch_all()
 
 import sys
-import json
 import signal
 import logging
-from os import path
+import traceback
+from os import getcwd, path
 
 from docopt import docopt
 from termcolor import colored
 from coloredlogs import ColoredStreamHandler
 
-from pyinfra import host, logger, state as pseudo_state
+from pyinfra import logger, pseudo_state, pseudo_host
 from pyinfra.cli import (
-    make_inventory, load_config,
-    print_meta, print_results,
-    json_encode, run_hook
+    run_hook, dump_state,
+    make_inventory, load_config, setup_arguments,
+    print_meta, print_results, print_fact, print_facts_list
 )
 
 from pyinfra.api import State
 from pyinfra.api.ssh import connect_all
+from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.attrs import FallbackAttrData
-from pyinfra.api.facts import facts, get_facts, set_print_facts
+from pyinfra.api.facts import get_facts, set_print_facts
 from pyinfra.api.exceptions import PyinfraException
 
 
 # Handle ctrl+c
-def signal_handler(signum, frame):
+def _signal_handler(signum, frame):
     print 'Exiting upon user request!'
     sys.exit(0)
 
-signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGINT, _signal_handler)
+
+# Exit handler
+def _exit(code=0):
+    print
+    print '<- Thank you, goodbye'
+    print
+
+    sys.exit(code)
 
 
-# Setup arguments
+print
+print '-> Welcome to pyinfra'
+print
+
+
+# Get arguments
 arguments = docopt(__doc__, version='pyinfra')
-arguments = {
-    'inventory': arguments['-i'],
-    'deploy': arguments['DEPLOY'],
-    'verbose': arguments['-v'],
-    'dry': arguments['--dry'],
-    'serial': arguments['--serial'],
-    'nowait': arguments['--nowait'],
-    'debug': arguments['--debug'],
-    'fact': arguments['--fact'],
-    'limit': arguments['--limit'],
-    'list_facts': arguments['--facts'],
-    'deploy_dir': arguments['--dir'],
-    'user': arguments['--user'],
-    'key': arguments['--key'],
-    'key_password': arguments['--key-password'],
-    'port': arguments['--port'],
-    'sudo': arguments['--sudo'],
-    'sudo_user': arguments['--sudo-user']
-}
 
-print_output = arguments['verbose'] > 0
-print_facts = print_output if arguments['deploy'] is None else arguments['verbose'] > 1
-set_print_facts(print_facts, print_output)
-
-# Setup logs
+# Setup logging
 logging.getLogger().setLevel(logging.CRITICAL)
-log_level = logging.DEBUG if arguments['debug'] else logging.INFO
+log_level = logging.DEBUG if arguments['--debug'] else logging.INFO
 color_args = {
     'show_timestamps': False,
     'show_hostname': False,
@@ -108,27 +102,29 @@ handler = ColoredStreamHandler(level=log_level, **color_args)
 logger.setLevel(log_level)
 logger.addHandler(handler)
 
-
-print
-print '-> Welcome to pyinfra'
-print
-
-
-# Quickly list facts & exit if desired
-if arguments['list_facts']:
-    logger.info('Available facts list:')
-    print json.dumps(facts.keys(), indent=4)
-    sys.exit(0)
-
-
-# Now we're doing some work, either a dry or real run
 try:
-    # Setup our "working directory", taking --dir as default
-    if arguments['deploy_dir']:
-        deploy_dir = arguments['deploy_dir']
+    # Setup arguments
+    arguments = setup_arguments(arguments)
+
+    # Setup printing
+    print_output = arguments['verbose'] > 0
+    if arguments['deploy'] is None and arguments['op'] is None:
+        print_facts = print_output
+    else:
+        print_facts = arguments['verbose'] > 1
+
+    set_print_facts(print_facts, print_output)
+
+    # Quickly list facts & exit if desired
+    if arguments['list_facts']:
+        logger.info('Available facts list:')
+        print_facts_list()
+        _exit()
+
+    deploy_dir = getcwd()
 
     # This is the most common case: we have a deploy file so use it's pathname
-    elif arguments['deploy'] is not None:
+    if arguments['deploy'] is not None:
         deploy_dir = path.dirname(arguments['deploy'])
 
     # Load up the inventory from the filesystem
@@ -139,7 +135,8 @@ try:
         ssh_user=arguments['user'],
         ssh_key=arguments['key'],
         ssh_key_password=arguments['key_password'],
-        ssh_port=arguments['port']
+        ssh_port=arguments['port'],
+        ssh_password=arguments['password']
     )
 
     # Load up any config.py from the filesystem
@@ -184,55 +181,63 @@ try:
 
     print
 
-    # No deploy file, we're getting a fact
-    if arguments['deploy'] is None:
+    # Run the before_connect hook if provided
+    run_hook(state, config, 'before_facts', hook_data)
+
+    # Just getting a fact?
+    if arguments['fact']:
         if ':' in arguments['fact']:
-            fact, arg = arguments['fact'].split(':')
+            fact, fact_arg = arguments['fact'].split(':')
         else:
             fact = arguments['fact']
-            arg = None
+            fact_arg = None
 
         fact_data = get_facts(
-            fact, arg=arg,
+            state, fact, arg=fact_arg,
             sudo=arguments['sudo'], sudo_user=arguments['sudo_user'],
             print_output=print_output
         )
-        print json.dumps(fact_data, indent=4, default=json_encode)
-
-        sys.exit(0)
+        print_fact(fact_data)
+        _exit()
 
     # We're building a deploy!
     logger.info('Building deploy scripts...')
 
-    # This actually does the op build
-    for host_obj in inventory:
-        host.set(host_obj)
-        execfile(arguments['deploy'])
-        logger.info('{0} {1}'.format(
-            '[{}]'.format(colored(host_obj.ssh_hostname, attrs=['bold'])),
-            colored('Ready', 'green')
-        ))
+    # Deploy file
+    if arguments['deploy']:
+        # This actually does the op build
+        for host in inventory:
+            pseudo_host.set(host)
+            execfile(arguments['deploy'])
+            logger.info('{0} {1}'.format(
+                '[{}]'.format(colored(host.ssh_hostname, attrs=['bold'])),
+                colored('Ready', 'green')
+            ))
+
+    # One off op run
+    else:
+        # Setup args if present
+        args, kwargs = [], {}
+        if isinstance(arguments['op_args'], tuple):
+            args, kwargs = arguments['op_args']
+
+        # Add the op w/args
+        add_op(
+            state, arguments['op'],
+            *args, **kwargs
+        )
 
     # Always show meta output
     print
     logger.info('Proposed changes:')
     print_meta(state)
 
-    # Not running the op?
-    if arguments['dry']:
-        if print_output:
-            print
-            logger.info('Proposed operations:')
-            print json.dumps(state.ops, indent=4, default=json_encode)
-            print
-            logger.info('Operation meta:')
-            print json.dumps(state.op_meta, indent=4, default=json_encode)
-            print
-            logger.info('Operation order:')
-            print json.dumps(state.op_order, indent=4, default=json_encode)
+    # If debug, dump state (ops, op order, op meta) now
+    if arguments['debug']:
+        dump_state(state)
 
     # Run the operations we generated with the deploy file
-    else:
+    if not arguments['dry']:
         print
 
         # Run the before_deploy hook if provided
@@ -253,12 +258,23 @@ try:
         logger.info('Results:')
         print_results(state)
 
+# Capture/log internal exceptions
 except PyinfraException as e:
-    logger.critical(e)
+    logger.critical('pyinfra exception:')
+    logger.warning(e)
+    _exit(1)
+
+# Capture/dump unexpected exceptions
+except Exception as e:
+    logger.critical('unknown exception:')
+
+    # Dev mode, so lets dump as much data as we have
+    error_type, value, trace = sys.exc_info()
+    print '----------------------'
+    traceback.print_tb(trace)
+    logger.critical('{0}: {1}'.format(error_type.__name__, value))
+    print '----------------------'
+    _exit(1)
 
 
-print
-print '<- Thank you, goodbye'
-print
-
-sys.exit(0)
+_exit()

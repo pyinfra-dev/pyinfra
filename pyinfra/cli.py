@@ -2,31 +2,56 @@
 # File: pyinfra/cli.py
 # Desc: pyinfra CLI helpers
 
+import json
 from os import path
 from imp import load_source
 from fnmatch import fnmatch
 from datetime import datetime
 from types import FunctionType
+from importlib import import_module
 
 from termcolor import colored
 
 from pyinfra import logger
 from pyinfra.api import Config, Inventory
+from pyinfra.api.facts import facts
 from pyinfra.api.exceptions import PyinfraException
 
-HOOK_NAMES = ('before_connect', 'before_deploy', 'after_deploy')
+HOOK_NAMES = ('before_connect', 'before_facts', 'before_deploy', 'after_deploy')
 
 
 class CliException(PyinfraException):
     pass
 
 
+def print_facts_list():
+    print json.dumps(facts.keys(), indent=4)
+
+
+def print_fact(fact_data):
+    print json.dumps(fact_data, indent=4, default=json_encode)
+
+
+def dump_state(state):
+    print
+    logger.info('Proposed operations:')
+    print json.dumps(state.ops, indent=4, default=json_encode)
+    print
+    logger.info('Operation meta:')
+    print json.dumps(state.op_meta, indent=4, default=json_encode)
+    print
+    logger.info('Operation order:')
+    print json.dumps(state.op_order, indent=4, default=json_encode)
+
+
 def run_hook(state, config, hook_name, hook_data):
-    if hasattr(config, hook_name):
+    hook_func = getattr(config, hook_name, None)
+
+    if hook_func:
         logger.info('Running {0} hook'.format(colored(hook_name, attrs=['bold'])))
         getattr(config, hook_name)(hook_data, state)
 
-    print
+        print
 
 
 def json_encode(obj):
@@ -80,6 +105,66 @@ def print_results(state):
             ))
 
 
+def setup_arguments(arguments):
+    # Prep --run OP ARGS
+    op, args = arguments['--run'], arguments['ARGS']
+
+    # Replace op name with the module
+    if op:
+        op_module, op_name = op.split('.')
+        op_module = import_module('pyinfra.modules.{0}'.format(op_module))
+
+        op_func = getattr(op_module, op_name, None)
+        if not op_func:
+            raise PyinfraException('No such operation: {0}'.format(op))
+
+        arguments['--run'] = op_func
+
+    # Replace the args string with kwargs
+    if args:
+        args = args.split(',')
+
+        # Setup kwargs
+        kwargs = [arg.split('=') for arg in args if '=' in arg]
+        op_kwargs = {
+            key: value
+            for key, value in kwargs
+        }
+
+        # Get the remaining args
+        args = [arg for arg in args if '=' not in arg]
+
+        arguments['ARGS'] = (args, op_kwargs)
+
+    # Setup the rest
+    return {
+        # Deploy options
+        'inventory': arguments['-i'],
+        'deploy': arguments['DEPLOY'],
+        'verbose': arguments['-v'],
+        'dry': arguments['--dry'],
+        'serial': arguments['--serial'],
+        'nowait': arguments['--nowait'],
+        'debug': arguments['--debug'],
+        'fact': arguments['--fact'],
+        'limit': arguments['--limit'],
+        'op': arguments['--run'],
+        'op_args': arguments['ARGS'],
+
+        # Config options
+        'user': arguments['--user'],
+        'key': arguments['--key'],
+        'key_password': arguments['--key-password'],
+        'password': arguments['--password'],
+        'port': arguments['--port'],
+        'sudo': arguments['--sudo'],
+        'sudo_user': arguments['--sudo-user'],
+
+        # Misc
+        'list_facts': arguments['--facts']
+    }
+
+
 def load_config(deploy_dir):
     '''Loads any local config.py file.'''
     config = Config()
@@ -97,7 +182,7 @@ def load_config(deploy_dir):
 
 def make_inventory(
     inventory_filename, deploy_dir=None, limit=None,
-    ssh_user=None, ssh_key=None, ssh_key_password=None, ssh_port=None
+    ssh_user=None, ssh_key=None, ssh_key_password=None, ssh_port=None, ssh_password=None
 ):
     '''Builds a pyinfra.api.Inventory from the filesystem (normally!).'''
     if ssh_port is not None:
@@ -179,5 +264,6 @@ def make_inventory(
         ssh_key=ssh_key,
         ssh_key_password=ssh_key_password,
         ssh_port=ssh_port,
+        ssh_password=ssh_password,
         **groups
     ), file_groupname and file_groupname.lower()

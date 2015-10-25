@@ -23,9 +23,12 @@ def before_connect(data, state):
         ))
 
 
-def before_deploy(data, state):
-    print 'Before deploy hook', data
+def before_facts(data, state):
+    pass
 
+
+def before_deploy(data, state):
+    pass
 
 def after_deploy(data, state):
-    print 'After deploy hook:', data
+    pass
