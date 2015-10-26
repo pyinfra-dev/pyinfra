@@ -169,7 +169,7 @@ def file(state, host, name, present=True, user=None, group=None, mode=None, touc
             commands.append(_chown(name, user, group))
 
     # It exists and we don't want it
-    elif not present:
+    elif info and not present:
         commands.append('rm -f {0}'.format(name))
 
     # It exists & we want to ensure its state
