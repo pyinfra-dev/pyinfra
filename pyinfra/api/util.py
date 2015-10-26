@@ -55,7 +55,10 @@ def read_buffer(buff, print_output=False, print_func=False):
         line = line.strip()
         out.append(line)
 
-        if print_output and print_func:
-            print print_func(line)
+        if print_output:
+            if print_func:
+                print print_func(line)
+            else:
+                print line
 
     return out

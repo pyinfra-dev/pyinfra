@@ -10,12 +10,12 @@ from pyinfra.api import FactBase
 class DebPackages(FactBase):
     '''Returns a dict of installed dpkg packages -> version.'''
     command = 'dpkg -l'
-    regex = r'^[a-z]+\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
+    _regex = r'^[a-z]+\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
 
     def process(self, output):
         packages = {}
         for line in output:
-            matches = re.match(self.regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 # apt packages are case-insensitive
                 name = matches.group(1).lower()
@@ -27,12 +27,12 @@ class DebPackages(FactBase):
 class RPMPackages(FactBase):
     '''Returns a dict of installed rpm packages -> version.'''
     command = 'rpm -qa'
-    regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.[a-z0-9_]+\.[a-z0-9_\.]+$'
+    _regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.[a-z0-9_]+\.[a-z0-9_\.]+$'
 
     def process(self, output):
         packages = {}
         for line in output:
-            matches = re.match(self.regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 packages[matches.group(1)] = matches.group(2)
 
@@ -42,12 +42,12 @@ class RPMPackages(FactBase):
 class PkgPackages(FactBase):
     '''Returns a dict of installed pkg packages -> version.'''
     command = 'pkg_info'
-    regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.]+)'
+    _regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.]+)'
 
     def process(self, output):
         packages = {}
         for line in output:
-            matches = re.match(self.regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 packages[matches.group(1)] = matches.group(2)
 
@@ -57,12 +57,12 @@ class PkgPackages(FactBase):
 class PipPackages(FactBase):
     '''Returns a dict of installed pip packages -> version.'''
     command = 'pip freeze'
-    regex = r'^([a-zA-Z0-9_\-\+]+)==([0-9\.]+)$'
+    _regex = r'^([a-zA-Z0-9_\-\+]+)==([0-9\.]+)$'
 
     def process(self, output):
         packages = {}
         for line in output:
-            matches = re.match(self.regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 # pip packages are case-insensitive
                 name = matches.group(1).lower()

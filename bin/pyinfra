@@ -51,6 +51,7 @@ from termcolor import colored
 from coloredlogs import ColoredStreamHandler
 
 from pyinfra import logger, pseudo_state, pseudo_host
+from pyinfra.local import set_print_local
 from pyinfra.cli import (
     run_hook, dump_state,
     make_inventory, load_config, setup_arguments,
@@ -114,6 +115,7 @@ try:
         print_facts = arguments['verbose'] > 1
 
     set_print_facts(print_facts, print_output)
+    set_print_local(print_output)
 
     # Quickly list facts & exit if desired
     if arguments['list_facts']:
@@ -154,9 +156,9 @@ try:
 
     # Setup the data to be passed to config hooks
     hook_data = FallbackAttrData(
+        state.inventory.get_override_data(),
         state.inventory.get_group_data(inventory_group),
-        state.inventory.get_data(),
-        state.inventory.get_default_data()
+        state.inventory.get_data()
     )
 
     # Run the before_connect hook if provided
