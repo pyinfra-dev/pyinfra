@@ -129,6 +129,19 @@ try:
     if arguments['deploy'] is not None:
         deploy_dir = path.dirname(arguments['deploy'])
 
+    # If we have a valid inventory, look in it's path and it's parent for group_data or
+    # config.py to indicate deploy_dir (--fact, --run)
+    elif arguments['inventory'] and path.isfile(arguments['inventory']):
+        inventory_dir, _ = path.split(arguments['inventory'])
+        above_inventory_dir, _ = path.split(inventory_dir)
+
+        for inventory_path in (inventory_dir, above_inventory_dir):
+            if any((
+                path.isdir(path.join(inventory_path, 'group_data')),
+                path.isfile(path.join(inventory_path, 'config.py'))
+            )):
+                deploy_dir = inventory_path
+
     # Load up the inventory from the filesystem
     inventory, inventory_group = make_inventory(
         arguments['inventory'],
