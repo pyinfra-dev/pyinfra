@@ -24,6 +24,7 @@ for MODULE_FILE in `ls docs/api/api.*.rst`; do
 done
 
 # Build the modules/*.rst docs
+rm -f docs/modules/*.rst
 python scripts/generate_modules_docs.py
 
 # Build the facts.rst doc

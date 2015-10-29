@@ -15,7 +15,7 @@ def _title_line(char, string):
 
 
 def _format_doc_line(line):
-    return re.sub(r'\+ ([a-z_]+)(.*)', r'+ **\1**\2', line)
+    return re.sub(r'\+ ([a-z_]+)(.*)', r'+ **\1**\2', line).strip()
 
 
 def build_facts():
@@ -33,11 +33,12 @@ def build_facts():
             lines.append(module.__doc__)
 
         operation_functions = [
-            (key, value.__decorated__)
+            (key, value._pyinfra_op)
             for key, value in getmembers(module)
             if (
                 isinstance(value, FunctionType)
                 and value.__module__ == module.__name__
+                and getattr(value, '_pyinfra_op', False)
                 and not value.__name__.startswith('_')
             )
         ]
@@ -48,6 +49,15 @@ def build_facts():
 
             # Underline name with -'s for title
             lines.append(_title_line('~', title_name))
+
+            doc = func.__doc__
+            if doc:
+                docbits = [line for line in doc.split('\n') if line]
+                if len(docbits) > 0:
+                    lines.append('')
+                    lines.append(docbits[0].strip())
+                    lines.append('')
+                    doc = '\n'.join(docbits[1:])
 
             argspec = getargspec(func)
 
@@ -67,7 +77,6 @@ def build_facts():
             print defaults
 
             lines.append('''
-
 .. code:: python
 
     {0}.{1}({2})
@@ -81,12 +90,11 @@ def build_facts():
                 )
             ))
 
-            # Append any docstring
-            doc = func.__doc__
+            # Append any remaining docstring
             if doc:
                 lines.append('')
                 lines.append('{0}'.format('\n'.join([
-                    _format_doc_line(line.strip()) for line in doc.split('\n')
+                    _format_doc_line(line) for line in doc.split('\n')
                 ])).strip())
 
             lines.append('')

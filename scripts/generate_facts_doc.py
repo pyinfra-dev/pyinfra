@@ -61,8 +61,7 @@ def build_facts():
             if doc:
                 lines.append('')
                 lines.append('{0}'.format('\n'.join([
-                    line.strip() for line in doc.split('\n')
-                    if line
+                    line for line in doc.split('\n')
                 ])))
 
             lines.append('')

@@ -6,38 +6,42 @@ The server module takes care of os-level state. Targets POSIX compatability, tes
 
 :code:`server.script`
 ~~~~~~~~~~~~~~~~~~~~~
+
+Upload and execute a local script on the remote host.
+
 .. code:: python
 
     server.script(filename)
 
-Upload and execute a local script on the remote host.
-
 
 :code:`server.shell`
 ~~~~~~~~~~~~~~~~~~~~
+
+Run raw shell code.
+
 .. code:: python
 
     server.shell()
 
-Run raw shell code.
-
 
 :code:`server.user`
 ~~~~~~~~~~~~~~~~~~~
+
+Manage Linux users & their ssh `authorized_keys`. Options:
+
 .. code:: python
 
     server.user(name, present=True, home=None, shell=None, public_keys=None)
-
-Manage Linux users & their ssh `authorized_keys`. Options:
 
 + **public_keys**: list of public keys to attach to this user
 
 
 :code:`server.wait`
 ~~~~~~~~~~~~~~~~~~~
+
+Waits for a port to come active on the target machine. Requires netstat, checks every 1s.
+
 .. code:: python
 
     server.wait(port=None)
-
-Waits for a port to come active on the target machine. Requires netstat, checks every 1s.
 

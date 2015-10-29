@@ -10,7 +10,18 @@ Apt
 :code:`apt_sources`
 ~~~~~~~~~~~~~~~~~~~
 
-Returns a dict of installed apt sources -> version.
+
+    Returns a dict of installed apt sources:
+
+    .. code:: python
+
+        "http://archive.ubuntu.org": {
+            'type': 'deb',
+            'distribution': 'trusty',
+            'components', ['main', 'multiverse']
+        },
+        ...
+    
 
 
 Devices
@@ -58,20 +69,24 @@ Init
 :code:`initd_status`
 ~~~~~~~~~~~~~~~~~~~~
 
-Low level check for every /etc/init.d/* script. Unfortunately many of these mishehave and return
-exit status 0 while also displaying the help info/not offering status support.
-Returns a dict of name -> status.
-Expected codes found at:
-http://refspecs.linuxbase.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
 
+    Low level check for every /etc/init.d/* script. Unfortunately many of these mishehave and return
+    exit status 0 while also displaying the help info/not offering status support.
+
+    Returns a dict of name -> status.
+
+    Expected codes found at:
+        http://refspecs.linuxbase.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
+    
 
 
 :code:`rcd_status`
 ~~~~~~~~~~~~~~~~~~
 
-As above but for BSD (/etc/rc.d) systems. Unlike Linux/init.d, BSD init scripts are well behaved
-and as such their output can be trusted.
 
+    As above but for BSD (/etc/rc.d) systems. Unlike Linux/init.d, BSD init scripts are well behaved
+    and as such their output can be trusted.
+    
 
 
 :code:`service_status`

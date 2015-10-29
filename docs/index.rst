@@ -14,14 +14,15 @@ pyinfra targets POSIX compatability and is currently tested against Ubuntu, Debi
     building_a_deploy
     modules
     facts
+    patterns
 
 .. toctree::
     :maxdepth: 1
     :caption: How pyinfra Works
 
-    operations
     deploy_process
-    conventions
+    operations
+    performance
 
 .. toctree::
     :maxdepth: 1
