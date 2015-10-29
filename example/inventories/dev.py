@@ -15,6 +15,7 @@ YUM = [
 
 APT = [
     'ubuntu14.pyinfra',
+    'ubuntu15.pyinfra',
     'debian7.pyinfra'
 ]
 

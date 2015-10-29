@@ -1,7 +1,8 @@
 # pyinfra test/example hostnames
+
 20.20.20.21 ubuntu14.pyinfra
+20.20.20.26 ubuntu15.pyinfra
 20.20.20.22 centos6.pyinfra
 20.20.20.23 centos7.pyinfra
 20.20.20.24 debian7.pyinfra
-20.20.20.25 openbsd56.pyinfra
-20.20.20.26 freebsd10.pyinfra
+20.20.20.25 openbsd57.pyinfra
