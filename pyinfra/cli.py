@@ -13,15 +13,36 @@ from importlib import import_module
 from termcolor import colored
 
 from pyinfra import logger
+
 from pyinfra.api import Config, Inventory
 from pyinfra.api.facts import facts
 from pyinfra.api.exceptions import PyinfraException
 
-HOOK_NAMES = ('before_connect', 'before_facts', 'before_deploy', 'after_deploy')
+from .hook import HOOKS, HOOK_NAMES
 
 
 class CliException(PyinfraException):
     pass
+
+
+class FakeData(object):
+    def __getattr__(self, key):
+        return None
+
+    def __iter__(self):
+        yield None
+
+class FakeHost(object):
+    @property
+    def data(self):
+        return FakeData()
+
+    @property
+    def host_data(self):
+        return FakeData()
+
+    def __getattr__(self, key):
+        return FakeData()
 
 
 def print_facts_list():
@@ -44,12 +65,16 @@ def dump_state(state):
     print json.dumps(state.op_order, indent=4, default=json_encode)
 
 
-def run_hook(state, config, hook_name, hook_data):
-    hook_func = getattr(config, hook_name, None)
+def run_hook(state, hook_name, hook_data):
+    hooks = HOOKS[hook_name]
 
-    if hook_func:
-        logger.info('Running {0} hook'.format(colored(hook_name, attrs=['bold'])))
-        getattr(config, hook_name)(hook_data, state)
+    if hooks:
+        for hook in hooks:
+            logger.info('Running hook: {0}/{1}'.format(
+                hook_name,
+                colored(hook.__name__, attrs=['bold'])
+            ))
+            hook(hook_data, state)
 
         print
 
@@ -172,6 +197,19 @@ def load_config(deploy_dir):
 
     if path.exists(config_filename):
         module = load_source('', config_filename)
+
+        for attr in dir(module):
+            if hasattr(config, attr) or attr in HOOK_NAMES:
+                setattr(config, attr, getattr(module, attr))
+
+    return config
+
+
+def load_deploy_config(deploy_filename, config):
+    '''Loads any local config overrides in the deploy file.'''
+
+    if path.exists(deploy_filename):
+        module = load_source('', deploy_filename)
 
         for attr in dir(module):
             if hasattr(config, attr) or attr in HOOK_NAMES:

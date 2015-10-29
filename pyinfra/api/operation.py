@@ -48,6 +48,8 @@ def operation(func):
         ):
             state = pseudo_state
             host = pseudo_host
+            if not state.active:
+                return
 
         # Otherwise (API mode) we just trim off the commands
         else:
@@ -149,8 +151,5 @@ def operation(func):
         })
         if name not in op_meta['names']:
             op_meta['names'].append(name)
-
-    # Add __decorated__ for pydocs
-    decorated_function.__decorated__ = getattr(func, '__decorated__', func)
 
     return decorated_function

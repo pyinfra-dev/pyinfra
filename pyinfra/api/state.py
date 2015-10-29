@@ -19,9 +19,9 @@ class DefaultState(object):
     in_op = False # whether we are in an @operation (so inner ops aren't wrapped)
     current_op_sudo = None # current @operation args tuple (sudo, sudo_user) for use w/facts
 
-    pre_run = False
-
+    # Used in CLI
     deploy_dir = None
+    active = True
 
     def __init__(self):
         self.op_order = [] # list of operation hashes

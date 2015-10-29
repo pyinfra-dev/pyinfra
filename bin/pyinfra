@@ -53,8 +53,9 @@ from coloredlogs import ColoredStreamHandler
 from pyinfra import logger, pseudo_state, pseudo_host
 from pyinfra.local import set_print_local
 from pyinfra.cli import (
+    FakeHost,
     run_hook, dump_state,
-    make_inventory, load_config, setup_arguments,
+    make_inventory, load_config, load_deploy_config, setup_arguments,
     print_meta, print_results, print_fact, print_facts_list
 )
 
@@ -165,7 +166,15 @@ try:
     # Create/set the state
     state = State(inventory, config)
     state.deploy_dir = deploy_dir
+
+    # Attach to pseudo state
     pseudo_state.set(state)
+
+    # Load any hooks/config from the deploy file
+    state.active = False
+    pseudo_host.set(FakeHost())
+    load_deploy_config(arguments['deploy'], config)
+    state.active = True
 
     # Setup the data to be passed to config hooks
     hook_data = FallbackAttrData(
@@ -175,7 +184,7 @@ try:
     )
 
     # Run the before_connect hook if provided
-    run_hook(state, config, 'before_connect', hook_data)
+    run_hook(state, 'before_connect', hook_data)
 
     # Connect to all the servers
     logger.info('Connecting to hosts...')
@@ -197,7 +206,7 @@ try:
     print
 
     # Run the before_connect hook if provided
-    run_hook(state, config, 'before_facts', hook_data)
+    run_hook(state, 'before_facts', hook_data)
 
     # Just getting a fact?
     if arguments['fact']:
@@ -256,7 +265,7 @@ try:
         print
 
         # Run the before_deploy hook if provided
-        run_hook(state, config, 'before_deploy', hook_data)
+        run_hook(state, 'before_deploy', hook_data)
 
         logger.info('Beginning operation run...')
         run_ops(
@@ -268,7 +277,7 @@ try:
         )
 
         # Run the after_deploy hook if provided
-        run_hook(state, config, 'after_deploy', hook_data)
+        run_hook(state, 'after_deploy', hook_data)
 
         logger.info('Results:')
         print_results(state)

@@ -1,12 +1,18 @@
 # pyinfra
-# File: example/deploy.py
+# File: pyinfra/example/deploy.py
 # Desc: example deploy script for the pyinfra CLI, targets: Ubuntu/Debian, CentOS & OpenBSD
 
 # Host represents the *current* server begin managed
-from pyinfra import host
+from pyinfra import host, local, hook
 
 # Modules provide namespaced operations, which do the work
-from pyinfra.modules import server, apt, yum, files, python, git, pip, pkg, init
+from pyinfra.modules import server, apt, yum, files, python, git, pip, init
+
+
+# Hooks inside deploy file
+@hook.before_connect
+def before_connect(data, state):
+    print 'before_connect deploy file hook!'
 
 
 # Ensure the state of a user
@@ -76,8 +82,14 @@ files.template(
     hostname=host.hostname
 )
 
-# Work with facts about the remote host
-if host.os == 'Linux':
+# Work with inventory groups
+if 'bsd' in host.groups:
+
+    # Include roles
+    local.include('roles/bsd_role.py')
+
+elif 'linux' in host.groups:
+    # Work with facts about the remote host
     if host.linux_distribution['name'] in ('Debian', 'Ubuntu'):
         # apt package manager
         apt.packages(
@@ -104,21 +116,6 @@ if host.os == 'Linux':
             'python /tmp/get-pip.py',
             sudo=True
         )
-
-# Work with inventory groups
-elif 'bsd' in host.groups:
-    # OpenBSD packages?
-    pkg.packages(
-        ['py-pip', 'git'],
-        sudo=True,
-        op='core_packages' # this and above binds these three operations to run as one
-    )
-
-    # add_pkg does not automatically do this
-    server.shell(
-        'ln -sf /usr/local/bin/pip-2.7 /usr/local/bin/pip',
-        sudo=True
-    )
 
 # Execute arbitrary shell commands
 server.shell(

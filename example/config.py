@@ -1,9 +1,9 @@
 # pyinfra
-# File: example/config.py
+# File: pyinfra/example/config.py
 # Desc: entirely optional config file for the CLI deploy
 #       see: pyinfra/api/config.py for defaults
 
-from pyinfra import local
+from pyinfra import local, hook
 
 # These can be here or in deploy.py
 TIMEOUT = 1
@@ -11,7 +11,8 @@ FAIL_PERCENT = 81
 
 
 # Deploy hook, can also be in deploy.py
-def before_connect(data, state):
+@hook.before_connect
+def ensure_branch(data, state):
     # Check something local is correct, etc
     branch = local.shell('git rev-parse --abbrev-ref HEAD')
     app_branch = data.app_branch
@@ -23,12 +24,6 @@ def before_connect(data, state):
         ))
 
 
-def before_facts(data, state):
-    pass
-
-
-def before_deploy(data, state):
-    pass
-
-def after_deploy(data, state):
-    pass
+@hook.after_deploy
+def notify_people(data, state):
+    print 'After deploy hook!'
