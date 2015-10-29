@@ -40,7 +40,7 @@ class Host(object):
 
     def __getattr__(self, key):
         if not is_fact(key):
-            raise AttributeError('No such fact: {}'.format(key))
+            raise AttributeError('No such fact: {0}'.format(key))
 
         fact = get_fact(self.inventory.state, self.ssh_hostname, key)
         return wrap_attr_data(key, fact)
@@ -52,6 +52,17 @@ class HostModule(object):
     files can't access the host themselves. Additionally binds to pyinfra.host as a nicer
     looking alternative for deploy scripts: (``host.data.x`` > ``pseudo_host.data.x``)
     '''
+    _host = None
+
+    def __getattr__(self, key):
+        return getattr(self._host, key)
+
+    def __setattr__(self, key, value):
+        if key == '_host':
+            return object.__setattr__(self, key, value)
+
+        setattr(self._host, key, value)
+
     def set(self, host):
         '''
         Bind a new host object.
@@ -59,15 +70,7 @@ class HostModule(object):
         Args:
             host (``pyinfra.api.Host`` obj): host object to bind to
         '''
-        self.host = host
-        self.ssh_hostname = host.ssh_hostname
-        self.groups = host.groups
-        self.data = host.data
-        self.host_data = host.host_data
-        self.group_data = host.group_data
-
-    def __getattr__(self, key):
-        return getattr(self.host, key)
+        self._host = host
 
 
 import pyinfra
