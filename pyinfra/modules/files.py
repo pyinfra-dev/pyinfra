@@ -189,7 +189,10 @@ def file(state, host, name, present=True, user=None, group=None, mode=None, touc
 
 
 @operation
-def directory(state, host, name, present=True, user=None, group=None, mode=None, recursive=False):
+def directory(
+    state, host, name,
+    present=True, user=None, group=None, mode=None, recursive=False
+):
     '''Manage the state of directories.'''
     info = host.directory(name)
     commands = []

@@ -12,7 +12,7 @@ from pyinfra.api import operation
 @operation
 def packages(state, host, packages=None, present=True, requirements=None, venv=None):
     '''
-    Manage pip packages. Options:
+    Manage pip packages.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed

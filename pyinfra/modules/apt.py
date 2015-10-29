@@ -9,23 +9,58 @@ Manage apt packages and repositories.
 from datetime import timedelta
 
 from pyinfra.api import operation, OperationException
+from pyinfra.facts.apt import parse_apt_repo
 
 
 @operation
 def repo(state, host, name, present=True):
-    '''[Not complete] Manage apt sources.'''
-    return ['apt-add-repository {0} -y'.format(name)]
+    '''
+    Manage apt source repositories. Options:
+
+    + name: apt line, repo url or PPA
+    + present: whether the repo should exist on the system
+    '''
+
+    commands = []
+
+    apt_sources = host.apt_sources or {}
+
+    # Parse out the URL from the name if available
+    repo = parse_apt_repo(name)
+    if repo:
+        name, _ = repo
+
+    # Convert ppa's to full URLs
+    elif name.startswith('ppa:'):
+        name = 'http://ppa.launchpad.net/{0}/ubuntu'.format(name[4:])
+
+    is_present = name in apt_sources
+
+    # Doesn't exit and we want it
+    if not is_present and present:
+        commands.append('apt-add-repository {0} -y'.format(name))
+
+    # Exists and we don't want it
+    if is_present and not present:
+        commands.append('apt-add-repository {0} -y --remove'.format(name))
+
+    return commands
 
 
 @operation
-def ppa(state, host, name, **kwargs):
-    '''[Not complete] Shortcut for managing ppa apt sources.'''
-    return repo('ppa:{}'.format(name), **kwargs)
+def packages(
+    state, host,
+    packages=None, present=True, update=False, cache_time=None, upgrade=False
+):
+    '''
+    Install/remove/upgrade packages & update apt.
 
-
-@operation
-def packages(state, host, packages=None, present=True, update=False, cache_time=None, upgrade=False):
-    '''Install/remove/upgrade packages & update apt.'''
+    + packages: list of packages to ensure
+    + present: whether the packages should be installed
+    + update: run apt update
+    + cache_time: when used with update, cache for this many seconds
+    + upgrade: run apt upgrade
+    '''
 
     if packages is None:
         packages = []
