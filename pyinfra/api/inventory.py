@@ -8,7 +8,7 @@ from .attrs import AttrData
 
 class Inventory(object):
     '''
-    Represents a collection of target hosts. Stores and provides access too group data,
+    Represents a collection of target hosts. Stores and provides access to group data,
     host data and default data for these hosts.
     '''
 

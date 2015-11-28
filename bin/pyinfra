@@ -48,13 +48,12 @@ from os import getcwd, path
 
 from docopt import docopt
 from termcolor import colored
-from coloredlogs import ColoredStreamHandler
 
 from pyinfra import logger, pseudo_state, pseudo_host
 from pyinfra.local import set_print_local
 from pyinfra.cli import (
     FakeHost,
-    run_hook, dump_state,
+    run_hook, dump_state, setup_logging,
     make_inventory, load_config, load_deploy_config, setup_arguments,
     print_meta, print_results, print_fact, print_facts_list
 )
@@ -78,14 +77,14 @@ signal.signal(signal.SIGINT, _signal_handler)
 # Exit handler
 def _exit(code=0):
     print
-    print '<- Thank you, goodbye'
+    print '<-- Thank you, goodbye'
     print
 
     sys.exit(code)
 
 
 print
-print '-> Welcome to pyinfra'
+print '### {0}'.format(colored('Welcome to pyinfra', attrs=['bold']))
 print
 
 
@@ -93,16 +92,9 @@ print
 arguments = docopt(__doc__, version='pyinfra')
 
 # Setup logging
-logging.getLogger().setLevel(logging.CRITICAL)
 log_level = logging.DEBUG if arguments['--debug'] else logging.INFO
-color_args = {
-    'show_timestamps': False,
-    'show_hostname': False,
-    'show_name': False
-}
-handler = ColoredStreamHandler(level=log_level, **color_args)
-logger.setLevel(log_level)
-logger.addHandler(handler)
+setup_logging(log_level)
+
 
 try:
     # Setup arguments
@@ -187,7 +179,7 @@ try:
     run_hook(state, 'before_connect', hook_data)
 
     # Connect to all the servers
-    logger.info('Connecting to hosts...')
+    print '--> Connecting to hosts...'
     connect_all(state)
 
     # Check we've connected to something
@@ -225,7 +217,7 @@ try:
         _exit()
 
     # We're building a deploy!
-    logger.info('Building deploy scripts...')
+    print '--> Building deploy scripts...'
 
     # Deploy file
     if arguments['deploy']:
@@ -253,7 +245,7 @@ try:
 
     # Always show meta output
     print
-    logger.info('Proposed changes:')
+    print '--> Proposed changes:'
     print_meta(state)
 
     # If debug, dump state (ops, op order, op meta) now
@@ -267,7 +259,7 @@ try:
         # Run the before_deploy hook if provided
         run_hook(state, 'before_deploy', hook_data)
 
-        logger.info('Beginning operation run...')
+        print '--> Beginning operation run...'
         run_ops(
             state,
             serial=arguments['serial'],
@@ -279,18 +271,24 @@ try:
         # Run the after_deploy hook if provided
         run_hook(state, 'after_deploy', hook_data)
 
-        logger.info('Results:')
+        print '--> Results:'
         print_results(state)
 
 # Capture/log internal exceptions
 except PyinfraException as e:
-    logger.critical('pyinfra exception:')
+    print
+    sys.stderr.write(
+        '--> {0}: '.format(colored('pyinfra exception', 'red', attrs=['bold']))
+    )
     logger.warning(e)
     _exit(1)
 
 # Capture/dump unexpected exceptions
 except Exception as e:
-    logger.critical('unknown exception:')
+    print
+    sys.stderr.write(
+        '--> {0}: '.format(colored('unknown exception', 'red', attrs=['bold']))
+    )
 
     # Dev mode, so lets dump as much data as we have
     error_type, value, trace = sys.exc_info()

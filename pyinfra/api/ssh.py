@@ -40,13 +40,16 @@ def _connect(hostname, **kwargs):
         return (hostname, client)
 
     except AuthenticationException as e:
-        logger.critical(u'Auth error on: {0}, {1}'.format(hostname, e))
+        logger.error(u'Auth error on: {0}, {1}'.format(hostname, e))
+
     except SSHException as e:
-        logger.critical(u'SSH error on: {0}, {1}'.format(hostname, e))
+        logger.error(u'SSH error on: {0}, {1}'.format(hostname, e))
+
     except gaierror:
-        logger.critical(u'Could not resolve: {0}'.format(hostname))
+        logger.error(u'Could not resolve: {0}'.format(hostname))
+
     except socket_error as e:
-        logger.critical(u'Could not connect: {0}:{1}, {2}'.format(
+        logger.error(u'Could not connect: {0}:{1}, {2}'.format(
             hostname, kwargs.get('port', 22), e)
         )
 
@@ -253,7 +256,7 @@ def put_file(
         )
 
         if channel.exit_status > 0:
-            logger.critical(u'File error: {0}'.format('\n'.join(stderr)))
+            logger.error(u'File error: {0}'.format('\n'.join(stderr)))
             return False
 
     if print_output:

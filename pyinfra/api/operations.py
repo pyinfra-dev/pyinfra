@@ -11,6 +11,7 @@ from gevent import joinall
 from termcolor import colored
 
 from pyinfra import logger
+from pyinfra.api.exceptions import PyinfraException
 
 from .ssh import run_shell_command, put_file
 
@@ -25,7 +26,7 @@ def _run_op(state, hostname, op_hash, print_output=False):
     op_meta = state.op_meta[op_hash]
 
     stderr_buffer = []
-    print_prefix = '[{}] '.format(colored(hostname, attrs=['bold']))
+    print_prefix = '{}: '.format(hostname, attrs=['bold'])
 
     skip = False
 
@@ -120,7 +121,7 @@ def _run_op(state, hostname, op_hash, print_output=False):
     # If the op failed somewhere, print stderr (if not already printed!)
     if not print_output:
         for line in stderr_buffer:
-            print u'{0}{1}'.format(
+            print u'    {0}{1}'.format(
                 print_prefix,
                 colored(line, 'red')
             )
@@ -128,15 +129,14 @@ def _run_op(state, hostname, op_hash, print_output=False):
     # Up error_ops & log
     state.results[hostname]['error_ops'] += 1
 
-    error_text = '{0}{1}'.format(colored(''), print_prefix)
     if op_meta['ignore_errors']:
-        logger.warning('{0}{1}'.format(
-            error_text,
+        logger.warning('[{0}] {1}'.format(
+            hostname,
             colored('Error (ignored)', 'yellow')
         ))
     else:
-        logger.critical('{0}{1}'.format(
-            error_text,
+        logger.error('[{0}] {1}'.format(
+            hostname,
             colored('Error', 'red')
         ))
 
@@ -162,10 +162,9 @@ def _run_server_ops(state, hostname, print_output, print_lines):
 
         result = _run_op(hostname, op_hash, print_output)
         if result is False:
-            logger.critical('Error in operation {0} on {1}, exiting...'.format(
+            raise PyinfraException('Error in operation {0} on {1}'.format(
                 ', '.join(op_meta['names']), hostname
             ))
-            return
 
         if print_lines:
             print
@@ -220,7 +219,7 @@ def run_ops(
 
         logger.info('{0} {1}'.format(
             colored('Starting{0}operation:'.format(
-                ' {} '.format(', '.join(op_types)) if op_types else ' '
+                ' {0} '.format(', '.join(op_types)) if op_types else ' '
             ), 'blue'),
             colored(', '.join(op_meta['names']), attrs=['bold'])
         ))
@@ -238,6 +237,7 @@ def run_ops(
                     successful_hosts.append(hostname)
                 else:
                     failed_hosts.append(hostname)
+
         else:
             # Spawn greenlet for each host
             greenlet_hosts = [
@@ -264,15 +264,13 @@ def run_ops(
                 percent_failed = (1 - len(successful_hosts) / len(hosts)) * 100
 
                 if percent_failed >= state.config.FAIL_PERCENT:
-                    logger.critical('Over {0}% of hosts failed, exiting'.format(
+                    raise PyinfraException('Over {0}% of hosts failed'.format(
                         state.config.FAIL_PERCENT
                     ))
-                    break
 
             # No hosts left!
             if not successful_hosts:
-                logger.critical('No hosts remaining, exiting...')
-                break
+                raise PyinfraException('No hosts remaining')
 
         if print_lines:
             print

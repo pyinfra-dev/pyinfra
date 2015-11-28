@@ -28,10 +28,9 @@ if __name__ == '__main__':
         install_requires=[
             'gevent',
             'paramiko',
-            'inflection',
             'docopt',
-            'coloredlogs',
             'termcolor',
-            'jinja2'
+            'jinja2',
+            'python-dateutil'
         ]
     )

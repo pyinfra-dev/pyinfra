@@ -5,8 +5,6 @@
 from os import path
 from subprocess import Popen, PIPE, STDOUT
 
-from termcolor import colored
-
 from . import pseudo_state
 from .api.util import read_buffer
 
@@ -30,7 +28,7 @@ def include(filename):
 def shell(command, print_output=False):
     '''Subprocess based implementation of pyinfra/api/ssh.py's run_shell_command.'''
 
-    print_prefix = '[{0}] '.format(colored('127.0.0.1', attrs=['bold']))
+    print_prefix = 'localhost: '
 
     if print_output or print_local:
         print '{0}>>> {1}'.format(print_prefix, command)

@@ -2,7 +2,9 @@
 # File: pyinfra/cli.py
 # Desc: pyinfra CLI helpers
 
+import sys
 import json
+import logging
 from os import path
 from imp import load_source
 from fnmatch import fnmatch
@@ -20,6 +22,9 @@ from pyinfra.api.exceptions import PyinfraException
 
 from .hook import HOOKS, HOOK_NAMES
 
+STDOUT_LOG_LEVELS = (logging.DEBUG, logging.INFO)
+STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
+
 
 class CliException(PyinfraException):
     pass
@@ -35,6 +40,7 @@ class FakeData(object):
     def __call__(self, *args, **kwargs):
         return self
 
+
 class FakeHost(object):
     @property
     def data(self):
@@ -48,6 +54,68 @@ class FakeHost(object):
         return FakeData()
 
 
+class LogFilter(logging.Filter):
+    def __init__(self, *levels):
+        self.levels = levels
+
+    def filter(self, record):
+        return record.levelno in self.levels
+
+
+class LogFormatter(logging.Formatter):
+    level_to_format = {
+        logging.DEBUG: lambda s: colored(s, 'green'),
+        logging.WARNING: lambda s: colored(s, 'yellow'),
+        logging.ERROR: lambda s: colored(s, 'red'),
+        logging.CRITICAL: lambda s: colored(s, 'red', attrs=['bold'])
+    }
+
+    def format(self, record):
+        message = record.msg
+
+        # We only handle strings here
+        if isinstance(message, basestring):
+            # Horrible string matching hack
+            if message.find('Starting operation') > 0:
+                message = u'--> {0}'.format(message)
+            else:
+                message = u'    {0}'.format(message)
+
+            if record.levelno in self.level_to_format:
+                message = self.level_to_format[record.levelno](message)
+
+            return message
+
+        # If not a string, pass to standard Formatter
+        else:
+            return super(LogFormatter, self).format(record)
+
+
+def setup_logging(log_level):
+    # Set the log level
+    logger.setLevel(log_level)
+
+    # Setup a new handler for stdout & stderr
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stderr_handler = logging.StreamHandler(sys.stderr)
+
+    # Setup filters to push different levels to different streams
+    stdout_filter = LogFilter(*STDOUT_LOG_LEVELS)
+    stdout_handler.addFilter(stdout_filter)
+
+    stderr_filter = LogFilter(*STDERR_LOG_LEVELS)
+    stderr_handler.addFilter(stderr_filter)
+
+    # Setup a formatter
+    formatter = LogFormatter()
+    stdout_handler.setFormatter(formatter)
+    stderr_handler.setFormatter(formatter)
+
+    # Add the handlers
+    logger.addHandler(stdout_handler)
+    logger.addHandler(stderr_handler)
+
+
 def print_facts_list():
     print json.dumps(facts.keys(), indent=4)
 
@@ -58,13 +126,13 @@ def print_fact(fact_data):
 
 def dump_state(state):
     print
-    logger.info('Proposed operations:')
+    print '--> Proposed operations:'
     print json.dumps(state.ops, indent=4, default=json_encode)
     print
-    logger.info('Operation meta:')
+    print '--> Operation meta:'
     print json.dumps(state.op_meta, indent=4, default=json_encode)
     print
-    logger.info('Operation order:')
+    print '--> Operation order:'
     print json.dumps(state.op_order, indent=4, default=json_encode)
 
 
@@ -73,10 +141,10 @@ def run_hook(state, hook_name, hook_data):
 
     if hooks:
         for hook in hooks:
-            logger.info('Running hook: {0}/{1}'.format(
+            print '--> Running hook: {0}/{1}'.format(
                 hook_name,
                 colored(hook.__name__, attrs=['bold'])
-            ))
+            )
             hook(hook_data, state)
 
         print
@@ -99,8 +167,9 @@ def json_encode(obj):
 def print_meta(state):
     for hostname, meta in state.meta.iteritems():
         logger.info(
-            '{0}\tOperations: {1}\t    Commands: {2}'.format(
-                hostname, meta['ops'], meta['commands']
+            '[{0}]\tOperations: {1}\t    Commands: {2}'.format(
+                colored(hostname, attrs=['bold']),
+                meta['ops'], meta['commands']
             )
         )
 
@@ -125,7 +194,7 @@ def print_results(state):
             else:
                 host_string = colored(hostname, 'red', attrs=['bold'])
 
-            logger.info('{0}\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}/{4}'.format(
+            logger.info('[{0}]\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}/{4}'.format(
                 host_string,
                 colored(success_ops, attrs=['bold']),
                 error_ops if error_ops == 0 else colored(error_ops, 'red', attrs=['bold']),
