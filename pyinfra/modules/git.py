@@ -9,9 +9,18 @@ from pyinfra.api import operation
 
 @operation
 def repo(state, host, source, target, branch='master', pull=True, rebase=False):
-    '''Manage git repositories.'''
-    is_repo = host.directory(path.join(target, '.git'))
+    '''
+    Manage git repositories.
+
+    + source: the git source URL
+    + target: target directory to clone to
+    + branch: branch to pull/checkout
+    + pull: pull any changes for the branch
+    + rebase: when pulling, use ``--rebase``
+    '''
+
     commands = []
+    is_repo = host.directory(path.join(target, '.git'))
 
     # Cloning new repo?
     if not is_repo:

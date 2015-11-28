@@ -165,7 +165,7 @@ server.shell(
 # and manage pip within it
 pip.packages(
     ['ElasticQuery', 'JsonTest'],
-    venv=host.data.env_dir,
+    virtualenv=host.data.env_dir,
     sudo=True,
     sudo_user='pyinfra'
 )

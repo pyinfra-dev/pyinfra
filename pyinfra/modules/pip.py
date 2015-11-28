@@ -10,14 +10,18 @@ from pyinfra.api import operation
 
 
 @operation
-def packages(state, host, packages=None, present=True, requirements=None, venv=None):
+def packages(
+    state, host,
+    packages=None, present=True,
+    requirements=None, virtualenv=None
+):
     '''
     Manage pip packages.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed
     + requirements: location of requirements file to install
-    + venv: root directory of virtualenv to work in
+    + virtualenv: root directory of virtualenv to work in
     '''
 
     if packages is None:
@@ -26,15 +30,23 @@ def packages(state, host, packages=None, present=True, requirements=None, venv=N
     if isinstance(packages, basestring):
         packages = [packages]
 
-    # pip packages are case-insensitive
-    packages = [package.lower() for package in packages]
+    # pip packages are case-insensitive & interchange -, _
+    packages = [
+        package.lower().replace('_', '-')
+        for package in packages
+    ]
 
     commands = []
 
     if requirements is not None:
         commands.append('pip install -r {0}'.format(requirements))
 
-    current_packages = host.pip_packages_venv(venv) if venv else host.pip_packages
+    current_packages = (
+        host.pip_packages_virtualenv(virtualenv)
+        if virtualenv else host.pip_packages
+    )
+
+    # Don't fail if pip isn't found as it's not a system package manager
     current_packages = current_packages or {}
 
     if present is True:
@@ -55,11 +67,11 @@ def packages(state, host, packages=None, present=True, requirements=None, venv=N
         if diff_packages:
             commands.append('pip uninstall {0}'.format(' '.join(diff_packages)))
 
-    if venv:
+    if virtualenv:
         # Remove any trailing slash
-        venv = venv.rstrip('/')
+        virtualenv = virtualenv.rstrip('/')
         commands = [
-            '{0}/bin/{1}'.format(venv, command)
+            '{0}/bin/{1}'.format(virtualenv, command)
             for command in commands
         ]
 
