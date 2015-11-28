@@ -31,4 +31,4 @@ python scripts/generate_modules_docs.py
 python scripts/generate_facts_doc.py
 
 # Build the HTML docs
-sphinx-build -a docs/ docs/_html/
+sphinx-build -a docs/ docs/build/

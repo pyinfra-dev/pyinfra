@@ -9,4 +9,4 @@ example/.vagrant/
 .venv
 
 .docstmp
-docs/_html/
+docs/build/
