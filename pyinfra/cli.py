@@ -32,6 +32,9 @@ class FakeData(object):
     def __iter__(self):
         yield None
 
+    def __call__(self, *args, **kwargs):
+        return self
+
 class FakeHost(object):
     @property
     def data(self):
@@ -208,6 +211,9 @@ def load_config(deploy_dir):
 def load_deploy_config(deploy_filename, config):
     '''Loads any local config overrides in the deploy file.'''
 
+    if not deploy_filename:
+        return
+
     if path.exists(deploy_filename):
         module = load_source('', deploy_filename)
 
@@ -258,7 +264,11 @@ def make_inventory(
     else:
         all_hosts = []
         for hosts in groups.values():
+            # Groups can be a list of hosts or tuple of (hosts, data)
+            hosts = hosts[0] if isinstance(hosts, tuple) else hosts
+
             for host in hosts:
+                # Hosts can be a hostname or tuple of (hostname, data)
                 hostname = host[0] if isinstance(host, tuple) else host
 
                 if hostname not in all_hosts:
@@ -281,17 +291,21 @@ def make_inventory(
     # For each group load up any data
     for name, hosts in groups.iteritems():
         data = {}
+
+        if isinstance(hosts, tuple):
+            hosts, data = hosts
+
         data_filename = path.join(
             deploy_dir, 'group_data', '{0}.py'.format(name.lower())
         )
 
         if path.exists(data_filename):
             module = load_source('', data_filename)
-            data = {
+            data.update({
                 attr: getattr(module, attr)
                 for attr in dir(module)
                 if attr.islower() and not attr.startswith('_')
-            }
+            })
 
         # Attach to group object
         groups[name] = (hosts, data)
