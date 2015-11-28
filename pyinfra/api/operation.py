@@ -152,4 +152,5 @@ def operation(func):
         if name not in op_meta['names']:
             op_meta['names'].append(name)
 
+    decorated_function._pyinfra_op = func
     return decorated_function

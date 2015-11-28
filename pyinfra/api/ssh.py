@@ -230,6 +230,7 @@ def put_file(
     sudo=False, sudo_user=None, print_output=False, print_prefix=''
 ):
     '''Upload file-ios to the specified host.'''
+
     if not sudo:
         _put_file(state, hostname, file_io, remote_file)
     else:
