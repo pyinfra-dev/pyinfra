@@ -5,9 +5,9 @@ pyinfra automates service deployment. It does this by diffing the state of the s
 + [Getting started](https://pyinfra.readthedocs.org/getting_started.html)
 + [Documentation](https://pyinfra.readthedocs.org)
 + [Example deploy](example)
-+ [API Example](example/api_deploy.py)
++ [API Example](https://pyinfra.readthedocs.org/api_example.html)
 
-When you run `pyinfra -i <inventory_file> <deploy_file>`, you'll see something like:
+When you run `pyinfra -i INVENTORY DEPLOY`, you'll see something like:
 
 ![](./docs/example_deploy.png)
 
@@ -93,7 +93,7 @@ add_op(
 run_ops()
 ```
 
-+ [CLI Example](example)
-+ [API Example](example/api_deploy.py)
-+ [Quick start](docs/quick_start.md)
-+ [Documentation](docs/README.md)
++ [Getting started](https://pyinfra.readthedocs.org/getting_started.html)
++ [Documentation](https://pyinfra.readthedocs.org)
++ [Example deploy](example)
++ [API Example](https://pyinfra.readthedocs.org/api_example.html)
