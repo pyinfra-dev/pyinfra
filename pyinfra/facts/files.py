@@ -10,6 +10,7 @@ from pyinfra.api.facts import FactBase
 LS_REGEX = re.compile(
     r'^[d\-]([\-rwx]{9})\.?\s+[0-9]+\s+([a-zA-Z]+)\s+([a-zA-Z]+)\s+([0-9]+)\s+([a-zA-Z]{3}\s+[0-9]+\s+[0-9:]{4,5})\s+[a-zA-Z0-9\/\.]+'
 )
+
 SYMBOL_TO_OCTAL_PERMISSIONS = {
     'rwx': '7',
     'rw-': '6',
@@ -32,6 +33,7 @@ def _parse_mode(mode):
 
     return result
 
+
 def _parse_time(time):
     # Try matching with the hour/second format, ie within the current year
     try:
@@ -45,6 +47,7 @@ def _parse_time(time):
         return datetime.strptime(time, '%b %d %Y')
     except ValueError:
         pass
+
 
 def _process_ls_output(output, directory=False):
     if output:

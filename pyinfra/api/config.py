@@ -11,6 +11,9 @@ class Config(object):
     # Seconds to timeout SSH connections
     TIMEOUT = 10
 
+    # Temporary directory (on the remote side) to use for caching any files/downloads
+    TEMP_DIR = '/tmp/pyinfra'
+
     # All these can be overridden inside module calls
     SUDO = False
     SUDO_USER = None

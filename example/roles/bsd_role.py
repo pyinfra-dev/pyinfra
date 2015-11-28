@@ -1,3 +1,7 @@
+# pyinfra
+# File: example/roles/bsd_role.py
+# Desc: example role that installs pip on (Open)BSD
+
 from pyinfra.modules import server, pkg
 
 
