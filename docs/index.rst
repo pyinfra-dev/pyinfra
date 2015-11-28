@@ -10,7 +10,7 @@ pyinfra targets POSIX compatability and is currently tested against Ubuntu, Debi
     :maxdepth: 1
     :caption: Using pyinfra
 
-    quick_start
+    getting_started
     building_a_deploy
     modules
     facts

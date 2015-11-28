@@ -1,11 +1,19 @@
-Quick Start
-===========
+Getting Started
+===============
 
-This guide should help describe the basics of deploying stuff with pyinfra. Start by installing Python with pip:
+This guide should help describe the basics of deploying stuff with pyinfra.
 
-.. code:: shell
+
+Install
+-------
+
+pyinfra requires `Python <https://python.org>`_ and can be installed with ``pip`` (or
+``easy_install``):
+
+.. code:: bash
 
     pip install pyinfra
+
 
 Command Line Ops
 ----------------
@@ -15,11 +23,11 @@ To deploy something with pyinfra, you need an **inventory** and some **operation
 + **The inventory** holds the target hosts, groups and any data associated with them
 + **The operations** define the desired state of the target hosts, and are grouped as **modules**
 
-Lets start by running a deploy that will ensure user "nick" exists, using the ``server.user`` operation:
+Lets start by running a deploy that will ensure user "fred" exists, using the ``server.user`` operation:
 
 .. code:: shell
 
-    pyinfra -i my-server.host --run server.user nick --sudo  # --user, --key
+    pyinfra -i my-server.host --run server.user fred --sudo  # --user, --key
 
 The ``--sudo`` flag used to run the operation with sudo. To connect & authenticate with the remote host you can use the ``--port``, ``--user``, ``--key`` and password ``--password`` flags.
 
@@ -36,11 +44,11 @@ To write persistent (on disk) deploys with pyinfra you just use a Python file, e
 
     # Ensure the state of a user
     server.user(
-        'nick',
+        'vivian',
         sudo=True
     )
 
-Like above, this deploy ensures user "nick" exists, using the :doc:`server module <./modules/server>`. To execute the deploy:
+Like above, this deploy ensures user "vivian" exists, using the :doc:`server module <./modules/server>`. To execute the deploy:
 
 .. code:: shell
 

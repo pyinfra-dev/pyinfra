@@ -15,11 +15,32 @@ Apt
 
     .. code:: python
 
-        "http://archive.ubuntu.org": {
+        'http://archive.ubuntu.org': {
             'type': 'deb',
             'distribution': 'trusty',
             'components', ['main', 'multiverse']
         },
+        ...
+    
+
+
+:code:`deb_package(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns information on a .deb file.
+    
+
+
+:code:`deb_packages`
+~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a dict of installed dpkg packages:
+
+    .. code:: python
+
+        'package_name': 'version',
         ...
     
 
@@ -30,7 +51,43 @@ Devices
 :code:`block_devices`
 ~~~~~~~~~~~~~~~~~~~~~
 
-Returns a dict of (mounted) block devices -> details.
+
+    Returns a dict of (mounted) block devices:
+
+    .. code:: python
+
+        '/dev/sda1': {
+            'available': '39489508',
+            'used_percent': '3',
+            'mount': '/',
+            'used': '836392',
+            'blocks': '40325900'
+        }
+        ...
+    
+
+
+:code:`network_devices`
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Gets & returns a dict of network devices:
+
+    .. code:: python
+
+        'eth0': {
+            'ipv4': {
+                'address': '127.0.0.1',
+                'netmask': '255.255.255.255',
+                'broadcast': '127.0.0.13'
+            },
+            'ipv6': {
+                'size': '64',
+                'address': 'fe80::a00:27ff:fec3:36f0'
+            }
+        }
+        ...
+    
 
 
 Files
@@ -101,46 +158,40 @@ Returns a dict of name -> status for services listed by "service".
 Returns a dict of name -> status for systemd managed services.
 
 
-Mysql
------
-
-:code:`mysql_databases`
-~~~~~~~~~~~~~~~~~~~~~~~
-
-
-:code:`mysql_users`
-~~~~~~~~~~~~~~~~~~~
-
-
-Packages
---------
-
-:code:`deb_packages`
-~~~~~~~~~~~~~~~~~~~~
-
-Returns a dict of installed dpkg packages -> version.
-
+Pip
+---
 
 :code:`pip_packages`
 ~~~~~~~~~~~~~~~~~~~~
 
-Returns a dict of installed pip packages -> version.
+
+    Returns a dict of installed pip:
+
+    .. code:: python
+
+        'package_name': 'version',
+        ...
+    
 
 
-:code:`pip_packages_venv(venv)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`pip_packages_virtualenv(venv)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+Pkg
+---
 
 :code:`pkg_packages`
 ~~~~~~~~~~~~~~~~~~~~
 
-Returns a dict of installed pkg packages -> version.
 
+    Returns a dict of installed pkg packages:
 
-:code:`rpm_packages`
-~~~~~~~~~~~~~~~~~~~~
+    .. code:: python
 
-Returns a dict of installed rpm packages -> version.
+        'package_name': 'version',
+        ...
+    
 
 
 Server
@@ -182,3 +233,18 @@ Returns the Linux distribution. Ubuntu, CentOS & Debian currently.
 ~~~~~~~~~~~~~
 
 Gets & returns a dict of users -> details.
+
+
+Yum
+---
+
+:code:`rpm_packages`
+~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a dict of installed rpm packages:
+
+    .. code:: python
+
+        'package_name': 'version',
+        ...
