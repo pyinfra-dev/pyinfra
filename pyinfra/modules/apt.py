@@ -11,6 +11,17 @@ from datetime import timedelta
 from pyinfra.api import operation, OperationException
 from pyinfra.facts.apt import parse_apt_repo
 
+from . import files
+
+
+# TODO
+#@operation
+def deb(state, host, source, present=True):
+    # If source is a url, get filename & ensure we have file
+    # Check for file .deb information (if file is present)
+    # Check if installed
+    pass
+
 
 @operation
 def repo(state, host, name, present=True):
@@ -88,8 +99,9 @@ def packages(
     if upgrade:
         commands.append('DEBIAN_FRONTEND=noninteractive apt-get upgrade -y')
 
-    current_packages = host.deb_packages or {}
+    current_packages = host.deb_packages
 
+    # Raise error if apt isn't installed as it's a system package manager
     if current_packages is None:
         raise OperationException('apt is not installed')
 

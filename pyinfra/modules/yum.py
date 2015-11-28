@@ -9,7 +9,7 @@ Manage yum packages and repositories. Note that yum package names are case-sensi
 from pyinfra.api import operation, OperationException
 
 
-@operation
+#@operation
 def repo(state, host, name, present=True):
     '''[Not implemented] Manage yum repositories.'''
     pass

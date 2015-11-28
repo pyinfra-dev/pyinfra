@@ -27,6 +27,25 @@ def _chown(target, user, group, recursive=False):
     return 'chown {0}{1} {2}'.format(('-R ' if recursive else ''), user_group, target)
 
 
+# TODO
+#@operation
+def download(
+    state, host, source_url,
+    destination=None, user=None, group=None, mode=None, force=False
+):
+    '''
+    Download files from remote locations.
+    '''
+    pass
+
+
+# TODO
+#@operation
+def line(state, host, source, line, present=True):
+    '''Ensure/set lines in files.'''
+    pass
+
+
 @operation
 def sync(state, host, source, destination, user=None, group=None, mode=None, delete=False):
     '''
