@@ -3,7 +3,8 @@
 # Desc: server/os related facts
 
 import re
-from datetime import datetime
+
+from dateutil.parser import parse as parse_date
 
 from pyinfra.api import FactBase
 
@@ -33,10 +34,7 @@ class Date(FactBase):
     command = 'date'
 
     def process(self, output):
-        # Remove the timezone as local Python might not be aware (Python fail right there)
-        bits = output[0].split(' ')
-        datestring_no_tz = u' '.join(bits[0:4] + [bits[5]])
-        return datetime.strptime(datestring_no_tz, '%a %b %d %H:%M:%S %Y')
+        return parse_date(output[0])
 
 
 class Users(FactBase):
