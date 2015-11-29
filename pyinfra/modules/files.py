@@ -51,7 +51,15 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
     '''
     Syncs a local directory with a remote one, with delete support. Note that delete will
     remove extra files on the remote side, but not extra directories.
+
+    + source: local directory to sync
+    + destination: remote directory to sync to
+    + user: user to own the files
+    + group: group to own the files
+    + mode: permissions of the files
+    + delete: delete remote files not present locally
     '''
+
     # If we don't enforce the source ending with /, remote_dirname below might start with
     # a /, which makes the path.join cut off the destination bit.
     if not source.endswith(path.sep):
@@ -111,7 +119,15 @@ def put(
     state, host, local_filename, remote_filename,
     user=None, group=None, mode=None, add_deploy_dir=True
 ):
-    '''Copy a local file to the remote system.'''
+    '''
+    Copy a local file to the remote system.
+
+    + local_filename: local filename (or file-like object)
+    + remote_filename: remote filename
+    + user: user to own the files
+    + group: group to own the files
+    + mode: permissions of the files
+    '''
 
     if state.deploy_dir and add_deploy_dir:
         local_filename = path.join(state.deploy_dir, local_filename)
@@ -160,13 +176,26 @@ def template(
     state, host, template_filename, remote_filename,
     user=None, group=None, mode=None, **data
 ):
-    '''Generate a template and write it to the remote system.'''
+    '''
+    Generate a template and write it to the remote system.
+
+    + template_filename: local template filename (or file-like object)
+    + remote_filename: remote filename
+    + user: user to own the files
+    + group: group to own the files
+    + mode: permissions of the files
+    '''
 
     if state.deploy_dir:
         template_filename = path.join(state.deploy_dir, template_filename)
 
-    # Load the template from file
-    template_file = open(template_filename, 'r')
+    # Accept template_filename as a string or (assumed) file-like object
+    if isinstance(template_filename, basestring):
+        template_file = open(template_filename, 'r')
+    else:
+        template_file = template_filename
+
+    # Load the template into memory
     template = Template(template_file.read())
 
     # Ensure host is always available inside templates
@@ -185,8 +214,21 @@ def template(
 
 
 @operation
-def file(state, host, name, present=True, user=None, group=None, mode=None, touch=False):
-    '''Manage the state of files.'''
+def file(
+    state, host, name,
+    present=True, user=None, group=None, mode=None, touch=False
+):
+    '''
+    Manage the state of files.
+
+    + name: name/patr of the remote file
+    + present: whether the file should exist
+    + user: user to own the files
+    + group: group to own the files
+    + mode: permissions of the files
+    + touch: touch the file
+    '''
+
     info = host.file(name)
     commands = []
 
@@ -227,7 +269,17 @@ def directory(
     state, host, name,
     present=True, user=None, group=None, mode=None, recursive=False
 ):
-    '''Manage the state of directories.'''
+    '''
+    Manage the state of directories.
+
+    + name: name/patr of the remote file
+    + present: whether the file should exist
+    + user: user to own the files
+    + group: group to own the files
+    + mode: permissions of the files
+    + recursive: recursively apply user/group/mode
+    '''
+
     info = host.directory(name)
     commands = []
 
