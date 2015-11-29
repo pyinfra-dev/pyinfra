@@ -58,7 +58,8 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
         source = '{0}{1}'.format(source, path.sep)
 
     # Source relative to deploy.py
-    source_dir = path.join(state.deploy_dir, source)
+    if state.deploy_dir:
+        source_dir = path.join(state.deploy_dir, source)
 
     put_files = []
     ensure_dirnames = []
@@ -111,10 +112,16 @@ def put(
     user=None, group=None, mode=None, add_deploy_dir=True
 ):
     '''Copy a local file to the remote system.'''
+
     if state.deploy_dir and add_deploy_dir:
         local_filename = path.join(state.deploy_dir, local_filename)
 
-    local_file = open(local_filename, 'r')
+    # Accept local_filename as a string or (assumed) file-like object
+    if isinstance(local_filename, basestring):
+        local_file = open(local_filename, 'r')
+    else:
+        local_file = local_filename
+
     remote_file = host.file(remote_filename)
     commands = []
 
@@ -149,10 +156,17 @@ def put(
 
 
 @operation
-def template(state, host, template_filename, remote_filename, **data):
+def template(
+    state, host, template_filename, remote_filename,
+    user=None, group=None, mode=None, **data
+):
     '''Generate a template and write it to the remote system.'''
+
+    if state.deploy_dir:
+        template_filename = path.join(state.deploy_dir, template_filename)
+
     # Load the template from file
-    template_file = open(path.join(state.deploy_dir, template_filename), 'r')
+    template_file = open(template_filename, 'r')
     template = Template(template_file.read())
 
     # Ensure host is always available inside templates
@@ -162,11 +176,12 @@ def template(state, host, template_filename, remote_filename, **data):
     output = template.render(data)
     output_file = StringIO(output)
 
-    local_sum = get_file_sha1(output_file)
-    remote_sum = host.sha1_file(remote_filename)
-
-    if local_sum != remote_sum:
-        return [(output_file, remote_filename)]
+    # Pass to the put function
+    return put(
+        output_file, remote_filename,
+        user=user, group=group, mode=mode,
+        add_deploy_dir=False
+    )
 
 
 @operation
