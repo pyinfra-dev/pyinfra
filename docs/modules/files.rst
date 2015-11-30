@@ -30,7 +30,7 @@ Manage the state of files.
 
     files.file(name, present=True, user=None, group=None, mode=None, touch=False)
 
-+ **name**: name/patr of the remote file
++ **name**: name/path of the remote file
 + **present**: whether the file should exist
 + **user**: user to own the files
 + **group**: group to own the files

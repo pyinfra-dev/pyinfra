@@ -221,7 +221,7 @@ def file(
     '''
     Manage the state of files.
 
-    + name: name/patr of the remote file
+    + name: name/path of the remote file
     + present: whether the file should exist
     + user: user to own the files
     + group: group to own the files
