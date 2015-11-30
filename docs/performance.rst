@@ -9,20 +9,50 @@ Performance
     --> Running test: pyinfra -i deploy/inventory.py deploy/deploy.py
     --> Removing any existing hosts
     --> Bringing up new hosts
+    --> Sleeping for 20s
     --> Executing first run...
     --> Executing second run...
 
-    --> First complete in 2.139081000 seconds
-    --> Second complete in 1.567480000 seconds
+    --> First complete in 2.498434000 seconds
+    --> Second complete in 1.927552000 seconds
 
     --> Running test: ansible-playbook -i playbook/inventory.py playbook/playbook.yaml
     --> Removing any existing hosts
     --> Bringing up new hosts
+    --> Sleeping for 20s
     --> Executing first run...
     --> Executing second run...
 
-    --> First complete in 2.061040000 seconds
-    --> Second complete in 1.704296000 seconds
+    --> First complete in 1.846866000 seconds
+    --> Second complete in 1.654313000 seconds
+
+    <-- All tests complete!
+
+
+.. code:: shell
+
+    ### pyinfra Performance Tests
+    --> Running with 25 hosts
+
+    --> Running test: pyinfra -i deploy/inventory.py deploy/deploy.py
+    --> Removing any existing hosts
+    --> Bringing up new hosts
+    --> Sleeping for 20s
+    --> Executing first run...
+    --> Executing second run...
+
+    --> First complete in 7.047766000 seconds
+    --> Second complete in 5.800223000 seconds
+
+    --> Running test: ansible-playbook -i playbook/inventory.py playbook/playbook.yaml
+    --> Removing any existing hosts
+    --> Bringing up new hosts
+    --> Sleeping for 20s
+    --> Executing first run...
+    --> Executing second run...
+
+    --> First complete in 9.397780000 seconds
+    --> Second complete in 8.130766000 seconds
 
     <-- All tests complete!
 
@@ -35,19 +65,21 @@ Performance
     --> Running test: pyinfra -i deploy/inventory.py deploy/deploy.py
     --> Removing any existing hosts
     --> Bringing up new hosts
+    --> Sleeping for 20s
     --> Executing first run...
     --> Executing second run...
 
-    --> First complete in 23.637547000 seconds
-    --> Second complete in 14.014011000 seconds
+    --> First complete in 26.231039000 seconds
+    --> Second complete in 15.398840000 seconds
 
     --> Running test: ansible-playbook -i playbook/inventory.py playbook/playbook.yaml
     --> Removing any existing hosts
     --> Bringing up new hosts
+    --> Sleeping for 20s
     --> Executing first run...
     --> Executing second run...
 
-    --> First complete in 23.942866000 seconds
-    --> Second complete in 20.004602000 seconds
+    --> First complete in 26.753693000 seconds
+    --> Second complete in 20.011880000 seconds
 
     <-- All tests complete!
