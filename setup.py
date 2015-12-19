@@ -29,6 +29,7 @@ if __name__ == '__main__':
             'gevent',
             'paramiko',
             'docopt',
+            'colorama',
             'termcolor',
             'jinja2',
             'python-dateutil'
