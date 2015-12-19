@@ -51,7 +51,7 @@ nettools_1_regexes = [
         ('ipv4', 'address', 'broadcast', 'netmask')
     ),
     (
-        r'^inet6 addr: ([0-9a-z:]+)\/([0-9]+)',
+        r'^inet6 addr: ([0-9a-z:]+)\/([0-9]+) Scope:Global',
         ('ipv6', 'address', 'size')
     )
 ]
@@ -113,11 +113,11 @@ class NetworkDevices(FactBase):
 
     _start_regexes = [
         (
-            r'^([a-z0-9]+)\s+Link encap:',
+            r'^([a-z0-9_]+)\s+Link encap:',
             lambda lines: _parse_regexes(nettools_1_regexes, lines)
         ),
         (
-            r'^([a-z0-9]+): flags=',
+            r'^([a-z0-9_]+): flags=',
             lambda lines: _parse_regexes(nettools_2_regexes, lines)
         )
     ]
@@ -125,24 +125,37 @@ class NetworkDevices(FactBase):
     def process(self, output):
         devices = {}
 
+        # Store current matches (start lines), the handler and any lines
+        matches = None
+        handler = None
         line_buffer = []
 
         for line in output:
             matched = False
 
-            # Note that reassigning handler each loop is useless it just avoids matching
-            # the version of net-tools elsewhere.
-            for regex, handler in self._start_regexes:
-                matches = re.match(regex, line)
-                if matches:
-                    if line_buffer:
-                        devices[matches.group(1)] = handler(line_buffer)
+            # Look for start lines
+            for regex, new_handler in self._start_regexes:
+                new_matches = re.match(regex, line)
 
-                    line_buffer = [line]
+                # If we find a start line
+                if new_matches:
                     matched = True
+
+                    # Assign any current matches with current handler, reset buffer
+                    if matches:
+                        devices[matches.group(1)] = handler(line_buffer)
+                        line_buffer = []
+
+                    # Set new matches/handler
+                    matches = new_matches
+                    handler = new_handler
                     break
 
             if not matched:
                 line_buffer.append(line)
+
+        # Handle any left over matches
+        if matches:
+            devices[matches.group(1)] = handler(line_buffer)
 
         return devices
