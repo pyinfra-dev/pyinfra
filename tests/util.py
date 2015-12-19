@@ -1,0 +1,41 @@
+# pyinfra
+# File: tests/util.py
+# Desc: utilities for fake pyinfra state/host objects
+
+
+class FakeState(object):
+    deploy_dir = ''
+
+
+class FakeFact(object):
+    def __init__(self, data):
+        self.data = data
+
+    def __getattr__(self, key):
+        return self.data[key]
+
+    def __call__(self, arg):
+        return self.data[arg]
+
+
+class FakeHost(object):
+    def __init__(self, facts):
+        self.facts = facts
+
+    def __getattr__(self, key):
+        return FakeFact(self.facts[key])
+
+
+def create_host(fact_data):
+    '''Creates a FakeHost object with attached fact data.'''
+
+    facts = {}
+
+    for name, data in fact_data.iteritems():
+        if ':' in name:
+            name, arg = name.split(':')
+            facts.setdefault(name, {})[arg] = data
+        else:
+            facts[name] = data
+
+    return FakeHost(facts)

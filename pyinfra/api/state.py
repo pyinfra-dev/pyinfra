@@ -11,6 +11,7 @@ from .config import Config
 
 class DefaultState(object):
     '''Represents a default/blank internal pyinfra state.'''
+
     inventory = None # a pyinfra.api.Inventory which stores all our pyinfra.api.Host's
     config = None # a pyinfra.api.Config
 
@@ -38,6 +39,7 @@ class DefaultState(object):
 
 class State(DefaultState):
     '''Create a new state based on the default state.'''
+
     def __init__(self, inventory, config=None):
         super(State, self).__init__()
 
