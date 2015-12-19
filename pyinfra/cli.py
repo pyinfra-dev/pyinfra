@@ -326,8 +326,13 @@ def make_inventory(
             'ALL': [inventory_filename]
         }
 
+    all_data = {}
+
     if 'ALL' in groups:
         all_hosts = groups.pop('ALL')
+
+        if isinstance(all_hosts, tuple):
+            all_hosts, all_data = all_hosts
 
     # Build ALL out of the existing hosts if not defined
     else:
@@ -351,7 +356,7 @@ def make_inventory(
             or (isinstance(host, basestring) and fnmatch(host, limit))
         ]
 
-    groups['ALL'] = all_hosts
+    groups['ALL'] = (all_hosts, all_data)
 
     # Apply the filename group if not already defined
     if file_groupname and file_groupname not in groups:
@@ -367,6 +372,7 @@ def make_inventory(
         data_filename = path.join(
             deploy_dir, 'group_data', '{0}.py'.format(name.lower())
         )
+        logger.debug('Looking for group data: {0}'.format(data_filename))
 
         if path.exists(data_filename):
             module = load_source('', data_filename)
