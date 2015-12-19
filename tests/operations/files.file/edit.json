@@ -1,0 +1,19 @@
+{
+    "args": ["testfile"],
+    "kwargs": {
+        "user": "testuser",
+        "group": "testgroup",
+        "mode": 777
+    },
+    "facts": {
+        "file:testfile": {
+            "mode": 600,
+            "user": "wronguser",
+            "group": "wronggroup"
+        }
+    },
+    "commands": [
+        "chmod 777 testfile",
+        "chown testuser:testgroup testfile"
+    ]
+}

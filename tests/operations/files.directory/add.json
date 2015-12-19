@@ -1,0 +1,17 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "user": "testuser",
+        "group": "testgroup",
+        "mode": 777,
+        "recursive": true
+    },
+    "facts": {
+        "directory:testdir": null
+    },
+    "commands": [
+        "mkdir -p testdir",
+        "chmod -R 777 testdir",
+        "chown -R testuser:testgroup testdir"
+    ]
+}
