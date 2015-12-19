@@ -10,6 +10,15 @@ class Inventory(object):
     '''
     Represents a collection of target hosts. Stores and provides access to group data,
     host data and default data for these hosts.
+
+    Args:
+        hostnames_data: tuple of ``(hostnames, data)``
+        ssh_user: default SSH user
+        ssh_port: default SSH port
+        ssh_key: default SSH key filename
+        ssh_key_password: default password for the SSH key
+        ssh_password: default SSH password
+        **kwargs: map of group names -> ``(hostnames, data)``
     '''
 
     state = None
@@ -72,15 +81,23 @@ class Inventory(object):
                 yield host
 
     def get_data(self):
+        '''Get the base/all data attached to this inventory.'''
+
         return self.data
 
     def get_override_data(self):
+        '''Get override data for this inventory.'''
+
         return self.override_data
 
     def get_host_data(self, hostname):
+        '''Get data for a single host in this inventory.'''
+
         return self.host_data[hostname]
 
     def get_group_data(self, group):
+        '''Get data for a single group in this inventory.'''
+
         return self.group_data.get(group, {})
 
     def get_groups_data(self, groups):

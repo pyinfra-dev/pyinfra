@@ -4,6 +4,8 @@
 
 
 class Config(object):
+    '''The default/base configuration options for a pyinfra deploy.'''
+
     state = None
 
     # % of hosts which have to fail for all operations to stop

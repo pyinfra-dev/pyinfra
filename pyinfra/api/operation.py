@@ -9,14 +9,12 @@ state. This is then run later by pyinfra's ``__main__`` or the :doc:`./operation
 '''
 
 from functools import wraps
-from types import FunctionType
 
 from pyinfra import pseudo_state, pseudo_host
 
 from .host import Host, HostModule
 from .state import State, StateModule
-from .util import make_hash
-from .attrs import AttrBase
+from .util import make_hash, get_arg_name
 
 
 def add_op(state, op_func, *args, **kwargs):
@@ -88,19 +86,15 @@ def operation(func):
         if state.in_op:
             return func(state, host, *args, **kwargs) or []
 
+        # Convert any AttrBase items (returned by host.data), see attrs.py.
         if op_hash is None:
-            # Convert any AttrBase items (returned by host.data) arg
-            # this means if one of the args is host.data.app_dir which is set to different
-            # values on different hosts it will still generate one operation.
             hash_args = [
-                arg.pyinfra_attr_key if isinstance(arg, AttrBase) else
-                arg.__name__ if isinstance(arg, FunctionType) else arg
+                get_arg_name(arg)
                 for arg in args
             ]
 
             hash_kwargs = {
-                key: arg.pyinfra_attr_key if isinstance(arg, AttrBase) else
-                arg.__name__ if isinstance(arg, FunctionType) else arg
+                key: get_arg_name(arg)
                 for key, arg in kwargs.iteritems()
             }
 
