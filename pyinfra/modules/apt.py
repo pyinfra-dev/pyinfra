@@ -71,6 +71,10 @@ def packages(
     + update: run apt update
     + cache_time: when used with update, cache for this many seconds
     + upgrade: run apt upgrade
+
+    Note:
+        ``cache_time`` only works on systems that provide the
+        ``/var/lib/apt/periodic/update-success-stamp`` file (ie Ubuntu).
     '''
 
     if packages is None:
@@ -86,7 +90,9 @@ def packages(
 
     # If cache_time check when apt was last updated, prevent updates if within time
     if cache_time:
-        cache_info = host.file('/var/cache/apt/pkgcache.bin')
+        # Ubuntu provides this handy file
+        cache_info = host.file('/var/lib/apt/periodic/update-success-stamp')
+
         # Time on files is not tz-aware, and will be the same tz as the server's time,
         # so we can safely remove the tzinfo from host.date before comparison.
         cache_time = host.date.replace(tzinfo=None) - timedelta(seconds=cache_time)

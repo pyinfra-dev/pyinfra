@@ -64,6 +64,7 @@ Syncs a local directory with a remote one, with delete support. Note that delete
     files.sync(source, destination, user=None, group=None, mode=None, delete=False)
 
 remove extra files on the remote side, but not extra directories.
+
 + **source**: local directory to sync
 + **destination**: remote directory to sync to
 + **user**: user to own the files

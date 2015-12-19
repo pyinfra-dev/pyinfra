@@ -14,8 +14,6 @@ Manage the state of /etc/init.d service scripts.
     init.d(name, running=True, restarted=False, reloaded=False, command=None)
 
 
-
-
 :code:`init.rc`
 ~~~~~~~~~~~~~~~
 

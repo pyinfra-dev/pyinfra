@@ -15,7 +15,11 @@ def _title_line(char, string):
 
 
 def _format_doc_line(line):
-    return re.sub(r'\+ ([a-z_]+)(.*)', r'+ **\1**\2', line).strip()
+    # Bold the <arg>: part of each line
+    line = re.sub(r'\+ ([a-z_]+)(.*)', r'+ **\1**\2', line)
+
+    # Strip the first 4 characters (first indent from docstring)
+    return line[4:]
 
 
 def build_facts():
@@ -52,7 +56,8 @@ def build_facts():
 
             doc = func.__doc__
             if doc:
-                docbits = [line for line in doc.split('\n') if line]
+                docbits = doc.strip().split('\n')
+                print 'BITS', docbits
                 if len(docbits) > 0:
                     lines.append('')
                     lines.append(docbits[0].strip())
