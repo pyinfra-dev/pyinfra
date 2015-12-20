@@ -28,12 +28,15 @@ def _chown(target, user, group, recursive=False):
     return 'chown {0}{1} {2}'.format(('-R ' if recursive else ''), user_group, target)
 
 
-def _sed_replace(filename, line, replace):
-    return 'sed -i "s/{0}/{1}/" {2}'.format(line, replace, filename)
+def _sed_replace(filename, line, replace, flags=None):
+    flags = ''.join(flags) if flags else ''
+
+    return 'sed -i "s/{0}/{1}/{2}" {3}'.format(
+        line, replace, flags, filename
+    )
 
 
-# TODO
-#@operation
+@operation
 def download(
     state, host, source_url,
     destination=None, user=None, group=None, mode=None, cache_time=None, force=False
@@ -49,11 +52,41 @@ def download(
     + cache_time: if the file exists already, re-download after this time (in s)
     + force: always download the file, even if it already exists
     '''
-    pass
+
+    # Get destination info
+    info = host.file(destination)
+
+    # Destination is a directory?
+    if info is False:
+        raise OperationException('{0} is a directory'.format(destination))
+
+    # Do we download the file? Force by default
+    download = force
+
+    # Doesn't exist, lets download it
+    if info is None:
+        download = True
+
+    # Destination file exists & cache_time: check when the file was last modified,
+    # download if old
+    elif cache_time:
+        download = True
+
+    # If we download, always do user/group/mode as SSH user may be different
+    if download:
+        commands = ['wget -q {0} -O {1}'.format(source_url, destination)]
+
+        if user or group:
+            commands.append(_chown(destination, user, group))
+
+        if mode:
+            commands.append(_chmod(destination, mode))
+
+        return commands
 
 
 @operation
-def line(state, host, name, line, present=True, replace=None):
+def line(state, host, name, line, present=True, replace=None, flags=None):
     '''
     Ensure lines in files using grep to locate and sed to replace.
 
@@ -61,10 +94,16 @@ def line(state, host, name, line, present=True, replace=None):
     + line: string or regex matching the *entire* target line
     + present: whether the line should be in the file
     + replace: text to replace entire matching lines when ``present=True``
+    + flags: list of flags to pass to sed when replacing/deleting
+
+    Note:
+        if not present, line will have ``^`` & ``$`` wrapped around so when using regex
+        the entire line must match (eg ``SELINUX=.*``)
     '''
 
     match_line = line
 
+    # Ensure we're matching a whole ^line$
     if not match_line.startswith('^'):
         match_line = '^{0}'.format(match_line)
 
@@ -84,11 +123,24 @@ def line(state, host, name, line, present=True, replace=None):
 
     # Line exists and we have a replacement that *is* different, sed it
     if is_present != replace:
-        return [_sed_replace(name, match_line, replace)]
+        return [_sed_replace(name, match_line, replace, flags=flags)]
 
     # Line exists and we want to remove it, replace with nothing
     if is_present and not present:
-        return [_sed_replace(name, match_line, '')]
+        return [_sed_replace(name, match_line, '', flags=flags)]
+
+
+@operation
+def replace(state, host, name, match, replace, flags=None):
+    '''
+    A simple shortcut for replacing text in files with sed.
+
+    + name: target remote file to edit
+    + match: text/regex to match for
+    + replace: text to replace with
+    + flags: list of flaggs to pass to sed
+    '''
+    return [_sed_replace(name, match, replace, flags=flags)]
 
 
 @operation

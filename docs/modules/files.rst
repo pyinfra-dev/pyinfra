@@ -21,6 +21,24 @@ Manage the state of directories.
 + **recursive**: recursively apply user/group/mode
 
 
+:code:`files.download`
+~~~~~~~~~~~~~~~~~~~~~~
+
+Download files from remote locations.
+
+.. code:: python
+
+    files.download(source_url, destination=None, user=None, group=None, mode=None, cache_time=None, force=False)
+
++ **source_url**: source URl of the file
++ **destination**: where to save the file
++ **user**: user to own the files
++ **group**: group to own the files
++ **mode**: permissions of the files
++ **cache_time**: if the file exists already, re-download after this time (in s)
++ **force**: always download the file, even if it already exists
+
+
 :code:`files.file`
 ~~~~~~~~~~~~~~~~~~
 
@@ -45,12 +63,17 @@ Ensure lines in files using grep to locate and sed to replace.
 
 .. code:: python
 
-    files.line(name, line, present=True, replace=None)
+    files.line(name, line, present=True, replace=None, flags=None)
 
 + **name**: target remote file to edit
 + **line**: string or regex matching the *entire* target line
 + **present**: whether the line should be in the file
 + **replace**: text to replace entire matching lines when ``present=True``
++ **flags**: list of flags to pass to sed when replacing/deleting
+
+Note:
+    if not present, line will have ``^`` & ``$`` wrapped around so when using regex
+    the entire line must match (eg ``SELINUX=.*``)
 
 
 :code:`files.put`
@@ -67,6 +90,21 @@ Copy a local file to the remote system.
 + **user**: user to own the files
 + **group**: group to own the files
 + **mode**: permissions of the files
+
+
+:code:`files.replace`
+~~~~~~~~~~~~~~~~~~~~~
+
+A simple shortcut for replacing text in files with sed.
+
+.. code:: python
+
+    files.replace(name, match, replace, flags=None)
+
++ **name**: target remote file to edit
++ **match**: text/regex to match for
++ **replace**: text to replace with
++ **flags**: list of flaggs to pass to sed
 
 
 :code:`files.sync`
