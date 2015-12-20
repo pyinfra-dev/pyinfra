@@ -3,7 +3,8 @@
 # Desc: the base os-level module
 
 '''
-The server module takes care of os-level state. Targets POSIX compatability, tested on Linux/BSD.
+The server module takes care of os-level state. Targets POSIX compatability, tested on
+Linux/BSD.
 '''
 
 from hashlib import sha1
@@ -15,7 +16,11 @@ from . import files
 
 @operation
 def wait(state, host, port=None):
-    '''Waits for a port to come active on the target machine. Requires netstat, checks every 1s.'''
+    '''
+    Waits for a port to come active on the target machine. Requires netstat, checks every
+    1s.
+    '''
+
     return ['''
         while ! (netstat -an | grep LISTEN | grep -e "\.{0}" -e ":{0}"); do
             echo "waiting for port {0}..."
@@ -27,12 +32,14 @@ def wait(state, host, port=None):
 @operation
 def shell(state, host, *commands):
     '''Run raw shell code.'''
+
     return list(commands)
 
 
 @operation
 def script(state, host, filename):
     '''Upload and execute a local script on the remote host.'''
+
     commands = []
 
     hash_ = sha1()
