@@ -46,7 +46,7 @@ class FactBase(object):
         return output[0]
 
 
-def get_facts(state, name, arg=None, sudo=False, sudo_user=None, print_output=False):
+def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=False):
     '''
     Get a single fact for all hosts in the state.
     '''
@@ -54,8 +54,8 @@ def get_facts(state, name, arg=None, sudo=False, sudo_user=None, print_output=Fa
     fact = facts[name]
     command = fact.command
 
-    if arg:
-        command = command(arg)
+    if args:
+        command = command(*args)
 
     fact_hash = make_hash((name, command, sudo, sudo_user))
 
@@ -84,8 +84,8 @@ def get_facts(state, name, arg=None, sudo=False, sudo_user=None, print_output=Fa
 
     log_name = colored(name, attrs=['bold'])
 
-    if arg:
-        log = 'Loaded fact {0}: {1}'.format(log_name, arg)
+    if args:
+        log = 'Loaded fact {0}: {1}'.format(log_name, args)
     else:
         log = 'Loaded fact {0}'.format(log_name)
 
@@ -111,9 +111,9 @@ def get_fact(state, hostname, name, print_output=False):
 
     # Expecting a function to return
     if callable(facts[name].command):
-        def wrapper(arg):
+        def wrapper(*args):
             fact_data = get_facts(
-                state, name, arg,
+                state, name, args=args,
                 sudo=sudo, sudo_user=sudo_user,
                 print_output=print_output
             )

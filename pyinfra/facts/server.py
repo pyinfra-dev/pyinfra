@@ -31,6 +31,7 @@ class Arch(FactBase):
 
 class Date(FactBase):
     '''Returns the current datetime on the server.'''
+
     command = 'date'
 
     def process(self, output):
@@ -38,7 +39,20 @@ class Date(FactBase):
 
 
 class Users(FactBase):
-    '''Gets & returns a dict of users -> details.'''
+    '''
+    Gets & returns a dict of users -> details:
+
+    .. code:: python
+
+        'user_name': {
+            'uid': 1,
+            'gid': 1,
+            'home': '/home/user_name',
+            'shell': '/bin/bash
+        },
+        ...
+    '''
+
     command = 'cat /etc/passwd'
 
     def process(self, output):
@@ -61,8 +75,20 @@ class Users(FactBase):
 
 
 class LinuxDistribution(FactBase):
-    '''Returns the Linux distribution. Ubuntu, CentOS & Debian currently.'''
+    '''
+    Returns a dict of the Linux distribution version. Ubuntu, CentOS & Debian currently:
+
+    .. code:: python
+
+        {
+            'name': 'CentOS',
+            'major': 6,
+            'minor': 5
+        }
+    '''
+
     command = 'cat /etc/*-release'
+
     # Currently supported distros
     regexes = [
         r'(Ubuntu) ([0-9]{2})\.([0-9]{2})',

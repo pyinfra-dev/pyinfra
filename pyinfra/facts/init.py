@@ -9,6 +9,7 @@ from pyinfra.api import FactBase
 
 class SystemctlStatus(FactBase):
     '''Returns a dict of name -> status for systemd managed services.'''
+
     command = 'systemctl -alt service list-units'
     _regex = r'^([a-z\-]+)\.service\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
 
@@ -25,6 +26,7 @@ class SystemctlStatus(FactBase):
 
 class ServiceStatus(FactBase):
     '''Returns a dict of name -> status for services listed by "service".'''
+
     command = 'service --status-all'
 
     _regexes = [
@@ -63,6 +65,7 @@ class InitdStatus(FactBase):
     Expected codes found at:
         http://refspecs.linuxbase.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
     '''
+
     command = '''
         for SERVICE in `ls /etc/init.d/`; do
             _=`cat /etc/init.d/$SERVICE | grep "### BEGIN INIT INFO"`
@@ -98,9 +101,10 @@ class InitdStatus(FactBase):
 
 class RcdStatus(InitdStatus):
     '''
-    As above but for BSD (/etc/rc.d) systems. Unlike Linux/init.d, BSD init scripts are well behaved
-    and as such their output can be trusted.
+    As above but for BSD (/etc/rc.d) systems. Unlike Linux/init.d, BSD init scripts are
+    well behaved and as such their output can be trusted.
     '''
+
     command = '''
         for SERVICE in `ls /etc/rc.d/`; do
             _=`cat /etc/rc.d/$SERVICE | grep "daemon="`

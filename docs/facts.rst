@@ -62,7 +62,7 @@ Devices
             'mount': '/',
             'used': '836392',
             'blocks': '40325900'
-        }
+        },
         ...
     
 
@@ -85,7 +85,7 @@ Devices
                 'size': '64',
                 'address': 'fe80::a00:27ff:fec3:36f0'
             }
-        }
+        },
         ...
     
 
@@ -105,6 +105,12 @@ Files
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Returns a list of files/dirs from a start point, recursively using find.
+
+
+:code:`find_in_file(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Checks for the existence of text in a file using grep.
 
 
 :code:`sha1_file(name)`
@@ -141,8 +147,8 @@ Init
 ~~~~~~~~~~~~~~~~~~
 
 
-    As above but for BSD (/etc/rc.d) systems. Unlike Linux/init.d, BSD init scripts are well behaved
-    and as such their output can be trusted.
+    As above but for BSD (/etc/rc.d) systems. Unlike Linux/init.d, BSD init scripts are
+    well behaved and as such their output can be trusted.
     
 
 
@@ -218,7 +224,17 @@ Returns the current datetime on the server.
 :code:`linux_distribution`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Returns the Linux distribution. Ubuntu, CentOS & Debian currently.
+
+    Returns a dict of the Linux distribution version. Ubuntu, CentOS & Debian currently:
+
+    .. code:: python
+
+        {
+            'name': 'CentOS',
+            'major': 6,
+            'minor': 5
+        }
+    
 
 
 :code:`os`
@@ -232,7 +248,19 @@ Returns the Linux distribution. Ubuntu, CentOS & Debian currently.
 :code:`users`
 ~~~~~~~~~~~~~
 
-Gets & returns a dict of users -> details.
+
+    Gets & returns a dict of users -> details:
+
+    .. code:: python
+
+        'user_name': {
+            'uid': 1,
+            'gid': 1,
+            'home': '/home/user_name',
+            'shell': '/bin/bash
+        },
+        ...
+    
 
 
 Yum

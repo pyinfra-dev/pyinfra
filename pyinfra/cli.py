@@ -202,6 +202,16 @@ def print_results(state):
             ))
 
 
+def _parse_arg(arg):
+    if arg == 'False':
+        return False
+
+    if arg == 'True':
+        return True
+
+    return arg
+
+
 def setup_arguments(arguments):
     # Prep --run OP ARGS
     op, args = arguments['--run'], arguments['ARGS']
@@ -224,12 +234,12 @@ def setup_arguments(arguments):
         # Setup kwargs
         kwargs = [arg.split('=') for arg in args if '=' in arg]
         op_kwargs = {
-            key: value
+            key: _parse_arg(value)
             for key, value in kwargs
         }
 
         # Get the remaining args
-        args = [arg for arg in args if '=' not in arg]
+        args = [_parse_arg(arg) for arg in args if '=' not in arg]
 
         arguments['ARGS'] = (args, op_kwargs)
 

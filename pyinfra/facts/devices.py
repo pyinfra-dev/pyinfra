@@ -19,9 +19,10 @@ class BlockDevices(FactBase):
             'mount': '/',
             'used': '836392',
             'blocks': '40325900'
-        }
+        },
         ...
     '''
+
     command = 'df'
     _regex = r'([a-zA-Z0-9\/\-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
 
@@ -106,9 +107,10 @@ class NetworkDevices(FactBase):
                 'size': '64',
                 'address': 'fe80::a00:27ff:fec3:36f0'
             }
-        }
+        },
         ...
     '''
+
     command = 'ifconfig'
 
     _start_regexes = [
