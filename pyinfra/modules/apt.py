@@ -7,6 +7,7 @@ Manage apt packages and repositories.
 '''
 
 from datetime import timedelta
+from urlparse import urlparse
 
 from pyinfra.api import operation, OperationException
 from pyinfra.facts.apt import parse_apt_repo
@@ -14,13 +15,60 @@ from pyinfra.facts.apt import parse_apt_repo
 from . import files
 
 
-# TODO
-#@operation
+@operation
 def deb(state, host, source, present=True):
-    # If source is a url, get filename & ensure we have file
+    '''
+    Install/manage .deb file packages.
+
+    + source: filename or URL of the .deb file
+    + present: whether or not the package should exist on the system
+
+    Note:
+        when installing, ``apt-get install -f`` will be run to install any unmet
+        dependencies
+    '''
+
+    commands = []
+
+    # If source is a url
+    if urlparse(source).scheme:
+        # Generate a temp filename
+        temp_filename = state.get_temp_filename(source)
+
+        # Ensure it's downloaded
+        commands.extend(files.download(source, temp_filename))
+
+        # Override the source with the downloaded file
+        source = temp_filename
+
     # Check for file .deb information (if file is present)
-    # Check if installed
-    pass
+    info = host.deb_package(source)
+
+    # To install?
+    install = False
+
+    # If file doesn't exist/no info - blind install
+    if info is None:
+        install = True
+
+    # We have deb info! Check against installed packages
+    else:
+        current_packages = host.deb_packages
+
+        if (
+            info['name'] not in current_packages
+            or current_packages[info['name']] != info['version']
+        ):
+            install = True
+
+    if install:
+        commands.extend([
+            # Install .deb file
+            'dpkg -i {0}'.format(source),
+            # Attempt to install any missing dependencies
+            'DEBIAN_FRONTEND=noninteractive apt-get install -fy'
+        ])
+        return commands
 
 
 @operation

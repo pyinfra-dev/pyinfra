@@ -100,6 +100,12 @@ elif 'linux' in host.groups:
             op='core_packages' # this and below binds these three operations to run as one
         )
 
+        # Manage remote deb files
+        apt.deb(
+            'https://github.com/rabbitmq/rabbitmq-server/releases/download/rabbitmq_v3_5_7/rabbitmq-server_3.5.7-1_all.deb',
+            sudo=True
+        )
+
     elif host.linux_distribution['name'] == 'CentOS':
         # yum package manager
         yum.packages(

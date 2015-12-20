@@ -55,6 +55,7 @@ class DebPackages(FactBase):
         'package_name': 'version',
         ...
     '''
+
     command = 'dpkg -l'
     _regex = r'^[a-z]+\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
 
@@ -74,5 +75,24 @@ class DebPackage(FactBase):
     '''
     Returns information on a .deb file.
     '''
+
+    _regexes = {
+        'name': r'^Package: ([a-zA-Z0-9\-]+)$',
+        'version': r'^Version: ([0-9\.\-]+)$'
+    }
+
     def command(self, name):
         return 'dpkg -I {0}'.format(name)
+
+    def process(self, output):
+        data = {}
+
+        for line in output:
+            for key, regex in self._regexes.iteritems():
+                matches = re.match(regex, line)
+                if matches:
+                    value = matches.group(1)
+                    data[key] = value
+                    break
+
+        return data

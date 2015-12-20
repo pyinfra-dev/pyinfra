@@ -4,6 +4,23 @@ Apt
 
 Manage apt packages and repositories.
 
+:code:`apt.deb`
+~~~~~~~~~~~~~~~
+
+Install/manage .deb file packages.
+
+.. code:: python
+
+    apt.deb(source, present=True)
+
++ **source**: filename or URL of the .deb file
++ **present**: whether or not the package should exist on the system
+
+Note:
+    when installing, ``apt-get install -f`` will be run to install any unmet
+    dependencies
+
+
 :code:`apt.packages`
 ~~~~~~~~~~~~~~~~~~~~
 
