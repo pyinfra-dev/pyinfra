@@ -7,8 +7,6 @@ The server module takes care of os-level state. Targets POSIX compatability, tes
 Linux/BSD.
 '''
 
-from hashlib import sha1
-
 from pyinfra.api import operation
 
 from . import files
@@ -42,10 +40,7 @@ def script(state, host, filename):
 
     commands = []
 
-    hash_ = sha1()
-    hash_.update(filename)
-    temp_file = '/tmp/{0}'.format(hash_.hexdigest())
-
+    temp_file = state.get_temp_filename(filename)
     commands.extend(files.put(filename, temp_file))
 
     commands.append('chmod +x {0}'.format(temp_file))

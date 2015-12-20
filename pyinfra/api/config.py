@@ -14,7 +14,7 @@ class Config(object):
     TIMEOUT = 10
 
     # Temporary directory (on the remote side) to use for caching any files/downloads
-    TEMP_DIR = '/tmp/pyinfra'
+    TEMP_DIR = '/tmp'
 
     # All these can be overridden inside module calls
     SUDO = False

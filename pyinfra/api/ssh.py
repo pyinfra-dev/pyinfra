@@ -3,7 +3,6 @@
 # Desc: handle all SSH related stuff
 
 from os import path
-from hashlib import sha1
 from socket import (
     gaierror,
     error as socket_error, timeout as timeout_error
@@ -221,9 +220,11 @@ def _get_sftp_connection(state, hostname):
 
     return client
 
+
 def _put_file(state, hostname, file_io, remote_location):
     sftp = _get_sftp_connection(state, hostname)
     sftp.putfo(file_io, remote_location)
+
 
 def put_file(
     state, hostname, file_io, remote_file,
@@ -238,10 +239,7 @@ def put_file(
         # connected,  so upload to tmp and copy/chown w/sudo
 
         # Get temp file location
-        hash_ = sha1()
-        hash_.update(remote_file)
-        temp_file = '/tmp/{0}'.format(hash_.hexdigest())
-
+        temp_file = state.get_temp_filename(remote_file)
         _put_file(state, hostname, file_io, temp_file)
 
         # Execute run_shell_command w/sudo to mv/chown it

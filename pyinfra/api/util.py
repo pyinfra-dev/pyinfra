@@ -19,6 +19,14 @@ def underscore(name):
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
+def sha1_hash(string):
+    '''Return the SHA1 of the input string.'''
+
+    hasher = sha1()
+    hasher.update(string)
+    return hasher.hexdigest()
+
+
 def get_arg_name(arg):
     '''
     Returns the name or value of an argument as passed into an operation. Will use pyinfra

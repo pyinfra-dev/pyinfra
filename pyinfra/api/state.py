@@ -7,10 +7,11 @@ import sys
 from gevent.pool import Pool
 
 from .config import Config
+from .util import sha1_hash
 
 
-class DefaultState(object):
-    '''Represents a default/blank internal pyinfra state.'''
+class State(object):
+    '''Create a new state based on the default state.'''
 
     inventory = None # a pyinfra.api.Inventory which stores all our pyinfra.api.Host's
     config = None # a pyinfra.api.Config
@@ -24,24 +25,9 @@ class DefaultState(object):
     deploy_dir = None
     active = True
 
-    def __init__(self):
-        self.op_order = [] # list of operation hashes
-        self.op_meta = {} # maps operation hash -> names/etc
-        self.ops_run = set() # list of ops which have been started/run
-        self.ops = {} # maps hostnames ->  operation hashes -> operation
-
-        self.meta = {}
-        self.results = {}
-
+    def __init__(self, inventory, config=None):
         self.ssh_connections = {}
         self.sftp_connections = {}
-
-
-class State(DefaultState):
-    '''Create a new state based on the default state.'''
-
-    def __init__(self, inventory, config=None):
-        super(State, self).__init__()
 
         if config is None:
             config = Config()
@@ -58,15 +44,18 @@ class State(DefaultState):
 
         hostnames = [host.ssh_hostname for host in inventory]
 
-        self.ops = {
-            hostname: {}
-            for hostname in hostnames
-        }
+        # Op basics
+        self.op_order = [] # list of operation hashes
+        self.op_meta = {} # maps operation hash -> names/etc
+        self.ops_run = set() # list of ops which have been started/run
+
+        # Op dict for each host
         self.ops = {
             hostname: {}
             for hostname in hostnames
         }
 
+        # Meta dict for each host
         self.meta = {
             hostname: {
                 'ops': 0, # one function call in a deploy file
@@ -75,6 +64,7 @@ class State(DefaultState):
             for hostname in hostnames
         }
 
+        # Results dict for each host
         self.results = {
             hostname: {
                 'ops': 0, # success_ops + failed ops w/ignore_errors
@@ -84,6 +74,14 @@ class State(DefaultState):
             }
             for hostname in hostnames
         }
+
+    def get_temp_filename(self, hash_key):
+        temp_filename = ''
+
+        if hash_key:
+            temp_filename = sha1_hash(hash_key)
+
+        return '{0}/{1}'.format(self.config.TEMP_DIR, temp_filename)
 
 
 class StateModule(object):
