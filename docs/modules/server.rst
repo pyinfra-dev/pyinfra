@@ -2,7 +2,8 @@ Server
 ------
 
 
-The server module takes care of os-level state. Targets POSIX compatability, tested on Linux/BSD.
+The server module takes care of os-level state. Targets POSIX compatability, tested on
+Linux/BSD.
 
 :code:`server.script`
 ~~~~~~~~~~~~~~~~~~~~~
@@ -39,9 +40,11 @@ Manage Linux users & their ssh `authorized_keys`. Options:
 :code:`server.wait`
 ~~~~~~~~~~~~~~~~~~~
 
-Waits for a port to come active on the target machine. Requires netstat, checks every 1s.
+Waits for a port to come active on the target machine. Requires netstat, checks every
 
 .. code:: python
 
     server.wait(port=None)
+
+1s.
 

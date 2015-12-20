@@ -41,5 +41,6 @@ Meta
     :hidden:
     :caption: Elsewhere
 
-    pyinfra's website <http://pyinfra.com>
     pyinfra on GitHub <http://github.com/Fizzadar/pyinfra>
+
+..    pyinfra's website <http://pyinfra.com>
