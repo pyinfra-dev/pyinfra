@@ -9,6 +9,8 @@ from importlib import import_module
 from nose.tools import nottest
 from jsontest import JsonTest
 
+from pyinfra import pseudo_state, pseudo_host
+
 from .util import FakeState, create_host
 
 
@@ -27,19 +29,23 @@ def make_operation_tests(arg):
 
         @classmethod
         def setUpClass(cls):
+            # Create a global fake state that attach to pseudo state
             cls.state = FakeState()
+            pseudo_state.set(cls.state)
 
         def jsontest_function(self, test_name, test_data):
-            host = create_host(test_data['facts'])
+            # Create a host with this tests facts and attach to pseudo host
+            host = create_host(test_data.get('facts', {}))
+            pseudo_host.set(host)
 
             commands = op._pyinfra_op(
-                self.state, host,
-                *test_data['args'], **test_data['kwargs']
+                pseudo_state, pseudo_host,
+                *test_data.get('args', []), **test_data.get('kwargs', {})
             )
 
             print
-            print commands
-            print test_data['commands']
+            print '--> GOT:', commands
+            print '--> WANT:', test_data['commands']
 
             self.assertEqual(commands, test_data['commands'])
 

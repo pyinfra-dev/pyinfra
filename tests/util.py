@@ -2,9 +2,15 @@
 # File: tests/util.py
 # Desc: utilities for fake pyinfra state/host objects
 
+from pyinfra.api import Config
+
 
 class FakeState(object):
+    active = True
     deploy_dir = ''
+    in_op = True
+
+    config = Config()
 
 
 class FakeFact(object):
@@ -16,6 +22,12 @@ class FakeFact(object):
 
     def __call__(self, arg):
         return self.data[arg]
+
+    def get(self, key, default=None):
+        if key in self.data:
+            return self.data[key]
+
+        return default
 
 
 class FakeHost(object):
