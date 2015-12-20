@@ -41,13 +41,11 @@ Manage the state of files.
 :code:`files.line`
 ~~~~~~~~~~~~~~~~~~
 
-Ensure lines in files, using grep & sed. Lines are located with grep, and replacement
+Ensure lines in files using grep to locate and sed to replace.
 
 .. code:: python
 
     files.line(name, line, present=True, replace=None)
-
-& deletion by sed.
 
 + **name**: target remote file to edit
 + **line**: string or regex matching the *entire* target line
