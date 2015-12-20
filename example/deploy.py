@@ -175,3 +175,12 @@ server.wait(
     port=22,
     timeout=5
 )
+
+# Edit lines in files
+files.line(
+    '/etc/sysconfig/selinux',
+    '^SELINUX=.*',
+    replace='SELINUX=disabled',
+    sudo=True,
+    ignore_errors=True
+)

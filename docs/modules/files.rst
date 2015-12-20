@@ -38,6 +38,23 @@ Manage the state of files.
 + **touch**: touch the file
 
 
+:code:`files.line`
+~~~~~~~~~~~~~~~~~~
+
+Ensure lines in files, using grep & sed. Lines are located with grep, and replacement
+
+.. code:: python
+
+    files.line(name, line, present=True, replace=None)
+
+& deletion by sed.
+
++ **name**: target remote file to edit
++ **line**: string or regex matching the *entire* target line
++ **present**: whether the line should be in the file
++ **replace**: text to replace entire matching lines when ``present=True``
+
+
 :code:`files.put`
 ~~~~~~~~~~~~~~~~~
 

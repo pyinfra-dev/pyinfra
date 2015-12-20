@@ -18,6 +18,7 @@ from pyinfra.api.util import get_file_sha1
 def _chmod(target, mode, recursive=False):
     return 'chmod {0}{1} {2}'.format(('-R ' if recursive else ''), mode, target)
 
+
 def _chown(target, user, group, recursive=False):
     if user and group:
         user_group = '{0}:{1}'.format(user, group)
@@ -27,23 +28,68 @@ def _chown(target, user, group, recursive=False):
     return 'chown {0}{1} {2}'.format(('-R ' if recursive else ''), user_group, target)
 
 
+def _sed_replace(filename, line, replace):
+    return 'sed -i "s/{0}/{1}/" {2}'.format(line, replace, filename)
+
+
 # TODO
 #@operation
 def download(
     state, host, source_url,
-    destination=None, user=None, group=None, mode=None, force=False
+    destination=None, user=None, group=None, mode=None, cache_time=None, force=False
 ):
     '''
     Download files from remote locations.
+
+    + source_url: source URl of the file
+    + destination: where to save the file
+    + user: user to own the files
+    + group: group to own the files
+    + mode: permissions of the files
+    + cache_time: if the file exists already, re-download after this time (in s)
+    + force: always download the file, even if it already exists
     '''
     pass
 
 
-# TODO
-#@operation
-def line(state, host, source, line, present=True):
-    '''Ensure/set lines in files.'''
-    pass
+@operation
+def line(state, host, name, line, present=True, replace=None):
+    '''
+    Ensure lines in files, using grep & sed. Lines are located with grep, and replacement
+    & deletion by sed.
+
+    + name: target remote file to edit
+    + line: string or regex matching the *entire* target line
+    + present: whether the line should be in the file
+    + replace: text to replace entire matching lines when ``present=True``
+    '''
+
+    match_line = line
+
+    if not match_line.startswith('^'):
+        match_line = '^{0}'.format(match_line)
+
+    if not match_line.endswith('$'):
+        match_line = '{0}$'.format(match_line)
+
+    # Is there a matching line in this file?
+    is_present = host.find_in_file(name, match_line)
+
+    # No line and we want it, append it
+    if not is_present and present:
+        # If replace present, use that over the matching line
+        if replace:
+            line = replace
+
+        return ['echo "{0}" >> {1}'.format(line, name)]
+
+    # Line exists and we have a replacement that *is* different, sed it
+    if is_present != replace:
+        return [_sed_replace(name, match_line, replace)]
+
+    # Line exists and we want to remove it, replace with nothing
+    if is_present and not present:
+        return [_sed_replace(name, match_line, '')]
 
 
 @operation

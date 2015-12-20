@@ -83,6 +83,7 @@ class Directory(File):
 
 class Sha1File(FactBase):
     '''Returns a SHA1 hash of a file. Works with both sha1sum and sha1.'''
+
     _regexes = [
         r'^([a-zA-Z0-9]+)\s+[a-zA-Z0-9_\/\.\-]+$',
         r'^SHA1 \([a-zA-Z0-9_\/\.\-]+\)\s+=\s+([a-zA-Z0-9]+)$'
@@ -98,8 +99,16 @@ class Sha1File(FactBase):
                 return matches.group(1)
 
 
+class FindInFile(FactBase):
+    '''Checks for the existence of text in a file using grep.'''
+
+    def command(self, name, pattern):
+        return 'grep "{0}" {1}'.format(pattern, name)
+
+
 class FindFiles(FactBase):
     '''Returns a list of files/dirs from a start point, recursively using find.'''
+
     def command(self, name):
         return 'find {0} -type f'.format(name)
 
