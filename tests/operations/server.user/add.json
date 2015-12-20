@@ -1,0 +1,16 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "home": "homedir",
+        "shell": "shellbin"
+    },
+    "facts": {
+        "users": {},
+        "directory:homedir": null
+    },
+    "commands": [
+        "useradd -d homedir -s shellbin someuser",
+        "mkdir -p homedir",
+        "chown someuser:someuser homedir"
+    ]
+}
