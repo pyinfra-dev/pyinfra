@@ -15,18 +15,23 @@ Vagrant.configure('2') do |config|
     end
 
     config.vm.define :centos6 do |centos|
-        centos.vm.box = 'chef/centos-6.6'
+        centos.vm.box = 'boxcutter/centos67'
         centos.vm.network :private_network, ip: '20.20.20.22'
     end
 
     config.vm.define :centos7 do |centos|
-        centos.vm.box = 'chef/centos-7.0'
+        centos.vm.box = 'boxcutter/centos72'
         centos.vm.network :private_network, ip: '20.20.20.23'
     end
 
     config.vm.define :debian7 do |debian|
-        debian.vm.box = 'chef/debian-7.7'
+        debian.vm.box = 'debian/wheezy64'
         debian.vm.network :private_network, ip: '20.20.20.24'
+    end
+
+    config.vm.define :debian8 do |debian|
+        debian.vm.box = 'debian/jessie64'
+        debian.vm.network :private_network, ip: '20.20.20.27'
     end
 
     config.vm.define :openbsd57 do |openbsd|

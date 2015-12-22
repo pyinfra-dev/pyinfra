@@ -5,4 +5,5 @@
 20.20.20.22 centos6.pyinfra
 20.20.20.23 centos7.pyinfra
 20.20.20.24 debian7.pyinfra
+20.20.20.27 debian8.pyinfra
 20.20.20.25 openbsd57.pyinfra
