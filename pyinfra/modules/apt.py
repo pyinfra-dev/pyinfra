@@ -63,10 +63,13 @@ def deb(state, host, source, present=True):
 
     if install:
         commands.extend([
-            # Install .deb file
-            'dpkg -i {0}'.format(source),
+            # Install .deb file - ignoring failure (on unmet dependencies)
+            'DEBIAN_FRONTEND=noninteractive dpkg -i {0} || true'.format(source),
             # Attempt to install any missing dependencies
-            'DEBIAN_FRONTEND=noninteractive apt-get install -fy'
+            'DEBIAN_FRONTEND=noninteractive apt-get install -fy',
+            # Now reinstall, and critically configure, the package - if there are still
+            # missing deps, now we error
+            'DEBIAN_FRONTEND=noninteractive dpkg -i {0}'.format(source)
         ])
         return commands
 
