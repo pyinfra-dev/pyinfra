@@ -21,6 +21,21 @@ Note:
     dependencies
 
 
+:code:`apt.key`
+~~~~~~~~~~~~~~~
+
+Add apt gpg keys with ``apt-key``.
+
+.. code:: python
+
+    apt.key(key)
+
++ **key**: filename or URL
+
+Note:
+    always returns an add command, not state checking
+
+
 :code:`apt.packages`
 ~~~~~~~~~~~~~~~~~~~~
 

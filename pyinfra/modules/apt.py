@@ -16,6 +16,58 @@ from . import files
 
 
 @operation
+def key(state, host, key):
+    '''
+    Add apt gpg keys with ``apt-key``.
+
+    + key: filename or URL
+
+    Note:
+        always returns an add command, not state checking
+    '''
+
+    if urlparse(key).scheme:
+        return ['apt-key adv --fetch-keys {0}'.format(key)]
+
+    return ['apt-key add {0}'.format(key)]
+
+
+@operation
+def repo(state, host, name, present=True):
+    '''
+    Manage apt source repositories. Options:
+
+    + name: apt line, repo url or PPA
+    + present: whether the repo should exist on the system
+    '''
+
+    commands = []
+
+    apt_sources = host.apt_sources or {}
+
+    # Parse out the URL from the name if available
+    repo = parse_apt_repo(name)
+    if repo:
+        name, _ = repo
+
+    # Convert ppa's to full URLs
+    elif name.startswith('ppa:'):
+        name = 'http://ppa.launchpad.net/{0}/ubuntu'.format(name[4:])
+
+    is_present = name in apt_sources
+
+    # Doesn't exit and we want it
+    if not is_present and present:
+        commands.append('apt-add-repository "{0}" -y'.format(name))
+
+    # Exists and we don't want it
+    if is_present and not present:
+        commands.append('apt-add-repository "{0}" -y --remove'.format(name))
+
+    return commands
+
+
+@operation
 def deb(state, host, source, present=True):
     '''
     Install/manage .deb file packages.
@@ -71,42 +123,8 @@ def deb(state, host, source, present=True):
             # missing deps, now we error
             'DEBIAN_FRONTEND=noninteractive dpkg -i {0}'.format(source)
         ])
+
         return commands
-
-
-@operation
-def repo(state, host, name, present=True):
-    '''
-    Manage apt source repositories. Options:
-
-    + name: apt line, repo url or PPA
-    + present: whether the repo should exist on the system
-    '''
-
-    commands = []
-
-    apt_sources = host.apt_sources or {}
-
-    # Parse out the URL from the name if available
-    repo = parse_apt_repo(name)
-    if repo:
-        name, _ = repo
-
-    # Convert ppa's to full URLs
-    elif name.startswith('ppa:'):
-        name = 'http://ppa.launchpad.net/{0}/ubuntu'.format(name[4:])
-
-    is_present = name in apt_sources
-
-    # Doesn't exit and we want it
-    if not is_present and present:
-        commands.append('apt-add-repository {0} -y'.format(name))
-
-    # Exists and we don't want it
-    if is_present and not present:
-        commands.append('apt-add-repository {0} -y --remove'.format(name))
-
-    return commands
 
 
 @operation
@@ -160,7 +178,7 @@ def packages(
 
     # Raise error if apt isn't installed as it's a system package manager
     if current_packages is None:
-        raise OperationException('apt is not installed')
+        raise OperationException('apt is not present on {0}'.format(host.ssh_hostname))
 
     if present is True:
         # Packages specified but not installed

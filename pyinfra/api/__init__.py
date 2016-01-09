@@ -3,10 +3,6 @@
 # File: pyinfra/api/__init__.py
 # Desc: import some stuff
 
-'''
-The pyinfra API allows you to dynamically build inventories and operations.
-'''
-
 # Triggers pyinfra.pseudo_[host|state] module-class creation
 from . import state
 from . import host
