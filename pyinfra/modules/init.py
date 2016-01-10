@@ -39,9 +39,8 @@ def d(
     state, host, name,
     running=True, restarted=False, reloaded=False, command=None
 ):
-    '''
-    Manage the state of /etc/init.d service scripts.
-    '''
+    '''Manage the state of /etc/init.d service scripts.'''
+
     status = host.initd_status or {}
     status = status.get(name, None)
 
@@ -58,6 +57,7 @@ def rc(
     running=True, restarted=False, reloaded=False, command=None
 ):
     '''Manage the state of /etc/rc.d service scripts.'''
+
     status = host.rcd_status or {}
     status = status.get(name, None)
 
@@ -74,6 +74,7 @@ def service(
     running=True, restarted=False, reloaded=False, command=None
 ):
     '''Manage the state of "service" managed services.'''
+
     status = host.service_status or {}
     status = status.get(name, None)
 

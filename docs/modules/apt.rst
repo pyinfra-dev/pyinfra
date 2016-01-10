@@ -7,18 +7,22 @@ Manage apt packages and repositories.
 :code:`apt.deb`
 ~~~~~~~~~~~~~~~
 
-Install/manage .deb file packages.
+Install/manage ``.deb`` file packages.
 
 .. code:: python
 
     apt.deb(source, present=True)
 
-+ **source**: filename or URL of the .deb file
++ **source**: filename or URL of the ``.deb`` file
 + **present**: whether or not the package should exist on the system
 
 Note:
     when installing, ``apt-get install -f`` will be run to install any unmet
     dependencies
+
+URL sources with ``present=False``:
+    if the ``.deb`` file isn't downloaded, pyinfra can't remove any existing package
+    as the file won't exist until mid-deploy
 
 
 :code:`apt.key`
@@ -59,7 +63,7 @@ Note:
 :code:`apt.repo`
 ~~~~~~~~~~~~~~~~
 
-Manage apt source repositories. Options:
+Manage apt repositories.
 
 .. code:: python
 

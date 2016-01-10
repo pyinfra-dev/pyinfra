@@ -226,12 +226,14 @@ def put(
     + mode: permissions of the files
     '''
 
-    if state.deploy_dir and add_deploy_dir:
-        local_filename = path.join(state.deploy_dir, local_filename)
-
-    # Accept local_filename as a string or (assumed) file-like object
+    # Accept local_filename as a string
     if isinstance(local_filename, basestring):
+        if state.deploy_dir and add_deploy_dir:
+            local_filename = path.join(state.deploy_dir, local_filename)
+
         local_file = open(local_filename, 'r')
+
+    # Not a string? Assume file-like object
     else:
         local_file = local_filename
 

@@ -6,8 +6,8 @@
 Manage apt packages and repositories.
 '''
 
-from datetime import timedelta
 from urlparse import urlparse
+from datetime import timedelta
 
 from pyinfra.api import operation, OperationException
 from pyinfra.facts.apt import parse_apt_repo
@@ -35,7 +35,7 @@ def key(state, host, key):
 @operation
 def repo(state, host, name, present=True):
     '''
-    Manage apt source repositories. Options:
+    Manage apt repositories.
 
     + name: apt line, repo url or PPA
     + present: whether the repo should exist on the system
@@ -70,14 +70,18 @@ def repo(state, host, name, present=True):
 @operation
 def deb(state, host, source, present=True):
     '''
-    Install/manage .deb file packages.
+    Install/manage ``.deb`` file packages.
 
-    + source: filename or URL of the .deb file
+    + source: filename or URL of the ``.deb`` file
     + present: whether or not the package should exist on the system
 
     Note:
         when installing, ``apt-get install -f`` will be run to install any unmet
         dependencies
+
+    URL sources with ``present=False``:
+        if the ``.deb`` file isn't downloaded, pyinfra can't remove any existing package
+        as the file won't exist until mid-deploy
     '''
 
     commands = []
@@ -96,24 +100,20 @@ def deb(state, host, source, present=True):
     # Check for file .deb information (if file is present)
     info = host.deb_package(source)
 
-    # To install?
-    install = False
-
-    # If file doesn't exist/no info - blind install
-    if info is None:
-        install = True
+    exists = False
 
     # We have deb info! Check against installed packages
-    else:
+    if info:
         current_packages = host.deb_packages
 
         if (
             info['name'] not in current_packages
-            or current_packages[info['name']] != info['version']
+            and current_packages[info['version']] == info['version']
         ):
-            install = True
+            exists = True
 
-    if install:
+    # Package does not exist and we want?
+    if present and not exists:
         commands.extend([
             # Install .deb file - ignoring failure (on unmet dependencies)
             'DEBIAN_FRONTEND=noninteractive dpkg -i {0} || true'.format(source),
@@ -124,7 +124,13 @@ def deb(state, host, source, present=True):
             'DEBIAN_FRONTEND=noninteractive dpkg -i {0}'.format(source)
         ])
 
-        return commands
+    # Package exists but we don't want?
+    if exists and not present:
+        commands.extend([
+            'DEBIAN_FRONTEND=noninteractive apt-get remove {0} -y'.format(info['name'])
+        ])
+
+    return commands
 
 
 @operation
