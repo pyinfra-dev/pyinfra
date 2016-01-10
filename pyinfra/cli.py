@@ -34,6 +34,9 @@ class FakeData(object):
     def __getattr__(self, key):
         return None
 
+    def __getitem__(self, key):
+        return None
+
     def __iter__(self):
         yield None
 
