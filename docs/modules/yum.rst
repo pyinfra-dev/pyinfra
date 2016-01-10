@@ -57,11 +57,10 @@ Install/manage ``.rpm`` file packages.
 
 .. code:: python
 
-    yum.rpm(source, present=True, gpgcheck=True)
+    yum.rpm(source, present=True)
 
 + **source**: filenameo or URL of the ``.rpm`` package
 + **present**: whether ore not the package should exist on the system
-+ **gpgcheck**: set to false to install unsigned packages
 
 URL sources with ``present=False``:
     if the ``.rpm`` file isn't downloaded, pyinfra can't remove any existing package
