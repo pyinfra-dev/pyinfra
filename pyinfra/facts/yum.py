@@ -6,12 +6,7 @@ import re
 
 from pyinfra.api import FactBase
 
-
-class YumSources():
-    '''
-    Returns a dict of installed yum sources.
-    '''
-    pass
+RPM_PACKAGE_RE = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.[a-z0-9_]+\.[a-z0-9_\.]+$'
 
 
 class RPMPackages(FactBase):
@@ -24,20 +19,30 @@ class RPMPackages(FactBase):
         ...
     '''
     command = 'rpm -qa'
-    _regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.[a-z0-9_]+\.[a-z0-9_\.]+$'
 
     def process(self, output):
         packages = {}
         for line in output:
-            matches = re.match(self._regex, line)
+            matches = re.match(RPM_PACKAGE_RE, line)
             if matches:
                 packages[matches.group(1)] = matches.group(2)
 
         return packages
 
 
-class RPMPackage():
+class RpmPackage(FactBase):
     '''
     Returns information on a .rpm file.
     '''
-    pass
+
+    def command(self, name):
+        return 'rpm -qp {0}'.format(name)
+
+    def process(self, output):
+        for line in output:
+            matches = re.match(RPM_PACKAGE_RE, line)
+            if matches:
+                return {
+                    'name': matches.group(1),
+                    'version': matches.group(2)
+                }

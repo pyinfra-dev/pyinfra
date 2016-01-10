@@ -276,3 +276,11 @@ Yum
 
         'package_name': 'version',
         ...
+    
+
+
+:code:`rpm_package(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns information on a .rpm file.
