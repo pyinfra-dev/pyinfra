@@ -107,8 +107,8 @@ def deb(state, host, source, present=True):
         current_packages = host.deb_packages
 
         if (
-            info['name'] not in current_packages
-            and current_packages[info['version']] == info['version']
+            info['name'] in current_packages
+            and current_packages[info['name']] == info['version']
         ):
             exists = True
 

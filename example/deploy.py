@@ -100,27 +100,21 @@ elif 'linux' in host.groups:
             op='core_packages' # this and below binds these three operations to run as one
         )
 
-        # Manage remote deb files
-        apt.deb(
-            'https://github.com/rabbitmq/rabbitmq-server/releases/download/rabbitmq_v3_5_7/rabbitmq-server_3.5.7-1_all.deb',
-            sudo=True
+    elif host.linux_distribution['name'] == 'CentOS':
+        # Manage remote rpm files
+        yum.rpm(
+            'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{0}.noarch.rpm'.format(
+                host.linux_distribution['major']
+            ),
+            sudo=True,
+            op='epel_repo'
         )
 
-    elif host.linux_distribution['name'] == 'CentOS':
         # yum package manager
         yum.packages(
-            ['git'],
+            ['git', 'python-pip'],
             sudo=True,
             op='core_packages' # this and above/below binds these three operations to run as one
-        )
-
-        # yum doesn't, by default, have pip
-        if not host.file('/tmp/get-pip.py'):
-            server.shell('wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py')
-
-        server.shell(
-            'python /tmp/get-pip.py',
-            sudo=True
         )
 
 # Execute arbitrary shell commands

@@ -80,8 +80,8 @@ def rpm(state, host, source, present=True):
 
     # If source is a url
     if urlparse(source).scheme:
-        # Generate a temp filename
-        temp_filename = state.get_temp_filename(source)
+        # Generate a temp filename (with .rpm extension to please yum)
+        temp_filename = '{0}.rpm'.format(state.get_temp_filename(source))
 
         # Ensure it's downloaded
         commands.extend(files.download(state, host, source, temp_filename))
@@ -91,7 +91,6 @@ def rpm(state, host, source, present=True):
 
     # Check for file .rpm information
     info = host.rpm_package(source)
-
     exists = False
 
     # We have info!
@@ -100,20 +99,20 @@ def rpm(state, host, source, present=True):
 
         if (
             info['name'] in current_packages
-            and current_packages[info['version']] == info['version']
+            and current_packages[info['name']] == info['version']
         ):
             exists = True
 
     # Package does not exist and we want?
     if present and not exists:
         commands.extend([
-            'rpm -i {0}'.format(source)
+            'yum localinstall {0} -y'.format(source)
         ])
 
     # Package exists but we don't want?
     if exists and not present:
         commands.extend([
-            'yum remove {0}'.format(info['name'])
+            'yum remove {0} -y'.format(info['name'])
         ])
 
     return commands

@@ -6,7 +6,7 @@ import re
 
 from pyinfra.api import FactBase
 
-RPM_PACKAGE_RE = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.[a-z0-9_]+\.[a-z0-9_\.]+$'
+RPM_PACKAGE_RE = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.[a-z0-9_\.]+$'
 
 
 class RPMPackages(FactBase):
