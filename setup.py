@@ -7,7 +7,7 @@ from setuptools import setup
 
 if __name__ == '__main__':
     setup(
-        version='0.1.dev2',
+        version='0.1.dev3',
         name='pyinfra',
         description='Stateful deploy with Python.',
         author='Nick @ Oxygem',
