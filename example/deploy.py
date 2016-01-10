@@ -177,10 +177,10 @@ server.wait(
 )
 
 # Edit lines in files
-files.line(
-    '/etc/sysconfig/selinux',
-    '^SELINUX=.*',
-    replace='SELINUX=disabled',
-    sudo=True,
-    ignore_errors=True
-)
+if host.os == 'Linux' and host.linux_distribution['name'] == 'CentOS':
+    files.line(
+        '/etc/sysconfig/selinux',
+        '^SELINUX=.*',
+        replace='SELINUX=disabled',
+        sudo=True
+    )
