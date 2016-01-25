@@ -9,9 +9,10 @@ Manage yum packages and repositories. Note that yum package names are case-sensi
 from urlparse import urlparse
 from cStringIO import StringIO
 
-from pyinfra.api import operation, OperationException
+from pyinfra.api import operation
 
 from . import files
+from .util.packaging import ensure_packages
 
 
 @operation
@@ -129,12 +130,6 @@ def packages(state, host, packages=None, present=True, upgrade=False, clean=Fals
     + clean: run yum clean
     '''
 
-    if packages is None:
-        packages = []
-
-    if isinstance(packages, basestring):
-        packages = [packages]
-
     commands = []
 
     if clean:
@@ -143,29 +138,10 @@ def packages(state, host, packages=None, present=True, upgrade=False, clean=Fals
     if upgrade:
         commands.append('yum update -y')
 
-    current_packages = host.rpm_packages or {}
-
-    if current_packages is None:
-        raise OperationException('yum is not installed')
-
-    if present is True:
-        # Packages specified but not installed
-        diff_packages = [
-            package for package in packages
-            if package not in current_packages
-        ]
-
-        if diff_packages:
-            commands.append('yum install -y {0}'.format(' '.join(diff_packages)))
-
-    else:
-        # Packages specified & installed
-        diff_packages = [
-            package for package in packages
-            if package in current_packages
-        ]
-
-        if diff_packages:
-            commands.append('yum remove -y {0}'.format(' '.join(diff_packages)))
+    commands.extend(ensure_packages(
+        packages, host.rpm_packages, present,
+        install_command='yum install -y',
+        uninstall_command='yum remove -y'
+    ))
 
     return commands

@@ -9,10 +9,11 @@ Manage apt packages and repositories.
 from urlparse import urlparse
 from datetime import timedelta
 
-from pyinfra.api import operation, OperationException
+from pyinfra.api import operation
 from pyinfra.facts.apt import parse_apt_repo
 
 from . import files
+from .util.packaging import ensure_packages
 
 
 @operation
@@ -152,19 +153,10 @@ def packages(
         ``/var/lib/apt/periodic/update-success-stamp`` file (ie Ubuntu).
     '''
 
-    if packages is None:
-        packages = []
-
-    if isinstance(packages, basestring):
-        packages = [packages]
-
-    # apt packages are case-insensitive
-    packages = [package.lower() for package in packages]
-
     commands = []
 
     # If cache_time check when apt was last updated, prevent updates if within time
-    if cache_time:
+    if update and cache_time:
         # Ubuntu provides this handy file
         cache_info = host.file('/var/lib/apt/periodic/update-success-stamp')
 
@@ -180,38 +172,11 @@ def packages(
     if upgrade:
         commands.append('DEBIAN_FRONTEND=noninteractive apt-get upgrade -y')
 
-    current_packages = host.deb_packages
-
-    # Raise error if apt isn't installed as it's a system package manager
-    if current_packages is None:
-        raise OperationException('apt is not present on {0}'.format(host.ssh_hostname))
-
-    if present is True:
-        # Packages specified but not installed
-        diff_packages = [
-            package for package in packages
-            if package not in current_packages
-        ]
-
-        if diff_packages:
-            commands.append(
-                'DEBIAN_FRONTEND=noninteractive apt-get install -y {0}'.format(
-                    ' '.join(diff_packages)
-                )
-            )
-
-    else:
-        # Packages specified & installed
-        diff_packages = [
-            package for package in packages
-            if package in current_packages
-        ]
-
-        if diff_packages:
-            commands.append(
-                'DEBIAN_FRONTEND=noninteractive apt-get remove -y {0}'.format(
-                    ' '.join(diff_packages)
-                )
-            )
+    # Compare/ensure packages are present/not
+    commands.extend(ensure_packages(
+        packages, host.deb_packages, present,
+        install_command='DEBIAN_FRONTEND=noninteractive apt-get install -y',
+        uninstall_command='DEBIAN_FRONTEND=noninteractive apt-get remove -y'
+    ))
 
     return commands

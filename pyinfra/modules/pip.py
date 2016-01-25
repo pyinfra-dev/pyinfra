@@ -8,6 +8,8 @@ Manage pip packages. Compatible globally or inside a virtualenv.
 
 from pyinfra.api import operation
 
+from .util.packaging import ensure_packages
+
 
 @operation
 def packages(
@@ -24,18 +26,6 @@ def packages(
     + virtualenv: root directory of virtualenv to work in
     '''
 
-    if packages is None:
-        packages = []
-
-    if isinstance(packages, basestring):
-        packages = [packages]
-
-    # pip packages are case-insensitive & interchange -, _
-    packages = [
-        package.lower().replace('_', '-')
-        for package in packages
-    ]
-
     commands = []
 
     if requirements is not None:
@@ -46,29 +36,14 @@ def packages(
         if virtualenv else host.pip_packages
     )
 
-    # Don't fail if pip isn't found as it's not a system package manager
-    current_packages = current_packages or {}
+    commands.extend(ensure_packages(
+        packages, current_packages, present,
+        install_command='pip install',
+        uninstall_command='pip uninstall'
+    ))
 
-    if present is True:
-        diff_packages = [
-            package for package in packages
-            if package not in current_packages
-        ]
-
-        if diff_packages:
-            commands.append('pip install {0}'.format(' '.join(diff_packages)))
-
-    else:
-        diff_packages = [
-            package for package in packages
-            if package in current_packages
-        ]
-
-        if diff_packages:
-            commands.append('pip uninstall {0}'.format(' '.join(diff_packages)))
-
+    # Wrap commands inside virtualenv when present
     if virtualenv:
-        # Remove any trailing slash
         virtualenv = virtualenv.rstrip('/')
         commands = [
             '{0}/bin/{1}'.format(virtualenv, command)

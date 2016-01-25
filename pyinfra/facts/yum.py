@@ -22,7 +22,11 @@ class RPMPackages(FactBase):
     '''
 
     command = 'rpm -qa'
-    process = lambda self, output: parse_packages(rpm_regex, output)
+    process = lambda self, output: parse_packages(
+        rpm_regex, output,
+        # yum packages are case-sensitive
+        lower=False
+    )
 
 
 class RpmPackage(FactBase):
