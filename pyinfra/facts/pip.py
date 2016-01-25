@@ -9,15 +9,16 @@ from pyinfra.api import FactBase
 
 class PipPackages(FactBase):
     '''
-    Returns a dict of installed pip:
+    Returns a dict of installed pip packages:
 
     .. code:: python
 
         'package_name': 'version',
         ...
     '''
+
     command = 'pip freeze'
-    _regex = r'^([a-zA-Z0-9_\-\+]+)==([0-9\.]+)$'
+    _regex = r'^([a-zA-Z0-9_\-\+\.]+)==([0-9\.]+[a-z0-9\-]*)$'
 
     def process(self, output):
         packages = {}
