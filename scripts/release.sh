@@ -5,7 +5,7 @@ VERSION=`python setup.py --version`
 echo "# Releasing pyinfra v$VERSION..."
 
 echo "# Build the docs..."
-python scripts/build_docs.py
+scripts/build_docs.sh
 
 echo "# Commit & push the docs..."
 git add docs/
