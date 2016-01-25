@@ -6,6 +6,8 @@ import re
 
 from pyinfra.api import FactBase
 
+from .util.packaging import parse_packages
+
 
 def parse_apt_repo(name):
     regex = r'^(deb(?:-src)?)\s+([^\s]+)\s+([a-z-]+)\s+([a-z-\s]*)$'
@@ -59,16 +61,7 @@ class DebPackages(FactBase):
     command = 'dpkg -l'
     _regex = r'^[a-z]+\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
 
-    def process(self, output):
-        packages = {}
-        for line in output:
-            matches = re.match(self._regex, line)
-            if matches:
-                # apt packages are case-insensitive
-                name = matches.group(1).lower()
-                packages[name] = matches.group(2)
-
-        return packages
+    process = lambda self, output: parse_packages(self._regex, output)
 
 
 class DebPackage(FactBase):

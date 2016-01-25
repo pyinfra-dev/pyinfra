@@ -6,7 +6,9 @@ import re
 
 from pyinfra.api import FactBase
 
-RPM_PACKAGE_RE = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.[a-z0-9_\.]+$'
+from .util.packaging import parse_packages
+
+rpm_regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.[a-z0-9_\.]+$'
 
 
 class RPMPackages(FactBase):
@@ -18,16 +20,9 @@ class RPMPackages(FactBase):
         'package_name': 'version',
         ...
     '''
+
     command = 'rpm -qa'
-
-    def process(self, output):
-        packages = {}
-        for line in output:
-            matches = re.match(RPM_PACKAGE_RE, line)
-            if matches:
-                packages[matches.group(1)] = matches.group(2)
-
-        return packages
+    process = lambda self, output: parse_packages(rpm_regex, output)
 
 
 class RpmPackage(FactBase):
@@ -40,7 +35,7 @@ class RpmPackage(FactBase):
 
     def process(self, output):
         for line in output:
-            matches = re.match(RPM_PACKAGE_RE, line)
+            matches = re.match(rpm_regex, line)
             if matches:
                 return {
                     'name': matches.group(1),

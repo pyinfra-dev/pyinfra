@@ -2,9 +2,9 @@
 # File: pyinfra/facts/pip.py
 # Desc: facts for the pip package manager
 
-import re
-
 from pyinfra.api import FactBase
+
+from .util.packaging import parse_packages
 
 
 class PipPackages(FactBase):
@@ -20,17 +20,7 @@ class PipPackages(FactBase):
     command = 'pip freeze'
     _regex = r'^([a-zA-Z0-9_\-\+\.]+)==([0-9\.]+[a-z0-9\-]*)$'
 
-    def process(self, output):
-        packages = {}
-
-        for line in output:
-            matches = re.match(self._regex, line)
-            if matches:
-                # pip packages are case-insensitive
-                name = matches.group(1).lower()
-                packages[name] = matches.group(2)
-
-        return packages
+    process = lambda self, output: parse_packages(self._regex, output)
 
 
 class PipPackagesVirtualenv(PipPackages):
