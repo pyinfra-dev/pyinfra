@@ -9,9 +9,9 @@ if __name__ == '__main__':
     setup(
         version='0.1.dev4',
         name='pyinfra',
-        description='Stateful deploy with Python.',
-        author='Nick @ Oxygem',
-        author_email='nick@oxygem.com',
+        description='Deploy stuff by diff-ing the state you want against the remote server.',
+        author='Nick / Fizzadar',
+        author_email='pointlessrambler@gmail.com',
         url='http://github.com/Fizzadar/pyinfra',
         packages=[
             'pyinfra',
