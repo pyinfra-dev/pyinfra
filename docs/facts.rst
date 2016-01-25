@@ -180,6 +180,35 @@ Returns a dict of name -> status for services listed by "service".
 Returns a dict of name -> status for systemd managed services.
 
 
+Npm
+---
+
+:code:`npm_local_packages(directory)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a dict of locally installed npm packages in a given directory:
+
+    .. code:: python
+
+        'package_name': 'version',
+        ...
+    
+
+
+:code:`npm_packages`
+~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a dict of globally installed npm packages:
+
+    .. code:: python
+
+        'package_name': 'version',
+        ...
+    
+
+
 Pip
 ---
 
