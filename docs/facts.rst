@@ -119,6 +119,22 @@ Checks for the existence of text in a file using grep.
 Returns a SHA1 hash of a file. Works with both sha1sum and sha1.
 
 
+Gem
+---
+
+:code:`gem_packages`
+~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a dict of installed gem packages:
+
+    .. code:: python
+
+        'package_name': 'version',
+        ...
+    
+
+
 Git
 ---
 
@@ -171,7 +187,7 @@ Pip
 ~~~~~~~~~~~~~~~~~~~~
 
 
-    Returns a dict of installed pip:
+    Returns a dict of installed pip packages:
 
     .. code:: python
 
