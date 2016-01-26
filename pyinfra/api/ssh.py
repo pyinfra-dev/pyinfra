@@ -192,7 +192,7 @@ def run_shell_command(
         print_func=lambda line: u'{0}{1}'.format(print_prefix, colored(line, 'red'))
     )
 
-    # Wait on output, with our timeout
+    # Wait on output, with our timeout (or None)
     greenlets = gevent.wait((stdout_reader, stderr_reader), timeout=timeout)
 
     # Timeout doesn't raise an exception, but gevent.wait returns the greenlets which did

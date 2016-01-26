@@ -14,8 +14,3 @@ class OperationException(PyinfraException):
     output/change state.
     '''
     pass
-
-
-class HookException(PyinfraException):
-    '''Exception raised when encounting errors in deploy hooks.'''
-    pass

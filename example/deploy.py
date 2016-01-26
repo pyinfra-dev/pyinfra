@@ -1,6 +1,7 @@
 # pyinfra
 # File: pyinfra/example/deploy.py
-# Desc: example deploy script for the pyinfra CLI, targets: Ubuntu/Debian, CentOS & OpenBSD
+# Desc: example deploy script for the pyinfra CLI
+#       targets: Ubuntu/Debian, CentOS & OpenBSD
 
 # Host represents the *current* server begin managed
 from pyinfra import host, local, hook
@@ -82,6 +83,24 @@ files.template(
     hostname=host.hostname
 )
 
+# Execute arbitrary shell commands
+server.shell(
+    'echo "Shell command"',
+    'echo "And another!"'
+)
+# and scripts
+server.script(
+    'files/test.sh'
+)
+
+# Manage init systems
+init.service(
+    'crond',
+    running=True,
+    sudo=True,
+    ignore_errors=True
+)
+
 # Work with inventory groups
 if 'bsd' in host.groups:
 
@@ -117,30 +136,6 @@ elif 'linux' in host.groups:
             op='core_packages' # this and above/below binds these three operations to run as one
         )
 
-# Execute arbitrary shell commands
-server.shell(
-    'echo "Shell command"',
-    'echo "And another!"'
-)
-# and scripts
-server.script(
-    'files/test.sh'
-)
-
-# Manage init systems
-init.service(
-    'crond',
-    running=True,
-    sudo=True,
-    ignore_errors=True
-)
-
-# Execute Python locally, mid-deploy
-def some_python(state, host, hostname, *args, **kwargs):
-    print 'connecting hostname: {0}, actual: {1}'.format(hostname, host.hostname)
-
-python.execute(some_python, 'arg1', 'arg2', kwarg='hello world')
-
 # Ensure the state of git repositories
 git.repo(
     'https://github.com/Fizzadar/pyinfra',
@@ -150,7 +145,7 @@ git.repo(
     sudo_user='pyinfra'
 )
 
-# Manage pip packages
+# Manage pip (npm, gem) packages
 pip.packages(
     ['virtualenv'],
     sudo=True
@@ -184,3 +179,9 @@ if host.os == 'Linux' and host.linux_distribution['name'] == 'CentOS':
         replace='SELINUX=disabled',
         sudo=True
     )
+
+# Execute Python locally, mid-deploy
+def some_python(state, host, hostname, *args, **kwargs):
+    print 'connecting hostname: {0}, actual: {1}'.format(hostname, host.hostname)
+
+python.execute(some_python, 'arg1', 'arg2', kwarg='hello world')
