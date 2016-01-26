@@ -53,7 +53,7 @@ from termcolor import colored
 from colorama import init as colorama_init
 colorama_init()
 
-from pyinfra import logger, pseudo_state, pseudo_host
+from pyinfra import logger, pseudo_state, pseudo_host, hook
 from pyinfra.local import set_print_local
 from pyinfra.cli import (
     FakeHost,
@@ -278,6 +278,14 @@ try:
 
         print '--> Results:'
         print_results(state)
+
+except hook.Error as e:
+    print
+    sys.stderr.write(
+        '--> {0}: '.format(colored('hook exception', 'red', attrs=['bold']))
+    )
+    logger.warning(e)
+    _exit(1)
 
 # Capture/log internal exceptions
 except PyinfraException as e:

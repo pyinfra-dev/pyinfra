@@ -11,6 +11,11 @@ HOOKS = {
 }
 
 
+class Error(Exception):
+    '''Exception raised when encounting errors in deploy hooks.'''
+    pass
+
+
 def before_connect(func):
     HOOKS['before_connect'].append(func)
 

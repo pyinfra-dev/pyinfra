@@ -300,7 +300,7 @@ def load_deploy_config(deploy_filename, config):
         module = load_source('', deploy_filename)
 
         for attr in dir(module):
-            if hasattr(config, attr) or attr in HOOK_NAMES:
+            if hasattr(config, attr):
                 setattr(config, attr, getattr(module, attr))
 
     return config

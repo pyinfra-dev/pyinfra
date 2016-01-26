@@ -18,8 +18,8 @@ def ensure_branch(data, state):
     app_branch = data.app_branch
 
     if branch != app_branch:
-        # Raise SystemExit for pyinfra to handle
-        raise SystemExit('We\'re on the wrong branch (want {0}, got {1})!'.format(
+        # Raise hook.Error for pyinfra to handle
+        raise hook.Error('We\'re on the wrong branch (want {0}, got {1})!'.format(
             branch, app_branch
         ))
 
