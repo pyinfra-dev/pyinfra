@@ -18,7 +18,5 @@ def parse_packages(regex, output, lower=True):
                 name = name.lower()
 
             packages[name] = matches.group(2)
-        else:
-            print 'NO MATCH', line
 
     return packages
