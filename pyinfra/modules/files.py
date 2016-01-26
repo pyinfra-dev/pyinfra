@@ -164,12 +164,12 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
 
     # Source relative to deploy.py
     if state.deploy_dir:
-        source_dir = path.join(state.deploy_dir, source)
+        source = path.join(state.deploy_dir, source)
 
     put_files = []
     ensure_dirnames = []
-    for dirname, _, filenames in walk(source_dir):
-        remote_dirname = dirname.replace(source_dir, '')
+    for dirname, _, filenames in walk(source):
+        remote_dirname = dirname.replace(source, '')
 
         if remote_dirname:
             ensure_dirnames.append(remote_dirname)
