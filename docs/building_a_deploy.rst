@@ -237,15 +237,16 @@ Some facts also take arguments, for example the ``directory`` or ``file`` facts.
 :doc:`facts index <./facts>` lists the available facts and their arguments.
 
 
-Config.py
----------
+Config
+------
 
-pyinfra looks for a ``config.py`` alongside the deploy file. This can be used to set certain
-deploy-specific configuration options:
+There are a number of configuration options for how deploys are managed. These can be
+defined at the top of a deploy file, or in a ``config.py`` alongside the deploy file. See
+:doc:`the full list of options & defaults <./api/config>`.
 
 .. code:: python
 
-    # config.py
+    # config.py or top of deploy.py
 
     # SSH connect timeout
     TIMEOUT = 1
@@ -253,8 +254,12 @@ deploy-specific configuration options:
     # Fail the entire deploy after 10% of hosts fail
     FAIL_PERCENT = 10
 
-Deploy Hooks
-~~~~~~~~~~~~
+config.py advantage:
+    When added to ``config.py``, these options will take affect when using pyinfra
+    ``--fact`` or ``--run``.
+
+Hooks
+-----
 
 Deploy hooks are executed by the CLI at various points during the deploy process:
 
@@ -263,18 +268,19 @@ Deploy hooks are executed by the CLI at various points during the deploy process
 + ``before_deploy``
 + ``after_deploy``
 
-These can be used, for example, to check the right branch before connecting or to build some clientside assets locally before fact gathering.
-
-Hooks are defined in ``config.py`` and all take the same arguments:
+These can be used, for example, to check the right branch before connecting or to build some clientside assets locally before fact gathering. Hooks all take ``data, state`` as
+arguments:
 
 .. code:: python
 
-    # config.py
+    # config.py or top of deploy.py
+    from pyinfra import hook
 
-    def before_connect(data, state):
+    @hook.before_connect
+    def my_callback(data, state):
         print 'Before connect hook!'
 
-To abort a deploy, a hook can raise a ``pyinfra.exceptions.HookException`` which the CLI
+To abort a deploy, a hook can raise a ``hook.Error`` which the CLI
 will handle.
 
 When executing commands locally inside a hook (ie ``webpack build``), you should always use
@@ -282,13 +288,14 @@ the ``pyinfra.local`` module:
 
 .. code:: python
 
-    def before_connect(data, state):
+    @hook.before_connect
+    def my_callback(data, state):
         # Check something local is correct, etc
         branch = local.shell('git rev-parse --abbrev-ref HEAD')
         app_branch = data.app_branch
 
         if branch != app_branch:
-            # Raise SystemExit for pyinfra to handle
-            raise SystemExit('We\'re on the wrong branch (want {0}, got {1})!'.format(
+            # Raise HookError for pyinfra to handle
+            raise HookError('We\'re on the wrong branch (want {0}, got {1})!'.format(
                 branch, app_branch
             ))
