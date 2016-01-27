@@ -7,7 +7,7 @@ from setuptools import setup
 
 if __name__ == '__main__':
     setup(
-        version='0.1.dev4',
+        version='0.1.dev5',
         name='pyinfra',
         description='Deploy stuff by diff-ing the state you want against the remote server.',
         author='Nick / Fizzadar',
