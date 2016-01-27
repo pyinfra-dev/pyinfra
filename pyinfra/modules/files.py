@@ -20,12 +20,25 @@ def _chmod(target, mode, recursive=False):
 
 
 def _chown(target, user, group, recursive=False):
+    command = 'chown'
+    user_group = None
+
     if user and group:
         user_group = '{0}:{1}'.format(user, group)
-    else:
-        user_group = user or group
 
-    return 'chown {0}{1} {2}'.format(('-R ' if recursive else ''), user_group, target)
+    elif user:
+        user_group = user
+
+    elif group:
+        command = 'chgrp'
+        user_group = group
+
+    return '{0}{1} {2} {3}'.format(
+        command,
+        ' -R' if recursive else '',
+        user_group,
+        target
+    )
 
 
 def _sed_replace(filename, line, replace, flags=None):
