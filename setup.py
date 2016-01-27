@@ -17,7 +17,9 @@ if __name__ == '__main__':
             'pyinfra',
             'pyinfra.api',
             'pyinfra.facts',
-            'pyinfra.modules'
+            'pyinfra.facts.util',
+            'pyinfra.modules',
+            'pyinfra.modules.util'
         ],
         package_dir={
             'pyinfra': 'pyinfra'
