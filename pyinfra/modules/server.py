@@ -54,8 +54,9 @@ def user(state, host, name, present=True, home=None, shell=None, public_keys=Non
     '''
     Manage Linux users & their ssh `authorized_keys`. Options:
 
-    + public_keys: list of public keys to attach to this user
+    + public_keys: list of public keys to attach to this user, ``home`` must be specified
     '''
+
     commands = []
     users = host.users or {}
     user = users.get(name)
@@ -95,30 +96,30 @@ def user(state, host, name, present=True, home=None, shell=None, public_keys=Non
             user=name, group=name
         ))
 
-    # Add SSH keys
-    if public_keys is not None:
-        # Ensure .ssh directory
-        # note that this always outputs commands unless the SSH user has access to the
-        # authorized_keys file, ie the SSH user is the user defined in this function
-        commands.extend(files.directory(
-            state, host,
-            '{0}/.ssh'.format(home),
-            user=name, group=name,
-            mode='700'
-        ))
-
-        filename = '{0}/.ssh/authorized_keys'.format(home)
-
-        # Ensure authorized_keys
-        commands.extend(files.file(
-            state, host, filename,
-            user=name, group=name,
-            mode='600'
-        ))
-
-        for key in public_keys:
-            commands.append('cat {0} | grep "{1}" || echo "{1}" >> {0}'.format(
-                filename, key
+        # Add SSH keys
+        if public_keys is not None:
+            # Ensure .ssh directory
+            # note that this always outputs commands unless the SSH user has access to the
+            # authorized_keys file, ie the SSH user is the user defined in this function
+            commands.extend(files.directory(
+                state, host,
+                '{0}/.ssh'.format(home),
+                user=name, group=name,
+                mode='700'
             ))
+
+            filename = '{0}/.ssh/authorized_keys'.format(home)
+
+            # Ensure authorized_keys
+            commands.extend(files.file(
+                state, host, filename,
+                user=name, group=name,
+                mode='600'
+            ))
+
+            for key in public_keys:
+                commands.append('cat {0} | grep "{1}" || echo "{1}" >> {0}'.format(
+                    filename, key
+                ))
 
     return commands
