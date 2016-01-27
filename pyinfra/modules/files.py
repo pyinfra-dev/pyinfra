@@ -51,8 +51,8 @@ def _sed_replace(filename, line, replace, flags=None):
 
 @operation
 def download(
-    state, host, source_url,
-    destination=None, user=None, group=None, mode=None, cache_time=None, force=False
+    state, host, source_url, destination,
+    user=None, group=None, mode=None, cache_time=None, force=False
 ):
     '''
     Download files from remote locations.
