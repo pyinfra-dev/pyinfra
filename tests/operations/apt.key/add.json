@@ -1,0 +1,6 @@
+{
+    "args": ["mykey"],
+    "commands": [
+        "apt-key add mykey"
+    ]
+}

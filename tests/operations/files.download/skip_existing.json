@@ -1,0 +1,10 @@
+{
+    "args": ["http://myfile"],
+    "kwargs": {
+        "destination": "/home/myfile"
+    },
+    "facts": {
+        "file:/home/myfile": {}
+    },
+    "commands": []
+}

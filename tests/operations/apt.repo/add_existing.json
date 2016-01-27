@@ -1,0 +1,9 @@
+{
+    "args": ["ppa:some-repo"],
+    "facts": {
+        "apt_sources": {
+            "http://ppa.launchpad.net/some-repo/ubuntu": {}
+        }
+    },
+    "commands": []
+}

@@ -1,0 +1,14 @@
+{
+    "args": ["nginx"],
+    "kwargs": {
+        "running": false
+    },
+    "facts": {
+        "initd_status": {
+            "nginx": true
+        }
+    },
+    "commands": [
+        "/etc/init.d/nginx stop"
+    ]
+}

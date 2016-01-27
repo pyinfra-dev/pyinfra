@@ -1,0 +1,32 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "home": "homedir",
+        "public_keys": ["abc"]
+    },
+    "facts": {
+        "users": {
+            "someuser": {
+                "home": "homedir"
+            }
+        },
+        "directory:homedir": {
+            "user": "someuser",
+            "group": "someuser"
+        },
+        "directory:homedir/.ssh": {
+            "user": "someuser",
+            "group": "someuser",
+            "mode": "700"
+        },
+        "file:homedir/.ssh/authorized_keys": {
+            "user": "someuser",
+            "group": "someuser",
+            "mode": "601"
+        }
+    },
+    "commands": [
+        "chmod 600 homedir/.ssh/authorized_keys",
+        "cat homedir/.ssh/authorized_keys | grep \"abc\" || echo \"abc\" >> homedir/.ssh/authorized_keys"
+    ]
+}

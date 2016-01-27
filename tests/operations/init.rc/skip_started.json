@@ -1,0 +1,10 @@
+{
+    "args": ["nginx"],
+    "facts": {
+        "rcd_status": {
+            "nginx": true
+        }
+    },
+    "commands": [
+    ]
+}

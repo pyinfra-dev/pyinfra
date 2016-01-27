@@ -1,0 +1,14 @@
+{
+    "args": ["nginx"],
+    "kwargs": {
+        "reloaded": true
+    },
+    "facts": {
+        "service_status": {
+            "nginx": true
+        }
+    },
+    "commands": [
+        "service nginx reload"
+    ]
+}

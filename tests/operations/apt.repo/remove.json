@@ -1,0 +1,14 @@
+{
+    "args": ["my-repo-line"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "apt_sources": {
+            "my-repo-line": {}
+        }
+    },
+    "commands": [
+        "apt-add-repository \"my-repo-line\" -y --remove"
+    ]
+}

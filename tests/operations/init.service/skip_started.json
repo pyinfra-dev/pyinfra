@@ -1,0 +1,10 @@
+{
+    "args": ["nginx"],
+    "facts": {
+        "service_status": {
+            "nginx": true
+        }
+    },
+    "commands": [
+    ]
+}

@@ -1,0 +1,16 @@
+{
+    "args": ["myrepo", "/home/myrepo"],
+    "kwargs": {
+        "branch": "mybranch"
+    },
+    "facts": {
+        "directory:/home/myrepo/.git": {
+            "mode": 0
+        },
+        "git_branch:/home/myrepo": "master"
+    },
+    "commands": [
+        "cd /home/myrepo && git checkout mybranch",
+        "cd /home/myrepo && git pull"
+    ]
+}

@@ -1,0 +1,16 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "directory:testdir": {
+            "mode": 0,
+            "user": "testuser",
+            "group": "testgroup"
+        }
+    },
+    "commands": [
+        "rm -rf testdir"
+    ]
+}

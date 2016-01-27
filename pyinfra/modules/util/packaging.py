@@ -8,7 +8,7 @@ def ensure_packages(
     install_command, uninstall_command, lower=True
 ):
     if packages is None:
-        return
+        return []
 
     # Accept a single package as string
     if isinstance(packages, basestring):

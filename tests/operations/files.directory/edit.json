@@ -1,0 +1,19 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "mode": 777,
+        "recursive": true,
+        "group": "otheruser"
+    },
+    "facts": {
+        "directory:testdir": {
+            "mode": 0,
+            "user": "testuser",
+            "group": "testgroup"
+        }
+    },
+    "commands": [
+        "chmod -R 777 testdir",
+        "chgrp -R otheruser testdir"
+    ]
+}

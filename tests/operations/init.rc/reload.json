@@ -1,0 +1,14 @@
+{
+    "args": ["nginx"],
+    "kwargs": {
+        "reloaded": true
+    },
+    "facts": {
+        "rcd_status": {
+            "nginx": true
+        }
+    },
+    "commands": [
+        "/etc/rc.d/nginx reload"
+    ]
+}

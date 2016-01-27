@@ -1,0 +1,10 @@
+{
+    "args": ["nginx"],
+    "facts": {
+        "initd_status": {
+            "nginx": true
+        }
+    },
+    "commands": [
+    ]
+}

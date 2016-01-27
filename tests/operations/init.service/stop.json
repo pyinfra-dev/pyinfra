@@ -1,0 +1,14 @@
+{
+    "args": ["nginx"],
+    "kwargs": {
+        "running": false
+    },
+    "facts": {
+        "service_status": {
+            "nginx": true
+        }
+    },
+    "commands": [
+        "service nginx stop"
+    ]
+}

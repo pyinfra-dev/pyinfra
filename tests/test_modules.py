@@ -41,7 +41,7 @@ def make_operation_tests(arg):
             commands = op._pyinfra_op(
                 pseudo_state, pseudo_host,
                 *test_data.get('args', []), **test_data.get('kwargs', {})
-            )
+            ) or []
 
             print
             print '--> GOT:', commands

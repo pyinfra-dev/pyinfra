@@ -1,0 +1,11 @@
+{
+    "args": ["nginx"],
+    "facts": {
+        "initd_status": {
+            "nginx": false
+        }
+    },
+    "commands": [
+        "/etc/init.d/nginx start"
+    ]
+}

@@ -1,0 +1,14 @@
+{
+    "args": ["nginx"],
+    "kwargs": {
+        "reloaded": true
+    },
+    "facts": {
+        "initd_status": {
+            "nginx": true
+        }
+    },
+    "commands": [
+        "/etc/init.d/nginx reload"
+    ]
+}

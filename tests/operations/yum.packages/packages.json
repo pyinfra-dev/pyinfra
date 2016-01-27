@@ -1,0 +1,15 @@
+{
+    "args": [[
+        "git",
+        "python-devel",
+        "something"
+    ]],
+    "facts": {
+        "rpm_packages": {
+            "something": ""
+        }
+    },
+    "commands": [
+        "yum install -y git python-devel"
+    ]
+}

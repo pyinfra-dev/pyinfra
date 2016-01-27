@@ -1,0 +1,17 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "users": {
+            "someuser": {
+                "home": "/home",
+                "shell": "/bin/bash"
+            }
+        }
+    },
+    "commands": [
+        "userdel someuser"
+    ]
+}

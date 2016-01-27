@@ -1,0 +1,17 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "shell": "/bin/false"
+    },
+    "facts": {
+        "users": {
+            "someuser": {
+                "home": "/home",
+                "shell": "/bin/bash"
+            }
+        }
+    },
+    "commands": [
+    "usermod -s /bin/false someuser"
+    ]
+}

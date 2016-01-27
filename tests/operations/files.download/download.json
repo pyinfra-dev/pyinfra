@@ -1,0 +1,16 @@
+{
+    "args": ["http://myfile"],
+    "kwargs": {
+        "destination": "/home/myfile",
+        "group": "mygroup",
+        "mode": 777
+    },
+    "facts": {
+        "file:/home/myfile": null
+    },
+    "commands": [
+        "wget -q http://myfile -O /home/myfile",
+        "chgrp mygroup /home/myfile",
+        "chmod 777 /home/myfile"
+    ]
+}

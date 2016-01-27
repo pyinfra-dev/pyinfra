@@ -23,6 +23,9 @@ class FakeFact(object):
     def __call__(self, arg):
         return self.data[arg]
 
+    def __iter__(self):
+        return iter(self.data)
+
     def get(self, key, default=None):
         if key in self.data:
             return self.data[key]

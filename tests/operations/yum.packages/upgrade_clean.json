@@ -1,0 +1,13 @@
+{
+    "kwargs": {
+        "upgrade": true,
+        "clean": true
+    },
+    "facts": {
+        "rpm_packages": {}
+    },
+    "commands": [
+        "yum clean all",
+        "yum update -y"
+    ]
+}

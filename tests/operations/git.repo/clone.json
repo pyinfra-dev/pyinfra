@@ -1,0 +1,12 @@
+{
+    "args": ["myrepo", "/home/myrepo"],
+    "kwargs": {
+        "branch": "mybranch"
+    },
+    "facts": {
+        "directory:/home/myrepo/.git": null
+    },
+    "commands": [
+        "cd /home/myrepo && git clone myrepo --branch mybranch ."
+    ]
+}

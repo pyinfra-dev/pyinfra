@@ -1,0 +1,15 @@
+{
+    "args": [[
+        "git",
+        "python-pip",
+        "another"
+    ]],
+    "facts": {
+        "deb_packages": {
+            "another": ""
+        }
+    },
+    "commands": [
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y git python-pip"
+    ]
+}

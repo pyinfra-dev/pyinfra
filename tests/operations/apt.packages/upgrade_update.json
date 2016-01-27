@@ -1,0 +1,13 @@
+{
+    "kwargs": {
+        "update": true,
+        "upgrade": true
+    },
+    "facts": {
+        "deb_packages": {}
+    },
+    "commands": [
+        "apt-get update",
+        "DEBIAN_FRONTEND=noninteractive apt-get upgrade -y"
+    ]
+}

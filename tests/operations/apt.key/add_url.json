@@ -1,0 +1,6 @@
+{
+    "args": ["http://mykey"],
+    "commands": [
+        "apt-key adv --fetch-keys http://mykey"
+    ]
+}
