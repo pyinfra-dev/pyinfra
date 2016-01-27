@@ -34,7 +34,7 @@ Manage Linux users & their ssh `authorized_keys`. Options:
 
     server.user(name, present=True, home=None, shell=None, public_keys=None)
 
-+ **public_keys**: list of public keys to attach to this user
++ **public_keys**: list of public keys to attach to this user, ``home`` must be specified
 
 
 :code:`server.wait`
