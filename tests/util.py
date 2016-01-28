@@ -38,7 +38,10 @@ class FakeHost(object):
         self.facts = facts
 
     def __getattr__(self, key):
-        return FakeFact(self.facts[key])
+        if self.facts[key] is None:
+            return None
+        else:
+            return FakeFact(self.facts[key])
 
 
 def create_host(fact_data):

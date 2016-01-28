@@ -1,0 +1,9 @@
+{
+    "args": ["git"],
+    "facts": {
+        "deb_packages": null
+    },
+    "commands": [
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y git"
+    ]
+}

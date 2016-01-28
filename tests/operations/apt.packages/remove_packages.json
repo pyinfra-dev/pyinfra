@@ -1,0 +1,19 @@
+{
+    "args": [[
+        "git",
+        "python-pip",
+        "another"
+    ]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "deb_packages": {
+            "git": "",
+            "python-pip": ""
+        }
+    },
+    "commands": [
+        "DEBIAN_FRONTEND=noninteractive apt-get remove -y git python-pip"
+    ]
+}

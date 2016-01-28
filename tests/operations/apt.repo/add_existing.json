@@ -1,8 +1,8 @@
 {
-    "args": ["ppa:some-repo"],
+    "args": ["deb http://archive.canonical.com/ubuntu hardy partner"],
     "facts": {
         "apt_sources": {
-            "http://ppa.launchpad.net/some-repo/ubuntu": {}
+            "http://archive.canonical.com/ubuntu": {}
         }
     },
     "commands": []
