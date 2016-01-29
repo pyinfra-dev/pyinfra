@@ -14,3 +14,6 @@ Manage npm packages.
 + **present**: whether the packages should be present
 + **directory**: directory to manage packages for, defaults to global
 
+Versions:
+    Package versions can be pinned like npm: ``<pkg>@<version>``
+

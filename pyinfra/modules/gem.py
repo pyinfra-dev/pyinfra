@@ -18,6 +18,9 @@ def packages(state, host, packages=None, present=True):
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed
+
+    Versions:
+        Package versions can be pinned like gem: ``<pkg>:<version>``
     '''
 
     return ensure_packages(

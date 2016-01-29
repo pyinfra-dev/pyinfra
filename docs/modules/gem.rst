@@ -16,3 +16,6 @@ Manage gem packages.
 + **packages**: list of packages to ensure
 + **present**: whether the packages should be installed
 
+Versions:
+    Package versions can be pinned like gem: ``<pkg>:<version>``
+

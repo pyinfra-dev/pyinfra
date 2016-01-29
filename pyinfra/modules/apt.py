@@ -148,6 +148,9 @@ def packages(
     + cache_time: when used with update, cache for this many seconds
     + upgrade: run apt upgrade
 
+    Versions:
+        Package versions can be pinned like apt: ``<pkg>=<version>``
+
     Note:
         ``cache_time`` only works on systems that provide the
         ``/var/lib/apt/periodic/update-success-stamp`` file (ie Ubuntu).

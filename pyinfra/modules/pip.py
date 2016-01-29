@@ -24,6 +24,9 @@ def packages(
     + present: whether the packages should be installed
     + requirements: location of requirements file to install
     + virtualenv: root directory of virtualenv to work in
+
+    Versions:
+        Package versions can be pinned like pip: ``<pkg>==<version>``
     '''
 
     commands = []
