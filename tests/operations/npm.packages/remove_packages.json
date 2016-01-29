@@ -1,0 +1,16 @@
+{
+    "args": [["git@1.1", "react", "test@1.1"]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "npm_packages": {
+            "git": "1.0",
+            "react": "",
+            "test": "1.1"
+        }
+    },
+    "commands": [
+        "npm uninstall -g react test@1.1"
+    ]
+}
