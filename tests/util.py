@@ -20,6 +20,9 @@ class FakeFact(object):
     def __getattr__(self, key):
         return self.data[key]
 
+    def __getitem__(self, key):
+        return self.data[key]
+
     def __call__(self, arg):
         return self.data[arg]
 

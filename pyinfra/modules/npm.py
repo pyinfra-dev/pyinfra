@@ -38,5 +38,6 @@ def packages(state, host, packages=None, present=True, directory=None):
     return ensure_packages(
         packages, current_packages, present,
         install_command=install_command,
-        uninstall_command=uninstall_command
+        uninstall_command=uninstall_command,
+        version_join='@'
     )

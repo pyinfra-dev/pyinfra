@@ -23,5 +23,6 @@ def packages(state, host, packages=None, present=True):
     return ensure_packages(
         packages, host.gem_packages, present,
         install_command='gem instal',
-        uninstall_command='gem uninstall'
+        uninstall_command='gem uninstall',
+        version_join=':'
     )

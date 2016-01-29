@@ -2,14 +2,16 @@
     "args": [[
         "git",
         "python-pip",
-        "another"
+        "something=1.0",
+        "another=1.1"
     ]],
     "facts": {
         "deb_packages": {
-            "another": ""
+            "something": "0.9",
+            "another": "1.1"
         }
     },
     "commands": [
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y git python-pip"
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y git python-pip something=1.0"
     ]
 }

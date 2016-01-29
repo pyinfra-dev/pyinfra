@@ -176,7 +176,8 @@ def packages(
     commands.extend(ensure_packages(
         packages, host.deb_packages, present,
         install_command='DEBIAN_FRONTEND=noninteractive apt-get install -y',
-        uninstall_command='DEBIAN_FRONTEND=noninteractive apt-get remove -y'
+        uninstall_command='DEBIAN_FRONTEND=noninteractive apt-get remove -y',
+        version_join='='
     ))
 
     return commands

@@ -39,7 +39,8 @@ def packages(
     commands.extend(ensure_packages(
         packages, current_packages, present,
         install_command='pip install',
-        uninstall_command='pip uninstall'
+        uninstall_command='pip uninstall',
+        version_join='=='
     ))
 
     # Wrap commands inside virtualenv when present
