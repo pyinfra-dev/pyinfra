@@ -1,4 +1,4 @@
-api.inventory module
+pyinfra.api.inventory
 ====================
 
 .. automodule:: pyinfra.api.inventory

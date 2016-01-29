@@ -1,4 +1,4 @@
-api.facts module
+pyinfra.api.facts
 ================
 
 .. automodule:: pyinfra.api.facts

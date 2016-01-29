@@ -1,4 +1,4 @@
-api.config module
+pyinfra.api.config
 =================
 
 .. automodule:: pyinfra.api.config

@@ -1,7 +1,7 @@
-api.exceptions module
+pyinfra.api.operations
 =====================
 
-.. automodule:: pyinfra.api.exceptions
+.. automodule:: pyinfra.api.operations
     :members:
     :undoc-members:
     :show-inheritance:

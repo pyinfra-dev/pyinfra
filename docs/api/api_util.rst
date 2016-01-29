@@ -1,7 +1,7 @@
-api.host module
+pyinfra.api.util
 ===============
 
-.. automodule:: pyinfra.api.host
+.. automodule:: pyinfra.api.util
     :members:
     :undoc-members:
     :show-inheritance:

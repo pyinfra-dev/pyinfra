@@ -13,8 +13,18 @@ The pyinfra API is build like this:
     - ``ssh.py``
 + Facts API in ``facts.py``
 
+
 .. toctree::
+    :caption: Core API
     :maxdepth: 1
     :glob:
 
-    api/*
+    api/api_*
+
+
+.. toctree::
+    :caption: Module/Fact Utilities
+    :maxdepth: 1
+    :glob:
+
+    api/*_util_*

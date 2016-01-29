@@ -1,7 +1,7 @@
-api.operations module
+pyinfra.modules.util.packaging
 =====================
 
-.. automodule:: pyinfra.api.operations
+.. automodule:: pyinfra.modules.util.packaging
     :members:
     :undoc-members:
     :show-inheritance:

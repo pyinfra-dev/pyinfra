@@ -1,33 +1,20 @@
 #!/bin/sh
 
-# Autodoc the API reference
-sphinx-apidoc -e -M -f -o docs/api/ pyinfra/api/
+# pyinfra
+# File: scripts/build_docs.sh
+# Desc: build the pyinfra docs
 
-# Remove useless files
-rm -f docs/api/api.rst docs/api/modules.rst
 
-# Fiddle with the module titles/etc
-for MODULE_FILE in `ls docs/api/api.*.rst`; do
-    NEW_FILE=`echo "$MODULE_FILE" | sed -e "s/api\/api\./api\//"`
-    echo "--> Parsing $MODULE_FILE -> $NEW_FILE"
-
-    # Make automodule work
-    sed -e 's/\.\. automodule:: api/\.\. automodule:: pyinfra\.api/' \
-    $MODULE_FILE > .docstmp
-
-    # Update the title
-    sed -e 's/api\.\([a-z]*\) api/\1 api/' \
-    .docstmp > $NEW_FILE
-
-    echo "--> Removing $MODULE_FILE"
-    rm -f $MODULE_FILE
-done
+# Build the api/*.rst docs
+rm -f docs/api/*.rst
+sh scripts/generate_api_docs.sh
 
 # Build the modules/*.rst docs
 rm -f docs/modules/*.rst
 python scripts/generate_modules_docs.py
 
 # Build the facts.rst doc
+rm -f docs/facts.rst
 python scripts/generate_facts_doc.py
 
 # Build the HTML docs

@@ -1,4 +1,4 @@
-api.state module
+pyinfra.api.state
 ================
 
 .. automodule:: pyinfra.api.state

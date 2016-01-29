@@ -1,4 +1,4 @@
-api.operation module
+pyinfra.api.operation
 ====================
 
 .. automodule:: pyinfra.api.operation

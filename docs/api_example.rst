@@ -6,9 +6,4 @@ This example API deploy should get you started with pyinfra's API mode. If you a
 .. literalinclude:: ../example/api_deploy.py
    :language: python
 
-All the files/templates can be found in `the GitHub example <https://github.com/Fizzadar/pyinfra/tree/develop/example>`_.
-
-.. toctree::
-    :maxdepth: 2
-
-    api_reference
+All the files/templates can be found in `the GitHub example <https://github.com/Fizzadar/pyinfra/tree/develop/example>`_. Also see :doc:`the API reference <./api_reference>`.

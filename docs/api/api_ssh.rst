@@ -1,4 +1,4 @@
-api.ssh module
+pyinfra.api.ssh
 ==============
 
 .. automodule:: pyinfra.api.ssh

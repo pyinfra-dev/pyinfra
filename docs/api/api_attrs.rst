@@ -1,4 +1,4 @@
-api.attrs module
+pyinfra.api.attrs
 ================
 
 .. automodule:: pyinfra.api.attrs
