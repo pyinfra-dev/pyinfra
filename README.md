@@ -1,4 +1,4 @@
-# pyinfra [![PyPI version](https://img.shields.io/pypi/v/pyinfra.svg)](https://pypi.python.org/pypi/pyinfra)
+# pyinfra [![PyPI version](https://badge.fury.io/py/pyinfra.svg)](https://pypi.python.org/pypi/pyinfra)
 
 pyinfra automates service deployment. It does this by diffing the state of the server with the state defined in the deploy script. Deploys are asyncronous and highly performant. The inventory & deploy are managed with pure Python, allowing for near-infinite extendability.
 
