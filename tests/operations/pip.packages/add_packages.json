@@ -1,0 +1,12 @@
+{
+    "args": [["pyinfra==1.1", "pytask", "test==1.1"]],
+    "facts": {
+        "pip_packages": {
+            "pyinfra": "1.0",
+            "test": "1.1"
+        }
+    },
+    "commands": [
+        "pip install pyinfra==1.1 pytask"
+    ]
+}
