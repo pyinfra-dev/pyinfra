@@ -23,7 +23,7 @@ class PipPackages(FactBase):
     process = lambda self, output: parse_packages(self._regex, output)
 
 
-class PipPackagesVirtualenv(PipPackages):
+class PipVirtualenvPackages(PipPackages):
     def command(self, venv):
         # Remove any trailing slash
         venv = venv.rstrip('/')

@@ -2,10 +2,14 @@
 # File: pyinfra/modules/util/packaging.py
 # Desc: common functions for packaging modules
 
+from pyinfra.api.exceptions import PyinfraException
+
 
 def ensure_packages(
     packages, current_packages, present,
-    install_command, uninstall_command, version_join=None, lower=True
+    install_command, uninstall_command,
+    latest=False, upgrade_command=None,
+    version_join=None, lower=True
 ):
     '''
     Handles this common scenario:
@@ -14,6 +18,7 @@ def ensure_packages(
     + We have a map of existing package -> versions
     + We have the common command bits (install, uninstall, version "joiner")
     + Outputs commands to ensure our desired packages/versions
+    + Optionally upgrades packages w/o specified version when present
 
     Args:
         packages (list): list of packages or package/versions
@@ -21,9 +26,17 @@ def ensure_packages(
         present (bool): whether packages should exist or not
         install_command (str): command to prefix to list of packages to install
         uninstall_command (str): as above for uninstalling packages
+        latest (bool): whether to upgrade installed packages when present
+        upgrade_command (str): as above for upgrading
         version_join (str): the package manager specific "joiner", ie ``=`` for \
             ``<apt_pkg>=<version>``
+        lower (bool): whether to lowercase package names
     '''
+
+    if latest and not upgrade_command:
+        raise PyinfraException(
+            'Packages cannot be upgraded to latest w/o upgrade_command'
+        )
 
     if packages is None:
         return []
@@ -63,6 +76,9 @@ def ensure_packages(
     # Diff the ensured packages against the remote state/fact
     diff_packages = []
 
+    # Packages to upgrade? (install only)
+    upgrade_packages = None
+
     # Installing?
     if present is True:
         diff_packages = [
@@ -80,6 +96,14 @@ def ensure_packages(
                 isinstance(package, basestring)
                 and package not in current_packages
             )
+        ]
+
+        # Present packages w/o version specified - for upgrade if latest
+        upgrade_packages = [
+            package
+            for package in packages
+            if isinstance(package, basestring)
+            and package in current_packages
         ]
 
     # Uninstalling?
@@ -115,6 +139,12 @@ def ensure_packages(
         commands.append('{0} {1}'.format(
             command,
             ' '.join(diff_packages)
+        ))
+
+    if latest and upgrade_packages:
+        commands.append('{0} {1}'.format(
+            upgrade_command,
+            ' '.join(upgrade_packages)
         ))
 
     return commands

@@ -47,10 +47,11 @@ Install/remove/upgrade packages & update apt.
 
 .. code:: python
 
-    apt.packages(packages=None, present=True, update=False, cache_time=None, upgrade=False)
+    apt.packages(packages=None, present=True, latest=False, update=False, cache_time=None, upgrade=False)
 
 + **packages**: list of packages to ensure
 + **present**: whether the packages should be installed
++ **latest**: whether to upgrade packages without a specified version
 + **update**: run apt update
 + **cache_time**: when used with update, cache for this many seconds
 + **upgrade**: run apt upgrade

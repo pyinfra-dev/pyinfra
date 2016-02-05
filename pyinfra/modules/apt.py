@@ -137,13 +137,15 @@ def deb(state, host, source, present=True):
 @operation
 def packages(
     state, host,
-    packages=None, present=True, update=False, cache_time=None, upgrade=False
+    packages=None, present=True, latest=False,
+    update=False, cache_time=None, upgrade=False
 ):
     '''
     Install/remove/upgrade packages & update apt.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed
+    + latest: whether to upgrade packages without a specified version
     + update: run apt update
     + cache_time: when used with update, cache for this many seconds
     + upgrade: run apt upgrade
@@ -180,7 +182,9 @@ def packages(
         packages, host.deb_packages, present,
         install_command='DEBIAN_FRONTEND=noninteractive apt-get install -y',
         uninstall_command='DEBIAN_FRONTEND=noninteractive apt-get remove -y',
-        version_join='='
+        version_join='=',
+        upgrade_command='DEBIAN_FRONTEND=noninteractive apt-get upgrade -y',
+        latest=latest
     ))
 
     return commands

@@ -11,10 +11,11 @@ Manage pip packages.
 
 .. code:: python
 
-    pip.packages(packages=None, present=True, requirements=None, virtualenv=None)
+    pip.packages(packages=None, present=True, latest=False, requirements=None, virtualenv=None)
 
 + **packages**: list of packages to ensure
 + **present**: whether the packages should be installed
++ **latest**: whether to upgrade packages without a specified version
 + **requirements**: location of requirements file to install
 + **virtualenv**: root directory of virtualenv to work in
 

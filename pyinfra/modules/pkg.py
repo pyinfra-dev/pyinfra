@@ -13,6 +13,13 @@ from .util.packaging import ensure_packages
 
 @operation
 def packages(state, host, packages=None, present=True):
+    '''
+    Manage pkg_* packages.
+
+    + packages: list of packages to ensure
+    + present: whether the packages should be installed
+    '''
+
     pkg_path = ''
 
     if present is True:

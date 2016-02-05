@@ -120,12 +120,16 @@ def rpm(state, host, source, present=True):
 
 
 @operation
-def packages(state, host, packages=None, present=True, upgrade=False, clean=False):
+def packages(
+    state, host, packages=None,
+    present=True, latest=False, upgrade=False, clean=False
+):
     '''
     Manage yum packages & updates.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed
+    + latest: whether to upgrade packages without a specified version
     + upgrade: run yum upgrade
     + clean: run yum clean
     '''
@@ -141,7 +145,9 @@ def packages(state, host, packages=None, present=True, upgrade=False, clean=Fals
     commands.extend(ensure_packages(
         packages, host.rpm_packages, present,
         install_command='yum install -y',
-        uninstall_command='yum remove -y'
+        uninstall_command='yum remove -y',
+        upgrade_command='yum update -y',
+        latest=latest
     ))
 
     return commands

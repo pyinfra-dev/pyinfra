@@ -12,12 +12,13 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def packages(state, host, packages=None, present=True):
+def packages(state, host, packages=None, present=True, latest=False):
     '''
     Manage gem packages.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed
+    + latest: whether to upgrade packages without a specified version
 
     Versions:
         Package versions can be pinned like gem: ``<pkg>:<version>``
@@ -27,5 +28,7 @@ def packages(state, host, packages=None, present=True):
         packages, host.gem_packages, present,
         install_command='gem instal',
         uninstall_command='gem uninstall',
-        version_join=':'
+        version_join=':',
+        upgrade_command='gem update',
+        latest=latest
     )

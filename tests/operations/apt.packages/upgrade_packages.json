@@ -1,0 +1,15 @@
+{
+    "args": [["git", "another"]],
+    "kwargs": {
+        "latest": true
+    },
+    "facts": {
+        "deb_packages": {
+            "git": "1.0"
+        }
+    },
+    "commands": [
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y another",
+        "DEBIAN_FRONTEND=noninteractive apt-get upgrade -y git"
+    ]
+}

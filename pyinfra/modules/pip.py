@@ -14,7 +14,7 @@ from .util.packaging import ensure_packages
 @operation
 def packages(
     state, host,
-    packages=None, present=True,
+    packages=None, present=True, latest=False,
     requirements=None, virtualenv=None
 ):
     '''
@@ -22,6 +22,7 @@ def packages(
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed
+    + latest: whether to upgrade packages without a specified version
     + requirements: location of requirements file to install
     + virtualenv: root directory of virtualenv to work in
 
@@ -35,7 +36,7 @@ def packages(
         commands.append('pip install -r {0}'.format(requirements))
 
     current_packages = (
-        host.pip_packages_virtualenv(virtualenv)
+        host.pip_virtualenv_packages(virtualenv)
         if virtualenv else host.pip_packages
     )
 
@@ -43,7 +44,9 @@ def packages(
         packages, current_packages, present,
         install_command='pip install',
         uninstall_command='pip uninstall',
-        version_join='=='
+        version_join='==',
+        upgrade_command='pip upgrade',
+        latest=latest,
     ))
 
     # Wrap commands inside virtualenv when present
