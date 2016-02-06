@@ -3,6 +3,7 @@
 Vagrant.configure('2') do |config|
     config.ssh.insert_key = false
     config.ssh.private_key_path = 'files/insecure_private_key'
+    config.vm.synced_folder '.', '/vagrant', disabled: true
 
     config.vm.define :ubuntu14 do |ubuntu|
         ubuntu.vm.box = 'ubuntu/trusty64'
