@@ -45,6 +45,19 @@ def _run_op(state, hostname, op_hash, print_output=False):
     for i, command in enumerate(op_data['commands']):
         status = True
 
+        sudo = op_meta['sudo']
+        sudo_user = op_meta['sudo_user']
+
+        # As dicts, individual commands can override meta settings (ie on a per-host
+        # basis generated during deploy).
+        if isinstance(command, dict):
+            if 'sudo' in command:
+                sudo = command['sudo']
+            if 'sudo_user' in command:
+                sudo_user = command['sudo_user']
+
+            command = command['command']
+
         if skip:
             # Not continue because we need to +commands below
             pass
@@ -64,8 +77,8 @@ def _run_op(state, hostname, op_hash, print_output=False):
             else:
                 status = put_file(
                     state, hostname, *command,
-                    sudo=op_meta['sudo'],
-                    sudo_user=op_meta['sudo_user'],
+                    sudo=sudo,
+                    sudo_user=sudo_user,
                     print_output=print_output,
                     print_prefix=print_prefix
                 )
@@ -75,8 +88,8 @@ def _run_op(state, hostname, op_hash, print_output=False):
             try:
                 channel, _, stderr = run_shell_command(
                     state, hostname, command.strip(),
-                    sudo=op_meta['sudo'],
-                    sudo_user=op_meta['sudo_user'],
+                    sudo=sudo,
+                    sudo_user=sudo_user,
                     timeout=op_meta['timeout'],
                     env=op_data['env'],
                     print_output=print_output,

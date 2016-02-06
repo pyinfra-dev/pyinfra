@@ -27,6 +27,7 @@ def add_op(state, op_func, *args, **kwargs):
             ``server.user``
         args/kwargs: passed to the operation function
     '''
+
     for host in state.inventory:
         op_func(state, host, *args, **kwargs)
 
@@ -36,6 +37,7 @@ def operation(func):
     Decorator that takes a simple module function and turn it into the internal operation
     representation that consists of a list of commands + options (sudo, user, env).
     '''
+
     @wraps(func)
     def decorated_function(*args, **kwargs):
         # If we're in CLI mode, there's no state/host passed down, we need to use the
