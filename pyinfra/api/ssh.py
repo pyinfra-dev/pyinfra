@@ -10,13 +10,14 @@ from socket import (
 
 import gevent
 from termcolor import colored
+from paramiko.agent import AgentRequestHandler
 from paramiko import (
     SSHClient, SFTPClient, RSAKey,
     MissingHostKeyPolicy, SSHException, AuthenticationException
 )
 
 from pyinfra import logger
-from pyinfra.api.util import read_buffer
+from pyinfra.api.util import read_buffer, make_command
 
 
 def _connect(hostname, **kwargs):
@@ -29,6 +30,10 @@ def _connect(hostname, **kwargs):
         client = SSHClient()
         client.set_missing_host_key_policy(MissingHostKeyPolicy())
         client.connect(hostname, **kwargs)
+
+        # Enable SSH forwarding
+        session = client.get_transport().open_session()
+        AgentRequestHandler(session)
 
         # Log
         logger.info(u'[{0}] {1}'.format(
@@ -60,6 +65,7 @@ def connect_all(state):
     Args:
         state (``pyinfra.api.State`` obj): the state containing an inventory to connect to
     '''
+
     greenlets = []
 
     for host in state.inventory:
@@ -145,28 +151,7 @@ def run_shell_command(
         sudo, sudo_user, env
     ))
 
-    # Use env & build our actual command
-    if env:
-        env_string = ' '.join([
-            '{0}={1}'.format(key, value)
-            for key, value in env.iteritems()
-        ])
-        command = '{0} {1}'.format(env_string, command)
-
-    # Escape "'s
-    command = command.replace("'", "\\'")
-
-    # No sudo, just sh wrap the command
-    if not sudo:
-        command = "sh -c '{0}'".format(command)
-    # Otherwise, work out sudo
-    else:
-        # Sudo with a user, then sh
-        if sudo_user:
-            command = "sudo -H -u {0} -S sh -c '{1}'".format(sudo_user, command)
-        # Sudo then sh
-        else:
-            command = "sudo -H -S sh -c '{0}'".format(command)
+    command = make_command(command, env=env, sudo=sudo, sudo_user=sudo_user)
 
     if print_output:
         print '{0}>>> {1}'.format(print_prefix, command)

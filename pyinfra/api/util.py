@@ -27,6 +27,34 @@ def sha1_hash(string):
     return hasher.hexdigest()
 
 
+def make_command(command, env=None, sudo=False, sudo_user=None):
+    # Use env & build our actual command
+    if env:
+        env_string = ' '.join([
+            '{0}={1}'.format(key, value)
+            for key, value in env.iteritems()
+        ])
+        command = '{0} {1}'.format(env_string, command)
+
+    # Escape "'s
+    command = command.replace("'", "\\'")
+
+    # No sudo, just sh wrap the command
+    if not sudo:
+        command = "sh -c '{0}'".format(command)
+
+    # Otherwise, work out sudo
+    else:
+        # Sudo with a user, then sh
+        if sudo_user:
+            command = "sudo -H -u {0} -S sh -c '{1}'".format(sudo_user, command)
+        # Sudo then sh
+        else:
+            command = "sudo -H -S sh -c '{0}'".format(command)
+
+    return command
+
+
 def get_arg_name(arg):
     '''
     Returns the name or value of an argument as passed into an operation. Will use pyinfra
