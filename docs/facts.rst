@@ -225,7 +225,7 @@ Pip
     
 
 
-:code:`pip_packages_virtualenv(venv)`
+:code:`pip_virtualenv_packages(venv)`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

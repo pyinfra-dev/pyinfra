@@ -30,7 +30,10 @@ def key(state, host, key):
 
 
 @operation
-def repo(state, host, name, baseurl, present=True, description=None, gpgcheck=True):
+def repo(
+    state, host, name, baseurl,
+    present=True, description=None, gpgcheck=True, key=None
+):
     '''
     Manage yum repositories.
 
@@ -39,6 +42,7 @@ def repo(state, host, name, baseurl, present=True, description=None, gpgcheck=Tr
     + present: whether the ``.repo`` file should be present
     + description: optional verbose description
     + gpgcheck: whether set ``gpgcheck=1``
+    + key: shortcut to trigger ``yum.key(key)`` after adding the repo
     '''
 
     filename = '/etc/yum.repos.d/{0}.repo'.format(name)
@@ -61,7 +65,12 @@ gpgcheck={gpgcheck}
     repo = StringIO(repo)
 
     # Ensure this is the file on the server
-    return files.put(state, host, repo, filename)
+    commands = files.put(state, host, repo, filename)
+
+    if key:
+        commands.extend(key(key))
+
+    return commands
 
 
 @operation
