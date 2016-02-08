@@ -208,6 +208,24 @@ within a deploy on ``pyinfra.host.data``:
         home=host.data.app_dir
     )
 
+Operation Meta
+~~~~~~~~~~~~~~
+
+Operation meta can be used during a deploy to change the desired operations:
+
+.. code:: python
+
+    from pyinfra.modules import server.user
+
+    # Run an operation, collecting its meta output
+    meta = server.user(
+        'myuser'
+    )
+
+    # If we added a user above, do something extra
+    if meta.commands:
+        server.shell('# add server to sudo, etc...')
+
 Facts
 ~~~~~
 
