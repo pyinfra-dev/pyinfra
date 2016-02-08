@@ -1,0 +1,9 @@
+{
+    "args": ["ppa:some-repo"],
+    "facts": {
+        "apt_sources": {}
+    },
+    "commands": [
+        "apt-add-repository \"ppa:some-repo\" -y"
+    ]
+}

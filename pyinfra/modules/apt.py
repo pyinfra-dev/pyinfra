@@ -48,15 +48,17 @@ def repo(state, host, name, present=True, key=None):
     apt_sources = host.apt_sources or {}
 
     # Parse out the URL from the name if available
+    url = name
+
     repo = parse_apt_repo(name)
     if repo:
-        name, _ = repo
+        url, _ = repo
 
     # Convert ppa's to full URLs
     elif name.startswith('ppa:'):
-        name = 'http://ppa.launchpad.net/{0}/ubuntu'.format(name[4:])
+        url = 'http://ppa.launchpad.net/{0}/ubuntu'.format(name[4:])
 
-    is_present = name in apt_sources
+    is_present = url in apt_sources
 
     # Doesn't exit and we want it
     if not is_present and present:
