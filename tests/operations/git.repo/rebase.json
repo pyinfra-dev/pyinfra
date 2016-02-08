@@ -4,6 +4,8 @@
         "rebase": true
     },
     "facts": {
+        "directory:/home/myrepo": {
+        },
         "directory:/home/myrepo/.git": {
             "mode": 0
         },

@@ -14,31 +14,7 @@ from jinja2 import Template
 from pyinfra.api import operation, OperationException
 from pyinfra.api.util import get_file_sha1
 
-
-def _chmod(target, mode, recursive=False):
-    return 'chmod {0}{1} {2}'.format(('-R ' if recursive else ''), mode, target)
-
-
-def _chown(target, user, group, recursive=False):
-    command = 'chown'
-    user_group = None
-
-    if user and group:
-        user_group = '{0}:{1}'.format(user, group)
-
-    elif user:
-        user_group = user
-
-    elif group:
-        command = 'chgrp'
-        user_group = group
-
-    return '{0}{1} {2} {3}'.format(
-        command,
-        ' -R' if recursive else '',
-        user_group,
-        target
-    )
+from .util.files import chmod, chown
 
 
 def _sed_replace(filename, line, replace, flags=None):
@@ -90,10 +66,10 @@ def download(
         commands = ['wget -q {0} -O {1}'.format(source_url, destination)]
 
         if user or group:
-            commands.append(_chown(destination, user, group))
+            commands.append(chown(destination, user, group))
 
         if mode:
-            commands.append(_chmod(destination, mode))
+            commands.append(chmod(destination, mode))
 
         return commands
 
@@ -258,10 +234,10 @@ def put(
         commands.append((local_file, remote_filename))
 
         if user or group:
-            commands.append(_chown(remote_filename, user, group))
+            commands.append(chown(remote_filename, user, group))
 
         if mode:
-            commands.append(_chmod(remote_filename, mode))
+            commands.append(chmod(remote_filename, mode))
 
     # File exists, check sum and check user/group/mode if supplied
     else:
@@ -274,11 +250,11 @@ def put(
 
         # Check mode
         if mode and remote_file['mode'] != mode:
-            commands.append(_chmod(remote_filename, mode))
+            commands.append(chmod(remote_filename, mode))
 
         # Check user/group
         if (user and remote_file['user'] != user) or (group and remote_file['group'] != group):
-            commands.append(_chown(remote_filename, user, group))
+            commands.append(chown(remote_filename, user, group))
 
     return commands
 
@@ -351,10 +327,11 @@ def file(
     # Doesn't exist & we want it
     if info is None and present:
         commands.append('touch {0}'.format(name))
+
         if mode:
-            commands.append(_chmod(name, mode))
+            commands.append(chmod(name, mode))
         if user or group:
-            commands.append(_chown(name, user, group))
+            commands.append(chown(name, user, group))
 
     # It exists and we don't want it
     elif info and not present:
@@ -367,11 +344,11 @@ def file(
 
         # Check mode
         if mode and info['mode'] != mode:
-            commands.append(_chmod(name, mode))
+            commands.append(chmod(name, mode))
 
         # Check user/group
         if (user and info['user'] != user) or (group and info['group'] != group):
-            commands.append(_chown(name, user, group))
+            commands.append(chown(name, user, group))
 
     return commands
 
@@ -403,9 +380,9 @@ def directory(
     if info is None and present:
         commands.append('mkdir -p {0}'.format(name))
         if mode:
-            commands.append(_chmod(name, mode, recursive=recursive))
+            commands.append(chmod(name, mode, recursive=recursive))
         if user or group:
-            commands.append(_chown(name, user, group, recursive=recursive))
+            commands.append(chown(name, user, group, recursive=recursive))
 
     # It exists and we don't want it
     elif not present:
@@ -415,10 +392,10 @@ def directory(
     else:
         # Check mode
         if mode and info['mode'] != mode:
-            commands.append(_chmod(name, mode, recursive=recursive))
+            commands.append(chmod(name, mode, recursive=recursive))
 
         # Check user/group
         if (user and info['user'] != user) or (group and info['group'] != group):
-            commands.append(_chown(name, user, group, recursive=recursive))
+            commands.append(chown(name, user, group, recursive=recursive))
 
     return commands
