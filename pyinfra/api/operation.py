@@ -17,6 +17,12 @@ from .state import State, StateModule
 from .util import make_hash, get_arg_name
 
 
+class OperationMeta(object):
+    def __init__(self, hash=None, commands=None):
+        self.hash = hash
+        self.commands = commands or []
+
+
 def add_op(state, op_func, *args, **kwargs):
     '''
     Prepare & add an operation to pyinfra.state by executing it on all hosts.
@@ -49,7 +55,7 @@ def operation(func):
             state = pseudo_state
             host = pseudo_host
             if not state.active:
-                return
+                return OperationMeta()
 
         # Otherwise (API mode) we just trim off the commands
         else:
@@ -147,6 +153,9 @@ def operation(func):
         })
         if name not in op_meta['names']:
             op_meta['names'].append(name)
+
+        # Return result meta for use in deploy scripts
+        return OperationMeta(op_hash, commands)
 
     decorated_function._pyinfra_op = func
     return decorated_function
