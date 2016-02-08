@@ -2,6 +2,7 @@
 # File: tests/test_modules.py
 # Desc: generate tests for module operations
 
+import json
 from os import listdir, path
 from unittest import TestCase
 from importlib import import_module
@@ -44,8 +45,8 @@ def make_operation_tests(arg):
             ) or []
 
             print
-            print '--> GOT:', commands
-            print '--> WANT:', test_data['commands']
+            print '--> GOT:\n', json.dumps(commands, indent=4)
+            print '--> WANT:', json.dumps(test_data['commands'], indent=4)
 
             self.assertEqual(commands, test_data['commands'])
 

@@ -52,13 +52,6 @@ files.directory(
     serial=True
 )
 
-files.directory(
-    host.data.app_dir,
-    user='pyinfra',
-    group='pyinfra',
-    sudo=True
-)
-
 # Copy local files to remote host
 files.put(
     'files/file.txt',
@@ -142,14 +135,22 @@ git.repo(
     host.data.app_dir,
     branch='develop',
     sudo=True,
-    sudo_user='pyinfra'
+    # And then make this user own it
+    user='pyinfra'
+    # Do the git clone/pull as the SSH user when using forwarding
+    # use_ssh_user=True
 )
 
 # Manage pip (npm, gem) packages
-pip.packages(
+did_install = pip.packages(
     ['virtualenv'],
     sudo=True
 )
+# use operation meta to affect the deploy
+if did_install.commands:
+    server.shell(
+        'echo "Clean package build/etc"'
+    )
 
 # Create a virtualenv
 server.shell(
