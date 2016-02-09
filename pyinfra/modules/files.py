@@ -109,15 +109,15 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
         if replace:
             line = replace
 
-        commands.append(['echo "{0}" >> {1}'.format(line, name)])
+        commands.append('echo "{0}" >> {1}'.format(line, name))
 
     # Line exists and we have a replacement that *is* different, sed it
     if is_present != replace:
-        commands.append([_sed_replace(name, match_line, replace, flags=flags)])
+        commands.append(_sed_replace(name, match_line, replace, flags=flags))
 
     # Line exists and we want to remove it, replace with nothing
     if is_present and not present:
-        commands.append([_sed_replace(name, match_line, '', flags=flags)])
+        commands.append(_sed_replace(name, match_line, '', flags=flags))
 
     return commands
 
