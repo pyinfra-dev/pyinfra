@@ -173,7 +173,7 @@ def _run_server_ops(state, hostname, print_output, print_lines):
             colored(hostname, attrs=['bold'])
         ))
 
-        result = _run_op(hostname, op_hash, print_output)
+        result = _run_op(state, hostname, op_hash, print_output)
         if result is False:
             raise PyinfraException('Error in operation {0} on {1}'.format(
                 ', '.join(op_meta['names']), hostname

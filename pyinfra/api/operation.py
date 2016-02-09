@@ -117,10 +117,6 @@ def operation(func):
         state.in_op = False
         state.current_op_sudo = None
 
-        # No commands, no changes
-        if not isinstance(commands, list):
-            commands = []
-
         # Add the hash to the operational order if not already in there
         # we insert the hash at the current position for the current host, such that
         # deploy scripts run in the order they are defined *for each host*. Using if
