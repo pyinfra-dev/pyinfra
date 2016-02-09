@@ -197,8 +197,6 @@ within a deploy on ``pyinfra.host.data``:
 
 .. code:: python
 
-    # deploy.py
-
     from pyinfra import host
     from pyinfra.modules import server
 
@@ -215,7 +213,7 @@ Operation meta can be used during a deploy to change the desired operations:
 
 .. code:: python
 
-    from pyinfra.modules import server.user
+    from pyinfra.modules import server
 
     # Run an operation, collecting its meta output
     meta = server.user(
@@ -234,8 +232,6 @@ A good example is switching between apt & yum depending on the Linux distributio
 facts are accessed on ``pyinfra.host``:
 
 .. code:: python
-
-    # deploy.py
 
     from pyinfra import host
     from pyinfra.modules import apt, yum
@@ -279,7 +275,8 @@ config.py advantage:
 Hooks
 -----
 
-Deploy hooks are executed by the CLI at various points during the deploy process:
+Deploy hooks are executed by the CLI at various points during the deploy process. Like
+config, they can be defined in a ``config.py`` or at the top of the deploy file:
 
 + ``before_connect``
 + ``before_facts``
@@ -292,6 +289,7 @@ arguments:
 .. code:: python
 
     # config.py or top of deploy.py
+
     from pyinfra import hook
 
     @hook.before_connect
