@@ -21,7 +21,9 @@ from pyinfra.api.util import read_buffer, make_command
 
 
 def _connect(hostname, **kwargs):
-    '''Connect to a single host. Returns the hostname if succesful.'''
+    '''
+    Connect to a single host. Returns the hostname if succesful.
+    '''
 
     logger.debug('Connecting to: {0} ({1})'.format(hostname, kwargs))
 
@@ -215,10 +217,14 @@ def put_file(
     state, hostname, file_io, remote_file,
     sudo=False, sudo_user=None, print_output=False, print_prefix=''
 ):
-    '''Upload file-ios to the specified host.'''
+    '''
+    Upload file-ios to the specified host using SFTP. Supports uploading files with sudo
+    by uploading to a temporary directory then moving & chowning.
+    '''
 
     if not sudo:
         _put_file(state, hostname, file_io, remote_file)
+
     else:
         # sudo is a little more complicated, as you can only sftp with the SSH user
         # connected,  so upload to tmp and copy/chown w/sudo

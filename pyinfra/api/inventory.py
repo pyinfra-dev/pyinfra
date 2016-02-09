@@ -18,7 +18,7 @@ class Inventory(object):
         ssh_key: default SSH key filename
         ssh_key_password: default password for the SSH key
         ssh_password: default SSH password
-        **kwargs: map of group names -> ``(hostnames, data)``
+        **groups: map of group names -> ``(hostnames, data)``
     '''
 
     state = None
@@ -26,7 +26,7 @@ class Inventory(object):
     def __init__(
         self, hostnames_data,
         ssh_user=None, ssh_port=None, ssh_key=None,
-        ssh_key_password=None, ssh_password=None, **kwargs
+        ssh_key_password=None, ssh_password=None, **groups
     ):
         hostnames, data = hostnames_data
 
@@ -39,14 +39,15 @@ class Inventory(object):
             'ssh_user': ssh_user,
             'ssh_key': ssh_key,
             'ssh_key_password': ssh_key_password,
-            'ssh_port': ssh_port or 22
+            'ssh_port': ssh_port or 22,
+            'ssh_password': ssh_password
         })
 
         self.data = AttrData(data)
 
         # Loop groups and build map of hostnames -> groups
         hostnames_to_groups = {}
-        for group_name, (group_hostnames, group_data) in kwargs.iteritems():
+        for group_name, (group_hostnames, group_data) in groups.iteritems():
             group_name = group_name.lower()
             self.group_data[group_name] = AttrData(group_data)
 
@@ -105,7 +106,9 @@ class Inventory(object):
         Gets aggregated data from a list of groups. Vars are collected in order so, for
         any groups which define the same var twice, the last group's value will hold.
         '''
+
         data = {}
+
         for group in groups:
             data.update(
                 self.get_group_data(group).dict()
