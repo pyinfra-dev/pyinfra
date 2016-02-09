@@ -101,6 +101,7 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
 
     # Is there a matching line in this file?
     is_present = host.find_in_file(name, match_line)
+    commands = []
 
     # No line and we want it, append it
     if not is_present and present:
@@ -108,15 +109,17 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
         if replace:
             line = replace
 
-        return ['echo "{0}" >> {1}'.format(line, name)]
+        commands.append(['echo "{0}" >> {1}'.format(line, name)])
 
     # Line exists and we have a replacement that *is* different, sed it
     if is_present != replace:
-        return [_sed_replace(name, match_line, replace, flags=flags)]
+        commands.append([_sed_replace(name, match_line, replace, flags=flags)])
 
     # Line exists and we want to remove it, replace with nothing
     if is_present and not present:
-        return [_sed_replace(name, match_line, '', flags=flags)]
+        commands.append([_sed_replace(name, match_line, '', flags=flags)])
+
+    return commands
 
 
 @operation
@@ -129,6 +132,7 @@ def replace(state, host, name, match, replace, flags=None):
     + replace: text to replace with
     + flags: list of flaggs to pass to sed
     '''
+
     return [_sed_replace(name, match, replace, flags=flags)]
 
 
