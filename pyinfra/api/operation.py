@@ -117,19 +117,25 @@ def operation(func):
         state.in_op = False
         state.current_op_sudo = None
 
-        # Add the hash to the operational order if not already in there
-        # we insert the hash at the current position for the current host, such that
-        # deploy scripts run in the order they are defined *for each host*. Using if
-        # statements without matching the operations within (by op_name and the number of
-        # them) will results in them not running in the order defined in the deploy script,
-        # but they will remain in-order per-host.
+        # Add the hash to the operational order if not already in there. To ensure that
+        # deploys run as defined in the deploy file *per host* we keep track of each hosts
+        # latest op hash, and use that to insert new ones. Note that using the op kwarg
+        # on operations can break the ordering when imbalanced (between if statements in
+        # deploy file, for example).
         if op_hash not in state.op_order:
-            current_ops = state.meta[host.ssh_hostname]['ops']
-            state.op_order.insert(current_ops, op_hash)
+            previous_op_hash = state.meta[host.ssh_hostname]['latest_op_hash']
+
+            if previous_op_hash:
+                index = state.op_order.index(previous_op_hash)
+            else:
+                index = 0
+
+            state.op_order.insert(index + 1, op_hash)
 
         # We're doing some commands, meta/ops++
         state.meta[host.ssh_hostname]['ops'] += 1
         state.meta[host.ssh_hostname]['commands'] += len(commands)
+        state.meta[host.ssh_hostname]['latest_op_hash'] = op_hash
 
         # Add the server-relevant commands/env to the current server
         state.ops[host.ssh_hostname][op_hash] = {

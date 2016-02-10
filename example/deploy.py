@@ -108,8 +108,7 @@ elif 'linux' in host.groups:
             ['git', 'python-pip'],
             sudo=True,
             update=True,
-            cache_time=3600,
-            op='core_packages' # this and below binds these three operations to run as one
+            cache_time=3600
         )
 
     elif host.linux_distribution['name'] == 'CentOS':
@@ -119,14 +118,14 @@ elif 'linux' in host.groups:
                 host.linux_distribution['major']
             ),
             sudo=True,
-            op='epel_repo'
+            op='epel_repo',  # this makes one operation despite differing args above
+            name='Add EPEL Repo'
         )
 
         # yum package manager
         yum.packages(
             ['git', 'python-pip'],
-            sudo=True,
-            op='core_packages' # this and above/below binds these three operations to run as one
+            sudo=True
         )
 
 # Ensure the state of git repositories
