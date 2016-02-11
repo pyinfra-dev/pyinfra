@@ -51,23 +51,24 @@ def repo(
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
-        url = re.match(r'^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)', source)
-        if url:
-            url = url.group(1)
+        domain = re.match(r'^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)', source)
 
-        cmd = '''
-            cat ~/.ssh/known_hosts | grep {0} || ssh-keyscan {0} >> ~/.ssh/known_hosts
-        '''.format(url)
+        if domain:
+            domain = domain.group(1)
 
-        if use_ssh_user:
-            commands.append({
-                'command': cmd,
-                'sudo': False,
-                'sudo_user': False
-            })
+            cmd = '''
+                cat ~/.ssh/known_hosts | grep {0} || ssh-keyscan {0} >> ~/.ssh/known_hosts
+            '''.format(domain)
 
-        else:
-            commands.append(cmd)
+            if use_ssh_user:
+                commands.append({
+                    'command': cmd,
+                    'sudo': False,
+                    'sudo_user': False
+                })
+
+            else:
+                commands.append(cmd)
 
     # Store git commands for directory prefix
     git_commands = []
@@ -112,7 +113,7 @@ def repo(
         # Remove write permissions from other or other+group when no group
         commands.append(chmod(
             target,
-            'o+w' if group else 'go-w',
+            'o-w' if group else 'go-w',
             recursive=True
         ))
 
