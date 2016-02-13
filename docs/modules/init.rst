@@ -17,8 +17,8 @@ Manage the state of SysV Init (/etc/init.d) service scripts.
 .. code:: python
 
     init.d(
-        name, running=True, restarted=False, reloaded=False,
-        command=None, enabled=None, priority=20, start_runlevels=(2, 3, 4, 5), kill_runlevels=(0, 1, 6)
+        name, running=True, restarted=False, reloaded=False, command=None,
+        enabled=None, start_priority=20, kill_priority=20, start_runlevels=(2, 3, 4, 5), kill_runlevels=(0, 1, 6)
     )
 
 + **name**: name of the service to manage
@@ -27,7 +27,8 @@ Manage the state of SysV Init (/etc/init.d) service scripts.
 + **reloaded**: whether the service should be reloaded
 + **command**: custom command to pass like: ``/etc/init.d/<name> <command>``
 + **enabled**: whether this service should be enabled/disabled at runlevels
-+ **priority**: priority to execute the service
++ **start_priority**: priority to start the service
++ **kill_priority**: priority to stop the service
 + **start_runlevels**: which runlevels should the service run when enabled
 + **kill_runlevels**: which runlevels should the service stop when enabled
 
@@ -46,6 +47,40 @@ Manage the state of BSD init (/etc/rc.d) service scripts.
 .. code:: python
 
     init.rc(name, running=True, restarted=False, reloaded=False, command=None, enabled=None)
+
++ **name**: name of the service to manage
++ **running**: whether the service should be running
++ **restarted**: whether the service should be restarted
++ **reloaded**: whether the service should be reloaded
++ **command**: custom command to pass like: ``/etc/rc.d/<name> <command>``
++ **enabled**: whether this service should be enabled/disabled on boot
+
+
+:code:`init.systemd`
+~~~~~~~~~~~~~~~~~~~~
+
+Manage the state of systemd managed services.
+
+.. code:: python
+
+    init.systemd(name, running=True, restarted=False, reloaded=False, command=None, enabled=None)
+
++ **name**: name of the service to manage
++ **running**: whether the service should be running
++ **restarted**: whether the service should be restarted
++ **reloaded**: whether the service should be reloaded
++ **command**: custom command to pass like: ``/etc/rc.d/<name> <command>``
++ **enabled**: whether this service should be enabled/disabled on boot
+
+
+:code:`init.upstart`
+~~~~~~~~~~~~~~~~~~~~
+
+Manage the state of upstart managed services.
+
+.. code:: python
+
+    init.upstart(name, running=True, restarted=False, reloaded=False, command=None, enabled=None)
 
 + **name**: name of the service to manage
 + **running**: whether the service should be running
