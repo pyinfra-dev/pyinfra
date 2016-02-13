@@ -7,8 +7,8 @@ import re
 from pyinfra.api import FactBase
 
 
-class UpstartStatus(FactBase):
-    pass
+# class UpstartStatus(FactBase):
+#     pass
 
 
 class SystemctlStatus(FactBase):
