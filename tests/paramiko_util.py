@@ -46,7 +46,12 @@ class FakeSSHClient(object):
 
 
 class FakeSFTPClient(object):
-    pass
+    @classmethod
+    def from_transport(cls, transport):
+        return cls()
+
+    def putfo(self, file_io, remote_location):
+        pass
 
 
 class FakeRSAKey(object):

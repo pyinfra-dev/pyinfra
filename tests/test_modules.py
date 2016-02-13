@@ -11,6 +11,7 @@ from nose.tools import nottest
 from jsontest import JsonTest
 
 from pyinfra import pseudo_state, pseudo_host
+from pyinfra.cli import json_encode
 
 from .util import FakeState, create_host
 
@@ -45,8 +46,10 @@ def make_operation_tests(arg):
             ) or []
 
             print
-            print '--> GOT:\n', json.dumps(commands, indent=4)
-            print '--> WANT:', json.dumps(test_data['commands'], indent=4)
+            print '--> GOT:\n', json.dumps(commands, indent=4, default=json_encode)
+            print '--> WANT:', json.dumps(
+                test_data['commands'], indent=4, default=json_encode
+            )
 
             self.assertEqual(commands, test_data['commands'])
 
