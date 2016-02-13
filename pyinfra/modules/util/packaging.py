@@ -2,8 +2,6 @@
 # File: pyinfra/modules/util/packaging.py
 # Desc: common functions for packaging modules
 
-from pyinfra.api.exceptions import OperationError
-
 
 def ensure_packages(
     packages, current_packages, present,
@@ -32,11 +30,6 @@ def ensure_packages(
             ``<apt_pkg>=<version>``
         lower (bool): whether to lowercase package names
     '''
-
-    if latest and not upgrade_command:
-        raise OperationError(
-            'Packages cannot be upgraded to latest w/o upgrade_command'
-        )
 
     if packages is None:
         return []
@@ -141,7 +134,7 @@ def ensure_packages(
             ' '.join(diff_packages)
         ))
 
-    if latest and upgrade_packages:
+    if latest and upgrade_command and upgrade_packages:
         commands.append('{0} {1}'.format(
             upgrade_command,
             ' '.join(upgrade_packages)

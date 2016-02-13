@@ -70,6 +70,7 @@ class HostModule(object):
         Args:
             host (``pyinfra.api.Host`` obj): host object to bind to
         '''
+
         self._host = host
 
 

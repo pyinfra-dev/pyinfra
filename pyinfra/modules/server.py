@@ -51,7 +51,7 @@ def script(state, host, filename):
     commands = []
 
     temp_file = state.get_temp_filename(filename)
-    commands.extend(files.put(filename, temp_file))
+    commands.extend(files.put(state, host, filename, temp_file))
 
     commands.append('chmod +x {0}'.format(temp_file))
     commands.append(temp_file)

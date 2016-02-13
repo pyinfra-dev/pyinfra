@@ -13,19 +13,22 @@ Manages the state and configuration of init services. Support for:
 
 from pyinfra.api.operation import operation
 
+from . import files
+
 
 def _handle_service_control(
     name, statuses, formatter, running, restarted, reloaded, command
 ):
+    statuses = statuses or {}
     status = statuses.get(name, None)
     commands = []
 
     # Need running but down
-    if running and not status:
+    if running is True and not status:
         commands.append(formatter.format(name, 'start'))
 
     # Need down but running
-    if not running and status is not False:
+    if running is False and status is not False:
         commands.append(formatter.format(name, 'stop'))
 
     if restarted:
@@ -44,7 +47,7 @@ def _handle_service_control(
 def d(
     state, host, name,
     running=True, restarted=False, reloaded=False,
-    command=None, enabled=None, priority=20,
+    command=None, enabled=None, start_priority=20, kill_priority=20,
     start_runlevels=(2, 3, 4, 5), kill_runlevels=(0, 1, 6)
 ):
     '''
@@ -56,7 +59,8 @@ def d(
     + reloaded: whether the service should be reloaded
     + command: custom command to pass like: ``/etc/init.d/<name> <command>``
     + enabled: whether this service should be enabled/disabled at runlevels
-    + priority: priority to execute the service
+    + start_priority: priority to start the service
+    + kill_priority: priority to stop the service
     + start_runlevels: which runlevels should the service run when enabled
     + kill_runlevels: which runlevels should the service stop when enabled
 
@@ -67,11 +71,36 @@ def d(
         ``/etc/rcX.d`` directories.
     '''
 
-    return _handle_service_control(
+    commands = _handle_service_control(
         name, host.initd_status,
         '/etc/init.d/{0} {1}',
         running, restarted, reloaded, command
     )
+
+    # Create desired /etc/rcX.d/<name> links
+    if enabled is True:
+        # Build link list
+        links = []
+
+        for level in start_runlevels:
+            links.append('/etc/rc{0}.d/S{1}{2}'.format(level, start_priority, name))
+
+        for level in kill_runlevels:
+            links.append('/etc/rc{0}.d/K{1}{2}'.format(level, kill_priority, name))
+
+        # Ensure all the links exist
+        for link in links:
+            commands.extend(files.link(state, host, link, '/etc/init.d/{0}'.format(name)))
+
+    # Remove any /etc/rcX.d/<name> links
+    elif enabled is False:
+        links = host.find_links('/etc/rc*.d/*{0}'.format(name)) or []
+
+        # No state checking, just blindly remove any that exist
+        for link in links:
+            commands.append('rm -f {0}'.format(link))
+
+    return commands
 
 
 @operation
