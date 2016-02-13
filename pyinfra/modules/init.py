@@ -15,8 +15,9 @@ from pyinfra.api.operation import operation
 
 
 def _handle_service_control(
-    formatter, name, status, running, restarted, reloaded, command
+    name, statuses, formatter, running, restarted, reloaded, command
 ):
+    status = statuses.get(name, None)
     commands = []
 
     # Need running but down
@@ -66,13 +67,10 @@ def d(
         ``/etc/rcX.d`` directories.
     '''
 
-    status = host.initd_status or {}
-    status = status.get(name, None)
-
     return _handle_service_control(
+        name, host.initd_status,
         '/etc/init.d/{0} {1}',
-        name, status,
-        running=running, restarted=restarted, reloaded=reloaded, command=command
+        running, restarted, reloaded, command
     )
 
 
@@ -93,17 +91,14 @@ def rc(
     + enabled: whether this service should be enabled/disabled on boot
     '''
 
-    status = host.rcd_status or {}
-    status = status.get(name, None)
-
     return _handle_service_control(
+        name, host.rcs_status,
         '/etc/rc.d/{0} {1}',
-        name, status,
-        running=running, restarted=restarted, reloaded=reloaded, command=command
+        running, restarted, reloaded, command
     )
 
 
-# @operation
+@operation
 def upstart(
     state, host, name,
     running=True, restarted=False, reloaded=False,
@@ -120,8 +115,14 @@ def upstart(
     + enabled: whether this service should be enabled/disabled on boot
     '''
 
+    return _handle_service_control(
+        name, host.upstart_status,
+        '{1} {0}',
+        running, restarted, reloaded, command
+    )
 
-# @operation
+
+@operation
 def systemd(
     state, host, name,
     running=True, restarted=False, reloaded=False,
@@ -137,3 +138,9 @@ def systemd(
     + command: custom command to pass like: ``/etc/rc.d/<name> <command>``
     + enabled: whether this service should be enabled/disabled on boot
     '''
+
+    return _handle_service_control(
+        name, host.systemd_status,
+        'systemctl {1} {0}.service',
+        running, restarted, reloaded, command
+    )
