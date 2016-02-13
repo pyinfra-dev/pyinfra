@@ -27,7 +27,7 @@ class UpstartStatus(FactBase):
         return services
 
 
-class SystemctlStatus(FactBase):
+class SystemdStatus(FactBase):
     '''
     Returns a dict of name -> status for systemd managed services.
     '''

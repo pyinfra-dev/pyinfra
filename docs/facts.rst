@@ -194,8 +194,8 @@ Init
     
 
 
-:code:`systemctl_status`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`systemd_status`
+~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of name -> status for systemd managed services.
