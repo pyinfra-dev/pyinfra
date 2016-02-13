@@ -194,7 +194,7 @@ try:
     # Check we've not failed
     if state.config.FAIL_PERCENT is not None:
         percent_failed = (1 - n_connected_hosts / len(state.inventory)) * 100
-        if percent_failed >= state.config.FAIL_PERCENT:
+        if percent_failed > state.config.FAIL_PERCENT:
             raise PyinfraException('Over {0}% of hosts failed, exiting'.format(
                 state.config.FAIL_PERCENT
             ))

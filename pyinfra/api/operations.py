@@ -276,7 +276,7 @@ def run_ops(
             if state.config.FAIL_PERCENT is not None:
                 percent_failed = (1 - len(successful_hosts) / len(hosts)) * 100
 
-                if percent_failed >= state.config.FAIL_PERCENT:
+                if percent_failed > state.config.FAIL_PERCENT:
                     raise PyinfraException('Over {0}% of hosts failed'.format(
                         state.config.FAIL_PERCENT
                     ))
