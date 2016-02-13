@@ -7,50 +7,26 @@ import re
 from pyinfra.api import FactBase
 
 
+class UpstartStatus(FactBase):
+    pass
+
+
 class SystemctlStatus(FactBase):
-    '''Returns a dict of name -> status for systemd managed services.'''
+    '''
+    Returns a dict of name -> status for systemd managed services.
+    '''
 
     command = 'systemctl -alt service list-units'
     _regex = r'^([a-z\-]+)\.service\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
 
-    def process(self, output):
+    @classmethod
+    def process(cls, output):
         services = {}
 
         for line in output:
-            matches = re.match(self._regex, line)
+            matches = re.match(cls._regex, line)
             if matches:
                 services[matches.group(1)] = matches.group(2) == 'running'
-
-        return services
-
-
-class ServiceStatus(FactBase):
-    '''Returns a dict of name -> status for services listed by "service".'''
-
-    command = 'service --status-all'
-
-    _regexes = [
-        # [ <status> ] <name>
-        (r'^\[ ([+-\?]) \]\s+([a-zA-Z0-9\-\.]+)$', lambda matches: (
-            matches.group(2),
-            True if matches.group(1) == '+' else False if matches.group(1) == '-' else None
-        )),
-        # <name> is stopped
-        (r'^([a-zA-Z0-9\.\-]+) is stopped$', lambda matches: (matches.group(1), False)),
-        # <name> (pid  <pid>) is running
-        (r'^([a-zA-Z0-9\.\-]+) \(pid  [0-9]+\) is running\.*$', lambda matches: (matches.group(1), True))
-    ]
-
-    def process(self, output):
-        services = {}
-
-        for line in output:
-            for (regex, handler) in self._regexes:
-                matches = re.match(regex, line)
-                if matches:
-                    name, status = handler(matches)
-                    services[name] = status
-                    continue
 
         return services
 
@@ -78,11 +54,12 @@ class InitdStatus(FactBase):
     '''
     _regex = r'([a-zA-Z0-9]+)=([0-9]+)'
 
-    def process(self, output):
+    @classmethod
+    def process(cls, output):
         services = {}
 
         for line in output:
-            matches = re.match(self._regex, line)
+            matches = re.match(cls._regex, line)
             if matches:
                 status = int(matches.group(2))
                 # Exit code 0 = OK/running

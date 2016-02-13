@@ -22,11 +22,14 @@ class RPMPackages(FactBase):
     '''
 
     command = 'rpm -qa'
-    process = lambda self, output: parse_packages(
-        rpm_regex, output,
-        # yum packages are case-sensitive
-        lower=False
-    )
+
+    @classmethod
+    def process(cls, output):
+        return parse_packages(
+            rpm_regex, output,
+            # yum packages are case-sensitive
+            lower=False
+        )
 
 
 class RpmPackage(FactBase):
@@ -34,10 +37,12 @@ class RpmPackage(FactBase):
     Returns information on a .rpm file.
     '''
 
-    def command(self, name):
+    @classmethod
+    def command(cls, name):
         return 'rpm -qp {0}'.format(name)
 
-    def process(self, output):
+    @classmethod
+    def process(cls, output):
         for line in output:
             matches = re.match(rpm_regex, line)
             if matches:

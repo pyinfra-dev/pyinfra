@@ -20,11 +20,14 @@ class PipPackages(FactBase):
     command = 'pip freeze'
     _regex = r'^([a-zA-Z0-9_\-\+\.]+)==([0-9\.]+[a-z0-9\-]*)$'
 
-    process = lambda self, output: parse_packages(self._regex, output)
+    @classmethod
+    def process(cls, output):
+        return parse_packages(cls._regex, output)
 
 
 class PipVirtualenvPackages(PipPackages):
-    def command(self, venv):
+    @classmethod
+    def command(cls, venv):
         # Remove any trailing slash
         venv = venv.rstrip('/')
         return '{0}/bin/pip freeze'.format(venv)

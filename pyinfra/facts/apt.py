@@ -37,7 +37,8 @@ class AptSources(FactBase):
 
     command = 'cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list | grep -v "#"'
 
-    def process(self, output):
+    @classmethod
+    def process(cls, output):
         repos = {}
         for line in output:
             repo = parse_apt_repo(line)
@@ -61,7 +62,9 @@ class DebPackages(FactBase):
     command = 'dpkg -l'
     _regex = r'^[a-z]+\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
 
-    process = lambda self, output: parse_packages(self._regex, output)
+    @classmethod
+    def process(cls, output):
+        return parse_packages(cls._regex, output)
 
 
 class DebPackage(FactBase):
@@ -74,14 +77,16 @@ class DebPackage(FactBase):
         'version': r'^Version: ([0-9\.\-]+)$'
     }
 
-    def command(self, name):
+    @classmethod
+    def command(cls, name):
         return 'dpkg -I {0}'.format(name)
 
-    def process(self, output):
+    @classmethod
+    def process(cls, output):
         data = {}
 
         for line in output:
-            for key, regex in self._regexes.iteritems():
+            for key, regex in cls._regexes.iteritems():
                 matches = re.match(regex, line)
                 if matches:
                     value = matches.group(1)

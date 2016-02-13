@@ -26,11 +26,12 @@ class BlockDevices(FactBase):
     command = 'df'
     _regex = r'([a-zA-Z0-9\/\-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
 
-    def process(self, output):
+    @classmethod
+    def process(cls, output):
         devices = {}
 
         for line in output:
-            matches = re.match(self._regex, line)
+            matches = re.match(cls._regex, line)
             if matches:
                 if matches.group(1) == 'none':
                     continue
@@ -124,7 +125,8 @@ class NetworkDevices(FactBase):
         )
     ]
 
-    def process(self, output):
+    @classmethod
+    def process(cls, output):
         devices = {}
 
         # Store current matches (start lines), the handler and any lines
@@ -136,7 +138,7 @@ class NetworkDevices(FactBase):
             matched = False
 
             # Look for start lines
-            for regex, new_handler in self._start_regexes:
+            for regex, new_handler in cls._start_regexes:
                 new_matches = re.match(regex, line)
 
                 # If we find a start line

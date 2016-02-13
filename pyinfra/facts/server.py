@@ -34,7 +34,8 @@ class Date(FactBase):
 
     command = 'date'
 
-    def process(self, output):
+    @classmethod
+    def process(cls, output):
         return parse_date(output[0])
 
 
@@ -55,7 +56,8 @@ class Users(FactBase):
 
     command = 'cat /etc/passwd'
 
-    def process(self, output):
+    @classmethod
+    def process(cls, output):
         users = {}
         for line in output:
             try:
@@ -97,10 +99,11 @@ class LinuxDistribution(FactBase):
         r'(Debian) GNU/Linux ([0-9])()'
     ]
 
-    def process(self, output):
+    @classmethod
+    def process(cls, output):
         output = '\n'.join(output)
 
-        for regex in self.regexes:
+        for regex in cls.regexes:
             matches = re.search(regex, output)
             if matches:
                 return {

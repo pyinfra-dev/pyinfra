@@ -18,31 +18,43 @@ fact_locks = {}
 print_fact_info = False
 print_fact_output = False
 
+
 def set_print_facts(to_print_output, to_print_info):
     global print_fact_info, print_fact_output
+
     print_fact_info = to_print_info
     print_fact_output = to_print_output
+
 
 def is_fact(name):
     return name in facts
 
+
 def get_fact_names():
-    '''Returns a list of available facts in camel_case format.'''
+    '''
+    Returns a list of available facts in camel_case format.
+    '''
+
     return facts.keys()
 
 
 class FactMeta(type):
-    '''Metaclass to dynamically build the facts index.'''
+    '''
+    Metaclass to dynamically build the facts index.
+    '''
+
     def __init__(cls, name, bases, attrs):
         global facts
 
         # Get the an instance of the fact, attach to facts
-        facts[underscore(name)] = cls()
+        facts[underscore(name)] = cls
+
 
 class FactBase(object):
     __metaclass__ = FactMeta
 
-    def process(self, output):
+    @classmethod
+    def process(cls, output):
         return output[0]
 
 
