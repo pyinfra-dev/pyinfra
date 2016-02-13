@@ -306,6 +306,60 @@ def template(
 
 
 @operation
+def link(
+    state, host, name, source=None, present=True, symbolic=True
+):
+    '''
+    Manage the state of links.
+
+    + name: the name of the link
+    + source: the file/directory the link points to
+    + present: whether the link should exist
+    + symbolic: whether to make a symbolic link (vs hard link)
+
+    Source changes:
+        If the link exists and points to a different source, pyinfra will remove it and
+        recreate a new one pointing to then new source.
+    '''
+
+    if present and not source:
+        raise OperationError('If present is True source must be provided')
+
+    info = host.link(name)
+    commands = []
+
+    # Not a link?
+    if info is False:
+        raise OperationError('{0} exists and is not a link'.format(name))
+
+    add_cmd = 'ln{0} {1} {2}'.format(
+        ' -s' if symbolic else '',
+        source, name
+    )
+
+    remove_cmd = 'rm -f {0}'.format(name)
+
+    # No link and we want it
+    if info is None and present:
+        commands.append(add_cmd)
+
+    # It exists and we don't want it
+    elif info and not present:
+        commands.append(remove_cmd)
+
+    # Exists and want to ensure it's state
+    elif info and present:
+        # If the source is wrong, remove & recreate the link
+        if info['link_target'] != source:
+            commands.extend((
+                remove_cmd,
+                add_cmd
+            ))
+
+    return commands
+
+
+@operation
 def file(
     state, host, name,
     present=True, user=None, group=None, mode=None, touch=False
@@ -324,9 +378,9 @@ def file(
     info = host.file(name)
     commands = []
 
-    # It's a directory?!
+    # Not a file?!
     if info is False:
-        raise OperationError('{0} is a directory'.format(name))
+        raise OperationError('{0} exists and is not a file'.format(name))
 
     # Doesn't exist & we want it
     if info is None and present:
@@ -342,7 +396,7 @@ def file(
         commands.append('rm -f {0}'.format(name))
 
     # It exists & we want to ensure its state
-    else:
+    elif info and present:
         if touch:
             commands.append('touch {0}'.format(name))
 
@@ -376,9 +430,9 @@ def directory(
     info = host.directory(name)
     commands = []
 
-    # It's a file?!
+    # Not a directory?!
     if info is False:
-        raise OperationError('{0} is a file'.format(name))
+        raise OperationError('{0} exists and is not a directory'.format(name))
 
     # Doesn't exist & we want it
     if info is None and present:
@@ -393,7 +447,7 @@ def directory(
         commands.append('rm -rf {0}'.format(name))
 
     # It exists & we want to ensure its state
-    else:
+    elif info and present:
         # Check mode
         if mode and info['mode'] != mode:
             commands.append(chmod(name, mode, recursive=recursive))
