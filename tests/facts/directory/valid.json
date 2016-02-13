@@ -1,0 +1,12 @@
+{
+    "output": [
+        "drwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56 /home/pyinfra/mydir"
+    ],
+    "fact": {
+        "group": "pyinfra",
+        "user": "pyinfra",
+        "mode": "777",
+        "mtime": "2016-02-13T12:56:00",
+        "size": "8"
+    }
+}

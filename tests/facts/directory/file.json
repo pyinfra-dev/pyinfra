@@ -1,0 +1,6 @@
+{
+    "output": [
+        "-rwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56 /home/pyinfra/mylink -> file.txt"
+    ],
+    "fact": false
+}
