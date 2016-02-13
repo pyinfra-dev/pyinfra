@@ -140,7 +140,7 @@ def replace(state, host, name, match, replace, flags=None):
     + flags: list of flaggs to pass to sed
     '''
 
-    return [_sed_replace(name, match, replace, flags=flags)]
+    return _sed_replace(state, name, match, replace, flags=flags)
 
 
 @operation

@@ -12,6 +12,9 @@ class FakeState(object):
 
     config = Config()
 
+    def get_temp_filename(*args):
+        return '_tempfile_'
+
 
 class FakeFact(object):
     def __init__(self, data):
