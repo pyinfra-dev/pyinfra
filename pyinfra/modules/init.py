@@ -195,8 +195,16 @@ def systemd(
     + enabled: whether this service should be enabled/disabled on boot
     '''
 
-    return _handle_service_control(
+    commands = _handle_service_control(
         name, host.systemd_status,
         'systemctl {1} {0}.service',
         running, restarted, reloaded, command
     )
+
+    if enabled is True:
+        commands.append('systemctl enable {0}.service'.format(name))
+
+    elif enabled is False:
+        commands.append('systemctl disable {0}.service'.format(name))
+
+    return commands
