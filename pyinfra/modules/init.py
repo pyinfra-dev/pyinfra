@@ -156,11 +156,26 @@ def upstart(
     + enabled: whether this service should be enabled/disabled on boot
     '''
 
-    return _handle_service_control(
+    commands = _handle_service_control(
         name, host.upstart_status,
         '{1} {0}',
         running, restarted, reloaded, command
     )
+
+    # Upstart jobs are setup w/runlevels etc in their config files, so here we just check
+    # there's no override file.
+    if enabled is True:
+        commands.extend(files.file(
+            state, host,
+            '/etc/init/{0}.override'.format(name),
+            present=False
+        ))
+
+    # Set the override file to "manual" to disable automatic start
+    elif enabled is False:
+        commands.append('echo "manual" > /etc/init/{0}.override'.format(name))
+
+    return commands
 
 
 @operation
