@@ -8,7 +8,7 @@ from datetime import datetime
 from pyinfra.api.facts import FactBase
 
 LS_REGEX = re.compile(
-    r'^[d\-]([\-rwx]{9})\.?\s+[0-9]+\s+([a-zA-Z]+)\s+([a-zA-Z]+)\s+([0-9]+)\s+([a-zA-Z]{3}\s+[0-9]+\s+[0-9:]{4,5})\s+[a-zA-Z0-9\/\.]+'
+    r'^[dl\-]([\-rwx]{9})\.?\s+[0-9]+\s+([a-zA-Z]+)\s+([a-zA-Z]+)\s+([0-9]+)\s+([a-zA-Z]{3}\s+[0-9]+\s+[0-9:]{4,5})\s+[a-zA-Z0-9\/\.]+\s*-?>?\s*([a-zA-Z0-9\/\.]*)'
 )
 
 SYMBOL_TO_OCTAL_PERMISSIONS = {
@@ -49,14 +49,18 @@ def _parse_time(time):
         pass
 
 
-def _process_ls_output(output, directory=False):
+def _process_ls_output(output, directory=False, link=False):
     if output:
         matches = re.match(LS_REGEX, output)
         if matches:
             # Ensure we have what we want
             is_directory = output.startswith('d')
-            if directory != is_directory:
-                return False # stands for the wrong type
+            if directory is not is_directory:
+                return False
+
+            is_link = output.startswith('l')
+            if link is not is_link:
+                return False
 
             out = {
                 'mode': _parse_mode(matches.group(1)),
@@ -65,6 +69,10 @@ def _process_ls_output(output, directory=False):
                 'size': matches.group(4),
                 'mtime': _parse_time(matches.group(5))
             }
+
+            if link:
+                out['link_target'] = matches.group(6)
+
             return out
 
 
@@ -76,13 +84,20 @@ class File(FactBase):
         return _process_ls_output(output[0])
 
 
+class Link(File):
+    def process(self, output):
+        return _process_ls_output(output[0], link=True)
+
+
 class Directory(File):
     def process(self, output):
         return _process_ls_output(output[0], directory=True)
 
 
 class Sha1File(FactBase):
-    '''Returns a SHA1 hash of a file. Works with both sha1sum and sha1.'''
+    '''
+    Returns a SHA1 hash of a file. Works with both sha1sum and sha1.
+    '''
 
     _regexes = [
         r'^([a-zA-Z0-9]+)\s+[a-zA-Z0-9_\/\.\-]+$',
@@ -100,14 +115,18 @@ class Sha1File(FactBase):
 
 
 class FindInFile(FactBase):
-    '''Checks for the existence of text in a file using grep.'''
+    '''
+    Checks for the existence of text in a file using grep.
+    '''
 
     def command(self, name, pattern):
         return 'grep "{0}" {1}'.format(pattern, name)
 
 
 class FindFiles(FactBase):
-    '''Returns a list of files/dirs from a start point, recursively using find.'''
+    '''
+    Returns a list of files/dirs from a start point, recursively using find.
+    '''
 
     def command(self, name):
         return 'find {0} -type f'.format(name)
