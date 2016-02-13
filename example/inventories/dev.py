@@ -4,7 +4,7 @@
 
 # Defines a group - group names must be defined in ALL_CAPS
 BSD = [
-    'openbsd56.pyinfra'
+    'openbsd57.pyinfra'
 ]
 
 YUM = [

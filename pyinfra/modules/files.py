@@ -17,12 +17,17 @@ from pyinfra.api.util import get_file_sha1
 from .util.files import chmod, chown
 
 
-def _sed_replace(filename, line, replace, flags=None):
+def _sed_replace(state, filename, line, replace, flags=None):
     flags = ''.join(flags) if flags else ''
 
-    return 'sed -i "s/{0}/{1}/{2}" {3}'.format(
-        line, replace, flags, filename
-    )
+    temp_filename = state.get_temp_filename()
+
+    return [
+        'sed "s/{0}/{1}/{2}" {3} > {4}'.format(
+            line, replace, flags, filename, temp_filename
+        ),
+        'mv {0} {1}'.format(temp_filename, filename)
+    ]
 
 
 @operation
@@ -111,13 +116,15 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
 
         commands.append('echo "{0}" >> {1}'.format(line, name))
 
-    # Line exists and we have a replacement that *is* different, sed it
-    if is_present != replace:
-        commands.append(_sed_replace(name, match_line, replace, flags=flags))
-
     # Line exists and we want to remove it, replace with nothing
-    if is_present and not present:
-        commands.append(_sed_replace(name, match_line, '', flags=flags))
+    elif is_present and not present:
+        commands.extend(_sed_replace(state, name, match_line, '', flags=flags))
+
+    # Line exists and we have want to ensure it's correct
+    elif is_present and present:
+        # If the line *is* different, sed replace it
+        if replace and is_present != replace:
+            commands.extend(_sed_replace(state, name, match_line, replace, flags=flags))
 
     return commands
 

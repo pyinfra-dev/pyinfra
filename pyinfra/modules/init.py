@@ -120,11 +120,23 @@ def rc(
     + enabled: whether this service should be enabled/disabled on boot
     '''
 
-    return _handle_service_control(
-        name, host.rcs_status,
+    commands = _handle_service_control(
+        name, host.rcd_status,
         '/etc/rc.d/{0} {1}',
         running, restarted, reloaded, command
     )
+
+    # BSD init is simple, just add/remove <name>_enabled="YES"
+    if isinstance(enabled, bool):
+        commands.extend(files.line(
+            state, host,
+            '/etc/rc.conf.local',
+            '{0}_enable=.*'.format(name),
+            replace='{0}_enable="YES"'.format(name),
+            present=enabled
+        ))
+
+    return commands
 
 
 @operation

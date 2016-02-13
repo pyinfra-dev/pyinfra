@@ -3,6 +3,7 @@
 # Desc: class that represents the current pyinfra.state
 
 import sys
+from uuid import uuid4
 
 from gevent.pool import Pool
 
@@ -78,12 +79,11 @@ class State(object):
             for hostname in hostnames
         }
 
-    def get_temp_filename(self, hash_key):
-        temp_filename = ''
+    def get_temp_filename(self, hash_key=None):
+        if not hash_key:
+            hash_key = str(uuid4())
 
-        if hash_key:
-            temp_filename = sha1_hash(hash_key)
-
+        temp_filename = sha1_hash(hash_key)
         return '{0}/{1}'.format(self.config.TEMP_DIR, temp_filename)
 
 
