@@ -125,7 +125,7 @@ class FindInFile(FactBase):
 
 class FindFiles(FactBase):
     '''
-    Returns a list of files/dirs from a start point, recursively using find.
+    Returns a list of files from a start point, recursively using find.
     '''
 
     def command(self, name):
@@ -133,3 +133,21 @@ class FindFiles(FactBase):
 
     def process(self, output):
         return output
+
+
+class FindLinks(FindFiles):
+    '''
+    Returns a list of links from a start point, recursively using find.
+    '''
+
+    def command(self, name):
+        return 'find {0} -type l'.format(name)
+
+
+class FindDirectories(FindFiles):
+    '''
+    Returns a list of directories from a start point, recursively using find.
+    '''
+
+    def command(self, name):
+        return 'find {0} -type d'.format(name)
