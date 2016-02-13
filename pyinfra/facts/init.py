@@ -7,8 +7,24 @@ import re
 from pyinfra.api import FactBase
 
 
-# class UpstartStatus(FactBase):
-#     pass
+class UpstartStatus(FactBase):
+    '''
+    Returns a dict of name -> status for upstart managed services.
+    '''
+
+    command = 'initctl list'
+    _regex = r'^([a-z\-]+) [a-z]+\/([a-z]+)'
+
+    @classmethod
+    def process(cls, output):
+        services = {}
+
+        for line in output:
+            matches = re.match(cls._regex, line)
+            if matches:
+                services[matches.group(1)] = matches.group(2) == 'running'
+
+        return services
 
 
 class SystemctlStatus(FactBase):
@@ -75,6 +91,7 @@ class InitdStatus(FactBase):
                 services[matches.group(1)] = status
 
         return services
+
 
 class RcdStatus(InitdStatus):
     '''

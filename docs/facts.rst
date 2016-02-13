@@ -202,6 +202,14 @@ Init
     
 
 
+:code:`upstart_status`
+~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a dict of name -> status for upstart managed services.
+    
+
+
 Npm
 ---
 
