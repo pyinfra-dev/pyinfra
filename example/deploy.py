@@ -87,7 +87,7 @@ server.script(
 )
 
 # Manage init systems
-init.service(
+init.d(
     'crond',
     running=True,
     sudo=True,
