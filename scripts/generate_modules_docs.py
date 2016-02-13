@@ -57,12 +57,19 @@ def build_facts():
             doc = func.__doc__
             if doc:
                 docbits = doc.strip().split('\n')
-                print 'BITS', docbits
+                description_lines = []
+
+                for line in docbits:
+                    if line:
+                        description_lines.append(line)
+                    else:
+                        break
+
                 if len(docbits) > 0:
                     lines.append('')
-                    lines.append(docbits[0].strip())
+                    lines.extend([line.strip() for line in description_lines])
                     lines.append('')
-                    doc = '\n'.join(docbits[1:])
+                    doc = '\n'.join(docbits[len(description_lines):])
 
             argspec = getargspec(func)
 
@@ -78,22 +85,36 @@ def build_facts():
                 arg_defaults
             )) if arg_defaults else {}
 
-            print argspec
-            print defaults
+            # Build args string
+            args = [
+                '{0}={1}'.format(arg, defaults[arg])
+                if arg in defaults else arg
+                for arg in argspec.args[2:]
+            ]
 
+            arg_count = len(args)
+            if arg_count < 7:
+                args_string = ', '.join(args)
+
+            else:
+                top_args = args[:arg_count / 2]
+                bottom_args = args[arg_count / 2:]
+
+                args_string = '''
+        {0},
+        {1}
+    '''.format(
+                    ', '.join(top_args),
+                    ', '.join(bottom_args)
+                )
+
+            # Atttach the code block
             lines.append('''
 .. code:: python
 
     {0}.{1}({2})
 
-'''.strip().format(
-                module_name, name,
-                ', '.join(
-                    '{0}={1}'.format(arg, defaults[arg])
-                    if arg in defaults else arg
-                    for arg in argspec.args[2:]
-                )
-            ))
+'''.strip().format(module_name, name, args_string))
 
             # Append any remaining docstring
             if doc:

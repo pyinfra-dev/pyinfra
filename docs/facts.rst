@@ -1,7 +1,7 @@
 Facts Index
 ===========
 
-.. include:: _facts.rst
+.. include:: facts_.rst
 
 
 Apt
@@ -101,22 +101,48 @@ Files
 ~~~~~~~~~~~~~~~~~~
 
 
+:code:`find_directories(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a list of directories from a start point, recursively using find.
+    
+
+
 :code:`find_files(name)`
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Returns a list of files/dirs from a start point, recursively using find.
+
+    Returns a list of files from a start point, recursively using find.
+    
 
 
 :code:`find_in_file(name)`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Checks for the existence of text in a file using grep.
+
+    Checks for the existence of text in a file using grep.
+    
+
+
+:code:`find_links(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a list of links from a start point, recursively using find.
+    
+
+
+:code:`link(name)`
+~~~~~~~~~~~~~~~~~~
 
 
 :code:`sha1_file(name)`
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Returns a SHA1 hash of a file. Works with both sha1sum and sha1.
+
+    Returns a SHA1 hash of a file. Works with both sha1sum and sha1.
+    
 
 
 Gem

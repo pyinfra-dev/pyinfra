@@ -28,7 +28,10 @@ Download files from remote locations.
 
 .. code:: python
 
-    files.download(source_url, destination, user=None, group=None, mode=None, cache_time=None, force=False)
+    files.download(
+        source_url, destination, user=None,
+        group=None, mode=None, cache_time=None, force=False
+    )
 
 + **source_url**: source URl of the file
 + **destination**: where to save the file
@@ -111,12 +114,11 @@ A simple shortcut for replacing text in files with sed.
 ~~~~~~~~~~~~~~~~~~
 
 Syncs a local directory with a remote one, with delete support. Note that delete will
+remove extra files on the remote side, but not extra directories.
 
 .. code:: python
 
     files.sync(source, destination, user=None, group=None, mode=None, delete=False)
-
-remove extra files on the remote side, but not extra directories.
 
 + **source**: local directory to sync
 + **destination**: remote directory to sync to

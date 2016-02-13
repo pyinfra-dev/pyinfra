@@ -75,7 +75,7 @@ def build_facts():
 Facts Index
 ===========
 
-.. include:: _facts.rst
+.. include:: facts_.rst
 
 
 {0}
