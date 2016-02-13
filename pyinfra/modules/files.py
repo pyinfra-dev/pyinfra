@@ -11,7 +11,7 @@ from cStringIO import StringIO
 
 from jinja2 import Template
 
-from pyinfra.api import operation, OperationException
+from pyinfra.api import operation, OperationError
 from pyinfra.api.util import get_file_sha1
 
 from .util.files import chmod, chown
@@ -47,7 +47,7 @@ def download(
 
     # Destination is a directory?
     if info is False:
-        raise OperationException('{0} is a directory'.format(destination))
+        raise OperationError('{0} is a directory'.format(destination))
 
     # Do we download the file? Force by default
     download = force
@@ -326,7 +326,7 @@ def file(
 
     # It's a directory?!
     if info is False:
-        raise OperationException('{0} is a directory'.format(name))
+        raise OperationError('{0} is a directory'.format(name))
 
     # Doesn't exist & we want it
     if info is None and present:
@@ -378,7 +378,7 @@ def directory(
 
     # It's a file?!
     if info is False:
-        raise OperationException('{0} is a file'.format(name))
+        raise OperationError('{0} is a file'.format(name))
 
     # Doesn't exist & we want it
     if info is None and present:

@@ -7,7 +7,7 @@ from subprocess import Popen, PIPE, STDOUT
 
 from . import pseudo_state
 from .api.util import read_buffer
-from .api.exceptions import PyinfraException
+from .api.exceptions import PyinfraError
 
 
 print_local = False
@@ -28,7 +28,7 @@ def include(filename):
     try:
         execfile(filename)
     except IOError as e:
-        raise PyinfraException(
+        raise PyinfraError(
             'Could not include local file: {0}\n{1}'.format(filename, e)
         )
 
@@ -52,7 +52,7 @@ def shell(command, print_output=False):
     # Get & check result
     result = process.wait()
     if result > 0:
-        raise PyinfraException(
+        raise PyinfraError(
             'Local command failed: {0}\n{1}'.format(command, stdout)
         )
 

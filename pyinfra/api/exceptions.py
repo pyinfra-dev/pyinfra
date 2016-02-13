@@ -3,12 +3,12 @@
 # Desc: pyinfra's exceptions!
 
 
-class PyinfraException(Exception):
+class PyinfraError(Exception):
     '''Generic pyinfra exception.'''
     pass
 
 
-class OperationException(PyinfraException):
+class OperationError(PyinfraError):
     '''
     Exception raised during fact gathering staging if an operation is unable to generate
     output/change state.

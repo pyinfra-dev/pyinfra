@@ -11,7 +11,7 @@ from gevent import joinall
 from termcolor import colored
 
 from pyinfra import logger
-from pyinfra.api.exceptions import PyinfraException
+from pyinfra.api.exceptions import PyinfraError
 
 from .ssh import run_shell_command, put_file
 
@@ -175,7 +175,7 @@ def _run_server_ops(state, hostname, print_output, print_lines):
 
         result = _run_op(state, hostname, op_hash, print_output)
         if result is False:
-            raise PyinfraException('Error in operation {0} on {1}'.format(
+            raise PyinfraError('Error in operation {0} on {1}'.format(
                 ', '.join(op_meta['names']), hostname
             ))
 
@@ -195,6 +195,7 @@ def run_ops(
         serial (boolean): whether to run operations host by host
         nowait (boolean): whether to wait for all hosts between operations
     '''
+
     hosts = state.inventory
 
     # Run all ops, but server by server
@@ -277,13 +278,13 @@ def run_ops(
                 percent_failed = (1 - len(successful_hosts) / len(hosts)) * 100
 
                 if percent_failed > state.config.FAIL_PERCENT:
-                    raise PyinfraException('Over {0}% of hosts failed'.format(
+                    raise PyinfraError('Over {0}% of hosts failed'.format(
                         state.config.FAIL_PERCENT
                     ))
 
             # No hosts left!
             if not successful_hosts:
-                raise PyinfraException('No hosts remaining')
+                raise PyinfraError('No hosts remaining')
 
         if print_lines:
             print

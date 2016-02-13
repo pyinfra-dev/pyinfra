@@ -9,7 +9,7 @@ from . import host
 
 # Operations API
 from .operation import operation
-from .exceptions import OperationException
+from .exceptions import OperationError
 
 # Facts API
 from .facts import FactBase

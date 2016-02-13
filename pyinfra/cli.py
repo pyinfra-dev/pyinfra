@@ -18,7 +18,7 @@ from pyinfra import logger
 
 from pyinfra.api import Config, Inventory
 from pyinfra.api.facts import facts
-from pyinfra.api.exceptions import PyinfraException
+from pyinfra.api.exceptions import PyinfraError
 
 from .hook import HOOKS, HOOK_NAMES
 
@@ -26,7 +26,7 @@ STDOUT_LOG_LEVELS = (logging.DEBUG, logging.INFO)
 STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
 
 
-class CliException(PyinfraException):
+class CliException(PyinfraError):
     pass
 
 
@@ -226,7 +226,7 @@ def setup_arguments(arguments):
 
         op_func = getattr(op_module, op_name, None)
         if not op_func:
-            raise PyinfraException('No such operation: {0}'.format(op))
+            raise PyinfraError('No such operation: {0}'.format(op))
 
         arguments['--run'] = op_func
 

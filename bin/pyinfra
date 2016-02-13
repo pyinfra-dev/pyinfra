@@ -68,7 +68,7 @@ from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.attrs import FallbackAttrData
 from pyinfra.api.facts import get_facts, set_print_facts
-from pyinfra.api.exceptions import PyinfraException
+from pyinfra.api.exceptions import PyinfraError
 
 
 # Handle ctrl+c
@@ -186,19 +186,6 @@ try:
     print '--> Connecting to hosts...'
     connect_all(state)
 
-    # Check we've connected to something
-    n_connected_hosts = len(state.inventory.connected_hosts)
-    if n_connected_hosts == 0:
-        raise PyinfraException('No hosts connected, exiting')
-
-    # Check we've not failed
-    if state.config.FAIL_PERCENT is not None:
-        percent_failed = (1 - n_connected_hosts / len(state.inventory)) * 100
-        if percent_failed > state.config.FAIL_PERCENT:
-            raise PyinfraException('Over {0}% of hosts failed, exiting'.format(
-                state.config.FAIL_PERCENT
-            ))
-
     print
 
     # Run the before_connect hook if provided
@@ -288,7 +275,7 @@ except hook.Error as e:
     _exit(1)
 
 # Capture/log internal exceptions
-except PyinfraException as e:
+except PyinfraError as e:
     print
     sys.stderr.write(
         '--> {0}: '.format(colored('pyinfra exception', 'red', attrs=['bold']))

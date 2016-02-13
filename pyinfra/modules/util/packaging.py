@@ -2,7 +2,7 @@
 # File: pyinfra/modules/util/packaging.py
 # Desc: common functions for packaging modules
 
-from pyinfra.api.exceptions import PyinfraException
+from pyinfra.api.exceptions import OperationError
 
 
 def ensure_packages(
@@ -34,7 +34,7 @@ def ensure_packages(
     '''
 
     if latest and not upgrade_command:
-        raise PyinfraException(
+        raise OperationError(
             'Packages cannot be upgraded to latest w/o upgrade_command'
         )
 

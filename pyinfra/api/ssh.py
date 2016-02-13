@@ -18,11 +18,13 @@ from paramiko import (
 
 from pyinfra import logger
 from pyinfra.api.util import read_buffer, make_command
+from pyinfra.api.exceptions import PyinfraError
 
 
-def _connect(hostname, **kwargs):
+def connect(hostname, **kwargs):
     '''
-    Connect to a single host. Returns the hostname if succesful.
+    Connect to a single host. Returns the hostname if succesful. Stateless by design so
+    can be run in parallel.
     '''
 
     logger.debug('Connecting to: {0} ({1})'.format(hostname, kwargs))
@@ -103,7 +105,7 @@ def connect_all(state):
                     break
 
         greenlets.append(
-            state.pool.spawn(_connect, host.ssh_hostname, **kwargs)
+            state.pool.spawn(connect, host.ssh_hostname, **kwargs)
         )
 
     gevent.wait(greenlets)
@@ -120,6 +122,19 @@ def connect_all(state):
         state.ssh_connections[hostname] = client
 
     state.inventory.connected_hosts = set(filter(None, hostname_clients.keys()))
+
+    # Check we've connected to something
+    n_connected_hosts = len(state.inventory.connected_hosts)
+    if n_connected_hosts == 0:
+        raise PyinfraError('No hosts connected, exiting')
+
+    # Check we've not failed
+    if state.config.FAIL_PERCENT is not None:
+        percent_failed = (1 - n_connected_hosts / len(state.inventory)) * 100
+        if percent_failed > state.config.FAIL_PERCENT:
+            raise PyinfraError('Over {0}% of hosts failed, exiting'.format(
+                state.config.FAIL_PERCENT
+            ))
 
 
 def run_shell_command(
