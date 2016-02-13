@@ -194,16 +194,12 @@ Init
     
 
 
-:code:`service_status`
-~~~~~~~~~~~~~~~~~~~~~~
-
-Returns a dict of name -> status for services listed by "service".
-
-
 :code:`systemctl_status`
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Returns a dict of name -> status for systemd managed services.
+
+    Returns a dict of name -> status for systemd managed services.
+    
 
 
 Npm
