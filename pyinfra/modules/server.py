@@ -17,6 +17,8 @@ def wait(state, host, port=None):
     '''
     Waits for a port to come active on the target machine. Requires netstat, checks every
     1s.
+
+    + port: port number to wait for
     '''
 
     return ['''
@@ -29,14 +31,22 @@ def wait(state, host, port=None):
 
 @operation
 def shell(state, host, *commands):
-    '''Run raw shell code.'''
+    '''
+    Run raw shell code.
+
+    + commands: raw commands to execute on the server
+    '''
 
     return list(commands)
 
 
 @operation
 def script(state, host, filename):
-    '''Upload and execute a local script on the remote host.'''
+    '''
+    Upload and execute a local script on the remote host.
+
+    + filename: local script filename to upload & execute
+    '''
 
     commands = []
 
@@ -54,6 +64,10 @@ def user(state, host, name, present=True, home=None, shell=None, public_keys=Non
     '''
     Manage Linux users & their ssh `authorized_keys`. Options:
 
+    + name: name of the user to ensure
+    + present: whether this user should exist
+    + home: the users home directory
+    + shell: the users shell
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
     '''
 
