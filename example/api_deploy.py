@@ -30,10 +30,10 @@ inventory = Inventory(
         ('centos7.pyinfra', {'systemd': True}),
         'ubuntu14.pyinfra',
         'debian7.pyinfra',
-        'openbsd56.pyinfra'
+        'openbsd57.pyinfra'
     ], {}),
     bsd=([
-        'openbsd56.pyinfra'
+        'openbsd57.pyinfra'
     ], {
         # Group-specific data can be attached like so
         'app_dir': '/opt/pyinfra/bsd'
