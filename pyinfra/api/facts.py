@@ -62,6 +62,7 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
     '''
     Get a single fact for all hosts in the state.
     '''
+
     print_output = print_output or print_fact_output
     fact = facts[name]
     command = fact.command
@@ -112,7 +113,9 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
 
 
 def get_fact(state, hostname, name, print_output=False):
-    '''Wrapper around get_facts returning facts for one host or a function that does.'''
+    '''
+    Wrapper around get_facts returning facts for one host or a function that does.
+    '''
 
     print_output = print_output or print_fact_output
     sudo = False

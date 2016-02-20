@@ -216,6 +216,10 @@ def _parse_arg(arg):
 
 
 def setup_arguments(arguments):
+    '''
+    Prepares argumnents output by docopt.
+    '''
+
     # Prep --run OP ARGS
     op, args = arguments['--run'], arguments['ARGS']
 
@@ -246,6 +250,10 @@ def setup_arguments(arguments):
 
         arguments['ARGS'] = (args, op_kwargs)
 
+    # Ensure parallel is a number
+    if arguments['--parallel']:
+        arguments['--parallel'] = int(arguments['--parallel'])
+
     # Setup the rest
     return {
         # Deploy options
@@ -254,7 +262,7 @@ def setup_arguments(arguments):
         'verbose': arguments['-v'],
         'dry': arguments['--dry'],
         'serial': arguments['--serial'],
-        'nowait': arguments['--nowait'],
+        'no_wait': arguments['--no-wait'],
         'debug': arguments['--debug'],
         'fact': arguments['--fact'],
         'limit': arguments['--limit'],
@@ -269,6 +277,7 @@ def setup_arguments(arguments):
         'port': arguments['--port'],
         'sudo': arguments['--sudo'],
         'sudo_user': arguments['--sudo-user'],
+        'parallel': arguments['--parallel'],
 
         # Misc
         'list_facts': arguments['--facts']
@@ -276,7 +285,10 @@ def setup_arguments(arguments):
 
 
 def load_config(deploy_dir):
-    '''Loads any local config.py file.'''
+    '''
+    Loads any local config.py file.
+    '''
+
     config = Config()
     config_filename = path.join(deploy_dir, 'config.py')
 
@@ -291,7 +303,9 @@ def load_config(deploy_dir):
 
 
 def load_deploy_config(deploy_filename, config):
-    '''Loads any local config overrides in the deploy file.'''
+    '''
+    Loads any local config overrides in the deploy file.
+    '''
 
     if not deploy_filename:
         return
@@ -310,7 +324,11 @@ def make_inventory(
     inventory_filename, deploy_dir=None, limit=None,
     ssh_user=None, ssh_key=None, ssh_key_password=None, ssh_port=None, ssh_password=None
 ):
-    '''Builds a pyinfra.api.Inventory from the filesystem (normally!).'''
+    '''
+    Builds a ``pyinfra.api.Inventory`` from the filesystem. If the file does not exist
+    and doesn't contain a / attempts to use that as the only hostname.
+    '''
+
     if ssh_port is not None:
         ssh_port = int(ssh_port)
 

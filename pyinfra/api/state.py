@@ -35,6 +35,9 @@ class State(object):
         if config is None:
             config = Config()
 
+        if not config.PARALLEL:
+            config.PARALLEL = len(inventory)
+
         # Assign inventory/config
         self.inventory = inventory
         self.config = config
@@ -43,7 +46,7 @@ class State(object):
         inventory.state = config.state = self
 
         # Setup greenlet pool
-        self.pool = Pool(len(inventory))
+        self.pool = Pool(config.PARALLEL)
 
         hostnames = [host.ssh_hostname for host in inventory]
 

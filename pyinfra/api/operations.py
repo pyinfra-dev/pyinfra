@@ -1,6 +1,6 @@
 # pyinfra
 # File: pyinfra/api/operations.py
-# Desc: Runs operations from pyinfra._ops in various modes (parallel, nowait, serial)
+# Desc: Runs operations from pyinfra._ops in various modes (parallel, no_wait, serial)
 
 from __future__ import division
 
@@ -184,7 +184,7 @@ def _run_server_ops(state, hostname, print_output, print_lines):
 
 
 def run_ops(
-    state, serial=False, nowait=False,
+    state, serial=False, no_wait=False,
     print_output=False, print_lines=False
 ):
     '''
@@ -193,7 +193,7 @@ def run_ops(
     Args:
         state (``pyinfra.api.State`` obj): the deploy state to execute
         serial (boolean): whether to run operations host by host
-        nowait (boolean): whether to wait for all hosts between operations
+        no_wait (boolean): whether to wait for all hosts between operations
     '''
 
     hosts = state.inventory
@@ -208,7 +208,7 @@ def run_ops(
         return
 
     # Run all the ops on each server in parallel (not waiting at each operation)
-    elif nowait:
+    elif no_wait:
         # Spawn greenlet for each host to run *all* ops
         greenlets = [
             state.pool.spawn(

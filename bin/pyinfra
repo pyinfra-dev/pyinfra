@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # pyinfra
 # File: bin/pyinfra
-# Desc: __main__ for pyinfra
+# Desc: the CLI in front of the API
 
 '''
 pyinfra
@@ -20,7 +20,7 @@ Deploy options:
     --fact FACT          Name of fact to run/test.
     --limit HOSTNAME     Limit the inventory at runtime, supports *wildcards.
     --serial             Run commands on one host at a time.
-    --nowait             Don't wait for all hosts at each operation.
+    --no-wait             Don't wait for all hosts at each operation.
     -v -vv               Prints remote input/output in realtime. -vv prints facts output.
     --dry                Only print proposed changes.
     --debug              Print debug info.
@@ -28,11 +28,12 @@ Deploy options:
 Config options:
     -p --port PORT       SSH port number.
     -u --user USER       SSH user.
-    --key KEY_FILE       SSH private key.
+    --key FILE           SSH private key.
     --key-password PASS  SSH key password.
     --sudo               Use sudo.
     --sudo-user USER     Which user to sudo to.
     --password PASS      SSH password auth (bad).
+    --parallel NUM       Number of parallel processes.
 '''
 
 from __future__ import division
@@ -159,6 +160,9 @@ try:
         if arguments['sudo_user']:
             config.SUDO_USER = arguments['sudo_user']
 
+    if arguments['parallel']:
+        config.PARALLEL = arguments['parallel']
+
     # Create/set the state
     state = State(inventory, config)
     state.deploy_dir = deploy_dir
@@ -255,7 +259,7 @@ try:
         run_ops(
             state,
             serial=arguments['serial'],
-            nowait=arguments['nowait'],
+            no_wait=arguments['no_wait'],
             print_output=print_output,
             print_lines=True
         )

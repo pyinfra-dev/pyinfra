@@ -153,7 +153,7 @@ class TestApi(TestCase):
 
         run_ops(state, serial=True)
 
-    def test_run_ops_nowait(self):
+    def test_run_ops_no_wait(self):
         state = State(make_inventory(), make_config())
         connect_all(state)
 
@@ -162,4 +162,4 @@ class TestApi(TestCase):
             'echo "hello world"'
         )
 
-        run_ops(state, nowait=True)
+        run_ops(state, no_wait=True)
