@@ -378,8 +378,8 @@ def file(
     + present: whether the file should exist
     + user: user to own the files
     + group: group to own the files
-    + mode: permissions of the files
-    + touch: touch the file
+    + mode: permissions of the files as an integer, eg: 755
+    + touch: whether to touch the file
     '''
 
     info = host.file(name)

@@ -23,6 +23,10 @@ SYMBOL_TO_OCTAL_PERMISSIONS = {
 
 
 def _parse_mode(mode):
+    '''
+    Converts ls mode output (rwxrwxrwx) -> integer (755).
+    '''
+
     result = ''
     # owner, group, world
     for group in [mode[0:3], mode[3:6], mode[6:9]]:
@@ -31,7 +35,8 @@ def _parse_mode(mode):
         else:
             result = '{0}0'.format(result)
 
-    return result
+    # Return as an integer
+    return int(result)
 
 
 def _parse_time(time):
