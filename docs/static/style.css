@@ -45,4 +45,9 @@
 
 .rst-versions {
     border-top: none;
+    background-color: #556270;
+}
+
+.rst-versions .rst-current-version {
+    background: transparent;
 }
