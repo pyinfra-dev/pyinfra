@@ -42,3 +42,7 @@
 .wy-menu-vertical li code {
     font-size: 100%;
 }
+
+.rst-versions {
+    border-top: none;
+}
