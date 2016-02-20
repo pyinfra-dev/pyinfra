@@ -450,7 +450,7 @@ def directory(
             commands.append(chown(name, user, group, recursive=recursive))
 
     # It exists and we don't want it
-    elif not present:
+    elif info and not present:
         commands.append('rm -rf {0}'.format(name))
 
     # It exists & we want to ensure its state
