@@ -1,0 +1,44 @@
+@import 'css/theme.css';
+
+
+.wy-nav-side {
+    background: rgb(240, 240, 240);
+}
+
+.wy-side-nav-search {
+    background: #556270;
+}
+
+.wy-side-nav-search input[type=text] {
+    border-radius: 0;
+}
+
+.wy-nav-content-wrap {
+    position: relative;
+}
+
+.wy-nav-content {
+    background: #FCFCFC;
+    max-width: 900px;
+}
+
+.wy-menu-vertical a:hover {
+    background-color: #fcfcfc;
+    color: #404040;
+}
+
+.wy-menu-vertical a {
+    color: #909090;
+}
+
+.wy-menu-vertical li.current > a {
+    border: none;
+}
+
+.wy-menu-vertical li.current a {
+    border: none;
+}
+
+.wy-menu-vertical li code {
+    font-size: 100%;
+}

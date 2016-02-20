@@ -10,11 +10,13 @@ extensions = [
 
 source_suffix = '.rst'
 master_doc = 'index'
-project = u'pyinfra'
-copyright = u'2015, Nick Barrett (Fizzadar)'
-author = u'Fizzadar'
+project = 'pyinfra'
+copyright = '2015, Nick Barrett (Fizzadar)'
+author = 'Fizzadar'
 version = 'develop'
-exclude_patterns = ['_html']
 pygments_style = 'sphinx'
+
+# Theme style override
 html_theme = 'sphinx_rtd_theme'
-htmlhelp_basename = 'pyinfradoc'
+html_static_path = ['static']
+html_style = 'style.css'
