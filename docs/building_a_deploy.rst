@@ -103,7 +103,7 @@ Data Hierarchy
 ~~~~~~~~~~~~~~
 
 The same keys can be defined for host and group data - this means we can set a default in
-`all.py` and override it on a group or host basis. When accessing data, the first match in
+*all.py* and override it on a group or host basis. When accessing data, the first match in
 the following is returned:
 
 + "Override" data passed in via CLI args
@@ -133,7 +133,7 @@ The "all" group data contains any shared info and defaults:
     env = 'dev'
     git_repo = 'https://github.com/Fizzadar/pyinfra'
 
-And the production/staging data describes the differences:
+And the production/staging data describe the differences:
 
 .. code:: python
 
@@ -247,8 +247,8 @@ facts are accessed on ``pyinfra.host``:
             sudo=True
         )
 
-Some facts also take arguments, for example the ``directory`` or ``file`` facts. The
-:doc:`facts index <./facts>` lists the available facts and their arguments.
+Some facts also take a single argument, for example the ``directory`` or ``file`` facts.
+The :doc:`facts index <./facts>` lists the available facts and their arguments.
 
 
 Config

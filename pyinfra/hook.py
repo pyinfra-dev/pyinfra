@@ -1,5 +1,6 @@
 # pyinfra
 # File: pyinfra/hook.py
+# Desc: Python hooks for CLI deploys
 
 from functools import wraps
 
@@ -12,8 +13,9 @@ HOOKS = {
 
 
 class Error(Exception):
-    '''Exception raised when encounting errors in deploy hooks.'''
-    pass
+    '''
+    Exception raised when encounting errors in deploy hooks.
+    '''
 
 
 def before_connect(func):

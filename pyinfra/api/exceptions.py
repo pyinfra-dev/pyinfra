@@ -4,13 +4,19 @@
 
 
 class PyinfraError(Exception):
-    '''Generic pyinfra exception.'''
-    pass
+    '''
+    Generic pyinfra exception.
+    '''
 
 
 class OperationError(PyinfraError):
     '''
-    Exception raised during fact gathering staging if an operation is unable to generate
-    output/change state.
+    Exception raised during fact gathering staging if an
+    operation is unable to generate output/change state.
     '''
-    pass
+
+
+class DeployError(PyinfraError):
+    '''
+    User exception for raising in deploys or sub deploys.
+    '''
