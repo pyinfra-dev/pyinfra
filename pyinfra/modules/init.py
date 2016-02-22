@@ -90,7 +90,9 @@ def d(
 
         # Ensure all the links exist
         for link in links:
-            commands.extend(files.link(state, host, link, '/etc/init.d/{0}'.format(name)))
+            commands.extend(
+                files.link(state, host, link, '/etc/init.d/{0}'.format(name))
+            )
 
     # Remove any /etc/rcX.d/<name> links
     elif enabled is False:
@@ -154,11 +156,17 @@ def upstart(
     + reloaded: whether the service should be reloaded
     + command: custom command to pass like: ``/etc/rc.d/<name> <command>``
     + enabled: whether this service should be enabled/disabled on boot
+
+    Enabling/disabling services:
+        Upstart jobs define runlevels in their config files - as such there is no way to
+        edit/list these without fiddling with the config. So pyinfra simply manages the
+        existence of a ``/etc/init/<service>.override`` file, and sets its content to
+        "manual" to disable automatic start of services.
     '''
 
     commands = _handle_service_control(
         name, host.upstart_status,
-        '{1} {0}',
+        'initctl {1} {0}',
         running, restarted, reloaded, command
     )
 
@@ -201,10 +209,15 @@ def systemd(
         running, restarted, reloaded, command
     )
 
-    if enabled is True:
-        commands.append('systemctl enable {0}.service'.format(name))
+    if isinstance(enabled, bool):
+        is_enabled = host.systemd_enabled.get(name, False)
 
-    elif enabled is False:
-        commands.append('systemctl disable {0}.service'.format(name))
+        # Isn't enabled and want enabled?
+        if not is_enabled and enabled is True:
+            commands.append('systemctl enable {0}.service'.format(name))
+
+        # Is enabled and want disabled?
+        elif is_enabled and enabled is False:
+            commands.append('systemctl disable {0}.service'.format(name))
 
     return commands

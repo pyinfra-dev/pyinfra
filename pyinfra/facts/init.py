@@ -47,10 +47,31 @@ class SystemdStatus(FactBase):
         return services
 
 
+class SystemdEnabled(FactBase):
+    '''
+    Returns a dict of name -> whether enabled for systemd managed services.
+    '''
+
+    command = 'systemctl -alt service list-unit-files'
+    _regex = r'^([a-z\-]+)\.service\s+([a-z]+)'
+
+    @classmethod
+    def process(cls, output):
+        services = {}
+
+        for line in output:
+            matches = re.match(cls._regex, line)
+            if matches:
+                services[matches.group(1)] = matches.group(2) in ('enabled', 'static')
+
+        return services
+
+
 class InitdStatus(FactBase):
     '''
-    Low level check for every /etc/init.d/* script. Unfortunately many of these mishehave and return
-    exit status 0 while also displaying the help info/not offering status support.
+    Low level check for every /etc/init.d/* script. Unfortunately many of these mishehave
+    and return exit status 0 while also displaying the help info/not offering status
+    support.
 
     Returns a dict of name -> status.
 
@@ -78,12 +99,15 @@ class InitdStatus(FactBase):
             matches = re.match(cls._regex, line)
             if matches:
                 status = int(matches.group(2))
+
                 # Exit code 0 = OK/running
                 if status == 0:
                     status = True
+
                 # Exit codes 1-3 = DOWN/not running
                 elif status < 4:
                     status = False
+
                 # Exit codes 4+ = unknown
                 else:
                     status = None
@@ -95,8 +119,8 @@ class InitdStatus(FactBase):
 
 class RcdStatus(InitdStatus):
     '''
-    As above but for BSD (/etc/rc.d) systems. Unlike Linux/init.d, BSD init scripts are
-    well behaved and as such their output can be trusted.
+    Same as ``initd_status`` but for BSD (/etc/rc.d) systems. Unlike Linux/init.d, BSD
+    init scripts are well behaved and as such their output can be trusted.
     '''
 
     command = '''
@@ -108,4 +132,11 @@ class RcdStatus(InitdStatus):
                 echo "$SERVICE=$?"
             fi
         done
+    '''
+
+
+class RcdEnabled(FactBase):
+    '''
+    Returns a dict of service name -> whether enabled (on boot) status. Different to Linux
+    variants because BSD has no/one runlevel.
     '''
