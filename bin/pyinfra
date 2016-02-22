@@ -18,7 +18,7 @@ Deploy options:
     -i INVENTORY         Inventory script filename or single hostname.
     --run OP ARGS        Run a single operation with args.
     --fact FACT          Name of fact to run/test.
-    --limit HOSTNAME     Limit the inventory at runtime, supports *wildcards.
+    --limit HOSTNAME     Limit the inventory, supports *wildcards and group names.
     --serial             Run commands on one host at a time.
     --no-wait             Don't wait for all hosts at each operation.
     -v -vv               Prints remote input/output in realtime. -vv prints facts output.

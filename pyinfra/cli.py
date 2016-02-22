@@ -381,11 +381,21 @@ def make_inventory(
 
     # Apply any limit to all_hosts
     if limit:
-        all_hosts = [
-            host for host in all_hosts
-            if (isinstance(host, tuple) and fnmatch(host[0], limit))
-            or (isinstance(host, basestring) and fnmatch(host, limit))
-        ]
+        # Limits can be groups
+        limit_groupname = limit.upper()
+        if limit_groupname in groups:
+            all_hosts = [
+                host[0] if isinstance(host, tuple) else host
+                for host in groups[limit_groupname]
+            ]
+
+        # Or hostnames w/*wildcards
+        else:
+            all_hosts = [
+                host for host in all_hosts
+                if (isinstance(host, tuple) and fnmatch(host[0], limit))
+                or (isinstance(host, basestring) and fnmatch(host, limit))
+            ]
 
     groups['ALL'] = (all_hosts, all_data)
 
