@@ -17,20 +17,35 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def key(state, host, key):
+def key(state, host, key=None, keyserver=None, keyid=None):
     '''
     Add apt gpg keys with ``apt-key``.
 
     + key: filename or URL
+    + keyserver: URL of keyserver to fetch key from
+    + keyid: key identifier when using keyserver
 
     Note:
-        always returns an add command, not state checking
+        Always returns an add command, not state checking.
+
+    keyserver/id:
+        These must be provided together.
     '''
 
-    if urlparse(key).scheme:
-        return ['apt-key adv --fetch-keys {0}'.format(key)]
+    commands = []
 
-    return ['apt-key add {0}'.format(key)]
+    if key:
+        if urlparse(key).scheme:
+            commands.append('apt-key adv --fetch-keys {0}'.format(key))
+
+        commands.append('apt-key add {0}'.format(key))
+
+    if keyserver and keyid:
+        commands.append(
+            'apt-key adv --keyserver {0} --recv-keys {1}'.format(keyserver, keyid)
+        )
+
+    return commands
 
 
 @operation
