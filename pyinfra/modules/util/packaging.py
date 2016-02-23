@@ -70,53 +70,39 @@ def ensure_packages(
     diff_packages = []
 
     # Packages to upgrade? (install only)
-    upgrade_packages = None
+    upgrade_packages = []
 
     # Installing?
     if present is True:
-        diff_packages = [
-            package
-            for package in packages
-            if(
-                # Tuple/version, check not in existing OR incorrect version
-                isinstance(package, list)
-                and (
-                    package[0] not in current_packages
-                    or package[1] != current_packages[package[0]]
-                )
-            ) or (
-                # String version, just check if not existing
-                isinstance(package, basestring)
-                and package not in current_packages
-            )
-        ]
+        for package in packages:
+            # Tuple/version, check not in existing OR incorrect version
+            if isinstance(package, list) and (
+                package[0] not in current_packages
+                or package[1] != current_packages[package[0]]
+            ):
+                diff_packages.append(package)
 
-        # Present packages w/o version specified - for upgrade if latest
-        upgrade_packages = [
-            package
-            for package in packages
-            if isinstance(package, basestring)
-            and package in current_packages
-        ]
+            # String version, just check if not existing
+            if isinstance(package, basestring) and package not in current_packages:
+                diff_packages.append(package)
+
+            # Present packages w/o version spec ified - for upgrade if latest
+            if isinstance(package, basestring) and package in current_packages:
+                upgrade_packages.append(package)
 
     # Uninstalling?
     else:
-        diff_packages = [
-            package
-            for package in packages
-            if(
-                # Tuple/version, check existing AND correct version
-                isinstance(package, list)
-                and (
-                    package[0] in current_packages
-                    and package[1] == current_packages[package[0]]
-                )
-            ) or (
-                # String version, just check if existing
-                isinstance(package, basestring)
-                and package in current_packages
-            )
-        ]
+        for package in packages:
+            # Tuple/version, heck existing AND correct version
+            if isinstance(package, list) and (
+                package[0] in current_packages
+                and package[1] == current_packages[package[0]]
+            ):
+                diff_packages.append(package)
+
+            # String version, just check if existing
+            if isinstance(package, basestring) and package in current_packages:
+                diff_packages.append(package)
 
     # Convert packages back to string(/version)
     diff_packages = [
