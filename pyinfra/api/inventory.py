@@ -12,25 +12,26 @@ class Inventory(object):
     host data and default data for these hosts.
 
     Args:
-        hostnames_data: tuple of ``(hostnames, data)``
+        names_data: tuple of ``(names, data)``
         ssh_user: default SSH user
         ssh_port: default SSH port
         ssh_key: default SSH key filename
         ssh_key_password: default password for the SSH key
         ssh_password: default SSH password
-        **groups: map of group names -> ``(hostnames, data)``
+        **groups: map of group names -> ``(names, data)``
     '''
 
     state = None
 
     def __init__(
-        self, hostnames_data,
+        self, names_data,
         ssh_user=None, ssh_port=None, ssh_key=None,
         ssh_key_password=None, ssh_password=None, **groups
     ):
-        hostnames, data = hostnames_data
+        names, data = names_data
 
         self.connected_hosts = set()
+        self.groups = {}
         self.host_data = {}
         self.group_data = {}
 
@@ -45,59 +46,98 @@ class Inventory(object):
 
         self.data = AttrData(data)
 
-        # Loop groups and build map of hostnames -> groups
-        hostnames_to_groups = {}
-        for group_name, (group_hostnames, group_data) in groups.iteritems():
+        # Loop groups and build map of name -> groups
+        names_to_groups = {}
+        for group_name, (group_names, group_data) in groups.iteritems():
             group_name = group_name.lower()
             self.group_data[group_name] = AttrData(group_data)
 
-            for hostname in group_hostnames:
-                hostname = hostname[0] if isinstance(hostname, tuple) else hostname
-                hostnames_to_groups.setdefault(hostname, []).append(group_name)
+            for name in group_names:
+                name = name[0] if isinstance(name, tuple) else name
+                names_to_groups.setdefault(name, []).append(group_name)
 
         # Build the actual Host instances
         hosts = {}
-        for hostname in hostnames:
+        for name in names:
             host_data = {}
-            if isinstance(hostname, tuple):
-                hostname, host_data = hostname
+            if isinstance(name, tuple):
+                name, host_data = name
 
-            self.host_data[hostname] = AttrData(host_data)
+            # SSH hostname defaults to the name, but can be overridden
+            if 'ssh_hostname' not in host_data:
+                host_data['ssh_hostname'] = name
 
-            hosts[hostname] = Host(self, hostname, hostnames_to_groups.get(hostname))
+            self.host_data[name] = AttrData(host_data)
+
+            # Create the Host
+            host = Host(self, name, names_to_groups.get(name))
+            hosts[name] = host
+
+            # Push into any groups
+            for groupname in names_to_groups.get(name, []):
+                self.groups.setdefault(groupname, []).append(host)
 
         self.hosts = hosts
 
     def __getitem__(self, key):
+        '''
+        Get individual hosts from the inventory by name.
+        '''
+
         return self.hosts.get(key)
 
+    def __getattr__(self, key):
+        '''
+        Get groups (lists of hosts) from the inventory by name.
+        '''
+
+        return self.groups.get(key)
+
     def __len__(self):
+        '''
+        Returns a list of all hosts, connected or not.
+        '''
+
         return len(self.hosts)
 
     def __iter__(self):
+        '''
+        Iterates over inventory hosts. Uses connected hosts only when they exist - in that
+        sense can be seen as the "active" list of hosts during a deploy.
+        '''
+
         for host in self.hosts.values():
             if not self.connected_hosts:
                 yield host
-            elif host.ssh_hostname in self.connected_hosts:
+
+            elif host.name in self.connected_hosts:
                 yield host
 
     def get_data(self):
-        '''Get the base/all data attached to this inventory.'''
+        '''
+        Get the base/all data attached to this inventory.
+        '''
 
         return self.data
 
     def get_override_data(self):
-        '''Get override data for this inventory.'''
+        '''
+        Get override data for this inventory.
+        '''
 
         return self.override_data
 
     def get_host_data(self, hostname):
-        '''Get data for a single host in this inventory.'''
+        '''
+        Get data for a single host in this inventory.
+        '''
 
         return self.host_data[hostname]
 
     def get_group_data(self, group):
-        '''Get data for a single group in this inventory.'''
+        '''
+        Get data for a single group in this inventory.
+        '''
 
         return self.group_data.get(group, {})
 

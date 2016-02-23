@@ -14,7 +14,7 @@ YUM = [
 ]
 
 APT = [
-    'ubuntu14.pyinfra',
+    ('ubuntu14-hosttest', {'ssh_hostname': 'ubuntu14.pyinfra'}),
     'ubuntu15.pyinfra',
     'debian7.pyinfra',
     'debian8.pyinfra'

@@ -37,8 +37,8 @@ def key(state, host, key=None, keyserver=None, keyid=None):
     if key:
         if urlparse(key).scheme:
             commands.append('apt-key adv --fetch-keys {0}'.format(key))
-
-        commands.append('apt-key add {0}'.format(key))
+        else:
+            commands.append('apt-key add {0}'.format(key))
 
     if keyserver and keyid:
         commands.append(

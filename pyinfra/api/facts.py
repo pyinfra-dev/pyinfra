@@ -80,10 +80,10 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
 
     # Execute the command for each state inventory in a greenlet
     greenlets = {
-        host.ssh_hostname: state.pool.spawn(
-            run_shell_command, state, host.ssh_hostname, command,
+        host.name: state.pool.spawn(
+            run_shell_command, state, host.name, command,
             sudo=sudo, sudo_user=sudo_user, print_output=print_output,
-            print_prefix='[{0}] '.format(colored(host.ssh_hostname, attrs=['bold']))
+            print_prefix='[{0}] '.format(colored(host.name, attrs=['bold']))
         )
         for host in state.inventory
     }

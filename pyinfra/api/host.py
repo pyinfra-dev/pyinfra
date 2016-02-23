@@ -10,40 +10,40 @@ from .attrs import FallbackAttrData, wrap_attr_data
 
 
 class Host(object):
-    '''Represents a target host. Thin class that links up to facts and host/group data.'''
+    '''
+    Represents a target host. Thin class that links up to facts and host/group data.
+    '''
+
     _data = None
 
-    @property
-    def data(self):
-        if not self._data:
-            self._data = FallbackAttrData(
-                self.inventory.get_override_data(),
-                self.inventory.get_host_data(self.ssh_hostname),
-                self.inventory.get_groups_data(self.groups),
-                self.inventory.get_data()
-            )
+    def __init__(self, inventory, name, groups=None):
+        groups = groups if groups else []
 
-        return self._data
-
-    @property
-    def host_data(self):
-        return self.inventory.get_host_data(self.ssh_hostname)
-
-    @property
-    def group_data(self):
-        return self.inventory.get_groups_data(self.groups)
-
-    def __init__(self, inventory, ssh_hostname, groups=None):
         self.inventory = inventory
-        self.ssh_hostname = ssh_hostname
-        self.groups = groups if groups else []
+        self.name = name
+        self.groups = groups
+
+        self.data = FallbackAttrData(
+            inventory.get_override_data(),
+            inventory.get_host_data(name),
+            inventory.get_groups_data(groups),
+            inventory.get_data()
+        )
 
     def __getattr__(self, key):
         if not is_fact(key):
             raise AttributeError('No such fact: {0}'.format(key))
 
-        fact = get_fact(self.inventory.state, self.ssh_hostname, key)
+        fact = get_fact(self.inventory.state, self.name, key)
         return wrap_attr_data(key, fact)
+
+    @property
+    def host_data(self):
+        return self.inventory.get_host_data(self.name)
+
+    @property
+    def group_data(self):
+        return self.inventory.get_groups_data(self.groups)
 
 
 class HostModule(object):
@@ -52,6 +52,7 @@ class HostModule(object):
     files can't access the host themselves. Additionally binds to pyinfra.host as a nicer
     looking alternative for deploy scripts: (``host.data.x`` > ``pseudo_host.data.x``)
     '''
+
     _host = None
 
     def __getattr__(self, key):

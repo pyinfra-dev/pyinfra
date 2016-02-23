@@ -51,7 +51,9 @@ class FakeHost(object):
 
 
 def create_host(fact_data):
-    '''Creates a FakeHost object with attached fact data.'''
+    '''
+    Creates a FakeHost object with attached fact data.
+    '''
 
     facts = {}
 

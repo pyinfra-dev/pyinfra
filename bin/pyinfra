@@ -222,7 +222,7 @@ try:
             pseudo_host.set(host)
             execfile(arguments['deploy'])
             logger.info('{0} {1}'.format(
-                '[{}]'.format(colored(host.ssh_hostname, attrs=['bold'])),
+                '[{}]'.format(colored(host.name, attrs=['bold'])),
                 colored('Ready', 'green')
             ))
 

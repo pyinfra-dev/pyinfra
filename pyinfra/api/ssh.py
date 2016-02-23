@@ -21,13 +21,16 @@ from pyinfra.api.util import read_buffer, make_command
 from pyinfra.api.exceptions import PyinfraError
 
 
-def connect(hostname, **kwargs):
+def connect(host, **kwargs):
     '''
     Connect to a single host. Returns the hostname if succesful. Stateless by design so
     can be run in parallel.
     '''
 
-    logger.debug('Connecting to: {0} ({1})'.format(hostname, kwargs))
+    logger.debug('Connecting to: {0} ({1})'.format(host.name, kwargs))
+
+    name = host.name
+    hostname = host.data.ssh_hostname
 
     try:
         # Create new client & connect to the host
@@ -41,24 +44,25 @@ def connect(hostname, **kwargs):
 
         # Log
         logger.info(u'[{0}] {1}'.format(
-            colored(hostname, attrs=['bold']),
+            colored(name, attrs=['bold']),
             colored('Connected', 'green')
         ))
 
-        return (hostname, client)
+        return (name, client)
 
     except AuthenticationException as e:
-        logger.error(u'Auth error on: {0}, {1}'.format(hostname, e))
+        logger.error(u'Auth error on: {0}, {1}'.format(name, e))
 
     except SSHException as e:
-        logger.error(u'SSH error on: {0}, {1}'.format(hostname, e))
+        logger.error(u'SSH error on: {0}, {1}'.format(name, e))
 
     except gaierror:
-        logger.error(u'Could not resolve: {0}'.format(hostname))
+        if hostname != name:
+            logger.error(u'Could not resolve {0} host: {1}'.format(name, hostname))
 
     except socket_error as e:
         logger.error(u'Could not connect: {0}:{1}, {2}'.format(
-            hostname, kwargs.get('port', 22), e)
+            name, kwargs.get('port', 22), e)
         )
 
 
@@ -105,7 +109,7 @@ def connect_all(state):
                     break
 
         greenlets.append(
-            state.pool.spawn(connect, host.ssh_hostname, **kwargs)
+            state.pool.spawn(connect, host, **kwargs)
         )
 
     gevent.wait(greenlets)

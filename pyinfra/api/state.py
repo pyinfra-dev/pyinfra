@@ -48,7 +48,7 @@ class State(object):
         # Setup greenlet pool
         self.pool = Pool(config.PARALLEL)
 
-        hostnames = [host.ssh_hostname for host in inventory]
+        hostnames = [host.name for host in inventory]
 
         # Op basics
         self.op_order = []  # list of operation hashes

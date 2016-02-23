@@ -5,7 +5,7 @@
     "fact": {
         "group": "pyinfra",
         "user": "pyinfra",
-        "mode": "777",
+        "mode": 777,
         "mtime": "2016-02-13T12:56:00",
         "size": "8"
     }

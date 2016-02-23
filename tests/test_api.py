@@ -25,6 +25,8 @@ from pyinfra.api.exceptions import PyinfraError
 
 from pyinfra.modules import files, server
 
+from .util import create_host
+
 
 def make_inventory(hosts=('somehost', 'anotherhost'), **kwargs):
     return Inventory(
@@ -54,7 +56,7 @@ class TestApi(TestCase):
 
         # Get a host
         host = inventory['somehost']
-        self.assertEqual(host.ssh_hostname, 'somehost')
+        self.assertEqual(host.data.ssh_hostname, 'somehost')
         self.assertEqual(host.data.ssh_user, 'vagrant')
 
         # Check our group data
@@ -80,10 +82,17 @@ class TestApi(TestCase):
         self.assertEqual(len(inventory.connected_hosts), 2)
 
     def test_connect_exceptions_fail(self):
-        self.assertEqual(connect(AuthenticationException), None)
-        self.assertEqual(connect(SSHException), None)
-        self.assertEqual(connect(gaierror), None)
-        self.assertEqual(connect(socket_error), None)
+        for exception in (
+            AuthenticationException, SSHException,
+            gaierror, socket_error
+        ):
+            host = create_host({
+                'name': 'nowt',
+                'data': {
+                    'ssh_hostname': AuthenticationException
+                }
+            })
+            self.assertEqual(connect(host), None)
 
     def test_fail_percent(self):
         inventory = make_inventory(('somehost', SSHException))

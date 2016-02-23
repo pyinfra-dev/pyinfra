@@ -202,7 +202,7 @@ def run_ops(
     if serial:
         for host in hosts:
             _run_server_ops(
-                state, host.ssh_hostname,
+                state, host.name,
                 print_output=print_output, print_lines=print_lines
             )
         return
@@ -212,7 +212,7 @@ def run_ops(
         # Spawn greenlet for each host to run *all* ops
         greenlets = [
             state.pool.spawn(
-                _run_server_ops, state, host.ssh_hostname,
+                _run_server_ops, state, host.name,
                 print_output=print_output, print_lines=print_lines
             )
             for host in hosts
@@ -238,7 +238,7 @@ def run_ops(
             colored(', '.join(op_meta['names']), attrs=['bold'])
         ))
 
-        op_hosts = set(list(host.ssh_hostname for host in hosts)) - remove_hosts
+        op_hosts = set(list(host.name for host in hosts)) - remove_hosts
         successful_hosts = []
         failed_hosts = []
 
