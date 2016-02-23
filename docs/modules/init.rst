@@ -89,3 +89,9 @@ Manage the state of upstart managed services.
 + **command**: custom command to pass like: ``/etc/rc.d/<name> <command>``
 + **enabled**: whether this service should be enabled/disabled on boot
 
+Enabling/disabling services:
+    Upstart jobs define runlevels in their config files - as such there is no way to
+    edit/list these without fiddling with the config. So pyinfra simply manages the
+    existence of a ``/etc/init/<service>.override`` file, and sets its content to
+    "manual" to disable automatic start of services.
+

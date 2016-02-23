@@ -175,8 +175,9 @@ Init
 ~~~~~~~~~~~~~~~~~~~~
 
 
-    Low level check for every /etc/init.d/* script. Unfortunately many of these mishehave and return
-    exit status 0 while also displaying the help info/not offering status support.
+    Low level check for every /etc/init.d/* script. Unfortunately many of these mishehave
+    and return exit status 0 while also displaying the help info/not offering status
+    support.
 
     Returns a dict of name -> status.
 
@@ -185,12 +186,29 @@ Init
     
 
 
+:code:`rcd_enabled`
+~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a dict of service name -> whether enabled (on boot) status. Different to Linux
+    variants because BSD has no/one runlevel.
+    
+
+
 :code:`rcd_status`
 ~~~~~~~~~~~~~~~~~~
 
 
-    As above but for BSD (/etc/rc.d) systems. Unlike Linux/init.d, BSD init scripts are
-    well behaved and as such their output can be trusted.
+    Same as ``initd_status`` but for BSD (/etc/rc.d) systems. Unlike Linux/init.d, BSD
+    init scripts are well behaved and as such their output can be trusted.
+    
+
+
+:code:`systemd_enabled`
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a dict of name -> whether enabled for systemd managed services.
     
 
 

@@ -32,12 +32,17 @@ Add apt gpg keys with ``apt-key``.
 
 .. code:: python
 
-    apt.key(key)
+    apt.key(key=None, keyserver=None, keyid=None)
 
 + **key**: filename or URL
++ **keyserver**: URL of keyserver to fetch key from
++ **keyid**: key identifier when using keyserver
 
 Note:
-    always returns an add command, not state checking
+    Always returns an add command, not state checking.
+
+keyserver/id:
+    These must be provided together.
 
 
 :code:`apt.packages`
