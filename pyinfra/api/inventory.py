@@ -40,7 +40,7 @@ class Inventory(object):
             'ssh_user': ssh_user,
             'ssh_key': ssh_key,
             'ssh_key_password': ssh_key_password,
-            'ssh_port': ssh_port or 22,
+            'ssh_port': ssh_port,
             'ssh_password': ssh_password
         })
 
@@ -66,6 +66,10 @@ class Inventory(object):
             # SSH hostname defaults to the name, but can be overridden
             if 'ssh_hostname' not in host_data:
                 host_data['ssh_hostname'] = name
+
+            # SSH port defaults to 22, obvs
+            if 'ssh_port' not in host_data:
+                host_data['ssh_port'] = 22
 
             self.host_data[name] = AttrData(host_data)
 
