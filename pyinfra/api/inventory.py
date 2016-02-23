@@ -63,14 +63,6 @@ class Inventory(object):
             if isinstance(name, tuple):
                 name, host_data = name
 
-            # SSH hostname defaults to the name, but can be overridden
-            if 'ssh_hostname' not in host_data:
-                host_data['ssh_hostname'] = name
-
-            # SSH port defaults to 22, obvs
-            if 'ssh_port' not in host_data:
-                host_data['ssh_port'] = 22
-
             self.host_data[name] = AttrData(host_data)
 
             # Create the Host

@@ -30,7 +30,7 @@ def connect(host, **kwargs):
     logger.debug('Connecting to: {0} ({1})'.format(host.name, kwargs))
 
     name = host.name
-    hostname = host.data.ssh_hostname
+    hostname = host.data.ssh_hostname or name
 
     try:
         # Create new client & connect to the host
@@ -59,6 +59,8 @@ def connect(host, **kwargs):
     except gaierror:
         if hostname != name:
             logger.error(u'Could not resolve {0} host: {1}'.format(name, hostname))
+        else:
+            logger.error(u'Could not resolve {0}'.format(name))
 
     except socket_error as e:
         logger.error(u'Could not connect: {0}:{1}, {2}'.format(
@@ -79,7 +81,7 @@ def connect_all(state):
     for host in state.inventory:
         kwargs = {
             'username': host.data.ssh_user,
-            'port': host.data.ssh_port,
+            'port': host.data.ssh_port or 22,
             'timeout': state.config.TIMEOUT
         }
 
