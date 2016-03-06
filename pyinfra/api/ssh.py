@@ -82,7 +82,10 @@ def connect_all(state):
         kwargs = {
             'username': host.data.ssh_user,
             'port': host.data.ssh_port or 22,
-            'timeout': state.config.TIMEOUT
+            'timeout': state.config.TIMEOUT,
+            # At this point we're assuming a password/key are provided
+            'allow_agent': False,
+            'look_for_keys': False
         }
 
         # Password auth (boo!)
@@ -109,6 +112,11 @@ def connect_all(state):
                         password=host.data.ssh_key_password
                     )
                     break
+
+        # No key or password, so let's have paramiko look for SSH agents and user keys
+        else:
+            kwargs['allow_agent'] = True
+            kwargs['look_for_keys'] = True
 
         greenlets.append(
             state.pool.spawn(connect, host, **kwargs)
