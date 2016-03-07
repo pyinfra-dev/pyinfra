@@ -46,32 +46,70 @@ class Users(FactBase):
     .. code:: python
 
         'user_name': {
-            'uid': 1,
-            'gid': 1,
             'home': '/home/user_name',
-            'shell': '/bin/bash
+            'shell': '/bin/bash,
+            'group': 'main_user_group',
+            'groups': [
+                'other',
+                'groups'
+            ]
         },
         ...
     '''
 
-    command = 'cat /etc/passwd'
+    command = '''
+        for i in `cat /etc/passwd | cut -d: -f1`; do
+            ID=`id $i`
+            META=`cat /etc/passwd | grep ^$i: | cut -d: -f6-7`
+            echo $ID$META
+        done
+    '''
+
+    _regex = r'^uid=[0-9]+\(([a-z\-]+)\) gid=[0-9]+\(([a-z\-]+)\) groups=([,0-9a-z\-\(\)]+)(.*)$'
+    _group_regex = r'^[0-9]+\(([a-z\-]+)\)$'
 
     @classmethod
     def process(cls, output):
         users = {}
         for line in output:
-            try:
-                name, _, uid, gid, _, home, shell = line.split(':')
-            # Invalid /etc/passwd line?
-            except ValueError:
-                continue
+            matches = re.match(cls._regex, line)
 
-            users[name] = {
-                'uid': uid,
-                'gid': gid,
-                'home': home,
-                'shell': shell
-            }
+            if matches:
+                # Parse out the home/shell
+                home_shell = matches.group(4)
+                home = shell = None
+
+                # /blah: is just a home
+                if home_shell.endswith(':'):
+                    home = home_shell[:1]
+
+                # :/blah is just a shell
+                elif home_shell.startswith(':'):
+                    shell = home_shell[1:]
+
+                # Both home & shell
+                elif ':' in home_shell:
+                    home, shell = home_shell.split(':')
+
+                # Main user group
+                group = matches.group(2)
+
+                # Parse the groups
+                groups = []
+                for group_matches in matches.group(3).split(','):
+                    name = re.match(cls._group_regex, group_matches).group(1)
+                    # We only want secondary groups here
+                    if name != group:
+                        groups.append(
+                            name
+                        )
+
+                users[matches.group(1)] = {
+                    'group': group,
+                    'groups': groups,
+                    'home': home,
+                    'shell': shell
+                }
 
         return users
 
@@ -92,7 +130,7 @@ class LinuxDistribution(FactBase):
     command = 'cat /etc/*-release'
 
     # Currently supported distros
-    regexes = [
+    _regexes = [
         r'(Ubuntu) ([0-9]{2})\.([0-9]{2})',
         r'(CentOS) release ([0-9]).([0-9])',
         r'(CentOS) Linux release ([0-9]).([0-9])',
@@ -103,7 +141,7 @@ class LinuxDistribution(FactBase):
     def process(cls, output):
         output = '\n'.join(output)
 
-        for regex in cls.regexes:
+        for regex in cls._regexes:
             matches = re.search(regex, output)
             if matches:
                 return {
