@@ -57,6 +57,9 @@ colorama_init()
 # Bootstrap pyinfra pseudo_* modules
 from pyinfra import pseudo_modules  # noqa
 
+# Boots the facts index
+from pyinfra import facts  # noqa
+
 from pyinfra import logger, pseudo_state, pseudo_host, pseudo_inventory, hook
 from pyinfra.local import set_print_local
 from pyinfra.cli import (

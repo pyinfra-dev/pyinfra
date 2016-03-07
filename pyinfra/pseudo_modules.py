@@ -1,3 +1,7 @@
+# pyinfra
+# File: pyinfra/pseudo_modules.py
+# Desc: essentially a hack that provides dynamic imports for the current deploy (CLI only)
+
 import sys
 import pyinfra
 
@@ -21,14 +25,17 @@ class PseudoModule(object):
         self._module = module
 
 
+# The current deploy state
 sys.modules['pyinfra.pseudo_state'] = sys.modules['pyinfra.state'] = \
     pyinfra.pseudo_state = pyinfra.state = \
     PseudoModule()
 
-sys.modules['pyinfra.pseudo_host'] = sys.modules['pyinfra.host'] = \
-    pyinfra.pseudo_host = pyinfra.host = \
-    PseudoModule()
-
+# The current deploy inventory
 sys.modules['pyinfra.pseudo_inventory'] = sys.modules['pyinfra.inventory'] = \
     pyinfra.pseudo_inventory = pyinfra.inventory = \
+    PseudoModule()
+
+# The current target host
+sys.modules['pyinfra.pseudo_host'] = sys.modules['pyinfra.host'] = \
+    pyinfra.pseudo_host = pyinfra.host = \
     PseudoModule()
