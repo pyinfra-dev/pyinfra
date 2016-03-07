@@ -44,7 +44,7 @@ files.file(
     '/var/log/pyinfra.log',
     user='pyinfra',
     group='pyinfra',
-    mode='644',
+    mode=644,
     sudo=True
 )
 
@@ -53,7 +53,7 @@ files.directory(
     host.data.env_dir,
     user='pyinfra',
     group='pyinfra',
-    mode='755',
+    mode=755,
     recursive=True,
     sudo=True,
     serial=True
@@ -63,7 +63,7 @@ files.directory(
 files.put(
     'files/file.txt',
     '/home/vagrant/file.txt',
-    mode='777'
+    mode=777
 )
 # and sync directories
 files.sync(

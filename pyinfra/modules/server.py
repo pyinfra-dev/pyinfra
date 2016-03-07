@@ -177,7 +177,7 @@ def user(
                 state, host,
                 '{0}/.ssh'.format(home),
                 user=name, group=name,
-                mode='700'
+                mode=700
             ))
 
             filename = '{0}/.ssh/authorized_keys'.format(home)
@@ -186,7 +186,7 @@ def user(
             commands.extend(files.file(
                 state, host, filename,
                 user=name, group=name,
-                mode='600'
+                mode=600
             ))
 
             for key in public_keys:

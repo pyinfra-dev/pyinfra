@@ -2,6 +2,24 @@
 # File: pyinfra/modules/util/files.py
 # Desc: common functions for handling the filesystem
 
+from types import NoneType
+
+
+def ensure_mode_int(mode):
+    # Already an int (/None)?
+    if isinstance(mode, (int, NoneType)):
+        return mode
+
+    try:
+        # Try making an int ('700' -> 700)
+        return int(mode)
+
+    except (TypeError, ValueError):
+        pass
+
+    # Return as-is (ie +x which we don't need to normalise, it always gets run)
+    return mode
+
 
 def chmod(target, mode, recursive=False):
     return 'chmod {0}{1} {2}'.format(('-R ' if recursive else ''), mode, target)

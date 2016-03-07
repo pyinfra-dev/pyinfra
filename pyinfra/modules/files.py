@@ -14,7 +14,7 @@ from jinja2 import Template
 from pyinfra.api import operation, OperationError
 from pyinfra.api.util import get_file_sha1
 
-from .util.files import chmod, chown
+from .util.files import chmod, chown, ensure_mode_int
 
 
 def _sed_replace(state, filename, line, replace, flags=None):
@@ -226,6 +226,8 @@ def put(
     + mode: permissions of the files
     '''
 
+    mode = ensure_mode_int(mode)
+
     # Accept local_filename as a string
     if isinstance(local_filename, basestring):
         if state.deploy_dir and add_deploy_dir:
@@ -382,6 +384,7 @@ def file(
     + touch: whether to touch the file
     '''
 
+    mode = ensure_mode_int(mode)
     info = host.fact.file(name)
     commands = []
 
@@ -434,6 +437,7 @@ def directory(
     + recursive: recursively apply user/group/mode
     '''
 
+    mode = ensure_mode_int(mode)
     info = host.fact.directory(name)
     commands = []
 
