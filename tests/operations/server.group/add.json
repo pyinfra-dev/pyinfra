@@ -1,0 +1,9 @@
+{
+    "args": ["somegroup"],
+    "facts": {
+        "groups": []
+    },
+    "commands": [
+        "groupadd somegroup"
+    ]
+}

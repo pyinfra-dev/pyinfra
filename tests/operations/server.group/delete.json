@@ -1,0 +1,14 @@
+{
+    "args": ["somegroup"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "groups": [
+            "somegroup"
+        ]
+    },
+    "commands": [
+        "groupdel somegroup"
+    ]
+}

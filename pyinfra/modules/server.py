@@ -60,20 +60,46 @@ def script(state, host, filename):
 
 
 @operation
+def group(
+    state, host, name, present=True
+):
+    '''
+    Manage system groups.
+
+    + name: name of the group to ensure
+    + present: whether the group should be present or not
+    '''
+
+    commands = []
+    groups = host.groups or []
+    is_present = name in groups
+
+    # Group exists but we don't want them?
+    if not present and is_present:
+        commands.append('groupdel {0}'.format(name))
+
+    # Group doesn't exist and we want it?
+    elif present and not is_present:
+        commands.append('groupadd {0}'.format(name))
+
+    return commands
+
+
+@operation
 def user(
     state, host, name,
     present=True, home=None, shell=None, group=None, groups=None,
     public_keys=None, ensure_home=True
 ):
     '''
-    Manage Linux users & their ssh `authorized_keys`. Options:
+    Manage system users & their ssh `authorized_keys`. Options:
 
     + name: name of the user to ensure
     + present: whether this user should exist
     + home: the users home directory
     + shell: the users shell
-    + group: set the users primary group
-    + groups: set the users secondary groups
+    + group: the users primary group
+    + groups: the users secondary groups
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
     + ensure_home: whether to ensure the ``home`` directory exists
     '''

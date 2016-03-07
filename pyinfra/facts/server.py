@@ -39,9 +39,27 @@ class Date(FactBase):
         return parse_date(output[0])
 
 
+class Groups(FactBase):
+    '''
+    Returns a list of groups on the system.
+    '''
+
+    command = 'cat /etc/group'
+
+    @classmethod
+    def process(cls, output):
+        groups = []
+
+        for line in output:
+            if ':' in line:
+                groups.append(line.split(':')[0])
+
+        return groups
+
+
 class Users(FactBase):
     '''
-    Gets & returns a dict of users -> details:
+    Returns a dict of users -> details:
 
     .. code:: python
 
