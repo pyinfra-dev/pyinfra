@@ -25,7 +25,7 @@ def packages(state, host, packages=None, present=True, latest=False):
     '''
 
     return ensure_packages(
-        packages, host.gem_packages, present,
+        packages, host.fact.gem_packages, present,
         install_command='gem instal',
         uninstall_command='gem uninstall',
         version_join=':',

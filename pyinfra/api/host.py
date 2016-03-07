@@ -6,6 +6,19 @@ from .facts import is_fact, get_fact
 from .attrs import FallbackAttrData, wrap_attr_data
 
 
+class HostFacts(object):
+    def __init__(self, inventory, name):
+        self.inventory = inventory
+        self.name = name
+
+    def __getattr__(self, key):
+        if not is_fact(key):
+            raise AttributeError('No such fact: {0}'.format(key))
+
+        fact = get_fact(self.inventory.state, self.name, key)
+        return wrap_attr_data(key, fact)
+
+
 class Host(object):
     '''
     Represents a target host. Thin class that links up to facts and host/group data.
@@ -20,6 +33,7 @@ class Host(object):
         self.name = name
         self.groups = groups
 
+        # Attach the (override, default to: host, group, global) data structure
         self.data = FallbackAttrData(
             inventory.get_override_data(),
             inventory.get_host_data(name),
@@ -27,12 +41,8 @@ class Host(object):
             inventory.get_data()
         )
 
-    def __getattr__(self, key):
-        if not is_fact(key):
-            raise AttributeError('No such fact: {0}'.format(key))
-
-        fact = get_fact(self.inventory.state, self.name, key)
-        return wrap_attr_data(key, fact)
+        # Attach the fact structure
+        self.fact = HostFacts(inventory, name)
 
     @property
     def host_data(self):

@@ -79,11 +79,11 @@ class Users(FactBase):
         for i in `cat /etc/passwd | cut -d: -f1`; do
             ID=`id $i`
             META=`cat /etc/passwd | grep ^$i: | cut -d: -f6-7`
-            echo $ID$META
+            echo "$ID $META"
         done
     '''
 
-    _regex = r'^uid=[0-9]+\(([a-z\-]+)\) gid=[0-9]+\(([a-z\-]+)\) groups=([,0-9a-z\-\(\)]+)(.*)$'
+    _regex = r'^uid=[0-9]+\(([a-z0-9\-]+)\) gid=[0-9]+\(([a-z0-9\-]+)\) groups=([,0-9a-z\-\(\)]+) (.*)$'
     _group_regex = r'^[0-9]+\(([a-z\-]+)\)$'
 
     @classmethod
@@ -115,7 +115,12 @@ class Users(FactBase):
                 # Parse the groups
                 groups = []
                 for group_matches in matches.group(3).split(','):
-                    name = re.match(cls._group_regex, group_matches).group(1)
+                    name = re.match(cls._group_regex, group_matches)
+                    if name:
+                        name = name.group(1)
+                    else:
+                        continue
+
                     # We only want secondary groups here
                     if name != group:
                         groups.append(

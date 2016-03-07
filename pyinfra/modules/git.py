@@ -72,7 +72,7 @@ def repo(
 
     # Store git commands for directory prefix
     git_commands = []
-    is_repo = host.directory(path.join(target, '.git'))
+    is_repo = host.fact.directory(path.join(target, '.git'))
 
     # Cloning new repo?
     if not is_repo:
@@ -80,7 +80,7 @@ def repo(
 
     # Ensuring existing repo
     else:
-        current_branch = host.git_branch(target)
+        current_branch = host.fact.git_branch(target)
         if current_branch != branch:
             git_commands.append('checkout {0}'.format(branch))
 

@@ -72,7 +72,7 @@ def d(
     '''
 
     commands = _handle_service_control(
-        name, host.initd_status,
+        name, host.fact.initd_status,
         '/etc/init.d/{0} {1}',
         running, restarted, reloaded, command
     )
@@ -96,7 +96,7 @@ def d(
 
     # Remove any /etc/rcX.d/<name> links
     elif enabled is False:
-        links = host.find_links('/etc/rc*.d/*{0}'.format(name)) or []
+        links = host.fact.find_links('/etc/rc*.d/*{0}'.format(name)) or []
 
         # No state checking, just blindly remove any that exist
         for link in links:
@@ -123,7 +123,7 @@ def rc(
     '''
 
     commands = _handle_service_control(
-        name, host.rcd_status,
+        name, host.fact.rcd_status,
         '/etc/rc.d/{0} {1}',
         running, restarted, reloaded, command
     )
@@ -165,7 +165,7 @@ def upstart(
     '''
 
     commands = _handle_service_control(
-        name, host.upstart_status,
+        name, host.fact.upstart_status,
         'initctl {1} {0}',
         running, restarted, reloaded, command
     )
@@ -204,13 +204,13 @@ def systemd(
     '''
 
     commands = _handle_service_control(
-        name, host.systemd_status,
+        name, host.fact.systemd_status,
         'systemctl {1} {0}.service',
         running, restarted, reloaded, command
     )
 
     if isinstance(enabled, bool):
-        is_enabled = host.systemd_enabled.get(name, False)
+        is_enabled = host.fact.systemd_enabled.get(name, False)
 
         # Isn't enabled and want enabled?
         if not is_enabled and enabled is True:

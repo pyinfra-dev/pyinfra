@@ -33,6 +33,12 @@ server.user(
     timeout=30 # only applies to commands on the remote host (not SFTP, local Python)
 )
 
+# And groups
+server.group(
+    'pyinfra2',
+    sudo=True
+)
+
 # Ensure the state of files
 files.file(
     '/var/log/pyinfra.log',
@@ -74,7 +80,7 @@ files.template(
     'templates/template.txt.jn2',
     '/home/vagrant/template.txt',
     # non-standard kwargs are passed to the template
-    hostname=host.hostname
+    hostname=host.fact.hostname
 )
 
 # Execute arbitrary shell commands
@@ -103,7 +109,7 @@ if 'bsd' in host.groups:
 
 elif 'linux' in host.groups:
     # Work with facts about the remote host
-    if host.linux_distribution['name'] in ('Debian', 'Ubuntu'):
+    if host.fact.linux_distribution['name'] in ('Debian', 'Ubuntu'):
         # apt package manager
         apt.packages(
             ['git', 'python-pip'],
@@ -112,11 +118,11 @@ elif 'linux' in host.groups:
             cache_time=3600
         )
 
-    elif host.linux_distribution['name'] == 'CentOS':
+    elif host.fact.linux_distribution['name'] == 'CentOS':
         # Manage remote rpm files
         yum.rpm(
             'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{0}.noarch.rpm'.format(
-                host.linux_distribution['major']
+                host.fact.linux_distribution['major']
             ),
             sudo=True,
             op='epel_repo',  # this makes one operation despite differing args above
@@ -173,7 +179,7 @@ server.wait(
 )
 
 # Edit lines in files
-if host.os == 'Linux' and host.linux_distribution['name'] == 'CentOS':
+if host.fact.os == 'Linux' and host.fact.linux_distribution['name'] == 'CentOS':
     files.line(
         '/etc/sysconfig/selinux',
         '^SELINUX=.*',
@@ -183,6 +189,6 @@ if host.os == 'Linux' and host.linux_distribution['name'] == 'CentOS':
 
 # Execute Python locally, mid-deploy
 def some_python(state, host, hostname, *args, **kwargs):
-    print 'connecting hostname: {0}, actual: {1}'.format(hostname, host.hostname)
+    print 'connecting hostname: {0}, actual: {1}'.format(hostname, host.fact.hostname)
 
 python.execute(some_python, 'arg1', 'arg2', kwarg='hello world')

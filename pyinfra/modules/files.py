@@ -48,7 +48,7 @@ def download(
     '''
 
     # Get destination info
-    info = host.file(destination)
+    info = host.fact.file(destination)
 
     # Destination is a directory?
     if info is False:
@@ -105,7 +105,7 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
         match_line = '{0}$'.format(match_line)
 
     # Is there a matching line in this file?
-    is_present = host.find_in_file(name, match_line)
+    is_present = host.fact.find_in_file(name, match_line)
     commands = []
 
     # No line and we want it, append it
@@ -202,7 +202,7 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
 
     # Delete any extra files
     if delete:
-        remote_filenames = set(host.find_files(destination) or [])
+        remote_filenames = set(host.fact.find_files(destination) or [])
         wanted_filenames = set([remote_filename for _, remote_filename in put_files])
         files_to_delete = remote_filenames - wanted_filenames
         for filename in files_to_delete:
@@ -237,7 +237,7 @@ def put(
     else:
         local_file = local_filename
 
-    remote_file = host.file(remote_filename)
+    remote_file = host.fact.file(remote_filename)
     commands = []
 
     # No remote file, always upload and user/group/mode if supplied
@@ -253,7 +253,7 @@ def put(
     # File exists, check sum and check user/group/mode if supplied
     else:
         local_sum = get_file_sha1(local_file)
-        remote_sum = host.sha1_file(remote_filename)
+        remote_sum = host.fact.sha1_file(remote_filename)
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
@@ -332,7 +332,7 @@ def link(
     if present and not source:
         raise OperationError('If present is True source must be provided')
 
-    info = host.link(name)
+    info = host.fact.link(name)
     commands = []
 
     # Not a link?
@@ -382,7 +382,7 @@ def file(
     + touch: whether to touch the file
     '''
 
-    info = host.file(name)
+    info = host.fact.file(name)
     commands = []
 
     # Not a file?!
@@ -434,7 +434,7 @@ def directory(
     + recursive: recursively apply user/group/mode
     '''
 
-    info = host.directory(name)
+    info = host.fact.directory(name)
     commands = []
 
     # Not a directory?!

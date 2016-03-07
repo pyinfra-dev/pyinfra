@@ -60,7 +60,7 @@ def repo(state, host, name, present=True, key=None):
 
     commands = []
 
-    apt_sources = host.apt_sources or {}
+    apt_sources = host.fact.apt_sources or {}
 
     # Parse out the URL from the name if available
     url = name
@@ -120,13 +120,13 @@ def deb(state, host, source, present=True):
         source = temp_filename
 
     # Check for file .deb information (if file is present)
-    info = host.deb_package(source)
+    info = host.fact.deb_package(source)
 
     exists = False
 
     # We have deb info! Check against installed packages
     if info:
-        current_packages = host.deb_packages
+        current_packages = host.fact.deb_packages
 
         if (
             info['name'] in current_packages
@@ -184,11 +184,11 @@ def packages(
     # If cache_time check when apt was last updated, prevent updates if within time
     if update and cache_time:
         # Ubuntu provides this handy file
-        cache_info = host.file('/var/lib/apt/periodic/update-success-stamp')
+        cache_info = host.fact.file('/var/lib/apt/periodic/update-success-stamp')
 
         # Time on files is not tz-aware, and will be the same tz as the server's time,
-        # so we can safely remove the tzinfo from host.date before comparison.
-        cache_time = host.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
+        # so we can safely remove the tzinfo from host.fact.date before comparison.
+        cache_time = host.fact.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
         if cache_info and cache_info['mtime'] and cache_info['mtime'] > cache_time:
             update = False
 
@@ -200,7 +200,7 @@ def packages(
 
     # Compare/ensure packages are present/not
     commands.extend(ensure_packages(
-        packages, host.deb_packages, present,
+        packages, host.fact.deb_packages, present,
         install_command='DEBIAN_FRONTEND=noninteractive apt-get install -y',
         uninstall_command='DEBIAN_FRONTEND=noninteractive apt-get remove -y',
         version_join='=',

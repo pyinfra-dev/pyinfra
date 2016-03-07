@@ -100,12 +100,12 @@ def rpm(state, host, source, present=True):
         source = temp_filename
 
     # Check for file .rpm information
-    info = host.rpm_package(source)
+    info = host.fact.rpm_package(source)
     exists = False
 
     # We have info!
     if info:
-        current_packages = host.rpm_packages
+        current_packages = host.fact.rpm_packages
 
         if (
             info['name'] in current_packages
@@ -152,7 +152,7 @@ def packages(
         commands.append('yum update -y')
 
     commands.extend(ensure_packages(
-        packages, host.rpm_packages, present,
+        packages, host.fact.rpm_packages, present,
         install_command='yum install -y',
         uninstall_command='yum remove -y',
         upgrade_command='yum update -y',

@@ -28,12 +28,12 @@ def packages(state, host, packages=None, present=True):
         pkg_path = 'http://ftp.{http}.org/pub/{os}/{version}/packages/{arch}/'.format(
             http=host.os.lower(),
             os=host.os,
-            version=host.os_version,
+            version=host.fact.os_version,
             arch=host.arch
         )
 
     return ensure_packages(
-        packages, host.pkg_packages, present,
+        packages, host.fact.pkg_packages, present,
         install_command='PKG_PATH={0} pkg_add'.format(pkg_path),
         uninstall_command='pkg_delete'
     )

@@ -36,8 +36,8 @@ def packages(
         commands.append('pip install -r {0}'.format(requirements))
 
     current_packages = (
-        host.pip_virtualenv_packages(virtualenv)
-        if virtualenv else host.pip_packages
+        host.fact.pip_virtualenv_packages(virtualenv)
+        if virtualenv else host.fact.pip_packages
     )
 
     commands.extend(ensure_packages(

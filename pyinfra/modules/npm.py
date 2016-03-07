@@ -22,9 +22,9 @@ def packages(state, host, packages=None, present=True, latest=False, directory=N
     '''
 
     current_packages = (
-        host.npm_packages
+        host.fact.npm_packages
         if directory is None
-        else host.npm_local_packages(directory)
+        else host.fact.npm_local_packages(directory)
     )
 
     install_command = (

@@ -10,6 +10,7 @@ Linux/BSD.
 from pyinfra.api import operation
 
 from . import files
+from .util.files import chmod
 
 
 @operation
@@ -53,7 +54,7 @@ def script(state, host, filename):
     temp_file = state.get_temp_filename(filename)
     commands.extend(files.put(state, host, filename, temp_file))
 
-    commands.append('chmod +x {0}'.format(temp_file))
+    commands.append(chmod(temp_file, '+x'))
     commands.append(temp_file)
 
     return commands
@@ -71,7 +72,7 @@ def group(
     '''
 
     commands = []
-    groups = host.groups or []
+    groups = host.fact.groups or []
     is_present = name in groups
 
     # Group exists but we don't want them?
@@ -105,7 +106,7 @@ def user(
     '''
 
     commands = []
-    users = host.users or {}
+    users = host.fact.users or {}
     user = users.get(name)
 
     if groups is None:
