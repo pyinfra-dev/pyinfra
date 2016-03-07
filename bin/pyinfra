@@ -54,9 +54,6 @@ from termcolor import colored
 from colorama import init as colorama_init
 colorama_init()
 
-# Boots the facts index
-from pyinfra import facts  # noqa
-
 from pyinfra import logger, pseudo_state, pseudo_host, pseudo_inventory, hook
 from pyinfra.local import set_print_local
 from pyinfra.cli import (

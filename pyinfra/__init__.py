@@ -16,3 +16,6 @@ logger = logging.getLogger('pyinfra')
 
 # Trigger pseudo_* creation
 from . import pseudo_modules
+
+# Trigger facts index
+from . import facts
