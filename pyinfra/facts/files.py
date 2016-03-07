@@ -3,82 +3,10 @@
 # Desc: filesystem facts
 
 import re
-from datetime import datetime
 
 from pyinfra.api.facts import FactBase
 
-LS_REGEX = re.compile(
-    r'^[dl\-]([\-rwx]{9})\.?\s+[0-9]+\s+([a-zA-Z]+)\s+([a-zA-Z]+)\s+([0-9]+)\s+([a-zA-Z]{3}\s+[0-9]+\s+[0-9:]{4,5})\s+[a-zA-Z0-9\/\.]+\s*-?>?\s*([a-zA-Z0-9\/\.]*)'
-)
-
-SYMBOL_TO_OCTAL_PERMISSIONS = {
-    'rwx': '7',
-    'rw-': '6',
-    'r-x': '5',
-    'r--': '4',
-    '-wx': '3',
-    '-w-': '2',
-    '--x': '1'
-}
-
-
-def _parse_mode(mode):
-    '''
-    Converts ls mode output (rwxrwxrwx) -> integer (755).
-    '''
-
-    result = ''
-    # owner, group, world
-    for group in [mode[0:3], mode[3:6], mode[6:9]]:
-        if group in SYMBOL_TO_OCTAL_PERMISSIONS:
-            result = '{0}{1}'.format(result, SYMBOL_TO_OCTAL_PERMISSIONS[group])
-        else:
-            result = '{0}0'.format(result)
-
-    # Return as an integer
-    return int(result)
-
-
-def _parse_time(time):
-    # Try matching with the hour/second format, ie within the current year
-    try:
-        dt = datetime.strptime(time, '%b %d %H:%M')
-        return dt.replace(year=datetime.now().year)
-    except ValueError:
-        pass
-
-    # Otherwise we're in the past, timed to the nearest day
-    try:
-        return datetime.strptime(time, '%b %d %Y')
-    except ValueError:
-        pass
-
-
-def _process_ls_output(output, directory=False, link=False):
-    if output:
-        matches = re.match(LS_REGEX, output)
-        if matches:
-            # Ensure we have what we want
-            is_directory = output.startswith('d')
-            if directory is not is_directory:
-                return False
-
-            is_link = output.startswith('l')
-            if link is not is_link:
-                return False
-
-            out = {
-                'mode': _parse_mode(matches.group(1)),
-                'user': matches.group(2),
-                'group': matches.group(3),
-                'size': matches.group(4),
-                'mtime': _parse_time(matches.group(5))
-            }
-
-            if link:
-                out['link_target'] = matches.group(6)
-
-            return out
+from .util.files import parse_ls_output
 
 
 class File(FactBase):
@@ -88,19 +16,19 @@ class File(FactBase):
 
     @classmethod
     def process(cls, output):
-        return _process_ls_output(output[0])
+        return parse_ls_output(output[0])
 
 
 class Link(File):
     @classmethod
     def process(cls, output):
-        return _process_ls_output(output[0], link=True)
+        return parse_ls_output(output[0], link=True)
 
 
 class Directory(File):
     @classmethod
     def process(cls, output):
-        return _process_ls_output(output[0], directory=True)
+        return parse_ls_output(output[0], directory=True)
 
 
 class Sha1File(FactBase):
