@@ -2,14 +2,16 @@
     "args": ["someuser"],
     "kwargs": {
         "home": "homedir",
-        "shell": "shellbin"
+        "shell": "shellbin",
+        "group": "mygroup",
+        "groups": ["secondary_group", "another"]
     },
     "facts": {
         "users": {},
         "directory:homedir": null
     },
     "commands": [
-        "useradd -d homedir -s shellbin someuser",
+        "useradd -d homedir -s shellbin -g mygroup -G secondary_group,another someuser",
         "mkdir -p homedir",
         "chown someuser:someuser homedir"
     ]

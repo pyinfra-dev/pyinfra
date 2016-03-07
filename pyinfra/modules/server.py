@@ -62,8 +62,8 @@ def script(state, host, filename):
 @operation
 def user(
     state, host, name,
-    present=True, home=None, shell=None, public_keys=None,
-    ensure_home=True
+    present=True, home=None, shell=None, group=None, groups=None,
+    public_keys=None, ensure_home=True
 ):
     '''
     Manage Linux users & their ssh `authorized_keys`. Options:
@@ -72,6 +72,8 @@ def user(
     + present: whether this user should exist
     + home: the users home directory
     + shell: the users shell
+    + group: set the users primary group
+    + groups: set the users secondary groups
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
     + ensure_home: whether to ensure the ``home`` directory exists
     '''
@@ -79,6 +81,9 @@ def user(
     commands = []
     users = host.users or {}
     user = users.get(name)
+
+    if groups is None:
+        groups = []
 
     # User exists but we don't want them?
     if not present and user:
@@ -96,17 +101,37 @@ def user(
         if shell:
             args.append('-s {0}'.format(shell))
 
+        if group:
+            args.append('-g {0}'.format(group))
+
+        if groups:
+            args.append('-G {0}'.format(','.join(groups)))
+
         commands.append('useradd {0} {1}'.format(' '.join(args), name))
 
     # User exists and we want them, check home/shell/keys
     else:
+        args = []
+
         # Check homedir
         if home and user['home'] != home:
-            commands.append('usermod -d {0} {1}'.format(home, name))
+            args.append('-d {0}'.format(home))
 
         # Check shell
         if shell and user['shell'] != shell:
-            commands.append('usermod -s {0} {1}'.format(shell, name))
+            args.append('-s {0}'.format(shell))
+
+        # Check primary group
+        if group and user['group'] != group:
+            args.append('-g {0}'.format(group))
+
+        # Check secondary groups
+        if set(user['groups']) != set(groups):
+            args.append('-G {0}'.format(','.join(groups)))
+
+        # Need to mod the user?
+        if args:
+            commands.append('usermod {0} {1}'.format(' '.join(args), name))
 
     # Ensure home directory ownership
     if home:

@@ -1,17 +1,22 @@
 {
     "args": ["someuser"],
     "kwargs": {
-        "shell": "/bin/false"
+        "shell": "/bin/false",
+        "groups": ["group1", "group2", "group3"]
     },
     "facts": {
         "users": {
             "someuser": {
                 "home": "/home",
-                "shell": "/bin/bash"
+                "shell": "/bin/bash",
+                "group": "nowt",
+                "groups": [
+                    "group1", "group2"
+                ]
             }
         }
     },
     "commands": [
-    "usermod -s /bin/false someuser"
+        "usermod -s /bin/false -G group1,group2,group3 someuser"
     ]
 }
