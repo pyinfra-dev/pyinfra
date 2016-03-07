@@ -31,5 +31,6 @@ if os.environ.get('READTHEDOCS') == 'True':
             'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
             'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
             '_static/theme.css',
-        ]
+        ],
+        'theme_css': '_static/theme.css'
     }
