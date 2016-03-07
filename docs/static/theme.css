@@ -2,51 +2,51 @@
 
 
 .wy-nav-side {
-    background: rgb(240, 240, 240);
+    background: rgb(240, 240, 240) !important;
 }
 
 .wy-side-nav-search {
-    background: #556270;
+    background: #556270 !important;
 }
 
 .wy-side-nav-search input[type=text] {
-    border-radius: 0;
+    border-radius: 0 !important;
 }
 
 .wy-nav-content-wrap {
-    position: relative;
+    position: relative !important;
 }
 
 .wy-nav-content {
-    background: #FCFCFC;
+    background: #FCFCFC !important;
 }
 
 .wy-menu-vertical a:hover {
-    background-color: #fcfcfc;
-    color: #404040;
+    background-color: #fcfcfc !important;
+    color: #404040 !important;
 }
 
 .wy-menu-vertical a {
-    color: #909090;
+    color: #909090 !important;
 }
 
 .wy-menu-vertical li.current > a {
-    border: none;
+    border: none !important;
 }
 
 .wy-menu-vertical li.current a {
-    border: none;
+    border: none !important;
 }
 
 .wy-menu-vertical li code {
-    font-size: 100%;
+    font-size: 100% !important;
 }
 
 .rst-versions {
-    border-top: none;
-    background-color: #556270;
+    border-top: none !important;
+    background-color: #556270 !important;
 }
 
 .rst-versions .rst-current-version {
-    background: transparent;
+    background: transparent !important;
 }
