@@ -43,7 +43,9 @@ class AttrDataInt(AttrBase, int):
 
 
 class AttrData(object):
-    '''Dict with attribute access and AttrBase wrappers.'''
+    '''
+    Dict with attribute access and AttrBase wrappers.
+    '''
 
     def __init__(self, attrs):
         self.attrs = attrs
@@ -65,7 +67,9 @@ class AttrData(object):
 
 
 class FallbackAttrData(object):
-    '''Combines multiple AttrData's to search for attributes.'''
+    '''
+    Combines multiple AttrData's to search for attributes.
+    '''
 
     def __init__(self, *datas):
         self.datas = datas

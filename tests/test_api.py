@@ -85,11 +85,8 @@ class TestApi(TestCase):
             AuthenticationException, SSHException,
             gaierror, socket_error
         ):
-            host = create_host({
-                'name': 'nowt',
-                'data': {
-                    'ssh_hostname': AuthenticationException
-                }
+            host = create_host(name='nowt', data={
+                'ssh_hostname': AuthenticationException
             })
             self.assertEqual(connect(host), None)
 

@@ -3,6 +3,7 @@
 # Desc: utilities for fake pyinfra state/host objects
 
 from pyinfra.api import Config
+from pyinfra.api.attrs import AttrData
 
 
 class FakeState(object):
@@ -39,7 +40,7 @@ class FakeFact(object):
         return default
 
 
-class FakeHost(object):
+class FakeFacts(object):
     def __init__(self, facts):
         self.facts = facts
 
@@ -50,18 +51,26 @@ class FakeHost(object):
             return FakeFact(self.facts[key])
 
 
-def create_host(fact_data):
+class FakeHost(object):
+    def __init__(self, name, facts, data):
+        self.name = name
+        self.fact = FakeFacts(facts)
+        self.data = AttrData(data)
+
+
+def create_host(name=None, facts=None, data=None):
     '''
     Creates a FakeHost object with attached fact data.
     '''
 
-    facts = {}
+    real_facts = {}
+    facts = facts or {}
 
-    for name, data in fact_data.iteritems():
+    for name, fact_data in facts.iteritems():
         if ':' in name:
             name, arg = name.split(':')
-            facts.setdefault(name, {})[arg] = data
+            real_facts.setdefault(name, {})[arg] = fact_data
         else:
-            facts[name] = data
+            real_facts[name] = fact_data
 
-    return FakeHost(facts)
+    return FakeHost(name, facts=real_facts, data=data)

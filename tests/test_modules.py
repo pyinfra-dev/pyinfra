@@ -37,7 +37,7 @@ def make_operation_tests(arg):
 
         def jsontest_function(self, test_name, test_data):
             # Create a host with this tests facts and attach to pseudo host
-            host = create_host(test_data.get('facts', {}))
+            host = create_host(facts=test_data.get('facts', {}))
             pseudo_host.set(host)
 
             commands = op._pyinfra_op(
