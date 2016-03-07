@@ -54,7 +54,10 @@ from termcolor import colored
 from colorama import init as colorama_init
 colorama_init()
 
-from pyinfra import logger, pseudo_state, pseudo_host, hook
+# Bootstrap pyinfra pseudo_* modules
+from pyinfra import pseudo_modules  # noqa
+
+from pyinfra import logger, pseudo_state, pseudo_host, pseudo_inventory, hook
 from pyinfra.local import set_print_local
 from pyinfra.cli import (
     FakeHost,
@@ -167,7 +170,8 @@ try:
     state = State(inventory, config)
     state.deploy_dir = deploy_dir
 
-    # Attach to pseudo state
+    # Attach to pseudo inventory & state
+    pseudo_inventory.set(inventory)
     pseudo_state.set(state)
 
     # Load any hooks/config from the deploy file

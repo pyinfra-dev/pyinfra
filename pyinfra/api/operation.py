@@ -11,9 +11,10 @@ state. This is then run later by pyinfra's ``__main__`` or the :doc:`./operation
 from functools import wraps
 
 from pyinfra import pseudo_state, pseudo_host
+from pyinfra.pseudo_modules import PseudoModule
 
-from .host import Host, HostModule
-from .state import State, StateModule
+from .host import Host
+from .state import State
 from .util import make_hash, get_arg_name
 
 
@@ -49,8 +50,8 @@ def operation(func):
         # If we're in CLI mode, there's no state/host passed down, we need to use the
         # global "pseudo" modules.
         if len(args) < 2 or not (
-            isinstance(args[0], (State, StateModule))
-            and isinstance(args[1], (Host, HostModule))
+            isinstance(args[0], (State, PseudoModule))
+            and isinstance(args[1], (Host, PseudoModule))
         ):
             state = pseudo_state
             host = pseudo_host

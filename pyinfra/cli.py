@@ -14,7 +14,7 @@ from importlib import import_module
 
 from termcolor import colored
 
-from pyinfra import logger
+from pyinfra import logger, pseudo_inventory
 
 from pyinfra.api import Config, Inventory
 from pyinfra.api.facts import facts
@@ -403,6 +403,14 @@ def make_inventory(
     if file_groupname and file_groupname not in groups:
         groups[file_groupname] = all_hosts
 
+    # In pyinfra an inventory is a combination of (hostnames + data). However, in CLI
+    # mode we want to be define this in separate files (inventory / group data). The
+    # issue is we want inventory access within the group data files - but at this point
+    # we're not ready to make an Inventory. So here we just create a fake one, and attach
+    # it to pseudo_inventory while we import the data files.
+    fake_inventory = Inventory(groups['ALL'])
+    pseudo_inventory.set(fake_inventory)
+
     # For each group load up any data
     for name, hosts in groups.iteritems():
         data = {}
@@ -425,6 +433,9 @@ def make_inventory(
 
         # Attach to group object
         groups[name] = (hosts, data)
+
+    # Reset the pseudo inventory
+    pseudo_inventory.set(None)
 
     return Inventory(
         groups.pop('ALL'),

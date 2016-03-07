@@ -12,9 +12,3 @@ import logging
 
 # Global pyinfra logger
 logger = logging.getLogger('pyinfra')
-
-# Trigger facts index
-from . import facts
-
-# Trigger pyinfra.pseudo_[host|state] creation
-from . import api
