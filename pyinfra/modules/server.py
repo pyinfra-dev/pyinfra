@@ -60,7 +60,11 @@ def script(state, host, filename):
 
 
 @operation
-def user(state, host, name, present=True, home=None, shell=None, public_keys=None):
+def user(
+    state, host, name,
+    present=True, home=None, shell=None, public_keys=None,
+    ensure_home=True
+):
     '''
     Manage Linux users & their ssh `authorized_keys`. Options:
 
@@ -69,6 +73,7 @@ def user(state, host, name, present=True, home=None, shell=None, public_keys=Non
     + home: the users home directory
     + shell: the users shell
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
+    + ensure_home: whether to ensure the ``home`` directory exists
     '''
 
     commands = []
@@ -105,10 +110,11 @@ def user(state, host, name, present=True, home=None, shell=None, public_keys=Non
 
     # Ensure home directory ownership
     if home:
-        commands.extend(files.directory(
-            state, host, home,
-            user=name, group=name
-        ))
+        if ensure_home:
+            commands.extend(files.directory(
+                state, host, home,
+                user=name, group=name
+            ))
 
         # Add SSH keys
         if public_keys is not None:
