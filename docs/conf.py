@@ -19,4 +19,9 @@ pygments_style = 'sphinx'
 # Theme style override
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['static']
-html_style = 'css/theme.css'
+html_style = 'theme.css'
+html_context = {
+    'css_files': [
+        '_static/theme.css'
+    ]
+}
