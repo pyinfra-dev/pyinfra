@@ -12,3 +12,7 @@ import logging
 
 # Global pyinfra logger
 logger = logging.getLogger('pyinfra')
+
+
+# Trigger pseudo_* creation
+from . import pseudo_modules

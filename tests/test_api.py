@@ -56,7 +56,6 @@ class TestApi(TestCase):
 
         # Get a host
         host = inventory['somehost']
-        self.assertEqual(host.data.ssh_hostname, 'somehost')
         self.assertEqual(host.data.ssh_user, 'vagrant')
 
         # Check our group data

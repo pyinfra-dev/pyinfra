@@ -54,9 +54,6 @@ from termcolor import colored
 from colorama import init as colorama_init
 colorama_init()
 
-# Bootstrap pyinfra pseudo_* modules
-from pyinfra import pseudo_modules  # noqa
-
 # Boots the facts index
 from pyinfra import facts  # noqa
 
