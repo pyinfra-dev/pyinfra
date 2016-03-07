@@ -306,6 +306,14 @@ Server
 Returns the current datetime on the server.
 
 
+:code:`groups`
+~~~~~~~~~~~~~~
+
+
+    Returns a list of groups on the system.
+    
+
+
 :code:`home`
 ~~~~~~~~~~~~
 
@@ -342,7 +350,7 @@ Returns the current datetime on the server.
 ~~~~~~~~~~~~~
 
 
-    Gets & returns a dict of users -> details:
+    Returns a dict of users -> details:
 
     .. code:: python
 

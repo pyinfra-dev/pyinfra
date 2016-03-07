@@ -5,6 +5,19 @@ Server
 The server module takes care of os-level state. Targets POSIX compatability, tested on
 Linux/BSD.
 
+:code:`server.group`
+~~~~~~~~~~~~~~~~~~~~
+
+Manage system groups.
+
+.. code:: python
+
+    server.group(name, present=True)
+
++ **name**: name of the group to ensure
++ **present**: whether the group should be present or not
+
+
 :code:`server.script`
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -32,7 +45,7 @@ Run raw shell code.
 :code:`server.user`
 ~~~~~~~~~~~~~~~~~~~
 
-Manage Linux users & their ssh `authorized_keys`. Options:
+Manage system users & their ssh `authorized_keys`. Options:
 
 .. code:: python
 
@@ -45,8 +58,8 @@ Manage Linux users & their ssh `authorized_keys`. Options:
 + **present**: whether this user should exist
 + **home**: the users home directory
 + **shell**: the users shell
-+ **group**: set the users primary group
-+ **groups**: set the users secondary groups
++ **group**: the users primary group
++ **groups**: the users secondary groups
 + **public_keys**: list of public keys to attach to this user, ``home`` must be specified
 + **ensure_home**: whether to ensure the ``home`` directory exists
 
