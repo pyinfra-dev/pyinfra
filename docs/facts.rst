@@ -347,10 +347,13 @@ Returns the current datetime on the server.
     .. code:: python
 
         'user_name': {
-            'uid': 1,
-            'gid': 1,
             'home': '/home/user_name',
-            'shell': '/bin/bash
+            'shell': '/bin/bash,
+            'group': 'main_user_group',
+            'groups': [
+                'other',
+                'groups'
+            ]
         },
         ...
     

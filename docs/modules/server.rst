@@ -36,13 +36,19 @@ Manage Linux users & their ssh `authorized_keys`. Options:
 
 .. code:: python
 
-    server.user(name, present=True, home=None, shell=None, public_keys=None)
+    server.user(
+        name, present=True, home=None, shell=None,
+        group=None, groups=None, public_keys=None, ensure_home=True
+    )
 
 + **name**: name of the user to ensure
 + **present**: whether this user should exist
 + **home**: the users home directory
 + **shell**: the users shell
++ **group**: set the users primary group
++ **groups**: set the users secondary groups
 + **public_keys**: list of public keys to attach to this user, ``home`` must be specified
++ **ensure_home**: whether to ensure the ``home`` directory exists
 
 
 :code:`server.wait`

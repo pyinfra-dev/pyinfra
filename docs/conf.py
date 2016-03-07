@@ -22,7 +22,7 @@ pygments_style = 'sphinx'
 # Theme style override
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['static']
-html_style = 'style.css'
+html_style = 'theme.css'
 
 # Readthedocs appears to ignore html_style
 if os.environ.get('READTHEDOCS') == 'True':
@@ -30,6 +30,6 @@ if os.environ.get('READTHEDOCS') == 'True':
         'css_files': [
             'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
             'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
-            '_static/style.css'
+            '_static/theme.css',
         ]
     }
