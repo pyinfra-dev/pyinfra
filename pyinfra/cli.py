@@ -32,13 +32,13 @@ class CliException(PyinfraError):
 
 class FakeData(object):
     def __getattr__(self, key):
-        return None
+        return FakeData()
 
     def __getitem__(self, key):
-        return None
+        return FakeData()
 
     def __iter__(self):
-        yield None
+        yield FakeData()
 
     def __call__(self, *args, **kwargs):
         return self
@@ -51,6 +51,10 @@ class FakeHost(object):
 
     @property
     def host_data(self):
+        return FakeData()
+
+    @property
+    def fact(self):
         return FakeData()
 
     def __getattr__(self, key):
