@@ -56,14 +56,28 @@ class Inventory(object):
                 name = name[0] if isinstance(name, tuple) else name
                 names_to_groups.setdefault(name, []).append(group_name)
 
-        # Build the actual Host instances
-        hosts = {}
+        # Build host data
         for name in names:
+            # Extract any data
             host_data = {}
             if isinstance(name, tuple):
                 name, host_data = name
 
-            self.host_data[name] = AttrData(host_data)
+            # Ensure host has data dict
+            self.host_data.setdefault(name, {})
+            # Give host any data
+            self.host_data[name].update(host_data)
+
+        # Now we've got host data, convert -> AttrData
+        self.host_data = {
+            name: AttrData(d)
+            for name, d in self.host_data.iteritems()
+        }
+
+        # Actually make Host instances
+        hosts = {}
+        for name in names:
+            name = name[0] if isinstance(name, tuple) else name
 
             # Create the Host
             host = Host(self, name, names_to_groups.get(name))
