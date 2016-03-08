@@ -23,6 +23,9 @@ class OperationMeta(object):
         self.hash = hash
         self.commands = commands or []
 
+        # Changed flag = did we do anything?
+        self.changed = len(self.commands) > 0
+
 
 def add_op(state, op_func, *args, **kwargs):
     '''
