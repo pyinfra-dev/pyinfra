@@ -89,7 +89,7 @@ class InitdStatus(FactBase):
             fi
         done
     '''
-    _regex = r'([a-zA-Z0-9]+)=([0-9]+)'
+    _regex = r'([a-zA-Z0-9\-]+)=([0-9]+)'
 
     @classmethod
     def process(cls, output):
