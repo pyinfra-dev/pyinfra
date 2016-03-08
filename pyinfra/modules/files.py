@@ -85,24 +85,25 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
     Ensure lines in files using grep to locate and sed to replace.
 
     + name: target remote file to edit
-    + line: string or regex matching the *entire* target line
+    + line: string or regex matching the target line
     + present: whether the line should be in the file
     + replace: text to replace entire matching lines when ``present=True``
     + flags: list of flags to pass to sed when replacing/deleting
 
-    Note:
-        if not present, line will have ``^`` & ``$`` wrapped around so when using regex
-        the entire line must match (eg ``SELINUX=.*``)
+    Note on regex matching:
+        unless line matches a line (starts with ^, ends $), pyinfra will wrap it such that
+        it does, like: ``^.*LINE*.$``. This means we don't swap parts of lines out. To use
+        more involved examples, see ``files.replace``.
     '''
 
     match_line = line
 
     # Ensure we're matching a whole ^line$
     if not match_line.startswith('^'):
-        match_line = '^{0}'.format(match_line)
+        match_line = '^.*{0}'.format(match_line)
 
     if not match_line.endswith('$'):
-        match_line = '{0}$'.format(match_line)
+        match_line = '{0}.*$'.format(match_line)
 
     # Is there a matching line in this file?
     is_present = host.fact.find_in_file(name, match_line)
