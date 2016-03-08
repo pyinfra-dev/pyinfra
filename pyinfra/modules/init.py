@@ -31,10 +31,10 @@ def _handle_service_control(
     if running is False and status is not False:
         commands.append(formatter.format(name, 'stop'))
 
-    if restarted:
+    if restarted and status:
         commands.append(formatter.format(name, 'restart'))
 
-    if reloaded:
+    if reloaded and status:
         commands.append(formatter.format(name, 'reload'))
 
     if command:
