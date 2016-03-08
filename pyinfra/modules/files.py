@@ -311,6 +311,7 @@ def template(
 
     # Ensure host is always available inside templates
     data['host'] = host
+    data['inventory'] = state.inventory
 
     # Render and make file-like it's output
     output = template.render(data)
