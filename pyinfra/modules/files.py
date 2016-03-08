@@ -261,13 +261,23 @@ def put(
         if local_sum != remote_sum:
             commands.append((local_file, remote_filename))
 
-        # Check mode
-        if mode and remote_file['mode'] != mode:
-            commands.append(chmod(remote_filename, mode))
+            if user or group:
+                commands.append(chown(remote_filename, user, group))
 
-        # Check user/group
-        if (user and remote_file['user'] != user) or (group and remote_file['group'] != group):
-            commands.append(chown(remote_filename, user, group))
+            if mode:
+                commands.append(chmod(remote_filename, mode))
+
+        else:
+            # Check mode
+            if mode and remote_file['mode'] != mode:
+                commands.append(chmod(remote_filename, mode))
+
+            # Check user/group
+            if (
+                (user and remote_file['user'] != user)
+                or (group and remote_file['group'] != group)
+            ):
+                commands.append(chown(remote_filename, user, group))
 
     return commands
 
