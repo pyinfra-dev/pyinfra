@@ -191,7 +191,9 @@ def run_shell_command(
     connection = state.ssh_connections[hostname]
 
     # Run it! Get stdout, stderr & the underlying channel
-    _, stdout_buffer, stderr_buffer = connection.exec_command(command)
+    _, stdout_buffer, stderr_buffer = connection.exec_command(
+        command, timeout=state.config.TIMEOUT
+    )
     channel = stdout_buffer.channel
 
     # Iterate through outputs to get an exit status and generate desired list output,
