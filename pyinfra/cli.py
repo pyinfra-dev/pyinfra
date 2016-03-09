@@ -11,6 +11,7 @@ from fnmatch import fnmatch
 from datetime import datetime
 from types import FunctionType
 from importlib import import_module
+from cStringIO import OutputType, InputType
 
 from termcolor import colored
 
@@ -166,6 +167,9 @@ def json_encode(obj):
 
     elif isinstance(obj, file):
         return str(obj.name)
+
+    elif isinstance(obj, (InputType, OutputType)):
+        return 'In-memory file: {0}'.format(obj.read())
 
     else:
         raise TypeError('Cannot serialize: {0}'.format(obj))
