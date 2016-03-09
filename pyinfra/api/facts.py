@@ -2,6 +2,8 @@
 # File: pyinfra/api/facts.py
 # Desc: index fact classes for access via pyinfra.host
 
+from socket import timeout as timeout_error
+
 from gevent.lock import Semaphore
 from termcolor import colored
 
@@ -64,7 +66,10 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
     '''
 
     print_output = print_output or print_fact_output
-    fact = facts[name]
+
+    # Create an instance of the fact
+    fact = facts[name]()
+
     command = fact.command
 
     if args:
@@ -91,8 +96,13 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
     hostname_facts = {}
 
     for hostname, greenlet in greenlets.iteritems():
-        channel, stdout, stderr = greenlet.get()
-        data = fact.process(stdout) if stdout else None
+        try:
+            channel, stdout, stderr = greenlet.get()
+            data = fact.process(stdout) if stdout else None
+        # Fact timeouts just mean no fact, ie we don't fail
+        except timeout_error:
+            data = None
+
         hostname_facts[hostname] = data
 
     log_name = colored(name, attrs=['bold'])
@@ -118,8 +128,8 @@ def get_fact(state, hostname, name, print_output=False):
     '''
 
     print_output = print_output or print_fact_output
-    sudo = False
-    sudo_user = None
+    sudo = state.config.SUDO
+    sudo_user = state.config.SUDO_USER
 
     if state.current_op_sudo:
         sudo, sudo_user = state.current_op_sudo
