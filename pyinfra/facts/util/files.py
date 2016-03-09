@@ -3,6 +3,7 @@
 # Desc: file related fact utilities
 
 import re
+from os import path
 from datetime import datetime
 
 
@@ -53,7 +54,7 @@ def _parse_time(time):
         pass
 
 
-def parse_ls_output(output, directory=False, link=False):
+def parse_ls_output(filename, output, directory=False, link=False):
     if output:
         matches = re.match(LS_REGEX, output)
         if matches:
@@ -75,6 +76,19 @@ def parse_ls_output(output, directory=False, link=False):
             }
 
             if link:
-                out['link_target'] = matches.group(6)
+                target = matches.group(6)
+
+                # If not an absolute path, combine with the source to get one
+                if not path.isabs(target):
+                    target_filename = path.basename(target)
+                    target_dirname = path.dirname(target)
+                    source_dirname = path.dirname(filename)
+
+                    target_dirname = path.normpath(
+                        path.join(source_dirname, target_dirname)
+                    )
+                    target = path.join(target_dirname, target_filename)
+
+                out['link_target'] = target
 
             return out
