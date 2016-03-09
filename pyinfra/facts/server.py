@@ -34,8 +34,7 @@ class Date(FactBase):
 
     command = 'date'
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         return parse_date(output[0])
 
 
@@ -46,8 +45,7 @@ class Groups(FactBase):
 
     command = 'cat /etc/group'
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         groups = []
 
         for line in output:
@@ -86,11 +84,10 @@ class Users(FactBase):
     _regex = r'^uid=[0-9]+\(([a-z0-9\-]+)\) gid=[0-9]+\(([a-z0-9\-]+)\) groups=([,0-9a-z\-\(\)]+) (.*)$'
     _group_regex = r'^[0-9]+\(([a-z\-]+)\)$'
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         users = {}
         for line in output:
-            matches = re.match(cls._regex, line)
+            matches = re.match(self._regex, line)
 
             if matches:
                 # Parse out the home/shell
@@ -115,7 +112,7 @@ class Users(FactBase):
                 # Parse the groups
                 groups = []
                 for group_matches in matches.group(3).split(','):
-                    name = re.match(cls._group_regex, group_matches)
+                    name = re.match(self._group_regex, group_matches)
                     if name:
                         name = name.group(1)
                     else:
@@ -160,11 +157,10 @@ class LinuxDistribution(FactBase):
         r'(Debian) GNU/Linux ([0-9])()'
     ]
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         output = '\n'.join(output)
 
-        for regex in cls._regexes:
+        for regex in self._regexes:
             matches = re.search(regex, output)
             if matches:
                 return {

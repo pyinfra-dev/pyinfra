@@ -20,6 +20,5 @@ class GemPackages(FactBase):
     command = 'gem list --local'
     _regex = r'^([a-zA-Z0-9\-\+\_]+)\s\(([0-9\.]+)\)$'
 
-    @classmethod
-    def process(cls, output):
-        return parse_packages(cls._regex, output)
+    def process(self, output):
+        return parse_packages(self._regex, output)

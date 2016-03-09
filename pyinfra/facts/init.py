@@ -15,12 +15,11 @@ class UpstartStatus(FactBase):
     command = 'initctl list'
     _regex = r'^([a-z\-]+) [a-z]+\/([a-z]+)'
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         services = {}
 
         for line in output:
-            matches = re.match(cls._regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 services[matches.group(1)] = matches.group(2) == 'running'
 
@@ -35,12 +34,11 @@ class SystemdStatus(FactBase):
     command = 'systemctl -alt service list-units'
     _regex = r'^([a-z\-]+)\.service\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         services = {}
 
         for line in output:
-            matches = re.match(cls._regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 services[matches.group(1)] = matches.group(2) == 'running'
 
@@ -55,12 +53,11 @@ class SystemdEnabled(FactBase):
     command = 'systemctl -alt service list-unit-files'
     _regex = r'^([a-z\-]+)\.service\s+([a-z]+)'
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         services = {}
 
         for line in output:
-            matches = re.match(cls._regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 services[matches.group(1)] = matches.group(2) in ('enabled', 'static')
 
@@ -91,12 +88,11 @@ class InitdStatus(FactBase):
     '''
     _regex = r'([a-zA-Z0-9\-]+)=([0-9]+)'
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         services = {}
 
         for line in output:
-            matches = re.match(cls._regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 status = int(matches.group(2))
 

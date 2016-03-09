@@ -26,12 +26,11 @@ class BlockDevices(FactBase):
     command = 'df'
     _regex = r'([a-zA-Z0-9\/\-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         devices = {}
 
         for line in output:
-            matches = re.match(cls._regex, line)
+            matches = re.match(self._regex, line)
             if matches:
                 if matches.group(1) == 'none':
                     continue
@@ -49,7 +48,7 @@ class BlockDevices(FactBase):
 
 nettools_1_regexes = [
     (
-        r'^inet addr:([0-9\.]+)\s+Bcast:([0-9\.]+)\s+Mask:([0-9\.]+)$',
+        r'^inet addr:([0-9\.]+).+Bcast:([0-9\.]+).+Mask:([0-9\.]+)$',
         ('ipv4', 'address', 'broadcast', 'netmask')
     ),
     (
@@ -116,17 +115,16 @@ class NetworkDevices(FactBase):
 
     _start_regexes = [
         (
-            r'^([a-z0-9_]+)\s+Link encap:',
+            r'^([a-z0-9_:]+)\s+Link encap:',
             lambda lines: _parse_regexes(nettools_1_regexes, lines)
         ),
         (
-            r'^([a-z0-9_]+): flags=',
+            r'^([a-z0-9_:]+): flags=',
             lambda lines: _parse_regexes(nettools_2_regexes, lines)
         )
     ]
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         devices = {}
 
         # Store current matches (start lines), the handler and any lines
@@ -138,7 +136,7 @@ class NetworkDevices(FactBase):
             matched = False
 
             # Look for start lines
-            for regex, new_handler in cls._start_regexes:
+            for regex, new_handler in self._start_regexes:
                 new_matches = re.match(regex, line)
 
                 # If we find a start line

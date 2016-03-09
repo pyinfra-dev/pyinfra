@@ -24,8 +24,7 @@ class NpmPackages(FactBase):
 
     command = 'npm list -g --depth=0'
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         parse_packages(npm_regex, output)
 
 
@@ -39,10 +38,8 @@ class NpmLocalPackages(FactBase):
         ...
     '''
 
-    @classmethod
-    def command(cls, directory):
+    def command(self, directory):
         return 'cd {0} && npm list -g --depth=0'.format(directory)
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         parse_packages(npm_regex, output)

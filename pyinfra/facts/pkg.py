@@ -20,6 +20,5 @@ class PkgPackages(FactBase):
     command = 'pkg_info'
     _regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.]+)'
 
-    @classmethod
-    def process(cls, output):
-        return parse_packages(cls._regex, output)
+    def process(self, output):
+        return parse_packages(self._regex, output)

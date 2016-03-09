@@ -23,8 +23,7 @@ class RPMPackages(FactBase):
 
     command = 'rpm -qa'
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         return parse_packages(
             rpm_regex, output,
             # yum packages are case-sensitive
@@ -37,12 +36,10 @@ class RpmPackage(FactBase):
     Returns information on a .rpm file.
     '''
 
-    @classmethod
-    def command(cls, name):
+    def command(self, name):
         return 'rpm -qp {0}'.format(name)
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         for line in output:
             matches = re.match(rpm_regex, line)
             if matches:

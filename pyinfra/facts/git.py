@@ -6,6 +6,5 @@ from pyinfra.api.facts import FactBase
 
 
 class GitBranch(FactBase):
-    @classmethod
-    def command(cls, name):
+    def command(self, name):
         return 'cd {0} && git rev-parse --abbrev-ref HEAD'.format(name)
