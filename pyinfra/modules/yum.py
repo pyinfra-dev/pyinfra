@@ -32,7 +32,7 @@ def key(state, host, key):
 @operation
 def repo(
     state, host, name, baseurl,
-    present=True, description=None, gpgcheck=True, key=None
+    present=True, description=None, gpgcheck=True, enabled=True, key=None
 ):
     '''
     Manage yum repositories.
@@ -44,6 +44,9 @@ def repo(
     + gpgcheck: whether set ``gpgcheck=1``
     + key: shortcut to trigger ``yum.key(key)`` after adding the repo
     '''
+
+    # Description defaults to name
+    description = description or name
 
     filename = '/etc/yum.repos.d/{0}.repo'.format(name)
 
@@ -57,9 +60,11 @@ def repo(
 name={description}
 baseurl={baseurl}
 gpgcheck={gpgcheck}
+enabled={enabled}
 '''.format(
         name=name, baseurl=baseurl, description=description,
-        gpgcheck=1 if gpgcheck else 0
+        gpgcheck=1 if gpgcheck else 0,
+        enabled=1 if enabled else 0
     )
 
     repo = StringIO(repo)
