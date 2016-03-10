@@ -6,8 +6,10 @@ from socket import timeout as timeout_error
 
 from gevent.lock import Semaphore
 from termcolor import colored
+from paramiko import SSHException
 
 from pyinfra import logger
+from pyinfra.api.exceptions import PyinfraError
 
 from .ssh import run_shell_command
 from .util import underscore, make_hash
@@ -94,16 +96,21 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
     }
 
     hostname_facts = {}
+    failed_hosts = set()
 
     for hostname, greenlet in greenlets.iteritems():
         try:
             channel, stdout, stderr = greenlet.get()
             data = fact.process(stdout) if stdout else None
-        # Fact timeouts just mean no fact, ie we don't fail
-        except timeout_error:
-            data = None
+            hostname_facts[hostname] = data
 
-        hostname_facts[hostname] = data
+        except (timeout_error, SSHException) as e:
+            failed_hosts.add(hostname)
+            logger.error('[{0}] {1}: {2}'.format(
+                hostname,
+                colored('Fact error', 'red'),
+                e
+            ))
 
     log_name = colored(name, attrs=['bold'])
 
@@ -116,6 +123,18 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
         logger.info(log)
     else:
         logger.debug(log)
+
+    # Remove any failed hosts from the inventory
+    state.inventory.connected_hosts -= failed_hosts
+
+    # Check we've not failed
+    n_connected_hosts = len(hostname_facts)
+    if state.config.FAIL_PERCENT is not None:
+        percent_failed = (1 - n_connected_hosts / len(state.inventory)) * 100
+        if percent_failed > state.config.FAIL_PERCENT:
+            raise PyinfraError('Over {0}% of hosts failed, exiting'.format(
+                state.config.FAIL_PERCENT
+            ))
 
     facts[fact_hash] = hostname_facts
     fact_locks[fact_hash].release()
