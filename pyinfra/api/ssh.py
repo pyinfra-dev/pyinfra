@@ -67,6 +67,9 @@ def connect(host, **kwargs):
             name, kwargs.get('port', 22), e)
         )
 
+    except EOFError as e:
+        logger.error(u'EOF error connecting to {0}: {1}'.format(name, e))
+
 
 def connect_all(state):
     '''
