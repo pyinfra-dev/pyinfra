@@ -220,7 +220,7 @@ def run_ops(
         joinall(greenlets)
         return
 
-    # Run all ops in order, waiting at each for all servers to complete
+    # Default: run all ops in order, waiting at each for all servers to complete
     remove_hosts = set()
     for op_hash in state.op_order:
         op_meta = state.op_meta[op_hash]

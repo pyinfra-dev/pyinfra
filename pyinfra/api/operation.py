@@ -12,6 +12,7 @@ from functools import wraps
 
 from pyinfra import pseudo_state, pseudo_host
 from pyinfra.pseudo_modules import PseudoModule
+from pyinfra.api.exceptions import PyinfraError
 
 from .host import Host
 from .state import State
@@ -117,7 +118,12 @@ def operation(func):
         # Otherwise, flag as in-op and run it to get the commands
         state.in_op = True
         state.current_op_sudo = (sudo, sudo_user)
-        commands = func(state, host, *args, **kwargs)
+
+        try:
+            commands = func(state, host, *args, **kwargs)
+        except Exception as e:
+            raise PyinfraError('Operation error with {0}: {1}'.format(host.name, e))
+
         state.in_op = False
         state.current_op_sudo = None
 
