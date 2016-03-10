@@ -21,7 +21,9 @@ class State(object):
     pool = None  # main gevent pool
 
     in_op = False  # whether we are in an @operation (so inner ops aren't wrapped)
-    current_op_sudo = None  # current op args tuple (sudo, sudo_user) for use w/facts
+
+    # Current op args tuple (sudo, sudo_user, ignore_errors) for use w/facts
+    current_op_meta = None
 
     # Used in CLI
     deploy_dir = None

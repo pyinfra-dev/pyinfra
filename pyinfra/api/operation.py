@@ -117,7 +117,7 @@ def operation(func):
 
         # Otherwise, flag as in-op and run it to get the commands
         state.in_op = True
-        state.current_op_sudo = (sudo, sudo_user)
+        state.current_op_meta = (sudo, sudo_user, ignore_errors)
 
         try:
             commands = func(state, host, *args, **kwargs)
@@ -125,7 +125,7 @@ def operation(func):
             raise PyinfraError('Operation error with {0}: {1}'.format(host.name, e))
 
         state.in_op = False
-        state.current_op_sudo = None
+        state.current_op_meta = None
 
         # Add the hash to the operational order if not already in there. To ensure that
         # deploys run as defined in the deploy file *per host* we keep track of each hosts

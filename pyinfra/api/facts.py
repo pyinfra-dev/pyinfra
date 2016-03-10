@@ -69,6 +69,13 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
 
     print_output = print_output or print_fact_output
 
+    sudo = state.config.SUDO
+    sudo_user = state.config.SUDO_USER
+    ignore_errors = state.config.IGNORE_ERRORS
+
+    if state.current_op_meta:
+        sudo, sudo_user, ignore_errors = state.current_op_meta
+
     # Create an instance of the fact
     fact = facts[name]()
 
@@ -104,13 +111,19 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
             data = fact.process(stdout) if stdout else None
             hostname_facts[hostname] = data
 
-        except (timeout_error, SSHException) as e:
+        except (timeout_error, SSHException):
             failed_hosts.add(hostname)
-            logger.error('[{0}] {1}: {2}'.format(
-                hostname,
-                colored('Fact error', 'red'),
-                e
-            ))
+
+            if ignore_errors:
+                logger.warning('[{0}] {1}'.format(
+                    hostname,
+                    colored('Fact error (ignored)', 'yellow')
+                ))
+            else:
+                logger.error('[{0}] {1}'.format(
+                    hostname,
+                    colored('Fact error', 'red')
+                ))
 
     log_name = colored(name, attrs=['bold'])
 
@@ -128,13 +141,14 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
     state.inventory.connected_hosts -= failed_hosts
 
     # Check we've not failed
-    n_connected_hosts = len(hostname_facts)
-    if state.config.FAIL_PERCENT is not None:
-        percent_failed = (1 - n_connected_hosts / len(state.inventory)) * 100
-        if percent_failed > state.config.FAIL_PERCENT:
-            raise PyinfraError('Over {0}% of hosts failed, exiting'.format(
-                state.config.FAIL_PERCENT
-            ))
+    if not ignore_errors:
+        n_connected_hosts = len(hostname_facts)
+        if state.config.FAIL_PERCENT is not None:
+            percent_failed = (1 - n_connected_hosts / len(state.inventory)) * 100
+            if percent_failed > state.config.FAIL_PERCENT:
+                raise PyinfraError('Over {0}% of hosts failed, exiting'.format(
+                    state.config.FAIL_PERCENT
+                ))
 
     facts[fact_hash] = hostname_facts
     fact_locks[fact_hash].release()
@@ -146,19 +160,11 @@ def get_fact(state, hostname, name, print_output=False):
     Wrapper around get_facts returning facts for one host or a function that does.
     '''
 
-    print_output = print_output or print_fact_output
-    sudo = state.config.SUDO
-    sudo_user = state.config.SUDO_USER
-
-    if state.current_op_sudo:
-        sudo, sudo_user = state.current_op_sudo
-
     # Expecting a function to return
     if callable(facts[name].command):
         def wrapper(*args):
             fact_data = get_facts(
                 state, name, args=args,
-                sudo=sudo, sudo_user=sudo_user,
                 print_output=print_output
             )
             return fact_data.get(hostname)
@@ -170,7 +176,6 @@ def get_fact(state, hostname, name, print_output=False):
         # Get the fact
         fact_data = get_facts(
             state, name,
-            sudo=sudo, sudo_user=sudo_user,
             print_output=print_output
         )
         return fact_data.get(hostname)
