@@ -42,7 +42,10 @@ Manage yum repositories.
 
 .. code:: python
 
-    yum.repo(name, baseurl, present=True, description=None, gpgcheck=True, key=None)
+    yum.repo(
+        name, baseurl, present=True,
+        description=None, gpgcheck=True, enabled=True, key=None
+    )
 
 + **name**: filename for the repo (in ``/etc/yum/repos.d/``)
 + **baseurl**: the baseurl of the repo
