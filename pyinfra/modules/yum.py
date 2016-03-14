@@ -32,7 +32,7 @@ def key(state, host, key):
 @operation
 def repo(
     state, host, name, baseurl,
-    present=True, description=None, gpgcheck=True, enabled=True, key=None
+    present=True, description=None, gpgcheck=True, enabled=True
 ):
     '''
     Manage yum repositories.
@@ -42,7 +42,6 @@ def repo(
     + present: whether the ``.repo`` file should be present
     + description: optional verbose description
     + gpgcheck: whether set ``gpgcheck=1``
-    + key: shortcut to trigger ``yum.key(key)`` after adding the repo
     '''
 
     # Description defaults to name
@@ -71,9 +70,6 @@ enabled={enabled}
 
     # Ensure this is the file on the server
     commands = files.put(state, host, repo, filename)
-
-    if key:
-        commands.extend(key(key))
 
     return commands
 

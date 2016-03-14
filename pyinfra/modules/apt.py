@@ -49,13 +49,12 @@ def key(state, host, key=None, keyserver=None, keyid=None):
 
 
 @operation
-def repo(state, host, name, present=True, key=None):
+def repo(state, host, name, present=True):
     '''
     Manage apt repositories.
 
     + name: apt line, repo url or PPA
     + present: whether the repo should exist on the system
-    + key: shortcut to trigger ``apt.key(key)`` after adding the repo
     '''
 
     commands = []
@@ -82,9 +81,6 @@ def repo(state, host, name, present=True, key=None):
     # Exists and we don't want it
     if is_present and not present:
         commands.append('apt-add-repository "{0}" -y --remove'.format(name))
-
-    if key:
-        commands.extend(key(key))
 
     return commands
 
