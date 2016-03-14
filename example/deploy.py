@@ -109,7 +109,7 @@ if 'bsd' in host.groups:
 
 elif 'linux' in host.groups:
     # Work with facts about the remote host
-    if host.fact.linux_distribution['name'] in ('Debian', 'Ubuntu'):
+    if host.fact.linux_distribution.get('name') in ('Debian', 'Ubuntu'):
         # apt package manager
         apt.packages(
             ['git', 'python-pip'],
@@ -118,11 +118,11 @@ elif 'linux' in host.groups:
             cache_time=3600
         )
 
-    elif host.fact.linux_distribution['name'] == 'CentOS':
+    elif host.fact.linux_distribution.get('name') == 'CentOS':
         # Manage remote rpm files
         yum.rpm(
             'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{0}.noarch.rpm'.format(
-                host.fact.linux_distribution['major']
+                host.fact.linux_distribution.get('major')
             ),
             sudo=True,
             op='epel_repo',  # this makes one operation despite differing args above
@@ -179,7 +179,7 @@ server.wait(
 )
 
 # Edit lines in files
-if host.fact.os == 'Linux' and host.fact.linux_distribution['name'] == 'CentOS':
+if host.fact.os == 'Linux' and host.fact.linux_distribution.get('name') == 'CentOS':
     files.line(
         '/etc/sysconfig/selinux',
         '^SELINUX=.*',

@@ -43,14 +43,23 @@ def add_op(state, op_func, *args, **kwargs):
         op_func(state, host, *args, **kwargs)
 
 
-def operation(func):
+def operation(func=None, pipeline_facts=None):
     '''
     Decorator that takes a simple module function and turn it into the internal operation
     representation that consists of a list of commands + options (sudo, user, env).
     '''
 
+    # If not decorating, return a decorator which attaches any config to the function
+    if func is None:
+        def decorator(func):
+            setattr(func, 'pipeline_facts', pipeline_facts)
+            return operation(func)
+
+        return decorator
+
+    # Actually decorate!
     @wraps(func)
-    def decorated_function(*args, **kwargs):
+    def decorated_func(*args, **kwargs):
         # If we're in CLI mode, there's no state/host passed down, we need to use the
         # global "pseudo" modules.
         if len(args) < 2 or not (
@@ -67,6 +76,10 @@ def operation(func):
             args_copy = list(args)
             state, host = args[0], args[1]
             args = args_copy[2:]
+
+        # Pipelining? Now we have args, we can process the argspec and prep the pipe
+        if state.pipelining:
+            state.pipeline_facts.process(func, decorated_func, args, kwargs)
 
         # Locally & globally configurable
         sudo = kwargs.pop('sudo', state.config.SUDO)
@@ -89,7 +102,7 @@ def operation(func):
         if name is None:
             module_bits = func.__module__.split('.')
             module_name = module_bits[-1]
-            name = '{}/{}'.format(module_name.title(), func.__name__.title())
+            name = '{0}/{1}'.format(module_name.title(), func.__name__.title())
 
         # Get/generate a hash for this op
         op_hash = kwargs.pop('op', None)
@@ -126,6 +139,14 @@ def operation(func):
 
         state.in_op = False
         state.current_op_meta = None
+
+        # Pipelining? Just drop the op into state.ops_to_pipeline and return here, this
+        # will be re-run once the facts are gathered.
+        if state.pipelining:
+            state.ops_to_pipeline.append(
+                (decorated_func, state, host._module, args, kwargs)
+            )
+            return OperationMeta()
 
         # Add the hash to the operational order if not already in there. To ensure that
         # deploys run as defined in the deploy file *per host* we keep track of each hosts
@@ -169,5 +190,5 @@ def operation(func):
         # Return result meta for use in deploy scripts
         return OperationMeta(op_hash, commands)
 
-    decorated_function._pyinfra_op = func
-    return decorated_function
+    decorated_func._pyinfra_op = func
+    return decorated_func

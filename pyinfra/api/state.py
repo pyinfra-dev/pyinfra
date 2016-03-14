@@ -3,6 +3,7 @@
 # Desc: class that represents the current pyinfra.state
 
 from uuid import uuid4
+from inspect import getargspec
 
 from gevent.pool import Pool
 
@@ -10,9 +11,47 @@ from .config import Config
 from .util import sha1_hash
 
 
+class PipelineFacts(object):
+    def __init__(self, state):
+        self.state = state
+
+    def __enter__(self):
+        self.state.pipelining = True
+        self.state.ops_to_pipeline = []
+        self.state.facts_to_pipeline = {}
+
+    def __exit__(self, type, value, traceback):
+        self.state.pipelining = False
+
+        # Get pipelined facts!
+        print self.state.facts_to_pipeline
+
+        # Actually build our ops
+        for (func, state, host, args, kwargs) in self.state.ops_to_pipeline:
+            func(state, host, *args, **kwargs)
+
+    def process(self, func, decorated_func, args, kwargs):
+        pipeline_facts = getattr(decorated_func, 'pipeline_facts', {})
+
+        if pipeline_facts:
+            func_args = list(getargspec(func).args)
+            func_args = func_args[2:]
+
+            for fact_name, arg_name in pipeline_facts.iteritems():
+                index = func_args.index(arg_name)
+
+                if len(args) >= index:
+                    fact_arg = args[index]
+                else:
+                    fact_arg = kwargs.get(arg_name)
+
+                if fact_arg:
+                    self.state.facts_to_pipeline.setdefault(fact_name, set()).add(fact_arg)
+
+
 class State(object):
     '''
-    Create a new state based on the default state.
+    Manages state for a pyinfra deploy.
     '''
 
     inventory = None  # a pyinfra.api.Inventory which stores all our pyinfra.api.Host's
@@ -24,6 +63,9 @@ class State(object):
 
     # Current op args tuple (sudo, sudo_user, ignore_errors) for use w/facts
     current_op_meta = None
+
+    # Flag for pipelining mode
+    pipelining = False
 
     # Used in CLI
     deploy_dir = None
@@ -82,6 +124,9 @@ class State(object):
             }
             for hostname in hostnames
         }
+
+        # Pipeline facts context manager attached to self
+        self.pipeline_facts = PipelineFacts(self)
 
     def get_temp_filename(self, hash_key=None):
         if not hash_key:

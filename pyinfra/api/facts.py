@@ -17,8 +17,12 @@ from .util import underscore, make_hash
 
 # Index of snake_case facts -> CamelCase classes
 facts = {}
+
 # Lock on getting facts
 fact_locks = {}
+
+# Module-level flags for printing
+# TODO: remove, or roll into pyinfra.logger somehow
 print_fact_info = False
 print_fact_output = False
 
@@ -57,6 +61,8 @@ class FactMeta(type):
 class FactBase(object):
     __metaclass__ = FactMeta
 
+    default = None
+
     @classmethod
     def process(cls, output):
         return output[0]
@@ -79,15 +85,26 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
     # Create an instance of the fact
     fact = facts[name]()
 
+    # If we're pipelining - just return the defaults because we don't care at this time!
+    if state.pipelining:
+        return {
+            host.name: fact.default
+            for host in state.inventory
+        }
+
     command = fact.command
 
     if args:
         command = command(*args)
 
+    # Make a hash which keeps facts unique - but usable cross-deploy/threads. Locks are
+    # used to maintain order.
     fact_hash = make_hash((name, command, sudo, sudo_user))
 
+    # Lock!
     fact_locks.setdefault(fact_hash, Semaphore()).acquire()
 
+    # Already got these facts? Unlock and return 'em
     if facts.get(fact_hash):
         fact_locks[fact_hash].release()
         return facts[fact_hash]
@@ -105,6 +122,7 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
     hostname_facts = {}
     failed_hosts = set()
 
+    # Collect the facts and any failures
     for hostname, greenlet in greenlets.iteritems():
         try:
             channel, stdout, stderr = greenlet.get()
@@ -150,6 +168,7 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
                     state.config.FAIL_PERCENT
                 ))
 
+    # Assign the facts, release the lock and return 'em!
     facts[fact_hash] = hostname_facts
     fact_locks[fact_hash].release()
     return hostname_facts
@@ -157,7 +176,7 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
 
 def get_fact(state, hostname, name, print_output=False):
     '''
-    Wrapper around get_facts returning facts for one host or a function that does.
+    Wrapper around ``get_facts`` returning facts for one host or a function that does.
     '''
 
     # Expecting a function to return

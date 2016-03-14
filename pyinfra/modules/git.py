@@ -11,7 +11,9 @@ from . import files
 from .util.files import chown, chmod
 
 
-@operation
+@operation(pipeline_facts={
+    'git_branch': 'target'
+})
 def repo(
     state, host, source, target,
     branch='master', pull=True, rebase=False,

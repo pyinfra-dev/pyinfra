@@ -73,6 +73,8 @@ class Users(FactBase):
         ...
     '''
 
+    default = {}
+
     command = '''
         for i in `cat /etc/passwd | cut -d: -f1`; do
             ID=`id $i`
@@ -146,6 +148,8 @@ class LinuxDistribution(FactBase):
             'minor': 5
         }
     '''
+
+    default = {}
 
     command = 'cat /etc/*-release'
 

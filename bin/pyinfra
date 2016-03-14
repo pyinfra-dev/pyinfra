@@ -218,14 +218,15 @@ try:
 
     # Deploy file
     if arguments['deploy']:
-        # This actually does the op build
-        for host in inventory:
-            pseudo_host.set(host)
-            execfile(arguments['deploy'])
-            logger.info('{0} {1}'.format(
-                '[{}]'.format(colored(host.name, attrs=['bold'])),
-                colored('Ready', 'green')
-            ))
+        with state.pipeline_facts:
+            # This actually does the op build
+            for host in inventory:
+                pseudo_host.set(host)
+                execfile(arguments['deploy'])
+                logger.info('{0} {1}'.format(
+                    '[{}]'.format(colored(host.name, attrs=['bold'])),
+                    colored('Ready', 'green')
+                ))
 
     # One off op run
     else:

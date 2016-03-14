@@ -21,6 +21,16 @@ def ensure_mode_int(mode):
     return mode
 
 
+def sed_replace(state, filename, line, replace, flags=None):
+    flags = ''.join(flags) if flags else ''
+
+    temp_filename = state.get_temp_filename()
+
+    return 'sed "s/{0}/{1}/{2}" {3} > {4} && mv {4} {3}'.format(
+        line, replace, flags, filename, temp_filename
+    )
+
+
 def chmod(target, mode, recursive=False):
     return 'chmod {0}{1} {2}'.format(('-R ' if recursive else ''), mode, target)
 

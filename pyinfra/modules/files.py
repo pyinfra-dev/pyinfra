@@ -14,23 +14,12 @@ from jinja2 import Template
 from pyinfra.api import operation, OperationError
 from pyinfra.api.util import get_file_sha1
 
-from .util.files import chmod, chown, ensure_mode_int
+from .util.files import chmod, chown, ensure_mode_int, sed_replace
 
 
-def _sed_replace(state, filename, line, replace, flags=None):
-    flags = ''.join(flags) if flags else ''
-
-    temp_filename = state.get_temp_filename()
-
-    return [
-        'sed "s/{0}/{1}/{2}" {3} > {4}'.format(
-            line, replace, flags, filename, temp_filename
-        ),
-        'mv {0} {1}'.format(temp_filename, filename)
-    ]
-
-
-@operation
+@operation(pipeline_facts={
+    'file': 'destination'
+})
 def download(
     state, host, source_url, destination,
     user=None, group=None, mode=None, cache_time=None, force=False
@@ -52,7 +41,9 @@ def download(
 
     # Destination is a directory?
     if info is False:
-        raise OperationError('{0} is a directory'.format(destination))
+        raise OperationError(
+            'Destination {0} already exists and is not a file'.format(destination)
+        )
 
     # Do we download the file? Force by default
     download = force
@@ -119,13 +110,13 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
 
     # Line exists and we want to remove it, replace with nothing
     elif is_present and not present:
-        commands.extend(_sed_replace(state, name, match_line, '', flags=flags))
+        commands.append(sed_replace(state, name, match_line, '', flags=flags))
 
     # Line exists and we have want to ensure it's correct
     elif is_present and present:
         # If the line *is* different, sed replace it
         if replace and is_present != replace:
-            commands.extend(_sed_replace(state, name, match_line, replace, flags=flags))
+            commands.append(sed_replace(state, name, match_line, replace, flags=flags))
 
     return commands
 
@@ -141,10 +132,12 @@ def replace(state, host, name, match, replace, flags=None):
     + flags: list of flaggs to pass to sed
     '''
 
-    return _sed_replace(state, name, match, replace, flags=flags)
+    return [sed_replace(state, name, match, replace, flags=flags)]
 
 
-@operation
+@operation(pipeline_facts={
+    'find_files': 'destination'
+})
 def sync(state, host, source, destination, user=None, group=None, mode=None, delete=False):
     '''
     Syncs a local directory with a remote one, with delete support. Note that delete will
@@ -212,7 +205,10 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
     return commands
 
 
-@operation
+@operation(pipeline_facts={
+    'file': 'remote_filename',
+    'sha1_file': 'remote_filename'
+})
 def put(
     state, host, local_filename, remote_filename,
     user=None, group=None, mode=None, add_deploy_dir=True
@@ -326,7 +322,9 @@ def template(
     )
 
 
-@operation
+@operation(pipeline_facts={
+    'link': 'name'
+})
 def link(
     state, host, name, source=None, present=True, symbolic=True
 ):
@@ -380,7 +378,9 @@ def link(
     return commands
 
 
-@operation
+@operation(pipeline_facts={
+    'file': 'name'
+})
 def file(
     state, host, name,
     present=True, user=None, group=None, mode=None, touch=False
@@ -433,7 +433,9 @@ def file(
     return commands
 
 
-@operation
+@operation(pipeline_facts={
+    'directory': 'name'
+})
 def directory(
     state, host, name,
     present=True, user=None, group=None, mode=None, recursive=False

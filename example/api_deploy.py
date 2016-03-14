@@ -58,41 +58,45 @@ state = State(inventory, config)
 # Connect to all the hosts
 connect_all(state)
 
-# Now we can build up a list of operations to run (running facts as required)
-add_op(
-    state, server.user,
-    'pyinfra',
-    home='/home/pyinfra',
-    shell='/bin/bash',
-    sudo=True
-)
+# Now we can build up a list of operations to run. Using the pipeline_facts context is
+# optional, but it _significantly_ speeds up fact gathering by batching them where
+# possible, this is achieved by catching/stopping ad_op calls below, getting a list of all
+# facts, running them in pipeline mode and finally re-running the ad_op calls properly.
+with state.pipeline_facts:
+    add_op(
+        state, server.user,
+        'pyinfra',
+        home='/home/pyinfra',
+        shell='/bin/bash',
+        sudo=True
+    )
 
-# Ensure the state of files
-add_op(
-    state, files.file,
-    '/var/log/pyinfra.log',
-    user='pyinfra',
-    group='pyinfra',
-    mode='644',
-    sudo=True
-)
+    # Ensure the state of files
+    add_op(
+        state, files.file,
+        '/var/log/pyinfra.log',
+        user='pyinfra',
+        group='pyinfra',
+        mode='644',
+        sudo=True
+    )
 
-# Ensure the state of directories
-add_op(
-    state, files.directory,
-    '/tmp/email',
-    user='pyinfra',
-    group='pyinfra',
-    mode='755',
-    sudo=True
-)
+    # Ensure the state of directories
+    add_op(
+        state, files.directory,
+        '/tmp/email',
+        user='pyinfra',
+        group='pyinfra',
+        mode='755',
+        sudo=True
+    )
 
-# Copy local files to remote host
-add_op(
-    state, files.put,
-    'files/file.txt',
-    '/home/vagrant/file.txt'
-)
+    # Copy local files to remote host
+    add_op(
+        state, files.put,
+        'files/file.txt',
+        '/home/vagrant/file.txt'
+    )
 
 # And finally we run the ops
 run_ops(state)

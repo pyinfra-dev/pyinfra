@@ -23,11 +23,13 @@ def packages(state, host, packages=None, present=True):
     pkg_path = ''
 
     if present is True:
+        host_os = host.fact.os or ''
+
         # We have to set the pkg_path manually as the env var (seemingly, OpenBSD 5.6)
         # isn't created for non-tty requests such as pyinfra's
         pkg_path = 'http://ftp.{http}.org/pub/{os}/{version}/packages/{arch}/'.format(
-            http=host.fact.os.lower(),
-            os=host.fact.os,
+            http=host_os.lower(),
+            os=host_os,
             version=host.fact.os_version,
             arch=host.fact.arch
         )
