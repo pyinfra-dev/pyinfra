@@ -200,7 +200,7 @@ def packages(
         install_command='DEBIAN_FRONTEND=noninteractive apt-get install -y',
         uninstall_command='DEBIAN_FRONTEND=noninteractive apt-get remove -y',
         version_join='=',
-        upgrade_command='DEBIAN_FRONTEND=noninteractive apt-get upgrade -y',
+        upgrade_command='DEBIAN_FRONTEND=noninteractive apt-get install -y',
         latest=latest
     ))
 
