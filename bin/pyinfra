@@ -34,6 +34,9 @@ Config options:
     --sudo-user USER     Which user to sudo to.
     --password PASS      SSH password auth (bad).
     --parallel NUM       Number of parallel processes.
+
+Experimental options:
+    --enable-pipelining  Enable fact pipelining.
 '''
 
 from __future__ import division
@@ -218,7 +221,7 @@ try:
 
     # Deploy file
     if arguments['deploy']:
-        with state.pipeline_facts:
+        def loop_hosts():
             # This actually does the op build
             for host in inventory:
                 pseudo_host.set(host)
@@ -227,6 +230,12 @@ try:
                     '[{}]'.format(colored(host.name, attrs=['bold'])),
                     colored('Ready', 'green')
                 ))
+
+        if arguments['pipelining']:
+            with state.pipeline_facts:
+                loop_hosts()
+        else:
+            loop_hosts()
 
     # One off op run
     else:

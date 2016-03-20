@@ -288,7 +288,10 @@ def setup_arguments(arguments):
         'parallel': arguments['--parallel'],
 
         # Misc
-        'list_facts': arguments['--facts']
+        'list_facts': arguments['--facts'],
+
+        # Experimental
+        'pipelining': arguments['--enable-pipelining']
     }
 
 
