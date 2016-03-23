@@ -10,6 +10,7 @@ class FakeState(object):
     active = True
     deploy_dir = ''
     in_op = True
+    pipelining = False
 
     config = Config()
 

@@ -10,6 +10,6 @@
     },
     "commands": [
         "DEBIAN_FRONTEND=noninteractive apt-get install -y another",
-        "DEBIAN_FRONTEND=noninteractive apt-get upgrade -y git"
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y git"
     ]
 }

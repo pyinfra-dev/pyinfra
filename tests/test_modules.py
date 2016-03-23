@@ -45,13 +45,15 @@ def make_operation_tests(arg):
                 *test_data.get('args', []), **test_data.get('kwargs', {})
             ) or []
 
-            print
-            print '--> GOT:\n', json.dumps(commands, indent=4, default=json_encode)
-            print '--> WANT:', json.dumps(
-                test_data['commands'], indent=4, default=json_encode
-            )
-
-            self.assertEqual(commands, test_data['commands'])
+            try:
+                self.assertEqual(commands, test_data['commands'])
+            except AssertionError as e:
+                print
+                print '--> GOT:\n', json.dumps(commands, indent=4, default=json_encode)
+                print '--> WANT:', json.dumps(
+                    test_data['commands'], indent=4, default=json_encode
+                )
+                raise e
 
     # Convert the op name (module.op) to a class name ModuleOp
     test_name = (

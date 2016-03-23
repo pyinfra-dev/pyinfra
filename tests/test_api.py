@@ -110,7 +110,7 @@ class TestApi(TestCase):
             sudo=True
         )
 
-        run_ops(state, print_output=True)
+        run_ops(state)
 
     def test_file_op(self):
         state = State(make_inventory(), make_config())

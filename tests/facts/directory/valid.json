@@ -1,4 +1,5 @@
 {
+    "arg": "/home/pyinfra/mydir",
     "output": [
         "drwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56 /home/pyinfra/mydir"
     ],

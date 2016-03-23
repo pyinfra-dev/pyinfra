@@ -15,7 +15,7 @@ from pyinfra.api.facts import facts
 
 @nottest
 def make_fact_tests(fact_name):
-    fact = facts[fact_name]
+    fact = facts[fact_name]()
 
     class TestTests(TestCase):
         __metaclass__ = JsonTest
@@ -23,15 +23,20 @@ def make_fact_tests(fact_name):
         jsontest_files = path.join('tests', 'facts', fact_name)
 
         def jsontest_function(self, test_name, test_data):
-            data = fact.process(test_data['output'])
+            if 'arg' in test_data:
+                fact.command(test_data['arg'])
 
-            print
-            print '--> GOT:\n', json.dumps(data, indent=4, default=json_encode)
-            print '--> WANT:', json.dumps(test_data['fact'], indent=4, default=json_encode)
+            data = fact.process(test_data['output'])
 
             # Encode/decode data to ensure datetimes/etc become JSON
             data = json.loads(json.dumps(data, default=json_encode))
-            self.assertEqual(data, test_data['fact'])
+            try:
+                self.assertEqual(data, test_data['fact'])
+            except AssertionError as e:
+                print
+                print '--> GOT:\n', json.dumps(data, indent=4, default=json_encode)
+                print '--> WANT:', json.dumps(test_data['fact'], indent=4, default=json_encode)
+                raise e
 
     TestTests.__name__ = 'Fact{0}'.format(fact_name)
     return TestTests
