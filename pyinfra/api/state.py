@@ -8,7 +8,7 @@ from inspect import getargspec
 from gevent.pool import Pool
 
 from .config import Config
-from .facts import get_facts
+# from .facts import get_facts
 from .util import sha1_hash
 
 
@@ -25,9 +25,8 @@ class PipelineFacts(object):
         self.state.pipelining = False
 
         # Get pipelined facts!
-        for name, args in self.state.facts_to_pipeline.iteritems():
-            print 'PIPE', name, args
-            get_facts(self.state, name, pipeline_args=args)
+        # for name, args in self.state.facts_to_pipeline.iteritems():
+        #     get_facts(self.state, name, pipeline_args=args)
 
         # Actually build our ops
         for (func, state, host, args, kwargs) in self.state.ops_to_pipeline:
@@ -77,12 +76,17 @@ class State(object):
     print_lines = False  # print blank lines between operations (always in CLI)
 
     # Used in CLI
-    deploy_dir = None
-    active = True
+    deploy_dir = None  # base directory for locating files/templates/etc
+    active = True  # used to disable operation calls when scanning deploy.py for config
 
     def __init__(self, inventory, config=None):
+        # Connection storage
         self.ssh_connections = {}
         self.sftp_connections = {}
+
+        # Facts storage
+        self.facts = {}
+        self.fact_locks = {}
 
         if config is None:
             config = Config()
@@ -138,6 +142,10 @@ class State(object):
         self.pipeline_facts = PipelineFacts(self)
 
     def get_temp_filename(self, hash_key=None):
+        '''
+        Generate a temporary filename for this deploy.
+        '''
+
         if not hash_key:
             hash_key = str(uuid4())
 

@@ -10,22 +10,25 @@ from .util.files import parse_ls_output
 
 
 class File(FactBase):
+    link = False
+    directory = False
+
     def command(self, name):
         self.name = name
         return 'ls -ld {0}'.format(name)
 
     def process(self, output):
-        return parse_ls_output(self.name, output[0])
+        return parse_ls_output(
+            self.name, output[0],
+            link=self.link, directory=self.directory
+        )
 
 
 class Link(File):
-    def process(self, output):
-        return parse_ls_output(self.name, output[0], link=True)
-
+    link = True
 
 class Directory(File):
-    def process(self, output):
-        return parse_ls_output(self.name, output[0], directory=True)
+    directory = True
 
 
 class Sha1File(FactBase):
@@ -42,6 +45,7 @@ class Sha1File(FactBase):
         return 'sha1sum {0} || sha1 {0}'.format(name)
 
     def process(self, output):
+        # print 'OUT', output
         for regex in self._regexes:
             matches = re.match(regex, output[0])
             if matches:

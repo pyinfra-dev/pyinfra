@@ -23,7 +23,9 @@ class BlockDevices(FactBase):
         ...
     '''
 
+    default = {}
     command = 'df'
+
     _regex = r'([a-zA-Z0-9\/\-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
 
     def process(self, output):
@@ -111,6 +113,8 @@ class NetworkDevices(FactBase):
         ...
     '''
 
+    from pyinfra.cli import FakeData
+    default = FakeData()
     command = 'ifconfig'
 
     _start_regexes = [

@@ -1,6 +1,11 @@
 # pyinfra
 # File: pyinfra/api/facts.py
-# Desc: index fact classes for access via pyinfra.host
+# Desc: the facts API
+
+'''
+The pyinfra facts API. Facts enable pyinfra to collect remote server state which is used
+to "diff" with the desired state, producing the final commands required for a deploy.
+'''
 
 from socket import timeout as timeout_error
 
@@ -17,21 +22,6 @@ from .util import underscore, make_hash
 
 # Index of snake_case facts -> CamelCase classes
 facts = {}
-
-# Lock on getting facts
-fact_locks = {}
-
-# Module-level flags for printing
-# TODO: remove, or roll into pyinfra.logger somehow
-print_fact_info = False
-print_fact_output = False
-
-
-def set_print_facts(to_print_output, to_print_info):
-    global print_fact_info, print_fact_output
-
-    print_fact_info = to_print_info
-    print_fact_output = to_print_output
 
 
 def is_fact(name):
@@ -63,20 +53,26 @@ class FactBase(object):
 
     default = None
 
-    @classmethod
-    def process(cls, output):
+    def process(self, output):
         return output[0]
 
+    def process_pipeline(self, args, output):
+        return {
+            arg: self.process([output[i]])
+            for i, arg in enumerate(args)
+        }
 
-def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=False):
+
+def get_facts(
+    state, name,
+    args=None, sudo=False, sudo_user=None
+):
     '''
     Get a single fact for all hosts in the state.
     '''
 
-    print_output = print_output or print_fact_output
-
-    sudo = state.config.SUDO
-    sudo_user = state.config.SUDO_USER
+    sudo = sudo or state.config.SUDO
+    sudo_user = sudo_user or state.config.SUDO_USER
     ignore_errors = state.config.IGNORE_ERRORS
 
     if state.current_op_meta:
@@ -85,8 +81,8 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
     # Create an instance of the fact
     fact = facts[name]()
 
-    # If we're pipelining - just return the defaults because we don't care at this time!
-    if state.pipelining:
+    # If we're pipelining & inside an op - just return the defaults
+    if state.pipelining and state.in_op:
         return {
             host.name: fact.default
             for host in state.inventory
@@ -102,19 +98,19 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
     fact_hash = make_hash((name, command, sudo, sudo_user))
 
     # Lock!
-    fact_locks.setdefault(fact_hash, Semaphore()).acquire()
+    state.fact_locks.setdefault(fact_hash, Semaphore()).acquire()
 
-    # Already got these facts? Unlock and return 'em
-    if facts.get(fact_hash):
-        fact_locks[fact_hash].release()
-        return facts[fact_hash]
+    # Already got this fact? Unlock and return 'em
+    if state.facts.get(fact_hash):
+        state.fact_locks[fact_hash].release()
+        return state.facts[fact_hash]
 
     # Execute the command for each state inventory in a greenlet
     greenlets = {
         host.name: state.pool.spawn(
             run_shell_command, state, host.name, command,
-            sudo=sudo, sudo_user=sudo_user, print_output=print_output,
-            print_prefix='[{0}] '.format(colored(host.name, attrs=['bold']))
+            sudo=sudo, sudo_user=sudo_user,
+            print_output=state.print_fact_output
         )
         for host in state.inventory
     }
@@ -126,7 +122,12 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
     for hostname, greenlet in greenlets.iteritems():
         try:
             channel, stdout, stderr = greenlet.get()
-            data = fact.process(stdout) if stdout else None
+
+            if stdout:
+                data = fact.process(stdout)
+            else:
+                data = None
+
             hostname_facts[hostname] = data
 
         except (timeout_error, SSHException):
@@ -150,7 +151,7 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
     else:
         log = 'Loaded fact {0}'.format(log_name)
 
-    if print_fact_info:
+    if state.print_fact_info:
         logger.info(log)
     else:
         logger.debug(log)
@@ -168,13 +169,15 @@ def get_facts(state, name, args=None, sudo=False, sudo_user=None, print_output=F
                     state.config.FAIL_PERCENT
                 ))
 
-    # Assign the facts, release the lock and return 'em!
-    facts[fact_hash] = hostname_facts
-    fact_locks[fact_hash].release()
-    return hostname_facts
+    # Assign the facts
+    state.facts[fact_hash] = hostname_facts
+
+    # Release the lock, return the data
+    state.fact_locks[fact_hash].release()
+    return state.facts[fact_hash]
 
 
-def get_fact(state, hostname, name, print_output=False):
+def get_fact(state, hostname, name):
     '''
     Wrapper around ``get_facts`` returning facts for one host or a function that does.
     '''
@@ -182,19 +185,14 @@ def get_fact(state, hostname, name, print_output=False):
     # Expecting a function to return
     if callable(facts[name].command):
         def wrapper(*args):
-            fact_data = get_facts(
-                state, name, args=args,
-                print_output=print_output
-            )
-            return fact_data.get(hostname)
+            fact_data = get_facts(state, name, args=args)
 
+            return fact_data.get(hostname)
         return wrapper
 
     # Expecting the fact as a return value
     else:
         # Get the fact
-        fact_data = get_facts(
-            state, name,
-            print_output=print_output
-        )
+        fact_data = get_facts(state, name)
+
         return fact_data.get(hostname)

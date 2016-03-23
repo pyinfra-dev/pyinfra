@@ -3,6 +3,7 @@
 # Desc: server/os related facts
 
 import re
+from datetime import datetime
 
 from dateutil.parser import parse as parse_date
 
@@ -32,6 +33,7 @@ class Arch(FactBase):
 class Date(FactBase):
     '''Returns the current datetime on the server.'''
 
+    default = datetime.now()
     command = 'date'
 
     def process(self, output):
