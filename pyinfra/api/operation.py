@@ -9,10 +9,10 @@ state. This is then run later by pyinfra's ``__main__`` or the :doc:`./operation
 '''
 
 from functools import wraps
+from types import FunctionType
 
 from pyinfra import pseudo_state, pseudo_host
 from pyinfra.pseudo_modules import PseudoModule
-from pyinfra.api.exceptions import PyinfraError
 
 from .host import Host
 from .state import State
@@ -132,10 +132,7 @@ def operation(func=None, pipeline_facts=None):
         state.in_op = True
         state.current_op_meta = (sudo, sudo_user, ignore_errors)
 
-        try:
-            commands = func(state, host, *args, **kwargs)
-        except Exception as e:
-            raise PyinfraError('Operation error with {0}: {1}'.format(host.name, e))
+        commands = func(state, host, *args, **kwargs)
 
         state.in_op = False
         state.current_op_meta = None
@@ -177,6 +174,7 @@ def operation(func=None, pipeline_facts=None):
         # Create/update shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(op_hash, {
             'names': [],
+            'args': [],
             'sudo': sudo,
             'sudo_user': sudo_user,
             'ignore_errors': ignore_errors,
@@ -184,8 +182,16 @@ def operation(func=None, pipeline_facts=None):
             'run_once': run_once,
             'timeout': timeout
         })
+
         if name not in op_meta['names']:
             op_meta['names'].append(name)
+
+        for arg in args:
+            if isinstance(arg, FunctionType):
+                arg = arg.__name__
+
+            if arg not in op_meta['args']:
+                op_meta['args'].append(arg)
 
         # Return result meta for use in deploy scripts
         return OperationMeta(op_hash, commands)
