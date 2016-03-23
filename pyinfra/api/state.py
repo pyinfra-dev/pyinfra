@@ -8,6 +8,7 @@ from inspect import getargspec
 from gevent.pool import Pool
 
 from .config import Config
+from .facts import get_facts
 from .util import sha1_hash
 
 
@@ -24,14 +25,16 @@ class PipelineFacts(object):
         self.state.pipelining = False
 
         # Get pipelined facts!
-        print self.state.facts_to_pipeline
+        for name, args in self.state.facts_to_pipeline.iteritems():
+            print 'PIPE', name, args
+            get_facts(self.state, name, pipeline_args=args)
 
         # Actually build our ops
         for (func, state, host, args, kwargs) in self.state.ops_to_pipeline:
             func(state, host, *args, **kwargs)
 
     def process(self, func, decorated_func, args, kwargs):
-        pipeline_facts = getattr(decorated_func, 'pipeline_facts', {})
+        pipeline_facts = getattr(decorated_func, 'pipeline_facts', None)
 
         if pipeline_facts:
             func_args = list(getargspec(func).args)
@@ -66,6 +69,12 @@ class State(object):
 
     # Flag for pipelining mode
     pipelining = False
+
+    # Flags for printing
+    print_output = False  # print output from the actual deploy (-v)
+    print_fact_info = False  # log fact gathering as INFO > DEBUG (-v)
+    print_fact_output = False  # print output from facts (-vv)
+    print_lines = False  # print blank lines between operations (always in CLI)
 
     # Used in CLI
     deploy_dir = None

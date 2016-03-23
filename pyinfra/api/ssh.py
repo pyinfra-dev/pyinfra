@@ -156,7 +156,7 @@ def connect_all(state):
 
 def run_shell_command(
     state, hostname, command,
-    sudo=False, sudo_user=None, env=None, timeout=None, print_output=False, print_prefix=''
+    sudo=False, sudo_user=None, env=None, timeout=None, print_output=False
 ):
     '''
     Execute a command on the specified host.
@@ -177,6 +177,9 @@ def run_shell_command(
 
         stdout and stderr are both lists of strings from each buffer.
     '''
+
+    print_prefix = '[{0}] '.format(colored(hostname, attrs=['bold']))
+
     if env is None:
         env = {}
 
@@ -247,12 +250,14 @@ def _put_file(state, hostname, file_io, remote_location):
 
 def put_file(
     state, hostname, file_io, remote_file,
-    sudo=False, sudo_user=None, print_output=False, print_prefix=''
+    sudo=False, sudo_user=None, print_output=False
 ):
     '''
     Upload file-ios to the specified host using SFTP. Supports uploading files with sudo
     by uploading to a temporary directory then moving & chowning.
     '''
+
+    print_prefix = '[{0}] '.format(colored(hostname, attrs=['bold']))
 
     if not sudo:
         _put_file(state, hostname, file_io, remote_file)
@@ -273,8 +278,7 @@ def put_file(
         channel, _, stderr = run_shell_command(
             state, hostname, command,
             sudo=sudo, sudo_user=sudo_user,
-            print_output=print_output,
-            print_prefix=print_prefix
+            print_output=print_output
         )
 
         if channel.exit_status > 0:

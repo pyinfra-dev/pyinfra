@@ -58,7 +58,6 @@ from colorama import init as colorama_init
 colorama_init()
 
 from pyinfra import logger, pseudo_state, pseudo_host, pseudo_inventory, hook
-from pyinfra.local import set_print_local
 from pyinfra.cli import (
     FakeHost,
     run_hook, dump_state, setup_logging,
@@ -71,7 +70,7 @@ from pyinfra.api.ssh import connect_all
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.attrs import FallbackAttrData
-from pyinfra.api.facts import get_facts, set_print_facts
+from pyinfra.api.facts import get_facts
 from pyinfra.api.exceptions import PyinfraError
 
 
@@ -107,16 +106,6 @@ setup_logging(log_level)
 try:
     # Setup arguments
     arguments = setup_arguments(arguments)
-
-    # Setup printing
-    print_output = arguments['verbose'] > 0
-    if arguments['deploy'] is None and arguments['op'] is None:
-        print_facts = print_output
-    else:
-        print_facts = arguments['verbose'] > 1
-
-    set_print_facts(print_facts, print_output)
-    set_print_local(print_output)
 
     # Quickly list facts & exit if desired
     if arguments['list_facts']:
@@ -170,6 +159,18 @@ try:
     state = State(inventory, config)
     state.deploy_dir = deploy_dir
 
+    # Setup printing on the new state
+    print_output = arguments['verbose'] > 0
+    if arguments['deploy'] is None and arguments['op'] is None:
+        print_fact_output = print_output
+    else:
+        print_fact_output = arguments['verbose'] > 1
+
+    state.print_output = print_output  # -v
+    state.print_fact_info = print_output  # -v
+    state.print_fact_output = print_fact_output  # -vv
+    state.print_lines = True
+
     # Attach to pseudo inventory & state
     pseudo_inventory.set(inventory)
     pseudo_state.set(state)
@@ -210,8 +211,7 @@ try:
 
         fact_data = get_facts(
             state, fact, args=fact_args,
-            sudo=arguments['sudo'], sudo_user=arguments['sudo_user'],
-            print_output=print_output
+            sudo=arguments['sudo'], sudo_user=arguments['sudo_user']
         )
         print_fact(fact_data)
         _exit()
@@ -270,9 +270,7 @@ try:
         run_ops(
             state,
             serial=arguments['serial'],
-            no_wait=arguments['no_wait'],
-            print_output=print_output,
-            print_lines=True
+            no_wait=arguments['no_wait']
         )
 
         # Run the after_deploy hook if provided

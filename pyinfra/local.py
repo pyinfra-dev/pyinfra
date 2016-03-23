@@ -10,14 +10,6 @@ from .api.util import read_buffer
 from .api.exceptions import PyinfraError
 
 
-print_local = False
-
-def set_print_local(to_print):
-    global print_local
-
-    print_local = to_print
-
-
 def include(filename):
     '''
     Executes a local python file within the ``pyinfra.pseudo_state.deploy_dir`` directory.
@@ -33,19 +25,21 @@ def include(filename):
         )
 
 
-def shell(command, print_output=False):
-    '''Subprocess based implementation of pyinfra/api/ssh.py's run_shell_command.'''
+def shell(command):
+    '''
+    Subprocess based implementation of pyinfra/api/ssh.py's ``run_shell_command``.
+    '''
 
     print_prefix = 'localhost: '
 
-    if print_output or print_local:
+    if pseudo_state.print_output:
         print '{0}>>> {1}'.format(print_prefix, command)
 
     process = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
 
     stdout = read_buffer(
         process.stdout,
-        print_output=print_output or print_local,
+        print_output=pseudo_state.print_output,
         print_func=lambda line: u'{0}{1}'.format(print_prefix, line)
     )
 

@@ -16,7 +16,7 @@ from pyinfra.api.exceptions import PyinfraError
 from .ssh import run_shell_command, put_file
 
 
-def _run_op(state, hostname, op_hash, print_output=False):
+def _run_op(state, hostname, op_hash):
     # Noop for this host?
     if op_hash not in state.ops[hostname]:
         logger.debug('(Skipping) no op {0} on {1}'.format(op_hash, hostname))
@@ -68,8 +68,6 @@ def _run_op(state, hostname, op_hash, print_output=False):
             if isinstance(command[0], FunctionType):
                 status = command[0](
                     state, state.inventory[hostname], hostname,
-                    print_output=print_output,
-                    print_prefix=print_prefix,
                     *command[1], **command[2]
                 )
 
@@ -79,8 +77,7 @@ def _run_op(state, hostname, op_hash, print_output=False):
                     state, hostname, *command,
                     sudo=sudo,
                     sudo_user=sudo_user,
-                    print_output=print_output,
-                    print_prefix=print_prefix
+                    print_output=state.print_output
                 )
 
         # Must be a string/shell command: execute it on the server w/op-level preferences
@@ -92,8 +89,7 @@ def _run_op(state, hostname, op_hash, print_output=False):
                     sudo_user=sudo_user,
                     timeout=op_meta['timeout'],
                     env=op_data['env'],
-                    print_output=print_output,
-                    print_prefix=print_prefix
+                    print_output=state.print_output
                 )
 
                 # Keep stderr in case of error
@@ -106,7 +102,7 @@ def _run_op(state, hostname, op_hash, print_output=False):
                 status = False
 
                 # Print the timeout error as not printed by run_shell_command
-                if print_output:
+                if state.print_output:
                     print u'{0}{1}'.format(print_prefix, timeout_message)
 
         if status is False:
@@ -132,7 +128,7 @@ def _run_op(state, hostname, op_hash, print_output=False):
         return True
 
     # If the op failed somewhere, print stderr (if not already printed!)
-    if not print_output:
+    if not state.print_output:
         for line in stderr_buffer:
             print u'    {0}{1}'.format(
                 print_prefix,
@@ -162,7 +158,7 @@ def _run_op(state, hostname, op_hash, print_output=False):
     return False
 
 
-def _run_server_ops(state, hostname, print_output, print_lines):
+def _run_server_ops(state, hostname):
     logger.debug('Running all ops on {}'.format(hostname))
     for op_hash in state.op_order:
         op_meta = state.op_meta[op_hash]
@@ -173,20 +169,17 @@ def _run_server_ops(state, hostname, print_output, print_lines):
             colored(hostname, attrs=['bold'])
         ))
 
-        result = _run_op(state, hostname, op_hash, print_output)
+        result = _run_op(state, hostname, op_hash)
         if result is False:
             raise PyinfraError('Error in operation {0} on {1}'.format(
                 ', '.join(op_meta['names']), hostname
             ))
 
-        if print_lines:
+        if state.print_lines:
             print
 
 
-def run_ops(
-    state, serial=False, no_wait=False,
-    print_output=False, print_lines=False
-):
+def run_ops(state, serial=False, no_wait=False):
     '''
     Runs all operations across all servers in a configurable manner.
 
@@ -201,20 +194,14 @@ def run_ops(
     # Run all ops, but server by server
     if serial:
         for host in hosts:
-            _run_server_ops(
-                state, host.name,
-                print_output=print_output, print_lines=print_lines
-            )
+            _run_server_ops(state, host.name)
         return
 
     # Run all the ops on each server in parallel (not waiting at each operation)
     elif no_wait:
         # Spawn greenlet for each host to run *all* ops
         greenlets = [
-            state.pool.spawn(
-                _run_server_ops, state, host.name,
-                print_output=print_output, print_lines=print_lines
-            )
+            state.pool.spawn(_run_server_ops, state, host.name)
             for host in hosts
         ]
         joinall(greenlets)
@@ -231,11 +218,12 @@ def run_ops(
         if op_meta['run_once']:
             op_types.append('run once')
 
-        logger.info('{0} {1}'.format(
+        logger.info('{0} {1} {2}'.format(
             colored('Starting{0}operation:'.format(
                 ' {0} '.format(', '.join(op_types)) if op_types else ' '
             ), 'blue'),
-            colored(', '.join(op_meta['names']), attrs=['bold'])
+            colored(', '.join(op_meta['names']), attrs=['bold']),
+            tuple(op_meta['args'])
         ))
 
         op_hosts = set(list(host.name for host in hosts)) - remove_hosts
@@ -245,7 +233,7 @@ def run_ops(
         if op_meta['serial']:
             # For each host, run the op
             for hostname in op_hosts:
-                result = _run_op(state, hostname, op_hash, print_output=print_output)
+                result = _run_op(state, hostname, op_hash)
 
                 if result:
                     successful_hosts.append(hostname)
@@ -256,7 +244,7 @@ def run_ops(
             # Spawn greenlet for each host
             greenlet_hosts = [
                 (hostname, state.pool.spawn(
-                    _run_op, state, hostname, op_hash, print_output=print_output
+                    _run_op, state, hostname, op_hash
                 ))
                 for hostname in op_hosts
             ]
@@ -286,5 +274,5 @@ def run_ops(
             if not successful_hosts:
                 raise PyinfraError('No hosts remaining')
 
-        if print_lines:
+        if state.print_lines:
             print
