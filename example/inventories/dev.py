@@ -10,7 +10,8 @@ BSD = [
 YUM = [
     'centos6.pyinfra',
     # Host-specific data can be attached in inventory
-    ('centos7.pyinfra', {'systemd': True})
+    ('centos7.pyinfra', {'systemd': True}),
+    'fedora23.pyinfra'
 ]
 
 APT = [
@@ -20,8 +21,12 @@ APT = [
     'debian8.pyinfra'
 ]
 
+GENTOO = [
+    'gentoo.pyinfra'
+]
+
 # Hosts can be in multiple groups
-LINUX = YUM + APT
+LINUX = YUM + APT + GENTOO
 
 # ALL is automatically set to the unique hosts above and so does not need to be defined
 # ALL = LINUX + BSD

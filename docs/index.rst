@@ -1,10 +1,12 @@
 pyinfra
 =======
 
-pyinfra automates service deployment. It does this by diffing the state of the server with the state defined in the deploy script. Deploys are asyncronous and highly performant. The inventory & deploy are managed with pure Python, allowing for near-infinite extendability.
+pyinfra automates service deployment. It does this by diffing the state of the server with
+the state defined in the deploy script. Deploys are asyncronous and highly performant. The
+inventory & deploy are managed with pure Python, allowing for near-infinite extendability.
 
-pyinfra targets POSIX compatability and is currently tested against Ubuntu, Debian, CentOS
-& OpenBSD.
+pyinfra targets POSIX compatability and is currently tested against Ubuntu, Debian, CentOS,
+Fedora, Gentoo & OpenBSD.
 
 .. toctree::
     :maxdepth: 1

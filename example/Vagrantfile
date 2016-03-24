@@ -10,11 +10,6 @@ Vagrant.configure('2') do |config|
         ubuntu.vm.network :private_network, ip: '20.20.20.21'
     end
 
-    config.vm.define :ubuntu15 do |ubuntu|
-        ubuntu.vm.box = 'ubuntu/vivid64'
-        ubuntu.vm.network :private_network, ip: '20.20.20.26'
-    end
-
     config.vm.define :centos6 do |centos|
         centos.vm.box = 'boxcutter/centos67'
         centos.vm.network :private_network, ip: '20.20.20.22'
@@ -30,13 +25,28 @@ Vagrant.configure('2') do |config|
         debian.vm.network :private_network, ip: '20.20.20.24'
     end
 
+    config.vm.define :openbsd57 do |openbsd|
+        openbsd.vm.box = 'tmatilai/openbsd-5.7'
+        openbsd.vm.network :private_network, ip: '20.20.20.25'
+    end
+
+    config.vm.define :ubuntu15 do |ubuntu|
+        ubuntu.vm.box = 'ubuntu/wily64'
+        ubuntu.vm.network :private_network, ip: '20.20.20.26'
+    end
+
     config.vm.define :debian8 do |debian|
         debian.vm.box = 'debian/jessie64'
         debian.vm.network :private_network, ip: '20.20.20.27'
     end
 
-    config.vm.define :openbsd57 do |openbsd|
-        openbsd.vm.box = 'tmatilai/openbsd-5.7'
-        openbsd.vm.network :private_network, ip: '20.20.20.25'
+    config.vm.define :fedora23 do |fedora|
+        fedora.vm.box = 'boxcutter/fedora23'
+        fedora.vm.network :private_network, ip: '20.20.20.28'
+    end
+
+    config.vm.define :gentoo do |gentoo|
+        gentoo.vm.box = 'd11wtq/gentoo'
+        gentoo.vm.network :private_network, ip: '20.20.20.29'
     end
 end
