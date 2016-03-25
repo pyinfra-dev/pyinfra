@@ -18,7 +18,7 @@ from termcolor import colored
 from pyinfra import logger, pseudo_inventory
 
 from pyinfra.api import Config, Inventory
-from pyinfra.api.facts import facts
+from pyinfra.api.facts import facts, is_fact
 from pyinfra.api.exceptions import PyinfraError
 
 from .hook import HOOKS, HOOK_NAMES
@@ -188,7 +188,7 @@ def print_meta(state):
 def print_results(state):
     for hostname, results in state.results.iteritems():
         if hostname not in state.inventory.connected_hosts:
-            logger.info('{0}\tNo connection'.format(colored(hostname, 'red', attrs=['bold'])))
+            logger.info('[{0}]\tNo connection'.format(colored(hostname, 'red', attrs=['bold'])))
 
         else:
             meta = state.meta[hostname]
@@ -261,6 +261,11 @@ def setup_arguments(arguments):
     # Ensure parallel is a number
     if arguments['--parallel']:
         arguments['--parallel'] = int(arguments['--parallel'])
+
+    # Ensure any fact exists
+    if arguments['--fact']:
+        if not is_fact(arguments['--fact']):
+            raise PyinfraError('Invalid fact: {0}'.format(arguments['--fact']))
 
     # Setup the rest
     return {
@@ -419,7 +424,12 @@ def make_inventory(
     # issue is we want inventory access within the group data files - but at this point
     # we're not ready to make an Inventory. So here we just create a fake one, and attach
     # it to pseudo_inventory while we import the data files.
-    fake_inventory = Inventory(groups['ALL'])
+    fake_groups = {
+        # In API mode groups *must* be tuples of (hostnames, data)
+        name: group if isinstance(group, tuple) else (group, {})
+        for name, group in groups.iteritems()
+    }
+    fake_inventory = Inventory(groups['ALL'], **fake_groups)
     pseudo_inventory.set(fake_inventory)
 
     # For each group load up any data
