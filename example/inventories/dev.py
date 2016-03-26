@@ -21,12 +21,8 @@ APT = [
     'debian8.pyinfra'
 ]
 
-GENTOO = [
-    'gentoo.pyinfra'
-]
-
 # Hosts can be in multiple groups
-LINUX = YUM + APT + GENTOO
+LINUX = YUM + APT
 
 # ALL is automatically set to the unique hosts above and so does not need to be defined
 # ALL = LINUX + BSD

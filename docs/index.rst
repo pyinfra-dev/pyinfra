@@ -6,7 +6,7 @@ the state defined in the deploy script. Deploys are asyncronous and highly perfo
 inventory & deploy are managed with pure Python, allowing for near-infinite extendability.
 
 pyinfra targets POSIX compatability and is currently tested against Ubuntu, Debian, CentOS,
-Fedora, Gentoo & OpenBSD.
+Fedora & OpenBSD.
 
 .. toctree::
     :maxdepth: 1

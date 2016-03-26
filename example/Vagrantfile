@@ -44,9 +44,4 @@ Vagrant.configure('2') do |config|
         fedora.vm.box = 'boxcutter/fedora23'
         fedora.vm.network :private_network, ip: '20.20.20.28'
     end
-
-    config.vm.define :gentoo do |gentoo|
-        gentoo.vm.box = 'd11wtq/gentoo'
-        gentoo.vm.network :private_network, ip: '20.20.20.29'
-    end
 end
