@@ -54,11 +54,21 @@ class Sha1File(FactBase):
 
 class FindInFile(FactBase):
     '''
-    Checks for the existence of text in a file using grep.
+    Checks for the existence of text in a file using grep. Returns a list of matching
+    lines if the file exists, and ``None`` if the file does not.
     '''
 
     def command(self, name, pattern):
-        return 'grep "{0}" {1}'.format(pattern, name)
+        self.name = name
+        return 'grep "{0}" {1} || find {1}'.format(pattern, name)
+
+    def process(self, output):
+        # If output is the filename (ie caught by the || find <filename>), no matches, so
+        # return an empty list.
+        if output[0] == self.name:
+            return []
+
+        return output
 
 
 class FindFiles(FactBase):
