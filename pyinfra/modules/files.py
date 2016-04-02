@@ -97,26 +97,54 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
         match_line = '{0}.*$'.format(match_line)
 
     # Is there a matching line in this file?
-    is_present = host.fact.find_in_file(name, match_line)
+    present_lines = host.fact.find_in_file(name, match_line)
     commands = []
 
+    # If replace present, use that over the matching line
+    if replace:
+        line = replace
+
+    # Save commands for re-use in dynamic script when file not present at fact stage
+    echo_command = 'echo "{0}" >> {1}'.format(line, name)
+    sed_replace_command = sed_replace(state, name, match_line, replace, flags=flags)
+
     # No line and we want it, append it
-    if not is_present and present:
-        # If replace present, use that over the matching line
-        if replace:
-            line = replace
+    if not present_lines and present:
+        # If the file does not exist - it *might* be created, so we handle it dynamically
+        # with a little script.
+        if present_lines is None:
+            commands.append('''
+                # If the file now exists
+                if [ -f "{target}" ]; then
+                    # Grep for the line, sed if matches
+                    (grep "{match_line}" "{target}" && {sed_replace_command}) || \
+                    # Else echo
+                    {echo_command}
 
-        commands.append('echo "{0}" >> {1}'.format(line, name))
+                # No file, just echo
+                else
+                    {echo_command}
+                fi
+            '''.format(
+                target=name,
+                match_line=match_line,
+                echo_command=echo_command,
+                sed_replace_command=sed_replace_command
+            ))
 
-    # Line exists and we want to remove it, replace with nothing
-    elif is_present and not present:
+        # Otherwise the file exists and there is no matching line, so append it
+        else:
+            commands.append(echo_command)
+
+    # Line(s) exists and we want to remove them, replace with nothing
+    elif present_lines and not present:
         commands.append(sed_replace(state, name, match_line, '', flags=flags))
 
-    # Line exists and we have want to ensure it's correct
-    elif is_present and present:
-        # If the line *is* different, sed replace it
-        if replace and is_present != replace:
-            commands.append(sed_replace(state, name, match_line, replace, flags=flags))
+    # Line(s) exists and we have want to ensure they're correct
+    elif present_lines and present:
+        # If any of lines are different, sed replace them
+        if replace and any(line != replace for line in present_lines):
+            commands.append(sed_replace_command)
 
     return commands
 
@@ -145,8 +173,8 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
 
     + source: local directory to sync
     + destination: remote directory to sync to
-    + user: user to own the files
-    + group: group to own the files
+    + user: user to own the files and directories
+    + group: group to own the files and directories
     + mode: permissions of the files
     + delete: delete remote files not present locally
     '''
@@ -177,13 +205,13 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
     commands = []
 
     # Ensure the destination directory
-    commands.extend(directory(destination, user=user, group=group, mode=mode))
+    commands.extend(directory(destination, user=user, group=group))
 
     # Ensure any remote dirnames
     for dirname in ensure_dirnames:
         commands.extend(directory(
             '{0}/{1}'.format(destination, dirname),
-            user=user, group=group, mode=mode
+            user=user, group=group
         ))
 
     # Put each file combination
