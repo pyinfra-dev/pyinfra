@@ -186,9 +186,17 @@ def operation(func=None, pipeline_facts=None):
         if name not in op_meta['names']:
             op_meta['names'].append(name)
 
+        # Attach normal args
         for arg in args:
             if isinstance(arg, FunctionType):
                 arg = arg.__name__
+
+            if arg not in op_meta['args']:
+                op_meta['args'].append(arg)
+
+        # Attach keyword args
+        for key, value in kwargs.iteritems():
+            arg = '='.join((str(key), str(value)))
 
             if arg not in op_meta['args']:
                 op_meta['args'].append(arg)

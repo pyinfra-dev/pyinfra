@@ -223,7 +223,7 @@ def run_ops(state, serial=False, no_wait=False):
                 ' {0} '.format(', '.join(op_types)) if op_types else ' '
             ), 'blue'),
             colored(', '.join(op_meta['names']), attrs=['bold']),
-            tuple(op_meta['args'])
+            tuple(op_meta['args']) if op_meta['args'] else ''
         ))
 
         op_hosts = set(list(host.name for host in hosts)) - remove_hosts
