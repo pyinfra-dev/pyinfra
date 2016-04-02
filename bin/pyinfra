@@ -202,15 +202,8 @@ try:
 
     # Just getting a fact?
     if arguments['fact']:
-        if ':' in arguments['fact']:
-            fact, fact_args = arguments['fact'].split(':')
-            fact_args = fact_args.split(',')
-        else:
-            fact = arguments['fact']
-            fact_args = None
-
         fact_data = get_facts(
-            state, fact, args=fact_args,
+            state, arguments['fact'], args=arguments['fact_args'],
             sudo=arguments['sudo'], sudo_user=arguments['sudo_user']
         )
         print_fact(fact_data)

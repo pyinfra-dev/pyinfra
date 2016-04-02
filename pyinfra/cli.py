@@ -262,8 +262,15 @@ def setup_arguments(arguments):
     if arguments['--parallel']:
         arguments['--parallel'] = int(arguments['--parallel'])
 
-    # Ensure any fact exists
+    # Always assign empty args
+    fact_args = {}
     if arguments['--fact']:
+        if ':' in arguments['--fact']:
+            fact, fact_args = arguments['--fact'].split(':')
+            fact_args = fact_args.split(',')
+            arguments['--fact'] = fact
+
+        # Ensure the fact exists
         if not is_fact(arguments['--fact']):
             raise PyinfraError('Invalid fact: {0}'.format(arguments['--fact']))
 
@@ -277,7 +284,10 @@ def setup_arguments(arguments):
         'serial': arguments['--serial'],
         'no_wait': arguments['--no-wait'],
         'debug': arguments['--debug'],
+
         'fact': arguments['--fact'],
+        'fact_args': fact_args,
+
         'limit': arguments['--limit'],
         'op': arguments['--run'],
         'op_args': arguments['ARGS'],
