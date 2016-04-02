@@ -395,24 +395,6 @@ def make_inventory(
                 if hostname not in all_hosts:
                     all_hosts.append(host)
 
-    # Apply any limit to all_hosts
-    if limit:
-        # Limits can be groups
-        limit_groupname = limit.upper()
-        if limit_groupname in groups:
-            all_hosts = [
-                host[0] if isinstance(host, tuple) else host
-                for host in groups[limit_groupname]
-            ]
-
-        # Or hostnames w/*wildcards
-        else:
-            all_hosts = [
-                host for host in all_hosts
-                if (isinstance(host, tuple) and fnmatch(host[0], limit))
-                or (isinstance(host, basestring) and fnmatch(host, limit))
-            ]
-
     groups['ALL'] = (all_hosts, all_data)
 
     # Apply the filename group if not already defined
@@ -429,7 +411,7 @@ def make_inventory(
         name: group if isinstance(group, tuple) else (group, {})
         for name, group in groups.iteritems()
     }
-    fake_inventory = Inventory(groups['ALL'], **fake_groups)
+    fake_inventory = Inventory((all_hosts, all_data), **fake_groups)
     pseudo_inventory.set(fake_inventory)
 
     # For each group load up any data
@@ -457,6 +439,28 @@ def make_inventory(
 
     # Reset the pseudo inventory
     pseudo_inventory.set(None)
+
+    # Apply any limit to all_hosts
+    if limit:
+        # Limits can be groups
+        limit_groupname = limit.upper()
+        if limit_groupname in groups:
+            all_hosts = [
+                host[0] if isinstance(host, tuple) else host
+                for host in groups[limit_groupname]
+            ]
+
+        # Or hostnames w/*wildcards
+        else:
+            all_hosts = [
+                host for host in all_hosts
+                if (isinstance(host, tuple) and fnmatch(host[0], limit))
+                or (isinstance(host, basestring) and fnmatch(host, limit))
+
+            ]
+
+        # Reassign the ALL group w/limit
+        groups['ALL'] = (all_hosts, all_data)
 
     return Inventory(
         groups.pop('ALL'),
