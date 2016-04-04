@@ -2,8 +2,6 @@
 # File: pyinfra/api/operations.py
 # Desc: Runs operations from pyinfra._ops in various modes (parallel, no_wait, serial)
 
-from __future__ import division
-
 from types import FunctionType
 from socket import timeout as timeout_error
 
@@ -208,7 +206,6 @@ def run_ops(state, serial=False, no_wait=False):
         return
 
     # Default: run all ops in order, waiting at each for all servers to complete
-    remove_hosts = set()
     for op_hash in state.op_order:
         op_meta = state.op_meta[op_hash]
 
@@ -226,53 +223,32 @@ def run_ops(state, serial=False, no_wait=False):
             tuple(op_meta['args']) if op_meta['args'] else ''
         ))
 
-        op_hosts = set(list(host.name for host in hosts)) - remove_hosts
-        successful_hosts = []
-        failed_hosts = []
+        failed_hosts = set()
 
         if op_meta['serial']:
             # For each host, run the op
-            for hostname in op_hosts:
-                result = _run_op(state, hostname, op_hash)
+            for host in hosts:
+                result = _run_op(state, host.name, op_hash)
 
-                if result:
-                    successful_hosts.append(hostname)
-                else:
-                    failed_hosts.append(hostname)
+                if not result:
+                    failed_hosts.add(host.name)
 
         else:
             # Spawn greenlet for each host
             greenlet_hosts = [
-                (hostname, state.pool.spawn(
-                    _run_op, state, hostname, op_hash
+                (host.name, state.pool.spawn(
+                    _run_op, state, host.name, op_hash
                 ))
-                for hostname in op_hosts
+                for host in hosts
             ]
 
             # Get all the results
             for (hostname, greenlet) in greenlet_hosts:
-                if greenlet.get():
-                    successful_hosts.append(hostname)
-                else:
-                    failed_hosts.append(hostname)
+                if not greenlet.get():
+                    failed_hosts.add(hostname)
 
         if not op_meta['ignore_errors']:
-            # Don't continue operations on failed/non-ignore hosts
-            for hostname in failed_hosts:
-                remove_hosts.add(hostname)
-
-            # Check we're not above the fail percent
-            if state.config.FAIL_PERCENT is not None:
-                percent_failed = (1 - len(successful_hosts) / len(hosts)) * 100
-
-                if percent_failed > state.config.FAIL_PERCENT:
-                    raise PyinfraError('Over {0}% of hosts failed'.format(
-                        state.config.FAIL_PERCENT
-                    ))
-
-            # No hosts left!
-            if not successful_hosts:
-                raise PyinfraError('No hosts remaining')
+            state.fail_hosts(failed_hosts)
 
         if state.print_lines:
             print

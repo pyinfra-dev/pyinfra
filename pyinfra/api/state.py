@@ -2,6 +2,8 @@
 # File: pyinfra/api/state.py
 # Desc: class that represents the current pyinfra.state
 
+from __future__ import division
+
 from uuid import uuid4
 from inspect import getargspec
 
@@ -12,6 +14,7 @@ from pyinfra import logger
 from .config import Config
 # from .facts import get_facts
 from .util import sha1_hash
+from .exceptions import PyinfraError
 
 
 class PipelineFacts(object):
@@ -158,7 +161,22 @@ class State(object):
         self.pipeline_facts = PipelineFacts(self)
 
     def fail_hosts(self, hosts_to_fail):
-        pass
+        # Remove the failed hosts
+        self.inventory.connected_hosts -= hosts_to_fail
+
+        # Check we're not above the fail percent
+        connected_hosts = self.inventory.connected_hosts
+
+        if self.config.FAIL_PERCENT is not None:
+            percent_failed = (1 - len(connected_hosts) / len(self.inventory)) * 100
+            if percent_failed > self.config.FAIL_PERCENT:
+                raise PyinfraError('Over {0}% of hosts failed'.format(
+                    self.config.FAIL_PERCENT
+                ))
+
+        # No hosts left!
+        if not connected_hosts:
+            raise PyinfraError('No hosts remaining!')
 
     def get_temp_filename(self, hash_key=None):
         '''

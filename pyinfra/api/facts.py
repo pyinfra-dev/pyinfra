@@ -7,6 +7,8 @@ The pyinfra facts API. Facts enable pyinfra to collect remote server state which
 to "diff" with the desired state, producing the final commands required for a deploy.
 '''
 
+from __future__ import division
+
 from socket import timeout as timeout_error
 
 from gevent.lock import Semaphore
@@ -14,7 +16,6 @@ from termcolor import colored
 from paramiko import SSHException
 
 from pyinfra import logger
-from pyinfra.api.exceptions import PyinfraError
 
 from .ssh import run_shell_command
 from .util import underscore, make_hash
@@ -63,6 +64,10 @@ class FactBase(object):
         }
 
 
+def get_pipeline_facts(state, name, args, sudo, sudo_user):
+    pass
+
+
 def get_facts(
     state, name,
     args=None, sudo=False, sudo_user=None
@@ -81,7 +86,7 @@ def get_facts(
     # Create an instance of the fact
     fact = facts[name]()
 
-    # If we're pipelining & inside an op - just return the defaults
+    # If we're pipelining & inside an op: just return the defaults
     if state.pipelining and state.in_op:
         return {
             host.name: fact.default
@@ -131,7 +136,6 @@ def get_facts(
             hostname_facts[hostname] = data
 
         except (timeout_error, SSHException):
-            failed_hosts.add(hostname)
 
             if ignore_errors:
                 logger.warning('[{0}] {1}'.format(
@@ -139,6 +143,7 @@ def get_facts(
                     colored('Fact error (ignored)', 'yellow')
                 ))
             else:
+                failed_hosts.add(hostname)
                 logger.error('[{0}] {1}'.format(
                     hostname,
                     colored('Fact error', 'red')
@@ -156,18 +161,9 @@ def get_facts(
     else:
         logger.debug(log)
 
-    # Remove any failed hosts from the inventory
-    state.inventory.connected_hosts -= failed_hosts
-
     # Check we've not failed
     if not ignore_errors:
-        n_connected_hosts = len(hostname_facts)
-        if state.config.FAIL_PERCENT is not None:
-            percent_failed = (1 - n_connected_hosts / len(state.inventory)) * 100
-            if percent_failed > state.config.FAIL_PERCENT:
-                raise PyinfraError('Over {0}% of hosts failed, exiting'.format(
-                    state.config.FAIL_PERCENT
-                ))
+        state.fail_hosts(failed_hosts)
 
     # Assign the facts
     state.facts[fact_hash] = hostname_facts

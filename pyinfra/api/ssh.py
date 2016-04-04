@@ -2,6 +2,8 @@
 # File: pyinfra/api/ssh.py
 # Desc: handle all SSH related stuff
 
+from __future__ import division
+
 from os import path
 from socket import (
     gaierror,
@@ -18,7 +20,6 @@ from paramiko import (
 
 from pyinfra import logger
 from pyinfra.api.util import read_buffer, make_command
-from pyinfra.api.exceptions import PyinfraError
 
 
 def connect(host, **kwargs):
@@ -48,7 +49,7 @@ def connect(host, **kwargs):
             colored('Connected', 'green')
         ))
 
-        return (name, client)
+        return client
 
     except AuthenticationException as e:
         logger.error(u'Auth error on: {0}, {1}'.format(name, e))
@@ -79,7 +80,7 @@ def connect_all(state):
         state (``pyinfra.api.State`` obj): the state containing an inventory to connect to
     '''
 
-    greenlets = []
+    greenlets = {}
 
     for host in state.inventory:
         kwargs = {
@@ -121,37 +122,26 @@ def connect_all(state):
             kwargs['allow_agent'] = True
             kwargs['look_for_keys'] = True
 
-        greenlets.append(
-            state.pool.spawn(connect, host, **kwargs)
-        )
+        greenlets[host.name] = state.pool.spawn(connect, host, **kwargs)
 
-    gevent.wait(greenlets)
+    gevent.wait(greenlets.values())
 
     # Get/set the results
-    results = [greenlet.get() for greenlet in greenlets]
-    hostname_clients = {
-        result[0]: result[1]
-        for result in results
-        if result
-    }
+    failed_hosts = set()
 
-    for hostname, client in hostname_clients.iteritems():
-        state.ssh_connections[hostname] = client
+    for name, greenlet in greenlets.iteritems():
+        client = greenlet.get()
 
-    state.inventory.connected_hosts = set(filter(None, hostname_clients.keys()))
+        if not client:
+            failed_hosts.add(name)
+        else:
+            state.ssh_connections[name] = client
 
-    # Check we've connected to something
-    n_connected_hosts = len(state.inventory.connected_hosts)
-    if n_connected_hosts == 0:
-        raise PyinfraError('No hosts connected, exiting')
+    # Add all the hosts as connected
+    state.inventory.connected_hosts = set(greenlets.keys())
 
-    # Check we've not failed
-    if state.config.FAIL_PERCENT is not None:
-        percent_failed = (1 - n_connected_hosts / len(state.inventory)) * 100
-        if percent_failed > state.config.FAIL_PERCENT:
-            raise PyinfraError('Over {0}% of hosts failed, exiting'.format(
-                state.config.FAIL_PERCENT
-            ))
+    # Remove those that failed, triggering FAIL_PERCENT check
+    state.fail_hosts(failed_hosts)
 
 
 def run_shell_command(
