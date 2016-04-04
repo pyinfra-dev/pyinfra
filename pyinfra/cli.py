@@ -5,6 +5,7 @@
 import sys
 import json
 import logging
+import traceback
 from os import path
 from imp import load_source
 from fnmatch import fnmatch
@@ -130,6 +131,15 @@ def print_facts_list():
 
 def print_fact(fact_data):
     print json.dumps(fact_data, indent=4, default=json_encode)
+
+
+def dump_trace(exc_info):
+    # Dev mode, so lets dump as much data as we have
+    error_type, value, trace = exc_info
+    print '----------------------'
+    traceback.print_tb(trace)
+    logger.critical('{0}: {1}'.format(error_type.__name__, value))
+    print '----------------------'
 
 
 def dump_state(state):

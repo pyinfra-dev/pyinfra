@@ -47,7 +47,6 @@ monkey.patch_all()
 import sys
 import signal
 import logging
-import traceback
 from os import getcwd, path
 
 from docopt import docopt
@@ -60,7 +59,7 @@ colorama_init()
 from pyinfra import logger, pseudo_state, pseudo_host, pseudo_inventory, hook
 from pyinfra.cli import (
     FakeHost,
-    run_hook, dump_state, setup_logging,
+    run_hook, dump_state, dump_trace, setup_logging,
     make_inventory, load_config, load_deploy_config, setup_arguments,
     print_meta, print_results, print_fact, print_facts_list
 )
@@ -278,6 +277,10 @@ except hook.Error as e:
         '--> {0}: '.format(colored('hook exception', 'red', attrs=['bold']))
     )
     logger.warning(e)
+
+    if arguments['debug']:
+        dump_trace(sys.exc_info())
+
     _exit(1)
 
 # Capture/log internal exceptions
@@ -287,6 +290,10 @@ except PyinfraError as e:
         '--> {0}: '.format(colored('pyinfra exception', 'red', attrs=['bold']))
     )
     logger.warning(e)
+
+    if arguments['debug']:
+        dump_trace(sys.exc_info())
+
     _exit(1)
 
 # Capture/dump unexpected exceptions
@@ -295,13 +302,7 @@ except Exception as e:
     sys.stderr.write(
         '--> {0}: '.format(colored('unknown exception', 'red', attrs=['bold']))
     )
-
-    # Dev mode, so lets dump as much data as we have
-    error_type, value, trace = sys.exc_info()
-    print '----------------------'
-    traceback.print_tb(trace)
-    logger.critical('{0}: {1}'.format(error_type.__name__, value))
-    print '----------------------'
+    dump_trace(sys.exc_info())
     _exit(1)
 
 
