@@ -128,6 +128,7 @@ def connect_all(state):
 
     # Get/set the results
     failed_hosts = set()
+    connected_hosts = set()
 
     for name, greenlet in greenlets.iteritems():
         client = greenlet.get()
@@ -136,10 +137,13 @@ def connect_all(state):
             failed_hosts.add(name)
         else:
             state.ssh_connections[name] = client
+            connected_hosts.add(name)
 
-    # Add all the hosts as connected
-    state.inventory.connected_hosts = set(greenlets.keys())
+    # Add connected hosts to inventory
+    state.inventory.connected_hosts = connected_hosts
 
+    # Add all the hosts as active
+    state.inventory.active_hosts = set(greenlets.keys())
     # Remove those that failed, triggering FAIL_PERCENT check
     state.fail_hosts(failed_hosts)
 

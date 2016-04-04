@@ -123,6 +123,10 @@ class State(object):
         # Setup greenlet pool
         self.pool = Pool(config.PARALLEL)
 
+        # Host tracking
+        self.active_hosts = set()
+        self.connected_hosts = set()
+
         hostnames = [host.name for host in inventory]
 
         # Op basics
@@ -162,20 +166,20 @@ class State(object):
 
     def fail_hosts(self, hosts_to_fail):
         # Remove the failed hosts
-        self.inventory.connected_hosts -= hosts_to_fail
+        self.inventory.active_hosts -= hosts_to_fail
 
         # Check we're not above the fail percent
-        connected_hosts = self.inventory.connected_hosts
+        active_hosts = self.inventory.active_hosts
 
         if self.config.FAIL_PERCENT is not None:
-            percent_failed = (1 - len(connected_hosts) / len(self.inventory)) * 100
+            percent_failed = (1 - len(active_hosts) / len(self.inventory)) * 100
             if percent_failed > self.config.FAIL_PERCENT:
                 raise PyinfraError('Over {0}% of hosts failed'.format(
                     self.config.FAIL_PERCENT
                 ))
 
         # No hosts left!
-        if not connected_hosts:
+        if not active_hosts:
             raise PyinfraError('No hosts remaining!')
 
     def get_temp_filename(self, hash_key=None):
