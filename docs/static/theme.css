@@ -19,6 +19,7 @@
 
 .wy-nav-content {
     background: #FCFCFC !important;
+    margin: 0 !important;
 }
 
 .wy-menu-vertical a:hover {
