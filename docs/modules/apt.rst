@@ -76,9 +76,8 @@ Manage apt repositories.
 
 .. code:: python
 
-    apt.repo(name, present=True, key=None)
+    apt.repo(name, present=True)
 
 + **name**: apt line, repo url or PPA
 + **present**: whether the repo should exist on the system
-+ **key**: shortcut to trigger ``apt.key(key)`` after adding the repo
 

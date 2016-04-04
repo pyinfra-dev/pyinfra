@@ -142,8 +142,8 @@ remove extra files on the remote side, but not extra directories.
 
 + **source**: local directory to sync
 + **destination**: remote directory to sync to
-+ **user**: user to own the files
-+ **group**: group to own the files
++ **user**: user to own the files and directories
++ **group**: group to own the files and directories
 + **mode**: permissions of the files
 + **delete**: delete remote files not present locally
 

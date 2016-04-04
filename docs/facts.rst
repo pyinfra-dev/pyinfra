@@ -121,7 +121,8 @@ Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    Checks for the existence of text in a file using grep.
+    Checks for the existence of text in a file using grep. Returns a list of matching
+    lines if the file exists, and ``None`` if the file does not.
     
 
 
@@ -326,7 +327,8 @@ Returns the current datetime on the server.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    Returns a dict of the Linux distribution version. Ubuntu, CentOS & Debian currently:
+    Returns a dict of the Linux distribution version. Ubuntu, Debian, CentOS, Fedora &
+    Gentoo currently:
 
     .. code:: python
 
