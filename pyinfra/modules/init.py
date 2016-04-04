@@ -11,7 +11,7 @@ Manages the state and configuration of init services. Support for:
 + Systemctl
 '''
 
-from pyinfra.api import operation, OperationError
+from pyinfra.api import operation
 
 from . import files
 
@@ -95,11 +95,6 @@ def d(
 
             elif distro == 'Gentoo':
                 commands.append('rc-update add apache2 default')
-
-            else:
-                raise OperationError(
-                    'Unsupported: init.d with enabled on distribution: {0}'.format(distro)
-                )
 
         # Remove any /etc/rcX.d/<name> start links
         elif enabled is False:
