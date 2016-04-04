@@ -160,6 +160,7 @@ class LinuxDistribution(FactBase):
     _regexes = [
         r'(Ubuntu) ([0-9]{2})\.([0-9]{2})',
         r'(CentOS) release ([0-9]).([0-9])',
+        r'(Red Hat Enterprise Linux) Server release ([0-9]).([0-9])',
         r'(CentOS) Linux release ([0-9])\.([0-9])',
         r'(Debian) GNU/Linux ([0-9])()',
         r'(Gentoo) Base System release ([0-9])\.([0-9])',
