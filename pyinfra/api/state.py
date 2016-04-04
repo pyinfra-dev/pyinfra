@@ -24,9 +24,6 @@ class PipelineFacts(object):
         self.state.facts_to_pipeline = {}
 
     def __exit__(self, type_, value, traceback):
-        if type_ and issubclass(type_, Exception):
-            raise value
-
         self.state.pipelining = False
 
         print 'FACTS TO PIPE'
@@ -37,12 +34,12 @@ class PipelineFacts(object):
         #     get_facts(self.state, name, pipeline_args=args)
 
         # Actually build our ops
-        for (func, state, host, args, kwargs) in self.state.ops_to_pipeline:
+        for (host_name, func, args, kwargs) in self.state.ops_to_pipeline:
             logger.debug(
-                'Replaying op: {0}, args={1}, kwargs={2}'.format(host, args, kwargs)
+                'Replaying op: {0}, args={1}, kwargs={2}'.format(func, args, kwargs)
             )
 
-            func(state, host, *args, **kwargs)
+            func(self.state, self.state.inventory[host_name], *args, **kwargs)
 
     def process(self, func, decorated_func, args, kwargs):
         pipeline_facts = getattr(decorated_func, 'pipeline_facts', None)
@@ -159,6 +156,9 @@ class State(object):
 
         # Pipeline facts context manager attached to self
         self.pipeline_facts = PipelineFacts(self)
+
+    def fail_hosts(self, hosts_to_fail):
+        pass
 
     def get_temp_filename(self, hash_key=None):
         '''

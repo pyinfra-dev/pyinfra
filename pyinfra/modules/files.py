@@ -205,11 +205,15 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
     commands = []
 
     # Ensure the destination directory
-    commands.extend(directory(destination, user=user, group=group))
+    commands.extend(directory(
+        state, host, destination,
+        user=user, group=group
+    ))
 
     # Ensure any remote dirnames
     for dirname in ensure_dirnames:
         commands.extend(directory(
+            state, host,
             '{0}/{1}'.format(destination, dirname),
             user=user, group=group
         ))
@@ -217,6 +221,7 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
     # Put each file combination
     for local_filename, remote_filename in put_files:
         commands.extend(put(
+            state, host,
             local_filename, remote_filename,
             user=user, group=group, mode=mode,
             add_deploy_dir=False
@@ -344,6 +349,7 @@ def template(
 
     # Pass to the put function
     return put(
+        state, host,
         output_file, remote_filename,
         user=user, group=group, mode=mode,
         add_deploy_dir=False

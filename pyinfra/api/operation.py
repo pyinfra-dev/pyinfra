@@ -17,6 +17,7 @@ from pyinfra.pseudo_modules import PseudoModule
 from .host import Host
 from .state import State
 from .util import make_hash, get_arg_name
+from .exceptions import PyinfraError
 
 
 class OperationMeta(object):
@@ -70,6 +71,11 @@ def operation(func=None, pipeline_facts=None):
             host = pseudo_host
             if not state.active:
                 return OperationMeta()
+
+            if state.in_op:
+                raise PyinfraError(
+                    'Nested operation called without state/host: {0}'.format(func)
+                )
 
         # Otherwise (API mode) we just trim off the commands
         else:
@@ -141,7 +147,7 @@ def operation(func=None, pipeline_facts=None):
         # will be re-run once the facts are gathered.
         if state.pipelining:
             state.ops_to_pipeline.append(
-                (decorated_func, state, host._module, args, kwargs)
+                (host.name, decorated_func, args, kwargs)
             )
             return OperationMeta()
 
