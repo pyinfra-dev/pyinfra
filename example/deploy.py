@@ -13,7 +13,6 @@ from pyinfra.modules import server, apt, yum, files, python, git, pip, init
 # Hooks inside deploy file
 @hook.before_connect
 def before_connect(data, state):
-    print 'before_connect deploy file hook!'
     print 'inventory hosts!: ', [host.name for host in inventory]
 
 
@@ -118,16 +117,17 @@ elif 'linux' in host.groups:
             cache_time=3600
         )
 
-    elif host.fact.linux_distribution['name'] == 'CentOS':
-        # Manage remote rpm files
-        yum.rpm(
-            'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{0}.noarch.rpm'.format(
-                host.fact.linux_distribution['major']
-            ),
-            sudo=True,
-            op='epel_repo',  # this makes one operation despite differing args above
-            name='Add EPEL Repo'
-        )
+    elif host.fact.linux_distribution['name'] in ('CentOS', 'Fedora'):
+        if host.fact.linux_distribution['name'] == 'CentOS':
+            # Manage remote rpm files
+            yum.rpm(
+                'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{0}.noarch.rpm'.format(
+                    host.fact.linux_distribution['major']
+                ),
+                sudo=True,
+                op='epel_repo',  # this makes one operation despite differing args above
+                name='Add EPEL Repo'
+            )
 
         # yum package manager
         yum.packages(
