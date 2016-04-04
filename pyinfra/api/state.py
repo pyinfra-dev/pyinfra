@@ -7,6 +7,8 @@ from inspect import getargspec
 
 from gevent.pool import Pool
 
+from pyinfra import logger
+
 from .config import Config
 # from .facts import get_facts
 from .util import sha1_hash
@@ -21,8 +23,14 @@ class PipelineFacts(object):
         self.state.ops_to_pipeline = []
         self.state.facts_to_pipeline = {}
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
+        if type_ and issubclass(type_, Exception):
+            raise value
+
         self.state.pipelining = False
+
+        print 'FACTS TO PIPE'
+        print self.state.facts_to_pipeline
 
         # Get pipelined facts!
         # for name, args in self.state.facts_to_pipeline.iteritems():
@@ -30,6 +38,10 @@ class PipelineFacts(object):
 
         # Actually build our ops
         for (func, state, host, args, kwargs) in self.state.ops_to_pipeline:
+            logger.debug(
+                'Replaying op: {0}, args={1}, kwargs={2}'.format(host, args, kwargs)
+            )
+
             func(state, host, *args, **kwargs)
 
     def process(self, func, decorated_func, args, kwargs):
@@ -48,7 +60,14 @@ class PipelineFacts(object):
                     fact_arg = kwargs.get(arg_name)
 
                 if fact_arg:
-                    self.state.facts_to_pipeline.setdefault(fact_name, set()).add(fact_arg)
+                    # Get the sudo/sudo_user state, because facts are uniquely hashed
+                    # using their name, command and sudo/sudo_user.
+                    sudo = kwargs.get('sudo', self.state.config.SUDO)
+                    sudo_user = kwargs.get('sudo_user', self.state.config.SUDO_USER)
+
+                    self.state.facts_to_pipeline.setdefault(
+                        (fact_name, sudo, sudo_user), set()
+                    ).add(fact_arg)
 
 
 class State(object):
