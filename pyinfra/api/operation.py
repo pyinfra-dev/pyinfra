@@ -87,6 +87,13 @@ def operation(func=None, pipeline_facts=None):
         if state.pipelining:
             state.pipeline_facts.process(func, decorated_func, args, kwargs)
 
+            # Not in op? Just drop the op into state.ops_to_pipeline and return here, this
+            # will be re-run once the facts are gathered.
+            if not state.in_op:
+                state.ops_to_pipeline.append(
+                    (host.name, decorated_func, args, kwargs.copy())
+                )
+
         # Locally & globally configurable
         sudo = kwargs.pop('sudo', state.config.SUDO)
         sudo_user = kwargs.pop('sudo_user', state.config.SUDO_USER)
@@ -143,12 +150,7 @@ def operation(func=None, pipeline_facts=None):
         state.in_op = False
         state.current_op_meta = None
 
-        # Pipelining? Just drop the op into state.ops_to_pipeline and return here, this
-        # will be re-run once the facts are gathered.
         if state.pipelining:
-            state.ops_to_pipeline.append(
-                (host.name, decorated_func, args, kwargs)
-            )
             return OperationMeta()
 
         # Add the hash to the operational order if not already in there. To ensure that

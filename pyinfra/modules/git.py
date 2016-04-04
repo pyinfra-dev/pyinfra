@@ -44,7 +44,7 @@ def repo(
     commands = []
 
     # Ensure our target directory exists
-    commands.extend(files.directory(target))
+    commands.extend(files.directory(state, host, target))
 
     # If we're going to chown this after clone/pull, and we're sudo'd, we need to make the
     # directory writeable by the SSH user
