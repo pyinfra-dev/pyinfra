@@ -25,10 +25,10 @@ Vagrant.configure('2') do |config|
         debian.vm.network :private_network, ip: '20.20.20.24'
     end
 
-    config.vm.define :openbsd57 do |openbsd|
-        openbsd.vm.box = 'tmatilai/openbsd-5.7'
+    config.vm.define :openbsd58 do |openbsd|
+        openbsd.vm.box = 'twingly/openbsd-5.8-amd64'
         openbsd.vm.network :private_network, ip: '20.20.20.25'
-    end
+    endv
 
     config.vm.define :ubuntu15 do |ubuntu|
         ubuntu.vm.box = 'ubuntu/wily64'

@@ -4,17 +4,17 @@
 
 # Defines a group - group names must be defined in ALL_CAPS
 BSD = [
-    'openbsd57.pyinfra'
+    'openbsd58.pyinfra'
 ]
 
 YUM = [
     'centos6.pyinfra',
-    # Host-specific data can be attached in inventory
-    ('centos7.pyinfra', {'systemd': True}),
+    'centos7.pyinfra',
     'fedora23.pyinfra'
 ]
 
 APT = [
+    # Host-specific data can be attached in inventory
     ('ubuntu14-hosttest', {'ssh_hostname': 'ubuntu14.pyinfra'}),
     'ubuntu15.pyinfra',
     'debian7.pyinfra',

@@ -22,6 +22,6 @@ LINUX = [
 ]
 
 BSD = [
-    # OpenBSD 5.7
+    # OpenBSD 5.8
     '20.20.20.25'
 ]

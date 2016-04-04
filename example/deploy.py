@@ -20,7 +20,7 @@ def before_connect(data, state):
 server.user(
     'pyinfra',
     home='/home/pyinfra',
-    shell='/bin/bash',
+    shell='/bin/sh',
 
     # Options available for all operations
     name='Ensure user pyinfra',
