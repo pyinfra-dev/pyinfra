@@ -35,6 +35,7 @@ class AptSources(FactBase):
         ...
     '''
 
+    default = {}
     command = 'cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list | grep -v "#"'
 
     def process(self, output):
@@ -58,6 +59,7 @@ class DebPackages(FactBase):
         ...
     '''
 
+    default = {}
     command = 'dpkg -l'
     _regex = r'^[a-z]+\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
 

@@ -53,7 +53,7 @@ def repo(state, host, name, present=True, filename=None):
     '''
     Manage apt repositories.
 
-    + name: apt line, repo url or PPA
+    + name: apt source string eg ``deb http://X hardy main``
     + present: whether the repo should exist on the system
     + filename: optional filename to use ``/etc/apt/sources.list.d/<filename>.list``. By
       default uses ``/etc/apt/sources.list``.
@@ -61,7 +61,7 @@ def repo(state, host, name, present=True, filename=None):
 
     commands = []
 
-    apt_sources = host.fact.apt_sources or {}
+    apt_sources = host.fact.apt_sources
 
     # Get the target .list file to manage
     if filename:
@@ -71,14 +71,9 @@ def repo(state, host, name, present=True, filename=None):
 
     # Parse out the URL from the name if available
     repo_url = name
-
     repo = parse_apt_repo(name)
     if repo:
         repo_url, _ = repo
-
-    # Convert ppa's to full URLs
-    elif name.startswith('ppa:'):
-        repo_url = 'http://ppa.launchpad.net/{0}/ubuntu'.format(name[4:])
 
     is_present = repo_url in apt_sources
 
@@ -93,6 +88,34 @@ def repo(state, host, name, present=True, filename=None):
         commands.extend(files.line(
             state, host, filename, name, present=False
         ))
+
+    return commands
+
+
+@operation
+def ppa(state, host, name, present=True):
+    '''
+    Manage Ubuntu ppa repositories.
+
+    + name: the PPA name
+    + present: whether it should exist
+
+    Note:
+        requires ``apt-add-repository`` on the remote host
+    '''
+
+    commands = []
+    apt_sources = host.fact.apt_sources
+
+    repo_url = 'http://ppa.launchpad.net/{0}/ubuntu'.format(name[4:])
+
+    is_present = repo_url in apt_sources
+
+    if not is_present and present:
+        commands.append('apt-add-repository "{0}" -y'.format(name))
+
+    if is_present and not present:
+        commands.append('apt-add-repository "{0}" -y --remove'.format(name))
 
     return commands
 

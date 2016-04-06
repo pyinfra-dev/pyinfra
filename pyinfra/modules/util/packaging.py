@@ -36,10 +36,6 @@ def ensure_packages(
 
     commands = []
 
-    # Current packages not strictly required
-    if not current_packages:
-        current_packages = {}
-
     # Accept a single package as string
     if isinstance(packages, basestring):
         packages = [packages]
