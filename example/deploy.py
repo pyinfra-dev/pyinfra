@@ -100,6 +100,11 @@ init.d(
     ignore_errors=True
 )
 
+# Storing this fact to avoid typing it so much (because the example targets a whole bunch
+# of distros [& 2 OSs]).
+distro = host.fact.linux_distribution
+
+
 # Work with inventory groups
 if 'bsd' in host.groups:
 
@@ -108,7 +113,7 @@ if 'bsd' in host.groups:
 
 elif 'linux' in host.groups:
     # Work with facts about the remote host
-    if host.fact.linux_distribution['name'] in ('Debian', 'Ubuntu'):
+    if distro['name'] in ('Debian', 'Ubuntu'):
         # apt package manager
         apt.packages(
             ['git', 'python-pip'],
@@ -117,12 +122,16 @@ elif 'linux' in host.groups:
             cache_time=3600
         )
 
-    elif host.fact.linux_distribution['name'] in ('CentOS', 'Fedora'):
-        if host.fact.linux_distribution['name'] == 'CentOS':
+        # and repos/keys
+        apt.repo('deb http://www.rabbitmq.com/debian/ testing main', sudo=True)
+        apt.key('http://www.rabbitmq.com/rabbitmq-signing-key-public.asc', sudo=True)
+
+    elif distro['name'] in ('CentOS', 'Fedora'):
+        if distro['name'] == 'CentOS':
             # Manage remote rpm files
             yum.rpm(
                 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{0}.noarch.rpm'.format(
-                    host.fact.linux_distribution['major']
+                    distro['major']
                 ),
                 sudo=True,
                 op='epel_repo',  # this makes one operation despite differing args above
@@ -178,8 +187,8 @@ server.wait(
     timeout=5
 )
 
-# Edit lines in files
-if host.fact.os == 'Linux' and host.fact.linux_distribution['name'] == 'CentOS':
+# Edit lines in files, if we're Linux/CentOS
+if host.fact.os == 'Linux' and distro['name'] == 'CentOS':
     files.line(
         '/etc/sysconfig/selinux',
         '^SELINUX=.*',
