@@ -131,7 +131,7 @@ def get_facts(
             if stdout:
                 data = fact.process(stdout)
             else:
-                data = None
+                data = fact.default
 
             hostname_facts[hostname] = data
 
