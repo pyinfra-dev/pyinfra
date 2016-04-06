@@ -1,7 +1,8 @@
 {
     "args": ["ppa:some-repo"],
     "facts": {
-        "apt_sources": {}
+        "apt_sources": {},
+        "find_in_file:/etc/apt/sources.list": false
     },
     "commands": [
         "apt-add-repository \"ppa:some-repo\" -y"

@@ -1,0 +1,12 @@
+{
+    "args": ["ppa:some-repo"],
+    "facts": {
+        "apt_sources": {
+            "http://ppa.launchpad.net/some-repo/ubunut": {}
+        },
+        "find_in_file:/etc/apt/sources.list": false
+    },
+    "commands": [
+        "apt-add-repository \"ppa:some-repo\" -y"
+    ]
+}

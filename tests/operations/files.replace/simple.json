@@ -4,6 +4,6 @@
         "flags": ["g", "i"]
     },
     "commands": [
-        "sed \"s/match/replace/gi\" filename > _tempfile_ && mv _tempfile_ filename"
+        "sed -i \"s/match/replace/gi\" filename"
     ]
 }

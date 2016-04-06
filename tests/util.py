@@ -28,8 +28,8 @@ class FakeFact(object):
     def __getitem__(self, key):
         return self.data[key]
 
-    def __call__(self, arg):
-        return self.data[arg]
+    def __call__(self, *args, **kwargs):
+        return self.data[args[0]]
 
     def __iter__(self):
         return iter(self.data)
@@ -69,8 +69,10 @@ def create_host(name=None, facts=None, data=None):
 
     for name, fact_data in facts.iteritems():
         if ':' in name:
-            name, arg = name.split(':')
-            real_facts.setdefault(name, {})[arg] = fact_data
+            args = name.split(':')
+            name = args[0]
+            args = args[1]
+            real_facts.setdefault(name, {})[args] = fact_data
         else:
             real_facts[name] = fact_data
 

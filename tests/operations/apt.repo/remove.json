@@ -6,9 +6,10 @@
     "facts": {
         "apt_sources": {
             "my-repo-line": {}
-        }
+        },
+        "find_in_file:/etc/apt/sources.list": [""]
     },
     "commands": [
-        "apt-add-repository \"my-repo-line\" -y --remove"
+        "sed -i \"s/^.*my-repo-line.*$//\" /etc/apt/sources.list"
     ]
 }
