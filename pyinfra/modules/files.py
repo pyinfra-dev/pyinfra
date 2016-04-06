@@ -103,6 +103,9 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
     # If replace present, use that over the matching line
     if replace:
         line = replace
+    # We must provide some kind of replace to sed_replace_command below
+    else:
+        replace = ''
 
     # Save commands for re-use in dynamic script when file not present at fact stage
     echo_command = 'echo "{0}" >> {1}'.format(line, name)

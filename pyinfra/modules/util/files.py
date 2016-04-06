@@ -24,6 +24,9 @@ def ensure_mode_int(mode):
 def sed_replace(state, filename, line, replace, flags=None):
     flags = ''.join(flags) if flags else ''
 
+    line = line.replace('/', '\/')
+    replace = replace.replace('/', '\/')
+
     temp_filename = state.get_temp_filename()
 
     return 'sed "s/{0}/{1}/{2}" {3} > {4} && mv {4} {3}'.format(
