@@ -187,11 +187,9 @@ def run_ops(state, serial=False, no_wait=False):
         no_wait (boolean): whether to wait for all hosts between operations
     '''
 
-    hosts = state.inventory
-
     # Run all ops, but server by server
     if serial:
-        for host in hosts:
+        for host in state.inventory:
             _run_server_ops(state, host.name)
         return
 
@@ -200,7 +198,7 @@ def run_ops(state, serial=False, no_wait=False):
         # Spawn greenlet for each host to run *all* ops
         greenlets = [
             state.pool.spawn(_run_server_ops, state, host.name)
-            for host in hosts
+            for host in state.inventory
         ]
         joinall(greenlets)
         return
@@ -227,7 +225,7 @@ def run_ops(state, serial=False, no_wait=False):
 
         if op_meta['serial']:
             # For each host, run the op
-            for host in hosts:
+            for host in state.inventory:
                 result = _run_op(state, host.name, op_hash)
 
                 if not result:
@@ -239,7 +237,7 @@ def run_ops(state, serial=False, no_wait=False):
                 (host.name, state.pool.spawn(
                     _run_op, state, host.name, op_hash
                 ))
-                for host in hosts
+                for host in state.inventory
             ]
 
             # Get all the results

@@ -112,15 +112,15 @@ class Inventory(object):
 
     def __iter__(self):
         '''
-        Iterates over inventory hosts. Uses connected hosts only when they exist - in that
+        Iterates over inventory hosts. Uses active hosts only when they exist - in that
         sense can be seen as the "active" list of hosts during a deploy.
         '''
 
         for host in self.hosts.values():
-            if not self.connected_hosts:
+            if not self.active_hosts:
                 yield host
 
-            elif host.name in self.connected_hosts:
+            elif host.name in self.active_hosts:
                 yield host
 
     def get_data(self):
