@@ -114,6 +114,10 @@ if 'bsd' in host.groups:
 elif 'linux' in host.groups:
     # Work with facts about the remote host
     if distro['name'] in ('Debian', 'Ubuntu'):
+        # apt repos/keys
+        apt.repo('deb http://www.rabbitmq.com/debian/ testing main', sudo=True)
+        apt.key('http://www.rabbitmq.com/rabbitmq-signing-key-public.asc', sudo=True)
+
         # apt package manager
         apt.packages(
             ['git', 'python-pip'],
@@ -121,10 +125,6 @@ elif 'linux' in host.groups:
             update=True,
             cache_time=3600
         )
-
-        # and repos/keys
-        apt.repo('deb http://www.rabbitmq.com/debian/ testing main', sudo=True)
-        apt.key('http://www.rabbitmq.com/rabbitmq-signing-key-public.asc', sudo=True)
 
     elif distro['name'] in ('CentOS', 'Fedora'):
         if distro['name'] == 'CentOS':
