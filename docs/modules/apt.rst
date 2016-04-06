@@ -69,6 +69,22 @@ Note:
     ``/var/lib/apt/periodic/update-success-stamp`` file (ie Ubuntu).
 
 
+:code:`apt.ppa`
+~~~~~~~~~~~~~~~
+
+Manage Ubuntu ppa repositories.
+
+.. code:: python
+
+    apt.ppa(name, present=True)
+
++ **name**: the PPA name
++ **present**: whether it should exist
+
+Note:
+    requires ``apt-add-repository`` on the remote host
+
+
 :code:`apt.repo`
 ~~~~~~~~~~~~~~~~
 
@@ -76,8 +92,10 @@ Manage apt repositories.
 
 .. code:: python
 
-    apt.repo(name, present=True)
+    apt.repo(name, present=True, filename=None)
 
-+ **name**: apt line, repo url or PPA
++ **name**: apt source string eg ``deb http://X hardy main``
 + **present**: whether the repo should exist on the system
++ **filename**: optional filename to use ``/etc/apt/sources.list.d/<filename>.list``. By
+  default uses ``/etc/apt/sources.list``.
 
