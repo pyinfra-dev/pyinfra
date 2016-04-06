@@ -16,6 +16,14 @@ from . import files
 from .util.packaging import ensure_packages
 
 
+def noninteractive_apt(command):
+    return ' '.join((
+        'DEBIAN_FRONTEND=noninteractive apt-get -y',
+        '-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"',
+        command
+    ))
+
+
 @operation
 def key(state, host, key=None, keyserver=None, keyid=None):
     '''
@@ -169,18 +177,18 @@ def deb(state, host, source, present=True):
     if present and not exists:
         commands.extend([
             # Install .deb file - ignoring failure (on unmet dependencies)
-            'DEBIAN_FRONTEND=noninteractive dpkg -i {0} || true'.format(source),
+            'dpkg -i {0} || true'.format(source),
             # Attempt to install any missing dependencies
-            'DEBIAN_FRONTEND=noninteractive apt-get install -fy',
+            '{0} -f'.format(noninteractive_apt('install')),
             # Now reinstall, and critically configure, the package - if there are still
             # missing deps, now we error
-            'DEBIAN_FRONTEND=noninteractive dpkg -i {0}'.format(source)
+            'dpkg -i {0}'.format(source)
         ])
 
     # Package exists but we don't want?
     if exists and not present:
         commands.extend([
-            'DEBIAN_FRONTEND=noninteractive apt-get remove {0} -y'.format(info['name'])
+            '{0} {1}'.format(noninteractive_apt('remove'), info['name'])
         ])
 
     return commands
@@ -227,15 +235,15 @@ def packages(
         commands.append('apt-get update')
 
     if upgrade:
-        commands.append('DEBIAN_FRONTEND=noninteractive apt-get upgrade -y')
+        commands.append(noninteractive_apt('upgrade'))
 
     # Compare/ensure packages are present/not
     commands.extend(ensure_packages(
         packages, host.fact.deb_packages, present,
-        install_command='DEBIAN_FRONTEND=noninteractive apt-get install -y',
-        uninstall_command='DEBIAN_FRONTEND=noninteractive apt-get remove -y',
+        install_command=noninteractive_apt('install'),
+        uninstall_command=noninteractive_apt('remove'),
         version_join='=',
-        upgrade_command='DEBIAN_FRONTEND=noninteractive apt-get install -y',
+        upgrade_command=noninteractive_apt('install'),
         latest=latest
     ))
 
