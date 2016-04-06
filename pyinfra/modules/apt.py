@@ -49,38 +49,50 @@ def key(state, host, key=None, keyserver=None, keyid=None):
 
 
 @operation
-def repo(state, host, name, present=True):
+def repo(state, host, name, present=True, filename=None):
     '''
     Manage apt repositories.
 
     + name: apt line, repo url or PPA
     + present: whether the repo should exist on the system
+    + filename: optional filename to use ``/etc/apt/sources.list.d/<filename>.list``. By
+      default uses ``/etc/apt/sources.list``.
     '''
 
     commands = []
 
     apt_sources = host.fact.apt_sources or {}
 
+    # Get the target .list file to manage
+    if filename:
+        filename = '/etc/apt/sources.list.d/{0}.list'.format(filename)
+    else:
+        filename = '/etc/apt/sources.list'
+
     # Parse out the URL from the name if available
-    url = name
+    repo_url = name
 
     repo = parse_apt_repo(name)
     if repo:
-        url, _ = repo
+        repo_url, _ = repo
 
     # Convert ppa's to full URLs
     elif name.startswith('ppa:'):
-        url = 'http://ppa.launchpad.net/{0}/ubuntu'.format(name[4:])
+        repo_url = 'http://ppa.launchpad.net/{0}/ubuntu'.format(name[4:])
 
-    is_present = url in apt_sources
+    is_present = repo_url in apt_sources
 
-    # Doesn't exit and we want it
+    # Doesn't exist and we want it
     if not is_present and present:
-        commands.append('apt-add-repository "{0}" -y'.format(name))
+        commands.extend(files.line(
+            state, host, filename, name
+        ))
 
     # Exists and we don't want it
     if is_present and not present:
-        commands.append('apt-add-repository "{0}" -y --remove'.format(name))
+        commands.extend(files.line(
+            state, host, filename, name, present=False
+        ))
 
     return commands
 
