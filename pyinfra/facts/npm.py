@@ -22,6 +22,7 @@ class NpmPackages(FactBase):
         ...
     '''
 
+    default = {}
     command = 'npm list -g --depth=0'
 
     def process(self, output):

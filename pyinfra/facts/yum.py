@@ -21,6 +21,7 @@ class RPMPackages(FactBase):
         ...
     '''
 
+    default = {}
     command = 'rpm -qa'
 
     def process(self, output):

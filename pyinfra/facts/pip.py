@@ -17,6 +17,7 @@ class PipPackages(FactBase):
         ...
     '''
 
+    default = {}
     command = 'pip freeze'
     _regex = r'^([a-zA-Z0-9_\-\+\.]+)==([0-9\.]+[a-z0-9\-]*)$'
 

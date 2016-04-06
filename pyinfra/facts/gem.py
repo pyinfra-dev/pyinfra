@@ -17,6 +17,7 @@ class GemPackages(FactBase):
         ...
     '''
 
+    default = {}
     command = 'gem list --local'
     _regex = r'^([a-zA-Z0-9\-\+\_]+)\s\(([0-9\.]+)\)$'
 
