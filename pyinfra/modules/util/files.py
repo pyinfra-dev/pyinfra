@@ -27,10 +27,8 @@ def sed_replace(state, filename, line, replace, flags=None):
     line = line.replace('/', '\/')
     replace = replace.replace('/', '\/')
 
-    temp_filename = state.get_temp_filename()
-
-    return 'sed "s/{0}/{1}/{2}" {3} > {4} && mv {4} {3}'.format(
-        line, replace, flags, filename, temp_filename
+    return 'sed -i "s/{0}/{1}/{2}" {3}'.format(
+        line, replace, flags, filename
     )
 
 
