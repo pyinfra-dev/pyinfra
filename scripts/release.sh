@@ -10,7 +10,7 @@ scripts/build_docs.sh
 echo "# Commit & push the docs..."
 git add docs/
 git add README.md
-git commit -m "Documentation update for v$VERSION"
+git commit -m "Documentation update for v$VERSION."
 git push
 
 echo "# Git tag & push..."
