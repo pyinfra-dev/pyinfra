@@ -30,6 +30,11 @@ class Arch(FactBase):
     command = 'uname -p'
 
 
+class Which(FactBase):
+    def command(self, name):
+        return 'which {0}'.format(name)
+
+
 class Date(FactBase):
     '''Returns the current datetime on the server.'''
 
