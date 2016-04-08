@@ -45,6 +45,9 @@ class FakeData(object):
     def __call__(self, *args, **kwargs):
         return self
 
+    def __str__(self):
+        return ''
+
 
 class FakeHost(object):
     @property
