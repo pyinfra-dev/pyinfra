@@ -36,6 +36,8 @@ def download(
     + force: always download the file, even if it already exists
     '''
 
+    commands = []
+
     # Get destination info
     info = host.fact.file(destination)
 
@@ -59,7 +61,7 @@ def download(
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
-        commands = ['wget -q {0} -O {1}'.format(source_url, destination)]
+        commands.append('wget -q {0} -O {1}'.format(source_url, destination))
 
         if user or group:
             commands.append(chown(destination, user, group))
@@ -67,7 +69,7 @@ def download(
         if mode:
             commands.append(chmod(destination, mode))
 
-        return commands
+    return commands
 
 
 @operation
@@ -340,7 +342,7 @@ def template(
         template_file = template_filename
 
     # Load the template into memory
-    template = Template(template_file.read())
+    template = Template(template_file.read(), keep_trailing_newline=True)
 
     # Ensure host is always available inside templates
     data['host'] = host
