@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 VERSION=`python setup.py --version`
 
 echo "# Releasing pyinfra v$VERSION..."
