@@ -369,6 +369,10 @@ Returns the current datetime on the server.
     
 
 
+:code:`which(name)`
+~~~~~~~~~~~~~~~~~~~
+
+
 Yum
 ---
 
