@@ -1,14 +1,6 @@
 Init
 ----
 
-
-Manages the state and configuration of init services. Support for:
-
-+ SysVinit (/etc/init.d)
-+ BSD init (/etc/rc.d)
-+ Upstart
-+ Systemctl
-
 :code:`init.d`
 ~~~~~~~~~~~~~~
 

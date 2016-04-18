@@ -25,9 +25,10 @@ Upload and execute a local script on the remote host.
 
 .. code:: python
 
-    server.script(filename)
+    server.script(filename, chdir=None)
 
 + **filename**: local script filename to upload & execute
++ **chdir**: directory to cd into before executing the script
 
 
 :code:`server.shell`
@@ -37,9 +38,10 @@ Run raw shell code.
 
 .. code:: python
 
-    server.shell()
+    server.shell(commands, chdir=None)
 
-+ **commands**: raw commands to execute on the server
++ **commands**: command or list of commands to execute on the remote server
++ **chdir**: directory to cd into before executing commands
 
 
 :code:`server.user`
