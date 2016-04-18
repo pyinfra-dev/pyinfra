@@ -2,8 +2,6 @@
 # File: pyinfra/modules/init.py
 # Desc: manage init systems
 
-from __future__ import unicode_literals
-
 '''
 Manages the state and configuration of init services. Support for:
 
@@ -12,6 +10,8 @@ Manages the state and configuration of init services. Support for:
 + Upstart
 + Systemctl
 '''
+
+from __future__ import unicode_literals
 
 from pyinfra.api import operation
 
