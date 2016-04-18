@@ -6,6 +6,7 @@ from __future__ import division, unicode_literals, print_function
 
 import sys
 import json
+import shlex
 import logging
 import traceback
 from os import path
@@ -246,6 +247,53 @@ def _parse_arg(arg):
     return arg
 
 
+def parse_argstring(argstring):
+    '''
+    Preparses CLI input:
+
+    ``arg1,arg2`` => ``['arg1', 'arg2']``
+    ``[item1, item2],arg2`` => ``[['item1', 'item2'], arg2]``
+    '''
+
+    argstring = argstring.replace(',', ' , ')
+    argstring = argstring.replace('[', ' [ ')
+    argstring = argstring.replace(']', ' ] ')
+
+    argbits = shlex.split(argstring)
+    args = []
+    arg_buff = []
+    list_buff = []
+    in_list = False
+
+    for bit in argbits:
+        if bit == '[' and not in_list:
+            in_list = True
+            continue
+
+        elif bit == ']' and in_list:
+            in_list = False
+            args.append(list_buff)
+            list_buff = []
+            continue
+
+        elif bit == ',':
+            if not in_list and arg_buff:
+                args.append(' '.join(arg_buff))
+                arg_buff = []
+
+            continue
+
+        if in_list:
+            list_buff.append(bit)
+        else:
+            arg_buff.append(bit)
+
+    if arg_buff:
+        args.append(' '.join(arg_buff))
+
+    return args
+
+
 def setup_arguments(arguments):
     '''
     Prepares argumnents output by docopt.
@@ -267,7 +315,7 @@ def setup_arguments(arguments):
 
     # Replace the args string with kwargs
     if args:
-        args = args.split(',')
+        args = parse_argstring(args)
 
         # Setup kwargs
         kwargs = [arg.split('=') for arg in args if '=' in arg]
