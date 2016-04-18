@@ -45,7 +45,7 @@ def connect(host, **kwargs):
         AgentRequestHandler(session)
 
         # Log
-        logger.info(u'[{0}] {1}'.format(
+        logger.info('[{0}] {1}'.format(
             colored(name, attrs=['bold']),
             colored('Connected', 'green')
         ))
@@ -53,24 +53,24 @@ def connect(host, **kwargs):
         return client
 
     except AuthenticationException as e:
-        logger.error(u'Auth error on: {0}, {1}'.format(name, e))
+        logger.error('Auth error on: {0}, {1}'.format(name, e))
 
     except SSHException as e:
-        logger.error(u'SSH error on: {0}, {1}'.format(name, e))
+        logger.error('SSH error on: {0}, {1}'.format(name, e))
 
     except gaierror:
         if hostname != name:
-            logger.error(u'Could not resolve {0} host: {1}'.format(name, hostname))
+            logger.error('Could not resolve {0} host: {1}'.format(name, hostname))
         else:
-            logger.error(u'Could not resolve {0}'.format(name))
+            logger.error('Could not resolve {0}'.format(name))
 
     except socket_error as e:
-        logger.error(u'Could not connect: {0}:{1}, {2}'.format(
+        logger.error('Could not connect: {0}:{1}, {2}'.format(
             name, kwargs.get('port', 22), e)
         )
 
     except EOFError as e:
-        logger.error(u'EOF error connecting to {0}: {1}'.format(name, e))
+        logger.error('EOF error connecting to {0}: {1}'.format(name, e))
 
 
 def connect_all(state):
@@ -178,8 +178,8 @@ def run_shell_command(
     if env is None:
         env = {}
 
-    logger.debug(u'Running command on {0}: "{1}"'.format(hostname, command))
-    logger.debug(u'Command sudo?: {0}, sudo user: {1}, env: {2}'.format(
+    logger.debug('Running command on {0}: "{1}"'.format(hostname, command))
+    logger.debug('Command sudo?: {0}, sudo user: {1}, env: {2}'.format(
         sudo, sudo_user, env
     ))
 
@@ -201,12 +201,12 @@ def run_shell_command(
     stdout_reader = gevent.spawn(
         read_buffer, stdout_buffer,
         print_output=print_output,
-        print_func=lambda line: u'{0}{1}'.format(print_prefix, line)
+        print_func=lambda line: '{0}{1}'.format(print_prefix, line)
     )
     stderr_reader = gevent.spawn(
         read_buffer, stderr_buffer,
         print_output=print_output,
-        print_func=lambda line: u'{0}{1}'.format(print_prefix, colored(line, 'red'))
+        print_func=lambda line: '{0}{1}'.format(print_prefix, colored(line, 'red'))
     )
 
     # Wait on output, with our timeout (or None)

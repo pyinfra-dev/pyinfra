@@ -29,7 +29,7 @@ from termcolor import colored
 from pyinfra import logger, pseudo_inventory
 
 from pyinfra.api import Config, Inventory
-from pyinfra.api.facts import facts, is_fact
+from pyinfra.api.facts import FACTS, is_fact
 from pyinfra.api.exceptions import PyinfraError
 
 from .hook import HOOKS, HOOK_NAMES
@@ -99,9 +99,9 @@ class LogFormatter(logging.Formatter):
         if isinstance(message, six.string_types):
             # Horrible string matching hack
             if message.find('Starting operation') > 0:
-                message = u'--> {0}'.format(message)
+                message = '--> {0}'.format(message)
             else:
-                message = u'    {0}'.format(message)
+                message = '    {0}'.format(message)
 
             if record.levelno in self.level_to_format:
                 message = self.level_to_format[record.levelno](message)
@@ -139,7 +139,7 @@ def setup_logging(log_level):
 
 
 def print_facts_list():
-    print(json.dumps(facts.keys(), indent=4))
+    print(json.dumps(FACTS.keys(), indent=4))
 
 
 def print_fact(fact_data):
