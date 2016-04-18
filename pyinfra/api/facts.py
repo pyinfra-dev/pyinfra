@@ -23,11 +23,11 @@ from .util import underscore, make_hash
 
 
 # Index of snake_case facts -> CamelCase classes
-facts = {}
+FACTS = {}
 
 
 def is_fact(name):
-    return name in facts
+    return name in FACTS
 
 
 def get_fact_names():
@@ -35,7 +35,7 @@ def get_fact_names():
     Returns a list of available facts in camel_case format.
     '''
 
-    return facts.keys()
+    return FACTS.keys()
 
 
 class FactMeta(type):
@@ -44,10 +44,10 @@ class FactMeta(type):
     '''
 
     def __init__(cls, name, bases, attrs):
-        global facts
+        global FACTS
 
         # Get the an instance of the fact, attach to facts
-        facts[underscore(name)] = cls
+        FACTS[underscore(name)] = cls
 
 
 @six.add_metaclass(FactMeta)
@@ -84,7 +84,7 @@ def get_facts(
         sudo, sudo_user, ignore_errors = state.current_op_meta
 
     # Create an instance of the fact
-    fact = facts[name]()
+    fact = FACTS[name]()
 
     # If we're inactive or  (pipelining & inside an op): just return the defaults
     if not state.active or (state.pipelining and state.in_op):
@@ -179,7 +179,7 @@ def get_fact(state, hostname, name):
     '''
 
     # Expecting a function to return
-    if callable(facts[name].command):
+    if callable(FACTS[name].command):
         def wrapper(*args):
             fact_data = get_facts(state, name, args=args)
 
