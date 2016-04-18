@@ -56,7 +56,7 @@ from termcolor import colored
 from colorama import init as colorama_init
 colorama_init()
 
-from pyinfra import logger, pseudo_state, pseudo_host, pseudo_inventory, hook
+from pyinfra import logger, pseudo_state, pseudo_host, pseudo_inventory, hook, __version__
 from pyinfra.local import exec_file
 from pyinfra.cli import (
     FakeHost,
@@ -93,13 +93,12 @@ def _exit(code=0):
     sys.exit(code)
 
 
+# Get arguments
+arguments = docopt(__doc__, version='pyinfra-{0}'.format(__version__))
+
 print()
 print('### {0}'.format(colored('Welcome to pyinfra', attrs=['bold'])))
 print()
-
-
-# Get arguments
-arguments = docopt(__doc__, version='pyinfra')
 
 # Setup logging
 log_level = logging.DEBUG if arguments['--debug'] else logging.INFO
