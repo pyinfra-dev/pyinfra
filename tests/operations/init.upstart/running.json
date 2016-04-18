@@ -1,0 +1,11 @@
+{
+    "args": ["redis-server"],
+    "facts": {
+        "upstart_status": {
+            "redis-server": false
+        }
+    },
+    "commands": [
+        "initctl start redis-server"
+    ]
+}

@@ -13,12 +13,12 @@ from nose.tools import nottest
 from jsontest import JsonTest
 
 from pyinfra.cli import json_encode
-from pyinfra.api.facts import facts
+from pyinfra.api.facts import FACTS
 
 
 @nottest
 def make_fact_tests(fact_name):
-    fact = facts[fact_name]()
+    fact = FACTS[fact_name]()
 
     @six.add_metaclass(JsonTest)
     class TestTests(TestCase):

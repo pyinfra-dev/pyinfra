@@ -1,0 +1,11 @@
+{
+    "args": ["https://something.rpm"],
+    "facts": {
+        "file:_tempfile_.rpm": null,
+        "rpm_package:_tempfile_.rpm": null
+    },
+    "commands": [
+        "wget -q https://something.rpm -O _tempfile_.rpm",
+        "yum localinstall -y _tempfile_.rpm"
+    ]
+}

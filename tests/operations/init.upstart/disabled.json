@@ -1,0 +1,14 @@
+{
+    "args": ["redis-server"],
+    "kwargs": {
+        "enabled": false
+    },
+    "facts": {
+        "upstart_status": {
+            "redis-server": true
+        }
+    },
+    "commands": [
+        "echo \"manual\" > /etc/init/redis-server.override"
+    ]
+}

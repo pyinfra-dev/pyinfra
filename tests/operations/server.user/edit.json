@@ -2,6 +2,7 @@
     "args": ["someuser"],
     "kwargs": {
         "shell": "/bin/false",
+        "group": "somegroup",
         "groups": ["group1", "group2", "group3"]
     },
     "facts": {
@@ -17,6 +18,6 @@
         }
     },
     "commands": [
-        "usermod -s /bin/false -G group1,group2,group3 someuser"
+        "usermod -s /bin/false -g somegroup -G group1,group2,group3 someuser"
     ]
 }

@@ -8,6 +8,7 @@ import json
 from os import listdir, path
 from unittest import TestCase
 from importlib import import_module
+from types import FunctionType
 
 import six
 from nose.tools import nottest
@@ -16,7 +17,7 @@ from jsontest import JsonTest
 from pyinfra import pseudo_state, pseudo_host
 from pyinfra.cli import json_encode
 
-from .util import FakeState, create_host
+from .util import FakeState, create_host, patch_files
 
 
 @nottest
@@ -42,10 +43,30 @@ def make_operation_tests(arg):
             host = create_host(facts=test_data.get('facts', {}))
             pseudo_host.set(host)
 
-            commands = op._pyinfra_op(
-                pseudo_state, pseudo_host,
-                *test_data.get('args', []), **test_data.get('kwargs', {})
-            ) or []
+            with patch_files(test_data.get('files', {})):
+                output_commands = op._pyinfra_op(
+                    pseudo_state, pseudo_host,
+                    *test_data.get('args', []), **test_data.get('kwargs', {})
+                ) or []
+
+            commands = []
+
+            for command in output_commands:
+                if isinstance(command, six.string_types):
+                    commands.append(command.strip())
+
+                elif isinstance(command, dict):
+                    command['command'] = command['command'].strip()
+                    commands.append(command)
+
+                elif isinstance(command, tuple):
+                    if isinstance(command[0], FunctionType):
+                        commands.append(command)
+                    else:
+                        commands.append([command[0].read(), command[1]])
+
+                else:
+                    commands.append(command)
 
             try:
                 self.assertEqual(commands, test_data['commands'])

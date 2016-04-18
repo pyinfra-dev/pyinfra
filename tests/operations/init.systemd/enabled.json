@@ -1,0 +1,17 @@
+{
+    "args": ["redis-server"],
+    "kwargs": {
+        "enabled": true
+    },
+    "facts": {
+        "systemd_status": {
+            "redis-server": true
+        },
+        "systemd_enabled": {
+            "redis-server": false
+        }
+    },
+    "commands": [
+        "systemctl enable redis-server.service"
+    ]
+}

@@ -1,12 +1,15 @@
 {
     "args": ["ppa:some-repo"],
+    "kwargs": {
+        "present": false
+    },
     "facts": {
         "apt_sources": {
-            "http://ppa.launchpad.net/some-repo/ubunut": {}
+            "http://ppa.launchpad.net/some-repo/ubuntu": {}
         },
         "find_in_file:/etc/apt/sources.list": false
     },
     "commands": [
-        "apt-add-repository \"ppa:some-repo\" -y"
+        "apt-add-repository -y --remove \"ppa:some-repo\""
     ]
 }

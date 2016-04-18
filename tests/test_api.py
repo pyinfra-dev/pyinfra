@@ -120,7 +120,7 @@ class TestApi(TestCase):
         connect_all(state)
 
         # Test normal
-        with patch('pyinfra.modules.files.open', mock_open(read_data='test!'), create=True):
+        with patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True):
             add_op(
                 state, files.put,
                 'files/file.txt',
@@ -128,7 +128,7 @@ class TestApi(TestCase):
             )
 
         # And with sudo
-        with patch('pyinfra.modules.files.open', mock_open(read_data='test!'), create=True):
+        with patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True):
             add_op(
                 state, files.put,
                 'files/file.txt',

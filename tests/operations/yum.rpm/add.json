@@ -1,0 +1,9 @@
+{
+    "args": ["something.rpm"],
+    "facts": {
+        "rpm_package:something.rpm": null
+    },
+    "commands": [
+        "yum localinstall -y something.rpm"
+    ]
+}

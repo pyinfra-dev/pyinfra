@@ -1,0 +1,18 @@
+{
+    "args": ["something.rpm"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "rpm_package:something.rpm": {
+            "name": "something",
+            "version": "1.1"
+        },
+        "rpm_packages": {
+            "something": "1.1"
+        }
+    },
+    "commands": [
+        "yum remove -y something"
+    ]
+}

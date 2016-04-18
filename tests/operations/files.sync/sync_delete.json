@@ -1,0 +1,16 @@
+{
+    "args": ["/somedir", "/home/somedir"],
+    "kwargs": {
+        "delete": true
+    },
+    "directories": {
+        "/somedir": ["somefile.txt", "anotherfile.txt"]
+    },
+    "facts": {
+        "directory:/home/somedir": null,
+        "find_files:/home/somedir": null
+    },
+    "commands": [
+        "mkdir -p /home/somedir"
+    ]
+}

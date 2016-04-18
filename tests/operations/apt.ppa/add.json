@@ -5,6 +5,6 @@
         "find_in_file:/etc/apt/sources.list": false
     },
     "commands": [
-        "apt-add-repository \"ppa:some-repo\" -y"
+        "apt-add-repository -y \"ppa:some-repo\""
     ]
 }

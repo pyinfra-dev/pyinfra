@@ -1,0 +1,17 @@
+{
+    "args": ["somefile.txt", "/home/somefile.txt"],
+    "kwargs": {
+        "user": "testuser",
+        "group": "testgroup",
+        "mode": 644
+    },
+    "files": ["somefile.txt"],
+    "facts": {
+        "file:/home/somefile.txt": null
+    },
+    "commands": [
+        ["", "/home/somefile.txt"],
+        "chown testuser:testgroup /home/somefile.txt",
+        "chmod 644 /home/somefile.txt"
+    ]
+}

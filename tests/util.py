@@ -2,9 +2,12 @@
 # File: tests/util.py
 # Desc: utilities for fake pyinfra state/host objects
 
-import six
+from datetime import datetime
 
-from pyinfra.api import Config
+import six
+from mock import patch
+
+from pyinfra.api import Config, Inventory
 from pyinfra.api.attrs import AttrData
 
 
@@ -14,18 +17,36 @@ class FakeState(object):
     in_op = True
     pipelining = False
 
-    config = Config()
+    def __init__(self):
+        self.inventory = Inventory(([], {}))
+        self.config = Config()
 
     def get_temp_filename(*args):
         return '_tempfile_'
 
 
+def parse_fact(fact):
+    if isinstance(fact, six.string_types) and fact.startswith('datetime:'):
+        return datetime.strptime(fact[9:], '%Y-%m-%dT%H:%M:%S')
+
+    elif isinstance(fact, list):
+        return [parse_fact(value) for value in fact]
+
+    elif isinstance(fact, dict):
+        return {
+            key: parse_fact(value)
+            for key, value in six.iteritems(fact)
+        }
+
+    return fact
+
+
 class FakeFact(object):
     def __init__(self, data):
-        self.data = data
+        self.data = parse_fact(data)
 
     def __getattr__(self, key):
-        return self.data[key]
+        return getattr(self.data, key)
 
     def __getitem__(self, key):
         return self.data[key]
@@ -59,6 +80,43 @@ class FakeHost(object):
         self.name = name
         self.fact = FakeFacts(facts)
         self.data = AttrData(data)
+
+
+class FakeFile(file):
+    _read = False
+
+    def __init__(self, name):
+        self._name = name
+
+    def read(self, *args, **kwargs):
+        if self._read is False:
+            self._read = True
+            return '_test_data_'
+
+        return ''
+
+    def seek(self, *args, **kwargs):
+        pass
+
+
+class PatchFiles(object):
+    def __init__(self, files):
+        self.files = files
+
+    def __enter__(self):
+        self.patched = patch('pyinfra.api.util.open', self.get_file, create=True)
+        self.patched.start()
+
+    def __exit__(self, type_, value, traceback):
+        self.patched.stop()
+
+    def get_file(self, filename, *args):
+        if filename in self.files:
+            return FakeFile(filename)
+
+
+def patch_files(files=None):
+    return PatchFiles(files)
 
 
 def create_host(name=None, facts=None, data=None):

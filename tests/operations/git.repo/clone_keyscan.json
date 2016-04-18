@@ -1,0 +1,16 @@
+{
+    "args": ["git@github.com:Fizzadar/pyinfra", "/home/myrepo"],
+    "kwargs": {
+        "branch": "mybranch",
+        "ssh_keyscan": true
+    },
+    "facts": {
+        "directory:/home/myrepo": {
+        },
+        "directory:/home/myrepo/.git": null
+    },
+    "commands": [
+        "cat ~/.ssh/known_hosts | grep github.com || ssh-keyscan github.com >> ~/.ssh/known_hosts",
+        "cd /home/myrepo && git clone git@github.com:Fizzadar/pyinfra --branch mybranch ."
+    ]
+}

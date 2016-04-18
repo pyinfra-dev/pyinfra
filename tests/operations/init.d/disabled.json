@@ -1,0 +1,17 @@
+{
+    "args": ["nginx"],
+    "kwargs": {
+        "enabled": false
+    },
+    "facts": {
+        "initd_status": {
+            "nginx": true
+        },
+        "find_links:/etc/rc*.d/S*nginx": [
+            "somelink"
+        ]
+    },
+    "commands": [
+        "rm -f somelink"
+    ]
+}
