@@ -10,6 +10,9 @@ Welcome to pyinfra.
 import logging
 
 
+# pyinfra version
+__version__ = '0.1.dev18'
+
 # Global pyinfra logger
 logger = logging.getLogger('pyinfra')
 
