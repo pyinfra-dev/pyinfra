@@ -11,10 +11,9 @@ from __future__ import unicode_literals
 from os import path, walk
 
 import six
-from jinja2 import Template
 
 from pyinfra.api import operation, OperationError
-from pyinfra.api.util import get_file_sha1
+from pyinfra.api.util import get_file_sha1, get_file, get_template
 
 from .util.files import chmod, chown, ensure_mode_int, sed_replace
 
@@ -270,7 +269,7 @@ def put(
         if state.deploy_dir and add_deploy_dir:
             local_filename = path.join(state.deploy_dir, local_filename)
 
-        local_file = open(local_filename, 'r')
+        local_file = get_file(local_filename)
 
     # Not a string? Assume file-like object
     else:
@@ -339,12 +338,12 @@ def template(
 
     # Accept template_filename as a string or (assumed) file-like object
     if isinstance(template_filename, six.string_types):
-        template_file = open(template_filename, 'r')
+        template_file = get_file(template_filename)
     else:
         template_file = template_filename
 
     # Load the template into memory
-    template = Template(template_file.read(), keep_trailing_newline=True)
+    template = get_template(template_file.read())
 
     # Ensure host is always available inside templates
     data['host'] = host

@@ -20,7 +20,7 @@ from pyinfra.pseudo_modules import PseudoModule
 
 from .host import Host
 from .state import State
-from .util import make_hash, get_arg_name
+from .util import make_hash, get_arg_name, get_arg_value
 from .exceptions import PyinfraError
 
 
@@ -151,7 +151,20 @@ def operation(func=None, pipeline_facts=None):
         state.in_op = True
         state.current_op_meta = (sudo, sudo_user, ignore_errors)
 
-        commands = func(state, host, *args, **kwargs)
+        # Generate actual arguments by parsing strings as jinja2 templates. This means
+        # you can string format arguments w/o generating multiple operations. Only affects
+        # top level operations, as must be run "in_op" so facts are gathered correctly.
+        actual_args = [
+            get_arg_value(state, host, arg)
+            for arg in args
+        ]
+
+        actual_kwargs = {
+            key: get_arg_value(state, host, arg)
+            for key, arg in six.iteritems(kwargs)
+        }
+
+        commands = func(state, host, *actual_args, **actual_kwargs)
 
         state.in_op = False
         state.current_op_meta = None

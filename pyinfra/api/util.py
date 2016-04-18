@@ -10,10 +10,43 @@ from hashlib import sha1
 from types import FunctionType
 
 import six
+from jinja2 import Template
 
 from .attrs import AttrBase
 
 BLOCKSIZE = 65536
+
+# Caches
+FILES = {}
+TEMPLATES = {}
+
+
+def get_file(filename):
+    '''
+    Get file objects with caching.
+    '''
+
+    if filename in FILES:
+        FILES[filename].seek(0)
+        return FILES[filename]
+
+    FILES[filename] = open(filename, 'r')
+    return FILES[filename]
+
+
+def get_template(string):
+    '''
+    Gets a jinja2 ``Template`` object for the input string, with caching based on the SHA1
+    of the string.
+    '''
+
+    cache_key = sha1_hash(string)
+
+    if cache_key in TEMPLATES:
+        return TEMPLATES[cache_key]
+
+    TEMPLATES[cache_key] = Template(string, keep_trailing_newline=True)
+    return TEMPLATES[cache_key]
 
 
 def underscore(name):
@@ -36,6 +69,10 @@ def sha1_hash(string):
 
 
 def make_command(command, env=None, sudo=False, sudo_user=None):
+    '''
+    Builds a shell command with various kwargs.
+    '''
+
     # Use env & build our actual command
     if env:
         env_string = ' '.join([
@@ -61,6 +98,35 @@ def make_command(command, env=None, sudo=False, sudo_user=None):
             command = "sudo -H -S sh -c '{0}'".format(command)
 
     return command
+
+
+def get_arg_value(state, host, arg):
+    '''
+    Runs string arguments through the jinja2 templating system with a state and host. Used
+    to avoid string formatting in deploy operations which result in one operation per
+    host/variable. By parsing the commands after we generate the ``op_hash``, multiple
+    command variations can fall under one op.
+    '''
+
+    if isinstance(arg, six.string_types):
+        template = get_template(arg)
+        data = {
+            'host': host,
+            'inventory': state.inventory
+        }
+
+        return template.render(data)
+
+    elif isinstance(arg, list):
+        return [get_arg_value(state, host, value) for value in arg]
+
+    elif isinstance(arg, dict):
+        return {
+            key: get_arg_value(state, host, value)
+            for key, value in six.iteritems(arg)
+        }
+
+    return arg
 
 
 def get_arg_name(arg):
@@ -103,6 +169,8 @@ def get_file_sha1(io):
     Calculates the SHA1 of a file object using a buffer to handle larger files.
     '''
 
+    # Make sure we're at the start
+    io.seek(0)
     buff = io.read(BLOCKSIZE)
     hasher = sha1()
 
