@@ -9,6 +9,8 @@ Linux/BSD.
 
 from __future__ import unicode_literals
 
+import six
+
 from pyinfra.api import operation
 
 from . import files
@@ -33,22 +35,34 @@ def wait(state, host, port=None):
 
 
 @operation
-def shell(state, host, *commands):
+def shell(state, host, commands, chdir=None):
     '''
     Run raw shell code.
 
-    + commands: raw commands to execute on the server
+    + commands: command or list of commands to execute on the remote server
+    + chdir: directory to cd into before executing commands
     '''
 
-    return list(commands)
+    # Ensure we have a list
+    if isinstance(commands, six.string_types):
+        commands = [commands]
+
+    if chdir:
+        commands = [
+            'cd {0} && ({1})'.format(chdir, command)
+            for command in commands
+        ]
+
+    return commands
 
 
 @operation
-def script(state, host, filename):
+def script(state, host, filename, chdir=None):
     '''
     Upload and execute a local script on the remote host.
 
     + filename: local script filename to upload & execute
+    + chdir: directory to cd into before executing the script
     '''
 
     commands = []
@@ -57,7 +71,11 @@ def script(state, host, filename):
     commands.extend(files.put(state, host, filename, temp_file))
 
     commands.append(chmod(temp_file, '+x'))
-    commands.append(temp_file)
+
+    if chdir:
+        commands.append('cd {0} && {1}'.format(chdir, temp_file))
+    else:
+        commands.append(temp_file)
 
     return commands
 

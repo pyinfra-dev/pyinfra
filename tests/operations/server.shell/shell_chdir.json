@@ -1,0 +1,13 @@
+{
+    "args": [[
+        "some shell",
+        "some more shell"
+    ]],
+    "kwargs": {
+        "chdir": "/home"
+    },
+    "commands": [
+        "cd /home && (some shell)",
+        "cd /home && (some more shell)"
+    ]
+}

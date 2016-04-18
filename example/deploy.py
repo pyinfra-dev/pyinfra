@@ -81,10 +81,10 @@ files.template(
 )
 
 # Execute arbitrary shell commands
-server.shell(
+server.shell([
     'echo "Shell command"',
     'echo "My hostname is {0}"'.format(host.fact.hostname)
-)
+])
 # and scripts
 server.script(
     'files/test.sh'
