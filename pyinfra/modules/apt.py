@@ -123,10 +123,10 @@ def ppa(state, host, name, present=True):
     is_present = repo_url in apt_sources
 
     if not is_present and present:
-        commands.append('apt-add-repository "{0}" -y'.format(name))
+        commands.append('apt-add-repository -y "{0}"'.format(name))
 
     if is_present and not present:
-        commands.append('apt-add-repository "{0}" -y --remove'.format(name))
+        commands.append('apt-add-repository -y --remove "{0}"'.format(name))
 
     return commands
 
