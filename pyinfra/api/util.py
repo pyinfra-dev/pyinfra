@@ -2,10 +2,14 @@
 # File: pyinfra/api/util.py
 # Desc: utility functions
 
+from __future__ import division, unicode_literals, print_function
+
 import re
 from copy import deepcopy
 from hashlib import sha1
 from types import FunctionType
+
+import six
 
 from .attrs import AttrBase
 
@@ -13,17 +17,21 @@ BLOCKSIZE = 65536
 
 
 def underscore(name):
-    '''Transform CamelCase -> snake_case.'''
+    '''
+    Transform CamelCase -> snake_case.
+    '''
 
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
 def sha1_hash(string):
-    '''Return the SHA1 of the input string.'''
+    '''
+    Return the SHA1 of the input string.
+    '''
 
     hasher = sha1()
-    hasher.update(string)
+    hasher.update(string.encode())
     return hasher.hexdigest()
 
 
@@ -32,7 +40,7 @@ def make_command(command, env=None, sudo=False, sudo_user=None):
     if env:
         env_string = ' '.join([
             '{0}={1}'.format(key, value)
-            for key, value in env.iteritems()
+            for key, value in six.iteritems(env)
         ])
         command = '{0} {1}'.format(env_string, command)
 
@@ -76,6 +84,7 @@ def make_hash(obj):
     Make a hash from an arbitrary nested dictionary, list, tuple or set, used to generate
     ID's for operations based on their name & arguments.
     '''
+
     if type(obj) in (set, tuple, list):
         return hash(tuple([make_hash(e) for e in obj]))
 
@@ -90,13 +99,15 @@ def make_hash(obj):
 
 
 def get_file_sha1(io):
-    '''Calculates the SHA1 of a file object using a buffer to handle larger files.'''
+    '''
+    Calculates the SHA1 of a file object using a buffer to handle larger files.
+    '''
 
     buff = io.read(BLOCKSIZE)
     hasher = sha1()
 
     while len(buff) > 0:
-        hasher.update(buff)
+        hasher.update(buff.encode())
         buff = io.read(BLOCKSIZE)
 
     # Reset the IO read
@@ -105,18 +116,24 @@ def get_file_sha1(io):
 
 
 def read_buffer(buff, print_output=False, print_func=False):
-    '''Reads a file-like buffer object into lines and optionally prints the output.'''
+    '''
+    Reads a file-like buffer object into lines and optionally prints the output.
+    '''
 
     out = []
 
     for line in buff:
+        # Handle local Popen shells returning list of bytes, not strings
+        if not isinstance(line, six.text_type):
+            line = line.decode('utf-8')
+
         line = line.strip()
         out.append(line)
 
         if print_output:
             if print_func:
-                print print_func(line)
+                print(print_func(line))
             else:
-                print line
+                print(line)
 
     return out

@@ -13,7 +13,7 @@ from pyinfra.modules import server, apt, yum, files, python, git, pip, init
 # Hooks inside deploy file
 @hook.before_connect
 def before_connect(data, state):
-    print 'inventory hosts!: ', [host.name for host in inventory]
+    print('inventory hosts!: ', [host.name for host in inventory])
 
 
 # Ensure the state of a user
@@ -77,15 +77,13 @@ files.sync(
 # Generate files from local jinja2 templates
 files.template(
     'templates/template.txt.jn2',
-    '/home/vagrant/template.txt',
-    # non-standard kwargs are passed to the template
-    hostname=host.fact.hostname
+    '/home/vagrant/template.txt'
 )
 
 # Execute arbitrary shell commands
 server.shell(
     'echo "Shell command"',
-    'echo "And another!"'
+    'echo "My hostname is {0}"'.format(host.fact.hostname)
 )
 # and scripts
 server.script(
@@ -198,6 +196,6 @@ if host.fact.os == 'Linux' and distro['name'] == 'CentOS':
 
 # Execute Python locally, mid-deploy
 def some_python(state, host, hostname, *args, **kwargs):
-    print 'connecting hostname: {0}, actual: {1}'.format(hostname, host.fact.hostname)
+    print('connecting hostname: {0}, actual: {1}'.format(hostname, host.fact.hostname))
 
 python.execute(some_python, 'arg1', 'arg2', kwarg='hello world')

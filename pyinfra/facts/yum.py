@@ -2,6 +2,8 @@
 # File: pyinfra/facts/yum.py
 # Desc: facts for the yum package manager and rpm files
 
+from __future__ import unicode_literals
+
 import re
 
 from pyinfra.api import FactBase

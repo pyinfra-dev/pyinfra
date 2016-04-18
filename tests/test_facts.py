@@ -2,10 +2,13 @@
 # File: tests/test_facts.py
 # Desc: generate tests for facts
 
+from __future__ import print_function
+
 import json
 from os import path, listdir
 from unittest import TestCase
 
+import six
 from nose.tools import nottest
 from jsontest import JsonTest
 
@@ -17,9 +20,8 @@ from pyinfra.api.facts import facts
 def make_fact_tests(fact_name):
     fact = facts[fact_name]()
 
+    @six.add_metaclass(JsonTest)
     class TestTests(TestCase):
-        __metaclass__ = JsonTest
-
         jsontest_files = path.join('tests', 'facts', fact_name)
 
         def jsontest_function(self, test_name, test_data):
@@ -33,9 +35,11 @@ def make_fact_tests(fact_name):
             try:
                 self.assertEqual(data, test_data['fact'])
             except AssertionError as e:
-                print
-                print '--> GOT:\n', json.dumps(data, indent=4, default=json_encode)
-                print '--> WANT:', json.dumps(test_data['fact'], indent=4, default=json_encode)
+                print()
+                print('--> GOT:\n', json.dumps(data, indent=4, default=json_encode))
+                print('--> WANT:', json.dumps(
+                    test_data['fact'], indent=4, default=json_encode
+                ))
                 raise e
 
     TestTests.__name__ = 'Fact{0}'.format(fact_name)

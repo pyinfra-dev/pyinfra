@@ -2,11 +2,12 @@
 # File: pyinfra/api/state.py
 # Desc: class that represents the current pyinfra.state
 
-from __future__ import division
+from __future__ import division, unicode_literals, print_function
 
 from uuid import uuid4
 from inspect import getargspec
 
+import six
 from gevent.pool import Pool
 
 from pyinfra import logger
@@ -29,11 +30,8 @@ class PipelineFacts(object):
     def __exit__(self, type_, value, traceback):
         self.state.pipelining = False
 
-        print 'FACTS TO PIPE'
-        print self.state.facts_to_pipeline
-
         # Get pipelined facts!
-        # for name, args in self.state.facts_to_pipeline.iteritems():
+        # for name, args in six.iteritems(self.state.facts_to_pipeline):
         #     get_facts(self.state, name, pipeline_args=args)
 
         # Actually build our ops
@@ -51,7 +49,7 @@ class PipelineFacts(object):
             func_args = list(getargspec(func).args)
             func_args = func_args[2:]
 
-            for fact_name, arg_name in pipeline_facts.iteritems():
+            for fact_name, arg_name in six.iteritems(pipeline_facts):
                 index = func_args.index(arg_name)
 
                 if len(args) >= index:

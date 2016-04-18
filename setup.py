@@ -35,11 +35,15 @@ if __name__ == '__main__':
             'colorama',
             'termcolor',
             'jinja2',
-            'python-dateutil'
+            'python-dateutil',
+            'six'
         ),
         extras_require={
             'dev': (
-                # Dev testung requirements
+                # Dev debugging
+                'ipdb',
+
+                # Dev testing requirements
                 'nose==1.3.7',
                 'jsontest==1.2',
                 'coverage==4.0.3',

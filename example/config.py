@@ -26,4 +26,4 @@ def ensure_branch(data, state):
 
 @hook.after_deploy
 def notify_people(data, state):
-    print 'After deploy hook!'
+    print('After deploy hook!')

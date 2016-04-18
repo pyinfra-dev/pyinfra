@@ -2,6 +2,8 @@
 # File: pyinfra/api/operations.py
 # Desc: Runs operations from pyinfra._ops in various modes (parallel, no_wait, serial)
 
+from __future__ import unicode_literals, print_function
+
 from types import FunctionType
 from socket import timeout as timeout_error
 
@@ -101,7 +103,7 @@ def _run_op(state, hostname, op_hash):
 
                 # Print the timeout error as not printed by run_shell_command
                 if state.print_output:
-                    print u'{0}{1}'.format(print_prefix, timeout_message)
+                    print('{0}{1}'.format(print_prefix, timeout_message))
 
         if status is False:
             break
@@ -128,10 +130,10 @@ def _run_op(state, hostname, op_hash):
     # If the op failed somewhere, print stderr (if not already printed!)
     if not state.print_output:
         for line in stderr_buffer:
-            print u'    {0}{1}'.format(
+            print('    {0}{1}'.format(
                 print_prefix,
                 colored(line, 'red')
-            )
+            ))
 
     # Up error_ops & log
     state.results[hostname]['error_ops'] += 1
@@ -174,7 +176,7 @@ def _run_server_ops(state, hostname):
             ))
 
         if state.print_lines:
-            print
+            print()
 
 
 def run_ops(state, serial=False, no_wait=False):
@@ -249,4 +251,4 @@ def run_ops(state, serial=False, no_wait=False):
             state.fail_hosts(failed_hosts)
 
         if state.print_lines:
-            print
+            print()

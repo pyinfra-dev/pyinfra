@@ -2,7 +2,7 @@
 # File: pyinfra/api/ssh.py
 # Desc: handle all SSH related stuff
 
-from __future__ import division
+from __future__ import division, unicode_literals, print_function
 
 from os import path
 from socket import (
@@ -10,6 +10,7 @@ from socket import (
     error as socket_error, timeout as timeout_error
 )
 
+import six
 import gevent
 from termcolor import colored
 from paramiko.agent import AgentRequestHandler
@@ -130,7 +131,7 @@ def connect_all(state):
     failed_hosts = set()
     connected_hosts = set()
 
-    for name, greenlet in greenlets.iteritems():
+    for name, greenlet in six.iteritems(greenlets):
         client = greenlet.get()
 
         if not client:
@@ -185,7 +186,7 @@ def run_shell_command(
     command = make_command(command, env=env, sudo=sudo, sudo_user=sudo_user)
 
     if print_output:
-        print '{0}>>> {1}'.format(print_prefix, command)
+        print('{0}>>> {1}'.format(print_prefix, command))
 
     # Get the connection for this hostname
     connection = state.ssh_connections[hostname]
@@ -276,8 +277,8 @@ def put_file(
         )
 
         if channel.exit_status > 0:
-            logger.error(u'File error: {0}'.format('\n'.join(stderr)))
+            logger.error('File error: {0}'.format('\n'.join(stderr)))
             return False
 
     if print_output:
-        print u'{0}file uploaded: {1}'.format(print_prefix, remote_file)
+        print('{0}file uploaded: {1}'.format(print_prefix, remote_file))

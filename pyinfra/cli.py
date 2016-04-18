@@ -2,6 +2,8 @@
 # File: pyinfra/cli.py
 # Desc: pyinfra CLI helpers
 
+from __future__ import division, unicode_literals, print_function
+
 import sys
 import json
 import logging
@@ -12,8 +14,16 @@ from fnmatch import fnmatch
 from datetime import datetime
 from types import FunctionType
 from importlib import import_module
-from cStringIO import OutputType, InputType
 
+# py2/3 switcheroo
+try:
+    from cStringIO import OutputType, InputType
+    io_bases = (OutputType, InputType)
+except ImportError:
+    from io import IOBase
+    io_bases = IOBase
+
+import six
 from termcolor import colored
 
 from pyinfra import logger, pseudo_inventory
@@ -86,7 +96,7 @@ class LogFormatter(logging.Formatter):
         message = record.msg
 
         # We only handle strings here
-        if isinstance(message, basestring):
+        if isinstance(message, six.string_types):
             # Horrible string matching hack
             if message.find('Starting operation') > 0:
                 message = u'--> {0}'.format(message)
@@ -129,32 +139,32 @@ def setup_logging(log_level):
 
 
 def print_facts_list():
-    print json.dumps(facts.keys(), indent=4)
+    print(json.dumps(facts.keys(), indent=4))
 
 
 def print_fact(fact_data):
-    print json.dumps(fact_data, indent=4, default=json_encode)
+    print(json.dumps(fact_data, indent=4, default=json_encode))
 
 
 def dump_trace(exc_info):
     # Dev mode, so lets dump as much data as we have
     error_type, value, trace = exc_info
-    print '----------------------'
+    print('----------------------')
     traceback.print_tb(trace)
     logger.critical('{0}: {1}'.format(error_type.__name__, value))
-    print '----------------------'
+    print('----------------------')
 
 
 def dump_state(state):
-    print
-    print '--> Proposed operations:'
-    print json.dumps(state.ops, indent=4, default=json_encode)
-    print
-    print '--> Operation meta:'
-    print json.dumps(state.op_meta, indent=4, default=json_encode)
-    print
-    print '--> Operation order:'
-    print json.dumps(state.op_order, indent=4, default=json_encode)
+    print()
+    print('--> Proposed operations:')
+    print(json.dumps(state.ops, indent=4, default=json_encode))
+    print()
+    print('--> Operation meta:')
+    print(json.dumps(state.op_meta, indent=4, default=json_encode))
+    print()
+    print('--> Operation order:')
+    print(json.dumps(state.op_order, indent=4, default=json_encode))
 
 
 def run_hook(state, hook_name, hook_data):
@@ -162,13 +172,13 @@ def run_hook(state, hook_name, hook_data):
 
     if hooks:
         for hook in hooks:
-            print '--> Running hook: {0}/{1}'.format(
+            print('--> Running hook: {0}/{1}'.format(
                 hook_name,
                 colored(hook.__name__, attrs=['bold'])
-            )
+            ))
             hook(hook_data, state)
 
-        print
+        print()
 
 
 def json_encode(obj):
@@ -181,7 +191,7 @@ def json_encode(obj):
     elif isinstance(obj, file):
         return str(obj.name)
 
-    elif isinstance(obj, (InputType, OutputType)):
+    elif isinstance(obj, io_bases):
         return 'In-memory file: {0}'.format(obj.read())
 
     else:
@@ -189,7 +199,7 @@ def json_encode(obj):
 
 
 def print_meta(state):
-    for hostname, meta in state.meta.iteritems():
+    for hostname, meta in six.iteritems(state.meta):
         logger.info(
             '[{0}]\tOperations: {1}\t    Commands: {2}'.format(
                 colored(hostname, attrs=['bold']),
@@ -199,7 +209,7 @@ def print_meta(state):
 
 
 def print_results(state):
-    for hostname, results in state.results.iteritems():
+    for hostname, results in six.iteritems(state.results):
         if hostname not in state.inventory.connected_hosts:
             logger.info('[{0}]\tNo connection'.format(colored(hostname, 'red', attrs=['bold'])))
 
@@ -432,13 +442,13 @@ def make_inventory(
     fake_groups = {
         # In API mode groups *must* be tuples of (hostnames, data)
         name: group if isinstance(group, tuple) else (group, {})
-        for name, group in groups.iteritems()
+        for name, group in six.iteritems(groups)
     }
     fake_inventory = Inventory((all_hosts, all_data), **fake_groups)
     pseudo_inventory.set(fake_inventory)
 
     # For each group load up any data
-    for name, hosts in groups.iteritems():
+    for name, hosts in six.iteritems(groups):
         data = {}
 
         if isinstance(hosts, tuple):
@@ -478,7 +488,7 @@ def make_inventory(
             all_hosts = [
                 host for host in all_hosts
                 if (isinstance(host, tuple) and fnmatch(host[0], limit))
-                or (isinstance(host, basestring) and fnmatch(host, limit))
+                or (isinstance(host, six.string_types) and fnmatch(host, limit))
 
             ]
 

@@ -2,6 +2,8 @@
 # File: pyinfra/facts/util/files.py
 # Desc: file related fact utilities
 
+from __future__ import unicode_literals
+
 import re
 from os import path
 from datetime import datetime

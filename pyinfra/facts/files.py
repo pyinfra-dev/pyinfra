@@ -2,6 +2,8 @@
 # File: pyinfra/facts/server.py
 # Desc: filesystem facts
 
+from __future__ import unicode_literals
+
 import re
 
 from pyinfra.api.facts import FactBase

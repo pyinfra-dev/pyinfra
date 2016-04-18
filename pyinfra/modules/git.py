@@ -2,6 +2,8 @@
 # File: pyinfra/modules/git.py
 # Desc: manage git repositories
 
+from __future__ import unicode_literals
+
 import re
 from os import path
 

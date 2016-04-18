@@ -7,10 +7,11 @@ The pyinfra facts API. Facts enable pyinfra to collect remote server state which
 to "diff" with the desired state, producing the final commands required for a deploy.
 '''
 
-from __future__ import division
+from __future__ import division, unicode_literals
 
 from socket import timeout as timeout_error
 
+import six
 from gevent.lock import Semaphore
 from termcolor import colored
 from paramiko import SSHException
@@ -49,9 +50,8 @@ class FactMeta(type):
         facts[underscore(name)] = cls
 
 
+@six.add_metaclass(FactMeta)
 class FactBase(object):
-    __metaclass__ = FactMeta
-
     default = None
 
     def process(self, output):
@@ -124,7 +124,7 @@ def get_facts(
     failed_hosts = set()
 
     # Collect the facts and any failures
-    for hostname, greenlet in greenlets.iteritems():
+    for hostname, greenlet in six.iteritems(greenlets):
         try:
             channel, stdout, stderr = greenlet.get()
 

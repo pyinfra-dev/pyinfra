@@ -10,11 +10,17 @@ argument ``host.data.x`` where ``host.data.x`` changes between hosts. The same l
 applied to facts.
 '''
 
+import six
+
 
 def wrap_attr_data(key, attr):
-    '''Wraps an object (hopefully) as a AttrBase item.'''
-    if isinstance(attr, basestring):
+    '''
+    Wraps an object (hopefully) as a AttrBase item.
+    '''
+
+    if isinstance(attr, six.text_type):
         return AttrDataStr(key, attr)
+
     elif isinstance(attr, int):
         return AttrDataInt(key, attr)
 
@@ -25,10 +31,11 @@ class AttrBase:
     '''
     Subclasses of this represent core Python types with an extra 'host_key' attribute.
     '''
+
     pyinfra_attr_key = None
 
 
-class AttrDataStr(AttrBase, str):
+class AttrDataStr(AttrBase, six.text_type):
     def __new__(cls, key, obj):
         obj = super(AttrDataStr, cls).__new__(cls, obj)
         setattr(obj, 'pyinfra_attr_key', key)
@@ -57,7 +64,7 @@ class AttrData(object):
         return self.get(key)
 
     def __str__(self):
-        return str(self.attrs)
+        return six.text_type(self.attrs)
 
     def get(self, key):
         return wrap_attr_data(key, self.attrs.get(key))

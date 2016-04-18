@@ -6,9 +6,11 @@
 The files module handles filesystem state, file uploads and template generation.
 '''
 
-from os import path, walk
-from cStringIO import StringIO
+from __future__ import unicode_literals
 
+from os import path, walk
+
+import six
 from jinja2 import Template
 
 from pyinfra.api import operation, OperationError
@@ -264,7 +266,7 @@ def put(
     mode = ensure_mode_int(mode)
 
     # Accept local_filename as a string
-    if isinstance(local_filename, basestring):
+    if isinstance(local_filename, six.string_types):
         if state.deploy_dir and add_deploy_dir:
             local_filename = path.join(state.deploy_dir, local_filename)
 
@@ -336,7 +338,7 @@ def template(
         template_filename = path.join(state.deploy_dir, template_filename)
 
     # Accept template_filename as a string or (assumed) file-like object
-    if isinstance(template_filename, basestring):
+    if isinstance(template_filename, six.string_types):
         template_file = open(template_filename, 'r')
     else:
         template_file = template_filename
@@ -350,7 +352,7 @@ def template(
 
     # Render and make file-like it's output
     output = template.render(data)
-    output_file = StringIO(output)
+    output_file = six.StringIO(output)
 
     # Pass to the put function
     return put(

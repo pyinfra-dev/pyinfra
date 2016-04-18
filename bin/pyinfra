@@ -39,7 +39,7 @@ Experimental options:
     --enable-pipelining  Enable fact pipelining.
 '''
 
-from __future__ import division
+from __future__ import division, unicode_literals, print_function
 
 from gevent import monkey
 monkey.patch_all()
@@ -57,6 +57,7 @@ from colorama import init as colorama_init
 colorama_init()
 
 from pyinfra import logger, pseudo_state, pseudo_host, pseudo_inventory, hook
+from pyinfra.local import exec_file
 from pyinfra.cli import (
     FakeHost,
     run_hook, dump_state, dump_trace, setup_logging,
@@ -73,25 +74,28 @@ from pyinfra.api.facts import get_facts
 from pyinfra.api.exceptions import PyinfraError
 
 
+# Don't write out deploy.pyc/config.pyc etc
+sys.dont_write_bytecode = True
+
 # Handle ctrl+c
 def _signal_handler(signum, frame):
-    print 'Exiting upon user request!'
+    print('Exiting upon user request!')
     sys.exit(0)
 
 signal.signal(signal.SIGINT, _signal_handler)
 
 # Exit handler
 def _exit(code=0):
-    print
-    print '<-- Thank you, goodbye'
-    print
+    print()
+    print('<-- Thank you, goodbye')
+    print()
 
     sys.exit(code)
 
 
-print
-print '### {0}'.format(colored('Welcome to pyinfra', attrs=['bold']))
-print
+print()
+print('### {0}'.format(colored('Welcome to pyinfra', attrs=['bold'])))
+print()
 
 
 # Get arguments
@@ -191,10 +195,10 @@ try:
     run_hook(state, 'before_connect', hook_data)
 
     # Connect to all the servers
-    print '--> Connecting to hosts...'
+    print('--> Connecting to hosts...')
     connect_all(state)
 
-    print
+    print()
 
     # Run the before_connect hook if provided
     run_hook(state, 'before_facts', hook_data)
@@ -209,7 +213,7 @@ try:
         _exit()
 
     # We're building a deploy!
-    print '--> Building deploy scripts...'
+    print('--> Building deploy scripts...')
 
     # Deploy file
     if arguments['deploy']:
@@ -217,7 +221,7 @@ try:
             # This actually does the op build
             for host in inventory:
                 pseudo_host.set(host)
-                execfile(arguments['deploy'])
+                exec_file(arguments['deploy'])
                 logger.info('{0} {1}'.format(
                     '[{}]'.format(colored(host.name, attrs=['bold'])),
                     colored('Ready', 'green')
@@ -243,8 +247,8 @@ try:
         )
 
     # Always show meta output
-    print
-    print '--> Proposed changes:'
+    print()
+    print('--> Proposed changes:')
     print_meta(state)
 
     # If debug, dump state (ops, op order, op meta) now
@@ -253,12 +257,12 @@ try:
 
     # Run the operations we generated with the deploy file
     if not arguments['dry']:
-        print
+        print()
 
         # Run the before_deploy hook if provided
         run_hook(state, 'before_deploy', hook_data)
 
-        print '--> Beginning operation run...'
+        print('--> Beginning operation run...')
         run_ops(
             state,
             serial=arguments['serial'],
@@ -268,11 +272,11 @@ try:
         # Run the after_deploy hook if provided
         run_hook(state, 'after_deploy', hook_data)
 
-        print '--> Results:'
+        print('--> Results:')
         print_results(state)
 
 except hook.Error as e:
-    print
+    print()
     sys.stderr.write(
         '--> {0}: '.format(colored('hook exception', 'red', attrs=['bold']))
     )
@@ -285,7 +289,7 @@ except hook.Error as e:
 
 # Capture/log internal exceptions
 except PyinfraError as e:
-    print
+    print()
     sys.stderr.write(
         '--> {0}: '.format(colored('pyinfra exception', 'red', attrs=['bold']))
     )
@@ -298,7 +302,7 @@ except PyinfraError as e:
 
 # Capture/dump unexpected exceptions
 except Exception as e:
-    print
+    print()
     sys.stderr.write(
         '--> {0}: '.format(colored('unknown exception', 'red', attrs=['bold']))
     )

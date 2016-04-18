@@ -2,6 +2,8 @@
 # File: pyinfra/api/inventory.py
 # Desc: represents a pyinfra inventory
 
+import six
+
 from .host import Host
 from .attrs import AttrData
 
@@ -48,7 +50,7 @@ class Inventory(object):
 
         # Loop groups and build map of name -> groups
         names_to_groups = {}
-        for group_name, (group_names, group_data) in groups.iteritems():
+        for group_name, (group_names, group_data) in six.iteritems(groups):
             group_name = group_name.lower()
             self.group_data[group_name] = AttrData(group_data)
 
@@ -71,7 +73,7 @@ class Inventory(object):
         # Now we've got host data, convert -> AttrData
         self.host_data = {
             name: AttrData(d)
-            for name, d in self.host_data.iteritems()
+            for name, d in six.iteritems(self.host_data)
         }
 
         # Actually make Host instances

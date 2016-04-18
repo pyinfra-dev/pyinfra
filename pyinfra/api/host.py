@@ -2,6 +2,8 @@
 # File: pyinfra/api/host.py
 # Desc: thin class that represents a target host in pyinfra
 
+from __future__ import unicode_literals
+
 from .facts import is_fact, get_fact
 from .attrs import FallbackAttrData, wrap_attr_data
 

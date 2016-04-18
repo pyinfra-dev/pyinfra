@@ -2,12 +2,12 @@
 # File: pyinfra/modules/util/files.py
 # Desc: common functions for handling the filesystem
 
-from types import NoneType
+from __future__ import unicode_literals
 
 
 def ensure_mode_int(mode):
     # Already an int (/None)?
-    if isinstance(mode, (int, NoneType)):
+    if isinstance(mode, int) or mode is None:
         return mode
 
     try:

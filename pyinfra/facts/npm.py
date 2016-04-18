@@ -4,12 +4,14 @@
 # File: pyinfra/facts/npm.py
 # Desc: npm package manager facts
 
+from __future__ import unicode_literals
+
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
 
 # Matching output of npm list
-npm_regex = ur'^[└├]\─\─\s([a-zA-Z0-9\-]+)@([0-9\.]+)$'
+npm_regex = r'^[└├]\─\─\s([a-zA-Z0-9\-]+)@([0-9\.]+)$'
 
 
 class NpmPackages(FactBase):

@@ -2,6 +2,8 @@
 # File: pyinfra/modules/init.py
 # Desc: manage init systems
 
+from __future__ import unicode_literals
+
 '''
 Manages the state and configuration of init services. Support for:
 

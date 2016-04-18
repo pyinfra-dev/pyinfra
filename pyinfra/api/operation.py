@@ -8,8 +8,12 @@ function and instead diff against the remote server, outputting commands to the 
 state. This is then run later by pyinfra's ``__main__`` or the :doc:`./operations`.
 '''
 
+from __future__ import unicode_literals
+
 from functools import wraps
 from types import FunctionType
+
+import six
 
 from pyinfra import pseudo_state, pseudo_host
 from pyinfra.pseudo_modules import PseudoModule
@@ -112,10 +116,6 @@ def operation(func=None, pipeline_facts=None):
 
         # Name the operation
         name = kwargs.pop('name', None)
-        if name is None:
-            module_bits = func.__module__.split('.')
-            module_name = module_bits[-1]
-            name = '{0}/{1}'.format(module_name.title(), func.__name__.title())
 
         # Get/generate a hash for this op
         op_hash = kwargs.pop('op', None)
@@ -124,6 +124,12 @@ def operation(func=None, pipeline_facts=None):
         # (any unwanted/op-related kwargs removed above)
         if state.in_op:
             return func(state, host, *args, **kwargs) or []
+
+        # Generate an operation name if needed (Module/Operation format)
+        if name is None:
+            module_bits = func.__module__.split('.')
+            module_name = module_bits[-1]
+            name = '{0}/{1}'.format(module_name.title(), func.__name__.title())
 
         # Convert any AttrBase items (returned by host.data), see attrs.py.
         if op_hash is None:
@@ -134,7 +140,7 @@ def operation(func=None, pipeline_facts=None):
 
             hash_kwargs = {
                 key: get_arg_name(arg)
-                for key, arg in kwargs.iteritems()
+                for key, arg in six.iteritems(kwargs)
             }
 
             op_hash = (name, sudo, sudo_user, ignore_errors, env, hash_args, hash_kwargs)
@@ -203,7 +209,7 @@ def operation(func=None, pipeline_facts=None):
                 op_meta['args'].append(arg)
 
         # Attach keyword args
-        for key, value in kwargs.iteritems():
+        for key, value in six.iteritems(kwargs):
             arg = '='.join((str(key), str(value)))
 
             if arg not in op_meta['args']:

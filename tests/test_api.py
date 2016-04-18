@@ -1,4 +1,7 @@
-import __builtin__ as builtins
+# pyinfra
+# File: tests/test_api.py
+# Desc: tests for the pyinfra API
+
 from unittest import TestCase
 from socket import gaierror, error as socket_error
 
@@ -117,7 +120,7 @@ class TestApi(TestCase):
         connect_all(state)
 
         # Test normal
-        with patch.object(builtins, 'open', mock_open(read_data='test!')):
+        with patch('pyinfra.modules.files.open', mock_open(read_data='test!'), create=True):
             add_op(
                 state, files.put,
                 'files/file.txt',
@@ -125,7 +128,7 @@ class TestApi(TestCase):
             )
 
         # And with sudo
-        with patch.object(builtins, 'open', mock_open(read_data='test!')):
+        with patch('pyinfra.modules.files.open', mock_open(read_data='test!'), create=True):
             add_op(
                 state, files.put,
                 'files/file.txt',

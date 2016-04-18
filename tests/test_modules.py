@@ -2,11 +2,14 @@
 # File: tests/test_modules.py
 # Desc: generate tests for module operations
 
+from __future__ import print_function
+
 import json
 from os import listdir, path
 from unittest import TestCase
 from importlib import import_module
 
+import six
 from nose.tools import nottest
 from jsontest import JsonTest
 
@@ -24,9 +27,8 @@ def make_operation_tests(arg):
     op = getattr(module, op_name)
 
     # Generate a test class
+    @six.add_metaclass(JsonTest)
     class TestTests(TestCase):
-        __metaclass__ = JsonTest
-
         jsontest_files = path.join('tests', 'operations', arg)
 
         @classmethod
@@ -48,11 +50,11 @@ def make_operation_tests(arg):
             try:
                 self.assertEqual(commands, test_data['commands'])
             except AssertionError as e:
-                print
-                print '--> GOT:\n', json.dumps(commands, indent=4, default=json_encode)
-                print '--> WANT:', json.dumps(
+                print()
+                print('--> GOT:\n', json.dumps(commands, indent=4, default=json_encode))
+                print('--> WANT:', json.dumps(
                     test_data['commands'], indent=4, default=json_encode
-                )
+                ))
                 raise e
 
     # Convert the op name (module.op) to a class name ModuleOp

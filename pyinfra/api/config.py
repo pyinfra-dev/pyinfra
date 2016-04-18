@@ -2,6 +2,8 @@
 # File: api/config.py
 # Desc: the default config
 
+import six
+
 
 class Config(object):
     '''
@@ -32,5 +34,5 @@ class Config(object):
         self.ENV = env
 
         # Apply kwargs
-        for key, value in kwargs.iteritems():
+        for key, value in six.iteritems(kwargs):
             setattr(self, key, value)

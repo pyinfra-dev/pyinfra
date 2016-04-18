@@ -2,6 +2,8 @@
 # File: tests/util.py
 # Desc: utilities for fake pyinfra state/host objects
 
+import six
+
 from pyinfra.api import Config
 from pyinfra.api.attrs import AttrData
 
@@ -67,7 +69,7 @@ def create_host(name=None, facts=None, data=None):
     real_facts = {}
     facts = facts or {}
 
-    for name, fact_data in facts.iteritems():
+    for name, fact_data in six.iteritems(facts):
         if ':' in name:
             args = name.split(':')
             name = args[0]

@@ -6,8 +6,11 @@
 Manage apt packages and repositories.
 '''
 
-from urlparse import urlparse
+from __future__ import unicode_literals
+
 from datetime import timedelta
+
+from six.moves.urllib.parse import urlparse
 
 from pyinfra.api import operation
 from pyinfra.facts.apt import parse_apt_repo

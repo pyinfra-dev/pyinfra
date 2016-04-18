@@ -7,6 +7,8 @@ The server module takes care of os-level state. Targets POSIX compatability, tes
 Linux/BSD.
 '''
 
+from __future__ import unicode_literals
+
 from pyinfra.api import operation
 
 from . import files
