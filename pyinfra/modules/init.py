@@ -96,7 +96,7 @@ def d(
                 ])
 
             elif distro == 'Gentoo':
-                commands.append('rc-update add apache2 default')
+                commands.append('rc-update add {0} default'.format(name))
 
         # Remove any /etc/rcX.d/<name> start links
         elif enabled is False:
