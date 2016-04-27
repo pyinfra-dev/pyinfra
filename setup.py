@@ -4,12 +4,15 @@
 
 from setuptools import setup
 
-from pyinfra import __version__
 
+# Extract version info without importing entire pyinfra package
+version_data = {}
+with open('pyinfra/version.py') as f:
+    exec(f.read(), version_data)
 
 if __name__ == '__main__':
     setup(
-        version=__version__,
+        version=version_data['__version__'],
         name='pyinfra',
         description='Deploy stuff by diff-ing the state you want against the remote server.',
         author='Nick / Fizzadar',
