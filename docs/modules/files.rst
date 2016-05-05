@@ -108,7 +108,7 @@ Copy a local file to the remote system.
 
     files.put(local_filename, remote_filename, user=None, group=None, mode=None, add_deploy_dir=True)
 
-+ **local_filename**: local filename (or file-like object)
++ **local_filename**: local filename
 + **remote_filename**: remote filename
 + **user**: user to own the files
 + **group**: group to own the files
@@ -157,7 +157,7 @@ Generate a template and write it to the remote system.
 
     files.template(template_filename, remote_filename, user=None, group=None, mode=None)
 
-+ **template_filename**: local template filename (or file-like object)
++ **template_filename**: local template filename
 + **remote_filename**: remote filename
 + **user**: user to own the files
 + **group**: group to own the files
