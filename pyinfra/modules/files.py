@@ -13,7 +13,7 @@ from os import path, walk
 import six
 
 from pyinfra.api import operation, OperationError
-from pyinfra.api.util import get_file_sha1, get_file, get_template
+from pyinfra.api.util import get_file_sha1, get_template
 
 from .util.files import chmod, chown, ensure_mode_int, sed_replace
 
@@ -255,7 +255,7 @@ def put(
     '''
     Copy a local file to the remote system.
 
-    + local_filename: local filename (or file-like object)
+    + local_filename: local filename
     + remote_filename: remote filename
     + user: user to own the files
     + group: group to own the files
@@ -264,23 +264,12 @@ def put(
 
     mode = ensure_mode_int(mode)
 
-    # Accept local_filename as a string
-    if isinstance(local_filename, six.string_types):
-        if state.deploy_dir and add_deploy_dir:
-            local_filename = path.join(state.deploy_dir, local_filename)
-
-        local_file = get_file(local_filename)
-
-    # Not a string? Assume file-like object
-    else:
-        local_file = local_filename
-
     remote_file = host.fact.file(remote_filename)
     commands = []
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file:
-        commands.append((local_file, remote_filename))
+        commands.append((local_filename, remote_filename))
 
         if user or group:
             commands.append(chown(remote_filename, user, group))
@@ -290,12 +279,12 @@ def put(
 
     # File exists, check sum and check user/group/mode if supplied
     else:
-        local_sum = get_file_sha1(local_file)
+        local_sum = get_file_sha1(local_filename)
         remote_sum = host.fact.sha1_file(remote_filename)
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
-            commands.append((local_file, remote_filename))
+            commands.append((local_filename, remote_filename))
 
             if user or group:
                 commands.append(chown(remote_filename, user, group))
@@ -326,7 +315,7 @@ def template(
     '''
     Generate a template and write it to the remote system.
 
-    + template_filename: local template filename (or file-like object)
+    + template_filename: local template filename
     + remote_filename: remote filename
     + user: user to own the files
     + group: group to own the files
@@ -336,14 +325,8 @@ def template(
     if state.deploy_dir:
         template_filename = path.join(state.deploy_dir, template_filename)
 
-    # Accept template_filename as a string or (assumed) file-like object
-    if isinstance(template_filename, six.string_types):
-        template_file = get_file(template_filename)
-    else:
-        template_file = template_filename
-
     # Load the template into memory
-    template = get_template(template_file.read())
+    template = get_template(template_filename)
 
     # Ensure host is always available inside templates
     data['host'] = host
