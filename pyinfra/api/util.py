@@ -17,35 +17,33 @@ from .attrs import AttrBase
 BLOCKSIZE = 65536
 
 # Caches
-FILES = {}
 TEMPLATES = {}
 
 
-def get_file(filename):
+def get_template(filename_or_string, is_string=False):
     '''
-    Get file objects with caching.
-    '''
-
-    if filename in FILES:
-        FILES[filename].seek(0)
-        return FILES[filename]
-
-    FILES[filename] = open(filename, 'r')
-    return FILES[filename]
-
-
-def get_template(string):
-    '''
-    Gets a jinja2 ``Template`` object for the input string, with caching based on the SHA1
-    of the string.
+    Gets a jinja2 ``Template`` object for the input filename or string, with caching
+    based on the filename of the template, or the SHA1 of the input string.
     '''
 
-    cache_key = sha1_hash(string)
+    if is_string:
+        # Cache against sha1 of the template
+        cache_key = sha1_hash(filename_or_string)
+
+        # Set the input string as our template
+        template_string = filename_or_string
+    else:
+        # Load template data into memory
+        file_io = open(filename_or_string, 'r')
+        template_string = file_io.read()
+
+        # Cache against filename
+        cache_key = filename_or_string
 
     if cache_key in TEMPLATES:
         return TEMPLATES[cache_key]
 
-    TEMPLATES[cache_key] = Template(string, keep_trailing_newline=True)
+    TEMPLATES[cache_key] = Template(template_string, keep_trailing_newline=True)
     return TEMPLATES[cache_key]
 
 
@@ -109,7 +107,7 @@ def get_arg_value(state, host, arg):
     '''
 
     if isinstance(arg, six.string_types):
-        template = get_template(arg)
+        template = get_template(arg, is_string=True)
         data = {
             'host': host,
             'inventory': state.inventory
@@ -164,22 +162,26 @@ def make_hash(obj):
     return hash(tuple(set(new_obj.items())))
 
 
-def get_file_sha1(io):
+def get_file_sha1(filename):
     '''
-    Calculates the SHA1 of a file object using a buffer to handle larger files.
+    Calculates the SHA1 of a file or file object using a buffer to handle larger files.
     '''
 
-    # Make sure we're at the start
-    io.seek(0)
-    buff = io.read(BLOCKSIZE)
+    # If we have a read attribute, just use the object as-is
+    if hasattr(filename, 'read'):
+        file_io = filename
+
+    # Otherwise, assume a filename and open it up
+    else:
+        file_io = open(filename, 'r')
+
+    buff = file_io.read(BLOCKSIZE)
     hasher = sha1()
 
     while len(buff) > 0:
         hasher.update(buff.encode())
-        buff = io.read(BLOCKSIZE)
+        buff = file_io.read(BLOCKSIZE)
 
-    # Reset the IO read
-    io.seek(0)
     return hasher.hexdigest()
 
 
