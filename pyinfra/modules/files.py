@@ -262,14 +262,26 @@ def put(
     + mode: permissions of the files
     '''
 
+    commands = []
     mode = ensure_mode_int(mode)
 
+    # Upload IO objects as-is
+    if hasattr(local_filename, 'read'):
+        local_file = local_filename
+
+    # Assume string filename
+    else:
+        # Add deploy directory?
+        if add_deploy_dir and state.deploy_dir:
+            local_filename = path.join(state.deploy_dir, local_filename)
+
+        local_file = open(local_filename, 'r')
+
     remote_file = host.fact.file(remote_filename)
-    commands = []
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file:
-        commands.append((local_filename, remote_filename))
+        commands.append((local_file, remote_filename))
 
         if user or group:
             commands.append(chown(remote_filename, user, group))
@@ -284,7 +296,7 @@ def put(
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
-            commands.append((local_filename, remote_filename))
+            commands.append((local_file, remote_filename))
 
             if user or group:
                 commands.append(chown(remote_filename, user, group))

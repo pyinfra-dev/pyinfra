@@ -239,16 +239,13 @@ def _get_sftp_connection(state, hostname):
 
 
 def _put_file(state, hostname, file_io, remote_location):
-    # Snrue we're at the start of the file
-    file_io.seek(0)
-
     # Upload it via SFTP
     sftp = _get_sftp_connection(state, hostname)
     sftp.putfo(file_io, remote_location)
 
 
 def put_file(
-    state, hostname, filename, remote_file,
+    state, hostname, file_io, remote_file,
     sudo=False, sudo_user=None, print_output=False
 ):
     '''
@@ -257,14 +254,6 @@ def put_file(
     '''
 
     print_prefix = '[{0}] '.format(colored(hostname, attrs=['bold']))
-
-    # File is already an IO object?
-    if hasattr(filename, 'read'):
-        file_io = filename
-
-    # Load up the file as an IO object
-    else:
-        file_io = open(filename, 'r')
 
     if not sudo:
         _put_file(state, hostname, file_io, remote_file)
