@@ -167,7 +167,7 @@ if did_install.commands:
 
 # Create a virtualenv
 server.shell(
-    'virtualenv {0}'.format(host.data.env_dir),
+    'virtualenv {{ host.data.env_dir }}',
     sudo=True,
     sudo_user='pyinfra'
 )

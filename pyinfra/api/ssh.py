@@ -25,7 +25,7 @@ from pyinfra.api.util import read_buffer, make_command
 
 def connect(host, **kwargs):
     '''
-    Connect to a single host. Returns the hostname if succesful. Stateless by design so
+    Connect to a single host. Returns the SSH client if succesful. Stateless by design so
     can be run in parallel.
     '''
 

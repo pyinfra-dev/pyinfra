@@ -262,9 +262,6 @@ def put(
     + mode: permissions of the files
     '''
 
-    commands = []
-    mode = ensure_mode_int(mode)
-
     # Upload IO objects as-is
     if hasattr(local_filename, 'read'):
         local_file = local_filename
@@ -277,7 +274,9 @@ def put(
 
         local_file = open(local_filename, 'r')
 
+    mode = ensure_mode_int(mode)
     remote_file = host.fact.file(remote_filename)
+    commands = []
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file:
