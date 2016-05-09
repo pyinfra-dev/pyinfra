@@ -45,6 +45,9 @@ if __name__ == '__main__':
         ),
         extras_require={
             'dev': (
+                # Releasing
+                'wheel',
+
                 # Dev debugging
                 'ipdb',
 
