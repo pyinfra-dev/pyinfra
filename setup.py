@@ -34,14 +34,14 @@ if __name__ == '__main__':
             'bin/pyinfra',
         ),
         install_requires=(
-            'gevent',
-            'paramiko',
-            'docopt',
-            'colorama',
-            'termcolor',
-            'jinja2',
-            'python-dateutil',
-            'six'
+            'gevent>1,<2',
+            'paramiko>1,<2',
+            'docopt<1',
+            'colorama<1',
+            'termcolor>1,<2',
+            'jinja2>2,<3',
+            'python-dateutil>2,<3',
+            'six>1,<2'
         ),
         extras_require={
             'dev': (
