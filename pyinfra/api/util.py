@@ -16,8 +16,17 @@ from .attrs import AttrBase
 
 BLOCKSIZE = 65536
 
-# Caches
+# Template cache
 TEMPLATES = {}
+
+
+def import_locals(filename):
+    data = {}
+
+    with open(filename, 'r') as file:
+        exec(file.read(), {}, data)
+
+    return data
 
 
 def get_template(filename_or_string, is_string=False):

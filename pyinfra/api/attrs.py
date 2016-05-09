@@ -89,3 +89,15 @@ class FallbackAttrData(object):
 
     def __str__(self):
         return str(self.datas)
+
+    def dict(self):
+        out = {}
+
+        # Copy and reverse data objects
+        datas = list(self.datas)
+        datas.reverse()
+
+        for data in datas:
+            out.update(data.dict())
+
+        return out

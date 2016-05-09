@@ -28,10 +28,12 @@ import six
 from termcolor import colored
 
 from pyinfra import logger, pseudo_inventory
+from pyinfra.pseudo_modules import PseudoModule
 
 from pyinfra.api import Config, Inventory
 from pyinfra.api.facts import FACTS, is_fact
 from pyinfra.api.exceptions import PyinfraError
+from pyinfra.api.util import import_locals
 
 from .hook import HOOKS, HOOK_NAMES
 
@@ -209,6 +211,13 @@ def print_meta(state):
         )
 
 
+def print_data(inventory):
+    for host in inventory:
+        print('[{0}]'.format(colored(host.name, attrs=['bold'])))
+        print(json.dumps(host.data.dict(), indent=4))
+        print()
+
+
 def print_results(state):
     for hostname, results in six.iteritems(state.results):
         if hostname not in state.inventory.connected_hosts:
@@ -345,6 +354,12 @@ def setup_arguments(arguments):
         if not is_fact(arguments['--fact']):
             raise PyinfraError('Invalid fact: {0}'.format(arguments['--fact']))
 
+    if (
+        not arguments['--debug-data'] and not arguments['--fact']
+        and not arguments['--run'] and not arguments['DEPLOY']
+    ):
+        raise PyinfraError('Missing DEPLOY file.')
+
     # Setup the rest
     return {
         # Deploy options
@@ -355,6 +370,8 @@ def setup_arguments(arguments):
         'serial': arguments['--serial'],
         'no_wait': arguments['--no-wait'],
         'debug': arguments['--debug'],
+
+        'debug_data': arguments['--debug-data'],
 
         'fact': arguments['--fact'],
         'fact_args': fact_args,
@@ -432,12 +449,12 @@ def make_inventory(
     file_groupname = None
 
     try:
-        module = load_source('', inventory_filename)
+        attrs = import_locals(inventory_filename)
 
         groups = {
-            attr: getattr(module, attr)
-            for attr in dir(module)
-            if attr.isupper()
+            key: value
+            for key, value in six.iteritems(attrs)
+            if key.isupper()
         }
 
         # Used to set all the hosts to an additional group - that of the filename
@@ -474,7 +491,7 @@ def make_inventory(
                 hostname = host[0] if isinstance(host, tuple) else host
 
                 if hostname not in all_hosts:
-                    all_hosts.append(host)
+                    all_hosts.append(hostname)
 
     groups['ALL'] = (all_hosts, all_data)
 
@@ -508,11 +525,14 @@ def make_inventory(
         logger.debug('Looking for group data: {0}'.format(data_filename))
 
         if path.exists(data_filename):
-            module = load_source('', data_filename)
+            # Read the files locals into a dict
+            file_data = import_locals(data_filename)
+
+            # Strip out any pseudo module imports
             data.update({
-                attr: getattr(module, attr)
-                for attr in dir(module)
-                if attr.islower() and not attr.startswith('_')
+                key: value
+                for key, value in six.iteritems(file_data)
+                if not isinstance(value, PseudoModule)
             })
 
         # Attach to group object

@@ -11,6 +11,7 @@ Usage:
     pyinfra -i INVENTORY DEPLOY [-v -vv options]
     pyinfra -i INVENTORY --run OP ARGS [-v -vv options]
     pyinfra -i INVENTORY --fact FACT [-v options]
+    pyinfra -i INVENTORY [options]
     pyinfra (--facts | --help | --version)
 
 Deploy options:
@@ -24,6 +25,7 @@ Deploy options:
     -v -vv               Prints remote input/output in realtime. -vv prints facts output.
     --dry                Only print proposed changes.
     --debug              Print debug info.
+    --debug-data         Print inventory data and exit.
 
 Config options:
     -p --port PORT       SSH port number.
@@ -62,7 +64,7 @@ from pyinfra.cli import (
     FakeHost,
     run_hook, dump_state, dump_trace, setup_logging,
     make_inventory, load_config, load_deploy_config, setup_arguments,
-    print_meta, print_results, print_fact, print_facts_list
+    print_meta, print_results, print_fact, print_facts_list, print_data
 )
 
 from pyinfra.api import State
@@ -156,6 +158,11 @@ try:
 
     if arguments['parallel']:
         config.PARALLEL = arguments['parallel']
+
+    # Just debugging data? Dump & exit
+    if arguments['debug_data']:
+        print_data(inventory)
+        _exit()
 
     # Create/set the state
     state = State(inventory, config)
