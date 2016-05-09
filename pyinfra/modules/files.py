@@ -11,6 +11,7 @@ from __future__ import unicode_literals
 from os import path, walk
 
 import six
+from jinja2 import UndefinedError
 
 from pyinfra.api import operation, OperationError
 from pyinfra.api.util import get_file_sha1, get_template
@@ -344,7 +345,11 @@ def template(
     data['inventory'] = state.inventory
 
     # Render and make file-like it's output
-    output = template.render(data)
+    try:
+        output = template.render(data)
+    except UndefinedError as e:
+        raise OperationError('Error in template: {0}: {1}'.format(template_filename, e))
+
     output_file = six.StringIO(output)
 
     # Pass to the put function
