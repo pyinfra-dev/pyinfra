@@ -48,6 +48,13 @@ class Inventory(object):
 
         self.data = AttrData(data)
 
+        # Build host data
+        for name in names:
+            if isinstance(name, tuple):
+                self.host_data[name[0]] = name[1]
+            else:
+                self.host_data[name] = {}
+
         # Loop groups and build map of name -> groups
         names_to_groups = {}
         for group_name, (group_names, group_data) in six.iteritems(groups):
@@ -55,20 +62,12 @@ class Inventory(object):
             self.group_data[group_name] = AttrData(group_data)
 
             for name in group_names:
-                name = name[0] if isinstance(name, tuple) else name
+                # Extract any data
+                if isinstance(name, tuple):
+                    self.host_data[name[0]].update(name[1])
+                    name = name[0]
+
                 names_to_groups.setdefault(name, []).append(group_name)
-
-        # Build host data
-        for name in names:
-            # Extract any data
-            host_data = {}
-            if isinstance(name, tuple):
-                name, host_data = name
-
-            # Ensure host has data dict
-            self.host_data.setdefault(name, {})
-            # Give host any data
-            self.host_data[name].update(host_data)
 
         # Now we've got host data, convert -> AttrData
         self.host_data = {
