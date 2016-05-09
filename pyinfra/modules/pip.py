@@ -47,7 +47,7 @@ def packages(
         install_command='pip install',
         uninstall_command='pip uninstall',
         version_join='==',
-        upgrade_command='pip upgrade',
+        upgrade_command='pip install --upgrade',
         latest=latest,
     ))
 
