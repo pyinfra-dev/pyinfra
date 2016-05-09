@@ -24,6 +24,12 @@ class PseudoModule(object):
     def set(self, module):
         self._module = module
 
+    def reset(self):
+        self._module = None
+
+    def isset(self):
+        return self._module is not None
+
 
 # The current deploy state
 sys.modules['pyinfra.pseudo_state'] = sys.modules['pyinfra.state'] = \

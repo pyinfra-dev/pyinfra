@@ -539,7 +539,7 @@ def make_inventory(
         groups[name] = (hosts, data)
 
     # Reset the pseudo inventory
-    pseudo_inventory.set(None)
+    pseudo_inventory.reset()
 
     # Apply any limit to all_hosts
     if limit:

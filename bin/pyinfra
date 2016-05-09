@@ -94,6 +94,25 @@ def _exit(code=0):
 
     sys.exit(code)
 
+# Exception handler
+def _exception(name, e, always_dump=False):
+    print()
+    if pseudo_host.isset():
+        sys.stderr.write('--> [{0}]: {1}: '.format(
+            colored(pseudo_host.name, attrs=['bold']),
+            colored(name, 'red', attrs=['bold'])
+        ))
+    else:
+        sys.stderr.write('--> {0}: '.format(colored(name, 'red', attrs=['bold'])))
+
+    if e:
+        logger.warning(e)
+
+    if arguments['debug'] or always_dump:
+        dump_trace(sys.exc_info())
+
+    _exit(1)
+
 
 # Get arguments
 arguments = docopt(__doc__, version='pyinfra-{0}'.format(__version__))
@@ -239,6 +258,9 @@ try:
         else:
             loop_hosts()
 
+        # Remove any pseudo host
+        pseudo_host.reset()
+
     # One off op run
     else:
         # Setup args if present
@@ -281,39 +303,21 @@ try:
         print('--> Results:')
         print_results(state)
 
+# Hook errors
 except hook.Error as e:
-    print()
-    sys.stderr.write(
-        '--> {0}: '.format(colored('hook exception', 'red', attrs=['bold']))
-    )
-    logger.warning(e)
+    _exception('hook error', e)
 
-    if arguments['debug']:
-        dump_trace(sys.exc_info())
-
-    _exit(1)
-
-# Capture/log internal exceptions
+# Internal exceptions
 except PyinfraError as e:
-    print()
-    sys.stderr.write(
-        '--> {0}: '.format(colored('pyinfra exception', 'red', attrs=['bold']))
-    )
-    logger.warning(e)
+    _exception('pyinfra error', e)
 
-    if arguments['debug']:
-        dump_trace(sys.exc_info())
+# IO errors
+except IOError as e:
+    _exception('local IO error', e)
 
-    _exit(1)
-
-# Capture/dump unexpected exceptions
+# Unexpected exceptions/everything else
 except Exception as e:
-    print()
-    sys.stderr.write(
-        '--> {0}: '.format(colored('unknown exception', 'red', attrs=['bold']))
-    )
-    dump_trace(sys.exc_info())
-    _exit(1)
+    _exception('unknown error', e, always_dump=True)
 
 
 _exit()
