@@ -64,7 +64,7 @@ class Inventory(object):
             for name in group_names:
                 # Extract any data
                 if isinstance(name, tuple):
-                    self.host_data[name[0]].update(name[1])
+                    self.host_data.setdefault(name[0], {}).update(name[1])
                     name = name[0]
 
                 names_to_groups.setdefault(name, []).append(group_name)
