@@ -239,6 +239,9 @@ def _get_sftp_connection(state, hostname):
 
 
 def _put_file(state, hostname, file_io, remote_location):
+    # Ensure we're at the start of the file
+    file_io.seek(0)
+
     # Upload it via SFTP
     sftp = _get_sftp_connection(state, hostname)
     sftp.putfo(file_io, remote_location)

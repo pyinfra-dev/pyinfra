@@ -184,6 +184,9 @@ def get_file_sha1(filename):
     else:
         file_io = open(filename, 'r')
 
+    # Ensure we're at the start of the file
+    file_io.seek(0)
+
     buff = file_io.read(BLOCKSIZE)
     hasher = sha1()
 
