@@ -156,7 +156,7 @@ def deb(state, host, source, present=True):
         temp_filename = state.get_temp_filename(source)
 
         # Ensure it's downloaded
-        commands.extend(files.download(source, temp_filename))
+        commands.extend(files.download(state, host, source, temp_filename))
 
         # Override the source with the downloaded file
         source = temp_filename
