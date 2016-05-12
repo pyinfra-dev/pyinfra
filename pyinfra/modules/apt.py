@@ -180,12 +180,12 @@ def deb(state, host, source, present=True):
     if present and not exists:
         commands.extend([
             # Install .deb file - ignoring failure (on unmet dependencies)
-            'dpkg -i {0} --force-confdef --force-confold || true'.format(source),
+            'dpkg --force-confdef --force-confold -i {0} || true'.format(source),
             # Attempt to install any missing dependencies
             '{0} -f'.format(noninteractive_apt('install')),
             # Now reinstall, and critically configure, the package - if there are still
             # missing deps, now we error
-            'dpkg -i {0}'.format(source)
+            'dpkg --force-confdef --force-confold -i {0}'.format(source)
         ])
 
     # Package exists but we don't want?
