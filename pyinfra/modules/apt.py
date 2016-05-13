@@ -198,6 +198,13 @@ def deb(state, host, source, present=True):
 
 
 @operation
+def update(state, host):
+    return ['apt-get update']
+
+apt_update = update
+
+
+@operation
 def packages(
     state, host,
     packages=None, present=True, latest=False,
@@ -235,7 +242,7 @@ def packages(
             update = False
 
     if update:
-        commands.append('apt-get update')
+        commands.extend(apt_update(state, host))
 
     if upgrade:
         commands.append(noninteractive_apt('upgrade'))
