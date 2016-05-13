@@ -128,12 +128,8 @@ elif 'linux' in host.groups:
         if distro['name'] == 'CentOS':
             # Manage remote rpm files
             yum.rpm(
-                'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{0}.noarch.rpm'.format(
-                    distro['major']
-                ),
-                sudo=True,
-                op='epel_repo',  # this makes one operation despite differing args above
-                name='Add EPEL Repo'
+                'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ host.fact.linux_distribution.major }}.noarch.rpm',
+                sudo=True
             )
 
         # yum package manager
