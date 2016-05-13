@@ -11,7 +11,7 @@ Usage:
     pyinfra -i INVENTORY DEPLOY [-v -vv options]
     pyinfra -i INVENTORY --run OP ARGS [-v -vv options]
     pyinfra -i INVENTORY --fact FACT [-v options]
-    pyinfra -i INVENTORY [options]
+    pyinfra -i INVENTORY [DEPLOY] --debug-data
     pyinfra (--facts | --help | --version)
 
 Deploy options:
@@ -25,7 +25,7 @@ Deploy options:
     -v -vv               Prints remote input/output in realtime. -vv prints facts output.
     --dry                Only print proposed changes.
     --debug              Print debug info.
-    --debug-data         Print inventory data and exit.
+    --debug-data         Print inventory hosts, data and exit.
 
 Config options:
     -p --port PORT       SSH port number.
@@ -108,7 +108,7 @@ def _exception(name, e, always_dump=False):
     if e:
         logger.warning(e)
 
-    if arguments['debug'] or always_dump:
+    if arguments.get('debug') or always_dump:
         dump_trace(sys.exc_info())
 
     _exit(1)

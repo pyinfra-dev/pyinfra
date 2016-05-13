@@ -31,7 +31,7 @@ from pyinfra import logger, pseudo_inventory
 from pyinfra.pseudo_modules import PseudoModule
 
 from pyinfra.api import Config, Inventory
-from pyinfra.api.facts import FACTS, is_fact
+from pyinfra.api.facts import get_fact_names, is_fact
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import import_locals
 
@@ -41,7 +41,7 @@ STDOUT_LOG_LEVELS = (logging.DEBUG, logging.INFO)
 STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
 
 
-class CliException(PyinfraError):
+class CliError(PyinfraError):
     pass
 
 
@@ -142,7 +142,7 @@ def setup_logging(log_level):
 
 
 def print_facts_list():
-    print(json.dumps(FACTS.keys(), indent=4))
+    print(json.dumps(list(get_fact_names()), indent=4))
 
 
 def print_fact(fact_data):
@@ -318,7 +318,7 @@ def setup_arguments(arguments):
 
         op_func = getattr(op_module, op_name, None)
         if not op_func:
-            raise PyinfraError('No such operation: {0}'.format(op))
+            raise CliError('No such operation: {0}'.format(op))
 
         arguments['--run'] = op_func
 
@@ -352,13 +352,14 @@ def setup_arguments(arguments):
 
         # Ensure the fact exists
         if not is_fact(arguments['--fact']):
-            raise PyinfraError('Invalid fact: {0}'.format(arguments['--fact']))
+            raise CliError('Invalid fact: {0}'.format(arguments['--fact']))
 
-    if (
-        not arguments['--debug-data'] and not arguments['--fact']
-        and not arguments['--run'] and not arguments['DEPLOY']
-    ):
-        raise PyinfraError('Missing DEPLOY file.')
+    # Check deploy file exists
+    if arguments['DEPLOY']:
+        try:
+            open(arguments['DEPLOY']).close()
+        except IOError as e:
+            raise CliError('{0}: {1}'.format(e.strerror, arguments['DEPLOY']))
 
     # Setup the rest
     return {
@@ -461,10 +462,10 @@ def make_inventory(
         # ie inventories/dev.py means all the hosts are in the dev group, if not present
         file_groupname = path.basename(inventory_filename).split('.')[0].upper()
 
-    except IOError:
+    except IOError as e:
         # If a /, definitely not a hostname
         if '/' in inventory_filename:
-            raise CliException('Invalid inventory file: {0}'.format(inventory_filename))
+            raise CliError('{0}: {1}'.format(e.strerror, inventory_filename))
 
         # Otherwise we assume the inventory file is a single hostname
         groups = {
