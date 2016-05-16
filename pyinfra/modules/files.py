@@ -8,7 +8,9 @@ The files module handles filesystem state, file uploads and template generation.
 
 from __future__ import unicode_literals
 
+import sys
 from os import path, walk
+from datetime import timedelta
 
 import six
 from jinja2 import UndefinedError
@@ -59,7 +61,11 @@ def download(
     # Destination file exists & cache_time: check when the file was last modified,
     # download if old
     elif cache_time:
-        download = True
+        # Time on files is not tz-aware, and will be the same tz as the server's time,
+        # so we can safely remove the tzinfo from host.fact.date before comparison.
+        cache_time = host.fact.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
+        if info['mtime'] and info['mtime'] > cache_time:
+            download = True
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
@@ -273,7 +279,7 @@ def put(
         if add_deploy_dir and state.deploy_dir:
             local_filename = path.join(state.deploy_dir, local_filename)
 
-        local_file = open(local_filename, 'r')
+        local_file = open(local_filename)
 
     mode = ensure_mode_int(mode)
     remote_file = host.fact.file(remote_filename)
@@ -348,7 +354,26 @@ def template(
     try:
         output = template.render(data)
     except UndefinedError as e:
-        raise OperationError('Error in template: {0}: {1}'.format(template_filename, e))
+        _, _, trace = sys.exc_info()
+
+        # Jump through to the *second last* traceback, which contains the line number
+        # of the error within the in-memory Template object
+        while trace.tb_next:
+            if trace.tb_next.tb_next:
+                trace = trace.tb_next
+            else:
+                break
+
+        line_number = trace.tb_frame.f_lineno
+
+        # Quickly read the line in question and one above/below for nicer debugging
+        template_lines = open(template_filename).readlines()
+        template_lines = [line.strip() for line in template_lines]
+        relevant_lines = template_lines[max(line_number - 2, 0):line_number + 1]
+
+        raise OperationError('Error in template: {0} (L{1}): {2}\n...\n{3}\n...'.format(
+            template_filename, line_number, e, '\n'.join(relevant_lines)
+        ))
 
     output_file = six.StringIO(output)
 
