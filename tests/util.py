@@ -13,7 +13,7 @@ from pyinfra.api.attrs import AttrData
 
 class FakeState(object):
     active = True
-    deploy_dir = ''
+    deploy_dir = '/'
     in_op = True
     pipelining = False
 
@@ -84,35 +84,77 @@ class FakeHost(object):
 
 class FakeFile(file):
     _read = False
+    _data = None
 
-    def __init__(self, name):
+    def __init__(self, name, data=None):
         self._name = name
+        self._data = data
 
     def read(self, *args, **kwargs):
         if self._read is False:
             self._read = True
-            return '_test_data_'
+
+            if self._data:
+                return self._data
+            else:
+                return '_test_data_'
 
         return ''
+
+    def readlines(self, *args, **kwargs):
+        if self._read is False:
+            self._read = True
+
+            if self._data:
+                return self._data.split()
+            else:
+                return ['_test_data_']
+
+            return []
 
     def seek(self, *args, **kwargs):
         pass
 
 
 class PatchFiles(object):
-    def __init__(self, files):
+    def __init__(self, patch_files):
+        files = []
+        files_data = {}
+
+        for filename_data in patch_files:
+            if isinstance(filename_data, list):
+                filename, data = filename_data
+            else:
+                filename = filename_data
+                data = None
+
+            filename = '{0}{1}'.format(FakeState.deploy_dir, filename)
+            files.append(filename)
+
+            if data:
+                files_data[filename] = data
+
         self.files = files
+        self.files_data = files_data
 
     def __enter__(self):
-        self.patched = patch('pyinfra.api.util.open', self.get_file, create=True)
-        self.patched.start()
+        self.patches = [
+            patch('pyinfra.modules.files.open', self.get_file, create=True),
+            patch('pyinfra.api.util.open', self.get_file, create=True),
+        ]
+
+        for patched in self.patches:
+            patched.start()
 
     def __exit__(self, type_, value, traceback):
-        self.patched.stop()
+        for patched in self.patches:
+            patched.stop()
 
     def get_file(self, filename, *args):
         if filename in self.files:
-            return FakeFile(filename)
+            return FakeFile(filename, self.files_data.get(filename))
+
+        raise IOError('Missing FakeFile: {0}'.format(filename))
 
 
 def patch_files(files=None):
@@ -128,12 +170,6 @@ def create_host(name=None, facts=None, data=None):
     facts = facts or {}
 
     for name, fact_data in six.iteritems(facts):
-        if ':' in name:
-            args = name.split(':')
-            name = args[0]
-            args = args[1]
-            real_facts.setdefault(name, {})[args] = fact_data
-        else:
             real_facts[name] = fact_data
 
     return FakeHost(name, facts=real_facts, data=data)

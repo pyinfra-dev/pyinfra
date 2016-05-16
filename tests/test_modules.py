@@ -43,11 +43,21 @@ def make_operation_tests(arg):
             host = create_host(facts=test_data.get('facts', {}))
             pseudo_host.set(host)
 
-            with patch_files(test_data.get('files', {})):
-                output_commands = op._pyinfra_op(
-                    pseudo_state, pseudo_host,
-                    *test_data.get('args', []), **test_data.get('kwargs', {})
-                ) or []
+            allowed_exception = test_data.get('exception')
+
+            with patch_files(test_data.get('files', [])):
+                try:
+                    output_commands = op._pyinfra_op(
+                        pseudo_state, pseudo_host,
+                        *test_data.get('args', []), **test_data.get('kwargs', {})
+                    ) or []
+                except Exception as e:
+                    if allowed_exception:
+                        self.assertEqual(e.__class__.__name__, allowed_exception['name'])
+                        self.assertEqual(e.message, allowed_exception['message'])
+                        return
+
+                    raise
 
             commands = []
 
