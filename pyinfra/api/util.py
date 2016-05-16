@@ -23,7 +23,7 @@ TEMPLATES = {}
 def import_locals(filename):
     data = {}
 
-    with open(filename, 'r') as file:
+    with open(filename) as file:
         exec(file.read(), {}, data)
 
     return data
@@ -43,7 +43,7 @@ def get_template(filename_or_string, is_string=False):
         template_string = filename_or_string
     else:
         # Load template data into memory
-        file_io = open(filename_or_string, 'r')
+        file_io = open(filename_or_string)
         template_string = file_io.read()
 
         # Cache against filename
@@ -182,7 +182,7 @@ def get_file_sha1(filename):
 
     # Otherwise, assume a filename and open it up
     else:
-        file_io = open(filename, 'r')
+        file_io = open(filename)
 
     # Ensure we're at the start of the file
     file_io.seek(0)
