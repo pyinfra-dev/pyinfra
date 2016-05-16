@@ -1,0 +1,14 @@
+{
+    "args": ["somerepo", "http://baseurl"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "file": {
+            "/etc/yum.repos.d/somerepo.repo": {
+                "mode": 0
+            }
+        }
+    },
+    "commands": ["rm -f /etc/yum.repos.d/somerepo.repo"]
+}

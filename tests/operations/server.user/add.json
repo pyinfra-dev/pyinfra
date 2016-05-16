@@ -8,7 +8,9 @@
     },
     "facts": {
         "users": {},
-        "directory:homedir": null
+        "directory": {
+            "homedir": null
+        }
     },
     "commands": [
         "useradd -d homedir -s shellbin -g mygroup -G secondary_group,another someuser",

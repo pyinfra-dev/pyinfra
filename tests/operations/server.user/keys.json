@@ -12,19 +12,23 @@
                 "groups": []
             }
         },
-        "directory:homedir": {
-            "user": "someuser",
-            "group": "someuser"
+        "directory": {
+            "homedir": {
+                "user": "someuser",
+                "group": "someuser"
+            },
+            "homedir/.ssh": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 700
+            }
         },
-        "directory:homedir/.ssh": {
-            "user": "someuser",
-            "group": "someuser",
-            "mode": 700
-        },
-        "file:homedir/.ssh/authorized_keys": {
-            "user": "someuser",
-            "group": "someuser",
-            "mode": 601
+        "file": {
+            "homedir/.ssh/authorized_keys": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 601
+            }
         }
     },
     "commands": [

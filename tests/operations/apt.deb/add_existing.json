@@ -1,0 +1,18 @@
+{
+    "args": ["http://somewhere.com/something.deb"],
+    "facts": {
+        "file": {
+            "_tempfile_": ""
+        },
+        "deb_package": {
+            "_tempfile_": {
+                "name": "test",
+                "version": 0
+            }
+        },
+        "deb_packages": {
+            "test": 0
+        }
+    },
+    "commands": []
+}

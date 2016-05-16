@@ -15,12 +15,10 @@
             }
         },
         "sha1_file": {
-            "/home/somefile.txt": "nowt"
+            "/home/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
         }
     },
     "commands": [
-        ["_test_data_", "/home/somefile.txt"],
-        "chown testuser:testgroup /home/somefile.txt",
         "chmod 644 /home/somefile.txt"
     ]
 }

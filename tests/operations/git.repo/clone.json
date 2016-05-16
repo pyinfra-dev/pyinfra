@@ -4,9 +4,10 @@
         "branch": "mybranch"
     },
     "facts": {
-        "directory:/home/myrepo": {
-        },
-        "directory:/home/myrepo/.git": null
+        "directory": {
+            "/home/myrepo": {},
+            "/home/myrepo/.git": null
+        }
     },
     "commands": [
         "cd /home/myrepo && git clone myrepo --branch mybranch ."

@@ -7,7 +7,9 @@
         "recursive": true
     },
     "facts": {
-        "directory:testdir": null
+        "directory": {
+            "testdir": null
+        }
     },
     "commands": [
         "mkdir -p testdir",

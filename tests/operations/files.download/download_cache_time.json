@@ -1,16 +1,18 @@
 {
+    "args": ["http://myfile"],
     "kwargs": {
-        "update": true,
+        "destination": "/home/myfile",
         "cache_time": 3600
     },
     "facts": {
-        "deb_packages": {},
         "date": "datetime:2015-01-01T00:00:00",
         "file": {
-            "/var/lib/apt/periodic/update-success-stamp": {
+            "/home/myfile": {
                 "mtime": "datetime:2015-01-01T00:00:00"
             }
         }
     },
-    "commands": []
+    "commands": [
+        "wget -q http://myfile -O /home/myfile"
+    ]
 }

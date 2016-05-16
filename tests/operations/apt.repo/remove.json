@@ -7,7 +7,9 @@
         "apt_sources": {
             "my-repo-line": {}
         },
-        "find_in_file:/etc/apt/sources.list": [""]
+        "find_in_file": {
+            "/etc/apt/sources.list": [""]
+        }
     },
     "commands": [
         "sed -i \"s/^.*my-repo-line.*$//\" /etc/apt/sources.list"

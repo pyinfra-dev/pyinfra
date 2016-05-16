@@ -4,10 +4,12 @@
         "present": false
     },
     "facts": {
-        "directory:testdir": {
-            "mode": 0,
-            "user": "testuser",
-            "group": "testgroup"
+        "directory": {
+            "testdir": {
+                "mode": 0,
+                "user": "testuser",
+                "group": "testgroup"
+            }
         }
     },
     "commands": [

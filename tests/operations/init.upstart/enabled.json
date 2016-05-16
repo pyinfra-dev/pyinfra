@@ -7,8 +7,10 @@
         "upstart_status": {
             "redis-server": true
         },
-        "file:/etc/init/redis-server.override": {
-            "mode": 1
+        "file": {
+            "/etc/init/redis-server.override": {
+                "mode": 1
+            }
         }
     },
     "commands": [

@@ -7,8 +7,12 @@
         "/somedir": ["somefile.txt", "anotherfile.txt"]
     },
     "facts": {
-        "directory:/home/somedir": null,
-        "find_files:/home/somedir": null
+        "directory": {
+            "/home/somedir": null
+        },
+        "find_files": {
+            "/home/somedir": null
+        }
     },
     "commands": [
         "mkdir -p /home/somedir"

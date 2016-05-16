@@ -1,0 +1,19 @@
+{
+    "args": ["somescript.sh"],
+    "kwargs": {
+        "chdir": "/home"
+    },
+    "files": [
+        "somescript.sh"
+    ],
+    "facts": {
+        "file": {
+            "_tempfile_": null
+        }
+    },
+    "commands": [
+        ["_test_data_", "_tempfile_"],
+        "chmod +x _tempfile_",
+        "cd /home && _tempfile_"
+    ]
+}

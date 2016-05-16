@@ -1,0 +1,16 @@
+{
+    "args": ["somefile", "match_line"],
+    "kwargs": {
+        "replace": "replace_line",
+        "flags": "abc"
+    },
+    "facts": {
+        "find_in_file": {
+            "somefile": [
+                "replace_line"
+            ]
+        }
+    },
+    "commands": [
+    ]
+}

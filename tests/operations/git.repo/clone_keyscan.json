@@ -5,9 +5,10 @@
         "ssh_keyscan": true
     },
     "facts": {
-        "directory:/home/myrepo": {
-        },
-        "directory:/home/myrepo/.git": null
+        "directory": {
+            "/home/myrepo": {},
+            "/home/myrepo/.git": null
+        }
     },
     "commands": [
         "cat ~/.ssh/known_hosts | grep github.com || ssh-keyscan github.com >> ~/.ssh/known_hosts",

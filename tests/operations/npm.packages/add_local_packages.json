@@ -4,9 +4,11 @@
         "directory": "testdir"
     },
     "facts": {
-        "npm_local_packages:testdir": {
-            "git": "1.0",
-            "test": "1.1"
+        "npm_local_packages": {
+            "testdir": {
+                "git": "1.0",
+                "test": "1.1"
+            }
         }
     },
     "commands": [

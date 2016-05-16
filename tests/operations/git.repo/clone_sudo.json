@@ -6,9 +6,10 @@
         "user": "pyinfra"
     },
     "facts": {
-        "directory:/home/myrepo": {
-        },
-        "directory:/home/myrepo/.git": null
+        "directory": {
+            "/home/myrepo": {},
+            "/home/myrepo/.git": null
+        }
     },
     "commands": [
         "chmod -R go+w /home/myrepo",

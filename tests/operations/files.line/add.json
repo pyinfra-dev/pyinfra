@@ -1,0 +1,14 @@
+{
+    "args": ["somefile", "match_line"],
+    "kwargs": {
+        "flags": "abc"
+    },
+    "facts": {
+        "find_in_file": {
+            "somefile": {}
+        }
+    },
+    "commands": [
+        "echo \"match_line\" >> somefile"
+    ]
+}

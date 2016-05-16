@@ -7,7 +7,9 @@
         "touch": true
     },
     "facts": {
-        "file:testfile": null
+        "file": {
+            "testfile": null
+        }
     },
     "commands": [
         "touch testfile",

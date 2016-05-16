@@ -1,14 +1,16 @@
 {
     "args": ["nginx"],
     "facts": {
-        "link:/etc/rc2.d/S20nginx": null,
-        "link:/etc/rc3.d/S20nginx": null,
-        "link:/etc/rc4.d/S20nginx": null,
-        "link:/etc/rc5.d/S20nginx": null,
-        "link:/etc/rc0.d/K80nginx": null,
-        "link:/etc/rc1.d/K80nginx": null,
-        "link:/etc/rc6.d/K80nginx": {
-            "link_target": "/etc/init.d/nginx"
+        "link": {
+            "/etc/rc2.d/S20nginx": null,
+            "/etc/rc3.d/S20nginx": null,
+            "/etc/rc4.d/S20nginx": null,
+            "/etc/rc5.d/S20nginx": null,
+            "/etc/rc0.d/K80nginx": null,
+            "/etc/rc1.d/K80nginx": null,
+            "/etc/rc6.d/K80nginx": {
+                "link_target": "/etc/init.d/nginx"
+            }
         }
     },
     "commands": [

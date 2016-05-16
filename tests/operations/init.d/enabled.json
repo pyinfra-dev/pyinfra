@@ -7,7 +7,9 @@
         "initd_status": {
             "nginx": true
         },
-        "find_links:/etc/rc*.d/S*nginx": [],
+        "find_links": {
+            "/etc/rc*.d/S*nginx": []
+        },
         "linux_distribution": "Ubuntu"
     },
     "commands": [

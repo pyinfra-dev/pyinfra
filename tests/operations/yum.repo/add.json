@@ -1,0 +1,16 @@
+{
+    "args": ["somerepo", "http://baseurl"],
+    "kwargs": {
+        "description": "description",
+        "gpgcheck": false
+    },
+    "facts": {
+        "file": {
+            "/etc/yum.repos.d/somerepo.repo": {}
+        }
+    },
+    "commands": [[
+        "\n[somerepo]\nname=description\nbaseurl=http://baseurl\ngpgcheck=0\nenabled=1\n",
+            "/etc/yum.repos.d/somerepo.repo"
+    ]]
+}

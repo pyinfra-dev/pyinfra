@@ -1,0 +1,22 @@
+{
+    "args": ["http://somewhere.com/something.deb"],
+    "facts": {
+        "file": {
+            "_tempfile_": ""
+        },
+        "deb_package": {
+            "_tempfile_": {
+                "name": "test",
+                "version": 0
+            }
+        },
+        "deb_packages": {
+            "test": 1
+        }
+    },
+    "commands": [
+        "dpkg --force-confdef --force-confold -i _tempfile_ || true",
+        "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" install -f",
+        "dpkg --force-confdef --force-confold -i _tempfile_"
+    ]
+}

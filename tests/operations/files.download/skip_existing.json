@@ -4,7 +4,9 @@
         "destination": "/home/myfile"
     },
     "facts": {
-        "file:/home/myfile": {}
+        "file": {
+            "/home/myfile": {}
+        }
     },
     "commands": []
 }

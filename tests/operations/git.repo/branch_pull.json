@@ -4,12 +4,15 @@
         "branch": "mybranch"
     },
     "facts": {
-        "directory:/home/myrepo": {
+        "directory": {
+            "/home/myrepo": {},
+            "/home/myrepo/.git": {
+                "mode": 0
+            }
         },
-        "directory:/home/myrepo/.git": {
-            "mode": 0
-        },
-        "git_branch:/home/myrepo": "master"
+        "git_branch": {
+            "/home/myrepo": "master"
+        }
     },
     "commands": [
         "cd /home/myrepo && git checkout mybranch",

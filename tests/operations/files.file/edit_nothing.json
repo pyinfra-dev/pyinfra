@@ -6,10 +6,12 @@
         "mode": 777
     },
     "facts": {
-        "file:testfile": {
-            "mode": 777,
-            "user": "testuser",
-            "group": "testgroup"
+        "file": {
+            "testfile": {
+                "mode": 777,
+                "user": "testuser",
+                "group": "testgroup"
+            }
         }
     },
     "commands": [

@@ -1,9 +1,11 @@
 {
     "args": ["something.rpm"],
     "facts": {
-        "rpm_package:something.rpm": {
-            "name": "something",
-            "version": "1.1"
+        "rpm_package": {
+            "something.rpm": {
+                "name": "something",
+                "version": "1.1"
+            }
         },
         "rpm_packages": {
             "something": "1.1"
