@@ -142,7 +142,7 @@ def setup_logging(log_level):
 
 
 def print_facts_list():
-    print(json.dumps(list(get_fact_names()), indent=4))
+    print(json.dumps(list(get_fact_names()), indent=4, default=json_encode))
 
 
 def print_fact(fact_data):
@@ -214,7 +214,7 @@ def print_meta(state):
 def print_data(inventory):
     for host in inventory:
         print('[{0}]'.format(colored(host.name, attrs=['bold'])))
-        print(json.dumps(host.data.dict(), indent=4))
+        print(json.dumps(host.data.dict(), indent=4, default=json_encode))
         print()
 
 
@@ -529,11 +529,13 @@ def make_inventory(
             # Read the files locals into a dict
             file_data = import_locals(data_filename)
 
-            # Strip out any pseudo module imports
+            # Strip out any pseudo module imports and _prefixed variables
             data.update({
                 key: value
                 for key, value in six.iteritems(file_data)
                 if not isinstance(value, PseudoModule)
+                and not key.startswith('_')
+                and key.islower()
             })
 
         # Attach to group object
