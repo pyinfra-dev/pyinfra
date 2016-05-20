@@ -4,70 +4,85 @@ Performance
 This page contains a summary of the latest performance tests. The source code for the tests
 is available `on GitHub <https://github.com/Fizzadar/pyinfra-performance>`_. You can also view the `full test results <https://github.com/Fizzadar/pyinfra-performance/blob/develop/latest_results.txt>`_.
 
+.. image:: performance.png
+
 
 **5 hosts**
 
 .. code::
 
-    --> Running tests: pyinfra -i deploy/inventory.py deploy/deploy.py
-    --> First complete in 2.420728000 seconds
-    --> Second complete in 1.946565000 seconds
+    --> Running tests: pyinfra -i tests/deploy/inventory.py tests/deploy/deploy.py
 
-    --> Running tests: ansible-playbook -i playbook/inventory.py playbook/playbook.yaml -c ssh
-    --> First complete in 2.945665000 seconds
-    --> Second complete in 1.654146000 seconds
+    --> First complete in 1.654032424 seconds
+    --> Second complete in .903923313 seconds
 
-    --> Running tests: ansible-playbook -i playbook/inventory.py playbook/playbook.yaml -c paramiko
-    --> First complete in 7.942255000 seconds
-    --> Second complete in 8.053086000 seconds
+    --> Running tests: ansible-playbook -i tests/playbook/inventory.py tests/playbook/playbook.yml -c ssh
+
+    --> First complete in 2.015568222 seconds
+    --> Second complete in 1.254801765 seconds
+
+    --> Running tests: ansible-playbook -i tests/playbook/inventory.py tests/playbook/playbook.yml -c paramiko
+
+    --> First complete in 3.721675592 seconds
+    --> Second complete in 3.217463631 seconds
 
 
-**15 hosts**
+**10 hosts**
 
 .. code::
 
-    --> Running tests: pyinfra -i deploy/inventory.py deploy/deploy.py
-    --> First complete in 4.002151000 seconds
-    --> Second complete in 3.405913000 seconds
+    --> Running tests: pyinfra -i tests/deploy/inventory.py tests/deploy/deploy.py
 
-    --> Running tests: ansible-playbook -i playbook/inventory.py playbook/playbook.yaml -c ssh
-    --> First complete in 8.137818000 seconds
-    --> Second complete in 4.115502000 seconds
+    --> First complete in 1.979076484 seconds
+    --> Second complete in 1.068944839 seconds
 
-    --> Running tests: ansible-playbook -i playbook/inventory.py playbook/playbook.yaml -c paramiko
-    --> First complete in 22.373341000 seconds
-    --> Second complete in 22.933183000 seconds
+    --> Running tests: ansible-playbook -i tests/playbook/inventory.py tests/playbook/playbook.yml -c ssh
+
+    --> First complete in 4.347069985 seconds
+    --> Second complete in 2.925277140 seconds
+
+    --> Running tests: ansible-playbook -i tests/playbook/inventory.py tests/playbook/playbook.yml -c paramiko
+
+    --> First complete in 7.657454777 seconds
+    --> Second complete in 6.705772392 seconds
 
 
 **25 hosts**
 
 .. code::
 
-    --> Running tests: pyinfra -i deploy/inventory.py deploy/deploy.py
-    --> First complete in 6.508553000 seconds
-    --> Second complete in 5.720865000 seconds
+    --> Running tests: pyinfra -i tests/deploy/inventory.py tests/deploy/deploy.py
 
-    --> Running tests: ansible-playbook -i playbook/inventory.py playbook/playbook.yaml -c ssh
-    --> First complete in 14.714010000 seconds
-    --> Second complete in 7.110009000 seconds
+    --> First complete in 4.056870330 seconds
+    --> Second complete in 1.739780331 seconds
 
-    --> Running tests: ansible-playbook -i playbook/inventory.py playbook/playbook.yaml -c paramiko
-    --> First complete in 39.348739000 seconds
-    --> Second complete in 38.424486000 seconds
+    --> Running tests: ansible-playbook -i tests/playbook/inventory.py tests/playbook/playbook.yml -c ssh
+
+    --> First complete in 13.995488838 seconds
+    --> Second complete in 7.954871905 seconds
+
+    --> Running tests: ansible-playbook -i tests/playbook/inventory.py tests/playbook/playbook.yml -c paramiko
+
+    --> First complete in 17.409813055 seconds
+    --> Second complete in 14.446487122 seconds
+
 
 
 **50 hosts**
 
 .. code::
 
-    --> Running tests: pyinfra -i deploy/inventory.py deploy/deploy.py
-    --> First complete in 14.393754000 seconds
-    --> Second complete in 11.465988000 seconds
+    --> Running tests: pyinfra -i tests/deploy/inventory.py tests/deploy/deploy.py
 
-    --> Running tests: ansible-playbook -i playbook/inventory.py playbook/playbook.yaml -c ssh
-    --> First complete in 28.466202000 seconds
-    --> Second complete in 13.888249000 seconds
+    --> First complete in 8.364125808 seconds
+    --> Second complete in 5.036991163 seconds
 
-    --> Running tests: ansible-playbook -i playbook/inventory.py playbook/playbook.yaml -c paramiko
-    --> First complete in 81.422183000 seconds
-    --> Second complete in 80.385777000 seconds
+    --> Running tests: ansible-playbook -i tests/playbook/inventory.py tests/playbook/playbook.yml -c ssh
+
+    --> First complete in 29.092618702 seconds
+    --> Second complete in 17.804247488 seconds
+
+    --> Running tests: ansible-playbook -i tests/playbook/inventory.py tests/playbook/playbook.yml -c paramiko
+
+    --> First complete in 42.302565665 seconds
+    --> Second complete in 38.529662848 seconds

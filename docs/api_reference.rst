@@ -1,17 +1,17 @@
 API Reference
 =============
 
-The pyinfra API is build like this:
+The pyinfra API is designed like this:
 
-+ A set of Classes storing state
++ A set of classes storing state
+    - ``pyinfra.api.State``
     - ``pyinfra.api.Inventory``
-    - ``pyinfra.apiState``
-    - ``pyinfra.apiHost``
-    - ``pyinfra.apiConfig``
-+ Which are passed to functional SSH and operation modules
+    - ``pyinfra.api.Host``
+    - ``pyinfra.api.Config``
++ A set of modules that implement functionality:
     - ``operation.py`` & ``operations.py``
     - ``ssh.py``
-+ Facts API in ``facts.py``
+    - ``facts.py``
 
 
 .. toctree::

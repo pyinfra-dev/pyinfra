@@ -23,8 +23,8 @@ Fedora & OpenBSD.
     :caption: How pyinfra Works
 
     deploy_process
-    operations
     performance
+    compatability
 
 .. toctree::
     :maxdepth: 1

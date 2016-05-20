@@ -1,7 +1,7 @@
 # pyinfra
 # File: pyinfra/example/deploy.py
 # Desc: example deploy script for the pyinfra CLI
-#       targets: Ubuntu/Debian, CentOS & OpenBSD
+#       targets: Ubuntu/Debian, CentOS/Fedora & OpenBSD
 
 # Host represents the *current* server begin managed
 from pyinfra import host, inventory, local, hook
@@ -29,13 +29,14 @@ server.user(
     ignore_errors=False,
     serial=False,
     run_once=False,
-    timeout=30 # only applies to commands on the remote host (not SFTP, local Python)
+    timeout=30  # only applies to commands on the remote host (not SFTP, local Python)
 )
 
 # And groups
 server.group(
     'pyinfra2',
-    sudo=True
+    sudo=True,
+    run_once=True  # run only on one host
 )
 
 # Ensure the state of files

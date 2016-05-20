@@ -4,6 +4,13 @@ Apt
 
 Manage apt packages and repositories.
 
+:code:`apt.apt_update`
+~~~~~~~~~~~~~~~~~~~~~~
+.. code:: python
+
+    apt.apt_update()
+
+
 :code:`apt.deb`
 ~~~~~~~~~~~~~~~
 
@@ -98,4 +105,11 @@ Manage apt repositories.
 + **present**: whether the repo should exist on the system
 + **filename**: optional filename to use ``/etc/apt/sources.list.d/<filename>.list``. By
   default uses ``/etc/apt/sources.list``.
+
+
+:code:`apt.update`
+~~~~~~~~~~~~~~~~~~
+.. code:: python
+
+    apt.update()
 

@@ -6,6 +6,7 @@ The definitive guide to building a pyinfra deploy:
 .. contents::
     :local:
 
+
 Layout
 ------
 
@@ -111,6 +112,10 @@ the following is returned:
 + Normal group data
 + "All" group data
 
+Debugging data issues:
+    pyinfra contains a ``--debug-data`` option which can be used to explore the data output
+    per-host for a given inventory/deploy.
+
 Data Example
 ~~~~~~~~~~~~
 
@@ -206,6 +211,22 @@ within a deploy on ``pyinfra.host.data``:
         home=host.data.app_dir
     )
 
+String formatting:
+    pyinfra supports jinja2 style string arguments, which should be used over Python's
+    builtin string formatting where you expect the final string to change per host. This
+    is because pyinfra groups operations by their arguments.
+
+.. code:: python
+
+    from pyinfra import host
+    from pyinfra.modules import server
+
+    server.user(
+        host.data.app_user,
+        '/opt/{{ host.data.app_dir }}'  # for multiple values of host.data.app_dir we still
+                                        # generate a single operation
+    )
+
 Operation Meta
 ~~~~~~~~~~~~~~
 
@@ -229,14 +250,14 @@ Facts
 
 Facts allow you to use information about the target host to change the operations you use.
 A good example is switching between apt & yum depending on the Linux distribution. Like data,
-facts are accessed on ``pyinfra.host``:
+facts are accessed on ``host.fact``:
 
 .. code:: python
 
     from pyinfra import host
     from pyinfra.modules import apt, yum
 
-    if host.linux_distribution == 'CentOS':
+    if host.fact.linux_distribution == 'CentOS':
         yum.packages(
             'nano',
             sudo=True
@@ -256,7 +277,7 @@ Config
 
 There are a number of configuration options for how deploys are managed. These can be
 defined at the top of a deploy file, or in a ``config.py`` alongside the deploy file. See
-:doc:`the full list of options & defaults <./api/config>`.
+:doc:`the full list of options & defaults <./api/api_config>`.
 
 .. code:: python
 

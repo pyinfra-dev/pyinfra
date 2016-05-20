@@ -10,6 +10,7 @@ match) and the client assets are then built before connect:
 .. code:: python
 
     # deploy.py
+
     from pyinfra import hook, local
 
     @hook.before_connect
