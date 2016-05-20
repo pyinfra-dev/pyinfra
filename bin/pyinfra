@@ -11,7 +11,7 @@ Usage:
     pyinfra -i INVENTORY DEPLOY [-v -vv options]
     pyinfra -i INVENTORY --run OP ARGS [-v -vv options]
     pyinfra -i INVENTORY --fact FACT [-v options]
-    pyinfra -i INVENTORY [DEPLOY] --debug-data
+    pyinfra -i INVENTORY [DEPLOY] --debug-data [options]
     pyinfra (--facts | --help | --version)
 
 Deploy options:
