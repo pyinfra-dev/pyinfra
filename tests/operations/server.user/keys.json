@@ -29,10 +29,15 @@
                 "group": "someuser",
                 "mode": 601
             }
+        },
+        "find_in_file": {
+            "homedir/.ssh/authorized_keys": {
+
+            }
         }
     },
     "commands": [
         "chmod 600 homedir/.ssh/authorized_keys",
-        "cat homedir/.ssh/authorized_keys | grep \"abc\" || echo \"abc\" >> homedir/.ssh/authorized_keys"
+        "echo \"abc\" >> homedir/.ssh/authorized_keys"
     ]
 }
