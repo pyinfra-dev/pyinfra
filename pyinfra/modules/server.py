@@ -210,7 +210,8 @@ def user(
             ))
 
             for key in public_keys:
-                commands.append('cat {0} | grep "{1}" || echo "{1}" >> {0}'.format(
+                commands.extend(files.line(
+                    state, host,
                     filename, key
                 ))
 
