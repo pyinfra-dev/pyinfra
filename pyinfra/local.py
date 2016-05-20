@@ -7,6 +7,8 @@ from __future__ import unicode_literals, print_function
 from os import path
 from subprocess import Popen, PIPE, STDOUT
 
+import six
+
 from . import pseudo_state
 from .api.util import read_buffer
 from .api.exceptions import PyinfraError
@@ -37,29 +39,37 @@ def include(filename):
         )
 
 
-def shell(command):
+def shell(commands):
     '''
     Subprocess based implementation of pyinfra/api/ssh.py's ``run_shell_command``.
     '''
 
-    print_prefix = 'localhost: '
+    if isinstance(commands, six.string_types):
+        commands = [commands]
 
-    if pseudo_state.print_output:
-        print('{0}>>> {1}'.format(print_prefix, command))
+    all_stdout = []
 
-    process = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
+    for command in commands:
+        print_prefix = 'localhost: '
 
-    stdout = read_buffer(
-        process.stdout,
-        print_output=pseudo_state.print_output,
-        print_func=lambda line: '{0}{1}'.format(print_prefix, line)
-    )
+        if pseudo_state.print_output:
+            print('{0}>>> {1}'.format(print_prefix, command))
 
-    # Get & check result
-    result = process.wait()
-    if result > 0:
-        raise PyinfraError(
-            'Local command failed: {0}\n{1}'.format(command, stdout)
+        process = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
+
+        stdout = read_buffer(
+            process.stdout,
+            print_output=pseudo_state.print_output,
+            print_func=lambda line: '{0}{1}'.format(print_prefix, line)
         )
 
-    return '\n'.join(stdout)
+        # Get & check result
+        result = process.wait()
+        if result > 0:
+            raise PyinfraError(
+                'Local command failed: {0}\n{1}'.format(command, stdout)
+            )
+
+        all_stdout.extend(stdout)
+
+    return '\n'.join(all_stdout)
