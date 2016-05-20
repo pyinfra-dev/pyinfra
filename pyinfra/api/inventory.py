@@ -38,13 +38,21 @@ class Inventory(object):
         self.group_data = {}
 
         # In CLI mode these are --user, --key, etc
-        self.override_data = AttrData({
+        override_data = {
             'ssh_user': ssh_user,
             'ssh_key': ssh_key,
             'ssh_key_password': ssh_key_password,
             'ssh_port': ssh_port,
             'ssh_password': ssh_password
-        })
+        }
+        # Strip None values
+        override_data = {
+            key: value
+            for key, value in six.iteritems(override_data)
+            if value is not None
+        }
+
+        self.override_data = AttrData(override_data)
 
         self.data = AttrData(data)
 
