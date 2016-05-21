@@ -21,6 +21,7 @@ from pyinfra.modules import server, files
 logging.basicConfig(level=logging.WARNING)
 logging.getLogger('pyinfra').setLevel(logging.INFO)
 
+
 # First we setup some inventory we want to target
 # the first argument is a tuple of (list all all hosts, global/ALL data)
 inventory = Inventory(
@@ -55,11 +56,17 @@ config = Config(
 # Setup the pyinfra state for this deploy
 state = State(inventory, config)
 
+
 # Connect to all the hosts
+print('Connecting...')
 connect_all(state)
 
+
+# Start adding operations
+print('Generating operations...')
 add_op(
     state, server.user,
+    {'Ensure user pyinfra'},
     'pyinfra',
     home='/home/pyinfra',
     shell='/bin/bash',
@@ -89,12 +96,13 @@ add_op(
 # Copy local files to remote host
 add_op(
     state, files.put,
-    'files/file.txt',
-    '/home/vagrant/file.txt'
+    'files/file.txt', '/home/vagrant/file.txt'
 )
+
 
 # And finally we run the ops
 run_ops(state)
+
 
 # We can also get facts for all the hosts
 facts = get_facts(state, 'os')

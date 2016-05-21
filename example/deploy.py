@@ -23,7 +23,6 @@ server.user(
     shell='/bin/sh',
 
     # Options available for all operations
-    name='Ensure user pyinfra',
     sudo=True,
     sudo_user='root',
     ignore_errors=False,
@@ -34,6 +33,7 @@ server.user(
 
 # And groups
 server.group(
+    {'Ensure pyinfra2 group exists'},  # use a set as the first arg to set the op name
     'pyinfra2',
     sudo=True,
     run_once=True  # run only on one host

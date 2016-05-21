@@ -5,7 +5,8 @@
 '''
 Operations are the core of pyinfra. The ``@operation`` wrapper intercepts calls to the
 function and instead diff against the remote server, outputting commands to the deploy
-state. This is then run later by pyinfra's ``__main__`` or the :doc:`./operations`.
+state. This is then run later by pyinfra's ``__main__`` or the :doc:`./api_operations`
+module.
 '''
 
 from __future__ import unicode_literals
@@ -98,6 +99,23 @@ def operation(func=None, pipeline_facts=None):
                     (host.name, decorated_func, args, kwargs.copy())
                 )
 
+        # Name the operation
+        names = None
+        autoname = False
+
+        # Look for a set as the first argument
+        if len(args) > 0 and isinstance(args[0], set):
+            names = args[0]
+            args_copy = list(args)
+            args = args[1:]
+
+        # Generate an operation name if needed (Module/Operation format)
+        else:
+            autoname = True
+            module_bits = func.__module__.split('.')
+            module_name = module_bits[-1]
+            names = {'{0}/{1}'.format(module_name.title(), func.__name__.title())}
+
         # Locally & globally configurable
         sudo = kwargs.pop('sudo', state.config.SUDO)
         sudo_user = kwargs.pop('sudo_user', state.config.SUDO_USER)
@@ -114,9 +132,6 @@ def operation(func=None, pipeline_facts=None):
         env = state.config.ENV
         env.update(kwargs.pop('env', {}))
 
-        # Name the operation
-        name = kwargs.pop('name', None)
-
         # Get/generate a hash for this op
         op_hash = kwargs.pop('op', None)
 
@@ -124,12 +139,6 @@ def operation(func=None, pipeline_facts=None):
         # (any unwanted/op-related kwargs removed above)
         if state.in_op:
             return func(state, host, *args, **kwargs) or []
-
-        # Generate an operation name if needed (Module/Operation format)
-        if name is None:
-            module_bits = func.__module__.split('.')
-            module_name = module_bits[-1]
-            name = '{0}/{1}'.format(module_name.title(), func.__name__.title())
 
         # Convert any AttrBase items (returned by host.data), see attrs.py.
         if op_hash is None:
@@ -143,7 +152,7 @@ def operation(func=None, pipeline_facts=None):
                 for key, arg in six.iteritems(kwargs)
             }
 
-            op_hash = (name, sudo, sudo_user, ignore_errors, env, hash_args, hash_kwargs)
+            op_hash = (names, sudo, sudo_user, ignore_errors, env, hash_args, hash_kwargs)
 
         op_hash = make_hash(op_hash)
 
@@ -200,7 +209,7 @@ def operation(func=None, pipeline_facts=None):
 
         # Create/update shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(op_hash, {
-            'names': [],
+            'names': set(),
             'args': [],
             'sudo': sudo,
             'sudo_user': sudo_user,
@@ -210,23 +219,24 @@ def operation(func=None, pipeline_facts=None):
             'timeout': timeout
         })
 
-        if name not in op_meta['names']:
-            op_meta['names'].append(name)
+        # Add any new names to the set
+        op_meta['names'].update(names)
 
-        # Attach normal args
-        for arg in args:
-            if isinstance(arg, FunctionType):
-                arg = arg.__name__
+        # Attach normal args, if we're auto-naming this operation
+        if autoname:
+            for arg in args:
+                if isinstance(arg, FunctionType):
+                    arg = arg.__name__
 
-            if arg not in op_meta['args']:
-                op_meta['args'].append(arg)
+                if arg not in op_meta['args']:
+                    op_meta['args'].append(arg)
 
-        # Attach keyword args
-        for key, value in six.iteritems(kwargs):
-            arg = '='.join((str(key), str(value)))
+            # Attach keyword args
+            for key, value in six.iteritems(kwargs):
+                arg = '='.join((str(key), str(value)))
 
-            if arg not in op_meta['args']:
-                op_meta['args'].append(arg)
+                if arg not in op_meta['args']:
+                    op_meta['args'].append(arg)
 
         # Return result meta for use in deploy scripts
         return OperationMeta(op_hash, commands)
