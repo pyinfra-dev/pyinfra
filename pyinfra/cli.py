@@ -4,6 +4,7 @@
 
 from __future__ import division, unicode_literals, print_function
 
+import re
 import sys
 import json
 import shlex
@@ -101,7 +102,7 @@ class LogFormatter(logging.Formatter):
         # We only handle strings here
         if isinstance(message, six.string_types):
             # Horrible string matching hack
-            if message.find('Starting operation') > 0:
+            if re.match(r'.*Starting[ a-zA-Z,]*operation.*', message):
                 message = '--> {0}'.format(message)
             else:
                 message = '    {0}'.format(message)
