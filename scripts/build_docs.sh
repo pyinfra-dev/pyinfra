@@ -5,8 +5,8 @@
 # Desc: build the pyinfra docs
 
 
-# Build the api/*.rst docs
-rm -f docs/api/*.rst
+# Build the apidoc/*.rst docs
+rm -f docs/apidoc/*.rst
 sh scripts/generate_api_docs.sh
 
 # Build the modules/*.rst docs

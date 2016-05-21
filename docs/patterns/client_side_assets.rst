@@ -5,7 +5,7 @@ Often projects need to pre-compile assets at deploy time to be uploaded to the r
 This can be achieved using hooks and the ``pyinfra.local`` module.
 
 In the following example the branch is first checked (to ensure deploy branch/local branch
-match) and the client assets are then built before connect:
+match) and the client assets are then built before pyinfra connects to any hosts:
 
 .. code:: python
 

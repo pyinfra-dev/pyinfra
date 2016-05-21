@@ -16,8 +16,8 @@ parse_files() {
     PREFIX=$2
     MODULE_PREFIX=`echo "${PREFIX}" | sed -e "s/_/./"`
 
-    for MODULE_FILE in `ls docs/api/${FILEMATCH}.*.rst`; do
-        NEW_FILE=`echo "${MODULE_FILE}" | sed -e "s/api\/${FILEMATCH}\./api\/${PREFIX}_/"`
+    for MODULE_FILE in `ls docs/apidoc/${FILEMATCH}.*.rst`; do
+        NEW_FILE=`echo "${MODULE_FILE}" | sed -e "s/apidoc\/${FILEMATCH}\./apidoc\/${PREFIX}_/"`
         echo "--> Parsing $MODULE_FILE -> $NEW_FILE"
 
         # Make automodule work
@@ -33,16 +33,16 @@ parse_files() {
 }
 
 # Autodoc the API reference
-sphinx-apidoc -e -M -f -o docs/api/ pyinfra/api/
+sphinx-apidoc -e -M -f -o docs/apidoc/ pyinfra/api/
 parse_files "api" "api"
 
 # Autodoc the modules utils reference
-sphinx-apidoc -e -M -f -o docs/api/ pyinfra/modules/util/
+sphinx-apidoc -e -M -f -o docs/apidoc/ pyinfra/modules/util/
 parse_files "util" "modules_util"
 
 # Autodoc the facts utils reference
-sphinx-apidoc -e -M -f -o docs/api/ pyinfra/facts/util/
+sphinx-apidoc -e -M -f -o docs/apidoc/ pyinfra/facts/util/
 parse_files "util" "facts_util"
 
 # Remove fluff
-rm -f docs/api/util.rst docs/api/modules.rst docs/api/api.rst
+rm -f docs/apidoc/util.rst docs/apidoc/modules.rst docs/apidoc/api.rst

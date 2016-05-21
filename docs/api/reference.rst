@@ -19,7 +19,7 @@ The pyinfra API is designed like this:
     :maxdepth: 1
     :glob:
 
-    api/api_*
+    ../apidoc/api_*
 
 
 .. toctree::
@@ -27,4 +27,4 @@ The pyinfra API is designed like this:
     :maxdepth: 1
     :glob:
 
-    api/*_util_*
+    ../apidoc/*_util_*

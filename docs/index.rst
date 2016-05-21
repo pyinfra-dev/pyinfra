@@ -30,8 +30,10 @@ Fedora & OpenBSD.
     :maxdepth: 1
     :caption: API Documentation
 
-    api_example
-    api_reference
+    api/example
+    api/reference
+    api/operations
+
 
 Meta
 ----

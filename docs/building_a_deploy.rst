@@ -194,11 +194,24 @@ For example, this deploy will ensure that user "pyinfra" exists with home direct
 Uses the :doc:`server module <./modules/server>` and :doc:`files module <./modules/files>`.
 You can see all the modules in :doc:`the modules index <./modules>`.
 
+Naming operations:
+    Pass a ``set`` object as the first argument to name the operation, which will appear
+    during a deploy. By default the operation module, name and arguments are shown:
+
+.. code:: python
+
+    server.user(
+        {'Ensure user pyinfra'},  # the contents of the set will become the op name
+        'pyinfra',
+        home='/home/pyinfra'
+    )
+
+
 Using Data
 ~~~~~~~~~~
 
 Adding data to inventories was :ref:`described above <data-ref-label>` - you can access it
-within a deploy on ``pyinfra.host.data``:
+within a deploy on ``host.data``:
 
 .. code:: python
 
@@ -214,7 +227,7 @@ within a deploy on ``pyinfra.host.data``:
 String formatting:
     pyinfra supports jinja2 style string arguments, which should be used over Python's
     builtin string formatting where you expect the final string to change per host. This
-    is because pyinfra groups operations by their arguments.
+    is because pyinfra groups operations by their arguments:
 
 .. code:: python
 
@@ -277,7 +290,7 @@ Config
 
 There are a number of configuration options for how deploys are managed. These can be
 defined at the top of a deploy file, or in a ``config.py`` alongside the deploy file. See
-:doc:`the full list of options & defaults <./api/api_config>`.
+:doc:`the full list of options & defaults <./apidoc/api_config>`.
 
 .. code:: python
 
