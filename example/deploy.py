@@ -99,45 +99,51 @@ init.d(
     ignore_errors=True
 )
 
+# Include roles
+local.include(
+    'roles/bsd_role.py',
+    hosts=inventory.bsd  # optionally limit the role to a subset of hosts
+)
+
 # Storing this fact to avoid typing it so much (because the example targets a whole bunch
 # of distros [& 2 OSs]).
 distro = host.fact.linux_distribution
 
+# Work with facts about the remote host
+if distro['name'] in ('Debian', 'Ubuntu'):
+    # apt repos/keys
+    apt.repo('deb http://www.rabbitmq.com/debian/ testing main', sudo=True)
+    apt.key('http://www.rabbitmq.com/rabbitmq-signing-key-public.asc', sudo=True)
 
-# Work with inventory groups
-if 'bsd' in host.groups:
+    # apt package manager
+    apt.packages(
+        ['git', 'python-pip'],
+        sudo=True,
+        update=True,
+        cache_time=3600
+    )
 
-    # Include roles
-    local.include('roles/bsd_role.py')
-
-elif 'linux' in host.groups:
-    # Work with facts about the remote host
-    if distro['name'] in ('Debian', 'Ubuntu'):
-        # apt repos/keys
-        apt.repo('deb http://www.rabbitmq.com/debian/ testing main', sudo=True)
-        apt.key('http://www.rabbitmq.com/rabbitmq-signing-key-public.asc', sudo=True)
-
-        # apt package manager
-        apt.packages(
-            ['git', 'python-pip'],
-            sudo=True,
-            update=True,
-            cache_time=3600
-        )
-
-    elif distro['name'] in ('CentOS', 'Fedora'):
-        if distro['name'] == 'CentOS':
-            # Manage remote rpm files
-            yum.rpm(
-                'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ host.fact.linux_distribution.major }}.noarch.rpm',
-                sudo=True
-            )
-
-        # yum package manager
-        yum.packages(
-            ['git', 'python-pip'],
+elif distro['name'] in ('CentOS', 'Fedora'):
+    if distro['name'] == 'CentOS':
+        # Manage remote rpm files
+        yum.rpm(
+            'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ host.fact.linux_distribution.major }}.noarch.rpm',
             sudo=True
         )
+
+    # yum package manager
+    yum.packages(
+        ['git', 'python-pip'],
+        sudo=True
+    )
+
+    # Edit lines in files
+    files.line(
+        '/etc/sysconfig/selinux',
+        '^SELINUX=.*',
+        replace='SELINUX=disabled',
+        sudo=True
+    )
 
 # Ensure the state of git repositories
 git.repo(
@@ -181,15 +187,6 @@ server.wait(
     port=22,
     timeout=5
 )
-
-# Edit lines in files, if we're Linux/CentOS
-if host.fact.os == 'Linux' and distro['name'] == 'CentOS':
-    files.line(
-        '/etc/sysconfig/selinux',
-        '^SELINUX=.*',
-        replace='SELINUX=disabled',
-        sudo=True
-    )
 
 # Execute Python locally, mid-deploy
 def some_python(state, host, hostname, *args, **kwargs):

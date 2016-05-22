@@ -24,10 +24,13 @@ def exec_file(filename):
         exec(code)
 
 
-def include(filename):
+def include(filename, hosts=None):
     '''
     Executes a local python file within the ``pyinfra.pseudo_state.deploy_dir`` directory.
     '''
+
+    if hosts:
+        pseudo_state.limit_hosts = hosts
 
     filename = path.join(pseudo_state.deploy_dir, filename)
 
@@ -37,6 +40,11 @@ def include(filename):
         raise PyinfraError(
             'Could not include local file: {0}\n{1}'.format(filename, e)
         )
+
+    # Always clear any host limit
+    finally:
+        if hosts:
+            pseudo_state.limit_hosts = None
 
 
 def shell(commands):

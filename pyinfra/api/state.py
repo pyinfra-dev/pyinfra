@@ -105,6 +105,9 @@ class State(object):
         self.facts = {}
         self.fact_locks = {}
 
+        # Work on all hosts
+        self.limit_hosts = []
+
         if config is None:
             config = Config()
 

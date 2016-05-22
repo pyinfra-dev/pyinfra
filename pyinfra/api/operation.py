@@ -49,6 +49,28 @@ def add_op(state, op_func, *args, **kwargs):
         op_func(state, host, *args, **kwargs)
 
 
+def add_limited_op(state, op_func, hosts, *args, **kwargs):
+    '''
+    Prepare & add an operation to pyinfra.state by executing it on all hosts.
+
+    Args:
+        state (``pyinfra.api.State`` obj): the deploy state to add the operation to
+        op_func (function): the operation function from one of the modules, ie \
+            ``server.user``
+        hosts (list of ``pyinfra.api.Host`` obj): hosts this operation will be limited to
+        args/kwargs: passed to the operation function
+    '''
+
+    # Set the limit
+    state.limit_hosts = hosts
+
+    # Add the op
+    add_op(state, op_func, *args, **kwargs)
+
+    # Remove the limit
+    state.limit_hosts = []
+
+
 def operation(func=None, pipeline_facts=None):
     '''
     Decorator that takes a simple module function and turn it into the internal operation
@@ -72,8 +94,9 @@ def operation(func=None, pipeline_facts=None):
             isinstance(args[0], (State, PseudoModule))
             and isinstance(args[1], (Host, PseudoModule))
         ):
-            state = pseudo_state
-            host = pseudo_host
+            state = pseudo_state._module
+            host = pseudo_host._module
+
             if not state.active:
                 return OperationMeta()
 
@@ -178,8 +201,13 @@ def operation(func=None, pipeline_facts=None):
         state.in_op = False
         state.current_op_meta = None
 
+        # Make the operaton meta object for returning
+        operation_meta = OperationMeta(op_hash, commands)
+
+        # If we're pipelining, we don't actually want to add the operation as-is, just
+        # collect the facts.
         if state.pipelining:
-            return OperationMeta()
+            return operation_meta
 
         # Add the hash to the operational order if not already in there. To ensure that
         # deploys run as defined in the deploy file *per host* we keep track of each hosts
@@ -196,16 +224,7 @@ def operation(func=None, pipeline_facts=None):
 
             state.op_order.insert(index + 1, op_hash)
 
-        # We're doing some commands, meta/ops++
-        state.meta[host.name]['ops'] += 1
-        state.meta[host.name]['commands'] += len(commands)
         state.meta[host.name]['latest_op_hash'] = op_hash
-
-        # Add the server-relevant commands/env to the current server
-        state.ops[host.name][op_hash] = {
-            'commands': commands,
-            'env': env
-        }
 
         # Create/update shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(op_hash, {
@@ -238,8 +257,24 @@ def operation(func=None, pipeline_facts=None):
                 if arg not in op_meta['args']:
                     op_meta['args'].append(arg)
 
+        # If we're limited, and this host is not included, stop here. This means the
+        # operation has been added to the host as latest_op_hash, ensuring we maintain
+        # order even though this is a no-op for this host.
+        if state.limit_hosts and host not in state.limit_hosts:
+            return operation_meta
+
+        # We're doing some commands, meta/ops++
+        state.meta[host.name]['ops'] += 1
+        state.meta[host.name]['commands'] += len(commands)
+
+        # Add the server-relevant commands/env to the current server
+        state.ops[host.name][op_hash] = {
+            'commands': commands,
+            'env': env
+        }
+
         # Return result meta for use in deploy scripts
-        return OperationMeta(op_hash, commands)
+        return operation_meta
 
     decorated_func._pyinfra_op = func
     return decorated_func

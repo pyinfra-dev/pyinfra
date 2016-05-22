@@ -9,7 +9,7 @@ import json
 import logging
 
 from pyinfra.api import Inventory, Config, State
-from pyinfra.api.operation import add_op
+from pyinfra.api.operation import add_op, add_limited_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.ssh import connect_all
 from pyinfra.api.facts import get_facts
@@ -66,10 +66,17 @@ connect_all(state)
 print('Generating operations...')
 add_op(
     state, server.user,
-    {'Ensure user pyinfra'},
     'pyinfra',
     home='/home/pyinfra',
     shell='/bin/bash',
+    sudo=True
+)
+
+# Add an op only to a subset of hosts (in this case, the inventory.centos group)
+add_limited_op(
+    state, server.group, inventory.centos,
+    {'Ensure pyinfra2 group exists'},  # set as the first arg names the operation
+    'pyinfra2',
     sudo=True
 )
 
