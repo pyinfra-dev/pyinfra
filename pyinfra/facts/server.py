@@ -159,7 +159,11 @@ class LinuxDistribution(FactBase):
         }
     '''
 
-    default = {}
+    default = {
+        'name': None,
+        'major': None,
+        'minor': None
+    }
 
     command = 'cat /etc/*-release'
 

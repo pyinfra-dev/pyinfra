@@ -17,6 +17,7 @@ class PkgPackages(FactBase):
         ...
     '''
 
+    default = {}
     command = 'pkg_info'
     _regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.]+)'
 
