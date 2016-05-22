@@ -132,6 +132,17 @@ def rpm(state, host, source, present=True):
 
 
 @operation
+def upgrade(state, host):
+    '''
+    Upgrades all yum packages.
+    '''
+
+    return ['yum update -y']
+
+_upgrade = upgrade
+
+
+@operation
 def packages(
     state, host, packages=None,
     present=True, latest=False, upgrade=False, clean=False
@@ -152,7 +163,7 @@ def packages(
         commands.append('yum clean all')
 
     if upgrade:
-        commands.append('yum update -y')
+        commands.extend(_upgrade(state, host))
 
     commands.extend(ensure_packages(
         packages, host.fact.rpm_packages, present,

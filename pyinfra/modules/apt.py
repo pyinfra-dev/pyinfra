@@ -199,9 +199,24 @@ def deb(state, host, source, present=True):
 
 @operation
 def update(state, host):
+    '''
+    Updates apt repos.
+    '''
+
     return ['apt-get update']
 
-apt_update = update
+_update = update
+
+
+@operation
+def upgrade(state, host):
+    '''
+    Upgrades all apt packages.
+    '''
+
+    return [noninteractive_apt('upgrade')]
+
+_upgrade = upgrade
 
 
 @operation
@@ -242,10 +257,10 @@ def packages(
             update = False
 
     if update:
-        commands.extend(apt_update(state, host))
+        commands.extend(_update(state, host))
 
     if upgrade:
-        commands.append(noninteractive_apt('upgrade'))
+        commands.extend(_upgrade(state, host))
 
     # Compare/ensure packages are present/not
     commands.extend(ensure_packages(
