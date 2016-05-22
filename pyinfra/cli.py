@@ -19,8 +19,9 @@ from importlib import import_module
 
 # py2/3 switcheroo
 try:
+    from StringIO import StringIO
     from cStringIO import OutputType, InputType
-    io_bases = (OutputType, InputType)
+    io_bases = (OutputType, InputType, StringIO)
 except ImportError:
     from io import IOBase
     io_bases = IOBase
@@ -197,6 +198,9 @@ def json_encode(obj):
 
     elif isinstance(obj, io_bases):
         return 'In-memory file: {0}'.format(obj.read())
+
+    elif isinstance(obj, set):
+        return list(obj)
 
     else:
         raise TypeError('Cannot serialize: {0}'.format(obj))
