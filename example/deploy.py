@@ -111,10 +111,6 @@ distro = host.fact.linux_distribution
 
 # Work with facts about the remote host
 if distro['name'] in ('Debian', 'Ubuntu'):
-    # apt repos/keys
-    apt.repo('deb http://www.rabbitmq.com/debian/ testing main', sudo=True)
-    apt.key('http://www.rabbitmq.com/rabbitmq-signing-key-public.asc', sudo=True)
-
     # apt package manager
     apt.packages(
         ['git', 'python-pip'],

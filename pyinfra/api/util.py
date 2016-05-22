@@ -22,14 +22,43 @@ TEMPLATES = {}
 
 def exec_file(filename):
     '''
-    Python 2 ``execfile`` implementation for Python 2/3.
+    Python 2 ``execfile`` implementation for Python 2/3 that returns any locals from the
+    file.
+
+    I encountered a strange issue with doing this, for example:
+
+    .. code:: python
+
+        hello = 'world'
+
+        def test():
+            return hello
+
+        thing = test()
+
+    Will raise a ``NameError`` claiming the ``hello`` _global_ is undefined. To fix/hack
+    around this the exec call is executed twice - the first collects "top level" items
+    and the second is passed these as globals, so the function statements evaluate.
+
+    GitHub issue: https://github.com/Fizzadar/pyinfra/issues/26
     '''
 
     new_locals = {}
 
     with open(filename) as f:
         code = compile(f.read(), filename, mode='exec')
-        exec(code, {}, new_locals)
+
+        # First exec attempt (see docstring)
+        try:
+            first_locals = {}
+            exec(code, {}, first_locals)
+            new_locals.update(first_locals)
+
+        # Second attempt
+        except NameError:
+            second_locals = {}
+            exec(code, first_locals, second_locals)
+            new_locals.update(second_locals)
 
     return new_locals
 
