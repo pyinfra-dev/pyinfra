@@ -44,6 +44,7 @@ def build_facts():
                 and value.__module__ == module.__name__
                 and getattr(value, '_pyinfra_op', False)
                 and not value.__name__.startswith('_')
+                and not key.startswith('_')
             )
         ]
 
