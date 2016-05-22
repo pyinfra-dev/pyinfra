@@ -10,18 +10,8 @@ from subprocess import Popen, PIPE, STDOUT
 import six
 
 from . import pseudo_state
-from .api.util import read_buffer
+from .api.util import read_buffer, exec_file
 from .api.exceptions import PyinfraError
-
-
-def exec_file(filename):
-    '''
-    Python 2 ``execfile`` implementation for Python 2/3.
-    '''
-
-    with open(filename) as f:
-        code = compile(f.read(), filename, mode='exec')
-        exec(code)
 
 
 def include(filename, hosts=None):

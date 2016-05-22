@@ -34,7 +34,7 @@ from pyinfra.pseudo_modules import PseudoModule
 from pyinfra.api import Config, Inventory
 from pyinfra.api.facts import get_fact_names, is_fact
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.api.util import import_locals
+from pyinfra.api.util import exec_file
 
 from .hook import HOOKS, HOOK_NAMES
 
@@ -451,7 +451,7 @@ def make_inventory(
     file_groupname = None
 
     try:
-        attrs = import_locals(inventory_filename)
+        attrs = exec_file(inventory_filename)
 
         groups = {
             key: value
@@ -528,7 +528,7 @@ def make_inventory(
 
         if path.exists(data_filename):
             # Read the files locals into a dict
-            file_data = import_locals(data_filename)
+            file_data = exec_file(data_filename)
 
             # Strip out any pseudo module imports and _prefixed variables
             data.update({

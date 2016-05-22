@@ -20,13 +20,18 @@ BLOCKSIZE = 65536
 TEMPLATES = {}
 
 
-def import_locals(filename):
-    data = {}
+def exec_file(filename):
+    '''
+    Python 2 ``execfile`` implementation for Python 2/3.
+    '''
 
-    with open(filename) as file:
-        exec(file.read(), {}, data)
+    new_locals = {}
 
-    return data
+    with open(filename) as f:
+        code = compile(f.read(), filename, mode='exec')
+        exec(code, {}, new_locals)
+
+    return new_locals
 
 
 def get_template(filename_or_string, is_string=False):
