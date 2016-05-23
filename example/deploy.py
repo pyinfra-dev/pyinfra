@@ -77,7 +77,7 @@ files.sync(
 
 # Generate files from local jinja2 templates
 files.template(
-    'templates/template.txt.jn2',
+    'templates/template.txt.j2',
     '/home/vagrant/template.txt'
 )
 
