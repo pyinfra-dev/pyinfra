@@ -21,7 +21,7 @@ from importlib import import_module
 try:
     from StringIO import StringIO
     from cStringIO import OutputType, InputType
-    io_bases = (OutputType, InputType, StringIO)
+    io_bases = (file, OutputType, InputType, StringIO)
 except ImportError:
     from io import IOBase
     io_bases = IOBase
@@ -196,10 +196,14 @@ def json_encode(obj):
     elif isinstance(obj, datetime):
         return obj.isoformat()
 
-    elif isinstance(obj, file):
-        return str(obj.name)
-
     elif isinstance(obj, io_bases):
+        if hasattr(obj, 'name'):
+            return 'File: {0}'.format(obj.name)
+
+        elif hasattr(obj, 'template'):
+            return 'Template: {0}'.format(obj.template)
+
+        obj.seek(0)
         return 'In-memory file: {0}'.format(obj.read())
 
     elif isinstance(obj, set):

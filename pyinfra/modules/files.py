@@ -376,6 +376,7 @@ def template(
         ))
 
     output_file = six.StringIO(output)
+    output_file.template = template_filename
 
     # Pass to the put function
     return put(
