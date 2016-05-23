@@ -4,13 +4,6 @@ Apt
 
 Manage apt packages and repositories.
 
-:code:`apt.apt_update`
-~~~~~~~~~~~~~~~~~~~~~~
-.. code:: python
-
-    apt.apt_update()
-
-
 :code:`apt.deb`
 ~~~~~~~~~~~~~~~
 
@@ -109,7 +102,20 @@ Manage apt repositories.
 
 :code:`apt.update`
 ~~~~~~~~~~~~~~~~~~
+
+Updates apt repos.
+
 .. code:: python
 
     apt.update()
+
+
+:code:`apt.upgrade`
+~~~~~~~~~~~~~~~~~~~
+
+Upgrades all apt packages.
+
+.. code:: python
+
+    apt.upgrade()
 
