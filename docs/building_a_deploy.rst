@@ -14,6 +14,7 @@ Layout
 + ``inventories/*.py`` - files that describe different inventories
 + ``group_data/*.py`` - files that describe data for groups
 + ``templates/*.jn2`` - templates used in the deploys
++ ``roles/*.py`` - files that describe role specific deploys
 + ``files/*`` - files used in the deploys
 + ``config.py`` - optional config and hooks
 
@@ -283,6 +284,25 @@ facts are accessed on ``host.fact``:
 
 Some facts also take a single argument, for example the ``directory`` or ``file`` facts.
 The :doc:`facts index <./facts>` lists the available facts and their arguments.
+
+Includes/Roles
+~~~~~~~~~~~~~~
+
+Roles can be used to break out deploy logic into multiple files. They can also be used to
+limit the contained operations to a subset of hosts. Roles can be included using
+``local.include``.
+
+.. code:: python
+
+    from pyinfra import local, inventory
+
+    # Operations in this file will be added to all hosts
+    local.include('roles/my_role.py')
+
+    # Operations in this file will be added to the hosts in group "my_group"
+    local.include('roles/limited_role.py', hosts=inventory.my_group)
+
+See more in :doc:`patterns: groups & roles <./patterns/groups_roles>`.
 
 
 Config
