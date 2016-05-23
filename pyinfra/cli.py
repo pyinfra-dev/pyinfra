@@ -58,10 +58,13 @@ class FakeData(object):
         yield FakeData()
 
     def __call__(self, *args, **kwargs):
-        return self
+        return FakeData()
 
     def __str__(self):
-        return ''
+        return 'FakeData'
+
+    def iteritems(self):
+        return iter([(FakeData(), FakeData())])
 
 
 class FakeHost(object):
