@@ -119,7 +119,7 @@ def rpm(state, host, source, present=True):
     # Package does not exist and we want?
     if present and not exists:
         commands.extend([
-            'yum localinstall -y {0}'.format(source)
+            'rpm -U {0}'.format(source)
         ])
 
     # Package exists but we don't want?
