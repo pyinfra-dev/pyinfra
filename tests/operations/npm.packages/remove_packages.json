@@ -5,9 +5,9 @@
     },
     "facts": {
         "npm_packages": {
-            "git": "1.0",
-            "react": "",
-            "test": "1.1"
+            "git": ["1.0"],
+            "react": [""],
+            "test": ["1.1"]
         }
     },
     "commands": [

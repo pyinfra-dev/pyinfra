@@ -5,7 +5,7 @@
     },
     "facts": {
         "deb_packages": {
-            "git": "1.0"
+            "git": ["1.0"]
         }
     },
     "commands": [

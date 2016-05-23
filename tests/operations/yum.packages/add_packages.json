@@ -6,7 +6,7 @@
     ]],
     "facts": {
         "rpm_packages": {
-            "something": ""
+            "something": [""]
         }
     },
     "commands": [

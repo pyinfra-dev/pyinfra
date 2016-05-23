@@ -17,6 +17,7 @@ def parse_packages(regex, output, lower=True):
             if lower:
                 name = name.lower()
 
-            packages[name] = matches.group(2)
+            packages.setdefault(name, set())
+            packages[name].add(matches.group(2))
 
     return packages

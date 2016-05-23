@@ -9,8 +9,8 @@
     },
     "facts": {
         "deb_packages": {
-            "git": "",
-            "python-pip": ""
+            "git": [""],
+            "python-pip": [""]
         }
     },
     "commands": [

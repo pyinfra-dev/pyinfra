@@ -7,8 +7,8 @@
     ]],
     "facts": {
         "deb_packages": {
-            "something": "0.9",
-            "another": "1.1"
+            "something": ["0.9"],
+            "another": ["1.1"]
         }
     },
     "commands": [

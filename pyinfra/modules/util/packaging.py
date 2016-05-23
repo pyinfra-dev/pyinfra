@@ -78,7 +78,7 @@ def ensure_packages(
             # Tuple/version, check not in existing OR incorrect version
             if isinstance(package, list) and (
                 package[0] not in current_packages
-                or package[1] != current_packages[package[0]]
+                or package[1] not in current_packages[package[0]]
             ):
                 diff_packages.append(package)
 
@@ -96,7 +96,7 @@ def ensure_packages(
             # Tuple/version, heck existing AND correct version
             if isinstance(package, list) and (
                 package[0] in current_packages
-                and package[1] == current_packages[package[0]]
+                and package[1] in current_packages[package[0]]
             ):
                 diff_packages.append(package)
 
