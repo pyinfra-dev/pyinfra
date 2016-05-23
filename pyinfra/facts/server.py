@@ -32,6 +32,11 @@ class Arch(FactBase):
     command = 'uname -p'
 
 
+class Command(FactBase):
+    def command(self, command):
+        return command
+
+
 class Which(FactBase):
     def command(self, name):
         return 'which {0}'.format(name)
