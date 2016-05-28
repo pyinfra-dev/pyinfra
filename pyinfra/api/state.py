@@ -114,15 +114,16 @@ class State(object):
         if not config.PARALLEL:
             config.PARALLEL = len(inventory)
 
+        # Setup greenlet pools
+        self.pool = Pool(config.PARALLEL)
+        self.fact_pool = Pool(config.PARALLEL)
+
         # Assign inventory/config
         self.inventory = inventory
         self.config = config
 
         # Assign self to inventory & config
         inventory.state = config.state = self
-
-        # Setup greenlet pool
-        self.pool = Pool(config.PARALLEL)
 
         # Host tracking
         self.active_hosts = set()

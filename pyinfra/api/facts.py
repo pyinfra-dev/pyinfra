@@ -112,7 +112,7 @@ def get_facts(
 
     # Execute the command for each state inventory in a greenlet
     greenlets = {
-        host.name: state.pool.spawn(
+        host.name: state.fact_pool.spawn(
             run_shell_command, state, host.name, command,
             sudo=sudo, sudo_user=sudo_user,
             print_output=state.print_fact_output
