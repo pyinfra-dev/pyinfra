@@ -11,7 +11,6 @@ import shlex
 import logging
 import traceback
 from os import path
-from imp import load_source
 from fnmatch import fnmatch
 from datetime import datetime
 from types import FunctionType
@@ -37,7 +36,7 @@ from pyinfra.api.facts import get_fact_names, is_fact
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import exec_file
 
-from .hook import HOOKS, HOOK_NAMES
+from .hook import HOOKS
 
 STDOUT_LOG_LEVELS = (logging.DEBUG, logging.INFO)
 STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
@@ -420,11 +419,11 @@ def load_config(deploy_dir):
     config_filename = path.join(deploy_dir, 'config.py')
 
     if path.exists(config_filename):
-        module = load_source('', config_filename)
+        attrs = exec_file(config_filename, return_locals=True)
 
-        for attr in dir(module):
-            if hasattr(config, attr) or attr in HOOK_NAMES:
-                setattr(config, attr, getattr(module, attr))
+        for key, value in six.iteritems(attrs):
+            if hasattr(config, key):
+                setattr(config, key, value)
 
     return config
 
@@ -438,11 +437,11 @@ def load_deploy_config(deploy_filename, config):
         return
 
     if path.exists(deploy_filename):
-        module = load_source('', deploy_filename)
+        attrs = exec_file(deploy_filename, return_locals=True)
 
-        for attr in dir(module):
-            if hasattr(config, attr):
-                setattr(config, attr, getattr(module, attr))
+        for key, value in six.iteritems(attrs):
+            if hasattr(config, key):
+                setattr(config, key, value)
 
     return config
 
@@ -462,7 +461,7 @@ def make_inventory(
     file_groupname = None
 
     try:
-        attrs = exec_file(inventory_filename)
+        attrs = exec_file(inventory_filename, return_locals=True)
 
         groups = {
             key: value
@@ -539,12 +538,12 @@ def make_inventory(
 
         if path.exists(data_filename):
             # Read the files locals into a dict
-            file_data = exec_file(data_filename)
+            attrs = exec_file(data_filename, return_locals=True)
 
             # Strip out any pseudo module imports and _prefixed variables
             data.update({
                 key: value
-                for key, value in six.iteritems(file_data)
+                for key, value in six.iteritems(attrs)
                 if not isinstance(value, PseudoModule)
                 and not key.startswith('_')
                 and key.islower()
