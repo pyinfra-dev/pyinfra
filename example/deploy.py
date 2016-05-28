@@ -187,5 +187,6 @@ server.wait(
 # Execute Python locally, mid-deploy
 def some_python(state, host, hostname, *args, **kwargs):
     print('connecting hostname: {0}, actual: {1}'.format(hostname, host.fact.hostname))
+    local.shell('echo "local stuff!"')
 
 python.execute(some_python, 'arg1', 'arg2', kwarg='hello world')
