@@ -11,7 +11,7 @@
             }
         },
         "deb_packages": {
-            "test": 0
+            "test": [0]
         }
     },
     "commands": []

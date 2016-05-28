@@ -172,7 +172,7 @@ def deb(state, host, source, present=True):
 
         if (
             info['name'] in current_packages
-            and current_packages[info['name']] == info['version']
+            and info['version'] in current_packages[info['name']]
         ):
             exists = True
 
