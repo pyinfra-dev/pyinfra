@@ -5,21 +5,12 @@
     background: rgb(240, 240, 240) !important;
 }
 
-.wy-side-nav-search {
+.wy-side-nav-search, .wy-nav-top {
     background: #556270 !important;
 }
 
 .wy-side-nav-search input[type=text] {
     border-radius: 0 !important;
-}
-
-.wy-nav-content-wrap {
-    position: relative !important;
-}
-
-.wy-nav-content {
-    background: #FCFCFC !important;
-    margin: 0 !important;
 }
 
 .wy-menu-vertical a:hover {
