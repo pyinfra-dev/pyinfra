@@ -207,6 +207,7 @@ try:
     state.active = False
     pseudo_host.set(FakeHost())
     load_deploy_config(arguments['deploy'], config)
+    pseudo_host.reset()
     state.active = True
 
     # Setup the data to be passed to config hooks
