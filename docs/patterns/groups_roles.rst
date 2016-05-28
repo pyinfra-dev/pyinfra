@@ -12,7 +12,7 @@ be passed in to limit the include to those hosts.
 
     # deploy.py
 
-    from pyinfra import local
+    from pyinfra import local, inventory
 
     # Include the web role, targeted at the web group
     local.include(
