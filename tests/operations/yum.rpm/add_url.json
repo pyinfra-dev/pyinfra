@@ -10,6 +10,6 @@
     },
     "commands": [
         "wget -q https://something.rpm -O _tempfile_.rpm",
-        "yum localinstall -y _tempfile_.rpm"
+        "rpm -U _tempfile_.rpm"
     ]
 }

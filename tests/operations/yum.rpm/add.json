@@ -6,6 +6,6 @@
         }
     },
     "commands": [
-        "yum localinstall -y something.rpm"
+        "rpm -U something.rpm"
     ]
 }
