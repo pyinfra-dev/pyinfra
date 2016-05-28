@@ -82,7 +82,7 @@ class FakeHost(object):
         self.data = AttrData(data)
 
 
-class FakeFile(file):
+class FakeFile(object):
     _read = False
     _data = None
 

@@ -54,7 +54,7 @@ def make_operation_tests(arg):
                 except Exception as e:
                     if allowed_exception:
                         self.assertEqual(e.__class__.__name__, allowed_exception['name'])
-                        self.assertEqual(e.message, allowed_exception['message'])
+                        self.assertEqual(e.args[0], allowed_exception['message'])
                         return
 
                     raise
