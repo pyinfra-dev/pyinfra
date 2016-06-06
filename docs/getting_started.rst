@@ -7,12 +7,20 @@ This guide should help describe the basics of deploying stuff with pyinfra.
 Install
 -------
 
-pyinfra requires `Python <https://python.org>`_ and can be installed with ``pip`` (or
-``easy_install``):
+pyinfra requires `Python <https://python.org>`_ and can be installed with ``pip``:
 
 .. code:: bash
 
-    pip install pyinfra
+    $ pip install pyinfra
+    ...
+    $ pyinfra (on Windows: python -m pyinfra)
+
+    Usage:
+        pyinfra -i INVENTORY DEPLOY [-v -vv options]
+        pyinfra -i INVENTORY --run OP ARGS [-v -vv options]
+        pyinfra -i INVENTORY --fact FACT [-v options]
+        pyinfra -i INVENTORY [DEPLOY] --debug-data [options]
+        pyinfra (--facts | --help | --version)
 
 
 Command Line Ops
