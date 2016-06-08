@@ -36,7 +36,7 @@ def chmod(target, mode, recursive=False):
     return 'chmod {0}{1} {2}'.format(('-R ' if recursive else ''), mode, target)
 
 
-def chown(target, user, group=None, recursive=False):
+def chown(target, user, group=None, recursive=False, dereference=True):
     command = 'chown'
     user_group = None
 
@@ -50,9 +50,10 @@ def chown(target, user, group=None, recursive=False):
         command = 'chgrp'
         user_group = group
 
-    return '{0}{1} {2} {3}'.format(
+    return '{0}{1}{2} {3} {4}'.format(
         command,
         ' -R' if recursive else '',
+        ' -h' if not dereference else '',
         user_group,
         target
     )
