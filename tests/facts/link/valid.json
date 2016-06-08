@@ -1,13 +1,13 @@
 {
-    "arg": "/home/pyinfra/mylink",
+    "arg": "/home/pyinfra/my@-_link",
     "output": [
-        "lrwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56 /home/pyinfra/mylink -> my_file.txt"
+        "lrwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56 /home/pyinfra/my@-_link -> my_f@-ile.txt"
     ],
     "fact": {
         "group": "pyinfra",
         "user": "pyinfra",
         "mode": 777,
-        "link_target": "my_file.txt",
+        "link_target": "my_f@-ile.txt",
         "mtime": "2016-02-13T12:56:00",
         "size": "8"
     }

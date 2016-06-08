@@ -9,7 +9,7 @@ from datetime import datetime
 
 
 LS_REGEX = re.compile(
-    r'^[dl\-]([\-rwx]{9})\.?\s+[0-9]+\s+([a-zA-Z]+)\s+([a-zA-Z]+)\s+([0-9]+)\s+([a-zA-Z]{3}\s+[0-9]+\s+[0-9:]{4,5})\s+[a-zA-Z0-9\/\.\-]+\s?-?>?\s?([a-zA-Z0-9\/\.\-_]*)'
+    r'^[dl\-]([\-rwx]{9})\.?\s+[0-9]+\s+([\w]+)\s+([\w]+)\s+([0-9]+)\s+([a-zA-Z]{3}\s+[0-9]+\s+[0-9:]{4,5})\s+[\w\/\.@-]+\s?-?>?\s?([\w\/\.@-]*)'
 )
 
 SYMBOL_TO_OCTAL_PERMISSIONS = {

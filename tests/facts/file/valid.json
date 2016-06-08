@@ -1,7 +1,7 @@
 {
-    "arg": "/home/pyinfra/mylink",
+    "arg": "/home/pyinfra/fil-@_e.txt",
     "output": [
-        "-rwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56 /home/pyinfra/file.txt"
+        "-rwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56 /home/pyinfra/fil-@_e.txt"
     ],
     "fact": {
         "group": "pyinfra",
