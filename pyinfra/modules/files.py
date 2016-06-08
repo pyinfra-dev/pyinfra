@@ -438,6 +438,19 @@ def link(
 
     # Exists and want to ensure it's state
     elif info and present:
+        # If we have an absolute name - prepend to any non-absolute values from the fact
+        # and/or the soruce.
+        if path.isabs(name):
+            link_dirname = path.dirname(name)
+
+            if not path.isabs(source):
+                source = path.normpath(path.join(link_dirname, source))
+
+            if not path.isabs(info['link_target']):
+                info['link_target'] = path.normpath(
+                    path.join(link_dirname, info['link_target'])
+                )
+
         # If the source is wrong, remove & recreate the link
         if info['link_target'] != source:
             commands.extend((

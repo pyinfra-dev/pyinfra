@@ -1,0 +1,20 @@
+{
+    "args": ["/etc/rc.d/nginx"],
+    "kwargs": {
+        "source": "/etc/init.d/nginx",
+        "user": "testuser",
+        "group": "testgroup"
+    },
+    "facts": {
+        "link": {
+            "/etc/rc.d/nginx": {
+                "link_target": "../init.d/nginx",
+                "user": "wronguser",
+                "group": "wronggroup"
+            }
+        }
+    },
+    "commands": [
+        "chown -h testuser:testgroup /etc/rc.d/nginx"
+    ]
+}

@@ -7,9 +7,11 @@
             "/etc/rc4.d/S20nginx": null,
             "/etc/rc5.d/S20nginx": null,
             "/etc/rc0.d/K80nginx": null,
-            "/etc/rc1.d/K80nginx": null,
-            "/etc/rc6.d/K80nginx": {
+            "/etc/rc1.d/K80nginx": {
                 "link_target": "/etc/init.d/nginx"
+            },
+            "/etc/rc6.d/K80nginx": {
+                "link_target": "../init.d/nginx"
             }
         }
     },
@@ -18,7 +20,6 @@
         "ln -s /etc/init.d/nginx /etc/rc3.d/S20nginx",
         "ln -s /etc/init.d/nginx /etc/rc4.d/S20nginx",
         "ln -s /etc/init.d/nginx /etc/rc5.d/S20nginx",
-        "ln -s /etc/init.d/nginx /etc/rc0.d/K80nginx",
-        "ln -s /etc/init.d/nginx /etc/rc1.d/K80nginx"
+        "ln -s /etc/init.d/nginx /etc/rc0.d/K80nginx"
     ]
 }

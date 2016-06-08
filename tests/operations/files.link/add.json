@@ -1,0 +1,17 @@
+{
+    "args": ["testlink"],
+    "kwargs": {
+        "source": "/etc/init.d/nginx",
+        "user": "testuser",
+        "group": "testgroup"
+    },
+    "facts": {
+        "link": {
+            "testlink": null
+        }
+    },
+    "commands": [
+        "ln -s /etc/init.d/nginx testlink",
+        "chown -h testuser:testgroup testlink"
+    ]
+}
