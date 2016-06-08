@@ -87,16 +87,18 @@ Manage the state of links.
 
 .. code:: python
 
-    files.link(name, source=None, present=True, symbolic=True)
+    files.link(name, target=None, present=True, user=None, group=None, symbolic=True)
 
 + **name**: the name of the link
-+ **source**: the file/directory the link points to
++ **target**: the file/directory the link points to
 + **present**: whether the link should exist
++ **user**: user to own the link
++ **group**: group to own the link
 + **symbolic**: whether to make a symbolic link (vs hard link)
 
 Source changes:
-    If the link exists and points to a different source, pyinfra will remove it and
-    recreate a new one pointing to then new source.
+    If the link exists and points to a different target, pyinfra will remove it and
+    recreate a new one pointing to then new target.
 
 
 :code:`files.put`
