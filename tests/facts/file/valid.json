@@ -1,0 +1,13 @@
+{
+    "arg": "/home/pyinfra/mylink",
+    "output": [
+        "-rwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56 /home/pyinfra/file.txt"
+    ],
+    "fact": {
+        "group": "pyinfra",
+        "user": "pyinfra",
+        "mode": 777,
+        "mtime": "2016-02-13T12:56:00",
+        "size": "8"
+    }
+}
