@@ -391,7 +391,8 @@ def template(
     'link': 'name'
 })
 def link(
-    state, host, name, source=None, present=True, symbolic=True
+    state, host, name,
+    source=None, present=True, user=None, group=None, symbolic=True
 ):
     '''
     Manage the state of links.
@@ -399,6 +400,8 @@ def link(
     + name: the name of the link
     + source: the file/directory the link points to
     + present: whether the link should exist
+    + user: user to own the link
+    + group: group to own the link
     + symbolic: whether to make a symbolic link (vs hard link)
 
     Source changes:
@@ -426,6 +429,8 @@ def link(
     # No link and we want it
     if info is None and present:
         commands.append(add_cmd)
+        if user or group:
+            commands.append(chown(name, user, group, dereference=False))
 
     # It exists and we don't want it
     elif info and not present:
@@ -439,6 +444,10 @@ def link(
                 remove_cmd,
                 add_cmd
             ))
+
+        # Check user/group
+        if (user and info['user'] != user) or (group and info['group'] != group):
+            commands.append(chown(name, user, group, dereference=False))
 
     return commands
 
