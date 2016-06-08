@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import re
-from os import path
 from datetime import datetime
 
 
@@ -78,19 +77,6 @@ def parse_ls_output(filename, output, directory=False, link=False):
             }
 
             if link:
-                target = matches.group(6)
-
-                # If not an absolute path, combine with the source to get one
-                if not path.isabs(target):
-                    target_filename = path.basename(target)
-                    target_dirname = path.dirname(target)
-                    source_dirname = path.dirname(filename)
-
-                    target_dirname = path.normpath(
-                        path.join(source_dirname, target_dirname)
-                    )
-                    target = path.join(target_dirname, target_filename)
-
-                out['link_target'] = target
+                out['link_target'] = matches.group(6)
 
             return out
