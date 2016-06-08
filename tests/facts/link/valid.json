@@ -7,7 +7,7 @@
         "group": "pyinfra",
         "user": "pyinfra",
         "mode": 777,
-        "link_target": "/home/pyinfra/my_file.txt",
+        "link_target": "my_file.txt",
         "mtime": "2016-02-13T12:56:00",
         "size": "8"
     }
