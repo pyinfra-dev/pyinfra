@@ -392,25 +392,25 @@ def template(
 })
 def link(
     state, host, name,
-    source=None, present=True, user=None, group=None, symbolic=True
+    target=None, present=True, user=None, group=None, symbolic=True
 ):
     '''
     Manage the state of links.
 
     + name: the name of the link
-    + source: the file/directory the link points to
+    + target: the file/directory the link points to
     + present: whether the link should exist
     + user: user to own the link
     + group: group to own the link
     + symbolic: whether to make a symbolic link (vs hard link)
 
     Source changes:
-        If the link exists and points to a different source, pyinfra will remove it and
-        recreate a new one pointing to then new source.
+        If the link exists and points to a different target, pyinfra will remove it and
+        recreate a new one pointing to then new target.
     '''
 
-    if present and not source:
-        raise OperationError('If present is True source must be provided')
+    if present and not target:
+        raise OperationError('If present is True target must be provided')
 
     info = host.fact.link(name)
     commands = []
@@ -421,7 +421,7 @@ def link(
 
     add_cmd = 'ln{0} {1} {2}'.format(
         ' -s' if symbolic else '',
-        source, name
+        target, name
     )
 
     remove_cmd = 'rm -f {0}'.format(name)
@@ -443,16 +443,16 @@ def link(
         if path.isabs(name):
             link_dirname = path.dirname(name)
 
-            if not path.isabs(source):
-                source = path.normpath(path.join(link_dirname, source))
+            if not path.isabs(target):
+                target = path.normpath(path.join(link_dirname, target))
 
             if not path.isabs(info['link_target']):
                 info['link_target'] = path.normpath(
                     path.join(link_dirname, info['link_target'])
                 )
 
-        # If the source is wrong, remove & recreate the link
-        if info['link_target'] != source:
+        # If the target is wrong, remove & recreate the link
+        if info['link_target'] != target:
             commands.extend((
                 remove_cmd,
                 add_cmd
