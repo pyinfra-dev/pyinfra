@@ -1,7 +1,7 @@
 {
     "args": ["/etc/rc.d/nginx"],
     "kwargs": {
-        "source": "/etc/init.d/nginx",
+        "target": "/etc/init.d/nginx",
         "user": "testuser",
         "group": "testgroup"
     },
