@@ -21,7 +21,7 @@ from .util.packaging import ensure_packages
 
 def noninteractive_apt(command):
     return ' '.join((
-        'DEBIAN_FRONTEND=noninteractive apt-get -y',
+        'DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes',
         '-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"',
         command
     ))
