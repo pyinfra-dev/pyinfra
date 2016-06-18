@@ -163,7 +163,7 @@ Now that you've got an inventory of hosts and know how to auth with them, you ca
 writing the deploy. This is described in a Python file normally situated in the top level
 of the deploy directory.
 
-In this file, eg *deploy.py*, you import pyinfra **modules**. Each of these contains a
+In this file, eg ``deploy.py``, you import pyinfra **modules**. Each of these contains a
 number of **operations**. You call these operations inside the deploy file, with arguments
 describing remote state, and pyinfra uses this to run the deploy.
 
