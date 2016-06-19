@@ -50,7 +50,15 @@ class SystemdEnabled(FactBase):
     Returns a dict of name -> whether enabled for systemd managed services.
     '''
 
-    command = 'systemctl -alt service list-unit-files'
+    command = '''
+        systemctl --no-legend -alt service list-unit-files | while read -r SERVICE STATUS; do
+            if [ "$STATUS" = generated ] &&
+                systemctl is-enabled $SERVICE.service >/dev/null 2>&1; then
+                STATUS=enabled
+            fi
+            echo $SERVICE $STATUS
+        done
+    '''
     _regex = r'^([a-z\-]+)\.service\s+([a-z]+)'
 
     def process(self, output):
