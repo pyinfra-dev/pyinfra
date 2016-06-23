@@ -82,13 +82,14 @@ def script(state, host, filename, chdir=None):
 
 @operation
 def group(
-    state, host, name, present=True
+    state, host, name, present=True, system=False
 ):
     '''
     Manage system groups.
 
     + name: name of the group to ensure
     + present: whether the group should be present or not
+    + system: whether to create a system group
     '''
 
     commands = []
@@ -101,7 +102,10 @@ def group(
 
     # Group doesn't exist and we want it?
     elif present and not is_present:
-        commands.append('groupadd {0}'.format(name))
+        args = []
+        if system and host.fact.os not in ('OpenBSD', 'NetBSD'):
+            args.append('-r')
+        commands.append('groupadd {0} {1}'.format(' '.join(args), name))
 
     return commands
 
@@ -110,7 +114,7 @@ def group(
 def user(
     state, host, name,
     present=True, home=None, shell=None, group=None, groups=None,
-    public_keys=None, ensure_home=True
+    public_keys=None, ensure_home=True, system=False
 ):
     '''
     Manage system users & their ssh `authorized_keys`. Options:
@@ -123,6 +127,7 @@ def user(
     + groups: the users secondary groups
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
     + ensure_home: whether to ensure the ``home`` directory exists
+    + system: whether to create a system account
     '''
 
     commands = []
@@ -153,6 +158,9 @@ def user(
 
         if groups:
             args.append('-G {0}'.format(','.join(groups)))
+
+        if system and host.fact.os not in ('OpenBSD', 'NetBSD'):
+            args.append('-r')
 
         commands.append('useradd {0} {1}'.format(' '.join(args), name))
 
