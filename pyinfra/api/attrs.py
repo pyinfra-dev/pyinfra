@@ -63,6 +63,9 @@ class AttrData(object):
     def __getattr__(self, key):
         return self.get(key)
 
+    def __contains__(self, key):
+        return key in self.attrs
+
     def __str__(self):
         return six.text_type(self.attrs)
 
@@ -83,9 +86,8 @@ class FallbackAttrData(object):
 
     def __getattr__(self, key):
         for data in self.datas:
-            attr = getattr(data, key, None)
-            if attr:
-                return attr
+            if key in data:
+                return data[key]
 
     def __str__(self):
         return str(self.datas)
