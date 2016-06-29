@@ -20,13 +20,13 @@ ssh.RSAKey = FakeRSAKey
 ssh.AgentRequestHandler = FakeAgentRequestHandler
 
 
-from pyinfra.api import Inventory, Config, State
+from pyinfra.api import Inventory, Config, State, operation
 from pyinfra.api.ssh import connect_all, connect
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.exceptions import PyinfraError
 
-from pyinfra.modules import files, server
+from pyinfra.modules import files, server, apt
 
 from .util import create_host
 
@@ -138,6 +138,41 @@ class TestApi(TestCase):
             )
 
         run_ops(state)
+
+    def test_multiple_op_order(self):
+        state = State(make_inventory(), make_config())
+        connect_all(state)
+
+        with patch('pyinfra.api.util.hash') as mock_hash:
+            mock_hash.return_value = 'apt-update'
+            add_op(
+                state, apt.update,
+                sudo=True
+            )
+
+            mock_hash.return_value = 'file-creation'
+            add_op(
+                state, files.file,
+                '/var/log/pyinfra.log',
+                sudo=True
+            )
+
+            mock_hash.return_value = 'apt-update'
+            add_op(
+                state, apt.update,
+                sudo=True
+            )
+
+            mock_hash.return_value = 'second-file-creation'
+            add_op(
+                state, files.file,
+                '/var/log/pyinfra-two.log',
+                sudo=True
+            )
+
+        self.assertEqual(state.op_order, [
+            'apt-update', 'file-creation', 'second-file-creation',
+        ])
 
     def test_run_ops(self):
         state = State(make_inventory(), make_config())
