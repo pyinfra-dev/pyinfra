@@ -189,7 +189,7 @@ def get_file_sha1(filename):
 
     # Otherwise, assume a filename and open it up
     else:
-        file_io = open(filename)
+        file_io = open(filename, 'rb')
 
     # Ensure we're at the start of the file
     file_io.seek(0)
@@ -198,7 +198,7 @@ def get_file_sha1(filename):
     hasher = sha1()
 
     while len(buff) > 0:
-        hasher.update(buff.encode())
+        hasher.update(buff)
         buff = file_io.read(BLOCKSIZE)
 
     return hasher.hexdigest()
