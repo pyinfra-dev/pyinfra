@@ -54,7 +54,7 @@ def get_template(filename_or_string, is_string=False):
 
     else:
         # Load template data into memory
-        file_io = open(filename_or_string)
+        file_io = open(filename_or_string, 'r')
         template_string = file_io.read()
 
     TEMPLATES[cache_key] = Template(template_string, keep_trailing_newline=True)
