@@ -11,6 +11,7 @@ module.
 
 from __future__ import unicode_literals
 
+from inspect import stack
 from functools import wraps
 from types import FunctionType
 
@@ -175,7 +176,23 @@ def operation(func=None, pipeline_facts=None):
                 for key, arg in six.iteritems(kwargs)
             }
 
-            op_hash = (names, sudo, sudo_user, ignore_errors, env, hash_args, hash_kwargs)
+            # Get the line number where this operation was called by looking through the
+            # call stack for the first non-pyinfra line.
+            frames = stack()
+            line_number = None
+
+            for frame in frames:
+                if not (
+                    frame[3] in ('decorated_func', 'add_op', 'add_limited_op')
+                    and frame[1].endswith('pyinfra/api/operation.py')
+                ):
+                    line_number = frame[0].f_lineno
+                    break
+
+            op_hash = (
+                names, sudo, sudo_user, line_number,
+                ignore_errors, env, hash_args, hash_kwargs
+            )
 
         op_hash = make_hash(op_hash)
 
