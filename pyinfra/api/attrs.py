@@ -18,10 +18,11 @@ def wrap_attr_data(key, attr):
     Wraps an object (hopefully) as a AttrBase item.
     '''
 
-    if isinstance(attr, six.text_type):
+
+    if isinstance(attr, six.string_types):
         return AttrDataStr(key, attr)
 
-    elif isinstance(attr, int):
+    if isinstance(attr, int):
         return AttrDataInt(key, attr)
 
     return attr
