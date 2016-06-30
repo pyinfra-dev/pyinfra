@@ -39,17 +39,19 @@ class Sha1File(FactBase):
     '''
 
     _regexes = [
-        r'^([a-zA-Z0-9]{40})\s+',
-        r'\s+=\s+([a-zA-Z0-9]{40})$'
+        r'^([a-zA-Z0-9]{40})\s+%s$',
+        r'^SHA1\s+\(%s\)\s+=\s+([a-zA-Z0-9]{40})$'
     ]
 
     def command(self, name):
+        self.name = name
         return 'sha1sum {0} || sha1 {0}'.format(name)
 
     def process(self, output):
-        # print 'OUT', output
         for regex in self._regexes:
+            regex = regex % self.name
             matches = re.match(regex, output[0])
+
             if matches:
                 return matches.group(1)
 
