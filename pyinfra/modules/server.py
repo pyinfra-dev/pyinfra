@@ -128,6 +128,10 @@ def user(
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
     + ensure_home: whether to ensure the ``home`` directory exists
     + system: whether to create a system account
+
+    Home directory:
+        When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
+        ``/home/{name}``
     '''
 
     commands = []
@@ -136,6 +140,9 @@ def user(
 
     if groups is None:
         groups = []
+
+    if home is None:
+        home = '/home/{0}'.format(name)
 
     # User exists but we don't want them?
     if not present and user:
@@ -189,38 +196,37 @@ def user(
             commands.append('usermod {0} {1}'.format(' '.join(args), name))
 
     # Ensure home directory ownership
-    if home:
-        if ensure_home:
-            commands.extend(files.directory(
-                state, host, home,
-                user=name, group=name
-            ))
+    if ensure_home:
+        commands.extend(files.directory(
+            state, host, home,
+            user=name, group=name
+        ))
 
-        # Add SSH keys
-        if public_keys is not None:
-            # Ensure .ssh directory
-            # note that this always outputs commands unless the SSH user has access to the
-            # authorized_keys file, ie the SSH user is the user defined in this function
-            commands.extend(files.directory(
+    # Add SSH keys
+    if public_keys is not None:
+        # Ensure .ssh directory
+        # note that this always outputs commands unless the SSH user has access to the
+        # authorized_keys file, ie the SSH user is the user defined in this function
+        commands.extend(files.directory(
+            state, host,
+            '{0}/.ssh'.format(home),
+            user=name, group=name,
+            mode=700
+        ))
+
+        filename = '{0}/.ssh/authorized_keys'.format(home)
+
+        # Ensure authorized_keys
+        commands.extend(files.file(
+            state, host, filename,
+            user=name, group=name,
+            mode=600
+        ))
+
+        for key in public_keys:
+            commands.extend(files.line(
                 state, host,
-                '{0}/.ssh'.format(home),
-                user=name, group=name,
-                mode=700
+                filename, key
             ))
-
-            filename = '{0}/.ssh/authorized_keys'.format(home)
-
-            # Ensure authorized_keys
-            commands.extend(files.file(
-                state, host, filename,
-                user=name, group=name,
-                mode=600
-            ))
-
-            for key in public_keys:
-                commands.extend(files.line(
-                    state, host,
-                    filename, key
-                ))
 
     return commands
