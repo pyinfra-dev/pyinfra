@@ -8,12 +8,18 @@
     "facts": {
         "users": {
             "someuser": {
-                "home": "/home",
+                "home": "/home/someuser",
                 "shell": "/bin/bash",
                 "group": "nowt",
                 "groups": [
                     "group1", "group2"
                 ]
+            }
+        },
+        "directory": {
+            "/home/someuser": {
+                "user": "someuser",
+                "group": "someuser"
             }
         }
     },
