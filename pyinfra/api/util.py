@@ -42,22 +42,20 @@ def get_template(filename_or_string, is_string=False):
     based on the filename of the template, or the SHA1 of the input string.
     '''
 
-    if is_string:
-        # Cache against sha1 of the template
-        cache_key = sha1_hash(filename_or_string)
+    # Cache against string sha or just the filename
+    cache_key = sha1_hash(filename_or_string) if is_string else filename_or_string
 
+    if cache_key in TEMPLATES:
+        return TEMPLATES[cache_key]
+
+    if is_string:
         # Set the input string as our template
         template_string = filename_or_string
+
     else:
         # Load template data into memory
         file_io = open(filename_or_string)
         template_string = file_io.read()
-
-        # Cache against filename
-        cache_key = filename_or_string
-
-    if cache_key in TEMPLATES:
-        return TEMPLATES[cache_key]
 
     TEMPLATES[cache_key] = Template(template_string, keep_trailing_newline=True)
     return TEMPLATES[cache_key]
