@@ -19,7 +19,7 @@ def include(filename, hosts=None):
     Executes a local python file within the ``pyinfra.pseudo_state.deploy_dir`` directory.
     '''
 
-    if hosts:
+    if isinstance(hosts, list):
         pseudo_state.limit_hosts = hosts
 
     filename = path.join(pseudo_state.deploy_dir, filename)
@@ -33,7 +33,7 @@ def include(filename, hosts=None):
 
     # Always clear any host limit
     finally:
-        if hosts:
+        if isinstance(hosts, list):
             pseudo_state.limit_hosts = None
 
 

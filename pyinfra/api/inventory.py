@@ -67,6 +67,8 @@ class Inventory(object):
         names_to_groups = {}
         for group_name, (group_names, group_data) in six.iteritems(groups):
             group_name = group_name.lower()
+
+            self.groups[group_name] = []
             self.group_data[group_name] = AttrData(group_data)
 
             for name in group_names:
@@ -93,8 +95,8 @@ class Inventory(object):
             hosts[name] = host
 
             # Push into any groups
-            for groupname in names_to_groups.get(name, []):
-                self.groups.setdefault(groupname, []).append(host)
+            for group_name in names_to_groups.get(name, []):
+                self.groups[group_name].append(host)
 
         self.hosts = hosts
 

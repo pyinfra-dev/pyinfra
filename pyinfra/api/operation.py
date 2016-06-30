@@ -260,7 +260,7 @@ def operation(func=None, pipeline_facts=None):
         # If we're limited, and this host is not included, stop here. This means the
         # operation has been added to the host as latest_op_hash, ensuring we maintain
         # order even though this is a no-op for this host.
-        if state.limit_hosts and host not in state.limit_hosts:
+        if isinstance(state.limit_hosts, list) and host not in state.limit_hosts:
             return operation_meta
 
         # We're doing some commands, meta/ops++

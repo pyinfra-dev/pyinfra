@@ -21,6 +21,7 @@ try:
     from StringIO import StringIO
     from cStringIO import OutputType, InputType
     io_bases = (file, OutputType, InputType, StringIO)
+
 except ImportError:
     from io import IOBase
     io_bases = IOBase

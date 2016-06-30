@@ -73,18 +73,26 @@ class State(object):
     Manages state for a pyinfra deploy.
     '''
 
-    inventory = None  # a pyinfra.api.Inventory which stores all our pyinfra.api.Host's
-    config = None  # a pyinfra.api.Config
+    # A pyinfra.api.Inventory which stores all our pyinfra.api.Host's
+    inventory = None
 
-    pool = None  # main gevent pool
+    # A pyinfra.api.Config
+    config = None
 
-    in_op = False  # whether we are in an @operation (so inner ops aren't wrapped)
+    # Main gevent pool
+    pool = None
+
+    # Whether we are in an @operation (so inner ops aren't wrapped)
+    in_op = False
 
     # Current op args tuple (sudo, sudo_user, ignore_errors) for use w/facts
     current_op_meta = None
 
     # Flag for pipelining mode
     pipelining = False
+
+    # List of hosts to only apply operations to
+    limit_hosts = None
 
     # Flags for printing
     print_output = False  # print output from the actual deploy (-v)
@@ -104,9 +112,6 @@ class State(object):
         # Facts storage
         self.facts = {}
         self.fact_locks = {}
-
-        # Work on all hosts
-        self.limit_hosts = []
 
         if config is None:
             config = Config()
