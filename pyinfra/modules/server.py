@@ -103,9 +103,14 @@ def group(
     # Group doesn't exist and we want it?
     elif present and not is_present:
         args = []
-        if system and host.fact.os not in ('OpenBSD', 'NetBSD'):
+
+        # BSD doesn't do system users
+        if system and 'BSD' not in host.fact.os:
             args.append('-r')
-        commands.append('groupadd {0} {1}'.format(' '.join(args), name))
+
+        args.append(name)
+
+        commands.append('groupadd {0}'.format(' '.join(args)))
 
     return commands
 

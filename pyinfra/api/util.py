@@ -15,6 +15,7 @@ from jinja2 import Template
 
 from .attrs import AttrBase
 
+# 64kb chunks
 BLOCKSIZE = 65536
 
 # Template cache
@@ -192,8 +193,8 @@ def get_file_sha1(filename):
     # Ensure we're at the start of the file
     file_io.seek(0)
 
-    buff = file_io.read(BLOCKSIZE)
     hasher = sha1()
+    buff = file_io.read(BLOCKSIZE)
 
     while len(buff) > 0:
         hasher.update(buff)

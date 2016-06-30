@@ -19,8 +19,8 @@ def before_connect(data, state):
 # Ensure the state of a user
 server.user(
     'pyinfra',
-    home='/home/pyinfra',
     shell='/bin/sh',
+    ensure_home=True,
 
     # Options available for all operations
     sudo=True,
@@ -68,7 +68,7 @@ files.put(
 # and sync directories
 files.sync(
     'files',
-    '/home/pyinfra/example_files',
+    '/home/vagrant/example_files',
     user='pyinfra',
     group='pyinfra',
     delete=True,
