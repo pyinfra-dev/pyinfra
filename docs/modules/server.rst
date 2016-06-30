@@ -12,10 +12,11 @@ Manage system groups.
 
 .. code:: python
 
-    server.group(name, present=True)
+    server.group(name, present=True, system=False)
 
 + **name**: name of the group to ensure
 + **present**: whether the group should be present or not
++ **system**: whether to create a system group
 
 
 :code:`server.script`
@@ -53,7 +54,7 @@ Manage system users & their ssh `authorized_keys`. Options:
 
     server.user(
         name, present=True, home=None, shell=None,
-        group=None, groups=None, public_keys=None, ensure_home=True
+        group=None, groups=None, public_keys=None, ensure_home=True, system=False
     )
 
 + **name**: name of the user to ensure
@@ -64,6 +65,11 @@ Manage system users & their ssh `authorized_keys`. Options:
 + **groups**: the users secondary groups
 + **public_keys**: list of public keys to attach to this user, ``home`` must be specified
 + **ensure_home**: whether to ensure the ``home`` directory exists
++ **system**: whether to create a system account
+
+Home directory:
+    When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
+    ``/home/{name}``
 
 
 :code:`server.wait`
