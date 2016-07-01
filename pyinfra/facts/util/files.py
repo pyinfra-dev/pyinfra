@@ -55,7 +55,7 @@ def _parse_time(time):
         pass
 
 
-def parse_ls_output(filename, output, directory=False, link=False):
+def parse_ls_output(output, directory=False, link=False):
     if output:
         matches = re.match(LS_REGEX, output)
         if matches:

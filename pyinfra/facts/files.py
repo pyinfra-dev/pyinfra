@@ -21,7 +21,7 @@ class File(FactBase):
 
     def process(self, output):
         return parse_ls_output(
-            self.name, output[0],
+            output[0],
             link=self.link, directory=self.directory
         )
 
