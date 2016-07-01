@@ -27,7 +27,7 @@ Commands come in three forms:
     commands.append('echo "Shell!"')
 
     # File uploads represented by a tuple
-    commands.append((file_io_object, remote_filename))
+    commands.append((filename_or_io, remote_filename))
 
     # Python functions represented by a tuple
     commands.append((function, args_list, kwargs_dict))

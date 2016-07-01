@@ -20,7 +20,7 @@ from paramiko import (
 )
 
 from pyinfra import logger
-from pyinfra.api.util import read_buffer, make_command
+from pyinfra.api.util import read_buffer, make_command, get_file_io
 
 
 def connect(host, **kwargs):
@@ -238,13 +238,11 @@ def _get_sftp_connection(state, hostname):
     return client
 
 
-def _put_file(state, hostname, file_io, remote_location):
-    # Ensure we're at the start of the file
-    file_io.seek(0)
-
-    # Upload it via SFTP
-    sftp = _get_sftp_connection(state, hostname)
-    sftp.putfo(file_io, remote_location)
+def _put_file(state, hostname, filename_or_io, remote_location):
+    with get_file_io(filename_or_io) as file_io:
+        # Upload it via SFTP
+        sftp = _get_sftp_connection(state, hostname)
+        sftp.putfo(file_io, remote_location)
 
 
 def put_file(

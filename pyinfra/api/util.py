@@ -20,6 +20,7 @@ BLOCKSIZE = 65536
 
 # Template cache
 TEMPLATES = {}
+FILE_SHAS = {}
 
 
 def exec_file(filename, return_locals=False):
@@ -177,30 +178,68 @@ def make_hash(obj):
     return hash(tuple(set(new_obj.items())))
 
 
-def get_file_sha1(filename):
+class get_file_io(object):
+    '''
+    Given either a filename or an existing IO object, this context processor will open
+    and close filenames, and leave IO objects alone.
+    '''
+
+    close = False
+
+    def __init__(self, filename_or_io):
+        self.filename_or_io = filename_or_io
+
+    def __enter__(self):
+        # If we have a read attribute, just use the object as-is
+        if hasattr(self.filename_or_io, 'read'):
+            file_io = self.filename_or_io
+
+        # Otherwise, assume a filename and open it up
+        else:
+            file_io = open(self.filename_or_io, 'rb')
+
+            # Attach to self for closing on __exit__
+            self.file_io = file_io
+            self.close = True
+
+        # Ensure we're at the start of the file
+        file_io.seek(0)
+        return file_io
+
+    def __exit__(self, type, value, traceback):
+        if self.close:
+            self.file_io.close()
+
+    @property
+    def cache_key(self):
+        if hasattr(self.filename_or_io, 'read'):
+            return id(self.filename_or_io)
+
+        else:
+            return self.filename_or_io
+
+
+def get_file_sha1(filename_or_io):
     '''
     Calculates the SHA1 of a file or file object using a buffer to handle larger files.
     '''
 
-    # If we have a read attribute, just use the object as-is
-    if hasattr(filename, 'read'):
-        file_io = filename
+    file_data = get_file_io(filename_or_io)
 
-    # Otherwise, assume a filename and open it up
-    else:
-        file_io = open(filename, 'rb')
+    if file_data.cache_key in FILE_SHAS:
+        return FILE_SHAS[file_data.cache_key]
 
-    # Ensure we're at the start of the file
-    file_io.seek(0)
-
-    hasher = sha1()
-    buff = file_io.read(BLOCKSIZE)
-
-    while len(buff) > 0:
-        hasher.update(buff)
+    with file_data as file_io:
+        hasher = sha1()
         buff = file_io.read(BLOCKSIZE)
 
-    return hasher.hexdigest()
+        while len(buff) > 0:
+            hasher.update(buff)
+            buff = file_io.read(BLOCKSIZE)
+
+    digest = hasher.hexdigest()
+    FILE_SHAS[file_data.cache_key] = digest
+    return digest
 
 
 def read_buffer(buff, print_output=False, print_func=False):

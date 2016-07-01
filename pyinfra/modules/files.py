@@ -279,7 +279,7 @@ def put(
         if add_deploy_dir and state.deploy_dir:
             local_filename = path.join(state.deploy_dir, local_filename)
 
-        local_file = open(local_filename, 'rb')
+        local_file = local_filename
 
     mode = ensure_mode_int(mode)
     remote_file = host.fact.file(remote_filename)
