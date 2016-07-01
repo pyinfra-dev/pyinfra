@@ -56,8 +56,7 @@ def repo(
         return files.file(state, host, filename, present=False)
 
     # Build the repo file from string
-    repo = '''
-[{name}]
+    repo = '''[{name}]
 name={description}
 baseurl={baseurl}
 gpgcheck={gpgcheck}
