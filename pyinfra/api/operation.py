@@ -11,6 +11,7 @@ module.
 
 from __future__ import unicode_literals
 
+from os import path
 from inspect import stack
 from functools import wraps
 from types import FunctionType
@@ -184,7 +185,7 @@ def operation(func=None, pipeline_facts=None):
             for frame in frames:
                 if not (
                     frame[3] in ('decorated_func', 'add_op', 'add_limited_op')
-                    and frame[1].endswith('pyinfra/api/operation.py')
+                    and frame[1].endswith(path.join('pyinfra', 'api', 'operation.py'))
                 ):
                     line_number = frame[0].f_lineno
                     break
