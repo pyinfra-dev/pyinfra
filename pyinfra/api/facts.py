@@ -118,6 +118,7 @@ def get_facts(
             print_output=state.print_fact_output
         )
         for host in state.inventory
+        if host not in state.ready_hosts
     }
 
     hostname_facts = {}

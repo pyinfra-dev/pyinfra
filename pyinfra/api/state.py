@@ -132,6 +132,7 @@ class State(object):
 
         # Host tracking
         self.active_hosts = set()
+        self.ready_hosts = set()
         self.connected_hosts = set()
 
         hostnames = [host.name for host in inventory]
@@ -171,7 +172,18 @@ class State(object):
         # Pipeline facts context manager attached to self
         self.pipeline_facts = PipelineFacts(self)
 
+    def ready_host(self, host):
+        '''
+        Flag a host as ready, after which facts will not be gathered for it.
+        '''
+
+        self.ready_hosts.add(host)
+
     def fail_hosts(self, hosts_to_fail):
+        '''
+        Flag a ``set`` of hosts as failed, error for `config.FAIL_PERCENT`.
+        '''
+
         # Remove the failed hosts
         self.inventory.active_hosts -= hosts_to_fail
 

@@ -248,6 +248,8 @@ try:
             for host in inventory:
                 pseudo_host.set(host)
                 exec_file(arguments['deploy'])
+                state.ready_host(host)
+
                 logger.info('{0} {1}'.format(
                     '[{}]'.format(colored(host.name, attrs=['bold'])),
                     colored('Ready', 'green')
@@ -261,6 +263,10 @@ try:
 
         # Remove any pseudo host
         pseudo_host.reset()
+
+        # Un-ready the hosts - this is so that any hooks or callbacks during the deploy
+        # can still use facts as expected.
+        state.ready_hosts = set()
 
     # One off op run
     else:
