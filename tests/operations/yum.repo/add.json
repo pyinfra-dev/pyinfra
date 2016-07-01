@@ -10,7 +10,7 @@
         }
     },
     "commands": [[
-        "\n[somerepo]\nname=description\nbaseurl=http://baseurl\ngpgcheck=0\nenabled=1\n",
+        "[somerepo]\nname=description\nbaseurl=http://baseurl\ngpgcheck=0\nenabled=1\n",
             "/etc/yum.repos.d/somerepo.repo"
     ]]
 }
