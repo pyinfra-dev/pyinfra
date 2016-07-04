@@ -53,7 +53,10 @@ def make_operation_tests(arg):
                     ) or []
                 except Exception as e:
                     if allowed_exception:
-                        self.assertEqual(e.__class__.__name__, allowed_exception['name'])
+                        if e.__class__.__name__ != allowed_exception['name']:
+                            print('Wrong execption raised!')
+                            raise
+
                         self.assertEqual(e.args[0], allowed_exception['message'])
                         return
 
@@ -73,7 +76,12 @@ def make_operation_tests(arg):
                     if isinstance(command[0], FunctionType):
                         commands.append(command)
                     else:
-                        commands.append([command[0].read(), command[1]])
+                        if hasattr(command[0], 'read'):
+                            data = command[0].read()
+                        else:
+                            data = command[0]
+
+                        commands.append([data, command[1]])
 
                 else:
                     commands.append(command)

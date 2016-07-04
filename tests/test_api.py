@@ -119,16 +119,15 @@ class TestApi(TestCase):
         state = State(make_inventory(), make_config())
         connect_all(state)
 
-        # Test normal
-        with patch('pyinfra.modules.files.open', mock_open(read_data='test!'), create=True):
+        with patch('pyinfra.modules.files.path.exists', lambda *args, **kwargs: True):
+            # Test normal
             add_op(
                 state, files.put,
                 'files/file.txt',
                 '/home/vagrant/file.txt'
             )
 
-        # And with sudo
-        with patch('pyinfra.modules.files.open', mock_open(read_data='test!'), create=True):
+            # And with sudo
             add_op(
                 state, files.put,
                 'files/file.txt',
@@ -137,7 +136,8 @@ class TestApi(TestCase):
                 sudo_user='pyinfra'
             )
 
-        run_ops(state)
+        with patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True):
+            run_ops(state)
 
     def test_run_ops(self):
         state = State(make_inventory(), make_config())

@@ -12,7 +12,7 @@
         }
     },
     "commands": [
-        ["_test_data_", "_tempfile_"],
+        ["/somescript.sh", "_tempfile_"],
         "chmod +x _tempfile_",
         "cd /home && _tempfile_"
     ]

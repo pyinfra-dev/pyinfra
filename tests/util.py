@@ -115,6 +115,15 @@ class FakeFile(object):
     def seek(self, *args, **kwargs):
         pass
 
+    def close(self, *args, **kwargs):
+        pass
+
+    def __enter__(self, *args, **kwargs):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        pass
+
 
 class PatchFiles(object):
     def __init__(self, patch_files):
@@ -139,6 +148,10 @@ class PatchFiles(object):
 
     def __enter__(self):
         self.patches = [
+            patch(
+                'pyinfra.modules.files.path.exists',
+                lambda *args, **kwargs: True, create=True
+            ),
             patch('pyinfra.modules.files.open', self.get_file, create=True),
             patch('pyinfra.api.util.open', self.get_file, create=True),
         ]
