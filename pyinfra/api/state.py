@@ -190,16 +190,16 @@ class State(object):
         # Check we're not above the fail percent
         active_hosts = self.inventory.active_hosts
 
+        # No hosts left!
+        if not active_hosts:
+            raise PyinfraError('No hosts remaining!')
+
         if self.config.FAIL_PERCENT is not None:
             percent_failed = (1 - len(active_hosts) / len(self.inventory)) * 100
             if percent_failed > self.config.FAIL_PERCENT:
                 raise PyinfraError('Over {0}% of hosts failed'.format(
                     self.config.FAIL_PERCENT
                 ))
-
-        # No hosts left!
-        if not active_hosts:
-            raise PyinfraError('No hosts remaining!')
 
     def get_temp_filename(self, hash_key=None):
         '''
