@@ -563,7 +563,7 @@ def make_inventory(
         if limit_groupname in groups:
             all_hosts = [
                 host[0] if isinstance(host, tuple) else host
-                for host in groups[limit_groupname]
+                for host in groups[limit_groupname][0]
             ]
 
         # Or hostnames w/*wildcards
