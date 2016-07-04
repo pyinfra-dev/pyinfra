@@ -63,6 +63,10 @@ def shell(commands):
 
         # Get & check result
         result = process.wait()
+
+        # Close any open file descriptor
+        process.stdout.close()
+
         if result > 0:
             raise PyinfraError(
                 'Local command failed: {0}\n{1}'.format(command, stdout)
