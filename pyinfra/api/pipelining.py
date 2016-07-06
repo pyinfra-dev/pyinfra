@@ -1,6 +1,6 @@
 # pyinfra
-# File: pyinfra/api/state.py
-# Desc: class that represents the current pyinfra.state
+# File: pyinfra/api/pipelining.py
+# Desc: pipelining related functions and helpers
 
 from __future__ import unicode_literals
 
