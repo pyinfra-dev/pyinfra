@@ -23,6 +23,7 @@ from pyinfra.pseudo_modules import PseudoModule
 
 from .host import Host
 from .state import State
+from .attrs import wrap_attr_data
 from .util import make_hash, get_arg_name, get_arg_value
 from .exceptions import PyinfraError
 
@@ -33,7 +34,7 @@ class OperationMeta(object):
         self.commands = commands or []
 
         # Changed flag = did we do anything?
-        self.changed = len(self.commands) > 0
+        self.changed = wrap_attr_data('changed', len(self.commands) > 0)
 
 
 def add_op(state, op_func, *args, **kwargs):

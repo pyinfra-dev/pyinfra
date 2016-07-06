@@ -18,6 +18,9 @@ def wrap_attr_data(key, attr):
     Wraps an object (hopefully) as a AttrBase item.
     '''
 
+    if isinstance(attr, bool):
+        return AttrDataBool(key, attr)
+
     if isinstance(attr, six.string_types):
         return AttrDataStr(key, attr)
 
@@ -45,6 +48,13 @@ class AttrDataStr(AttrBase, six.text_type):
 class AttrDataInt(AttrBase, int):
     def __new__(cls, key, obj):
         obj = super(AttrDataInt, cls).__new__(cls, obj)
+        setattr(obj, 'pyinfra_attr_key', key)
+        return obj
+
+
+class AttrDataBool(AttrBase, int):
+    def __new__(cls, key, obj):
+        obj = super(AttrDataBool, cls).__new__(cls, bool(obj))
         setattr(obj, 'pyinfra_attr_key', key)
         return obj
 

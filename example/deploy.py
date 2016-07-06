@@ -159,7 +159,7 @@ did_install = pip.packages(
     sudo=True
 )
 # use operation meta to affect the deploy
-if did_install.commands:
+if did_install.changed:
     server.shell(
         'echo "Clean package build/etc"'
     )
