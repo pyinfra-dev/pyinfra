@@ -35,7 +35,7 @@ if __name__ == '__main__':
         ),
         install_requires=(
             'gevent>1,<2',
-            'paramiko>1,<2',
+            'paramiko>1,<3',
             'docopt<1',
             'colorama<1',
             'termcolor>1,<2',
