@@ -5,13 +5,23 @@
 from __future__ import division, unicode_literals
 
 from uuid import uuid4
+from resource import getrlimit, RLIMIT_NOFILE
 
 from gevent.pool import Pool
+
+from pyinfra import logger
 
 from .config import Config
 from .util import sha1_hash
 from .exceptions import PyinfraError
 from .pipelining import PipelineFacts
+
+
+# Work out the max parallel we can achieve with the open files limit of the user/process,
+# take 10 for opening Python files and /3 for ~3 files per host during op runs.
+# See: https://github.com/Fizzadar/pyinfra/issues/44
+nofile_limit, _ = getrlimit(RLIMIT_NOFILE)
+MAX_PARALLEL = round((nofile_limit - 10) / 3)
 
 
 class State(object):
@@ -64,7 +74,15 @@ class State(object):
             config = Config()
 
         if not config.PARALLEL:
-            config.PARALLEL = len(inventory)
+            # If possible run everything in parallel, otherwise the max as defined above
+            config.PARALLEL = min(len(inventory), MAX_PARALLEL)
+
+        else:
+            # If explicitly set, just issue a warning
+            if config.PARALLEL > MAX_PARALLEL:
+                logger.warning((
+                    'Parallel set to {0}, but this may hit the open files limit of {1}'
+                ).format(config.PARALLEL, nofile_limit))
 
         # Setup greenlet pools
         self.pool = Pool(config.PARALLEL)
