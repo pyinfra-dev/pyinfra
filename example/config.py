@@ -20,7 +20,7 @@ def ensure_branch(data, state):
     if branch != app_branch:
         # Raise hook.Error for pyinfra to handle
         raise hook.Error('We\'re on the wrong branch (want {0}, got {1})!'.format(
-            branch, app_branch
+            app_branch, branch
         ))
 
 
