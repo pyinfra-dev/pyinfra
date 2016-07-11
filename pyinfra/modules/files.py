@@ -246,7 +246,7 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
         wanted_filenames = set([remote_filename for _, remote_filename in put_files])
         files_to_delete = remote_filenames - wanted_filenames
         for filename in files_to_delete:
-            commands.extend(file(filename, present=False))
+            commands.extend(file(state, host, filename, present=False))
 
     return commands
 
