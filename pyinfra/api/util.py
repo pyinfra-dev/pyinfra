@@ -244,14 +244,61 @@ def get_file_sha1(filename_or_io):
     return digest
 
 
-def read_buffer(buff, print_output=False, print_func=False):
+def read_buffer(io, print_output=False, print_func=False):
     '''
     Reads a file-like buffer object into lines and optionally prints the output.
     '''
 
+    def _print(line):
+        if print_output:
+            if print_func:
+                print(print_func(line))
+            else:
+                print(line)
+
     out = []
 
-    for line in buff:
+    # TODO: research this further - some steps towards handling stdin (ie password requests
+    # from programs that don't notice there's no TTY to accept passwords from!). This just
+    # prints output as below, but stores partial lines in a buffer, which could be printed
+    # when ready to accept input. Or detected and raise an error.
+
+    # GitHub issue: https://github.com/Fizzadar/pyinfra/issues/40
+
+    # buff = ''
+    # data = io.read(1)
+
+    # while data:
+    #     # Append to the buffer
+    #     buff += data
+
+    #     # Newlines in the buffer? Break them out
+    #     if '\n' in buff:
+    #         lines = buff.split('\n')
+
+    #         # Set the buffer back to just the last line
+    #         buff = lines[-1]
+
+    #         # Get the other lines, strip them
+    #         lines = [
+    #             line.strip()
+    #             for line in lines[:-1]
+    #         ]
+
+    #         out.extend(lines)
+
+    #         for line in lines:
+    #             _print(line)
+
+    #     # Get next data
+    #     data = io.read(1)
+
+    # if buff:
+    #     line = buff.strip()
+    #     out.append(line)
+    #     _print(line)
+
+    for line in io:
         # Handle local Popen shells returning list of bytes, not strings
         if not isinstance(line, six.text_type):
             line = line.decode('utf-8')
@@ -259,10 +306,6 @@ def read_buffer(buff, print_output=False, print_func=False):
         line = line.strip()
         out.append(line)
 
-        if print_output:
-            if print_func:
-                print(print_func(line))
-            else:
-                print(line)
+        _print(line)
 
     return out
