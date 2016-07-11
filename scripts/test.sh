@@ -4,6 +4,9 @@ TEST=$1
 
 echo "### pyinfra Tests"
 
+# Remove any cached coverage data
+rm -f .coverage
+
 if [ -z $TEST ]; then
     echo "--> Testing everything..."
     nosetests --with-coverage --cover-package pyinfra.api,pyinfra.modules,pyinfra.facts
