@@ -18,6 +18,8 @@ from pyinfra.facts.apt import parse_apt_repo
 from . import files
 from .util.packaging import ensure_packages
 
+APT_UPDATE_FILENAME = '/var/lib/apt/periodic/update-success-stamp'
+
 
 def noninteractive_apt(command):
     return ' '.join((
@@ -198,12 +200,21 @@ def deb(state, host, source, present=True):
 
 
 @operation
-def update(state, host):
+def update(state, host, touch_periodic=False):
     '''
     Updates apt repos.
+
+    + touch_periodic: touch ``/var/lib/apt/periodic/update-success-stamp`` after update
     '''
 
-    return ['apt-get update']
+    commands = ['apt-get update']
+
+    # Some apt systems (Debian) have the /var/lib/apt/periodic directory, but don't
+    # bother touching anything in there - so pyinfra does it, enabling cache_time to work.
+    if touch_periodic:
+        commands.append('touch {0}'.format(APT_UPDATE_FILENAME))
+
+    return commands
 
 _update = update
 
@@ -238,9 +249,10 @@ def packages(
     Versions:
         Package versions can be pinned like apt: ``<pkg>=<version>``
 
-    Note:
-        ``cache_time`` only works on systems that provide the
-        ``/var/lib/apt/periodic/update-success-stamp`` file (ie Ubuntu).
+    Cache time:
+        When ``cache_time`` is set the ``/var/lib/apt/periodic/update-success-stamp`` file
+        is touched upon successful update. Some distros already do this (Ubuntu), but others
+        simply leave the periodic directory empty (Debian).
     '''
 
     commands = []
@@ -248,16 +260,16 @@ def packages(
     # If cache_time check when apt was last updated, prevent updates if within time
     if update and cache_time:
         # Ubuntu provides this handy file
-        cache_info = host.fact.file('/var/lib/apt/periodic/update-success-stamp')
+        cache_info = host.fact.file(APT_UPDATE_FILENAME)
 
         # Time on files is not tz-aware, and will be the same tz as the server's time,
         # so we can safely remove the tzinfo from host.fact.date before comparison.
-        cache_time = host.fact.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
-        if cache_info and cache_info['mtime'] and cache_info['mtime'] > cache_time:
+        host_cache_time = host.fact.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
+        if cache_info and cache_info['mtime'] and cache_info['mtime'] > host_cache_time:
             update = False
 
     if update:
-        commands.extend(_update(state, host))
+        commands.extend(_update(state, host, touch_periodic=cache_time))
 
     if upgrade:
         commands.extend(_upgrade(state, host))
