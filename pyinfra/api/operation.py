@@ -77,7 +77,7 @@ def add_limited_op(state, op_func, hosts, *args, **kwargs):
 def operation(func=None, pipeline_facts=None):
     '''
     Decorator that takes a simple module function and turn it into the internal operation
-    representation that consists of a list of commands + options (sudo, user, env).
+    representation that consists of a list of commands + options (sudo, (sudo|su)_user, env).
     '''
 
     # If not decorating, return a decorator which attaches any config to the function
@@ -145,6 +145,7 @@ def operation(func=None, pipeline_facts=None):
         # Locally & globally configurable
         sudo = kwargs.pop('sudo', state.config.SUDO)
         sudo_user = kwargs.pop('sudo_user', state.config.SUDO_USER)
+        su_user = kwargs.pop('su_user', state.config.SU_USER)
         ignore_errors = kwargs.pop('ignore_errors', state.config.IGNORE_ERRORS)
 
         # Forces serial mode for this operation (--serial for one op)
@@ -192,7 +193,7 @@ def operation(func=None, pipeline_facts=None):
                     break
 
             op_hash = (
-                names, sudo, sudo_user, line_number,
+                names, sudo, sudo_user, su_user, line_number,
                 ignore_errors, env, hash_args, hash_kwargs
             )
 
@@ -200,7 +201,7 @@ def operation(func=None, pipeline_facts=None):
 
         # Otherwise, flag as in-op and run it to get the commands
         state.in_op = True
-        state.current_op_meta = (sudo, sudo_user, ignore_errors)
+        state.current_op_meta = (sudo, sudo_user, su_user, ignore_errors)
 
         # Generate actual arguments by parsing strings as jinja2 templates. This means
         # you can string format arguments w/o generating multiple operations. Only affects
@@ -249,6 +250,7 @@ def operation(func=None, pipeline_facts=None):
         op_meta = state.op_meta.setdefault(op_hash, {
             'names': set(),
             'args': [],
+            'su_user': su_user,
             'sudo': sudo,
             'sudo_user': sudo_user,
             'ignore_errors': ignore_errors,

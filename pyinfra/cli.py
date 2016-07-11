@@ -401,6 +401,7 @@ def setup_arguments(arguments):
         'port': arguments['--port'],
         'sudo': arguments['--sudo'],
         'sudo_user': arguments['--sudo-user'],
+        'su_user': arguments['--su-user'],
         'parallel': arguments['--parallel'],
 
         # Misc

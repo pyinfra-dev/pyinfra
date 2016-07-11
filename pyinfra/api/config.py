@@ -23,9 +23,16 @@ class Config(object):
     # Gevent pool size (defaults to #of target hosts)
     PARALLEL = None
 
-    # All these can be overridden inside module calls
+    # All these can be overridden inside module calls:
+
+    # Switch to this user (from ssh_user) using su before executing operations
+    SU_USER = None
+
+    # Use sudo and optional user
     SUDO = False
     SUDO_USER = None
+
+    # Only show errors, but don't count as failure
     IGNORE_ERRORS = False
 
     def __init__(self, **kwargs):

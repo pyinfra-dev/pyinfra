@@ -47,6 +47,7 @@ def _run_op(state, hostname, op_hash):
 
         sudo = op_meta['sudo']
         sudo_user = op_meta['sudo_user']
+        su_user = op_meta['su_user']
 
         # As dicts, individual commands can override meta settings (ie on a per-host
         # basis generated during deploy).
@@ -55,6 +56,8 @@ def _run_op(state, hostname, op_hash):
                 sudo = command['sudo']
             if 'sudo_user' in command:
                 sudo_user = command['sudo_user']
+            if 'su_user' in command:
+                su_user = command['su_user']
 
             command = command['command']
 
@@ -77,6 +80,7 @@ def _run_op(state, hostname, op_hash):
                     state, hostname, *command,
                     sudo=sudo,
                     sudo_user=sudo_user,
+                    su_user=su_user,
                     print_output=state.print_output
                 )
 
@@ -87,6 +91,7 @@ def _run_op(state, hostname, op_hash):
                     state, hostname, command.strip(),
                     sudo=sudo,
                     sudo_user=sudo_user,
+                    su_user=su_user,
                     timeout=op_meta['timeout'],
                     env=op_data['env'],
                     print_output=state.print_output

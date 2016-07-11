@@ -151,7 +151,7 @@ def connect_all(state):
 
 def run_shell_command(
     state, hostname, command,
-    sudo=False, sudo_user=None, env=None, timeout=None, print_output=False
+    sudo=False, sudo_user=None, su_user=None, env=None, timeout=None, print_output=False
 ):
     '''
     Execute a command on the specified host.
@@ -178,12 +178,24 @@ def run_shell_command(
     if env is None:
         env = {}
 
-    logger.debug('Running command on {0}: "{1}"'.format(hostname, command))
-    logger.debug('Command sudo?: {0}, sudo user: {1}, env: {2}'.format(
-        sudo, sudo_user, env
-    ))
+    logger.debug('Building command on {0}: {1}'.format(hostname, command))
 
-    command = make_command(command, env=env, sudo=sudo, sudo_user=sudo_user)
+    debug_meta = {}
+
+    for key, value in six.iteritems({
+        'sudo': sudo, 'sudo_user': sudo_user, 'su_user': su_user, 'env': env
+    }):
+        if value:
+            debug_meta[key] = value
+
+    logger.debug('Command meta ({0})'.format(' '.join(
+        '{0}: {1}'.format(key, value)
+        for key, value in six.iteritems(debug_meta)
+    )))
+
+    command = make_command(command, env=env, sudo=sudo, sudo_user=sudo_user, su_user=su_user)
+
+    logger.debug('--> Running command on {0}: {1}'.format(hostname, command))
 
     if print_output:
         print('{0}>>> {1}'.format(print_prefix, command))
@@ -247,7 +259,7 @@ def _put_file(state, hostname, filename_or_io, remote_location):
 
 def put_file(
     state, hostname, file_io, remote_file,
-    sudo=False, sudo_user=None, print_output=False
+    sudo=False, sudo_user=None, su_user=None, print_output=False
 ):
     '''
     Upload file-ios to the specified host using SFTP. Supports uploading files with sudo
@@ -256,31 +268,37 @@ def put_file(
 
     print_prefix = '[{0}] '.format(colored(hostname, attrs=['bold']))
 
-    if not sudo:
-        _put_file(state, hostname, file_io, remote_file)
-
-    else:
-        # sudo is a little more complicated, as you can only sftp with the SSH user
-        # connected,  so upload to tmp and copy/chown w/sudo
-
+    # sudo/su are a little more complicated, as you can only sftp with the SSH user
+    # connected,  so upload to tmp and copy/chown w/sudo and/or su_user
+    if sudo or su_user:
         # Get temp file location
         temp_file = state.get_temp_filename(remote_file)
         _put_file(state, hostname, file_io, temp_file)
 
-        # Execute run_shell_command w/sudo to mv/chown it
+        # Execute run_shell_command w/sudo and/or su_user
         command = 'mv {0} {1}'.format(temp_file, remote_file)
-        if sudo_user:
+
+        # Move it to the su_user if present
+        if su_user:
+            command = '{0} && chown {1} {2}'.format(command, su_user, remote_file)
+
+        # Otherwise any sudo_user
+        elif sudo_user:
             command = '{0} && chown {1} {2}'.format(command, sudo_user, remote_file)
 
         channel, _, stderr = run_shell_command(
             state, hostname, command,
-            sudo=sudo, sudo_user=sudo_user,
+            sudo=sudo, sudo_user=sudo_user, su_user=su_user,
             print_output=print_output
         )
 
         if channel.exit_status > 0:
             logger.error('File error: {0}'.format('\n'.join(stderr)))
             return False
+
+    # No sudo and no su_user, so just upload it!
+    else:
+        _put_file(state, hostname, file_io, remote_file)
 
     if print_output:
         print('{0}file uploaded: {1}'.format(print_prefix, remote_file))

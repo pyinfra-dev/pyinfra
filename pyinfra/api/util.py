@@ -82,7 +82,7 @@ def sha1_hash(string):
     return hasher.hexdigest()
 
 
-def make_command(command, env=None, sudo=False, sudo_user=None):
+def make_command(command, env=None, su_user=None, sudo=False, sudo_user=None):
     '''
     Builds a shell command with various kwargs.
     '''
@@ -98,18 +98,20 @@ def make_command(command, env=None, sudo=False, sudo_user=None):
     # Escape "'s
     command = command.replace("'", "\\'")
 
-    # No sudo, just sh wrap the command
-    if not sudo:
+    # Switch user with su
+    if su_user:
+        command = "su {0} -c '{1}'".format(su_user, command)
+
+    # Otherwise just sh wrap the command
+    else:
         command = "sh -c '{0}'".format(command)
 
-    # Otherwise, work out sudo
-    else:
-        # Sudo with a user, then sh
+    # Use sudo (w/user?)
+    if sudo:
         if sudo_user:
-            command = "sudo -H -u {0} -S sh -c '{1}'".format(sudo_user, command)
-        # Sudo then sh
+            command = "sudo -H -u {0} -S {1}".format(sudo_user, command)
         else:
-            command = "sudo -H -S sh -c '{0}'".format(command)
+            command = "sudo -H -S {0}".format(command)
 
     return command
 

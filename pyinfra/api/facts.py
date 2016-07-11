@@ -70,7 +70,7 @@ def get_pipeline_facts(state, name, args, sudo, sudo_user):
 
 def get_facts(
     state, name,
-    args=None, sudo=False, sudo_user=None
+    args=None, sudo=False, sudo_user=None, su_user=None
 ):
     '''
     Get a single fact for all hosts in the state.
@@ -78,10 +78,12 @@ def get_facts(
 
     sudo = sudo or state.config.SUDO
     sudo_user = sudo_user or state.config.SUDO_USER
+    su_user = su_user or state.config.SU_USER
     ignore_errors = state.config.IGNORE_ERRORS
 
+    # If inside an operation, fetch config meta
     if state.current_op_meta:
-        sudo, sudo_user, ignore_errors = state.current_op_meta
+        sudo, sudo_user, su_user, ignore_errors = state.current_op_meta
 
     # Create an instance of the fact
     fact = FACTS[name]()
@@ -114,7 +116,7 @@ def get_facts(
     greenlets = {
         host.name: state.fact_pool.spawn(
             run_shell_command, state, host.name, command,
-            sudo=sudo, sudo_user=sudo_user,
+            sudo=sudo, sudo_user=sudo_user, su_user=su_user,
             print_output=state.print_fact_output
         )
         for host in state.inventory

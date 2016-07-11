@@ -34,6 +34,7 @@ Config options:
     --key-password PASS  SSH key password.
     --sudo               Use sudo.
     --sudo-user USER     Which user to sudo to.
+    --su-user USER
     --password PASS      SSH password auth (bad).
     --parallel NUM       Number of parallel processes.
 
@@ -175,6 +176,9 @@ try:
         if arguments['sudo_user']:
             config.SUDO_USER = arguments['sudo_user']
 
+    if arguments['su_user']:
+        config.SU_USER = arguments['su_user']
+
     if arguments['parallel']:
         config.PARALLEL = arguments['parallel']
 
@@ -233,7 +237,8 @@ try:
     if arguments['fact']:
         fact_data = get_facts(
             state, arguments['fact'], args=arguments['fact_args'],
-            sudo=arguments['sudo'], sudo_user=arguments['sudo_user']
+            sudo=arguments['sudo'], sudo_user=arguments['sudo_user'],
+            su_user=arguments['su_user']
         )
         print_fact(fact_data)
         _exit()
