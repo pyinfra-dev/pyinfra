@@ -146,9 +146,7 @@ git.repo(
     'https://github.com/Fizzadar/pyinfra',
     host.data.app_dir,
     branch='develop',
-    sudo=True,
-    # And then make this user own it
-    user='pyinfra'
+    sudo=True
     # Do the git clone/pull as the SSH user when using forwarding
     # use_ssh_user=True
 )

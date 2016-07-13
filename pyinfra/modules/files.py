@@ -211,8 +211,14 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
 
         for filename in filenames:
             put_files.append((
+                # Join local as normal (unix, win)
                 path.join(dirname, filename),
-                path.join(destination, remote_dirname, filename)
+                # Join remote as unix like
+                '/'.join(
+                    item for item in
+                    (destination, remote_dirname, filename)
+                    if item
+                )
             ))
 
     commands = []
@@ -227,7 +233,7 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
     for dirname in ensure_dirnames:
         commands.extend(directory(
             state, host,
-            '{0}/{1}'.format(destination, dirname),
+            '/'.join((destination, dirname)),
             user=user, group=group
         ))
 
@@ -447,11 +453,11 @@ def link(
             link_dirname = path.dirname(name)
 
             if not path.isabs(target):
-                target = path.normpath(path.join(link_dirname, target))
+                target = path.normpath('/'.join((link_dirname, target)))
 
             if not path.isabs(info['link_target']):
                 info['link_target'] = path.normpath(
-                    path.join(link_dirname, info['link_target'])
+                    '/'.join((link_dirname, info['link_target']))
                 )
 
         # If the target is wrong, remove & recreate the link

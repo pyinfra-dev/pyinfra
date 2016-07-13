@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import re
-from os import path
 
 from pyinfra.api import operation
 
@@ -76,7 +75,7 @@ def repo(
 
     # Store git commands for directory prefix
     git_commands = []
-    is_repo = host.fact.directory(path.join(target, '.git'))
+    is_repo = host.fact.directory('/'.join((target, '.git')))
 
     # Cloning new repo?
     if not is_repo:
