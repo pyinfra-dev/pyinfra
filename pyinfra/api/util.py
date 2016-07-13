@@ -6,7 +6,6 @@ from __future__ import division, unicode_literals, print_function
 
 import re
 from hashlib import sha1
-from copy import deepcopy
 from imp import load_source
 from types import FunctionType
 
@@ -167,17 +166,18 @@ def make_hash(obj):
     ID's for operations based on their name & arguments.
     '''
 
-    if type(obj) in (set, tuple, list):
+    if isinstance(obj, (set, tuple, list)):
         return hash(tuple([make_hash(e) for e in obj]))
 
     elif not isinstance(obj, dict):
         return hash(obj)
 
-    new_obj = deepcopy(obj)
-    for k, v in new_obj.items():
-        new_obj[k] = make_hash(v)
+    new_dict = {
+        key: make_hash(value)
+        for key, value in six.iteritems(obj)
+    }
 
-    return hash(tuple(set(new_obj.items())))
+    return hash(tuple(set(new_dict.items())))
 
 
 class get_file_io(object):
