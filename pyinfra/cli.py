@@ -181,6 +181,9 @@ def dump_state(state):
     print()
     print('--> Operation order:')
     print(json.dumps(state.op_order, indent=4, default=json_encode))
+    print()
+    print('--> Gathered facts:')
+    print(json.dumps(state.facts, indent=4, default=json_encode))
 
 
 def run_hook(state, hook_name, hook_data):
