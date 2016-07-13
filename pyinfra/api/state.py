@@ -25,6 +25,7 @@ try:
 
 # Resource isn't available on Windows
 except ImportError:
+    nofile_limit = 0
     MAX_PARALLEL = None
 
 
@@ -85,12 +86,12 @@ class State(object):
                 else len(inventory)
             )
 
-        else:
-            # If explicitly set, just issue a warning
-            if config.PARALLEL > MAX_PARALLEL:
-                logger.warning((
-                    'Parallel set to {0}, but this may hit the open files limit of {1}'
-                ).format(config.PARALLEL, nofile_limit))
+        # If explicitly set, just issue a warning
+        elif MAX_PARALLEL is not None and config.PARALLEL > MAX_PARALLEL:
+            logger.warning((
+                'Parallel set to {0}, but this may hit the open files limit of {1}.\n'
+                '    Max recommended value: {2}'
+            ).format(config.PARALLEL, nofile_limit, MAX_PARALLEL))
 
         # Setup greenlet pools
         self.pool = Pool(config.PARALLEL)
