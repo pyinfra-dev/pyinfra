@@ -7,7 +7,6 @@ from __future__ import division, unicode_literals, print_function
 import re
 from hashlib import sha1
 from imp import load_source
-from types import FunctionType
 
 import six
 from jinja2 import Template
@@ -144,22 +143,6 @@ def get_arg_value(state, host, arg):
     return arg
 
 
-def get_arg_name(arg):
-    '''
-    Returns the name or value of an argument as passed into an operation. Will use pyinfra
-    attr key where available, and function names instead of references. See attrs.py for a
-    more in-depth description.
-    '''
-
-    return (
-        arg.pyinfra_attr_key
-        if isinstance(arg, AttrBase)
-        else arg.__name__
-        if isinstance(arg, FunctionType)
-        else arg
-    )
-
-
 def make_hash(obj):
     '''
     Make a hash from an arbitrary nested dictionary, list, tuple or set, used to generate
@@ -169,15 +152,21 @@ def make_hash(obj):
     if isinstance(obj, (set, tuple, list)):
         return hash(tuple([make_hash(e) for e in obj]))
 
-    elif not isinstance(obj, dict):
-        return hash(obj)
+    elif isinstance(obj, dict):
+        new_dict = {
+            key: make_hash(value)
+            for key, value in six.iteritems(obj)
+        }
 
-    new_dict = {
-        key: make_hash(value)
-        for key, value in six.iteritems(obj)
-    }
+        return hash(tuple(set(new_dict.items())))
 
-    return hash(tuple(set(new_dict.items())))
+    else:
+        # Return the attr key where available, otherwise just the hash (see attrs.py)
+        return (
+            obj.pyinfra_attr_key
+            if isinstance(obj, AttrBase)
+            else hash(obj)
+        )
 
 
 class get_file_io(object):

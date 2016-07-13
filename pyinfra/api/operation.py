@@ -24,7 +24,7 @@ from pyinfra.pseudo_modules import PseudoModule
 from .host import Host
 from .state import State
 from .attrs import wrap_attr_data
-from .util import make_hash, get_arg_name, get_arg_value
+from .util import make_hash, get_arg_value
 from .exceptions import PyinfraError
 
 
@@ -169,16 +169,6 @@ def operation(func=None, pipeline_facts=None):
 
         # Convert any AttrBase items (returned by host.data), see attrs.py.
         if op_hash is None:
-            hash_args = [
-                get_arg_name(arg)
-                for arg in args
-            ]
-
-            hash_kwargs = {
-                key: get_arg_name(arg)
-                for key, arg in six.iteritems(kwargs)
-            }
-
             # Get the line number where this operation was called by looking through the
             # call stack for the first non-pyinfra line.
             frames = stack()
@@ -194,7 +184,7 @@ def operation(func=None, pipeline_facts=None):
 
             op_hash = (
                 names, sudo, sudo_user, su_user, line_number,
-                ignore_errors, env, hash_args, hash_kwargs
+                ignore_errors, env, args, kwargs
             )
 
         op_hash = make_hash(op_hash)
