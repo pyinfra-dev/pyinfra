@@ -5,7 +5,6 @@
 from __future__ import division, unicode_literals
 
 from uuid import uuid4
-from resource import getrlimit, RLIMIT_NOFILE
 
 from gevent.pool import Pool
 
@@ -16,12 +15,17 @@ from .util import sha1_hash
 from .exceptions import PyinfraError
 from .pipelining import PipelineFacts
 
-
 # Work out the max parallel we can achieve with the open files limit of the user/process,
 # take 10 for opening Python files and /3 for ~3 files per host during op runs.
 # See: https://github.com/Fizzadar/pyinfra/issues/44
-nofile_limit, _ = getrlimit(RLIMIT_NOFILE)
-MAX_PARALLEL = round((nofile_limit - 10) / 3)
+try:
+    from resource import getrlimit, RLIMIT_NOFILE
+    nofile_limit, _ = getrlimit(RLIMIT_NOFILE)
+    MAX_PARALLEL = round((nofile_limit - 10) / 3)
+
+# Resource isn't available on Windows
+except ImportError:
+    MAX_PARALLEL = None
 
 
 class State(object):
@@ -74,8 +78,12 @@ class State(object):
             config = Config()
 
         if not config.PARALLEL:
-            # If possible run everything in parallel, otherwise the max as defined above
-            config.PARALLEL = min(len(inventory), MAX_PARALLEL)
+            # If possible run everything in parallel, otherwise the max if defined above
+            config.PARALLEL = (
+                min(len(inventory), MAX_PARALLEL)
+                if MAX_PARALLEL is not None
+                else len(inventory)
+            )
 
         else:
             # If explicitly set, just issue a warning
