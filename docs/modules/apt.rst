@@ -64,9 +64,10 @@ Install/remove/upgrade packages & update apt.
 Versions:
     Package versions can be pinned like apt: ``<pkg>=<version>``
 
-Note:
-    ``cache_time`` only works on systems that provide the
-    ``/var/lib/apt/periodic/update-success-stamp`` file (ie Ubuntu).
+Cache time:
+    When ``cache_time`` is set the ``/var/lib/apt/periodic/update-success-stamp`` file
+    is touched upon successful update. Some distros already do this (Ubuntu), but others
+    simply leave the periodic directory empty (Debian).
 
 
 :code:`apt.ppa`
@@ -107,7 +108,9 @@ Updates apt repos.
 
 .. code:: python
 
-    apt.update()
+    apt.update(touch_periodic=False)
+
++ **touch_periodic**: touch ``/var/lib/apt/periodic/update-success-stamp`` after update
 
 
 :code:`apt.upgrade`
