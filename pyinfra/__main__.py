@@ -62,7 +62,7 @@ colorama_init()
 from pyinfra import logger, pseudo_state, pseudo_host, pseudo_inventory, hook, __version__
 from pyinfra.local import exec_file
 from pyinfra.cli import (
-    FakeHost,
+    FakeHost, FakeState,
     run_hook, dump_state, dump_trace, setup_logging,
     make_inventory, load_config, load_deploy_config, setup_arguments,
     print_meta, print_results, print_fact, print_facts_list, print_data
@@ -168,6 +168,9 @@ try:
         ssh_password=arguments['password']
     )
 
+    # Attach to pseudo inventory
+    pseudo_inventory.set(inventory)
+
     # Load up any config.py from the filesystem
     config = load_config(deploy_dir)
     # Arg based overrides
@@ -187,6 +190,13 @@ try:
         print_data(inventory)
         _exit()
 
+    # Load any hooks/config from the deploy file w/fake state & host
+    pseudo_state.set(FakeState())
+    pseudo_host.set(FakeHost())
+    load_deploy_config(arguments['deploy'], config)
+    pseudo_host.reset()
+    pseudo_state.reset()
+
     # Create/set the state
     state = State(inventory, config)
     state.deploy_dir = deploy_dir
@@ -203,16 +213,8 @@ try:
     state.print_fact_output = print_fact_output  # -vv
     state.print_lines = True
 
-    # Attach to pseudo inventory & state
-    pseudo_inventory.set(inventory)
+    # Attach to pseudo state
     pseudo_state.set(state)
-
-    # Load any hooks/config from the deploy file
-    state.active = False
-    pseudo_host.set(FakeHost())
-    load_deploy_config(arguments['deploy'], config)
-    pseudo_host.reset()
-    state.active = True
 
     # Setup the data to be passed to config hooks
     hook_data = FallbackAttrData(

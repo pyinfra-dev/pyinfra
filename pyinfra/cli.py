@@ -84,6 +84,14 @@ class FakeHost(object):
         return FakeData()
 
 
+class FakeState(object):
+    active = False
+    deploy_dir = ''
+
+    def __getattr__(self, key):
+        return FakeData()
+
+
 class LogFilter(logging.Filter):
     def __init__(self, *levels):
         self.levels = levels
