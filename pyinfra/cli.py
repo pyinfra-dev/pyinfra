@@ -376,10 +376,8 @@ def setup_arguments(arguments):
 
     # Check deploy file exists
     if arguments['DEPLOY']:
-        try:
-            open(arguments['DEPLOY']).close()
-        except IOError as e:
-            raise CliError('{0}: {1}'.format(e.strerror, arguments['DEPLOY']))
+        if not path.exists(arguments['DEPLOY']):
+            raise CliError('Deploy file not found: {1}'.format(arguments['DEPLOY']))
 
     # Setup the rest
     return {
