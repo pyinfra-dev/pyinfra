@@ -10,6 +10,7 @@ version_data = {}
 with open('pyinfra/version.py') as f:
     exec(f.read(), version_data)
 
+
 if __name__ == '__main__':
     setup(
         version=version_data['__version__'],
@@ -25,10 +26,10 @@ if __name__ == '__main__':
             'pyinfra.facts',
             'pyinfra.facts.util',
             'pyinfra.modules',
-            'pyinfra.modules.util'
+            'pyinfra.modules.util',
         ),
         package_dir={
-            'pyinfra': 'pyinfra'
+            'pyinfra': 'pyinfra',
         },
         scripts=(
             'bin/pyinfra',
@@ -41,7 +42,7 @@ if __name__ == '__main__':
             'termcolor>1,<2',
             'jinja2>2,<3',
             'python-dateutil>2,<3',
-            'six>1,<2'
+            'six>1,<2',
         ),
         extras_require={
             'dev': (
@@ -59,7 +60,17 @@ if __name__ == '__main__':
 
                 # Dev docs requirements
                 'sphinx==1.3.1',
-                'sphinx-autobuild==0.5.2'
+                'sphinx-autobuild==0.5.2',
             )
-        }
+        },
+        classifiers=(
+            'Development Status :: 4 - Beta',
+            'Intended Audience :: Developers',
+            'Intended Audience :: System Administrators',
+            'License :: OSI Approved :: MIT License',
+            'Operating System :: OS Independent',
+            'Programming Language :: Python :: 2',
+            'Programming Language :: Python :: 3',
+            'Topic :: System :: Systems Administration',
+        )
     )
