@@ -394,6 +394,7 @@ def setup_arguments(arguments):
         'debug': arguments['--debug'],
 
         'debug_data': arguments['--debug-data'],
+        'debug_state': arguments['--debug-state'],
 
         'fact': arguments['--fact'],
         'fact_args': fact_args,
@@ -417,7 +418,7 @@ def setup_arguments(arguments):
         'list_facts': arguments['--facts'],
 
         # Experimental
-        'pipelining': arguments['--enable-pipelining']
+        'pipelining': arguments['--enable-pipelining'],
     }
 
 

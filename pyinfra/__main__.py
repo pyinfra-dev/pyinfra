@@ -25,7 +25,8 @@ Deploy options:
     -v -vv               Prints remote input/output in realtime. -vv prints facts output.
     --dry                Only print proposed changes.
     --debug              Print debug info.
-    --debug-data         Print inventory hosts, data and exit.
+    --debug-data         Print inventory hosts, data and exit (no connect/deploy).
+    --debug-state        Print state information and exit (no deploy like --dry).
 
 Config options:
     -p --port PORT       SSH port number.
@@ -185,7 +186,7 @@ try:
     if arguments['parallel']:
         config.PARALLEL = arguments['parallel']
 
-    # Just debugging data? Dump & exit
+    # If --debug-data dump & exit
     if arguments['debug_data']:
         print_data(inventory)
         _exit()
@@ -293,9 +294,10 @@ try:
     print('--> Proposed changes:')
     print_meta(state)
 
-    # If debug, dump state (ops, op order, op meta) now
-    if arguments['debug']:
+    # If --debug-state, dump state (ops, op order, op meta) now & exit
+    if arguments['debug_state']:
         dump_state(state)
+        _exit()
 
     # Run the operations we generated with the deploy file
     if not arguments['dry']:
