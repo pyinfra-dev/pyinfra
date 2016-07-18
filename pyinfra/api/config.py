@@ -14,6 +14,7 @@ class Config(object):
 
     # % of hosts which have to fail for all operations to stop
     FAIL_PERCENT = None
+
     # Seconds to timeout SSH connections
     TIMEOUT = 10
 
@@ -23,7 +24,7 @@ class Config(object):
     # Gevent pool size (defaults to #of target hosts)
     PARALLEL = None
 
-    # All these can be overridden inside module calls:
+    # All these can be overridden inside individual operation calls:
 
     # Switch to this user (from ssh_user) using su before executing operations
     SU_USER = None

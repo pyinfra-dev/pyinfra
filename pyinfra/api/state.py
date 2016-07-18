@@ -155,10 +155,10 @@ class State(object):
 
     def fail_hosts(self, hosts_to_fail):
         '''
-        Flag a ``set`` of hosts as failed, error for `config.FAIL_PERCENT`.
+        Flag a ``set`` of hosts as failed, error for ``config.FAIL_PERCENT``.
         '''
 
-        # Remove the failed hosts
+        # Remove the failed hosts from the inventory
         self.inventory.active_hosts -= hosts_to_fail
 
         # Check we're not above the fail percent
