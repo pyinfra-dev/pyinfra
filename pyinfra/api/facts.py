@@ -102,7 +102,7 @@ def get_facts(
 
     # Make a hash which keeps facts unique - but usable cross-deploy/threads. Locks are
     # used to maintain order.
-    fact_hash = make_hash((name, command, sudo, sudo_user))
+    fact_hash = make_hash((name, command, sudo, sudo_user, su_user, ignore_errors))
 
     # Lock!
     state.fact_locks.setdefault(fact_hash, Semaphore()).acquire()
