@@ -150,23 +150,27 @@ def make_hash(obj):
     '''
 
     if isinstance(obj, (set, tuple, list)):
-        return hash(tuple([make_hash(e) for e in obj]))
+        hash_string = ''.join([make_hash(e) for e in obj])
 
     elif isinstance(obj, dict):
-        new_dict = {
-            key: make_hash(value)
+        hash_string = ''.join(
+            ''.join((key, make_hash(value)))
             for key, value in six.iteritems(obj)
-        }
-
-        return hash(tuple(set(new_dict.items())))
+        )
 
     else:
-        # Return the attr key where available, otherwise just the hash (see attrs.py)
-        return (
-            obj.pyinfra_attr_key
-            if isinstance(obj, AttrBase)
-            else hash(obj)
+        hash_string = (
+            # pyinfra attr key where available (host/inventory data), see attrs.py
+            obj.pyinfra_attr_key if isinstance(obj, AttrBase)
+            # Plain strings
+            else obj if isinstance(obj, six.string_types)
+            # Objects with names
+            else obj.__name__ if hasattr(obj, '__name__')
+            # Repr anything else
+            else repr(obj)
         )
+
+    return sha1_hash(hash_string)
 
 
 class get_file_io(object):
