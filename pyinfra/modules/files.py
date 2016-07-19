@@ -287,8 +287,8 @@ def put(
 
         local_file = local_filename
 
-        if not path.exists(local_file):
-            raise IOError('No such file or directory: {0}'.format(local_file))
+        if not path.isfile(local_file):
+            raise IOError('No such file: {0}'.format(local_file))
 
     mode = ensure_mode_int(mode)
     remote_file = host.fact.file(remote_filename)
