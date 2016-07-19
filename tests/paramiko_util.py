@@ -2,7 +2,7 @@
 # File: tests/paramiko_util.py
 # Desc: paramiko fake test classes/shim for full API tests
 
-import six
+from inspect import isclass
 
 
 class FakeAgentRequestHandler(object):
@@ -29,7 +29,7 @@ class FakeSSHClient(object):
         pass
 
     def connect(self, hostname, *args, **kwargs):
-        if not isinstance(hostname, six.string_types) and issubclass(hostname, Exception):
+        if isclass(hostname) and issubclass(hostname, Exception):
             raise hostname()
 
     def get_transport(self):
@@ -57,4 +57,6 @@ class FakeSFTPClient(object):
 
 
 class FakeRSAKey(object):
-    pass
+    @classmethod
+    def from_private_key_file(cls, *args, **kwargs):
+        return cls()
