@@ -125,7 +125,7 @@ class FakeFile(object):
         pass
 
 
-class PatchFiles(object):
+class patch_files(object):
     def __init__(self, patch_files):
         files = []
         files_data = {}
@@ -168,10 +168,6 @@ class PatchFiles(object):
             return FakeFile(filename, self.files_data.get(filename))
 
         raise IOError('Missing FakeFile: {0}'.format(filename))
-
-
-def patch_files(files=None):
-    return PatchFiles(files)
 
 
 def create_host(name=None, facts=None, data=None):
