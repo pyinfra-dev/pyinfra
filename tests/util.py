@@ -149,7 +149,7 @@ class patch_files(object):
     def __enter__(self):
         self.patches = [
             patch(
-                'pyinfra.modules.files.path.exists',
+                'pyinfra.modules.files.path.isfile',
                 lambda *args, **kwargs: True, create=True
             ),
             patch('pyinfra.modules.files.open', self.get_file, create=True),
