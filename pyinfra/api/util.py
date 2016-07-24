@@ -229,6 +229,9 @@ def get_file_sha1(filename_or_io):
         buff = file_io.read(BLOCKSIZE)
 
         while len(buff) > 0:
+            if isinstance(buff, six.text_type):
+                buff = buff.encode('utf-8')
+
             hasher.update(buff)
             buff = file_io.read(BLOCKSIZE)
 
