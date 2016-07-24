@@ -22,7 +22,7 @@ ssh.AgentRequestHandler = FakeAgentRequestHandler
 
 from pyinfra.api import Inventory, Config, State
 from pyinfra.api.ssh import connect_all, connect
-from pyinfra.api.operation import add_op
+from pyinfra.api.operation import add_op, add_limited_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.exceptions import PyinfraError
 
@@ -69,7 +69,7 @@ class TestInventoryApi(TestCase):
             tuple_group=([
                 ('somehost', {'another_data': 'world'}),
             ], {
-                'group_data': 'word'
+                'tuple_group_data': 'word'
             })
         )
 
@@ -78,8 +78,8 @@ class TestInventoryApi(TestCase):
         self.assertEqual(host.data.some_data, 'hello')
         self.assertEqual(host.data.another_data, 'world')
 
-        # # Check group data
-        self.assertEqual(host.data.group_data, 'word')
+        # Check group data
+        self.assertEqual(host.data.tuple_group_data, 'word')
 
 
 class TestSSHApi(TestCase):
@@ -205,6 +205,7 @@ class TestOperationsApi(TestCase):
             # Test normal
             add_op(
                 state, files.put,
+                {'First op name'},
                 'files/file.txt',
                 '/home/vagrant/file.txt'
             )
@@ -234,7 +235,7 @@ class TestOperationsApi(TestCase):
         # Ensure first op is the right one
         self.assertEqual(
             state.op_meta[first_op_hash]['names'],
-            {'Files/Put'}
+            {'First op name'}
         )
 
         # Ensure first op has the right (upload) command
@@ -248,36 +249,30 @@ class TestOperationsApi(TestCase):
         # Check run ops works
         with patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True):
             run_ops(state)
+            run_ops(state, serial=True)
+            run_ops(state, no_wait=True)
 
-    def test_run_ops(self):
-        state = State(make_inventory(), Config())
+    def test_limited_op(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
         connect_all(state)
 
+        # Add op to both hosts
         add_op(
-            state, server.shell,
-            'echo "hello world"'
+            state, server.user,
+            'testuser',
+            home='somedir'
         )
 
-        run_ops(state)
-
-    def test_run_ops_serial(self):
-        state = State(make_inventory(), Config())
-        connect_all(state)
-
-        add_op(
-            state, server.shell,
-            'echo "hello world"'
+        # Add op to just the first host
+        add_limited_op(
+            state, server.user, inventory['somehost'],
+            'somehost_user'
         )
 
-        run_ops(state, serial=True)
+        # Ensure there are two ops
+        self.assertEqual(len(state.op_order), 2)
 
-    def test_run_ops_no_wait(self):
-        state = State(make_inventory(), Config())
-        connect_all(state)
-
-        add_op(
-            state, server.shell,
-            'echo "hello world"'
-        )
-
-        run_ops(state, no_wait=True)
+        # Ensure somehost has two ops and anotherhost only has the one
+        self.assertEqual(len(state.ops['somehost']), 2)
+        self.assertEqual(len(state.ops['anotherhost']), 1)
