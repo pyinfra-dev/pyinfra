@@ -6,6 +6,7 @@ from __future__ import division, unicode_literals
 
 from uuid import uuid4
 
+import six
 from gevent.pool import Pool
 
 from pyinfra import logger
@@ -181,7 +182,7 @@ class State(object):
         '''
 
         if not hash_key:
-            hash_key = str(uuid4())
+            hash_key = six.text_type(uuid4())
 
         temp_filename = sha1_hash(hash_key)
         return '{0}/{1}'.format(self.config.TEMP_DIR, temp_filename)

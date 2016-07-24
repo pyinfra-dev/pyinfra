@@ -100,7 +100,7 @@ class FallbackAttrData(object):
                 return data[key]
 
     def __str__(self):
-        return str(self.datas)
+        return six.text_type(self.datas)
 
     def dict(self):
         out = {}
