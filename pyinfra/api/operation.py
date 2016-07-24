@@ -60,9 +60,12 @@ def add_limited_op(state, op_func, hosts, *args, **kwargs):
         state (``pyinfra.api.State`` obj): the deploy state to add the operation to
         op_func (function): the operation function from one of the modules, ie \
             ``server.user``
-        hosts (list of ``pyinfra.api.Host`` obj): hosts this operation will be limited to
+        hosts (``pyinfra.api.Host`` obj or list): hosts this operation will be limited to
         args/kwargs: passed to the operation function
     '''
+
+    if not isinstance(hosts, (list, tuple)):
+        hosts = [hosts]
 
     # Set the limit
     state.limit_hosts = hosts
@@ -264,14 +267,13 @@ def operation(func=None, pipeline_facts=None):
             # Attach keyword args
             for key, value in six.iteritems(kwargs):
                 arg = '='.join((str(key), str(value)))
-
                 if arg not in op_meta['args']:
                     op_meta['args'].append(arg)
 
         # If we're limited, and this host is not included, stop here. This means the
         # operation has been added to the host as latest_op_hash, ensuring we maintain
         # order even though this is a no-op for this host.
-        if isinstance(state.limit_hosts, list) and host not in state.limit_hosts:
+        if state.limit_hosts is not None and host not in state.limit_hosts:
             return operation_meta
 
         # We're doing some commands, meta/ops++
