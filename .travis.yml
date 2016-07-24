@@ -6,8 +6,8 @@ python:
   - '3.4'
   - '3.5'
 
-# Install pyinfra + dev/test deps
-install: 'pip install -e .[dev]'
+# Install pyinfra + test deps
+install: 'pip install -e .[test]'
 
 # Run the tests
 script: nosetests

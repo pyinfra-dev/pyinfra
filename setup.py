@@ -4,6 +4,36 @@
 
 from setuptools import setup
 
+INSTALL_REQUIRES = (
+    'gevent>1,<2',
+    'paramiko>1,<3',
+    'docopt<1',
+    'colorama<1',
+    'termcolor>1,<2',
+    'jinja2>2,<3',
+    'python-dateutil>2,<3',
+    'six>1,<2',
+)
+
+TEST_REQUIRES = (
+    'nose==1.3.7',
+    'jsontest==1.2',
+    'coverage==4.0.3',
+    'mock==1.3.0',
+)
+
+DEV_REQUIRES = TEST_REQUIRES + (
+    # Releasing
+    'wheel',
+
+    # Dev debugging
+    'ipdb',
+
+    # Dev docs requirements
+    'sphinx==1.3.1',
+    'sphinx-autobuild==0.5.2',
+)
+
 
 # Extract version info without importing entire pyinfra package
 version_data = {}
@@ -34,34 +64,10 @@ if __name__ == '__main__':
         scripts=(
             'bin/pyinfra',
         ),
-        install_requires=(
-            'gevent>1,<2',
-            'paramiko>1,<3',
-            'docopt<1',
-            'colorama<1',
-            'termcolor>1,<2',
-            'jinja2>2,<3',
-            'python-dateutil>2,<3',
-            'six>1,<2',
-        ),
+        install_requires=INSTALL_REQUIRES,
         extras_require={
-            'dev': (
-                # Releasing
-                'wheel',
-
-                # Dev debugging
-                'ipdb',
-
-                # Dev testing requirements
-                'nose==1.3.7',
-                'jsontest==1.2',
-                'coverage==4.0.3',
-                'mock==1.3.0',
-
-                # Dev docs requirements
-                'sphinx==1.3.1',
-                'sphinx-autobuild==0.5.2',
-            )
+            'dev': DEV_REQUIRES,
+            'test': TEST_REQUIRES,
         },
         classifiers=(
             'Development Status :: 4 - Beta',
