@@ -90,6 +90,9 @@ def group(
     + name: name of the group to ensure
     + present: whether the group should be present or not
     + system: whether to create a system group
+
+    System users:
+        System users don't exist on BSD, so the argument is ignored for BSD targets.
     '''
 
     commands = []
