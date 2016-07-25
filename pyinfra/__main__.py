@@ -5,11 +5,12 @@
 
 '''
 pyinfra
-Docs: pyinfra.readthedocs.org/en/develop
+Docs: pyinfra.readthedocs.io
 
 Usage:
     pyinfra -i INVENTORY DEPLOY [-v -vv options]
     pyinfra -i INVENTORY --run OP ARGS [-v -vv options]
+    pyinfra -i INVENTORY --run COMMAND [-v -vv options]
     pyinfra -i INVENTORY --fact FACT [-v options]
     pyinfra -i INVENTORY [DEPLOY] --debug-data [options]
     pyinfra (--facts | --help | --version)
@@ -18,6 +19,7 @@ Deploy options:
     DEPLOY               Deploy script filename.
     -i INVENTORY         Inventory script filename or single hostname.
     --run OP ARGS        Run a single operation with args.
+          COMMAND        Run a command using the server.shell operation.
     --fact FACT          Name of fact to run/test.
     --limit HOSTNAME     Limit the inventory, supports *wildcards and group names.
     --serial             Run commands on one host at a time.

@@ -334,6 +334,11 @@ def setup_arguments(arguments):
     # Prep --run OP ARGS
     op, args = arguments['--run'], arguments['ARGS']
 
+    # If not args, op is the args and op defaults to server.shell
+    if not args:
+        args = op
+        op = 'server.shell'
+
     # Replace op name with the module
     if op:
         op_module, op_name = op.split('.')
