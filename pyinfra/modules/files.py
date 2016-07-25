@@ -91,10 +91,14 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
     + replace: text to replace entire matching lines when ``present=True``
     + flags: list of flags to pass to sed when replacing/deleting
 
-    Note on regex matching:
-        unless line matches a line (starts with ^, ends $), pyinfra will wrap it such that
-        it does, like: ``^.*LINE*.$``. This means we don't swap parts of lines out. To use
-        more involved examples, see ``files.replace``.
+    Regex line matching:
+        Unless line matches a line (starts with ^, ends $), pyinfra will wrap it such that
+        it does, like: ``^.*LINE*.$``. This means we don't swap parts of lines out. To
+        change bits of lines, see ``files.replace``.
+
+    Regex line escaping:
+        If matching special characters (eg a crontab line containing *), remember to escape
+        it first using Python's ``re.escape``.
     '''
 
     match_line = line
