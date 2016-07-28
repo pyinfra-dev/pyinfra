@@ -18,6 +18,9 @@ Manage system groups.
 + **present**: whether the group should be present or not
 + **system**: whether to create a system group
 
+System users:
+    System users don't exist on BSD, so the argument is ignored for BSD targets.
+
 
 :code:`server.script`
 ~~~~~~~~~~~~~~~~~~~~~
