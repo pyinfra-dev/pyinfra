@@ -14,11 +14,11 @@ from pyinfra import logger
 class PipelineFacts(object):
     def __init__(self, state):
         self.state = state
+        self.state.ops_to_pipeline = []
+        self.state.facts_to_pipeline = {}
 
     def __enter__(self):
         self.state.pipelining = True
-        self.state.ops_to_pipeline = []
-        self.state.facts_to_pipeline = {}
 
     def __exit__(self, type_, value, traceback):
         self.state.pipelining = False
