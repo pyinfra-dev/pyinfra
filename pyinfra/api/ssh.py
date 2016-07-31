@@ -118,6 +118,10 @@ def connect_all(state):
                     )
                     break
 
+            # No break, so no key found
+            else:
+                raise IOError('No such private key file: {0}'.format(host.data.ssh_key))
+
         # No key or password, so let's have paramiko look for SSH agents and user keys
         else:
             kwargs['allow_agent'] = True
