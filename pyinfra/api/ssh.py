@@ -59,10 +59,10 @@ def connect(host, **kwargs):
         logger.error('SSH error on: {0}, {1}'.format(name, e))
 
     except gaierror:
-        if hostname != name:
-            logger.error('Could not resolve {0} host: {1}'.format(name, hostname))
-        else:
+        if hostname == name:
             logger.error('Could not resolve {0}'.format(name))
+        else:
+            logger.error('Could not resolve for {0} (SSH host: {1})'.format(name, hostname))
 
     except socket_error as e:
         logger.error('Could not connect: {0}:{1}, {2}'.format(
