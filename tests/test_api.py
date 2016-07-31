@@ -276,3 +276,41 @@ class TestOperationsApi(TestCase):
         # Ensure somehost has two ops and anotherhost only has the one
         self.assertEqual(len(state.ops['somehost']), 2)
         self.assertEqual(len(state.ops['anotherhost']), 1)
+
+    def test_pseudo_op(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        connect_all(state)
+
+        pseudo_state.set(state)
+        pseudo_host.set(inventory['somehost'])
+
+        # Exceute the op "bare"
+        server.shell('echo "hi"')
+
+        # Ensure this is ignored
+        state.active = False
+        server.shell('echo "hi 2"')
+
+        # We should now have one op
+        self.assertEqual(len(state.op_order), 1)
+
+        # Ensure only somehost has actual op
+        self.assertEqual(len(state.ops['somehost']), 1)
+        self.assertEqual(len(state.ops['anotherhost']), 0)
+
+        # Check we can't call it inside another op
+        state.active = True
+        state.in_op = True
+        with self.assertRaises(PyinfraError):
+            server.shell('echo "hi 3"')
+
+        pseudo_state.reset()
+        pseudo_host.reset()
+
+    def test_pipelining_active_works(self):
+        state = State(make_inventory(), Config())
+        connect_all(state)
+
+        state.pipelining = True
+        add_op(state, server.shell, 'echo "hi"')
