@@ -6,7 +6,11 @@ from unittest import TestCase
 from socket import gaierror, error as socket_error
 
 from mock import patch, mock_open
-from paramiko import SSHException, AuthenticationException
+from paramiko.agent import AgentRequestHandler
+from paramiko import (
+    SSHClient, SFTPClient, RSAKey,
+    SSHException, AuthenticationException
+)
 
 # Patch in paramiko fake classes
 from pyinfra.api import ssh
@@ -14,12 +18,9 @@ from .paramiko_util import (
     FakeSSHClient, FakeSFTPClient, FakeRSAKey,
     FakeAgentRequestHandler
 )
-ssh.SSHClient = FakeSSHClient
-ssh.SFTPClient = FakeSFTPClient
-ssh.RSAKey = FakeRSAKey
-ssh.AgentRequestHandler = FakeAgentRequestHandler
 
 
+from pyinfra import pseudo_state, pseudo_host
 from pyinfra.api import Inventory, Config, State
 from pyinfra.api.ssh import connect_all, connect
 from pyinfra.api.operation import add_op, add_limited_op
@@ -83,6 +84,21 @@ class TestInventoryApi(TestCase):
 
 
 class TestSSHApi(TestCase):
+    def setUp(self):
+        self.fake_connect_patch = patch('pyinfra.api.ssh.SSHClient.connect')
+        self.fake_connect_mock = self.fake_connect_patch.start()
+
+        self.fake_get_transport_patch = patch('pyinfra.api.ssh.SSHClient.get_transport')
+        self.fake_get_transport_patch.start()
+
+        self.fake_agentrequesthandler_patch = patch('pyinfra.api.ssh.AgentRequestHandler')
+        self.fake_agentrequesthandler_patch.start()
+
+    def tearDown(self):
+        self.fake_connect_patch.stop()
+        self.fake_get_transport_patch.stop()
+        self.fake_agentrequesthandler_patch.stop()
+
     def test_connect_all(self):
         inventory = make_inventory()
         state = State(inventory, Config())
@@ -111,27 +127,78 @@ class TestSSHApi(TestCase):
         Ensure that connection exceptions are captured and return None.
         '''
 
-        for exception in (
-            AuthenticationException, SSHException,
-            gaierror, socket_error, EOFError
-        ):
-            host = create_host(name='nowt', data={
-                'ssh_hostname': exception
-            })
-            self.assertEqual(connect(host), None)
+        with patch('pyinfra.api.ssh.SSHClient', FakeSSHClient):
+            for exception in (
+                AuthenticationException, SSHException,
+                gaierror, socket_error, EOFError
+            ):
+                host = create_host(name='nowt', data={
+                    'ssh_hostname': exception
+                })
+                self.assertEqual(connect(host), None)
 
     def test_connect_with_ssh_key(self):
         state = State(make_inventory(hosts=(
             ('somehost', {'ssh_key': 'testkey'}),
         )), Config())
 
-        state.deploy_dir = '/'
+        with patch('pyinfra.api.ssh.path.isfile', lambda *args, **kwargs: True), \
+                patch('pyinfra.api.ssh.RSAKey.from_private_key_file') as fake_key_open:
 
-        with patch('pyinfra.modules.files.path.isfile', lambda *args, **kwargs: True):
+            fake_key = FakeRSAKey()
+            fake_key_open.return_value = fake_key
+
+            state.deploy_dir = '/'
+
             connect_all(state)
 
+            # Check the key was created properly
+            fake_key_open.assert_called_with(filename='testkey', password=None)
 
-class TestStateApi(TestCase):
+            # And check the Paramiko SSH call was correct
+            self.fake_connect_mock.assert_called_with(
+                'somehost',
+                allow_agent=False,
+                look_for_keys=False,
+                pkey=fake_key,
+                port=22,
+                timeout=10,
+                username='vagrant'
+            )
+
+    def test_connect_with_missing_ssh_key(self):
+        state = State(make_inventory(hosts=(
+            ('somehost', {'ssh_key': 'testkey'}),
+        )), Config())
+
+        with self.assertRaises(IOError) as e:
+            connect_all(state)
+
+        # Ensure pyinfra style IOError
+        self.assertTrue(e.exception.message.startswith('No such private key file:'))
+
+class PatchSSHTest(TestCase):
+    '''
+    A test class that patches out the paramiko SSH parts such that they succeed as normal.
+    The SSH tests above check these are called correctly.
+    '''
+
+    @classmethod
+    def setUpClass(cls):
+        ssh.SSHClient = FakeSSHClient
+        ssh.SFTPClient = FakeSFTPClient
+        ssh.RSAKey = FakeRSAKey
+        ssh.AgentRequestHandler = FakeAgentRequestHandler
+
+    @classmethod
+    def tearDownClass(cls):
+        ssh.SSHClient = SSHClient
+        ssh.SFTPClient = SFTPClient
+        ssh.RSAKey = RSAKey
+        ssh.AgentRequestHandler = AgentRequestHandler
+
+
+class TestStateApi(PatchSSHTest):
     def test_fail_percent(self):
         '''
         Ensure that ``Config.FAIL_PERCENT`` works as intended when connecting.
@@ -149,7 +216,7 @@ class TestStateApi(TestCase):
         self.assertEqual(len(inventory.connected_hosts), 2)
 
 
-class TestOperationsApi(TestCase):
+class TestOperationsApi(PatchSSHTest):
     def test_op(self):
         state = State(make_inventory(), Config())
         connect_all(state)
@@ -246,6 +313,13 @@ class TestOperationsApi(TestCase):
             ]
         )
 
+        # Ensure second op has sudo/sudo_user
+        self.assertEqual(state.op_meta[state.op_order[1]]['sudo'], True)
+        self.assertEqual(state.op_meta[state.op_order[1]]['sudo_user'], 'pyinfra')
+
+        # Ensure third has su_user
+        self.assertEqual(state.op_meta[state.op_order[2]]['su_user'], 'pyinfra')
+
         # Check run ops works
         with patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True):
             run_ops(state)
@@ -258,11 +332,7 @@ class TestOperationsApi(TestCase):
         connect_all(state)
 
         # Add op to both hosts
-        add_op(
-            state, server.user,
-            'testuser',
-            home='somedir'
-        )
+        add_op(state, server.shell, 'echo "hi"')
 
         # Add op to just the first host
         add_limited_op(
