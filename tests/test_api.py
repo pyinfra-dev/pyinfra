@@ -175,7 +175,7 @@ class TestSSHApi(TestCase):
             connect_all(state)
 
         # Ensure pyinfra style IOError
-        self.assertTrue(e.exception.message.startswith('No such private key file:'))
+        self.assertTrue(e.exception.args[0].startswith('No such private key file:'))
 
 class PatchSSHTest(TestCase):
     '''
