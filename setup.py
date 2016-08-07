@@ -28,6 +28,7 @@ DEV_REQUIRES = TEST_REQUIRES + (
 
     # Dev debugging
     'ipdb',
+    'ipdbplugin',
 
     # Dev docs requirements
     'sphinx==1.3.1',
