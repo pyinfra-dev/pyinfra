@@ -16,7 +16,7 @@ from paramiko import (
 from pyinfra.api import ssh
 from .paramiko_util import (
     FakeSSHClient, FakeSFTPClient, FakeRSAKey,
-    FakeAgentRequestHandler
+    FakeAgentRequestHandler, FakeChannel, FakeBuffer
 )
 
 
@@ -200,10 +200,6 @@ class PatchSSHTest(TestCase):
 
 class TestStateApi(PatchSSHTest):
     def test_fail_percent(self):
-        '''
-        Ensure that ``Config.FAIL_PERCENT`` works as intended when connecting.
-        '''
-
         inventory = make_inventory(('somehost', SSHException, 'anotherhost'))
         state = State(inventory, Config(FAIL_PERCENT=1))
 
@@ -219,6 +215,13 @@ class TestStateApi(PatchSSHTest):
 class TestOperationsApi(PatchSSHTest):
     def test_op(self):
         state = State(make_inventory(), Config())
+
+        # Enable printing on this test to catch any exceptions in the formatting
+        state.print_output = True
+        state.print_fact_info = True
+        state.print_fact_output = True
+        state.print_lines = True
+
         connect_all(state)
 
         add_op(
@@ -230,7 +233,10 @@ class TestOperationsApi(PatchSSHTest):
             sudo=True,
             sudo_user='test_sudo',
             su_user='test_su',
-            ignore_errors=True
+            ignore_errors=True,
+            env={
+                'TEST': 'what',
+            }
         )
 
         # Ensure we have an op
@@ -264,6 +270,20 @@ class TestOperationsApi(PatchSSHTest):
         # Ensure run ops works
         run_ops(state)
 
+        # Ensure ops completed OK
+        self.assertEqual(state.results['somehost']['success_ops'], 1)
+        self.assertEqual(state.results['somehost']['ops'], 1)
+        self.assertEqual(state.results['anotherhost']['success_ops'], 1)
+        self.assertEqual(state.results['anotherhost']['ops'], 1)
+
+        # And w/o errors
+        self.assertEqual(state.results['somehost']['error_ops'], 0)
+        self.assertEqual(state.results['anotherhost']['error_ops'], 0)
+
+        # And with the different modes
+        run_ops(state, serial=True)
+        run_ops(state, no_wait=True)
+
     def test_file_op(self):
         state = State(make_inventory(), Config())
         connect_all(state)
@@ -291,6 +311,7 @@ class TestOperationsApi(PatchSSHTest):
                 state, files.put,
                 'files/file.txt',
                 '/home/vagrant/file.txt',
+                sudo=True,
                 su_user='pyinfra'
             )
 
@@ -323,8 +344,16 @@ class TestOperationsApi(PatchSSHTest):
         # Check run ops works
         with patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True):
             run_ops(state)
-            run_ops(state, serial=True)
-            run_ops(state, no_wait=True)
+
+        # Ensure ops completed OK
+        self.assertEqual(state.results['somehost']['success_ops'], 3)
+        self.assertEqual(state.results['somehost']['ops'], 3)
+        self.assertEqual(state.results['anotherhost']['success_ops'], 3)
+        self.assertEqual(state.results['anotherhost']['ops'], 3)
+
+        # And w/o errors
+        self.assertEqual(state.results['somehost']['error_ops'], 0)
+        self.assertEqual(state.results['anotherhost']['error_ops'], 0)
 
     def test_limited_op(self):
         inventory = make_inventory()
@@ -346,6 +375,77 @@ class TestOperationsApi(PatchSSHTest):
         # Ensure somehost has two ops and anotherhost only has the one
         self.assertEqual(len(state.ops['somehost']), 2)
         self.assertEqual(len(state.ops['anotherhost']), 1)
+
+    def test_run_once_serial_op(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        connect_all(state)
+
+        # Add a run once op
+        add_op(state, server.shell, 'echo "hi"', run_once=True, serial=True)
+
+        # Ensure it's added to op_order
+        self.assertEqual(len(state.op_order), 1)
+
+        # Ensure between the two hosts we only run the one op
+        self.assertEqual(len(state.ops['somehost']) + len(state.ops['anotherhost']), 1)
+
+        # Check run works
+        run_ops(state)
+
+        self.assertEqual((
+            state.results['somehost']['success_ops']
+            + state.results['anotherhost']['success_ops']
+        ), 1)
+
+    def test_full_op_fail(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        connect_all(state)
+
+        add_op(state, server.shell, 'echo "hi"')
+
+        with patch('pyinfra.api.operations.run_shell_command') as fake_run_command:
+            fake_channel = FakeChannel(1)
+            fake_run_command.return_value = (
+                fake_channel,
+                FakeBuffer('', fake_channel),
+                FakeBuffer('', fake_channel)
+            )
+
+            with self.assertRaises(PyinfraError) as e:
+                run_ops(state)
+
+            self.assertEqual(e.exception.args[0], 'No hosts remaining!')
+
+            # Ensure the op was not flagged as success
+            self.assertEqual(state.results['somehost']['success_ops'], 0)
+            # And was flagged asn an error
+            self.assertEqual(state.results['somehost']['error_ops'], 1)
+
+    def test_ignore_errors_op_fail(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        connect_all(state)
+
+        add_op(state, server.shell, 'echo "hi"', ignore_errors=True)
+
+        with patch('pyinfra.api.operations.run_shell_command') as fake_run_command:
+            fake_channel = FakeChannel(1)
+            fake_run_command.return_value = (
+                fake_channel,
+                FakeBuffer('', fake_channel),
+                FakeBuffer('', fake_channel)
+            )
+
+            # This should run OK
+            run_ops(state)
+
+            # Ensure the op was added to results
+            self.assertEqual(state.results['somehost']['ops'], 1)
+            self.assertEqual(state.results['somehost']['error_ops'], 1)
+            # But not as a success
+            self.assertEqual(state.results['somehost']['success_ops'], 0)
 
     def test_pseudo_op(self):
         inventory = make_inventory()
