@@ -19,6 +19,9 @@ def include(filename, hosts=None):
     Executes a local python file within the ``pyinfra.pseudo_state.deploy_dir`` directory.
     '''
 
+    if not pseudo_state.active:
+        return
+
     if isinstance(hosts, list):
         pseudo_state.limit_hosts = hosts
 
