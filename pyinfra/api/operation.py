@@ -239,7 +239,19 @@ def operation(func=None, pipeline_facts=None):
 
         state.meta[host.name]['latest_op_hash'] = op_hash
 
-        # Create/update shared (between servers) operation meta
+        if (
+            # If we're limited, and this host is not included, stop here. This means the
+            # operation has been added to the host as latest_op_hash, ensuring we maintain
+            # order even though this is a no-op for this host.
+            (state.limit_hosts is not None and host not in state.limit_hosts)
+
+            # If we're a run-once op, exit here if this op has been attached to another
+            # host already.
+            or (run_once and op_hash in state.op_meta)
+        ):
+            return operation_meta
+
+        # Ensure shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(op_hash, {
             'names': set(),
             'args': [],
@@ -269,12 +281,6 @@ def operation(func=None, pipeline_facts=None):
                 arg = '='.join((str(key), str(value)))
                 if arg not in op_meta['args']:
                     op_meta['args'].append(arg)
-
-        # If we're limited, and this host is not included, stop here. This means the
-        # operation has been added to the host as latest_op_hash, ensuring we maintain
-        # order even though this is a no-op for this host.
-        if state.limit_hosts is not None and host not in state.limit_hosts:
-            return operation_meta
 
         # We're doing some commands, meta/ops++
         state.meta[host.name]['ops'] += 1

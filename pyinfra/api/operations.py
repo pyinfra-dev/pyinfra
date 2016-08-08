@@ -28,16 +28,9 @@ def _run_op(state, hostname, op_hash):
     stderr_buffer = []
     print_prefix = '{}: '.format(hostname, attrs=['bold'])
 
-    skip = False
-
-    # If run once & already run, flag to skip
-    if op_meta['run_once'] and op_hash in state.ops_run:
-        skip = True
-        logger.debug('Skipping {0} on {1}, run once'.format(op_hash, hostname))
-    else:
-        logger.debug('Starting operation {0} on {1}'.format(
-            ', '.join(op_meta['names']), hostname
-        ))
+    logger.debug('Starting operation {0} on {1}'.format(
+        ', '.join(op_meta['names']), hostname
+    ))
 
     state.ops_run.add(op_hash)
 
@@ -54,16 +47,14 @@ def _run_op(state, hostname, op_hash):
         if isinstance(command, dict):
             if 'sudo' in command:
                 sudo = command['sudo']
+
             if 'sudo_user' in command:
                 sudo_user = command['sudo_user']
+
             if 'su_user' in command:
                 su_user = command['su_user']
 
             command = command['command']
-
-        if skip:
-            # Not continue because we need to +commands below
-            pass
 
         # Tuples stand for callbacks & file uploads
         elif isinstance(command, tuple):
@@ -121,14 +112,13 @@ def _run_op(state, hostname, op_hash):
         state.results[hostname]['ops'] += 1
         state.results[hostname]['success_ops'] += 1
 
-        if not skip:
-            logger.info('[{0}] {1}'.format(
-                colored(hostname, attrs=['bold']),
-                colored(
-                    'Success' if len(op_data['commands']) > 0 else 'No changes',
-                    'green'
-                )
-            ))
+        logger.info('[{0}] {1}'.format(
+            colored(hostname, attrs=['bold']),
+            colored(
+                'Success' if len(op_data['commands']) > 0 else 'No changes',
+                'green'
+            )
+        ))
 
         return True
 
@@ -215,8 +205,10 @@ def run_ops(state, serial=False, no_wait=False):
         op_meta = state.op_meta[op_hash]
 
         op_types = []
+
         if op_meta['serial']:
             op_types.append('serial')
+
         if op_meta['run_once']:
             op_types.append('run once')
 
