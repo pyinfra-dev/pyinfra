@@ -90,7 +90,7 @@ def _run_op(state, hostname, op_hash):
 
                 # Keep stderr in case of error
                 stderr_buffer.extend(stderr)
-                status = channel.exit_status <= 0
+                status = channel.exit_status == 0
 
             except timeout_error:
                 timeout_message = 'Operation timeout after {0}s'.format(op_meta['timeout'])
