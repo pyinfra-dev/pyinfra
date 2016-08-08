@@ -5,13 +5,15 @@
 from types import MethodType
 from inspect import getmembers, getargspec, isclass
 
+from six.moves import range
+
 from pyinfra import facts
 from pyinfra.api.facts import FactBase
 from pyinfra.api.util import underscore
 
 
 def _title_line(char, string):
-    return ''.join(char for _ in xrange(0, len(string)))
+    return ''.join(char for _ in range(0, len(string)))
 
 def build_facts():
     lines = []
@@ -19,7 +21,7 @@ def build_facts():
     # Now we generate a facts.rst describing the use of the facts as:
     # host.data.<snake_case_fact>
     for module_name in facts.__all__:
-        print '--> Doing fact module: {0}'.format(module_name)
+        print('--> Doing fact module: {0}'.format(module_name))
         module = getattr(facts, module_name)
 
         lines.append(module_name.title())
@@ -68,7 +70,7 @@ def build_facts():
             lines.append('')
 
     # Write out the file
-    print '--> Writing docs/facts.rst'
+    print('--> Writing docs/facts.rst')
 
     out = '\n'.join(lines)
     out = '''
@@ -87,5 +89,5 @@ Facts Index
 
 
 if __name__ == '__main__':
-    print '### Building fact docs'
+    print('### Building fact docs')
     build_facts()

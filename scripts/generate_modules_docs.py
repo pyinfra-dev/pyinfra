@@ -7,11 +7,13 @@ from types import FunctionType
 from importlib import import_module
 from inspect import getmembers, getargspec
 
+from six.moves import range
+
 from pyinfra import modules
 
 
 def _title_line(char, string):
-    return ''.join(char for _ in xrange(0, len(string)))
+    return ''.join(char for _ in range(0, len(string)))
 
 
 def _format_doc_line(line):
@@ -26,7 +28,7 @@ def build_facts():
     for module_name in modules.__all__:
         lines = []
 
-        print '--> Doing module: {0}'.format(module_name)
+        print('--> Doing module: {0}'.format(module_name))
         module = import_module('pyinfra.modules.{0}'.format(module_name))
 
         lines.append(module_name.title())
@@ -98,8 +100,9 @@ def build_facts():
                 args_string = ', '.join(args)
 
             else:
-                top_args = args[:arg_count / 2]
-                bottom_args = args[arg_count / 2:]
+                split_point = round(arg_count / 2)
+                top_args = args[:split_point]
+                bottom_args = args[split_point:]
 
                 args_string = '''
         {0},
@@ -129,7 +132,7 @@ def build_facts():
 
         # Write out the file
         module_filename = 'docs/modules/{0}.rst'.format(module_name)
-        print '--> Writing {0}'.format(module_filename)
+        print('--> Writing {0}'.format(module_filename))
 
         out = '\n'.join(lines)
 
@@ -139,5 +142,5 @@ def build_facts():
 
 
 if __name__ == '__main__':
-    print '### Building module docs'
+    print('### Building module docs')
     build_facts()
