@@ -5,6 +5,7 @@
 from __future__ import division, unicode_literals, print_function
 
 from os import path
+from time import sleep
 from socket import (
     gaierror,
     error as socket_error, timeout as timeout_error
@@ -12,6 +13,7 @@ from socket import (
 
 import six
 import gevent
+
 from termcolor import colored
 from paramiko.agent import AgentRequestHandler
 from paramiko import (
@@ -235,8 +237,21 @@ def run_shell_command(
         stderr_reader.kill()
         raise timeout_error()
 
+    # Read the buffers into a list of lines
     stdout = stdout_reader.get()
     stderr = stderr_reader.get()
+
+    # Wait until the exit code is ready. We have to sleep between checks to allow gevent
+    # to jump to the paramiko networking stack to receive the final exit code. Normally
+    # this is ready after reading out the buffers, but it's possible the exit code didn't
+    # make it into the final read.
+    ready = channel.exit_status_ready()
+    while ready is False:
+        logger.debug('--> Waiting for exit status...')
+        sleep(0.001)
+        ready = channel.exit_status_ready()
+
+    logger.debug('--> Command exit status: {0}'.format(channel.exit_status))
     return channel, stdout, stderr
 
 
