@@ -100,7 +100,7 @@ def build_facts():
                 args_string = ', '.join(args)
 
             else:
-                split_point = round(arg_count / 2)
+                split_point = int(round(arg_count / 2))
                 top_args = args[:split_point]
                 bottom_args = args[split_point:]
 
