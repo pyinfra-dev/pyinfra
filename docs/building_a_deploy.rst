@@ -348,7 +348,7 @@ arguments:
 
     @hook.before_connect
     def my_callback(data, state):
-        print 'Before connect hook!'
+        print('Before connect hook!')
 
 To abort a deploy, a hook can raise a ``hook.Error`` which the CLI
 will handle.

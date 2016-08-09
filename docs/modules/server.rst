@@ -56,8 +56,8 @@ Manage system users & their ssh `authorized_keys`. Options:
 .. code:: python
 
     server.user(
-        name, present=True, home=None, shell=None,
-        group=None, groups=None, public_keys=None, ensure_home=True, system=False
+        name, present=True, home=None, shell=None, group=None,
+        groups=None, public_keys=None, delete_keys=False, ensure_home=True, system=False
     )
 
 + **name**: name of the user to ensure
@@ -67,12 +67,13 @@ Manage system users & their ssh `authorized_keys`. Options:
 + **group**: the users primary group
 + **groups**: the users secondary groups
 + **public_keys**: list of public keys to attach to this user, ``home`` must be specified
++ **delete_keys**: whether to remove any keys not specified in ``public_keys``
 + **ensure_home**: whether to ensure the ``home`` directory exists
 + **system**: whether to create a system account
 
 Home directory:
     When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
-    ``/home/{name}``
+    ``/home/{name}``.
 
 
 :code:`server.wait`

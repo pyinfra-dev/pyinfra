@@ -7,7 +7,7 @@ This guide should help describe the basics of deploying stuff with pyinfra.
 Install
 -------
 
-pyinfra requires `Python <https://python.org>`_ and can be installed with ``pip``:
+pyinfra requires `Python <https://python.org>`_ and can be installed with `pip <https://pip.pypa.io/en/stable/>`_:
 
 .. code:: bash
 
@@ -18,9 +18,9 @@ pyinfra requires `Python <https://python.org>`_ and can be installed with ``pip`
     Usage:
         pyinfra -i INVENTORY DEPLOY [-v -vv options]
         pyinfra -i INVENTORY --run OP ARGS [-v -vv options]
-        pyinfra -i INVENTORY --fact FACT [-v options]
-        pyinfra -i INVENTORY [DEPLOY] --debug-data [options]
-        pyinfra (--facts | --help | --version)
+        pyinfra -i INVENTORY --run COMMAND [-v -vv options]
+        pyinfra -i INVENTORY --fact FACT [-vv options]
+        ...
 
 
 Command Line Ops
@@ -29,8 +29,7 @@ Command Line Ops
 To deploy something with pyinfra, you need an **inventory** and some **operations**:
 
 + **The inventory** holds the target hosts, groups and any data associated with them
-+ **The operations** define the desired state of the target hosts, and are grouped as
-**modules**
++ **The operations** define the desired state of the target hosts, and are grouped as **modules**
 
 Lets start by running a deploy that will ensure user "fred" exists, using the ``server.user`` operation:
 
