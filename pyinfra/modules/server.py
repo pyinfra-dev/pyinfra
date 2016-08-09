@@ -122,7 +122,7 @@ def group(
 def user(
     state, host, name,
     present=True, home=None, shell=None, group=None, groups=None,
-    public_keys=None, ensure_home=True, system=False
+    public_keys=None, delete_keys=False, ensure_home=True, system=False
 ):
     '''
     Manage system users & their ssh `authorized_keys`. Options:
@@ -134,12 +134,13 @@ def user(
     + group: the users primary group
     + groups: the users secondary groups
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
+    + delete_keys: whether to remove any keys not specified in ``public_keys``
     + ensure_home: whether to ensure the ``home`` directory exists
     + system: whether to create a system account
 
     Home directory:
         When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
-        ``/home/{name}``
+        ``/home/{name}``.
     '''
 
     commands = []
@@ -224,17 +225,33 @@ def user(
 
         filename = '{0}/.ssh/authorized_keys'.format(home)
 
-        # Ensure authorized_keys
-        commands.extend(files.file(
-            state, host, filename,
-            user=name, group=name,
-            mode=600
-        ))
-
-        for key in public_keys:
-            commands.extend(files.line(
-                state, host,
-                filename, key
+        if delete_keys:
+            # Create a whole new authorized_keys file
+            keys_file = six.StringIO('{0}\n'.format(
+                '\n'.join(public_keys)
             ))
+
+            # And ensure it exists
+            commands.extend(files.put(
+                state, host,
+                keys_file, filename,
+                user=name, group=name,
+                mode=600
+            ))
+
+        else:
+            # Ensure authorized_keys exists
+            commands.extend(files.file(
+                state, host, filename,
+                user=name, group=name,
+                mode=600
+            ))
+
+            # And every public key is present
+            for key in public_keys:
+                commands.extend(files.line(
+                    state, host,
+                    filename, key
+                ))
 
     return commands
