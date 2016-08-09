@@ -10,6 +10,7 @@ import json
 import shlex
 import logging
 import traceback
+
 from os import path
 from fnmatch import fnmatch
 from datetime import datetime
@@ -27,11 +28,10 @@ except ImportError:
     io_bases = IOBase
 
 import six
+
 from termcolor import colored
 
 from pyinfra import logger, pseudo_inventory
-from pyinfra.pseudo_modules import PseudoModule
-
 from pyinfra.api import Config, Inventory
 from pyinfra.api.facts import get_fact_names, is_fact
 from pyinfra.api.exceptions import PyinfraError
@@ -41,6 +41,11 @@ from .hook import HOOKS
 
 STDOUT_LOG_LEVELS = (logging.DEBUG, logging.INFO)
 STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
+
+ALLOWED_DATA_TYPES = tuple(
+    list(six.string_types) + list(six.integer_types)
+    + [bool, dict, list, set, tuple, float, complex]
+)
 
 
 class CliError(PyinfraError):
@@ -557,11 +562,10 @@ def make_inventory(
             # Read the files locals into a dict
             attrs = exec_file(data_filename, return_locals=True)
 
-            # Strip out any pseudo module imports and _prefixed variables
             data.update({
                 key: value
                 for key, value in six.iteritems(attrs)
-                if not isinstance(value, PseudoModule)
+                if isinstance(value, ALLOWED_DATA_TYPES)
                 and not key.startswith('_')
                 and key.islower()
             })
@@ -588,7 +592,6 @@ def make_inventory(
                 host for host in all_hosts
                 if (isinstance(host, tuple) and fnmatch(host[0], limit))
                 or (isinstance(host, six.string_types) and fnmatch(host, limit))
-
             ]
 
         # Reassign the ALL group w/limit
