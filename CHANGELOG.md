@@ -1,3 +1,8 @@
+# v0.1.1
+
++ Don't generate set groups when `groups` is an empty list in `server.user`.
+
+
 # v0.1
 
 + First versioned release, start of changelog
