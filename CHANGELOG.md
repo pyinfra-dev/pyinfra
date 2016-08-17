@@ -1,3 +1,9 @@
+# v0.1.2
+
++ Improve private key error handling
++ Ask for encrypted private key passwords in CLI mode
+
+
 # v0.1.1
 
 + Don't generate set groups when `groups` is an empty list in `server.user`.
