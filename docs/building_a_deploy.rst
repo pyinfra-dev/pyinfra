@@ -365,7 +365,7 @@ the ``pyinfra.local`` module:
         app_branch = data.app_branch
 
         if branch != app_branch:
-            # Raise HookError for pyinfra to handle
-            raise HookError('We\'re on the wrong branch (want {0}, got {1})!'.format(
+            # Raise hook.Error for pyinfra to handle
+            raise hook.Error('We\'re on the wrong branch (want {0}, got {1})!'.format(
                 branch, app_branch
             ))
