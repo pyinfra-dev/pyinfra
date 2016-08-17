@@ -390,7 +390,12 @@ def setup_arguments(arguments):
     # Check deploy file exists
     if arguments['DEPLOY']:
         if not path.exists(arguments['DEPLOY']):
-            raise CliError('Deploy file not found: {1}'.format(arguments['DEPLOY']))
+            raise CliError('Deploy file not found: {0}'.format(arguments['DEPLOY']))
+
+    # Check our key file exists
+    if arguments['--key']:
+        if not path.exists(arguments['--key']):
+            raise CliError('Private key file not found: {0}'.format(arguments['--key']))
 
     # Setup the rest
     return {
