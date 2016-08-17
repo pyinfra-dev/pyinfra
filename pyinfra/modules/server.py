@@ -196,8 +196,8 @@ def user(
         if group and user['group'] != group:
             args.append('-g {0}'.format(group))
 
-        # Check secondary groups
-        if set(user['groups']) != set(groups):
+        # Check secondary groups, if defined
+        if groups and set(user['groups']) != set(groups):
             args.append('-G {0}'.format(','.join(groups)))
 
         # Need to mod the user?

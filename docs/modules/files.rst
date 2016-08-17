@@ -29,8 +29,8 @@ Download files from remote locations.
 .. code:: python
 
     files.download(
-        source_url, destination, user=None,
-        group=None, mode=None, cache_time=None, force=False
+        source_url, destination, user=None, group=None,
+        mode=None, cache_time=None, force=False
     )
 
 + **source_url**: source URl of the file
