@@ -9,7 +9,7 @@ from mock import patch, mock_open
 from paramiko.agent import AgentRequestHandler
 from paramiko import (
     SSHClient, SFTPClient, RSAKey,
-    SSHException, AuthenticationException
+    SSHException, AuthenticationException, PasswordRequiredException,
 )
 
 # Patch in paramiko fake classes
@@ -153,7 +153,7 @@ class TestSSHApi(TestCase):
             connect_all(state)
 
             # Check the key was created properly
-            fake_key_open.assert_called_with(filename='testkey', password=None)
+            fake_key_open.assert_called_with(filename='testkey')
 
             # And check the Paramiko SSH call was correct
             self.fake_connect_mock.assert_called_with(
@@ -165,6 +165,30 @@ class TestSSHApi(TestCase):
                 timeout=10,
                 username='vagrant'
             )
+
+    def test_connect_with_ssh_key_password(self):
+        state = State(make_inventory(hosts=(
+            ('somehost', {'ssh_key': 'testkey', 'ssh_key_password': 'testpass'}),
+        )), Config())
+
+        with patch('pyinfra.api.ssh.path.isfile', lambda *args, **kwargs: True), \
+                patch('pyinfra.api.ssh.RSAKey.from_private_key_file') as fake_key_open:
+
+            def fake_key_open_fail(*args, **kwargs):
+                if 'password' not in kwargs:
+                    raise PasswordRequiredException()
+
+            fake_key_open.side_effect = fake_key_open_fail
+
+            fake_key = FakeRSAKey()
+            fake_key_open.return_value = fake_key
+
+            state.deploy_dir = '/'
+
+            connect_all(state)
+
+            # Check the key was created properly
+            fake_key_open.assert_called_with(filename='testkey', password='testpass')
 
     def test_connect_with_missing_ssh_key(self):
         state = State(make_inventory(hosts=(

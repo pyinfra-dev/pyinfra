@@ -72,6 +72,9 @@ class State(object):
         self.ssh_connections = {}
         self.sftp_connections = {}
 
+        # Private keys
+        self.private_keys = {}
+
         # Facts storage
         self.facts = {}
         self.fact_locks = {}
