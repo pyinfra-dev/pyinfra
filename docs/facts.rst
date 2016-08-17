@@ -24,8 +24,8 @@ Apt
     
 
 
-:code:`deb_package`
-~~~~~~~~~~~~~~~~~~~
+:code:`deb_package(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns information on a .deb file.
@@ -93,32 +93,32 @@ Devices
 Files
 -----
 
-:code:`directory`
-~~~~~~~~~~~~~~~~~
+:code:`directory(name)`
+~~~~~~~~~~~~~~~~~~~~~~~
 
 
-:code:`file`
-~~~~~~~~~~~~
+:code:`file(name)`
+~~~~~~~~~~~~~~~~~~
 
 
-:code:`find_directories`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`find_directories(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of directories from a start point, recursively using find.
     
 
 
-:code:`find_files`
-~~~~~~~~~~~~~~~~~~
+:code:`find_files(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of files from a start point, recursively using find.
     
 
 
-:code:`find_in_file`
-~~~~~~~~~~~~~~~~~~~~
+:code:`find_in_file(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Checks for the existence of text in a file using grep. Returns a list of matching
@@ -126,20 +126,20 @@ Files
     
 
 
-:code:`find_links`
-~~~~~~~~~~~~~~~~~~
+:code:`find_links(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of links from a start point, recursively using find.
     
 
 
-:code:`link`
-~~~~~~~~~~~~
+:code:`link(name)`
+~~~~~~~~~~~~~~~~~~
 
 
-:code:`sha1_file`
-~~~~~~~~~~~~~~~~~
+:code:`sha1_file(name)`
+~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a SHA1 hash of a file. Works with both sha1sum and sha1.
@@ -165,8 +165,8 @@ Gem
 Git
 ---
 
-:code:`git_branch`
-~~~~~~~~~~~~~~~~~~
+:code:`git_branch(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Init
@@ -232,8 +232,8 @@ Init
 Npm
 ---
 
-:code:`npm_local_packages`
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`npm_local_packages(directory)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of locally installed npm packages in a given directory:
@@ -274,8 +274,8 @@ Pip
     
 
 
-:code:`pip_virtualenv_packages`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`pip_virtualenv_packages(venv)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Pkg
@@ -301,8 +301,8 @@ Server
 ~~~~~~~~~~~~
 
 
-:code:`command`
-~~~~~~~~~~~~~~~
+:code:`command(command)`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 :code:`date`
@@ -373,8 +373,8 @@ Returns the current datetime on the server.
     
 
 
-:code:`which`
-~~~~~~~~~~~~~
+:code:`which(name)`
+~~~~~~~~~~~~~~~~~~~
 
 
 Yum
@@ -393,8 +393,8 @@ Yum
     
 
 
-:code:`rpm_package`
-~~~~~~~~~~~~~~~~~~~
+:code:`rpm_package(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns information on a .rpm file.
