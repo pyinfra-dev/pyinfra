@@ -202,6 +202,7 @@ try:
 
     # Create/set the state
     state = State(inventory, config)
+    state.is_cli = True
     state.deploy_dir = deploy_dir
 
     # Setup printing on the new state

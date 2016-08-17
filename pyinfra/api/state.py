@@ -65,6 +65,7 @@ class State(object):
     # Used in CLI
     deploy_dir = None  # base directory for locating files/templates/etc
     active = True  # used to disable operation calls when scanning deploy.py for config
+    is_cli = False
 
     def __init__(self, inventory, config=None):
         # Connection storage
