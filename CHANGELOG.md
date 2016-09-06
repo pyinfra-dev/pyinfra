@@ -1,3 +1,8 @@
+# v0.1.3
+
++ Fix issue when removing users that don't exist
+
+
 # v0.1.2
 
 + Improve private key error handling
