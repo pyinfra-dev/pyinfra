@@ -153,9 +153,10 @@ def user(
     if home is None:
         home = '/home/{0}'.format(name)
 
-    # User exists but we don't want them?
-    if not present and user:
-        commands.append('userdel {0}'.format(name))
+    # User not wanted?
+    if not present:
+        if user:
+            commands.append('userdel {0}'.format(name))
         return commands
 
     # User doesn't exist but we want them?
