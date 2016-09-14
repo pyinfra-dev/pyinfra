@@ -6,6 +6,7 @@ from __future__ import division, unicode_literals, print_function
 
 from os import path
 from time import sleep
+from getpass import getpass
 from socket import (
     gaierror,
     error as socket_error, timeout as timeout_error
@@ -59,7 +60,7 @@ def _get_private_key(state, key_filename, key_password):
             # anywhere else without duplicating lots of key related code into cli.py.
             if not key_password:
                 if state.is_cli:
-                    key_password = raw_input(
+                    key_password = getpass(
                         'Enter password for private key: {0}: '.format(
                             key_filename
                         )
