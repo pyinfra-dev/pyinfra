@@ -1,3 +1,8 @@
+# v0.1.4
+
++ Enable passing of multiple, comma separated hosts, as inventory
++ Use `getpass`, not `raw_input` for collecting key passwords in CLI mode
+
 # v0.1.3
 
 + Fix issue when removing users that don't exist
