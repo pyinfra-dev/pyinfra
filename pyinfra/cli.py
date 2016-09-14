@@ -505,9 +505,9 @@ def make_inventory(
         if '/' in inventory_filename:
             raise CliError('{0}: {1}'.format(e.strerror, inventory_filename))
 
-        # Otherwise we assume the inventory file is a single hostname
+        # Otherwise we assume the inventory is actually a hostname or list of hostnames
         groups = {
-            'ALL': [inventory_filename]
+            'ALL': inventory_filename.split(',')
         }
 
     all_data = {}
