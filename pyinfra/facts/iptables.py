@@ -3,20 +3,29 @@
 # Desc: facts for the Linux iptables firewall
 
 from __future__ import unicode_literals
-from collections import OrderedDict
 
 from pyinfra.api import FactBase
 
+# Mapping for iptables code arguments to variable names that can be manipulated
+# from Python
 IPTABLES_ARGS = {
     '--dport': 'dport',
     '-p': 'protocol',
     '--to-destination': 'destination',
     '-i': 'interface',
+    '-A': 'chain',
+    '-m': 'match',
+    '-j': 'jump',
 }
 
 
 def parse_rule(line):
-    "Parse one iptables rule"
+    '''
+    Parse one iptables rule. Returns a dict where each iptables code argument
+    is mapped to a name using IPTABLES_ARGS.
+
+    + line: line matching a rule
+    '''
     line = line.split()
     keys = line[::2]
     values = line[1::2]
@@ -30,8 +39,9 @@ def parse_rule(line):
 
 
 def parse_rules(output):
-    "Parse iptables rules from an output list"
+    "Parse iptables rules from an iptables-save output list"
     for line in output:
+        # Rules start with '-'
         if line.startswith('-'):
             yield parse_rule(line)
 
@@ -45,30 +55,3 @@ class Iptables(FactBase):
 
     def process(self, output):
         return list(parse_rules(output))
-
-
-class IptablesForward(Iptables):
-    '''
-    Check if a specific iptables port forwarding rule is present
-    '''
-
-    def command(self, dport, to_ip, to_port=None,
-                interface='eth0', protocol='tcp'):
-        to_port = to_port or dport
-        self.definition = {
-            'dport': str(dport),
-            'destination': '{}:{}'.format(to_ip, to_port),
-            'interface': interface,
-            'protocol': protocol,
-        }
-        return 'iptables-save -t nat'
-
-    def process(self, output):
-        'List of matching rules'
-        # Using a set to match subset dictionnaries
-        result = []
-        looking_for = set(self.definition.items())
-        for rule in parse_rules(output):
-            if looking_for.issubset(set(rule.items())):
-                result.append(rule)
-        return result
