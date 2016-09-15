@@ -315,10 +315,15 @@ def parse_argstring(argstring):
 
         elif bit == ',':
             if not in_list and arg_buff:
-                args.append(' '.join(arg_buff))
+                args.append(''.join(arg_buff))
                 arg_buff = []
 
             continue
+
+        # Restore any broken up ,[]s
+        bit = bit.replace(' , ', ',')
+        bit = bit.replace(' [ ', '[')
+        bit = bit.replace(' ] ', ']')
 
         if in_list:
             list_buff.append(bit)
