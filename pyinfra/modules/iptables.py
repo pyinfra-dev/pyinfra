@@ -12,9 +12,9 @@ from pyinfra.api import operation
 
 
 @operation
-def forward(state, host, dport, to_ip, to_port=None,
-            interface='eth0', protocol='tcp', chain='PREROUTING', jump='DNAT',
-            present=True):
+def nat(state, host, dport, to_ip, to_port=None,
+        interface='eth0', protocol='tcp', chain='PREROUTING', jump='DNAT',
+        present=True):
     '''
     Manage an iptables rule to forward packets arriving on a given port and
     interface to another host.
