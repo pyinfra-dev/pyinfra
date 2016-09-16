@@ -1,0 +1,14 @@
+{
+    "output": [
+        "[{\"name\": \"container1\", \"status\": \"Running\"},{\"name\": \"container2\"}]"
+    ],
+    "fact":  [
+        {
+            "name": "container1",
+            "status": "Running"
+        },
+        {
+            "name": "container2"
+        }
+    ]
+}

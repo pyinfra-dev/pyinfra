@@ -1,0 +1,17 @@
+{
+    "kwargs": {
+        "name": "container1",
+        "image": "ubuntu:16.04",
+        "present": false
+    },
+    "facts": {
+        "lxd_containers": [
+            {
+                "name": "container2",
+                "status": "Running"
+            }
+        ]
+    },
+    "commands": [
+    ]
+}
