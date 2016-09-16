@@ -209,7 +209,8 @@ def operation(func=None, pipeline_facts=None):
             for key, arg in six.iteritems(kwargs)
         }
 
-        commands = func(state, host, *actual_args, **actual_kwargs)
+        # Convert to list as the result may be a generator
+        commands = list(func(state, host, *actual_args, **actual_kwargs))
 
         state.in_op = False
         state.current_op_meta = None
