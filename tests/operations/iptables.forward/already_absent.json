@@ -1,0 +1,23 @@
+{
+    "kwargs": {
+        "to_ip": "10.10.10.10",
+        "dport": 8080,
+        "present": false
+    },
+    "facts": {
+        "iptables": {
+            "nat": [{
+                "dport": "8080",
+                "destination": "10.10.10.10:8080",
+                "interface": "eth0",
+                "protocol": "tcp",
+                "match": "tcp",
+                "chain": "PREROUTING",
+                "jump": "DNAT"
+            }]
+        }
+    },
+    "commands": [
+        "iptables -t nat -D PREROUTING -i eth0 -p tcp -m tcp --dport 8080 -j DNAT --to-destination 10.10.10.10:8080"
+    ]
+}
