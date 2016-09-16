@@ -13,7 +13,7 @@ from pyinfra.api import operation
 
 @operation
 def forward(state, host, dport, to_ip, to_port=None,
-            interface='eth0', protocol='tcp', chain='PREROUTING',
+            interface='eth0', protocol='tcp', chain='PREROUTING', jump='DNAT',
             present=True):
     '''
     Manage an iptables rule to forward packets arriving on a given port and
@@ -25,6 +25,7 @@ def forward(state, host, dport, to_ip, to_port=None,
     + interface: interface on which the packets are arriving
     + protocol: protocol (tcp or udp)
     + chain: iptables chain (PREROUTING, POSTROUTING, OUTPUT)
+    + jump: target of the rule (eg: DNAT)
     + present: whether the rule should be present or removed
     '''
     to_port = to_port or dport
@@ -35,7 +36,7 @@ def forward(state, host, dport, to_ip, to_port=None,
         'protocol': protocol,
         'match': protocol,
         'chain': chain,
-        'jump': 'DNAT',
+        'jump': jump,
     }
 
     if definition in host.fact.iptables('nat'):
