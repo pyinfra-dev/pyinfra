@@ -61,6 +61,6 @@ def nat(state, host, dport, to_ip, to_port=None,
             return [(
                 'iptables -t nat -A {chain} '
                 '-i {interface} -p {protocol} -m {protocol} '
-                '--dport {dport} -j DNAT --to-destination {destination}'
+                '--dport {dport} -j {jump} --to-destination {destination}'
                 ).format(**definition)
             ]
