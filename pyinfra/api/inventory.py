@@ -112,7 +112,7 @@ class Inventory(object):
         Get groups (lists of hosts) from the inventory by name.
         '''
 
-        return self.groups.get(key)
+        return self.groups[key]
 
     def __len__(self):
         '''
