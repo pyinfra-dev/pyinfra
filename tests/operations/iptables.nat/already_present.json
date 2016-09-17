@@ -1,0 +1,20 @@
+{
+    "kwargs": {
+        "to_ip": "10.10.10.10",
+        "dport": 8080
+    },
+    "facts": {
+        "iptables": {
+            "nat": [{
+                "dport": "8080",
+                "destination": "10.10.10.10:8080",
+                "interface": "eth0",
+                "protocol": "tcp",
+                "match": "tcp",
+                "chain": "PREROUTING",
+                "jump": "DNAT"
+            }]
+        }
+    },
+    "commands": []
+}

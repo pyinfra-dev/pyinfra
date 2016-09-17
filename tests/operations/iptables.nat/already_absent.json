@@ -1,0 +1,13 @@
+{
+    "kwargs": {
+        "to_ip": "10.10.10.10",
+        "dport": 8080,
+        "present": false
+    },
+    "facts": {
+        "iptables": {
+            "nat": []
+        }
+    },
+    "commands": []
+}
