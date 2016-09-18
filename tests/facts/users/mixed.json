@@ -1,0 +1,43 @@
+{
+    "output": [
+        "uid=0(root) gid=0(wheel) groups=0(wheel), 2(kmem), 3(sys), 4(tty), 5(operator), 20(staff), 31(guest) /root:/bin/ks",
+        "uid=1001(pyinfra) gid=1001(pyinfra) groups=1001(pyinfra) /home/pyinfra:/bin/sh",
+        "uid=1003(test.testy) gid=1003(test.testy) groups=1003(test.testy) /home/test.testy:/bin/ksh",
+        "uid=1004(_tesTy.test) gid=1004(_tesTy.test) groups=1004(_tesTy.test),1001(pyinfra) /home/_tesTy.test:/bin/ksh"
+    ],
+    "fact": {
+        "root": {
+            "home": "/root",
+            "shell": "/bin/ks",
+            "group": "wheel",
+            "groups": [
+                "kmem",
+                "sys",
+                "tty",
+                "operator",
+                "staff",
+                "guest"
+            ]
+        },
+        "_tesTy.test": {
+            "home": "/home/_tesTy.test",
+            "shell": "/bin/ksh",
+            "group": "_tesTy.test",
+            "groups": [
+                "pyinfra"
+            ]
+        },
+        "test.testy": {
+            "home": "/home/test.testy",
+            "shell": "/bin/ksh",
+            "group": "test.testy",
+            "groups": []
+        },
+        "pyinfra": {
+            "home": "/home/pyinfra",
+            "shell": "/bin/sh",
+            "group": "pyinfra",
+            "groups": []
+        }
+    }
+}

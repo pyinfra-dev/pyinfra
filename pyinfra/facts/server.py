@@ -97,8 +97,8 @@ class Users(FactBase):
         done
     '''
 
-    _regex = r'^uid=[0-9]+\(([a-z0-9\-]+)\) gid=[0-9]+\(([a-z0-9\-]+)\) groups=([,0-9a-z\-\(\)]+) (.*)$'
-    _group_regex = r'^[0-9]+\(([a-z\-]+)\)$'
+    _regex = r'^uid=[0-9]+\(([a-zA-Z0-9_\.\-]+)\) gid=[0-9]+\(([a-zA-Z0-9_\.\-]+)\) groups=([a-zA-Z0-9_\.\-,\(\)\s]+) (.*)$'
+    _group_regex = r'^[0-9]+\(([a-zA-Z0-9_\.\-]+)\)$'
 
     def process(self, output):
         users = {}
@@ -128,7 +128,7 @@ class Users(FactBase):
                 # Parse the groups
                 groups = []
                 for group_matches in matches.group(3).split(','):
-                    name = re.match(self._group_regex, group_matches)
+                    name = re.match(self._group_regex, group_matches.strip())
                     if name:
                         name = name.group(1)
                     else:
