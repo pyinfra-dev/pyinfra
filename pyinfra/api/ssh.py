@@ -201,10 +201,11 @@ def connect_all(state):
             connected_hosts.add(name)
 
     # Add connected hosts to inventory
-    state.inventory.connected_hosts = connected_hosts
+    state.connected_hosts = connected_hosts
 
     # Add all the hosts as active
-    state.inventory.active_hosts = set(greenlets.keys())
+    state.active_hosts = set(greenlets.keys())
+
     # Remove those that failed, triggering FAIL_PERCENT check
     state.fail_hosts(failed_hosts)
 

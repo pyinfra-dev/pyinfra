@@ -128,10 +128,10 @@ class Inventory(object):
         '''
 
         for host in self.hosts.values():
-            if not self.active_hosts:
+            if not self.state or not self.state.active_hosts:
                 yield host
 
-            elif host.name in self.active_hosts:
+            elif host.name in self.state.active_hosts:
                 yield host
 
     def get_data(self):

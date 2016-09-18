@@ -164,10 +164,10 @@ class State(object):
         '''
 
         # Remove the failed hosts from the inventory
-        self.inventory.active_hosts -= hosts_to_fail
+        self.active_hosts -= hosts_to_fail
 
         # Check we're not above the fail percent
-        active_hosts = self.inventory.active_hosts
+        active_hosts = self.active_hosts
 
         # No hosts left!
         if not active_hosts:
