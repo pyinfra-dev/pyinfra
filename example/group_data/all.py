@@ -1,5 +1,5 @@
 # pyinfra
-# File: example/group_vars/all.py
+# File: example/group_data/all.py
 # Desc: config/variables which apply to all hosts, must be snake_case
 
 # Required
