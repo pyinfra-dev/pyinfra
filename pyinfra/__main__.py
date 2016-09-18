@@ -8,9 +8,9 @@ pyinfra
 Docs: pyinfra.readthedocs.io
 
 Usage:
-    pyinfra -i INVENTORY DEPLOY [-v -vv options]
-    pyinfra -i INVENTORY --run OP ARGS [-v -vv options]
-    pyinfra -i INVENTORY --run COMMAND [-v -vv options]
+    pyinfra -i INVENTORY DEPLOY [-vv options]
+    pyinfra -i INVENTORY --run OP ARGS [-vv options]
+    pyinfra -i INVENTORY --run COMMAND [-vv options]
     pyinfra -i INVENTORY --fact FACT [-vv options]
     pyinfra -i INVENTORY [DEPLOY] --debug-data [options]
     pyinfra (--facts | --help | --version)
