@@ -11,6 +11,8 @@ from six.moves import range
 
 from pyinfra import modules
 
+MODULE_DEF_LINE_MAX = 90
+
 
 def _title_line(char, string):
     return ''.join(char for _ in range(0, len(string)))
@@ -18,7 +20,7 @@ def _title_line(char, string):
 
 def _format_doc_line(line):
     # Bold the <arg>: part of each line
-    line = re.sub(r'\+ ([a-z_]+)(.*)', r'+ **\1**\2', line)
+    line = re.sub(r'\+ ([a-z_\/]+)(.*)', r'+ **\1**\2', line)
 
     # Strip the first 4 characters (first indent from docstring)
     return line[4:]
@@ -95,22 +97,28 @@ def build_facts():
                 for arg in argspec.args[2:]
             ]
 
-            arg_count = len(args)
-            if arg_count < 7:
+            if len(', '.join(args)) <= MODULE_DEF_LINE_MAX:
                 args_string = ', '.join(args)
 
             else:
-                split_point = int(round(arg_count / 2))
-                top_args = args[:split_point]
-                bottom_args = args[split_point:]
+                arg_buffer = []
+                arg_lines = []
+                for arg in args:
+                    if len(', '.join(arg_buffer + [arg])) >= MODULE_DEF_LINE_MAX:
+                        arg_lines.append(arg_buffer)
+                        arg_buffer = []
 
-                args_string = '''
-        {0},
-        {1}
-    '''.format(
-                    ', '.join(top_args),
-                    ', '.join(bottom_args)
-                )
+                    arg_buffer.append(arg)
+
+                if arg_buffer:
+                    arg_lines.append(arg_buffer)
+
+                arg_lines = [
+                    '        {0}'.format(', '.join(line_args))
+                    for line_args in arg_lines
+                ]
+
+                args_string = '\n{0}\n    '.format(',\n'.join(arg_lines))
 
             # Atttach the code block
             lines.append('''
