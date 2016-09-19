@@ -20,8 +20,10 @@ def get_container_named(name, containers):
 
 
 @operation
-def container(state, host, name, image='ubuntu:16.04',
-              present=True):
+def container(
+    state, host, name,
+    present=True, image='ubuntu:16.04'
+):
     '''
     Manage LXD containers.
 
@@ -42,9 +44,10 @@ def container(state, host, name, image='ubuntu:16.04',
         else:
             commands = []
             if container['status'] == 'Running':
-                commands.append('lxc stop {}'.format(name))
+                commands.append('lxc stop {0}'.format(name))
+
             # Command to remove the container:
-            commands.append('lxc delete {}'.format(name))
+            commands.append('lxc delete {0}'.format(name))
             return commands
     else:
         if not present:

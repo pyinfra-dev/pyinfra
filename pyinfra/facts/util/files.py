@@ -19,7 +19,7 @@ SYMBOL_TO_OCTAL_PERMISSIONS = {
     'r--': '4',
     '-wx': '3',
     '-w-': '2',
-    '--x': '1'
+    '--x': '1',
 }
 
 

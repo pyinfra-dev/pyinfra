@@ -173,7 +173,8 @@ def operation(func=None, pipeline_facts=None):
         # Convert any AttrBase items (returned by host.data), see attrs.py.
         if op_hash is None:
             # Get the line number where this operation was called by looking through the
-            # call stack for the first non-pyinfra line.
+            # call stack for the first non-pyinfra line. This ensures two identical
+            # operations (in terms of arguments/meta) will still generate two hashes.
             frames = stack()
             line_number = None
 
@@ -254,7 +255,7 @@ def operation(func=None, pipeline_facts=None):
             'ignore_errors': ignore_errors,
             'serial': serial,
             'run_once': run_once,
-            'timeout': timeout
+            'timeout': timeout,
         })
 
         # Add any new names to the set
@@ -288,7 +289,7 @@ def operation(func=None, pipeline_facts=None):
         # Add the server-relevant commands/env to the current server
         state.ops[host.name][op_hash] = {
             'commands': commands,
-            'env': env
+            'env': env,
         }
 
         # Return result meta for use in deploy scripts
