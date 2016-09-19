@@ -22,8 +22,8 @@ def include(filename, hosts=None):
     if not pseudo_state.active:
         return
 
-    if isinstance(hosts, list):
-        pseudo_state.limit_hosts = hosts
+    if hosts is not None:
+        pseudo_state.limit_hosts = list(hosts)
 
     filename = path.join(pseudo_state.deploy_dir, filename)
 
