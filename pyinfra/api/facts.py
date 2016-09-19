@@ -9,6 +9,7 @@ to "diff" with the desired state, producing the final commands required for a de
 
 from __future__ import division, unicode_literals
 
+from inspect import ismethod
 from socket import timeout as timeout_error
 
 import six
@@ -97,7 +98,10 @@ def get_facts(
 
     command = fact.command
 
-    if args:
+    if ismethod(command):
+        if args is None:
+            args = []
+
         command = command(*args)
 
     # Make a hash which keeps facts unique - but usable cross-deploy/threads. Locks are

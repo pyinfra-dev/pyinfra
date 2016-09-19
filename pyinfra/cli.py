@@ -387,7 +387,7 @@ def setup_arguments(arguments):
         arguments['--parallel'] = int(arguments['--parallel'])
 
     # Always assign empty args
-    fact_args = {}
+    fact_args = []
     if arguments['--fact']:
         if ':' in arguments['--fact']:
             fact, fact_args = arguments['--fact'].split(':')
