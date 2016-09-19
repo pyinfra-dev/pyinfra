@@ -16,9 +16,9 @@ pyinfra requires `Python <https://python.org>`_ and can be installed with `pip <
     $ pyinfra (on Windows: python -m pyinfra)
 
     Usage:
-        pyinfra -i INVENTORY DEPLOY [-v -vv options]
-        pyinfra -i INVENTORY --run OP ARGS [-v -vv options]
-        pyinfra -i INVENTORY --run COMMAND [-v -vv options]
+        pyinfra -i INVENTORY DEPLOY [-vv options]
+        pyinfra -i INVENTORY --run OP ARGS [-vv options]
+        pyinfra -i INVENTORY --run COMMAND [-vv options]
         pyinfra -i INVENTORY --fact FACT [-vv options]
         ...
 

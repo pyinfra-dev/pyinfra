@@ -13,17 +13,22 @@ For example, here we fetch the list of target hosts from some internal inventory
 
     import requests
 
-    DB_SERVERS = []
-    WEB_SERVERS = []
+    def get_servers():
+        db = []
+        web = []
 
-    servers = requests.get('inventory.mycompany.net/api/v1/app_servers').json()
+        servers = requests.get('inventory.mycompany.net/api/v1/app_servers').json()
 
-    for server in servers:
-        if server['group'] == 'db':
-            DB_SERVERS.append(server['hostname'])
+        for server in servers:
+            if server['group'] == 'db':
+                db.append(server['hostname'])
 
-        elif server['group'] == 'web':
-            WEB_SERVERS.append(server['hostname'])
+            elif server['group'] == 'web':
+                web.append(server['hostname'])
+
+        return db, web
+
+    db_servers, web_servers = get_servers()
 
 
 Like the dynamic inventory, we can use Python inside group data. It is also possible to

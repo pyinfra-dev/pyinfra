@@ -14,28 +14,27 @@ Layout
 + ``inventories/*.py`` - files that describe different inventories
 + ``group_data/*.py`` - files that describe data for groups
 + ``templates/*.jn2`` - templates used in the deploys
-+ ``roles/*.py`` - files that describe role specific deploys
 + ``files/*`` - files used in the deploys
++ ``roles/*.py`` - files that describe role specific deploys
 + ``config.py`` - optional config and hooks
 
 
 Inventory
 ---------
 
-Inventory files contain groups of hosts. Groups are defined as ``ALL_CAPS`` variables
-assigned to a list of hosts. For example, this inventory creates two groups, "app_servers"
-and "db_servers":
+Inventory files contain groups of hosts. Groups are defined as a list or tuple of hosts.
+For example, this inventory creates two groups, "app_servers" and "db_servers":
 
 .. code:: python
 
     # inventories/production.py
 
-    APP_SERVERS = [
+    app_servers = [
         'app-1.net',
         'app-2.net'
     ]
 
-    DB_SERVERS = [
+    db_servers = [
         'db-1.net',
         'db-2.net',
         'db-3.net'
@@ -64,7 +63,7 @@ tuple ``(hostname, data)`` instead of just the hostname:
 
     # inventories/production.py
 
-    APP_SERVERS = [
+    app_servers = [
         'app-1.net',
         ('app-2.net', {'some_key': True})
     ]
@@ -111,7 +110,7 @@ the following is returned:
 + "Override" data passed in via CLI args
 + Host data as defined in the inventory file
 + Normal group data
-+ "All" group data
++ "all" group data
 
 Debugging data issues:
     pyinfra contains a ``--debug-data`` option which can be used to explore the data output

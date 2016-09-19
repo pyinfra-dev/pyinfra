@@ -33,8 +33,8 @@ be passed in to limit the include to those hosts.
 
     # inventory.py
 
-    WEB_SERVERS = ['web1', 'web2', 'web3']
-    DB_SERVERS = ['db1', 'db2', 'db3']
+    web_servers = ['web1', 'web2', 'web3']
+    db_servers = ['db1', 'db2', 'db3']
 
 .. code:: python
 
