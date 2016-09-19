@@ -11,7 +11,7 @@ from .util.packaging import parse_packages
 
 class PipPackages(FactBase):
     '''
-    Returns a dict of installed pip packages:
+    Returns a dict of installed pip packages globally or in a given virtualenv:
 
     .. code:: python
 
@@ -23,12 +23,21 @@ class PipPackages(FactBase):
     command = 'pip freeze'
     _regex = r'^([a-zA-Z0-9_\-\+\.]+)==([0-9\.]+[a-z0-9\-]*)$'
 
+    def command(self, venv=None):
+        if venv:
+            venv = venv.rstrip('/')
+            return '{0}/bin/pip freeze'.format(venv)
+
+        else:
+            return 'pip freeze'
+
     def process(self, output):
         return parse_packages(self._regex, output)
 
 
+# TODO: remove at some point
+# COMPAT: above now covers both use cases
 class PipVirtualenvPackages(PipPackages):
-    def command(self, venv):
-        # Remove any trailing slash
-        venv = venv.rstrip('/')
-        return '{0}/bin/pip freeze'.format(venv)
+    '''
+    [DEPRECIATED] Maintained for backwards-compatability.
+    '''

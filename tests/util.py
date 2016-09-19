@@ -52,6 +52,9 @@ class FakeFact(object):
         return self.data[key]
 
     def __call__(self, *args, **kwargs):
+        if args[0] is None:
+            return self.data
+
         return self.data[args[0]]
 
     def __iter__(self):

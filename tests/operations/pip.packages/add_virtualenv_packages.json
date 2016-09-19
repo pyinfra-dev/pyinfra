@@ -4,7 +4,7 @@
         "virtualenv": "testdir"
     },
     "facts": {
-        "pip_virtualenv_packages": {
+        "pip_packages": {
             "testdir": {
                 "elasticquery": ["1.0"],
                 "test": ["1.1"]

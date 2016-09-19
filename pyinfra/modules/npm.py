@@ -23,11 +23,7 @@ def packages(state, host, packages=None, present=True, latest=False, directory=N
         Package versions can be pinned like npm: ``<pkg>@<version>``
     '''
 
-    current_packages = (
-        host.fact.npm_packages
-        if directory is None
-        else host.fact.npm_local_packages(directory)
-    )
+    current_packages = host.fact.npm_packages(directory)
 
     install_command = (
         'npm install -g'

@@ -16,7 +16,7 @@ npm_regex = r'^[└├]\─\─\s([a-zA-Z0-9\-]+)@([0-9\.]+)$'
 
 class NpmPackages(FactBase):
     '''
-    Returns a dict of globally installed npm packages:
+    Returns a dict of installed npm packages globally or in a given directory:
 
     .. code:: python
 
@@ -27,22 +27,19 @@ class NpmPackages(FactBase):
     default = {}
     command = 'npm list -g --depth=0'
 
-    def process(self, output):
-        parse_packages(npm_regex, output)
-
-
-class NpmLocalPackages(FactBase):
-    '''
-    Returns a dict of locally installed npm packages in a given directory:
-
-    .. code:: python
-
-        'package_name': 'version',
-        ...
-    '''
-
-    def command(self, directory):
-        return 'cd {0} && npm list -g --depth=0'.format(directory)
+    def command(self, directory=None):
+        if directory:
+            return 'cd {0} && npm list -g --depth=0'.format(directory)
+        else:
+            return 'npm list -g --depth=0'
 
     def process(self, output):
         parse_packages(npm_regex, output)
+
+
+# TODO: remove at some point
+# COMPAT: above now covers both use cases
+class NpmLocalPackages(NpmPackages):
+    '''
+    [DEPRECIATED] Maintained for backwards-compatability.
+    '''
