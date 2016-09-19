@@ -1,0 +1,13 @@
+{
+    "args": ["PREROUTING", "DNAT"],
+    "kwargs": {
+        "to_destination": "10.10.10.10",
+        "present": false
+    },
+    "facts": {
+        "iptables_rules": {
+            "filter": []
+        }
+    },
+    "commands": []
+}

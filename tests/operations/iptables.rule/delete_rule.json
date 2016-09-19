@@ -1,0 +1,20 @@
+{
+    "args": ["PREROUTING", "DNAT"],
+    "kwargs": {
+        "table": "nat",
+        "to_destination": "10.10.10.10",
+        "present": false
+    },
+    "facts": {
+        "iptables_rules": {
+            "nat": [{
+                "to_destination": "10.10.10.10",
+                "chain": "PREROUTING",
+                "jump": "DNAT"
+            }]
+        }
+    },
+    "commands": [
+        "iptables -t nat -D PREROUTING -j DNAT --to-destination 10.10.10.10"
+    ]
+}

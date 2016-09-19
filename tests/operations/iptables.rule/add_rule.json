@@ -1,0 +1,17 @@
+{
+    "args": ["PREROUTING", "DNAT"],
+    "kwargs": {
+        "table": "nat",
+        "to_destination": "10.10.10.10:8080",
+        "dport": 8080,
+        "protocol": "tcp"
+    },
+    "facts": {
+        "iptables_rules": {
+            "nat": []
+        }
+    },
+    "commands": [
+        "iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to-destination 10.10.10.10:8080"
+    ]
+}

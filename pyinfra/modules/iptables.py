@@ -8,59 +8,241 @@ The iptables modules handles iptables rules
 
 from __future__ import unicode_literals
 
+import six
+
 from pyinfra.api import operation
+from pyinfra.api.exceptions import OperationError
 
 
 @operation
-def nat(state, host, dport, to_ip, to_port=None,
-        interface='eth0', protocol='tcp', chain='PREROUTING', jump='DNAT',
-        present=True):
+def chain(
+    state, host, name, present=True,
+    table='filter', policy=None, version=4,
+):
     '''
-    Manage an iptables rule to forward packets arriving on a given port and
-    interface to another host.
+    Manage iptables chains.
 
-    + dport: port on which the packets are arriving
-    + to_ip: ip of the destination
-    + to_port: port of the destination (default to dport)
-    + interface: interface on which the packets are arriving
-    + protocol: protocol (tcp or udp)
-    + chain: iptables chain (PREROUTING, POSTROUTING, OUTPUT)
-    + jump: target of the rule (eg: DNAT)
-    + present: whether the rule should be present or removed
+    + name: the name of the chain
+    + present: whether the chain should exist
+    + table: the iptables table this chain should belong to
+    + policy: the policy this table should have
+    + version: whether to target iptables or ip6tables
+
+    Policy:
+        These can only be applied to system chains (FORWARD, INPUT, OUTPUT, etc).
     '''
-    to_port = to_port or dport
+
+    chains = (
+        host.fact.iptables_chains(table)
+        if version == 4
+        else host.fact.ip6tables_chains(table)
+    )
+
+    command = 'iptables' if version == 4 else 'ip6tables'
+
+    # Doesn't exist but we want it?
+    if present and name not in chains:
+        yield '{0} -N {1}'.format(command, name)
+
+        if policy:
+            yield '{0} -P {1} {2}'.format(command, name, policy)
+
+    # Exists and we don't want it?
+    if not present and name in chains:
+        yield '{0} -X {1}'.format(command, name)
+
+    # Exists, we want it, but the policies don't match?
+    if present and name in chains and policy and chains[name] != policy:
+        yield '{0} -P {1} {2}'.format(command, name, policy)
+
+
+@operation
+def rule(
+    state, host, chain, jump, present=True,
+    table='filter', append=True, version=4,
+    # Core iptables filter arguments
+    protocol=None, not_protocol=None,
+    source=None, not_source=None,
+    destination=None, not_destination=None,
+    in_interface=None, not_in_interface=None,
+    out_interface=None, not_out_interface=None,
+    # After-rule arguments
+    to_destination=None, to_source=None, to_ports=None, log_prefix=None,
+    # Extras and extra shortcuts
+    dport=None, sport=None, extras='',
+):
+    '''
+    Manage iptables rules.
+
+    + chain: the chain this rule should live in
+    + jump: the target of the rule
+    + table: the iptables table this rule should belong to
+    + append: whether to append or insert the rule (if not present)
+    + version: whether to target iptables or ip6tables
+
+    Iptables args:
+
+    + protocol/not_protocol: filter by protocol (tcp or udp)
+    + source/not_source: filter by source IPs
+    + destination/not_destination: filter by destination IPs
+    + in_interface/not_in_interface: filter by incoming interface
+    + out_interface/not_out_interface: filter by outgoing interface
+    + to_destination: where to route to when jump=DNAT
+    + to_source: where to route to when jump=SNAT
+    + to_ports: where to route to when jump=REDIRECT
+    + log_prefix: prefix for the log of this rule when jump=LOG
+
+    Extras:
+
+    + extras: a place to define iptables extension arguments (eg --limit, --physdev)
+    + dport: destination port (requires protocol)
+    + sport: source port (requires protocol)
+
+    Examples:
+
+    .. code:: python
+
+        # Block SSH traffic
+
+        iptables.rule(
+            'INPUT', 'DROP',
+            dport=22
+        )
+
+
+        # NAT traffic on from 8.8.8.8:53 to 8.8.4.4:8080
+
+        iptables.rule(
+            'PREROUTING', 'DNAT', table='nat',
+            source='8.8.8.8', dport=53,
+            to_destination='8.8.4.4:8080'
+        )
+    '''
+
+    # These are only shortcuts for extras
+    if dport:
+        extras = '{0} --dport {1}'.format(extras, dport)
+
+    if sport:
+        extras = '{0} --sport {1}'.format(extras, sport)
+
+    # Convert the extras string into a set to enable comparison with the fact
+    extras_set = set(extras.split())
+
+    # When protocol is set, the extension is automagically added by iptables (which shows
+    # in iptables-save): http://ipset.netfilter.org/iptables-extensions.man.html
+    if protocol:
+        extras_set.add('-m')
+        extras_set.add(protocol)
+
+    # --dport and --sport do not work without a protocol (because they need -m [tcp|udp]
+    elif dport or sport:
+        raise OperationError('iptables cannot filter by dport/sport without a protocol')
+
     definition = {
-        'dport': str(dport),
-        'destination': '{}:{}'.format(to_ip, to_port),
-        'interface': interface,
-        'protocol': protocol,
-        'match': protocol,
         'chain': chain,
         'jump': jump,
+
+        'protocol': protocol,
+        'source': source,
+        'destination': destination,
+        'in_interface': in_interface,
+        'out_interface': out_interface,
+
+        'not_protocol': not_protocol,
+        'not_source': not_source,
+        'not_destination': not_destination,
+        'not_in_interface': not_in_interface,
+        'not_out_interface': not_out_interface,
+
+        # These go *after* the jump argument
+        'log_prefix': log_prefix,
+        'to_destination': to_destination,
+        'to_source': to_source,
+        'to_ports': to_ports,
+        'extras': extras_set,
     }
 
-    if definition in host.fact.iptables('nat'):
-        if present:
-            # Not removing the rule if it should be present:
-            return []
-        else:
-            # Command to remove the rule, note -D instead of -A:
-            return [(
-                'iptables -t nat -D {chain} '
-                '-i {interface} -p {protocol} -m {protocol} '
-                '--dport {dport} -j {jump} --to-destination {destination}'
-                ).format(**definition)
-            ]
+    definition = {
+        key: (
+            '{0}/32'.format(value)
+            if (
+                '/' not in value
+                and key in ('source', 'not_source', 'destination', 'not_destination')
+            )
+            else value
+        )
+        for key, value in six.iteritems(definition)
+        if value
+    }
 
-    else:
-        if not present:
-            # Not adding the rule if it should be absent:
-            return []
-        else:
-            # Command to add the rule:
-            return [(
-                'iptables -t nat -A {chain} '
-                '-i {interface} -p {protocol} -m {protocol} '
-                '--dport {dport} -j {jump} --to-destination {destination}'
-                ).format(**definition)
-            ]
+    rules = (
+        host.fact.iptables_rules(table)
+        if version == 4
+        else host.fact.ip6tables_rules(table)
+    )
+
+    action = None
+
+    # Definition doesn't exist and we want it
+    if present and definition not in rules:
+        action = '-A' if append else '-I'
+
+    # Definition exists and we don't want it
+    if not present and definition in rules:
+        action = '-D'
+
+    # Are we adding/removing a rule? Lets build it
+    if action:
+        args = [
+            'iptables' if version == 4 else 'ip6tables',
+            # Add the table
+            '-t', table,
+            # Add the action and target chain
+            action, chain
+        ]
+
+        if protocol:
+            args.extend(('-p', protocol))
+
+        if source:
+            args.extend(('-s', source))
+
+        if in_interface:
+            args.extend(('-i', in_interface))
+
+        if out_interface:
+            args.extend(('-o', out_interface))
+
+        if not_protocol:
+            args.extend(('!', '-p', not_protocol))
+
+        if not_source:
+            args.extend(('!', '-s', not_source))
+
+        if not_in_interface:
+            args.extend(('!', '-i', not_in_interface))
+
+        if not_out_interface:
+            args.extend(('!', '-o', not_out_interface))
+
+        if extras:
+            args.append(extras.strip())
+
+        # Add the jump
+        args.extend(('-j', jump))
+
+        if log_prefix:
+            args.extend(('--log-prefix', log_prefix))
+
+        if to_destination:
+            args.extend(('--to-destination', to_destination))
+
+        if to_source:
+            args.extend(('--to-source', to_source))
+
+        if to_ports:
+            args.extend(('--to-ports', to_ports))
+
+        # Build the final iptables command
+        yield ' '.join(args)
