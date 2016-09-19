@@ -4,7 +4,7 @@
 #       see ./hostnames.py for a more advanced example
 
 # Defines a group - group names must be defined in ALL_CAPS
-LINUX = [
+linux = [
     # Ubuntu 14
     '20.20.20.21',
     # Ubuntu 15
@@ -21,7 +21,7 @@ LINUX = [
     '20.20.20.28'
 ]
 
-BSD = [
+bsd = [
     # OpenBSD 5.8
     '20.20.20.25'
 ]

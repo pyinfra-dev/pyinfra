@@ -6,6 +6,7 @@ import six
 
 from .host import Host
 from .attrs import AttrData
+from .exceptions import NoHostError, NoGroupError
 
 
 class Inventory(object):
@@ -66,8 +67,6 @@ class Inventory(object):
         # Loop groups and build map of name -> groups
         names_to_groups = {}
         for group_name, (group_names, group_data) in six.iteritems(groups):
-            group_name = group_name.lower()
-
             self.groups[group_name] = []
             self.group_data[group_name] = AttrData(group_data)
 
@@ -105,14 +104,27 @@ class Inventory(object):
         Get individual hosts from the inventory by name.
         '''
 
-        return self.hosts.get(key)
+        if key in self.hosts:
+            return self.hosts[key]
+
+        raise NoHostError('No such host: {0}'.format(key))
 
     def __getattr__(self, key):
         '''
         Get groups (lists of hosts) from the inventory by name.
         '''
 
-        return self.groups.get(key)
+        if key in self.groups:
+            return self.groups[key]
+
+        # TODO: remove at some point
+        # COMPAT: this provides compatability with 0.1 where inventory group names _had_
+        # to be defined in caps, but names were lowered before being added to the inventory.
+        # Now group names in caps will be left as-is, so check for that too.
+        elif key.upper() in self.groups:
+                return self.groups[key.upper()]
+
+        raise NoGroupError('No such group: {0}'.format(key))
 
     def __len__(self):
         '''

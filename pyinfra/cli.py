@@ -42,6 +42,12 @@ from .hook import HOOKS
 STDOUT_LOG_LEVELS = (logging.DEBUG, logging.INFO)
 STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
 
+# Hosts in an inventory can be just the hostname or a tuple (hostname, data)
+ALLOWED_HOST_TYPES = tuple(
+    list(six.string_types) + [tuple]
+)
+
+# Group data can be any "core" Python type
 ALLOWED_DATA_TYPES = tuple(
     list(six.string_types) + list(six.integer_types)
     + [bool, dict, list, set, tuple, float, complex]
@@ -248,7 +254,7 @@ def print_data(inventory):
 
 def print_results(state):
     for hostname, results in six.iteritems(state.results):
-        if hostname not in state.inventory.connected_hosts:
+        if hostname not in state.connected_hosts:
             logger.info('[{0}]\tNo connection'.format(colored(hostname, 'red', attrs=['bold'])))
 
         else:
@@ -478,6 +484,32 @@ def load_deploy_config(deploy_filename, config):
     return config
 
 
+def is_inventory_group(key, value):
+    '''
+    Verify that a module-level variable (key = value) is a valid inventory group.
+    '''
+
+    return (
+        isinstance(value, (list, tuple))
+        and not key.startswith('_')
+        and all(
+            isinstance(item, ALLOWED_HOST_TYPES)
+            for item in value
+        )
+    )
+
+
+def is_group_data(key, value):
+    '''
+    Verify that a module-level variable (key = value) is a valid bit of group data.
+    '''
+
+    return (
+        isinstance(value, ALLOWED_DATA_TYPES)
+        and not key.startswith('_')
+    )
+
+
 def make_inventory(
     inventory_filename, deploy_dir=None, limit=None,
     ssh_user=None, ssh_key=None, ssh_key_password=None, ssh_port=None, ssh_password=None
@@ -498,7 +530,7 @@ def make_inventory(
         groups = {
             key: value
             for key, value in six.iteritems(attrs)
-            if key.isupper()
+            if is_inventory_group(key, value)
         }
 
         # Used to set all the hosts to an additional group - that of the filename
@@ -512,18 +544,18 @@ def make_inventory(
 
         # Otherwise we assume the inventory is actually a hostname or list of hostnames
         groups = {
-            'ALL': inventory_filename.split(',')
+            'all': inventory_filename.split(',')
         }
 
     all_data = {}
 
-    if 'ALL' in groups:
-        all_hosts = groups.pop('ALL')
+    if 'all' in groups:
+        all_hosts = groups.pop('all')
 
         if isinstance(all_hosts, tuple):
             all_hosts, all_data = all_hosts
 
-    # Build ALL out of the existing hosts if not defined
+    # Build all out of the existing hosts if not defined
     else:
         all_hosts = []
         for hosts in groups.values():
@@ -537,7 +569,7 @@ def make_inventory(
                 if hostname not in all_hosts:
                     all_hosts.append(hostname)
 
-    groups['ALL'] = (all_hosts, all_data)
+    groups['all'] = (all_hosts, all_data)
 
     # Apply the filename group if not already defined
     if file_groupname and file_groupname not in groups:
@@ -575,9 +607,7 @@ def make_inventory(
             data.update({
                 key: value
                 for key, value in six.iteritems(attrs)
-                if isinstance(value, ALLOWED_DATA_TYPES)
-                and not key.startswith('_')
-                and key.islower()
+                if is_group_data(key, value)
             })
 
         # Attach to group object
@@ -604,11 +634,11 @@ def make_inventory(
                 or (isinstance(host, six.string_types) and fnmatch(host, limit))
             ]
 
-        # Reassign the ALL group w/limit
-        groups['ALL'] = (all_hosts, all_data)
+        # Reassign the all group w/limit
+        groups['all'] = (all_hosts, all_data)
 
     return Inventory(
-        groups.pop('ALL'),
+        groups.pop('all'),
         ssh_user=ssh_user,
         ssh_key=ssh_key,
         ssh_key_password=ssh_key_password,

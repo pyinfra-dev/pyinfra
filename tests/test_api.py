@@ -9,7 +9,7 @@ from mock import patch, mock_open
 from paramiko.agent import AgentRequestHandler
 from paramiko import (
     SSHClient, SFTPClient, RSAKey,
-    SSHException, AuthenticationException, PasswordRequiredException,
+    SSHException, AuthenticationException, PasswordRequiredException
 )
 
 # Patch in paramiko fake classes
@@ -25,7 +25,7 @@ from pyinfra.api import Inventory, Config, State
 from pyinfra.api.ssh import connect_all, connect
 from pyinfra.api.operation import add_op, add_limited_op
 from pyinfra.api.operations import run_ops
-from pyinfra.api.exceptions import PyinfraError
+from pyinfra.api.exceptions import PyinfraError, NoHostError, NoGroupError
 
 from pyinfra.modules import files, server
 
@@ -81,6 +81,15 @@ class TestInventoryApi(TestCase):
 
         # Check group data
         self.assertEqual(host.data.tuple_group_data, 'word')
+
+    def test_host_and_group_errors(self):
+        inventory = make_inventory()
+
+        with self.assertRaises(NoHostError):
+            inventory['i-dont-exist']
+
+        with self.assertRaises(NoGroupError):
+            getattr(inventory, 'i-dont-exist')
 
 
 class TestSSHApi(TestCase):
@@ -200,6 +209,7 @@ class TestSSHApi(TestCase):
 
         # Ensure pyinfra style IOError
         self.assertTrue(e.exception.args[0].startswith('No such private key file:'))
+
 
 class PatchSSHTest(TestCase):
     '''

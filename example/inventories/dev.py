@@ -2,18 +2,18 @@
 # File: example/inventories/dev.py
 # Desc: hostname based inventory (requires ./hosts in /etc/hosts)
 
-# Defines a group - group names must be defined in ALL_CAPS
-BSD = [
+# Defines a group
+bsd = [
     'openbsd58.pyinfra'
 ]
 
-YUM = [
+yum = [
     'centos6.pyinfra',
     'centos7.pyinfra',
     'fedora23.pyinfra'
 ]
 
-APT = [
+apt = [
     # Host-specific data can be attached in inventory
     ('ubuntu14-hosttest', {'ssh_hostname': 'ubuntu14.pyinfra'}),
     'ubuntu15.pyinfra',
@@ -22,7 +22,7 @@ APT = [
 ]
 
 # Hosts can be in multiple groups
-LINUX = YUM + APT
+linux = yum + apt
 
-# ALL is automatically set to the unique hosts above and so does not need to be defined
-# ALL = LINUX + BSD
+# The all group is automatically set to the unique hosts above and so does not need to be defined
+# all = linux + bsd
