@@ -47,10 +47,10 @@ def make_operation_tests(arg):
 
             with patch_files(test_data.get('files', [])):
                 try:
-                    output_commands = op._pyinfra_op(
+                    output_commands = list(op._pyinfra_op(
                         pseudo_state, pseudo_host,
                         *test_data.get('args', []), **test_data.get('kwargs', {})
-                    ) or []
+                    )) or []
                 except Exception as e:
                     if allowed_exception:
                         if e.__class__.__name__ != allowed_exception['name']:
