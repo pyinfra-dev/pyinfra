@@ -11,9 +11,9 @@ Input: reserved arguments
 
 The following keyword arguments are reserved for controlling how operations deploy, and
 cannot be used within operations: ``sudo``, ``sudo_user``, ``ignore_errors``, ``serial``,
-``run_once``, ``timeout``, ``env``, ``name``, ``op``. In addition to this, the *first*
-argument cannot accept ``set`` objects, as these will be removed for use as the operation
-name.
+``run_once``, ``timeout``, ``env``, ``name``, ``op``, ``get_pty``. In addition to this,
+the *first* argument cannot accept ``set`` objects, as these will be removed for use as
+the operation name.
 
 
 Output: commands

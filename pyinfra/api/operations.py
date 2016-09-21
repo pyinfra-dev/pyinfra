@@ -68,24 +68,27 @@ def _run_op(state, hostname, op_hash):
             # Non-function mean files to copy
             else:
                 status = put_file(
-                    state, hostname, *command,
+                    state, hostname,
+                    command[0], command[1],
                     sudo=sudo,
                     sudo_user=sudo_user,
                     su_user=su_user,
-                    print_output=state.print_output
+                    print_output=state.print_output,
                 )
 
         # Must be a string/shell command: execute it on the server w/op-level preferences
         else:
             try:
                 channel, _, stderr = run_shell_command(
-                    state, hostname, command.strip(),
+                    state, hostname,
+                    command.strip(),
                     sudo=sudo,
                     sudo_user=sudo_user,
                     su_user=su_user,
                     timeout=op_meta['timeout'],
+                    get_pty=op_meta['get_pty'],
                     env=op_data['env'],
-                    print_output=state.print_output
+                    print_output=state.print_output,
                 )
 
                 # Keep stderr in case of error

@@ -28,6 +28,7 @@ server.user(
     ignore_errors=False,
     serial=False,
     run_once=False,
+    get_pty=False,
     timeout=30  # only applies to commands on the remote host (not SFTP, local Python)
 )
 

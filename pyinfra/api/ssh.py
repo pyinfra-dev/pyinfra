@@ -212,7 +212,8 @@ def connect_all(state):
 
 def run_shell_command(
     state, hostname, command,
-    sudo=False, sudo_user=None, su_user=None, env=None, timeout=None, print_output=False
+    sudo=False, sudo_user=None, su_user=None,
+    get_pty=False, env=None, timeout=None, print_output=False,
 ):
     '''
     Execute a command on the specified host.
@@ -223,6 +224,7 @@ def run_shell_command(
         command (string): actual command to execute
         sudo (boolean): whether to wrap the command with sudo
         sudo_user (string): user to sudo to
+        get_pty (boolean): whether to get a PTY before executing the command
         env (dict): envrionment variables to set
         timeout (int): timeout for this command to complete before erroring
 
@@ -265,7 +267,7 @@ def run_shell_command(
     connection = state.ssh_connections[hostname]
 
     # Run it! Get stdout, stderr & the underlying channel
-    _, stdout_buffer, stderr_buffer = connection.exec_command(command)
+    _, stdout_buffer, stderr_buffer = connection.exec_command(command, get_pty=get_pty)
     channel = stdout_buffer.channel
 
     # Iterate through outputs to get an exit status and generate desired list output,

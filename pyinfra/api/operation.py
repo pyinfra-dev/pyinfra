@@ -157,6 +157,8 @@ def operation(func=None, pipeline_facts=None):
         run_once = kwargs.pop('run_once', False)
         # Timeout on running the command
         timeout = kwargs.pop('timeout', None)
+        # Get a PTY before executing commands
+        get_pty = kwargs.pop('get_pty', False)
 
         # Config env followed by command-level env
         env = state.config.ENV
@@ -256,6 +258,7 @@ def operation(func=None, pipeline_facts=None):
             'serial': serial,
             'run_once': run_once,
             'timeout': timeout,
+            'get_pty': get_pty,
         })
 
         # Add any new names to the set

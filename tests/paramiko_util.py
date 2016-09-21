@@ -41,7 +41,7 @@ class FakeSSHClient(object):
     def open_session(self):
         pass
 
-    def exec_command(self, command):
+    def exec_command(self, command, get_pty=None):
         channel = FakeChannel(0)
         return (
             channel,
