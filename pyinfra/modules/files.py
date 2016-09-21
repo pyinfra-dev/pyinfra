@@ -10,6 +10,7 @@ from __future__ import unicode_literals
 
 import sys
 from os import path, walk
+from fnmatch import fnmatch
 from datetime import timedelta
 
 import six
@@ -183,7 +184,10 @@ def replace(state, host, name, match, replace, flags=None):
 @operation(pipeline_facts={
     'find_files': 'destination'
 })
-def sync(state, host, source, destination, user=None, group=None, mode=None, delete=False):
+def sync(
+    state, host, source, destination,
+    user=None, group=None, mode=None, delete=False, exclude=None
+):
     '''
     Syncs a local directory with a remote one, with delete support. Note that delete will
     remove extra files on the remote side, but not extra directories.
@@ -194,6 +198,7 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
     + group: group to own the files and directories
     + mode: permissions of the files
     + delete: delete remote files not present locally
+    + exclude: string or list/tuple of strings to match & exclude files (eg *.pyc)
     '''
 
     # If we don't enforce the source ending with /, remote_dirname below might start with
@@ -205,6 +210,11 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
     if state.deploy_dir:
         source = path.join(state.deploy_dir, source)
 
+    # Ensure exclude is a list/tuple
+    if exclude is not None:
+        if not isinstance(exclude, (list, tuple)):
+            exclude = [exclude]
+
     put_files = []
     ensure_dirnames = []
     for dirname, _, filenames in walk(source):
@@ -214,9 +224,21 @@ def sync(state, host, source, destination, user=None, group=None, mode=None, del
             ensure_dirnames.append(remote_dirname)
 
         for filename in filenames:
+            full_filename = path.join(dirname, filename)
+
+            # Should we exclude this file?
+            to_exclude = False
+            if exclude:
+                for match in exclude:
+                    if fnmatch(full_filename, match):
+                        to_exclude = True
+
+            if to_exclude:
+                continue
+
             put_files.append((
                 # Join local as normal (unix, win)
-                path.join(dirname, filename),
+                full_filename,
                 # Join remote as unix like
                 '/'.join(
                     item for item in
