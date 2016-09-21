@@ -3,8 +3,11 @@
     "kwargs": {
         "table": "nat",
         "to_destination": "10.10.10.10:8080",
-        "dport": 8080,
-        "protocol": "tcp"
+        "destination_port": 8080,
+        "source_port": 80,
+        "protocol": "tcp",
+        "in_interface": "eth0",
+        "out_interface": "eth1"
     },
     "facts": {
         "iptables_rules": {
@@ -12,6 +15,6 @@
         }
     },
     "commands": [
-        "iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to-destination 10.10.10.10:8080"
+        "iptables -t nat -A PREROUTING -p tcp -i eth0 -o eth1 --dport 8080 --sport 80 -j DNAT --to-destination 10.10.10.10:8080"
     ]
 }
