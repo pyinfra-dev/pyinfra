@@ -39,6 +39,7 @@ def chain(
     )
 
     command = 'iptables' if version == 4 else 'ip6tables'
+    command = '{0} -t {1}'.format(command, table)
 
     # Doesn't exist but we want it?
     if present and name not in chains:
@@ -69,7 +70,7 @@ def rule(
     # After-rule arguments
     to_destination=None, to_source=None, to_ports=None, log_prefix=None,
     # Extras and extra shortcuts
-    dport=None, sport=None, extras='',
+    destination_port=None, source_port=None, extras='',
 ):
     '''
     Manage iptables rules.
@@ -95,8 +96,8 @@ def rule(
     Extras:
 
     + extras: a place to define iptables extension arguments (eg --limit, --physdev)
-    + dport: destination port (requires protocol)
-    + sport: source port (requires protocol)
+    + destination_port: destination port (requires protocol)
+    + source_port: source port (requires protocol)
 
     Examples:
 
@@ -106,7 +107,7 @@ def rule(
 
         iptables.rule(
             'INPUT', 'DROP',
-            dport=22
+            destination_port=22
         )
 
 
@@ -114,17 +115,17 @@ def rule(
 
         iptables.rule(
             'PREROUTING', 'DNAT', table='nat',
-            source='8.8.8.8', dport=53,
+            source='8.8.8.8', destination_port=53,
             to_destination='8.8.4.4:8080'
         )
     '''
 
     # These are only shortcuts for extras
-    if dport:
-        extras = '{0} --dport {1}'.format(extras, dport)
+    if destination_port:
+        extras = '{0} --dport {1}'.format(extras, destination_port)
 
-    if sport:
-        extras = '{0} --sport {1}'.format(extras, sport)
+    if source_port:
+        extras = '{0} --sport {1}'.format(extras, source_port)
 
     # Convert the extras string into a set to enable comparison with the fact
     extras_set = set(extras.split())
@@ -136,8 +137,38 @@ def rule(
         extras_set.add(protocol)
 
     # --dport and --sport do not work without a protocol (because they need -m [tcp|udp]
-    elif dport or sport:
-        raise OperationError('iptables cannot filter by dport/sport without a protocol')
+    elif destination_port or source_port:
+        raise OperationError(
+            'iptables cannot filter by destination_port/source_port without a protocol'
+        )
+
+    # Verify NAT arguments, --to-destination only w/table=nat, jump=DNAT
+    if to_destination and (table != 'nat' or jump != 'DNAT'):
+        raise OperationError(
+            'iptables only supports to_destination on the nat table and the DNAT jump '
+            '(table={0}, jump={1})'.format(table, jump)
+        )
+
+    # As above, --to-source only w/table=nat, jump=SNAT
+    if to_source and (table != 'nat' or jump != 'SNAT'):
+        raise OperationError(
+            'iptables only supports to_source on the nat table and the SNAT jump '
+            '(table={0}, jump={1})'.format(table, jump)
+        )
+
+    # As above, --to-ports only w/table=nat, jump=REDIRECT
+    if to_ports and (table != 'nat' or jump != 'REDIRECT'):
+        raise OperationError(
+            'iptables only supports to_ports on the nat table and the REDIRECT jump '
+            '(table={0}, jump={1})'.format(table, jump)
+        )
+
+    # --log-prefix is only supported with jump=LOG
+    if log_prefix and jump != 'LOG':
+        raise OperationError(
+            'iptables only supports log_prefix with the LOG jump '
+            '(jump={0})'.format(jump)
+        )
 
     definition = {
         'chain': chain,

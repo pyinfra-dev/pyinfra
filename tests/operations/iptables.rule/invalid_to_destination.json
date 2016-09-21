@@ -1,0 +1,10 @@
+{
+    "args": ["PREROUTING", "DNAT"],
+    "kwargs": {
+        "to_destination": "8.8.8.8"
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "iptables only supports to_destination on the nat table and the DNAT jump (table=filter, jump=DNAT)"
+    }
+}

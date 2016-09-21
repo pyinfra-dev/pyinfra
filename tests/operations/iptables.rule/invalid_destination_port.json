@@ -1,0 +1,10 @@
+{
+    "args": ["PREROUTING", "ACCEPT"],
+    "kwargs": {
+        "destination_port": 8080
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "iptables cannot filter by destination_port/source_port without a protocol"
+    }
+}

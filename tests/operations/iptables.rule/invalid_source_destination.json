@@ -1,0 +1,10 @@
+{
+    "args": ["PREROUTING", "SNAT"],
+    "kwargs": {
+        "to_source": "8.8.8.8"
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "iptables only supports to_source on the nat table and the SNAT jump (table=filter, jump=SNAT)"
+    }
+}

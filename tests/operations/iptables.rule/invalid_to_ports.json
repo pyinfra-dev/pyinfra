@@ -1,0 +1,10 @@
+{
+    "args": ["PREROUTING", "REDIRECT"],
+    "kwargs": {
+        "to_ports": "8.8.8.8"
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "iptables only supports to_ports on the nat table and the REDIRECT jump (table=filter, jump=REDIRECT)"
+    }
+}
