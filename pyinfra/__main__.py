@@ -40,6 +40,7 @@ Config options:
     --su-user USER
     --password PASS      SSH password auth (bad).
     --parallel NUM       Number of parallel processes.
+    --fail-percent NUM   Percentage of hosts that can fail before exiting.
 
 Experimental options:
     --enable-pipelining  Enable fact pipelining.
@@ -168,15 +169,28 @@ try:
         ssh_key=arguments['key'],
         ssh_key_password=arguments['key_password'],
         ssh_port=arguments['port'],
-        ssh_password=arguments['password']
+        ssh_password=arguments['password'],
     )
+
+    # If --debug-data dump & exit
+    if arguments['debug_data']:
+        print_data(inventory)
+        _exit()
 
     # Attach to pseudo inventory
     pseudo_inventory.set(inventory)
 
     # Load up any config.py from the filesystem
     config = load_config(deploy_dir)
-    # Arg based overrides
+
+    # Load any hooks/config from the deploy file w/fake state & host
+    pseudo_state.set(FakeState())
+    pseudo_host.set(FakeHost())
+    load_deploy_config(arguments['deploy'], config)
+    pseudo_host.reset()
+    pseudo_state.reset()
+
+    # Arg based config overrides
     if arguments['sudo']:
         config.SUDO = True
         if arguments['sudo_user']:
@@ -188,17 +202,8 @@ try:
     if arguments['parallel']:
         config.PARALLEL = arguments['parallel']
 
-    # If --debug-data dump & exit
-    if arguments['debug_data']:
-        print_data(inventory)
-        _exit()
-
-    # Load any hooks/config from the deploy file w/fake state & host
-    pseudo_state.set(FakeState())
-    pseudo_host.set(FakeHost())
-    load_deploy_config(arguments['deploy'], config)
-    pseudo_host.reset()
-    pseudo_state.reset()
+    if arguments['fail_percent'] is not None:
+        config.FAIL_PERCENT = arguments['fail_percent']
 
     # Create/set the state
     state = State(inventory, config)

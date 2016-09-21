@@ -408,6 +408,11 @@ def setup_arguments(arguments):
         if not path.exists(arguments['--key']):
             raise CliError('Private key file not found: {0}'.format(arguments['--key']))
 
+    # Fail percent must be a number
+    fail_percent = None
+    if arguments['--fail-percent']:
+        fail_percent = int(arguments['--fail-percent'])
+
     # Setup the rest
     return {
         # Deploy options
@@ -439,6 +444,7 @@ def setup_arguments(arguments):
         'sudo_user': arguments['--sudo-user'],
         'su_user': arguments['--su-user'],
         'parallel': arguments['--parallel'],
+        'fail_percent': fail_percent,
 
         # Misc
         'list_facts': arguments['--facts'],
