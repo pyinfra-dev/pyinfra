@@ -1,0 +1,16 @@
+{
+    "args": ["MYCHAIN"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "iptables_chains": {
+            "filter": {
+                "MYCHAIN": "ACCEPT"
+            }
+        }
+    },
+    "commands": [
+        "iptables -t filter -X MYCHAIN"
+    ]
+}

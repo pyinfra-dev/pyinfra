@@ -1,0 +1,15 @@
+{
+    "args": ["MYCHAIN"],
+    "kwargs": {
+        "policy": "DROP"
+    },
+    "facts": {
+        "iptables_chains": {
+            "filter": {}
+        }
+    },
+    "commands": [
+        "iptables -t filter -N MYCHAIN",
+        "iptables -t filter -P MYCHAIN DROP"
+    ]
+}
