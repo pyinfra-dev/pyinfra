@@ -32,28 +32,37 @@ def packages(
         Package versions can be pinned like pip: ``<pkg>==<version>``
     '''
 
-    commands = []
-
     if requirements is not None:
-        commands.append('pip install -r {0}'.format(requirements))
+        yield 'pip install -r {0}'.format(requirements)
 
     current_packages = host.fact.pip_packages(virtualenv)
 
-    commands.extend(ensure_packages(
-        packages, current_packages, present,
-        install_command='pip install',
-        uninstall_command='pip uninstall',
-        version_join='==',
-        upgrade_command='pip install --upgrade',
-        latest=latest,
-    ))
-
-    # Wrap commands inside virtualenv when present
     if virtualenv:
         virtualenv = virtualenv.rstrip('/')
-        commands = [
-            '{0}/bin/{1}'.format(virtualenv, command)
-            for command in commands
-        ]
 
-    return commands
+    install_command = (
+        'pip install'
+        if virtualenv is None
+        else '{0}/bin/pip install'.format(virtualenv)
+    )
+
+    uninstall_command = (
+        'pip uninstall'
+        if virtualenv is None
+        else '{0}/bin/pip uninstall'.format(virtualenv)
+    )
+
+    upgrade_command = (
+        'pip install --upgrade'
+        if virtualenv is None
+        else '{0}/bin/pip install --upgrade'.format(virtualenv)
+    )
+
+    yield ensure_packages(
+        packages, current_packages, present,
+        install_command=install_command,
+        uninstall_command=uninstall_command,
+        upgrade_command=upgrade_command,
+        version_join='==',
+        latest=latest,
+    )

@@ -37,24 +37,15 @@ def container(
 
     container = get_container_named(name, host.fact.lxd_containers)
 
-    if container:
-        if present:
-            # Not removing the container if it should be present:
-            return []
-        else:
-            commands = []
+    # Container exists and we don't want it
+    if container and not present:
             if container['status'] == 'Running':
-                commands.append('lxc stop {0}'.format(name))
+                yield 'lxc stop {0}'.format(name)
 
             # Command to remove the container:
-            commands.append('lxc delete {0}'.format(name))
-            return commands
-    else:
-        if not present:
-            # Not creating the container if it should be absent:
-            return []
-        else:
-            # Command to create the container:
-            return [
-                'lxc launch {image} {name}'.format(name=name, image=image)
-            ]
+            yield 'lxc delete {0}'.format(name)
+
+    # Container doesn't exist and we want it
+    if not container and present:
+        # Command to create the container:
+        yield 'lxc launch {image} {name}'.format(name=name, image=image)

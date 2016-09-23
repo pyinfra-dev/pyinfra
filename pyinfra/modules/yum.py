@@ -28,7 +28,7 @@ def key(state, host, key):
         always returns one command, not state checking
     '''
 
-    return ['rpm --import {0}'.format(key)]
+    yield 'rpm --import {0}'.format(key)
 
 
 @operation
@@ -53,7 +53,8 @@ def repo(
 
     # If we don't want the repo, just remove any existing file
     if not present:
-        return files.file(state, host, filename, present=False)
+        yield files.file(state, host, filename, present=False)
+        return
 
     # Build the repo file from string
     repo = '''[{name}]
@@ -62,17 +63,16 @@ baseurl={baseurl}
 gpgcheck={gpgcheck}
 enabled={enabled}
 '''.format(
-        name=name, baseurl=baseurl, description=description,
+        name=name, baseurl=baseurl,
+        description=description,
         gpgcheck=1 if gpgcheck else 0,
-        enabled=1 if enabled else 0
+        enabled=1 if enabled else 0,
     )
 
     repo = StringIO(repo)
 
     # Ensure this is the file on the server
-    commands = files.put(state, host, repo, filename)
-
-    return commands
+    yield files.put(state, host, repo, filename)
 
 
 @operation
@@ -88,15 +88,13 @@ def rpm(state, host, source, present=True):
         as the file won't exist until mid-deploy
     '''
 
-    commands = []
-
     # If source is a url
     if urlparse(source).scheme:
         # Generate a temp filename (with .rpm extension to please yum)
         temp_filename = '{0}.rpm'.format(state.get_temp_filename(source))
 
         # Ensure it's downloaded
-        commands.extend(files.download(state, host, source, temp_filename))
+        yield files.download(state, host, source, temp_filename)
 
         # Override the source with the downloaded file
         source = temp_filename
@@ -117,17 +115,11 @@ def rpm(state, host, source, present=True):
 
     # Package does not exist and we want?
     if present and not exists:
-        commands.extend([
-            'rpm -U {0}'.format(source)
-        ])
+        yield 'rpm -U {0}'.format(source)
 
     # Package exists but we don't want?
     if exists and not present:
-        commands.extend([
-            'yum remove -y {0}'.format(info['name'])
-        ])
-
-    return commands
+        yield 'yum remove -y {0}'.format(info['name'])
 
 
 @operation
@@ -136,7 +128,7 @@ def upgrade(state, host):
     Upgrades all yum packages.
     '''
 
-    return ['yum update -y']
+    yield 'yum update -y'
 
 _upgrade = upgrade
 
@@ -156,20 +148,16 @@ def packages(
     + clean: run yum clean
     '''
 
-    commands = []
-
     if clean:
-        commands.append('yum clean all')
+        yield 'yum clean all'
 
     if upgrade:
-        commands.extend(_upgrade(state, host))
+        yield _upgrade(state, host)
 
-    commands.extend(ensure_packages(
+    yield ensure_packages(
         packages, host.fact.rpm_packages, present,
         install_command='yum install -y',
         uninstall_command='yum remove -y',
         upgrade_command='yum update -y',
-        latest=latest
-    ))
-
-    return commands
+        latest=latest,
+    )

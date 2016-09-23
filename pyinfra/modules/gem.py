@@ -24,11 +24,11 @@ def packages(state, host, packages=None, present=True, latest=False):
         Package versions can be pinned like gem: ``<pkg>:<version>``
     '''
 
-    return ensure_packages(
+    yield ensure_packages(
         packages, host.fact.gem_packages, present,
         install_command='gem instal',
         uninstall_command='gem uninstall',
-        version_join=':',
         upgrade_command='gem update',
-        latest=latest
+        version_join=':',
+        latest=latest,
     )

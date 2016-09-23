@@ -42,7 +42,7 @@ def packages(state, host, packages=None, present=True, pkg_path=None):
                 arch=host.fact.arch
             )
 
-    return ensure_packages(
+    yield ensure_packages(
         packages, host.fact.pkg_packages, present,
         install_command='PKG_PATH={0} pkg_add'.format(pkg_path),
         uninstall_command='pkg_delete'

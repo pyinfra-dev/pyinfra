@@ -43,11 +43,11 @@ def packages(state, host, packages=None, present=True, latest=False, directory=N
         else 'cd {0} && npm update'.format(directory)
     )
 
-    return ensure_packages(
+    yield ensure_packages(
         packages, current_packages, present,
         install_command=install_command,
         uninstall_command=uninstall_command,
-        version_join='@',
         upgrade_command=upgrade_command,
-        latest=latest
+        version_join='@',
+        latest=latest,
     )

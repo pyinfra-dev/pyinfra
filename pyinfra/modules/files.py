@@ -41,8 +41,6 @@ def download(
     + force: always download the file, even if it already exists
     '''
 
-    commands = []
-
     # Get destination info
     info = host.fact.file(destination)
 
@@ -70,15 +68,13 @@ def download(
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
-        commands.append('wget -q {0} -O {1}'.format(source_url, destination))
+        yield 'wget -q {0} -O {1}'.format(source_url, destination)
 
         if user or group:
-            commands.append(chown(destination, user, group))
+            yield chown(destination, user, group)
 
         if mode:
-            commands.append(chmod(destination, mode))
-
-    return commands
+            yield chmod(destination, mode)
 
 
 @operation
@@ -113,7 +109,6 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
 
     # Is there a matching line in this file?
     present_lines = host.fact.find_in_file(name, match_line)
-    commands = []
 
     # If replace present, use that over the matching line
     if replace:
@@ -131,7 +126,7 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
         # If the file does not exist - it *might* be created, so we handle it dynamically
         # with a little script.
         if present_lines is None:
-            commands.append('''
+            yield '''
                 # If the file now exists
                 if [ -f "{target}" ]; then
                     # Grep for the line, sed if matches
@@ -147,24 +142,22 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
                 target=name,
                 match_line=match_line,
                 echo_command=echo_command,
-                sed_replace_command=sed_replace_command
-            ))
+                sed_replace_command=sed_replace_command,
+            )
 
         # Otherwise the file exists and there is no matching line, so append it
         else:
-            commands.append(echo_command)
+            yield echo_command
 
     # Line(s) exists and we want to remove them, replace with nothing
     elif present_lines and not present:
-        commands.append(sed_replace(state, name, match_line, '', flags=flags))
+        yield sed_replace(state, name, match_line, '', flags=flags)
 
     # Line(s) exists and we have want to ensure they're correct
     elif present_lines and present:
         # If any of lines are different, sed replace them
         if replace and any(line != replace for line in present_lines):
-            commands.append(sed_replace_command)
-
-    return commands
+            yield sed_replace_command
 
 
 @operation
@@ -178,7 +171,7 @@ def replace(state, host, name, match, replace, flags=None):
     + flags: list of flaggs to pass to sed
     '''
 
-    return [sed_replace(state, name, match, replace, flags=flags)]
+    yield sed_replace(state, name, match, replace, flags=flags)
 
 
 @operation(pipeline_facts={
@@ -247,30 +240,28 @@ def sync(
                 )
             ))
 
-    commands = []
-
     # Ensure the destination directory
-    commands.extend(directory(
+    yield directory(
         state, host, destination,
-        user=user, group=group
-    ))
+        user=user, group=group,
+    )
 
     # Ensure any remote dirnames
     for dirname in ensure_dirnames:
-        commands.extend(directory(
+        yield directory(
             state, host,
             '/'.join((destination, dirname)),
-            user=user, group=group
-        ))
+            user=user, group=group,
+        )
 
     # Put each file combination
     for local_filename, remote_filename in put_files:
-        commands.extend(put(
+        yield put(
             state, host,
             local_filename, remote_filename,
             user=user, group=group, mode=mode,
-            add_deploy_dir=False
-        ))
+            add_deploy_dir=False,
+        )
 
     # Delete any extra files
     if delete:
@@ -278,9 +269,7 @@ def sync(
         wanted_filenames = set([remote_filename for _, remote_filename in put_files])
         files_to_delete = remote_filenames - wanted_filenames
         for filename in files_to_delete:
-            commands.extend(file(state, host, filename, present=False))
-
-    return commands
+            yield file(state, host, filename, present=False)
 
 
 @operation(pipeline_facts={
@@ -318,17 +307,16 @@ def put(
 
     mode = ensure_mode_int(mode)
     remote_file = host.fact.file(remote_filename)
-    commands = []
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file:
-        commands.append((local_file, remote_filename))
+        yield (local_file, remote_filename)
 
         if user or group:
-            commands.append(chown(remote_filename, user, group))
+            yield chown(remote_filename, user, group)
 
         if mode:
-            commands.append(chmod(remote_filename, mode))
+            yield chmod(remote_filename, mode)
 
     # File exists, check sum and check user/group/mode if supplied
     else:
@@ -337,27 +325,25 @@ def put(
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
-            commands.append((local_file, remote_filename))
+            yield (local_file, remote_filename)
 
             if user or group:
-                commands.append(chown(remote_filename, user, group))
+                yield chown(remote_filename, user, group)
 
             if mode:
-                commands.append(chmod(remote_filename, mode))
+                yield chmod(remote_filename, mode)
 
         else:
             # Check mode
             if mode and remote_file['mode'] != mode:
-                commands.append(chmod(remote_filename, mode))
+                yield chmod(remote_filename, mode)
 
             # Check user/group
             if (
                 (user and remote_file['user'] != user)
                 or (group and remote_file['group'] != group)
             ):
-                commands.append(chown(remote_filename, user, group))
-
-    return commands
+                yield chown(remote_filename, user, group)
 
 
 @operation
@@ -414,7 +400,7 @@ def template(
     output_file.template = template_filename
 
     # Pass to the put function
-    return put(
+    yield put(
         state, host,
         output_file, remote_filename,
         user=user, group=group, mode=mode,
@@ -448,7 +434,6 @@ def link(
         raise OperationError('If present is True target must be provided')
 
     info = host.fact.link(name)
-    commands = []
 
     # Not a link?
     if info is False:
@@ -463,13 +448,13 @@ def link(
 
     # No link and we want it
     if info is None and present:
-        commands.append(add_cmd)
+        yield add_cmd
         if user or group:
-            commands.append(chown(name, user, group, dereference=False))
+            yield chown(name, user, group, dereference=False)
 
     # It exists and we don't want it
     elif info and not present:
-        commands.append(remove_cmd)
+        yield remove_cmd
 
     # Exists and want to ensure it's state
     elif info and present:
@@ -488,16 +473,12 @@ def link(
 
         # If the target is wrong, remove & recreate the link
         if info['link_target'] != target:
-            commands.extend((
-                remove_cmd,
-                add_cmd
-            ))
+            yield remove_cmd
+            yield add_cmd
 
         # Check user/group
         if (user and info['user'] != user) or (group and info['group'] != group):
-            commands.append(chown(name, user, group, dereference=False))
-
-    return commands
+            yield chown(name, user, group, dereference=False)
 
 
 @operation(pipeline_facts={
@@ -520,7 +501,6 @@ def file(
 
     mode = ensure_mode_int(mode)
     info = host.fact.file(name)
-    commands = []
 
     # Not a file?!
     if info is False:
@@ -528,31 +508,29 @@ def file(
 
     # Doesn't exist & we want it
     if info is None and present:
-        commands.append('touch {0}'.format(name))
+        yield 'touch {0}'.format(name)
 
         if mode:
-            commands.append(chmod(name, mode))
+            yield chmod(name, mode)
         if user or group:
-            commands.append(chown(name, user, group))
+            yield chown(name, user, group)
 
     # It exists and we don't want it
     elif info and not present:
-        commands.append('rm -f {0}'.format(name))
+        yield 'rm -f {0}'.format(name)
 
     # It exists & we want to ensure its state
     elif info and present:
         if touch:
-            commands.append('touch {0}'.format(name))
+            yield 'touch {0}'.format(name)
 
         # Check mode
         if mode and info['mode'] != mode:
-            commands.append(chmod(name, mode))
+            yield chmod(name, mode)
 
         # Check user/group
         if (user and info['user'] != user) or (group and info['group'] != group):
-            commands.append(chown(name, user, group))
-
-    return commands
+            yield chown(name, user, group)
 
 
 @operation(pipeline_facts={
@@ -575,7 +553,6 @@ def directory(
 
     mode = ensure_mode_int(mode)
     info = host.fact.directory(name)
-    commands = []
 
     # Not a directory?!
     if info is False:
@@ -583,24 +560,22 @@ def directory(
 
     # Doesn't exist & we want it
     if info is None and present:
-        commands.append('mkdir -p {0}'.format(name))
+        yield 'mkdir -p {0}'.format(name)
         if mode:
-            commands.append(chmod(name, mode, recursive=recursive))
+            yield chmod(name, mode, recursive=recursive)
         if user or group:
-            commands.append(chown(name, user, group, recursive=recursive))
+            yield chown(name, user, group, recursive=recursive)
 
     # It exists and we don't want it
     elif info and not present:
-        commands.append('rm -rf {0}'.format(name))
+        yield 'rm -rf {0}'.format(name)
 
     # It exists & we want to ensure its state
     elif info and present:
         # Check mode
         if mode and info['mode'] != mode:
-            commands.append(chmod(name, mode, recursive=recursive))
+            yield chmod(name, mode, recursive=recursive)
 
         # Check user/group
         if (user and info['user'] != user) or (group and info['group'] != group):
-            commands.append(chown(name, user, group, recursive=recursive))
-
-    return commands
+            yield chown(name, user, group, recursive=recursive)

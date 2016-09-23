@@ -45,20 +45,14 @@ def key(state, host, key=None, keyserver=None, keyid=None):
         These must be provided together.
     '''
 
-    commands = []
-
     if key:
         if urlparse(key).scheme:
-            commands.append('apt-key adv --fetch-keys {0}'.format(key))
+            yield'apt-key adv --fetch-keys {0}'.format(key)
         else:
-            commands.append('apt-key add {0}'.format(key))
+            yield'apt-key add {0}'.format(key)
 
     if keyserver and keyid:
-        commands.append(
-            'apt-key adv --keyserver {0} --recv-keys {1}'.format(keyserver, keyid)
-        )
-
-    return commands
+        yield 'apt-key adv --keyserver {0} --recv-keys {1}'.format(keyserver, keyid)
 
 
 @operation
@@ -71,8 +65,6 @@ def repo(state, host, name, present=True, filename=None):
     + filename: optional filename to use ``/etc/apt/sources.list.d/<filename>.list``. By
       default uses ``/etc/apt/sources.list``.
     '''
-
-    commands = []
 
     apt_sources = host.fact.apt_sources
 
@@ -92,17 +84,16 @@ def repo(state, host, name, present=True, filename=None):
 
     # Doesn't exist and we want it
     if not is_present and present:
-        commands.extend(files.line(
+        yield files.line(
             state, host, filename, name
-        ))
+        )
 
     # Exists and we don't want it
     if is_present and not present:
-        commands.extend(files.line(
-            state, host, filename, name, present=False
-        ))
-
-    return commands
+        yield files.line(
+            state, host, filename, name,
+            present=False,
+        )
 
 
 @operation
@@ -117,7 +108,6 @@ def ppa(state, host, name, present=True):
         requires ``apt-add-repository`` on the remote host
     '''
 
-    commands = []
     apt_sources = host.fact.apt_sources
 
     repo_url = 'http://ppa.launchpad.net/{0}/ubuntu'.format(name[4:])
@@ -125,12 +115,10 @@ def ppa(state, host, name, present=True):
     is_present = repo_url in apt_sources
 
     if not is_present and present:
-        commands.append('apt-add-repository -y "{0}"'.format(name))
+        yield 'apt-add-repository -y "{0}"'.format(name)
 
     if is_present and not present:
-        commands.append('apt-add-repository -y --remove "{0}"'.format(name))
-
-    return commands
+        yield 'apt-add-repository -y --remove "{0}"'.format(name)
 
 
 @operation
@@ -150,15 +138,13 @@ def deb(state, host, source, present=True):
         as the file won't exist until mid-deploy
     '''
 
-    commands = []
-
     # If source is a url
     if urlparse(source).scheme:
         # Generate a temp filename
         temp_filename = state.get_temp_filename(source)
 
         # Ensure it's downloaded
-        commands.extend(files.download(state, host, source, temp_filename))
+        yield files.download(state, host, source, temp_filename)
 
         # Override the source with the downloaded file
         source = temp_filename
@@ -180,23 +166,17 @@ def deb(state, host, source, present=True):
 
     # Package does not exist and we want?
     if present and not exists:
-        commands.extend([
-            # Install .deb file - ignoring failure (on unmet dependencies)
-            'dpkg --force-confdef --force-confold -i {0} || true'.format(source),
-            # Attempt to install any missing dependencies
-            '{0} -f'.format(noninteractive_apt('install')),
-            # Now reinstall, and critically configure, the package - if there are still
-            # missing deps, now we error
-            'dpkg --force-confdef --force-confold -i {0}'.format(source)
-        ])
+        # Install .deb file - ignoring failure (on unmet dependencies)
+        yield 'dpkg --force-confdef --force-confold -i {0} || true'.format(source)
+        # Attempt to install any missing dependencies
+        yield '{0} -f'.format(noninteractive_apt('install'))
+        # Now reinstall, and critically configure, the package - if there are still
+        # missing deps, now we error
+        yield 'dpkg --force-confdef --force-confold -i {0}'.format(source)
 
     # Package exists but we don't want?
     if exists and not present:
-        commands.extend([
-            '{0} {1}'.format(noninteractive_apt('remove'), info['name'])
-        ])
-
-    return commands
+        yield '{0} {1}'.format(noninteractive_apt('remove'), info['name'])
 
 
 @operation
@@ -207,14 +187,12 @@ def update(state, host, touch_periodic=False):
     + touch_periodic: touch ``/var/lib/apt/periodic/update-success-stamp`` after update
     '''
 
-    commands = ['apt-get update']
+    yield 'apt-get update'
 
     # Some apt systems (Debian) have the /var/lib/apt/periodic directory, but don't
     # bother touching anything in there - so pyinfra does it, enabling cache_time to work.
     if touch_periodic:
-        commands.append('touch {0}'.format(APT_UPDATE_FILENAME))
-
-    return commands
+        yield 'touch {0}'.format(APT_UPDATE_FILENAME)
 
 _update = update
 
@@ -225,7 +203,7 @@ def upgrade(state, host):
     Upgrades all apt packages.
     '''
 
-    return [noninteractive_apt('upgrade')]
+    yield noninteractive_apt('upgrade')
 
 _upgrade = upgrade
 
@@ -255,8 +233,6 @@ def packages(
         simply leave the periodic directory empty (Debian).
     '''
 
-    commands = []
-
     # If cache_time check when apt was last updated, prevent updates if within time
     if update and cache_time:
         # Ubuntu provides this handy file
@@ -269,19 +245,17 @@ def packages(
             update = False
 
     if update:
-        commands.extend(_update(state, host, touch_periodic=cache_time))
+        yield _update(state, host, touch_periodic=cache_time)
 
     if upgrade:
-        commands.extend(_upgrade(state, host))
+        yield _upgrade(state, host)
 
     # Compare/ensure packages are present/not
-    commands.extend(ensure_packages(
+    yield ensure_packages(
         packages, host.fact.deb_packages, present,
         install_command=noninteractive_apt('install'),
         uninstall_command=noninteractive_apt('remove'),
-        version_join='=',
         upgrade_command=noninteractive_apt('install'),
-        latest=latest
-    ))
-
-    return commands
+        version_join='=',
+        latest=latest,
+    )

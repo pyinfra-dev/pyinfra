@@ -23,26 +23,23 @@ def _handle_service_control(
 ):
     statuses = statuses or {}
     status = statuses.get(name, None)
-    commands = []
 
     # Need running but down
     if running is True and not status:
-        commands.append(formatter.format(name, 'start'))
+        yield formatter.format(name, 'start')
 
     # Need down but running
     if running is False and status is not False:
-        commands.append(formatter.format(name, 'stop'))
+        yield formatter.format(name, 'stop')
 
     if command and status:
-        commands.append(formatter.format(name, command))
+        yield formatter.format(name, command)
 
     if restarted and status:
-        commands.append(formatter.format(name, 'restart'))
+        yield formatter.format(name, 'restart')
 
     if reloaded:
-        commands.append(formatter.format(name, 'reload'))
-
-    return commands
+        yield formatter.format(name, 'reload')
 
 
 @operation
@@ -73,7 +70,7 @@ def d(
         ``init.d_enable`` operation.
     '''
 
-    commands = _handle_service_control(
+    yield _handle_service_control(
         name, host.fact.initd_status,
         '/etc/init.d/{0} {1}',
         running, restarted, reloaded, command
@@ -87,24 +84,20 @@ def d(
             distro = host.fact.linux_distribution.get('name')
 
             if distro in ('Ubuntu', 'Debian'):
-                commands.append('update-rc.d {0} defaults'.format(name))
+                yield 'update-rc.d {0} defaults'.format(name)
 
             elif distro in ('CentOS', 'Fedora', 'Red Hat Enterprise Linux'):
-                commands.extend([
-                    'chkconfig {0} --add'.format(name),
-                    'chkconfig {0} on'.format(name)
-                ])
+                yield 'chkconfig {0} --add'.format(name)
+                yield 'chkconfig {0} on'.format(name)
 
             elif distro == 'Gentoo':
-                commands.append('rc-update add {0} default'.format(name))
+                yield 'rc-update add {0} default'.format(name)
 
         # Remove any /etc/rcX.d/<name> start links
         elif enabled is False:
             # No state checking, just blindly remove any that exist
             for link in start_links:
-                commands.append('rm -f {0}'.format(link))
-
-    return commands
+                yield 'rm -f {0}'.format(link)
 
 
 @operation
@@ -123,8 +116,6 @@ def d_enable(
     + stop_levels: which runlevels should the service stop when enabled
     '''
 
-    commands = []
-
     # Build link list
     links = []
 
@@ -136,11 +127,7 @@ def d_enable(
 
     # Ensure all the new links exist
     for link in links:
-        commands.extend(
-            files.link(state, host, link, '/etc/init.d/{0}'.format(name))
-        )
-
-    return commands
+        yield files.link(state, host, link, '/etc/init.d/{0}'.format(name))
 
 
 @operation
@@ -160,7 +147,7 @@ def rc(
     + enabled: whether this service should be enabled/disabled on boot
     '''
 
-    commands = _handle_service_control(
+    yield _handle_service_control(
         name, host.fact.rcd_status,
         '/etc/rc.d/{0} {1}',
         running, restarted, reloaded, command
@@ -168,15 +155,13 @@ def rc(
 
     # BSD init is simple, just add/remove <name>_enabled="YES"
     if isinstance(enabled, bool):
-        commands.extend(files.line(
+        yield files.line(
             state, host,
             '/etc/rc.conf.local',
             '{0}_enable=.*'.format(name),
             replace='{0}_enable="YES"'.format(name),
-            present=enabled
-        ))
-
-    return commands
+            present=enabled,
+        )
 
 
 @operation
@@ -202,26 +187,24 @@ def upstart(
         "manual" to disable automatic start of services.
     '''
 
-    commands = _handle_service_control(
+    yield _handle_service_control(
         name, host.fact.upstart_status,
         'initctl {1} {0}',
-        running, restarted, reloaded, command
+        running, restarted, reloaded, command,
     )
 
     # Upstart jobs are setup w/runlevels etc in their config files, so here we just check
     # there's no override file.
     if enabled is True:
-        commands.extend(files.file(
+        yield files.file(
             state, host,
             '/etc/init/{0}.override'.format(name),
-            present=False
-        ))
+            present=False,
+        )
 
     # Set the override file to "manual" to disable automatic start
     elif enabled is False:
-        commands.append('echo "manual" > /etc/init/{0}.override'.format(name))
-
-    return commands
+        yield 'echo "manual" > /etc/init/{0}.override'.format(name)
 
 
 @operation
@@ -241,7 +224,7 @@ def systemd(
     + enabled: whether this service should be enabled/disabled on boot
     '''
 
-    commands = _handle_service_control(
+    yield _handle_service_control(
         name, host.fact.systemd_status,
         'systemctl {1} {0}.service',
         running, restarted, reloaded, command
@@ -252,10 +235,8 @@ def systemd(
 
         # Isn't enabled and want enabled?
         if not is_enabled and enabled is True:
-            commands.append('systemctl enable {0}.service'.format(name))
+            yield 'systemctl enable {0}.service'.format(name)
 
         # Is enabled and want disabled?
         elif is_enabled and enabled is False:
-            commands.append('systemctl disable {0}.service'.format(name))
-
-    return commands
+            yield 'systemctl disable {0}.service'.format(name)

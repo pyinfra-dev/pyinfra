@@ -36,9 +36,7 @@ def ensure_packages(
     '''
 
     if packages is None:
-        return []
-
-    commands = []
+        return
 
     # Accept a single package as string
     if isinstance(packages, six.string_types):
@@ -115,15 +113,13 @@ def ensure_packages(
     if diff_packages:
         command = install_command if present else uninstall_command
 
-        commands.append('{0} {1}'.format(
+        yield '{0} {1}'.format(
             command,
             ' '.join(diff_packages)
-        ))
+        )
 
     if latest and upgrade_command and upgrade_packages:
-        commands.append('{0} {1}'.format(
+        yield '{0} {1}'.format(
             upgrade_command,
             ' '.join(upgrade_packages)
-        ))
-
-    return commands
+        )

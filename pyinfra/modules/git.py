@@ -42,15 +42,13 @@ def repo(
           only other
     '''
 
-    commands = []
-
     # Ensure our target directory exists
-    commands.extend(files.directory(state, host, target))
+    yield files.directory(state, host, target)
 
     # If we're going to chown this after clone/pull, and we're sudo'd, we need to make the
     # directory writeable by the SSH user
     if use_ssh_user:
-        commands.append(chmod(target, 'go+w', recursive=True))
+        yield chmod(target, 'go+w', recursive=True)
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
@@ -64,14 +62,14 @@ def repo(
             '''.format(domain)
 
             if use_ssh_user:
-                commands.append({
+                yield {
                     'command': cmd,
                     'sudo': False,
-                    'sudo_user': False
-                })
+                    'sudo_user': False,
+                }
 
             else:
-                commands.append(cmd)
+                yield cmd
 
     # Store git commands for directory prefix
     git_commands = []
@@ -105,23 +103,22 @@ def repo(
             {
                 'command': command,
                 'sudo': False,
-                'sudo_user': False
+                'sudo_user': False,
             }
             for command in git_commands
         ]
 
-    commands.extend(git_commands)
+    for cmd in git_commands:
+        yield cmd
 
     if use_ssh_user:
         # Remove write permissions from other or other+group when no group
-        commands.append(chmod(
+        yield chmod(
             target,
             'o-w' if group else 'go-w',
-            recursive=True
-        ))
+            recursive=True,
+        )
 
     # Apply any user or group
     if user or group:
-        commands.append(chown(target, user, group, recursive=True))
-
-    return commands
+        yield chown(target, user, group, recursive=True)

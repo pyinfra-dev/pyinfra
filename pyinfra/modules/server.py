@@ -26,12 +26,12 @@ def wait(state, host, port=None):
     + port: port number to wait for
     '''
 
-    return ['''
+    yield '''
         while ! (netstat -an | grep LISTEN | grep -e "\.{0}" -e ":{0}"); do
             echo "waiting for port {0}..."
             sleep 1
         done
-    '''.format(port)]
+    '''.format(port)
 
 
 @operation
@@ -47,13 +47,11 @@ def shell(state, host, commands, chdir=None):
     if isinstance(commands, six.string_types):
         commands = [commands]
 
-    if chdir:
-        commands = [
-            'cd {0} && ({1})'.format(chdir, command)
-            for command in commands
-        ]
-
-    return commands
+    for command in commands:
+        if chdir:
+            yield 'cd {0} && ({1})'.format(chdir, command)
+        else:
+            yield command
 
 
 @operation
@@ -65,19 +63,15 @@ def script(state, host, filename, chdir=None):
     + chdir: directory to cd into before executing the script
     '''
 
-    commands = []
-
     temp_file = state.get_temp_filename(filename)
-    commands.extend(files.put(state, host, filename, temp_file))
+    yield files.put(state, host, filename, temp_file)
 
-    commands.append(chmod(temp_file, '+x'))
+    yield chmod(temp_file, '+x')
 
     if chdir:
-        commands.append('cd {0} && {1}'.format(chdir, temp_file))
+        yield 'cd {0} && {1}'.format(chdir, temp_file)
     else:
-        commands.append(temp_file)
-
-    return commands
+        yield temp_file
 
 
 @operation
@@ -95,13 +89,12 @@ def group(
         System users don't exist on BSD, so the argument is ignored for BSD targets.
     '''
 
-    commands = []
     groups = host.fact.groups or []
     is_present = name in groups
 
     # Group exists but we don't want them?
     if not present and is_present:
-        commands.append('groupdel {0}'.format(name))
+        yield 'groupdel {0}'.format(name)
 
     # Group doesn't exist and we want it?
     elif present and not is_present:
@@ -113,9 +106,7 @@ def group(
 
         args.append(name)
 
-        commands.append('groupadd {0}'.format(' '.join(args)))
-
-    return commands
+        yield 'groupadd {0}'.format(' '.join(args))
 
 
 @operation
@@ -143,7 +134,6 @@ def user(
         ``/home/{name}``.
     '''
 
-    commands = []
     users = host.fact.users or {}
     user = users.get(name)
 
@@ -156,8 +146,8 @@ def user(
     # User not wanted?
     if not present:
         if user:
-            commands.append('userdel {0}'.format(name))
-        return commands
+            yield 'userdel {0}'.format(name)
+        return
 
     # User doesn't exist but we want them?
     if present and user is None:
@@ -179,7 +169,7 @@ def user(
         if system and host.fact.os not in ('OpenBSD', 'NetBSD'):
             args.append('-r')
 
-        commands.append('useradd {0} {1}'.format(' '.join(args), name))
+        yield 'useradd {0} {1}'.format(' '.join(args), name)
 
     # User exists and we want them, check home/shell/keys
     else:
@@ -203,26 +193,26 @@ def user(
 
         # Need to mod the user?
         if args:
-            commands.append('usermod {0} {1}'.format(' '.join(args), name))
+            yield 'usermod {0} {1}'.format(' '.join(args), name)
 
     # Ensure home directory ownership
     if ensure_home:
-        commands.extend(files.directory(
+        yield files.directory(
             state, host, home,
             user=name, group=name
-        ))
+        )
 
     # Add SSH keys
     if public_keys is not None:
         # Ensure .ssh directory
         # note that this always outputs commands unless the SSH user has access to the
         # authorized_keys file, ie the SSH user is the user defined in this function
-        commands.extend(files.directory(
+        yield files.directory(
             state, host,
             '{0}/.ssh'.format(home),
             user=name, group=name,
             mode=700
-        ))
+        )
 
         filename = '{0}/.ssh/authorized_keys'.format(home)
 
@@ -233,26 +223,24 @@ def user(
             ))
 
             # And ensure it exists
-            commands.extend(files.put(
+            yield files.put(
                 state, host,
                 keys_file, filename,
                 user=name, group=name,
                 mode=600
-            ))
+            )
 
         else:
             # Ensure authorized_keys exists
-            commands.extend(files.file(
+            yield files.file(
                 state, host, filename,
                 user=name, group=name,
                 mode=600
-            ))
+            )
 
             # And every public key is present
             for key in public_keys:
-                commands.extend(files.line(
+                yield files.line(
                     state, host,
                     filename, key
-                ))
-
-    return commands
+                )

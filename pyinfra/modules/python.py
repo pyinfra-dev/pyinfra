@@ -11,4 +11,4 @@ from pyinfra.api import operation
 
 @operation
 def execute(state, host, callback, *args, **kwargs):
-    return [(callback, args, kwargs)]
+    yield (callback, args, kwargs)
