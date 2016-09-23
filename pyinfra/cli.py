@@ -634,10 +634,18 @@ def make_inventory(
 
         # Or hostnames w/*wildcards
         else:
+            limits = limit.split(',')
+
             all_hosts = [
                 host for host in all_hosts
-                if (isinstance(host, tuple) and fnmatch(host[0], limit))
-                or (isinstance(host, six.string_types) and fnmatch(host, limit))
+                if (
+                    isinstance(host, tuple)
+                    and any(fnmatch(host[0], limit) for limit in limits)
+                )
+                or (
+                    isinstance(host, six.string_types)
+                    and any(fnmatch(host, limit) for limit in limits)
+                )
             ]
 
         # Reassign the all group w/limit
