@@ -24,7 +24,7 @@ from pyinfra.pseudo_modules import PseudoModule
 from .host import Host
 from .state import State
 from .attrs import wrap_attr_data
-from .util import make_hash, get_arg_value
+from .util import make_hash, get_arg_value, unroll_generators
 from .exceptions import PyinfraError
 
 
@@ -213,7 +213,7 @@ def operation(func=None, pipeline_facts=None):
         }
 
         # Convert to list as the result may be a generator
-        commands = list(func(state, host, *actual_args, **actual_kwargs))
+        commands = unroll_generators(func(state, host, *actual_args, **actual_kwargs))
 
         state.in_op = False
         state.current_op_meta = None

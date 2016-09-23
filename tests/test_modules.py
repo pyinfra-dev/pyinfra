@@ -16,6 +16,7 @@ from jsontest import JsonTest
 
 from pyinfra import pseudo_state, pseudo_host
 from pyinfra.cli import json_encode
+from pyinfra.api.util import unroll_generators
 
 from .util import FakeState, create_host, patch_files
 
@@ -47,7 +48,7 @@ def make_operation_tests(arg):
 
             with patch_files(test_data.get('files', [])):
                 try:
-                    output_commands = list(op._pyinfra_op(
+                    output_commands = unroll_generators(op._pyinfra_op(
                         pseudo_state, pseudo_host,
                         *test_data.get('args', []), **test_data.get('kwargs', {})
                     )) or []

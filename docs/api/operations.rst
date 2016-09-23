@@ -3,7 +3,7 @@ Writing Operations
 
 Operations are, in general, simple Python functions. They are passed the current deploy
 state and a target host, along with any operation arguments. The function reads state
-from the host, comparing it to the arguments, and outputs a list of **commands**.
+from the host, comparing it to the arguments, and yields **commands**.
 
 
 Input: reserved arguments
@@ -19,24 +19,24 @@ the operation name.
 Output: commands
 ----------------
 
-Commands come in three forms:
+Operations are generator functions and ``yield`` three types of command:
 
 .. code:: python
 
     # Shell commands, simply represented by a string
-    commands.append('echo "Shell!"')
+    yield 'echo "Shell!"'
 
     # File uploads represented by a tuple
-    commands.append((filename_or_io, remote_filename))
+    yield (filename_or_io, remote_filename)
 
     # Python functions represented by a tuple
-    commands.append((function, args_list, kwargs_dict))
+    yield (function, args_list, kwargs_dict)
 
     # Additionally, commands can be wrapped in a dict, overriding sudo/sudo_user
-    commands.append({
+    yield {
         'command': 'echo "Shell!"',
         'sudo': True
-    })
+    }
 
 
 Example: managing files
@@ -57,7 +57,6 @@ remote file based on the ``present`` kwargs:
         '''
 
         info = host.fact.file(name)
-        commands = []
 
         # Not a file?!
         if info is False:
@@ -65,10 +64,8 @@ remote file based on the ``present`` kwargs:
 
         # Doesn't exist & we want it
         if info is None and present:
-            commands.append('touch {0}'.format(name))
+            yield 'touch {0}'.format(name)
 
         # It exists and we don't want it
         elif info and not present:
-            commands.append('rm -f {0}'.format(name))
-
-        return commands
+            yield 'rm -f {0}'.format(name)

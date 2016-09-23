@@ -7,6 +7,7 @@ from __future__ import division, unicode_literals, print_function
 import re
 from hashlib import sha1
 from imp import load_source
+from types import GeneratorType
 
 import six
 from jinja2 import Template
@@ -19,6 +20,27 @@ BLOCKSIZE = 65536
 # Template cache
 TEMPLATES = {}
 FILE_SHAS = {}
+
+
+def unroll_generators(generator):
+    '''
+    Take a generator and unroll any sub-generators recursively. This is essentially a
+    Python 2 way of doing `yield from` in Python 3 (given iterating the entire thing).
+    '''
+
+    # Ensure we have a generator (prevents ccommands returning lists)
+    if not isinstance(generator, GeneratorType):
+        raise TypeError('{0} is not a generator'.format(generator))
+
+    items = []
+
+    for item in generator:
+        if isinstance(item, GeneratorType):
+            items.extend(unroll_generators(item))
+        else:
+            items.append(item)
+
+    return items
 
 
 def exec_file(filename, return_locals=False):
