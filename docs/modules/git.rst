@@ -9,8 +9,8 @@ Manage git repositories.
 .. code:: python
 
     git.repo(
-        source, target, branch=master, pull=True,
-        rebase=False, user=None, group=None, use_ssh_user=False, ssh_keyscan=False
+        source, target, branch='master', pull=True, rebase=False, user=None, group=None,
+        use_ssh_user=False, ssh_keyscan=False
     )
 
 + **source**: the git source URL

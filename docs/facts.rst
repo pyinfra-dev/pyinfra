@@ -24,8 +24,8 @@ Apt
     
 
 
-:code:`deb_package(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`deb_package`
+~~~~~~~~~~~~~~~~~~~
 
 
     Returns information on a .deb file.
@@ -93,32 +93,32 @@ Devices
 Files
 -----
 
-:code:`directory(name)`
-~~~~~~~~~~~~~~~~~~~~~~~
+:code:`directory`
+~~~~~~~~~~~~~~~~~
 
 
-:code:`file(name)`
-~~~~~~~~~~~~~~~~~~
+:code:`file`
+~~~~~~~~~~~~
 
 
-:code:`find_directories(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`find_directories`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of directories from a start point, recursively using find.
     
 
 
-:code:`find_files(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`find_files`
+~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of files from a start point, recursively using find.
     
 
 
-:code:`find_in_file(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`find_in_file`
+~~~~~~~~~~~~~~~~~~~~
 
 
     Checks for the existence of text in a file using grep. Returns a list of matching
@@ -126,20 +126,20 @@ Files
     
 
 
-:code:`find_links(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`find_links`
+~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of links from a start point, recursively using find.
     
 
 
-:code:`link(name)`
-~~~~~~~~~~~~~~~~~~
+:code:`link`
+~~~~~~~~~~~~
 
 
-:code:`sha1_file(name)`
-~~~~~~~~~~~~~~~~~~~~~~~
+:code:`sha1_file`
+~~~~~~~~~~~~~~~~~
 
 
     Returns a SHA1 hash of a file. Works with both sha1sum and sha1.
@@ -165,8 +165,8 @@ Gem
 Git
 ---
 
-:code:`git_branch(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`git_branch`
+~~~~~~~~~~~~~~~~~~
 
 
 Init
@@ -229,19 +229,86 @@ Init
     
 
 
-Npm
----
+Iptables
+--------
 
-:code:`npm_local_packages(directory)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`ip6tables_chains`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    Returns a dict of locally installed npm packages in a given directory:
+    Returns a dict of ip6tables chains & policies:
 
     .. code:: python
 
-        'package_name': 'version',
+        'NAME': 'POLICY',
         ...
+    
+
+
+:code:`ip6tables_rules`
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a list of ip6tables rules for a specific table:
+
+    .. code:: python
+
+        {
+            'chain': 'PREROUTING',
+            'jump': 'DNAT'
+        },
+        ...
+    
+
+
+:code:`iptables_chains`
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a dict of iptables chains & policies:
+
+    .. code:: python
+
+        'NAME': 'POLICY',
+        ...
+    
+
+
+:code:`iptables_rules`
+~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a list of iptables rules for a specific table:
+
+    .. code:: python
+
+        {
+            'chain': 'PREROUTING',
+            'jump': 'DNAT'
+        },
+        ...
+    
+
+
+Lxd
+---
+
+:code:`lxd_containers`
+~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a list of running LXD containers
+    
+
+
+Npm
+---
+
+:code:`npm_local_packages`
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    [DEPRECIATED] Maintained for backwards-compatability.
     
 
 
@@ -249,7 +316,7 @@ Npm
 ~~~~~~~~~~~~~~~~~~~~
 
 
-    Returns a dict of globally installed npm packages:
+    Returns a dict of installed npm packages globally or in a given directory:
 
     .. code:: python
 
@@ -265,7 +332,7 @@ Pip
 ~~~~~~~~~~~~~~~~~~~~
 
 
-    Returns a dict of installed pip packages:
+    Returns a dict of installed pip packages globally or in a given virtualenv:
 
     .. code:: python
 
@@ -274,8 +341,12 @@ Pip
     
 
 
-:code:`pip_virtualenv_packages(venv)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`pip_virtualenv_packages`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    [DEPRECIATED] Maintained for backwards-compatability.
+    
 
 
 Pkg
@@ -301,8 +372,8 @@ Server
 ~~~~~~~~~~~~
 
 
-:code:`command(command)`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`command`
+~~~~~~~~~~~~~~~
 
 
 :code:`date`
@@ -373,8 +444,8 @@ Returns the current datetime on the server.
     
 
 
-:code:`which(name)`
-~~~~~~~~~~~~~~~~~~~
+:code:`which`
+~~~~~~~~~~~~~
 
 
 Yum
@@ -393,8 +464,8 @@ Yum
     
 
 
-:code:`rpm_package(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`rpm_package`
+~~~~~~~~~~~~~~~~~~~
 
 
     Returns information on a .rpm file.

@@ -28,10 +28,7 @@ Download files from remote locations.
 
 .. code:: python
 
-    files.download(
-        source_url, destination, user=None,
-        group=None, mode=None, cache_time=None, force=False
-    )
+    files.download(source_url, destination, user=None, group=None, mode=None, cache_time=None, force=False)
 
 + **source_url**: source URl of the file
 + **destination**: where to save the file
@@ -144,7 +141,7 @@ remove extra files on the remote side, but not extra directories.
 
 .. code:: python
 
-    files.sync(source, destination, user=None, group=None, mode=None, delete=False)
+    files.sync(source, destination, user=None, group=None, mode=None, delete=False, exclude=None)
 
 + **source**: local directory to sync
 + **destination**: remote directory to sync to
@@ -152,6 +149,7 @@ remove extra files on the remote side, but not extra directories.
 + **group**: group to own the files and directories
 + **mode**: permissions of the files
 + **delete**: delete remote files not present locally
++ **exclude**: string or list/tuple of strings to match & exclude files (eg *.pyc)
 
 
 :code:`files.template`

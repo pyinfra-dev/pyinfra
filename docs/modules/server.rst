@@ -56,8 +56,8 @@ Manage system users & their ssh `authorized_keys`. Options:
 .. code:: python
 
     server.user(
-        name, present=True, home=None, shell=None, group=None,
-        groups=None, public_keys=None, delete_keys=False, ensure_home=True, system=False
+        name, present=True, home=None, shell=None, group=None, groups=None, public_keys=None,
+        delete_keys=False, ensure_home=True, system=False
     )
 
 + **name**: name of the user to ensure

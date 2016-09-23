@@ -44,7 +44,10 @@ Manually enable /etc/init.d scripts by creating /etc/rcX.d/Y links.
 
 .. code:: python
 
-    init.d_enable(name, start_priority=20, stop_priority=80, start_levels=(2, 3, 4, 5), stop_levels=(0, 1, 6))
+    init.d_enable(
+        name, start_priority=20, stop_priority=80, start_levels=(2, 3, 4, 5),
+        stop_levels=(0, 1, 6)
+    )
 
 + **name**: name of the service to enable
 + **start_priority**: priority to start the service
