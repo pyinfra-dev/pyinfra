@@ -33,6 +33,7 @@ Fedora & OpenBSD.
     api/example
     api/reference
     api/operations
+    api/facts
 
 
 Meta
