@@ -2,11 +2,11 @@
 
 pyinfra automates service deployment. It does this by diff-ing the state of the server with the state defined in the deploy script. Deploys are asyncronous and highly performant. The inventory & deploy are managed with pure Python, allowing for near-infinite extendability.
 
-+ [Getting started](https://pyinfra.readthedocs.org/getting_started.html)
++ [Getting started](https://pyinfra.readthedocs.org/page/getting_started.html)
 + [Documentation](https://pyinfra.readthedocs.org)
 + [Example deploy](example)
-+ [API Example](https://pyinfra.readthedocs.org/api_example.html)
-+ [How the deploy works](https://pyinfra.readthedocs.org/deploy_process.html)
++ [API Example](https://pyinfra.readthedocs.org/page/api/example.html)
++ [How the deploy works](https://pyinfra.readthedocs.org/page/deploy_process.html)
 
 When you run pyinfra you'll see something like:
 

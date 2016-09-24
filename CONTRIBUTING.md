@@ -19,9 +19,9 @@ pip install -e .
 
 ## Guides
 
-+ [How to write operations](https://pyinfra.readthedocs.io/en/latest/api/operations.html)
-+ [How to write facts](https://pyinfra.readthedocs.io/en/latest/api/facts.html)
-+ [API reference](https://pyinfra.readthedocs.io/en/latest/api/reference.html)
++ [How to write operations](https://pyinfra.readthedocs.io/page/api/operations.html)
++ [How to write facts](https://pyinfra.readthedocs.io/page/api/facts.html)
++ [API reference](https://pyinfra.readthedocs.io/page/api/reference.html)
 
 
 ## Code
