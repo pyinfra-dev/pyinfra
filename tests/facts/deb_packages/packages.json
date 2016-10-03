@@ -1,0 +1,16 @@
+{
+    "output": [
+        "ii  w3m 0.5.3-15 amd64 WWW browsable pager with excellent tables/frames support",
+        "ii  wget 1.15-1ubuntu1.14.04. amd64 retrieves files from the web",
+        "ii  whiptail 0.52.15-2ubuntu5 amd64 Displays user-friendly dialog oxes from shell scripts",
+        "ii  x11-common 1:7.7+1ubuntu8.1 all X Window System (X.Org) infrastructure",
+        "ii  x11-xkb-utils 7.7+1 amd64 X11 XKB utilitie"
+    ],
+    "fact": {
+        "w3m": ["0.5.3-15"],
+        "wget": ["1.15-1ubuntu1.14.04."],
+        "whiptail": ["0.52.15-2ubuntu5"],
+        "x11-common": ["1:7.7+1ubuntu8.1"],
+        "x11-xkb-utils": ["7.7+1"]
+    }
+}
