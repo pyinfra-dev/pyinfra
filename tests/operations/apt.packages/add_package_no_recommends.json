@@ -1,0 +1,12 @@
+{
+    "args": ["git"],
+    "kwargs": {
+        "no_recommends": true
+    },
+    "facts": {
+        "deb_packages": {}
+    },
+    "commands": [
+        "DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" install --no-install-recommends git"
+    ]
+}

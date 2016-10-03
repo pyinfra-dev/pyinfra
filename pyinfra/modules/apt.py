@@ -212,7 +212,8 @@ _upgrade = upgrade
 def packages(
     state, host,
     packages=None, present=True, latest=False,
-    update=False, cache_time=None, upgrade=False
+    update=False, cache_time=None, upgrade=False,
+    no_recommends=False,
 ):
     '''
     Install/remove/upgrade packages & update apt.
@@ -223,6 +224,7 @@ def packages(
     + update: run apt update
     + cache_time: when used with update, cache for this many seconds
     + upgrade: run apt upgrade
+    + no_recommends: don't install recommended packages
 
     Versions:
         Package versions can be pinned like apt: ``<pkg>=<version>``
@@ -250,12 +252,18 @@ def packages(
     if upgrade:
         yield _upgrade(state, host)
 
+    install_command = (
+        'install --no-install-recommends'
+        if no_recommends is True
+        else 'install'
+    )
+
     # Compare/ensure packages are present/not
     yield ensure_packages(
         packages, host.fact.deb_packages, present,
-        install_command=noninteractive_apt('install'),
+        install_command=noninteractive_apt(install_command),
         uninstall_command=noninteractive_apt('remove'),
-        upgrade_command=noninteractive_apt('install'),
+        upgrade_command=noninteractive_apt(install_command),
         version_join='=',
         latest=latest,
     )
