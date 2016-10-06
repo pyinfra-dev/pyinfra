@@ -347,6 +347,11 @@ def setup_arguments(arguments):
     Prepares argumnents output by docopt.
     '''
 
+    # Ensure parallel/port are numbers
+    for key in ('--parallel', '--port', '--fail-percent'):
+        if arguments[key]:
+            arguments[key] = int(arguments[key])
+
     # Prep --run OP ARGS
     op, args = arguments['--run'], arguments['ARGS']
 
@@ -382,10 +387,6 @@ def setup_arguments(arguments):
 
         arguments['ARGS'] = (args, op_kwargs)
 
-    # Ensure parallel is a number
-    if arguments['--parallel']:
-        arguments['--parallel'] = int(arguments['--parallel'])
-
     # Always assign empty args
     fact_args = []
     if arguments['--fact']:
@@ -407,11 +408,6 @@ def setup_arguments(arguments):
     if arguments['--key']:
         if not path.exists(arguments['--key']):
             raise CliError('Private key file not found: {0}'.format(arguments['--key']))
-
-    # Fail percent must be a number
-    fail_percent = None
-    if arguments['--fail-percent']:
-        fail_percent = int(arguments['--fail-percent'])
 
     # Setup the rest
     return {
@@ -444,7 +440,7 @@ def setup_arguments(arguments):
         'sudo_user': arguments['--sudo-user'],
         'su_user': arguments['--su-user'],
         'parallel': arguments['--parallel'],
-        'fail_percent': fail_percent,
+        'fail_percent': arguments['--fail-percent'],
 
         # Misc
         'list_facts': arguments['--facts'],
