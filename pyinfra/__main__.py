@@ -49,7 +49,7 @@ Experimental options:
 from __future__ import division, unicode_literals, print_function
 
 from gevent import monkey
-monkey.patch_all()
+monkey.patch_all()  # noqa
 
 import sys
 import signal
@@ -61,7 +61,7 @@ from termcolor import colored
 
 # Colorama patch to enable termcolor on Windows
 from colorama import init as colorama_init
-colorama_init()
+colorama_init()  # noqa
 
 from pyinfra import logger, pseudo_state, pseudo_host, pseudo_inventory, hook, __version__
 from pyinfra.local import exec_file
@@ -84,12 +84,14 @@ from pyinfra.api.exceptions import PyinfraError
 # Don't write out deploy.pyc/config.pyc etc
 sys.dont_write_bytecode = True
 
+
 # Handle ctrl+c
 def _signal_handler(signum, frame):
     print('Exiting upon user request!')
     sys.exit(0)
 
 signal.signal(signal.SIGINT, _signal_handler)
+
 
 # Exit handler
 def _exit(code=0):
@@ -98,6 +100,7 @@ def _exit(code=0):
     print()
 
     sys.exit(code)
+
 
 # Exception handler
 def _exception(name, e, always_dump=False):
