@@ -159,7 +159,7 @@ def connect_all(state):
     for host in state.inventory:
         kwargs = {
             'username': host.data.ssh_user,
-            'port': host.data.ssh_port or 22,
+            'port': int(host.data.ssh_port) if host.data.ssh_port else 22,
             'timeout': state.config.TIMEOUT,
             # At this point we're assuming a password/key are provided
             'allow_agent': False,
