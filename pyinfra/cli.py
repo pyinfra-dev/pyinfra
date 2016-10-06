@@ -255,7 +255,9 @@ def print_data(inventory):
 def print_results(state):
     for hostname, results in six.iteritems(state.results):
         if hostname not in state.connected_hosts:
-            logger.info('[{0}]\tNo connection'.format(colored(hostname, 'red', attrs=['bold'])))
+            logger.info('[{0}]\tNo connection'.format(
+                colored(hostname, 'red', attrs=['bold'])
+            ))
 
         else:
             meta = state.meta[hostname]
@@ -275,7 +277,9 @@ def print_results(state):
             logger.info('[{0}]\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}/{4}'.format(
                 host_string,
                 colored(success_ops, attrs=['bold']),
-                error_ops if error_ops == 0 else colored(error_ops, 'red', attrs=['bold']),
+                error_ops
+                if error_ops == 0
+                else colored(error_ops, 'red', attrs=['bold']),
                 results['commands'], meta['commands']
             ))
 
