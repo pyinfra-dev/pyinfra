@@ -84,6 +84,9 @@ from pyinfra.api.exceptions import PyinfraError
 # Don't write out deploy.pyc/config.pyc etc
 sys.dont_write_bytecode = True
 
+# Make sure imported files (deploy.py/etc) behave as if imported from the cwd
+sys.path.append('.')
+
 
 # Handle ctrl+c
 def _signal_handler(signum, frame):
