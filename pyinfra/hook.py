@@ -4,11 +4,13 @@
 
 from functools import wraps
 
-HOOK_NAMES = ('before_connect', 'before_facts', 'before_deploy', 'after_deploy')
+from . import pseudo_state
 
 HOOKS = {
-    key: []
-    for key in HOOK_NAMES
+    'before_connect': [],
+    'before_facts': [],
+    'before_deploy': [],
+    'after_deploy': [],
 }
 
 
@@ -18,33 +20,22 @@ class Error(Exception):
     '''
 
 
-def before_connect(func):
-    HOOKS['before_connect'].append(func)
+def _make_hook_wrapper(hook_name):
+    def hook_func(func):
+        # Only add hooks when the state isn't active
+        if pseudo_state.active:
+            return
 
-    @wraps(func)
-    def decorated(*args, **kwargs):
-        return func(*args, **kwargs)
+        HOOKS[hook_name].append(func)
 
+        @wraps(func)
+        def decorated(*args, **kwargs):
+            return func(*args, **kwargs)
 
-def before_facts(func):
-    HOOKS['before_facts'].append(func)
-
-    @wraps(func)
-    def decorated(*args, **kwargs):
-        return func(*args, **kwargs)
-
-
-def before_deploy(func):
-    HOOKS['before_deploy'].append(func)
-
-    @wraps(func)
-    def decorated(*args, **kwargs):
-        return func(*args, **kwargs)
+    return hook_func
 
 
-def after_deploy(func):
-    HOOKS['after_deploy'].append(func)
-
-    @wraps(func)
-    def decorated(*args, **kwargs):
-        return func(*args, **kwargs)
+before_connect = _make_hook_wrapper('before_connect')
+before_facts = _make_hook_wrapper('before_facts')
+before_deploy = _make_hook_wrapper('before_deploy')
+after_deploy = _make_hook_wrapper('after_deploy')

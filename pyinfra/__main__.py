@@ -186,13 +186,17 @@ try:
     # Attach to pseudo inventory
     pseudo_inventory.set(inventory)
 
+    # Set a fake state/host
+    pseudo_state.set(FakeState())
+    pseudo_host.set(FakeHost())
+
     # Load up any config.py from the filesystem
     config = load_config(deploy_dir)
 
-    # Load any hooks/config from the deploy file w/fake state & host
-    pseudo_state.set(FakeState())
-    pseudo_host.set(FakeHost())
+    # Load any hooks/config from the deploy file
     load_deploy_config(arguments['deploy'], config)
+
+    # Unset fake state/host
     pseudo_host.reset()
     pseudo_state.reset()
 
