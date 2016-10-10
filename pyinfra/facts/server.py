@@ -136,15 +136,13 @@ class Users(FactBase):
 
                     # We only want secondary groups here
                     if name != group:
-                        groups.append(
-                            name
-                        )
+                        groups.append(name)
 
                 users[matches.group(1)] = {
                     'group': group,
                     'groups': groups,
                     'home': home,
-                    'shell': shell
+                    'shell': shell,
                 }
 
         return users
@@ -152,8 +150,8 @@ class Users(FactBase):
 
 class LinuxDistribution(FactBase):
     '''
-    Returns a dict of the Linux distribution version. Ubuntu, Debian, CentOS, Fedora &
-    Gentoo currently:
+    Returns a dict of the Linux distribution version. Ubuntu, Debian, CentOS,
+    Fedora & Gentoo currently:
 
     .. code:: python
 
@@ -167,7 +165,7 @@ class LinuxDistribution(FactBase):
     default = {
         'name': None,
         'major': None,
-        'minor': None
+        'minor': None,
     }
 
     command = 'cat /etc/*-release'
@@ -180,7 +178,7 @@ class LinuxDistribution(FactBase):
         r'(CentOS) Linux release ([0-9])\.([0-9])',
         r'(Debian) GNU/Linux ([0-9])()',
         r'(Gentoo) Base System release ([0-9])\.([0-9])',
-        r'(Fedora) release ([0-9]+)()'
+        r'(Fedora) release ([0-9]+)()',
     ]
 
     def process(self, output):
@@ -192,7 +190,7 @@ class LinuxDistribution(FactBase):
                 return {
                     'name': matches.group(1),
                     'major': matches.group(2),
-                    'minor': matches.group(3)
+                    'minor': matches.group(3),
                 }
 
-        return {'name': 'Unknown'}
+        return self.default
