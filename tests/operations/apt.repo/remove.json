@@ -1,17 +1,20 @@
 {
-    "args": ["my-repo-line"],
+    "args": ["deb http://archive.canonical.com/ubuntu hardy partner"],
     "kwargs": {
         "present": false
     },
     "facts": {
-        "apt_sources": {
-            "my-repo-line": {}
-        },
+        "apt_sources": [{
+            "type": "deb",
+            "url": "http://archive.canonical.com/ubuntu",
+            "distribution": "hardy",
+            "components": ["_set", "partner"]
+        }],
         "find_in_file": {
             "/etc/apt/sources.list": [""]
         }
     },
     "commands": [
-        "sed -i \"s/^.*my-repo-line.*$//\" /etc/apt/sources.list"
+        "sed -i \"s/^.*deb http:\\/\\/archive.canonical.com\\/ubuntu hardy partner.*$//\" /etc/apt/sources.list"
     ]
 }
