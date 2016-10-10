@@ -99,7 +99,7 @@ def ppa(state, host, name, present=True):
     '''
     Manage Ubuntu ppa repositories.
 
-    + name: the PPA name
+    + name: the PPA name (full ppa:user/repo format)
     + present: whether it should exist
 
     Note:
