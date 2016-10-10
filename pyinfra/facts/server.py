@@ -151,14 +151,19 @@ class Users(FactBase):
 class LinuxDistribution(FactBase):
     '''
     Returns a dict of the Linux distribution version. Ubuntu, Debian, CentOS,
-    Fedora & Gentoo currently:
+    Fedora & Gentoo currently. Also contains any key/value items located in
+    release files.
 
     .. code:: python
 
         {
             'name': 'CentOS',
             'major': 6,
-            'minor': 5
+            'minor': 5,
+            'release_meta': {
+                'DISTRIB_CODENAME': 'trusty',
+                ...
+            }
         }
     '''
 
@@ -182,15 +187,27 @@ class LinuxDistribution(FactBase):
     ]
 
     def process(self, output):
-        output = '\n'.join(output)
+        release_info = {
+            'release_meta': {},
+        }
 
-        for regex in self._regexes:
-            matches = re.search(regex, output)
-            if matches:
-                return {
-                    'name': matches.group(1),
-                    'major': matches.group(2),
-                    'minor': matches.group(3),
-                }
+        # Start with a copy of the default (None) data
+        release_info.update(self.default)
 
-        return self.default
+        for line in output:
+            # Check if we match a known version/major/minor string
+            for regex in self._regexes:
+                matches = re.search(regex, line)
+                if matches:
+                    print('MATCHES', line)
+                    release_info.update({
+                        'name': matches.group(1),
+                        'major': matches.group(2) and int(matches.group(2)) or None,
+                        'minor': matches.group(3) and int(matches.group(3)) or None,
+                    })
+
+            if '=' in line:
+                key, value = line.split('=')
+                release_info['release_meta'][key] = value.strip('"')
+
+        return release_info
