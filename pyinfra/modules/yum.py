@@ -122,21 +122,35 @@ def rpm(state, host, source, present=True):
         yield 'yum remove -y {0}'.format(info['name'])
 
 
+# TODO: remove this at some point
+# COMPAT: this used to, incorrectly, be yum.upgrade
 @operation
 def upgrade(state, host):
     '''
-    Upgrades all yum packages.
+    **DEPRECIATED** - please use ``yum.update`` as this will be removed in the future.
     '''
 
     yield 'yum update -y'
 
-_upgrade = upgrade
+
+@operation
+def update(state, host):
+    '''
+    Updates all yum packages.
+    '''
+
+    yield 'yum update -y'
+
+_update = update
 
 
 @operation
 def packages(
     state, host, packages=None,
-    present=True, latest=False, upgrade=False, clean=False
+    present=True, latest=False, update=False, clean=False,
+    # TODO: remove this at some point
+    # COMPAT: as above, this should have always been update
+    upgrade=False,
 ):
     '''
     Manage yum packages & updates.
@@ -144,15 +158,17 @@ def packages(
     + packages: list of packages to ensure
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
-    + upgrade: run yum upgrade
+    + update: run yum update
     + clean: run yum clean
     '''
 
     if clean:
         yield 'yum clean all'
 
-    if upgrade:
-        yield _upgrade(state, host)
+    # TODO: remove at some point
+    # COMPAT: used to be upgrade, now update
+    if update or upgrade:
+        yield _update(state, host)
 
     yield ensure_packages(
         packages, host.fact.rpm_packages, present,
