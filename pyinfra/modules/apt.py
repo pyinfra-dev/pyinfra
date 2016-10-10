@@ -66,21 +66,19 @@ def repo(state, host, name, present=True, filename=None):
       default uses ``/etc/apt/sources.list``.
     '''
 
-    apt_sources = host.fact.apt_sources
-
     # Get the target .list file to manage
     if filename:
         filename = '/etc/apt/sources.list.d/{0}.list'.format(filename)
     else:
         filename = '/etc/apt/sources.list'
 
-    # Parse out the URL from the name if available
-    repo_url = name
-    repo = parse_apt_repo(name)
-    if repo:
-        repo_url, _ = repo
+    # Work out if the repo exists already
+    apt_sources = host.fact.apt_sources
 
-    is_present = repo_url in apt_sources
+    is_present = False
+    repo = parse_apt_repo(name)
+    if repo and repo in apt_sources:
+        is_present = True
 
     # Doesn't exist and we want it
     if not is_present and present:

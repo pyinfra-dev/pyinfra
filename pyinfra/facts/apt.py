@@ -18,21 +18,23 @@ def parse_apt_repo(name):
 
     matches = re.match(regex, name)
     if matches:
-        return matches.group(2), {
+        return {
             'type': matches.group(1),
+            'url': matches.group(2),
             'distribution': matches.group(3),
-            'components': matches.group(4).split()
+            'components': set(matches.group(4).split())
         }
 
 
 class AptSources(FactBase):
     '''
-    Returns a dict of installed apt sources:
+    Returns a list of installed apt sources:
 
     .. code:: python
 
-        'http://archive.ubuntu.org': {
+        {
             'type': 'deb',
+            'url': 'http://archive.ubuntu.org',
             'distribution': 'trusty',
             'components', ['main', 'multiverse']
         },
@@ -40,15 +42,15 @@ class AptSources(FactBase):
     '''
 
     default = {}
-    command = 'cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list | grep -v "#"'
+    command = 'cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list'
 
     def process(self, output):
-        repos = {}
+        repos = []
+
         for line in output:
             repo = parse_apt_repo(line)
             if repo:
-                url, data = repo
-                repos[url] = data
+                repos.append(repo)
 
         return repos
 
@@ -78,7 +80,7 @@ class DebPackage(FactBase):
 
     _regexes = {
         'name': r'^Package: ([a-zA-Z0-9\-]+)$',
-        'version': r'^Version: ([0-9\.\-]+)$'
+        'version': r'^Version: ([0-9\.\-]+)$',
     }
 
     def command(self, name):
