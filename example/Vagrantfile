@@ -3,7 +3,20 @@
 Vagrant.configure('2') do |config|
     config.ssh.insert_key = false
     config.ssh.private_key_path = 'files/insecure_private_key'
+
+    # Disable /vagrant synced folder
     config.vm.synced_folder '.', '/vagrant', disabled: true
+
+    # Give the boxes less memory
+    config.vm.provider 'virtualbox' do |v|
+        v.memory = 256
+    end
+
+    # Disable updating/installing Virtualbox guest additions with vagrant-vbguest
+    config.vbguest.auto_update = false
+
+    # Begin pyinfra test VM's:
+    #
 
     config.vm.define :ubuntu14 do |ubuntu|
         ubuntu.vm.box = 'ubuntu/trusty64'
@@ -11,12 +24,12 @@ Vagrant.configure('2') do |config|
     end
 
     config.vm.define :centos6 do |centos|
-        centos.vm.box = 'boxcutter/centos67'
+        centos.vm.box = 'centos/6'
         centos.vm.network :private_network, ip: '20.20.20.22'
     end
 
     config.vm.define :centos7 do |centos|
-        centos.vm.box = 'boxcutter/centos72'
+        centos.vm.box = 'centos/7'
         centos.vm.network :private_network, ip: '20.20.20.23'
     end
 
