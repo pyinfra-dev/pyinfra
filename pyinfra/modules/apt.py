@@ -106,16 +106,10 @@ def ppa(state, host, name, present=True):
         requires ``apt-add-repository`` on the remote host
     '''
 
-    apt_sources = host.fact.apt_sources
-
-    repo_url = 'http://ppa.launchpad.net/{0}/ubuntu'.format(name[4:])
-
-    is_present = repo_url in apt_sources
-
-    if not is_present and present:
+    if present:
         yield 'apt-add-repository -y "{0}"'.format(name)
 
-    if is_present and not present:
+    if not present:
         yield 'apt-add-repository -y --remove "{0}"'.format(name)
 
 
