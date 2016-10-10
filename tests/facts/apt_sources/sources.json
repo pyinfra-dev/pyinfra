@@ -1,0 +1,24 @@
+{
+    "output": [
+        "deb http://archive.ubuntu.com/ubuntu trusty restricted",
+        "deb-src http://archive.ubuntu.com/ubuntu trusty main"
+    ],
+    "fact": [
+        {
+            "url": "http://archive.ubuntu.com/ubuntu",
+            "distribution": "trusty",
+            "type": "deb",
+            "components": [
+                "restricted"
+            ]
+        },
+        {
+            "url": "http://archive.ubuntu.com/ubuntu",
+            "distribution": "trusty",
+            "type": "deb-src",
+            "components": [
+                "main"
+            ]
+        }
+    ]
+}
