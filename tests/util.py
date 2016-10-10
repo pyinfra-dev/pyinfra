@@ -26,10 +26,19 @@ class FakeState(object):
 
 
 def parse_fact(fact):
+    '''
+    Convert JSON types to more complex Python types because JSON is lacking.
+    '''
+
+    # Handle datetimes
     if isinstance(fact, six.string_types) and fact.startswith('datetime:'):
         return datetime.strptime(fact[9:], '%Y-%m-%dT%H:%M:%S')
 
     elif isinstance(fact, list):
+        # Handle sets
+        if len(fact) > 1 and fact[0] == '_set':
+            return set(parse_fact(value) for value in fact[1:])
+
         return [parse_fact(value) for value in fact]
 
     elif isinstance(fact, dict):
@@ -45,20 +54,23 @@ class FakeFact(object):
     def __init__(self, data):
         self.data = parse_fact(data)
 
+    def __iter__(self):
+        return iter(self.data)
+
     def __getattr__(self, key):
         return getattr(self.data, key)
 
     def __getitem__(self, key):
         return self.data[key]
 
+    def __contains__(self, key):
+        return key in self.data
+
     def __call__(self, *args, **kwargs):
         if args[0] is None:
             return self.data
 
         return self.data[args[0]]
-
-    def __iter__(self):
-        return iter(self.data)
 
     def get(self, key, default=None):
         if key in self.data:
