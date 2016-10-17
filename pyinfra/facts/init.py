@@ -67,16 +67,18 @@ class SystemdEnabled(FactBase):
         for line in output:
             matches = re.match(self._regex, line)
             if matches:
-                services[matches.group(1)] = matches.group(2) in ('enabled', 'static')
+                services[matches.group(1)] = (
+                    matches.group(2) in ('enabled', 'static')
+                )
 
         return services
 
 
 class InitdStatus(FactBase):
     '''
-    Low level check for every /etc/init.d/* script. Unfortunately many of these mishehave
-    and return exit status 0 while also displaying the help info/not offering status
-    support.
+    Low level check for every /etc/init.d/* script. Unfortunately many of these
+    mishehave and return exit status 0 while also displaying the help info/not
+    offering status support.
 
     Returns a dict of name -> status.
 
@@ -123,8 +125,8 @@ class InitdStatus(FactBase):
 
 class RcdStatus(InitdStatus):
     '''
-    Same as ``initd_status`` but for BSD (/etc/rc.d) systems. Unlike Linux/init.d, BSD
-    init scripts are well behaved and as such their output can be trusted.
+    Same as ``initd_status`` but for BSD (/etc/rc.d) systems. Unlike Linux/init.d,
+    BSD init scripts are well behaved and as such their output can be trusted.
     '''
 
     command = '''
@@ -141,6 +143,6 @@ class RcdStatus(InitdStatus):
 
 class RcdEnabled(FactBase):
     '''
-    Returns a dict of service name -> whether enabled (on boot) status. Different to Linux
-    variants because BSD has no/one runlevel.
+    Returns a dict of service name -> whether enabled (on boot) status. Different
+    to Linux variants because BSD has no/one runlevel.
     '''
