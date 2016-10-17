@@ -119,12 +119,15 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
 
     # Save commands for re-use in dynamic script when file not present at fact stage
     echo_command = 'echo "{0}" >> {1}'.format(line, name)
-    sed_replace_command = sed_replace(state, name, match_line, replace, flags=flags)
+    sed_replace_command = sed_replace(
+        state, name, match_line, replace,
+        flags=flags,
+    )
 
     # No line and we want it, append it
     if not present_lines and present:
-        # If the file does not exist - it *might* be created, so we handle it dynamically
-        # with a little script.
+        # If the file does not exist - it *might* be created, so we handle it
+        # dynamically with a little script.
         if present_lines is None:
             yield '''
                 # If the file now exists
