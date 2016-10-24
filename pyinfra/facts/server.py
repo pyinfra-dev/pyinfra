@@ -199,7 +199,6 @@ class LinuxDistribution(FactBase):
             for regex in self._regexes:
                 matches = re.search(regex, line)
                 if matches:
-                    print('MATCHES', line)
                     release_info.update({
                         'name': matches.group(1),
                         'major': matches.group(2) and int(matches.group(2)) or None,
