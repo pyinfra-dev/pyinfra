@@ -285,10 +285,10 @@ def print_results(state):
 
 
 def _parse_arg(arg):
-    if arg == 'False':
+    if arg.lower() == 'false':
         return False
 
-    if arg == 'True':
+    if arg.lower() == 'true':
         return True
 
     return arg
