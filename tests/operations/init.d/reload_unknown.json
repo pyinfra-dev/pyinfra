@@ -1,0 +1,12 @@
+{
+    "args": ["nginx"],
+    "kwargs": {
+        "reloaded": true
+    },
+    "facts": {
+        "initd_status": {}
+    },
+    "commands": [
+        "# If the service is running\n            if /etc/init.d/nginx status; then\n                true\n                true\n                /etc/init.d/nginx reload\n\n            # If the service is not running, we just start it (no re[start|load])\n            else\n                /etc/init.d/nginx start\n            fi"
+    ]
+}

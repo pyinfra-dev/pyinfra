@@ -1,17 +1,14 @@
 {
     "args": ["nginx"],
     "kwargs": {
-        "enabled": true
+        "restarted": true
     },
     "facts": {
         "initd_status": {
             "nginx": true
-        },
-        "find_links": {
-            "/etc/rc*.d/S*nginx": []
-        },
-        "linux_distribution": "Ubuntu"
+        }
     },
     "commands": [
+        "/etc/init.d/nginx restart"
     ]
 }

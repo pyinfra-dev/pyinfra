@@ -19,27 +19,67 @@ from . import files
 
 
 def _handle_service_control(
-    name, statuses, formatter, running, restarted, reloaded, command
+    name, statuses, formatter, running, restarted, reloaded, command,
+    status_argument='status',
 ):
     statuses = statuses or {}
     status = statuses.get(name, None)
 
-    # Need running but down
-    if running is True and not status:
-        yield formatter.format(name, 'start')
+    # If we don't know the status, we need to check if it's up before starting
+    # and/or restarting/reloading
+    if status is None:
+        yield '''
+            # If the service is running
+            if {status_command}; then
+                {stop_command}
+                {restart_command}
+                {reload_command}
 
-    # Need down but running
-    if running is False and status is not False:
-        yield formatter.format(name, 'stop')
+            # If the service is not running, we just start it (no re[start|load])
+            else
+                {start_command}
+            fi
+        '''.format(
+                status_command=formatter.format(name, status_argument),
+                start_command=(
+                    formatter.format(name, 'start')
+                    if running is True else 'true'
+                ),
+                stop_command=(
+                    formatter.format(name, 'stop')
+                    if running is False else 'true'
+                ),
+                restart_command=(
+                    formatter.format(name, 'restart')
+                    if restarted else 'true'
+                ),
+                reload_command=(
+                    formatter.format(name, 'reload')
+                    if reloaded else 'true'
+                ),
+            )
 
-    if command and status:
+    else:
+        # Need down but running
+        if running is False and status:
+            yield formatter.format(name, 'stop')
+
+        # Need running but down
+        if running is True and not status:
+            yield formatter.format(name, 'start')
+
+        # Only restart if the service is already running
+        if restarted and status:
+            yield formatter.format(name, 'restart')
+
+        # Only reload if the service is already reloaded
+        if reloaded and status:
+            yield formatter.format(name, 'reload')
+
+    # Always execute arbitrary commands as these may or may not rely on the service
+    # being up or down
+    if command:
         yield formatter.format(name, command)
-
-    if restarted and status:
-        yield formatter.format(name, 'restart')
-
-    if reloaded:
-        yield formatter.format(name, 'reload')
 
 
 @operation
@@ -150,7 +190,8 @@ def rc(
     yield _handle_service_control(
         name, host.fact.rcd_status,
         '/etc/rc.d/{0} {1}',
-        running, restarted, reloaded, command
+        running, restarted, reloaded, command,
+        status_argument='check',
     )
 
     # BSD init is simple, just add/remove <name>_enabled="YES"
@@ -158,7 +199,7 @@ def rc(
         yield files.line(
             state, host,
             '/etc/rc.conf.local',
-            '{0}_enable=.*'.format(name),
+            '^{0}_enable='.format(name),
             replace='{0}_enable="YES"'.format(name),
             present=enabled,
         )

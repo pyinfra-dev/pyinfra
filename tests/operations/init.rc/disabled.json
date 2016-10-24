@@ -1,0 +1,19 @@
+{
+    "args": ["nginx"],
+    "kwargs": {
+        "enabled": false
+    },
+    "facts": {
+        "rcd_status": {
+            "nginx": true
+        },
+        "find_in_file": {
+            "/etc/rc.conf.local": {
+                "nginx_enable=\"YES\"": []
+            }
+        }
+    },
+    "commands": [
+        "sed -i \"s/^nginx_enable=.*$//\" /etc/rc.conf.local"
+    ]
+}

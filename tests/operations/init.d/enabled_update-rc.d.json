@@ -11,10 +11,10 @@
             "/etc/rc*.d/S*nginx": []
         },
         "linux_distribution": {
-            "name": "Gentoo"
+            "name": "Ubuntu"
         }
     },
     "commands": [
-        "rc-update add nginx default"
+        "update-rc.d nginx defaults"
     ]
 }

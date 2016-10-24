@@ -11,11 +11,10 @@
             "/etc/rc*.d/S*nginx": []
         },
         "linux_distribution": {
-            "name": "CentOS"
+            "name": "Gentoo"
         }
     },
     "commands": [
-        "chkconfig nginx --add",
-        "chkconfig nginx on"
+        "rc-update add nginx default"
     ]
 }
