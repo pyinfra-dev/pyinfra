@@ -94,7 +94,7 @@ server.script(
 
 # Manage init systems
 init.d(
-    'crond',
+    'cron',
     running=True,
     sudo=True,
     ignore_errors=True
