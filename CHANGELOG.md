@@ -1,3 +1,31 @@
+# v0.2 - WIP (dev0)
+
+New stuff:
+
++ Add LXD facts/module
++ Add iptables facts/module
++ Support usernames with non-standard characters (_, capitals, etc)
++ Add global `get_pty` kwarg for all operations to work with certain dodgy programs
++ Add `--fail-percent` CLI arg
++ Add `exclude` kwarg to `files.sync`
++ Enable `--limit` CLI arg to be multiple, comma separated, hostnames
++ Add `no_recommends` kwarg to `apt.packages` operation
++ Make local imports work like calling `python` by adding `.` to `sys.path` in CLI
++ Add key/value release meta to `linux_distribution` fact
++ Improve how the init module handles "unknown" services
+
+To-be-breaking changes (deprecated will be removed in 0.3):
+
++ Switch to lowercase inventory names (accessing `inventory.bsd` where the group is defined as `BSD = []` is deprecated)
++ Rename `yum.upgrade` -> `yum.update` (`yum.upgrade` deprecated)
++ Deprecate `pip_virtualenv_packages` fact as `pip_packages` will now accept an argument for the virtualenv
++ Deprecate `npm_local_packages` fact as `npm_packages` will accept an argument for the directory
+
+Internal changes:
+
++ Operations now `yield`, rather than returning lists of commands
+
+
 # v0.1.5
 
 + Fix `--run` arg parsing splutting up `[],`
