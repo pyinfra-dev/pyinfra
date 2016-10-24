@@ -122,6 +122,12 @@ if distro['name'] in ('Debian', 'Ubuntu'):
 
 elif distro['name'] in ('CentOS', 'Fedora'):
     if distro['name'] == 'CentOS':
+        # Both missing in the CentOS 7 Vagrant image
+        yum.packages(
+            ['wget', 'net-tools'],
+            sudo=True
+        )
+
         # Manage remote rpm files
         yum.rpm(
             'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ host.fact.linux_distribution.major }}.noarch.rpm',
