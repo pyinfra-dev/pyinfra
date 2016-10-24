@@ -39,11 +39,11 @@ def packages(state, host, packages=None, present=True, pkg_path=None):
                 http=host_os.lower(),
                 os=host_os,
                 version=host.fact.os_version,
-                arch=host.fact.arch
+                arch=host.fact.arch,
             )
 
     yield ensure_packages(
         packages, host.fact.pkg_packages, present,
         install_command='PKG_PATH={0} pkg_add'.format(pkg_path),
-        uninstall_command='pkg_delete'
+        uninstall_command='pkg_delete',
     )

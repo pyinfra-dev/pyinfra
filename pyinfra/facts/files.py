@@ -29,6 +29,7 @@ class File(FactBase):
 class Link(File):
     link = True
 
+
 class Directory(File):
     directory = True
 

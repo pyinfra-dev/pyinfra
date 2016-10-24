@@ -113,7 +113,7 @@ def d(
     yield _handle_service_control(
         name, host.fact.initd_status,
         '/etc/init.d/{0} {1}',
-        running, restarted, reloaded, command
+        running, restarted, reloaded, command,
     )
 
     if enabled is not None:
@@ -268,7 +268,7 @@ def systemd(
     yield _handle_service_control(
         name, host.fact.systemd_status,
         'systemctl {1} {0}.service',
-        running, restarted, reloaded, command
+        running, restarted, reloaded, command,
     )
 
     if isinstance(enabled, bool):

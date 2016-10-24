@@ -199,7 +199,7 @@ def user(
     if ensure_home:
         yield files.directory(
             state, host, home,
-            user=name, group=name
+            user=name, group=name,
         )
 
     # Add SSH keys
@@ -211,7 +211,7 @@ def user(
             state, host,
             '{0}/.ssh'.format(home),
             user=name, group=name,
-            mode=700
+            mode=700,
         )
 
         filename = '{0}/.ssh/authorized_keys'.format(home)
@@ -227,7 +227,7 @@ def user(
                 state, host,
                 keys_file, filename,
                 user=name, group=name,
-                mode=600
+                mode=600,
             )
 
         else:
@@ -235,12 +235,12 @@ def user(
             yield files.file(
                 state, host, filename,
                 user=name, group=name,
-                mode=600
+                mode=600,
             )
 
             # And every public key is present
             for key in public_keys:
                 yield files.line(
                     state, host,
-                    filename, key
+                    filename, key,
                 )

@@ -1,6 +1,6 @@
 # pyinfra
 # File: setup.py
-# Desc: needed
+# Desc: pyinfra package setup
 
 from setuptools import setup, find_packages
 
