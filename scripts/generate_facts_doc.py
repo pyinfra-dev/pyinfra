@@ -15,6 +15,7 @@ from pyinfra.api.util import underscore
 def _title_line(char, string):
     return ''.join(char for _ in range(0, len(string)))
 
+
 def build_facts():
     lines = []
 
@@ -50,7 +51,8 @@ def build_facts():
                 # Note only supports facts with one arg as this is all that's possible,
                 # will need to refactor to print properly in future.
                 argspec = getargspec(command_attr)
-                name = '{0}({1})'.format(name, argspec.args[1])
+                if len(argspec.args) > 1:
+                    name = '{0}({1})'.format(name, argspec.args[1])
 
             name = ':code:`{0}`'.format(name)
             lines.append(name)
