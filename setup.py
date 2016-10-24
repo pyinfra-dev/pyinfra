@@ -2,7 +2,7 @@
 # File: setup.py
 # Desc: needed
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 INSTALL_REQUIRES = (
     'gevent>1,<2',
@@ -51,17 +51,7 @@ if __name__ == '__main__':
         author_email='pointlessrambler@gmail.com',
         license='MIT',
         url='http://github.com/Fizzadar/pyinfra',
-        packages=(
-            'pyinfra',
-            'pyinfra.api',
-            'pyinfra.facts',
-            'pyinfra.facts.util',
-            'pyinfra.modules',
-            'pyinfra.modules.util',
-        ),
-        package_dir={
-            'pyinfra': 'pyinfra',
-        },
+        packages=find_packages(),
         scripts=(
             'bin/pyinfra',
         ),
