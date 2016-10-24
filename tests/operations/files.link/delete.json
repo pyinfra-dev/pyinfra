@@ -1,0 +1,18 @@
+{
+    "args": ["testlink"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "link": {
+            "testlink": {
+                "link_target": "/etc/init.d/not-nginx",
+                "user": "wronguser",
+                "group": "wronggroup"
+            }
+        }
+    },
+    "commands": [
+        "rm -f testlink"
+    ]
+}

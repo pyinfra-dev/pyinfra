@@ -1,0 +1,17 @@
+{
+    "args": ["testfile"],
+    "kwargs": {
+        "user": "testuser",
+        "group": "testgroup",
+        "mode": 777
+    },
+    "facts": {
+        "file": {
+            "testfile": false
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "testfile exists and is not a file"
+    }
+}

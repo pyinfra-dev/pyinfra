@@ -1,0 +1,16 @@
+{
+    "args": ["testfile"],
+    "kwargs": {
+        "touch": true
+    },
+    "facts": {
+        "file": {
+            "testfile": {
+                "mode": 600
+            }
+        }
+    },
+    "commands": [
+        "touch testfile"
+    ]
+}

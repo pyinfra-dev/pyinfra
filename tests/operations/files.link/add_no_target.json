@@ -1,0 +1,16 @@
+{
+    "args": ["testlink"],
+    "kwargs": {
+        "user": "testuser",
+        "group": "testgroup"
+    },
+    "facts": {
+        "link": {
+            "testlink": null
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "If present is True target must be provided"
+    }
+}

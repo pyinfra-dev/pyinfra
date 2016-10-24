@@ -1,0 +1,17 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "mode": 777,
+        "recursive": true,
+        "group": "otheruser"
+    },
+    "facts": {
+        "directory": {
+            "testdir": false
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "testdir exists and is not a directory"
+    }
+}

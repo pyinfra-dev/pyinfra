@@ -1,0 +1,17 @@
+{
+    "args": ["testlink"],
+    "kwargs": {
+        "target": "/etc/init.d/nginx",
+        "user": "testuser",
+        "group": "testgroup"
+    },
+    "facts": {
+        "link": {
+            "testlink": false
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "testlink exists and is not a link"
+    }
+}
