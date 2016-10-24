@@ -4,6 +4,7 @@
 # File: scripts/build_docs.sh
 # Desc: build the pyinfra docs
 
+set -e
 
 # Build the apidoc/*.rst docs
 rm -f docs/apidoc/*.rst
