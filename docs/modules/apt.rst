@@ -52,7 +52,10 @@ Install/remove/upgrade packages & update apt.
 
 .. code:: python
 
-    apt.packages(packages=None, present=True, latest=False, update=False, cache_time=None, upgrade=False)
+    apt.packages(
+        packages=None, present=True, latest=False, update=False, cache_time=None, upgrade=False,
+        no_recommends=False
+    )
 
 + **packages**: list of packages to ensure
 + **present**: whether the packages should be installed
@@ -60,6 +63,7 @@ Install/remove/upgrade packages & update apt.
 + **update**: run apt update
 + **cache_time**: when used with update, cache for this many seconds
 + **upgrade**: run apt upgrade
++ **no_recommends**: don't install recommended packages
 
 Versions:
     Package versions can be pinned like apt: ``<pkg>=<version>``
@@ -79,7 +83,7 @@ Manage Ubuntu ppa repositories.
 
     apt.ppa(name, present=True)
 
-+ **name**: the PPA name
++ **name**: the PPA name (full ppa:user/repo format)
 + **present**: whether it should exist
 
 Note:

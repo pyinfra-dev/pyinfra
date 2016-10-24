@@ -11,7 +11,7 @@ Manage iptables chains.
 
 .. code:: python
 
-    iptables.chain(name, present=True, table='filter', policy=None, version=4)
+    iptables.chain(name, present=True, table=filter, policy=None, version=4)
 
 + **name**: the name of the chain
 + **present**: whether the chain should exist
@@ -31,11 +31,11 @@ Manage iptables rules.
 .. code:: python
 
     iptables.rule(
-        chain, jump, present=True, table='filter', append=True, version=4, protocol=None,
+        chain, jump, present=True, table=filter, append=True, version=4, protocol=None,
         not_protocol=None, source=None, not_source=None, destination=None, not_destination=None,
         in_interface=None, not_in_interface=None, out_interface=None, not_out_interface=None,
         to_destination=None, to_source=None, to_ports=None, log_prefix=None,
-        destination_port=None, source_port=None, extras=''
+        destination_port=None, source_port=None, extras=
     )
 
 + **chain**: the chain this rule should live in

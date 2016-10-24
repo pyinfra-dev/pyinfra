@@ -11,12 +11,13 @@ Apt
 ~~~~~~~~~~~~~~~~~~~
 
 
-    Returns a dict of installed apt sources:
+    Returns a list of installed apt sources:
 
     .. code:: python
 
-        'http://archive.ubuntu.org': {
+        {
             'type': 'deb',
+            'url': 'http://archive.ubuntu.org',
             'distribution': 'trusty',
             'components', ['main', 'multiverse']
         },
@@ -24,8 +25,8 @@ Apt
     
 
 
-:code:`deb_package`
-~~~~~~~~~~~~~~~~~~~
+:code:`deb_package(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns information on a .deb file.
@@ -93,32 +94,32 @@ Devices
 Files
 -----
 
-:code:`directory`
-~~~~~~~~~~~~~~~~~
+:code:`directory(name)`
+~~~~~~~~~~~~~~~~~~~~~~~
 
 
-:code:`file`
-~~~~~~~~~~~~
+:code:`file(name)`
+~~~~~~~~~~~~~~~~~~
 
 
-:code:`find_directories`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`find_directories(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of directories from a start point, recursively using find.
     
 
 
-:code:`find_files`
-~~~~~~~~~~~~~~~~~~
+:code:`find_files(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of files from a start point, recursively using find.
     
 
 
-:code:`find_in_file`
-~~~~~~~~~~~~~~~~~~~~
+:code:`find_in_file(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Checks for the existence of text in a file using grep. Returns a list of matching
@@ -126,20 +127,20 @@ Files
     
 
 
-:code:`find_links`
-~~~~~~~~~~~~~~~~~~
+:code:`find_links(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of links from a start point, recursively using find.
     
 
 
-:code:`link`
-~~~~~~~~~~~~
+:code:`link(name)`
+~~~~~~~~~~~~~~~~~~
 
 
-:code:`sha1_file`
-~~~~~~~~~~~~~~~~~
+:code:`sha1_file(name)`
+~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a SHA1 hash of a file. Works with both sha1sum and sha1.
@@ -165,8 +166,8 @@ Gem
 Git
 ---
 
-:code:`git_branch`
-~~~~~~~~~~~~~~~~~~
+:code:`git_branch(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Init
@@ -176,9 +177,9 @@ Init
 ~~~~~~~~~~~~~~~~~~~~
 
 
-    Low level check for every /etc/init.d/* script. Unfortunately many of these mishehave
-    and return exit status 0 while also displaying the help info/not offering status
-    support.
+    Low level check for every /etc/init.d/* script. Unfortunately many of these
+    mishehave and return exit status 0 while also displaying the help info/not
+    offering status support.
 
     Returns a dict of name -> status.
 
@@ -191,8 +192,8 @@ Init
 ~~~~~~~~~~~~~~~~~~~
 
 
-    Returns a dict of service name -> whether enabled (on boot) status. Different to Linux
-    variants because BSD has no/one runlevel.
+    Returns a dict of service name -> whether enabled (on boot) status. Different
+    to Linux variants because BSD has no/one runlevel.
     
 
 
@@ -200,8 +201,8 @@ Init
 ~~~~~~~~~~~~~~~~~~
 
 
-    Same as ``initd_status`` but for BSD (/etc/rc.d) systems. Unlike Linux/init.d, BSD
-    init scripts are well behaved and as such their output can be trusted.
+    Same as ``initd_status`` but for BSD (/etc/rc.d) systems. Unlike Linux/init.d,
+    BSD init scripts are well behaved and as such their output can be trusted.
     
 
 
@@ -232,8 +233,8 @@ Init
 Iptables
 --------
 
-:code:`ip6tables_chains`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`ip6tables_chains(table)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of ip6tables chains & policies:
@@ -245,8 +246,8 @@ Iptables
     
 
 
-:code:`ip6tables_rules`
-~~~~~~~~~~~~~~~~~~~~~~~
+:code:`ip6tables_rules(table)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of ip6tables rules for a specific table:
@@ -261,8 +262,8 @@ Iptables
     
 
 
-:code:`iptables_chains`
-~~~~~~~~~~~~~~~~~~~~~~~
+:code:`iptables_chains(table)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of iptables chains & policies:
@@ -274,8 +275,8 @@ Iptables
     
 
 
-:code:`iptables_rules`
-~~~~~~~~~~~~~~~~~~~~~~
+:code:`iptables_rules(table)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of iptables rules for a specific table:
@@ -308,12 +309,12 @@ Npm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    [DEPRECIATED] Maintained for backwards-compatability.
+    [DEPRECATED] Maintained for backwards-compatability.
     
 
 
-:code:`npm_packages`
-~~~~~~~~~~~~~~~~~~~~
+:code:`npm_packages(directory)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of installed npm packages globally or in a given directory:
@@ -328,8 +329,8 @@ Npm
 Pip
 ---
 
-:code:`pip_packages`
-~~~~~~~~~~~~~~~~~~~~
+:code:`pip_packages(venv)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of installed pip packages globally or in a given virtualenv:
@@ -345,7 +346,7 @@ Pip
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    [DEPRECIATED] Maintained for backwards-compatability.
+    [DEPRECATED] Maintained for backwards-compatability.
     
 
 
@@ -372,8 +373,8 @@ Server
 ~~~~~~~~~~~~
 
 
-:code:`command`
-~~~~~~~~~~~~~~~
+:code:`command(command)`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 :code:`date`
@@ -402,15 +403,20 @@ Returns the current datetime on the server.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    Returns a dict of the Linux distribution version. Ubuntu, Debian, CentOS, Fedora &
-    Gentoo currently:
+    Returns a dict of the Linux distribution version. Ubuntu, Debian, CentOS,
+    Fedora & Gentoo currently. Also contains any key/value items located in
+    release files.
 
     .. code:: python
 
         {
             'name': 'CentOS',
             'major': 6,
-            'minor': 5
+            'minor': 5,
+            'release_meta': {
+                'DISTRIB_CODENAME': 'trusty',
+                ...
+            }
         }
     
 
@@ -444,8 +450,8 @@ Returns the current datetime on the server.
     
 
 
-:code:`which`
-~~~~~~~~~~~~~
+:code:`which(name)`
+~~~~~~~~~~~~~~~~~~~
 
 
 Yum
@@ -464,8 +470,8 @@ Yum
     
 
 
-:code:`rpm_package`
-~~~~~~~~~~~~~~~~~~~
+:code:`rpm_package(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns information on a .rpm file.

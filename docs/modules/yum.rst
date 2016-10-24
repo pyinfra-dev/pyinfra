@@ -26,12 +26,12 @@ Manage yum packages & updates.
 
 .. code:: python
 
-    yum.packages(packages=None, present=True, latest=False, upgrade=False, clean=False)
+    yum.packages(packages=None, present=True, latest=False, update=False, clean=False, upgrade=False)
 
 + **packages**: list of packages to ensure
 + **present**: whether the packages should be installed
 + **latest**: whether to upgrade packages without a specified version
-+ **upgrade**: run yum upgrade
++ **update**: run yum update
 + **clean**: run yum clean
 
 
@@ -68,10 +68,20 @@ URL sources with ``present=False``:
     as the file won't exist until mid-deploy
 
 
+:code:`yum.update`
+~~~~~~~~~~~~~~~~~~
+
+Updates all yum packages.
+
+.. code:: python
+
+    yum.update()
+
+
 :code:`yum.upgrade`
 ~~~~~~~~~~~~~~~~~~~
 
-Upgrades all yum packages.
+**DEPRECATED** - please use ``yum.update`` as this will be removed in the future.
 
 .. code:: python
 
