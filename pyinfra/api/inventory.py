@@ -4,6 +4,8 @@
 
 import six
 
+from pyinfra import logger
+
 from .host import Host
 from .attrs import AttrData
 from .exceptions import NoHostError, NoGroupError
@@ -122,7 +124,10 @@ class Inventory(object):
         # to be defined in caps, but names were lowered before being added to the inventory.
         # Now group names in caps will be left as-is, so check for that too.
         elif key.upper() in self.groups:
-                return self.groups[key.upper()]
+            logger.warning(
+                'Accessing groups defined in CAPS with lowercase is deprecated, please use the name as-is'
+            )
+            return self.groups[key.upper()]
 
         raise NoGroupError('No such group: {0}'.format(key))
 

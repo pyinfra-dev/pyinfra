@@ -11,6 +11,7 @@ from __future__ import unicode_literals
 from six import StringIO
 from six.moves.urllib.parse import urlparse
 
+from pyinfra import logger
 from pyinfra.api import operation
 
 from . import files
@@ -127,9 +128,10 @@ def rpm(state, host, source, present=True):
 @operation
 def upgrade(state, host):
     '''
-    **DEPRECIATED** - please use ``yum.update`` as this will be removed in the future.
+    **DEPRECATED** - please use ``yum.update`` as this will be removed in the future.
     '''
 
+    logger.warning('yum.upgrade is deprecated, please use yum.update')
     yield 'yum update -y'
 
 

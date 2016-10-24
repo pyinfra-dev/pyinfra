@@ -6,6 +6,7 @@
 
 from __future__ import unicode_literals
 
+from pyinfra import logger
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
@@ -41,5 +42,9 @@ class NpmPackages(FactBase):
 # COMPAT: above now covers both use cases
 class NpmLocalPackages(NpmPackages):
     '''
-    [DEPRECIATED] Maintained for backwards-compatability.
+    [DEPRECATED] Maintained for backwards-compatability.
     '''
+
+    def command(self, *args, **kwargs):
+        logger.warning('The npm_local_packages fact is depreciated, please use npm_packages')
+        return super(NpmLocalPackages, self).command(*args, **kwargs)

@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+from pyinfra import logger
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
@@ -39,5 +40,9 @@ class PipPackages(FactBase):
 # COMPAT: above now covers both use cases
 class PipVirtualenvPackages(PipPackages):
     '''
-    [DEPRECIATED] Maintained for backwards-compatability.
+    [DEPRECATED] Maintained for backwards-compatability.
     '''
+
+    def command(self, *args, **kwargs):
+        logger.warning('The pip_virtualenv_packages fact is depreciated, please use pip_packages')
+        return super(PipVirtualenvPackages, self).command(*args, **kwargs)
