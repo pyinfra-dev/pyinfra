@@ -14,6 +14,6 @@
         }
     },
     "commands": [
-        "DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" remove git python-pip"
+        "DEBIAN_FRONTEND=noninteractive apt-get -y --assume-yes -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" remove git python-pip"
     ]
 }
