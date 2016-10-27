@@ -1,0 +1,14 @@
+{
+    "kwargs": {
+        "path": "/some/virtualenv",
+        "present": false
+    },
+    "facts": {
+        "directory": {
+            "/some/virtualenv": true
+        }
+    },
+    "commands": [
+        "rm -rf /some/virtualenv"
+    ]
+}

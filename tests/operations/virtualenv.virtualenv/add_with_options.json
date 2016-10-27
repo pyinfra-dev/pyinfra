@@ -1,0 +1,15 @@
+{
+    "kwargs": {
+        "path": "/some/virtualenv",
+        "site_packages": true,
+        "always_copy": true
+    },
+    "facts": {
+        "directory": {
+            "/some/virtualenv": false
+        }
+    },
+    "commands": [
+        "/usr/bin/virtualenv -p python3 --system-site-packages --always-copy /some/virtualenv"
+    ]
+}
