@@ -29,7 +29,9 @@ def virtualenv(
 
     if present is False and host.fact.directory(path):
         # Ensure deletion of unwanted virtualenv
-        yield from files.directory(state, host, path, present=False)
+        # no 'yield from' in python 2.7
+        for cmd in files.directory(state, host, path, present=False):
+            yield cmd
 
     elif present and not host.fact.directory(path):
         # Create missing virtualenv
