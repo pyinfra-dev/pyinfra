@@ -34,12 +34,12 @@ def virtualenv(
 
     elif present and not host.fact.directory(path):
         # Create missing virtualenv
-        command = '/usr/bin/virtualenv'
+        command = ['/usr/bin/virtualenv']
         if python:
-            command += ' -p {}'.format(python)
+            command.append('-p {}'.format(python))
         if site_packages:
-            command += ' --system-site-packages'
+            command.append('--system-site-packages')
         if always_copy:
-            command += ' --always-copy'
-        command += ' ' + path
-        yield command
+            command.append('--always-copy')
+        command.append(path)
+        yield ' '.join(command)
