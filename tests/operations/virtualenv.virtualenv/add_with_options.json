@@ -1,6 +1,7 @@
 {
     "kwargs": {
         "path": "/some/virtualenv",
+        "python": "python2",
         "site_packages": true,
         "always_copy": true
     },
@@ -10,6 +11,6 @@
         }
     },
     "commands": [
-        "/usr/bin/virtualenv -p python3 --system-site-packages --always-copy /some/virtualenv"
+        "/usr/bin/virtualenv -p python2 --system-site-packages --always-copy /some/virtualenv"
     ]
 }

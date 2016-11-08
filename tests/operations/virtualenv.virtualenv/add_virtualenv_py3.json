@@ -1,6 +1,7 @@
 {
     "kwargs": {
-        "path": "/some/virtualenv"
+        "path": "/some/virtualenv",
+        "python": "python3"
     },
     "facts": {
         "directory": {
@@ -8,6 +9,6 @@
         }
     },
     "commands": [
-        "/usr/bin/virtualenv /some/virtualenv"
+        "/usr/bin/virtualenv -p python3 /some/virtualenv"
     ]
 }
