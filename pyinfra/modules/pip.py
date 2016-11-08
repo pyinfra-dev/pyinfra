@@ -51,7 +51,7 @@ def virtualenv(
 def packages(
     state, host,
     packages=None, present=True, latest=False,
-    requirements=None, virtualenv=None
+    requirements=None, virtualenv_root=None
 ):
     '''
     Manage pip packages.
@@ -60,7 +60,7 @@ def packages(
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
     + requirements: location of requirements file to install
-    + virtualenv: root directory of virtualenv to work in
+    + virtualenv_root: root directory of virtualenv to work in
 
     Versions:
         Package versions can be pinned like pip: ``<pkg>==<version>``
@@ -69,27 +69,29 @@ def packages(
     if requirements is not None:
         yield 'pip install -r {0}'.format(requirements)
 
-    current_packages = host.fact.pip_packages(virtualenv)
+    current_packages = host.fact.pip_packages(virtualenv_root)
 
-    if virtualenv:
-        virtualenv = virtualenv.rstrip('/')
+    if virtualenv_root:
+        virtualenv_root = virtualenv_root.rstrip('/')
+        if not host.fact.directory(virtualenv_root):
+            virtualenv(state, host, virtualenv_root)
 
     install_command = (
         'pip install'
-        if virtualenv is None
-        else '{0}/bin/pip install'.format(virtualenv)
+        if virtualenv_root is None
+        else '{0}/bin/pip install'.format(virtualenv_root)
     )
 
     uninstall_command = (
         'pip uninstall'
-        if virtualenv is None
-        else '{0}/bin/pip uninstall'.format(virtualenv)
+        if virtualenv_root is None
+        else '{0}/bin/pip uninstall'.format(virtualenv_root)
     )
 
     upgrade_command = (
         'pip install --upgrade'
-        if virtualenv is None
-        else '{0}/bin/pip install --upgrade'.format(virtualenv)
+        if virtualenv_root is None
+        else '{0}/bin/pip install --upgrade'.format(virtualenv_root)
     )
 
     yield ensure_packages(
