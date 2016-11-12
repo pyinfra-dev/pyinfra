@@ -1,0 +1,16 @@
+{
+    "kwargs": {
+        "path": "/some/virtualenv",
+        "python": "python2",
+        "site_packages": true,
+        "always_copy": true
+    },
+    "facts": {
+        "directory": {
+            "/some/virtualenv": false
+        }
+    },
+    "commands": [
+        "virtualenv -p python2 --system-site-packages --always-copy /some/virtualenv"
+    ]
+}

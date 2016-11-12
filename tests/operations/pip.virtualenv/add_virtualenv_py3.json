@@ -1,0 +1,14 @@
+{
+    "kwargs": {
+        "path": "/some/virtualenv",
+        "python": "python3"
+    },
+    "facts": {
+        "directory": {
+            "/some/virtualenv": false
+        }
+    },
+    "commands": [
+        "virtualenv -p python3 /some/virtualenv"
+    ]
+}
