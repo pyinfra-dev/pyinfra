@@ -346,38 +346,37 @@ def parse_argstring(argstring):
     return args
 
 
-def setup_arguments(arguments):
-    '''
-    Prepares argumnents output by docopt.
-    '''
+def setup_op_and_args(op_string, args_string):
+    op_bits = op_string.split('.')
 
-    # Ensure parallel/port are numbers
-    for key in ('--parallel', '--port', '--fail-percent'):
-        if arguments[key]:
-            arguments[key] = int(arguments[key])
+    # If the op isn't <module>.<operation>
+    if len(op_bits) != 2:
+        # Either default to server.shell w/op as command if no args are passed
+        if not args_string:
+            args_string = op_string
+            op_bits = ['server', 'shell']
 
-    # Prep --run OP ARGS
-    op, args = arguments['--run'], arguments['ARGS']
+        # Or fail as it's an invalid op
+        else:
+            raise CliError('Invalid operation: {0}'.format(op_string))
 
-    # If not args, op is the args and op defaults to server.shell
-    if not args:
-        args = op
-        op = 'server.shell'
+    # Get the module & operation name
+    op_module, op_name = op_bits
 
-    # Replace op name with the module
-    if op:
-        op_module, op_name = op.split('.')
+    try:
         op_module = import_module('pyinfra.modules.{0}'.format(op_module))
+    except ImportError:
+        raise CliError('No such module: {0}'.format(op_module))
 
-        op_func = getattr(op_module, op_name, None)
-        if not op_func:
-            raise CliError('No such operation: {0}'.format(op))
-
-        arguments['--run'] = op_func
+    op = getattr(op_module, op_name, None)
+    if not op:
+        raise CliError('No such operation: {0}'.format(op_string))
 
     # Replace the args string with kwargs
-    if args:
-        args = parse_argstring(args)
+    args = None
+
+    if args_string:
+        args = parse_argstring(args_string)
 
         # Setup kwargs
         kwargs = [arg.split('=') for arg in args if '=' in arg]
@@ -389,7 +388,23 @@ def setup_arguments(arguments):
         # Get the remaining args
         args = [_parse_arg(arg) for arg in args if '=' not in arg]
 
-        arguments['ARGS'] = (args, op_kwargs)
+        args = (args, op_kwargs)
+
+    return op, args
+
+
+def setup_arguments(arguments):
+    '''
+    Prepares argumnents output by docopt.
+    '''
+
+    # Ensure parallel/port are numbers
+    for key in ('--parallel', '--port', '--fail-percent'):
+        if arguments[key]:
+            arguments[key] = int(arguments[key])
+
+    # Prep --run OP ARGS
+    op, args = setup_op_and_args(arguments['--run'], arguments['ARGS'])
 
     # Always assign empty args
     fact_args = []
@@ -431,8 +446,8 @@ def setup_arguments(arguments):
         'fact_args': fact_args,
 
         'limit': arguments['--limit'],
-        'op': arguments['--run'],
-        'op_args': arguments['ARGS'],
+        'op': op,
+        'op_args': args,
 
         # Config options
         'user': arguments['--user'],
@@ -584,8 +599,8 @@ def make_inventory(
     # In pyinfra an inventory is a combination of (hostnames + data). However, in CLI
     # mode we want to be define this in separate files (inventory / group data). The
     # issue is we want inventory access within the group data files - but at this point
-    # we're not ready to make an Inventory. So here we just create a fake one, and attach
-    # it to pseudo_inventory while we import the data files.
+    # we're not ready to make an Inventory. So here we just create a fake one, and
+    # attach it to pseudo_inventory while we import the data files.
     fake_groups = {
         # In API mode groups *must* be tuples of (hostnames, data)
         name: group if isinstance(group, tuple) else (group, {})
