@@ -129,10 +129,10 @@ elif distro['name'] in ('CentOS', 'Fedora'):
         )
 
         # Manage remote rpm files
-        yum.rpm(
-            'https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ host.fact.linux_distribution.major }}.noarch.rpm',
-            sudo=True
-        )
+        yum.rpm((
+            'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
+            '{{ host.fact.linux_distribution.major }}.noarch.rpm'
+        ), sudo=True)
 
     # yum package manager
     yum.packages(
@@ -188,6 +188,7 @@ server.wait(
     port=22,
     timeout=5
 )
+
 
 # Execute Python locally, mid-deploy
 def some_python(state, host, hostname, *args, **kwargs):
