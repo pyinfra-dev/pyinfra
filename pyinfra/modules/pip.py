@@ -36,7 +36,7 @@ def virtualenv(
 
     elif present and not host.fact.directory(path):
         # Create missing virtualenv
-        command = ['/usr/bin/virtualenv']
+        command = ['virtualenv']
         if python:
             command.append('-p {}'.format(python))
         if site_packages:

@@ -9,6 +9,6 @@
         }
     },
     "commands": [
-        "/usr/bin/virtualenv -p python3 /some/virtualenv"
+        "virtualenv -p python3 /some/virtualenv"
     ]
 }

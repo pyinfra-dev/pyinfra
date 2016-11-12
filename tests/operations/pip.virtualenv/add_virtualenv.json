@@ -8,6 +8,6 @@
         }
     },
     "commands": [
-        "/usr/bin/virtualenv /some/virtualenv"
+        "virtualenv /some/virtualenv"
     ]
 }
