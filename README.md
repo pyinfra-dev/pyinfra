@@ -1,4 +1,6 @@
-# pyinfra [![PyPI version](https://badge.fury.io/py/pyinfra.svg)](https://pypi.python.org/pypi/pyinfra) [![Travis.CI status](https://travis-ci.org/Fizzadar/pyinfra.svg?branch=develop)](https://travis-ci.org/Fizzadar/pyinfra)
+# pyinfra
+
+[![PyPI version](https://badge.fury.io/py/pyinfra.svg)](https://pypi.python.org/pypi/pyinfra) [![Travis.CI status](https://travis-ci.org/Fizzadar/pyinfra.svg?branch=develop)](https://travis-ci.org/Fizzadar/pyinfra)
 
 pyinfra automates service deployment. It does this by diff-ing the state of the server with the state defined in the deploy script. Deploys are asyncronous and highly performant. The inventory & deploy are managed with pure Python, allowing for near-infinite extendability.
 
@@ -10,7 +12,7 @@ pyinfra automates service deployment. It does this by diff-ing the state of the 
 
 When you run pyinfra you'll see something like:
 
-![](./docs/example_deploy.png)
+![](https://raw.githubusercontent.com/Fizzadar/pyinfra/develop/docs/example_deploy.png)
 
 
 ## Design Features
