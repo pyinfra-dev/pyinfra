@@ -34,6 +34,9 @@ DEV_REQUIRES = TEST_REQUIRES + (
     # Dev docs requirements
     'sphinx==1.3.1',
     'sphinx-autobuild==0.5.2',
+
+    # Convert markdowns to rst for long_description
+    'pypandoc==1.3.3',
 )
 
 
@@ -43,8 +46,14 @@ with open('pyinfra/version.py') as f:
     exec(f.read(), version_data)
 
 
-# Get the long_description from the README
-long_description = open('README.rst', 'r').read()
+# Get the long_description from the README, hopefully as rst
+try:
+    from pypandoc import convert_file
+    long_description = convert_file('README.md', 'rst')
+
+except ImportError:
+    print('Warning: pypandoc module not found, could not convert Markdown to RST')
+    long_description = open('README.md', 'r').read()
 
 
 if __name__ == '__main__':
