@@ -33,7 +33,23 @@ DEV_REQUIRES = TEST_REQUIRES + (
     # Dev docs requirements
     'sphinx==1.3.1',
     'sphinx-autobuild==0.5.2',
+
+    # Convert markdowns to rst for long_description
+    'pypandoc==1.3.3',
 )
+
+
+try:
+    from pypandoc import convert
+
+    def read_md(f):
+        return convert(f, 'rst')
+
+except ImportError:
+    print('Warning: pypandoc module not found, could not convert Markdown to RST')
+
+    def read_md(f):
+        return open(f, 'r').read()
 
 
 # Extract version info without importing entire pyinfra package
@@ -47,6 +63,7 @@ if __name__ == '__main__':
         version=version_data['__version__'],
         name='pyinfra',
         description='Deploy stuff by diff-ing the state you want against the remote server.',
+        long_description=read_md('README.md') + read_md('CHANGELOG.md'),
         author='Nick / Fizzadar',
         author_email='pointlessrambler@gmail.com',
         license='MIT',
@@ -69,5 +86,5 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 2',
             'Programming Language :: Python :: 3',
             'Topic :: System :: Systems Administration',
-        )
+        ),
     )
