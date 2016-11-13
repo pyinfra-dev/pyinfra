@@ -47,13 +47,24 @@ with open('pyinfra/version.py') as f:
 
 
 # Get the long_description from the README, hopefully as rst
+long_description = open('README.md', 'r').read()
+
 try:
-    from pypandoc import convert_file
-    long_description = convert_file('README.md', 'rst')
+    from pypandoc import convert_text
+
+    # Strip out the example image because pypi's RST processing ignores width
+    long_description = '\n'.join(
+        line for line in long_description.split('\n')
+        if line not in (
+            'When you run pyinfra you\'ll see something like:',
+            '![](https://raw.githubusercontent.com/Fizzadar/pyinfra/develop/docs/example_deploy.png)',
+        )
+    )
+
+    long_description = convert_text(long_description, 'rst', 'markdown')
 
 except ImportError:
     print('Warning: pypandoc module not found, could not convert Markdown to RST')
-    long_description = open('README.md', 'r').read()
 
 
 if __name__ == '__main__':
