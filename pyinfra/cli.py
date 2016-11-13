@@ -404,7 +404,10 @@ def setup_arguments(arguments):
             arguments[key] = int(arguments[key])
 
     # Prep --run OP ARGS
-    op, args = setup_op_and_args(arguments['--run'], arguments['ARGS'])
+    if arguments['--run']:
+        op, args = setup_op_and_args(arguments['--run'], arguments['ARGS'])
+    else:
+        op = args = None
 
     # Always assign empty args
     fact_args = []
