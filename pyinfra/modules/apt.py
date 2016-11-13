@@ -21,10 +21,12 @@ from .util.packaging import ensure_packages
 APT_UPDATE_FILENAME = '/var/lib/apt/periodic/update-success-stamp'
 
 
-def noninteractive_apt(command):
+def noninteractive_apt(command, force=False):
     return ' '.join((
-        'DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes',
-        '-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"',
+        'DEBIAN_FRONTEND=noninteractive apt-get -y',
+        '--force-yes' if force else '',
+        '-o Dpkg::Options::="--force-confdef"',
+        '-o Dpkg::Options::="--force-confold"',
         command,
     ))
 
@@ -114,7 +116,7 @@ def ppa(state, host, name, present=True):
 
 
 @operation
-def deb(state, host, source, present=True):
+def deb(state, host, source, present=True, force=False):
     '''
     Install/manage ``.deb`` file packages.
 
@@ -161,14 +163,17 @@ def deb(state, host, source, present=True):
         # Install .deb file - ignoring failure (on unmet dependencies)
         yield 'dpkg --force-confdef --force-confold -i {0} || true'.format(source)
         # Attempt to install any missing dependencies
-        yield '{0} -f'.format(noninteractive_apt('install'))
+        yield '{0} -f'.format(noninteractive_apt('install', force=force))
         # Now reinstall, and critically configure, the package - if there are still
         # missing deps, now we error
         yield 'dpkg --force-confdef --force-confold -i {0}'.format(source)
 
     # Package exists but we don't want?
     if exists and not present:
-        yield '{0} {1}'.format(noninteractive_apt('remove'), info['name'])
+        yield '{0} {1}'.format(
+            noninteractive_apt('remove', force=force),
+            info['name'],
+        )
 
 
 @operation
@@ -205,7 +210,7 @@ def packages(
     state, host,
     packages=None, present=True, latest=False,
     update=False, cache_time=None, upgrade=False,
-    no_recommends=False,
+    force=False, no_recommends=False,
 ):
     '''
     Install/remove/upgrade packages & update apt.
@@ -253,9 +258,9 @@ def packages(
     # Compare/ensure packages are present/not
     yield ensure_packages(
         packages, host.fact.deb_packages, present,
-        install_command=noninteractive_apt(install_command),
-        uninstall_command=noninteractive_apt('remove'),
-        upgrade_command=noninteractive_apt(install_command),
+        install_command=noninteractive_apt(install_command, force=force),
+        uninstall_command=noninteractive_apt('remove', force=force),
+        upgrade_command=noninteractive_apt(install_command, force=force),
         version_join='=',
         latest=latest,
     )
