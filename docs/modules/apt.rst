@@ -11,10 +11,11 @@ Install/manage ``.deb`` file packages.
 
 .. code:: python
 
-    apt.deb(source, present=True)
+    apt.deb(source, present=True, force=False)
 
 + **source**: filename or URL of the ``.deb`` file
 + **present**: whether or not the package should exist on the system
++ **force**: whether to force the package install by passing `--force-yes` to apt
 
 Note:
     when installing, ``apt-get install -f`` will be run to install any unmet
@@ -54,7 +55,7 @@ Install/remove/upgrade packages & update apt.
 
     apt.packages(
         packages=None, present=True, latest=False, update=False, cache_time=None, upgrade=False,
-        no_recommends=False
+        force=False, no_recommends=False
     )
 
 + **packages**: list of packages to ensure
@@ -63,6 +64,7 @@ Install/remove/upgrade packages & update apt.
 + **update**: run apt update
 + **cache_time**: when used with update, cache for this many seconds
 + **upgrade**: run apt upgrade
++ **force**: whether to force package installs by passing `--force-yes` to apt
 + **no_recommends**: don't install recommended packages
 
 Versions:
