@@ -25,6 +25,7 @@ TEST_REQUIRES = (
 DEV_REQUIRES = TEST_REQUIRES + (
     # Releasing
     'wheel',
+    'twine==1.8.1',
 
     # Dev debugging
     'ipdb',
