@@ -40,23 +40,20 @@ DEV_REQUIRES = TEST_REQUIRES + (
 )
 
 
-try:
-    from pypandoc import convert
-
-    def read_md(f):
-        return convert(f, 'rst')
-
-except ImportError:
-    print('Warning: pypandoc module not found, could not convert Markdown to RST')
-
-    def read_md(f):
-        return open(f, 'r').read()
-
-
 # Extract version info without importing entire pyinfra package
 version_data = {}
 with open('pyinfra/version.py') as f:
     exec(f.read(), version_data)
+
+
+# Get the long_description from the README, hopefully as rst
+try:
+    from pypandoc import convert_file
+    long_description = convert_file('README.md', 'rst')
+
+except ImportError:
+    print('Warning: pypandoc module not found, could not convert Markdown to RST')
+    long_description = open('README.md', 'r').read()
 
 
 if __name__ == '__main__':
@@ -64,7 +61,7 @@ if __name__ == '__main__':
         version=version_data['__version__'],
         name='pyinfra',
         description='Deploy stuff by diff-ing the state you want against the remote server.',
-        long_description=read_md('README.md') + read_md('CHANGELOG.md'),
+        long_description=long_description,
         author='Nick / Fizzadar',
         author_email='pointlessrambler@gmail.com',
         license='MIT',
