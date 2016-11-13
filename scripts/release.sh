@@ -14,7 +14,6 @@ scripts/build_docs.sh
 
 echo "# Commit & push the docs..."
 git add docs/
-git add README.md
 git commit -m "Documentation update for v$VERSION." || echo "No docs updated!"
 git push
 
