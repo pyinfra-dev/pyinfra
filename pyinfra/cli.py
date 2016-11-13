@@ -557,6 +557,30 @@ def make_inventory(
             if is_inventory_group(key, value)
         }
 
+        # TODO: remove at some point
+        # COMPAT: 0.2 switched to supporting lowercase group names, instead of
+        # all uppercase - but old deploys may have uppercase names and lowercase
+        # vars (now should be wrapped in a function). So here we check for mixed
+        # case group names, and default to upper if so, with a warning.
+        all_groups_lowercase = all(key.islower() for key in groups)
+
+        # Not all the groups are lowercased
+        if not all_groups_lowercase:
+            # Filter to only use uppercase groups (0.1)
+            groups = {
+                key: value
+                for key, value in six.iteritems(groups)
+                if key.isupper()
+            }
+
+            logger.warning(
+                'Mixed-case group names detected - defaulting to upperacse only. '
+                '0.2 supports lowercase names, so any non-group related variables '
+                'in the inventory file need to be "hidden" inside a function. 0.3 '
+                'will remove this check and accept mixed group names. See: '
+                'http://pyinfra.readthedocs.io/en/latest/patterns/dynamic_inventories_data.html'
+            )
+
         # Used to set all the hosts to an additional group - that of the filename
         # ie inventories/dev.py means all the hosts are in the dev group, if not present
         file_groupname = path.basename(inventory_filename).split('.')[0].upper()
