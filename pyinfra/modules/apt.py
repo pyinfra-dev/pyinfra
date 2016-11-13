@@ -122,6 +122,7 @@ def deb(state, host, source, present=True, force=False):
 
     + source: filename or URL of the ``.deb`` file
     + present: whether or not the package should exist on the system
+    + force: whether to force the package install by passing `--force-yes` to apt
 
     Note:
         when installing, ``apt-get install -f`` will be run to install any unmet
@@ -221,6 +222,7 @@ def packages(
     + update: run apt update
     + cache_time: when used with update, cache for this many seconds
     + upgrade: run apt upgrade
+    + force: whether to force package installs by passing `--force-yes` to apt
     + no_recommends: don't install recommended packages
 
     Versions:
