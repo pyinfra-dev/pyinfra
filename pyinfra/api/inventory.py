@@ -125,7 +125,8 @@ class Inventory(object):
         # Now group names in caps will be left as-is, so check for that too.
         elif key.upper() in self.groups:
             logger.warning(
-                'Accessing groups defined in CAPS with lowercase is deprecated, please use the name as-is'
+                'Accessing groups defined in CAPS with lowercase is deprecated '
+                'and will be removed in 0.3, please use the name as-is'
             )
             return self.groups[key.upper()]
 

@@ -46,5 +46,5 @@ class NpmLocalPackages(NpmPackages):
     '''
 
     def command(self, *args, **kwargs):
-        logger.warning('The npm_local_packages fact is depreciated, please use npm_packages')
+        logger.warning('The npm_local_packages fact is depreciated and will be removed in 0.3, please use npm_packages')
         return super(NpmLocalPackages, self).command(*args, **kwargs)

@@ -131,7 +131,7 @@ def upgrade(state, host):
     **DEPRECATED** - please use ``yum.update`` as this will be removed in the future.
     '''
 
-    logger.warning('yum.upgrade is deprecated, please use yum.update')
+    logger.warning('yum.upgrade is deprecated and will be removed in 0.3, please use yum.update')
     yield 'yum update -y'
 
 

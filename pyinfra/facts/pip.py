@@ -44,5 +44,5 @@ class PipVirtualenvPackages(PipPackages):
     '''
 
     def command(self, *args, **kwargs):
-        logger.warning('The pip_virtualenv_packages fact is depreciated, please use pip_packages')
+        logger.warning('The pip_virtualenv_packages fact is depreciated and will be removed in 0.3, please use pip_packages')
         return super(PipVirtualenvPackages, self).command(*args, **kwargs)
