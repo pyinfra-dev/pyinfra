@@ -13,8 +13,9 @@ New stuff:
 + Make local imports work like calling `python` by adding `.` to `sys.path` in CLI
 + Add key/value release meta to `linux_distribution` fact
 + Improve how the init module handles "unknown" services
++ Add `force` kwarg to `apt.packages` and `apt.deb` and don't `--force-yes` by default
 
-To-be-breaking changes (deprecated will be removed in 0.3):
+To-be-breaking changes (deprecated & will be removed in 0.3):
 
 + Switch to lowercase inventory names (accessing `inventory.bsd` where the group is defined as `BSD = []` is deprecated)
 + Rename `yum.upgrade` -> `yum.update` (`yum.upgrade` deprecated)
