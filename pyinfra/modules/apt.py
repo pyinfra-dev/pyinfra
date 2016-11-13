@@ -23,7 +23,7 @@ APT_UPDATE_FILENAME = '/var/lib/apt/periodic/update-success-stamp'
 
 def noninteractive_apt(command):
     return ' '.join((
-        'DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes',
+        'DEBIAN_FRONTEND=noninteractive apt-get -y --assume-yes',
         '-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"',
         command,
     ))

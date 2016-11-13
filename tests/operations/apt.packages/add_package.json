@@ -4,6 +4,6 @@
         "deb_packages": {}
     },
     "commands": [
-        "DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" install git"
+        "DEBIAN_FRONTEND=noninteractive apt-get -y --assume-yes -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" install git"
     ]
 }
