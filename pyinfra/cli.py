@@ -513,13 +513,15 @@ def is_inventory_group(key, value):
     Verify that a module-level variable (key = value) is a valid inventory group.
     '''
 
-    return (
-        isinstance(value, (list, tuple))
-        and not key.startswith('_')
-        and all(
-            isinstance(item, ALLOWED_HOST_TYPES)
-            for item in value
-        )
+    if not isinstance(value, (list, tuple)) or key.startswith('_'):
+        return False
+
+    if isinstance(value, tuple):
+        value = value[0]
+
+    return all(
+        isinstance(item, ALLOWED_HOST_TYPES)
+        for item in value
     )
 
 
