@@ -64,7 +64,8 @@ try:
     long_description = convert_text(long_description, 'rst', 'markdown')
 
 except (ImportError, OSError):
-    print('Warning: pypandoc module not found, could not convert Markdown to RST')
+    # Ignore this - release.sh checks for making releases
+    pass
 
 
 if __name__ == '__main__':

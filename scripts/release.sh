@@ -6,6 +6,10 @@ VERSION=`python setup.py --version`
 
 echo "# Releasing pyinfra v$VERSION..."
 
+echo "# Checking pandoc installed..."
+pandoc --help >/dev/null 2>&1 || (echo "pandoc is not installed!" && exit 1)
+python -c 'import pypandoc' >/dev/null 2>&1 || (echo "pypandoc is not installed!" && exit 1)
+
 echo "# Running tests..."
 nosetests -s
 
