@@ -401,7 +401,12 @@ def setup_arguments(arguments):
     # Ensure parallel/port are numbers
     for key in ('--parallel', '--port', '--fail-percent'):
         if arguments[key]:
-            arguments[key] = int(arguments[key])
+            try:
+                arguments[key] = int(arguments[key])
+            except ValueError:
+                raise CliError('{0} is not a valid integer for {1}'.format(
+                    arguments[key], key
+                ))
 
     # Prep --run OP ARGS
     if arguments['--run']:
