@@ -10,7 +10,7 @@ rm -f .coverage
 
 if [ ! -f tests/test_${TEST}.py ]; then
     echo "--> Testing everything..."
-    nosetests --with-coverage --cover-package pyinfra.api,pyinfra.modules,pyinfra.facts $@
+    nosetests --with-coverage --cover-package pyinfra $@
 else
     echo "--> Testing ${TEST}..."
     ARGS="${@:2}"
