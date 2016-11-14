@@ -1,4 +1,4 @@
-# v0.2 - WIP (dev0)
+# v0.2
 
 New stuff:
 
