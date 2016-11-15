@@ -1,0 +1,12 @@
+{
+    "kwargs": {
+        "username": "testuser"
+    },
+    "facts": {
+        "postgresql_users": {
+        }
+    },
+    "commands": [
+        "su postgres -c \"createuser  testuser\""
+    ]
+}
