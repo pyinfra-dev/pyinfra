@@ -1,0 +1,9 @@
+{
+    "kwargs": {
+        "name": "somebase",
+        "user": null
+    },
+    "commands": [
+        "createdb somebase"
+    ]
+}

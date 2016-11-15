@@ -1,0 +1,8 @@
+{
+    "kwargs": {
+        "name": "somebase"
+    },
+    "commands": [
+        "su postgres -c \"createdb somebase\""
+    ]
+}
