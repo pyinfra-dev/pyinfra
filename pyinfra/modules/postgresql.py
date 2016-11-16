@@ -10,13 +10,18 @@ from pyinfra.api import operation
 
 
 @operation
-def user(state, host, username, present=True, superuser=False):
+def user(state, host, username, present=True,
+         createdb=None, createrole=None, superuser=None, replication=None,
+         ):
     '''
     Manage PostgreSQL users.
 
     + username: username in the database
-    + superuser: superuser priviledges
     + present: whether the user should be present or absent
+    + createdb: user is allowed to create databases
+    + createrole: user is allowed to create new roles
+    + superuser: user will be a superuser
+    + replication: user has the replication privilege
     '''
     user = host.fact.postgresql_users.get(username)
 
@@ -26,8 +31,13 @@ def user(state, host, username, present=True, superuser=False):
             return
         else:
             options = []
-            if superuser:
-                options.append('--superuser')
+
+            # Explicitely setting
+            for arg in 'createdb', 'createrole', 'superuser', 'replication':
+                if locals()[arg] is True:
+                    options.append('--{}'.format(arg))
+                elif locals()[arg] is False:
+                    options.append('--no-{}'.format(arg))
 
             options_str = ' '.join(options)
             yield 'su postgres -c "createuser {} {}"' \

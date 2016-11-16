@@ -1,0 +1,16 @@
+{
+    "kwargs": {
+        "username": "testuser",
+        "createdb": true,
+        "createrole": true,
+        "superuser": true,
+        "replication": true
+    },
+    "facts": {
+        "postgresql_users": {
+        }
+    },
+    "commands": [
+        "su postgres -c \"createuser --createdb --createrole --superuser --replication testuser\""
+    ]
+}
