@@ -590,7 +590,7 @@ def make_inventory(
 
         # Used to set all the hosts to an additional group - that of the filename
         # ie inventories/dev.py means all the hosts are in the dev group, if not present
-        file_groupname = path.basename(inventory_filename).split('.')[0].upper()
+        file_groupname = path.basename(inventory_filename).split('.')[0]
 
     except IOError as e:
         # If a /, definitely not a hostname
