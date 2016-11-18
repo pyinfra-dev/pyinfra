@@ -1,3 +1,7 @@
+# v0.2.1 [WIP]
+
++ Fix bug where file-based group names were uppercased incorrectly (ie dev.py made group DEV, rather than dev)
+
 # v0.2
 
 New stuff:
