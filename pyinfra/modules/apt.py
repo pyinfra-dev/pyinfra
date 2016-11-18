@@ -53,10 +53,12 @@ def key(state, host, key=None, keyserver=None, keyid=None):
     '''
 
     if key:
+        # If URL, wget the key to stdout and pipe into apt-key, because the "adv"
+        # apt-key passes to gpg which doesn't always support https!
         if urlparse(key).scheme:
-            yield'apt-key adv --fetch-keys {0}'.format(key)
+            yield 'wget -O- {0} | apt-key add -'.format(key)
         else:
-            yield'apt-key add {0}'.format(key)
+            yield 'apt-key add {0}'.format(key)
 
     if keyserver and keyid:
         yield 'apt-key adv --keyserver {0} --recv-keys {1}'.format(keyserver, keyid)

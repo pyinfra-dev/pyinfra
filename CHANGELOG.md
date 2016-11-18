@@ -1,5 +1,6 @@
 # v0.2.1 [WIP]
 
++ Use wget & pipe when adding apt keys via URL, rather than `apt-key adv` which breaks with HTTPs
 + Fix bug where file-based group names were uppercased incorrectly (ie dev.py made group DEV, rather than dev)
 
 # v0.2
