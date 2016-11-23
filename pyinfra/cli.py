@@ -14,7 +14,7 @@ import traceback
 from os import path
 from fnmatch import fnmatch
 from datetime import datetime
-from types import FunctionType
+from types import FunctionType, GeneratorType
 from importlib import import_module
 
 # py2/3 switcheroo
@@ -518,11 +518,19 @@ def is_inventory_group(key, value):
     Verify that a module-level variable (key = value) is a valid inventory group.
     '''
 
-    if not isinstance(value, (list, tuple)) or key.startswith('_'):
+    if (
+        key.startswith('_')
+        or not isinstance(value, (list, tuple, GeneratorType))
+    ):
         return False
 
+    # If the group is a tuple of (hosts, data), check the hosts
     if isinstance(value, tuple):
         value = value[0]
+
+    # Expand any generators of hosts
+    if isinstance(value, GeneratorType):
+        value = list(value)
 
     return all(
         isinstance(item, ALLOWED_HOST_TYPES)
