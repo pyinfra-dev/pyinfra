@@ -1,3 +1,8 @@
+# v0.2.2
+
++ Fix bug in parsing of network interfaces
++ Fix `--limit` with a group name
+
 # v0.2.1
 
 + Use wget & pipe when adding apt keys via URL, rather than `apt-key adv` which breaks with HTTPs
