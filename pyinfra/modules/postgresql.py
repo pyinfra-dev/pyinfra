@@ -40,14 +40,14 @@ def user(state, host, username, present=True,
                     options.append('--no-{}'.format(arg))
 
             options_str = ' '.join(options)
-            yield 'su postgres -c "createuser {} {}"' \
+            yield 'createuser {} {}' \
                   .format(options_str, username)
     elif user:
         raise NotImplemented("PostgreSQL users removal is not supported")
 
 
 @operation
-def database(state, host, name, user='postgres'):
+def database(state, host, name):
     '''
     Manage PostgreSQL databases.
 
@@ -56,9 +56,4 @@ def database(state, host, name, user='postgres'):
     + present: whether the user should be present or absent
     '''
     # Avoid double quotes as some will be added around it if user is present
-    command = 'createdb {}'.format(name)
-
-    if user:
-        yield 'su {} -c "{}"'.format(user, command)
-    else:
-        yield command
+    yield 'createdb {}'.format(name)

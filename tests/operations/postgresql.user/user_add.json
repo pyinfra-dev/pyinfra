@@ -7,6 +7,6 @@
         }
     },
     "commands": [
-        "su postgres -c \"createuser  testuser\""
+        "createuser  testuser"
     ]
 }

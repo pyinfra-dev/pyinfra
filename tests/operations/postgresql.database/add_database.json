@@ -3,6 +3,6 @@
         "name": "somebase"
     },
     "commands": [
-        "su postgres -c \"createdb somebase\""
+        "createdb somebase"
     ]
 }

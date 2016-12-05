@@ -11,6 +11,6 @@
         }
     },
     "commands": [
-        "su postgres -c \"createuser --createdb --createrole --superuser --replication testuser\""
+        "createuser --createdb --createrole --superuser --replication testuser"
     ]
 }
