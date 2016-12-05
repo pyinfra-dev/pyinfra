@@ -61,7 +61,7 @@ nettools_1_regexes = [
 
 nettools_2_regexes = [
     (
-        r'^inet ([0-9\.]+)\s+netmask ([0-9\.fx]+) broadcast ([0-9\.]+)$',
+        r'^inet ([0-9\.]+)\s+netmask ([0-9\.fx]+)\s+broadcast ([0-9\.]+)$',
         ('ipv4', 'address', 'netmask', 'broadcast')
     ),
     (
