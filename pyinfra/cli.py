@@ -682,7 +682,7 @@ def make_inventory(
     # Apply any limit to all_hosts
     if limit:
         # Limits can be groups
-        limit_groupname = limit.upper()
+        limit_groupname = limit
         if limit_groupname in groups:
             all_hosts = [
                 host[0] if isinstance(host, tuple) else host
