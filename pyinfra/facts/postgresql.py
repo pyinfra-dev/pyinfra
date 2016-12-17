@@ -20,7 +20,7 @@ class PostgresqlUsers(FactBase):
 
     # This command assumes that PostgreSQL is configured to run as user
     # 'postgres'. This is the case on Ubuntu and probably other common
-    # distributions but might not always be true.​
+    # distributions but might not always be true.
     command = 'sudo -u postgres -- psql postgres -tAc "SELECT * FROM pg_user;"'
 
     def process(self, output):
