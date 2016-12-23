@@ -53,7 +53,7 @@ _virtualenv = virtualenv
 def packages(
     state, host,
     packages=None, present=True, latest=False,
-    requirements=None, virtualenv=None
+    requirements=None, virtualenv=None, pip='pip',
 ):
     '''
     Manage pip packages.
@@ -63,13 +63,14 @@ def packages(
     + latest: whether to upgrade packages without a specified version
     + requirements: location of requirements file to install
     + virtualenv: root directory of virtualenv to work in
+    + pip: name or path of the pip directory to use
 
     Versions:
         Package versions can be pinned like pip: ``<pkg>==<version>``
     '''
 
     if requirements is not None:
-        yield 'pip install -r {0}'.format(requirements)
+        yield '{0} install -r {1}'.format(pip, requirements)
 
     current_packages = host.fact.pip_packages(virtualenv)
 
@@ -79,19 +80,19 @@ def packages(
             _virtualenv(state, host, virtualenv)
 
     install_command = (
-        'pip install'
+        '{0} install'.format(pip)
         if virtualenv is None
         else '{0}/bin/pip install'.format(virtualenv)
     )
 
     uninstall_command = (
-        'pip uninstall'
+        '{0} uninstall'.format(pip)
         if virtualenv is None
         else '{0}/bin/pip uninstall'.format(virtualenv)
     )
 
     upgrade_command = (
-        'pip install --upgrade'
+        '{0} install --upgrade'.format(pip)
         if virtualenv is None
         else '{0}/bin/pip install --upgrade'.format(virtualenv)
     )
