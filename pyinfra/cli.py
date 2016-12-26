@@ -350,7 +350,14 @@ def setup_op_and_args(op_string, args_string):
     op_bits = op_string.split('.')
 
     # If the op isn't <module>.<operation>
-    if len(op_bits) != 2:
+    if (
+        len(op_bits) != 2
+        # Modules/operations can only be lowercase alphabet
+        or any(
+            not bit.isalpha() or not bit.islower()
+            for bit in op_bits
+        )
+    ):
         # Either default to server.shell w/op as command if no args are passed
         if not args_string:
             args_string = op_string
