@@ -20,7 +20,7 @@ def virtualenv(
     python=None, site_packages=False, always_copy=False, present=True,
 ):
     '''
-    Manage virtualenv.
+    Manage Python virtualenvs.
 
     + python: python interpreter to use
     + site_packages: give access to the global site-packages
@@ -48,7 +48,7 @@ def virtualenv(
 
         yield ' '.join(command)
 
-_virtualenv = virtualenv
+_virtualenv = virtualenv  # noqa
 
 
 @operation
@@ -69,8 +69,9 @@ def packages(
     + virtualenv_kwargs: dictionary of arguments to pass to ``pip.virtualenv``
 
     Virtualenv:
-        This will be created if it does not exist already. Use
-        ``virtualenv_kwargs`` from the virtualenv operation to control this.
+        This will be created if it does not exist already. ``virtualenv_kwargs``
+        will be passed to ``pip.virtualenv`` which can be used to control how
+        the env is created.
 
     Versions:
         Package versions can be pinned like pip: ``<pkg>==<version>``
@@ -78,38 +79,27 @@ def packages(
 
     virtualenv_kwargs = virtualenv_kwargs or {}
 
-    if requirements is not None:
-        yield '{0} install -r {1}'.format(pip, requirements)
-
-    current_packages = host.fact.pip_packages(virtualenv)
-
     # Ensure any virutalenv
     if virtualenv:
         yield _virtualenv(state, host, virtualenv, **virtualenv_kwargs)
 
-    install_command = (
-        '{0} install'.format(pip)
-        if virtualenv is None
-        else '{0}/bin/pip install'.format(virtualenv)
-    )
+        # And update pip path
+        virtualenv = virtualenv.rstrip('/')
+        pip = '{0}/bin/{1}'.format(virtualenv, pip)
 
-    uninstall_command = (
-        '{0} uninstall'.format(pip)
-        if virtualenv is None
-        else '{0}/bin/pip uninstall'.format(virtualenv)
-    )
+    # Install requirements
+    if requirements is not None:
+        yield '{0} install -r {1}'.format(pip, requirements)
 
-    upgrade_command = (
-        '{0} install --upgrade'.format(pip)
-        if virtualenv is None
-        else '{0}/bin/pip install --upgrade'.format(virtualenv)
-    )
+    # Handle passed in packages
+    if packages:
+        current_packages = host.fact.pip_packages(virtualenv)
 
-    yield ensure_packages(
-        packages, current_packages, present,
-        install_command=install_command,
-        uninstall_command=uninstall_command,
-        upgrade_command=upgrade_command,
-        version_join='==',
-        latest=latest,
-    )
+        yield ensure_packages(
+            packages, current_packages, present,
+            install_command='{0} install'.format(pip),
+            uninstall_command='{0} uninstall'.format(pip),
+            upgrade_command='{0} install --upgrade'.format(pip),
+            version_join='==',
+            latest=latest,
+        )

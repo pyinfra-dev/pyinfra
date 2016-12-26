@@ -1,0 +1,14 @@
+{
+    "kwargs": {
+        "requirements": "requirements.pip",
+        "virtualenv": "testdir"
+    },
+    "facts": {
+        "directory": {
+            "testdir": true
+        }
+    },
+    "commands": [
+        "testdir/bin/pip install -r requirements.pip"
+    ]
+}
