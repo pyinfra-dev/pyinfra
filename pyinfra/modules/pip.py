@@ -53,7 +53,7 @@ _virtualenv = virtualenv
 def packages(
     state, host,
     packages=None, present=True, latest=False,
-    requirements=None, virtualenv=None, pip='pip',
+    requirements=None, pip='pip', virtualenv=None, virtualenv_kwargs=None,
 ):
     '''
     Manage pip packages.
@@ -62,22 +62,28 @@ def packages(
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
     + requirements: location of requirements file to install
-    + virtualenv: root directory of virtualenv to work in
     + pip: name or path of the pip directory to use
+    + virtualenv: root directory of virtualenv to work in
+    + virtualenv_kwargs: dictionary of arguments to pass to ``pip.virtualenv``
+
+    Virtualenv:
+        This will be created if it does not exist already. Use
+        ``virtualenv_kwargs`` from the virtualenv operation to control this.
 
     Versions:
         Package versions can be pinned like pip: ``<pkg>==<version>``
     '''
+
+    virtualenv_kwargs = virtualenv_kwargs or {}
 
     if requirements is not None:
         yield '{0} install -r {1}'.format(pip, requirements)
 
     current_packages = host.fact.pip_packages(virtualenv)
 
+    # Ensure any virutalenv
     if virtualenv:
-        virtualenv = virtualenv.rstrip('/')
-        if not host.fact.directory(virtualenv):
-            _virtualenv(state, host, virtualenv)
+        yield _virtualenv(state, host, virtualenv, **virtualenv_kwargs)
 
     install_command = (
         '{0} install'.format(pip)

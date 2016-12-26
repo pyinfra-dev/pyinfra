@@ -1,7 +1,10 @@
 {
     "args": [["elasticquery==1.1", "flask", "test==1.1"]],
     "kwargs": {
-        "virtualenv": "testdir"
+        "virtualenv": "testdir",
+        "virtualenv_kwargs": {
+            "site_packages": true
+        }
     },
     "facts": {
         "pip_packages": {
@@ -11,10 +14,11 @@
             }
         },
         "directory": {
-            "testdir": true
+            "testdir": null
         }
     },
     "commands": [
+        "virtualenv --system-site-packages testdir",
         "testdir/bin/pip install elasticquery==1.1 flask"
     ]
 }
