@@ -143,7 +143,7 @@ def update(state, host):
 
     yield 'yum update -y'
 
-_update = update
+_update = update  # noqa
 
 
 @operation

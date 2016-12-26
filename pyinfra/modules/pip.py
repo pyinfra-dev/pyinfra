@@ -16,9 +16,8 @@ from .util.packaging import ensure_packages
 
 @operation
 def virtualenv(
-    state, host,
-    path, python=None, site_packages=False, always_copy=False,
-    present=True,
+    state, host, path,
+    python=None, site_packages=False, always_copy=False, present=True,
 ):
     '''
     Manage virtualenv.
@@ -26,24 +25,27 @@ def virtualenv(
     + python: python interpreter to use
     + site_packages: give access to the global site-packages
     + always_copy: always copy files rather than symlinking
-    + present: whether the virtualenv should be installed
+    + present: whether the virtualenv should exist
     '''
 
     if present is False and host.fact.directory(path):
-        # Ensure deletion of unwanted virtualenv
-        # no 'yield from' in python 2.7
         yield files.directory(state, host, path, present=False)
 
     elif present and not host.fact.directory(path):
         # Create missing virtualenv
         command = ['virtualenv']
+
         if python:
-            command.append('-p {}'.format(python))
+            command.append('-p {0}'.format(python))
+
         if site_packages:
             command.append('--system-site-packages')
+
         if always_copy:
             command.append('--always-copy')
+
         command.append(path)
+
         yield ' '.join(command)
 
 _virtualenv = virtualenv

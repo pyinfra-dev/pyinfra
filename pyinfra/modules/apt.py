@@ -199,7 +199,7 @@ def update(state, host, touch_periodic=False):
     if touch_periodic:
         yield 'touch {0}'.format(APT_UPDATE_FILENAME)
 
-_update = update
+_update = update  # noqa
 
 
 @operation
@@ -210,7 +210,7 @@ def upgrade(state, host):
 
     yield noninteractive_apt('upgrade')
 
-_upgrade = upgrade
+_upgrade = upgrade  # noqa
 
 
 @operation
