@@ -116,7 +116,7 @@ def d(
         running, restarted, reloaded, command,
     )
 
-    if enabled is not None:
+    if isinstance(enabled, bool):
         start_links = host.fact.find_links('/etc/rc*.d/S*{0}'.format(name)) or []
 
         # If no links exist, attempt to enable the service using distro-specific commands
@@ -252,7 +252,7 @@ def upstart(
 def systemd(
     state, host, name,
     running=True, restarted=False, reloaded=False,
-    command=None, enabled=None,
+    command=None, enabled=None, daemon_reload=False,
 ):
     '''
     Manage the state of systemd managed services.
@@ -263,6 +263,7 @@ def systemd(
     + reloaded: whether the service should be reloaded
     + command: custom command to pass like: ``/etc/rc.d/<name> <command>``
     + enabled: whether this service should be enabled/disabled on boot
+    + daemon_reload: reload the systemd daemon to read updated unit files
     '''
 
     yield _handle_service_control(
@@ -281,3 +282,6 @@ def systemd(
         # Is enabled and want disabled?
         elif is_enabled and enabled is False:
             yield 'systemctl disable {0}.service'.format(name)
+
+    if daemon_reload:
+        yield 'systemctl daemon-reload'

@@ -1,0 +1,14 @@
+{
+    "args": ["redis-server"],
+    "kwargs": {
+        "daemon_reload": true
+    },
+    "facts": {
+        "systemd_status": {
+            "redis-server": true
+        }
+    },
+    "commands": [
+        "systemctl daemon-reload"
+    ]
+}
