@@ -20,7 +20,7 @@ from paramiko import SSHException
 from pyinfra import logger
 
 from .ssh import run_shell_command
-from .util import underscore, make_hash
+from .util import underscore, make_hash, get_arg_value
 
 
 # Index of snake_case facts -> CamelCase classes
@@ -77,14 +77,7 @@ def get_facts(
     Get a single fact for all hosts in the state.
     '''
 
-    sudo = sudo or state.config.SUDO
-    sudo_user = sudo_user or state.config.SUDO_USER
-    su_user = su_user or state.config.SU_USER
-    ignore_errors = state.config.IGNORE_ERRORS
-
-    # If inside an operation, fetch config meta
-    if state.current_op_meta:
-        sudo, sudo_user, su_user, ignore_errors = state.current_op_meta
+    args = args or []
 
     # Create an instance of the fact
     fact = FACTS[name]()
@@ -96,17 +89,19 @@ def get_facts(
             for host in state.inventory
         }
 
-    command = fact.command
+    # Apply args or defaults
+    sudo = sudo or state.config.SUDO
+    sudo_user = sudo_user or state.config.SUDO_USER
+    su_user = su_user or state.config.SU_USER
+    ignore_errors = state.config.IGNORE_ERRORS
 
-    if ismethod(command):
-        if args is None:
-            args = []
-
-        command = command(*args)
+    # If inside an operation, fetch config meta
+    if state.current_op_meta:
+        sudo, sudo_user, su_user, ignore_errors = state.current_op_meta
 
     # Make a hash which keeps facts unique - but usable cross-deploy/threads. Locks are
     # used to maintain order.
-    fact_hash = make_hash((name, command, sudo, sudo_user, su_user, ignore_errors))
+    fact_hash = make_hash((name, args, sudo, sudo_user, su_user, ignore_errors))
 
     # Lock!
     state.fact_locks.setdefault(fact_hash, Semaphore()).acquire()
@@ -117,15 +112,27 @@ def get_facts(
         return state.facts[fact_hash]
 
     # Execute the command for each state inventory in a greenlet
-    greenlets = {
-        host.name: state.fact_pool.spawn(
+    greenlets = {}
+
+    for host in state.inventory:
+        if host in state.ready_hosts:
+            continue
+
+        # Work out the command
+        command = fact.command
+
+        if ismethod(command):
+
+            # Generate actual arguments by pasing strings as jinja2 templates
+            host_args = [get_arg_value(state, host, arg) for arg in args]
+
+            command = command(*host_args)
+
+        greenlets[host.name] = state.fact_pool.spawn(
             run_shell_command, state, host.name, command,
             sudo=sudo, sudo_user=sudo_user, su_user=su_user,
-            print_output=state.print_fact_output
+            print_output=state.print_fact_output,
         )
-        for host in state.inventory
-        if host not in state.ready_hosts
-    }
 
     hostname_facts = {}
     failed_hosts = set()
