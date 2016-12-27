@@ -33,6 +33,16 @@ LS_REGEX = re.compile((
     r'\s?-?>?\s?([\w\/\.@-]*)'
 ))
 
+FLAG_TO_TYPE = {
+    'b': 'block',
+    'c': 'character',
+    'd': 'directory',
+    'l': 'link',
+    's': 'socket',
+    'p': 'fifo',
+    '-': 'file',
+}
+
 SYMBOL_TO_OCTAL_PERMISSIONS = {
     'rwx': '7',
     'rw-': '6',
@@ -75,17 +85,13 @@ def _parse_time(time):
         pass
 
 
-def parse_ls_output(output, directory=False, link=False):
+def parse_ls_output(output, wanted_type):
     if output:
         matches = re.match(LS_REGEX, output)
         if matches:
-            # Ensure we have what we want
-            is_directory = output.startswith('d')
-            if directory is not is_directory:
-                return False
+            type = FLAG_TO_TYPE[output[0]]
 
-            is_link = output.startswith('l')
-            if link is not is_link:
+            if type != wanted_type:
                 return False
 
             out = {
@@ -96,7 +102,7 @@ def parse_ls_output(output, directory=False, link=False):
                 'mtime': _parse_time(matches.group(5))
             }
 
-            if link:
+            if type == 'link':
                 out['link_target'] = matches.group(6)
 
             return out

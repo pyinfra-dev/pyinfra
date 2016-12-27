@@ -12,26 +12,27 @@ from .util.files import parse_ls_output
 
 
 class File(FactBase):
-    link = False
-    directory = False
+    # Types must match FLAG_TO_TYPE in .util.files.py
+    type = 'file'
 
     def command(self, name):
         self.name = name
         return 'ls -ld --time-style=long-iso {0} || ls -ldT {0}'.format(name)
 
     def process(self, output):
-        return parse_ls_output(
-            output[0],
-            link=self.link, directory=self.directory
-        )
+        return parse_ls_output(output[0], self.type)
 
 
 class Link(File):
-    link = True
+    type = 'link'
 
 
 class Directory(File):
-    directory = True
+    type = 'directory'
+
+
+class Socket(File):
+    type = 'socket'
 
 
 class Sha1File(FactBase):
