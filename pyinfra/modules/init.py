@@ -86,7 +86,7 @@ def _handle_service_control(
 def d(
     state, host, name,
     running=True, restarted=False, reloaded=False,
-    enabled=None, command=None
+    enabled=None, command=None,
 ):
     '''
     Manage the state of SysV Init (/etc/init.d) service scripts.
@@ -144,7 +144,7 @@ def d(
 def d_enable(
     state, host, name,
     start_priority=20, stop_priority=80,
-    start_levels=(2, 3, 4, 5), stop_levels=(0, 1, 6)
+    start_levels=(2, 3, 4, 5), stop_levels=(0, 1, 6),
 ):
     '''
     Manually enable /etc/init.d scripts by creating /etc/rcX.d/Y links.
@@ -174,7 +174,7 @@ def d_enable(
 def rc(
     state, host, name,
     running=True, restarted=False, reloaded=False,
-    command=None, enabled=None
+    command=None, enabled=None,
 ):
     '''
     Manage the state of BSD init (/etc/rc.d) service scripts.
@@ -209,7 +209,7 @@ def rc(
 def upstart(
     state, host, name,
     running=True, restarted=False, reloaded=False,
-    command=None, enabled=None
+    command=None, enabled=None,
 ):
     '''
     Manage the state of upstart managed services.
@@ -252,7 +252,7 @@ def upstart(
 def systemd(
     state, host, name,
     running=True, restarted=False, reloaded=False,
-    command=None, enabled=None
+    command=None, enabled=None,
 ):
     '''
     Manage the state of systemd managed services.
