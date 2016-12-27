@@ -74,6 +74,12 @@ class FakeData(object):
     def __str__(self):
         return 'FakeData'
 
+    def __add__(self, other):
+        return FakeData()
+
+    def __len__(self):
+        return 0
+
     def iteritems(self):
         return iter([(FakeData(), FakeData())])
 
