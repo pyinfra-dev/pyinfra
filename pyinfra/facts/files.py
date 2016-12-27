@@ -17,7 +17,7 @@ class File(FactBase):
 
     def command(self, name):
         self.name = name
-        return 'ls -ld {0}'.format(name)
+        return 'ls -ld --time-style=long-iso {0} || ls -ldT {0}'.format(name)
 
     def process(self, output):
         return parse_ls_output(

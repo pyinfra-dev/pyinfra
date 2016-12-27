@@ -1,7 +1,7 @@
 {
     "arg": "/home/pyinfra/myd@-_ir",
     "output": [
-        "drwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56 /home/pyinfra/myd@-_ir"
+        "drwxrwxrwx 1 pyinfra pyinfra 8 2016-02-13 12:56 /home/pyinfra/myd@-_ir"
     ],
     "fact": {
         "group": "pyinfra",

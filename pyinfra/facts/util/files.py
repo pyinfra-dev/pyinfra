@@ -8,9 +8,30 @@ import re
 from datetime import datetime
 
 
-LS_REGEX = re.compile(
-    r'^[dl\-]([\-rwx]{9})\.?\s+[0-9]+\s+([\w-]+)\s+([\w-]+)\s+([0-9]+)\s+([a-zA-Z]{3}\s+[0-9]+\s+[0-9:]{4,5})\s+[\w\/\.@-]+\s?-?>?\s?([\w\/\.@-]*)'
-)
+LS_REGEX = re.compile((
+    # Type flag
+    r'^[bcdlsp\-]'
+    # Permissions/ACL
+    r'([\-rwx]{9})[\.\+]?\s+'
+    # Links (unused)
+    r'[0-9]+\s+'
+    # User & group
+    r'([\w-]+)\s+([\w-]+)\s+'
+    # Size
+    r'([0-9]+)\s+'
+    # Date start options
+    r'((?:'
+    # BSD format
+    r'[a-zA-Z]{3}\s+[0-9]{1,2}\s+[0-9:]{8}\s+[0-9]{4}'
+    # Or Linux format (ISO)
+    r'|[0-9]{4}\-[0-9]{2}\-[0-9]{2}\s+[0-9:]{5}'
+    # Date end
+    r'))\s+'
+    # Filename
+    r'[\w\/\.@-]+'
+    # Optional link target
+    r'\s?-?>?\s?([\w\/\.@-]*)'
+))
 
 SYMBOL_TO_OCTAL_PERMISSIONS = {
     'rwx': '7',
@@ -41,16 +62,15 @@ def _parse_mode(mode):
 
 
 def _parse_time(time):
-    # Try matching with the hour/second format, ie within the current year
+    # Try matching with BSD format
     try:
-        dt = datetime.strptime(time, '%b %d %H:%M')
-        return dt.replace(year=datetime.now().year)
+        return datetime.strptime(time, '%b %d %H:%M:%S %Y')
     except ValueError:
         pass
 
-    # Otherwise we're in the past, timed to the nearest day
+    # Try matching ISO format
     try:
-        return datetime.strptime(time, '%b %d %Y')
+        return datetime.strptime(time, '%Y-%m-%d %H:%M')
     except ValueError:
         pass
 
