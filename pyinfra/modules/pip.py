@@ -93,7 +93,7 @@ def packages(
 
     # Handle passed in packages
     if packages:
-        current_packages = host.fact.pip_packages(virtualenv)
+        current_packages = host.fact.pip_packages(pip)
 
         yield ensure_packages(
             packages, current_packages, present,

@@ -12,7 +12,7 @@ from .util.packaging import parse_packages
 
 class PipPackages(FactBase):
     '''
-    Returns a dict of installed pip packages globally or in a given virtualenv:
+    Returns a dict of installed pip packages:
 
     .. code:: python
 
@@ -21,16 +21,10 @@ class PipPackages(FactBase):
     '''
 
     default = {}
-    command = 'pip freeze'
     _regex = r'^([a-zA-Z0-9_\-\+\.]+)==([0-9\.]+[a-z0-9\-]*)$'
 
-    def command(self, venv=None):
-        if venv:
-            venv = venv.rstrip('/')
-            return '{0}/bin/pip freeze'.format(venv)
-
-        else:
-            return 'pip freeze'
+    def command(self, pip='pip'):
+        return '{0} freeze'.format(pip)
 
     def process(self, output):
         return parse_packages(self._regex, output)
