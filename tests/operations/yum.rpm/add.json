@@ -1,8 +1,12 @@
 {
     "args": ["something.rpm"],
     "facts": {
+        "rpm_packages": {},
         "rpm_package": {
-            "something.rpm": null
+            "something.rpm": {
+                "name": "something",
+                "version": "abc"
+            }
         }
     },
     "commands": [
