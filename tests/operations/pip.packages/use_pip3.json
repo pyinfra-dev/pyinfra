@@ -5,6 +5,7 @@
     },
     "facts": {
         "pip_packages": {
+            "pip3": {}
         }
     },
     "commands": [

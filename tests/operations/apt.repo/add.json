@@ -3,7 +3,9 @@
     "facts": {
         "apt_sources": [],
         "find_in_file": {
-            "/etc/apt/sources.list": false
+            "/etc/apt/sources.list": {
+                "^.*deb http://archive.canonical.com/ubuntu hardy partner.*$": []
+            }
         }
     },
     "commands": [

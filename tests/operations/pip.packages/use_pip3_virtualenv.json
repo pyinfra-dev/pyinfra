@@ -6,7 +6,7 @@
     },
     "facts": {
         "pip_packages": {
-            "testdir": []
+            "testdir/bin/pip3": []
         },
         "directory": {
             "testdir": true

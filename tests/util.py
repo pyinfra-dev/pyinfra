@@ -67,10 +67,15 @@ class FakeFact(object):
         return key in self.data
 
     def __call__(self, *args, **kwargs):
-        if args[0] is None:
-            return self.data
+        item = self.data
 
-        return self.data[args[0]]
+        for arg in args:
+            if arg is None:
+                continue
+
+            item = item[arg]
+
+        return item
 
     def get(self, key, default=None):
         if key in self.data:

@@ -6,7 +6,9 @@
     },
     "facts": {
         "find_in_file": {
-            "somefile": {}
+            "somefile": {
+                "^.*match_line.*$": []
+            }
         }
     },
     "commands": [

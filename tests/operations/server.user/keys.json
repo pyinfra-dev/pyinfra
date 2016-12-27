@@ -32,7 +32,7 @@
         },
         "find_in_file": {
             "homedir/.ssh/authorized_keys": {
-
+                "^.*abc.*$": []
             }
         }
     },

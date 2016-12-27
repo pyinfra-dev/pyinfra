@@ -6,9 +6,11 @@
     },
     "facts": {
         "find_in_file": {
-            "somefile": [
-                "replace_line"
-            ]
+            "somefile": {
+                "^.*match_line.*$": [
+                    "replace_line"
+                ]
+            }
         }
     },
     "commands": [

@@ -8,7 +8,11 @@
             "components": ["partner"]
         }],
         "find_in_file": {
-            "/etc/apt/sources.list": [""]
+            "/etc/apt/sources.list": {
+                "^.*deb http://archive.canonical.com/ubuntu hardy partner.*$": [
+                    "deb http://archive.canonical.com/ubuntu hardy partner"
+                ]
+            }
         }
     },
     "commands": []
