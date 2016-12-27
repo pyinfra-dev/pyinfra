@@ -74,7 +74,7 @@ def packages(
         the env is created.
 
     Versions:
-        Package versions can be pinned like pip: ``<pkg>==<version>``
+        Package versions can be pinned like pip: ``<pkg>==<version>``.
     '''
 
     virtualenv_kwargs = virtualenv_kwargs or {}

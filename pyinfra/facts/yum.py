@@ -30,13 +30,20 @@ class RPMPackages(FactBase):
         return parse_packages(
             rpm_regex, output,
             # yum packages are case-sensitive
-            lower=False
+            lower=False,
         )
 
 
 class RpmPackage(FactBase):
     '''
-    Returns information on a .rpm file.
+    Returns information on a .rpm file:
+
+    .. code:: python
+
+        {
+            'name': 'my_package',
+            'version': '1.0.0'
+        }
     '''
 
     def command(self, name):
@@ -48,5 +55,5 @@ class RpmPackage(FactBase):
             if matches:
                 return {
                     'name': matches.group(1),
-                    'version': matches.group(2)
+                    'version': matches.group(2),
                 }

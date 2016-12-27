@@ -20,7 +20,7 @@ def packages(state, host, packages=None, present=True, latest=False, directory=N
     + directory: directory to manage packages for, defaults to global
 
     Versions:
-        Package versions can be pinned like npm: ``<pkg>@<version>``
+        Package versions can be pinned like npm: ``<pkg>@<version>``.
     '''
 
     current_packages = host.fact.npm_packages(directory)

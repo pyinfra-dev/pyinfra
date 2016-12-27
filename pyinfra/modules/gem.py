@@ -21,7 +21,7 @@ def packages(state, host, packages=None, present=True, latest=False):
     + latest: whether to upgrade packages without a specified version
 
     Versions:
-        Package versions can be pinned like gem: ``<pkg>:<version>``
+        Package versions can be pinned like gem: ``<pkg>:<version>``.
     '''
 
     yield ensure_packages(

@@ -132,12 +132,12 @@ def deb(state, host, source, present=True, force=False):
     + force: whether to force the package install by passing `--force-yes` to apt
 
     Note:
-        when installing, ``apt-get install -f`` will be run to install any unmet
-        dependencies
+        When installing, ``apt-get install -f`` will be run to install any unmet
+        dependencies.
 
     URL sources with ``present=False``:
-        if the ``.deb`` file isn't downloaded, pyinfra can't remove any existing package
-        as the file won't exist until mid-deploy
+        If the ``.deb`` file isn't downloaded, pyinfra can't remove any existing
+        package as the file won't exist until mid-deploy.
     '''
 
     # If source is a url
@@ -194,8 +194,9 @@ def update(state, host, touch_periodic=False):
 
     yield 'apt-get update'
 
-    # Some apt systems (Debian) have the /var/lib/apt/periodic directory, but don't
-    # bother touching anything in there - so pyinfra does it, enabling cache_time to work.
+    # Some apt systems (Debian) have the /var/lib/apt/periodic directory, but
+    # don't bother touching anything in there - so pyinfra does it, enabling
+    # cache_time to work.
     if touch_periodic:
         yield 'touch {0}'.format(APT_UPDATE_FILENAME)
 
