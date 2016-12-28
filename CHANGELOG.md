@@ -1,3 +1,20 @@
+# v0.3 (WIP)
+
+Mostly a maintenance release, with a few minor additions:
+
++ Add `config.MIN_PYINFRA_VERSION`
++ Add `daemon_reload` to `init.systemd`
++ Add `pip` path to `pip.packages` (@hoh)
++ Add `virtualenv_kwargs` to `pip.packages`
++ Add `socket` fact
++ Fact arguments now parsed with jinja2 like operation args
++ Use full dates in `file`, `directory` and `link` facts
++ Improve `--run` check between operation and/or shell
++ Improve tests with facts that have multiple arguments
++ Fix how `pip.packages` handles pip path
++ Fix `yum.rpm` when downloading already installed rpm's
++ Fix `users` fact with users that have no home directory
+
 # v0.2.2
 
 + Fix bug in parsing of network interfaces
