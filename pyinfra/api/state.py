@@ -7,9 +7,11 @@ from __future__ import division, unicode_literals
 from uuid import uuid4
 
 import six
-from gevent.pool import Pool
 
-from pyinfra import logger
+from gevent.pool import Pool
+from pkg_resources import parse_version
+
+from pyinfra import logger, __version__
 
 from .config import Config
 from .util import sha1_hash
@@ -82,6 +84,23 @@ class State(object):
         # If no config, create one using the defaults
         if config is None:
             config = Config()
+
+        # Error if our min version is not met
+        if config.MIN_PYINFRA_VERSION is not None:
+            running_version = parse_version(__version__)
+            needed_version = parse_version(
+                # Version must be a string
+                six.text_type(config.MIN_PYINFRA_VERSION)
+            )
+
+            if needed_version > running_version:
+                raise PyinfraError((
+                    'Minimum version not met '
+                    '(minimum={0}, running={1})'
+                ).format(
+                    config.MIN_PYINFRA_VERSION,
+                    __version__
+                ))
 
         if not config.PARALLEL:
             # If possible run everything in parallel, otherwise the max if defined above

@@ -13,6 +13,7 @@ INSTALL_REQUIRES = (
     'jinja2>2,<3',
     'python-dateutil>2,<3',
     'six>1,<2',
+    'setuptools',
 )
 
 TEST_REQUIRES = (

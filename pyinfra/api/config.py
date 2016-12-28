@@ -24,6 +24,9 @@ class Config(object):
     # Gevent pool size (defaults to #of target hosts)
     PARALLEL = None
 
+    # Specify a minimum required pyinfra version for a deploy
+    MIN_PYINFRA_VERSION = None
+
     # All these can be overridden inside individual operation calls:
 
     # Switch to this user (from ssh_user) using su before executing operations
