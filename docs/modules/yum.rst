@@ -60,12 +60,12 @@ Install/manage ``.rpm`` file packages.
 
     yum.rpm(source, present=True)
 
-+ **source**: filenameo or URL of the ``.rpm`` package
++ **source**: filename or URL of the ``.rpm`` package
 + **present**: whether ore not the package should exist on the system
 
 URL sources with ``present=False``:
-    if the ``.rpm`` file isn't downloaded, pyinfra can't remove any existing package
-    as the file won't exist until mid-deploy
+    If the ``.rpm`` file isn't downloaded, pyinfra can't remove any existing
+    package as the file won't exist until mid-deploy.
 
 
 :code:`yum.update`

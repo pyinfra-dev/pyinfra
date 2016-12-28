@@ -80,7 +80,10 @@ Manage the state of systemd managed services.
 
 .. code:: python
 
-    init.systemd(name, running=True, restarted=False, reloaded=False, command=None, enabled=None)
+    init.systemd(
+        name, running=True, restarted=False, reloaded=False, command=None, enabled=None,
+        daemon_reload=False
+    )
 
 + **name**: name of the service to manage
 + **running**: whether the service should be running
@@ -88,6 +91,7 @@ Manage the state of systemd managed services.
 + **reloaded**: whether the service should be reloaded
 + **command**: custom command to pass like: ``/etc/rc.d/<name> <command>``
 + **enabled**: whether this service should be enabled/disabled on boot
++ **daemon_reload**: reload the systemd daemon to read updated unit files
 
 
 :code:`init.upstart`

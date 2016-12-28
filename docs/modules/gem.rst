@@ -18,5 +18,5 @@ Manage gem packages.
 + **latest**: whether to upgrade packages without a specified version
 
 Versions:
-    Package versions can be pinned like gem: ``<pkg>:<version>``
+    Package versions can be pinned like gem: ``<pkg>:<version>``.
 

@@ -147,6 +147,10 @@ Files
     
 
 
+:code:`socket(name)`
+~~~~~~~~~~~~~~~~~~~~
+
+
 Gem
 ---
 
@@ -329,11 +333,11 @@ Npm
 Pip
 ---
 
-:code:`pip_packages(venv)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`pip_packages(pip)`
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    Returns a dict of installed pip packages globally or in a given virtualenv:
+    Returns a dict of installed pip packages:
 
     .. code:: python
 
@@ -474,4 +478,11 @@ Yum
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    Returns information on a .rpm file.
+    Returns information on a .rpm file:
+
+    .. code:: python
+
+        {
+            'name': 'my_package',
+            'version': '1.0.0'
+        }

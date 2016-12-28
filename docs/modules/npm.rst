@@ -16,5 +16,5 @@ Manage npm packages.
 + **directory**: directory to manage packages for, defaults to global
 
 Versions:
-    Package versions can be pinned like npm: ``<pkg>@<version>``
+    Package versions can be pinned like npm: ``<pkg>@<version>``.
 

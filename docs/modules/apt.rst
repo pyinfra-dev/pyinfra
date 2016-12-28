@@ -18,12 +18,12 @@ Install/manage ``.deb`` file packages.
 + **force**: whether to force the package install by passing `--force-yes` to apt
 
 Note:
-    when installing, ``apt-get install -f`` will be run to install any unmet
-    dependencies
+    When installing, ``apt-get install -f`` will be run to install any unmet
+    dependencies.
 
 URL sources with ``present=False``:
-    if the ``.deb`` file isn't downloaded, pyinfra can't remove any existing package
-    as the file won't exist until mid-deploy
+    If the ``.deb`` file isn't downloaded, pyinfra can't remove any existing
+    package as the file won't exist until mid-deploy.
 
 
 :code:`apt.key`
