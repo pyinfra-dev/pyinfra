@@ -112,7 +112,7 @@ class Users(FactBase):
 
                 # /blah: is just a home
                 if home_shell.endswith(':'):
-                    home = home_shell[:1]
+                    home = home_shell[:-1]
 
                 # :/blah is just a shell
                 elif home_shell.startswith(':'):
