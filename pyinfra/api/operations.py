@@ -79,7 +79,7 @@ def _run_op(state, hostname, op_hash):
         # Must be a string/shell command: execute it on the server w/op-level preferences
         else:
             try:
-                channel, _, stderr = run_shell_command(
+                status, _, stderr = run_shell_command(
                     state, hostname,
                     command.strip(),
                     sudo=sudo,
@@ -93,7 +93,6 @@ def _run_op(state, hostname, op_hash):
 
                 # Keep stderr in case of error
                 stderr_buffer.extend(stderr)
-                status = channel.exit_status == 0
 
             except timeout_error:
                 timeout_message = 'Operation timeout after {0}s'.format(op_meta['timeout'])

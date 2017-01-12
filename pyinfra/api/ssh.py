@@ -5,7 +5,6 @@
 from __future__ import division, unicode_literals, print_function
 
 from os import path
-from time import sleep
 from getpass import getpass
 from socket import (
     gaierror,
@@ -298,18 +297,11 @@ def run_shell_command(
     stdout = stdout_reader.get()
     stderr = stderr_reader.get()
 
-    # Wait until the exit code is ready. We have to sleep between checks to allow gevent
-    # to jump to the paramiko networking stack to receive the final exit code. Normally
-    # this is ready after reading out the buffers, but it's possible the exit code didn't
-    # make it into the final read.
-    ready = channel.exit_status_ready()
-    while ready is False:
-        logger.debug('--> Waiting for exit status...')
-        sleep(0.001)
-        ready = channel.exit_status_ready()
+    logger.debug('--> Waiting for exit status...')
+    exit_status = channel.recv_exit_status()
 
-    logger.debug('--> Command exit status: {0}'.format(channel.exit_status))
-    return channel, stdout, stderr
+    logger.debug('--> Command exit status: {0}'.format(exit_status))
+    return exit_status == 0, stdout, stderr
 
 
 def _get_sftp_connection(state, hostname):
@@ -362,13 +354,13 @@ def put_file(
         elif sudo_user:
             command = '{0} && chown {1} {2}'.format(command, sudo_user, remote_file)
 
-        channel, _, stderr = run_shell_command(
+        status, _, stderr = run_shell_command(
             state, hostname, command,
             sudo=sudo, sudo_user=sudo_user, su_user=su_user,
             print_output=print_output
         )
 
-        if channel.exit_status > 0:
+        if not status:
             logger.error('File error: {0}'.format('\n'.join(stderr)))
             return False
 
