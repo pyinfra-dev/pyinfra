@@ -129,9 +129,9 @@ def make_command(command, env=None, su_user=None, sudo=False, sudo_user=None):
     # Use sudo (w/user?)
     if sudo:
         if sudo_user:
-            command = "sudo -H -u {0} -S {1}".format(sudo_user, command)
+            command = 'sudo -H -u {0} -S {1}'.format(sudo_user, command)
         else:
-            command = "sudo -H -S {0}".format(command)
+            command = 'sudo -H -S {0}'.format(command)
 
     return command
 
@@ -267,15 +267,6 @@ def read_buffer(io, print_output=False, print_func=False):
     Reads a file-like buffer object into lines and optionally prints the output.
     '''
 
-    def _print(line):
-        if print_output:
-            if print_func:
-                print(print_func(line))
-            else:
-                print(line)
-
-    out = []
-
     # TODO: research this further - some steps towards handling stdin (ie password requests
     # from programs that don't notice there's no TTY to accept passwords from!). This just
     # prints output as below, but stores partial lines in a buffer, which could be printed
@@ -315,6 +306,15 @@ def read_buffer(io, print_output=False, print_func=False):
     #     line = buff.strip()
     #     out.append(line)
     #     _print(line)
+
+    def _print(line):
+        if print_output:
+            if print_func:
+                print(print_func(line))
+            else:
+                print(line)
+
+    out = []
 
     for line in io:
         # Handle local Popen shells returning list of bytes, not strings

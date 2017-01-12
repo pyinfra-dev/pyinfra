@@ -70,6 +70,7 @@ nettools_2_regexes = [
     )
 ]
 
+
 def _parse_regexes(regexes, lines):
     data = {
         'ipv4': {},
@@ -113,8 +114,7 @@ class NetworkDevices(FactBase):
         ...
     '''
 
-    from pyinfra.cli import FakeData
-    default = FakeData()
+    default = {}
     command = 'ifconfig'
 
     _start_regexes = [
