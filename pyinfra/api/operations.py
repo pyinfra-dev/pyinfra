@@ -19,7 +19,13 @@ from .ssh import run_shell_command, put_file
 def _run_op(state, hostname, op_hash):
     # Noop for this host?
     if op_hash not in state.ops[hostname]:
-        logger.debug('(Skipping) no op {0} on {1}'.format(op_hash, hostname))
+        logger.info('[{0}] {1}'.format(
+            colored(hostname, attrs=['bold']),
+            colored(
+                'Skipped',
+                'blue'
+            )
+        ))
         return True
 
     op_data = state.ops[hostname][op_hash]
