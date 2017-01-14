@@ -442,7 +442,7 @@ class TestOperationsApi(PatchSSHTest):
         with patch('pyinfra.api.operations.run_shell_command') as fake_run_command:
             fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
-                fake_channel,
+                False,
                 FakeBuffer('', fake_channel),
                 FakeBuffer('', fake_channel)
             )
@@ -467,7 +467,7 @@ class TestOperationsApi(PatchSSHTest):
         with patch('pyinfra.api.operations.run_shell_command') as fake_run_command:
             fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
-                fake_channel,
+                False,
                 FakeBuffer('', fake_channel),
                 FakeBuffer('', fake_channel)
             )

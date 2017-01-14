@@ -17,6 +17,9 @@ class FakeChannel(object):
     def exit_status_ready(self):
         return True
 
+    def recv_exit_status(self):
+        return self.exit_status
+
 
 class FakeBuffer(object):
     def __init__(self, data, channel):

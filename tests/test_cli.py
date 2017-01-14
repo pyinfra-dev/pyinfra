@@ -7,7 +7,9 @@ from unittest import TestCase
 
 import six
 
-from pyinfra.cli import CliError, setup_arguments
+from pyinfra.cli import CliError
+from pyinfra.cli.arguments import setup_arguments
+
 from pyinfra.modules import server
 
 
