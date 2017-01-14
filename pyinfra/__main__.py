@@ -65,11 +65,16 @@ colorama_init()  # noqa
 
 from pyinfra import logger, pseudo_state, pseudo_host, pseudo_inventory, hook, __version__
 from pyinfra.local import exec_file
-from pyinfra.cli import (
-    FakeHost, FakeState,
-    run_hook, dump_state, dump_trace, setup_logging,
-    make_inventory, load_config, load_deploy_config, setup_arguments,
-    print_meta, print_results, print_fact, print_facts_list, print_data
+
+from pyinfra.cli import run_hook
+from pyinfra.cli.arguments import setup_arguments
+from pyinfra.cli.config import load_config, load_deploy_config
+from pyinfra.cli.fake import FakeHost, FakeState
+from pyinfra.cli.inventory import make_inventory
+from pyinfra.cli.log import setup_logging
+from pyinfra.cli.prints import (
+    dump_state, dump_trace, print_inventory, print_facts_list,
+    print_fact, print_meta, print_results,
 )
 
 from pyinfra.api import State
@@ -180,7 +185,7 @@ try:
 
     # If --debug-data dump & exit
     if arguments['debug_data']:
-        print_data(inventory)
+        print_inventory(inventory)
         _exit()
 
     # Attach to pseudo inventory
@@ -310,7 +315,7 @@ try:
     # Always show meta output
     print()
     print('--> Proposed changes:')
-    print_meta(state)
+    print_meta(state, inventory)
 
     # If --debug-state, dump state (ops, op order, op meta) now & exit
     if arguments['debug_state']:
@@ -335,7 +340,7 @@ try:
         run_hook(state, 'after_deploy', hook_data)
 
         print('--> Results:')
-        print_results(state)
+        print_results(state, inventory)
 
 # Hook errors
 except hook.Error as e:
