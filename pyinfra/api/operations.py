@@ -62,8 +62,10 @@ def _run_op(state, hostname, op_hash):
 
             command = command['command']
 
+        # Now we attempt to execute the command
+
         # Tuples stand for callbacks & file uploads
-        elif isinstance(command, tuple):
+        if isinstance(command, tuple):
             # If first element is function, it's a callback
             if isinstance(command[0], FunctionType):
                 status = command[0](
