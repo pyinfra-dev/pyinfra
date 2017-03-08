@@ -131,18 +131,6 @@ def rpm(state, host, source, present=True):
         yield 'yum remove -y {0}'.format(info['name'])
 
 
-# TODO: remove this at some point
-# COMPAT: this used to, incorrectly, be yum.upgrade
-@operation
-def upgrade(state, host):
-    '''
-    **DEPRECATED** - please use ``yum.update`` as this will be removed in the future.
-    '''
-
-    logger.warning('yum.upgrade is deprecated and will be removed in 0.3, please use yum.update')
-    yield 'yum update -y'
-
-
 @operation
 def update(state, host):
     '''
@@ -158,9 +146,6 @@ _update = update  # noqa
 def packages(
     state, host, packages=None,
     present=True, latest=False, update=False, clean=False,
-    # TODO: remove this at some point
-    # COMPAT: as above, this should have always been update
-    upgrade=False,
 ):
     '''
     Manage yum packages & updates.
@@ -175,9 +160,7 @@ def packages(
     if clean:
         yield 'yum clean all'
 
-    # TODO: remove at some point
-    # COMPAT: used to be upgrade, now update
-    if update or upgrade:
+    if update:
         yield _update(state, host)
 
     yield ensure_packages(
