@@ -26,8 +26,8 @@ git tag -a "v$VERSION" -m "v$VERSION"
 git push --tags
 
 echo "# Upload to pypi..."
-# Clear dist
-rm -rf dist/*
+# Clear build & dist
+rm -rf build/* dist/*
 # Build source and wheel packages
 python setup.py sdist bdist_wheel
 # Upload w/Twine
