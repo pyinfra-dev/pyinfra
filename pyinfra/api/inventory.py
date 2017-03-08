@@ -119,17 +119,6 @@ class Inventory(object):
         if key in self.groups:
             return self.groups[key]
 
-        # TODO: remove at some point
-        # COMPAT: this provides compatability with 0.1 where inventory group names _had_
-        # to be defined in caps, but names were lowered before being added to the inventory.
-        # Now group names in caps will be left as-is, so check for that too.
-        elif key.upper() in self.groups:
-            logger.warning(
-                'Accessing groups defined in CAPS with lowercase is deprecated '
-                'and will be removed in 0.3, please use the name as-is'
-            )
-            return self.groups[key.upper()]
-
         raise NoGroupError('No such group: {0}'.format(key))
 
     def __len__(self):
