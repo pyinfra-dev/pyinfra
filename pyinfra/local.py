@@ -31,7 +31,7 @@ def include(filename, hosts=None):
         exec_file(filename)
     except IOError as e:
         raise PyinfraError(
-            'Could not include local file: {0}\n{1}'.format(filename, e)
+            'Could not include local file: {0}\n{1}'.format(filename, e),
         )
 
     # Always clear any host limit
@@ -61,7 +61,7 @@ def shell(commands):
         stdout = read_buffer(
             process.stdout,
             print_output=pseudo_state.print_output,
-            print_func=lambda line: '{0}{1}'.format(print_prefix, line)
+            print_func=lambda line: '{0}{1}'.format(print_prefix, line),
         )
 
         # Get & check result
@@ -72,7 +72,7 @@ def shell(commands):
 
         if result > 0:
             raise PyinfraError(
-                'Local command failed: {0}\n{1}'.format(command, stdout)
+                'Local command failed: {0}\n{1}'.format(command, stdout),
             )
 
         all_stdout.extend(stdout)
