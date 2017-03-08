@@ -292,6 +292,12 @@ def service(
     state, host,
     *args, **kwargs
 ):
+    '''
+    Manage the state of services. This command checks for the presence of all the
+    init systems pyinfra can handle and executes the relevant operation. See init
+    system sepcific operation for arguments.
+    '''
+
     if host.fact.which('systemctl'):
         yield systemd(state, host, *args, **kwargs)
         return
