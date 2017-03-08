@@ -21,7 +21,7 @@ def ensure_mode_int(mode):
     return mode
 
 
-def sed_replace(state, filename, line, replace, flags=None):
+def sed_replace(filename, line, replace, flags=None):
     flags = ''.join(flags) if flags else ''
 
     line = line.replace('/', '\/')

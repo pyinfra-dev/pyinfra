@@ -120,7 +120,7 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
     # Save commands for re-use in dynamic script when file not present at fact stage
     echo_command = 'echo "{0}" >> {1}'.format(line, name)
     sed_replace_command = sed_replace(
-        state, name, match_line, replace,
+        name, match_line, replace,
         flags=flags,
     )
 
@@ -154,7 +154,7 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
 
     # Line(s) exists and we want to remove them, replace with nothing
     elif present_lines and not present:
-        yield sed_replace(state, name, match_line, '', flags=flags)
+        yield sed_replace(name, match_line, '', flags=flags)
 
     # Line(s) exists and we have want to ensure they're correct
     elif present_lines and present:
@@ -174,7 +174,7 @@ def replace(state, host, name, match, replace, flags=None):
     + flags: list of flaggs to pass to sed
     '''
 
-    yield sed_replace(state, name, match, replace, flags=flags)
+    yield sed_replace(name, match, replace, flags=flags)
 
 
 @operation(pipeline_facts={
