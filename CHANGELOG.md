@@ -1,12 +1,11 @@
 # v0.3 (WIP)
 
-Mostly a maintenance release, with a few minor additions:
-
 + Add `config.MIN_PYINFRA_VERSION`
 + Add `daemon_reload` to `init.systemd`
 + Add `pip` path to `pip.packages` (@hoh)
 + Add `virtualenv_kwargs` to `pip.packages`
 + Add `socket` fact
++ Display meta and results in groups
 + Fact arguments now parsed with jinja2 like operation args
 + Use full dates in `file`, `directory` and `link` facts
 + Improve `--run` check between operation and/or shell
@@ -14,6 +13,8 @@ Mostly a maintenance release, with a few minor additions:
 + Fix how `pip.packages` handles pip path
 + Fix `yum.rpm` when downloading already installed rpm's
 + Fix `users` fact with users that have no home directory
++ Fix command overrides with dict objects (git.repo)
++ Removed compatability for deprecated changes in v0.2
 
 # v0.2.2
 
