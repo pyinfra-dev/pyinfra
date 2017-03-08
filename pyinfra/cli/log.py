@@ -29,7 +29,7 @@ class LogFormatter(logging.Formatter):
         logging.DEBUG: lambda s: colored(s, 'green'),
         logging.WARNING: lambda s: colored(s, 'yellow'),
         logging.ERROR: lambda s: colored(s, 'red'),
-        logging.CRITICAL: lambda s: colored(s, 'red', attrs=['bold'])
+        logging.CRITICAL: lambda s: colored(s, 'red', attrs=['bold']),
     }
 
     def format(self, record):

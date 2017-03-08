@@ -71,7 +71,7 @@ def get_pipeline_facts(state, name, args, sudo, sudo_user):
 
 def get_facts(
     state, name,
-    args=None, sudo=False, sudo_user=None, su_user=None
+    args=None, sudo=False, sudo_user=None, su_user=None,
 ):
     '''
     Get a single fact for all hosts in the state.
@@ -154,13 +154,13 @@ def get_facts(
             if ignore_errors:
                 logger.warning('[{0}] {1}'.format(
                     hostname,
-                    colored('Fact error (ignored)', 'yellow')
+                    colored('Fact error (ignored)', 'yellow'),
                 ))
             else:
                 failed_hosts.add(hostname)
                 logger.error('[{0}] {1}'.format(
                     hostname,
-                    colored('Fact error', 'red')
+                    colored('Fact error', 'red'),
                 ))
 
     log_name = colored(name, attrs=['bold'])

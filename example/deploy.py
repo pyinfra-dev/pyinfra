@@ -4,10 +4,10 @@
 #       targets: Ubuntu/Debian, CentOS/Fedora & OpenBSD
 
 # Host represents the *current* server begin managed
-from pyinfra import host, inventory, local, hook
+from pyinfra import hook, host, inventory, local
 
 # Modules provide namespaced operations, which do the work
-from pyinfra.modules import server, apt, yum, files, python, git, pip, init
+from pyinfra.modules import apt, files, git, init, pip, python, server, yum
 
 
 # Hooks inside deploy file
@@ -29,7 +29,7 @@ server.user(
     serial=False,
     run_once=False,
     get_pty=False,
-    timeout=30  # only applies to commands on the remote host (not SFTP, local Python)
+    timeout=30,  # only applies to commands on the remote host (not SFTP, local Python)
 )
 
 # And groups
@@ -37,7 +37,7 @@ server.group(
     {'Ensure pyinfra2 group exists'},  # use a set as the first arg to set the op name
     'pyinfra2',
     sudo=True,
-    run_once=True  # run only on one host
+    run_once=True,  # run only on one host
 )
 
 # Ensure the state of files
@@ -46,7 +46,7 @@ files.file(
     user='pyinfra',
     group='pyinfra',
     mode=644,
-    sudo=True
+    sudo=True,
 )
 
 # Ensure the state of directories
@@ -57,14 +57,14 @@ files.directory(
     mode=755,
     recursive=True,
     sudo=True,
-    serial=True
+    serial=True,
 )
 
 # Copy local files to remote host
 files.put(
     'files/file.txt',
     '/home/vagrant/file.txt',
-    mode=777
+    mode=777,
 )
 # and sync directories
 files.sync(
@@ -73,23 +73,23 @@ files.sync(
     user='pyinfra',
     group='pyinfra',
     delete=True,
-    sudo=True
+    sudo=True,
 )
 
 # Generate files from local jinja2 templates
 files.template(
     'templates/template.txt.j2',
-    '/home/vagrant/template.txt'
+    '/home/vagrant/template.txt',
 )
 
 # Execute arbitrary shell commands
 server.shell([
     'echo "Shell command"',
-    'echo "My hostname is {{ host.fact.hostname }}"'
+    'echo "My hostname is {{ host.fact.hostname }}"',
 ])
 # and scripts
 server.script(
-    'files/test.sh'
+    'files/test.sh',
 )
 
 # Manage init systems
@@ -97,13 +97,13 @@ init.d(
     'cron',
     running=True,
     sudo=True,
-    ignore_errors=True
+    ignore_errors=True,
 )
 
 # Include roles
 local.include(
     'roles/bsd_role.py',
-    hosts=inventory.bsd  # optionally limit the role to a subset of hosts
+    hosts=inventory.bsd,  # optionally limit the role to a subset of hosts
 )
 
 # Storing this fact to avoid typing it so much (because the example targets a whole bunch
@@ -117,7 +117,7 @@ if distro['name'] in ('Debian', 'Ubuntu'):
         ['git', 'python-pip'],
         sudo=True,
         update=True,
-        cache_time=3600
+        cache_time=3600,
     )
 
 elif distro['name'] in ('CentOS', 'Fedora'):
@@ -125,7 +125,7 @@ elif distro['name'] in ('CentOS', 'Fedora'):
         # Both missing in the CentOS 7 Vagrant image
         yum.packages(
             ['wget', 'net-tools'],
-            sudo=True
+            sudo=True,
         )
 
         # Manage remote rpm files
@@ -137,7 +137,7 @@ elif distro['name'] in ('CentOS', 'Fedora'):
     # yum package manager
     yum.packages(
         ['git', 'python-pip'],
-        sudo=True
+        sudo=True,
     )
 
     # Edit lines in files
@@ -145,7 +145,7 @@ elif distro['name'] in ('CentOS', 'Fedora'):
         '/etc/sysconfig/selinux',
         '^SELINUX=.*',
         replace='SELINUX=disabled',
-        sudo=True
+        sudo=True,
     )
 
 # Ensure the state of git repositories
@@ -153,7 +153,7 @@ git.repo(
     'https://github.com/Fizzadar/pyinfra',
     host.data.app_dir,
     branch='develop',
-    sudo=True
+    sudo=True,
     # Do the git clone/pull as the SSH user when using forwarding
     # use_ssh_user=True
 )
@@ -161,32 +161,32 @@ git.repo(
 # Manage pip (npm, gem) packages
 did_install = pip.packages(
     ['virtualenv'],
-    sudo=True
+    sudo=True,
 )
 # use operation meta to affect the deploy
 if did_install.changed:
     server.shell(
-        'echo "Clean package build/etc"'
+        'echo "Clean package build/etc"',
     )
 
 # Create a virtualenv
 server.shell(
     'virtualenv {{ host.data.env_dir }}',
     sudo=True,
-    sudo_user='pyinfra'
+    sudo_user='pyinfra',
 )
 # and manage pip within it
 pip.packages(
     ['ElasticQuery', 'JsonTest'],
     virtualenv=host.data.env_dir,
     sudo=True,
-    sudo_user='pyinfra'
+    sudo_user='pyinfra',
 )
 
 # Wait for services
 server.wait(
     port=22,
-    timeout=5
+    timeout=5,
 )
 
 

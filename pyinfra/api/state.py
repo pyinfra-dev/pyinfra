@@ -11,12 +11,12 @@ import six
 from gevent.pool import Pool
 from pkg_resources import parse_version
 
-from pyinfra import logger, __version__
+from pyinfra import __version__, logger
 
 from .config import Config
-from .util import sha1_hash
 from .exceptions import PyinfraError
 from .pipelining import PipelineFacts
+from .util import sha1_hash
 
 # Work out the max parallel we can achieve with the open files limit of the user/process,
 # take 10 for opening Python files and /3 for ~3 files per host during op runs.
@@ -90,7 +90,7 @@ class State(object):
             running_version = parse_version(__version__)
             needed_version = parse_version(
                 # Version must be a string
-                six.text_type(config.MIN_PYINFRA_VERSION)
+                six.text_type(config.MIN_PYINFRA_VERSION),
             )
 
             if needed_version > running_version:
@@ -99,7 +99,7 @@ class State(object):
                     '(minimum={0}, running={1})'
                 ).format(
                     config.MIN_PYINFRA_VERSION,
-                    __version__
+                    __version__,
                 ))
 
         if not config.PARALLEL:
@@ -151,7 +151,7 @@ class State(object):
             hostname: {
                 'ops': 0,  # one function call in a deploy file
                 'commands': 0,  # actual # of commands to run
-                'latest_op_hash': None
+                'latest_op_hash': None,
             }
             for hostname in hostnames
         }
@@ -162,7 +162,7 @@ class State(object):
                 'ops': 0,  # success_ops + failed ops w/ignore_errors
                 'success_ops': 0,
                 'error_ops': 0,
-                'commands': 0
+                'commands': 0,
             }
             for hostname in hostnames
         }
@@ -196,7 +196,7 @@ class State(object):
             percent_failed = (1 - len(active_hosts) / len(self.inventory)) * 100
             if percent_failed > self.config.FAIL_PERCENT:
                 raise PyinfraError('Over {0}% of hosts failed'.format(
-                    self.config.FAIL_PERCENT
+                    self.config.FAIL_PERCENT,
                 ))
 
     def get_temp_filename(self, hash_key=None):

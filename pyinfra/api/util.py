@@ -148,7 +148,7 @@ def get_arg_value(state, host, arg):
         template = get_template(arg, is_string=True)
         data = {
             'host': host,
-            'inventory': state.inventory
+            'inventory': state.inventory,
         }
 
         return template.render(data)

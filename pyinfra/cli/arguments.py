@@ -140,7 +140,7 @@ def setup_arguments(arguments):
                 arguments[key] = int(arguments[key])
             except ValueError:
                 raise CliError('{0} is not a valid integer for {1}'.format(
-                    arguments[key], key
+                    arguments[key], key,
                 ))
 
     # Prep --run OP ARGS

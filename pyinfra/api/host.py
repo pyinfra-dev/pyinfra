@@ -40,7 +40,7 @@ class Host(object):
             inventory.get_override_data(),
             inventory.get_host_data(name),
             inventory.get_groups_data(groups),
-            inventory.get_data()
+            inventory.get_data(),
         )
 
         # Attach the fact structure

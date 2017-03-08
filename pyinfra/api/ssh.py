@@ -8,7 +8,7 @@ from os import path
 from getpass import getpass
 from socket import (
     gaierror,
-    error as socket_error, timeout as timeout_error
+    error as socket_error, timeout as timeout_error,
 )
 
 import six
@@ -32,13 +32,13 @@ def _get_private_key(state, key_filename, key_password):
 
     ssh_key_filenames = [
         # Global from executed directory
-        path.expanduser(key_filename)
+        path.expanduser(key_filename),
     ]
 
     # Relative to the deploy
     if state.deploy_dir:
         ssh_key_filenames.append(
-            path.join(state.deploy_dir, key_filename)
+            path.join(state.deploy_dir, key_filename),
         )
 
     for filename in ssh_key_filenames:
@@ -61,15 +61,15 @@ def _get_private_key(state, key_filename, key_password):
                 if state.is_cli:
                     key_password = getpass(
                         'Enter password for private key: {0}: '.format(
-                            key_filename
-                        )
+                            key_filename,
+                        ),
                     )
 
             # API mode and no password? We can't continue!
                 else:
                     raise PyinfraError(
                         'Private key file ({0}) is encrypted, set ssh_key_password to '
-                        'use this key'.format(key_filename)
+                        'use this key'.format(key_filename),
                     )
 
             # Now, try opening the key with the password
@@ -83,8 +83,8 @@ def _get_private_key(state, key_filename, key_password):
             except SSHException:
                 raise PyinfraError(
                     'Incorrect password for private key: {0}'.format(
-                        key_filename
-                    )
+                        key_filename,
+                    ),
                 )
 
     # No break, so no key found
@@ -119,7 +119,7 @@ def connect(host, **kwargs):
         # Log
         logger.info('[{0}] {1}'.format(
             colored(name, attrs=['bold']),
-            colored('Connected', 'green')
+            colored('Connected', 'green'),
         ))
 
         return client
@@ -138,7 +138,7 @@ def connect(host, **kwargs):
 
     except socket_error as e:
         logger.error('Could not connect: {0}:{1}, {2}'.format(
-            name, kwargs.get('port', 22), e)
+            name, kwargs.get('port', 22), e),
         )
 
     except EOFError as e:
@@ -162,7 +162,7 @@ def connect_all(state):
             'timeout': state.config.TIMEOUT,
             # At this point we're assuming a password/key are provided
             'allow_agent': False,
-            'look_for_keys': False
+            'look_for_keys': False,
         }
 
         # Password auth (boo!)
@@ -244,9 +244,12 @@ def run_shell_command(
 
     debug_meta = {}
 
-    for key, value in six.iteritems({
-        'sudo': sudo, 'sudo_user': sudo_user, 'su_user': su_user, 'env': env
-    }):
+    for key, value in (
+        ('sudo', sudo),
+        ('sudo_user', sudo_user),
+        ('su_user', su_user),
+        ('env', env),
+    ):
         if value:
             debug_meta[key] = value
 
@@ -275,12 +278,12 @@ def run_shell_command(
     stdout_reader = gevent.spawn(
         read_buffer, stdout_buffer,
         print_output=print_output,
-        print_func=lambda line: '{0}{1}'.format(print_prefix, line)
+        print_func=lambda line: '{0}{1}'.format(print_prefix, line),
     )
     stderr_reader = gevent.spawn(
         read_buffer, stderr_buffer,
         print_output=print_output,
-        print_func=lambda line: '{0}{1}'.format(print_prefix, colored(line, 'red'))
+        print_func=lambda line: '{0}{1}'.format(print_prefix, colored(line, 'red')),
     )
 
     # Wait on output, with our timeout (or None)
@@ -327,7 +330,7 @@ def _put_file(state, hostname, filename_or_io, remote_location):
 
 def put_file(
     state, hostname, file_io, remote_file,
-    sudo=False, sudo_user=None, su_user=None, print_output=False
+    sudo=False, sudo_user=None, su_user=None, print_output=False,
 ):
     '''
     Upload file-ios to the specified host using SFTP. Supports uploading files with sudo
@@ -357,7 +360,7 @@ def put_file(
         status, _, stderr = run_shell_command(
             state, hostname, command,
             sudo=sudo, sudo_user=sudo_user, su_user=su_user,
-            print_output=print_output
+            print_output=print_output,
         )
 
         if not status:

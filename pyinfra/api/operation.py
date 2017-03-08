@@ -108,7 +108,7 @@ def operation(func=None, pipeline_facts=None):
 
             if state.in_op:
                 raise PyinfraError(
-                    'Nested operation called without state/host: {0}'.format(func)
+                    'Nested operation called without state/host: {0}'.format(func),
                 )
 
         # Otherwise (API mode) we just trim off the commands
@@ -125,7 +125,7 @@ def operation(func=None, pipeline_facts=None):
             # will be re-run once the facts are gathered.
             if not state.in_op:
                 state.ops_to_pipeline.append(
-                    (host.name, decorated_func, args, kwargs.copy())
+                    (host.name, decorated_func, args, kwargs.copy()),
                 )
 
         # Name the operation
@@ -190,7 +190,7 @@ def operation(func=None, pipeline_facts=None):
 
             op_hash = (
                 names, sudo, sudo_user, su_user, line_number,
-                ignore_errors, env, args, kwargs
+                ignore_errors, env, args, kwargs,
             )
 
         op_hash = make_hash(op_hash)

@@ -93,8 +93,8 @@ def print_meta(state, inventory):
             logger.info(
                 '[{0}]\tOperations: {1}\t    Commands: {2}'.format(
                     colored(host.name, attrs=['bold']),
-                    meta['ops'], meta['commands']
-                )
+                    meta['ops'], meta['commands'],
+                ),
             )
 
         if i != len(group_combinations):
@@ -113,7 +113,7 @@ def print_results(state, inventory):
             # Didn't conenct to this host?
             if host.name not in state.connected_hosts:
                 logger.info('[{0}]\tNo connection'.format(
-                    colored(host.name, 'red', attrs=['bold'])
+                    colored(host.name, 'red', attrs=['bold']),
                 ))
                 continue
 
@@ -139,7 +139,7 @@ def print_results(state, inventory):
                 error_ops
                 if error_ops == 0
                 else colored(error_ops, 'red', attrs=['bold']),
-                results['commands'], meta['commands']
+                results['commands'], meta['commands'],
             ))
 
         if i != len(group_combinations):

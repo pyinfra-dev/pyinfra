@@ -4,8 +4,6 @@
 
 import six
 
-from pyinfra import logger
-
 from .host import Host
 from .attrs import AttrData
 from .exceptions import NoHostError, NoGroupError
@@ -46,7 +44,7 @@ class Inventory(object):
             'ssh_key': ssh_key,
             'ssh_key_password': ssh_key_password,
             'ssh_port': ssh_port,
-            'ssh_password': ssh_password
+            'ssh_password': ssh_password,
         }
         # Strip None values
         override_data = {
@@ -187,7 +185,7 @@ class Inventory(object):
 
         for group in groups:
             data.update(
-                self.get_group_data(group).dict()
+                self.get_group_data(group).dict(),
             )
 
         return AttrData(data)

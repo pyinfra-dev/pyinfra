@@ -23,8 +23,8 @@ def _run_op(state, hostname, op_hash):
             colored(hostname, attrs=['bold']),
             colored(
                 'Skipped',
-                'blue'
-            )
+                'blue',
+            ),
         ))
         return True
 
@@ -35,7 +35,7 @@ def _run_op(state, hostname, op_hash):
     print_prefix = '{}: '.format(hostname, attrs=['bold'])
 
     logger.debug('Starting operation {0} on {1}'.format(
-        ', '.join(op_meta['names']), hostname
+        ', '.join(op_meta['names']), hostname,
     ))
 
     state.ops_run.add(op_hash)
@@ -126,8 +126,8 @@ def _run_op(state, hostname, op_hash):
             colored(hostname, attrs=['bold']),
             colored(
                 'Success' if len(op_data['commands']) > 0 else 'No changes',
-                'green'
-            )
+                'green',
+            ),
         ))
 
         return True
@@ -137,7 +137,7 @@ def _run_op(state, hostname, op_hash):
         for line in stderr_buffer:
             print('    {0}{1}'.format(
                 print_prefix,
-                colored(line, 'red')
+                colored(line, 'red'),
             ))
 
     # Up error_ops & log
@@ -146,12 +146,12 @@ def _run_op(state, hostname, op_hash):
     if op_meta['ignore_errors']:
         logger.warning('[{0}] {1}'.format(
             hostname,
-            colored('Error (ignored)', 'yellow')
+            colored('Error (ignored)', 'yellow'),
         ))
     else:
         logger.error('[{0}] {1}'.format(
             hostname,
-            colored('Error', 'red')
+            colored('Error', 'red'),
         ))
 
     # Ignored, op "completes" w/ ignored error
@@ -171,13 +171,13 @@ def _run_server_ops(state, hostname):
         logger.info('{0} {1} on {2}'.format(
             colored('Starting operation:', 'blue'),
             colored(', '.join(op_meta['names']), attrs=['bold']),
-            colored(hostname, attrs=['bold'])
+            colored(hostname, attrs=['bold']),
         ))
 
         result = _run_op(state, hostname, op_hash)
         if result is False:
             raise PyinfraError('Error in operation {0} on {1}'.format(
-                ', '.join(op_meta['names']), hostname
+                ', '.join(op_meta['names']), hostname,
             ))
 
         if state.print_lines:
@@ -224,10 +224,10 @@ def run_ops(state, serial=False, no_wait=False):
 
         logger.info('{0} {1} {2}'.format(
             colored('Starting{0}operation:'.format(
-                ' {0} '.format(', '.join(op_types)) if op_types else ' '
+                ' {0} '.format(', '.join(op_types)) if op_types else ' ',
             ), 'blue'),
             colored(', '.join(op_meta['names']), attrs=['bold']),
-            tuple(op_meta['args']) if op_meta['args'] else ''
+            tuple(op_meta['args']) if op_meta['args'] else '',
         ))
 
         failed_hosts = set()
@@ -244,7 +244,7 @@ def run_ops(state, serial=False, no_wait=False):
             # Spawn greenlet for each host
             greenlet_hosts = [
                 (host.name, state.pool.spawn(
-                    _run_op, state, host.name, op_hash
+                    _run_op, state, host.name, op_hash,
                 ))
                 for host in state.inventory
             ]

@@ -30,7 +30,7 @@ class PipelineFacts(object):
         # Actually build our ops
         for (host_name, func, args, kwargs) in self.state.ops_to_pipeline:
             logger.debug(
-                'Replaying op: {0}, args={1}, kwargs={2}'.format(func, args, kwargs)
+                'Replaying op: {0}, args={1}, kwargs={2}'.format(func, args, kwargs),
             )
 
             func(self.state, self.state.inventory[host_name], *args, **kwargs)
@@ -57,5 +57,5 @@ class PipelineFacts(object):
                     sudo_user = kwargs.get('sudo_user', self.state.config.SUDO_USER)
 
                     self.state.facts_to_pipeline.setdefault(
-                        (fact_name, sudo, sudo_user), set()
+                        (fact_name, sudo, sudo_user), set(),
                     ).add(fact_arg)

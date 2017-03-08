@@ -16,13 +16,13 @@ from . import CliError
 
 # Hosts in an inventory can be just the hostname or a tuple (hostname, data)
 ALLOWED_HOST_TYPES = tuple(
-    list(six.string_types) + [tuple]
+    list(six.string_types) + [tuple],
 )
 
 # Group data can be any "core" Python type
 ALLOWED_DATA_TYPES = tuple(
     list(six.string_types) + list(six.integer_types)
-    + [bool, dict, list, set, tuple, float, complex]
+    + [bool, dict, list, set, tuple, float, complex],
 )
 
 
@@ -63,8 +63,10 @@ def is_group_data(key, value):
 
 
 def make_inventory(
-    inventory_filename, deploy_dir=None, limit=None,
-    ssh_user=None, ssh_key=None, ssh_key_password=None, ssh_port=None, ssh_password=None
+    inventory_filename,
+    deploy_dir=None, limit=None,
+    ssh_user=None, ssh_key=None, ssh_key_password=None,
+    ssh_port=None, ssh_password=None,
 ):
     '''
     Builds a ``pyinfra.api.Inventory`` from the filesystem. If the file does not exist
@@ -96,7 +98,7 @@ def make_inventory(
 
         # Otherwise we assume the inventory is actually a hostname or list of hostnames
         groups = {
-            'all': inventory_filename.split(',')
+            'all': inventory_filename.split(','),
         }
 
     all_data = {}
@@ -148,7 +150,7 @@ def make_inventory(
             hosts, data = hosts
 
         data_filename = path.join(
-            deploy_dir, 'group_data', '{0}.py'.format(name.lower())
+            deploy_dir, 'group_data', '{0}.py'.format(name.lower()),
         )
         logger.debug('Looking for group data: {0}'.format(data_filename))
 
