@@ -1,0 +1,20 @@
+{
+    "args": ["nginx"],
+    "facts": {
+        "rcd_status": {
+            "nginx": false
+        },
+        "which": {
+            "systemctl": false,
+            "initctl": false
+        },
+        "directory": {
+            "/etc/init.d": false,
+            "/etc/rc.d": false
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "No init system found (no systemctl, initctl, /etc/init.d or /etc/rc.d found)"
+    }
+}

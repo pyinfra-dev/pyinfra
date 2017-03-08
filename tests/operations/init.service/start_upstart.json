@@ -1,0 +1,19 @@
+{
+    "args": ["nginx"],
+    "facts": {
+        "upstart_status": {
+            "nginx": false
+        },
+        "which": {
+            "systemctl": false,
+            "initctl": true
+        },
+        "directory": {
+            "/etc/init.d": false,
+            "/etc/rc.d": false
+        }
+    },
+    "commands": [
+        "initctl start nginx"
+    ]
+}

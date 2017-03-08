@@ -93,7 +93,7 @@ server.script(
 )
 
 # Manage init systems
-init.d(
+init.service(
     'cron',
     running=True,
     sudo=True,

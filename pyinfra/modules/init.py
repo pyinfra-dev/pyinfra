@@ -13,7 +13,7 @@ Manages the state and configuration of init services. Support for:
 
 from __future__ import unicode_literals
 
-from pyinfra.api import operation
+from pyinfra.api import operation, OperationError
 
 from . import files
 
@@ -285,3 +285,30 @@ def systemd(
 
     if daemon_reload:
         yield 'systemctl daemon-reload'
+
+
+@operation
+def service(
+    state, host,
+    *args, **kwargs
+):
+    if host.fact.which('systemctl'):
+        yield systemd(state, host, *args, **kwargs)
+        return
+
+    if host.fact.which('initctl'):
+        yield upstart(state, host, *args, **kwargs)
+        return
+
+    if host.fact.directory('/etc/init.d'):
+        yield d(state, host, *args, **kwargs)
+        return
+
+    if host.fact.directory('/etc/rc.d'):
+        yield rc(state, host, *args, **kwargs)
+        return
+
+    raise OperationError((
+        'No init system found '
+        '(no systemctl, initctl, /etc/init.d or /etc/rc.d found)'
+    ))
