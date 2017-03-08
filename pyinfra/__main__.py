@@ -69,7 +69,7 @@ from pyinfra.local import exec_file
 from pyinfra.cli import run_hook
 from pyinfra.cli.arguments import setup_arguments
 from pyinfra.cli.config import load_config, load_deploy_config
-from pyinfra.cli.fake import FakeHost, FakeState
+from pyinfra.cli.fake import FakeInventory, FakeHost, FakeState
 from pyinfra.cli.inventory import make_inventory
 from pyinfra.cli.log import setup_logging
 from pyinfra.cli.prints import (
@@ -171,6 +171,37 @@ try:
             )):
                 deploy_dir = inventory_path
 
+    # Set a fake state/host/inventory
+    pseudo_state.set(FakeState())
+    pseudo_host.set(FakeHost())
+    pseudo_inventory.set(FakeInventory())
+
+    # Load up any config.py from the filesystem
+    config = load_config(deploy_dir)
+
+    # Load any hooks/config from the deploy file
+    load_deploy_config(arguments['deploy'], config)
+
+    # Unset fake state/host/inventory
+    pseudo_host.reset()
+    pseudo_state.reset()
+    pseudo_inventory.reset()
+
+    # Arg based config overrides
+    if arguments['sudo']:
+        config.SUDO = True
+        if arguments['sudo_user']:
+            config.SUDO_USER = arguments['sudo_user']
+
+    if arguments['su_user']:
+        config.SU_USER = arguments['su_user']
+
+    if arguments['parallel']:
+        config.PARALLEL = arguments['parallel']
+
+    if arguments['fail_percent'] is not None:
+        config.FAIL_PERCENT = arguments['fail_percent']
+
     # Load up the inventory from the filesystem
     inventory, inventory_group = make_inventory(
         arguments['inventory'],
@@ -190,35 +221,6 @@ try:
 
     # Attach to pseudo inventory
     pseudo_inventory.set(inventory)
-
-    # Set a fake state/host
-    pseudo_state.set(FakeState())
-    pseudo_host.set(FakeHost())
-
-    # Load up any config.py from the filesystem
-    config = load_config(deploy_dir)
-
-    # Load any hooks/config from the deploy file
-    load_deploy_config(arguments['deploy'], config)
-
-    # Unset fake state/host
-    pseudo_host.reset()
-    pseudo_state.reset()
-
-    # Arg based config overrides
-    if arguments['sudo']:
-        config.SUDO = True
-        if arguments['sudo_user']:
-            config.SUDO_USER = arguments['sudo_user']
-
-    if arguments['su_user']:
-        config.SU_USER = arguments['su_user']
-
-    if arguments['parallel']:
-        config.PARALLEL = arguments['parallel']
-
-    if arguments['fail_percent'] is not None:
-        config.FAIL_PERCENT = arguments['fail_percent']
 
     # Create/set the state
     state = State(inventory, config)

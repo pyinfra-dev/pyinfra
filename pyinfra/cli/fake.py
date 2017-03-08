@@ -44,7 +44,7 @@ class FakeData(object):
 
     # Object use
     def __contains__(self, key):
-        return False
+        return True
 
     def __getattr__(self, key):
         return FakeData()
@@ -62,26 +62,14 @@ class FakeData(object):
         return iter([(FakeData(), FakeData())])
 
 
-class FakeHost(object):
-    @property
-    def data(self):
-        return FakeData()
-
-    @property
-    def host_data(self):
-        return FakeData()
-
-    @property
-    def fact(self):
-        return FakeData()
-
-    def __getattr__(self, key):
-        return FakeData()
-
-
-class FakeState(object):
+class FakeState(FakeData):
     active = False
     deploy_dir = ''
 
-    def __getattr__(self, key):
-        return FakeData()
+
+class FakeHost(FakeData):
+    pass
+
+
+class FakeInventory(FakeData):
+    pass
