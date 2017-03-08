@@ -1,6 +1,6 @@
 {
     "kwargs": {
-        "upgrade": true,
+        "update": true,
         "clean": true
     },
     "facts": {
