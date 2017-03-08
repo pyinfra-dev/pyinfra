@@ -59,8 +59,9 @@ def print_inventory(inventory):
 def get_group_combinations(inventory):
     group_combinations = {}
 
-    for host in inventory:
-        host_groups = tuple(host.groups)
+    for host in inventory.iter_all_hosts():
+        # Tuple for hashability, set to normalise order
+        host_groups = tuple(set(host.groups))
 
         group_combinations.setdefault(host_groups, [])
         group_combinations[host_groups].append(host)
@@ -81,12 +82,21 @@ def print_meta(state, inventory):
 
         for host in hosts:
             meta = state.meta[host.name]
-            logger.info(
-                '[{0}]\tOperations: {1}\t    Commands: {2}'.format(
-                    colored(host.name, attrs=['bold']),
-                    meta['ops'], meta['commands']
+
+            if host.name in state.active_hosts:
+                logger.info(
+                    '[{0}]\tOperations: {1}\t    Commands: {2}'.format(
+                        colored(host.name, attrs=['bold']),
+                        meta['ops'], meta['commands']
+                    )
                 )
-            )
+            else:
+                logger.info(
+                    '[{0}]\t{1}'.format(
+                        colored(host.name, attrs=['bold']),
+                        colored('No connection', 'red'),
+                    )
+                )
 
         if i != len(group_combinations):
             print()

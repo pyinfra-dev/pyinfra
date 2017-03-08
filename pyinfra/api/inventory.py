@@ -145,12 +145,20 @@ class Inventory(object):
         sense can be seen as the "active" list of hosts during a deploy.
         '''
 
-        for host in self.hosts.values():
+        for host in six.itervalues(self.hosts):
             if not self.state or not self.state.active_hosts:
                 yield host
 
             elif host.name in self.state.active_hosts:
                 yield host
+
+    def iter_all_hosts(self):
+        '''
+        Iterates over all inventory hosts, active or not.
+        '''
+
+        for host in six.itervalues(self.hosts):
+            yield host
 
     def get_data(self):
         '''
