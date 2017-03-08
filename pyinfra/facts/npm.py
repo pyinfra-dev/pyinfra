@@ -36,15 +36,3 @@ class NpmPackages(FactBase):
 
     def process(self, output):
         parse_packages(npm_regex, output)
-
-
-# TODO: remove at some point
-# COMPAT: above now covers both use cases
-class NpmLocalPackages(NpmPackages):
-    '''
-    [DEPRECATED] Maintained for backwards-compatability.
-    '''
-
-    def command(self, *args, **kwargs):
-        logger.warning('The npm_local_packages fact is depreciated and will be removed in 0.3, please use npm_packages')
-        return super(NpmLocalPackages, self).command(*args, **kwargs)
