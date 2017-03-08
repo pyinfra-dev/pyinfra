@@ -28,15 +28,3 @@ class PipPackages(FactBase):
 
     def process(self, output):
         return parse_packages(self._regex, output)
-
-
-# TODO: remove at some point
-# COMPAT: above now covers both use cases
-class PipVirtualenvPackages(PipPackages):
-    '''
-    [DEPRECATED] Maintained for backwards-compatability.
-    '''
-
-    def command(self, *args, **kwargs):
-        logger.warning('The pip_virtualenv_packages fact is depreciated and will be removed in 0.3, please use pip_packages')
-        return super(PipVirtualenvPackages, self).command(*args, **kwargs)
