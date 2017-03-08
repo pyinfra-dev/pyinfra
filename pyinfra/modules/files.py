@@ -23,11 +23,11 @@ from .util.files import chmod, chown, ensure_mode_int, sed_replace
 
 
 @operation(pipeline_facts={
-    'file': 'destination'
+    'file': 'destination',
 })
 def download(
     state, host, source_url, destination,
-    user=None, group=None, mode=None, cache_time=None, force=False
+    user=None, group=None, mode=None, cache_time=None, force=False,
 ):
     '''
     Download files from remote locations.
@@ -47,7 +47,7 @@ def download(
     # Destination is a directory?
     if info is False:
         raise OperationError(
-            'Destination {0} already exists and is not a file'.format(destination)
+            'Destination {0} already exists and is not a file'.format(destination),
         )
 
     # Do we download the file? Force by default
@@ -178,11 +178,11 @@ def replace(state, host, name, match, replace, flags=None):
 
 
 @operation(pipeline_facts={
-    'find_files': 'destination'
+    'find_files': 'destination',
 })
 def sync(
     state, host, source, destination,
-    user=None, group=None, mode=None, delete=False, exclude=None
+    user=None, group=None, mode=None, delete=False, exclude=None,
 ):
     '''
     Syncs a local directory with a remote one, with delete support. Note that delete will
@@ -240,7 +240,7 @@ def sync(
                     item for item in
                     (destination, remote_dirname, filename)
                     if item
-                )
+                ),
             ))
 
     # Ensure the destination directory
@@ -277,11 +277,11 @@ def sync(
 
 @operation(pipeline_facts={
     'file': 'remote_filename',
-    'sha1_file': 'remote_filename'
+    'sha1_file': 'remote_filename',
 })
 def put(
     state, host, local_filename, remote_filename,
-    user=None, group=None, mode=None, add_deploy_dir=True
+    user=None, group=None, mode=None, add_deploy_dir=True,
 ):
     '''
     Copy a local file to the remote system.
@@ -396,7 +396,7 @@ def template(
         relevant_lines = template_lines[max(line_number - 2, 0):line_number + 1]
 
         raise OperationError('Error in template: {0} (L{1}): {2}\n...\n{3}\n...'.format(
-            template_filename, line_number, e, '\n'.join(relevant_lines)
+            template_filename, line_number, e, '\n'.join(relevant_lines),
         ))
 
     output_file = six.StringIO(output)
@@ -407,16 +407,16 @@ def template(
         state, host,
         output_file, remote_filename,
         user=user, group=group, mode=mode,
-        add_deploy_dir=False
+        add_deploy_dir=False,
     )
 
 
 @operation(pipeline_facts={
-    'link': 'name'
+    'link': 'name',
 })
 def link(
     state, host, name,
-    target=None, present=True, user=None, group=None, symbolic=True
+    target=None, present=True, user=None, group=None, symbolic=True,
 ):
     '''
     Manage the state of links.
@@ -444,7 +444,7 @@ def link(
 
     add_cmd = 'ln{0} {1} {2}'.format(
         ' -s' if symbolic else '',
-        target, name
+        target, name,
     )
 
     remove_cmd = 'rm -f {0}'.format(name)
@@ -471,7 +471,7 @@ def link(
 
             if not path.isabs(info['link_target']):
                 info['link_target'] = path.normpath(
-                    '/'.join((link_dirname, info['link_target']))
+                    '/'.join((link_dirname, info['link_target'])),
                 )
 
         # If the target is wrong, remove & recreate the link
@@ -485,11 +485,11 @@ def link(
 
 
 @operation(pipeline_facts={
-    'file': 'name'
+    'file': 'name',
 })
 def file(
     state, host, name,
-    present=True, user=None, group=None, mode=None, touch=False
+    present=True, user=None, group=None, mode=None, touch=False,
 ):
     '''
     Manage the state of files.
@@ -537,11 +537,11 @@ def file(
 
 
 @operation(pipeline_facts={
-    'directory': 'name'
+    'directory': 'name',
 })
 def directory(
     state, host, name,
-    present=True, user=None, group=None, mode=None, recursive=False
+    present=True, user=None, group=None, mode=None, recursive=False,
 ):
     '''
     Manage the state of directories.

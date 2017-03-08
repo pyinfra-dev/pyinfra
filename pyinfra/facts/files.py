@@ -42,7 +42,7 @@ class Sha1File(FactBase):
 
     _regexes = [
         r'^([a-zA-Z0-9]{40})\s+%s$',
-        r'^SHA1\s+\(%s\)\s+=\s+([a-zA-Z0-9]{40})$'
+        r'^SHA1\s+\(%s\)\s+=\s+([a-zA-Z0-9]{40})$',
     ]
 
     def command(self, name):

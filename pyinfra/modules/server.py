@@ -76,7 +76,7 @@ def script(state, host, filename, chdir=None):
 
 @operation
 def group(
-    state, host, name, present=True, system=False
+    state, host, name, present=True, system=False,
 ):
     '''
     Manage system groups.
@@ -113,7 +113,7 @@ def group(
 def user(
     state, host, name,
     present=True, home=None, shell=None, group=None, groups=None,
-    public_keys=None, delete_keys=False, ensure_home=True, system=False
+    public_keys=None, delete_keys=False, ensure_home=True, system=False,
 ):
     '''
     Manage system users & their ssh `authorized_keys`. Options:
@@ -219,7 +219,7 @@ def user(
         if delete_keys:
             # Create a whole new authorized_keys file
             keys_file = six.StringIO('{0}\n'.format(
-                '\n'.join(public_keys)
+                '\n'.join(public_keys),
             ))
 
             # And ensure it exists

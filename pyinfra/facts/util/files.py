@@ -99,7 +99,7 @@ def parse_ls_output(output, wanted_type):
                 'user': matches.group(2),
                 'group': matches.group(3),
                 'size': matches.group(4),
-                'mtime': _parse_time(matches.group(5))
+                'mtime': _parse_time(matches.group(5)),
             }
 
             if type == 'link':

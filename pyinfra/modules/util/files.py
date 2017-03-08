@@ -28,7 +28,7 @@ def sed_replace(state, filename, line, replace, flags=None):
     replace = replace.replace('/', '\/')
 
     return 'sed -i "s/{0}/{1}/{2}" {3}'.format(
-        line, replace, flags, filename
+        line, replace, flags, filename,
     )
 
 
@@ -55,5 +55,5 @@ def chown(target, user, group=None, recursive=False, dereference=True):
         ' -R' if recursive else '',
         ' -h' if not dereference else '',
         user_group,
-        target
+        target,
     )

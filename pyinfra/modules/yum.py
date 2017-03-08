@@ -11,7 +11,6 @@ from __future__ import unicode_literals
 from six import StringIO
 from six.moves.urllib.parse import urlparse
 
-from pyinfra import logger
 from pyinfra.api import operation
 
 from . import files
@@ -35,7 +34,7 @@ def key(state, host, key):
 @operation
 def repo(
     state, host, name, baseurl,
-    present=True, description=None, gpgcheck=True, enabled=True
+    present=True, description=None, gpgcheck=True, enabled=True,
 ):
     '''
     Manage yum repositories.

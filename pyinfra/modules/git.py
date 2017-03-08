@@ -13,12 +13,12 @@ from .util.files import chown, chmod
 
 
 @operation(pipeline_facts={
-    'git_branch': 'target'
+    'git_branch': 'target',
 })
 def repo(
     state, host, source, target,
     branch='master', pull=True, rebase=False,
-    user=None, group=None, use_ssh_user=False, ssh_keyscan=False
+    user=None, group=None, use_ssh_user=False, ssh_keyscan=False,
 ):
     '''
     Manage git repositories.

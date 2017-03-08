@@ -22,7 +22,7 @@ def get_container_named(name, containers):
 @operation
 def container(
     state, host, name,
-    present=True, image='ubuntu:16.04'
+    present=True, image='ubuntu:16.04',
 ):
     '''
     Manage LXD containers.

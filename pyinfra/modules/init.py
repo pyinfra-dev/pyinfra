@@ -40,24 +40,24 @@ def _handle_service_control(
                 {start_command}
             fi
         '''.format(
-                status_command=formatter.format(name, status_argument),
-                start_command=(
-                    formatter.format(name, 'start')
-                    if running is True else 'true'
-                ),
-                stop_command=(
-                    formatter.format(name, 'stop')
-                    if running is False else 'true'
-                ),
-                restart_command=(
-                    formatter.format(name, 'restart')
-                    if restarted else 'true'
-                ),
-                reload_command=(
-                    formatter.format(name, 'reload')
-                    if reloaded else 'true'
-                ),
-            )
+            status_command=formatter.format(name, status_argument),
+            start_command=(
+                formatter.format(name, 'start')
+                if running is True else 'true'
+            ),
+            stop_command=(
+                formatter.format(name, 'stop')
+                if running is False else 'true'
+            ),
+            restart_command=(
+                formatter.format(name, 'restart')
+                if restarted else 'true'
+            ),
+            reload_command=(
+                formatter.format(name, 'reload')
+                if reloaded else 'true'
+            ),
+        )
 
     else:
         # Need down but running

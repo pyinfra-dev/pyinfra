@@ -11,7 +11,7 @@ def ensure_packages(
     packages, current_packages, present,
     install_command, uninstall_command,
     latest=False, upgrade_command=None,
-    version_join=None, lower=True
+    version_join=None, lower=True,
 ):
     '''
     Handles this common scenario:
@@ -115,11 +115,11 @@ def ensure_packages(
 
         yield '{0} {1}'.format(
             command,
-            ' '.join(diff_packages)
+            ' '.join(diff_packages),
         )
 
     if latest and upgrade_command and upgrade_packages:
         yield '{0} {1}'.format(
             upgrade_command,
-            ' '.join(upgrade_packages)
+            ' '.join(upgrade_packages),
         )

@@ -139,35 +139,35 @@ def rule(
     # --dport and --sport do not work without a protocol (because they need -m [tcp|udp]
     elif destination_port or source_port:
         raise OperationError(
-            'iptables cannot filter by destination_port/source_port without a protocol'
+            'iptables cannot filter by destination_port/source_port without a protocol',
         )
 
     # Verify NAT arguments, --to-destination only w/table=nat, jump=DNAT
     if to_destination and (table != 'nat' or jump != 'DNAT'):
         raise OperationError(
             'iptables only supports to_destination on the nat table and the DNAT jump '
-            '(table={0}, jump={1})'.format(table, jump)
+            '(table={0}, jump={1})'.format(table, jump),
         )
 
     # As above, --to-source only w/table=nat, jump=SNAT
     if to_source and (table != 'nat' or jump != 'SNAT'):
         raise OperationError(
             'iptables only supports to_source on the nat table and the SNAT jump '
-            '(table={0}, jump={1})'.format(table, jump)
+            '(table={0}, jump={1})'.format(table, jump),
         )
 
     # As above, --to-ports only w/table=nat, jump=REDIRECT
     if to_ports and (table != 'nat' or jump != 'REDIRECT'):
         raise OperationError(
             'iptables only supports to_ports on the nat table and the REDIRECT jump '
-            '(table={0}, jump={1})'.format(table, jump)
+            '(table={0}, jump={1})'.format(table, jump),
         )
 
     # --log-prefix is only supported with jump=LOG
     if log_prefix and jump != 'LOG':
         raise OperationError(
             'iptables only supports log_prefix with the LOG jump '
-            '(jump={0})'.format(jump)
+            '(jump={0})'.format(jump),
         )
 
     definition = {
@@ -230,7 +230,7 @@ def rule(
             # Add the table
             '-t', table,
             # Add the action and target chain
-            action, chain
+            action, chain,
         ]
 
         if protocol:

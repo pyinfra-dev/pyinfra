@@ -42,7 +42,7 @@ class BlockDevices(FactBase):
                     'used': matches.group(3),
                     'available': matches.group(4),
                     'used_percent': matches.group(5),
-                    'mount': matches.group(6)
+                    'mount': matches.group(6),
                 }
 
         return devices
@@ -51,30 +51,30 @@ class BlockDevices(FactBase):
 nettools_1_regexes = [
     (
         r'^inet addr:([0-9\.]+).+Bcast:([0-9\.]+).+Mask:([0-9\.]+)$',
-        ('ipv4', 'address', 'broadcast', 'netmask')
+        ('ipv4', 'address', 'broadcast', 'netmask'),
     ),
     (
         r'^inet6 addr: ([0-9a-z:]+)\/([0-9]+) Scope:Global',
-        ('ipv6', 'address', 'size')
-    )
+        ('ipv6', 'address', 'size'),
+    ),
 ]
 
 nettools_2_regexes = [
     (
         r'^inet ([0-9\.]+)\s+netmask ([0-9\.fx]+)\s+broadcast ([0-9\.]+)$',
-        ('ipv4', 'address', 'netmask', 'broadcast')
+        ('ipv4', 'address', 'netmask', 'broadcast'),
     ),
     (
         r'^inet6 ([0-9a-z:]+)\s+prefixlen ([0-9]+)',
-        ('ipv6', 'address', 'size')
-    )
+        ('ipv6', 'address', 'size'),
+    ),
 ]
 
 
 def _parse_regexes(regexes, lines):
     data = {
         'ipv4': {},
-        'ipv6': {}
+        'ipv6': {},
     }
 
     for line in lines:
@@ -120,12 +120,12 @@ class NetworkDevices(FactBase):
     _start_regexes = [
         (
             r'^([a-z0-9_:]+)\s+Link encap:',
-            lambda lines: _parse_regexes(nettools_1_regexes, lines)
+            lambda lines: _parse_regexes(nettools_1_regexes, lines),
         ),
         (
             r'^([a-z0-9_:]+): flags=',
-            lambda lines: _parse_regexes(nettools_2_regexes, lines)
-        )
+            lambda lines: _parse_regexes(nettools_2_regexes, lines),
+        ),
     ]
 
     def process(self, output):

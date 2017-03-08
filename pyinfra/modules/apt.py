@@ -92,7 +92,7 @@ def repo(state, host, name, present=True, filename=None):
     # Doesn't exist and we want it
     if not is_present and present:
         yield files.line(
-            state, host, filename, name
+            state, host, filename, name,
         )
 
     # Exists and we don't want it

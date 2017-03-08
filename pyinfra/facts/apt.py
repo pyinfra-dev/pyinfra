@@ -22,7 +22,7 @@ def parse_apt_repo(name):
             'type': matches.group(1),
             'url': matches.group(2),
             'distribution': matches.group(3),
-            'components': set(matches.group(4).split())
+            'components': set(matches.group(4).split()),
         }
 
 
