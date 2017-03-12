@@ -1,5 +1,6 @@
-# v0.3 (WIP)
+# v0.3
 
++ Add `init.service` operation
 + Add `config.MIN_PYINFRA_VERSION`
 + Add `daemon_reload` to `init.systemd`
 + Add `pip` path to `pip.packages` (@hoh)
