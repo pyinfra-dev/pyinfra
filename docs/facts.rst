@@ -309,14 +309,6 @@ Lxd
 Npm
 ---
 
-:code:`npm_local_packages`
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-    [DEPRECATED] Maintained for backwards-compatability.
-    
-
-
 :code:`npm_packages(directory)`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -343,14 +335,6 @@ Pip
 
         'package_name': 'version',
         ...
-    
-
-
-:code:`pip_virtualenv_packages`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-    [DEPRECATED] Maintained for backwards-compatability.
     
 
 

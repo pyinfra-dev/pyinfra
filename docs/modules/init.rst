@@ -73,6 +73,18 @@ Manage the state of BSD init (/etc/rc.d) service scripts.
 + **enabled**: whether this service should be enabled/disabled on boot
 
 
+:code:`init.service`
+~~~~~~~~~~~~~~~~~~~~
+
+Manage the state of services. This command checks for the presence of all the
+init systems pyinfra can handle and executes the relevant operation. See init
+system sepcific operation for arguments.
+
+.. code:: python
+
+    init.service()
+
+
 :code:`init.systemd`
 ~~~~~~~~~~~~~~~~~~~~
 
