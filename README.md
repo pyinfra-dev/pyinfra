@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/pyinfra.svg)](https://pypi.python.org/pypi/pyinfra) [![Travis.CI status](https://travis-ci.org/Fizzadar/pyinfra.svg?branch=develop)](https://travis-ci.org/Fizzadar/pyinfra)
 
-pyinfra automates service deployment. It does this by diff-ing the state of the server with the state defined in the deploy script. Deploys are asyncronous and highly performant. The inventory & deploy are managed with pure Python, allowing for near-infinite extendability.
+pyinfra manages the state of one or more servers. It can be used for app/service deployment, config management and ad-hoc command execution. Deploys are asynchronous, highly performant and can target thousands of hosts in parallel. The inventory of servers and deploy state are written in Python, allowing for near-infinite extendability.
 
 + [Getting started](https://pyinfra.readthedocs.org/page/getting_started.html)
 + [Documentation](https://pyinfra.readthedocs.org)
