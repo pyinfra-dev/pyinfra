@@ -1,9 +1,7 @@
 pyinfra
 =======
 
-pyinfra automates service deployment. It does this by diffing the state of the server with
-the state defined in the deploy script. Deploys are asyncronous and highly performant. The
-inventory & deploy are managed with pure Python, allowing for near-infinite extendability.
+pyinfra manages the state of one or more servers. It can be used for app/service deployment, config management and ad-hoc command execution. Deploys are asynchronous, highly performant and can target thousands of hosts in parallel. The inventory of servers and deploy state are written in Python, allowing for near-infinite extendability.
 
 pyinfra targets POSIX compatability and is currently tested against Ubuntu, Debian, CentOS,
 Fedora & OpenBSD.
