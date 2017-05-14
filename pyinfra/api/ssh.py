@@ -11,10 +11,10 @@ from socket import (
     error as socket_error, timeout as timeout_error,
 )
 
-import six
+import click
 import gevent
+import six
 
-from termcolor import colored
 from paramiko.agent import AgentRequestHandler
 from paramiko import (
     SSHClient, SFTPClient, RSAKey, MissingHostKeyPolicy,
@@ -118,8 +118,8 @@ def connect(host, **kwargs):
 
         # Log
         logger.info('[{0}] {1}'.format(
-            colored(name, attrs=['bold']),
-            colored('Connected', 'green'),
+            click.style(name, bold=True),
+            click.style('Connected', 'green'),
         ))
 
         return client
@@ -235,7 +235,7 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
-    print_prefix = '[{0}] '.format(colored(hostname, attrs=['bold']))
+    print_prefix = '[{0}] '.format(click.style(hostname, bold=True))
 
     if env is None:
         env = {}
@@ -283,7 +283,7 @@ def run_shell_command(
     stderr_reader = gevent.spawn(
         read_buffer, stderr_buffer,
         print_output=print_output,
-        print_func=lambda line: '{0}{1}'.format(print_prefix, colored(line, 'red')),
+        print_func=lambda line: '{0}{1}'.format(print_prefix, click.style(line, 'red')),
     )
 
     # Wait on output, with our timeout (or None)
@@ -337,7 +337,7 @@ def put_file(
     by uploading to a temporary directory then moving & chowning.
     '''
 
-    print_prefix = '[{0}] '.format(colored(hostname, attrs=['bold']))
+    print_prefix = '[{0}] '.format(click.style(hostname, bold=True))
 
     # sudo/su are a little more complicated, as you can only sftp with the SSH user
     # connected,  so upload to tmp and copy/chown w/sudo and/or su_user

@@ -12,9 +12,10 @@ from __future__ import division, unicode_literals
 from inspect import ismethod
 from socket import timeout as timeout_error
 
+import click
 import six
+
 from gevent.lock import Semaphore
-from termcolor import colored
 from paramiko import SSHException
 
 from pyinfra import logger
@@ -123,7 +124,6 @@ def get_facts(
         command = fact.command
 
         if ismethod(command):
-
             # Generate actual arguments by pasing strings as jinja2 templates
             host_args = [get_arg_value(state, host, arg) for arg in args]
 
@@ -155,16 +155,16 @@ def get_facts(
             if ignore_errors:
                 logger.warning('[{0}] {1}'.format(
                     hostname,
-                    colored('Fact error (ignored)', 'yellow'),
+                    click.style('Fact error (ignored)', 'yellow'),
                 ))
             else:
                 failed_hosts.add(hostname)
                 logger.error('[{0}] {1}'.format(
                     hostname,
-                    colored('Fact error', 'red'),
+                    click.style('Fact error', 'red'),
                 ))
 
-    log_name = colored(name, attrs=['bold'])
+    log_name = click.style(name, bold=True)
 
     if args:
         log = 'Loaded fact {0}: {1}'.format(log_name, args)

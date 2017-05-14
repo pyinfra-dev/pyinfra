@@ -2,26 +2,28 @@
 # File: pyinfra/api/operations.py
 # Desc: Runs operations from pyinfra._ops in various modes (parallel, no_wait, serial)
 
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
 
-from types import FunctionType
 from socket import timeout as timeout_error
+from types import FunctionType
+
+import click
 
 from gevent import joinall
-from termcolor import colored
 
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
+from pyinfra.api.ssh import put_file, run_shell_command
 
-from .ssh import run_shell_command, put_file
+from pyinfra.cli.log import print_blank
 
 
 def _run_op(state, hostname, op_hash):
     # Noop for this host?
     if op_hash not in state.ops[hostname]:
         logger.info('[{0}] {1}'.format(
-            colored(hostname, attrs=['bold']),
-            colored(
+            click.style(hostname, bold=True),
+            click.style(
                 'Skipped',
                 'blue',
             ),
@@ -32,7 +34,7 @@ def _run_op(state, hostname, op_hash):
     op_meta = state.op_meta[op_hash]
 
     stderr_buffer = []
-    print_prefix = '{}: '.format(hostname, attrs=['bold'])
+    print_prefix = '{0}: '.format(click.style(hostname, bold=True))
 
     logger.debug('Starting operation {0} on {1}'.format(
         ', '.join(op_meta['names']), hostname,
@@ -48,8 +50,8 @@ def _run_op(state, hostname, op_hash):
         sudo_user = op_meta['sudo_user']
         su_user = op_meta['su_user']
 
-        # As dicts, individual commands can override meta settings (ie on a per-host
-        # basis generated during deploy).
+        # As dicts, individual commands can override meta settings (ie on a
+        # per-host basis generated during deploy).
         if isinstance(command, dict):
             if 'sudo' in command:
                 sudo = command['sudo']
@@ -103,7 +105,9 @@ def _run_op(state, hostname, op_hash):
                 stderr_buffer.extend(stderr)
 
             except timeout_error:
-                timeout_message = 'Operation timeout after {0}s'.format(op_meta['timeout'])
+                timeout_message = 'Operation timeout after {0}s'.format(
+                    op_meta['timeout'],
+                )
                 stderr_buffer.append(timeout_message)
                 status = False
 
@@ -123,8 +127,8 @@ def _run_op(state, hostname, op_hash):
         state.results[hostname]['success_ops'] += 1
 
         logger.info('[{0}] {1}'.format(
-            colored(hostname, attrs=['bold']),
-            colored(
+            click.style(hostname, bold=True),
+            click.style(
                 'Success' if len(op_data['commands']) > 0 else 'No changes',
                 'green',
             ),
@@ -137,7 +141,7 @@ def _run_op(state, hostname, op_hash):
         for line in stderr_buffer:
             print('    {0}{1}'.format(
                 print_prefix,
-                colored(line, 'red'),
+                click.style(line, 'red'),
             ))
 
     # Up error_ops & log
@@ -146,12 +150,12 @@ def _run_op(state, hostname, op_hash):
     if op_meta['ignore_errors']:
         logger.warning('[{0}] {1}'.format(
             hostname,
-            colored('Error (ignored)', 'yellow'),
+            click.style('Error (ignored)', 'yellow'),
         ))
     else:
         logger.error('[{0}] {1}'.format(
             hostname,
-            colored('Error', 'red'),
+            click.style('Error', 'red'),
         ))
 
     # Ignored, op "completes" w/ ignored error
@@ -169,9 +173,9 @@ def _run_server_ops(state, hostname):
         op_meta = state.op_meta[op_hash]
 
         logger.info('{0} {1} on {2}'.format(
-            colored('Starting operation:', 'blue'),
-            colored(', '.join(op_meta['names']), attrs=['bold']),
-            colored(hostname, attrs=['bold']),
+            click.style('Starting operation:', 'blue'),
+            click.style(', '.join(op_meta['names']), bold=True),
+            click.style(hostname, bold=True),
         ))
 
         result = _run_op(state, hostname, op_hash)
@@ -179,9 +183,6 @@ def _run_server_ops(state, hostname):
             raise PyinfraError('Error in operation {0} on {1}'.format(
                 ', '.join(op_meta['names']), hostname,
             ))
-
-        if state.print_lines:
-            print()
 
 
 def run_ops(state, serial=False, no_wait=False):
@@ -223,10 +224,10 @@ def run_ops(state, serial=False, no_wait=False):
             op_types.append('run once')
 
         logger.info('{0} {1} {2}'.format(
-            colored('Starting{0}operation:'.format(
+            click.style('Starting{0}operation:'.format(
                 ' {0} '.format(', '.join(op_types)) if op_types else ' ',
             ), 'blue'),
-            colored(', '.join(op_meta['names']), attrs=['bold']),
+            click.style(', '.join(op_meta['names']), bold=True),
             tuple(op_meta['args']) if op_meta['args'] else '',
         ))
 
@@ -258,4 +259,4 @@ def run_ops(state, serial=False, no_wait=False):
             state.fail_hosts(failed_hosts)
 
         if state.print_lines:
-            print()
+            print_blank()
