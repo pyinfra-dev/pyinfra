@@ -2,33 +2,36 @@
 # File: pyinfra/local.py
 # Desc: run stuff locally, within the context of operations - utility for the CLI
 
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
 
 from os import path
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import PIPE, Popen, STDOUT
 
 import six
 
 from . import pseudo_state
-from .api.util import read_buffer, exec_file
 from .api.exceptions import PyinfraError
+from .api.util import ensure_hosts_list, exec_file, read_buffer
 
 
-def include(filename, hosts=None):
+def include(filename, hosts=False):
     '''
-    Executes a local python file within the ``pyinfra.pseudo_state.deploy_dir`` directory.
+    Executes a local python file within the ``pyinfra.pseudo_state.deploy_dir``
+    directory.
     '''
 
     if not pseudo_state.active:
         return
 
-    if hosts is not None:
-        pseudo_state.limit_hosts = list(hosts)
+    if hosts is not False:
+        hosts = ensure_hosts_list(hosts)
+        pseudo_state.limit_hosts = hosts
 
     filename = path.join(pseudo_state.deploy_dir, filename)
 
     try:
         exec_file(filename)
+
     except IOError as e:
         raise PyinfraError(
             'Could not include local file: {0}\n{1}'.format(filename, e),
@@ -36,7 +39,7 @@ def include(filename, hosts=None):
 
     # Always clear any host limit
     finally:
-        if isinstance(hosts, list):
+        if isinstance(hosts, (list, tuple)):
             pseudo_state.limit_hosts = None
 
 

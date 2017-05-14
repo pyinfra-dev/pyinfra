@@ -26,6 +26,9 @@ from .state import State
 from .attrs import wrap_attr_data
 from .util import make_hash, get_arg_value, unroll_generators
 from .exceptions import PyinfraError
+from .host import Host
+from .state import State
+from .util import ensure_hosts_list, get_arg_value, make_hash, unroll_generators
 
 
 class OperationMeta(object):
@@ -160,6 +163,16 @@ def operation(func=None, pipeline_facts=None):
         # Get a PTY before executing commands
         get_pty = kwargs.pop('get_pty', False)
 
+        # Limit this op to certain hosts
+        hosts = kwargs.pop('hosts', False)
+
+        # None means no hosts (see below), so use default False as None
+        if hosts is False:
+            hosts = None
+
+        else:
+            hosts = ensure_hosts_list(hosts)
+
         # Config env followed by command-level env
         env = state.config.ENV
         env.update(kwargs.pop('env', {}))
@@ -279,10 +292,13 @@ def operation(func=None, pipeline_facts=None):
                 if arg not in op_meta['args']:
                     op_meta['args'].append(arg)
 
-        # If we're limited, stop here - *after* we've created op_meta. This ensures the
-        # meta object always exists, even if no hosts actually ever execute the op (due
-        # to limit or otherwise).
-        if state.limit_hosts is not None and host not in state.limit_hosts:
+        # If we're limited, stop here - *after* we've created op_meta. This
+        # ensures the meta object always exists, even if no hosts actually ever
+        # execute the op (due to limit or otherwise).
+        if (
+            (state.limit_hosts is not None and host not in state.limit_hosts)
+            or (hosts is not None and host not in hosts)
+        ):
             return operation_meta
 
         # We're doing some commands, meta/ops++

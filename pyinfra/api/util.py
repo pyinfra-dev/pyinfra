@@ -2,7 +2,7 @@
 # File: pyinfra/api/util.py
 # Desc: utility functions
 
-from __future__ import division, unicode_literals, print_function
+from __future__ import division, print_function, unicode_literals
 
 import re
 from hashlib import sha1
@@ -20,6 +20,16 @@ BLOCKSIZE = 65536
 # Template cache
 TEMPLATES = {}
 FILE_SHAS = {}
+
+
+def ensure_hosts_list(hosts):
+    if hosts is None:
+        return []
+
+    if not isinstance(hosts, (list, tuple)):
+        return [hosts]
+
+    return hosts
 
 
 def unroll_generators(generator):
