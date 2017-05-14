@@ -18,10 +18,10 @@ except ImportError:
     from io import IOBase
     io_bases = IOBase
 
-from termcolor import colored
+import click
 
-from pyinfra.hook import HOOKS
 from pyinfra.api.exceptions import PyinfraError
+from pyinfra.hook import HOOKS
 
 
 class CliError(PyinfraError):
@@ -35,7 +35,7 @@ def run_hook(state, hook_name, hook_data):
         for hook in hooks:
             print('--> Running hook: {0}/{1}'.format(
                 hook_name,
-                colored(hook.__name__, attrs=['bold'])
+                click.style(hook.__name__, bold=True),
             ))
             hook(hook_data, state)
 

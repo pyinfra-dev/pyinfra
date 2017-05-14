@@ -7,22 +7,27 @@ from __future__ import print_function, unicode_literals
 import json
 import traceback
 
+import click
 import six
-
-from termcolor import colored
 
 from pyinfra import logger
 from pyinfra.api.facts import get_fact_names
 
 from . import json_encode
+from .log import print_blank
 
 
-def print_facts_list():
-    print(json.dumps(list(get_fact_names()), indent=4, default=json_encode))
+def _get_group_combinations(inventory):
+    group_combinations = {}
 
+    for host in inventory.iter_all_hosts():
+        # Tuple for hashability, set to normalise order
+        host_groups = tuple(set(host.groups))
 
-def print_fact(fact_data):
-    print(json.dumps(fact_data, indent=4, default=json_encode))
+        group_combinations.setdefault(host_groups, [])
+        group_combinations[host_groups].append(host)
+
+    return group_combinations
 
 
 def dump_trace(exc_info):
@@ -49,36 +54,58 @@ def dump_state(state):
     print(json.dumps(state.op_order, indent=4, default=json_encode))
 
 
+def print_facts_list():
+    fact_names = sorted(get_fact_names())
+
+    items = []
+    last_name = None
+
+    for name in fact_names:
+        # Keep all facts with the same first character on one line
+        if last_name is None or last_name[0] == name[0]:
+            items.append(name)
+
+        else:
+            print('    {0}'.format(', '.join((
+                click.style(name, bold=True)
+                for name in items
+            ))))
+
+            items = [name]
+
+        last_name = name
+
+
+def print_fact(fact_data):
+    print(json.dumps(fact_data, indent=4, default=json_encode))
+
+
 def print_inventory(inventory):
     for host in inventory:
-        print('[{0}]'.format(colored(host.name, attrs=['bold'])))
+        print_blank()
+        print('--> Data for: {0}'.format(click.style(host.name, bold=True)))
         print(json.dumps(host.data.dict(), indent=4, default=json_encode))
-        print()
 
 
-def get_group_combinations(inventory):
-    group_combinations = {}
-
-    for host in inventory.iter_all_hosts():
-        # Tuple for hashability, set to normalise order
-        host_groups = tuple(set(host.groups))
-
-        group_combinations.setdefault(host_groups, [])
-        group_combinations[host_groups].append(host)
-
-    return group_combinations
+def print_facts(facts):
+    for name, data in six.iteritems(facts):
+        print_blank()
+        print('--> Fact data for: {0}'.format(
+            click.style(name, bold=True),
+        ))
+        print_fact(data)
 
 
 def print_meta(state, inventory):
-    group_combinations = get_group_combinations(inventory)
+    group_combinations = _get_group_combinations(inventory)
 
     for i, (groups, hosts) in enumerate(six.iteritems(group_combinations), 1):
         if groups:
             logger.info('Groups: {0}'.format(
-                colored(' / '.join(groups), attrs=['bold']),
+                click.style(' / '.join(groups), bold=True),
             ))
         else:
-            logger.info('Ungrouped')
+            logger.info('Ungrouped:')
 
         for host in hosts:
             meta = state.meta[host.name]
@@ -86,13 +113,13 @@ def print_meta(state, inventory):
             # Didn't connect to this host?
             if host.name not in state.connected_hosts:
                 logger.info('[{0}]\tNo connection'.format(
-                    colored(host.name, 'red', attrs=['bold']),
+                    click.style(host.name, 'red', bold=True),
                 ))
                 continue
 
             logger.info(
                 '[{0}]\tOperations: {1}\t    Commands: {2}'.format(
-                    colored(host.name, attrs=['bold']),
+                    click.style(host.name, bold=True),
                     meta['ops'], meta['commands'],
                 ),
             )
@@ -102,18 +129,21 @@ def print_meta(state, inventory):
 
 
 def print_results(state, inventory):
-    group_combinations = get_group_combinations(inventory)
+    group_combinations = _get_group_combinations(inventory)
 
     for i, (groups, hosts) in enumerate(six.iteritems(group_combinations), 1):
-        logger.info('Groups: {0}'.format(
-            colored(' / '.join(groups), attrs=['bold']),
-        ))
+        if groups:
+            logger.info('Groups: {0}'.format(
+                click.style(' / '.join(groups), bold=True),
+            ))
+        else:
+            logger.info('Ungrouped:')
 
         for host in hosts:
             # Didn't conenct to this host?
             if host.name not in state.connected_hosts:
                 logger.info('[{0}]\tNo connection'.format(
-                    colored(host.name, 'red', attrs=['bold']),
+                    click.style(host.name, 'red', bold=True),
                 ))
                 continue
 
@@ -127,18 +157,18 @@ def print_results(state, inventory):
             if results['ops'] == meta['ops']:
                 # Yellow if ignored any errors, else green
                 color = 'green' if error_ops == 0 else 'yellow'
-                host_string = colored(host.name, color)
+                host_string = click.style(host.name, color)
 
             # Ops did not complete!
             else:
-                host_string = colored(host.name, 'red', attrs=['bold'])
+                host_string = click.style(host.name, 'red', bold=True)
 
             logger.info('[{0}]\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}/{4}'.format(
                 host_string,
-                colored(success_ops, attrs=['bold']),
+                click.style(six.text_type(success_ops), bold=True),
                 error_ops
                 if error_ops == 0
-                else colored(error_ops, 'red', attrs=['bold']),
+                else click.style(six.text_type(error_ops), 'red', bold=True),
                 results['commands'], meta['commands'],
             ))
 

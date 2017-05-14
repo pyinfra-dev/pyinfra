@@ -5,4 +5,4 @@ from gevent import monkey
 monkey.patch_all()
 
 # Boot pyinfra
-from pyinfra import __main__  # noqa
+from pyinfra.cli import __main__  # noqa

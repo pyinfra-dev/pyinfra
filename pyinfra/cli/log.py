@@ -2,18 +2,38 @@
 # File: pyinfra/cli/log.py
 # Desc: logging for the CLI
 
+from __future__ import division
+
 import logging
 import re
 import sys
 
-import six
+from collections import deque
+from threading import Thread
+from time import sleep
 
-from termcolor import colored
+import click
+import six
 
 from pyinfra import logger
 
 STDOUT_LOG_LEVELS = (logging.DEBUG, logging.INFO)
 STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
+
+
+def print_spinner():
+    wait_chars = deque(('-', '/', '|', '\\'))
+
+    while True:
+        wait_chars.rotate(1)
+        sys.stdout.write('    {0}\r'.format(wait_chars[0]))
+        sys.stdout.flush()
+        sleep(1 / 20)
+
+
+def print_blank():
+    # Print 5 blank characters, removing any spinner leftover
+    print('     ')
 
 
 class LogFilter(logging.Filter):
@@ -26,14 +46,17 @@ class LogFilter(logging.Filter):
 
 class LogFormatter(logging.Formatter):
     level_to_format = {
-        logging.DEBUG: lambda s: colored(s, 'green'),
-        logging.WARNING: lambda s: colored(s, 'yellow'),
-        logging.ERROR: lambda s: colored(s, 'red'),
-        logging.CRITICAL: lambda s: colored(s, 'red', attrs=['bold']),
+        logging.DEBUG: lambda s: click.style(s, 'green'),
+        logging.WARNING: lambda s: click.style(s, 'yellow'),
+        logging.ERROR: lambda s: click.style(s, 'red'),
+        logging.CRITICAL: lambda s: click.style(s, 'red', bold=True),
     }
 
     def format(self, record):
         message = record.msg
+
+        if record.args:
+            message = record.msg % record.args
 
         # We only handle strings here
         if isinstance(message, six.string_types):
@@ -76,3 +99,7 @@ def setup_logging(log_level):
     # Add the handlers
     logger.addHandler(stdout_handler)
     logger.addHandler(stderr_handler)
+
+    spinner_thread = Thread(target=print_spinner)
+    spinner_thread.daemon = True
+    spinner_thread.start()
