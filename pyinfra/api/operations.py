@@ -71,7 +71,7 @@ def _run_op(state, hostname, op_hash):
             # If first element is function, it's a callback
             if isinstance(command[0], FunctionType):
                 status = command[0](
-                    state, state.inventory[hostname], hostname,
+                    state, state.inventory.get_host(hostname), hostname,
                     *command[1], **command[2]
                 )
 

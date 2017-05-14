@@ -98,12 +98,13 @@ init.service(
     running=True,
     sudo=True,
     ignore_errors=True,
+    hosts=inventory.get_host('ubuntu14.pyinfra'),
 )
 
 # Include roles
 local.include(
     'roles/bsd_role.py',
-    hosts=inventory.bsd,  # optionally limit the role to a subset of hosts
+    hosts=inventory.get_group('bsd'),
 )
 
 # Storing this fact to avoid typing it so much (because the example targets a whole bunch
@@ -194,5 +195,6 @@ server.wait(
 def some_python(state, host, hostname, *args, **kwargs):
     print('connecting hostname: {0}, actual: {1}'.format(hostname, host.fact.hostname))
     local.shell('echo "local stuff!"')
+
 
 python.execute(some_python, 'arg1', 'arg2', kwarg='hello world')

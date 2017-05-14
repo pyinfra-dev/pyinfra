@@ -4,9 +4,11 @@
 
 import six
 
-from .host import Host
+from pyinfra import logger
+
 from .attrs import AttrData
-from .exceptions import NoHostError, NoGroupError
+from .exceptions import NoGroupError, NoHostError
+from .host import Host
 
 
 class Inventory(object):
@@ -101,8 +103,16 @@ class Inventory(object):
 
     def __getitem__(self, key):
         '''
-        Get individual hosts from the inventory by name.
+        DEPRECATED: please use ``Inventory.get_host`` instead.
         '''
+
+        # COMPAT w/ <0.4
+        # TODO: remove this function
+
+        logger.warning((
+            'Use of Inventory[<host_name>] is deprecated, '
+            'please use `Inventory.get_host` instead.'
+        ))
 
         if key in self.hosts:
             return self.hosts[key]
@@ -111,8 +121,16 @@ class Inventory(object):
 
     def __getattr__(self, key):
         '''
-        Get groups (lists of hosts) from the inventory by name.
+        DEPRECATED: please use ``Inventory.get_group`` instead.
         '''
+
+        # COMPAT w/ <0.4
+        # TODO: remove this function
+
+        logger.warning((
+            'Use of Inventory.<group_name> is deprecated, '
+            'please use `Inventory.get_group` instead.'
+        ))
 
         if key in self.groups:
             return self.groups[key]
@@ -147,6 +165,20 @@ class Inventory(object):
         for host in six.itervalues(self.hosts):
             yield host
 
+    def get_host(self, name, default=None):
+        '''
+        Get a single host by name.
+        '''
+
+        return self.hosts.get(name, default)
+
+    def get_group(self, name, default=None):
+        '''
+        Get a list of hosts belonging to a group.
+        '''
+
+        return self.groups.get(name, default)
+
     def get_data(self):
         '''
         Get the base/all data attached to this inventory.
@@ -166,7 +198,7 @@ class Inventory(object):
         Get data for a single host in this inventory.
         '''
 
-        return self.host_data[hostname]
+        return self.host_data.get(hostname, {})
 
     def get_group_data(self, group):
         '''
