@@ -36,7 +36,7 @@ def get_fact_names():
     Returns a list of available facts in camel_case format.
     '''
 
-    return FACTS.keys()
+    return list(six.iterkeys(FACTS))
 
 
 class FactMeta(type):
