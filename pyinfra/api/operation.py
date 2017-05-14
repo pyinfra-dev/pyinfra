@@ -3,28 +3,25 @@
 # Desc: wraps deploy script operations and puts commands -> pyinfra._ops
 
 '''
-Operations are the core of pyinfra. The ``@operation`` wrapper intercepts calls to the
-function and instead diff against the remote server, outputting commands to the deploy
-state. This is then run later by pyinfra's ``__main__`` or the :doc:`./api_operations`
-module.
+Operations are the core of pyinfra. The ``@operation`` wrapper intercepts calls
+to the function and instead diff against the remote server, outputting commands
+to the deploy state. This is then run later by pyinfra's ``__main__`` or the
+:doc:`./api_operations` module.
 '''
 
 from __future__ import unicode_literals
 
-from os import path
-from inspect import stack
 from functools import wraps
+from inspect import stack
+from os import path
 from types import FunctionType
 
 import six
 
-from pyinfra import pseudo_state, pseudo_host
+from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.pseudo_modules import PseudoModule
 
-from .host import Host
-from .state import State
 from .attrs import wrap_attr_data
-from .util import make_hash, get_arg_value, unroll_generators
 from .exceptions import PyinfraError
 from .host import Host
 from .state import State
@@ -57,15 +54,16 @@ def add_op(state, op_func, *args, **kwargs):
 
 def add_limited_op(state, op_func, hosts, *args, **kwargs):
     '''
-    Prepare & add an operation to pyinfra.state by executing it on all hosts.
-
-    Args:
-        state (``pyinfra.api.State`` obj): the deploy state to add the operation to
-        op_func (function): the operation function from one of the modules, ie \
-            ``server.user``
-        hosts (``pyinfra.api.Host`` obj or list): hosts this operation will be limited to
-        args/kwargs: passed to the operation function
+    DEPRECATED: please use ``add_op`` with the ``hosts`` kwarg.
     '''
+
+    # COMPAT w/ <0.4
+    # TODO: remove this function
+
+    logger.warning((
+        'Use of `add_limited_op` is deprecated, '
+        'please use `add_op` with the `hosts` kwarg instead.'
+    ))
 
     if not isinstance(hosts, (list, tuple)):
         hosts = [hosts]
@@ -82,11 +80,12 @@ def add_limited_op(state, op_func, hosts, *args, **kwargs):
 
 def operation(func=None, pipeline_facts=None):
     '''
-    Decorator that takes a simple module function and turn it into the internal operation
-    representation that consists of a list of commands + options (sudo, (sudo|su)_user, env).
+    Decorator that takes a simple module function and turn it into the internal
+    operation representation that consists of a list of commands + options
+    (sudo, (sudo|su)_user, env).
     '''
 
-    # If not decorating, return a decorator which attaches any config to the function
+    # If not decorating, return function with config attached
     if func is None:
         def decorator(func):
             setattr(func, 'pipeline_facts', pipeline_facts)
@@ -97,8 +96,8 @@ def operation(func=None, pipeline_facts=None):
     # Actually decorate!
     @wraps(func)
     def decorated_func(*args, **kwargs):
-        # If we're in CLI mode, there's no state/host passed down, we need to use the
-        # global "pseudo" modules.
+        # If we're in CLI mode, there's no state/host passed down, we need to
+        # use the global "pseudo" modules.
         if len(args) < 2 or not (
             isinstance(args[0], (State, PseudoModule))
             and isinstance(args[1], (Host, PseudoModule))
@@ -110,9 +109,9 @@ def operation(func=None, pipeline_facts=None):
                 return OperationMeta()
 
             if state.in_op:
-                raise PyinfraError(
-                    'Nested operation called without state/host: {0}'.format(func),
-                )
+                raise PyinfraError((
+                    'Nested operation called without state/host: {0}'
+                ).format(func))
 
         # Otherwise (API mode) we just trim off the commands
         else:
@@ -124,8 +123,8 @@ def operation(func=None, pipeline_facts=None):
         if state.pipelining:
             state.pipeline_facts.process(func, decorated_func, args, kwargs)
 
-            # Not in op? Just drop the op into state.ops_to_pipeline and return here, this
-            # will be re-run once the facts are gathered.
+            # Not in op? Just drop the op into state.ops_to_pipeline and return
+            # here, this will be re-run once the facts are gathered.
             if not state.in_op:
                 state.ops_to_pipeline.append(
                     (host.name, decorated_func, args, kwargs.copy()),
@@ -146,7 +145,9 @@ def operation(func=None, pipeline_facts=None):
             autoname = True
             module_bits = func.__module__.split('.')
             module_name = module_bits[-1]
-            names = {'{0}/{1}'.format(module_name.title(), func.__name__.title())}
+            names = {
+                '{0}/{1}'.format(module_name.title(), func.__name__.title()),
+            }
 
         # Locally & globally configurable
         sudo = kwargs.pop('sudo', state.config.SUDO)
@@ -181,15 +182,16 @@ def operation(func=None, pipeline_facts=None):
         op_hash = kwargs.pop('op', None)
 
         # If this op is being called inside another, just return here
-        # (any unwanted/op-related kwargs removed above)
+        # (any unwanted/op-related kwargs removed above).
         if state.in_op:
             return func(state, host, *args, **kwargs) or []
 
         # Convert any AttrBase items (returned by host.data), see attrs.py.
         if op_hash is None:
-            # Get the line number where this operation was called by looking through the
-            # call stack for the first non-pyinfra line. This ensures two identical
-            # operations (in terms of arguments/meta) will still generate two hashes.
+            # Get the line number where this operation was called by looking
+            # through the call stack for the first non-pyinfra line. This ensures
+            # two identical operations (in terms of arguments/meta) will still
+            # generate two hashes.
             frames = stack()
             line_number = None
 
@@ -212,9 +214,10 @@ def operation(func=None, pipeline_facts=None):
         state.in_op = True
         state.current_op_meta = (sudo, sudo_user, su_user, ignore_errors)
 
-        # Generate actual arguments by parsing strings as jinja2 templates. This means
-        # you can string format arguments w/o generating multiple operations. Only affects
-        # top level operations, as must be run "in_op" so facts are gathered correctly.
+        # Generate actual arguments by parsing strings as jinja2 templates. This
+        # means you can string format arguments w/o generating multiple
+        # operations. Only affects top level operations, as must be run "in_op"
+        # so facts are gathered correctly.
         actual_args = [
             get_arg_value(state, host, arg)
             for arg in args
@@ -226,7 +229,11 @@ def operation(func=None, pipeline_facts=None):
         }
 
         # Convert to list as the result may be a generator
-        commands = unroll_generators(func(state, host, *actual_args, **actual_kwargs))
+        commands = unroll_generators(func(
+            state, host,
+            *actual_args,
+            **actual_kwargs
+        ))
 
         state.in_op = False
         state.current_op_meta = None
@@ -234,16 +241,15 @@ def operation(func=None, pipeline_facts=None):
         # Make the operaton meta object for returning
         operation_meta = OperationMeta(op_hash, commands)
 
-        # If we're pipelining, we don't actually want to add the operation as-is, just
-        # collect the facts.
+        # If we're pipelining, we don't actually want to add the operation as-is,
+        # just collect the facts.
         if state.pipelining:
             return operation_meta
 
-        # Add the hash to the operational order if not already in there. To ensure that
-        # deploys run as defined in the deploy file *per host* we keep track of each hosts
-        # latest op hash, and use that to insert new ones. Note that using the op kwarg
-        # on operations can break the ordering when imbalanced (between if statements in
-        # deploy file, for example).
+        # Add the hash to the operational order if not already in there. To
+        # ensure that deploys run as defined in the deploy file *per host* we
+        # keep track of each hosts latest op hash, and use that to insert new
+        # ones.
         if op_hash not in state.op_order:
             previous_op_hash = state.meta[host.name]['latest_op_hash']
 

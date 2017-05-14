@@ -4,7 +4,7 @@
 
 # Defines a group
 bsd = [
-    'openbsd58.pyinfra'
+    'openbsd58.pyinfra',
 ]
 
 yum = [

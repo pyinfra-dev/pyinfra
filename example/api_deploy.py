@@ -31,26 +31,26 @@ inventory = Inventory(
         ('centos7.pyinfra', {'systemd': True}),
         'ubuntu14.pyinfra',
         'debian7.pyinfra',
-        'openbsd58.pyinfra'
+        'openbsd58.pyinfra',
     ], {}),
     bsd=([
-        'openbsd57.pyinfra'
+        'openbsd57.pyinfra',
     ], {
         # Group-specific data can be attached like so
-        'app_dir': '/opt/pyinfra/bsd'
+        'app_dir': '/opt/pyinfra/bsd',
     }),
     centos=([
         'centos6.pyinfra',
-        'centos7.pyinfra'
+        'centos7.pyinfra',
     ], {}),
     ssh_user='vagrant',
-    ssh_key='./files/insecure_private_key'
+    ssh_key='./files/insecure_private_key',
 )
 
 # Now we create a new config (w/optional args)
 config = Config(
-    FAIL_PERCENT=50,
-    TIMEOUT=1
+    FAIL_PERCENT=81,
+    TIMEOUT=5,
 )
 
 # Setup the pyinfra state for this deploy
@@ -69,7 +69,7 @@ add_op(
     'pyinfra',
     home='/home/pyinfra',
     shell='/bin/bash',
-    sudo=True
+    sudo=True,
 )
 
 add_op(
@@ -89,7 +89,7 @@ add_op(
     user='pyinfra',
     group='pyinfra',
     mode='644',
-    sudo=True
+    sudo=True,
 )
 
 # Ensure the state of directories
@@ -99,13 +99,13 @@ add_op(
     user='pyinfra',
     group='pyinfra',
     mode='755',
-    sudo=True
+    sudo=True,
 )
 
 # Copy local files to remote host
 add_op(
     state, files.put,
-    'files/file.txt', '/home/vagrant/file.txt'
+    'files/file.txt', '/home/vagrant/file.txt',
 )
 
 

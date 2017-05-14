@@ -6,7 +6,7 @@
 from pyinfra import local, hook
 
 # These can be here or in deploy.py
-TIMEOUT = 1
+TIMEOUT = 5
 FAIL_PERCENT = 81
 
 
