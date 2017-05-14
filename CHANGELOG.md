@@ -1,3 +1,32 @@
+# v0.4 (WIP)
+
+Major change: entirely new, streamlined CLI. Legacy support will remain for the next few releases. Usage is now:
+
+```sh
+# Run one or more deploys against the inventory
+pyinfra INVENTORY deploy_web.py [deploy_db.py]...
+
+# Run a single operation against the inventory
+pyinfra INVENTORY server.user pyinfra,home=/home/pyinfra
+
+# Execute an arbitrary command on the inventory
+pyinfra INVENTORY exec -- echo "hello world"
+
+# Run one or more facts on the inventory
+pyinfra INVENTORY fact linux_distribution [users]...
+```
+
++ Add `hosts` kwarg to all operations, working like `local.include`'s
++ Add `Inventory.get_group` and `Inventory.get_host`
++ Replace `docopt`/`termcolor` with `click`
+
+To-be-breaking changes (deprecated & will be removed in 0.5):
+
++ Deprecate `add_limited_op` function, use `hosts` kwarg on `add_op`
++ Deprecate group access via attribute and host access via index on `Inventory`
+    * `Inventory.get_group` and `inventory.get_host` replace
+
+
 # v0.3
 
 + Add `init.service` operation
@@ -17,15 +46,18 @@
 + Fix command overrides with dict objects (git.repo)
 + Removed compatability for deprecated changes in v0.2
 
+
 # v0.2.2
 
 + Fix bug in parsing of network interfaces
 + Fix `--limit` with a group name
 
+
 # v0.2.1
 
 + Use wget & pipe when adding apt keys via URL, rather than `apt-key adv` which breaks with HTTPs
 + Fix bug where file-based group names were uppercased incorrectly (ie dev.py made group DEV, rather than dev)
+
 
 # v0.2
 
