@@ -198,7 +198,13 @@ def run_ops(state, serial=False, no_wait=False):
     # Run all ops, but server by server
     if serial:
         for host in state.inventory:
-            _run_server_ops(state, host.name)
+            try:
+                _run_server_ops(state, host.name)
+            except PyinfraError:
+                state.fail_hosts({host.name})
+
+            if state.print_lines:
+                print_blank()
         return
 
     # Run all the ops on each server in parallel (not waiting at each operation)
