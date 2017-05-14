@@ -45,7 +45,8 @@ class FactMeta(type):
     '''
 
     def __init__(cls, name, bases, attrs):
-        global FACTS
+        if name == 'FactBase':
+            return
 
         # Get the an instance of the fact, attach to facts
         FACTS[underscore(name)] = cls
