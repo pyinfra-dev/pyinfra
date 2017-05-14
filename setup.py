@@ -7,9 +7,9 @@ from setuptools import setup, find_packages
 INSTALL_REQUIRES = (
     'gevent>1,<2',
     'paramiko>1,<3',
+    'click>2',
     'docopt<1',
     'colorama<1',
-    'termcolor>1,<2',
     'jinja2>2,<3',
     'python-dateutil>2,<3',
     'six>1,<2',
