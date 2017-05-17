@@ -28,6 +28,8 @@ from pyinfra import logger, pseudo_host
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.hook import Error as HookError, HOOKS
 
+from .log import print_blank
+
 
 class CliError(PyinfraError, click.ClickException):
     def show(self):
@@ -53,6 +55,7 @@ class CliError(PyinfraError, click.ClickException):
             )
 
         logger.warning(self)
+        print_blank()
 
 
 def run_hook(state, hook_name, hook_data):
@@ -66,7 +69,7 @@ def run_hook(state, hook_name, hook_data):
             ))
             hook(hook_data, state)
 
-        print()
+        print_blank()
 
 
 def json_encode(obj):
