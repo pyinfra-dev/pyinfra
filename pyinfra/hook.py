@@ -4,6 +4,10 @@
 
 from functools import wraps
 
+from click import ClickException
+
+from pyinfra.api.exceptions import PyinfraError
+
 from . import pseudo_state
 
 HOOKS = {
@@ -14,7 +18,7 @@ HOOKS = {
 }
 
 
-class Error(Exception):
+class Error(PyinfraError, ClickException):
     '''
     Exception raised when encounting errors in deploy hooks.
     '''
