@@ -21,7 +21,7 @@ from paramiko import SSHException
 from pyinfra import logger
 
 from .ssh import run_shell_command
-from .util import underscore, make_hash, get_arg_value
+from .util import get_arg_value, make_hash, underscore
 
 
 # Index of snake_case facts -> CamelCase classes
@@ -71,10 +71,7 @@ def get_pipeline_facts(state, name, args, sudo, sudo_user):
     pass
 
 
-def get_facts(
-    state, name,
-    args=None, sudo=False, sudo_user=None, su_user=None,
-):
+def get_facts(state, name, args=None):
     '''
     Get a single fact for all hosts in the state.
     '''
@@ -92,9 +89,9 @@ def get_facts(
         }
 
     # Apply args or defaults
-    sudo = sudo or state.config.SUDO
-    sudo_user = sudo_user or state.config.SUDO_USER
-    su_user = su_user or state.config.SU_USER
+    sudo = state.config.SUDO
+    sudo_user = state.config.SUDO_USER
+    su_user = state.config.SU_USER
     ignore_errors = state.config.IGNORE_ERRORS
 
     # If inside an operation, fetch config meta
