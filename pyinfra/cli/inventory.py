@@ -91,10 +91,10 @@ def make_inventory(
         # ie inventories/dev.py means all the hosts are in the dev group, if not present
         file_groupname = path.basename(inventory_filename).split('.')[0]
 
-    except IOError as e:
+    except IOError:
         # If a /, definitely not a hostname
         if '/' in inventory_filename:
-            raise CliError('{0}: {1}'.format(e.strerror, inventory_filename))
+            raise CliError('No inventory file: {0}'.format(inventory_filename))
 
         # Otherwise we assume the inventory is actually a hostname or list of hostnames
         groups = {
