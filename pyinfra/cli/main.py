@@ -18,6 +18,7 @@ from pyinfra import (
 
 from pyinfra.api import State
 from pyinfra.api.attrs import FallbackAttrData
+from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.facts import get_facts, is_fact
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
@@ -158,7 +159,20 @@ def cli(*args, **kwargs):
     main(*args, **kwargs)
 
 
-def main(
+def main(*args, **kwargs):
+    try:
+        _main(*args, **kwargs)
+
+    except PyinfraError as e:
+        # Re-raise any internal exceptions that aren't handled by click as
+        # CliErrors which are.
+        if not isinstance(e, click.ClickException):
+            raise CliError(e.message)
+
+        raise
+
+
+def _main(
     inventory, commands, verbosity,
     user, port, key, key_password, password,
     sudo, sudo_user, su_user,
