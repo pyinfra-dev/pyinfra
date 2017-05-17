@@ -1,23 +1,63 @@
 # pyinfra
-# File: tests/test_api.py
-# Desc: tests for the pyinfra API
+# File: tests/test_cli.py
+# Desc: tests for the pyinfra CLI
 
 from collections import defaultdict
 from unittest import TestCase
 
 import six
 
+from click.testing import CliRunner
+
 from pyinfra.cli import CliError
-from pyinfra.cli.arguments import setup_arguments
-
-from pyinfra.modules import server
-
-
-class DefaultNoneDict():
-    pass
+from pyinfra.cli.legacy import setup_arguments
+from pyinfra.cli.main import cli
 
 
-class TestCliArguments(TestCase):
+class TestCliExceptions(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.test_cli = CliRunner()
+        cls.old_cli_show = CliError.show
+
+    @classmethod
+    def tearDownClass(cls):
+        CliError.show = cls.old_cli_show
+
+    def setUp(self):
+        self.exception = None
+        CliError.show = lambda e: self.capture_cli_error(e)
+
+    def capture_cli_error(self, e):
+        self.exception = e
+        self.old_cli_show()
+
+    def assert_cli_exception(self, args, message):
+        self.test_cli.invoke(cli, args)
+
+        self.assertIsInstance(self.exception, CliError)
+        self.assertEqual(self.exception.message, message)
+
+    def test_bad_inventory_file(self):
+        self.assert_cli_exception(
+            ['thing/nop.py', 'fact', 'os'],
+            'No inventory file: thing/nop.py',
+        )
+
+    def test_bad_deploy_file(self):
+        self.assert_cli_exception(
+            ['example/inventories/dev.py', 'example/deploy.py', 'nop.py'],
+            'No deploy file: nop.py',
+        )
+
+    def test_bad_fact(self):
+        self.assert_cli_exception(
+            ['example/inventories/dev.py', 'fact', 'thing'],
+            'No fact: thing',
+        )
+
+
+class TestLegacyCliArguments(TestCase):
     def make_cli_arguments(self, arguments):
         default_arguments = defaultdict(lambda: None)
         default_arguments.update(arguments)
@@ -45,65 +85,10 @@ class TestCliArguments(TestCase):
 
     def test_wrong_int_argument(self):
         with self.assertRaises(
-            CliError, message='string is not a valid integer for --parallel'
+            CliError, message='string is not a valid integer for --parallel',
         ):
             self.assert_valid_arguments({
                 '--parallel': 'string',
-            })
-
-    def test_op_and_args(self):
-        self.assert_valid_arguments({
-            '--run': 'server.user',
-            'ARGS': 'ignore_errors=true',
-        }, {
-            'op': server.user,
-            'op_args': ([], {'ignore_errors': True})
-        })
-
-    def test_default_op(self):
-        self.assert_valid_arguments({
-            '--run': 'echo hi!',
-        }, {
-            'op': server.shell,
-            'op_args': (['echo hi!'], {}),
-        })
-
-    def test_invalid_op(self):
-        with self.assertRaises(CliError, message='Invalid operation: thisisnotanop'):
-            self.assert_valid_arguments({
-                '--run': 'thisisnotanop',
-                'ARGS': 'args',
-            })
-
-        with self.assertRaises(CliError, message='No such module: nomodule'):
-            self.assert_valid_arguments({
-                '--run': 'nomodule.op',
-            })
-
-        with self.assertRaises(CliError, message='No such operation: noop'):
-            self.assert_valid_arguments({
-                '--run': 'server.noop',
-            })
-
-    def test_fact(self):
-        self.assert_valid_arguments({
-            '--fact': 'linux_distribution',
-        }, {
-            'fact': 'linux_distribution',
-        })
-
-    def test_fact_with_args(self):
-        self.assert_valid_arguments({
-            '--fact': 'file:/file.txt',
-        }, {
-            'fact': 'file',
-            'fact_args': ['/file.txt'],
-        })
-
-    def test_invalid_fact(self):
-        with self.assertRaises(CliError, message='Invalid fact: thisisnotafact'):
-            self.assert_valid_arguments({
-                '--fact': 'thisisnotafact',
             })
 
     def test_invalid_files(self):
@@ -113,7 +98,7 @@ class TestCliArguments(TestCase):
             })
 
         with self.assertRaises(
-            CliError, message='Private key file not found: nop.key'
+            CliError, message='Private key file not found: nop.key',
         ):
             self.assert_valid_arguments({
                 '--key': 'nop.key',
