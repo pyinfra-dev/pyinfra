@@ -30,7 +30,7 @@ from . import CliError, run_hook
 from .config import load_config, load_deploy_config
 from .fake import FakeHost, FakeInventory, FakeState
 from .inventory import make_inventory
-from .log import print_blank, setup_logging
+from .log import setup_logging
 from .prints import (
     dump_state,
     print_facts,
@@ -44,9 +44,9 @@ from .util import get_operation_and_args, load_deploy_file
 
 # Exit handler
 def _exit():
-    print_blank()
+    print()
     print('<-- Thank you, goodbye')
-    print_blank()
+    print()
 
     sys.exit(0)
 
@@ -182,9 +182,9 @@ def _main(
     enable_pipelining,
     facts=None,
 ):
-    print_blank()
+    print()
     print('### {0}'.format(click.style('Welcome to pyinfra', bold=True)))
-    print_blank()
+    print()
 
     # Setup logging
     log_level = logging.DEBUG if debug else logging.INFO
@@ -357,7 +357,7 @@ def _main(
     #
 
     if command == 'fact':
-        print_blank()
+        print()
         print('--> Gathering facts...')
 
         # Print facts as we get them
@@ -392,7 +392,7 @@ def _main(
 
     # Deploy files(s)
     elif command == 'deploy':
-        print_blank()
+        print()
         print('--> Preparing operations...')
 
         for filename in commands:
@@ -405,7 +405,7 @@ def _main(
 
     # Operation w/optional args
     elif command == 'op':
-        print_blank()
+        print()
         print('--> Preparing operation...')
 
         op, args = commands
@@ -416,7 +416,7 @@ def _main(
         )
 
     # Always show meta output
-    print_blank()
+    print()
     print('--> Proposed changes:')
     print_meta(state, inventory)
 
@@ -429,7 +429,7 @@ def _main(
     if dry:
         _exit()
 
-    print_blank()
+    print()
 
     # Run the before_deploy hook if provided
     run_hook(state, 'before_deploy', hook_data)

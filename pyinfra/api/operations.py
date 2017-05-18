@@ -15,8 +15,6 @@ from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.ssh import put_file, run_shell_command
 
-from pyinfra.cli.log import print_blank
-
 
 def _run_op(state, hostname, op_hash):
     # Noop for this host?
@@ -204,7 +202,7 @@ def run_ops(state, serial=False, no_wait=False):
                 state.fail_hosts({host.name})
 
             if state.print_lines:
-                print_blank()
+                print()
         return
 
     # Run all the ops on each server in parallel (not waiting at each operation)
@@ -265,4 +263,4 @@ def run_ops(state, serial=False, no_wait=False):
             state.fail_hosts(failed_hosts)
 
         if state.print_lines:
-            print_blank()
+            print()

@@ -2,15 +2,11 @@
 # File: pyinfra/cli/log.py
 # Desc: logging for the CLI
 
-from __future__ import division
+from __future__ import division, print_function
 
 import logging
 import re
 import sys
-
-from collections import deque
-from threading import Thread
-from time import sleep
 
 import click
 import six
@@ -19,21 +15,6 @@ from pyinfra import logger
 
 STDOUT_LOG_LEVELS = (logging.DEBUG, logging.INFO)
 STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
-
-
-def print_spinner():
-    wait_chars = deque(('-', '/', '|', '\\'))
-
-    while True:
-        wait_chars.rotate(1)
-        sys.stdout.write('    {0}\r'.format(wait_chars[0]))
-        sys.stdout.flush()
-        sleep(1 / 20)
-
-
-def print_blank():
-    # Print 5 blank characters, removing any spinner leftover
-    print('     ')
 
 
 class LogFilter(logging.Filter):
@@ -99,7 +80,3 @@ def setup_logging(log_level):
     # Add the handlers
     logger.addHandler(stdout_handler)
     logger.addHandler(stderr_handler)
-
-    spinner_thread = Thread(target=print_spinner)
-    spinner_thread.daemon = True
-    spinner_thread.start()

@@ -14,7 +14,6 @@ from pyinfra import logger
 from pyinfra.api.facts import get_fact_names
 
 from . import json_encode
-from .log import print_blank
 
 
 def _get_group_combinations(inventory):
@@ -82,14 +81,14 @@ def print_fact(fact_data):
 
 def print_inventory(inventory):
     for host in inventory:
-        print_blank()
+        print()
         print('--> Data for: {0}'.format(click.style(host.name, bold=True)))
         print(json.dumps(host.data.dict(), indent=4, default=json_encode))
 
 
 def print_facts(facts):
     for name, data in six.iteritems(facts):
-        print_blank()
+        print()
         print('--> Fact data for: {0}'.format(
             click.style(name, bold=True),
         ))
