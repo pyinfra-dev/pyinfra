@@ -2,7 +2,21 @@
 # File: setup.py
 # Desc: pyinfra package setup
 
-from setuptools import setup, find_packages
+import sys
+
+try:
+    from setuptools import setup, find_packages
+
+except ImportError:
+    print('''
+Error: pyinfra needs setuptools in order to install:
+
+using pip: pip install setuptools
+using a package manager (apt, yum, etc), normally named: python-setuptools
+    '''.strip())
+
+    sys.exit(1)
+
 
 INSTALL_REQUIRES = (
     'gevent>1,<2',
