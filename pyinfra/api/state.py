@@ -193,7 +193,10 @@ class State(object):
             raise PyinfraError('No hosts remaining!')
 
         if self.config.FAIL_PERCENT is not None:
-            percent_failed = (1 - len(active_hosts) / len(self.inventory)) * 100
+            percent_failed = (
+                1 - len(active_hosts) / self.inventory.len_all_hosts()
+            ) * 100
+
             if percent_failed > self.config.FAIL_PERCENT:
                 raise PyinfraError('Over {0}% of hosts failed'.format(
                     self.config.FAIL_PERCENT,

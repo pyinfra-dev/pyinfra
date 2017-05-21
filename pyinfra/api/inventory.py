@@ -139,15 +139,24 @@ class Inventory(object):
 
     def __len__(self):
         '''
-        Returns a list of all hosts, connected or not.
+        Returns the number of active inventory hosts.
+        '''
+
+        if not self.state or not self.state.active_hosts:
+            return len(self.hosts)
+
+        return len(self.state.active_hosts)
+
+    def len_all_hosts(self):
+        '''
+        Returns the number of hosts in the inventory, active or not.
         '''
 
         return len(self.hosts)
 
     def __iter__(self):
         '''
-        Iterates over inventory hosts. Uses active hosts only when they exist - in that
-        sense can be seen as the "active" list of hosts during a deploy.
+        Iterates over avtive inventory hosts.
         '''
 
         for host in six.itervalues(self.hosts):
