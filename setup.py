@@ -80,9 +80,11 @@ if __name__ == '__main__':
         license='MIT',
         url='http://github.com/Fizzadar/pyinfra',
         packages=find_packages(),
-        scripts=(
-            'bin/pyinfra',
-        ),
+        entry_points={
+            'console_scripts': (
+                'pyinfra=pyinfra_cli.__main__',
+            ),
+        },
         install_requires=INSTALL_REQUIRES,
         extras_require={
             'dev': DEV_REQUIRES,

@@ -9,9 +9,9 @@ import six
 
 from click.testing import CliRunner
 
-from pyinfra.cli import CliError
-from pyinfra.cli.legacy import setup_arguments
-from pyinfra.cli.main import cli
+from pyinfra_cli.exceptions import CliError
+from pyinfra_cli.legacy import setup_arguments
+from pyinfra_cli.main import cli
 
 
 class TestCliExceptions(TestCase):

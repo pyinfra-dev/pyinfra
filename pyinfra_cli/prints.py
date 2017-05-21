@@ -13,7 +13,7 @@ import six
 from pyinfra import logger
 from pyinfra.api.facts import get_fact_names
 
-from . import json_encode
+from .util import json_encode
 
 
 def _get_group_combinations(inventory):

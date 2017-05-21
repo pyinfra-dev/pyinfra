@@ -12,8 +12,9 @@ import six
 from nose.tools import nottest
 from jsontest import JsonTest
 
-from pyinfra.cli import json_encode
 from pyinfra.api.facts import FACTS
+
+from pyinfra_cli.util import json_encode
 
 
 @nottest

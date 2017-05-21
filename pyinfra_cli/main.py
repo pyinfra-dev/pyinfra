@@ -2,6 +2,8 @@
 # File: pyinfra/cli/main.py
 # Desc: the actual CLI implementation, importable (not __main__) for tests
 
+from __future__ import division, print_function
+
 import logging
 import sys
 
@@ -26,8 +28,8 @@ from pyinfra.api.ssh import connect_all
 
 from pyinfra.modules import server
 
-from . import CliError, run_hook
 from .config import load_config, load_deploy_config
+from .exceptions import CliError
 from .fake import FakeHost, FakeInventory, FakeState
 from .inventory import make_inventory
 from .log import setup_logging
@@ -39,7 +41,12 @@ from .prints import (
     print_meta,
     print_results,
 )
-from .util import get_operation_and_args, load_deploy_file
+from .util import (
+    get_operation_and_args,
+    load_deploy_file,
+    progress_spinner,
+    run_hook,
+)
 
 
 # Exit handler
@@ -348,7 +355,8 @@ def _main(
 
     # Connect to all the servers
     print('--> Connecting to hosts...')
-    connect_all(state)
+    with progress_spinner(state.inventory) as progress:
+        connect_all(state, progress=progress)
 
     # Run the before_connect hook if provided
     run_hook(state, 'before_facts', hook_data)
@@ -368,11 +376,13 @@ def _main(
 
         fact_data = {}
 
-        for name, args in commands:
-            fact_data[name] = get_facts(
-                state, name,
-                args=args,
-            )
+        with progress_spinner(commands) as progress:
+            for i, (name, args) in enumerate(commands):
+                fact_data[name] = get_facts(
+                    state, name,
+                    args=args,
+                )
+                progress()
 
         print_facts(fact_data)
         _exit()
@@ -395,13 +405,18 @@ def _main(
         print()
         print('--> Preparing operations...')
 
-        for filename in commands:
-            if enable_pipelining:
-                with state.pipeline_facts:
-                    load_deploy_file(state, filename)
+        # Number of "steps" to make = number of files * number of hosts
+        prepare_steps = len(commands) * len(state.inventory)
+        with progress_spinner(prepare_steps) as progress:
+            for filename in commands:
+                if enable_pipelining:
+                    with state.pipeline_facts:
+                        load_deploy_file(state, filename, progress=progress)
 
-            else:
-                load_deploy_file(state, filename)
+                else:
+                    load_deploy_file(state, filename, progress=progress)
+
+                progress()
 
     # Operation w/optional args
     elif command == 'op':
@@ -435,11 +450,16 @@ def _main(
     run_hook(state, 'before_deploy', hook_data)
 
     print('--> Beginning operation run...')
-    run_ops(
-        state,
-        serial=serial,
-        no_wait=no_wait,
-    )
+
+    # Number of "steps" to make = number of operations * number of hosts
+    operation_steps = len(state.op_order) * len(state.inventory)
+    with progress_spinner(operation_steps) as progress:
+        run_ops(
+            state,
+            serial=serial,
+            no_wait=no_wait,
+            progress=progress,
+        )
 
     # Run the after_deploy hook if provided
     run_hook(state, 'after_deploy', hook_data)

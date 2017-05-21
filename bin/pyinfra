@@ -1,8 +1,0 @@
-#!/usr/bin/env python
-
-# Monkey patch the standard lib
-from gevent import monkey
-monkey.patch_all()
-
-# Boot pyinfra
-from pyinfra.cli import __main__  # noqa

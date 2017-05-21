@@ -8,8 +8,8 @@ from socket import timeout as timeout_error
 from types import FunctionType
 
 import click
-
-from gevent import joinall
+import gevent
+import six
 
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
@@ -165,8 +165,9 @@ def _run_op(state, hostname, op_hash):
     return False
 
 
-def _run_server_ops(state, hostname):
-    logger.debug('Running all ops on {}'.format(hostname))
+def _run_server_ops(state, hostname, progress=None):
+    logger.debug('Running all ops on {0}'.format(hostname))
+
     for op_hash in state.op_order:
         op_meta = state.op_meta[op_hash]
 
@@ -177,13 +178,21 @@ def _run_server_ops(state, hostname):
         ))
 
         result = _run_op(state, hostname, op_hash)
+
+        # Trigger CLI progress if provided
+        if progress:
+            progress()
+
         if result is False:
             raise PyinfraError('Error in operation {0} on {1}'.format(
                 ', '.join(op_meta['names']), hostname,
             ))
 
+        if state.print_lines:
+            print()
 
-def run_ops(state, serial=False, no_wait=False):
+
+def run_ops(state, serial=False, no_wait=False, progress=None):
     '''
     Runs all operations across all servers in a configurable manner.
 
@@ -197,22 +206,26 @@ def run_ops(state, serial=False, no_wait=False):
     if serial:
         for host in state.inventory:
             try:
-                _run_server_ops(state, host.name)
+                _run_server_ops(
+                    state, host.name,
+                    progress=progress,
+                )
             except PyinfraError:
                 state.fail_hosts({host.name})
 
-            if state.print_lines:
-                print()
         return
 
     # Run all the ops on each server in parallel (not waiting at each operation)
     elif no_wait:
         # Spawn greenlet for each host to run *all* ops
         greenlets = [
-            state.pool.spawn(_run_server_ops, state, host.name)
+            state.pool.spawn(
+                _run_server_ops, state, host.name,
+                progress=progress,
+            )
             for host in state.inventory
         ]
-        joinall(greenlets)
+        gevent.joinall(greenlets)
         return
 
     # Default: run all ops in order, waiting at each for all servers to complete
@@ -242,20 +255,29 @@ def run_ops(state, serial=False, no_wait=False):
             for host in state.inventory:
                 result = _run_op(state, host.name, op_hash)
 
+                # Trigger CLI progress if provided
+                if progress:
+                    progress()
+
                 if not result:
                     failed_hosts.add(host.name)
 
         else:
             # Spawn greenlet for each host
-            greenlet_hosts = [
-                (host.name, state.pool.spawn(
+            greenlets = {
+                host.name: state.pool.spawn(
                     _run_op, state, host.name, op_hash,
-                ))
+                )
                 for host in state.inventory
-            ]
+            }
+
+            for _ in gevent.iwait(greenlets.values()):
+                # Trigger CLI progress if provided
+                if progress:
+                    progress()
 
             # Get all the results
-            for (hostname, greenlet) in greenlet_hosts:
+            for hostname, greenlet in six.iteritems(greenlets):
                 if not greenlet.get():
                     failed_hosts.add(hostname)
 

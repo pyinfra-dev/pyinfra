@@ -145,7 +145,7 @@ def connect(host, **kwargs):
         logger.error('EOF error connecting to {0}: {1}'.format(name, e))
 
 
-def connect_all(state):
+def connect_all(state, progress=None):
     '''
     Connect to all the configured servers in parallel. Reads/writes state.inventory.
 
@@ -184,7 +184,11 @@ def connect_all(state):
 
         greenlets[host.name] = state.pool.spawn(connect, host, **kwargs)
 
-    gevent.wait(greenlets.values())
+    # Wait for all the connections to complete
+    for _ in gevent.iwait(greenlets.values()):
+        # Trigger CLI progress if provided
+        if progress:
+            progress()
 
     # Get/set the results
     failed_hosts = set()

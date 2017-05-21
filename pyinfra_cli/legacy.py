@@ -4,7 +4,7 @@ import six
 
 from docopt import docopt
 
-from pyinfra.cli import CliError
+from .exceptions import CliError
 
 
 DOCOPT_STRING = '''

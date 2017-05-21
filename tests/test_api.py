@@ -240,7 +240,8 @@ class TestStateApi(PatchSSHTest):
         # Ensure we would fail at this point
         with self.assertRaises(PyinfraError) as context:
             connect_all(state)
-            self.assertEqual(context.exception.message, 'Over 1% of hosts failed')
+
+        self.assertEqual(context.exception.args[0], 'Over 1% of hosts failed')
 
         # Ensure the other two did connect
         self.assertEqual(len(state.connected_hosts), 2)

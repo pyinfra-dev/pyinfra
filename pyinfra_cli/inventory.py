@@ -11,18 +11,19 @@ import six
 from pyinfra import logger, pseudo_inventory
 from pyinfra.api.inventory import Inventory
 from pyinfra.api.util import exec_file
-from . import CliError
+
+from .exceptions import CliError
 
 
 # Hosts in an inventory can be just the hostname or a tuple (hostname, data)
 ALLOWED_HOST_TYPES = tuple(
-    list(six.string_types) + [tuple],
+    six.string_types + (tuple,),
 )
 
 # Group data can be any "core" Python type
 ALLOWED_DATA_TYPES = tuple(
-    list(six.string_types) + list(six.integer_types)
-    + [bool, dict, list, set, tuple, float, complex],
+    six.string_types + six.integer_types
+    + (bool, dict, list, set, tuple, float, complex),
 )
 
 

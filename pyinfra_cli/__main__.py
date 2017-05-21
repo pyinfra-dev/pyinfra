@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-# pyinfra
-# File: bin/pyinfra
-# Desc: sets up and calls the CLI
-
-from __future__ import division, print_function, unicode_literals
-
 import signal
 import sys
 

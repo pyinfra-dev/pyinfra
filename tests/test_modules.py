@@ -14,9 +14,10 @@ import six
 from nose.tools import nottest
 from jsontest import JsonTest
 
-from pyinfra import pseudo_state, pseudo_host
-from pyinfra.cli import json_encode
+from pyinfra import pseudo_host, pseudo_state
 from pyinfra.api.util import unroll_generators
+
+from pyinfra_cli.util import json_encode
 
 from .util import FakeState, create_host, patch_files
 
