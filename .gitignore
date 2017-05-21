@@ -1,14 +1,13 @@
 .DS_Store
+
 *.pyc
-pyinfra.egg-info
+*.egg-info
 
 build/
 dist/
 
-example/.vagrant/
+example/.vagrant*
 
-.venv
-.proj
 .coverage
 
 .docstmp
