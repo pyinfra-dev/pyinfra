@@ -1,5 +1,12 @@
+# pyinfra
+# File: pyinfra_cli/legacy.py
+# Desc: the old, pre 0.4 CLI
+
+import sys
+
 from os import path
 
+import click
 import six
 
 from docopt import docopt
@@ -92,7 +99,14 @@ def run_main_with_legacy_arguments(main):
 
     kwargs['commands'] = commands
 
-    main(**kwargs)
+    try:
+        main(**kwargs)
+    except CliError as e:
+        click.echo('Unexpected exception: {0}({1})'.format(
+            e.__class__.__name__,
+            click.style(e.message, 'red', bold=True),
+        ))
+        sys.exit(1)
 
 
 def setup_op_and_args(op_string, args_string):
