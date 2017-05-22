@@ -5,12 +5,13 @@
 from __future__ import print_function
 
 import json
-from os import path, listdir
+
+from os import listdir, path
 from unittest import TestCase
 
 import six
-from nose.tools import nottest
 from jsontest import JsonTest
+from nose.tools import nottest
 
 from pyinfra.api.facts import FACTS
 
@@ -39,7 +40,7 @@ def make_fact_tests(fact_name):
                 print()
                 print('--> GOT:\n', json.dumps(data, indent=4, default=json_encode))
                 print('--> WANT:', json.dumps(
-                    test_data['fact'], indent=4, default=json_encode
+                    test_data['fact'], indent=4, default=json_encode,
                 ))
                 raise e
 

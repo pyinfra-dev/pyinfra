@@ -1,6 +1,6 @@
 # pyinfra
-# File: pyinfra/cli/main.py
-# Desc: the actual CLI implementation, importable (not __main__) for tests
+# File: pyinfra_cli/main.py
+# Desc: the actual CLI implementation
 
 from __future__ import division, print_function
 

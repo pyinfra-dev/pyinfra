@@ -1,5 +1,5 @@
 # pyinfra
-# File: pyinfra/cli/inventory.py
+# File: pyinfra_cli/inventory.py
 # Desc: inventory creation for the CLI
 
 from fnmatch import fnmatch

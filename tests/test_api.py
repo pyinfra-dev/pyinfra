@@ -2,33 +2,37 @@
 # File: tests/test_api.py
 # Desc: tests for the pyinfra API
 
+from socket import error as socket_error, gaierror
 from unittest import TestCase
-from socket import gaierror, error as socket_error
 
-from mock import patch, mock_open
-from paramiko.agent import AgentRequestHandler
+from mock import mock_open, patch
 from paramiko import (
-    SSHClient, SFTPClient, RSAKey,
-    SSHException, AuthenticationException, PasswordRequiredException
+    AuthenticationException,
+    PasswordRequiredException,
+    RSAKey,
+    SFTPClient,
+    SSHClient,
+    SSHException,
 )
+from paramiko.agent import AgentRequestHandler
 
-# Patch in paramiko fake classes
-from pyinfra.api import ssh
-from .paramiko_util import (
-    FakeSSHClient, FakeSFTPClient, FakeRSAKey,
-    FakeAgentRequestHandler, FakeChannel, FakeBuffer
-)
-
-
-from pyinfra import pseudo_state, pseudo_host
-from pyinfra.api import Inventory, Config, State
-from pyinfra.api.ssh import connect_all, connect
-from pyinfra.api.operation import add_op, add_limited_op
+from pyinfra import pseudo_host, pseudo_state
+from pyinfra.api import Config, Inventory, ssh, State
+from pyinfra.api.exceptions import NoGroupError, NoHostError, PyinfraError
+from pyinfra.api.operation import add_limited_op, add_op
 from pyinfra.api.operations import run_ops
-from pyinfra.api.exceptions import PyinfraError, NoHostError, NoGroupError
+from pyinfra.api.ssh import connect, connect_all
 
 from pyinfra.modules import files, server
 
+from .paramiko_util import (
+    FakeAgentRequestHandler,
+    FakeBuffer,
+    FakeChannel,
+    FakeRSAKey,
+    FakeSFTPClient,
+    FakeSSHClient,
+)
 from .util import create_host
 
 
@@ -36,9 +40,9 @@ def make_inventory(hosts=('somehost', 'anotherhost'), **kwargs):
     return Inventory(
         (hosts, {}),
         test_group=([
-            'somehost'
+            'somehost',
         ], {
-            'group_data': 'hello world'
+            'group_data': 'hello world',
         }),
         ssh_user='vagrant',
         **kwargs
@@ -59,7 +63,7 @@ class TestInventoryApi(TestCase):
         # Check our group data
         self.assertEqual(
             inventory.get_group_data('test_group').dict(),
-            {'group_data': 'hello world'}
+            {'group_data': 'hello world'},
         )
 
     def test_tuple_host_group_inventory_creation(self):
@@ -70,8 +74,8 @@ class TestInventoryApi(TestCase):
             tuple_group=([
                 ('somehost', {'another_data': 'world'}),
             ], {
-                'tuple_group_data': 'word'
-            })
+                'tuple_group_data': 'word',
+            }),
         )
 
         # Check host data
@@ -139,10 +143,10 @@ class TestSSHApi(TestCase):
         with patch('pyinfra.api.ssh.SSHClient', FakeSSHClient):
             for exception in (
                 AuthenticationException, SSHException,
-                gaierror, socket_error, EOFError
+                gaierror, socket_error, EOFError,
             ):
                 host = create_host(name='nowt', data={
-                    'ssh_hostname': exception
+                    'ssh_hostname': exception,
                 })
                 self.assertEqual(connect(host), None)
 
@@ -172,7 +176,7 @@ class TestSSHApi(TestCase):
                 pkey=fake_key,
                 port=22,
                 timeout=10,
-                username='vagrant'
+                username='vagrant',
             )
 
     def test_connect_with_ssh_key_password(self):
@@ -271,7 +275,7 @@ class TestOperationsApi(PatchSSHTest):
             ignore_errors=True,
             env={
                 'TEST': 'what',
-            }
+            },
         )
 
         # Ensure we have an op
@@ -282,7 +286,7 @@ class TestOperationsApi(PatchSSHTest):
         # Ensure the op name
         self.assertEqual(
             state.op_meta[first_op_hash]['names'],
-            {'Files/File'}
+            {'Files/File'},
         )
 
         # Ensure the commands
@@ -291,8 +295,8 @@ class TestOperationsApi(PatchSSHTest):
             [
                 'touch /var/log/pyinfra.log',
                 'chmod 644 /var/log/pyinfra.log',
-                'chown pyinfra:pyinfra /var/log/pyinfra.log'
-            ]
+                'chown pyinfra:pyinfra /var/log/pyinfra.log',
+            ],
         )
 
         # Ensure the meta
@@ -329,7 +333,7 @@ class TestOperationsApi(PatchSSHTest):
                 state, files.put,
                 {'First op name'},
                 'files/file.txt',
-                '/home/vagrant/file.txt'
+                '/home/vagrant/file.txt',
             )
 
             # And with sudo
@@ -338,7 +342,7 @@ class TestOperationsApi(PatchSSHTest):
                 'files/file.txt',
                 '/home/vagrant/file.txt',
                 sudo=True,
-                sudo_user='pyinfra'
+                sudo_user='pyinfra',
             )
 
             # And with su
@@ -347,7 +351,7 @@ class TestOperationsApi(PatchSSHTest):
                 'files/file.txt',
                 '/home/vagrant/file.txt',
                 sudo=True,
-                su_user='pyinfra'
+                su_user='pyinfra',
             )
 
         # Ensure we have all ops
@@ -358,7 +362,7 @@ class TestOperationsApi(PatchSSHTest):
         # Ensure first op is the right one
         self.assertEqual(
             state.op_meta[first_op_hash]['names'],
-            {'First op name'}
+            {'First op name'},
         )
 
         # Ensure first op has the right (upload) command

@@ -1,3 +1,7 @@
+# pyinfra
+# File: pyinfra_cli/__main__.py
+# Desc: bootstrap stuff for the pyinfra CLI and provide it's entry point
+
 import signal
 import sys
 

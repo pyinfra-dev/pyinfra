@@ -1,6 +1,6 @@
 # pyinfra
-# File: pyinfra/cli/arguments.py
-# Desc: argument parsing for the CLI
+# File: pyinfra_cli/arguments.py
+# Desc: general utilities for the pyinfra CLI
 
 from __future__ import division, print_function
 

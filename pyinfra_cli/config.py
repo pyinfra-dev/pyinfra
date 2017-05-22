@@ -1,5 +1,5 @@
 # pyinfra
-# File: pyinfra/cli/config.py
+# File: pyinfra_cli/config.py
 # Desc: config handling for the CLI
 
 from os import path

@@ -1,5 +1,5 @@
 # pyinfra
-# File: pyinfra/cli/log.py
+# File: pyinfra_cli/log.py
 # Desc: logging for the CLI
 
 from __future__ import division, print_function

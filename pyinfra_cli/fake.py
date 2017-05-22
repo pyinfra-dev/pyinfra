@@ -1,5 +1,5 @@
 # pyinfra
-# File: pyinfra/cli/fake.py
+# File: pyinfra_cli/fake.py
 # Desc: fake objects for the CLI
 
 
