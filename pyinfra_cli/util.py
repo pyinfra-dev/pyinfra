@@ -4,6 +4,7 @@
 
 from __future__ import division, print_function
 
+import json
 import shlex
 import sys
 
@@ -224,19 +225,24 @@ def get_operation_and_args(op_string, args_string):
     args = None
 
     if args_string:
-        args = _parse_argstring(args_string)
+        try:
+            args, kwargs = json.loads(args_string)
+            args = (args, kwargs)
 
-        # Setup kwargs
-        kwargs = [arg.split('=') for arg in args if '=' in arg]
-        op_kwargs = {
-            key: _parse_arg(value)
-            for key, value in kwargs
-        }
+        except ValueError:
+            args = _parse_argstring(args_string)
 
-        # Get the remaining args
-        args = [_parse_arg(arg) for arg in args if '=' not in arg]
+            # Setup kwargs
+            kwargs = [arg.split('=') for arg in args if '=' in arg]
+            op_kwargs = {
+                key: _parse_arg(value)
+                for key, value in kwargs
+            }
 
-        args = (args, op_kwargs)
+            # Get the remaining args
+            args = [_parse_arg(arg) for arg in args if '=' not in arg]
+
+            args = (args, op_kwargs)
 
     return op, args
 

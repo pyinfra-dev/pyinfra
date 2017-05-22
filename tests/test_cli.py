@@ -90,6 +90,18 @@ class TestCliUtil(TestCase):
             ),
         )
 
+    def test_setup_op_and_json_args(self):
+        op_string = 'server.user'
+        args_string = '[["one", "two"], {"hello": "world"}]'
+
+        self.assertEqual(
+            get_operation_and_args(op_string, args_string),
+            (
+                server.user,
+                (['one', 'two'], {'hello': 'world'}),
+            ),
+        )
+
 
 class TestCliExceptions(TestCase):
     @classmethod
