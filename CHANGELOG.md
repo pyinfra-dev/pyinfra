@@ -18,7 +18,14 @@ pyinfra INVENTORY fact linux_distribution [users]...
 
 + Add `hosts` kwarg to all operations, working like `local.include`'s
 + Add `Inventory.get_group` and `Inventory.get_host`
++ Inventory `__len__` now (correctly) looks at active hosts, rather than all
++ Add `Inventory.len_all_hosts` to replace above bug/qwirk
++ Add progress spinner and % indicator to CLI
 + Replace `docopt`/`termcolor` with `click`
++ Moved `pyinfra.cli` to `pyinfra_cli` (internal breaking)
++ Switch to setuptools `entry_points` instead of distutils scripts
++ Expand Travis.ci testing to Python 3.6 and 3.7 nightly
++ Remove unused kwargs (`sudo`, `sudo_user`, `su_user`) from `pyinfra.api.facts.get_facts`
 
 To-be-breaking changes (deprecated & will be removed in 0.5):
 
