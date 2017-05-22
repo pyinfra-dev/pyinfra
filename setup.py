@@ -96,7 +96,7 @@ if __name__ == '__main__':
         packages=find_packages(),
         entry_points={
             'console_scripts': (
-                'pyinfra=pyinfra_cli.__main__',
+                'pyinfra=pyinfra_cli.__main__:execute_pyinfra',
             ),
         },
         install_requires=INSTALL_REQUIRES,

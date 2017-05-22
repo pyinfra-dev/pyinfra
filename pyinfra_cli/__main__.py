@@ -34,8 +34,9 @@ def _signal_handler(signum, frame):
 signal.signal(signal.SIGINT, _signal_handler)  # noqa
 
 
-# TODO: Explain this!
-if '-i' in sys.argv:
-    run_main_with_legacy_arguments(main)
-else:
-    cli()
+def execute_pyinfra():
+    # Legacy support for pyinfra <0.4 using docopt
+    if '-i' in sys.argv:
+        run_main_with_legacy_arguments(main)
+    else:
+        cli()
