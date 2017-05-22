@@ -3,13 +3,13 @@
 # Desc: tests for the pyinfra CLI
 
 from collections import defaultdict
-from cStringIO import StringIO
 from datetime import datetime
 from unittest import TestCase
 
 import six
 
 from click.testing import CliRunner
+from six.moves import cStringIO as StringIO
 
 from pyinfra.modules import server
 
