@@ -133,7 +133,7 @@ def json_encode(obj):
             return 'Template: {0}'.format(obj.template)
 
         obj.seek(0)
-        return 'In-memory file: {0}'.format(obj.read())
+        return 'In memory file: {0}'.format(obj.read())
 
     elif isinstance(obj, set):
         return list(obj)
@@ -143,6 +143,9 @@ def json_encode(obj):
 
 
 def _parse_arg(arg):
+    if isinstance(arg, list):
+        return [_parse_arg(a) for a in arg]
+
     if arg.lower() == 'false':
         return False
 
@@ -152,7 +155,7 @@ def _parse_arg(arg):
     return arg
 
 
-def parse_argstring(argstring):
+def _parse_argstring(argstring):
     '''
     Preparses CLI input:
 
@@ -221,7 +224,7 @@ def get_operation_and_args(op_string, args_string):
     args = None
 
     if args_string:
-        args = parse_argstring(args_string)
+        args = _parse_argstring(args_string)
 
         # Setup kwargs
         kwargs = [arg.split('=') for arg in args if '=' in arg]
