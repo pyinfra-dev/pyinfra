@@ -5,15 +5,28 @@ Third party pull requests help expand pyinfra's functionality and are essential 
 
 ## Dev setup
 
-```
+```sh
 # Create a virtualenv
 virtualenv /path/to/venv
 
 # Clone the repo
 git clone git@github.com:Fizzadar/pyinfra.git
 
-# Install the package in "development mode"
-pip install -e .
+# Install the package in editable mode with development requirements
+pip install -e .[dev]
+```
+
+
+## Tests
+
+Use `nosetests` or the bundled helper script to run tests. This helper script also counts coverage:
+
+```sh
+# Test everything (API, modules & facts)
+scripts/test.sh
+
+# Set individual bits
+scripts/test.sh [api|modules|facts]
 ```
 
 
