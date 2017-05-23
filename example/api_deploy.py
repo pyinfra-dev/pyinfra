@@ -9,9 +9,9 @@ import json
 import logging
 
 from pyinfra.api import Inventory, Config, State
+from pyinfra.api.connect import connect_all
 from pyinfra.api.operation import add_op, add_limited_op
 from pyinfra.api.operations import run_ops
-from pyinfra.api.ssh import connect_all
 from pyinfra.api.facts import get_facts
 
 from pyinfra.modules import server, files
