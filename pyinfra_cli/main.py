@@ -20,11 +20,11 @@ from pyinfra import (
 
 from pyinfra.api import State
 from pyinfra.api.attrs import FallbackAttrData
+from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.facts import get_facts, is_fact
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
-from pyinfra.api.ssh import connect_all
 
 from pyinfra.modules import server
 
