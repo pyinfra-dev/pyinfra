@@ -13,14 +13,15 @@ import six
 
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.api.ssh import put_file, run_shell_command
 
 
-def _run_op(state, hostname, op_hash):
+def _run_op(state, host, op_hash):
+    name = host.name
+
     # Noop for this host?
-    if op_hash not in state.ops[hostname]:
+    if op_hash not in state.ops[name]:
         logger.info('[{0}] {1}'.format(
-            click.style(hostname, bold=True),
+            click.style(name, bold=True),
             click.style(
                 'Skipped',
                 'blue',
@@ -28,14 +29,14 @@ def _run_op(state, hostname, op_hash):
         ))
         return True
 
-    op_data = state.ops[hostname][op_hash]
+    op_data = state.ops[name][op_hash]
     op_meta = state.op_meta[op_hash]
 
     stderr_buffer = []
-    print_prefix = '{0}: '.format(click.style(hostname, bold=True))
+    print_prefix = '{0}: '.format(click.style(name, bold=True))
 
     logger.debug('Starting operation {0} on {1}'.format(
-        ', '.join(op_meta['names']), hostname,
+        ', '.join(op_meta['names']), name,
     ))
 
     state.ops_run.add(op_hash)
@@ -69,14 +70,14 @@ def _run_op(state, hostname, op_hash):
             # If first element is function, it's a callback
             if isinstance(command[0], FunctionType):
                 status = command[0](
-                    state, state.inventory.get_host(hostname), hostname,
+                    state, state.inventory.get_host(name), name,
                     *command[1], **command[2]
                 )
 
             # Non-function mean files to copy
             else:
-                status = put_file(
-                    state, hostname,
+                status = host.put_file(
+                    state,
                     command[0], command[1],
                     sudo=sudo,
                     sudo_user=sudo_user,
@@ -87,8 +88,8 @@ def _run_op(state, hostname, op_hash):
         # Must be a string/shell command: execute it on the server w/op-level preferences
         else:
             try:
-                status, _, stderr = run_shell_command(
-                    state, hostname,
+                status, _, stderr = host.run_shell_command(
+                    state,
                     command.strip(),
                     sudo=sudo,
                     sudo_user=sudo_user,
@@ -116,16 +117,16 @@ def _run_op(state, hostname, op_hash):
         if status is False:
             break
         else:
-            state.results[hostname]['commands'] += 1
+            state.results[name]['commands'] += 1
 
     # Commands didn't break, so count our successes & return True!
     else:
         # Count success
-        state.results[hostname]['ops'] += 1
-        state.results[hostname]['success_ops'] += 1
+        state.results[name]['ops'] += 1
+        state.results[name]['success_ops'] += 1
 
         logger.info('[{0}] {1}'.format(
-            click.style(hostname, bold=True),
+            click.style(name, bold=True),
             click.style(
                 'Success' if len(op_data['commands']) > 0 else 'No changes',
                 'green',
@@ -143,30 +144,32 @@ def _run_op(state, hostname, op_hash):
             ))
 
     # Up error_ops & log
-    state.results[hostname]['error_ops'] += 1
+    state.results[name]['error_ops'] += 1
 
     if op_meta['ignore_errors']:
         logger.warning('[{0}] {1}'.format(
-            hostname,
+            name,
             click.style('Error (ignored)', 'yellow'),
         ))
     else:
         logger.error('[{0}] {1}'.format(
-            hostname,
+            name,
             click.style('Error', 'red'),
         ))
 
     # Ignored, op "completes" w/ ignored error
     if op_meta['ignore_errors']:
-        state.results[hostname]['ops'] += 1
+        state.results[name]['ops'] += 1
         return None
 
     # Unignored error -> False
     return False
 
 
-def _run_server_ops(state, hostname, progress=None):
-    logger.debug('Running all ops on {0}'.format(hostname))
+def _run_server_ops(state, host, progress=None):
+    name = host.name
+
+    logger.debug('Running all ops on {0}'.format(name))
 
     for op_hash in state.op_order:
         op_meta = state.op_meta[op_hash]
@@ -174,10 +177,10 @@ def _run_server_ops(state, hostname, progress=None):
         logger.info('{0} {1} on {2}'.format(
             click.style('Starting operation:', 'blue'),
             click.style(', '.join(op_meta['names']), bold=True),
-            click.style(hostname, bold=True),
+            click.style(name, bold=True),
         ))
 
-        result = _run_op(state, hostname, op_hash)
+        result = _run_op(state, host, op_hash)
 
         # Trigger CLI progress if provided
         if progress:
@@ -185,7 +188,7 @@ def _run_server_ops(state, hostname, progress=None):
 
         if result is False:
             raise PyinfraError('Error in operation {0} on {1}'.format(
-                ', '.join(op_meta['names']), hostname,
+                ', '.join(op_meta['names']), name,
             ))
 
         if state.print_lines:
@@ -207,7 +210,7 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
         for host in state.inventory:
             try:
                 _run_server_ops(
-                    state, host.name,
+                    state, host,
                     progress=progress,
                 )
             except PyinfraError:
@@ -220,7 +223,7 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
         # Spawn greenlet for each host to run *all* ops
         greenlets = [
             state.pool.spawn(
-                _run_server_ops, state, host.name,
+                _run_server_ops, state, host,
                 progress=progress,
             )
             for host in state.inventory
@@ -253,7 +256,7 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
         if op_meta['serial']:
             # For each host, run the op
             for host in state.inventory:
-                result = _run_op(state, host.name, op_hash)
+                result = _run_op(state, host, op_hash)
 
                 # Trigger CLI progress if provided
                 if progress:
@@ -266,7 +269,7 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
             # Spawn greenlet for each host
             greenlets = {
                 host.name: state.pool.spawn(
-                    _run_op, state, host.name, op_hash,
+                    _run_op, state, host, op_hash,
                 )
                 for host in state.inventory
             }
