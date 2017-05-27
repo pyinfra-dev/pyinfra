@@ -1,6 +1,6 @@
 # v0.4 (WIP)
 
-Major change: entirely new, streamlined CLI. Legacy support will remain for the next few releases. Usage is now:
++ Major change: entirely new, streamlined CLI. Legacy support will remain for the next few releases. Usage is now:
 
 ```sh
 # Run one or more deploys against the inventory
@@ -14,6 +14,12 @@ pyinfra INVENTORY exec -- echo "hello world"
 
 # Run one or more facts on the inventory
 pyinfra INVENTORY fact linux_distribution [users]...
+```
+
++ Major change: new `connectors` module that means hosts are no longer limited to SSH targets. Hostnames prefixed in `@` define which non-SSH connector to use. There is a new `local` connector for executing directly on the local machine, use hostname `@local`, eg:
+
+```sh
+pyinfra @local fact arch
 ```
 
 + Add `hosts` kwarg to all operations, working like `local.include`'s
