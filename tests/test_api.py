@@ -17,11 +17,12 @@ from paramiko import (
 from paramiko.agent import AgentRequestHandler
 
 from pyinfra import pseudo_host, pseudo_state
-from pyinfra.api import Config, Inventory, ssh, State
+from pyinfra.api import Config, Inventory, State
+from pyinfra.api.connect import connect_all
+from pyinfra.api.connectors import ssh
 from pyinfra.api.exceptions import NoGroupError, NoHostError, PyinfraError
 from pyinfra.api.operation import add_limited_op, add_op
 from pyinfra.api.operations import run_ops
-from pyinfra.api.ssh import connect, connect_all
 
 from pyinfra.modules import files, server
 
@@ -33,7 +34,7 @@ from .paramiko_util import (
     FakeSFTPClient,
     FakeSSHClient,
 )
-from .util import create_host
+from .util import create_host, FakeState
 
 
 def make_inventory(hosts=('somehost', 'anotherhost'), **kwargs):
@@ -98,13 +99,13 @@ class TestInventoryApi(TestCase):
 
 class TestSSHApi(TestCase):
     def setUp(self):
-        self.fake_connect_patch = patch('pyinfra.api.ssh.SSHClient.connect')
+        self.fake_connect_patch = patch('pyinfra.api.connectors.ssh.SSHClient.connect')
         self.fake_connect_mock = self.fake_connect_patch.start()
 
-        self.fake_get_transport_patch = patch('pyinfra.api.ssh.SSHClient.get_transport')
+        self.fake_get_transport_patch = patch('pyinfra.api.connectors.ssh.SSHClient.get_transport')
         self.fake_get_transport_patch.start()
 
-        self.fake_agentrequesthandler_patch = patch('pyinfra.api.ssh.AgentRequestHandler')
+        self.fake_agentrequesthandler_patch = patch('pyinfra.api.connectors.ssh.AgentRequestHandler')
         self.fake_agentrequesthandler_patch.start()
 
     def tearDown(self):
@@ -140,7 +141,7 @@ class TestSSHApi(TestCase):
         Ensure that connection exceptions are captured and return None.
         '''
 
-        with patch('pyinfra.api.ssh.SSHClient', FakeSSHClient):
+        with patch('pyinfra.api.host.ssh.SSHClient', FakeSSHClient):
             for exception in (
                 AuthenticationException, SSHException,
                 gaierror, socket_error, EOFError,
@@ -148,15 +149,15 @@ class TestSSHApi(TestCase):
                 host = create_host(name='nowt', data={
                     'ssh_hostname': exception,
                 })
-                self.assertEqual(connect(host), None)
+                self.assertEqual(ssh.connect(FakeState(), host), None)
 
     def test_connect_with_ssh_key(self):
         state = State(make_inventory(hosts=(
             ('somehost', {'ssh_key': 'testkey'}),
         )), Config())
 
-        with patch('pyinfra.api.ssh.path.isfile', lambda *args, **kwargs: True), \
-                patch('pyinfra.api.ssh.RSAKey.from_private_key_file') as fake_key_open:
+        with patch('pyinfra.api.connect.path.isfile', lambda *args, **kwargs: True), \
+                patch('pyinfra.api.connect.RSAKey.from_private_key_file') as fake_key_open:
 
             fake_key = FakeRSAKey()
             fake_key_open.return_value = fake_key
@@ -184,8 +185,12 @@ class TestSSHApi(TestCase):
             ('somehost', {'ssh_key': 'testkey', 'ssh_key_password': 'testpass'}),
         )), Config())
 
-        with patch('pyinfra.api.ssh.path.isfile', lambda *args, **kwargs: True), \
-                patch('pyinfra.api.ssh.RSAKey.from_private_key_file') as fake_key_open:
+        with patch(
+            'pyinfra.api.connect.path.isfile',
+            lambda *args, **kwargs: True,
+        ), patch(
+            'pyinfra.api.connect.RSAKey.from_private_key_file',
+        ) as fake_key_open:
 
             def fake_key_open_fail(*args, **kwargs):
                 if 'password' not in kwargs:
@@ -369,8 +374,8 @@ class TestOperationsApi(PatchSSHTest):
         self.assertEqual(
             state.ops['somehost'][first_op_hash]['commands'],
             [
-                ('files/file.txt', '/home/vagrant/file.txt')
-            ]
+                ('files/file.txt', '/home/vagrant/file.txt'),
+            ],
         )
 
         # Ensure second op has sudo/sudo_user
@@ -405,7 +410,7 @@ class TestOperationsApi(PatchSSHTest):
         # Add op to just the first host
         add_limited_op(
             state, server.user, inventory['somehost'],
-            'somehost_user'
+            'somehost_user',
         )
 
         # Ensure there are two ops
@@ -444,12 +449,12 @@ class TestOperationsApi(PatchSSHTest):
 
         add_op(state, server.shell, 'echo "hi"')
 
-        with patch('pyinfra.api.operations.run_shell_command') as fake_run_command:
+        with patch('pyinfra.api.host.ssh.run_shell_command') as fake_run_command:
             fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
                 False,
                 FakeBuffer('', fake_channel),
-                FakeBuffer('', fake_channel)
+                FakeBuffer('', fake_channel),
             )
 
             with self.assertRaises(PyinfraError) as e:
@@ -469,12 +474,12 @@ class TestOperationsApi(PatchSSHTest):
 
         add_op(state, server.shell, 'echo "hi"', ignore_errors=True)
 
-        with patch('pyinfra.api.operations.run_shell_command') as fake_run_command:
+        with patch('pyinfra.api.host.ssh.run_shell_command') as fake_run_command:
             fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
                 False,
                 FakeBuffer('', fake_channel),
-                FakeBuffer('', fake_channel)
+                FakeBuffer('', fake_channel),
             )
 
             # This should run OK
