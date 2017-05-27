@@ -2,100 +2,34 @@
 # File: pyinfra/api/ssh.py
 # Desc: handle all SSH related stuff
 
-from __future__ import division, unicode_literals, print_function
+from __future__ import print_function, unicode_literals
 
-from os import path
-from getpass import getpass
 from socket import (
+    error as socket_error,
     gaierror,
-    error as socket_error, timeout as timeout_error,
+    timeout as timeout_error,
 )
 
 import click
 import gevent
 import six
 
-from paramiko.agent import AgentRequestHandler
 from paramiko import (
-    SSHClient, SFTPClient, RSAKey, MissingHostKeyPolicy,
-    SSHException, AuthenticationException, PasswordRequiredException,
+    AuthenticationException,
+    MissingHostKeyPolicy,
+    SFTPClient,
+    SSHClient,
+    SSHException,
 )
+from paramiko.agent import AgentRequestHandler
 
 from pyinfra import logger
-from pyinfra.api.exceptions import PyinfraError
-from pyinfra.api.util import read_buffer, make_command, get_file_io
+from pyinfra.api.util import get_file_io, make_command, read_buffer
+
+SFTP_CONNECTIONS = {}
 
 
-def _get_private_key(state, key_filename, key_password):
-    if key_filename in state.private_keys:
-        return state.private_keys[key_filename]
-
-    ssh_key_filenames = [
-        # Global from executed directory
-        path.expanduser(key_filename),
-    ]
-
-    # Relative to the deploy
-    if state.deploy_dir:
-        ssh_key_filenames.append(
-            path.join(state.deploy_dir, key_filename),
-        )
-
-    for filename in ssh_key_filenames:
-        if not path.isfile(filename):
-            continue
-
-        # First, lets try the key without a password
-        try:
-            key = RSAKey.from_private_key_file(
-                filename=filename,
-            )
-            break
-
-        # Key is encrypted!
-        except PasswordRequiredException:
-            # If password is not provided, but we're in CLI mode, ask for it. I'm not a
-            # huge fan of having CLI specific code in here, but it doesn't really fit
-            # anywhere else without duplicating lots of key related code into cli.py.
-            if not key_password:
-                if state.is_cli:
-                    key_password = getpass(
-                        'Enter password for private key: {0}: '.format(
-                            key_filename,
-                        ),
-                    )
-
-            # API mode and no password? We can't continue!
-                else:
-                    raise PyinfraError(
-                        'Private key file ({0}) is encrypted, set ssh_key_password to '
-                        'use this key'.format(key_filename),
-                    )
-
-            # Now, try opening the key with the password
-            try:
-                key = RSAKey.from_private_key_file(
-                    filename=filename,
-                    password=key_password,
-                )
-                break
-
-            except SSHException:
-                raise PyinfraError(
-                    'Incorrect password for private key: {0}'.format(
-                        key_filename,
-                    ),
-                )
-
-    # No break, so no key found
-    else:
-        raise IOError('No such private key file: {0}'.format(key_filename))
-
-    state.private_keys[key_filename] = key
-    return key
-
-
-def connect(host, **kwargs):
+def connect(state, host, **kwargs):
     '''
     Connect to a single host. Returns the SSH client if succesful. Stateless by design so
     can be run in parallel.
@@ -145,76 +79,8 @@ def connect(host, **kwargs):
         logger.error('EOF error connecting to {0}: {1}'.format(name, e))
 
 
-def connect_all(state, progress=None):
-    '''
-    Connect to all the configured servers in parallel. Reads/writes state.inventory.
-
-    Args:
-        state (``pyinfra.api.State`` obj): the state containing an inventory to connect to
-    '''
-
-    greenlets = {}
-
-    for host in state.inventory:
-        kwargs = {
-            'username': host.data.ssh_user,
-            'port': int(host.data.ssh_port) if host.data.ssh_port else 22,
-            'timeout': state.config.TIMEOUT,
-            # At this point we're assuming a password/key are provided
-            'allow_agent': False,
-            'look_for_keys': False,
-        }
-
-        # Password auth (boo!)
-        if host.data.ssh_password:
-            kwargs['password'] = host.data.ssh_password
-
-        # Key auth!
-        elif host.data.ssh_key:
-            kwargs['pkey'] = _get_private_key(
-                state,
-                key_filename=host.data.ssh_key,
-                key_password=host.data.ssh_key_password,
-            )
-
-        # No key or password, so let's have paramiko look for SSH agents and user keys
-        else:
-            kwargs['allow_agent'] = True
-            kwargs['look_for_keys'] = True
-
-        greenlets[host.name] = state.pool.spawn(connect, host, **kwargs)
-
-    # Wait for all the connections to complete
-    for _ in gevent.iwait(greenlets.values()):
-        # Trigger CLI progress if provided
-        if progress:
-            progress()
-
-    # Get/set the results
-    failed_hosts = set()
-    connected_hosts = set()
-
-    for name, greenlet in six.iteritems(greenlets):
-        client = greenlet.get()
-
-        if not client:
-            failed_hosts.add(name)
-        else:
-            state.ssh_connections[name] = client
-            connected_hosts.add(name)
-
-    # Add connected hosts to inventory
-    state.connected_hosts = connected_hosts
-
-    # Add all the hosts as active
-    state.active_hosts = set(greenlets.keys())
-
-    # Remove those that failed, triggering FAIL_PERCENT check
-    state.fail_hosts(failed_hosts)
-
-
 def run_shell_command(
-    state, hostname, command,
+    state, host, command,
     sudo=False, sudo_user=None, su_user=None,
     get_pty=False, env=None, timeout=None, print_output=False,
 ):
@@ -239,12 +105,12 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
-    print_prefix = '[{0}] '.format(click.style(hostname, bold=True))
+    print_prefix = host.print_prefix
 
     if env is None:
         env = {}
 
-    logger.debug('Building command on {0}: {1}'.format(hostname, command))
+    logger.debug('Building command on {0}: {1}'.format(host.name, command))
 
     debug_meta = {}
 
@@ -264,16 +130,13 @@ def run_shell_command(
 
     command = make_command(command, env=env, sudo=sudo, sudo_user=sudo_user, su_user=su_user)
 
-    logger.debug('--> Running command on {0}: {1}'.format(hostname, command))
+    logger.debug('--> Running command on {0}: {1}'.format(host.name, command))
 
     if print_output:
         print('{0}>>> {1}'.format(print_prefix, command))
 
-    # Get the connection for this hostname
-    connection = state.ssh_connections[hostname]
-
     # Run it! Get stdout, stderr & the underlying channel
-    _, stdout_buffer, stderr_buffer = connection.exec_command(command, get_pty=get_pty)
+    _, stdout_buffer, stderr_buffer = host.connection.exec_command(command, get_pty=get_pty)
     channel = stdout_buffer.channel
 
     # Iterate through outputs to get an exit status and generate desired list output,
@@ -311,29 +174,28 @@ def run_shell_command(
     return exit_status == 0, stdout, stderr
 
 
-def _get_sftp_connection(state, hostname):
+def _get_sftp_connection(host):
     # SFTP connections aren't *required* for deploys, so we create them on-demand
-    if hostname in state.sftp_connections:
-        return state.sftp_connections[hostname]
+    if host in SFTP_CONNECTIONS:
+        return SFTP_CONNECTIONS[host]
 
-    ssh_connection = state.ssh_connections[hostname]
-    transport = ssh_connection.get_transport()
+    transport = host.connection.get_transport()
     client = SFTPClient.from_transport(transport)
 
-    state.sftp_connections[hostname] = client
+    SFTP_CONNECTIONS[host] = client
 
     return client
 
 
-def _put_file(state, hostname, filename_or_io, remote_location):
+def _put_file(host, filename_or_io, remote_location):
     with get_file_io(filename_or_io) as file_io:
         # Upload it via SFTP
-        sftp = _get_sftp_connection(state, hostname)
+        sftp = _get_sftp_connection(host)
         sftp.putfo(file_io, remote_location)
 
 
 def put_file(
-    state, hostname, file_io, remote_file,
+    state, host, file_io, remote_file,
     sudo=False, sudo_user=None, su_user=None, print_output=False,
 ):
     '''
@@ -341,14 +203,14 @@ def put_file(
     by uploading to a temporary directory then moving & chowning.
     '''
 
-    print_prefix = '[{0}] '.format(click.style(hostname, bold=True))
+    print_prefix = '[{0}] '.format(click.style(host.name, bold=True))
 
     # sudo/su are a little more complicated, as you can only sftp with the SSH user
     # connected,  so upload to tmp and copy/chown w/sudo and/or su_user
     if sudo or su_user:
         # Get temp file location
         temp_file = state.get_temp_filename(remote_file)
-        _put_file(state, hostname, file_io, temp_file)
+        _put_file(host, file_io, temp_file)
 
         # Execute run_shell_command w/sudo and/or su_user
         command = 'mv {0} {1}'.format(temp_file, remote_file)
@@ -362,7 +224,7 @@ def put_file(
             command = '{0} && chown {1} {2}'.format(command, sudo_user, remote_file)
 
         status, _, stderr = run_shell_command(
-            state, hostname, command,
+            state, host, command,
             sudo=sudo, sudo_user=sudo_user, su_user=su_user,
             print_output=print_output,
         )
@@ -373,7 +235,7 @@ def put_file(
 
     # No sudo and no su_user, so just upload it!
     else:
-        _put_file(state, hostname, file_io, remote_file)
+        _put_file(host, file_io, remote_file)
 
     if print_output:
         print('{0}file uploaded: {1}'.format(print_prefix, remote_file))

@@ -20,7 +20,6 @@ from paramiko import SSHException
 
 from pyinfra import logger
 
-from .ssh import run_shell_command
 from .util import get_arg_value, make_hash, underscore
 
 
@@ -127,7 +126,7 @@ def get_facts(state, name, args=None):
             command = command(*host_args)
 
         greenlets[host.name] = state.fact_pool.spawn(
-            run_shell_command, state, host.name, command,
+            host.run_shell_command, state, command,
             sudo=sudo, sudo_user=sudo_user, su_user=su_user,
             print_output=state.print_fact_output,
         )
