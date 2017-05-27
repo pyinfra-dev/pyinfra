@@ -13,6 +13,7 @@ import click
 
 from pyinfra import (
     __version__,
+    logger,
     pseudo_host,
     pseudo_inventory,
     pseudo_state,
@@ -198,25 +199,41 @@ def _main(
     setup_logging(log_level)
 
     deploy_dir = getcwd()
+    potential_deploy_dirs = []
 
     # This is the most common case: we have a deploy file so use it's
     # pathname - we only look at the first file as we can't have multiple
     # deploy directories.
     if commands[0].endswith('.py'):
-        deploy_dir = path.dirname(commands[0])
+        deploy_file_dir, _ = path.split(commands[0])
+        above_deploy_file_dir, _ = path.split(deploy_file_dir)
+
+        potential_deploy_dirs.extend((
+            deploy_file_dir, above_deploy_file_dir,
+        ))
 
     # If we have a valid inventory, look in it's path and it's parent for
     # group_data or config.py to indicate deploy_dir (--fact, --run).
-    elif inventory.endswith('.py') and path.isfile(inventory):
+    if inventory.endswith('.py') and path.isfile(inventory):
         inventory_dir, _ = path.split(inventory)
         above_inventory_dir, _ = path.split(inventory_dir)
 
-        for inventory_path in (inventory_dir, above_inventory_dir):
-            if any((
-                path.isdir(path.join(inventory_path, 'group_data')),
-                path.isfile(path.join(inventory_path, 'config.py')),
-            )):
-                deploy_dir = inventory_path
+        potential_deploy_dirs.extend((
+            inventory_dir, above_inventory_dir,
+        ))
+
+    for potential_deploy_dir in potential_deploy_dirs:
+        logger.debug('Checking potential directory: {0}'.format(
+            potential_deploy_dir,
+        ))
+
+        if any((
+            path.isdir(path.join(potential_deploy_dir, 'group_data')),
+            path.isfile(path.join(potential_deploy_dir, 'config.py')),
+        )):
+            logger.debug('Setting directory to: {0}'.format(potential_deploy_dir))
+            deploy_dir = potential_deploy_dir
+            break
 
     # List facts
     if commands[0] == 'fact':
