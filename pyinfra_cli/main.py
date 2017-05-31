@@ -175,7 +175,8 @@ def main(*args, **kwargs):
         # Re-raise any internal exceptions that aren't handled by click as
         # CliErrors which are.
         if not isinstance(e, click.ClickException):
-            raise CliError(e.message)
+            message = getattr(e, 'message', e.args[0])
+            raise CliError(message)
 
         raise
 
