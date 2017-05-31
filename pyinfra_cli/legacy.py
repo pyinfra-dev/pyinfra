@@ -99,14 +99,36 @@ def run_main_with_legacy_arguments(main):
 
     kwargs['commands'] = commands
 
+    print(click.style(
+        'Falling back to old legacy v<0.4 CLI, in future please use:',
+        'yellow',
+    ))
+    print()
+    print(click.style('    pyinfra [OPTIONS] {0} {1}'.format(
+        kwargs['inventory'],
+        ' '.join(commands),
+    ), bold=True))
+
     try:
         main(**kwargs)
     except CliError as e:
-        click.echo('Unexpected exception: {0}({1})'.format(
+        click.echo('Error: {0}({1})'.format(
             e.__class__.__name__,
             click.style(e.message, 'red', bold=True),
         ))
         sys.exit(1)
+
+    finally:
+        print()
+        print(click.style(
+            'pyinfra was executed with the legacy v<0.4 CLI, in future please use:',
+            'yellow',
+        ))
+        print()
+        print(click.style('    pyinfra [OPTIONS] {0} {1}'.format(
+            kwargs['inventory'],
+            ' '.join(commands),
+        ), bold=True))
 
 
 def setup_op_and_args(op_string, args_string):
