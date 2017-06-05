@@ -61,6 +61,13 @@ class FakeData(object):
     def iteritems(self):
         return iter([(FakeData(), FakeData())])
 
+    # Context manager use
+    def __enter__(self, *args, **kwargs):
+        pass
+
+    def __exit__(self, *args, **kwargs):
+        pass
+
 
 class FakeState(FakeData):
     active = False
