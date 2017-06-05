@@ -149,6 +149,12 @@ def operation(func=None, pipeline_facts=None):
                 '{0}/{1}'.format(module_name.title(), func.__name__.title()),
             }
 
+        if state.deploy_name:
+            names = {
+                '{0} | {1}'.format(state.deploy_name, name)
+                for name in names
+            }
+
         # Locally & globally configurable
         sudo = kwargs.pop('sudo', state.config.SUDO)
         sudo_user = kwargs.pop('sudo_user', state.config.SUDO_USER)

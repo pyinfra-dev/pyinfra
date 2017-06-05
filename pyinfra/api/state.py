@@ -59,6 +59,9 @@ class State(object):
     # List of hosts to only apply operations to
     limit_hosts = None
 
+    # Name of the current deploy
+    deploy_name = None
+
     # Flags for printing
     print_output = False  # print output from the actual deploy (-v)
     print_fact_info = False  # log fact gathering as INFO > DEBUG (-v)
@@ -178,6 +181,12 @@ class State(object):
         self.limit_hosts = hosts
         yield
         self.limit_hosts = None
+
+    @contextmanager
+    def named_deploy(self, name):
+        self.deploy_name = name
+        yield
+        self.deploy_name = None
 
     def ready_host(self, host):
         '''
