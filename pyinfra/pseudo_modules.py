@@ -27,6 +27,9 @@ class PseudoModule(object):
     def __len__(self):
         return len(self._module)
 
+    def __eq__(self):
+        pass
+
     def set(self, module):
         self._module = module
 
