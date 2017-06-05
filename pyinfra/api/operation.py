@@ -175,7 +175,7 @@ def operation(func=None, pipeline_facts=None):
             hosts = ensure_hosts_list(hosts)
 
         # Config env followed by command-level env
-        env = state.config.ENV
+        env = state.config.ENV.copy()
         env.update(kwargs.pop('env', {}))
 
         # Get/generate a hash for this op
