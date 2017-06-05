@@ -87,9 +87,9 @@ def operation(func=None, pipeline_facts=None):
 
     # If not decorating, return function with config attached
     if func is None:
-        def decorator(func):
-            setattr(func, 'pipeline_facts', pipeline_facts)
-            return operation(func)
+        def decorator(f):
+            setattr(f, 'pipeline_facts', pipeline_facts)
+            return operation(f)
 
         return decorator
 
