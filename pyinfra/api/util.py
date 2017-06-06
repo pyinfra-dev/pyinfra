@@ -166,6 +166,9 @@ def get_arg_value(state, host, arg):
     elif isinstance(arg, list):
         return [get_arg_value(state, host, value) for value in arg]
 
+    elif isinstance(arg, tuple):
+        return tuple(get_arg_value(state, host, value) for value in arg)
+
     elif isinstance(arg, dict):
         return {
             key: get_arg_value(state, host, value)
