@@ -22,6 +22,8 @@ pyinfra INVENTORY fact linux_distribution [users]...
 pyinfra @local fact arch
 ```
 
++ Add `server.script_template` operation
++ Add `cache_time` kwarg to `apt.update` operation
 + Add `hosts` kwarg to all operations, working like `local.include`'s
 + Add `Inventory.get_group` and `Inventory.get_host`
 + Inventory `__len__` now (correctly) looks at active hosts, rather than all
