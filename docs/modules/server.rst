@@ -35,6 +35,19 @@ Upload and execute a local script on the remote host.
 + **chdir**: directory to cd into before executing the script
 
 
+:code:`server.script_template`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Generate, upload and execute a local script template on the remote host.
+
+.. code:: python
+
+    server.script_template(template_filename, chdir=None)
+
++ **template_filename**: local script template filename
++ **chdir**: directory to cd into before executing the script
+
+
 :code:`server.shell`
 ~~~~~~~~~~~~~~~~~~~~
 

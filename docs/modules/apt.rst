@@ -114,8 +114,9 @@ Updates apt repos.
 
 .. code:: python
 
-    apt.update(touch_periodic=False)
+    apt.update(cache_time=None, touch_periodic=False)
 
++ **cahce_time**: cache updates for this many seconds
 + **touch_periodic**: touch ``/var/lib/apt/periodic/update-success-stamp`` after update
 
 
