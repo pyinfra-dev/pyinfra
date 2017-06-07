@@ -1,3 +1,7 @@
+# pyinfra
+# File: pyinfra/api/connect.py
+# Desc: handle connecting to the inventory
+
 from getpass import getpass
 from os import path
 
