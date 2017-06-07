@@ -185,19 +185,31 @@ def deb(state, host, source, present=True, force=False):
 
 
 @operation
-def update(state, host, touch_periodic=False):
+def update(state, host, cache_time=None, touch_periodic=False):
     '''
     Updates apt repos.
 
+    + cahce_time: cache updates for this many seconds
     + touch_periodic: touch ``/var/lib/apt/periodic/update-success-stamp`` after update
     '''
+
+    # If cache_time check when apt was last updated, prevent updates if within time
+    if cache_time:
+        # Ubuntu provides this handy file
+        cache_info = host.fact.file(APT_UPDATE_FILENAME)
+
+        # Time on files is not tz-aware, and will be the same tz as the server's time,
+        # so we can safely remove the tzinfo from host.fact.date before comparison.
+        host_cache_time = host.fact.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
+        if cache_info and cache_info['mtime'] and cache_info['mtime'] > host_cache_time:
+            return
 
     yield 'apt-get update'
 
     # Some apt systems (Debian) have the /var/lib/apt/periodic directory, but
     # don't bother touching anything in there - so pyinfra does it, enabling
     # cache_time to work.
-    if touch_periodic:
+    if cache_time:
         yield 'touch {0}'.format(APT_UPDATE_FILENAME)
 
 _update = update  # noqa
@@ -242,19 +254,8 @@ def packages(
         simply leave the periodic directory empty (Debian).
     '''
 
-    # If cache_time check when apt was last updated, prevent updates if within time
-    if update and cache_time:
-        # Ubuntu provides this handy file
-        cache_info = host.fact.file(APT_UPDATE_FILENAME)
-
-        # Time on files is not tz-aware, and will be the same tz as the server's time,
-        # so we can safely remove the tzinfo from host.fact.date before comparison.
-        host_cache_time = host.fact.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
-        if cache_info and cache_info['mtime'] and cache_info['mtime'] > host_cache_time:
-            update = False
-
     if update:
-        yield _update(state, host, touch_periodic=cache_time)
+        yield _update(state, host, cache_time=cache_time)
 
     if upgrade:
         yield _upgrade(state, host)
