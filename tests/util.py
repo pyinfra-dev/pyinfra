@@ -14,6 +14,7 @@ from pyinfra.api.attrs import AttrData
 class FakeState(object):
     active = True
     deploy_dir = '/'
+    deploy_name = None
     in_op = True
     pipelining = False
 
