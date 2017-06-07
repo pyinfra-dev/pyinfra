@@ -75,6 +75,26 @@ def script(state, host, filename, chdir=None):
 
 
 @operation
+def script_template(state, host, template_filename, chdir=None, **data):
+    '''
+    Generate, upload and execute a local script template on the remote host.
+
+    + template_filename: local script template filename
+    + chdir: directory to cd into before executing the script
+    '''
+
+    temp_file = state.get_temp_filename(template_filename)
+    yield files.template(state, host, template_filename, temp_file, **data)
+
+    yield chmod(temp_file, '+x')
+
+    if chdir:
+        yield 'cd {0} && {1}'.format(chdir, temp_file)
+    else:
+        yield temp_file
+
+
+@operation
 def group(
     state, host, name, present=True, system=False,
 ):
