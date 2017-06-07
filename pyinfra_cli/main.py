@@ -209,6 +209,8 @@ def _main(
         deploy_file_dir, _ = path.split(commands[0])
         above_deploy_file_dir, _ = path.split(deploy_file_dir)
 
+        deploy_dir = deploy_file_dir
+
         potential_deploy_dirs.extend((
             deploy_file_dir, above_deploy_file_dir,
         ))
