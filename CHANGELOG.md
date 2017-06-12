@@ -1,6 +1,6 @@
 # v0.4 (WIP)
 
-+ Major change: entirely new, streamlined CLI. Legacy support will remain for the next few releases. Usage is now:
++ **Major change**: entirely new, streamlined CLI. Legacy support will remain for the next few releases. Usage is now:
 
 ```sh
 # Run one or more deploys against the inventory
@@ -16,10 +16,24 @@ pyinfra INVENTORY exec -- echo "hello world"
 pyinfra INVENTORY fact linux_distribution [users]...
 ```
 
-+ Major change: new `connectors` module that means hosts are no longer limited to SSH targets. Hostnames prefixed in `@` define which non-SSH connector to use. There is a new `local` connector for executing directly on the local machine, use hostname `@local`, eg:
++ **Major change**: new `connectors` module that means hosts are no longer limited to SSH targets. Hostnames prefixed in `@` define which non-SSH connector to use. There is a new `local` connector for executing directly on the local machine, use hostname `@local`, eg:
 
 ```sh
 pyinfra @local fact arch
+```
+
++ **Major addition**: add `@deploy` wrapper for pyinfra related modules (eg [pyinfra-openstack](https://github.com/Oxygem/pyinfra-openstack)) to wrap a deploy (collection of operations) under one function, eg:
+
+```py
+from pyinfra.api import deploy
+
+@deploy('Install Openstack controller')
+def install_openstack_controller(state, host):
+    apt.packages(
+        {'Install mysql-server'},
+        ['mysql-server'],
+    )
+    ...
 ```
 
 + Add `server.script_template` operation
