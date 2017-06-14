@@ -128,7 +128,13 @@ def run_shell_command(
         for key, value in six.iteritems(debug_meta)
     )))
 
-    command = make_command(command, env=env, sudo=sudo, sudo_user=sudo_user, su_user=su_user)
+    command = make_command(
+        command,
+        env=env,
+        sudo=sudo,
+        sudo_user=sudo_user,
+        su_user=su_user,
+    )
 
     logger.debug('--> Running command on {0}: {1}'.format(host.name, command))
 

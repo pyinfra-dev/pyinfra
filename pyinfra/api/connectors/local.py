@@ -2,7 +2,8 @@ from __future__ import unicode_literals
 
 from subprocess import PIPE, Popen
 
-from pyinfra.api.util import read_buffer
+from pyinfra import logger
+from pyinfra.api.util import make_command, read_buffer
 
 
 def connect(state, host, **kwargs):
@@ -14,6 +15,15 @@ def run_shell_command(
     sudo=False, sudo_user=None, su_user=None,
     get_pty=False, env=None, timeout=None, print_output=False,
 ):
+    command = make_command(
+        command,
+        env=env,
+        sudo=sudo,
+        sudo_user=sudo_user,
+        su_user=su_user,
+    )
+
+    logger.debug('--> Running command on localhost: {0}'.format(command))
 
     print_prefix = host.print_prefix
 
