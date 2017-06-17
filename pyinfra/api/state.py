@@ -99,7 +99,7 @@ class State(object):
 
             if needed_version > running_version:
                 raise PyinfraError((
-                    'Minimum version not met '
+                    'Minimum pyinfra version not met '
                     '(minimum={0}, running={1})'
                 ).format(
                     config.MIN_PYINFRA_VERSION,
