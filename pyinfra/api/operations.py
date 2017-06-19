@@ -48,6 +48,7 @@ def _run_op(state, host, op_hash):
         sudo = op_meta['sudo']
         sudo_user = op_meta['sudo_user']
         su_user = op_meta['su_user']
+        preserve_sudo_env = op_meta['preserve_sudo_env']
 
         # As dicts, individual commands can override meta settings (ie on a
         # per-host basis generated during deploy).
@@ -94,6 +95,7 @@ def _run_op(state, host, op_hash):
                     sudo=sudo,
                     sudo_user=sudo_user,
                     su_user=su_user,
+                    preserve_sudo_env=preserve_sudo_env,
                     timeout=op_meta['timeout'],
                     get_pty=op_meta['get_pty'],
                     env=op_data['env'],

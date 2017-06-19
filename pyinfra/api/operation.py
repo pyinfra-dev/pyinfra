@@ -169,6 +169,8 @@ def operation(func=None, pipeline_facts=None):
         timeout = kwargs.pop('timeout', None)
         # Get a PTY before executing commands
         get_pty = kwargs.pop('get_pty', False)
+        # Whether to preserve ENVars when sudoing (eg SSH forward agent socket)
+        preserve_sudo_env = kwargs.pop('preserve_sudo_env', False)
 
         # Limit this op to certain hosts
         hosts = kwargs.pop('hosts', False)
@@ -284,6 +286,7 @@ def operation(func=None, pipeline_facts=None):
             'run_once': run_once,
             'timeout': timeout,
             'get_pty': get_pty,
+            'preserve_sudo_env': preserve_sudo_env,
         })
 
         # Add any new names to the set

@@ -12,7 +12,7 @@ def connect(state, host, **kwargs):
 
 def run_shell_command(
     state, host, command,
-    sudo=False, sudo_user=None, su_user=None,
+    sudo=False, sudo_user=None, su_user=None, preserve_sudo_env=False,
     get_pty=False, env=None, timeout=None, print_output=False,
 ):
     command = make_command(
@@ -21,6 +21,7 @@ def run_shell_command(
         sudo=sudo,
         sudo_user=sudo_user,
         su_user=su_user,
+        preserve_sudo_env=preserve_sudo_env,
     )
 
     logger.debug('--> Running command on localhost: {0}'.format(command))

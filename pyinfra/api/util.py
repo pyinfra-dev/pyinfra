@@ -112,7 +112,14 @@ def sha1_hash(string):
     return hasher.hexdigest()
 
 
-def make_command(command, env=None, su_user=None, sudo=False, sudo_user=None):
+def make_command(
+    command,
+    env=None,
+    su_user=None,
+    sudo=False,
+    sudo_user=None,
+    preserve_sudo_env=False,
+):
     '''
     Builds a shell command with various kwargs.
     '''
@@ -138,10 +145,15 @@ def make_command(command, env=None, su_user=None, sudo=False, sudo_user=None):
 
     # Use sudo (w/user?)
     if sudo:
+        sudo_bits = ['sudo', '--set-home']
+
+        if preserve_sudo_env:
+            sudo_bits.append('--preserve-env')
+
         if sudo_user:
-            command = 'sudo -H -u {0} -S {1}'.format(sudo_user, command)
-        else:
-            command = 'sudo -H -S {0}'.format(command)
+            sudo_bits.extend(('--user', sudo_user))
+
+        command = '{0} {1}'.format(' '.join(sudo_bits), command)
 
     return command
 
