@@ -64,24 +64,11 @@ def repo(
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
+        # Attempt to parse the domain from the git repository
         domain = re.match(r'^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)', source)
 
         if domain:
-            domain = domain.group(1)
-
-            cmd = '''
-                cat ~/.ssh/known_hosts | grep {0} || ssh-keyscan {0} >> ~/.ssh/known_hosts
-            '''.format(domain)
-
-            if use_ssh_user:
-                yield {
-                    'command': cmd,
-                    'sudo': False,
-                    'sudo_user': False,
-                }
-
-            else:
-                yield cmd
+            yield ssh.keyscan(domain)
 
     # Store git commands for directory prefix
     git_commands = []
