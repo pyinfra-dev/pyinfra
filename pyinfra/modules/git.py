@@ -2,14 +2,19 @@
 # File: pyinfra/modules/git.py
 # Desc: manage git repositories
 
+'''
+Manage git repositories and configuration.
+'''
+
 from __future__ import unicode_literals
 
 import re
 
+from pyinfra import logger
 from pyinfra.api import operation
 
-from . import files
-from .util.files import chown, chmod
+from . import files, ssh
+from .util.files import chmod, chown
 
 
 @operation(pipeline_facts={
@@ -30,17 +35,24 @@ def repo(
     + rebase: when pulling, use ``--rebase``
     + user: chown files to this user after
     + group: chown files to this group after
-    + use_ssh_user: whether to use the SSH user to clone/pull
     + ssh_keyscan: keyscan the remote host if not in known_hosts before clone/pull
 
-    SSH user:
-        This is essentially a hack to bypass the fact that sudo doesn't carry SSH agent:
+    + [DEPRECATED] use_ssh_user: whether to use the SSH user to clone/pull
+
+    SSH user (deprecated, please use ``preserve_sudo_env``):
+        This is an old hack from pyinfra <0.4 which did not support the global
+        kwarg ``preserve_sudo_env``. It does the following:
 
         * makes the target directory writeable by all
         * clones/pulls w/o sudo as the connecting SSH user
-        * removes other/group write permissions - unless group is defined, in which case
-          only other
+        * removes other/group write permissions - unless group is defined, in
+          which case only other
     '''
+
+    if use_ssh_user:
+        logger.warning(
+            'Use of `use_ssh_user`, please use `preserve_sudo_env` instead.',
+        )
 
     # Ensure our target directory exists
     yield files.directory(state, host, target)
