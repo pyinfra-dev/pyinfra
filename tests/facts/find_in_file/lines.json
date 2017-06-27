@@ -1,0 +1,11 @@
+{
+    "arg": ["/home/pyinfra/mylink", "test"],
+    "output": [
+        "thing test thing",
+        "another test"
+    ],
+    "fact": [
+        "thing test thing",
+        "another test"
+    ]
+}

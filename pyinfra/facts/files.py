@@ -66,12 +66,19 @@ class FindInFile(FactBase):
 
     def command(self, name, pattern):
         self.name = name
-        return 'grep "{0}" {1} || find {1}'.format(pattern, name)
+
+        return '''
+            grep "{0}" {1} || (find {1} -type f && echo "_exists_{1}")
+        '''.format(pattern, name)
 
     def process(self, output):
-        # If output is the filename (ie caught by the || find <filename>), no matches, so
-        # return an empty list.
-        if output[0] == self.name:
+        # If output is the special string: no matches, so return an empty list;
+        # this allows us to differentiate between no matches in an existing file
+        # or a file not existing.
+        if output and (
+            output[0] == self.name
+            and output[1] == '_exists_{0}'.format(self.name)
+        ):
             return []
 
         return output
