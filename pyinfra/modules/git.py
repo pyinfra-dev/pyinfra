@@ -68,7 +68,7 @@ def repo(
         domain = re.match(r'^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)', source)
 
         if domain:
-            yield ssh.keyscan(domain)
+            yield ssh.keyscan(state, host, domain.group(1))
 
     # Store git commands for directory prefix
     git_commands = []
