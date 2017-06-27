@@ -9,9 +9,10 @@ The files module handles filesystem state, file uploads and template generation.
 from __future__ import unicode_literals
 
 import sys
-from os import path, walk
-from fnmatch import fnmatch
+
 from datetime import timedelta
+from fnmatch import fnmatch
+from os import path, walk
 
 import six
 from jinja2 import UndefinedError

@@ -3,8 +3,9 @@
 # Desc: the facts API
 
 '''
-The pyinfra facts API. Facts enable pyinfra to collect remote server state which is used
-to "diff" with the desired state, producing the final commands required for a deploy.
+The pyinfra facts API. Facts enable pyinfra to collect remote server state which
+is used to "diff" with the desired state, producing the final commands required
+for a deploy.
 '''
 
 from __future__ import division, unicode_literals
