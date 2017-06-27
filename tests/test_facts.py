@@ -28,7 +28,10 @@ def make_fact_tests(fact_name):
 
         def jsontest_function(self, test_name, test_data):
             if 'arg' in test_data:
-                fact.command(test_data['arg'])
+                if isinstance(test_data['arg'], list):
+                    fact.command(*test_data['arg'])
+                else:
+                    fact.command(test_data['arg'])
 
             data = fact.process(test_data['output'])
 
