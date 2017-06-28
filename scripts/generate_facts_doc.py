@@ -2,8 +2,8 @@
 # File: docs/generate_fact_docs.py
 # Desc: generate rst docs from the fact classes
 
+from inspect import getargspec, getmembers, isclass
 from types import MethodType
-from inspect import getmembers, getargspec, isclass
 
 from six.moves import range
 
@@ -52,7 +52,10 @@ def build_facts():
                 # will need to refactor to print properly in future.
                 argspec = getargspec(command_attr)
                 if len(argspec.args) > 1:
-                    name = '{0}({1})'.format(name, argspec.args[1])
+                    name = '{0}({1})'.format(
+                        name,
+                        ', '.join(arg for arg in argspec.args if arg != 'self'),
+                    )
 
             name = ':code:`{0}`'.format(name)
             lines.append(name)

@@ -3,9 +3,9 @@
 # Desc: generate rst docs from the module modules
 
 import re
-from types import FunctionType
 from importlib import import_module
-from inspect import getmembers, getargspec
+from inspect import getargspec, getmembers
+from types import FunctionType
 
 from six.moves import range
 
@@ -87,7 +87,7 @@ def build_facts():
             # Create a dict of arg name -> default
             defaults = dict(zip(
                 argspec.args[-len(arg_defaults):],
-                arg_defaults
+                arg_defaults,
             )) if arg_defaults else {}
 
             # Build args string
