@@ -32,26 +32,26 @@ INSTALL_REQUIRES = (
 
 TEST_REQUIRES = (
     'nose==1.3.7',
-    'jsontest==1.2',
-    'coverage==4.0.3',
+    'jsontest==1.3',
+    'coverage==4.4.1',
     'mock==1.3.0',
 )
 
 DEV_REQUIRES = TEST_REQUIRES + (
     # Releasing
     'wheel',
-    'twine==1.8.1',
+    'twine==1.9.1',
 
     # Dev debugging
-    'ipdb',
-    'ipdbplugin',
+    'ipdb==0.10.3',
+    'ipdbplugin==1.4.5',
 
     # Dev docs requirements
-    'sphinx==1.3.1',
-    'sphinx-autobuild==0.5.2',
+    'sphinx==1.6.2',
+    'sphinx-autobuild==0.6.0',
 
     # Convert markdowns to rst for long_description
-    'pypandoc==1.3.3',
+    'pypandoc==1.4',
 )
 
 
