@@ -16,7 +16,7 @@ pyinfra INVENTORY exec -- echo "hello world"
 pyinfra INVENTORY fact linux_distribution [users]...
 ```
 
-+ **Major change**: new `connectors` module that means hosts are no longer limited to SSH targets. Hostnames prefixed in `@` define which non-SSH connector to use. There is a new `local` connector for executing directly on the local machine, use hostname `@local`, eg:
++ **Major addition**: new `connectors` module that means hosts are no longer limited to SSH targets. Hostnames prefixed in `@` define which non-SSH connector to use. There is a new `local` connector for executing directly on the local machine, use hostname `@local`, eg:
 
 ```sh
 pyinfra @local fact arch
@@ -30,12 +30,14 @@ from pyinfra.api import deploy
 @deploy('Install Openstack controller')
 def install_openstack_controller(state, host):
     apt.packages(
+        state, host,
         {'Install mysql-server'},
         ['mysql-server'],
     )
     ...
 ```
 
++ Add **SSH module**: `ssh.keyscan`, `ssh.command`, `ssh.upload`, `ssh.download`
 + Add `server.script_template` operation
 + Add `cache_time` kwarg to `apt.update` operation
 + Add `hosts` kwarg to all operations, working like `local.include`'s
