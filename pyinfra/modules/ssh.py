@@ -36,8 +36,20 @@ def keyscan(state, host, hostname, force=False):
 
 
 @operation
-def command(state, host, hostname, command):
-    yield 'ssh {0} "{1}"'.format(hostname, command)
+def command(state, host, hostname, command, ssh_user=None):
+    '''
+    Execute commands on other servers over SSH.
+
+    + hostname: the hostname to connect to
+    + command: the command to execute
+    + ssh_user: connect with this user
+    '''
+
+    connection_target = hostname
+    if ssh_user:
+        connection_target = '@'.join((ssh_user, hostname))
+
+    yield 'ssh {0} "{1}"'.format(connection_target, command)
 
 
 @operation
