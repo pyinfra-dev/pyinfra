@@ -158,6 +158,24 @@ def make_command(
     Builds a shell command with various kwargs.
     '''
 
+    logger.debug('Building command {0}'.format(command))
+
+    debug_meta = {}
+
+    for key, value in (
+        ('sudo', sudo),
+        ('sudo_user', sudo_user),
+        ('su_user', su_user),
+        ('env', env),
+    ):
+        if value:
+            debug_meta[key] = value
+
+    logger.debug('Command meta ({0})'.format(' '.join(
+        '{0}: {1}'.format(key, value)
+        for key, value in six.iteritems(debug_meta)
+    )))
+
     # Use env & build our actual command
     if env:
         env_string = ' '.join([

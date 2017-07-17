@@ -12,7 +12,6 @@ from socket import (
 
 import click
 import gevent
-import six
 
 from paramiko import (
     AuthenticationException,
@@ -51,8 +50,8 @@ def connect(state, host, **kwargs):
         AgentRequestHandler(session)
 
         # Log
-        logger.info('[{0}] {1}'.format(
-            click.style(name, bold=True),
+        logger.info('{0}{1}'.format(
+            host.print_prefix,
             click.style('Connected', 'green'),
         ))
 
@@ -98,35 +97,9 @@ def run_shell_command(
         timeout (int): timeout for this command to complete before erroring
 
     Returns:
-        tuple: (channel, stdout, stderr)
-
-        Channel is a Paramiko channel object, mainly used for it's ``.exit_code`` attribute.
-
+        tuple: (exit_code, stdout, stderr)
         stdout and stderr are both lists of strings from each buffer.
     '''
-
-    print_prefix = host.print_prefix
-
-    if env is None:
-        env = {}
-
-    logger.debug('Building command on {0}: {1}'.format(host.name, command))
-
-    debug_meta = {}
-
-    for key, value in (
-        ('sudo', sudo),
-        ('sudo_user', sudo_user),
-        ('su_user', su_user),
-        ('env', env),
-    ):
-        if value:
-            debug_meta[key] = value
-
-    logger.debug('Command meta ({0})'.format(' '.join(
-        '{0}: {1}'.format(key, value)
-        for key, value in six.iteritems(debug_meta)
-    )))
 
     command = make_command(
         command,
@@ -140,34 +113,42 @@ def run_shell_command(
     logger.debug('--> Running command on {0}: {1}'.format(host.name, command))
 
     if print_output:
-        print('{0}>>> {1}'.format(print_prefix, command))
+        print('{0}>>> {1}'.format(host.print_prefix, command))
 
     # Run it! Get stdout, stderr & the underlying channel
-    _, stdout_buffer, stderr_buffer = host.connection.exec_command(command, get_pty=get_pty)
+    _, stdout_buffer, stderr_buffer = host.connection.exec_command(
+        command,
+        get_pty=get_pty,
+    )
+
     channel = stdout_buffer.channel
 
-    # Iterate through outputs to get an exit status and generate desired list output,
-    # done in two greenlets so stdout isn't printed before stderr. Not attached to
-    # state.pool to avoid blocking it with 2x n-hosts greenlets.
+    # Iterate through outputs to get an exit status and generate desired list
+    # output, done in two greenlets so stdout isn't printed before stderr. Not
+    # attached to state.pool to avoid blocking it with 2x n-hosts greenlets.
     stdout_reader = gevent.spawn(
         read_buffer, stdout_buffer,
         print_output=print_output,
-        print_func=lambda line: '{0}{1}'.format(print_prefix, line),
+        print_func=lambda line: '{0}{1}'.format(host.print_prefix, line),
     )
     stderr_reader = gevent.spawn(
         read_buffer, stderr_buffer,
         print_output=print_output,
-        print_func=lambda line: '{0}{1}'.format(print_prefix, click.style(line, 'red')),
+        print_func=lambda line: '{0}{1}'.format(
+            host.print_prefix, click.style(line, 'red'),
+        ),
     )
 
     # Wait on output, with our timeout (or None)
     greenlets = gevent.wait((stdout_reader, stderr_reader), timeout=timeout)
 
-    # Timeout doesn't raise an exception, but gevent.wait returns the greenlets which did
-    # complete. So if both haven't completed, we kill them and fail with a timeout.
+    # Timeout doesn't raise an exception, but gevent.wait returns the greenlets
+    # which did complete. So if both haven't completed, we kill them and fail
+    # with a timeout.
     if len(greenlets) != 2:
         stdout_reader.kill()
         stderr_reader.kill()
+
         raise timeout_error()
 
     # Read the buffers into a list of lines
@@ -206,14 +187,12 @@ def put_file(
     sudo=False, sudo_user=None, su_user=None, print_output=False,
 ):
     '''
-    Upload file-ios to the specified host using SFTP. Supports uploading files with sudo
-    by uploading to a temporary directory then moving & chowning.
+    Upload file-ios to the specified host using SFTP. Supports uploading files
+    with sudo by uploading to a temporary directory then moving & chowning.
     '''
 
-    print_prefix = '[{0}] '.format(click.style(host.name, bold=True))
-
-    # sudo/su are a little more complicated, as you can only sftp with the SSH user
-    # connected,  so upload to tmp and copy/chown w/sudo and/or su_user
+    # sudo/su are a little more complicated, as you can only sftp with the SSH
+    # user connected,  so upload to tmp and copy/chown w/sudo and/or su_user
     if sudo or su_user:
         # Get temp file location
         temp_file = state.get_temp_filename(remote_file)
@@ -236,7 +215,7 @@ def put_file(
             print_output=print_output,
         )
 
-        if not status:
+        if status is False:
             logger.error('File error: {0}'.format('\n'.join(stderr)))
             return False
 
