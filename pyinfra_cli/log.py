@@ -2,10 +2,9 @@
 # File: pyinfra_cli/log.py
 # Desc: logging for the CLI
 
-from __future__ import division, print_function
+from __future__ import division, print_function, unicode_literals
 
 import logging
-import re
 import sys
 
 import click
@@ -41,10 +40,7 @@ class LogFormatter(logging.Formatter):
 
         # We only handle strings here
         if isinstance(message, six.string_types):
-            # Horrible string matching hack
-            if re.match(r'.*Starting[ a-zA-Z,]*operation.*', message):
-                message = '--> {0}'.format(message)
-            else:
+            if '-->' not in message:
                 message = '    {0}'.format(message)
 
             if record.levelno in self.level_to_format:

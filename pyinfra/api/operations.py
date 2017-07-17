@@ -4,15 +4,21 @@
 
 from __future__ import print_function, unicode_literals
 
-from socket import timeout as timeout_error
+from socket import (
+    error as socket_error,
+    timeout as timeout_error,
+)
 from types import FunctionType
 
 import click
 import gevent
 import six
 
+from paramiko import SSHException
+
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
+from pyinfra.api.util import format_exception, log_host_command_error
 
 
 def _run_op(state, host, op_hash):
@@ -31,9 +37,6 @@ def _run_op(state, host, op_hash):
 
     op_data = state.ops[name][op_hash]
     op_meta = state.op_meta[op_hash]
-
-    stderr_buffer = []
-    print_prefix = '{0}: '.format(click.style(name, bold=True))
 
     logger.debug('Starting operation {0} on {1}'.format(
         ', '.join(op_meta['names']), name,
@@ -70,24 +73,55 @@ def _run_op(state, host, op_hash):
         if isinstance(command, tuple):
             # If first element is function, it's a callback
             if isinstance(command[0], FunctionType):
-                status = command[0](
-                    state, state.inventory.get_host(name), name,
-                    *command[1], **command[2]
-                )
+                func, args, kwargs = command
+
+                try:
+                    status = func(
+                        state, state.inventory.get_host(name),
+                        *args, **kwargs
+                    )
+
+                # Custom functions could do anything, so expect anything!
+                except Exception as e:
+                    status = False
+
+                    logger.error('{0}{1}'.format(
+                        host.print_prefix,
+                        click.style(
+                            'Unexpected error in Python callback: {0}'.format(
+                                format_exception(e),
+                            ),
+                            'red',
+                        ),
+                    ))
 
             # Non-function mean files to copy
             else:
-                status = host.put_file(
-                    state,
-                    command[0], command[1],
-                    sudo=sudo,
-                    sudo_user=sudo_user,
-                    su_user=su_user,
-                    print_output=state.print_output,
-                )
+                file_io, remote_filename = command
+
+                try:
+                    status = host.put_file(
+                        state,
+                        file_io,
+                        remote_filename,
+                        sudo=sudo,
+                        sudo_user=sudo_user,
+                        su_user=su_user,
+                        print_output=state.print_output,
+                    )
+
+                except (timeout_error, socket_error, SSHException) as e:
+                    log_host_command_error(
+                        host,
+                        e,
+                        timeout=op_meta['timeout'],
+                    )
 
         # Must be a string/shell command: execute it on the server w/op-level preferences
         else:
+            status = False
+            stderr = []
+
             try:
                 status, _, stderr = host.run_shell_command(
                     state,
@@ -102,20 +136,22 @@ def _run_op(state, host, op_hash):
                     print_output=state.print_output,
                 )
 
-                # Keep stderr in case of error
-                stderr_buffer.extend(stderr)
-
-            except timeout_error:
-                timeout_message = 'Operation timeout after {0}s'.format(
-                    op_meta['timeout'],
+            except (timeout_error, socket_error, SSHException) as e:
+                log_host_command_error(
+                    host,
+                    e,
+                    timeout=op_meta['timeout'],
                 )
-                stderr_buffer.append(timeout_message)
-                status = False
 
-                # Print the timeout error as not printed by run_shell_command
-                if state.print_output:
-                    print('{0}{1}'.format(print_prefix, timeout_message))
+            # If we failed and have no already printed the stderr, print it
+            if status is False and not state.print_output:
+                for line in stderr:
+                    logger.error('{0}{1}'.format(
+                        host.print_prefix,
+                        click.style(line, 'red'),
+                    ))
 
+        # Break the loop to trigger a failure
         if status is False:
             break
         else:
@@ -127,8 +163,8 @@ def _run_op(state, host, op_hash):
         state.results[name]['ops'] += 1
         state.results[name]['success_ops'] += 1
 
-        logger.info('[{0}] {1}'.format(
-            click.style(name, bold=True),
+        logger.info('{0}{1}'.format(
+            host.print_prefix,
             click.style(
                 'Success' if len(op_data['commands']) > 0 else 'No changes',
                 'green',
@@ -136,14 +172,6 @@ def _run_op(state, host, op_hash):
         ))
 
         return True
-
-    # If the op failed somewhere, print stderr (if not already printed!)
-    if not state.print_output:
-        for line in stderr_buffer:
-            print('    {0}{1}'.format(
-                print_prefix,
-                click.style(line, 'red'),
-            ))
 
     # Up error_ops & log
     state.results[name]['error_ops'] += 1
@@ -176,8 +204,8 @@ def _run_server_ops(state, host, progress=None):
     for op_hash in state.op_order:
         op_meta = state.op_meta[op_hash]
 
-        logger.info('{0} {1} on {2}'.format(
-            click.style('Starting operation:', 'blue'),
+        logger.info('--> {0} {1} on {2}'.format(
+            click.style('--> Starting operation:', 'blue'),
             click.style(', '.join(op_meta['names']), bold=True),
             click.style(name, bold=True),
         ))
@@ -246,7 +274,7 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
             op_types.append('run once')
 
         logger.info('{0} {1} {2}'.format(
-            click.style('Starting{0}operation:'.format(
+            click.style('--> Starting{0}operation:'.format(
                 ' {0} '.format(', '.join(op_types)) if op_types else ' ',
             ), 'blue'),
             click.style(', '.join(op_meta['names']), bold=True),

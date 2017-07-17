@@ -7,10 +7,19 @@ from __future__ import division, print_function, unicode_literals
 import re
 from hashlib import sha1
 from imp import load_source
+from socket import (
+    error as socket_error,
+    timeout as timeout_error,
+)
 from types import GeneratorType
 
+import click
 import six
+
 from jinja2 import Template
+from paramiko import SSHException
+
+from pyinfra import logger
 
 from .attrs import AttrBase
 
@@ -110,6 +119,31 @@ def sha1_hash(string):
     hasher = sha1()
     hasher.update(string.encode())
     return hasher.hexdigest()
+
+
+def format_exception(e):
+    return '{0}{1}'.format(e.__class__.__name__, e.args)
+
+
+def log_host_command_error(host, e, timeout=0, callback=None):
+    if isinstance(e, timeout_error):
+        logger.error('{0}{1}'.format(
+            host.print_prefix,
+            click.style('Command timed out after {0}s'.format(
+                timeout,
+            ), 'red'),
+        ))
+
+    elif isinstance(e, (socket_error, SSHException)):
+        logger.error('{0}{1}'.format(
+            host.print_prefix,
+            click.style('Command socket/SSH error: {0}'.format(
+                format_exception(e)), 'red',
+            ),
+        ))
+
+    if callback:
+        callback()
 
 
 def make_command(
