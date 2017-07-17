@@ -1,6 +1,10 @@
 from __future__ import unicode_literals
 
+from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
+
+import click
+import gevent
 
 from pyinfra import logger
 from pyinfra.api.util import make_command, read_buffer
@@ -26,32 +30,51 @@ def run_shell_command(
 
     logger.debug('--> Running command on localhost: {0}'.format(command))
 
-    print_prefix = host.print_prefix
-
     if print_output:
-        print('{0}>>> {1}'.format(print_prefix, command))
+        print('{0}>>> {1}'.format(host.print_prefix, command))
 
     process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
 
-    stdout = read_buffer(
-        process.stdout,
-        print_output=state.print_output,
-        print_func=lambda line: '{0}{1}'.format(print_prefix, line),
+    # Iterate through outputs to get an exit status and generate desired list
+    # output, done in two greenlets so stdout isn't printed before stderr. Not
+    # attached to state.pool to avoid blocking it with 2x n-hosts greenlets.
+    stdout_reader = gevent.spawn(
+        read_buffer, process.stdout,
+        print_output=print_output,
+        print_func=lambda line: '{0}{1}'.format(host.print_prefix, line),
+    )
+    stderr_reader = gevent.spawn(
+        read_buffer, process.stderr,
+        print_output=print_output,
+        print_func=lambda line: '{0}{1}'.format(
+            host.print_prefix, click.style(line, 'red'),
+        ),
     )
 
-    stderr = read_buffer(
-        process.stderr,
-        print_output=state.print_output,
-        print_func=lambda line: '{0}{1}'.format(print_prefix, line),
-    )
+    # Wait on output, with our timeout (or None)
+    greenlets = gevent.wait((stdout_reader, stderr_reader), timeout=timeout)
 
-    # Get & check result
-    result = process.wait()
+    # Timeout doesn't raise an exception, but gevent.wait returns the greenlets
+    # which did complete. So if both haven't completed, we kill them and fail
+    # with a timeout.
+    if len(greenlets) != 2:
+        stdout_reader.kill()
+        stderr_reader.kill()
+
+        raise timeout_error()
+
+    # Read the buffers into a list of lines
+    stdout = stdout_reader.get()
+    stderr = stderr_reader.get()
+
+    logger.debug('--> Waiting for exit status...')
+    process.wait()
 
     # Close any open file descriptor
     process.stdout.close()
 
-    return result == 0, stdout, stderr
+    logger.debug('--> Command exit status: {0}'.format(process.returncode))
+    return process.returncode == 0, stdout, stderr
 
 
 def put_file(
