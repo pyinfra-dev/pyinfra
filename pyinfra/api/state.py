@@ -50,6 +50,9 @@ class State(object):
     # Whether we are in an @operation (so inner ops aren't wrapped)
     in_op = False
 
+    # Current op hash for use w/facts
+    current_op_hash = None
+
     # Current op args tuple (sudo, sudo_user, ignore_errors) for use w/facts
     current_op_meta = None
 

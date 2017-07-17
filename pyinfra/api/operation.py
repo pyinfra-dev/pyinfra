@@ -96,6 +96,9 @@ def operation(func=None, pipeline_facts=None):
     # Actually decorate!
     @wraps(func)
     def decorated_func(*args, **kwargs):
+        # Prepare state/host
+        #
+
         # If we're in CLI mode, there's no state/host passed down, we need to
         # use the global "pseudo" modules.
         if len(args) < 2 or not (
@@ -129,6 +132,9 @@ def operation(func=None, pipeline_facts=None):
                 state.ops_to_pipeline.append(
                     (host.name, decorated_func, args, kwargs.copy()),
                 )
+
+        # Configure operation
+        #
 
         # Name the operation
         names = None
@@ -218,62 +224,6 @@ def operation(func=None, pipeline_facts=None):
 
         op_hash = make_hash(op_hash)
 
-        # Otherwise, flag as in-op and run it to get the commands
-        state.in_op = True
-        state.current_op_meta = (sudo, sudo_user, su_user, ignore_errors)
-
-        # Generate actual arguments by parsing strings as jinja2 templates. This
-        # means you can string format arguments w/o generating multiple
-        # operations. Only affects top level operations, as must be run "in_op"
-        # so facts are gathered correctly.
-        actual_args = [
-            get_arg_value(state, host, arg)
-            for arg in args
-        ]
-
-        actual_kwargs = {
-            key: get_arg_value(state, host, arg)
-            for key, arg in six.iteritems(kwargs)
-        }
-
-        # Convert to list as the result may be a generator
-        commands = unroll_generators(func(
-            state, host,
-            *actual_args,
-            **actual_kwargs
-        ))
-
-        state.in_op = False
-        state.current_op_meta = None
-
-        # Make the operaton meta object for returning
-        operation_meta = OperationMeta(op_hash, commands)
-
-        # If we're pipelining, we don't actually want to add the operation as-is,
-        # just collect the facts.
-        if state.pipelining:
-            return operation_meta
-
-        # Add the hash to the operational order if not already in there. To
-        # ensure that deploys run as defined in the deploy file *per host* we
-        # keep track of each hosts latest op hash, and use that to insert new
-        # ones.
-        if op_hash not in state.op_order:
-            previous_op_hash = state.meta[host.name]['latest_op_hash']
-
-            if previous_op_hash:
-                index = state.op_order.index(previous_op_hash)
-            else:
-                index = 0
-
-            state.op_order.insert(index + 1, op_hash)
-
-        state.meta[host.name]['latest_op_hash'] = op_hash
-
-        # Run once and we've already added meta for this op? Stop here.
-        if run_once and op_hash in state.op_meta:
-            return operation_meta
-
         # Ensure shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(op_hash, {
             'names': set(),
@@ -306,6 +256,77 @@ def operation(func=None, pipeline_facts=None):
                 arg = '='.join((str(key), str(value)))
                 if arg not in op_meta['args']:
                     op_meta['args'].append(arg)
+
+        # "Run" operation
+        #
+
+        # Otherwise, flag as in-op and run it to get the commands
+        state.in_op = True
+        state.current_op_hash = op_hash
+        state.current_op_meta = (sudo, sudo_user, su_user, ignore_errors)
+
+        # Generate actual arguments by parsing strings as jinja2 templates. This
+        # means you can string format arguments w/o generating multiple
+        # operations. Only affects top level operations, as must be run "in_op"
+        # so facts are gathered correctly.
+        actual_args = [
+            get_arg_value(state, host, a)
+            for a in args
+        ]
+
+        actual_kwargs = {
+            key: get_arg_value(state, host, a)
+            for key, a in six.iteritems(kwargs)
+        }
+
+        # Convert to list as the result may be a generator
+        commands = unroll_generators(func(
+            state, host,
+            *actual_args,
+            **actual_kwargs
+        ))
+
+        state.in_op = False
+        state.current_op_hash = None
+        state.current_op_meta = None
+
+        # Make the operaton meta object for returning
+        operation_meta = OperationMeta(op_hash, commands)
+
+        # If we're pipelining, we don't actually want to add the operation as-is,
+        # just collect the facts.
+        if state.pipelining:
+            return operation_meta
+
+        # Add host-specific operation data to state
+        #
+
+        # Add the hash to the operational order if not already in there. To
+        # ensure that deploys run as defined in the deploy file *per host* we
+        # keep track of each hosts latest op hash, and use that to insert new
+        # ones.
+        if op_hash not in state.op_order:
+            previous_op_hash = state.meta[host.name]['latest_op_hash']
+
+            if previous_op_hash:
+                index = state.op_order.index(previous_op_hash)
+            else:
+                index = 0
+
+            state.op_order.insert(index + 1, op_hash)
+
+        state.meta[host.name]['latest_op_hash'] = op_hash
+
+        # Run once and we've already added meta for this op? Stop here.
+        if run_once:
+            has_run = False
+            for ops in six.itervalues(state.ops):
+                if op_hash in ops:
+                    has_run = True
+                    break
+
+            if has_run:
+                return operation_meta
 
         # If we're limited, stop here - *after* we've created op_meta. This
         # ensures the meta object always exists, even if no hosts actually ever
