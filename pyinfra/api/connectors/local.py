@@ -11,6 +11,11 @@ from pyinfra.api.util import make_command, read_buffer
 
 
 def connect(state, host, **kwargs):
+    logger.info('{0}{1}'.format(
+        host.print_prefix,
+        click.style('Ready', 'green'),
+    ))
+
     return True
 
 
@@ -19,6 +24,24 @@ def run_shell_command(
     sudo=False, sudo_user=None, su_user=None, preserve_sudo_env=False,
     get_pty=False, env=None, timeout=None, print_output=False,
 ):
+    '''
+    Execute a command on the local machine.
+
+    Args:
+        state (``pyinfra.api.State`` obj): state object for this command
+        hostname (string): hostname of the target
+        command (string): actual command to execute
+        sudo (boolean): whether to wrap the command with sudo
+        sudo_user (string): user to sudo to
+        get_pty (boolean): whether to get a PTY before executing the command
+        env (dict): envrionment variables to set
+        timeout (int): timeout for this command to complete before erroring
+
+    Returns:
+        tuple: (exit_code, stdout, stderr)
+        stdout and stderr are both lists of strings from each buffer.
+    '''
+
     command = make_command(
         command,
         env=env,
@@ -83,3 +106,14 @@ def put_file(
 ):
     with open(remote_file, 'w') as f:
         f.write(file_io.read())
+
+    if print_output:
+        print('{0}file copied: {1}'.format(host.print_prefix, remote_file))
+
+
+def get_file(
+    state, host, remote_file, file_io,
+    sudo=False, sudo_user=False, su_user=None, print_output=False,
+):
+    with open(remote_file, 'r') as f:
+        file_io.write(f.read())
