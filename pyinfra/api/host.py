@@ -26,7 +26,8 @@ class HostFacts(object):
 
 class Host(object):
     '''
-    Represents a target host. Thin class that links up to facts and host/group data.
+    Represents a target host. Thin class that links up to facts and host/group
+    data.
     '''
 
     connection = None
