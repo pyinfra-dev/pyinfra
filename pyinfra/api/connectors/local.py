@@ -1,3 +1,7 @@
+# pyinfra
+# File: pyinfra/api/local.py
+# Desc: handle all local command related stuff
+
 from __future__ import unicode_literals
 
 from socket import timeout as timeout_error
