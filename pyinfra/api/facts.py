@@ -94,12 +94,19 @@ def get_facts(state, name, args=None):
     su_user = state.config.SU_USER
     ignore_errors = state.config.IGNORE_ERRORS
 
-    # If inside an operation, fetch config meta
-    if state.current_op_meta:
-        sudo, sudo_user, su_user, ignore_errors = state.current_op_meta
+    # Get the current op meta
+    current_op_hash = state.current_op_hash
+    current_op_meta = state.op_meta.get(current_op_hash)
 
-    # Make a hash which keeps facts unique - but usable cross-deploy/threads. Locks are
-    # used to maintain order.
+    # If inside an operation, fetch config meta
+    if current_op_meta:
+        sudo = current_op_meta['sudo']
+        sudo_user = current_op_meta['sudo_user']
+        su_user = current_op_meta['su_user']
+        ignore_errors = current_op_meta['ignore_errors']
+
+    # Make a hash which keeps facts unique - but usable cross-deploy/threads.
+    # Locks are used to maintain order.
     fact_hash = make_hash((name, args, sudo, sudo_user, su_user, ignore_errors))
 
     # Lock!

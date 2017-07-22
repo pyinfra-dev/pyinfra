@@ -263,7 +263,6 @@ def operation(func=None, pipeline_facts=None):
         # Otherwise, flag as in-op and run it to get the commands
         state.in_op = True
         state.current_op_hash = op_hash
-        state.current_op_meta = (sudo, sudo_user, su_user, ignore_errors)
 
         # Generate actual arguments by parsing strings as jinja2 templates. This
         # means you can string format arguments w/o generating multiple
@@ -288,7 +287,6 @@ def operation(func=None, pipeline_facts=None):
 
         state.in_op = False
         state.current_op_hash = None
-        state.current_op_meta = None
 
         # Make the operaton meta object for returning
         operation_meta = OperationMeta(op_hash, commands)
