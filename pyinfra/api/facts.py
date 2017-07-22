@@ -11,7 +11,10 @@ for a deploy.
 from __future__ import division, unicode_literals
 
 from inspect import ismethod
-from socket import timeout as timeout_error
+from socket import (
+    error as socket_error,
+    timeout as timeout_error,
+)
 
 import click
 import six
@@ -21,7 +24,7 @@ from paramiko import SSHException
 
 from pyinfra import logger
 
-from .util import get_arg_value, make_hash, underscore
+from .util import get_arg_value, log_host_command_error, make_hash, underscore
 
 
 # Index of snake_case facts -> CamelCase classes
@@ -144,29 +147,31 @@ def get_facts(state, name, args=None):
 
     # Collect the facts and any failures
     for hostname, greenlet in six.iteritems(greenlets):
+        status = False
+        stdout = []
+
         try:
-            channel, stdout, stderr = greenlet.get()
+            status, stdout, _ = greenlet.get()
 
-            if stdout:
-                data = fact.process(stdout)
-            else:
-                data = fact.default
+        except (timeout_error, socket_error, SSHException) as e:
+            kwargs = {}
 
-            hostname_facts[hostname] = data
+            if not ignore_errors:
+                kwargs['callback'] = lambda: failed_hosts.add(hostname)
 
-        except (timeout_error, SSHException):
+            log_host_command_error(
+                host,
+                e,
+                timeout=current_op_meta['timeout'],
+                **kwargs
+            )
 
-            if ignore_errors:
-                logger.warning('[{0}] {1}'.format(
-                    hostname,
-                    click.style('Fact error (ignored)', 'yellow'),
-                ))
-            else:
-                failed_hosts.add(hostname)
-                logger.error('[{0}] {1}'.format(
-                    hostname,
-                    click.style('Fact error', 'red'),
-                ))
+        data = fact.default
+
+        if status and stdout:
+            data = fact.process(stdout)
+
+        hostname_facts[hostname] = data
 
     log_name = click.style(name, bold=True)
 
@@ -194,7 +199,8 @@ def get_facts(state, name, args=None):
 
 def get_fact(state, hostname, name):
     '''
-    Wrapper around ``get_facts`` returning facts for one host or a function that does.
+    Wrapper around ``get_facts`` returning facts for one host or a function
+    that does.
     '''
 
     # Expecting a function to return
