@@ -41,7 +41,7 @@ class AptSources(FactBase):
         ...
     '''
 
-    default = {}
+    default = []
     command = 'cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list'
 
     def process(self, output):
