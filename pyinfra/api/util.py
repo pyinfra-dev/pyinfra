@@ -197,13 +197,13 @@ def make_command(
 
     # Use sudo (w/user?)
     if sudo:
-        sudo_bits = ['sudo', '--set-home']
+        sudo_bits = ['sudo', '-H']
 
         if preserve_sudo_env:
-            sudo_bits.append('--preserve-env')
+            sudo_bits.append('-E')
 
         if sudo_user:
-            sudo_bits.extend(('--user', sudo_user))
+            sudo_bits.extend(('-u', sudo_user))
 
         command = '{0} {1}'.format(' '.join(sudo_bits), command)
 
