@@ -113,11 +113,3 @@ def put_file(
 
     if print_output:
         print('{0}file copied: {1}'.format(host.print_prefix, remote_file))
-
-
-def get_file(
-    state, host, remote_file, file_io,
-    sudo=False, sudo_user=False, su_user=None, print_output=False,
-):
-    with open(remote_file, 'r') as f:
-        file_io.write(f.read())

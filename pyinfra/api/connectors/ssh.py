@@ -224,4 +224,4 @@ def put_file(
         _put_file(host, file_io, remote_file)
 
     if print_output:
-        print('{0}file uploaded: {1}'.format(print_prefix, remote_file))
+        print('{0}file uploaded: {1}'.format(host.print_prefix, remote_file))
