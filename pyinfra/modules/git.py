@@ -51,7 +51,7 @@ def repo(
 
     if use_ssh_user:
         logger.warning(
-            'Use of `use_ssh_user`, please use `preserve_sudo_env` instead.',
+            'Use of `use_ssh_user` is deprecated, please use `preserve_sudo_env` instead.',
         )
 
     # Ensure our target directory exists
