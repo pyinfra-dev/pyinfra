@@ -207,4 +207,4 @@ def some_python(state, host, hostname, *args, **kwargs):
     local.shell('echo "local stuff!"')
 
 
-python.execute(some_python, 'arg1', 'arg2', kwarg='hello world')
+python.call(some_python, 'arg1', 'arg2', kwarg='hello world')

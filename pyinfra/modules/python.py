@@ -6,6 +6,7 @@
 The Python module allows you to execute Python code within the context of a deploy.
 '''
 
+from pyinfra import logger
 from pyinfra.api import operation
 
 
@@ -15,7 +16,15 @@ def execute(state, host, callback, *args, **kwargs):
     [DEPRECATED], please use ``python.call``.
     '''
 
-    # Pre pyinfra 0.5 the operation execution passed (state, host, host.name)
+    # COMPAT w/ <0.4
+    # TODO: remove this function
+
+    logger.warning((
+        'Use of `python.execute` is deprecated, '
+        'please use `python.call` instead.'
+    ))
+
+    # Pre pyinfra 0.4 the operation execution passed (state, host, host.name)
     # as args, so here we replicate that - hence ``python.call`` which replaces
     # this function going forward.
     args = (host.name,) + args
