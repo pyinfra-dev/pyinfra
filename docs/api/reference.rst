@@ -19,12 +19,4 @@ The pyinfra API is designed like this:
     :maxdepth: 1
     :glob:
 
-    ../apidoc/api_*
-
-
-.. toctree::
-    :caption: Module/Fact Utilities
-    :maxdepth: 1
-    :glob:
-
-    ../apidoc/*_util_*
+    ../apidoc/*

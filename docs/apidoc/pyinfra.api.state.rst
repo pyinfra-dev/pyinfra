@@ -1,5 +1,5 @@
-pyinfra.api.state
-================
+pyinfra\.api\.state module
+==========================
 
 .. automodule:: pyinfra.api.state
     :members:

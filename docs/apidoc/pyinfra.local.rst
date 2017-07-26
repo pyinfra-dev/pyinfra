@@ -1,7 +1,7 @@
-pyinfra.modules.util.packaging
+pyinfra\.local module
 =====================
 
-.. automodule:: pyinfra.modules.util.packaging
+.. automodule:: pyinfra.local
     :members:
     :undoc-members:
     :show-inheritance:

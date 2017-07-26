@@ -1,7 +1,7 @@
-pyinfra.api.operation
+pyinfra\.hook module
 ====================
 
-.. automodule:: pyinfra.api.operation
+.. automodule:: pyinfra.hook
     :members:
     :undoc-members:
     :show-inheritance:

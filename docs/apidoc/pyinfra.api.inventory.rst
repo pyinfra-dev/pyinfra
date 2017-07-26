@@ -1,5 +1,5 @@
-pyinfra.api.inventory
-====================
+pyinfra\.api\.inventory module
+==============================
 
 .. automodule:: pyinfra.api.inventory
     :members:

@@ -118,8 +118,8 @@ Files
     
 
 
-:code:`find_in_file(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`find_in_file(name, pattern)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Checks for the existence of text in a file using grep. Returns a list of matching

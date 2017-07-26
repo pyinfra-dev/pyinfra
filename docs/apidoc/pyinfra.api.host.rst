@@ -1,7 +1,7 @@
-api.connectors.ssh module
+pyinfra\.api\.host module
 =========================
 
-.. automodule:: pyinfra.api.connectors.ssh
+.. automodule:: pyinfra.api.host
     :members:
     :undoc-members:
     :show-inheritance:

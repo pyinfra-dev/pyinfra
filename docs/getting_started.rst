@@ -4,69 +4,70 @@ Getting Started
 This guide should help describe the basics of deploying stuff with pyinfra.
 
 
-Install
--------
+Install & Usage
+---------------
 
 pyinfra requires `Python <https://python.org>`_ and can be installed with `pip <https://pip.pypa.io/en/stable/>`_:
 
 .. code:: bash
 
-    $ pip install pyinfra
-    ...
-    $ pyinfra (on Windows: python -m pyinfra)
+    pip install pyinfra
 
-    Usage:
-        pyinfra -i INVENTORY DEPLOY [-vv options]
-        pyinfra -i INVENTORY --run OP ARGS [-vv options]
-        pyinfra -i INVENTORY --run COMMAND [-vv options]
-        pyinfra -i INVENTORY --fact FACT [-vv options]
-        ...
+    # pyinfra is used like so:
+    pyinfra INVENTORY COMMANDS...
 
 
-Command Line Ops
-----------------
+Ad-hoc commands
+---------------
 
-To deploy something with pyinfra, you need an **inventory** and some **operations**:
-
-+ **The inventory** holds the target hosts, groups and any data associated with them
-+ **The operations** define the desired state of the target hosts, and are grouped as **modules**
-
-Lets start by running a deploy that will ensure user "fred" exists, using the ``server.user`` operation:
+To deploy something with pyinfra, you need an **inventory**. This specifies the target hosts, groups and any data associated with them. The simplest inventory is simply a comma separated list of target hostnames passed to the CLI. Let's start using pyinfra with a basic echo command:
 
 .. code:: shell
 
-    pyinfra -i my-server.host --run server.user fred --sudo  # --user, --key
+    # On Unix systems:
+    pyinfra @local exec -- echo "hello world"
 
-The ``--sudo`` flag used to run the operation with sudo. To connect & authenticate with
-the remote host you can use the ``--port``, ``--user``, ``--key`` and password
-``--password`` flags.
+    # On Windows you'll need a server to SSH into:
+    pyinfra my-server.net exec -- echo "hello world"
+
+As you'll see, pyinfra runs the echo command and prints the output.
+
+``@local``:
+    On *nix systems this special hostname can be used to execute commands on the local machine, without the need for SSH.
 
 
-The Deploy File
----------------
+Ad-hoc operations
+-----------------
 
-To write persistent (on disk) deploys with pyinfra you just use a Python file, eg.
-``deploy.py``. In this file you import the pyinfra modules needed and define the remote
-state desired with function calls:
+**Operations** in pyinfra define the desired state of the target hosts. For example, the ``files.directory`` operation can be used to ensure a given directory does or does not exist. There are a large number of operations which are grouped into **modules** - see :doc:`the modules index <modules>`. We can use single operations via the command line:
+
+.. code:: shell
+
+    pyinfra my-server.net files.directory my_directory
+
+This command will ensure that the directory ``my_directory`` exists in the current/home directory.
+
+
+Deploys
+-------
+
+To write persistent (on disk) deploys with pyinfra you just use Python files. These, along with any associated files/templates/etc are called **deploys**. In this file you import the pyinfra modules needed and define the remote state desired with function calls. For example if you create a file ``deploy.py``:
 
 .. code:: python
 
     # Import pyinfra modules, each containing operations to use
-    from pyinfra.modules import server
+    from pyinfra.modules import files
 
     # Ensure the state of a user
-    server.user(
-        'vivian',
-        sudo=True
+    files.directory(
+        'my_directory',
+        sudo=True,
     )
 
-Like above, this deploy ensures user "vivian" exists, using the :doc:`server module
-<./modules/server>`. To execute the deploy:
+Like above, this deploy ensures that the directory ``my_directory`` exists in the current/home directory. To execute the deploy:
 
 .. code:: shell
 
-    pyinfra -i my-server.host deploy.py
+    pyinfra my-server.net deploy.py
 
-That's the basics of pyinfra! There's a lot of other features like facts, groups, data
-which are described in the :doc:`building a deploy guide <./building_a_deploy>`. Also see
-:doc:`the modules index <modules>` and `the example deploy on GitHub <http://github.com/Fizzadar/pyinfra/tree/develop/example>`_.
+That's the basics of pyinfra! There's a lot of other features like facts, groups, data which are described in the :doc:`building a deploy guide <./building_a_deploy>`. Also see :doc:`the modules index <modules>` and `the example deploy on GitHub <http://github.com/Fizzadar/pyinfra/tree/develop/example>`_.

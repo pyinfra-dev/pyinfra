@@ -1,5 +1,5 @@
-pyinfra.api.util
-===============
+pyinfra\.api\.util module
+=========================
 
 .. automodule:: pyinfra.api.util
     :members:

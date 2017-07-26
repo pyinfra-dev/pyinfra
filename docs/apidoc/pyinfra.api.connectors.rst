@@ -1,5 +1,5 @@
-api.connectors package
-======================
+pyinfra\.api\.connectors package
+================================
 
 .. automodule:: pyinfra.api.connectors
     :members:
@@ -11,6 +11,6 @@ Submodules
 
 .. toctree::
 
-   api.connectors.local
-   api.connectors.ssh
+   pyinfra.api.connectors.local
+   pyinfra.api.connectors.ssh
 

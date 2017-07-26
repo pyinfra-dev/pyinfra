@@ -1,5 +1,5 @@
-pyinfra.api.connect
-==================
+pyinfra\.api\.connect module
+============================
 
 .. automodule:: pyinfra.api.connect
     :members:

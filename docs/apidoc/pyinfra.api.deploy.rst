@@ -1,5 +1,5 @@
-pyinfra.api.deploy
-=================
+pyinfra\.api\.deploy module
+===========================
 
 .. automodule:: pyinfra.api.deploy
     :members:

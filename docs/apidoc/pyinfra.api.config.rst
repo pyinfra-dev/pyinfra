@@ -1,7 +1,7 @@
-api.connectors.local module
+pyinfra\.api\.config module
 ===========================
 
-.. automodule:: pyinfra.api.connectors.local
+.. automodule:: pyinfra.api.config
     :members:
     :undoc-members:
     :show-inheritance:
