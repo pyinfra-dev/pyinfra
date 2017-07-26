@@ -38,6 +38,7 @@ def install_openstack_controller(state, host):
 ```
 
 + Add **SSH module**: `ssh.keyscan`, `ssh.command`, `ssh.upload`, `ssh.download`
++ Add `on_success` and `on_error` callbacks to all operations (args = `(state, host, op_hash)`)
 + Add `server.script_template` operation
 + Add `cache_time` kwarg to `apt.update` operation
 + Add `hosts` kwarg to all operations, working like `local.include`'s
