@@ -178,6 +178,10 @@ def operation(func=None, pipeline_facts=None):
         # Whether to preserve ENVars when sudoing (eg SSH forward agent socket)
         preserve_sudo_env = kwargs.pop('preserve_sudo_env', False)
 
+        # Callbacks
+        on_success = kwargs.pop('on_success', None)
+        on_error = kwargs.pop('on_error', None)
+
         # Limit this op to certain hosts
         hosts = kwargs.pop('hosts', False)
 
@@ -237,6 +241,8 @@ def operation(func=None, pipeline_facts=None):
             'timeout': timeout,
             'get_pty': get_pty,
             'preserve_sudo_env': preserve_sudo_env,
+            'on_success': on_success,
+            'on_error': on_error,
         })
 
         # Add any new names to the set

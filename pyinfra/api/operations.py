@@ -171,6 +171,10 @@ def _run_op(state, host, op_hash):
             ),
         ))
 
+        # Trigger any success handler
+        if op_meta['on_success']:
+            op_meta['on_success'](state, host, op_hash)
+
         return True
 
     # Up error_ops & log
@@ -186,6 +190,10 @@ def _run_op(state, host, op_hash):
             name,
             click.style('Error', 'red'),
         ))
+
+    # Always trigger any error handler
+    if op_meta['on_error']:
+        op_meta['on_error'](state, host, op_hash)
 
     # Ignored, op "completes" w/ ignored error
     if op_meta['ignore_errors']:
