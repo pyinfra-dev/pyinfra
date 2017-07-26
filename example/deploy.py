@@ -16,6 +16,14 @@ def before_connect(data, state):
     print('inventory hosts!: ', [host.name for host in inventory])
 
 
+def on_pyinfra_success(state, host, op_hash):
+    print('Success on {0} for OP: {1}!'.format(host.name, op_hash))
+
+
+def on_pyinfra_error(state, host, op_hash):
+    print('Error on {0} for OP: {1}!'.format(host.name, op_hash))
+
+
 # Ensure the state of a user
 server.user(
     'pyinfra',
@@ -30,6 +38,7 @@ server.user(
     run_once=False,
     get_pty=False,
     timeout=30,  # only applies to commands on the remote host (not SFTP, local Python)
+    on_success=on_pyinfra_success,
 )
 
 # And groups
@@ -98,7 +107,7 @@ init.service(
     running=True,
     sudo=True,
     ignore_errors=True,
-    hosts=inventory.get_host('ubuntu14.pyinfra'),
+    on_error=on_pyinfra_error,
 )
 
 # Include roles
@@ -151,12 +160,13 @@ elif distro['name'] in ('CentOS', 'Fedora'):
 
 # Ensure the state of git repositories
 git.repo(
-    'https://github.com/Fizzadar/pyinfra',
+    'git@github.com:Fizzadar/pyinfra',
     host.data.app_dir,
     branch='develop',
+    run_once=True,
     sudo=True,
-    # Do the git clone/pull as the SSH user when using forwarding
-    # use_ssh_user=True
+    # Carry SSH agent details w/sudo
+    preserve_sudo_env=True,
 )
 
 # Manage pip (npm, gem) packages
