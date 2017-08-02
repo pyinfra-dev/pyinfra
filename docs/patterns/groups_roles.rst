@@ -1,12 +1,9 @@
 Groups & Roles
 ==============
 
-Deploying complex projects usually involves multiple groups of servers, for example
-database & web servers. It is useful to separate the deploy into multiple files, normally
-called roles.
+Deploying complex projects usually involves multiple groups of servers, for example database & web servers. It is useful to separate the deploy into multiple files.
 
-These can be included within deploys using the ``pyinfra.local`` module. A list of hosts can
-be passed in to limit the include to those hosts.
+These can be included within deploys using the ``pyinfra.local`` module. A list of hosts can be passed in to limit the include to those hosts.
 
 .. code:: python
 
@@ -16,13 +13,13 @@ be passed in to limit the include to those hosts.
 
     # Include the web role, targeted at the web group
     local.include(
-        'roles/web.py',
+        'tasks/web.py',
         hosts=inventory.web_servers
     )
 
     # And the same for the database role & servers
     local.include(
-        'roles/database.py',
+        'tasks/database.py',
         hosts=inventory.db_servers
     )
 
@@ -38,14 +35,14 @@ be passed in to limit the include to those hosts.
 
 .. code:: python
 
-    # roles/web.py
+    # tasks/web.py
 
     server.shell('install webserver')
     ...
 
 .. code:: python
 
-    # roles/database.py
+    # tasks/database.py
 
     server.shell('install dbserver')
     ...

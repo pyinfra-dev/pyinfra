@@ -1,10 +1,18 @@
-pyinfra uses facts to determine the existing state of a remote server. Operations use this
-information to generate commands which alter the state. Facts can be easily tested like so:
+pyinfra uses facts to determine the existing state of a remote server. Operations use this information to generate commands which alter the state. Facts can be executed/tested via the command line:
 
-.. code:: shell
+.. code:: sh
 
-    $ pyinfra -i myhost.com --fact date
-    ...
-    "myhost.com": "2016-01-01T16:20:00+00:00"
+    pyinfra myhost.com fact date another_fact ...
 
-Facts are namespaced similarly to modules, use the sidebar to browse those available.
+Or as part of :doc:`a deploy <deploys>`:
+
+.. code:: py
+
+    if host.fact.linux_distribution['name'] == 'Ubuntu':
+        spt.packages(...)
+
+Facts, like :doc:`operations <operations>`, are namespaced as different modules:
+
+.. contents::
+    :local:
+    :depth: 1

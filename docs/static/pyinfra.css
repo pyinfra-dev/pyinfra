@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto+Slab:400,700');
+
+
+*::selection {
+    background: green;
+    color: white;
+}
+
+body {
+    margin: 0;
+    font-family: Roboto Slab;
+    line-height: 24px;
+    font-size: 16px;
+    color: #333;
+}
+
+a, a:visited {
+    text-decoration: none;
+    border-bottom: 1px solid #D7D7D7;
+    color: green;
+}
+a:visited {
+    opacity: 0.9;
+}
+a:hover {
+    border-bottom: 1px solid #A0A0A0;
+    text-decoration: none;
+}
+
+header h1:first-child {
+    margin-top: 30px;
+}
+header h1 a:before {
+    font-size: 36px;
+    color: green !important;
+    content: 'pyinfra ';
+    font-weight: bold;
+    position: absolute;
+    background: white;
+    margin-left: -70px;
+    margin-top: -6px;
+}
+header h1 a {
+    border: none;
+    color: #DDD;
+    font-weight: normal;
+    font-size: 16px;
+    padding-left: 70px;
+    margin-top: 25px;
+}
+header h1 a:hover {
+    border-bottom: none;
+}
+
+h2, h2:first-child {
+    margin-top: 30px;
+}
+
+code {
+    background: #F7F7F7;
+    color: #4070a0;
+    padding: 2px;
+    border: 1px solid #E1E1E1;
+}
+pre {
+    background: #F7F7F7;
+    border: 1px solid #E1E1E1;
+    padding: 10px;
+}
+pre code {
+    display: inline-block;
+    font-size: 14px;
+}
+
+
+
+/*
+    Sphinx specific
+*/
+
+a.toc-backref {
+    color: #333;
+    border: none;
+}
+a.headerlink {
+    border: none;
+    color: green;
+}
+
+p.caption {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+div.topic {
+    background: #F7F7F7;
+    border-color: #E1E1E1;
+}
+
+nav#breadcrumbs a, nav#rellinks a {
+    border: none;
+}
+
+div.sphinxsidebarwrapper a.current {
+    color: #333;
+    border-bottom: 1px solid #A0A0A0;
+}
+
+footer#pagefooter {
+    font-size: 12px;
+    color: #999;
+    text-align: left;
+    padding-top: 10px;
+}
+    footer#pagefooter a {
+        color: #666;
+        border: none;
+    }
+
+/* Index only */
+div#pyinfra-documentation div.compound {
+    width: 46%;
+    margin-right: 3%;
+    display: inline-block;
+    vertical-align: top;
+}
+    div#pyinfra-documentation div.compound a {
+        font-size: 18px;
+    }
+    div#pyinfra-documentation div.compound dd {
+        margin-left: 0;
+    }

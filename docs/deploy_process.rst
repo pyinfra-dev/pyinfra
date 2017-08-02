@@ -11,7 +11,7 @@ When you run a pyinfra deploy via the CLI or API, these are the high level steps
 Connecting
 ----------
 
-To connect to the target hosts, pyinfra uses an **inventory**. This contains metadata
+To connect to the target hosts, pyinfra uses an inventory. This contains metadata
 on all of the target machines, in addition to any user defined data for the deploy. Using
 this SSH connections are attempted in parallel until all hosts are either connected or have
 failed.
@@ -20,7 +20,7 @@ failed.
 Generating Operations
 ---------------------
 
-**Operations** define the desired state of the target hosts. When operations are added to
+Operations define the desired state of the target hosts. When operations are added to
 a deploy, facts/state is read from each of the hosts, for example ``directory:/opt/my_app``.
 Based on these facts and the desired state, operations output a list of commands per target
 host.

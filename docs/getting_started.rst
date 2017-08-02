@@ -17,8 +17,8 @@ pyinfra requires `Python <https://python.org>`_ and can be installed with `pip <
     pyinfra INVENTORY COMMANDS...
 
 
-Ad-hoc commands
----------------
+Executing Commands
+------------------
 
 To deploy something with pyinfra, you need an **inventory**. This specifies the target hosts, groups and any data associated with them. The simplest inventory is simply a comma separated list of target hostnames passed to the CLI. Let's start using pyinfra with a basic echo command:
 
@@ -36,20 +36,8 @@ As you'll see, pyinfra runs the echo command and prints the output.
     On *nix systems this special hostname can be used to execute commands on the local machine, without the need for SSH.
 
 
-Ad-hoc operations
------------------
-
-**Operations** in pyinfra define the desired state of the target hosts. For example, the ``files.directory`` operation can be used to ensure a given directory does or does not exist. There are a large number of operations which are grouped into **modules** - see :doc:`the modules index <modules>`. We can use single operations via the command line:
-
-.. code:: shell
-
-    pyinfra my-server.net files.directory my_directory
-
-This command will ensure that the directory ``my_directory`` exists in the current/home directory.
-
-
-Deploys
--------
+Create a Deploy
+---------------
 
 To write persistent (on disk) deploys with pyinfra you just use Python files. These, along with any associated files/templates/etc are called **deploys**. In this file you import the pyinfra modules needed and define the remote state desired with function calls. For example if you create a file ``deploy.py``:
 
@@ -70,4 +58,4 @@ Like above, this deploy ensures that the directory ``my_directory`` exists in th
 
     pyinfra my-server.net deploy.py
 
-That's the basics of pyinfra! There's a lot of other features like facts, groups, data which are described in the :doc:`building a deploy guide <./building_a_deploy>`. Also see :doc:`the modules index <modules>` and `the example deploy on GitHub <http://github.com/Fizzadar/pyinfra/tree/develop/example>`_.
+That's the basics of pyinfra! There's a lot of other features like facts, groups, data which are described in the :doc:`building a deploy guide <./deploys>`. Also see :doc:`the operations index <operations>` and `the example deploy on GitHub <http://github.com/Fizzadar/pyinfra/tree/develop/example>`_.
