@@ -177,6 +177,8 @@ def operation(func=None, pipeline_facts=None):
         get_pty = kwargs.pop('get_pty', False)
         # Whether to preserve ENVars when sudoing (eg SSH forward agent socket)
         preserve_sudo_env = kwargs.pop('preserve_sudo_env', False)
+        # Execute in batches of X hosts rather than all at once
+        parallel = kwargs.pop('parallel', None)
 
         # Callbacks
         on_success = kwargs.pop('on_success', None)
@@ -241,6 +243,7 @@ def operation(func=None, pipeline_facts=None):
             'timeout': timeout,
             'get_pty': get_pty,
             'preserve_sudo_env': preserve_sudo_env,
+            'parallel': parallel,
             'on_success': on_success,
             'on_error': on_error,
         })

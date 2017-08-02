@@ -304,26 +304,41 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
                     failed_hosts.add(host.name)
 
         else:
-            # Spawn greenlet for each host
-            greenlets = {
-                host.name: state.pool.spawn(
-                    _run_op, state, host, op_hash,
-                )
-                for host in state.inventory
-            }
+            # Start with the whole inventory in one batch
+            batches = [state.inventory]
 
-            for _ in gevent.iwait(greenlets.values()):
-                # Trigger CLI progress if provided
+            # If parallel set break up the inventory into a series of batches
+            if op_meta['parallel']:
+                parallel = op_meta['parallel']
+                hosts = list(state.inventory)
+
+                batches = [
+                    hosts[i:i + parallel]
+                    for i in range(0, len(hosts), parallel)
+                ]
+
+            for batch in batches:
+                # Spawn greenlet for each host
+                greenlets = {
+                    host.name: state.pool.spawn(
+                        _run_op, state, host, op_hash,
+                    )
+                    for host in batch
+                }
+
+                # Trigger CLI progress as hosts complete if provided
                 if progress:
-                    progress()
+                    for _ in gevent.iwait(greenlets.values()):
+                        progress()
 
-            # Get all the results
-            for hostname, greenlet in six.iteritems(greenlets):
-                if not greenlet.get():
-                    failed_hosts.add(hostname)
+                # Get all the results
+                for hostname, greenlet in six.iteritems(greenlets):
+                    if not greenlet.get():
+                        failed_hosts.add(hostname)
 
-        if not op_meta['ignore_errors']:
-            state.fail_hosts(failed_hosts)
+            # Now all the batches/hosts are complete, fail any failures
+            if not op_meta['ignore_errors']:
+                state.fail_hosts(failed_hosts)
 
         if state.print_lines:
             print()
