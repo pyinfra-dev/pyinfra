@@ -14,7 +14,6 @@ import click
 from pyinfra import (
     __version__,
     logger,
-    pseudo_host,
     pseudo_inventory,
     pseudo_state,
 )
@@ -31,7 +30,6 @@ from pyinfra.modules import server
 
 from .config import load_config, load_deploy_config
 from .exceptions import CliError
-from .fake import FakeHost, FakeInventory, FakeState
 from .inventory import make_inventory
 from .log import setup_logging
 from .prints import (
@@ -292,22 +290,12 @@ def _main(
 
     print('--> Loading config...')
 
-    # Set a fake state/host/inventory
-    pseudo_state.set(FakeState())
-    pseudo_host.set(FakeHost())
-    pseudo_inventory.set(FakeInventory())
-
     # Load up any config.py from the filesystem
     config = load_config(deploy_dir)
 
     # Load any hooks/config from the deploy file
     if command == 'deploy':
         load_deploy_config(commands[0], config)
-
-    # Unset fake state/host/inventory
-    pseudo_host.reset()
-    pseudo_state.reset()
-    pseudo_inventory.reset()
 
     # Arg based config overrides
     if sudo:
