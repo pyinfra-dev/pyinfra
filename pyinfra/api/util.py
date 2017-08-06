@@ -41,6 +41,62 @@ def ensure_hosts_list(hosts):
     return hosts
 
 
+def pop_op_kwargs(state, kwargs):
+    '''
+    Pop and return operation global keyword arguments.
+    '''
+
+    meta_kwargs = state.deploy_kwargs or {}
+
+    def get_kwarg(key, default):
+        return kwargs.pop(key, meta_kwargs.pop(key, default))
+
+    # Get the env for this host: config env followed by command-level env
+    env = state.config.ENV.copy()
+    env.update(get_kwarg('env', {}))
+
+    # None means no hosts (see below), so use default False as None
+    hosts = get_kwarg('hosts', False)
+    if hosts is False:
+        hosts = None
+    else:
+        hosts = ensure_hosts_list(hosts)
+
+    return {
+        # ENVars for commands in this operation
+        'env': env,
+        # Hosts to limit the op to
+        'hosts': hosts,
+        # Locally & globally configurable
+        'sudo': get_kwarg('sudo', state.config.SUDO),
+        'sudo_user': get_kwarg('sudo_user', state.config.SUDO_USER),
+        'su_user': get_kwarg('su_user', state.config.SU_USER),
+        # Whether to preserve ENVars when sudoing (eg SSH forward agent socket)
+        'preserve_sudo_env': get_kwarg(
+            'preserve_sudo_env', state.config.PRESERVE_SUDO_ENV,
+        ),
+        # Ignore any errors during this operation
+        'ignore_errors': get_kwarg(
+            'ignore_errors', state.config.IGNORE_ERRORS,
+        ),
+        # Timeout on running the command
+        'timeout': get_kwarg('timeout', None),
+        # Get a PTY before executing commands
+        'get_pty': get_kwarg('get_pty', False),
+        # Forces serial mode for this operation (--serial for one op)
+        'serial': get_kwarg('serial', False),
+        # Only runs this operation once
+        'run_once': get_kwarg('run_once', False),
+        # Execute in batches of X hosts rather than all at once
+        'parallel': get_kwarg('parallel', None),
+        # Callbacks
+        'on_success': get_kwarg('on_success', None),
+        'on_error': get_kwarg('on_error', None),
+        # Operation hash
+        'op': get_kwarg('op', None),
+    }
+
+
 def unroll_generators(generator):
     '''
     Take a generator and unroll any sub-generators recursively. This is essentially a

@@ -6,7 +6,7 @@
 Operations are the core of pyinfra. The ``@operation`` wrapper intercepts calls
 to the function and instead diff against the remote server, outputting commands
 to the deploy state. This is then run later by pyinfra's ``__main__`` or the
-:doc:`./api_operations` module.
+:doc:`./pyinfra.api.operations` module.
 '''
 
 from __future__ import unicode_literals
@@ -25,7 +25,7 @@ from .attrs import wrap_attr_data
 from .exceptions import PyinfraError
 from .host import Host
 from .state import State
-from .util import ensure_hosts_list, get_arg_value, make_hash, unroll_generators
+from .util import get_arg_value, make_hash, pop_op_kwargs, unroll_generators
 
 
 class OperationMeta(object):
@@ -42,9 +42,9 @@ def add_op(state, op_func, *args, **kwargs):
     Prepare & add an operation to pyinfra.state by executing it on all hosts.
 
     Args:
-        state (``pyinfra.api.State`` obj): the deploy state to add the operation to
-        op_func (function): the operation function from one of the modules, ie \
-            ``server.user``
+        state (``pyinfra.api.State`` obj): the deploy state to add the operation
+        to op_func (function): the operation function from one of the modules,
+        ie ``server.user``
         args/kwargs: passed to the operation function
     '''
 
@@ -150,52 +150,17 @@ def operation(func=None, pipeline_facts=None):
                 for name in names
             }
 
-        # Locally & globally configurable
-        sudo = kwargs.pop('sudo', state.config.SUDO)
-        sudo_user = kwargs.pop('sudo_user', state.config.SUDO_USER)
-        su_user = kwargs.pop('su_user', state.config.SU_USER)
-        ignore_errors = kwargs.pop('ignore_errors', state.config.IGNORE_ERRORS)
-
-        # Forces serial mode for this operation (--serial for one op)
-        serial = kwargs.pop('serial', False)
-        # Only runs this operation once
-        run_once = kwargs.pop('run_once', False)
-        # Timeout on running the command
-        timeout = kwargs.pop('timeout', None)
-        # Get a PTY before executing commands
-        get_pty = kwargs.pop('get_pty', False)
-        # Whether to preserve ENVars when sudoing (eg SSH forward agent socket)
-        preserve_sudo_env = kwargs.pop('preserve_sudo_env', False)
-        # Execute in batches of X hosts rather than all at once
-        parallel = kwargs.pop('parallel', None)
-
-        # Callbacks
-        on_success = kwargs.pop('on_success', None)
-        on_error = kwargs.pop('on_error', None)
-
-        # Limit this op to certain hosts
-        hosts = kwargs.pop('hosts', False)
-
-        # None means no hosts (see below), so use default False as None
-        if hosts is False:
-            hosts = None
-
-        else:
-            hosts = ensure_hosts_list(hosts)
-
-        # Config env followed by command-level env
-        env = state.config.ENV.copy()
-        env.update(kwargs.pop('env', {}))
-
-        # Get/generate a hash for this op
-        op_hash = kwargs.pop('op', None)
+        # Get the meta kwargps (globals that apply to all hosts)
+        op_meta_kwargs = pop_op_kwargs(state, kwargs)
 
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).
         if state.in_op:
             return func(state, host, *args, **kwargs) or []
 
-        # Convert any AttrBase items (returned by host.data), see attrs.py.
+        # Get/generate a hash for this op
+        op_hash = op_meta_kwargs['op']
+
         if op_hash is None:
             # Get the line number where this operation was called by looking
             # through the call stack for the first non-pyinfra line. This ensures
@@ -212,30 +177,22 @@ def operation(func=None, pipeline_facts=None):
                     line_number = frame[0].f_lineno
                     break
 
-            op_hash = (
-                names, sudo, sudo_user, su_user, line_number,
-                ignore_errors, env, args, kwargs,
-            )
-
-        op_hash = make_hash(op_hash)
+            # Make the hash - note we *don't* use data_kwargs here, because
+            # they can vary between hosts, but we only want to generate one
+            # operation across the hosts.
+            op_hash = make_hash((
+                names, line_number, args, kwargs,
+                op_meta_kwargs,
+            ))
 
         # Ensure shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(op_hash, {
             'names': set(),
             'args': [],
-            'su_user': su_user,
-            'sudo': sudo,
-            'sudo_user': sudo_user,
-            'ignore_errors': ignore_errors,
-            'serial': serial,
-            'run_once': run_once,
-            'timeout': timeout,
-            'get_pty': get_pty,
-            'preserve_sudo_env': preserve_sudo_env,
-            'parallel': parallel,
-            'on_success': on_success,
-            'on_error': on_error,
         })
+
+        # Add any meta kwargs (sudo, etc) to the meta
+        op_meta.update(op_meta_kwargs)
 
         # Add any new names to the set
         op_meta['names'].update(names)
@@ -309,7 +266,7 @@ def operation(func=None, pipeline_facts=None):
         state.meta[host.name]['latest_op_hash'] = op_hash
 
         # Run once and we've already added meta for this op? Stop here.
-        if run_once:
+        if op_meta_kwargs['run_once']:
             has_run = False
             for ops in six.itervalues(state.ops):
                 if op_hash in ops:
@@ -322,8 +279,12 @@ def operation(func=None, pipeline_facts=None):
         # If we're limited, stop here - *after* we've created op_meta. This
         # ensures the meta object always exists, even if no hosts actually ever
         # execute the op (due to limit or otherwise).
+        hosts = op_meta_kwargs['hosts']
+
         if (
+            # Limited by the state's limit_hosts?
             (state.limit_hosts is not None and host not in state.limit_hosts)
+            # Limited by the operation kwarg hosts?
             or (hosts is not None and host not in hosts)
         ):
             return operation_meta
@@ -332,10 +293,9 @@ def operation(func=None, pipeline_facts=None):
         state.meta[host.name]['ops'] += 1
         state.meta[host.name]['commands'] += len(commands)
 
-        # Add the server-relevant commands/env to the current server
+        # Add the server-relevant commands
         state.ops[host.name][op_hash] = {
             'commands': commands,
-            'env': env,
         }
 
         # Return result meta for use in deploy scripts

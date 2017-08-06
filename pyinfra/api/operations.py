@@ -132,7 +132,7 @@ def _run_op(state, host, op_hash):
                     preserve_sudo_env=preserve_sudo_env,
                     timeout=op_meta['timeout'],
                     get_pty=op_meta['get_pty'],
-                    env=op_data['env'],
+                    env=op_meta['env'],
                     print_output=state.print_output,
                 )
 
@@ -198,7 +198,6 @@ def _run_op(state, host, op_hash):
     # Ignored, op "completes" w/ ignored error
     if op_meta['ignore_errors']:
         state.results[name]['ops'] += 1
-        return None
 
     # Unignored error -> False
     return False
