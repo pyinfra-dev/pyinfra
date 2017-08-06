@@ -138,7 +138,7 @@ class State(object):
         self.ready_hosts = set()
         self.connected_hosts = set()
 
-        hostnames = [host.name for host in inventory]
+        host_names = [host.name for host in inventory]
 
         # Op basics
         self.op_order = []  # list of operation hashes
@@ -147,29 +147,35 @@ class State(object):
 
         # Op dict for each host
         self.ops = {
-            hostname: {}
-            for hostname in hostnames
+            name: {}
+            for name in host_names
+        }
+
+        # Facts dict for each host
+        self.facts = {
+            name: {}
+            for name in host_names
         }
 
         # Meta dict for each host
         self.meta = {
-            hostname: {
+            name: {
                 'ops': 0,  # one function call in a deploy file
                 'commands': 0,  # actual # of commands to run
                 'latest_op_hash': None,
             }
-            for hostname in hostnames
+            for name in host_names
         }
 
         # Results dict for each host
         self.results = {
-            hostname: {
+            name: {
                 'ops': 0,  # success_ops + failed ops w/ignore_errors
                 'success_ops': 0,
                 'error_ops': 0,
                 'commands': 0,
             }
-            for hostname in hostnames
+            for name in host_names
         }
 
         # Pipeline facts context manager attached to self
