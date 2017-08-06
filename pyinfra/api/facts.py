@@ -80,8 +80,8 @@ def get_facts(state, name, args=None):
     # Create an instance of the fact
     fact = FACTS[name]()
 
-    # If we're inactive or  (pipelining & inside an op): just return the defaults
-    if not state.active or (state.pipelining and state.in_op):
+    # If we're inactive: just return the defaults
+    if not state.active:
         return {
             host.name: fact.default
             for host in state.inventory

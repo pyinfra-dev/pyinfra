@@ -16,7 +16,6 @@ from pyinfra import __version__, logger
 
 from .config import Config
 from .exceptions import PyinfraError
-from .pipelining import PipelineFacts
 from .util import ensure_hosts_list, sha1_hash
 
 # Work out the max parallel we can achieve with the open files limit of the user/process,
@@ -52,9 +51,6 @@ class State(object):
 
     # Current op hash for use w/facts
     current_op_hash = None
-
-    # Flag for pipelining mode
-    pipelining = False
 
     # List of hosts to only apply operations to
     limit_hosts = None
@@ -177,9 +173,6 @@ class State(object):
             }
             for name in host_names
         }
-
-        # Pipeline facts context manager attached to self
-        self.pipeline_facts = PipelineFacts(self)
 
     @contextmanager
     def limit(self, hosts):
