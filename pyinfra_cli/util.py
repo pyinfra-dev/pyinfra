@@ -248,7 +248,7 @@ def get_operation_and_args(op_string, args_string):
 
 
 def load_deploy_file(state, filename, progress):
-    for i, host in enumerate(state.inventory):
+    for host in state.inventory:
         pseudo_host.set(host)
 
         exec_file(filename)
@@ -265,6 +265,6 @@ def load_deploy_file(state, filename, progress):
     # Remove any pseudo host
     pseudo_host.reset()
 
-    # Un-ready the hosts - this is so that any hooks or callbacks during the deploy
-    # can still use facts as expected.
+    # Un-ready the hosts - this is so that any hooks or callbacks during the
+    # deploy can still use facts as expected.
     state.ready_hosts = set()
