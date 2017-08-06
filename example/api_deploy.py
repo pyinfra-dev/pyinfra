@@ -2,19 +2,19 @@
 # File: example/api_deploy.py
 # Desc: example of how to deploy via the pyinfra API
 
-from gevent import monkey
-monkey.patch_all() # async things (speed++, optional)
+from gevent import monkey  # noqa
+monkey.patch_all()  # noqa async things (speed++, optional)
 
 import json
 import logging
 
-from pyinfra.api import Inventory, Config, State
+from pyinfra.api import Config, Inventory, State
 from pyinfra.api.connect import connect_all
-from pyinfra.api.operation import add_op, add_limited_op
-from pyinfra.api.operations import run_ops
 from pyinfra.api.facts import get_facts
+from pyinfra.api.operation import add_op
+from pyinfra.api.operations import run_ops
 
-from pyinfra.modules import server, files
+from pyinfra.modules import files, server
 
 
 # Enable pyinfra logging
