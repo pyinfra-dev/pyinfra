@@ -70,10 +70,6 @@ class FactBase(object):
         }
 
 
-def get_pipeline_facts(state, name, args, sudo, sudo_user):
-    pass
-
-
 def get_facts(state, name, args=None):
     '''
     Get a single fact for all hosts in the state.

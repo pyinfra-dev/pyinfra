@@ -59,7 +59,6 @@ Experimental options:
 
 ARGUMENT_KEY_CHANGES = {
     'verbose': 'verbosity',
-    'pipelining': 'enable_pipelining',
 }
 
 
@@ -217,7 +216,4 @@ def setup_arguments(arguments):
         'su_user': arguments['--su-user'],
         'parallel': arguments['--parallel'],
         'fail_percent': arguments['--fail-percent'],
-
-        # Experimental
-        'pipelining': arguments['--enable-pipelining'],
     }

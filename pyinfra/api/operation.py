@@ -122,17 +122,6 @@ def operation(func=None, pipeline_facts=None):
             state, host = args[0], args[1]
             args = args_copy[2:]
 
-        # Pipelining? Now we have args, we can process the argspec and prep the pipe
-        if state.pipelining:
-            state.pipeline_facts.process(func, decorated_func, args, kwargs)
-
-            # Not in op? Just drop the op into state.ops_to_pipeline and return
-            # here, this will be re-run once the facts are gathered.
-            if not state.in_op:
-                state.ops_to_pipeline.append(
-                    (host.name, decorated_func, args, kwargs.copy()),
-                )
-
         # Configure operation
         #
 
@@ -299,11 +288,6 @@ def operation(func=None, pipeline_facts=None):
 
         # Make the operaton meta object for returning
         operation_meta = OperationMeta(op_hash, commands)
-
-        # If we're pipelining, we don't actually want to add the operation as-is,
-        # just collect the facts.
-        if state.pipelining:
-            return operation_meta
 
         # Add host-specific operation data to state
         #

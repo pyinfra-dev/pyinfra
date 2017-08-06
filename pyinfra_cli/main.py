@@ -116,10 +116,6 @@ def _print_facts(ctx, param, value):
     help='Print state data before operations and exit.',
 )
 @click.option(
-    '--enable-pipelining', is_flag=True, default=False,
-    help='Enable pipelining [EXPERIMENTAL].',
-)
-@click.option(
     '--facts', is_flag=True, is_eager=True, callback=_print_facts,
     help='Print available facts list and exit.',
 )
@@ -186,7 +182,6 @@ def _main(
     parallel, fail_percent,
     dry, limit, no_wait, serial,
     debug, debug_data, debug_state,
-    enable_pipelining,
     facts=None,
 ):
     print()
@@ -417,13 +412,7 @@ def _main(
         prepare_steps = len(commands) * len(state.inventory)
         with progress_spinner(prepare_steps) as progress:
             for filename in commands:
-                if enable_pipelining:
-                    with state.pipeline_facts:
-                        load_deploy_file(state, filename, progress=progress)
-
-                else:
-                    load_deploy_file(state, filename, progress=progress)
-
+                load_deploy_file(state, filename, progress=progress)
                 progress()
 
     # Operation w/optional args
