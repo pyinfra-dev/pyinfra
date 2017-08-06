@@ -99,8 +99,9 @@ def pop_op_kwargs(state, kwargs):
 
 def unroll_generators(generator):
     '''
-    Take a generator and unroll any sub-generators recursively. This is essentially a
-    Python 2 way of doing `yield from` in Python 3 (given iterating the entire thing).
+    Take a generator and unroll any sub-generators recursively. This is
+    essentially a Python 2 way of doing `yield from` in Python 3 (given
+    iterating the entire thing).
     '''
 
     # Ensure we have a generator (prevents ccommands returning lists)
@@ -211,8 +212,6 @@ def make_command(
     Builds a shell command with various kwargs.
     '''
 
-    logger.debug('Building command {0}'.format(command))
-
     debug_meta = {}
 
     for key, value in (
@@ -224,7 +223,7 @@ def make_command(
         if value:
             debug_meta[key] = value
 
-    logger.debug('Command meta ({0})'.format(' '.join(
+    logger.debug('Building command ({0})'.format(' '.join(
         '{0}: {1}'.format(key, value)
         for key, value in six.iteritems(debug_meta)
     )))
