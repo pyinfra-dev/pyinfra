@@ -35,6 +35,7 @@ class Config(object):
     # Use sudo and optional user
     SUDO = False
     SUDO_USER = None
+    PRESERVE_SUDO_ENV = False
 
     # Only show errors, but don't count as failure
     IGNORE_ERRORS = False
