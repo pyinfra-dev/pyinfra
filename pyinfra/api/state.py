@@ -61,6 +61,7 @@ class State(object):
 
     # Name of the current deploy
     deploy_name = None
+    deploy_kwargs = None
 
     # Flags for printing
     print_output = False  # print output from the actual deploy (-v)
@@ -183,10 +184,12 @@ class State(object):
         self.limit_hosts = None
 
     @contextmanager
-    def named_deploy(self, name):
+    def deploy(self, name, meta_kwargs):
         self.deploy_name = name
+        self.deploy_kwargs = meta_kwargs
         yield
         self.deploy_name = None
+        self.deploy_kwargs = None
 
     def ready_host(self, host):
         '''

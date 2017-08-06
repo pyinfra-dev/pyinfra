@@ -17,6 +17,7 @@ from pyinfra.pseudo_modules import PseudoModule
 
 from .host import Host
 from .state import State
+from .util import pop_op_kwargs
 
 
 def add_deploy(state, deploy_func, *args, **kwargs):
@@ -55,9 +56,11 @@ def deploy(func):
             state, host = args[0], args[1]
             args = args_copy[2:]
 
+        meta_kwargs = pop_op_kwargs(state, kwargs)
+
         # Name the deploy
         deploy_name = getattr(func, 'deploy_name', func.__name__)
-        with state.named_deploy(deploy_name):
+        with state.deploy(deploy_name, meta_kwargs):
             # Execute the deploy, passing state and host
             func(state, host, *args, **kwargs)
 
