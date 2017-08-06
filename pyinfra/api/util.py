@@ -181,7 +181,7 @@ def format_exception(e):
     return '{0}{1}'.format(e.__class__.__name__, e.args)
 
 
-def log_host_command_error(host, e, timeout=0, callback=None):
+def log_host_command_error(host, e, timeout=0):
     if isinstance(e, timeout_error):
         logger.error('{0}{1}'.format(
             host.print_prefix,
@@ -197,9 +197,6 @@ def log_host_command_error(host, e, timeout=0, callback=None):
                 format_exception(e)), 'red',
             ),
         ))
-
-    if callback:
-        callback()
 
 
 def make_command(
