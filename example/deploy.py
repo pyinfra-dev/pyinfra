@@ -163,6 +163,7 @@ git.repo(
     'git@github.com:Fizzadar/pyinfra',
     host.data.app_dir,
     branch='develop',
+    ssh_keyscan=True,
     run_once=True,
     sudo=True,
     # Carry SSH agent details w/sudo
@@ -202,8 +203,8 @@ server.wait(
 
 
 # Execute Python locally, mid-deploy
-def some_python(state, host, hostname, *args, **kwargs):
-    print('connecting hostname: {0}, actual: {1}'.format(hostname, host.fact.hostname))
+def some_python(state, host, *args, **kwargs):
+    print('connecting host name: {0}, actual: {1}'.format(host.name, host.fact.hostname))
     local.shell('echo "local stuff!"')
 
 
