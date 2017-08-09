@@ -174,19 +174,31 @@ class Inventory(object):
         for host in six.itervalues(self.hosts):
             yield host
 
-    def get_host(self, name, default=None):
+    def get_host(self, name, default=NoHostError):
         '''
         Get a single host by name.
         '''
 
-        return self.hosts.get(name, default)
+        if name in self.hosts:
+            return self.hosts[name]
 
-    def get_group(self, name, default=None):
+        if default is NoHostError:
+            raise NoHostError('No such host: {0}'.format(name))
+
+        return default
+
+    def get_group(self, name, default=NoGroupError):
         '''
         Get a list of hosts belonging to a group.
         '''
 
-        return self.groups.get(name, default)
+        if name in self.groups:
+            return self.groups[name]
+
+        if default is NoGroupError:
+            raise NoGroupError('No such group: {0}'.format(name))
+
+        return default
 
     def get_data(self):
         '''
