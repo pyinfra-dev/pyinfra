@@ -39,11 +39,11 @@ def container(
 
     # Container exists and we don't want it
     if container and not present:
-            if container['status'] == 'Running':
-                yield 'lxc stop {0}'.format(name)
+        if container['status'] == 'Running':
+            yield 'lxc stop {0}'.format(name)
 
-            # Command to remove the container:
-            yield 'lxc delete {0}'.format(name)
+        # Command to remove the container:
+        yield 'lxc delete {0}'.format(name)
 
     # Container doesn't exist and we want it
     if not container and present:
