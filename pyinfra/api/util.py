@@ -48,8 +48,8 @@ def pop_op_kwargs(state, kwargs):
 
     meta_kwargs = state.deploy_kwargs or {}
 
-    def get_kwarg(key, default):
-        return kwargs.pop(key, meta_kwargs.pop(key, default))
+    def get_kwarg(key, default=None):
+        return kwargs.pop(key, meta_kwargs.get(key, default))
 
     # Get the env for this host: config env followed by command-level env
     env = state.config.ENV.copy()
@@ -77,7 +77,7 @@ def pop_op_kwargs(state, kwargs):
             'ignore_errors', state.config.IGNORE_ERRORS,
         ),
         # Timeout on running the command
-        'timeout': get_kwarg('timeout', None),
+        'timeout': get_kwarg('timeout'),
         # Get a PTY before executing commands
         'get_pty': get_kwarg('get_pty', False),
         # Forces serial mode for this operation (--serial for one op)
@@ -85,12 +85,12 @@ def pop_op_kwargs(state, kwargs):
         # Only runs this operation once
         'run_once': get_kwarg('run_once', False),
         # Execute in batches of X hosts rather than all at once
-        'parallel': get_kwarg('parallel', None),
+        'parallel': get_kwarg('parallel'),
         # Callbacks
-        'on_success': get_kwarg('on_success', None),
-        'on_error': get_kwarg('on_error', None),
+        'on_success': get_kwarg('on_success'),
+        'on_error': get_kwarg('on_error'),
         # Operation hash
-        'op': get_kwarg('op', None),
+        'op': get_kwarg('op'),
     }
 
 
