@@ -11,10 +11,10 @@ import six
 
 from . import pseudo_state
 from .api.exceptions import PyinfraError
-from .api.util import ensure_hosts_list, exec_file, read_buffer
+from .api.util import ensure_list, exec_file, read_buffer
 
 
-def include(filename, hosts=False):
+def include(filename, hosts=None):
     '''
     Executes a local python file within the ``pyinfra.pseudo_state.deploy_dir``
     directory.
@@ -23,24 +23,18 @@ def include(filename, hosts=False):
     if not pseudo_state.active:
         return
 
-    if hosts is not False:
-        hosts = ensure_hosts_list(hosts)
-        pseudo_state.limit_hosts = hosts
-
     filename = path.join(pseudo_state.deploy_dir, filename)
 
-    try:
-        exec_file(filename)
+    hosts = ensure_list(hosts)
 
-    except IOError as e:
-        raise PyinfraError(
-            'Could not include local file: {0}\n{1}'.format(filename, e),
-        )
+    with pseudo_state.limit(hosts):
+        try:
+            exec_file(filename)
 
-    # Always clear any host limit
-    finally:
-        if isinstance(hosts, (list, tuple)):
-            pseudo_state.limit_hosts = None
+        except IOError as e:
+            raise PyinfraError(
+                'Could not include local file: {0}\n{1}'.format(filename, e),
+            )
 
 
 def shell(commands):

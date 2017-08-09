@@ -31,14 +31,14 @@ TEMPLATES = {}
 FILE_SHAS = {}
 
 
-def ensure_hosts_list(hosts):
-    if hosts is None:
-        return []
+def ensure_list(items):
+    if items is None:
+        return items
 
-    if not isinstance(hosts, (list, tuple)):
-        return [hosts]
+    if not isinstance(items, (list, tuple)):
+        return [items]
 
-    return hosts
+    return items
 
 
 def pop_op_kwargs(state, kwargs):
@@ -56,11 +56,8 @@ def pop_op_kwargs(state, kwargs):
     env.update(get_kwarg('env', {}))
 
     # None means no hosts (see below), so use default False as None
-    hosts = get_kwarg('hosts', False)
-    if hosts is False:
-        hosts = None
-    else:
-        hosts = ensure_hosts_list(hosts)
+    hosts = get_kwarg('hosts')
+    hosts = ensure_list(hosts)
 
     return {
         # ENVars for commands in this operation
