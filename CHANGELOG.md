@@ -31,17 +31,18 @@ from pyinfra.api import deploy
 def install_openstack_controller(state, host):
     apt.packages(
         state, host,
-        {'Install mysql-server'},
-        ['mysql-server'],
+        {'Install openstack-client'},
+        ['openstack-client'],
     )
     ...
 ```
 
-+ Add **SSH module**: `ssh.keyscan`, `ssh.command`, `ssh.upload`, `ssh.download`
++ Add **SSH module** to execute SSH from others hosts: `ssh.keyscan`, `ssh.command`, `ssh.upload`, `ssh.download`
++ Add **vzctl module** to manage OpenVZ containers: `vzctl.create`, `vzctl.stop`, `vzctl.start`, `vzctl.restart`, `vzctl.delete`, `vzctl.set`
 + Add `on_success` and `on_error` callbacks to all operations (args = `(state, host, op_hash)`)
 + Add `server.script_template` operation
++ Add global `hosts` kwarg to all operations, working like `local.include`'s
 + Add `cache_time` kwarg to `apt.update` operation
-+ Add `hosts` kwarg to all operations, working like `local.include`'s
 + Add `Inventory.get_group` and `Inventory.get_host`
 + Inventory `__len__` now (correctly) looks at active hosts, rather than all
 + Add `Inventory.len_all_hosts` to replace above bug/qwirk
