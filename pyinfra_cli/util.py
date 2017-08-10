@@ -5,6 +5,7 @@
 from __future__ import division, print_function
 
 import json
+import os
 import shlex
 import sys
 
@@ -38,6 +39,9 @@ WAIT_CHARS = deque(('-', '/', '|', '\\'))
 
 
 def print_spinner(stop_event, progress_queue):
+    if 'PYINFRA_NO_PROGRESS' in os.environ:
+        return
+
     progress = ''
     text = ''
 
