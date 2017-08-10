@@ -1,4 +1,4 @@
-# v0.4 (WIP)
+# v0.4
 
 + **Major change**: entirely new, streamlined CLI. Legacy support will remain for the next few releases. Usage is now:
 
@@ -53,7 +53,7 @@ def install_openstack_controller(state, host):
 + Expand Travis.ci testing to Python 3.6 and 3.7 nightly
 + Remove unused kwargs (`sudo`, `sudo_user`, `su_user`) from `pyinfra.api.facts.get_facts`
 
-To-be-breaking changes (deprecated & will be removed in 0.5):
+To-be-breaking changes (deprecated):
 
 + Deprecate `add_limited_op` function, use `hosts` kwarg on `add_op`
 + Deprecate group access via attribute and host access via index on `Inventory`
@@ -109,7 +109,7 @@ New stuff:
 + Improve how the init module handles "unknown" services
 + Add `force` kwarg to `apt.packages` and `apt.deb` and don't `--force-yes` by default
 
-To-be-breaking changes (deprecated & will be removed in 0.3):
+To-be-breaking changes (deprecated):
 
 + Switch to lowercase inventory names (accessing `inventory.bsd` where the group is defined as `BSD = []` is deprecated)
 + Rename `yum.upgrade` -> `yum.update` (`yum.upgrade` deprecated)
