@@ -51,7 +51,7 @@ def restart(state, host, ctid, force=False):
     '''
 
     yield stop(state, host, ctid)
-    yield start(state, host, force=force)
+    yield start(state, host, ctid, force=force)
 
 
 @operation
