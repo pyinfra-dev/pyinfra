@@ -1,0 +1,9 @@
+{
+    "args": [123],
+    "kwargs": {
+        "force": true
+    },
+    "commands": [
+        "vzctl start 123 --force"
+    ]
+}

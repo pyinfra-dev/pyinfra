@@ -1,0 +1,12 @@
+{
+    "args": [123],
+    "kwargs": {
+        "template": "ubuntu-1604"
+    },
+    "facts": {
+        "openvz_containers": {}
+    },
+    "commands": [
+        "vzctl create 123 --ostemplate ubuntu-1604"
+    ]
+}

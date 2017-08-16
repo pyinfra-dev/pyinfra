@@ -1,0 +1,6 @@
+{
+    "args": [123],
+    "commands": [
+        "vzctl start 123"
+    ]
+}

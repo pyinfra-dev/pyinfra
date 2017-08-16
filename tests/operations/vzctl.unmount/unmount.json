@@ -1,0 +1,6 @@
+{
+    "args": [123],
+    "commands": [
+        "vzctl umount 123"
+    ]
+}
