@@ -1,0 +1,12 @@
+{
+    "args": ["py-pip"],
+    "facts": {
+        "os": "os",
+        "os_version": "os_version",
+        "arch": "arch",
+        "pkg_packages": {}
+    },
+    "commands": [
+        "PKG_PATH=http://ftp.os.org/pub/os/os_version/packages/arch/ pkg_add py-pip"
+    ]
+}
