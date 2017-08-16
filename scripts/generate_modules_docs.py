@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # pyinfra
 # File: docs/generate_module_docs.py
 # Desc: generate rst docs from the module modules
