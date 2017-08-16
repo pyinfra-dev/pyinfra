@@ -79,6 +79,12 @@ class FakeFact(object):
 
         return item
 
+    def __str__(self):
+        return self.data
+
+    def __unicode__(self):
+        return self.data
+
     def get(self, key, default=None):
         if key in self.data:
             return self.data[key]
