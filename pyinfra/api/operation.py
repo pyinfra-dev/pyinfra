@@ -28,6 +28,18 @@ from .state import State
 from .util import get_arg_value, make_hash, pop_op_kwargs, unroll_generators
 
 
+# List of available operation names
+OPERATIONS = []
+
+
+def get_operation_names():
+    '''
+    Returns a list of available operations.
+    '''
+
+    return OPERATIONS
+
+
 class OperationMeta(object):
     def __init__(self, hash=None, commands=None):
         self.hash = hash
@@ -92,6 +104,11 @@ def operation(func=None, pipeline_facts=None):
             return operation(f)
 
         return decorator
+
+    # Index the operation!
+    module_bits = func.__module__.split('.')
+    module_name = module_bits[-1]
+    OPERATIONS.append('.'.join((module_name, func.__name__)))
 
     # Actually decorate!
     @wraps(func)

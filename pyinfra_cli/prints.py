@@ -12,6 +12,7 @@ import six
 
 from pyinfra import logger
 from pyinfra.api.facts import get_fact_names
+from pyinfra.api.operation import get_operation_names
 
 from .util import json_encode
 
@@ -53,15 +54,13 @@ def dump_state(state):
     print(json.dumps(state.op_order, indent=4, default=json_encode))
 
 
-def print_facts_list():
-    fact_names = sorted(get_fact_names())
-
+def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
     items = []
     last_name = None
 
-    for name in fact_names:
+    for name in print_items:
         # Keep all facts with the same first character on one line
-        if last_name is None or last_name[0] == name[0]:
+        if last_name is None or comparator(last_name) == comparator(name):
             items.append(name)
 
         else:
@@ -73,6 +72,25 @@ def print_facts_list():
             items = [name]
 
         last_name = name
+
+    if items:
+        print('    {0}'.format(', '.join((
+            click.style(name, bold=True)
+            for name in items
+        ))))
+
+
+def print_facts_list():
+    fact_names = sorted(get_fact_names())
+    print_groups_by_comparison(fact_names)
+
+
+def print_operations_list():
+    operation_names = sorted(get_operation_names())
+    print_groups_by_comparison(
+        operation_names,
+        comparator=lambda item: item.split('.')[0],
+    )
 
 
 def print_fact(fact_data):

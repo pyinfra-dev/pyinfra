@@ -38,6 +38,7 @@ from .prints import (
     print_facts_list,
     print_inventory,
     print_meta,
+    print_operations_list,
     print_results,
 )
 from .util import (
@@ -63,6 +64,15 @@ def _print_facts(ctx, param, value):
 
     print('--> Available facts:')
     print_facts_list()
+    ctx.exit()
+
+
+def _print_operations(ctx, param, value):
+    if not value:
+        return
+
+    print('--> Available operations:')
+    print_operations_list()
     ctx.exit()
 
 
@@ -118,6 +128,10 @@ def _print_facts(ctx, param, value):
 @click.option(
     '--facts', is_flag=True, is_eager=True, callback=_print_facts,
     help='Print available facts list and exit.',
+)
+@click.option(
+    '--operations', is_flag=True, is_eager=True, callback=_print_operations,
+    help='Print available operations list and exit.',
 )
 @click.version_option(
     version=__version__,
@@ -182,7 +196,7 @@ def _main(
     parallel, fail_percent,
     dry, limit, no_wait, serial,
     debug, debug_data, debug_state,
-    facts=None,
+    facts=None, operations=None,
 ):
     print()
     print('### {0}'.format(click.style('Welcome to pyinfra', bold=True)))
