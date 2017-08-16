@@ -26,7 +26,7 @@ def packages(state, host, packages=None, present=True, latest=False):
 
     yield ensure_packages(
         packages, host.fact.gem_packages, present,
-        install_command='gem instal',
+        install_command='gem install',
         uninstall_command='gem uninstall',
         upgrade_command='gem update',
         version_join=':',
