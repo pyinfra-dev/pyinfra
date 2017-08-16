@@ -1,0 +1,10 @@
+{
+    "args": ["remote-host.net", "local_filename"],
+    "kwargs": {
+        "use_remote_sudo": true
+    },
+    "commands": [
+        "scp local_filename remote-host.net:_tempfile_",
+        "ssh remote-host.net \"sudo mv _tempfile_ local_filename\""
+    ]
+}

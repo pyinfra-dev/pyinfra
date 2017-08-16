@@ -1,0 +1,17 @@
+{
+    "args": ["remote-host.net", "local_filename"],
+    "kwargs": {
+        "ssh_user": "nick",
+        "ssh_keyscan": true
+    },
+    "facts": {
+        "find_in_file": {
+            "~/.ssh/known_hosts": {
+                "remote-host.net": [true]
+            }
+        }
+    },
+    "commands": [
+        "scp local_filename nick@remote-host.net:local_filename"
+    ]
+}

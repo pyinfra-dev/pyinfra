@@ -1,0 +1,9 @@
+{
+    "args": ["remote-host.net", "echo hi"],
+    "kwargs": {
+        "ssh_user": "nick"
+    },
+    "commands": [
+        "ssh nick@remote-host.net \"echo hi\""
+    ]
+}

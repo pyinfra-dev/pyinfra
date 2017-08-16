@@ -1,0 +1,17 @@
+{
+    "args": ["remote-host.net", "remote_filename", "local_filename"],
+    "facts": {
+        "file": {
+            "local_filename": false
+        },
+        "find_in_file": {
+            "~/.ssh/known_hosts": {
+                "remote-host.net": [true]
+            }
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "Local destination local_filename already exists and is not a file"
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "args": ["remote-host.net", "remote_filename", "local_filename"],
+    "kwargs": {
+        "force": true
+    },
+    "facts": {
+        "file": {
+            "local_filename": true
+        }
+    },
+    "commands": [
+        "scp remote-host.net:remote_filename local_filename"
+    ]
+}

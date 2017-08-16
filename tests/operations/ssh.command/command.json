@@ -1,0 +1,6 @@
+{
+    "args": ["remote-host.net", "echo hi"],
+    "commands": [
+        "ssh remote-host.net \"echo hi\""
+    ]
+}

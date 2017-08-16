@@ -1,0 +1,13 @@
+{
+    "args": ["remote-host.net"],
+    "facts": {
+        "find_in_file": {
+            "~/.ssh/known_hosts": {
+                "remote-host.net": []
+            }
+        }
+    },
+    "commands": [
+        "ssh-keyscan remote-host.net >> ~/.ssh/known_hosts"
+    ]
+}
