@@ -124,7 +124,10 @@ def set(state, host, ctid, save=True, **settings):
         ``hostname='my-host.net'`` becomes ``--hostname my-host.net``.
     '''
 
-    args = ['{0}'.format(ctid), '--save']
+    args = ['{0}'.format(ctid)]
+
+    if save:
+        args.append('--save')
 
     for key, value in six.iteritems(settings):
         # Handle list values (eg --nameserver X --nameserver X)
