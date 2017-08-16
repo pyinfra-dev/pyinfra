@@ -1,0 +1,13 @@
+{
+    "args": [123],
+    "kwargs": {
+        "template": "ubuntu-1604"
+    },
+    "facts": {
+        "openvz_containers": [123]
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "An OpenVZ container with CTID 123 already exists"
+    }
+}

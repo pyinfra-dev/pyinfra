@@ -1,0 +1,10 @@
+{
+    "args": [123],
+    "kwargs": {
+        "save": false,
+        "hostname": "my-host.name"
+    },
+    "commands": [
+        "vzctl set 123 --hostname my-host.name"
+    ]
+}
