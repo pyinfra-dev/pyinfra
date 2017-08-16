@@ -66,6 +66,17 @@ def mount(state, host, ctid):
 
 
 @operation
+def unmount(state, host, ctid):
+    '''
+    Unmount OpenVZ container filesystems.
+
+    + ctid: CTID of the container to unmount
+    '''
+
+    yield 'vzctl umount {0}'.format(ctid)
+
+
+@operation
 def delete(state, host, ctid):
     '''
     Delete OpenVZ containers.
