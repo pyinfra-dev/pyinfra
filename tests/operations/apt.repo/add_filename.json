@@ -1,0 +1,17 @@
+{
+    "args": ["deb http://archive.canonical.com/ubuntu hardy partner"],
+    "kwargs": {
+        "filename": "somefile"
+    },
+    "facts": {
+        "apt_sources": [],
+        "find_in_file": {
+            "/etc/apt/sources.list.d/somefile.list": {
+                "^.*deb http://archive.canonical.com/ubuntu hardy partner.*$": []
+            }
+        }
+    },
+    "commands": [
+        "echo \"deb http://archive.canonical.com/ubuntu hardy partner\" >> /etc/apt/sources.list.d/somefile.list"
+    ]
+}

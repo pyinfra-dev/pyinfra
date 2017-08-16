@@ -1,0 +1,9 @@
+{
+    "kwargs": {
+        "keyserver": "key-server.net",
+        "keyid": "abc"
+    },
+    "commands": [
+        "apt-key adv --keyserver key-server.net --recv-keys abc"
+    ]
+}
