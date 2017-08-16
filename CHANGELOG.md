@@ -1,3 +1,10 @@
+# v0.4.1 (WIP)
+
++ Add `vzctl.unmount` operation
++ Fix incorrect args in `vzctl.restart` operation
++ Fix `save=False` kwarg on `vzctl.set` not affecting command output (always saved)
++ Add script to generate empty test files
+
 # v0.4
 
 + **Major change**: entirely new, streamlined CLI. Legacy support will remain for the next few releases. Usage is now:
