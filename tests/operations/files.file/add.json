@@ -3,7 +3,7 @@
     "kwargs": {
         "user": "testuser",
         "group": "testgroup",
-        "mode": 777,
+        "mode": "777",
         "touch": true
     },
     "facts": {

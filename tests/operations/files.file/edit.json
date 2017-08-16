@@ -3,7 +3,7 @@
     "kwargs": {
         "user": "testuser",
         "group": "testgroup",
-        "mode": 777
+        "mode": "+x"
     },
     "facts": {
         "file": {
@@ -15,7 +15,7 @@
         }
     },
     "commands": [
-        "chmod 777 testfile",
+        "chmod +x testfile",
         "chown testuser:testgroup testfile"
     ]
 }
