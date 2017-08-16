@@ -6,7 +6,6 @@
 
 from __future__ import print_function
 
-import json
 import sys
 
 from os import makedirs, path
@@ -20,18 +19,20 @@ WRITE_LIMIT = [
     if item != '--write'
 ]
 
-EMPTY_FACT = '{0}\n'.format(json.dumps({
-    'output': [],
-    'fact': None,
-}, indent=4))
+EMPTY_FACT = '''{
+    "output": [],
+    "fact": null
+}
+'''
 
-EMPTY_OPERATION = '{0}\n'.format(json.dumps({
-    'args': [],
-    'kwargs': {},
-    'facts': {},
-    'commands': [],
-    'exception': {},
-}, indent=4))
+EMPTY_OPERATION = '''{
+    "args": [],
+    "kwargs": {},
+    "facts": {},
+    "commands": [],
+    "exception": {}
+}
+'''
 
 
 print('--> {0} empty fact tests'.format(
