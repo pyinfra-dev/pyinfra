@@ -20,3 +20,6 @@ from . import pseudo_modules  # noqa
 
 # Trigger fact index creation
 from . import facts  # noqa
+
+# Trigger module imports
+from . import modules  # noqa
