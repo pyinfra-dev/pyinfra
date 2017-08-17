@@ -1,0 +1,4 @@
+{
+    "output": ["os_version"],
+    "fact": "os_version"
+}

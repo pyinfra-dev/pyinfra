@@ -1,0 +1,4 @@
+{
+    "output": ["my-host.net"],
+    "fact": "my-host.net"
+}
