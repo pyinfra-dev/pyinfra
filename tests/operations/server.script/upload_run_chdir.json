@@ -1,5 +1,8 @@
 {
     "args": ["somescript.sh"],
+    "kwargs": {
+        "chdir": "/home"
+    },
     "files": [
         "somescript.sh"
     ],
@@ -11,6 +14,6 @@
     "commands": [
         ["/somescript.sh", "_tempfile_"],
         "chmod +x _tempfile_",
-        "_tempfile_"
+        "cd /home && _tempfile_"
     ]
 }
