@@ -5,21 +5,20 @@
 from __future__ import print_function
 
 import json
+from importlib import import_module
 from os import listdir, path
 from unittest import TestCase
-from importlib import import_module
-from types import FunctionType
 
 import six
-from nose.tools import nottest
 from jsontest import JsonTest
+from nose.tools import nottest
 
 from pyinfra import pseudo_host, pseudo_state
 from pyinfra.api.util import unroll_generators
 
 from pyinfra_cli.util import json_encode
 
-from .util import FakeState, create_host, patch_files
+from .util import create_host, FakeState, patch_files
 
 
 @nottest
@@ -75,8 +74,10 @@ def make_operation_tests(arg):
                     commands.append(command)
 
                 elif isinstance(command, tuple):
-                    if isinstance(command[0], FunctionType):
-                        commands.append(command)
+                    if command[0] == '__func__':
+                        commands.append([
+                            command[0], list(command[1]), command[2],
+                        ])
                     else:
                         if hasattr(command[0], 'read'):
                             data = command[0].read()
@@ -92,10 +93,14 @@ def make_operation_tests(arg):
                 self.assertEqual(commands, test_data['commands'])
             except AssertionError as e:
                 print()
-                print('--> GOT:\n', json.dumps(commands, indent=4, default=json_encode))
-                print('--> WANT:', json.dumps(
-                    test_data['commands'], indent=4, default=json_encode
+                print('--> COMMANDS OUTPUT:')
+                print(json.dumps(commands, indent=4, default=json_encode))
+
+                print('--> TEST WANTS:')
+                print(json.dumps(
+                    test_data['commands'], indent=4, default=json_encode,
                 ))
+
                 raise e
 
     # Convert the op name (module.op) to a class name ModuleOp
