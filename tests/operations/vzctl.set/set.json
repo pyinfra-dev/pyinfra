@@ -1,10 +1,9 @@
 {
     "args": [123],
     "kwargs": {
-        "hostname": "my-host.name",
-        "ipadd": ["192.168.1.1", "192.168.1.2"]
+        "hostname": "my-host.name"
     },
     "commands": [
-        "vzctl set 123 --save --hostname my-host.name --ipadd 192.168.1.1 --ipadd 192.168.1.2"
+        "vzctl set 123 --save --hostname my-host.name"
     ]
 }
