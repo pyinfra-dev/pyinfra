@@ -95,3 +95,15 @@ Stop OpenVZ containers.
 
 + **ctid**: CTID of the container to stop
 
+
+:code:`vzctl.unmount`
+~~~~~~~~~~~~~~~~~~~~~
+
+Unmount OpenVZ container filesystems.
+
+.. code:: python
+
+    vzctl.unmount(ctid)
+
++ **ctid**: CTID of the container to unmount
+
