@@ -1,9 +1,11 @@
-# v0.4.1 (WIP)
+# v0.4.1
 
 + Add `vzctl.unmount` operation
++ Add script to generate empty test files
++ Increase module test coverage significantly
 + Fix incorrect args in `vzctl.restart` operation
 + Fix `save=False` kwarg on `vzctl.set` not affecting command output (always saved)
-+ Add script to generate empty test files
++ Fix `gem.packages` install command
 
 # v0.4
 
