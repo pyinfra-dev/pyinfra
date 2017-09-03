@@ -36,6 +36,8 @@ from pyinfra.local import exec_file
 from .exceptions import CliError
 
 WAIT_CHARS = deque(('-', '/', '|', '\\'))
+CURSOR_UP_ONE = '\x1b[1A'
+ERASE_LINE = '\x1b[2K'
 
 
 def print_spinner(stop_event, progress_queue):
@@ -59,7 +61,8 @@ def print_spinner(stop_event, progress_queue):
 
         # Add 5 spaces on the end to overwrite any thing "pushed" right by the
         # user typing.
-        text = '    {0}     \r'.format(
+        text = CURSOR_UP_ONE + ERASE_LINE
+        text += '    {0}     \n\r'.format(
             ' '.join((WAIT_CHARS[0], progress)),
         )
 
