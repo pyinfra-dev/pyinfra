@@ -1,4 +1,4 @@
-Compatability
+Compatibility
 =============
 
 pyinfra aims to be compatible with all Unix-like operating systems and is currently tested against:
