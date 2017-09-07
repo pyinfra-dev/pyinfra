@@ -46,7 +46,7 @@ class Date(FactBase):
     '''Returns the current datetime on the server.'''
 
     default = datetime.now()
-    command = 'date'
+    command = 'LANG=C date'
 
     def process(self, output):
         return parse_date(output[0])
