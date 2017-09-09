@@ -86,7 +86,7 @@ To-be-breaking changes (deprecated):
 + Fix `yum.rpm` when downloading already installed rpm's
 + Fix `users` fact with users that have no home directory
 + Fix command overrides with dict objects (git.repo)
-+ Removed compatability for deprecated changes in v0.2
++ Removed compatibility for deprecated changes in v0.2
 
 
 # v0.2.2
@@ -163,7 +163,7 @@ Internal changes:
 + Full docs @ pyinfra.readthedocs.io
 + Core API with CLI built on top
 + Two-step deploy (diff state, exec commands)
-+ Compatability tested w/Ubuntu/CentOS/Debian/OpenBSD/Fedora
++ Compatibility tested w/Ubuntu/CentOS/Debian/OpenBSD/Fedora
 + Modules/facts implemented:
     * Apt
     * Files

@@ -2,7 +2,7 @@ Server
 ------
 
 
-The server module takes care of os-level state. Targets POSIX compatability, tested on
+The server module takes care of os-level state. Targets POSIX compatibility, tested on
 Linux/BSD.
 
 :code:`server.group`
