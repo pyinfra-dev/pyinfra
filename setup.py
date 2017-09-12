@@ -94,7 +94,7 @@ if __name__ == '__main__':
         author_email='pointlessrambler@gmail.com',
         license='MIT',
         url='http://github.com/Fizzadar/pyinfra',
-        packages=find_packages(),
+        packages=find_packages(exclude=['tests']),
         entry_points={
             'console_scripts': (
                 'pyinfra=pyinfra_cli.__main__:execute_pyinfra',
