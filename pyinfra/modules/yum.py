@@ -34,7 +34,7 @@ def key(state, host, key):
 @operation
 def repo(
     state, host, name, baseurl,
-    present=True, description=None, gpgcheck=True, enabled=True,
+    present=True, description=None, enabled=True, gpgcheck=True, gpgkey=None,
 ):
     '''
     Manage yum repositories.
@@ -44,6 +44,7 @@ def repo(
     + present: whether the ``.repo`` file should be present
     + description: optional verbose description
     + gpgcheck: whether set ``gpgcheck=1``
+    + gpgkey: the URL to the gpg key for this repo
     '''
 
     # Description defaults to name
@@ -57,18 +58,18 @@ def repo(
         return
 
     # Build the repo file from string
-    repo = '''[{name}]
-name={description}
-baseurl={baseurl}
-gpgcheck={gpgcheck}
-enabled={enabled}
-'''.format(
-        name=name, baseurl=baseurl,
-        description=description,
-        gpgcheck=1 if gpgcheck else 0,
-        enabled=1 if enabled else 0,
-    )
+    repo_lines = [
+        '[{0}]'.format(name),
+        'name={0}'.format(description),
+        'baseurl={0}'.format(baseurl),
+        'enabled={0}'.format(1 if enabled else 0),
+        'gpgcheck={0}'.format(1 if gpgcheck else 0),
+    ]
 
+    if gpgkey:
+        repo_lines.append('gpgkey={0}'.format(gpgkey))
+
+    repo = '\n'.join(repo_lines)
     repo = StringIO(repo)
 
     # Ensure this is the file on the server
