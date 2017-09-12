@@ -1,3 +1,9 @@
+# v0.4.2 (WIP)
+
++ Add `gpgkey` argument to the `yum.repo` operation
++ Don't include tests during setup!
+
+
 # v0.4.1
 
 + Add `vzctl.unmount` operation
