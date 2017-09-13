@@ -69,6 +69,7 @@ def repo(
     if gpgkey:
         repo_lines.append('gpgkey={0}'.format(gpgkey))
 
+    repo_lines.append('')
     repo = '\n'.join(repo_lines)
     repo = StringIO(repo)
 
