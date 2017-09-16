@@ -10,6 +10,8 @@ Eg: ``pyinfra -> inventory-host.net <-> another-host.net``
 
 from pyinfra.api import operation, OperationError
 
+from . import files
+
 
 @operation
 def keyscan(state, host, hostname, force=False):
@@ -19,6 +21,12 @@ def keyscan(state, host, hostname, force=False):
     + hostname: hostname that should have a key in ``known_hosts``
     + force: if the key already exists, remove and rescan
     '''
+
+    yield files.directory(
+        state, host,
+        '~/.ssh',
+        mode=700,
+    )
 
     hostname_present = host.fact.find_in_file(
         '~/.ssh/known_hosts',
