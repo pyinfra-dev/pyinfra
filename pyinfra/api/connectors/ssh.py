@@ -28,6 +28,14 @@ from pyinfra.api.util import get_file_io, make_command, read_buffer
 SFTP_CONNECTIONS = {}
 
 
+def _log_connect_error(host, message, data):
+    logger.error('{0}{1} ({2})'.format(
+        host.print_prefix,
+        click.style(message, 'red'),
+        data,
+    ))
+
+
 def connect(state, host, **kwargs):
     '''
     Connect to a single host. Returns the SSH client if succesful. Stateless by
@@ -58,24 +66,39 @@ def connect(state, host, **kwargs):
         return client
 
     except AuthenticationException as e:
-        logger.error('Auth error on: {0}, {1}'.format(name, e))
+        auth_kwargs = {}
 
-    except SSHException as e:
-        logger.error('SSH error on: {0}, {1}'.format(name, e))
+        for key, value in kwargs.items():
+            if key in ('username', 'password'):
+                auth_kwargs[key] = value
+                continue
 
-    except gaierror:
-        if hostname == name:
-            logger.error('Could not resolve {0}'.format(name))
-        else:
-            logger.error('Could not resolve for {0} (SSH host: {1})'.format(name, hostname))
+            if key == 'pkey' and value:
+                auth_kwargs['key'] = host.data.ssh_key
 
-    except socket_error as e:
-        logger.error('Could not connect: {0}:{1}, {2}'.format(
-            name, kwargs.get('port', 22), e),
+        auth_args = ', '.join(
+            '{0}={1}'.format(key, value)
+            for key, value in auth_kwargs.items()
         )
 
+        _log_connect_error(host, 'Authentication error', auth_args)
+
+    except SSHException as e:
+        _log_connect_error(host, 'SSH error', e)
+
+    except gaierror:
+        _log_connect_error(host, 'Could not resolve hostname', hostname)
+
+    except socket_error as e:
+        hostname_port = '{0}:{1}'.format(
+            hostname,
+            kwargs.get('port', 22),
+        )
+
+        _log_connect_error(host, 'Could not connect', hostname_port)
+
     except EOFError as e:
-        logger.error('EOF error connecting to {0}: {1}'.format(name, e))
+        _log_connect_error(host, 'EOF error', e)
 
 
 def run_shell_command(

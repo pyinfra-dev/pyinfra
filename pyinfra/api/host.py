@@ -72,7 +72,10 @@ class Host(object):
 
     @property
     def print_prefix(self):
-        return '[{0}] '.format(click.style(self.name, bold=True))
+        return '{0}[{1}] '.format(
+            click.style(''),  # reset
+            click.style(self.name, bold=True),
+        )
 
     # Connector proxy
     #

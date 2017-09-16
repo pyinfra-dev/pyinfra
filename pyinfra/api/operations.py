@@ -181,13 +181,13 @@ def _run_op(state, host, op_hash):
     state.results[name]['error_ops'] += 1
 
     if op_meta['ignore_errors']:
-        logger.warning('[{0}] {1}'.format(
-            name,
+        logger.warning('{0}{1}'.format(
+            host.print_prefix,
             click.style('Error (ignored)', 'yellow'),
         ))
     else:
-        logger.error('[{0}] {1}'.format(
-            name,
+        logger.error('{0}{1}'.format(
+            host.print_prefix,
             click.style('Error', 'red'),
         ))
 
