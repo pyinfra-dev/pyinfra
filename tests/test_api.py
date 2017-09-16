@@ -21,7 +21,7 @@ from pyinfra.api import Config, Inventory, State
 from pyinfra.api.connect import connect_all
 from pyinfra.api.connectors import ssh
 from pyinfra.api.exceptions import NoGroupError, NoHostError, PyinfraError
-from pyinfra.api.operation import add_limited_op, add_op
+from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 
 from pyinfra.modules import files, server
@@ -243,7 +243,11 @@ class PatchSSHTest(TestCase):
 
 class TestStateApi(PatchSSHTest):
     def test_fail_percent(self):
-        inventory = make_inventory(('somehost', SSHException, 'anotherhost'))
+        inventory = make_inventory((
+            'somehost',
+            ('thinghost', {'ssh_hostname': SSHException}),
+            'anotherhost',
+        ))
         state = State(inventory, Config(FAIL_PERCENT=1))
 
         # Ensure we would fail at this point

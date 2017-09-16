@@ -5,6 +5,11 @@
         "ssh_keyscan": true
     },
     "facts": {
+        "directory": {
+            "~/.ssh": {
+                "mode": 700
+            }
+        },
         "file": {
             "local_filename": null
         },

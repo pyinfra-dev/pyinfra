@@ -1,6 +1,11 @@
 {
     "args": ["remote-host.net"],
     "facts": {
+        "directory": {
+            "~/.ssh": {
+                "mode": 700
+            }
+        },
         "find_in_file": {
             "~/.ssh/known_hosts": {
                 "remote-host.net": [true]
