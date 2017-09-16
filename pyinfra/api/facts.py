@@ -49,7 +49,7 @@ class FactMeta(type):
     '''
 
     def __init__(cls, name, bases, attrs):
-        if name == 'FactBase':
+        if attrs.get('abstract'):
             return
 
         # Get the an instance of the fact, attach to facts
@@ -59,6 +59,7 @@ class FactMeta(type):
 @six.add_metaclass(FactMeta)
 class FactBase(object):
     default = None
+    abstract = True
 
     def process(self, output):
         return output[0]
