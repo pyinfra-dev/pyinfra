@@ -96,6 +96,11 @@ class FallbackAttrData(object):
 
     def __getattr__(self, key):
         for data in self.datas:
+            # Support for dynamic data, ie @deploy wrapped data defaults where
+            # the data is stored on the state temporarily.
+            if callable(data):
+                data = data()
+
             if key in data:
                 return data[key]
 

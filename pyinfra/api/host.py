@@ -45,6 +45,9 @@ class Host(object):
             inventory.get_host_data(name),
             inventory.get_groups_data(groups),
             inventory.get_data(),
+            # Pass the method, rather than data, as this comes from the state
+            # and can change during deploy(s).
+            inventory.get_deploy_data,
         )
 
         # Attach the fact structure

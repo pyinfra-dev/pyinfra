@@ -242,3 +242,13 @@ class Inventory(object):
             )
 
         return AttrData(data)
+
+    def get_deploy_data(self):
+        '''
+        Gets any default data attached to the current deploy, if any.
+        '''
+
+        if self.state:
+            return self.state.deploy_data or {}
+
+        return {}

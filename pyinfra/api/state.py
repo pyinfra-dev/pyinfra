@@ -14,6 +14,7 @@ from pkg_resources import parse_version
 
 from pyinfra import __version__, logger
 
+from .attrs import AttrData
 from .config import Config
 from .exceptions import PyinfraError
 from .util import ensure_list, sha1_hash
@@ -58,6 +59,7 @@ class State(object):
     # Name of the current deploy
     deploy_name = None
     deploy_kwargs = None
+    deploy_data = None
 
     # Flags for printing
     print_output = False  # print output from the actual deploy (-v)
@@ -183,12 +185,14 @@ class State(object):
         self.limit_hosts = None
 
     @contextmanager
-    def deploy(self, name, meta_kwargs):
+    def deploy(self, name, kwargs, data):
         self.deploy_name = name
-        self.deploy_kwargs = meta_kwargs
+        self.deploy_kwargs = kwargs
+        self.deploy_data = AttrData(data)
         yield
         self.deploy_name = None
         self.deploy_kwargs = None
+        self.deploy_data = None
 
     def ready_host(self, host):
         '''
