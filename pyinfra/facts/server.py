@@ -52,6 +52,31 @@ class Date(FactBase):
         return parse_date(output[0])
 
 
+class LsbRelease(FactBase):
+    command = 'lsb_release -ca'
+
+    def process(self, output):
+        items = {}
+
+        for line in output:
+            if ':' not in line:
+                continue
+
+            key, value = line.split(':')
+
+            key = key.strip().lower()
+
+            # Turn "distributor id" into "id"
+            if ' ' in key:
+                key = key.split(' ')[-1]
+
+            value = value.strip()
+
+            items[key] = value
+
+        return items
+
+
 class Groups(FactBase):
     '''
     Returns a list of groups on the system.
@@ -97,7 +122,7 @@ class Users(FactBase):
         done
     '''
 
-    _regex = r'^uid=[0-9]+\(([a-zA-Z0-9_\.\-]+)\) gid=[0-9]+\(([a-zA-Z0-9_\.\-]+)\) groups=([a-zA-Z0-9_\.\-,\(\)\s]+) (.*)$'
+    _regex = r'^uid=[0-9]+\(([a-zA-Z0-9_\.\-]+)\) gid=[0-9]+\(([a-zA-Z0-9_\.\-]+)\) groups=([a-zA-Z0-9_\.\-,\(\)\s]+) (.*)$'  # noqa
     _group_regex = r'^[0-9]+\(([a-zA-Z0-9_\.\-]+)\)$'
 
     def process(self, output):
