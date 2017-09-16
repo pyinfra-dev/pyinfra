@@ -10,15 +10,15 @@ bsd = [
 yum = [
     'centos6.pyinfra',
     'centos7.pyinfra',
-    'fedora23.pyinfra'
+    'fedora23.pyinfra',
 ]
 
 apt = [
     # Host-specific data can be attached in inventory
     ('ubuntu14-hosttest', {'ssh_hostname': 'ubuntu14.pyinfra'}),
-    'ubuntu15.pyinfra',
+    'ubuntu16.pyinfra',
     'debian7.pyinfra',
-    'debian8.pyinfra'
+    'debian8.pyinfra',
 ]
 
 # Hosts can be in multiple groups

@@ -3,7 +3,7 @@ Compatibility
 
 pyinfra aims to be compatible with all Unix-like operating systems and is currently tested against:
 
-+ Ubuntu 14/15
++ Ubuntu 14/16
 + Debian 7/8
 + CentOS 6/7
 + Fedora 23
