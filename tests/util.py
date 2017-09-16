@@ -109,6 +109,10 @@ class FakeHost(object):
         self.fact = FakeFacts(facts)
         self.data = AttrData(data)
 
+    @property
+    def print_prefix(self):
+        return ''
+
 
 class FakeFile(object):
     _read = False
