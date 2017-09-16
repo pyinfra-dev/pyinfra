@@ -1,12 +1,18 @@
-# v0.4.2 (WIP)
+# v0.5 (WIP)
 
+Operations/facts:
 + Add `gpgkey` argument to the `yum.repo` operation
++ Add `lsb_release` fact
+
+General:
++ Add data defaults to `@deploy` functions, meaning third party pyinfra packages can provide sensible defaults that the user can override individually
++ Make it possible to pass group names (as strings) to `state.limit_hosts`
 + Don't include tests during setup!
 
 
 # v0.4.1
 
-+ Add `vzctl.unmount` operation
++ Add `vzctl.unmount` operation (missing from 0.4!)
 + Add script to generate empty test files
 + Increase module test coverage significantly
 + Fix incorrect args in `vzctl.restart` operation
