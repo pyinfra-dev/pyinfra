@@ -399,7 +399,7 @@ class TestOperationsApi(PatchSSHTest):
         self.assertEqual(state.results['somehost']['error_ops'], 0)
         self.assertEqual(state.results['anotherhost']['error_ops'], 0)
 
-    def test_limited_op(self):
+    def test_op_hosts_limit(self):
         inventory = make_inventory()
         state = State(inventory, Config())
         connect_all(state)
@@ -408,13 +408,44 @@ class TestOperationsApi(PatchSSHTest):
         add_op(state, server.shell, 'echo "hi"')
 
         # Add op to just the first host
-        add_limited_op(
-            state, server.user, inventory['somehost'],
+        add_op(
+            state, server.user,
             'somehost_user',
+            hosts=inventory['somehost'],
         )
 
         # Ensure there are two ops
         self.assertEqual(len(state.op_order), 2)
+
+        # Ensure somehost has two ops and anotherhost only has the one
+        self.assertEqual(len(state.ops['somehost']), 2)
+        self.assertEqual(len(state.ops['anotherhost']), 1)
+
+    def test_op_state_hosts_limit(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        connect_all(state)
+
+        # Add op to both hosts
+        add_op(state, server.shell, 'echo "hi"')
+
+        # Add op to just the first host
+        with state.limit('test_group'):
+            add_op(
+                state, server.user,
+                'somehost_user',
+            )
+
+            # Now, also limited but set hosts to the non-limited hosts, which
+            # should mean this operation applies to no hosts.
+            add_op(
+                state, server.user,
+                'somehost_user',
+                hosts=inventory['anotherhost'],
+            )
+
+        # Ensure there are three ops
+        self.assertEqual(len(state.op_order), 3)
 
         # Ensure somehost has two ops and anotherhost only has the one
         self.assertEqual(len(state.ops['somehost']), 2)

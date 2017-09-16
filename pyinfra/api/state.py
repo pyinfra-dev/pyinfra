@@ -178,6 +178,10 @@ class State(object):
 
     @contextmanager
     def limit(self, hosts):
+        # If passed a string, treat as group name and get hosts from inventory
+        if isinstance(hosts, six.string_types):
+            hosts = self.inventory.get_group(hosts)
+
         hosts = ensure_list(hosts)
 
         self.limit_hosts = hosts
