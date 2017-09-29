@@ -2,8 +2,6 @@
 # File: docs/conf.py
 # Desc: minimal Sphinx config
 
-# import os
-
 from better import better_theme_path
 
 from pyinfra import __version__
