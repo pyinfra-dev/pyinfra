@@ -26,8 +26,8 @@ def _run_op(state, host, op_hash):
 
     # Noop for this host?
     if op_hash not in state.ops[name]:
-        logger.info('[{0}] {1}'.format(
-            click.style(name, bold=True),
+        logger.info('{0}{1}'.format(
+            host.print_prefix,
             click.style(
                 'Skipped',
                 'blue',
