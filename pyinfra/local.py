@@ -37,7 +37,7 @@ def include(filename, hosts=None):
             )
 
 
-def shell(commands, splitlines=False):
+def shell(commands, splitlines=False, ignore_errors=False):
     '''
     Subprocess based implementation of pyinfra/api/ssh.py's ``run_shell_command``.
     '''
@@ -75,7 +75,7 @@ def shell(commands, splitlines=False):
         # Close any open file descriptor
         process.stdout.close()
 
-        if result > 0:
+        if result > 0 and not ignore_errors:
             raise PyinfraError(
                 'Local command failed: {0}\n{1}'.format(command, stdout),
             )
