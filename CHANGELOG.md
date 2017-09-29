@@ -1,5 +1,16 @@
 # v0.5 (WIP)
 
++ **Vagrant integration**:
+
+```sh
+# Run a deploy on all Vagrant machines (vagrant status list)
+pyinfra @vagrant deploy.py
+
+# Can be used in tandem with other inventory:
+pyinfra @vagrant,my-host.net deploy.py
+pyinfra @vagrant,@local,my-host.net fact os
+```
+
 Operations/facts:
 + Add `gpgkey` argument to the `yum.repo` operation
 + Add `lsb_release` fact
@@ -7,6 +18,9 @@ Operations/facts:
 General:
 + Add data defaults to `@deploy` functions, meaning third party pyinfra packages can provide sensible defaults that the user can override individually
 + Make it possible to pass group names (as strings) to `state.limit_hosts`
++ Improved error output when connecting
++ Update testing box from Ubuntu 15 to Ubuntu 16
++ Ensure `~/.ssh` exists keyscanning in `ssh.keyscan`
 + Don't include tests during setup!
 
 
