@@ -11,14 +11,20 @@ class PyinfraError(Exception):
 
 class OperationError(PyinfraError):
     '''
-    Exception raised during fact gathering staging if an operation is unable to generate
-    output/change state.
+    Exception raised during fact gathering staging if an operation is unable to
+    generate output/change state.
     '''
 
 
 class DeployError(PyinfraError):
     '''
     User exception for raising in deploys or sub deploys.
+    '''
+
+
+class NoConnectorError(PyinfraError, TypeError):
+    '''
+    Raised when a requested connector is missing.
     '''
 
 

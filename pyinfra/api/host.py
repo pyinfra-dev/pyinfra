@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 
 import click
 
-from .attrs import FallbackAttrData, wrap_attr_data
-from .connectors import local, ssh
+from .attrs import wrap_attr_data
+from .connectors import EXECUTION_CONNECTORS
 from .facts import get_fact, is_fact
 
 
@@ -32,35 +32,18 @@ class Host(object):
 
     connection = None
 
-    def __init__(self, inventory, name, groups=None):
-        groups = groups if groups else []
-
+    def __init__(
+        self, name, inventory, groups, data,
+        executor=EXECUTION_CONNECTORS['ssh'],
+    ):
         self.inventory = inventory
         self.name = name
         self.groups = groups
+        self.data = data
+        self.executor = executor
 
-        # Attach the (override, default to: host, group, global) data structure
-        self.data = FallbackAttrData(
-            inventory.get_override_data(),
-            inventory.get_host_data(name),
-            inventory.get_groups_data(groups),
-            inventory.get_data(),
-            # Pass the method, rather than data, as this comes from the state
-            # and can change during deploy(s).
-            inventory.get_deploy_data,
-        )
-
-        # Attach the fact structure
+        # Attach the fact proxy
         self.fact = HostFacts(inventory, name)
-
-        # Work out the connector
-        connector = ssh
-        hostname = self.data.ssh_hostname or name
-
-        if hostname == '@local':
-            connector = local
-
-        self.connector = connector
 
     @property
     def host_data(self):
@@ -81,11 +64,13 @@ class Host(object):
     #
 
     def connect(self, state, *args, **kwargs):
-        self.connection = self.connector.connect(state, self, *args, **kwargs)
+        if not self.connection:
+            self.connection = self.executor.connect(state, self, *args, **kwargs)
+
         return self.connection
 
     def run_shell_command(self, state, *args, **kwargs):
-        return self.connector.run_shell_command(state, self, *args, **kwargs)
+        return self.executor.run_shell_command(state, self, *args, **kwargs)
 
     def put_file(self, state, *args, **kwargs):
-        return self.connector.put_file(state, self, *args, **kwargs)
+        return self.executor.put_file(state, self, *args, **kwargs)

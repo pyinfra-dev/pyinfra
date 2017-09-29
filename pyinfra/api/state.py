@@ -14,7 +14,6 @@ from pkg_resources import parse_version
 
 from pyinfra import __version__, logger
 
-from .attrs import AttrData
 from .config import Config
 from .exceptions import PyinfraError
 from .util import ensure_list, sha1_hash
@@ -192,7 +191,7 @@ class State(object):
     def deploy(self, name, kwargs, data):
         self.deploy_name = name
         self.deploy_kwargs = kwargs
-        self.deploy_data = AttrData(data)
+        self.deploy_data = data
         yield
         self.deploy_name = None
         self.deploy_kwargs = None
