@@ -83,6 +83,7 @@ class Groups(FactBase):
     '''
 
     command = 'cat /etc/group'
+    default = list
 
     def process(self, output):
         groups = []
@@ -194,12 +195,6 @@ class LinuxDistribution(FactBase):
 
     command = 'cat /etc/*-release'
 
-    default = {
-        'name': None,
-        'major': None,
-        'minor': None,
-    }
-
     # Currently supported distros
     regexes = [
         r'(Ubuntu) ([0-9]{2})\.([0-9]{2})',
@@ -211,13 +206,21 @@ class LinuxDistribution(FactBase):
         r'(Fedora) release ([0-9]+)()',
     ]
 
+    @staticmethod
+    def default():
+        return {
+            'name': None,
+            'major': None,
+            'minor': None,
+        }
+
     def process(self, output):
         release_info = {
             'release_meta': {},
         }
 
         # Start with a copy of the default (None) data
-        release_info.update(self.default)
+        release_info.update(self.default())
 
         for line in output:
             # Check if we match a known version/major/minor string
