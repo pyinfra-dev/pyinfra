@@ -135,6 +135,8 @@ def make_inventory(
     # issue is we want inventory access within the group data files - but at this point
     # we're not ready to make an Inventory. So here we just create a fake one, and
     # attach it to pseudo_inventory while we import the data files.
+    logger.debug('Creating fake inventory...')
+
     fake_groups = {
         # In API mode groups *must* be tuples of (hostnames, data)
         name: group if isinstance(group, tuple) else (group, {})
