@@ -136,21 +136,6 @@ class TestSSHApi(TestCase):
 
         self.assertEqual(len(state.connected_hosts), 2)
 
-    def test_connect_exceptions_fail(self):
-        '''
-        Ensure that connection exceptions are captured and return None.
-        '''
-
-        with patch('pyinfra.api.host.ssh.SSHClient', FakeSSHClient):
-            for exception in (
-                AuthenticationException, SSHException,
-                gaierror, socket_error, EOFError,
-            ):
-                host = create_host(name='nowt', data={
-                    'ssh_hostname': exception,
-                })
-                self.assertEqual(ssh.connect(FakeState(), host), None)
-
     def test_connect_with_ssh_key(self):
         state = State(make_inventory(hosts=(
             ('somehost', {'ssh_key': 'testkey'}),
@@ -484,7 +469,7 @@ class TestOperationsApi(PatchSSHTest):
 
         add_op(state, server.shell, 'echo "hi"')
 
-        with patch('pyinfra.api.host.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
             fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
                 False,
@@ -509,7 +494,7 @@ class TestOperationsApi(PatchSSHTest):
 
         add_op(state, server.shell, 'echo "hi"', ignore_errors=True)
 
-        with patch('pyinfra.api.host.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
             fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
                 False,
