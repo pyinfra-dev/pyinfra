@@ -37,7 +37,7 @@ def include(filename, hosts=None):
             )
 
 
-def shell(commands):
+def shell(commands, splitlines=False):
     '''
     Subprocess based implementation of pyinfra/api/ssh.py's ``run_shell_command``.
     '''
@@ -74,4 +74,7 @@ def shell(commands):
 
         all_stdout.extend(stdout)
 
-    return '\n'.join(all_stdout)
+    if not splitlines:
+        return '\n'.join(all_stdout)
+
+    return all_stdout
