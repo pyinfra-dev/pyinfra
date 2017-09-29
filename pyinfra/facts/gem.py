@@ -6,6 +6,8 @@ from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
 
+GEM_REGEX = r'^([a-zA-Z0-9\-\+\_]+)\s\(([0-9\.]+)\)$'
+
 
 class GemPackages(FactBase):
     '''
@@ -17,9 +19,8 @@ class GemPackages(FactBase):
         ...
     '''
 
-    default = {}
     command = 'gem list --local'
-    _regex = r'^([a-zA-Z0-9\-\+\_]+)\s\(([0-9\.]+)\)$'
+    default = dict
 
     def process(self, output):
-        return parse_packages(self._regex, output)
+        return parse_packages(GEM_REGEX, output)

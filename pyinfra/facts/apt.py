@@ -41,8 +41,8 @@ class AptSources(FactBase):
         ...
     '''
 
-    default = []
     command = 'cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list'
+    default = list
 
     def process(self, output):
         repos = []
@@ -65,12 +65,12 @@ class DebPackages(FactBase):
         ...
     '''
 
-    default = {}
     command = 'dpkg -l'
-    _regex = r'^[a-z]+\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
+    regex = r'^[a-z]+\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
+    default = dict
 
     def process(self, output):
-        return parse_packages(self._regex, output)
+        return parse_packages(self.regex, output)
 
 
 class DebPackage(FactBase):

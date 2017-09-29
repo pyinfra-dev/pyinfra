@@ -13,13 +13,14 @@ class UpstartStatus(FactBase):
     '''
 
     command = 'initctl list'
-    _regex = r'^([a-z\-]+) [a-z]+\/([a-z]+)'
+    regex = r'^([a-z\-]+) [a-z]+\/([a-z]+)'
+    default = dict
 
     def process(self, output):
         services = {}
 
         for line in output:
-            matches = re.match(self._regex, line)
+            matches = re.match(self.regex, line)
             if matches:
                 services[matches.group(1)] = matches.group(2) == 'running'
 
@@ -32,13 +33,14 @@ class SystemdStatus(FactBase):
     '''
 
     command = 'systemctl -alt service list-units'
-    _regex = r'^([a-z\-]+)\.service\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
+    regex = r'^([a-z\-]+)\.service\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
+    default = dict
 
     def process(self, output):
         services = {}
 
         for line in output:
-            matches = re.match(self._regex, line)
+            matches = re.match(self.regex, line)
             if matches:
                 services[matches.group(1)] = matches.group(2) == 'running'
 
@@ -59,13 +61,15 @@ class SystemdEnabled(FactBase):
             echo $SERVICE $STATUS
         done
     '''
-    _regex = r'^([a-z\-]+)\.service\s+([a-z]+)'
+
+    regex = r'^([a-z\-]+)\.service\s+([a-z]+)'
+    default = dict
 
     def process(self, output):
         services = {}
 
         for line in output:
-            matches = re.match(self._regex, line)
+            matches = re.match(self.regex, line)
             if matches:
                 services[matches.group(1)] = (
                     matches.group(2) in ('enabled', 'static')
@@ -96,13 +100,15 @@ class InitdStatus(FactBase):
             fi
         done
     '''
-    _regex = r'([a-zA-Z0-9\-]+)=([0-9]+)'
+
+    regex = r'([a-zA-Z0-9\-]+)=([0-9]+)'
+    default = dict
 
     def process(self, output):
         services = {}
 
         for line in output:
-            matches = re.match(self._regex, line)
+            matches = re.match(self.regex, line)
             if matches:
                 status = int(matches.group(2))
 
@@ -140,9 +146,13 @@ class RcdStatus(InitdStatus):
         done
     '''
 
+    default = dict
+
 
 class RcdEnabled(FactBase):
     '''
     Returns a dict of service name -> whether enabled (on boot) status. Different
     to Linux variants because BSD has no/one runlevel.
     '''
+
+    default = dict

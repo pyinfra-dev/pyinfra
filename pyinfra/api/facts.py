@@ -58,8 +58,13 @@ class FactMeta(type):
 
 @six.add_metaclass(FactMeta)
 class FactBase(object):
-    default = None
     abstract = True
+
+    @staticmethod
+    def default():
+        '''
+        Set the default attribute to be a type (eg list/dict).
+        '''
 
     def process(self, output):
         return output[0]
@@ -84,7 +89,7 @@ def get_facts(state, name, args=None):
     # If we're inactive: just return the defaults
     if not state.active:
         return {
-            host.name: fact.default
+            host.name: fact.default()
             for host in state.inventory
         }
 
@@ -163,7 +168,7 @@ def get_facts(state, name, args=None):
                 **kwargs
             )
 
-        data = fact.default
+        data = fact.default()
 
         if status and stdout:
             data = fact.process(stdout)

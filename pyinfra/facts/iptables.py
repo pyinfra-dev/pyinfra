@@ -97,6 +97,8 @@ class IptablesRules(FactBase):
         ...
     '''
 
+    default = list
+
     def command(self, table='filter'):
         return 'iptables-save -t {0}'.format(table)
 
@@ -136,6 +138,8 @@ class IptablesChains(IptablesRules):
         'NAME': 'POLICY',
         ...
     '''
+
+    default = dict
 
     def process(self, output):
         chains = {}

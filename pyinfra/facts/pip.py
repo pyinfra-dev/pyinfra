@@ -8,6 +8,8 @@ from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
 
+PIP_REGEX = r'^([a-zA-Z0-9_\-\+\.]+)==([0-9\.]+[a-z0-9\-]*)$'
+
 
 class PipPackages(FactBase):
     '''
@@ -19,11 +21,10 @@ class PipPackages(FactBase):
         ...
     '''
 
-    default = {}
-    _regex = r'^([a-zA-Z0-9_\-\+\.]+)==([0-9\.]+[a-z0-9\-]*)$'
+    default = dict
 
     def command(self, pip='pip'):
         return '{0} freeze'.format(pip)
 
     def process(self, output):
-        return parse_packages(self._regex, output)
+        return parse_packages(PIP_REGEX, output)

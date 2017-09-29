@@ -13,6 +13,7 @@ class LXDContainers(FactBase):
     '''
 
     command = 'lxc list --format json --fast'
+    default = list
 
     def process(self, output):
         assert len(output) == 1

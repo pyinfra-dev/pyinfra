@@ -24,6 +24,7 @@ class OpenvzContainers(FactBase):
     '''
 
     command = 'vzlist -a -j'
+    default = dict
 
     @staticmethod
     def process(output):

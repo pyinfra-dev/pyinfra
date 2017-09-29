@@ -17,9 +17,9 @@ class PkgPackages(FactBase):
         ...
     '''
 
-    default = {}
     command = 'pkg_info'
-    _regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.]+)'
+    regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.]+)'
+    default = dict
 
     def process(self, output):
-        return parse_packages(self._regex, output)
+        return parse_packages(self.regex, output)

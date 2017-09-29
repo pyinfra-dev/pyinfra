@@ -23,16 +23,15 @@ class BlockDevices(FactBase):
         ...
     '''
 
-    default = {}
     command = 'df'
-
-    _regex = r'([a-zA-Z0-9\/\-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
+    regex = r'([a-zA-Z0-9\/\-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
+    default = dict
 
     def process(self, output):
         devices = {}
 
         for line in output:
-            matches = re.match(self._regex, line)
+            matches = re.match(self.regex, line)
             if matches:
                 if matches.group(1) == 'none':
                     continue
@@ -114,8 +113,8 @@ class NetworkDevices(FactBase):
         ...
     '''
 
-    default = {}
     command = 'ifconfig'
+    default = dict
 
     _start_regexes = [
         (

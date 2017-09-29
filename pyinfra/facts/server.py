@@ -112,8 +112,6 @@ class Users(FactBase):
         ...
     '''
 
-    default = {}
-
     command = '''
         for i in `cat /etc/passwd | cut -d: -f1`; do
             ID=`id $i`
@@ -122,13 +120,15 @@ class Users(FactBase):
         done
     '''
 
-    _regex = r'^uid=[0-9]+\(([a-zA-Z0-9_\.\-]+)\) gid=[0-9]+\(([a-zA-Z0-9_\.\-]+)\) groups=([a-zA-Z0-9_\.\-,\(\)\s]+) (.*)$'  # noqa
-    _group_regex = r'^[0-9]+\(([a-zA-Z0-9_\.\-]+)\)$'
+    default = dict
+
+    regex = r'^uid=[0-9]+\(([a-zA-Z0-9_\.\-]+)\) gid=[0-9]+\(([a-zA-Z0-9_\.\-]+)\) groups=([a-zA-Z0-9_\.\-,\(\)\s]+) (.*)$'  # noqa
+    group_regex = r'^[0-9]+\(([a-zA-Z0-9_\.\-]+)\)$'
 
     def process(self, output):
         users = {}
         for line in output:
-            matches = re.match(self._regex, line)
+            matches = re.match(self.regex, line)
 
             if matches:
                 # Parse out the home/shell
@@ -153,7 +153,7 @@ class Users(FactBase):
                 # Parse the groups
                 groups = []
                 for group_matches in matches.group(3).split(','):
-                    name = re.match(self._group_regex, group_matches.strip())
+                    name = re.match(self.group_regex, group_matches.strip())
                     if name:
                         name = name.group(1)
                     else:
@@ -192,16 +192,16 @@ class LinuxDistribution(FactBase):
         }
     '''
 
+    command = 'cat /etc/*-release'
+
     default = {
         'name': None,
         'major': None,
         'minor': None,
     }
 
-    command = 'cat /etc/*-release'
-
     # Currently supported distros
-    _regexes = [
+    regexes = [
         r'(Ubuntu) ([0-9]{2})\.([0-9]{2})',
         r'(CentOS) release ([0-9]).([0-9])',
         r'(Red Hat Enterprise Linux) Server release ([0-9]).([0-9])',
@@ -221,7 +221,7 @@ class LinuxDistribution(FactBase):
 
         for line in output:
             # Check if we match a known version/major/minor string
-            for regex in self._regexes:
+            for regex in self.regexes:
                 matches = re.search(regex, line)
                 if matches:
                     release_info.update({

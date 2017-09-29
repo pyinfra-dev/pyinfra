@@ -23,8 +23,8 @@ class RPMPackages(FactBase):
         ...
     '''
 
-    default = {}
     command = 'rpm -qa'
+    default = dict
 
     def process(self, output):
         return parse_packages(
