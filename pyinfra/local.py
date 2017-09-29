@@ -47,17 +47,25 @@ def shell(commands, splitlines=False):
 
     all_stdout = []
 
+    # Checking for pseudo_state means this function works outside a deploy
+    # eg the vagrant connector.
+    print_output = (
+        pseudo_state.print_output
+        if pseudo_state.isset()
+        else False
+    )
+
     for command in commands:
         print_prefix = 'localhost: '
 
-        if pseudo_state.print_output:
+        if print_output:
             print('{0}>>> {1}'.format(print_prefix, command))
 
         process = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
 
         stdout = read_buffer(
             process.stdout,
-            print_output=pseudo_state.print_output,
+            print_output=print_output,
             print_func=lambda line: '{0}{1}'.format(print_prefix, line),
         )
 
