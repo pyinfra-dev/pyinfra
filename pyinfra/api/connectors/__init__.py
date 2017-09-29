@@ -1,3 +1,5 @@
+import six
+
 from . import local, ssh, vagrant
 
 
@@ -12,4 +14,7 @@ INVENTORY_CONNECTORS = {
     'vagrant': vagrant,
 }
 
-ALL_CONNECTORS = EXECUTION_CONNECTORS.keys() + INVENTORY_CONNECTORS.keys()
+ALL_CONNECTORS = (
+    list(six.iterkeys(EXECUTION_CONNECTORS))
+    + list(six.iterkeys(INVENTORY_CONNECTORS))
+)
