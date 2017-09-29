@@ -13,4 +13,5 @@ Submodules
 
    pyinfra.api.connectors.local
    pyinfra.api.connectors.ssh
+   pyinfra.api.connectors.vagrant
 

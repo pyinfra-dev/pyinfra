@@ -42,13 +42,14 @@ Manage yum repositories.
 
 .. code:: python
 
-    yum.repo(name, baseurl, present=True, description=None, gpgcheck=True, enabled=True)
+    yum.repo(name, baseurl, present=True, description=None, enabled=True, gpgcheck=True, gpgkey=None)
 
 + **name**: filename for the repo (in ``/etc/yum/repos.d/``)
 + **baseurl**: the baseurl of the repo
 + **present**: whether the ``.repo`` file should be present
 + **description**: optional verbose description
 + **gpgcheck**: whether set ``gpgcheck=1``
++ **gpgkey**: the URL to the gpg key for this repo
 
 
 :code:`yum.rpm`
