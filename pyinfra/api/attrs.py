@@ -3,14 +3,24 @@
 # Desc: helpers to manage "wrapped attributes"
 
 '''
-This file contains helpers/classes which allow us to have base type (``str``, ``int``, etc)
-like operation arguments while also being able to keep track of the original reference (ie
-the ``x`` in ``host.data.x``). This means we can generate one operation hash based on an
-argument ``host.data.x`` where ``host.data.x`` changes between hosts. The same logic is
-applied to facts.
+This file contains helpers/classes which allow us to have base type (``str``,
+``int``, etc) like operation arguments while also being able to keep track of
+the original reference (ie the ``x`` in ``host.data.x``). This means we can
+generate one operation hash based on an argument ``host.data.x`` where
+``host.data.x`` changes between hosts. The same logic is applied to facts.
 '''
 
 import six
+
+
+def extract_callable_datas(datas):
+    for data in datas:
+        # Support for dynamic data, ie @deploy wrapped data defaults where
+        # the data is stored on the state temporarily.
+        if callable(data):
+            data = data()
+
+        yield data
 
 
 def wrap_attr_data(key, attr):
@@ -64,8 +74,8 @@ class AttrData(object):
     Dict with attribute access and AttrBase wrappers.
     '''
 
-    def __init__(self, attrs):
-        self.attrs = attrs
+    def __init__(self, attrs=None):
+        self.attrs = attrs or {}
 
     def __getitem__(self, key):
         return self.get(key)
@@ -95,12 +105,7 @@ class FallbackAttrData(object):
         self.datas = datas
 
     def __getattr__(self, key):
-        for data in self.datas:
-            # Support for dynamic data, ie @deploy wrapped data defaults where
-            # the data is stored on the state temporarily.
-            if callable(data):
-                data = data()
-
+        for data in extract_callable_datas(self.datas):
             if key in data:
                 return data[key]
 
@@ -110,11 +115,12 @@ class FallbackAttrData(object):
     def dict(self):
         out = {}
 
-        # Copy and reverse data objects
+        # Copy and reverse data objects (such that the first items override
+        # the last, matching __getattr__ output).
         datas = list(self.datas)
         datas.reverse()
 
-        for data in datas:
+        for data in extract_callable_datas(datas):
             out.update(data.dict())
 
         return out
