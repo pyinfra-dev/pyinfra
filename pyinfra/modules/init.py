@@ -266,6 +266,9 @@ def systemd(
     + daemon_reload: reload the systemd daemon to read updated unit files
     '''
 
+    if daemon_reload:
+        yield 'systemctl daemon-reload'
+
     yield _handle_service_control(
         name, host.fact.systemd_status,
         'systemctl {1} {0}.service',
@@ -282,9 +285,6 @@ def systemd(
         # Is enabled and want disabled?
         elif is_enabled and enabled is False:
             yield 'systemctl disable {0}.service'.format(name)
-
-    if daemon_reload:
-        yield 'systemctl daemon-reload'
 
 
 @operation
