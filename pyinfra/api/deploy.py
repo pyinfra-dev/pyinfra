@@ -21,15 +21,26 @@ from .util import pop_op_kwargs
 
 
 def add_deploy(state, deploy_func, *args, **kwargs):
+    '''
+    Prepare & add an deploy to pyinfra.state by executing it on all hosts.
+
+    Args:
+        state (``pyinfra.api.State`` obj): the deploy state to add the operation
+        deploy_func (function): the operation function from one of the modules,
+        ie ``server.user``
+        args/kwargs: passed to the operation function
+    '''
+
     for host in state.inventory:
-        # Name the deploy
-        deploy_name = getattr(deploy_func, 'deploy_name', deploy_func.__name__)
-        with state.named_deploy(deploy_name):
-            # Execute the deploy, passing state and host
-            deploy_func(state, host, *args, **kwargs)
+        deploy_func(state, host, *args, **kwargs)
 
 
 def deploy(func_or_name, data_defaults=None):
+    '''
+    Decorator that takes a deploy function (normally from a pyinfra_* package)
+    and wraps any operations called inside with any deploy-wide kwargs/data.
+    '''
+
     # If not decorating, return function with config attached
     if isinstance(func_or_name, six.string_types):
         name = func_or_name
