@@ -133,6 +133,11 @@ def operation(func=None, pipeline_facts=None):
                     'Nested operation called without state/host: {0}'
                 ).format(func))
 
+            if state.in_deploy:
+                raise PyinfraError((
+                    'Nested deploy operation called without state/host: {0}'
+                ).format(func))
+
         # Otherwise (API mode) we just trim off the commands
         else:
             args_copy = list(args)

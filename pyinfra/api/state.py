@@ -56,6 +56,7 @@ class State(object):
     limit_hosts = None
 
     # Name of the current deploy
+    in_deploy = False
     deploy_name = None
     deploy_kwargs = None
     deploy_data = None
@@ -189,6 +190,7 @@ class State(object):
 
     @contextmanager
     def deploy(self, name, kwargs, data):
+        self.in_deploy = True
         self.deploy_name = name
         self.deploy_kwargs = kwargs
         self.deploy_data = data
@@ -196,6 +198,7 @@ class State(object):
         self.deploy_name = None
         self.deploy_kwargs = None
         self.deploy_data = None
+        self.in_deploy = False
 
     def ready_host(self, host):
         '''
