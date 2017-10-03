@@ -18,6 +18,7 @@ import six
 
 from jinja2 import Template
 from paramiko import SSHException
+from six.moves import shlex_quote
 
 from pyinfra import logger
 
@@ -233,16 +234,16 @@ def make_command(
         ])
         command = '{0} {1}'.format(env_string, command)
 
-    # Escape "'s
-    command = command.replace("'", "\\'")
+    # Quote the command as a string
+    command = shlex_quote(command)
 
     # Switch user with su
     if su_user:
-        command = "su {0} -c '{1}'".format(su_user, command)
+        command = 'su {0} -c {1}'.format(su_user, command)
 
     # Otherwise just sh wrap the command
     else:
-        command = "sh -c '{0}'".format(command)
+        command = 'sh -c {0}'.format(command)
 
     # Use sudo (w/user?)
     if sudo:
