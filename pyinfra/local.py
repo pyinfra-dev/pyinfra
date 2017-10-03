@@ -9,9 +9,9 @@ from subprocess import PIPE, Popen, STDOUT
 
 import six
 
-from . import pseudo_state
+from . import pseudo_inventory, pseudo_state
 from .api.exceptions import PyinfraError
-from .api.util import ensure_list, exec_file, read_buffer
+from .api.util import ensure_host_list, exec_file, read_buffer
 
 
 def include(filename, hosts=None):
@@ -25,7 +25,7 @@ def include(filename, hosts=None):
 
     filename = path.join(pseudo_state.deploy_dir, filename)
 
-    hosts = ensure_list(hosts)
+    hosts = ensure_host_list(hosts, pseudo_inventory)
 
     with pseudo_state.limit(hosts):
         try:

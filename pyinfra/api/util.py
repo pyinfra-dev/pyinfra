@@ -32,14 +32,18 @@ TEMPLATES = {}
 FILE_SHAS = {}
 
 
-def ensure_list(items):
-    if items is None:
-        return items
+def ensure_host_list(hosts, inventory):
+    if hosts is None:
+        return hosts
 
-    if not isinstance(items, (list, tuple)):
-        return [items]
+    # If passed a string, treat as group name and get hosts from inventory
+    if isinstance(hosts, six.string_types):
+        return inventory.get_group(hosts)
 
-    return items
+    if not isinstance(hosts, (list, tuple)):
+        return [hosts]
+
+    return hosts
 
 
 def pop_op_kwargs(state, kwargs):
@@ -58,7 +62,7 @@ def pop_op_kwargs(state, kwargs):
 
     # None means no hosts (see below), so use default False as None
     hosts = get_kwarg('hosts')
-    hosts = ensure_list(hosts)
+    hosts = ensure_host_list(hosts, inventory=state.inventory)
 
     return {
         # ENVars for commands in this operation

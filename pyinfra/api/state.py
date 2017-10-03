@@ -16,7 +16,7 @@ from pyinfra import __version__, logger
 
 from .config import Config
 from .exceptions import PyinfraError
-from .util import ensure_list, sha1_hash
+from .util import ensure_host_list, sha1_hash
 
 # Work out the max parallel we can achieve with the open files limit of the user/process,
 # take 10 for opening Python files and /3 for ~3 files per host during op runs.
@@ -178,11 +178,7 @@ class State(object):
 
     @contextmanager
     def limit(self, hosts):
-        # If passed a string, treat as group name and get hosts from inventory
-        if isinstance(hosts, six.string_types):
-            hosts = self.inventory.get_group(hosts)
-
-        hosts = ensure_list(hosts)
+        hosts = ensure_host_list(hosts, inventory=self.inventory)
 
         self.limit_hosts = hosts
         yield
