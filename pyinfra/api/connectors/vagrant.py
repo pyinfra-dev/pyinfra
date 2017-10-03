@@ -34,11 +34,17 @@ def _make_name_data(host):
 def make_names_data():
     vagrant_ssh_info = _get_vagrant_config()
 
+    logger.debug('Got Vagrant SSH info: \n{0}'.format(vagrant_ssh_info))
+
     current_host = None
 
     for line in vagrant_ssh_info:
+        # Vagrant outputs an empty line between each host
         if not line:
-            # Vagrant outputs an empty line between each host
+            # yield any previous host
+            if current_host:
+                yield _make_name_data(current_host)
+
             current_host = None
             continue
 
@@ -54,8 +60,13 @@ def make_names_data():
                 key: value,
             }
 
-        if current_host:
+        elif current_host:
             current_host[key] = value
+
+        else:
+            logger.debug('Extra Vagrant SSH key/value ({0}={1})'.format(
+                key, value,
+            ))
 
     # yield any leftover host
     if current_host:
