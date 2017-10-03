@@ -307,8 +307,7 @@ Callbacks:
     + ``on_error=my_error_function``: Callback function to execute on error.
 
 Limiting operations to subsets of the inventory:
-    + ``hosts=inventory.get_group('web')``: Limit the operation to a subset of the hosts.
-    + ``when=host.fact.os == 'Darwin'``: Limit the operation based on a boolean.
+    + ``hosts='web'``: Limit the operation to a subset of the hosts (either a list of host objects or a group name).
 
 
 Config
