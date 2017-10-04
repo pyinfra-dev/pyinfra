@@ -265,9 +265,6 @@ def operation(func=None, pipeline_facts=None):
         state.in_op = False
         state.current_op_hash = None
 
-        # Make the operaton meta object for returning
-        operation_meta = OperationMeta(op_hash, commands)
-
         # Add host-specific operation data to state
         #
 
@@ -296,7 +293,7 @@ def operation(func=None, pipeline_facts=None):
                     break
 
             if has_run:
-                return operation_meta
+                return OperationMeta(op_hash)
 
         # If we're limited, stop here - *after* we've created op_meta. This
         # ensures the meta object always exists, even if no hosts actually ever
@@ -309,7 +306,7 @@ def operation(func=None, pipeline_facts=None):
             # Limited by the operation kwarg hosts?
             or (hosts is not None and host not in hosts)
         ):
-            return operation_meta
+            return OperationMeta(op_hash)
 
         # We're doing some commands, meta/ops++
         state.meta[host.name]['ops'] += 1
@@ -321,7 +318,7 @@ def operation(func=None, pipeline_facts=None):
         }
 
         # Return result meta for use in deploy scripts
-        return operation_meta
+        return OperationMeta(op_hash, commands)
 
     decorated_func._pyinfra_op = func
     return decorated_func
