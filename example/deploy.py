@@ -4,7 +4,7 @@
 #       targets: Ubuntu/Debian, CentOS/Fedora & OpenBSD
 
 # Host represents the *current* server begin managed
-from pyinfra import hook, host, inventory, local
+from pyinfra import hook, host, inventory, local, state
 
 # Modules provide namespaced operations, which do the work
 from pyinfra.modules import apt, files, git, init, pip, python, server, yum
@@ -113,7 +113,7 @@ init.service(
 # Include roles
 local.include(
     'roles/bsd_role.py',
-    hosts=inventory.get_group('bsd'),
+    hosts=inventory.get_group('bsd', []),
 )
 
 # Storing this fact to avoid typing it so much (because the example targets a whole bunch
@@ -121,7 +121,7 @@ local.include(
 distro = host.fact.linux_distribution
 
 # Work with facts about the remote host
-if distro['name'] in ('Debian', 'Ubuntu'):
+with state.when(distro['name'] in ('Ubuntu', 'Debian')):
     # apt package manager
     apt.packages(
         ['git', 'python-pip'],
@@ -130,8 +130,8 @@ if distro['name'] in ('Debian', 'Ubuntu'):
         cache_time=3600,
     )
 
-elif distro['name'] in ('CentOS', 'Fedora'):
-    if distro['name'] == 'CentOS':
+with state.when(distro['name'] in ('CentOS', 'Fedora')):
+    with state.when(distro['name'] == 'CentOS'):
         # Both missing in the CentOS 7 Vagrant image
         yum.packages(
             ['wget', 'net-tools'],
