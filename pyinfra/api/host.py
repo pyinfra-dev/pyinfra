@@ -45,6 +45,9 @@ class Host(object):
         # Attach the fact proxy
         self.fact = HostFacts(inventory, name)
 
+    def __repr__(self):
+        return self.name
+
     @property
     def host_data(self):
         return self.inventory.get_host_data(self.name)
