@@ -1,13 +1,19 @@
+import json
+
+from os import path
+
 from pyinfra import local, logger
 
 VAGRANT_CONFIG = None
+VAGRANT_GROUPS = None
 
 
 def _get_vagrant_config():
     global VAGRANT_CONFIG
 
     if VAGRANT_CONFIG is None:
-        logger.info('Loading vagrant config...')
+        logger.info('Getting vagrant config...')
+
         VAGRANT_CONFIG = local.shell(
             'vagrant ssh-config',
             splitlines=True,
@@ -19,16 +25,37 @@ def _get_vagrant_config():
     return VAGRANT_CONFIG
 
 
+def _get_vagrant_groups():
+    global VAGRANT_GROUPS
+
+    if VAGRANT_GROUPS is None:
+        if path.exists('vagrant_groups.json'):
+            with open('vagrant_groups.json', 'r') as f:
+                VAGRANT_GROUPS = json.loads(f.read())
+        else:
+            VAGRANT_GROUPS = {}
+
+    return VAGRANT_GROUPS
+
+
 def _make_name_data(host):
-    return (
-        '@vagrant/{0}'.format(host['Host']),
-        {
-            'ssh_hostname': host['HostName'],
-            'ssh_port': host['Port'],
-            'ssh_user': host['User'],
-            'ssh_key': host['IdentityFile'],
-        },
-    )
+    host_to_group = _get_vagrant_groups()
+
+    # Build data
+    data = {
+        'ssh_hostname': host['HostName'],
+        'ssh_port': host['Port'],
+        'ssh_user': host['User'],
+        'ssh_key': host['IdentityFile'],
+    }
+
+    # Work out groups
+    groups = host_to_group.get(host['Host'])
+
+    if '@vagrant' not in groups:
+        groups.append('@vagrant')
+
+    return '@vagrant/{0}'.format(host['Host']), data, groups
 
 
 def make_names_data():
