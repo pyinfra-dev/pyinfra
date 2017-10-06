@@ -3,7 +3,7 @@
 # Desc: inventory creation for the CLI
 
 from fnmatch import fnmatch
-from os import path
+from os import listdir, path
 from types import GeneratorType
 
 import six
@@ -61,6 +61,34 @@ def is_group_data(key, value):
         isinstance(value, ALLOWED_DATA_TYPES)
         and not key.startswith('_')
     )
+
+
+def get_group_data(deploy_dir):
+    group_data = {}
+    group_data_directory = path.join(deploy_dir, 'group_data')
+
+    if path.exists(group_data_directory):
+        files = listdir(group_data_directory)
+
+        for file in files:
+            if not file.endswith('.py'):
+                continue
+
+            group_data_file = path.join(group_data_directory, file)
+            group_name = path.basename(file)[:-3]
+
+            logger.debug('Looking for group data in: {0}'.format(group_data_file))
+
+            # Read the files locals into a dict
+            attrs = exec_file(group_data_file, return_locals=True)
+
+            group_data[group_name] = {
+                key: value
+                for key, value in six.iteritems(attrs)
+                if is_group_data(key, value)
+            }
+
+    return group_data
 
 
 def make_inventory(
@@ -145,6 +173,12 @@ def make_inventory(
     fake_inventory = Inventory((all_hosts, all_data), **fake_groups)
     pseudo_inventory.set(fake_inventory)
 
+    # Get all group data (group_data/*.py)
+    group_data = get_group_data(deploy_dir)
+
+    # Reset the pseudo inventory
+    pseudo_inventory.reset()
+
     # For each group load up any data
     for name, hosts in six.iteritems(groups):
         data = {}
@@ -152,26 +186,17 @@ def make_inventory(
         if isinstance(hosts, tuple):
             hosts, data = hosts
 
-        data_filename = path.join(
-            deploy_dir, 'group_data', '{0}.py'.format(name.lower()),
-        )
-        logger.debug('Looking for group data: {0}'.format(data_filename))
-
-        if path.exists(data_filename):
-            # Read the files locals into a dict
-            attrs = exec_file(data_filename, return_locals=True)
-
-            data.update({
-                key: value
-                for key, value in six.iteritems(attrs)
-                if is_group_data(key, value)
-            })
+        if name in group_data:
+            data.update(group_data.pop(name))
 
         # Attach to group object
         groups[name] = (hosts, data)
 
-    # Reset the pseudo inventory
-    pseudo_inventory.reset()
+    # Loop back through any leftover group data and create an empty (for now)
+    # group - this is because inventory @connectors can attach arbitrary groups
+    # to hosts, so we need to support that.
+    for name, data in six.iteritems(group_data):
+        groups[name] = ([], data)
 
     # Apply any limit to all_hosts
     if limit:
