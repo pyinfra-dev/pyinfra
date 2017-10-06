@@ -9,32 +9,34 @@ from subprocess import PIPE, Popen, STDOUT
 
 import six
 
-from . import pseudo_inventory, pseudo_state
+from . import logger, pseudo_inventory, pseudo_state
 from .api.exceptions import PyinfraError
 from .api.util import ensure_host_list, exec_file, read_buffer
 
 
-def include(filename, hosts=None):
+def include(filename, hosts=False):
     '''
     Executes a local python file within the ``pyinfra.pseudo_state.deploy_dir``
     directory.
     '''
 
-    if not pseudo_state.active:
-        return
-
     filename = path.join(pseudo_state.deploy_dir, filename)
 
-    hosts = ensure_host_list(hosts, pseudo_inventory)
+    logger.debug('Including local file: {0}'.format(filename))
 
-    with pseudo_state.limit(hosts):
-        try:
+    try:
+        if hosts is not False:
+            hosts = ensure_host_list(hosts, pseudo_inventory)
+            with pseudo_state.limit(hosts):
+                exec_file(filename)
+
+        else:
             exec_file(filename)
 
-        except IOError as e:
-            raise PyinfraError(
-                'Could not include local file: {0}\n{1}'.format(filename, e),
-            )
+    except IOError as e:
+        raise PyinfraError(
+            'Could not include local file: {0}\n{1}'.format(filename, e),
+        )
 
 
 def shell(commands, splitlines=False, ignore_errors=False):
