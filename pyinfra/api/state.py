@@ -180,20 +180,53 @@ class State(object):
     def limit(self, hosts):
         hosts = ensure_host_list(hosts, inventory=self.inventory)
 
+        # Store the previous value
+        old_limit_hosts = self.limit_hosts
+
+        # Set the new value
         self.limit_hosts = hosts
+        logger.debug('Setting limit to hosts: {0}'.format(hosts))
+
         yield
-        self.limit_hosts = None
+
+        # Restore the old value
+        self.limit_hosts = old_limit_hosts
+        logger.debug('Reset limit to hosts: {0}'.format(old_limit_hosts))
 
     @contextmanager
     def deploy(self, name, kwargs, data):
+        # Handle nested deploy names
+        name = (
+            name
+            if not self.deploy_name
+            else '{0}/{1}'.format(name, self.deploy_name)
+        )
+
         self.in_deploy = True
+
+        # Store the previous values
+        old_deploy_name = self.deploy_name
+        old_deploy_kwargs = self.deploy_kwargs
+        old_deploy_data = self.deploy_data
+
+        # Set the new values
         self.deploy_name = name
         self.deploy_kwargs = kwargs
         self.deploy_data = data
+        logger.debug('Starting deploy {0} (args={1}, data={2})'.format(
+            name, kwargs, data,
+        ))
+
         yield
-        self.deploy_name = None
-        self.deploy_kwargs = None
-        self.deploy_data = None
+
+        # Restore the previous values
+        self.deploy_name = old_deploy_name
+        self.deploy_kwargs = old_deploy_kwargs
+        self.deploy_data = old_deploy_data
+        logger.debug('Reset deploy to {0} (args={1}, data={2})'.format(
+            old_deploy_name, old_deploy_kwargs, old_deploy_data,
+        ))
+
         self.in_deploy = False
 
     def ready_host(self, host):
