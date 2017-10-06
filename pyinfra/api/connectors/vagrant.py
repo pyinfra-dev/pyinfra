@@ -50,7 +50,7 @@ def _make_name_data(host):
     }
 
     # Work out groups
-    groups = host_to_group.get(host['Host'])
+    groups = host_to_group.get(host['Host'], [])
 
     if '@vagrant' not in groups:
         groups.append('@vagrant')
