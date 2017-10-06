@@ -234,6 +234,40 @@ def operation(func=None, pipeline_facts=None):
                 if arg not in op_meta['args']:
                     op_meta['args'].append(arg)
 
+        # Add the hash to the operational order if not already in there
+        if op_hash not in state.op_order:
+            state.op_order.append(op_hash)
+
+        # Check if we're actually running the operation on this host
+        #
+
+        # Run once and we've already added meta for this op? Stop here.
+        if op_meta_kwargs['run_once']:
+            has_run = False
+            for ops in six.itervalues(state.ops):
+                if op_hash in ops:
+                    has_run = True
+                    break
+
+            if has_run:
+                return OperationMeta(op_hash)
+
+        # If we're limited, stop here - *after* we've created op_meta. This
+        # ensures the meta object always exists, even if no hosts actually ever
+        # execute the op (due to limit or otherwise).
+        hosts = op_meta_kwargs['hosts']
+        when = op_meta_kwargs['when']
+
+        if (
+            # Limited by the state's limit_hosts?
+            (state.limit_hosts is not None and host not in state.limit_hosts)
+            # Limited by the operation kwarg hosts?
+            or (hosts is not None and host not in hosts)
+            # Limited by the operation kwarg when?
+            or when is False
+        ):
+            return OperationMeta(op_hash)
+
         # "Run" operation
         #
 
@@ -267,37 +301,6 @@ def operation(func=None, pipeline_facts=None):
 
         # Add host-specific operation data to state
         #
-
-        # Add the hash to the operational order if not already in there
-        if op_hash not in state.op_order:
-            state.op_order.append(op_hash)
-
-        # Run once and we've already added meta for this op? Stop here.
-        if op_meta_kwargs['run_once']:
-            has_run = False
-            for ops in six.itervalues(state.ops):
-                if op_hash in ops:
-                    has_run = True
-                    break
-
-            if has_run:
-                return OperationMeta(op_hash)
-
-        # If we're limited, stop here - *after* we've created op_meta. This
-        # ensures the meta object always exists, even if no hosts actually ever
-        # execute the op (due to limit or otherwise).
-        hosts = op_meta_kwargs['hosts']
-        when = op_meta_kwargs['when']
-
-        if (
-            # Limited by the state's limit_hosts?
-            (state.limit_hosts is not None and host not in state.limit_hosts)
-            # Limited by the operation kwarg hosts?
-            or (hosts is not None and host not in hosts)
-            # Limited by the operation kwarg when?
-            or when is False
-        ):
-            return OperationMeta(op_hash)
 
         # We're doing some commands, meta/ops++
         state.meta[host.name]['ops'] += 1
