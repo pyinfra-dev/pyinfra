@@ -129,7 +129,7 @@ class Inventory(object):
                         connector_name,
                     ))
 
-                    for name, data in (
+                    for name, data, group_names in (
                         INVENTORY_CONNECTORS[connector_name].make_names_data()
                     ):
                         # Make a copy of the host data, update with any from
@@ -137,9 +137,10 @@ class Inventory(object):
                         sub_host_data = host_data.copy()
                         sub_host_data.update(data)
 
-                        # Assign the name/data from the connector
+                        # Assign the name/data/group_names from the connector
                         self.host_data[name] = sub_host_data
                         names_executors.append((name, executor))
+                        name_to_group_names[name].extend(group_names)
 
                     continue
 
@@ -235,7 +236,7 @@ class Inventory(object):
 
     def __iter__(self):
         '''
-        Iterates over avtive inventory hosts.
+        Iterates over active inventory hosts.
         '''
 
         for host in six.itervalues(self.hosts):
