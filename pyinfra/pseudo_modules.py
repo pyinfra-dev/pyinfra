@@ -1,6 +1,17 @@
 # pyinfra
 # File: pyinfra/pseudo_modules.py
-# Desc: essentially a hack that provides dynamic imports for the current deploy (CLI only)
+# Desc: modules that shift and change as pyinfra executes deploys
+
+'''
+These three pseudo modules (state, inventory, host) are used throughout pyinfra
+and provide the magic that means "from pyinfra import host" inside a deploy
+file always represents the *current* host being executed, ie these modules are
+dynamic and change during execution of pyinfra.
+
+Although CLI only when in use, these are bundled into the main pyinfra package
+as they are utilised throughout (to determine the current state/host when
+executing in CLI mode).
+'''
 
 import sys
 import pyinfra
