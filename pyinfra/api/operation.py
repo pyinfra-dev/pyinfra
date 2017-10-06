@@ -287,12 +287,15 @@ def operation(func=None, pipeline_facts=None):
         # ensures the meta object always exists, even if no hosts actually ever
         # execute the op (due to limit or otherwise).
         hosts = op_meta_kwargs['hosts']
+        when = op_meta_kwargs['when']
 
         if (
             # Limited by the state's limit_hosts?
             (state.limit_hosts is not None and host not in state.limit_hosts)
             # Limited by the operation kwarg hosts?
             or (hosts is not None and host not in hosts)
+            # Limited by the operation kwarg when?
+            or when is False
         ):
             return OperationMeta(op_hash)
 

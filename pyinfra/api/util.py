@@ -69,6 +69,8 @@ def pop_op_kwargs(state, kwargs):
         'env': env,
         # Hosts to limit the op to
         'hosts': hosts,
+        # When to limit the op (default always)
+        'when': get_kwarg('when', True),
         # Locally & globally configurable
         'sudo': get_kwarg('sudo', state.config.SUDO),
         'sudo_user': get_kwarg('sudo_user', state.config.SUDO_USER),
