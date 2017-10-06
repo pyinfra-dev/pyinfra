@@ -194,6 +194,17 @@ class State(object):
         logger.debug('Reset limit to hosts: {0}'.format(old_limit_hosts))
 
     @contextmanager
+    def when(self, predicate):
+        # Truth-y? Just yield/end, nothing happens here!
+        if predicate:
+            yield
+            return
+
+        # Otherwise limit any operations within to match no hosts
+        with self.limit([]):
+            yield
+
+    @contextmanager
     def deploy(self, name, kwargs, data):
         # Handle nested deploy names
         name = (
