@@ -110,26 +110,28 @@ init.service(
     on_error=on_pyinfra_error,
 )
 
-# Include roles
+# Include other files
 local.include(
-    'roles/bsd_role.py',
+    'tasks/bsd_python.py',
     hosts=inventory.get_group('bsd', []),
 )
 
+# Work with facts about the remote host
 # Storing this fact to avoid typing it so much (because the example targets a whole bunch
 # of distros [& 2 OSs]).
 distro = host.fact.linux_distribution
 
-# Work with facts about the remote host
-with state.when(distro['name'] in ('Ubuntu', 'Debian')):
-    # apt package manager
-    apt.packages(
-        ['git', 'python-pip'],
-        sudo=True,
-        update=True,
-        cache_time=3600,
-    )
+# apt package manager
+apt.packages(
+    ['git', 'python-pip'],
+    sudo=True,
+    update=True,
+    cache_time=3600,
+    # Limit operations to certain hosts with when=...
+    when=distro['name'] in ('Ubuntu', 'Debian'),
+)
 
+# Or limit blocks of operations with state.when(...):
 with state.when(distro['name'] in ('CentOS', 'Fedora')):
     with state.when(distro['name'] == 'CentOS'):
         # Both missing in the CentOS 7 Vagrant image
@@ -176,10 +178,10 @@ did_install = pip.packages(
     sudo=True,
 )
 # use operation meta to affect the deploy
-if did_install.changed:
-    server.shell(
-        'echo "Clean package build/etc"',
-    )
+server.shell(
+    'echo "Clean package build/etc"',
+    when=did_install.changed,
+)
 
 # Create a virtualenv
 server.shell(
