@@ -268,21 +268,9 @@ def operation(func=None, pipeline_facts=None):
         # Add host-specific operation data to state
         #
 
-        # Add the hash to the operational order if not already in there. To
-        # ensure that deploys run as defined in the deploy file *per host* we
-        # keep track of each hosts latest op hash, and use that to insert new
-        # ones.
+        # Add the hash to the operational order if not already in there
         if op_hash not in state.op_order:
-            previous_op_hash = state.meta[host.name]['latest_op_hash']
-
-            if previous_op_hash:
-                index = state.op_order.index(previous_op_hash)
-            else:
-                index = 0
-
-            state.op_order.insert(index + 1, op_hash)
-
-        state.meta[host.name]['latest_op_hash'] = op_hash
+            state.op_order.append(op_hash)
 
         # Run once and we've already added meta for this op? Stop here.
         if op_meta_kwargs['run_once']:
