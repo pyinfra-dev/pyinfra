@@ -133,7 +133,7 @@ def run_shell_command(
         preserve_sudo_env=preserve_sudo_env,
     )
 
-    logger.debug('--> Running command on {0}: {1}'.format(host.name, command))
+    logger.debug('Running command on {0}: {1}'.format(host.name, command))
 
     if print_output:
         print('{0}>>> {1}'.format(host.print_prefix, command))
@@ -178,10 +178,10 @@ def run_shell_command(
     stdout = stdout_reader.get()
     stderr = stderr_reader.get()
 
-    logger.debug('--> Waiting for exit status...')
+    logger.debug('Waiting for exit status...')
     exit_status = channel.recv_exit_status()
 
-    logger.debug('--> Command exit status: {0}'.format(exit_status))
+    logger.debug('Command exit status: {0}'.format(exit_status))
     return exit_status == 0, stdout, stderr
 
 
