@@ -1,0 +1,5 @@
+{
+    "groups": {
+        "openbsd58": ["bsd"]
+    }
+}

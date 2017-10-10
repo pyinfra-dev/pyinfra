@@ -29,9 +29,9 @@ def _get_vagrant_groups():
     global VAGRANT_GROUPS
 
     if VAGRANT_GROUPS is None:
-        if path.exists('vagrant_groups.json'):
-            with open('vagrant_groups.json', 'r') as f:
-                VAGRANT_GROUPS = json.loads(f.read())
+        if path.exists('@vagrant.json'):
+            with open('@vagrant.json', 'r') as f:
+                VAGRANT_GROUPS = json.loads(f.read()).get('groups', {})
         else:
             VAGRANT_GROUPS = {}
 
