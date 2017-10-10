@@ -1,27 +1,17 @@
 # pyinfra
-# File: example/inventories/test.py
-# Desc: basic IP based inventory for testing the example
-#       see ./hostnames.py for a more advanced example
+# File: example/inventories/example.py
+# Desc: example inventory, not actually used anywhere
 
-# Defines a group - group names must be defined in ALL_CAPS
-linux = [
-    # Ubuntu 14
-    '20.20.20.21',
-    # Ubuntu 15
-    '20.20.20.26',
-    # CentOS 6
-    '20.20.20.22',
-    # CentOS 7
-    '20.20.20.23',
-    # Debian 7
-    '20.20.20.24',
-    # Debian 8
-    '20.20.20.27',
-    # Fedora 23
-    '20.20.20.28'
+# Define a group
+web_servers = [
+    'web-01.company.net',
+    'web-02.company.net',
 ]
 
-bsd = [
-    # OpenBSD 5.8
-    '20.20.20.25'
+
+# Define another group
+db_servers = [
+    'db-01.company.net',
+    # Define hosts with extra, per-host, data
+    ('db-02.company.net', {'hello': 'world'}),
 ]
