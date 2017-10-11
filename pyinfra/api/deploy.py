@@ -15,6 +15,7 @@ import six
 from pyinfra import pseudo_host, pseudo_state
 from pyinfra.pseudo_modules import PseudoModule
 
+from .exceptions import PyinfraError
 from .host import Host
 from .state import State
 from .util import pop_op_kwargs
@@ -68,6 +69,11 @@ def deploy(func_or_name, data_defaults=None):
         ):
             state = pseudo_state._module
             host = pseudo_host._module
+
+            if state.in_deploy:
+                raise PyinfraError((
+                    'Nested deploy called without state/host: {0}'
+                ).format(func))
 
         # Otherwise (API mode) we just trim off the commands
         else:
