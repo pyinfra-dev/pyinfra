@@ -372,10 +372,9 @@ class get_file_io(object):
 
     @property
     def cache_key(self):
-        if hasattr(self.filename_or_io, 'read'):
-            return id(self.filename_or_io)
-
-        else:
+        # If we're a filename, cache against that - we don't cache in-memory
+        # file objects.
+        if isinstance(self.filename_or_io, six.string_types):
             return self.filename_or_io
 
 
@@ -385,9 +384,10 @@ def get_file_sha1(filename_or_io):
     '''
 
     file_data = get_file_io(filename_or_io)
+    cache_key = file_data.cache_key
 
-    if file_data.cache_key in FILE_SHAS:
-        return FILE_SHAS[file_data.cache_key]
+    if cache_key and cache_key in FILE_SHAS:
+        return FILE_SHAS[cache_key]
 
     with file_data as file_io:
         hasher = sha1()
@@ -401,7 +401,10 @@ def get_file_sha1(filename_or_io):
             buff = file_io.read(BLOCKSIZE)
 
     digest = hasher.hexdigest()
-    FILE_SHAS[file_data.cache_key] = digest
+
+    if cache_key:
+        FILE_SHAS[cache_key] = digest
+
     return digest
 
 
