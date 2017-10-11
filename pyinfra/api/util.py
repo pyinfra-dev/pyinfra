@@ -337,6 +337,16 @@ class get_file_io(object):
     close = False
 
     def __init__(self, filename_or_io):
+        if not (
+            # Check we can be read
+            hasattr(filename_or_io, 'read')
+            # Or we're a filename
+            or isinstance(filename_or_io, six.string_types)
+        ):
+            raise TypeError('Invalid filename or IO object: {0}'.format(
+                filename_or_io,
+            ))
+
         self.filename_or_io = filename_or_io
 
     def __enter__(self):
