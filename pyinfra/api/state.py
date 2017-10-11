@@ -32,6 +32,27 @@ except ImportError:
     MAX_PARALLEL = None
 
 
+def _make_name(current, new):
+    '''
+    Stops duplication between similarly named nested deploys, eg:
+
+    Turn:
+        Deploy Kubernetes master/Configure Kubernetes
+    Into:
+        Deploy Kubernetes master/Configure
+    '''
+
+    current_tokens = current.split()
+    new_tokens = new.split()
+
+    new = ' '.join(
+        new_token for new_token in new_tokens
+        if new_token not in current_tokens
+    )
+
+    return '/'.join((current, new))
+
+
 class State(object):
     '''
     Manages state for a pyinfra deploy.
@@ -206,11 +227,8 @@ class State(object):
     @contextmanager
     def deploy(self, name, kwargs, data):
         # Handle nested deploy names
-        name = (
-            name
-            if not self.deploy_name
-            else '{0}/{1}'.format(name, self.deploy_name)
-        )
+        if self.deploy_name:
+            name = _make_name(self.deploy_name, name)
 
         self.in_deploy = True
 
