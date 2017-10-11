@@ -401,7 +401,8 @@ def template(
         ))
 
     output_file = six.StringIO(output)
-    output_file.template = template_filename
+    # Set the name attribute for nicer debugging
+    output_file.name = template_filename
 
     # Pass to the put function
     yield put(
