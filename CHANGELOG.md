@@ -1,6 +1,6 @@
 # v0.5 (WIP)
 
-+ **Vagrant integration**:
++ **Vagrant connector**:
 
 ```sh
 # Run a deploy on all Vagrant machines (vagrant status list)
@@ -11,13 +11,18 @@ pyinfra @vagrant,my-host.net deploy.py
 pyinfra @vagrant,@local,my-host.net fact os
 ```
 
+Proper conditional branching support (previously resulted in best-effort operation order):
++ Add global `when` kwarg to all operations, similar to `hosts` can be used to prevent operations executing on hosts based on a condition
++ Add `state.limit(hosts)` and `state.when(condition)` context managers to use in place of `if` statements in deploys
+
+Note that if statements/etc still work as before. TODO: document this.
+
 Operations/facts:
 + Add `gpgkey` argument to the `yum.repo` operation
 + Add `lsb_release` fact
 
 General:
 + Add data defaults to `@deploy` functions, meaning third party pyinfra packages can provide sensible defaults that the user can override individually
-+ Make it possible to pass group names (as strings) to `state.limit_hosts`
 + Improved error output when connecting
 + Update testing box from Ubuntu 15 to Ubuntu 16
 + Ensure `~/.ssh` exists keyscanning in `ssh.keyscan`
