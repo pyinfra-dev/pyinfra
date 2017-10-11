@@ -10,7 +10,8 @@
             "type": "deb",
             "components": [
                 "restricted"
-            ]
+            ],
+            "options": {}
         },
         {
             "url": "http://archive.ubuntu.com/ubuntu",
@@ -18,7 +19,8 @@
             "type": "deb-src",
             "components": [
                 "main"
-            ]
+            ],
+            "options": {}
         }
     ]
 }

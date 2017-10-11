@@ -5,7 +5,8 @@
             "type": "deb",
             "url": "http://archive.canonical.com/ubuntu",
             "distribution": "hardy",
-            "components": ["partner"]
+            "components": ["partner"],
+            "options": {}
         }],
         "find_in_file": {
             "/etc/apt/sources.list": {

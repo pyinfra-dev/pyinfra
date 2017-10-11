@@ -8,7 +8,8 @@
             "type": "deb",
             "url": "http://archive.canonical.com/ubuntu",
             "distribution": "hardy",
-            "components": ["_set", "partner"]
+            "components": ["_set", "partner"],
+            "options": {}
         }],
         "find_in_file": {
             "/etc/apt/sources.list": {
