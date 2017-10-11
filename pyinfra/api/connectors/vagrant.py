@@ -9,23 +9,39 @@ VAGRANT_GROUPS = None
 
 
 def _get_vagrant_config():
+    output = local.shell(
+        'vagrant status --machine-readable',
+        splitlines=True,
+    )
+
+    ssh_configs = []
+
+    for line in output:
+        _, target, type_, data = line.split(',', 3)
+
+        if type_ == 'state' and data == 'running':
+            logger.debug('Loading SSH config for {0}'.format(target))
+
+            ssh_configs.extend(local.shell(
+                'vagrant ssh-config {0}'.format(target),
+                splitlines=True,
+            ))
+
+    return ssh_configs
+
+
+def get_vagrant_config():
     global VAGRANT_CONFIG
 
     if VAGRANT_CONFIG is None:
         logger.info('Getting vagrant config...')
 
-        VAGRANT_CONFIG = local.shell(
-            'vagrant ssh-config',
-            splitlines=True,
-            # Annoyingly vagrant errors if any one machine isn't up - this doesn't
-            # mean nothing's up!
-            ignore_errors=True,
-        )
+        VAGRANT_CONFIG = _get_vagrant_config()
 
     return VAGRANT_CONFIG
 
 
-def _get_vagrant_groups():
+def get_vagrant_groups():
     global VAGRANT_GROUPS
 
     if VAGRANT_GROUPS is None:
@@ -39,7 +55,7 @@ def _get_vagrant_groups():
 
 
 def _make_name_data(host):
-    host_to_group = _get_vagrant_groups()
+    host_to_group = get_vagrant_groups()
 
     # Build data
     data = {
@@ -59,7 +75,7 @@ def _make_name_data(host):
 
 
 def make_names_data():
-    vagrant_ssh_info = _get_vagrant_config()
+    vagrant_ssh_info = get_vagrant_config()
 
     logger.debug('Got Vagrant SSH info: \n{0}'.format(vagrant_ssh_info))
 
