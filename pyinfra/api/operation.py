@@ -263,10 +263,10 @@ def operation(func=None, pipeline_facts=None):
             (state.limit_hosts is not None and host not in state.limit_hosts)
             # Limited by the operation kwarg hosts?
             or (hosts is not None and host not in hosts)
-            # Limited by the operation kwarg when? We check 0 because when is
+            # Limited by the operation kwarg when? We check == because when is
             # normally attribute wrapped as a AttrDataBool, which is actually
             # an integer (Python doesn't allow subclassing bool!).
-            or when is False or when is 0
+            or when == False  # noqa
         ):
             return OperationMeta(op_hash)
 
