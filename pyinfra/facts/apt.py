@@ -14,16 +14,31 @@ from .util.packaging import parse_packages
 
 
 def parse_apt_repo(name):
-    regex = r'^(deb(?:-src)?)\s+([^\s]+)\s+([a-z-]+)\s+([a-z-\s]*)$'
+    regex = r'^(deb(?:-src)?)(?:\s+\[([a-zA-Z0-9=\s]+)\])?\s+([^\s]+)\s+([a-z-]+)\s+([a-z-\s]*)$'
 
     matches = re.match(regex, name)
-    if matches:
-        return {
-            'type': matches.group(1),
-            'url': matches.group(2),
-            'distribution': matches.group(3),
-            'components': set(matches.group(4).split()),
-        }
+
+    if not matches:
+        return
+
+    # Parse any options
+    options = {}
+    options_string = matches.group(2)
+    if options_string:
+        for option in options_string.split():
+            key, value = option.split('=', 1)
+            if ',' in value:
+                value = value.split(',')
+
+            options[key] = value
+
+    return {
+        'options': options,
+        'type': matches.group(1),
+        'url': matches.group(3),
+        'distribution': matches.group(4),
+        'components': set(matches.group(5).split()),
+    }
 
 
 class AptSources(FactBase):
