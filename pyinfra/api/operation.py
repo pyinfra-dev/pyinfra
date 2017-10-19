@@ -234,9 +234,25 @@ def operation(func=None, pipeline_facts=None):
                 if arg not in op_meta['args']:
                     op_meta['args'].append(arg)
 
-        # Add the hash to the operational order if not already in there
+        # # Add the hash to the operational order if not already in there
+        # if op_hash not in state.op_order:
+        #     state.op_order.append(op_hash)
+
+        # Add the hash to the operational order if not already in there. To
+        # ensure that deploys run as defined in the deploy file *per host* we
+        # keep track of each hosts latest op hash, and use that to insert new
+        # ones.
         if op_hash not in state.op_order:
-            state.op_order.append(op_hash)
+            previous_op_hash = state.meta[host.name]['latest_op_hash']
+
+            if previous_op_hash:
+                index = state.op_order.index(previous_op_hash)
+            else:
+                index = 0
+
+            state.op_order.insert(index + 1, op_hash)
+
+        state.meta[host.name]['latest_op_hash'] = op_hash
 
         # Check if we're actually running the operation on this host
         #

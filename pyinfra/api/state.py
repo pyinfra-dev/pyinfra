@@ -181,6 +181,7 @@ class State(object):
             name: {
                 'ops': 0,  # one function call in a deploy file
                 'commands': 0,  # actual # of commands to run
+                'latest_op_hash': None,
             }
             for name in host_names
         }
