@@ -60,9 +60,15 @@ def pop_op_kwargs(state, kwargs):
     env = state.config.ENV.copy()
     env.update(get_kwarg('env', {}))
 
-    # None means no hosts (see below), so use default False as None
     hosts = get_kwarg('hosts')
     hosts = ensure_host_list(hosts, inventory=state.inventory)
+
+    # Filter out any hosts not in the meta kwargs (nested support)
+    if meta_kwargs.get('hosts') is not None:
+        hosts = [
+            host for host in hosts
+            if host in meta_kwargs['hosts']
+        ]
 
     return {
         # ENVars for commands in this operation

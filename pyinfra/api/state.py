@@ -204,6 +204,13 @@ class State(object):
         # Store the previous value
         old_limit_hosts = self.limit_hosts
 
+        # Limit the new hosts to a subset of the old hosts if they existed
+        if old_limit_hosts is not None:
+            hosts = [
+                host for host in hosts
+                if host in old_limit_hosts
+            ]
+
         # Set the new value
         self.limit_hosts = hosts
         logger.debug('Setting limit to hosts: {0}'.format(hosts))
@@ -227,6 +234,11 @@ class State(object):
 
     @contextmanager
     def deploy(self, name, kwargs, data):
+        '''
+        Wraps a group of operations as a deploy, this should not be used directly,
+        instead use ``pyinfra.api.deploy.deploy``.
+        '''
+
         # Handle nested deploy names
         if self.deploy_name:
             name = _make_name(self.deploy_name, name)
@@ -237,6 +249,21 @@ class State(object):
         old_deploy_name = self.deploy_name
         old_deploy_kwargs = self.deploy_kwargs
         old_deploy_data = self.deploy_data
+
+        # Limit the new hosts to a subset of the old hosts if they existed
+        if (
+            old_deploy_kwargs
+            and old_deploy_kwargs.get('hosts') is not None
+        ):
+            # If we have hosts - subset them based on the old hosts
+            if 'hosts' in kwargs:
+                kwargs['hosts'] = [
+                    host for host in kwargs['hosts']
+                    if host in old_deploy_kwargs['hosts']
+                ]
+            # Otherwise simply carry the previous hosts
+            else:
+                kwargs['hosts'] = old_deploy_kwargs['hosts']
 
         # Set the new values
         self.deploy_name = name
