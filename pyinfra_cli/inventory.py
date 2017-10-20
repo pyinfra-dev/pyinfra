@@ -12,9 +12,6 @@ from pyinfra import logger, pseudo_inventory
 from pyinfra.api.inventory import Inventory
 from pyinfra.api.util import exec_file
 
-from .exceptions import CliError
-
-
 # Hosts in an inventory can be just the hostname or a tuple (hostname, data)
 ALLOWED_HOST_TYPES = tuple(
     six.string_types + (tuple,),
@@ -121,10 +118,6 @@ def make_inventory(
         file_groupname = path.basename(inventory_filename).split('.')[0]
 
     except IOError:
-        # If a /, definitely not a hostname
-        if '/' in inventory_filename:
-            raise CliError('No inventory file: {0}'.format(inventory_filename))
-
         # Otherwise we assume the inventory is actually a hostname or list of hostnames
         groups = {
             'all': inventory_filename.split(','),
