@@ -63,6 +63,12 @@ class Host(object):
             click.style(self.name, bold=True),
         )
 
+    def style_print_prefix(self, *args, **kwargs):
+        return '{0}[{1}] '.format(
+            click.style(''),  # reset
+            click.style(self.name, *args, **kwargs),
+        )
+
     # Connector proxy
     #
 

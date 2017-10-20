@@ -5,6 +5,7 @@
 from __future__ import print_function, unicode_literals
 
 import json
+import re
 import traceback
 
 import click
@@ -15,6 +16,12 @@ from pyinfra.api.facts import get_fact_names
 from pyinfra.api.operation import get_operation_names
 
 from .util import json_encode
+
+ANSI_RE = re.compile('\033\[((?:\d|;)*)([a-zA-Z])')
+
+
+def _strip_ansi(value):
+    return ANSI_RE.sub('', value)
 
 
 def _get_group_combinations(inventory):
@@ -113,55 +120,103 @@ def print_facts(facts):
         print_fact(data)
 
 
+def print_rows(rows):
+    # Go through the rows and work out all the widths in each column
+    column_widths = []
+
+    for _, columns in rows:
+        if isinstance(columns, six.string_types):
+            continue
+
+        for i, column in enumerate(columns):
+            if i >= len(column_widths):
+                column_widths.append([])
+
+            # Length of the column (with ansi codes removed)
+            width = len(_strip_ansi(column.strip()))
+            column_widths[i].append(width)
+
+    # Get the max width of each column and add 4 padding spaces
+    column_widths = [
+        max(widths) + 4
+        for widths in column_widths
+    ]
+
+    # Now print each column, keeping text justified to the widths above
+    for func, columns in rows:
+        line = columns
+
+        if not isinstance(columns, six.string_types):
+            justified = []
+
+            for i, column in enumerate(columns):
+                stripped = _strip_ansi(column)
+                desired_width = column_widths[i]
+                padding = desired_width - len(stripped)
+
+                justified.append('{0}{1}'.format(
+                    column, ' '.join('' for _ in range(padding)),
+                ))
+
+            line = ''.join(justified)
+
+        func(line)
+
+
 def print_meta(state, inventory):
     group_combinations = _get_group_combinations(inventory)
+    rows = []
 
     for i, (groups, hosts) in enumerate(six.iteritems(group_combinations), 1):
         if groups:
-            logger.info('Groups: {0}'.format(
+            rows.append((logger.info, 'Groups: {0}'.format(
                 click.style(' / '.join(groups), bold=True),
-            ))
+            )))
         else:
-            logger.info('Ungrouped:')
+            rows.append((logger.info, 'Ungrouped:'))
 
         for host in hosts:
             meta = state.meta[host.name]
 
             # Didn't connect to this host?
             if host.name not in state.connected_hosts:
-                logger.info('[{0}]\tNo connection'.format(
-                    click.style(host.name, 'red', bold=True),
-                ))
+                rows.append((logger.info, [
+                    host.style_print_prefix('red', bold=True),
+                    click.style('No connection', 'red'),
+                ]))
                 continue
 
-            logger.info(
-                '[{0}]\tOperations: {1}\t    Commands: {2}'.format(
-                    click.style(host.name, bold=True),
-                    meta['ops'], meta['commands'],
-                ),
-            )
+            rows.append((logger.info, [
+                host.print_prefix,
+                'Operations: {0}'.format(meta['ops']),
+                'Commands: {0}'.format(meta['commands']),
+            ]))
 
         if i != len(group_combinations):
-            print()
+            rows.append((print, []))
+
+    print_rows(rows)
 
 
 def print_results(state, inventory):
     group_combinations = _get_group_combinations(inventory)
+    rows = []
 
     for i, (groups, hosts) in enumerate(six.iteritems(group_combinations), 1):
         if groups:
-            logger.info('Groups: {0}'.format(
+            rows.append((logger.info, 'Groups: {0}'.format(
                 click.style(' / '.join(groups), bold=True),
-            ))
+            )))
         else:
-            logger.info('Ungrouped:')
+            rows.append((logger.info, 'Ungrouped:'))
 
         for host in hosts:
             # Didn't conenct to this host?
             if host.name not in state.connected_hosts:
-                logger.info('[{0}]\tNo connection'.format(
-                    click.style(host.name, 'red', bold=True),
-                ))
+                rows.append((logger.info, [
+                    host.style_print_prefix('red', bold=True),
+                    click.style('No connection', 'red'),
+                ]))
                 continue
 
             results = state.results[host.name]
@@ -170,24 +225,28 @@ def print_results(state, inventory):
             success_ops = results['success_ops']
             error_ops = results['error_ops']
 
-            # If all ops got complete (even with ignored_errors)
+            host_args = ('green',)
+            host_kwargs = {}
+
+            # If all ops got complete
             if results['ops'] == meta['ops']:
-                # Yellow if ignored any errors, else green
-                color = 'green' if error_ops == 0 else 'yellow'
-                host_string = click.style(host.name, color)
+                # We had some errors - but we ignored them - so "warning" color
+                if error_ops != 0:
+                    host_args = ('yellow',)
 
             # Ops did not complete!
             else:
-                host_string = click.style(host.name, 'red', bold=True)
+                host_args = ('red',)
+                host_kwargs['bold'] = True
 
-            logger.info('[{0}]\tSuccessful: {1}\t    Errors: {2}\t    Commands: {3}/{4}'.format(
-                host_string,
-                click.style(six.text_type(success_ops), bold=True),
-                error_ops
-                if error_ops == 0
-                else click.style(six.text_type(error_ops), 'red', bold=True),
-                results['commands'], meta['commands'],
-            ))
+            rows.append((logger.info, [
+                host.style_print_prefix(*host_args, **host_kwargs),
+                'Successful: {0}'.format(click.style(six.text_type(success_ops), bold=True)),
+                'Errors: {0}'.format(click.style(six.text_type(error_ops), bold=True)),
+                'Commands: {0}/{1}'.format(results['commands'], meta['commands']),
+            ]))
 
         if i != len(group_combinations):
-            print()
+            rows.append((print, []))
+
+    print_rows(rows)
