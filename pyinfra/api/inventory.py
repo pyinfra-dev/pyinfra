@@ -113,6 +113,10 @@ class Inventory(object):
             # Name is @connector?
             if name[0] == '@':
                 connector_name = name[1:]
+                arg_string = None
+
+                if '/' in connector_name:
+                    connector_name, arg_string = connector_name.split('/', 1)
 
                 if connector_name not in ALL_CONNECTORS:
                     raise NoConnectorError(
@@ -130,7 +134,7 @@ class Inventory(object):
                     ))
 
                     for name, data, group_names in (
-                        INVENTORY_CONNECTORS[connector_name].make_names_data()
+                        INVENTORY_CONNECTORS[connector_name].make_names_data(arg_string)
                     ):
                         # Make a copy of the host data, update with any from
                         # the connector.
