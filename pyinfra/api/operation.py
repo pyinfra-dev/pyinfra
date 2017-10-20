@@ -199,12 +199,15 @@ def operation(func=None, pipeline_facts=None):
                     line_number = frame[0].f_lineno
                     break
 
-            # Make the hash - note we *don't* use data_kwargs here, because
-            # they can vary between hosts, but we only want to generate one
-            # operation across the hosts.
+            # The when kwarg might change between hosts - but we still want that
+            # to count as a single operation. Other meta kwargs are considered
+            # "global" and should be the same for every host.
+            op_meta_kwargs_copy = op_meta_kwargs.copy()
+            op_meta_kwargs_copy.pop('when', None)
+
             op_hash = make_hash((
                 names, line_number, args, kwargs,
-                op_meta_kwargs,
+                op_meta_kwargs_copy,
             ))
 
         # Ensure shared (between servers) operation meta
