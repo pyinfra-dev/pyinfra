@@ -1,6 +1,9 @@
 import json
 
 from os import path
+from threading import Thread
+
+from six.moves.queue import Queue
 
 from pyinfra import local, logger
 
@@ -8,35 +11,63 @@ VAGRANT_CONFIG = None
 VAGRANT_GROUPS = None
 
 
-def _get_vagrant_config():
+def _get_vagrant_ssh_config(queue, target):
+    logger.debug('Loading SSH config for {0}'.format(target))
+
+    queue.put(local.shell(
+        'vagrant ssh-config {0}'.format(target),
+        splitlines=True,
+    ))
+
+
+def _get_vagrant_config(limit=None):
+    if limit and not isinstance(limit, list):
+        limit = [limit]
+
     output = local.shell(
         'vagrant status --machine-readable',
         splitlines=True,
     )
 
-    ssh_configs = []
+    config_queue = Queue()
+    threads = []
 
     for line in output:
         _, target, type_, data = line.split(',', 3)
 
+        # Skip anything not in the limit
+        if limit is not None and target not in limit:
+            continue
+
+        # For each running container - fetch it's SSH config in a thread - this
+        # is because Vagrant *really* slow to run each command.
         if type_ == 'state' and data == 'running':
-            logger.debug('Loading SSH config for {0}'.format(target))
+            thread = Thread(
+                target=_get_vagrant_ssh_config,
+                args=(config_queue, target),
+            )
+            threads.append(thread)
+            thread.start()
 
-            ssh_configs.extend(local.shell(
-                'vagrant ssh-config {0}'.format(target),
-                splitlines=True,
-            ))
+    for thread in threads:
+        thread.join()
 
-    return ssh_configs
+    queue_items = list(config_queue.queue)
+
+    lines = []
+    for output in queue_items:
+        lines.extend(output)
+
+    return lines
 
 
-def get_vagrant_config():
+def get_vagrant_config(limit=None):
     global VAGRANT_CONFIG
 
     if VAGRANT_CONFIG is None:
         logger.info('Getting vagrant config...')
 
-        VAGRANT_CONFIG = _get_vagrant_config()
+        VAGRANT_CONFIG = _get_vagrant_config(limit=limit)
 
     return VAGRANT_CONFIG
 
@@ -74,8 +105,8 @@ def _make_name_data(host):
     return '@vagrant/{0}'.format(host['Host']), data, groups
 
 
-def make_names_data():
-    vagrant_ssh_info = get_vagrant_config()
+def make_names_data(limit=None):
+    vagrant_ssh_info = get_vagrant_config(limit)
 
     logger.debug('Got Vagrant SSH info: \n{0}'.format(vagrant_ssh_info))
 
