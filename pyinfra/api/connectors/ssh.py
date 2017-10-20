@@ -90,12 +90,7 @@ def connect(state, host, **kwargs):
         _log_connect_error(host, 'Could not resolve hostname', hostname)
 
     except socket_error as e:
-        hostname_port = '{0}:{1}'.format(
-            hostname,
-            kwargs.get('port', 22),
-        )
-
-        _log_connect_error(host, 'Could not connect', hostname_port)
+        _log_connect_error(host, 'Could not connect', e)
 
     except EOFError as e:
         _log_connect_error(host, 'EOF error', e)
