@@ -163,37 +163,6 @@ Returns the current datetime on the server.
 ~~~~~~~~~~~~~~~~~~~
 
 
-Docker
-------
-
-:code:`docker_containers`
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-    Returns a list of all Docker containers.
-    
-
-
-:code:`docker_fact_base`
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-:code:`docker_images`
-~~~~~~~~~~~~~~~~~~~~~
-
-
-    Returns a list of all Docker images.
-    
-
-
-:code:`docker_networks`
-~~~~~~~~~~~~~~~~~~~~~~~
-
-
-    Returns a list of all Docker networks.
-    
-
-
 Npm
 ---
 
@@ -525,33 +494,5 @@ Devices
                 'size': '64',
                 'address': 'fe80::a00:27ff:fec3:36f0'
             }
-        },
-        ...
-    
-
-
-Mysql
------
-
-:code:`mysql_databases`
-~~~~~~~~~~~~~~~~~~~~~~~
-
-
-    Returns a list of existing MySQL databases.
-    
-
-
-:code:`mysql_users`
-~~~~~~~~~~~~~~~~~~~
-
-
-    Returns a dict of MySQL user@host's and their associated data:
-
-    .. code:: python
-
-        'user@host': {
-            'permissions': ['Alter', 'Grant'],
-            'max_connections': 5,
-            ...
         },
         ...
