@@ -7,6 +7,7 @@ import ast
 from os import path
 
 from pyinfra.api import Config
+from pyinfra.api.util import exec_file
 
 
 def _extract_config_assignments(filename, config):
@@ -55,6 +56,9 @@ def load_config(deploy_dir):
 
     if path.exists(config_filename):
         _extract_config_assignments(config_filename, config)
+
+        # Now execute the file to trigger loading of any hooks
+        exec_file(config_filename)
 
     return config
 
