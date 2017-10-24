@@ -26,8 +26,8 @@ class Error(PyinfraError, ClickException):
 
 def _make_hook_wrapper(hook_name):
     def hook_func(func):
-        # Only add hooks when the state isn't active
-        if pseudo_state.active:
+        # Only add hooks when there's *no* state
+        if pseudo_state.isset():
             return
 
         HOOKS[hook_name].append(func)
