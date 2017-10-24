@@ -1,5 +1,7 @@
 {
     "groups": {
-        "openbsd58": ["bsd"]
+        "openbsd6": ["bsd"],
+        "debian8": ["debian"],
+        "debian9": ["debian"]
     }
 }

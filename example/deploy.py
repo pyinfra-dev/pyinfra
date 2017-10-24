@@ -4,16 +4,10 @@
 #       targets: Ubuntu/Debian, CentOS/Fedora & OpenBSD
 
 # Host represents the *current* server begin managed
-from pyinfra import hook, host, inventory, local, state
+from pyinfra import host, inventory, local, state
 
 # Modules provide namespaced operations, which do the work
 from pyinfra.modules import apt, files, git, init, pip, python, server, yum
-
-
-# Hooks inside deploy file
-@hook.before_connect
-def before_connect(data, state):
-    print('inventory hosts!: ', [host.name for host in inventory])
 
 
 def on_pyinfra_success(state, host, op_hash):

@@ -1,15 +1,12 @@
 # pyinfra test VM's
 
 Vagrant.configure('2') do |config|
-    config.ssh.insert_key = false
-    config.ssh.private_key_path = 'files/insecure_private_key'
-
     # Disable /vagrant synced folder
     config.vm.synced_folder '.', '/vagrant', disabled: true
 
-    # Set the boxes memory (8 boxes = 4G total)
+    # Set the boxes memory (11 boxes = ~2.8G total)
     config.vm.provider 'virtualbox' do |v|
-        v.memory = 512
+        v.memory = 256
     end
 
     # Disable updating/installing Virtualbox guest additions with vagrant-vbguest
@@ -48,12 +45,11 @@ Vagrant.configure('2') do |config|
         centos.vm.box = 'bento/centos-7'
     end
 
-
-    config.vm.define :openbsd58 do |openbsd|
-        openbsd.vm.box = 'twingly/openbsd-5.8-amd64'
+    config.vm.define :fedora24 do |fedora|
+        fedora.vm.box = 'bento/fedora-24'
     end
 
-    config.vm.define :fedora23 do |fedora|
-        fedora.vm.box = 'boxcutter/fedora23'
+    config.vm.define :openbsd6 do |openbsd|
+        openbsd.vm.box = 'ryanmaclean/openbsd-6.0'
     end
 end
