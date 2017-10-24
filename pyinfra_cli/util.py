@@ -30,8 +30,8 @@ except ImportError:
 import click
 
 from pyinfra import logger, pseudo_host
+from pyinfra.api.util import exec_file
 from pyinfra.hook import HOOKS
-from pyinfra.local import exec_file
 
 from .exceptions import CliError
 
