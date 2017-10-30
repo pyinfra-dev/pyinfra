@@ -1,32 +1,36 @@
 # v0.5 (WIP)
 
+What was originally a module release for pyinfra (see the 0.6 milestone!) has become all about proper conditional branching support (previously resulted in best-effort/guess operation order) and improving 0.4's initial `@deploy` concept:
+
++ Add global `when` kwarg to all operations, similar to `hosts` can be used to prevent operations executing on hosts based on a condition
++ Add `state.limit(hosts)` and `state.when(condition)` context managers to use in place of `if` statements within deploys
++ `@deploy`s and the context managers (`state.limit`, `state.when`) can all be nested as much as needed (although if you need to nest a lot, you're probably doing it wrong!)
++ Add `data_defaults` kwarg to `@deploy` functions, meaning third party pyinfra packages can provide sensible defaults that the user can override individually
++ Display a large warning when imbalanced branches are detected, linking the user to the documentation for the above
+
+Note that if statements/etc still work as before but pyinfra will print out a warning explaining the implications and linking to the docs (http://pyinfra.readthedocs.io/page/using_python.html#conditional-branches).
+
 + **Vagrant connector**:
 
 ```sh
 # Run a deploy on all Vagrant machines (vagrant status list)
 pyinfra @vagrant deploy.py
+pyinfra @vagrant/vm_name deploy.py
 
 # Can be used in tandem with other inventory:
 pyinfra @vagrant,my-host.net deploy.py
 pyinfra @vagrant,@local,my-host.net fact os
 ```
 
-Proper conditional branching support (previously resulted in best-effort operation order):
-+ Add global `when` kwarg to all operations, similar to `hosts` can be used to prevent operations executing on hosts based on a condition
-+ Add `state.limit(hosts)` and `state.when(condition)` context managers to use in place of `if` statements in deploys
-
-Note that if statements/etc still work as before. TODO: document this.
-
-Operations/facts:
++ **Hooks broken**: no longer loaded from deploy files, only from `config.py`, due to changes from `0.4` (removal of `FakeState` nonsense)
 + Add `gpgkey` argument to the `yum.repo` operation
 + Add `lsb_release` fact
-
-General:
-+ Add data defaults to `@deploy` functions, meaning third party pyinfra packages can provide sensible defaults that the user can override individually
++ `apt_sources` fact now supports apt repos with options (`[arch=amd64]`)
 + Improved error output when connecting
 + Update testing box from Ubuntu 15 to Ubuntu 16
 + Ensure `~/.ssh` exists keyscanning in `ssh.keyscan`
 + Don't include tests during setup!
++ Fix caching of local SHA1s on files
 
 
 # v0.4.1
