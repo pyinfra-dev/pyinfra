@@ -246,14 +246,29 @@ def operation(func=None, pipeline_facts=None):
         # keep track of each hosts latest op hash, and use that to insert new
         # ones.
         if op_hash not in state.op_order:
+            logger.debug((
+                'Pushing hash into operation order (host={0}, names={1}): {2}'
+            ).format(host.name, names, op_hash))
+
             previous_op_hash = state.meta[host.name]['latest_op_hash']
 
             if previous_op_hash:
-                index = state.op_order.index(previous_op_hash)
+                # Get the index of the previous op hash and bump after it
+                index = state.op_order.index(previous_op_hash) + 1
             else:
                 index = 0
 
-            state.op_order.insert(index + 1, op_hash)
+            # We *expect* to always append operations - if not it's almost
+            # certainly to (mis)use of conditional branches. An unfortunate
+            # result of the way deploy files are executed (once per host).
+            if index < len(state.op_order):
+                logger.warning('''Imbalanced operation detected! ({0})
+    Using conditional branches (if statements) may result in operations being called in an unexpected order.
+    Operations will always run in order *per host* but branches may execute in a non-deterministic order.
+    Please see http://pyinfra.readthedocs.io/page/using_python.html#conditional-branches.
+'''.format(', '.join(names)))
+
+            state.op_order.insert(index, op_hash)
 
         state.meta[host.name]['latest_op_hash'] = op_hash
 

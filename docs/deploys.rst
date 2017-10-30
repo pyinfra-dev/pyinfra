@@ -191,7 +191,6 @@ Naming operations:
         home='/home/pyinfra'
     )
 
-
 Using Data
 ~~~~~~~~~~
 
@@ -210,7 +209,7 @@ Adding data to inventories was :ref:`described above <data-ref-label>` - you can
     )
 
 String formatting:
-    pyinfra supports jinja2 style string arguments, which should be used over Python's builtin string formatting where you expect the final string to change per host. This is because pyinfra groups operations by their arguments:
+    pyinfra supports jinja2 style string arguments, which should be used over Python's builtin string formatting where you expect the final string to change per host. This is because pyinfra groups operations by their arguments. See: :doc:`using Python <./using_python>` for more information; an example of this is:
 
 .. code:: python
 
@@ -231,6 +230,7 @@ Operation meta can be used during a deploy to change the desired operations:
 
 .. code:: python
 
+    from pyinfra import state
     from pyinfra.modules import server
 
     # Run an operation, collecting its meta output
@@ -240,8 +240,11 @@ Operation meta can be used during a deploy to change the desired operations:
     }
 
     # If we added a user above, do something extra
-    if create_user.changed:
+    with state.when(create_user.changed):
         server.shell('# add user to sudo, etc...')
+
+Conditionals:
+    pyinfra supports conditional branches with the ``state.limit`` and ``state.when`` control structures (as shown above). These should be used in place of normal Python ``if`` statements. This prevents operations being executed in unexpected orders. For more information, see: :doc:`using Python <./using_python>`.
 
 Facts
 ~~~~~
@@ -253,21 +256,16 @@ Facts allow you to use information about the target host to change the operation
     from pyinfra import host
     from pyinfra.modules import apt, yum
 
-    if host.fact.linux_distribution['name'] == 'CentOS':
+    with state.when(host.fact.linux_distribution['name'] == 'CentOS'):
         yum.packages(
-            'nano',
-            sudo=True
-        )
-    else:
-        apt.packages(
             'nano',
             sudo=True
         )
 
 Some facts also take a single argument, for example the ``directory`` or ``file`` facts. The :doc:`facts index <./facts>` lists the available facts and their arguments.
 
-Includes/Roles
-~~~~~~~~~~~~~~
+Includes
+~~~~~~~~
 
 Roles can be used to break out deploy logic into multiple files. They can also be used to limit the contained operations to a subset of hosts. Roles can be included using ``local.include``.
 
@@ -276,10 +274,10 @@ Roles can be used to break out deploy logic into multiple files. They can also b
     from pyinfra import local, inventory
 
     # Operations in this file will be added to all hosts
-    local.include('roles/my_role.py')
+    local.include('tasks/my_role.py')
 
     # Operations in this file will be added to the hosts in group "my_group"
-    local.include('roles/limited_role.py', hosts=inventory.my_group)
+    local.include('tasks/limited_role.py', hosts=inventory.my_group)
 
 See more in :doc:`patterns: groups & roles <./patterns/groups_roles>`.
 
@@ -308,7 +306,7 @@ Callbacks:
 
 Limiting operations to subsets of the inventory:
     + ``hosts='web'``: Limit the operation to a subset of the hosts (either a list of host objects or a group name).
-
+    + ``when=host.fact.os == 'Darwin'``: Limit the operaton based on a conditional/boolean.
 
 Config
 ------
@@ -332,7 +330,7 @@ config.py advantage:
 Hooks
 -----
 
-Deploy hooks are executed by the CLI at various points during the deploy process. Like config, they can be defined in a ``config.py`` or at the top of the deploy file:
+Deploy hooks are executed by the CLI at various points during the deploy process. These can be defined in a ``config.py``:
 
 + ``before_connect``
 + ``before_facts``
@@ -343,7 +341,7 @@ These can be used, for example, to check the right branch before connecting or t
 
 .. code:: python
 
-    # config.py or top of deploy.py
+    # config.py
 
     from pyinfra import hook
 
