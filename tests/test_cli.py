@@ -127,12 +127,6 @@ class TestCliExceptions(TestCase):
         self.assertIsInstance(self.exception, CliError)
         self.assertEqual(self.exception.message, message)
 
-    def test_bad_inventory_file(self):
-        self.assert_cli_exception(
-            ['thing/nop.py', 'fact', 'os'],
-            'No inventory file: thing/nop.py',
-        )
-
     def test_bad_deploy_file(self):
         self.assert_cli_exception(
             ['example/inventories/dev.py', 'example/deploy.py', 'nop.py'],
