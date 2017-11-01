@@ -4,6 +4,24 @@ Using Python
 One of the most powerful features of pyinfra is that deploys are configured/written in pure Python. Where possible pyinfra stays out of the way and lets you use the full power of Python to your advantage - however there are a few caveats that this page explains.
 
 
+String Formatting
+-----------------
+
+pyinfra supports jinja2 style string arguments, which should be used over Python's builtin string formatting where you expect the final string to change per host. This is because pyinfra groups operations by their arguments. For example:
+
+.. code:: python
+
+    from pyinfra import host
+    from pyinfra.modules import server
+
+    server.user(
+        {'Setup the app user'},
+        host.data.app_user,
+        '/opt/{{ host.data.app_dir }}', # for multiple values of host.data.app_dir we still
+                                        # generate a single operation
+    )
+
+
 Conditional Branches
 --------------------
 
@@ -44,21 +62,3 @@ pyinfra also has a global ``limit`` keyword argument and a matching ``state.limi
 
 Note:
     pyinfra ensures that operations are always executed in order **per host**, so there's no risk of, say, trying to use ``docker`` before installing it.
-
-
-String Formatting
------------------
-
-pyinfra supports jinja2 style string arguments, which should be used over Python's builtin string formatting where you expect the final string to change per host. This is because pyinfra groups operations by their arguments. For example:
-
-.. code:: python
-
-    from pyinfra import host
-    from pyinfra.modules import server
-
-    server.user(
-        {'Setup the app user'},
-        host.data.app_user,
-        '/opt/{{ host.data.app_dir }}', # for multiple values of host.data.app_dir we still
-                                        # generate a single operation
-    )
