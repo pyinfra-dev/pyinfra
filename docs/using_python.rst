@@ -60,5 +60,5 @@ pyinfra also has a global ``limit`` keyword argument and a matching ``state.limi
         limit=inventory.get_host('my-host.net'),
     )
 
-Note:
-    pyinfra ensures that operations are always executed in order **per host**, so there's no risk of, say, trying to use ``docker`` before installing it.
+.. note::
+    Despite the above, pyinfra always ensures that operations are always executed in order **per host** so there's no risk of, say, trying to use ``docker`` before installing it.

@@ -103,7 +103,7 @@ The same keys can be defined for host and group data - this means we can set a d
 + Normal group data
 + "all" group data
 
-Debugging data issues:
+.. note::
     pyinfra contains a ``--debug-data`` option which can be used to explore the data output per-host for a given inventory/deploy.
 
 Data Example
@@ -180,16 +180,8 @@ For example, this deploy will ensure that user "pyinfra" exists with home direct
 
 Uses the :doc:`server module <./modules/server>` and :doc:`files module <./modules/files>`. You can see all the modules in :doc:`the modules index <./operations>`.
 
-Naming operations:
-    Pass a ``set`` object as the first argument to name the operation, which will appear during a deploy. By default the operation module, name and arguments are shown:
-
-.. code:: python
-
-    server.user(
-        {'Ensure user pyinfra'},  # the contents of the set will become the op name
-        'pyinfra',
-        home='/home/pyinfra'
-    )
+.. note::
+    Pass a ``set`` object as the first argument to name the operation (as above), which will appear during a deploy. By default the operation module, name and arguments are shown.
 
 Using Data
 ~~~~~~~~~~
@@ -208,7 +200,7 @@ Adding data to inventories was :ref:`described above <data-ref-label>` - you can
         home=host.data.app_dir,
     )
 
-String formatting:
+.. warning::
     pyinfra supports jinja2 style string arguments, which should be used over Python's builtin string formatting where you expect the final string to change per host. This is because pyinfra groups operations by their arguments. See: :doc:`using Python <./using_python>` for more information; an example of this is:
 
 .. code:: python
@@ -243,7 +235,7 @@ Operation meta can be used during a deploy to change the desired operations:
     with state.when(create_user.changed):
         server.shell('# add user to sudo, etc...')
 
-Conditionals:
+.. warning::
     pyinfra supports conditional branches with the ``state.limit`` and ``state.when`` control structures (as shown above). These should be used in place of normal Python ``if`` statements. This prevents operations being executed in unexpected orders. For more information, see: :doc:`using Python <./using_python>`.
 
 Facts
@@ -323,8 +315,8 @@ There are a number of configuration options for how deploys are managed. These c
     # Fail the entire deploy after 10% of hosts fail
     FAIL_PERCENT = 10
 
-config.py advantage:
-    When added to ``config.py``, these options will take affect when using pyinfra ``--fact`` or ``--run``.
+.. note::
+    When added to ``config.py`` (vs the deploy file), these options will take affect when using pyinfra ``--fact`` or ``--run``.
 
 
 Hooks

@@ -117,7 +117,40 @@ footer#pagefooter {
         border: none;
     }
 
-/* Index only */
+div.admonition {
+    padding: 0;
+    border: none;
+}
+div.admonition p {
+    display: block !important;
+    padding: 5px;
+    margin: 0;
+}
+p.admonition-title {
+    font-weight: normal;
+}
+
+div.admonition.note {
+    background: #e7f2fa;
+}
+div.admonition.note p.admonition-title {
+    background: #6ab0de;
+    color: white;
+}
+
+div.admonition.warning {
+    background: #ffedcc;
+}
+div.admonition.warning p.admonition-title {
+    background: #f0b37e;
+    color: white;
+}
+
+
+/*
+    Index only
+*/
+
 div#pyinfra-documentation div.compound {
     width: 46%;
     margin-right: 3%;

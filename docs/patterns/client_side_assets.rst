@@ -9,12 +9,12 @@ match) and the client assets are then built before pyinfra connects to any hosts
 
 .. code:: python
 
-    # deploy.py
+    # config.py
 
     from pyinfra import hook, local
 
     @hook.before_connect
-    def build_assets(data, state):
+    def check_branch(data, state):
         # Check local branch matches the deploy branch
         branch = local.shell('git rev-parse --abbrev-ref HEAD')
         app_branch = data.app_branch
@@ -25,6 +25,8 @@ match) and the client assets are then built before pyinfra connects to any hosts
                 branch, app_branch
             ))
 
+    @hook.before_connect
+    def build_assets(data, state):
         # Prep for clientside build
         local.shell('npm prune')
         local.shell('npm install')
@@ -32,4 +34,4 @@ match) and the client assets are then built before pyinfra connects to any hosts
         # Build the assets (using webpack in this case)
         local.shell('webpack --progress')
 
-    # deploy operations...
+Simply place this ``config.py`` alongside your deploys and pyinfra will pick it up.
