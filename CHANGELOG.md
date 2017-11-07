@@ -1,4 +1,4 @@
-# v0.5 (WIP)
+# v0.5
 
 What was originally a module release for pyinfra (see the 0.6 milestone!) has become all about proper conditional branching support (previously resulted in best-effort/guess operation order) and improving 0.4's initial `@deploy` concept:
 
