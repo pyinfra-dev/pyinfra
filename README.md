@@ -12,7 +12,7 @@ pyinfra manages the state of one or more servers. It can be used for app/service
 
 When you run pyinfra you'll see something like:
 
-![](https://raw.githubusercontent.com/Fizzadar/pyinfra/develop/docs/example_deploy.png)
+![](docs/example_deploy.png)
 
 
 ## Design Features
