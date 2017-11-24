@@ -244,7 +244,7 @@ def make_command(
             '{0}={1}'.format(key, value)
             for key, value in six.iteritems(env)
         ])
-        command = '{0} {1}'.format(env_string, command)
+        command = 'export {0}; {1}'.format(env_string, command)
 
     # Quote the command as a string
     command = shlex_quote(command)
