@@ -52,7 +52,6 @@ class Inventory(object):
         ssh_key_password=None, ssh_password=None, **groups
     ):
         # Setup basics
-        self.connected_hosts = set()
         self.groups = defaultdict(list)  # lists of Host objects
         self.host_data = defaultdict(dict)  # dict of name -> data
         self.group_data = defaultdict(dict)  # dict of name -> data
@@ -226,10 +225,10 @@ class Inventory(object):
         Returns the number of active inventory hosts.
         '''
 
-        if not self.state or not self.state.active_hosts:
+        if not self.state or not self.state.active_host_names:
             return len(self.hosts)
 
-        return len(self.state.active_hosts)
+        return len(self.state.active_host_names)
 
     def len_all_hosts(self):
         '''
@@ -244,10 +243,10 @@ class Inventory(object):
         '''
 
         for host in six.itervalues(self.hosts):
-            if not self.state or not self.state.active_hosts:
+            if not self.state or not self.state.active_host_names:
                 yield host
 
-            elif host.name in self.state.active_hosts:
+            elif host.name in self.state.active_host_names:
                 yield host
 
     def iter_all_hosts(self):

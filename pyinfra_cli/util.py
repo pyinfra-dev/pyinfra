@@ -271,4 +271,4 @@ def load_deploy_file(state, filename, progress):
 
     # Un-ready the hosts - this is so that any hooks or callbacks during the
     # deploy can still use facts as expected.
-    state.ready_hosts = set()
+    state.ready_host_names = set()

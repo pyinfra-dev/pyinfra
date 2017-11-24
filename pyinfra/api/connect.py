@@ -137,7 +137,7 @@ def connect_all(state, progress=None):
 
     # Get/set the results
     failed_hosts = set()
-    connected_hosts = set()
+    connected_host_names = set()
 
     for name, greenlet in six.iteritems(greenlets):
         client = greenlet.get()
@@ -145,13 +145,13 @@ def connect_all(state, progress=None):
         if not client:
             failed_hosts.add(name)
         else:
-            connected_hosts.add(name)
+            connected_host_names.add(name)
 
     # Add connected hosts to inventory
-    state.connected_hosts = connected_hosts
+    state.connected_host_names = connected_host_names
 
     # Add all the hosts as active
-    state.active_hosts = set(greenlets.keys())
+    state.active_host_names = set(greenlets.keys())
 
     # Remove those that failed, triggering FAIL_PERCENT check
     state.fail_hosts(failed_hosts)

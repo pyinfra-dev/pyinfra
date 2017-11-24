@@ -126,7 +126,7 @@ def get_facts(state, name, args=None):
     greenlets = {}
 
     for host in state.inventory:
-        if host in state.ready_hosts:
+        if host in state.ready_host_names:
             continue
 
         # Work out the command

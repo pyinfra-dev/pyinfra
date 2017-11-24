@@ -153,9 +153,9 @@ class State(object):
         inventory.state = config.state = self
 
         # Host tracking
-        self.active_hosts = set()
-        self.ready_hosts = set()
-        self.connected_hosts = set()
+        self.connected_host_names = set()  # host names we managed to connect to
+        self.ready_host_names = set()  # host names ready to be deployed to
+        self.active_host_names = set()  # host names that haven't failed (yet!)
 
         host_names = [host.name for host in inventory]
 
@@ -290,7 +290,7 @@ class State(object):
         Flag a host as ready, after which facts will not be gathered for it.
         '''
 
-        self.ready_hosts.add(host)
+        self.ready_host_names.add(host)
 
     def fail_hosts(self, hosts_to_fail):
         '''
@@ -298,18 +298,18 @@ class State(object):
         '''
 
         # Remove the failed hosts from the inventory
-        self.active_hosts -= hosts_to_fail
+        self.active_host_names -= hosts_to_fail
 
         # Check we're not above the fail percent
-        active_hosts = self.active_hosts
+        active_host_names = self.active_host_names
 
         # No hosts left!
-        if not active_hosts:
+        if not active_host_names:
             raise PyinfraError('No hosts remaining!')
 
         if self.config.FAIL_PERCENT is not None:
             percent_failed = (
-                1 - len(active_hosts) / self.inventory.len_all_hosts()
+                1 - len(active_host_names) / self.inventory.len_all_hosts()
             ) * 100
 
             if percent_failed > self.config.FAIL_PERCENT:
