@@ -33,4 +33,4 @@ class NpmPackages(FactBase):
             return 'npm list -g --depth=0'
 
     def process(self, output):
-        parse_packages(NPM_REGEX, output)
+        return parse_packages(NPM_REGEX, output)
