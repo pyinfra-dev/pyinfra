@@ -1,3 +1,8 @@
+# v0.5.1
+
++ Make environment variables stick between multiple commands
++ Fix npm packages fact missing a return(!)
+
 # v0.5
 
 What was originally a module release for pyinfra (see the 0.6 milestone!) has become all about proper conditional branching support (previously resulted in best-effort/guess operation order) and improving 0.4's initial `@deploy` concept:
