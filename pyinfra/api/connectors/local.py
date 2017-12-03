@@ -11,7 +11,7 @@ import click
 import gevent
 
 from pyinfra import logger
-from pyinfra.api.util import make_command, read_buffer
+from pyinfra.api.util import get_file_io, make_command, read_buffer
 
 
 def connect(state, host, **kwargs):
@@ -108,8 +108,8 @@ def put_file(
     state, host, file_io, remote_file,
     sudo=False, sudo_user=None, su_user=None, print_output=False,
 ):
-    with open(remote_file, 'w') as f:
-        f.write(file_io.read())
+    with open(remote_file, 'wb') as remote_f, get_file_io(file_io) as local_f:
+        remote_f.write(local_f.read())
 
     if print_output:
         print('{0}file copied: {1}'.format(host.print_prefix, remote_file))
