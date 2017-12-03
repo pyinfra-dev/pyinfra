@@ -1,3 +1,7 @@
+# v0.5.2 (WIP)
+
++ Fix `files.put` when using `@local`
+
 # v0.5.1
 
 + Make environment variables stick between multiple commands
