@@ -4,7 +4,8 @@
         "home": "homedir",
         "shell": "shellbin",
         "group": "mygroup",
-        "groups": ["secondary_group", "another"]
+        "groups": ["secondary_group", "another"],
+        "uid" : 1000
     },
     "facts": {
         "users": {},
@@ -13,7 +14,7 @@
         }
     },
     "commands": [
-        "useradd -d homedir -s shellbin -g mygroup -G secondary_group,another someuser",
+        "useradd -d homedir -s shellbin -g mygroup -G secondary_group,another --uid 1000 someuser",
         "mkdir -p homedir",
         "chown someuser:someuser homedir"
     ]
