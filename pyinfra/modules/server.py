@@ -96,7 +96,7 @@ def script_template(state, host, template_filename, chdir=None, **data):
 
 @operation
 def group(
-    state, host, name, present=True, system=False,
+    state, host, name, present=True, system=False, gid=None
 ):
     '''
     Manage system groups.
@@ -126,6 +126,9 @@ def group(
 
         args.append(name)
 
+        if gid:
+            args.append('--gid {0}'.format(gid))
+
         yield 'groupadd {0}'.format(' '.join(args))
 
 
@@ -133,7 +136,7 @@ def group(
 def user(
     state, host, name,
     present=True, home=None, shell=None, group=None, groups=None,
-    public_keys=None, delete_keys=False, ensure_home=True, system=False,
+    public_keys=None, delete_keys=False, ensure_home=True, system=False, uid=None
 ):
     '''
     Manage system users & their ssh `authorized_keys`. Options:
@@ -188,6 +191,9 @@ def user(
 
         if system and host.fact.os not in ('OpenBSD', 'NetBSD'):
             args.append('-r')
+
+        if uid:
+            args.append('--uid {0}'.format(uid))
 
         yield 'useradd {0} {1}'.format(' '.join(args), name)
 

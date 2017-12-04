@@ -12,3 +12,4 @@ example/.vagrant*
 
 .docstmp
 docs/build/
+.idea/

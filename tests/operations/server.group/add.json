@@ -1,9 +1,11 @@
 {
     "args": ["somegroup"],
+    "kwargs": {
+        "gid" : 1000},
     "facts": {
         "groups": []
     },
     "commands": [
-        "groupadd somegroup"
+        "groupadd somegroup --gid 1000"
     ]
 }
