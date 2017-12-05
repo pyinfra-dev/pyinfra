@@ -183,7 +183,7 @@ def replace(state, host, name, match, replace, flags=None):
 })
 def sync(
     state, host, source, destination,
-    user=None, group=None, mode=None, delete=False, exclude=None,
+    user=None, group=None, mode=None, delete=False, exclude=None, add_deploy_dir=True
 ):
     '''
     Syncs a local directory with a remote one, with delete support. Note that delete will
@@ -203,8 +203,8 @@ def sync(
     if not source.endswith(path.sep):
         source = '{0}{1}'.format(source, path.sep)
 
-    # Source relative to deploy.py
-    if state.deploy_dir:
+    # Add deploy directory?
+    if add_deploy_dir and state.deploy_dir:
         source = path.join(state.deploy_dir, source)
 
     # Ensure exclude is a list/tuple
