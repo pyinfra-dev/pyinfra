@@ -1,4 +1,4 @@
-# v0.5.2 (WIP)
+# v0.5.2
 
 + Add `exclude_dir` and `add_deploy_dir` kwargs to `files.sync`
 + Add pipfile for dev
