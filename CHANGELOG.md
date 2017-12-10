@@ -1,5 +1,7 @@
 # v0.5.2 (WIP)
 
++ Add `exclude_dir` and `add_deploy_dir` kwargs to `files.sync`
++ Add pipfile for dev
 + Fix `files.put` when using `@local`
 
 # v0.5.1
