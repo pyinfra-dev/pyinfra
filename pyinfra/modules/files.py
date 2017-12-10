@@ -278,6 +278,10 @@ def sync(
         wanted_filenames = set([remote_filename for _, remote_filename in put_files])
         files_to_delete = remote_filenames - wanted_filenames
         for filename in files_to_delete:
+            # Should we exclude this file?
+            if exclude and any(fnmatch(filename, match) for match in exclude):
+                continue
+
             yield file(state, host, filename, present=False)
 
 
