@@ -183,7 +183,8 @@ def replace(state, host, name, match, replace, flags=None):
 })
 def sync(
     state, host, source, destination,
-    user=None, group=None, mode=None, delete=False, exclude=None, exclude_dir=None, add_deploy_dir=True,
+    user=None, group=None, mode=None, delete=False,
+    exclude=None, exclude_dir=None, add_deploy_dir=True,
 ):
     '''
     Syncs a local directory with a remote one, with delete support. Note that delete will
@@ -196,6 +197,7 @@ def sync(
     + mode: permissions of the files
     + delete: delete remote files not present locally
     + exclude: string or list/tuple of strings to match & exclude files (eg *.pyc)
+    + exclude_dir: string or list/tuple of strings to match & exclude directories (eg node_modules)
     '''
 
     # If we don't enforce the source ending with /, remote_dirname below might start with
