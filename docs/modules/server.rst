@@ -12,7 +12,7 @@ Manage system groups.
 
 .. code:: python
 
-    server.group(name, present=True, system=False)
+    server.group(name, present=True, system=False, gid=None)
 
 + **name**: name of the group to ensure
 + **present**: whether the group should be present or not
@@ -70,7 +70,7 @@ Manage system users & their ssh `authorized_keys`. Options:
 
     server.user(
         name, present=True, home=None, shell=None, group=None, groups=None, public_keys=None,
-        delete_keys=False, ensure_home=True, system=False
+        delete_keys=False, ensure_home=True, system=False, uid=None
     )
 
 + **name**: name of the user to ensure

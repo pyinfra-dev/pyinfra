@@ -141,7 +141,10 @@ remove extra files on the remote side, but not extra directories.
 
 .. code:: python
 
-    files.sync(source, destination, user=None, group=None, mode=None, delete=False, exclude=None)
+    files.sync(
+        source, destination, user=None, group=None, mode=None, delete=False, exclude=None,
+        exclude_dir=None, add_deploy_dir=True
+    )
 
 + **source**: local directory to sync
 + **destination**: remote directory to sync to
@@ -150,6 +153,7 @@ remove extra files on the remote side, but not extra directories.
 + **mode**: permissions of the files
 + **delete**: delete remote files not present locally
 + **exclude**: string or list/tuple of strings to match & exclude files (eg *.pyc)
++ **exclude_dir**: string or list/tuple of strings to match & exclude directories (eg node_modules)
 
 
 :code:`files.template`
