@@ -212,6 +212,11 @@ def sync(
         if not isinstance(exclude, (list, tuple)):
             exclude = [exclude]
 
+    # Ensure exclude_dir is a list/tuple
+    if exclude_dir is not None:
+        if not isinstance(exclude_dir, (list, tuple)):
+            exclude_dir = [exclude_dir]
+
     put_files = []
     ensure_dirnames = []
     for dirname, _, filenames in walk(source):
