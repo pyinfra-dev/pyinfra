@@ -183,7 +183,7 @@ def replace(state, host, name, match, replace, flags=None):
 })
 def sync(
     state, host, source, destination,
-    user=None, group=None, mode=None, delete=False, exclude=None,
+    user=None, group=None, mode=None, delete=False, exclude=None, exclude_dir=None, add_deploy_dir=True,
 ):
     '''
     Syncs a local directory with a remote one, with delete support. Note that delete will
@@ -203,8 +203,8 @@ def sync(
     if not source.endswith(path.sep):
         source = '{0}{1}'.format(source, path.sep)
 
-    # Source relative to deploy.py
-    if state.deploy_dir:
+    # Add deploy directory?
+    if add_deploy_dir and state.deploy_dir:
         source = path.join(state.deploy_dir, source)
 
     # Ensure exclude is a list/tuple
@@ -217,6 +217,10 @@ def sync(
     for dirname, _, filenames in walk(source):
         remote_dirname = dirname.replace(source, '')
 
+        # Should we exclude this dir?
+        if exclude_dir and any(fnmatch(remote_dirname, match) for match in exclude_dir):
+            continue
+
         if remote_dirname:
             ensure_dirnames.append(remote_dirname)
 
@@ -224,13 +228,7 @@ def sync(
             full_filename = path.join(dirname, filename)
 
             # Should we exclude this file?
-            to_exclude = False
-            if exclude:
-                for match in exclude:
-                    if fnmatch(full_filename, match):
-                        to_exclude = True
-
-            if to_exclude:
+            if exclude and any(fnmatch(full_filename, match) for match in exclude):
                 continue
 
             put_files.append((
