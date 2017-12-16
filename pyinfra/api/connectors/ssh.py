@@ -201,7 +201,7 @@ def _put_file(host, filename_or_io, remote_location):
 
 
 def put_file(
-    state, host, file_io, remote_file,
+    state, host, filename_or_io, remote_file,
     sudo=False, sudo_user=None, su_user=None, print_output=False,
 ):
     '''
@@ -214,7 +214,7 @@ def put_file(
     if sudo or su_user:
         # Get temp file location
         temp_file = state.get_temp_filename(remote_file)
-        _put_file(host, file_io, temp_file)
+        _put_file(host, filename_or_io, temp_file)
 
         # Execute run_shell_command w/sudo and/or su_user
         command = 'mv {0} {1}'.format(temp_file, remote_file)
@@ -239,7 +239,7 @@ def put_file(
 
     # No sudo and no su_user, so just upload it!
     else:
-        _put_file(host, file_io, remote_file)
+        _put_file(host, filename_or_io, remote_file)
 
     if print_output:
         print('{0}file uploaded: {1}'.format(host.print_prefix, remote_file))

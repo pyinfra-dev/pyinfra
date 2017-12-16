@@ -336,8 +336,8 @@ def make_hash(obj):
 
 class get_file_io(object):
     '''
-    Given either a filename or an existing IO object, this context processor will open
-    and close filenames, and leave IO objects alone.
+    Given either a filename or an existing IO object, this context processor
+    will open and close filenames, and leave IO objects alone.
     '''
 
     close = False
