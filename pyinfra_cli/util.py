@@ -30,6 +30,7 @@ except ImportError:
 import click
 
 from pyinfra import logger, pseudo_host
+from pyinfra.api.host import Host
 from pyinfra.api.util import exec_file
 from pyinfra.hook import HOOKS
 
@@ -129,6 +130,9 @@ def json_encode(obj):
 
     elif isinstance(obj, datetime):
         return obj.isoformat()
+
+    elif isinstance(obj, Host):
+        return obj.name
 
     elif isinstance(obj, io_bases):
         if hasattr(obj, 'name'):
