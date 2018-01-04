@@ -1,3 +1,9 @@
+# v0.5.3 (WIP)
+
++ Fix writing unicode data with `@local`
++ Capture `IOError`s when SFTPing, note where remote disks might be full
++ Properly serialise `Host` objects for `--debug-state`
+
 # v0.5.2
 
 + Add `exclude_dir` and `add_deploy_dir` kwargs to `files.sync`
