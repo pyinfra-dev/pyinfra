@@ -46,7 +46,7 @@ def _run_op(state, host, op_hash):
 
     # ...loop through each command
     for i, command in enumerate(op_data['commands']):
-        status = True
+        status = False
 
         sudo = op_meta['sudo']
         sudo_user = op_meta['sudo_user']
@@ -83,8 +83,6 @@ def _run_op(state, host, op_hash):
 
                 # Custom functions could do anything, so expect anything!
                 except Exception as e:
-                    status = False
-
                     logger.error('{0}{1}'.format(
                         host.print_prefix,
                         click.style(
@@ -110,7 +108,7 @@ def _run_op(state, host, op_hash):
                         print_output=state.print_output,
                     )
 
-                except (timeout_error, socket_error, SSHException) as e:
+                except (timeout_error, socket_error, SSHException, IOError) as e:
                     log_host_command_error(
                         host,
                         e,
@@ -119,7 +117,6 @@ def _run_op(state, host, op_hash):
 
         # Must be a string/shell command: execute it on the server w/op-level preferences
         else:
-            status = False
             stderr = []
 
             try:
