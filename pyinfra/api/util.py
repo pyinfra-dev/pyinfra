@@ -209,6 +209,18 @@ def log_host_command_error(host, e, timeout=0):
             ),
         ))
 
+    elif isinstance(e, IOError):
+        logger.error('{0}{1}'.format(
+            host.print_prefix,
+            click.style('Command IO error: {0}'.format(
+                format_exception(e)), 'red',
+            ),
+        ))
+
+    # Still here? Re-raise!
+    else:
+        raise e
+
 
 def make_command(
     command,
