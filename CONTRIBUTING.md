@@ -32,14 +32,13 @@ scripts/test.sh [api|modules|facts]
 
 ## Guides
 
-+ [How to write operations](https://pyinfra.readthedocs.io/page/api/operations.html)
-+ [How to write facts](https://pyinfra.readthedocs.io/page/api/facts.html)
++ [How to write modules](https://pyinfra.readthedocs.io/page/api/modules.html) (operations + facts)
 + [API reference](https://pyinfra.readthedocs.io/page/api/reference.html)
 
 
 ## Code
 
-+ Always add tests for operations/facts
++ Always add tests for modules (operations + facts)
 + Keep code style consistent:
     - ~90 character lines
     - no hanging indents
