@@ -263,7 +263,7 @@ def load_deploy_file(state, filename, progress):
         progress()
 
         logger.info('{0} {1} {2}'.format(
-            '[{}]'.format(click.style(host.name, bold=True)),
+            host.print_prefix,
             click.style('Ready:', 'green'),
             click.style(filename, bold=True),
         ))
