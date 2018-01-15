@@ -17,6 +17,12 @@ def connect_all(state, progress=None):
     greenlets = {}
 
     for host in state.inventory:
+        # Don't connect to anything within our (top level, --limit) limit
+        if (
+            isinstance(state.limit_hosts, list)
+            and host not in state.limit_hosts
+        ):
+            continue
 
         greenlets[host] = state.pool.spawn(host.connect, state)
 
