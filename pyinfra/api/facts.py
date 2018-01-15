@@ -19,7 +19,7 @@ from socket import (
 import click
 import six
 
-from gevent.lock import Semaphore
+from gevent.lock import BoundedSemaphore
 from paramiko import SSHException
 
 from pyinfra import logger
@@ -29,6 +29,7 @@ from .util import get_arg_value, log_host_command_error, make_hash, underscore
 
 # Index of snake_case facts -> CamelCase classes
 FACTS = {}
+FACT_LOCK = BoundedSemaphore()
 
 
 def is_fact(name):
@@ -107,92 +108,87 @@ def get_facts(state, name, args=None):
     # Locks are used to maintain order.
     fact_hash = make_hash((name, args, sudo, sudo_user, su_user, ignore_errors))
 
-    # Lock!
-    state.fact_locks.setdefault(fact_hash, Semaphore()).acquire()
-
     # Already got this fact? Unlock and return 'em
     if state.facts.get(fact_hash):
-        state.fact_locks[fact_hash].release()
         return state.facts[fact_hash]
 
-    # Execute the command for each state inventory in a greenlet
-    greenlets = {}
+    with FACT_LOCK:
+        # Execute the command for each state inventory in a greenlet
+        greenlets = {}
 
-    for host in state.inventory:
-        if host in state.ready_host_names:
-            continue
+        for host in state.inventory:
+            # if host in state.ready_hosts:
+            #     continue
 
-        # Work out the command
-        command = fact.command
+            # Work out the command
+            command = fact.command
 
-        if ismethod(command):
-            # Generate actual arguments by pasing strings as jinja2 templates
-            host_args = [get_arg_value(state, host, arg) for arg in args]
+            if ismethod(command):
+                # Generate actual arguments by pasing strings as jinja2 templates
+                host_args = [get_arg_value(state, host, arg) for arg in args]
 
-            command = command(*host_args)
+                command = command(*host_args)
 
-        greenlets[host.name] = state.fact_pool.spawn(
-            host.run_shell_command, state, command,
-            sudo=sudo, sudo_user=sudo_user, su_user=su_user,
-            print_output=state.print_fact_output,
-        )
-
-    hostname_facts = {}
-    failed_hosts = set()
-
-    # Collect the facts and any failures
-    for hostname, greenlet in six.iteritems(greenlets):
-        status = False
-        stdout = []
-
-        try:
-            status, stdout, _ = greenlet.get()
-
-        except (timeout_error, socket_error, SSHException) as e:
-            kwargs = {}
-
-            if not ignore_errors:
-                kwargs['callback'] = lambda: failed_hosts.add(hostname)
-
-            log_host_command_error(
-                host,
-                e,
-                timeout=current_op_meta['timeout'],
-                **kwargs
+            greenlets[host] = state.fact_pool.spawn(
+                host.run_shell_command, state, command,
+                sudo=sudo, sudo_user=sudo_user, su_user=su_user,
+                print_output=state.print_fact_output,
             )
 
-        data = fact.default()
+        hostname_facts = {}
+        failed_hosts = set()
 
-        if status and stdout:
-            data = fact.process(stdout)
+        # Collect the facts and any failures
+        for host, greenlet in six.iteritems(greenlets):
+            status = False
+            stdout = []
 
-        hostname_facts[hostname] = data
+            try:
+                status, stdout, _ = greenlet.get()
 
-    log_name = click.style(name, bold=True)
+            except (timeout_error, socket_error, SSHException) as e:
+                kwargs = {}
 
-    if args:
-        log = 'Loaded fact {0}: {1}'.format(log_name, args)
-    else:
-        log = 'Loaded fact {0}'.format(log_name)
+                if not ignore_errors:
+                    kwargs['callback'] = lambda: failed_hosts.add(host)
 
-    if state.print_fact_info:
-        logger.info(log)
-    else:
-        logger.debug(log)
+                log_host_command_error(
+                    host,
+                    e,
+                    timeout=current_op_meta['timeout'],
+                    **kwargs
+                )
 
-    # Check we've not failed
-    if not ignore_errors:
-        state.fail_hosts(failed_hosts)
+            data = fact.default()
 
-    # Assign the facts
-    state.facts[fact_hash] = hostname_facts
+            if status and stdout:
+                data = fact.process(stdout)
 
-    # Release the lock, return the data
-    state.fact_locks[fact_hash].release()
+            hostname_facts[host] = data
+
+        log_name = click.style(name, bold=True)
+
+        if args:
+            log = 'Loaded fact {0}: {1}'.format(log_name, args)
+        else:
+            log = 'Loaded fact {0}'.format(log_name)
+
+        if state.print_fact_info:
+            logger.info(log)
+        else:
+            logger.debug(log)
+
+        # Check we've not failed
+        if not ignore_errors:
+            state.fail_hosts(failed_hosts)
+
+        # Assign the facts
+        state.facts[fact_hash] = hostname_facts
+
     return state.facts[fact_hash]
 
 
-def get_fact(state, hostname, name):
+def get_fact(state, host, name):
     '''
     Wrapper around ``get_facts`` returning facts for one host or a function
     that does.
@@ -203,7 +199,7 @@ def get_fact(state, hostname, name):
         def wrapper(*args):
             fact_data = get_facts(state, name, args=args)
 
-            return fact_data.get(hostname)
+            return fact_data.get(host)
         return wrapper
 
     # Expecting the fact as a return value
@@ -211,4 +207,4 @@ def get_fact(state, hostname, name):
         # Get the fact
         fact_data = get_facts(state, name)
 
-        return fact_data.get(hostname)
+        return fact_data.get(host)
