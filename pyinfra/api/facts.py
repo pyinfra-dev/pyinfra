@@ -86,13 +86,6 @@ def get_facts(state, name, args=None):
     # Create an instance of the fact
     fact = FACTS[name]()
 
-    # If we're inactive: just return the defaults
-    if not state.active:
-        return {
-            host.name: fact.default()
-            for host in state.inventory
-        }
-
     # Apply args or defaults
     sudo = state.config.SUDO
     sudo_user = state.config.SUDO_USER

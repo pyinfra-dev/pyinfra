@@ -125,9 +125,6 @@ def operation(func=None, pipeline_facts=None):
             state = pseudo_state._module
             host = pseudo_host._module
 
-            if not state.active:
-                return OperationMeta()
-
             if state.in_op:
                 raise PyinfraError((
                     'Nested operation called without state/host: {0}'
