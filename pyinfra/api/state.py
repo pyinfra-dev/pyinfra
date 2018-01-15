@@ -73,9 +73,6 @@ class State(object):
     # Current op hash for use w/facts
     current_op_hash = None
 
-    # List of hosts to only apply operations to
-    limit_hosts = None
-
     # Name of the current deploy
     in_deploy = False
     deploy_name = None
@@ -92,7 +89,7 @@ class State(object):
     deploy_dir = None  # base directory for locating files/templates/etc
     is_cli = False
 
-    def __init__(self, inventory, config=None):
+    def __init__(self, inventory, config=None, initial_limit=None):
         # Config validation
         #
 
@@ -161,6 +158,12 @@ class State(object):
         # Hosts that are ready to be deployed to
         self.ready_hosts = set()
 
+        # Track the *initial* limit hosts as we *don't* want to show "skipped"
+        # for these as they're essentially not include in the deploy - but *are*
+        # available for facts (eg master IP when only deploying slaves).
+        self.initial_limit_hosts = initial_limit
+        # Limit hosts changes dynamically to limit operations to a subset of hosts
+        self.limit_hosts = initial_limit
 
         # Op basics
         self.op_order = []  # list of operation hashes

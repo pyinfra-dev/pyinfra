@@ -240,7 +240,31 @@ class Inventory(object):
                 yield host
 
             return
+
+        for host in six.itervalues(self.hosts):
+            should_yield = True
+
+            # Host is not active?
+            if host not in self.state.active_hosts:
+                should_yield = False
+
+            # Host not included in the initial limit?
+            if (
+                self.state.deploying
+                and self.state.initial_limit_hosts is not None
+                and host not in self.state.initial_limit_hosts
+            ):
+                should_yield = False
+
+            if should_yield:
                 yield host
+
+    def len_all_hosts(self):
+        '''
+        Returns the number of hosts in the inventory, active or not.
+        '''
+
+        return len(self.hosts)
 
     def iter_all_hosts(self):
         '''

@@ -7,6 +7,7 @@ from __future__ import division, print_function
 import logging
 import sys
 
+from fnmatch import fnmatch
 from os import getcwd, path
 
 import click
@@ -21,7 +22,7 @@ from pyinfra import (
 from pyinfra.api import State
 from pyinfra.api.attrs import FallbackAttrData
 from pyinfra.api.connect import connect_all
-from pyinfra.api.exceptions import PyinfraError
+from pyinfra.api.exceptions import NoGroupError, PyinfraError
 from pyinfra.api.facts import get_facts, is_fact
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
@@ -327,13 +328,26 @@ def _main(
     inventory, inventory_group = make_inventory(
         inventory,
         deploy_dir=deploy_dir,
-        limit=limit,
+        ssh_port=port,
         ssh_user=user,
         ssh_key=key,
         ssh_key_password=key_password,
         ssh_password=password,
-        ssh_port=port,
     )
+
+    # Apply any --limit to the inventory
+    limit_hosts = None
+
+    if limit:
+        try:
+            limit_hosts = inventory.get_group(limit)
+        except NoGroupError:
+            limits = limit.split(',')
+
+            limit_hosts = [
+                host for host in inventory
+                if any(fnmatch(host.name, limit) for limit in limits)
+            ]
 
     # If --debug-data dump & exit
     if debug_data:
@@ -343,8 +357,9 @@ def _main(
     # Attach to pseudo inventory
     pseudo_inventory.set(inventory)
 
-    # Create/set the state
-    state = State(inventory, config)
+    # Create/set the state, passing any initial --limit
+    state = State(inventory, config, initial_limit=limit_hosts)
+
     state.is_cli = True
     state.print_lines = True
     state.deploy_dir = deploy_dir

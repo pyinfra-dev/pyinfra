@@ -2,7 +2,6 @@
 # File: pyinfra_cli/inventory.py
 # Desc: inventory creation for the CLI
 
-from fnmatch import fnmatch
 from os import listdir, path
 from types import GeneratorType
 
@@ -90,9 +89,12 @@ def get_group_data(deploy_dir):
 
 def make_inventory(
     inventory_filename,
-    deploy_dir=None, limit=None,
-    ssh_user=None, ssh_key=None, ssh_key_password=None,
-    ssh_port=None, ssh_password=None,
+    deploy_dir=None,
+    ssh_port=None,
+    ssh_user=None,
+    ssh_key=None,
+    ssh_key_password=None,
+    ssh_password=None,
 ):
     '''
     Builds a ``pyinfra.api.Inventory`` from the filesystem. If the file does not exist
@@ -190,35 +192,6 @@ def make_inventory(
     # to hosts, so we need to support that.
     for name, data in six.iteritems(group_data):
         groups[name] = ([], data)
-
-    # Apply any limit to all_hosts
-    if limit:
-        # Limits can be groups
-        limit_groupname = limit
-        if limit_groupname in groups:
-            all_hosts = [
-                host[0] if isinstance(host, tuple) else host
-                for host in groups[limit_groupname][0]
-            ]
-
-        # Or hostnames w/*wildcards
-        else:
-            limits = limit.split(',')
-
-            all_hosts = [
-                host for host in all_hosts
-                if (
-                    isinstance(host, tuple)
-                    and any(fnmatch(host[0], limit) for limit in limits)
-                )
-                or (
-                    isinstance(host, six.string_types)
-                    and any(fnmatch(host, limit) for limit in limits)
-                )
-            ]
-
-        # Reassign the all group w/limit
-        groups['all'] = (all_hosts, all_data)
 
     return Inventory(
         groups.pop('all'),
