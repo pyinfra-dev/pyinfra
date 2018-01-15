@@ -18,6 +18,7 @@ def connect_all(state, progress=None):
 
     for host in state.inventory:
 
+        greenlets[host] = state.pool.spawn(host.connect, state)
 
     # Wait for all the connections to complete
     for _ in gevent.iwait(greenlets.values()):
@@ -27,21 +28,12 @@ def connect_all(state, progress=None):
 
     # Get/set the results
     failed_hosts = set()
-    connected_host_names = set()
 
-    for name, greenlet in six.iteritems(greenlets):
+    for host, greenlet in six.iteritems(greenlets):
         client = greenlet.get()
 
         if not client:
-            failed_hosts.add(name)
-        else:
-            connected_host_names.add(name)
-
-    # Add connected hosts to inventory
-    state.connected_host_names = connected_host_names
-
-    # Add all the hosts as active
-    state.active_host_names = set(greenlets.keys())
+            failed_hosts.add(host)
 
     # Remove those that failed, triggering FAIL_PERCENT check
     state.fail_hosts(failed_hosts)

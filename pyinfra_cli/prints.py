@@ -13,6 +13,7 @@ import six
 
 from pyinfra import logger
 from pyinfra.api.facts import get_fact_names
+from pyinfra.api.host import Host
 from pyinfra.api.operation import get_operation_names
 
 from .util import json_encode
@@ -37,6 +38,15 @@ def _get_group_combinations(inventory):
     return group_combinations
 
 
+def _jsonify(data, *args, **kwargs):
+    data = {
+        key.name if isinstance(key, Host) else key: value
+        for key, value in six.iteritems(data)
+    }
+
+    return json.dumps(data, *args, **kwargs)
+
+
 def dump_trace(exc_info):
     # Dev mode, so lets dump as much data as we have
     error_type, value, trace = exc_info
@@ -49,16 +59,16 @@ def dump_trace(exc_info):
 def dump_state(state):
     print()
     print('--> Gathered facts:')
-    print(json.dumps(state.facts, indent=4, default=json_encode))
+    print(_jsonify(state.facts, indent=4, default=json_encode))
     print()
     print('--> Proposed operations:')
-    print(json.dumps(state.ops, indent=4, default=json_encode))
+    print(_jsonify(state.ops, indent=4, default=json_encode))
     print()
     print('--> Operation meta:')
-    print(json.dumps(state.op_meta, indent=4, default=json_encode))
+    print(_jsonify(state.op_meta, indent=4, default=json_encode))
     print()
     print('--> Operation order:')
-    print(json.dumps(state.op_order, indent=4, default=json_encode))
+    print(_jsonify(state.op_order, indent=4, default=json_encode))
 
 
 def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
@@ -101,14 +111,14 @@ def print_operations_list():
 
 
 def print_fact(fact_data):
-    print(json.dumps(fact_data, indent=4, default=json_encode))
+    print(_jsonify(fact_data, indent=4, default=json_encode))
 
 
 def print_inventory(inventory):
     for host in inventory:
         print()
         print('--> Data for: {0}'.format(click.style(host.name, bold=True)))
-        print(json.dumps(host.data.dict(), indent=4, default=json_encode))
+        print(_jsonify(host.data.dict(), indent=4, default=json_encode))
 
 
 def print_facts(facts):
@@ -176,10 +186,13 @@ def print_meta(state, inventory):
             rows.append((logger.info, 'Ungrouped:'))
 
         for host in hosts:
-            meta = state.meta[host.name]
+            if isinstance(state.limit_hosts, list) and host not in state.limit_hosts:
+                continue
+
+            meta = state.meta[host]
 
             # Didn't connect to this host?
-            if host.name not in state.connected_host_names:
+            if host not in state.connected_hosts:
                 rows.append((logger.info, [
                     host.style_print_prefix('red', bold=True),
                     click.style('No connection', 'red'),
@@ -211,17 +224,20 @@ def print_results(state, inventory):
             rows.append((logger.info, 'Ungrouped:'))
 
         for host in hosts:
+            if isinstance(state.limit_hosts, list) and host not in state.limit_hosts:
+                continue
+
             # Didn't conenct to this host?
-            if host.name not in state.connected_host_names:
+            if host not in state.connected_hosts:
                 rows.append((logger.info, [
                     host.style_print_prefix('red', bold=True),
                     click.style('No connection', 'red'),
                 ]))
                 continue
 
-            results = state.results[host.name]
+            results = state.results[host]
 
-            meta = state.meta[host.name]
+            meta = state.meta[host]
             success_ops = results['success_ops']
             error_ops = results['error_ops']
 

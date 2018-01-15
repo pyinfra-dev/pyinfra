@@ -12,15 +12,15 @@ from .facts import get_fact, is_fact
 
 
 class HostFacts(object):
-    def __init__(self, inventory, name):
+    def __init__(self, inventory, host):
         self.inventory = inventory
-        self.name = name
+        self.host = host
 
     def __getattr__(self, key):
         if not is_fact(key):
             raise AttributeError('No such fact: {0}'.format(key))
 
-        fact = get_fact(self.inventory.state, self.name, key)
+        fact = get_fact(self.inventory.state, self.host, key)
         return wrap_attr_data(key, fact)
 
 
@@ -43,7 +43,7 @@ class Host(object):
         self.executor = executor
 
         # Attach the fact proxy
-        self.fact = HostFacts(inventory, name)
+        self.fact = HostFacts(inventory, self)
 
     def __repr__(self):
         return self.name
@@ -75,6 +75,7 @@ class Host(object):
     def connect(self, state, *args, **kwargs):
         if not self.connection:
             self.connection = self.executor.connect(state, self, *args, **kwargs)
+            state.activate_host(self)
 
         return self.connection
 

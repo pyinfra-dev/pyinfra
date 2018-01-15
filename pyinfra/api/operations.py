@@ -22,10 +22,8 @@ from pyinfra.api.util import format_exception, log_host_command_error
 
 
 def _run_op(state, host, op_hash):
-    name = host.name
-
     # Noop for this host?
-    if op_hash not in state.ops[name]:
+    if op_hash not in state.ops[host]:
         logger.info('{0}{1}'.format(
             host.print_prefix,
             click.style(
@@ -35,11 +33,11 @@ def _run_op(state, host, op_hash):
         ))
         return True
 
-    op_data = state.ops[name][op_hash]
+    op_data = state.ops[host][op_hash]
     op_meta = state.op_meta[op_hash]
 
     logger.debug('Starting operation {0} on {1}'.format(
-        ', '.join(op_meta['names']), name,
+        ', '.join(op_meta['names']), host,
     ))
 
     state.ops_run.add(op_hash)
@@ -77,7 +75,7 @@ def _run_op(state, host, op_hash):
 
                 try:
                     status = func(
-                        state, state.inventory.get_host(name),
+                        state, host,
                         *args, **kwargs
                     )
 
@@ -152,13 +150,13 @@ def _run_op(state, host, op_hash):
         if status is False:
             break
         else:
-            state.results[name]['commands'] += 1
+            state.results[host]['commands'] += 1
 
     # Commands didn't break, so count our successes & return True!
     else:
         # Count success
-        state.results[name]['ops'] += 1
-        state.results[name]['success_ops'] += 1
+        state.results[host]['ops'] += 1
+        state.results[host]['success_ops'] += 1
 
         logger.info('{0}{1}'.format(
             host.print_prefix,
@@ -175,7 +173,7 @@ def _run_op(state, host, op_hash):
         return True
 
     # Up error_ops & log
-    state.results[name]['error_ops'] += 1
+    state.results[host]['error_ops'] += 1
 
     if op_meta['ignore_errors']:
         logger.warning('{0}{1}'.format(
@@ -194,16 +192,14 @@ def _run_op(state, host, op_hash):
 
     # Ignored, op "completes" w/ ignored error
     if op_meta['ignore_errors']:
-        state.results[name]['ops'] += 1
+        state.results[host]['ops'] += 1
 
     # Unignored error -> False
     return False
 
 
 def _run_server_ops(state, host, progress=None):
-    name = host.name
-
-    logger.debug('Running all ops on {0}'.format(name))
+    logger.debug('Running all ops on {0}'.format(host))
 
     for op_hash in state.op_order:
         op_meta = state.op_meta[op_hash]
@@ -211,7 +207,7 @@ def _run_server_ops(state, host, progress=None):
         logger.info('--> {0} {1} on {2}'.format(
             click.style('--> Starting operation:', 'blue'),
             click.style(', '.join(op_meta['names']), bold=True),
-            click.style(name, bold=True),
+            click.style(host, bold=True),
         ))
 
         result = _run_op(state, host, op_hash)
@@ -222,7 +218,7 @@ def _run_server_ops(state, host, progress=None):
 
         if result is False:
             raise PyinfraError('Error in operation {0} on {1}'.format(
-                ', '.join(op_meta['names']), name,
+                ', '.join(op_meta['names']), host,
             ))
 
         if state.print_lines:
@@ -248,7 +244,7 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
                     progress=progress,
                 )
             except PyinfraError:
-                state.fail_hosts({host.name})
+                state.fail_hosts({host})
 
         return
 
@@ -285,7 +281,7 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
             tuple(op_meta['args']) if op_meta['args'] else '',
         ))
 
-        failed_hosts = set()
+        failed_host_names = set()
 
         if op_meta['serial']:
             # For each host, run the op
@@ -297,7 +293,7 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
                     progress()
 
                 if not result:
-                    failed_hosts.add(host.name)
+                    failed_host_names.add(host.name)
 
         else:
             # Start with the whole inventory in one batch
@@ -330,11 +326,11 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
                 # Get all the results
                 for hostname, greenlet in six.iteritems(greenlets):
                     if not greenlet.get():
-                        failed_hosts.add(hostname)
+                        failed_host_names.add(hostname)
 
             # Now all the batches/hosts are complete, fail any failures
             if not op_meta['ignore_errors']:
-                state.fail_hosts(failed_hosts)
+                state.fail_hosts(failed_host_names)
 
         if state.print_lines:
             print()

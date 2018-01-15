@@ -225,28 +225,21 @@ class Inventory(object):
         Returns the number of active inventory hosts.
         '''
 
-        if not self.state or not self.state.active_host_names:
+        if not self.state or not self.state.active_hosts:
             return len(self.hosts)
 
-        return len(self.state.active_host_names)
-
-    def len_all_hosts(self):
-        '''
-        Returns the number of hosts in the inventory, active or not.
-        '''
-
-        return len(self.hosts)
+        return len(self.state.active_hosts)
 
     def __iter__(self):
         '''
         Iterates over active inventory hosts.
         '''
 
-        for host in six.itervalues(self.hosts):
-            if not self.state or not self.state.active_host_names:
+        if not self.state or not self.state.active_hosts:
+            for host in six.itervalues(self.hosts):
                 yield host
 
-            elif host.name in self.state.active_host_names:
+            return
                 yield host
 
     def iter_all_hosts(self):
@@ -254,8 +247,7 @@ class Inventory(object):
         Iterates over all inventory hosts, active or not.
         '''
 
-        for host in six.itervalues(self.hosts):
-            yield host
+        return six.itervalues(self.hosts)
 
     def get_host(self, name, default=NoHostError):
         '''

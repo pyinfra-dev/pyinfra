@@ -247,7 +247,7 @@ def operation(func=None, pipeline_facts=None):
                 'Pushing hash into operation order (host={0}, names={1}): {2}'
             ).format(host.name, names, op_hash))
 
-            previous_op_hash = state.meta[host.name]['latest_op_hash']
+            previous_op_hash = state.meta[host]['latest_op_hash']
 
             if previous_op_hash:
                 # Get the index of the previous op hash and bump after it
@@ -270,7 +270,7 @@ def operation(func=None, pipeline_facts=None):
 
             state.op_order.insert(index, op_hash)
 
-        state.meta[host.name]['latest_op_hash'] = op_hash
+        state.meta[host]['latest_op_hash'] = op_hash
 
         # Check if we're actually running the operation on this host
         #
@@ -339,11 +339,11 @@ def operation(func=None, pipeline_facts=None):
         #
 
         # We're doing some commands, meta/ops++
-        state.meta[host.name]['ops'] += 1
-        state.meta[host.name]['commands'] += len(commands)
+        state.meta[host]['ops'] += 1
+        state.meta[host]['commands'] += len(commands)
 
         # Add the server-relevant commands
-        state.ops[host.name][op_hash] = {
+        state.ops[host][op_hash] = {
             'commands': commands,
         }
 

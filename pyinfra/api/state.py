@@ -90,20 +90,11 @@ class State(object):
 
     # Used in CLI
     deploy_dir = None  # base directory for locating files/templates/etc
-    active = True  # used to disable operation calls when scanning deploy.py for config
     is_cli = False
 
     def __init__(self, inventory, config=None):
-        # Connection storage
-        self.ssh_connections = {}
-        self.sftp_connections = {}
-
-        # Private keys
-        self.private_keys = {}
-
-        # Facts storage
-        self.facts = {}
-        self.fact_locks = {}
+        # Config validation
+        #
 
         # If no config, create one using the defaults
         if config is None:
@@ -141,23 +132,35 @@ class State(object):
                 '    Max recommended value: {2}'
             ).format(config.PARALLEL, nofile_limit, MAX_PARALLEL))
 
+        # Actually initialise the state object
+        #
+
         # Setup greenlet pools
         self.pool = Pool(config.PARALLEL)
         self.fact_pool = Pool(config.PARALLEL)
+
+        # Connection storage
+        self.ssh_connections = {}
+        self.sftp_connections = {}
+
+        # Private keys
+        self.private_keys = {}
+
+        # Facts storage
+        self.facts = {}
+        self.fact_locks = {}
 
         # Assign inventory/config
         self.inventory = inventory
         self.config = config
 
-        # Assign self to inventory & config
-        inventory.state = config.state = self
+        # Hosts we've connected to at any time
+        self.connected_hosts = set()
+        # Hosts we've connected to that *haven't* failed yet
+        self.active_hosts = set()
+        # Hosts that are ready to be deployed to
+        self.ready_hosts = set()
 
-        # Host tracking
-        self.connected_host_names = set()  # host names we managed to connect to
-        self.ready_host_names = set()  # host names ready to be deployed to
-        self.active_host_names = set()  # host names that haven't failed (yet!)
-
-        host_names = [host.name for host in inventory]
 
         # Op basics
         self.op_order = []  # list of operation hashes
@@ -166,36 +169,39 @@ class State(object):
 
         # Op dict for each host
         self.ops = {
-            name: {}
-            for name in host_names
+            host: {}
+            for host in inventory
         }
 
         # Facts dict for each host
         self.facts = {
-            name: {}
-            for name in host_names
+            host: {}
+            for host in inventory
         }
 
         # Meta dict for each host
         self.meta = {
-            name: {
+            host: {
                 'ops': 0,  # one function call in a deploy file
                 'commands': 0,  # actual # of commands to run
                 'latest_op_hash': None,
             }
-            for name in host_names
+            for host in inventory
         }
 
         # Results dict for each host
         self.results = {
-            name: {
+            host: {
                 'ops': 0,  # success_ops + failed ops w/ignore_errors
                 'success_ops': 0,
                 'error_ops': 0,
                 'commands': 0,
             }
-            for name in host_names
+            for host in inventory
         }
+
+        # Assign state back references to inventory & config
+        inventory.state = config.state = self
 
     @contextmanager
     def limit(self, hosts):
@@ -297,24 +303,27 @@ class State(object):
         Flag a ``set`` of hosts as failed, error for ``config.FAIL_PERCENT``.
         '''
 
+        logger.debug('Failing hosts: {0}'.format(', '.join(hosts_to_fail)))
+
         # Remove the failed hosts from the inventory
-        self.active_host_names -= hosts_to_fail
+        self.active_hosts -= hosts_to_fail
 
         # Check we're not above the fail percent
-        active_host_names = self.active_host_names
+        active_hosts = self.active_hosts
 
         # No hosts left!
-        if not active_host_names:
+        if not active_hosts:
             raise PyinfraError('No hosts remaining!')
 
         if self.config.FAIL_PERCENT is not None:
             percent_failed = (
-                1 - len(active_host_names) / self.inventory.len_all_hosts()
+                1 - len(active_hosts) / len(self.connected_hosts)
             ) * 100
 
             if percent_failed > self.config.FAIL_PERCENT:
-                raise PyinfraError('Over {0}% of hosts failed'.format(
+                raise PyinfraError('Over {0}% of hosts failed ({1}%)'.format(
                     self.config.FAIL_PERCENT,
+                    int(round(percent_failed)),
                 ))
 
     def get_temp_filename(self, hash_key=None):
