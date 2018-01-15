@@ -20,6 +20,9 @@ class HostFacts(object):
         if not is_fact(key):
             raise AttributeError('No such fact: {0}'.format(key))
 
+        # Ensure this host is connected
+        self.host.connect(self.inventory.state, silent_success=True)
+
         fact = get_fact(self.inventory.state, self.host, key)
         return wrap_attr_data(key, fact)
 
