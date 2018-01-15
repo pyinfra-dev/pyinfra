@@ -1,4 +1,4 @@
-# v0.5.3 (WIP)
+# v0.5.3
 
 + Fix writing unicode data with `@local`
 + Capture `IOError`s when SFTPing, note where remote disks might be full
