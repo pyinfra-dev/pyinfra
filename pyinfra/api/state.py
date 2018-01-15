@@ -69,6 +69,8 @@ class State(object):
 
     # Whether we are in an @operation (so inner ops aren't wrapped)
     in_op = False
+    # Whether we are deploying (ie hosts are all ready)
+    deploying = False
 
     # Current op hash for use w/facts
     current_op_hash = None
@@ -294,12 +296,25 @@ class State(object):
 
         self.in_deploy = False
 
-    def ready_host(self, host):
+    def activate_host(self, host):
         '''
-        Flag a host as ready, after which facts will not be gathered for it.
+        Flag a host as active.
         '''
 
-        self.ready_host_names.add(host)
+        logger.debug('Activating host: {0}'.format(host))
+
+        # Add to *both* connected and active - active will reduce as hosts fail
+        # but connected will not, enabling us to track failed %.
+        self.connected_hosts.add(host)
+        self.active_hosts.add(host)
+
+    # def ready_host(self, host):
+    #     '''
+    #     Flag a host as ready, after which facts will not be gathered for it.
+    #     '''
+
+    #     logger.debug('Readying host: {0}'.format(host))
+    #     self.ready_hosts.add(host)
 
     def fail_hosts(self, hosts_to_fail):
         '''

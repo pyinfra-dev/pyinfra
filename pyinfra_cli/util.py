@@ -260,8 +260,6 @@ def load_deploy_file(state, filename, progress):
         pseudo_host.set(host)
 
         exec_file(filename)
-
-        state.ready_host(host)
         progress()
 
         logger.info('{0} {1} {2}'.format(
@@ -272,7 +270,3 @@ def load_deploy_file(state, filename, progress):
 
     # Remove any pseudo host
     pseudo_host.reset()
-
-    # Un-ready the hosts - this is so that any hooks or callbacks during the
-    # deploy can still use facts as expected.
-    state.ready_host_names = set()

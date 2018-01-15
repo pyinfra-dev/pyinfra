@@ -235,6 +235,9 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
         no_wait (boolean): whether to wait for all hosts between operations
     '''
 
+    # Flag state as deploy in process
+    state.deploying = True
+
     # Run all ops, but server by server
     if serial:
         for host in state.inventory:
