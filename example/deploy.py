@@ -52,6 +52,9 @@ files.file(
     sudo=True,
 )
 
+# Facts from any inventory hosts work even if not included in --limit
+inventory.get_host('@vagrant/ubuntu14').fact.network_devices
+
 # Ensure the state of directories
 files.directory(
     host.data.env_dir,
