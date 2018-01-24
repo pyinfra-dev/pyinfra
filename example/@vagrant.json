@@ -1,6 +1,7 @@
 {
     "groups": {
         "openbsd6": ["bsd"],
+        "debian7": ["debian"],
         "debian8": ["debian"],
         "debian9": ["debian"]
     }
