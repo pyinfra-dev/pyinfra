@@ -207,7 +207,7 @@ def _run_server_ops(state, host, progress=None):
         logger.info('--> {0} {1} on {2}'.format(
             click.style('--> Starting operation:', 'blue'),
             click.style(', '.join(op_meta['names']), bold=True),
-            click.style(host, bold=True),
+            click.style(host.name, bold=True),
         ))
 
         result = _run_op(state, host, op_hash)
@@ -284,7 +284,7 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
             tuple(op_meta['args']) if op_meta['args'] else '',
         ))
 
-        failed_host_names = set()
+        failed_hosts = set()
 
         if op_meta['serial']:
             # For each host, run the op
@@ -296,7 +296,7 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
                     progress()
 
                 if not result:
-                    failed_host_names.add(host.name)
+                    failed_hosts.add(host)
 
         else:
             # Start with the whole inventory in one batch
@@ -315,7 +315,7 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
             for batch in batches:
                 # Spawn greenlet for each host
                 greenlets = {
-                    host.name: state.pool.spawn(
+                    host: state.pool.spawn(
                         _run_op, state, host, op_hash,
                     )
                     for host in batch
@@ -327,13 +327,13 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
                         progress()
 
                 # Get all the results
-                for hostname, greenlet in six.iteritems(greenlets):
+                for host, greenlet in six.iteritems(greenlets):
                     if not greenlet.get():
-                        failed_host_names.add(hostname)
+                        failed_hosts.add(host)
 
             # Now all the batches/hosts are complete, fail any failures
             if not op_meta['ignore_errors']:
-                state.fail_hosts(failed_host_names)
+                state.fail_hosts(failed_hosts)
 
         if state.print_lines:
             print()
