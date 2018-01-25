@@ -78,7 +78,9 @@ class Host(object):
     def connect(self, state, *args, **kwargs):
         if not self.connection:
             self.connection = self.executor.connect(state, self, *args, **kwargs)
-            state.activate_host(self)
+
+            if self.connection:
+                state.activate_host(self)
 
         return self.connection
 
