@@ -6,6 +6,8 @@ import ast
 
 from os import path
 
+import six
+
 from pyinfra.api import Config
 from pyinfra.api.util import exec_file
 
@@ -26,6 +28,10 @@ def _extract_config_assignments(filename, config):
                 value = False
             else:
                 value = None
+
+        # NameConstant is Python 3+ only
+        elif six.PY3 and isinstance(node.value, ast.NameConstant):
+            value = node.value.value
 
         # Strings
         elif isinstance(node.value, ast.Str):
