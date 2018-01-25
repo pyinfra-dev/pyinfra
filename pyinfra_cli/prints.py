@@ -184,6 +184,15 @@ def print_meta(state, inventory):
     rows = []
 
     for i, (groups, hosts) in enumerate(six.iteritems(group_combinations), 1):
+        hosts = [
+            host for host in hosts
+            if not isinstance(state.limit_hosts, list)
+            or host in state.limit_hosts
+        ]
+
+        if not hosts:
+            continue
+
         if groups:
             rows.append((logger.info, 'Groups: {0}'.format(
                 click.style(' / '.join(groups), bold=True),
@@ -192,9 +201,6 @@ def print_meta(state, inventory):
             rows.append((logger.info, 'Ungrouped:'))
 
         for host in hosts:
-            if isinstance(state.limit_hosts, list) and host not in state.limit_hosts:
-                continue
-
             meta = state.meta[host]
 
             # Didn't connect to this host?
@@ -222,6 +228,15 @@ def print_results(state, inventory):
     rows = []
 
     for i, (groups, hosts) in enumerate(six.iteritems(group_combinations), 1):
+        hosts = [
+            host for host in hosts
+            if not isinstance(state.limit_hosts, list)
+            or host in state.limit_hosts
+        ]
+
+        if not hosts:
+            continue
+
         if groups:
             rows.append((logger.info, 'Groups: {0}'.format(
                 click.style(' / '.join(groups), bold=True),
@@ -230,9 +245,6 @@ def print_results(state, inventory):
             rows.append((logger.info, 'Ungrouped:'))
 
         for host in hosts:
-            if isinstance(state.limit_hosts, list) and host not in state.limit_hosts:
-                continue
-
             # Didn't conenct to this host?
             if host not in state.connected_hosts:
                 rows.append((logger.info, [
