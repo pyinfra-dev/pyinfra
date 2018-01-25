@@ -77,7 +77,7 @@ class FactBase(object):
         }
 
 
-def get_facts(state, name, args=None):
+def get_facts(state, name, args=None, ensure_hosts=None):
     '''
     Get a single fact for all hosts in the state.
     '''
@@ -109,14 +109,27 @@ def get_facts(state, name, args=None):
     fact_hash = make_hash((name, args, sudo, sudo_user, su_user, ignore_errors))
 
     # Already got this fact? Unlock and return 'em
-    if state.facts.get(fact_hash):
-        return state.facts[fact_hash]
+    current_facts = state.facts.get(fact_hash, {})
+    if current_facts:
+        if not ensure_hosts or all(
+            host in current_facts for host in ensure_hosts
+        ):
+            return current_facts
 
     with FACT_LOCK:
         # Execute the command for each state inventory in a greenlet
         greenlets = {}
 
-        for host in state.inventory:
+        # Add any hosts we must have, whether considered in the inventory or not
+        # (these hosts might be outside the --limit or current op limit_hosts).
+        hosts = set(state.inventory)
+        if ensure_hosts:
+            hosts.update(ensure_hosts)
+
+        for host in hosts:
+            if host in current_facts:
+                continue
+
             # if host in state.ready_hosts:
             #     continue
 
@@ -183,7 +196,7 @@ def get_facts(state, name, args=None):
             state.fail_hosts(failed_hosts)
 
         # Assign the facts
-        state.facts[fact_hash] = hostname_facts
+        state.facts.setdefault(fact_hash, {}).update(hostname_facts)
 
     return state.facts[fact_hash]
 
@@ -197,7 +210,7 @@ def get_fact(state, host, name):
     # Expecting a function to return
     if callable(FACTS[name].command):
         def wrapper(*args):
-            fact_data = get_facts(state, name, args=args)
+            fact_data = get_facts(state, name, args=args, ensure_hosts=(host,))
 
             return fact_data.get(host)
         return wrapper
@@ -205,6 +218,6 @@ def get_fact(state, host, name):
     # Expecting the fact as a return value
     else:
         # Get the fact
-        fact_data = get_facts(state, name)
+        fact_data = get_facts(state, name, ensure_hosts=(host,))
 
         return fact_data.get(host)
