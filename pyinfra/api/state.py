@@ -333,7 +333,7 @@ class State(object):
 
         if self.config.FAIL_PERCENT is not None:
             percent_failed = (
-                1 - len(active_hosts) / len(self.connected_hosts)
+                1 - len(active_hosts) / self.inventory.len_all_hosts()
             ) * 100
 
             if percent_failed > self.config.FAIL_PERCENT:
