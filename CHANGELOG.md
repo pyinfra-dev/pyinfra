@@ -1,3 +1,13 @@
+# v0.6 (WIP)
+
++ Make `--limit` apply the limit similarly to `state.limit`
+    - makes it possible to execute facts on hosts outside the `--limit`
+    - `--limit` no longer alters the inventory, instead provides an "initial" state limit
++ Refactor how we track host state throughout deploy
++ Refactor facts to only gather missing ones (enabling partial gathering)
++ Fix boolean constant detection with AST in Python3
+
+
 # v0.5.3
 
 + Fix writing unicode data with `@local`
