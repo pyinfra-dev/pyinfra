@@ -38,12 +38,18 @@ def _get_group_combinations(inventory):
     return group_combinations
 
 
-def _jsonify(data, *args, **kwargs):
-    data = {
-        key.name if isinstance(key, Host) else key: value
-        for key, value in six.iteritems(data)
-    }
+def _stringify_host_keys(data):
+    if isinstance(data, dict):
+        return {
+            key.name if isinstance(key, Host) else key: _stringify_host_keys(value)
+            for key, value in six.iteritems(data)
+        }
 
+    return data
+
+
+def _jsonify(data, *args, **kwargs):
+    data = _stringify_host_keys(data)
     return json.dumps(data, *args, **kwargs)
 
 
