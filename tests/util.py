@@ -182,7 +182,7 @@ class patch_files(object):
         self.patches = [
             patch(
                 'pyinfra.modules.files.path.isfile',
-                lambda *args, **kwargs: True, create=True
+                lambda *args, **kwargs: True, create=True,
             ),
             patch('pyinfra.modules.files.open', self.get_file, create=True),
             patch('pyinfra.api.util.open', self.get_file, create=True),

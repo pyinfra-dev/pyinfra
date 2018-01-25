@@ -49,7 +49,7 @@ class FakeSSHClient(object):
         return (
             channel,
             FakeBuffer([], channel),
-            FakeBuffer([], channel)
+            FakeBuffer([], channel),
         )
 
 
