@@ -15,11 +15,20 @@ from pyinfra import logger
 from pyinfra.api.util import get_file_io, make_command, read_buffer
 
 
-def connect(state, host, **kwargs):
-    logger.info('{0}{1}'.format(
+def connect(state, host, for_fact=None):
+    # Log
+    log_message = '{0}{1}'.format(
         host.print_prefix,
-        click.style('Ready', 'green'),
-    ))
+        click.style('Connected', 'green'),
+    )
+
+    if for_fact:
+        log_message = '{0}{1}'.format(
+            log_message,
+            ' (for {0} fact)'.format(for_fact),
+        )
+
+    logger.info(log_message)
 
     return True
 

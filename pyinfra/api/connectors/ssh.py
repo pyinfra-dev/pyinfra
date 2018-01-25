@@ -140,7 +140,7 @@ def _make_paramiko_kwargs(state, host):
     return kwargs
 
 
-def connect(state, host, silent_success=False):
+def connect(state, host, for_fact=None):
     '''
     Connect to a single host. Returns the SSH client if succesful. Stateless by
     design so can be run in parallel.
@@ -163,11 +163,18 @@ def connect(state, host, silent_success=False):
         AgentRequestHandler(session)
 
         # Log
-        if not silent_success:
-            logger.info('{0}{1}'.format(
-                host.print_prefix,
-                click.style('Connected', 'green'),
-            ))
+        log_message = '{0}{1}'.format(
+            host.print_prefix,
+            click.style('Connected', 'green'),
+        )
+
+        if for_fact:
+            log_message = '{0}{1}'.format(
+                log_message,
+                ' (for {0} fact)'.format(for_fact),
+            )
+
+        logger.info(log_message)
 
         return client
 
