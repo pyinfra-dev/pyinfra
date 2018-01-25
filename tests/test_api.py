@@ -2,12 +2,10 @@
 # File: tests/test_api.py
 # Desc: tests for the pyinfra API
 
-from socket import error as socket_error, gaierror
 from unittest import TestCase
 
 from mock import mock_open, patch
 from paramiko import (
-    AuthenticationException,
     PasswordRequiredException,
     RSAKey,
     SFTPClient,
@@ -16,7 +14,6 @@ from paramiko import (
 )
 from paramiko.agent import AgentRequestHandler
 
-from pyinfra import pseudo_host, pseudo_state
 from pyinfra.api import Config, Inventory, State
 from pyinfra.api.connect import connect_all
 from pyinfra.api.connectors import ssh
@@ -34,7 +31,6 @@ from .paramiko_util import (
     FakeSFTPClient,
     FakeSSHClient,
 )
-from .util import create_host, FakeState
 
 
 def make_inventory(hosts=('somehost', 'anotherhost'), **kwargs):
@@ -118,7 +114,7 @@ class TestSSHApi(TestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        self.assertEqual(len(state.connected_host_names), 2)
+        self.assertEqual(len(state.connected_hosts), 2)
 
     def test_connect_all_password(self):
         '''
@@ -128,21 +124,21 @@ class TestSSHApi(TestCase):
         inventory = make_inventory(ssh_password='test')
 
         # Get a host
-        host = inventory['somehost']
-        self.assertEqual(host.data.ssh_password, 'test')
+        somehost = inventory.get_host('somehost')
+        self.assertEqual(somehost.data.ssh_password, 'test')
 
         state = State(inventory, Config())
         connect_all(state)
 
-        self.assertEqual(len(state.connected_host_names), 2)
+        self.assertEqual(len(state.connected_hosts), 2)
 
     def test_connect_with_ssh_key(self):
         state = State(make_inventory(hosts=(
             ('somehost', {'ssh_key': 'testkey'}),
         )), Config())
 
-        with patch('pyinfra.api.connect.path.isfile', lambda *args, **kwargs: True), \
-                patch('pyinfra.api.connect.RSAKey.from_private_key_file') as fake_key_open:
+        with patch('pyinfra.api.connectors.ssh.path.isfile', lambda *args, **kwargs: True), \
+                patch('pyinfra.api.connectors.ssh.RSAKey.from_private_key_file') as fake_key_open:
 
             fake_key = FakeRSAKey()
             fake_key_open.return_value = fake_key
@@ -171,10 +167,10 @@ class TestSSHApi(TestCase):
         )), Config())
 
         with patch(
-            'pyinfra.api.connect.path.isfile',
+            'pyinfra.api.connectors.ssh.path.isfile',
             lambda *args, **kwargs: True,
         ), patch(
-            'pyinfra.api.connect.RSAKey.from_private_key_file',
+            'pyinfra.api.connectors.ssh.RSAKey.from_private_key_file',
         ) as fake_key_open:
 
             def fake_key_open_fail(*args, **kwargs):
@@ -239,15 +235,19 @@ class TestStateApi(PatchSSHTest):
         with self.assertRaises(PyinfraError) as context:
             connect_all(state)
 
-        self.assertEqual(context.exception.args[0], 'Over 1% of hosts failed')
+        self.assertEqual(context.exception.args[0], 'Over 1% of hosts failed (33%)')
 
         # Ensure the other two did connect
-        self.assertEqual(len(state.connected_host_names), 2)
+        self.assertEqual(len(state.connected_hosts), 2)
 
 
 class TestOperationsApi(PatchSSHTest):
     def test_op(self):
-        state = State(make_inventory(), Config())
+        inventory = make_inventory()
+        somehost = inventory.get_host('somehost')
+        anotherhost = inventory.get_host('anotherhost')
+
+        state = State(inventory, Config())
 
         # Enable printing on this test to catch any exceptions in the formatting
         state.print_output = True
@@ -285,7 +285,7 @@ class TestOperationsApi(PatchSSHTest):
 
         # Ensure the commands
         self.assertEqual(
-            state.ops['somehost'][first_op_hash]['commands'],
+            state.ops[somehost][first_op_hash]['commands'],
             [
                 'touch /var/log/pyinfra.log',
                 'chmod 644 /var/log/pyinfra.log',
@@ -304,21 +304,23 @@ class TestOperationsApi(PatchSSHTest):
         run_ops(state)
 
         # Ensure ops completed OK
-        self.assertEqual(state.results['somehost']['success_ops'], 1)
-        self.assertEqual(state.results['somehost']['ops'], 1)
-        self.assertEqual(state.results['anotherhost']['success_ops'], 1)
-        self.assertEqual(state.results['anotherhost']['ops'], 1)
+        self.assertEqual(state.results[somehost]['success_ops'], 1)
+        self.assertEqual(state.results[somehost]['ops'], 1)
+        self.assertEqual(state.results[anotherhost]['success_ops'], 1)
+        self.assertEqual(state.results[anotherhost]['ops'], 1)
 
         # And w/o errors
-        self.assertEqual(state.results['somehost']['error_ops'], 0)
-        self.assertEqual(state.results['anotherhost']['error_ops'], 0)
+        self.assertEqual(state.results[somehost]['error_ops'], 0)
+        self.assertEqual(state.results[anotherhost]['error_ops'], 0)
 
         # And with the different modes
         run_ops(state, serial=True)
         run_ops(state, no_wait=True)
 
     def test_file_op(self):
-        state = State(make_inventory(), Config())
+        inventory = make_inventory()
+
+        state = State(inventory, Config())
         connect_all(state)
 
         with patch('pyinfra.modules.files.path.isfile', lambda *args, **kwargs: True):
@@ -359,9 +361,12 @@ class TestOperationsApi(PatchSSHTest):
             {'First op name'},
         )
 
+        somehost = inventory.get_host('somehost')
+        anotherhost = inventory.get_host('anotherhost')
+
         # Ensure first op has the right (upload) command
         self.assertEqual(
-            state.ops['somehost'][first_op_hash]['commands'],
+            state.ops[somehost][first_op_hash]['commands'],
             [
                 ('files/file.txt', '/home/vagrant/file.txt'),
             ],
@@ -379,14 +384,14 @@ class TestOperationsApi(PatchSSHTest):
             run_ops(state)
 
         # Ensure ops completed OK
-        self.assertEqual(state.results['somehost']['success_ops'], 3)
-        self.assertEqual(state.results['somehost']['ops'], 3)
-        self.assertEqual(state.results['anotherhost']['success_ops'], 3)
-        self.assertEqual(state.results['anotherhost']['ops'], 3)
+        self.assertEqual(state.results[somehost]['success_ops'], 3)
+        self.assertEqual(state.results[somehost]['ops'], 3)
+        self.assertEqual(state.results[anotherhost]['success_ops'], 3)
+        self.assertEqual(state.results[anotherhost]['ops'], 3)
 
         # And w/o errors
-        self.assertEqual(state.results['somehost']['error_ops'], 0)
-        self.assertEqual(state.results['anotherhost']['error_ops'], 0)
+        self.assertEqual(state.results[somehost]['error_ops'], 0)
+        self.assertEqual(state.results[anotherhost]['error_ops'], 0)
 
     def test_op_hosts_limit(self):
         inventory = make_inventory()
@@ -407,8 +412,8 @@ class TestOperationsApi(PatchSSHTest):
         self.assertEqual(len(state.op_order), 2)
 
         # Ensure somehost has two ops and anotherhost only has the one
-        self.assertEqual(len(state.ops['somehost']), 2)
-        self.assertEqual(len(state.ops['anotherhost']), 1)
+        self.assertEqual(len(state.ops[inventory.get_host('somehost')]), 2)
+        self.assertEqual(len(state.ops[inventory.get_host('anotherhost')]), 1)
 
     def test_op_state_hosts_limit(self):
         inventory = make_inventory()
@@ -430,15 +435,15 @@ class TestOperationsApi(PatchSSHTest):
             add_op(
                 state, server.user,
                 'somehost_user',
-                hosts=inventory['anotherhost'],
+                hosts=inventory.get_host('anotherhost'),
             )
 
         # Ensure there are three ops
         self.assertEqual(len(state.op_order), 3)
 
         # Ensure somehost has two ops and anotherhost only has the one
-        self.assertEqual(len(state.ops['somehost']), 2)
-        self.assertEqual(len(state.ops['anotherhost']), 1)
+        self.assertEqual(len(state.ops[inventory.get_host('somehost')]), 2)
+        self.assertEqual(len(state.ops[inventory.get_host('anotherhost')]), 1)
 
     def test_run_once_serial_op(self):
         inventory = make_inventory()
@@ -451,15 +456,18 @@ class TestOperationsApi(PatchSSHTest):
         # Ensure it's added to op_order
         self.assertEqual(len(state.op_order), 1)
 
+        somehost = inventory.get_host('somehost')
+        anotherhost = inventory.get_host('anotherhost')
+
         # Ensure between the two hosts we only run the one op
-        self.assertEqual(len(state.ops['somehost']) + len(state.ops['anotherhost']), 1)
+        self.assertEqual(len(state.ops[somehost]) + len(state.ops[anotherhost]), 1)
 
         # Check run works
         run_ops(state)
 
         self.assertEqual((
-            state.results['somehost']['success_ops']
-            + state.results['anotherhost']['success_ops']
+            state.results[somehost]['success_ops']
+            + state.results[anotherhost]['success_ops']
         ), 1)
 
     def test_full_op_fail(self):
@@ -482,10 +490,12 @@ class TestOperationsApi(PatchSSHTest):
 
             self.assertEqual(e.exception.args[0], 'No hosts remaining!')
 
+            somehost = inventory.get_host('somehost')
+
             # Ensure the op was not flagged as success
-            self.assertEqual(state.results['somehost']['success_ops'], 0)
+            self.assertEqual(state.results[somehost]['success_ops'], 0)
             # And was flagged asn an error
-            self.assertEqual(state.results['somehost']['error_ops'], 1)
+            self.assertEqual(state.results[somehost]['error_ops'], 1)
 
     def test_ignore_errors_op_fail(self):
         inventory = make_inventory()
@@ -505,46 +515,10 @@ class TestOperationsApi(PatchSSHTest):
             # This should run OK
             run_ops(state)
 
+            somehost = inventory.get_host('somehost')
+
             # Ensure the op was added to results
-            self.assertEqual(state.results['somehost']['ops'], 1)
-            self.assertEqual(state.results['somehost']['error_ops'], 1)
+            self.assertEqual(state.results[somehost]['ops'], 1)
+            self.assertEqual(state.results[somehost]['error_ops'], 1)
             # But not as a success
-            self.assertEqual(state.results['somehost']['success_ops'], 0)
-
-    def test_pseudo_op(self):
-        inventory = make_inventory()
-        state = State(inventory, Config())
-        connect_all(state)
-
-        pseudo_state.set(state)
-        pseudo_host.set(inventory['somehost'])
-
-        # Exceute the op "bare"
-        server.shell('echo "hi"')
-
-        # Ensure this is ignored
-        state.active = False
-        server.shell('echo "hi 2"')
-
-        # We should now have one op
-        self.assertEqual(len(state.op_order), 1)
-
-        # Ensure only somehost has actual op
-        self.assertEqual(len(state.ops['somehost']), 1)
-        self.assertEqual(len(state.ops['anotherhost']), 0)
-
-        # Check we can't call it inside another op
-        state.active = True
-        state.in_op = True
-        with self.assertRaises(PyinfraError):
-            server.shell('echo "hi 3"')
-
-        pseudo_state.reset()
-        pseudo_host.reset()
-
-    def test_pipelining_active_works(self):
-        state = State(make_inventory(), Config())
-        connect_all(state)
-
-        state.pipelining = True
-        add_op(state, server.shell, 'echo "hi"')
+            self.assertEqual(state.results[somehost]['success_ops'], 0)
