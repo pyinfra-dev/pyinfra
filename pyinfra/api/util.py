@@ -337,8 +337,10 @@ def make_hash(obj):
             obj.pyinfra_attr_key if isinstance(obj, AttrBase)
             # Plain strings
             else obj if isinstance(obj, six.string_types)
-            # Objects with names
+            # Objects with __name__s
             else obj.__name__ if hasattr(obj, '__name__')
+            # Objects with names
+            else obj.name if hasattr(obj, 'name')
             # Repr anything else
             else repr(obj)
         )
