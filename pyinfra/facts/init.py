@@ -92,7 +92,7 @@ class InitdStatus(FactBase):
 
     command = '''
         for SERVICE in `ls /etc/init.d/`; do
-            _=`cat /etc/init.d/$SERVICE | grep status`
+            _=`cat /etc/init.d/$SERVICE | grep "### BEGIN INIT INFO"`
 
             if [ "$?" = "0" ]; then
                 STATUS=`/etc/init.d/$SERVICE status`
