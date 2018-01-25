@@ -160,10 +160,6 @@ class State(object):
         # Hosts that are ready to be deployed to
         self.ready_hosts = set()
 
-        # Track the *initial* limit hosts as we *don't* want to show "skipped"
-        # for these as they're essentially not include in the deploy - but *are*
-        # available for facts (eg master IP when only deploying slaves).
-        self.initial_limit_hosts = initial_limit
         # Limit hosts changes dynamically to limit operations to a subset of hosts
         self.limit_hosts = initial_limit
 
@@ -321,7 +317,9 @@ class State(object):
         Flag a ``set`` of hosts as failed, error for ``config.FAIL_PERCENT``.
         '''
 
-        logger.debug('Failing hosts: {0}'.format(', '.join(hosts_to_fail)))
+        logger.debug('Failing hosts: {0}'.format(', '.join(
+            host.name for host in hosts_to_fail,
+        )))
 
         # Remove the failed hosts from the inventory
         self.active_hosts -= hosts_to_fail

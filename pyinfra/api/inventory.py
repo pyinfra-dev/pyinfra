@@ -248,12 +248,8 @@ class Inventory(object):
             if host not in self.state.active_hosts:
                 should_yield = False
 
-            # Host not included in the initial limit?
-            if (
-                self.state.deploying
-                and self.state.initial_limit_hosts is not None
-                and host not in self.state.initial_limit_hosts
-            ):
+            # Limit that host is not in?
+            if self.state.limit_hosts and host not in self.state.limit_hosts:
                 should_yield = False
 
             if should_yield:
