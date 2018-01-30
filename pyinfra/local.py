@@ -20,6 +20,10 @@ def include(filename, hosts=False, when=True):
     '''
     Executes a local python file within the ``pyinfra.pseudo_state.deploy_dir``
     directory.
+
+    Args:
+        hosts (string, list): group name or list of hosts to limit this include to
+        when (bool): indicate whether to trigger operations in this include
     '''
 
     filename = path.join(pseudo_state.deploy_dir, filename)
@@ -44,6 +48,11 @@ def include(filename, hosts=False, when=True):
 def shell(commands, splitlines=False, ignore_errors=False):
     '''
     Subprocess based implementation of pyinfra/api/ssh.py's ``run_shell_command``.
+
+    Args:
+        commands (string, list): command or list of commands to execute
+        spltlines (bool): optionally have the output split by lines
+        ignore_errors (bool): ignore errors when executing these commands
     '''
 
     if isinstance(commands, six.string_types):
