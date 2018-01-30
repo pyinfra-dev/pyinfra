@@ -153,9 +153,9 @@ class State(object):
         self.inventory = inventory
         self.config = config
 
-        # Hosts we've connected to at any time
-        self.connected_hosts = set()
-        # Hosts we've connected to that *haven't* failed yet
+        # Hosts we've activated at any time
+        self.activated_hosts = set()
+        # Active hosts that *haven't* failed yet
         self.active_hosts = set()
         # Hosts that are ready to be deployed to
         self.ready_hosts = set()
@@ -299,9 +299,9 @@ class State(object):
 
         logger.debug('Activating host: {0}'.format(host))
 
-        # Add to *both* connected and active - active will reduce as hosts fail
+        # Add to *both* activated and active - active will reduce as hosts fail
         # but connected will not, enabling us to track failed %.
-        self.connected_hosts.add(host)
+        self.activated_hosts.add(host)
         self.active_hosts.add(host)
 
     # def ready_host(self, host):
@@ -333,7 +333,7 @@ class State(object):
 
         if self.config.FAIL_PERCENT is not None:
             percent_failed = (
-                1 - len(active_hosts) / len(self.connected_hosts)
+                1 - len(active_hosts) / len(self.activated_hosts)
             ) * 100
 
             if percent_failed > self.config.FAIL_PERCENT:

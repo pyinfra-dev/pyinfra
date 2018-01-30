@@ -204,7 +204,7 @@ def print_meta(state, inventory):
             meta = state.meta[host]
 
             # Didn't connect to this host?
-            if host not in state.connected_hosts:
+            if host not in state.activated_hosts:
                 rows.append((logger.info, [
                     host.style_print_prefix('red', bold=True),
                     click.style('No connection', 'red'),
@@ -246,7 +246,7 @@ def print_results(state, inventory):
 
         for host in hosts:
             # Didn't conenct to this host?
-            if host not in state.connected_hosts:
+            if host not in state.activated_hosts:
                 rows.append((logger.info, [
                     host.style_print_prefix('red', bold=True),
                     click.style('No connection', 'red'),

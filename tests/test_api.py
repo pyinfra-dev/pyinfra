@@ -114,7 +114,7 @@ class TestSSHApi(TestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        self.assertEqual(len(state.connected_hosts), 2)
+        self.assertEqual(len(state.active_hosts), 2)
 
     def test_connect_all_password(self):
         '''
@@ -130,7 +130,7 @@ class TestSSHApi(TestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        self.assertEqual(len(state.connected_hosts), 2)
+        self.assertEqual(len(state.active_hosts), 2)
 
     def test_connect_with_ssh_key(self):
         state = State(make_inventory(hosts=(
@@ -238,7 +238,7 @@ class TestStateApi(PatchSSHTest):
         self.assertEqual(context.exception.args[0], 'Over 1% of hosts failed (33%)')
 
         # Ensure the other two did connect
-        self.assertEqual(len(state.connected_hosts), 2)
+        self.assertEqual(len(state.active_hosts), 2)
 
 
 class TestOperationsApi(PatchSSHTest):
