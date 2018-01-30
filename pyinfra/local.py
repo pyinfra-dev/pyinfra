@@ -9,12 +9,14 @@ from subprocess import PIPE, Popen, STDOUT
 
 import six
 
-from . import logger, pseudo_inventory, pseudo_state
+from contextlib2 import ExitStack
+
+from . import logger, pseudo_state
 from .api.exceptions import PyinfraError
-from .api.util import ensure_host_list, exec_file, read_buffer
+from .api.util import exec_file, read_buffer
 
 
-def include(filename, hosts=False):
+def include(filename, hosts=False, when=True):
     '''
     Executes a local python file within the ``pyinfra.pseudo_state.deploy_dir``
     directory.
@@ -25,12 +27,12 @@ def include(filename, hosts=False):
     logger.debug('Including local file: {0}'.format(filename))
 
     try:
-        if hosts is not False:
-            hosts = ensure_host_list(hosts, pseudo_inventory)
-            with pseudo_state.limit(hosts):
-                exec_file(filename)
+        with ExitStack() as stack:
+            stack.enter_context(pseudo_state.when(when))
 
-        else:
+            if hosts is not False:
+                stack.enter_context(pseudo_state.limit(hosts))
+
             exec_file(filename)
 
     except IOError as e:
