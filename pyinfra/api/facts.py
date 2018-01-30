@@ -10,7 +10,7 @@ for a deploy.
 
 from __future__ import division, unicode_literals
 
-from inspect import ismethod
+from inspect import isfunction, ismethod
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -136,7 +136,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
             # Work out the command
             command = fact.command
 
-            if ismethod(command):
+            if ismethod(command) or isfunction(command):
                 # Generate actual arguments by pasing strings as jinja2 templates
                 host_args = [get_arg_value(state, host, arg) for arg in args]
 
