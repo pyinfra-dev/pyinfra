@@ -245,10 +245,10 @@ def make_command(
         if value:
             debug_meta[key] = value
 
-    logger.debug('Building command ({0})'.format(' '.join(
+    logger.debug('Building command ({0}): {1}'.format(' '.join(
         '{0}: {1}'.format(key, value)
         for key, value in six.iteritems(debug_meta)
-    )))
+    ), command))
 
     # Use env & build our actual command
     if env:
