@@ -3,8 +3,12 @@
 + Make `--limit` apply the limit similarly to `state.limit`
     - makes it possible to execute facts on hosts outside the `--limit`
     - `--limit` no longer alters the inventory, instead provides an "initial" state limit
++ Add `when=True` kwarg to `local.include`
++ Make it possible to add `data` to individual hosts in `@vagrant.json` configuration files
++ Add `memory` and `cpus` facts
 + Refactor how we track host state throughout deploy
 + Refactor facts to only gather missing ones (enabling partial gathering)
++ Improve check for valid `/etc/init.d/` services by looking for LSB header
 + Fix boolean constant detection with AST in Python3
 
 
