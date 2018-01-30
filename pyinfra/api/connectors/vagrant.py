@@ -8,7 +8,7 @@ from six.moves.queue import Queue
 from pyinfra import local, logger
 
 VAGRANT_CONFIG = None
-VAGRANT_GROUPS = None
+VAGRANT_OPTIONS = None
 
 
 def _get_vagrant_ssh_config(queue, target):
@@ -72,21 +72,22 @@ def get_vagrant_config(limit=None):
     return VAGRANT_CONFIG
 
 
-def get_vagrant_groups():
-    global VAGRANT_GROUPS
+def get_vagrant_options():
+    global VAGRANT_OPTIONS
 
-    if VAGRANT_GROUPS is None:
+    if VAGRANT_OPTIONS is None:
         if path.exists('@vagrant.json'):
             with open('@vagrant.json', 'r') as f:
-                VAGRANT_GROUPS = json.loads(f.read()).get('groups', {})
+                VAGRANT_OPTIONS = json.loads(f.read())
         else:
-            VAGRANT_GROUPS = {}
+            VAGRANT_OPTIONS = {}
 
-    return VAGRANT_GROUPS
+    return VAGRANT_OPTIONS
 
 
 def _make_name_data(host):
-    host_to_group = get_vagrant_groups()
+    vagrant_options = get_vagrant_options()
+    vagrant_host = host['Host']
 
     # Build data
     data = {
@@ -96,8 +97,12 @@ def _make_name_data(host):
         'ssh_key': host['IdentityFile'],
     }
 
+    # Update any configured JSON data
+    if vagrant_host in vagrant_options.get('data', {}):
+        data.update(vagrant_options['data'][vagrant_host])
+
     # Work out groups
-    groups = host_to_group.get(host['Host'], [])
+    groups = vagrant_options.get('groups', {}).get(vagrant_host, [])
 
     if '@vagrant' not in groups:
         groups.append('@vagrant')
