@@ -38,24 +38,29 @@ class Command(FactBase):
 
 
 class Which(FactBase):
-    def command(self, name):
+    @staticmethod
+    def command(name):
         return 'which {0}'.format(name)
 
 
 class Date(FactBase):
-    '''Returns the current datetime on the server.'''
+    '''
+    Returns the current datetime on the server.
+    '''
 
     command = 'LANG=C date'
     default = datetime.now
 
-    def process(self, output):
+    @staticmethod
+    def process(output):
         return parse_date(output[0])
 
 
 class LsbRelease(FactBase):
     command = 'lsb_release -ca'
 
-    def process(self, output):
+    @staticmethod
+    def process(output):
         items = {}
 
         for line in output:
@@ -85,7 +90,8 @@ class Groups(FactBase):
     command = 'cat /etc/group'
     default = list
 
-    def process(self, output):
+    @staticmethod
+    def process(output):
         groups = []
 
         for line in output:
