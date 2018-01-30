@@ -16,18 +16,18 @@ def connect_all(state, progress=None):
 
     greenlets = {}
 
-    for host in state.inventory:
-        # Don't connect to anything within our (top level, --limit) limit
-        if (
-            isinstance(state.limit_hosts, list)
-            and host not in state.limit_hosts
-        ):
-            continue
+    # Don't connect to anything within our (top level, --limit) limit
+    hosts = [
+        host for host in state.inventory
+        if not isinstance(state.limit_hosts, list)
+        or host in state.limit_hosts
+    ]
 
+    for host in hosts:
         greenlets[host] = state.pool.spawn(host.connect, state)
 
     # Wait for all the connections to complete
-    for _ in gevent.iwait(greenlets.values()):
+    for client in gevent.iwait(greenlets.values()):
         # Trigger CLI progress if provided
         if progress:
             progress()
@@ -38,7 +38,9 @@ def connect_all(state, progress=None):
     for host, greenlet in six.iteritems(greenlets):
         client = greenlet.get()
 
-        if not client:
+        if client:
+            state.activate_host(host)
+        else:
             failed_hosts.add(host)
 
     # Remove those that failed, triggering FAIL_PERCENT check

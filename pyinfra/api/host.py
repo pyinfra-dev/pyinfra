@@ -87,9 +87,6 @@ class Host(object):
         if not self.connection:
             self.connection = self.executor.connect(state, self, *args, **kwargs)
 
-            if self.connection:
-                state.activate_host(self)
-
         return self.connection
 
     def run_shell_command(self, state, *args, **kwargs):
