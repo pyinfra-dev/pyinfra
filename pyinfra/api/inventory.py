@@ -236,24 +236,9 @@ class Inventory(object):
         '''
 
         if not self.state or not self.state.active_hosts:
-            for host in six.itervalues(self.hosts):
-                yield host
+            return six.itervalues(self.hosts)
 
-            return
-
-        for host in six.itervalues(self.hosts):
-            should_yield = True
-
-            # Host is not active?
-            if host not in self.state.active_hosts:
-                should_yield = False
-
-            # Limit that host is not in?
-            if self.state.limit_hosts and host not in self.state.limit_hosts:
-                should_yield = False
-
-            if should_yield:
-                yield host
+        return iter(self.state.active_hosts)
 
     def len_all_hosts(self):
         '''
