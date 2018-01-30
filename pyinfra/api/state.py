@@ -312,10 +312,12 @@ class State(object):
     #     logger.debug('Readying host: {0}'.format(host))
     #     self.ready_hosts.add(host)
 
-    def fail_hosts(self, hosts_to_fail):
+    def fail_hosts(self, hosts_to_fail, activated_count=None):
         '''
         Flag a ``set`` of hosts as failed, error for ``config.FAIL_PERCENT``.
         '''
+
+        activated_count = activated_count or len(self.activated_hosts)
 
         logger.debug('Failing hosts: {0}'.format(', '.join(
             host.name for host in hosts_to_fail,
@@ -333,7 +335,7 @@ class State(object):
 
         if self.config.FAIL_PERCENT is not None:
             percent_failed = (
-                1 - len(active_hosts) / len(self.activated_hosts)
+                1 - len(active_hosts) / activated_count
             ) * 100
 
             if percent_failed > self.config.FAIL_PERCENT:

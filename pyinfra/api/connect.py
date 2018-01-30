@@ -44,4 +44,4 @@ def connect_all(state, progress=None):
             failed_hosts.add(host)
 
     # Remove those that failed, triggering FAIL_PERCENT check
-    state.fail_hosts(failed_hosts)
+    state.fail_hosts(failed_hosts, activated_count=len(hosts))
