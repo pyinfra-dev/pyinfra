@@ -82,6 +82,10 @@ def get_facts(state, name, args=None, ensure_hosts=None):
     Get a single fact for all hosts in the state.
     '''
 
+    logger.debug('Getting fact: {0} (ensure_hosts: {1})'.format(
+        name, ensure_hosts,
+    ))
+
     args = args or []
 
     # Create an instance of the fact
