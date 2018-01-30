@@ -12,7 +12,7 @@ LS_REGEX = re.compile((
     # Type flag
     r'^[bcdlsp\-]'
     # Permissions/ACL
-    r'([\-rwx]{9})[\.\+]?\s+'
+    r'([\-rwxsS]{9})[\.\+]?\s+'
     # Links (unused)
     r'[0-9]+\s+'
     # User & group
