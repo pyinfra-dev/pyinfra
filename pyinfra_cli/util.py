@@ -257,6 +257,13 @@ def get_operation_and_args(op_string, args_string):
 
 def load_deploy_file(state, filename, progress):
     for host in state.inventory:
+        # Don't load for anything within our (top level, --limit) limit
+        if (
+            isinstance(state.limit_hosts, list)
+            and host not in state.limit_hosts
+        ):
+            continue
+
         pseudo_host.set(host)
 
         exec_file(filename)
