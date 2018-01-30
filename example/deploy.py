@@ -53,7 +53,8 @@ files.file(
 )
 
 # Facts from any inventory hosts work even if not included in --limit
-inventory.get_host('@vagrant/ubuntu14').fact.network_devices
+devices = inventory.get_host('@vagrant/ubuntu14').fact.network_devices
+assert devices
 
 # Ensure the state of directories
 files.directory(
