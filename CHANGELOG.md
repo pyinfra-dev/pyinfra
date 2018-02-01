@@ -10,6 +10,8 @@
 + Refactor facts to only gather missing ones (enabling partial gathering)
 + Improve check for valid `/etc/init.d/` services by looking for LSB header
 + Fix boolean constant detection with AST in Python3
++ Fix parsing ls output where `setgid` is set
++ Fix sudo/su file uploads with the `@local` connector
 
 
 # v0.5.3
