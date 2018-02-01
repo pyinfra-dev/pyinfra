@@ -4,15 +4,18 @@
 
 from __future__ import unicode_literals
 
+import os
+
 from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
+from tempfile import mkstemp
 
 import click
 import gevent
 import six
 
 from pyinfra import logger
-from pyinfra.api.util import get_file_io, make_command, read_buffer
+from pyinfra.api.util import make_command, read_buffer
 
 
 def connect(state, host, for_fact=None):
@@ -118,13 +121,35 @@ def put_file(
     state, host, filename_or_io, remote_file,
     sudo=False, sudo_user=None, su_user=None, print_output=False,
 ):
-    with open(remote_file, 'wb') as remote_f, get_file_io(filename_or_io) as local_f:
-        data = local_f.read()
+    local_file = filename_or_io
+    temp_filename = None
 
-        if isinstance(data, six.text_type):
-            data = data.encode()
+    # If we're a file object, write it to a temp file before copying with `cp`,
+    # we do this instead of read/write in Python because it allows sudo/su to
+    # function as normal.
+    if hasattr(filename_or_io, 'read'):
+        _, temp_filename = mkstemp()
 
-        remote_f.write(data)
+        with open(temp_filename, 'wb') as temp_f:
+            data = filename_or_io.read()
+
+            if isinstance(data, six.text_type):
+                data = data.encode()
+
+            temp_f.write(data)
+
+        local_file = temp_filename
+
+    # Copy the file using `cp`
+    status, _, stderr = run_shell_command(
+        state, host, 'cp {0} {1}'.format(local_file, remote_file),
+        sudo=sudo, sudo_user=sudo_user, su_user=su_user,
+        print_output=print_output,
+    )
+
+    # Cleanup
+    if temp_filename:
+        os.remove(temp_filename)
 
     if print_output:
         print('{0}file copied: {1}'.format(host.print_prefix, remote_file))
