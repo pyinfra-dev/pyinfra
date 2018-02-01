@@ -332,7 +332,7 @@ def put_file(
     '''
 
     # sudo/su are a little more complicated, as you can only sftp with the SSH
-    # user connected,  so upload to tmp and copy/chown w/sudo and/or su_user
+    # user connected, so upload to tmp and copy/chown w/sudo and/or su_user
     if sudo or su_user:
         # Get temp file location
         temp_file = state.get_temp_filename(remote_file)
