@@ -85,7 +85,9 @@ Server
 :code:`date`
 ~~~~~~~~~~~~
 
-Returns the current datetime on the server.
+
+    Returns the current datetime on the server.
+    
 
 
 :code:`groups`
@@ -159,8 +161,8 @@ Returns the current datetime on the server.
     
 
 
-:code:`which(name)`
-~~~~~~~~~~~~~~~~~~~
+:code:`which`
+~~~~~~~~~~~~~
 
 
 Npm
@@ -271,6 +273,25 @@ Apt
 
         'package_name': 'version',
         ...
+    
+
+
+Hardware
+--------
+
+:code:`cpus`
+~~~~~~~~~~~~
+
+
+    Returns the number of CPUs on this server.
+    
+
+
+:code:`memory`
+~~~~~~~~~~~~~~
+
+
+    Returns the memory installed in this server, in MB.
     
 
 
