@@ -1,4 +1,4 @@
-# v0.6 (WIP)
+# v0.6
 
 + Make `--limit` apply the limit similarly to `state.limit`
     - makes it possible to execute facts on hosts outside the `--limit`
