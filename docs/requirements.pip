@@ -1,1 +1,5 @@
 sphinx-better-theme==0.13
+
+# ReadTheDocs pip seems to pick alpha over stable!
+gevent==1.2.2
+
