@@ -7,32 +7,32 @@ Facts Index
 Files
 -----
 
-:code:`directory(name)`
-~~~~~~~~~~~~~~~~~~~~~~~
+:code:`directory`
+~~~~~~~~~~~~~~~~~
 
 
-:code:`file(name)`
-~~~~~~~~~~~~~~~~~~
+:code:`file`
+~~~~~~~~~~~~
 
 
-:code:`find_directories(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`find_directories`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of directories from a start point, recursively using find.
     
 
 
-:code:`find_files(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`find_files`
+~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of files from a start point, recursively using find.
     
 
 
-:code:`find_in_file(name, pattern)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`find_in_file`
+~~~~~~~~~~~~~~~~~~~~
 
 
     Checks for the existence of text in a file using grep. Returns a list of matching
@@ -40,35 +40,35 @@ Files
     
 
 
-:code:`find_links(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`find_links`
+~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of links from a start point, recursively using find.
     
 
 
-:code:`link(name)`
-~~~~~~~~~~~~~~~~~~
+:code:`link`
+~~~~~~~~~~~~
 
 
-:code:`sha1_file(name)`
-~~~~~~~~~~~~~~~~~~~~~~~
+:code:`sha1_file`
+~~~~~~~~~~~~~~~~~
 
 
     Returns a SHA1 hash of a file. Works with both sha1sum and sha1.
     
 
 
-:code:`socket(name)`
-~~~~~~~~~~~~~~~~~~~~
+:code:`socket`
+~~~~~~~~~~~~~~
 
 
 Git
 ---
 
-:code:`git_branch(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`git_branch`
+~~~~~~~~~~~~~~~~~~
 
 
 Server
@@ -78,8 +78,8 @@ Server
 ~~~~~~~~~~~~
 
 
-:code:`command(command)`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`command`
+~~~~~~~~~~~~~~~
 
 
 :code:`date`
@@ -168,8 +168,8 @@ Server
 Npm
 ---
 
-:code:`npm_packages(directory)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`npm_packages`
+~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of installed npm packages globally or in a given directory:
@@ -197,8 +197,8 @@ Yum
     
 
 
-:code:`rpm_package(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`rpm_package`
+~~~~~~~~~~~~~~~~~~~
 
 
     Returns information on a .rpm file:
@@ -255,8 +255,8 @@ Apt
     
 
 
-:code:`deb_package(name)`
-~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`deb_package`
+~~~~~~~~~~~~~~~~~~~
 
 
     Returns information on a .deb file.
@@ -314,8 +314,8 @@ Pkg
 Iptables
 --------
 
-:code:`ip6tables_chains(table)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`ip6tables_chains`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of ip6tables chains & policies:
@@ -327,8 +327,8 @@ Iptables
     
 
 
-:code:`ip6tables_rules(table)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`ip6tables_rules`
+~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of ip6tables rules for a specific table:
@@ -343,8 +343,8 @@ Iptables
     
 
 
-:code:`iptables_chains(table)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`iptables_chains`
+~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of iptables chains & policies:
@@ -356,8 +356,8 @@ Iptables
     
 
 
-:code:`iptables_rules(table)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`iptables_rules`
+~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of iptables rules for a specific table:
@@ -375,8 +375,8 @@ Iptables
 Pip
 ---
 
-:code:`pip_packages(pip)`
-~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`pip_packages`
+~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of installed pip packages:

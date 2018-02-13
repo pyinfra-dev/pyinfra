@@ -12,7 +12,7 @@ Manage pip packages.
 .. code:: python
 
     pip.packages(
-        packages=None, present=True, latest=False, requirements=None, pip=pip, virtualenv=None,
+        packages=None, present=True, latest=False, requirements=None, pip='pip', virtualenv=None,
         virtualenv_kwargs=None
     )
 

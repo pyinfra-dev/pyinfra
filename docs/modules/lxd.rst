@@ -11,7 +11,7 @@ Manage LXD containers.
 
 .. code:: python
 
-    lxd.container(name, present=True, image=ubuntu:16.04)
+    lxd.container(name, present=True, image='ubuntu:16.04')
 
 Note: does not check if an existing container is based on the specified
 image.
