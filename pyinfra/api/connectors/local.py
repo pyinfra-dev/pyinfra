@@ -15,7 +15,7 @@ import gevent
 import six
 
 from pyinfra import logger
-from pyinfra.api.util import make_command, read_buffer
+from pyinfra.api.util import get_file_io, make_command, read_buffer
 
 
 def connect(state, host, for_fact=None):
@@ -121,28 +121,21 @@ def put_file(
     state, host, filename_or_io, remote_file,
     sudo=False, sudo_user=None, su_user=None, print_output=False,
 ):
-    local_file = filename_or_io
-    temp_filename = None
+    _, temp_filename = mkstemp()
 
-    # If we're a file object, write it to a temp file before copying with `cp`,
-    # we do this instead of read/write in Python because it allows sudo/su to
-    # function as normal.
-    if hasattr(filename_or_io, 'read'):
-        _, temp_filename = mkstemp()
-
+    # Load our file or IO object and write it to the temporary file
+    with get_file_io(filename_or_io) as file_io:
         with open(temp_filename, 'wb') as temp_f:
-            data = filename_or_io.read()
+            data = file_io.read()
 
             if isinstance(data, six.text_type):
                 data = data.encode()
 
             temp_f.write(data)
 
-        local_file = temp_filename
-
     # Copy the file using `cp`
     status, _, stderr = run_shell_command(
-        state, host, 'cp {0} {1}'.format(local_file, remote_file),
+        state, host, 'cp {0} {1}'.format(temp_filename, remote_file),
         sudo=sudo, sudo_user=sudo_user, su_user=su_user,
         print_output=print_output,
     )
