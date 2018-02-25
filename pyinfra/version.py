@@ -2,4 +2,4 @@
 # File: pyinfra/version.py
 # Desc: version file
 
-__version__ = '0.6'
+__version__ = '0.6.1'

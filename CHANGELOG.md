@@ -1,3 +1,7 @@
+# v0.6.1
+
++ Fix file "uploading" for the `@local` connector
+
 # v0.6
 
 + Make `--limit` apply the limit similarly to `state.limit`
