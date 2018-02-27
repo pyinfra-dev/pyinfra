@@ -67,7 +67,8 @@ class FactBase(object):
         Set the default attribute to be a type (eg list/dict).
         '''
 
-    def process(self, output):
+    @staticmethod
+    def process(output):
         return output[0]
 
     def process_pipeline(self, args, output):

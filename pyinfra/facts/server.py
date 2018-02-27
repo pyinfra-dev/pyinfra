@@ -33,7 +33,8 @@ class Arch(FactBase):
 
 
 class Command(FactBase):
-    def command(self, command):
+    @staticmethod
+    def command(command):
         return command
 
 
