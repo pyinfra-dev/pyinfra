@@ -1,3 +1,10 @@
+# v0.7 (WIP)
+
++ Add global install virtualenv support (like iPython)
++ Add `server.modprobe` and `server.hostname` operations
++ Add `kernel_modules` fact
+
+
 # v0.6.1
 
 + Fix file "uploading" for the `@local` connector
