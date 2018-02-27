@@ -57,6 +57,36 @@ class Date(FactBase):
         return parse_date(output[0])
 
 
+class KernelModules(FactBase):
+    command = 'cat /proc/modules'
+    default = dict
+
+    @staticmethod
+    def process(output):
+        modules = {}
+
+        for line in output:
+            name, size, instances, depends, state, _ = line.split(' ', 5)
+            instances = int(instances)
+
+            module = {
+                'size': size,
+                'instances': instances,
+                'state': state,
+            }
+
+            if depends != '-':
+                module['depends'] = [
+                    value
+                    for value in depends.split(',')
+                    if value
+                ]
+
+            modules[name] = module
+
+        return modules
+
+
 class LsbRelease(FactBase):
     command = 'lsb_release -ca'
 
