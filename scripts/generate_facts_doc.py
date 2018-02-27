@@ -5,7 +5,7 @@
 # Desc: generate rst docs from the fact classes
 
 from inspect import getargspec, getmembers, isclass
-from types import MethodType
+from types import FunctionType, MethodType
 
 from six.moves import range
 
@@ -48,7 +48,7 @@ def build_facts():
 
             # Does this fact take args?
             command_attr = getattr(cls, 'command', None)
-            if isinstance(command_attr, MethodType):
+            if isinstance(command_attr, (FunctionType, MethodType)):
                 # Attach basic argspec to name
                 # Note only supports facts with one arg as this is all that's possible,
                 # will need to refactor to print properly in future.
