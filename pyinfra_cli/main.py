@@ -48,6 +48,7 @@ from .util import (
     progress_spinner,
     run_hook,
 )
+from .virtualenv import init_virtualenv
 
 
 # Exit handler
@@ -137,7 +138,7 @@ def _print_operations(ctx, param, value):
 @click.version_option(
     version=__version__,
     prog_name='pyinfra',
-    message='%(prog)s: v%(version)s',
+    message='%(prog)s: v%(version)s\nExecutable: {0}'.format(sys.argv[0]),
 )
 def cli(*args, **kwargs):
     '''
@@ -206,6 +207,9 @@ def _main(
     # Setup logging
     log_level = logging.DEBUG if debug else logging.INFO
     setup_logging(log_level)
+
+    # Bootstrap any virtualenv
+    init_virtualenv()
 
     deploy_dir = getcwd()
     potential_deploy_dirs = []
