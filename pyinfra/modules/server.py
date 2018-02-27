@@ -119,6 +119,41 @@ def modprobe(state, host, name, present=True, force=False):
     elif present and not is_present:
         yield 'modprobe{0} {1}'.format(args, name)
 
+
+@operation
+def hostname(state, host, hostname, hostname_file=None):
+    '''
+    Manage the system hostname.
+
+    + hostname: the hostname that should be set
+    + hostname_file: the file that permanently sets the hostname
+
+    Hostname file:
+        By default pyinfra will auto detect this by targetting ``/etc/hostname``
+        on Linux and ``/etc/myname`` on OpenBSD.
+    '''
+
+    if hostname_file is None:
+        os = host.fact.os
+
+        if os == 'Linux':
+            hostname_file = '/etc/hostname'
+        elif os == 'OpenBSD':
+            hostname_file = '/etc/myname'
+
+    current_hostname = host.fact.hostname
+
+    if current_hostname != hostname:
+        yield 'hostname {0}'.format(hostname)
+
+    if hostname_file:
+        # Create a whole new hostname file
+        file = six.StringIO('{0}\n'.format(hostname))
+
+        # And ensure it exists
+        yield files.put(
+            state, host,
+            file, hostname_file,
         )
 
 
