@@ -124,7 +124,7 @@ def modprobe(state, host, name, present=True, force=False):
 
 @operation
 def group(
-    state, host, name, present=True, system=False, gid=None
+    state, host, name, present=True, system=False, gid=None,
 ):
     '''
     Manage system groups.
@@ -164,7 +164,7 @@ def group(
 def user(
     state, host, name,
     present=True, home=None, shell=None, group=None, groups=None,
-    public_keys=None, delete_keys=False, ensure_home=True, system=False, uid=None
+    public_keys=None, delete_keys=False, ensure_home=True, system=False, uid=None,
 ):
     '''
     Manage system users & their ssh `authorized_keys`. Options:
