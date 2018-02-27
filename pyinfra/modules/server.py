@@ -95,6 +95,34 @@ def script_template(state, host, template_filename, chdir=None, **data):
 
 
 @operation
+def modprobe(state, host, name, present=True, force=False):
+    '''
+    Manage kernel modules.
+
+    + name: name of the module to manage
+    + present: whether the module should be loaded or not
+    + force: whether to force any add/remove modules
+    '''
+
+    modules = host.fact.kernel_modules
+    is_present = name in modules
+
+    args = ''
+    if force:
+        args = ' -f'
+
+    # Module is loaded and we don't want it?
+    if not present and is_present:
+        yield 'modprobe{0} -r {1}'.format(args, name)
+
+    # Module isn't loaded and we want it?
+    elif present and not is_present:
+        yield 'modprobe{0} {1}'.format(args, name)
+
+        )
+
+
+@operation
 def group(
     state, host, name, present=True, system=False, gid=None
 ):
