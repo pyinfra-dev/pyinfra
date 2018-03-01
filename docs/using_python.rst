@@ -62,3 +62,24 @@ pyinfra also has a global ``limit`` keyword argument and a matching ``state.limi
 
 .. note::
     Despite the above, pyinfra always ensures that operations are always executed in order **per host** so there's no risk of, say, trying to use ``docker`` before installing it.
+
+
+Styleguide
+----------
+
+pyinfra deploys are written in Python, however it is important to separate deployment/configuration management code from application code. To this end, pyinfra highly recommends a more spaced out formatting for deployments (think Ansible):
+
+.. code:: python
+
+    # Define operation calls as a "block"
+    files.put(
+        # Always provide a description of the operation
+        {'Upload a file'},
+
+        # Split operation arguments onto different lines
+        '/home/nick/myfile.txt',
+        '/home/{{ host.data.user }}/myfile.txt',
+
+        # Provide global arguments last
+        sudo=True,
+    )
