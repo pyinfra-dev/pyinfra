@@ -14,6 +14,7 @@ from pkg_resources import parse_version
 
 from pyinfra import __version__, logger
 
+from .attrs import AttrData
 from .config import Config
 from .exceptions import PyinfraError
 from .util import ensure_host_list, sha1_hash
@@ -275,7 +276,7 @@ class State(object):
         # Set the new values
         self.deploy_name = name
         self.deploy_kwargs = kwargs
-        self.deploy_data = data
+        self.deploy_data = AttrData(data)
         logger.debug('Starting deploy {0} (args={1}, data={2})'.format(
             name, kwargs, data,
         ))

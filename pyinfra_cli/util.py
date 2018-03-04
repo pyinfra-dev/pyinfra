@@ -30,7 +30,7 @@ except ImportError:
 import click
 
 from pyinfra import logger, pseudo_host
-from pyinfra.api.host import Host
+from pyinfra.api.attrs import FallbackAttrData
 from pyinfra.api.util import exec_file
 from pyinfra.hook import HOOKS
 
@@ -131,8 +131,8 @@ def json_encode(obj):
     elif isinstance(obj, datetime):
         return obj.isoformat()
 
-    elif isinstance(obj, Host):
-        return obj.name
+    elif isinstance(obj, FallbackAttrData):
+        return obj.dict()
 
     elif isinstance(obj, io_bases):
         if hasattr(obj, 'name'):
@@ -148,7 +148,7 @@ def json_encode(obj):
         return list(obj)
 
     else:
-        raise TypeError('Cannot serialize: {0}'.format(obj))
+        raise TypeError('Cannot serialize: {0} ({1})'.format(type(obj), obj))
 
 
 def _parse_arg(arg):

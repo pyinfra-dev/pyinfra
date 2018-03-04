@@ -124,7 +124,7 @@ def print_inventory(inventory):
     for host in inventory:
         print()
         print('--> Data for: {0}'.format(click.style(host.name, bold=True)))
-        print(_jsonify(host.data.dict(), indent=4, default=json_encode))
+        print(_jsonify(host.data, indent=4, default=json_encode))
 
 
 def print_facts(facts):

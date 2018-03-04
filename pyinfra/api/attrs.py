@@ -37,6 +37,19 @@ def wrap_attr_data(key, attr):
     if isinstance(attr, int):
         return AttrDataInt(key, attr)
 
+    # Nested items/objects
+    if isinstance(attr, list):
+        return AttrDataList(key, [
+            wrap_attr_data('{0}.{1}'.format(key, i), v)
+            for i, v in enumerate(attr)
+        ])
+
+    if isinstance(attr, dict):
+        return AttrDataDict(key, {
+            k: wrap_attr_data('{0}.{1}'.format(key, k), v)
+            for k, v in six.iteritems(attr)
+        })
+
     return attr
 
 
@@ -48,6 +61,7 @@ class AttrBase:
     pyinfra_attr_key = None
 
 
+# Base types
 class AttrDataStr(AttrBase, six.text_type):
     def __new__(cls, key, obj):
         obj = super(AttrDataStr, cls).__new__(cls, obj)
@@ -69,31 +83,37 @@ class AttrDataBool(AttrBase, int):
         return obj
 
 
-class AttrData(object):
+# Iterable types
+class AttrDataList(AttrBase, list):
+    def __init__(self, key, obj):
+        super(AttrDataList, self).__init__(obj)
+        setattr(self, 'pyinfra_attr_key', key)
+
+
+class AttrDataDict(AttrBase, dict):
+    def __init__(self, key, obj):
+        obj = super(AttrDataDict, self).__init__(obj)
+        setattr(self, 'pyinfra_attr_key', key)
+
+
+class AttrData(dict):
     '''
     Dict with attribute access and AttrBase wrappers.
     '''
 
     def __init__(self, attrs=None):
-        self.attrs = attrs or {}
+        attrs = attrs or {}
 
-    def __getitem__(self, key):
-        return self.get(key)
+        # Wrap the dict
+        attrs = {
+            key: wrap_attr_data(key, value)
+            for key, value in six.iteritems(attrs)
+        }
+
+        super(AttrData, self).__init__(attrs)
 
     def __getattr__(self, key):
         return self.get(key)
-
-    def __contains__(self, key):
-        return key in self.attrs
-
-    def __str__(self):
-        return six.text_type(self.attrs)
-
-    def get(self, key):
-        return wrap_attr_data(key, self.attrs.get(key))
-
-    def dict(self):
-        return self.attrs
 
 
 class FallbackAttrData(object):
@@ -121,6 +141,6 @@ class FallbackAttrData(object):
         datas.reverse()
 
         for data in extract_callable_datas(datas):
-            out.update(data.dict())
+            out.update(data)
 
         return out

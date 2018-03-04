@@ -75,7 +75,7 @@ class Inventory(object):
         names, data = names_data
 
         # Assign global data
-        self.data = data
+        self.data = AttrData(data)
 
         # Create the actual host instances and groups
         self.hosts = self.make_hosts_and_groups(names, groups)
@@ -88,7 +88,7 @@ class Inventory(object):
 
         for group_name, (group_names, group_data) in six.iteritems(groups):
             # Assign group data
-            self.group_data[group_name] = group_data
+            self.group_data[group_name] = AttrData(group_data)
 
             # For any hosts in the group, assign mappings
             for name, data in extract_name_data(group_names):
@@ -141,14 +141,14 @@ class Inventory(object):
                         sub_host_data.update(data)
 
                         # Assign the name/data/group_names from the connector
-                        self.host_data[name] = sub_host_data
+                        self.host_data[name] = AttrData(sub_host_data)
                         names_executors.append((name, executor))
                         name_to_group_names[name].extend(group_names)
 
                     continue
 
             # Assign the name/data
-            self.host_data[name] = host_data
+            self.host_data[name] = AttrData(host_data)
             names_executors.append((name, executor))
 
         # Now we can actually make Host instances
@@ -285,28 +285,28 @@ class Inventory(object):
         Get the base/all data attached to this inventory.
         '''
 
-        return AttrData(self.data)
+        return self.data
 
     def get_override_data(self):
         '''
         Get override data for this inventory.
         '''
 
-        return AttrData(self.override_data)
+        return self.override_data
 
     def get_host_data(self, hostname):
         '''
         Get data for a single host in this inventory.
         '''
 
-        return AttrData(self.host_data.get(hostname, {}))
+        return self.host_data.get(hostname, {})
 
     def get_group_data(self, group):
         '''
         Get data for a single group in this inventory.
         '''
 
-        return AttrData(self.group_data.get(group, {}))
+        return self.group_data.get(group, {})
 
     def get_groups_data(self, groups):
         '''
@@ -317,11 +317,9 @@ class Inventory(object):
         data = {}
 
         for group in groups:
-            data.update(
-                self.get_group_data(group).dict(),
-            )
+            data.update(self.get_group_data(group))
 
-        return AttrData(data)
+        return data
 
     def get_deploy_data(self):
         '''
