@@ -24,6 +24,7 @@ from paramiko import SSHException
 
 from pyinfra import logger
 
+from .attrs import wrap_attr_data
 from .util import get_arg_value, log_host_command_error, make_hash, underscore
 
 
@@ -182,7 +183,10 @@ def get_facts(state, name, args=None, ensure_hosts=None):
             if status and stdout:
                 data = fact.process(stdout)
 
-            hostname_facts[host] = data
+            # Wrap the data with the fact name as the key, so when operations
+            # use the fact output as args/kwargs single operations are created
+            # for multiple values.
+            hostname_facts[host] = wrap_attr_data(name, data)
 
         log_name = click.style(name, bold=True)
 
