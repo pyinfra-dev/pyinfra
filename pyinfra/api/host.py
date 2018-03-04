@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import click
 
-from .attrs import wrap_attr_data
+from .attrs import AttrDataStr, wrap_attr_data
 from .connectors import EXECUTION_CONNECTORS
 from .exceptions import PyinfraError
 from .facts import get_fact, is_fact
@@ -48,10 +48,12 @@ class Host(object):
         executor=EXECUTION_CONNECTORS['ssh'],
     ):
         self.inventory = inventory
-        self.name = name
         self.groups = groups
         self.data = data
         self.executor = executor
+
+        # Make sure name can be used as a kwarg
+        self.name = AttrDataStr('name', name)
 
         # Attach the fact proxy
         self.fact = HostFacts(inventory, self)
