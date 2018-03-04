@@ -207,6 +207,16 @@ class State(object):
 
     @contextmanager
     def limit(self, hosts):
+        logger.warning((
+            'Use of `State.limit` is deprecated, '
+            'please use `State.hosts` instead.'
+        ))
+
+        with self.hosts(hosts):
+            yield
+
+    @contextmanager
+    def hosts(self, hosts):
         hosts = ensure_host_list(hosts, inventory=self.inventory)
 
         # Store the previous value
