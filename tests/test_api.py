@@ -59,7 +59,7 @@ class TestInventoryApi(TestCase):
 
         # Check our group data
         self.assertEqual(
-            inventory.get_group_data('test_group').dict(),
+            inventory.get_group_data('test_group'),
             {'group_data': 'hello world'},
         )
 
