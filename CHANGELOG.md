@@ -3,6 +3,14 @@
 + Add global install virtualenv support (like iPython)
 + Add `server.modprobe` and `server.hostname` operations
 + Add `kernel_modules` fact
++ **Deprecate** `state.limit` and replace with `state.hosts(hosts)` (consistency with global operation kwarg `hosts` not `limit`)
++ Major internal refactor of `AttrData` handling to reduce operation branching:
+    * Generate `AttrData` on creation, rather than read
+    * Add nesting support for `AttrData` so `host.data.thing['X']` will not create branching operations
+    * Turn fact data into `AttrData`
+    * Make `host.name` an `AttrDataStr`
+    * Hash `True`, `False` and `None` constants as the same so they can change between hosts without branching operations
+    * Update docs and warning on operation branching
 
 
 # v0.6.1
