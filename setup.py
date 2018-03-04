@@ -50,7 +50,7 @@ DEV_REQUIRES = TEST_REQUIRES + (
     # Dev docs requirements
     'sphinx==1.6.2',
     'sphinx-autobuild==0.6.0',
-    'sphinx-better-theme==0.13',
+    'sphinx-better-theme==0.1.5',
 
     # Convert markdowns to rst for long_description
     'pypandoc==1.4',
