@@ -322,6 +322,10 @@ def make_hash(obj):
     ID's for operations based on their name & arguments.
     '''
 
+    # pyinfra attr key where available (host/inventory data), see attrs.py
+    if isinstance(obj, AttrBase):
+        return obj.pyinfra_attr_key
+
     if isinstance(obj, (set, tuple, list)):
         hash_string = ''.join([make_hash(e) for e in obj])
 
@@ -333,8 +337,9 @@ def make_hash(obj):
 
     else:
         hash_string = (
-            # pyinfra attr key where available (host/inventory data), see attrs.py
-            obj.pyinfra_attr_key if isinstance(obj, AttrBase)
+            # Constants - the values can change between hosts but we should still
+            # group them under the same operation hash.
+            '' if obj in (True, False, None)
             # Plain strings
             else obj if isinstance(obj, six.string_types)
             # Objects with __name__s
