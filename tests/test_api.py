@@ -4,6 +4,8 @@
 
 from unittest import TestCase
 
+import gevent.hub
+
 from mock import mock_open, patch
 from paramiko import (
     PasswordRequiredException,
@@ -31,6 +33,9 @@ from .paramiko_util import (
     FakeSFTPClient,
     FakeSSHClient,
 )
+
+# Don't print out exceptions inside greenlets (because here we expect them!)
+gevent.hub.Hub.NOT_ERROR = (Exception,)
 
 
 def make_inventory(hosts=('somehost', 'anotherhost'), **kwargs):
@@ -117,10 +122,6 @@ class TestSSHApi(TestCase):
         self.assertEqual(len(state.active_hosts), 2)
 
     def test_connect_all_password(self):
-        '''
-        Ensure we can connect using a password.
-        '''
-
         inventory = make_inventory(ssh_password='test')
 
         # Get a host
