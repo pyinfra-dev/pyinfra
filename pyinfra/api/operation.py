@@ -260,10 +260,9 @@ def operation(func=None, pipeline_facts=None):
             # result of the way deploy files are executed (once per host).
             if index < len(state.op_order):
                 logger.warning('''Imbalanced operation detected! ({0})
-    Using conditional branches or `host.X` arguments may result in operations
-    being called in an unexpected order. Operations will always run in order
-    *per host* but branches and variable argument values may cause operations
-    to execute in a non-deterministic order.
+    Using conditional branches, `host.X` arguments or loops may result in
+    operations being called in an unexpected order. Operations will always
+    run in order *per host*, but some operations might be split by host.
 
     Please see: http://pyinfra.readthedocs.io/page/using_python.html.
 '''.format(', '.join(names)))

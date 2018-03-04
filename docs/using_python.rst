@@ -1,73 +1,101 @@
 Using Python
 ============
 
-One of the most powerful features of pyinfra is that deploys are configured/written in pure Python. Where possible pyinfra stays out of the way and lets you use the full power of Python to your advantage - however there are a few caveats that this page explains.
+.. warning::
+
+    This page describes the limitations of the pyinfra **CLI**. This applies to any Python files used to describe operations (the deploy code), eg ``deploy.py`` or ``tasks/nginx.py``. pyinfra will display a warning if any issues are detected and ensures that operations are always executed in order **per host** so there's no risk of, say, trying to use ``docker`` before installing it.
+
+The ``pyinfra`` CLI reads operations from normal Python files by executing the file once per host in the inventory. This means that pyinfra has to hash the arguments of a given operation so they can be grouped together. This means that:
+
+    **When executed, the Python code in the files must execute the same number of operations, each with similar arguments.**
+
+Practically speaking, this means there are a few differences from how you would normally write Python code:
 
 
 String Formatting
 -----------------
 
-pyinfra supports jinja2 style string arguments, which should be used over Python's builtin string formatting where you expect the final string to change per host. This is because pyinfra groups operations by their arguments. For example:
+.. code:: python
+
+    # This will generate a new operation per host where `host.data.filename` changes:
+
+    files.template(
+        '/opt/{0}'.format(host.data.filename),
+        ...
+    )
+
+    # Which should be re-written using jinja2 style strings:
+
+    files.template(
+        '/opt/{{ host.data.filename }}',
+        ...
+    )
+
+
+Conditional Statements
+----------------------
 
 .. code:: python
 
-    from pyinfra import host
-    from pyinfra.modules import server
+    # This will change the number of operations when the conditional changes:
+
+    if host.data.create_user:
+        server.user(...)
+
+    # Which should be rewritten using *either* the when keyword argument:
 
     server.user(
-        {'Setup the app user'},
-        host.data.app_user,
-        '/opt/{{ host.data.app_dir }}', # for multiple values of host.data.app_dir we still
-                                        # generate a single operation
+        when=host.data.create_user,
+        ...
     )
 
+    # Or, for multiple operations use `state.when`:
 
-Conditional Branches
---------------------
+    with state.when(host.data.create_user):
+        server.user(...)
+        ...
 
-pyinfra works by calling the deploy code you write once for each host. This means different conditional branches (``if`` statements, etc) may execute differently for each host. This means that operations may be added, and therefor execute, in a different order to the deploy code.
-
-To avoid these issues, pyinfra provides a global ``when`` keyword argument in all operations and a ``state.when`` context processor for blocks of code:
+It is also possible to limit operations to a list of hosts (or inventory group):
 
 .. code:: python
 
-    from pyinfra import host, state
-    from pyinfra.modules import server
+    # As a keyword argument:
 
-    # Replace if blocks with the state.when context
-    with state.when(host.name == 'my-host.net'):
-        server.shell('echo "my-host.net op!"')
+    server.user(
+        hosts=inventory.get_group('webservers'),
         ...
-
-    # Use the when kwarg to achieve the same, for single operations
-    server.shell(
-        'echo "my-host.net op!"',
-        when=host.name == 'my-host.net',
     )
 
-pyinfra also has a global ``limit`` keyword argument and a matching ``state.limit`` context processor for blocks:
+    # Or, for multiple operations:
+
+    with state.hosts(inventory.get_group('webservers')):
+        server.user(...)
+        ...
+
+
+Loops
+-----
 
 .. code:: python
 
-    from pyinfra import inventory, state
+    # Loops must be the same for all hosts, ie `host.data.commands` in:
 
-    with state.limit(inventory.get_host('my-host.net')):
-        server.shell('echo "my-host.net op!"')
-        ...
+    for command in host.data.commands:
+        server.shell(command)
+
+    # Where the data will change between hosts, it must be passed in as an operation keyword
+    # argument. There is currently no `state.X` workaround for this.
 
     server.shell(
-        'echo "my-host.net op!"',
-        limit=inventory.get_host('my-host.net'),
+        host.data.commands,
+        ...
     )
 
-.. note::
-    Despite the above, pyinfra always ensures that operations are always executed in order **per host** so there's no risk of, say, trying to use ``docker`` before installing it.
 
+Code Formatting
+---------------
 
-Styleguide
-----------
-
-pyinfra deploys are written in Python, however it is important to separate deployment/configuration management code from application code. To this end, pyinfra highly recommends a more spaced out formatting for deployments (think Ansible):
+It is important to maintain a difference between pyinfra code, with it's limitations above, and "pure" Python (especially true if your application is written in Python). As such, it is highly recommended to use the spaced out formatting used in this documentation:
 
 .. code:: python
 
