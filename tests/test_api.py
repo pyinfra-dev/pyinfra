@@ -425,7 +425,7 @@ class TestOperationsApi(PatchSSHTest):
         add_op(state, server.shell, 'echo "hi"')
 
         # Add op to just the first host
-        with state.limit('test_group'):
+        with state.hosts('test_group'):
             add_op(
                 state, server.user,
                 'somehost_user',

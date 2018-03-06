@@ -247,7 +247,7 @@ class State(object):
             return
 
         # Otherwise limit any operations within to match no hosts
-        with self.limit([]):
+        with self.hosts([]):
             yield
 
     @contextmanager

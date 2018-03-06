@@ -35,7 +35,7 @@ def include(filename, hosts=False, when=True):
             stack.enter_context(pseudo_state.when(when))
 
             if hosts is not False:
-                stack.enter_context(pseudo_state.limit(hosts))
+                stack.enter_context(pseudo_state.hosts(hosts))
 
             exec_file(filename)
 
