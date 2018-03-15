@@ -94,6 +94,19 @@ def add_limited_op(state, op_func, hosts, *args, **kwargs):
     state.limit_hosts = []
 
 
+def _get_call_location():
+    frames = stack()
+
+    # Frist two frames are this and the caller below, so get the third item on
+    # the frame list, which should be the call to the actual operation.
+    target = frames[2]
+
+    return 'line {0} in {1}'.format(
+        target.lineno,
+        path.relpath(target.filename),
+    )
+
+
 def operation(func=None, pipeline_facts=None):
     '''
     Decorator that takes a simple module function and turn it into the internal
@@ -112,7 +125,8 @@ def operation(func=None, pipeline_facts=None):
     # Index the operation!
     module_bits = func.__module__.split('.')
     module_name = module_bits[-1]
-    OPERATIONS.append('.'.join((module_name, func.__name__)))
+    op_name = '.'.join((module_name, func.__name__))
+    OPERATIONS.append(op_name)
 
     # Actually decorate!
     @wraps(func)
@@ -131,13 +145,13 @@ def operation(func=None, pipeline_facts=None):
 
             if state.in_op:
                 raise PyinfraError((
-                    'Nested operation called without state/host: {0}'
-                ).format(func))
+                    'Nested operation called without state/host: {0} ({1})'
+                ).format(op_name, _get_call_location()))
 
             if state.in_deploy:
                 raise PyinfraError((
-                    'Nested deploy operation called without state/host: {0}'
-                ).format(func))
+                    'Nested deploy operation called without state/host: {0} ({1})'
+                ).format(op_name, _get_call_location()))
 
         # Otherwise (API mode) we just trim off the commands
         else:
@@ -194,10 +208,10 @@ def operation(func=None, pipeline_facts=None):
 
             for frame in frames:
                 if not (
-                    frame[3] in ('decorated_func', 'add_op', 'add_limited_op')
-                    and frame[1].endswith(path.join('pyinfra', 'api', 'operation.py'))
+                    frame.function in ('decorated_func', 'add_op', 'add_limited_op')
+                    and frame.filename.endswith(path.join('pyinfra', 'api', 'operation.py'))
                 ):
-                    line_number = frame[0].f_lineno
+                    line_number = frame.lineno
                     break
 
             # The when kwarg might change between hosts - but we still want that
