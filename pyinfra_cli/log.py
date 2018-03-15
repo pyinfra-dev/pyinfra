@@ -38,6 +38,15 @@ class LogFormatter(logging.Formatter):
         if record.args:
             message = record.msg % record.args
 
+        # Add path/module info for debug
+        if record.levelno is logging.DEBUG:
+            path_start = record.pathname.rfind('pyinfra')
+
+            if path_start:
+                pyinfra_path = record.pathname[path_start:-3]  # -3 removes `.py`
+                module_name = pyinfra_path.replace('/', '.')
+                message = '[{0}] {1}'.format(module_name, message)
+
         # We only handle strings here
         if isinstance(message, six.string_types):
             if '-->' not in message:
