@@ -328,6 +328,9 @@ class State(object):
         Flag a ``set`` of hosts as failed, error for ``config.FAIL_PERCENT``.
         '''
 
+        if not hosts_to_fail:
+            return
+
         activated_count = activated_count or len(self.activated_hosts)
 
         logger.debug('Failing hosts: {0}'.format(', '.join(
