@@ -21,7 +21,7 @@ import six
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.pseudo_modules import PseudoModule
 
-from .attrs import wrap_attr_data
+from .attrs import AttrBase, wrap_attr_data
 from .exceptions import PyinfraError
 from .host import Host
 from .state import State
@@ -40,10 +40,14 @@ def get_operation_names():
     return OPERATIONS
 
 
-class OperationMeta(object):
+class OperationMeta(AttrBase):
     def __init__(self, hash=None, commands=None):
-        self.hash = hash
-        self.commands = commands or []
+        self.pyinfra_attr_key = hash
+
+        # Wrap all the attributes
+        commands = commands or []
+        self.commands = wrap_attr_data('commands', commands)
+        self.hash = wrap_attr_data('hash', hash)
 
         # Changed flag = did we do anything?
         self.changed = wrap_attr_data('changed', len(self.commands) > 0)
