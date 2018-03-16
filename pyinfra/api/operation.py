@@ -99,11 +99,11 @@ def _get_call_location():
 
     # Frist two frames are this and the caller below, so get the third item on
     # the frame list, which should be the call to the actual operation.
-    target = frames[2]
+    frame = frames[2]
 
     return 'line {0} in {1}'.format(
-        target.lineno,
-        path.relpath(target.filename),
+        frame[0].f_lineno,
+        path.relpath(frame[1]),
     )
 
 
@@ -208,10 +208,10 @@ def operation(func=None, pipeline_facts=None):
 
             for frame in frames:
                 if not (
-                    frame.function in ('decorated_func', 'add_op', 'add_limited_op')
-                    and frame.filename.endswith(path.join('pyinfra', 'api', 'operation.py'))
+                    frame[3] in ('decorated_func', 'add_op', 'add_limited_op')
+                    and frame[1].endswith(path.join('pyinfra', 'api', 'operation.py'))
                 ):
-                    line_number = frame.lineno
+                    line_number = frame[0].f_lineno
                     break
 
             # The when kwarg might change between hosts - but we still want that
