@@ -62,19 +62,33 @@ def dump_trace(exc_info):
     print('----------------------')
 
 
-def dump_state(state):
+def print_state_facts(state):
     print()
-    print('--> Gathered facts:')
+    print('--> Facts:')
     print(_jsonify(state.facts, indent=4, default=json_encode))
+
+
+def print_state_operations(state):
     print()
-    print('--> Proposed operations:')
+    print('--> Operations:')
     print(_jsonify(state.ops, indent=4, default=json_encode))
     print()
     print('--> Operation meta:')
     print(_jsonify(state.op_meta, indent=4, default=json_encode))
+
     print()
     print('--> Operation order:')
-    print(_jsonify(state.op_order, indent=4, default=json_encode))
+    print()
+    for op_hash in state.op_order:
+        meta = state.op_meta[op_hash]
+        hosts = set(
+            host for host, operations in six.iteritems(state.ops)
+            if op_hash in operations
+        )
+
+        print('    {0} (names={1}, hosts={2})'.format(
+            op_hash, meta['names'], hosts,
+        ))
 
 
 def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):

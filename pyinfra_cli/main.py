@@ -34,13 +34,14 @@ from .exceptions import CliError
 from .inventory import make_inventory
 from .log import setup_logging
 from .prints import (
-    dump_state,
     print_facts,
     print_facts_list,
     print_inventory,
     print_meta,
     print_operations_list,
     print_results,
+    print_state_facts,
+    print_state_operations,
 )
 from .util import (
     get_operation_and_args,
@@ -121,12 +122,17 @@ def _print_operations(ctx, param, value):
 )
 @click.option(
     '--debug-data', is_flag=True, default=False,
-    help='Print host/group data before operations and exit.',
+    help='Print host/group data before connecting and exit.',
 )
 @click.option(
-    '--debug-state', is_flag=True, default=False,
-    help='Print state data before operations and exit.',
+    '--debug-facts', is_flag=True, default=False,
+    help='Print fact data after generating operations and exit.',
 )
+@click.option(
+    '--debug-operations', is_flag=True, default=False,
+    help='Print operation data after generating operations and exit.',
+)
+# Eager commands (pyinfra [--facts | --operations | --version])
 @click.option(
     '--facts', is_flag=True, is_eager=True, callback=_print_facts,
     help='Print available facts list and exit.',
@@ -197,7 +203,7 @@ def _main(
     sudo, sudo_user, su_user,
     parallel, fail_percent,
     dry, limit, no_wait, serial,
-    debug, debug_data, debug_state,
+    debug, debug_data, debug_facts, debug_operations,
     facts=None, operations=None,
 ):
     print()
@@ -465,9 +471,14 @@ def _main(
     print('--> Proposed changes:')
     print_meta(state, inventory)
 
-    # If --debug-state, dump state (ops, op order, op meta) now & exit
-    if debug_state:
-        dump_state(state)
+    # If --debug-facts or --debug-operations, print and exit
+    if debug_facts or debug_operations:
+        if debug_facts:
+            print_state_facts(state)
+
+        if debug_operations:
+            print_state_operations(state)
+
         _exit()
 
     # Run the operations we generated with the deploy file
