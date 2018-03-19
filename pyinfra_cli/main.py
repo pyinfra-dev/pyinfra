@@ -397,7 +397,7 @@ def _main(
 
     # Connect to all the servers
     print('--> Connecting to hosts...')
-    with progress_spinner(state.inventory) as progress:
+    with progress_spinner(limit_hosts or state.inventory) as progress:
         connect_all(state, progress=progress)
 
     # Run the before_connect hook if provided
