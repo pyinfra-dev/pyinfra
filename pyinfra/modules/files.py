@@ -91,7 +91,7 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
 
     Regex line matching:
         Unless line matches a line (starts with ^, ends $), pyinfra will wrap it such that
-        it does, like: ``^.*LINE*.$``. This means we don't swap parts of lines out. To
+        it does, like: ``^.*LINE.*$``. This means we don't swap parts of lines out. To
         change bits of lines, see ``files.replace``.
 
     Regex line escaping:
