@@ -209,6 +209,10 @@ def sync(
     if add_deploy_dir and state.deploy_dir:
         source = path.join(state.deploy_dir, source)
 
+    # Ensure the source directory exists
+    if not path.isdir(source):
+        raise IOError('No such directory: {0}'.format(source))
+
     # Ensure exclude is a list/tuple
     if exclude is not None:
         if not isinstance(exclude, (list, tuple)):
