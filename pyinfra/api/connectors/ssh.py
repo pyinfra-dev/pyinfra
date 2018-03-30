@@ -22,6 +22,7 @@ from paramiko import (
     RSAKey,
     SFTPClient,
     SSHClient,
+    SSHConfig,
     SSHException,
 )
 from paramiko.agent import AgentRequestHandler
@@ -110,6 +111,30 @@ def _get_private_key(state, key_filename, key_password):
     return key
 
 
+def get_ssh_config(host):
+    ssh_config = SSHConfig()
+    user_config_file = path.expanduser("~/.ssh/config")
+    if path.exists(user_config_file):
+        cfg = dict()
+
+        with open(user_config_file) as f:
+            ssh_config.parse(f)
+            host_config = ssh_config.lookup(host)
+            if "user" in host_config:
+                cfg["username"] = host_config["user"]
+
+            if "proxycommand" in host_config:
+                cfg["sock"] = ProxyCommand(host_config["proxycommand"])
+
+            if "identityfile" in host_config:
+                cfg['key_filename'] = host_config['identityfile']
+
+            if "port" in host_config:
+                cfg["port"] = int(host_config["port"])
+
+            return cfg
+
+
 def _make_paramiko_kwargs(state, host):
     kwargs = {
         'username': host.data.ssh_user,
@@ -136,6 +161,7 @@ def _make_paramiko_kwargs(state, host):
     else:
         kwargs['allow_agent'] = True
         kwargs['look_for_keys'] = True
+        kwargs.update(get_ssh_config(host.name))
 
     return kwargs
 
