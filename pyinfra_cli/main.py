@@ -27,6 +27,7 @@ from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.modules import server
 
+from .compile import compile_deploy_file
 from .config import load_config, load_deploy_config
 from .exceptions import CliError, UnexpectedError
 from .inventory import make_inventory
@@ -257,6 +258,20 @@ def _main(
             logger.debug('Setting directory to: {0}'.format(potential_deploy_dir))
             deploy_dir = potential_deploy_dir
             break
+
+    # Compile a file or files
+    if inventory == 'compile':
+        for filename in commands:
+            print('--> Compiling: {0}'.format(click.style(
+                filename, bold=True,
+            )))
+
+            compiled_code = compile_deploy_file(filename)
+            print('=========================================')
+            print(compiled_code)
+            print('=========================================')
+
+        _exit()
 
     # List facts
     if commands[0] == 'fact':
