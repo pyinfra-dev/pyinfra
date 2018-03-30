@@ -9,7 +9,8 @@ import six
 
 from pyinfra import logger, pseudo_inventory
 from pyinfra.api.inventory import Inventory
-from pyinfra.api.util import exec_file
+
+from .util import exec_file
 
 # Hosts in an inventory can be just the hostname or a tuple (hostname, data)
 ALLOWED_HOST_TYPES = tuple(

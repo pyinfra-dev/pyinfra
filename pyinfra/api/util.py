@@ -6,7 +6,6 @@ from __future__ import division, print_function, unicode_literals
 
 import re
 from hashlib import sha1
-from imp import load_source
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -27,7 +26,7 @@ from .attrs import AttrBase
 # 64kb chunks
 BLOCKSIZE = 65536
 
-# Template cache
+# Caches
 TEMPLATES = {}
 FILE_SHAS = {}
 
@@ -127,21 +126,6 @@ def unroll_generators(generator):
             items.append(item)
 
     return items
-
-
-def exec_file(filename, return_locals=False):
-    '''
-    Execute a Python file and optionally return it's attributes as a dict.
-    '''
-
-    module_name = '_pyinfra_{0}'.format(filename.replace('.', '_'))
-    module = load_source(module_name, filename)
-
-    if return_locals:
-        return {
-            key: getattr(module, key)
-            for key in dir(module)
-        }
 
 
 def get_template(filename_or_string, is_string=False):

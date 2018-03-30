@@ -13,7 +13,7 @@ from contextlib2 import ExitStack
 
 from . import logger, pseudo_state
 from .api.exceptions import PyinfraError
-from .api.util import exec_file, read_buffer
+from .api.util import read_buffer
 
 
 def include(filename, hosts=False, when=True):
@@ -37,7 +37,15 @@ def include(filename, hosts=False, when=True):
             if hosts is not False:
                 stack.enter_context(pseudo_state.hosts(hosts))
 
-            exec_file(filename)
+            # Fixes a circular import because `pyinfra.local` is really a CLI
+            # only thing (so should be `pyinfra_cli.local`). It is kept here
+            # to maintain backwards compatability and the nicer public import
+            # (ideally users never need to import from `pyinfra_cli`).
+            from pyinfra_cli.util import exec_file
+            exec_file(filename, is_deploy_code=True)
+
+            # One potential solution to the above is to add local as an actual
+            # module, ie `pyinfra.modules.local`.
 
     except IOError as e:
         raise PyinfraError(

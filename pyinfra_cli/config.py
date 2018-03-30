@@ -9,7 +9,8 @@ from os import path
 import six
 
 from pyinfra.api import Config
-from pyinfra.api.util import exec_file
+
+from .util import exec_file
 
 
 def _extract_config_assignments(filename, config):

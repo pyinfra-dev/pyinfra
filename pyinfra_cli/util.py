@@ -29,13 +29,15 @@ except ImportError:
 
 import click
 
-from pyinfra import logger, pseudo_host
+from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.attrs import FallbackAttrData
-from pyinfra.api.util import exec_file
 from pyinfra.hook import HOOKS
 
+from .compile import compile_deploy_code
 from .exceptions import CliError
+from .legacy import parse_legacy_argstring
 
+PYTHON_CODES = {}
 WAIT_CHARS = deque(('-', '/', '|', '\\'))
 
 
@@ -108,6 +110,33 @@ def progress_spinner(length):
     # Finally, stop the spinner
     stop_event.set()
     spinner_thread.join()
+
+
+def exec_file(filename, return_locals=False, is_deploy_code=False):
+    '''
+    Execute a Python file and optionally return it's attributes as a dict.
+    '''
+
+    if filename not in PYTHON_CODES:
+        with open(filename, 'r') as f:
+            code = f.read()
+
+        if is_deploy_code:
+            code = compile_deploy_code(code)
+
+        code = compile(code, filename, 'exec')
+        PYTHON_CODES[filename] = code
+
+    # Create some base attributes for our "module"
+    data = {
+        '__file__': filename,
+        'state': pseudo_state,
+    }
+
+    # Execute the code with locals/globals going into the dict above
+    exec(PYTHON_CODES[filename], data)
+
+    return data
 
 
 def run_hook(state, hook_name, hook_data):
@@ -227,7 +256,7 @@ def load_deploy_file(state, filename, progress):
 
         pseudo_host.set(host)
 
-        exec_file(filename)
+        exec_file(filename, is_deploy_code=True)
         progress()
 
         logger.info('{0} {1} {2}'.format(
