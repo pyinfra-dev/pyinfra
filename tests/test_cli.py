@@ -13,6 +13,7 @@ from six.moves import cStringIO as StringIO
 
 from pyinfra.modules import server
 
+from pyinfra_cli.compile import compile_deploy_code
 from pyinfra_cli.exceptions import CliError
 from pyinfra_cli.legacy import setup_arguments
 from pyinfra_cli.main import cli
@@ -123,6 +124,38 @@ class TestCliExceptions(TestCase):
         self.assert_cli_exception(
             ['example/inventories/dev.py', 'fact', 'thing'],
             'No fact: thing',
+        )
+
+
+class TestCliCompile(TestCase):
+    def assert_compiles(self, code, wanted_code):
+        compiled_code = compile_deploy_code(code).strip()
+        self.assertEqual(compiled_code, wanted_code)
+
+    def test_if(self):
+        self.assert_compiles(
+            'if True: pass',
+            'with state.when(True): pass',
+        )
+
+    def test_if_else(self):
+        self.assert_compiles(
+            'if True: pass\nelse: pass',
+            (
+
+                'with state.when(True): pass\n'
+                'with state.when(not ((True))): pass'
+            ),
+        )
+
+    def test_if_elif(self):
+        self.assert_compiles(
+            'if True: pass\nelif False: pass\nelse: pass',
+            (
+                'with state.when(True): pass\n'
+                'with state.when((False) and not ((True))): pass\n'
+                'with state.when(not ((True) and (False))): pass'
+            ),
         )
 
 
