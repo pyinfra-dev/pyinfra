@@ -18,7 +18,6 @@ from pyinfra import (
     pseudo_inventory,
     pseudo_state,
 )
-
 from pyinfra.api import State
 from pyinfra.api.attrs import FallbackAttrData
 from pyinfra.api.connect import connect_all
@@ -26,11 +25,10 @@ from pyinfra.api.exceptions import NoGroupError, PyinfraError
 from pyinfra.api.facts import get_facts, is_fact
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
-
 from pyinfra.modules import server
 
 from .config import load_config, load_deploy_config
-from .exceptions import CliError
+from .exceptions import CliError, UnexpectedError
 from .inventory import make_inventory
 from .log import setup_logging
 from .prints import (
@@ -195,6 +193,10 @@ def main(*args, **kwargs):
             raise CliError(message)
 
         raise
+
+    except Exception as e:
+        # Re-raise any unexpected exceptions as UnexpectedError
+        raise UnexpectedError(e)
 
 
 def _main(
