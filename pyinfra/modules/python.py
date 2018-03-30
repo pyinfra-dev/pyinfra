@@ -54,3 +54,11 @@ def call(state, host, func, *args, **kwargs):
     '''
 
     yield (func, args, kwargs)
+
+
+@operation
+def raise_exception(state, host, exception_class, *args, **kwargs):
+    def raise_exc():
+        raise exception_class(*args, **kwargs)
+
+    yield (raise_exc)
