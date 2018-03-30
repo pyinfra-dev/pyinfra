@@ -6,7 +6,6 @@ from __future__ import division, print_function
 
 import json
 import os
-import shlex
 import sys
 
 from collections import deque
@@ -161,64 +160,19 @@ def _parse_arg(arg):
     if arg.lower() == 'true':
         return True
 
+    try:
+        return int(arg)
+    except (TypeError, ValueError):
+        pass
+
     return arg
 
 
-def _parse_argstring(argstring):
-    '''
-    Preparses CLI input:
+def get_operation_and_args(commands):
+    operation_name = commands[0]
 
-    ``arg1,arg2`` => ``['arg1', 'arg2']``
-    ``[item1, item2],arg2`` => ``[['item1', 'item2'], arg2]``
-    '''
-
-    argstring = argstring.replace(',', ' , ')
-    argstring = argstring.replace('[', ' [ ')
-    argstring = argstring.replace(']', ' ] ')
-
-    argbits = shlex.split(argstring)
-    args = []
-    arg_buff = []
-    list_buff = []
-    in_list = False
-
-    for bit in argbits:
-        if bit == '[' and not in_list:
-            in_list = True
-            continue
-
-        elif bit == ']' and in_list:
-            in_list = False
-            args.append(list_buff)
-            list_buff = []
-            continue
-
-        elif bit == ',':
-            if not in_list and arg_buff:
-                args.append(''.join(arg_buff))
-                arg_buff = []
-
-            continue
-
-        # Restore any broken up ,[]s
-        bit = bit.replace(' , ', ',')
-        bit = bit.replace(' [ ', '[')
-        bit = bit.replace(' ] ', ']')
-
-        if in_list:
-            list_buff.append(bit)
-        else:
-            arg_buff.append(bit)
-
-    if arg_buff:
-        args.append(' '.join(arg_buff))
-
-    return args
-
-
-def get_operation_and_args(op_string, args_string):
     # Get the module & operation name
-    op_module, op_name = op_string.split('.')
+    op_module, op_name = operation_name.split('.')
 
     try:
         op_module = import_module('pyinfra.modules.{0}'.format(op_module))
@@ -227,32 +181,38 @@ def get_operation_and_args(op_string, args_string):
 
     op = getattr(op_module, op_name, None)
     if not op:
-        raise CliError('No such operation: {0}'.format(op_string))
+        raise CliError('No such operation: {0}'.format(operation_name))
 
-    # Replace the args string with kwargs
-    args = None
+    # Parse the arguments
+    operation_args = commands[1:]
 
-    if args_string:
+    if len(operation_args) == 1:
+        # Check if we're JSON (in which case we expect a list of two items:
+        # a list of args and a dict of kwargs).
         try:
-            args, kwargs = json.loads(args_string)
-            args = (args, kwargs)
+            args, kwargs = json.loads(operation_args[0])
+            return op, (args, kwargs)
 
         except ValueError:
-            args = _parse_argstring(args_string)
+            # COMPAT w/ <0.7
+            # TODO: remove this conditional
+            if ',' in operation_args[0]:
+                operation_args = parse_legacy_argstring(operation_args[0])
 
-            # Setup kwargs
-            kwargs = [arg.split('=') for arg in args if '=' in arg]
-            op_kwargs = {
-                key: _parse_arg(value)
-                for key, value in kwargs
-            }
+    args = [
+        _parse_arg(arg)
+        for arg in operation_args if '=' not in arg
+    ]
 
-            # Get the remaining args
-            args = [_parse_arg(arg) for arg in args if '=' not in arg]
+    kwargs = {
+        key: _parse_arg(value)
+        for key, value in [
+            arg.split('=')
+            for arg in operation_args if '=' in arg
+        ]
+    }
 
-            args = (args, op_kwargs)
-
-    return op, args
+    return op, (args, kwargs)
 
 
 def load_deploy_file(state, filename, progress):

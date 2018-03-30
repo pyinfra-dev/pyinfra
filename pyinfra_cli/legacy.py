@@ -2,6 +2,7 @@
 # File: pyinfra_cli/legacy.py
 # Desc: the old, pre 0.4 CLI
 
+import shlex
 import sys
 
 from os import path
@@ -128,6 +129,58 @@ def run_main_with_legacy_arguments(main):
             kwargs['inventory'],
             ' '.join(commands),
         ), bold=True))
+
+
+def parse_legacy_argstring(argstring):
+    '''
+    Preparses CLI input:
+
+    ``arg1,arg2`` => ``['arg1', 'arg2']``
+    ``[item1, item2],arg2`` => ``[['item1', 'item2'], arg2]``
+    '''
+
+    argstring = argstring.replace(',', ' , ')
+    argstring = argstring.replace('[', ' [ ')
+    argstring = argstring.replace(']', ' ] ')
+
+    argbits = shlex.split(argstring)
+    args = []
+    arg_buff = []
+    list_buff = []
+    in_list = False
+
+    for bit in argbits:
+        if bit == '[' and not in_list:
+            in_list = True
+            continue
+
+        elif bit == ']' and in_list:
+            in_list = False
+            args.append(list_buff)
+            list_buff = []
+            continue
+
+        elif bit == ',':
+            if not in_list and arg_buff:
+                args.append(''.join(arg_buff))
+                arg_buff = []
+
+            continue
+
+        # Restore any broken up ,[]s
+        bit = bit.replace(' , ', ',')
+        bit = bit.replace(' [ ', '[')
+        bit = bit.replace(' ] ', ']')
+
+        if in_list:
+            list_buff.append(bit)
+        else:
+            arg_buff.append(bit)
+
+    if arg_buff:
+        args.append(' '.join(arg_buff))
+
+    return args
 
 
 def setup_op_and_args(op_string, args_string):

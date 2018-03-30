@@ -50,7 +50,7 @@ class TestCliUtil(TestCase):
 
     def test_setup_no_module(self):
         with self.assertRaises(CliError) as context:
-            get_operation_and_args('no.op', '')
+            get_operation_and_args(('no.op',))
 
         self.assertEqual(
             context.exception.message,
@@ -59,7 +59,7 @@ class TestCliUtil(TestCase):
 
     def test_setup_no_op(self):
         with self.assertRaises(CliError) as context:
-            get_operation_and_args('server.no', '')
+            get_operation_and_args(('server.no',))
 
         self.assertEqual(
             context.exception.message,
@@ -67,35 +67,21 @@ class TestCliUtil(TestCase):
         )
 
     def test_setup_op_and_args(self):
-        op_string = 'server.user'
-        args_string = 'one,two,hello=world'
+        commands = ('server.user', 'one', 'two', 'hello=world')
 
         self.assertEqual(
-            get_operation_and_args(op_string, args_string),
+            get_operation_and_args(commands),
             (
                 server.user,
                 (['one', 'two'], {'hello': 'world'}),
             ),
         )
 
-    def test_setup_op_and_args_list(self):
-        op_string = 'server.user'
-        args_string = '[one,two],hello=world'
-
-        self.assertEqual(
-            get_operation_and_args(op_string, args_string),
-            (
-                server.user,
-                ([['one', 'two']], {'hello': 'world'}),
-            ),
-        )
-
     def test_setup_op_and_json_args(self):
-        op_string = 'server.user'
-        args_string = '[["one", "two"], {"hello": "world"}]'
+        commands = ('server.user', '[["one", "two"], {"hello": "world"}]')
 
         self.assertEqual(
-            get_operation_and_args(op_string, args_string),
+            get_operation_and_args(commands),
             (
                 server.user,
                 (['one', 'two'], {'hello': 'world'}),
@@ -186,3 +172,39 @@ class TestLegacyCliArguments(TestCase):
             self.assert_valid_arguments({
                 '--key': 'nop.key',
             })
+
+    def test_legacy_setup_op_and_args(self):
+        op_string = 'server.user'
+        args_string = 'one,two,hello=world'
+
+        self.assertEqual(
+            get_operation_and_args((op_string, args_string)),
+            (
+                server.user,
+                (['one', 'two'], {'hello': 'world'}),
+            ),
+        )
+
+    def test_legacy_setup_op_and_args_list(self):
+        op_string = 'server.user'
+        args_string = '[one,two],hello=world'
+
+        self.assertEqual(
+            get_operation_and_args((op_string, args_string)),
+            (
+                server.user,
+                ([['one', 'two']], {'hello': 'world'}),
+            ),
+        )
+
+    def test_legacy_setup_op_and_json_args(self):
+        op_string = 'server.user'
+        args_string = '[["one", "two"], {"hello": "world"}]'
+
+        self.assertEqual(
+            get_operation_and_args((op_string, args_string)),
+            (
+                server.user,
+                (['one', 'two'], {'hello': 'world'}),
+            ),
+        )

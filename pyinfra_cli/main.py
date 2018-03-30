@@ -169,7 +169,7 @@ def cli(*args, **kwargs):
 
     \b
     # Run a single operation against the inventory
-    pyinfra INVENTORY server.user pyinfra,home=/home/pyinfra
+    pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
 
     \b
     # Execute an arbitrary command on the inventory
@@ -292,19 +292,17 @@ def _main(
             if not path.exists(file):
                 raise CliError('No deploy file: {0}'.format(file))
 
-    # Operation w/optional args
-    elif len(commands) == 2:
+    # Operation w/optional args (<module>.<op> ARG1 ARG2 ...)
+    elif len(commands[0].split('.')) == 2:
         command = 'op'
-        commands = get_operation_and_args(
-            commands[0], commands[1],
-        )
+        commands = get_operation_and_args(commands)
 
     else:
         raise CliError('''Invalid commands: {0}
 
     Command usage:
     pyinfra INVENTORY deploy_web.py [deploy_db.py]...
-    pyinfra INVENTORY server.user pyinfra,home=/home/pyinfra
+    pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
     pyinfra INVENTORY exec -- echo "hello world"
     pyinfra INVENTORY fact os [users]...'''.format(commands))
 
