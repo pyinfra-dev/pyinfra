@@ -20,7 +20,8 @@ from types import FunctionType
 try:
     from StringIO import StringIO
     from cStringIO import OutputType, InputType
-    io_bases = (file, OutputType, InputType, StringIO)
+    from types import FileType
+    io_bases = (FileType, OutputType, InputType, StringIO)
 
 except ImportError:
     from io import IOBase
