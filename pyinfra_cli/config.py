@@ -14,9 +14,11 @@ from pyinfra.api.util import exec_file
 
 def _extract_config_assignments(filename, config):
     with open(filename, 'r') as f:
-        data = ast.parse(f.read())
+        data = f.read()
 
-    for node in data.body:
+    ast_data = ast.parse(data, filename=filename)
+
+    for node in ast_data.body:
         if not isinstance(node, ast.Assign):
             continue
 
