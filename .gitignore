@@ -13,3 +13,5 @@ example/.vagrant*
 .docstmp
 docs/build/
 .idea/
+
+pyinfra-debug.log
