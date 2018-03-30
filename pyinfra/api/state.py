@@ -91,6 +91,7 @@ class State(object):
     # Used in CLI
     deploy_dir = None  # base directory for locating files/templates/etc
     is_cli = False
+    has_imbalanced_operations = False  # have we seen imbalanced operations?
 
     def __init__(self, inventory, config=None, initial_limit=None):
         # Config validation

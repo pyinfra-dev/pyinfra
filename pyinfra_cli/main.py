@@ -452,6 +452,17 @@ def _main(
                 load_deploy_file(state, filename, progress=progress)
                 progress()
 
+        # Show warning if we detected any imbalanced operations
+        if state.has_imbalanced_operations:
+            logger.warning('''
+    Imbalanced operations were detected!
+
+    The deploy files are executed once per host; the operations need to share
+    the same arguments otherwise pyinfra cannot run them in a consistent order.
+
+    Please see: http://pyinfra.readthedocs.io/page/using_python.html.
+        '''.rstrip().format(', '.join(commands)))
+
     # Operation w/optional args
     elif command == 'op':
         print()
