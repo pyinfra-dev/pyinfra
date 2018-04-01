@@ -112,7 +112,7 @@ def _get_private_key(state, key_filename, key_password):
     return key
 
 
-def get_ssh_config(host):
+def get_ssh_config(hostname):
     ssh_config = SSHConfig()
     user_config_file = path.expanduser('~/.ssh/config')
     cfg = dict()
@@ -120,12 +120,9 @@ def get_ssh_config(host):
     if path.exists(user_config_file):
         with open(user_config_file) as f:
             ssh_config.parse(f)
-            host_config = ssh_config.lookup(host)
+            host_config = ssh_config.lookup(hostname)
             if 'user' in host_config:
                 cfg['username'] = host_config['user']
-
-            if 'hostname' in host_config:
-                cfg['hostname'] = host_config['hostname']
 
             if 'proxycommand' in host_config:
                 cfg['sock'] = ProxyCommand(host_config['proxycommand'])
@@ -135,6 +132,11 @@ def get_ssh_config(host):
 
             if 'port' in host_config:
                 cfg['port'] = int(host_config['port'])
+
+            # Only apply the hostname if it differs (hostname alias)
+            host_config_hostname = host_config.get('hostname')
+            if host_config_hostname and host_config_hostname != hostname:
+                cfg['hostname'] = host_config['hostname']
 
     return cfg
 
