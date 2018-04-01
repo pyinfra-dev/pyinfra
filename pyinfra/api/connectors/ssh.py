@@ -124,7 +124,7 @@ def get_ssh_config(host):
             if 'user' in host_config:
                 cfg['username'] = host_config['user']
 
-            if "hostname" in host_config:
+            if 'hostname' in host_config:
                 cfg['hostname'] = host_config['hostname']
 
             if 'proxycommand' in host_config:
