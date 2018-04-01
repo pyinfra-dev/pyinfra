@@ -124,9 +124,8 @@ def get_ssh_config(host):
             if 'user' in host_config:
                 cfg['username'] = host_config['user']
 
-            # hostname aliases are not possible with current implementation
-            # if "hostname" in host_config:
-            #     cfg['hostname'] = host_config['hostname']
+            if "hostname" in host_config:
+                cfg['hostname'] = host_config['hostname']
 
             if 'proxycommand' in host_config:
                 cfg['sock'] = ProxyCommand(host_config['proxycommand'])
@@ -141,14 +140,21 @@ def get_ssh_config(host):
 
 
 def _make_paramiko_kwargs(state, host):
-    kwargs = {
-        'username': host.data.ssh_user,
-        'port': int(host.data.ssh_port) if host.data.ssh_port else 22,
-        'timeout': state.config.TIMEOUT,
+    # Start by loading any SSH config for this host
+    kwargs = get_ssh_config(host.name)
+
+    # Now apply "defaults" - meaning if the user explicitly sets the SSH user,
+    # this will override the SSH config setting.
+    for key, value in (
+        ('username', host.data.ssh_user),
+        ('port', int(host.data.ssh_port or 22)),
+        ('timeout', state.config.TIMEOUT),
         # At this point we're assuming a password/key are provided
-        'allow_agent': False,
-        'look_for_keys': False,
-    }
+        ('allow_agent', False),
+        ('look_for_keys', False),
+    ):
+        if key not in kwargs:
+            kwargs[key] = value
 
     # Password auth (boo!)
     if host.data.ssh_password:
@@ -166,7 +172,6 @@ def _make_paramiko_kwargs(state, host):
     else:
         kwargs['allow_agent'] = True
         kwargs['look_for_keys'] = True
-        kwargs.update(get_ssh_config(host.name))
 
     return kwargs
 
@@ -180,8 +185,11 @@ def connect(state, host, for_fact=None):
     kwargs = _make_paramiko_kwargs(state, host)
     logger.debug('Connecting to: {0} ({1})'.format(host.name, kwargs))
 
-    name = host.name
-    hostname = host.data.ssh_hostname or name
+    # Hostname can be provided via SSH config (alias), data, or the hosts name
+    hostname = kwargs.pop(
+        'hostname',
+        host.data.ssh_hostname or host.name,
+    )
 
     try:
         # Create new client & connect to the host
