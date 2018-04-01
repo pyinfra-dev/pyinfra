@@ -132,7 +132,7 @@ def get_ssh_config(host):
                 cfg['sock'] = ProxyCommand(host_config['proxycommand'])
 
             if 'identityfile' in host_config:
-                cfg['key_filename'] = host_config['identityfile']
+                cfg['pkey'] = _get_private_key(host_config['identityfile'])
 
             if 'port' in host_config:
                 cfg['port'] = int(host_config['port'])
