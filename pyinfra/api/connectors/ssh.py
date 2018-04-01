@@ -115,9 +115,9 @@ def _get_private_key(state, key_filename, key_password):
 def get_ssh_config(host):
     ssh_config = SSHConfig()
     user_config_file = path.expanduser('~/.ssh/config')
-    if path.exists(user_config_file):
-        cfg = dict()
+    cfg = dict()
 
+    if path.exists(user_config_file):
         with open(user_config_file) as f:
             ssh_config.parse(f)
             host_config = ssh_config.lookup(host)
@@ -136,7 +136,7 @@ def get_ssh_config(host):
             if 'port' in host_config:
                 cfg['port'] = int(host_config['port'])
 
-            return cfg
+    return cfg
 
 
 def _make_paramiko_kwargs(state, host):
