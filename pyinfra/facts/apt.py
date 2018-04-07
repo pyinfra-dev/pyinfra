@@ -81,7 +81,7 @@ class DebPackages(FactBase):
     '''
 
     command = 'dpkg -l'
-    regex = r'^[a-z]+\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
+    regex = r'^ii\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
     default = dict
 
     def process(self, output):
