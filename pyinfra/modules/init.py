@@ -288,6 +288,36 @@ def systemd(
 
 
 @operation
+def launchd(
+    state, host, name,
+    running=True, restarted=False, command=None,
+):
+    '''
+    Manage the state of systemd managed services.
+
+    + name: name of the service to manage
+    + running: whether the service should be running
+    + restarted: whether the service should be restarted
+    + command: custom command to pass like: ``/etc/rc.d/<name> <command>``
+    + enabled: whether this service should be enabled/disabled on boot
+    + daemon_reload: reload the systemd daemon to read updated unit files
+    '''
+
+    yield _handle_service_control(
+        name, host.fact.launchd_status,
+        'launchctl {1} {0}',
+        # No support for restart/reload/command
+        running, None, None, None,
+    )
+
+    # No restart command, so just stop/start
+    is_running = host.fact.launchd_status.get(name, None)
+    if restarted and is_running:
+        yield 'launchctl stop {0}'.format(name)
+        yield 'launchctl start {0}'.format(name)
+
+
+@operation
 def service(
     state, host,
     *args, **kwargs

@@ -149,10 +149,32 @@ class RcdStatus(InitdStatus):
     default = dict
 
 
-class RcdEnabled(FactBase):
+class LaunchdStatus(FactBase):
     '''
-    Returns a dict of service name -> whether enabled (on boot) status. Different
-    to Linux variants because BSD has no/one runlevel.
+    Returns a dict of name -> status for launchd managed services.
     '''
 
+    command = 'launchctl list'
     default = dict
+
+    def process(self, output):
+        services = {}
+
+        for line in output:
+            bits = line.split()
+
+            if not bits or bits[0] == 'PID':
+                continue
+
+            name = bits[2]
+            status = False
+
+            try:
+                int(bits[0])
+                status = True
+            except ValueError:
+                pass
+
+            services[name] = status
+
+        return services
