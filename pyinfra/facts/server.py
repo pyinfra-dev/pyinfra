@@ -132,6 +132,48 @@ class Groups(FactBase):
         return groups
 
 
+class Crontab(FactBase):
+    '''
+    Returns a dict of cron command -> execution time.
+
+    .. code:: python
+
+        '/path/to/command': {
+            'minute': '*',
+            'hour': '*',
+            'month': '*',
+            'day_of_month': '*',
+            'day_of_week': '*',
+        },
+        ...
+    '''
+
+    default = dict
+
+    @staticmethod
+    def command(user=None):
+        if user:
+            return 'crontab -l -u {0}'.format(user)
+
+        return 'crontab -l'
+
+    @staticmethod
+    def process(output):
+        crons = {}
+
+        for line in output:
+            minute, hour, day_of_month, month, day_of_week, command = line.split(' ', 5)
+            crons[command] = {
+                'minute': minute,
+                'hour': hour,
+                'month': month,
+                'day_of_month': day_of_month,
+                'day_of_week': day_of_week,
+            }
+
+        return crons
+
+
 class Users(FactBase):
     '''
     Returns a dict of users -> details:
