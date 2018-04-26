@@ -10,11 +10,12 @@ Linux/BSD.
 from __future__ import unicode_literals
 
 import six
+from six.moves import shlex_quote
 
 from pyinfra.api import operation
 
 from . import files
-from .util.files import chmod
+from .util.files import chmod, sed_replace
 
 
 @operation
@@ -155,6 +156,89 @@ def hostname(state, host, hostname, hostname_file=None):
             state, host,
             file, hostname_file,
         )
+
+
+@operation
+def crontab(
+    state, host, command, present=True, user=None,
+    minute='*', hour='*', month='*', day_of_week='*', day_of_month='*',
+):
+    '''
+    Manage crontab entries.
+
+    + command: the command for the cron
+    + present: whether this cron command should exist
+    + user: the user whose crontab to manage
+    + minute: which minutes to execute the cron
+    + hour: which hours to execute the cron
+    + month: which months to execute the cron
+    + day_of_week: which day of the week to execute the cron
+    + day_of_month: which day of the month to execute the cron
+
+    Cron commands:
+        The command is used to identify crontab entries - this means commands
+        must be unique within a given users crontab. If you require multiple
+        identical commands, prefix each with a nonce environment variable.
+    '''
+
+    crontab = host.fact.crontab(user)
+    exists = command in crontab
+
+    edit_commands = []
+    temp_filename = state.get_temp_filename()
+
+    new_crontab_line = '{minute} {hour} {day_of_month} {month} {day_of_week} {command}'.format(
+        command=command,
+        minute=minute,
+        hour=hour,
+        month=month,
+        day_of_week=day_of_week,
+        day_of_month=day_of_month,
+    )
+    existing_crontab_match = '.*{0}.*'.format(command)
+
+    # Don't want the cron and it does exist? Remove the line
+    if not present and exists:
+        edit_commands.append(sed_replace(
+            temp_filename, existing_crontab_match, '',
+        ))
+
+    # Want the cron but it doesn't exist? Append the line
+    elif present and not exists:
+        edit_commands.append('echo {0} >> {1}'.format(
+            shlex_quote(new_crontab_line), temp_filename,
+        ))
+
+    # We have the cron and it exists, do it's details? If not, replace the line
+    elif present and exists:
+        existing_details = crontab[command]
+
+        if any((
+            minute != existing_details['minute'],
+            hour != existing_details['hour'],
+            month != existing_details['month'],
+            day_of_week != existing_details['day_of_week'],
+            day_of_month != existing_details['day_of_month'],
+        )):
+            edit_commands.append(sed_replace(
+                temp_filename, existing_crontab_match, new_crontab_line,
+            ))
+
+    if edit_commands:
+        crontab_args = []
+        if user:
+            crontab_args.append('-u {0}'.format(user))
+
+        # List the crontab into a temporary file if it exists
+        if crontab:
+            yield 'crontab -l {0} > {1}'.format(' '.join(crontab_args), temp_filename)
+
+        # Now yield any edits
+        for command in edit_commands:
+            yield command
+
+        # Finally, use the tempfile to write a new crontab
+        yield 'crontab {0} {1}'.format(' '.join(crontab_args), temp_filename)
 
 
 @operation
