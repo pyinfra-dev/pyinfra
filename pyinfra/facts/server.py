@@ -132,6 +132,14 @@ class Groups(FactBase):
         return groups
 
 
+# TODO: find a nicer place for this!
+def _try_int(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return value
+
+
 class Crontab(FactBase):
     '''
     Returns a dict of cron command -> execution time.
@@ -162,13 +170,17 @@ class Crontab(FactBase):
         crons = {}
 
         for line in output:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+
             minute, hour, day_of_month, month, day_of_week, command = line.split(' ', 5)
             crons[command] = {
-                'minute': minute,
-                'hour': hour,
-                'month': month,
-                'day_of_month': day_of_month,
-                'day_of_week': day_of_week,
+                'minute': _try_int(minute),
+                'hour': _try_int(hour),
+                'month': _try_int(month),
+                'day_of_month': _try_int(day_of_month),
+                'day_of_week': _try_int(day_of_week),
             }
 
         return crons
