@@ -561,11 +561,11 @@ def directory(
     '''
     Manage the state of directories.
 
-    + name: name/patr of the remote file
-    + present: whether the file should exist
-    + user: user to own the files
-    + group: group to own the files
-    + mode: permissions of the files
+    + name: name/patr of the remote folder
+    + present: whether the folder should exist
+    + user: user to own the folder
+    + group: group to own the folder
+    + mode: permissions of the folder
     + recursive: recursively apply user/group/mode
     '''
 
