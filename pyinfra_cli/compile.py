@@ -61,7 +61,7 @@ def _replace_ifs(red):
 
 
 def compile_deploy_code(code):
-    if 'PYINFRA_NO_COMPILE' in os.environ:
+    if os.environ.get('PYINFRA_COMPILE') == 'off':
         return code
 
     red = RedBaron(code)

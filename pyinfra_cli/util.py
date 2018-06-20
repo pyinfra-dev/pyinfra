@@ -42,7 +42,7 @@ WAIT_CHARS = deque(('-', '/', '|', '\\'))
 
 
 def print_spinner(stop_event, progress_queue):
-    if 'PYINFRA_NO_PROGRESS' in os.environ:
+    if os.environ.get('PYINFRA_PROGRESS') == 'off':
         return
 
     progress = ''
