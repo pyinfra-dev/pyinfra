@@ -32,47 +32,6 @@ String Formatting
     )
 
 
-Conditional Statements
-----------------------
-
-.. code:: python
-
-    # This will change the number of operations when the conditional changes:
-
-    if host.data.create_user:
-        server.user(...)
-
-    # Which should be rewritten using *either* the when keyword argument:
-
-    server.user(
-        when=host.data.create_user,
-        ...
-    )
-
-    # Or, for multiple operations use `state.when`:
-
-    with state.when(host.data.create_user):
-        server.user(...)
-        ...
-
-It is also possible to limit operations to a list of hosts (or inventory group):
-
-.. code:: python
-
-    # As a keyword argument:
-
-    server.user(
-        hosts=inventory.get_group('webservers'),
-        ...
-    )
-
-    # Or, for multiple operations:
-
-    with state.hosts(inventory.get_group('webservers')):
-        server.user(...)
-        ...
-
-
 Loops
 -----
 
