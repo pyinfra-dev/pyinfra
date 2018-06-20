@@ -7,7 +7,8 @@ from pyinfra import local
 
 
 # These work everywhere
-local.include('deploy_basics.py')
-local.include('deploy_packages.py')
-local.include('deploy_callbacks.py')
-local.include('deploy_python_app.py')
+local.include('basics.py')
+local.include('packages.py')
+local.include('callbacks.py')
+local.include('python_app.py')
+
