@@ -198,19 +198,22 @@ def operation(func=None, pipeline_facts=None):
         # Get/generate a hash for this op
         op_hash = op_meta_kwargs['op']
 
+        line_number = None
+        filename = None
+
         if op_hash is None:
             # Get the line number where this operation was called by looking
             # through the call stack for the first non-pyinfra line. This ensures
             # two identical operations (in terms of arguments/meta) will still
             # generate two hashes.
             frames = stack()
-            line_number = None
 
             for frame in frames:
                 if not (
                     frame[3] in ('decorated_func', 'add_op', 'add_limited_op')
                     and frame[1].endswith(path.join('pyinfra', 'api', 'operation.py'))
                 ):
+                    filename = frame.filename
                     line_number = frame[0].f_lineno
                     break
 
@@ -279,8 +282,9 @@ def operation(func=None, pipeline_facts=None):
             if index < len(state.op_order):
                 state.has_imbalanced_operations = True
 
-                logger.warning('Imbalanced operation detected! ({0})'.format(
+                logger.warning('Imbalanced operation detected! ({0}{1})'.format(
                     ', '.join(names),
+                    ', {0}:{1}'.format(filename, line_number) if filename else '',
                 ))
 
             state.op_order.insert(index, op_hash)
