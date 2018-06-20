@@ -101,11 +101,11 @@ def _print_operations(ctx, param, value):
 @click.option('--fail-percent', type=int, help='% of hosts allowed to fail.')
 @click.option(
     '--dry', is_flag=True, default=False,
-    help='Don\'t execute operations on the remote host.',
+    help='Don\'t execute operations on the target hosts.',
 )
 @click.option(
     '--limit',
-    help='Limit the inventory, supports *wildcards and group names.',
+    help='Restrict the target hosts by name and group name.',
 )
 @click.option(
     '--no-wait', is_flag=True, default=False,
@@ -114,22 +114,6 @@ def _print_operations(ctx, param, value):
 @click.option(
     '--serial', is_flag=True, default=False,
     help='Run operations in serial, host by host.',
-)
-@click.option(
-    '--debug', is_flag=True, default=False,
-    help='Print debug info.',
-)
-@click.option(
-    '--debug-data', is_flag=True, default=False,
-    help='Print host/group data before connecting and exit.',
-)
-@click.option(
-    '--debug-facts', is_flag=True, default=False,
-    help='Print fact data after generating operations and exit.',
-)
-@click.option(
-    '--debug-operations', is_flag=True, default=False,
-    help='Print operation data after generating operations and exit.',
 )
 # Eager commands (pyinfra [--facts | --operations | --version])
 @click.option(
@@ -180,6 +164,32 @@ def cli(*args, **kwargs):
     '''
 
     main(*args, **kwargs)
+
+
+# This is a hack around Click 7 not being released (like, forever) which has the
+# magical click.option(hidden=True) capability.
+if '--help' not in sys.argv:
+    extra_options = (
+        click.option(
+            '--debug', is_flag=True, default=False,
+            help='Print debug info.',
+        ),
+        click.option(
+            '--debug-data', is_flag=True, default=False,
+            help='Print host/group data before connecting and exit.',
+        ),
+        click.option(
+            '--debug-facts', is_flag=True, default=False,
+            help='Print facts after generating operations and exit.',
+        ),
+        click.option(
+            '--debug-operations', is_flag=True, default=False,
+            help='Print operations after generating and exit.',
+        ),
+    )
+
+    for decorator in extra_options:
+        cli = decorator(cli)
 
 
 def main(*args, **kwargs):
