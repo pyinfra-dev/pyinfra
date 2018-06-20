@@ -56,6 +56,12 @@ def _convert_attr_bools(data):
             for key, value in six.iteritems(data)
         }
 
+    if isinstance(data, list):
+        return [
+            _convert_attr_bools(value)
+            for value in data
+        ]
+
     if isinstance(data, AttrDataBool):
         return bool(data)
 
