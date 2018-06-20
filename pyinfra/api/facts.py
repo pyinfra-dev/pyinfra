@@ -190,8 +190,9 @@ def get_facts(state, name, args=None, ensure_hosts=None):
 
         log_name = click.style(name, bold=True)
 
-        if args:
-            log = 'Loaded fact {0}: {1}'.format(log_name, args)
+        filtered_args = list(filter(None, args))
+        if filtered_args:
+            log = 'Loaded fact {0}: {1}'.format(log_name, tuple(filtered_args))
         else:
             log = 'Loaded fact {0}'.format(log_name)
 
