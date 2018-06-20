@@ -237,7 +237,7 @@ def get_operation_and_args(commands):
     kwargs = {
         key: _parse_arg(value)
         for key, value in [
-            arg.split('=')
+            arg.split('=', 1)
             for arg in operation_args if '=' in arg
         ]
     }
