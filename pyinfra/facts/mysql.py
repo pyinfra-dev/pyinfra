@@ -136,6 +136,8 @@ MYSQL_GRANT_REGEX = re.compile(
 
 
 class MysqlUserGrants(MysqlFactBase):
+    default = dict
+
     def command(
         self, user,
         hostname='localhost',
