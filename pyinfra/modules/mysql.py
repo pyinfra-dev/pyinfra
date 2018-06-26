@@ -242,18 +242,21 @@ def permission(
         mysql_host, mysql_port,
     )
 
-    existing_permissions = [
-        'ALL' if permission == 'ALL PRIVILEGES' else permission
-        for permission in user_grants[database_table]['permissions']
-    ]
+    has_permissions = False
 
-    has_permissions = (
-        database_table in user_grants
-        and all(
-            permission in existing_permissions
-            for permission in permissions
+    if database_table in user_grants:
+        existing_permissions = [
+            'ALL' if permission == 'ALL PRIVILEGES' else permission
+            for permission in user_grants[database_table]['permissions']
+        ]
+
+        has_permissions = (
+            database_table in user_grants
+            and all(
+                permission in existing_permissions
+                for permission in permissions
+            )
         )
-    )
 
     target = action = None
 
@@ -271,7 +274,7 @@ def permission(
         command = (
             '{action} {permissions} '
             'ON {database}.{table} '
-            '{target} "{user}"@"{user_hostname}" '
+            '{target} "{user}"@"{user_hostname}"'
         ).format(
             permissions=', '.join(permissions),
             action=action, target=target,
