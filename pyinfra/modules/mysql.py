@@ -6,6 +6,12 @@
 Manage MySQL databases, users and permissions.
 
 Requires the ``mysql`` CLI executable on the target host(s).
+
+All operations in this module take four optional global arguments:
+    + ``mysql_user``: the username to connect to mysql to
+    + ``mysql_password``: the password for the connecting user
+    + ``mysql_host``: the hostname of the server to connect to
+    + ``mysql_port``: the port of the server to connect to
 '''
 
 import six
@@ -27,8 +33,7 @@ def sql(
 
     + sql: the SQL to send to MySQL
     + database: optional database to open the connection with
-    + mysql_user: the username to connect to mysql with (defaults to current user)
-    + mysql_password: the password to use when connecting to mysql
+    + mysql_*: global module arguments, see above
     '''
 
     yield make_execute_mysql_command(
@@ -59,8 +64,7 @@ def user(
     + user_hostname: the hostname of the user
     + password: the password of the user (if created)
     + permissions: the global permissions for this user
-    + mysql_user: the username to connect to mysql with (defaults to current user)
-    + mysql_password: the password to use when connecting to mysql
+    + mysql_*: global module arguments, see above
 
     Hostname:
         this + ``name`` makes the username - so changing this will create a new
@@ -136,8 +140,7 @@ def database(
     + user: MySQL user to grant privileges on this database to
     + user_hostname: the hostname of the MySQL user to grant
     + user_permissions: permissions to grant to any specified user
-    + mysql_user: the username to connect to mysql with (defaults to current user)
-    + mysql_password: the password to use when connecting to mysql
+    + mysql_*: global module arguments, see above
 
     Collate/charset:
         these will only be applied if the database does not exist - ie pyinfra
@@ -212,8 +215,7 @@ def permission(
     + table: name of the table to grant user permissions to (defaults to all)
     + present: whether these permissions should exist (False to ``REVOKE)
     + flush: whether to flush (and update) the permissions table after any changes
-    + mysql_user: the username to connect to mysql with (defaults to current user)
-    + mysql_password: the password to use when connecting to mysql
+    + mysql_*: global module arguments, see above
     '''
 
     # Ensure we have a list
@@ -292,13 +294,16 @@ def permission(
 def dump(
     state, host,
     database, remote_filename,
-    gzip=False,
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
 ):
     '''
     Dump a MySQL database into a ``.sql`` file. Requires ``mysqldump``.
+
+    + database: name of the database to dump
+    + remote_filename: name of the file to dump the SQL to
+    + mysql_*: global module arguments, see above
     '''
 
     yield '{0} > {1}'.format(make_mysql_command(
@@ -321,6 +326,10 @@ def load(
 ):
     '''
     Load ``.sql`` file into a database.
+
+    + database: name of the database to import into
+    + remote_filename: the filename to read from
+    + mysql_*: global module arguments, see above
     '''
 
     yield '{0} < {1}'.format(make_mysql_command(
