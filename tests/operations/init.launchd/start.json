@@ -1,0 +1,11 @@
+{
+    "args": ["com.fizzadar.thing"],
+    "facts": {
+        "launchd_status": {
+            "com.fizzadar.thing": false
+        }
+    },
+    "commands": [
+        "launchctl start com.fizzadar.thing"
+    ]
+}

@@ -1,0 +1,9 @@
+{
+    "args": ["com.fizzadar.thing"],
+    "facts": {
+        "launchd_status": {
+            "com.fizzadar.thing": true
+        }
+    },
+    "commands": []
+}

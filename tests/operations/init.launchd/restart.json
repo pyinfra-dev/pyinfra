@@ -1,0 +1,15 @@
+{
+    "args": ["com.fizzadar.thing"],
+    "kwargs": {
+        "restarted": true
+    },
+    "facts": {
+        "launchd_status": {
+            "com.fizzadar.thing": true
+        }
+    },
+    "commands": [
+        "launchctl stop com.fizzadar.thing",
+        "launchctl start com.fizzadar.thing"
+    ]
+}
