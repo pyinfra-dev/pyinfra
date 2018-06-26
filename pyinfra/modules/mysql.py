@@ -114,6 +114,7 @@ def user(
     if permissions:
         yield permission(
             state, host, name, permissions,
+            user_hostname=user_hostname,
             mysql_user=mysql_user, mysql_password=mysql_password,
             mysql_host=mysql_host, mysql_port=mysql_port,
         )
