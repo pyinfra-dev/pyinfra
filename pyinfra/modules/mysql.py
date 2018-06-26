@@ -16,7 +16,7 @@ All operations in this module take four optional global arguments:
 
 import six
 
-from pyinfra.api import operation
+from pyinfra.api import operation, OperationError
 from pyinfra.facts.mysql import make_execute_mysql_command, make_mysql_command
 
 
@@ -227,6 +227,12 @@ def permission(
 
     if table != '*':
         table = '`{0}`'.format(table)
+
+        # We can't set permissions on *.tablename as MySQL won't allow it
+        if database == '*':
+            raise OperationError((
+                'Cannot apply MySQL permissions on {0}.{1}, no database provided'
+            ).format(database, table))
 
     database_table = '{0}.{1}'.format(database, table)
     user_grants = host.fact.mysql_user_grants(
