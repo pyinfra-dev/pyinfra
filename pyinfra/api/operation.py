@@ -213,7 +213,7 @@ def operation(func=None, pipeline_facts=None):
                     frame[3] in ('decorated_func', 'add_op', 'add_limited_op')
                     and frame[1].endswith(path.join('pyinfra', 'api', 'operation.py'))
                 ):
-                    filename = frame.filename
+                    filename = getattr(frame, 'filename', '<unknown filename>')
                     line_number = frame[0].f_lineno
                     break
 
