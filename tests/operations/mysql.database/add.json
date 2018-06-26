@@ -1,0 +1,13 @@
+{
+    "args": ["somedb"],
+    "kwargs": {
+        "collate": "utf8_bin",
+        "charset": "UTF-8"
+    },
+    "facts": {
+        "mysql_databases": []
+    },
+    "commands": [
+        "echo \"CREATE DATABASE somedb COLLATE utf8_bin CHARSET UTF-8;\" | mysql"
+    ]
+}

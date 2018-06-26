@@ -1,0 +1,21 @@
+{
+    "args": ["someuser", ["SELECT", "INSERT"]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "mysql_user_grants": {
+            "someuser": {
+                "localhost": {
+                    "*.*": {
+                        "permissions": ["SELECT", "INSERT"]
+                    }
+                }
+            }
+        }
+    },
+    "commands": [
+        "echo \"REVOKE SELECT, INSERT ON *.* FROM \\\"someuser\\\"@\\\"localhost\\\";\" | mysql",
+        "echo \"FLUSH PRIVILEGES;\" | mysql"
+    ]
+}

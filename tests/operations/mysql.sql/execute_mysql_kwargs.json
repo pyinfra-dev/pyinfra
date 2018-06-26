@@ -1,0 +1,12 @@
+{
+    "args": ["SELECT 1"],
+    "kwargs": {
+        "mysql_user": "someuser",
+        "mysql_password": "somepass",
+        "mysql_host": "127.0.0.1",
+        "mysql_port": 100
+    },
+    "commands": [
+        "echo \"SELECT 1;\" | mysql -u\"someuser\" -p\"somepass\" -h127.0.0.1 -P100"
+    ]
+}

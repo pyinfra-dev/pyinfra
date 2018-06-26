@@ -1,0 +1,12 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "user_hostname": "localwhat"
+    },
+    "facts": {
+        "mysql_users": {}
+    },
+    "commands": [
+        "echo \"CREATE USER \\\"someuser\\\"@\\\"localwhat\\\";\" | mysql"
+    ]
+}

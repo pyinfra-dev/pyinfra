@@ -1,0 +1,15 @@
+{
+    "args": ["someuser", ["SELECT", "INSERT"]],
+    "facts": {
+        "mysql_user_grants": {
+            "someuser": {
+                "localhost": {
+                    "*.*": {
+                        "permissions": ["SELECT", "INSERT"]
+                    }
+                }
+            }
+        }
+    },
+    "commands": []
+}

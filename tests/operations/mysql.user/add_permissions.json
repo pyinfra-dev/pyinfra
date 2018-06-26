@@ -1,0 +1,20 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "user_hostname": "localwhat",
+        "permissions": ["SELECT"]
+    },
+    "facts": {
+        "mysql_users": {},
+        "mysql_user_grants": {
+            "someuser": {
+                "localwhat": {}
+            }
+        }
+    },
+    "commands": [
+        "echo \"CREATE USER \\\"someuser\\\"@\\\"localwhat\\\";\" | mysql",
+        "echo \"GRANT SELECT ON *.* TO \\\"someuser\\\"@\\\"localwhat\\\";\" | mysql",
+        "echo \"FLUSH PRIVILEGES;\" | mysql"
+    ]
+}

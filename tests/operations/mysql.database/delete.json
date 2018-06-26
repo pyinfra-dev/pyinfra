@@ -1,0 +1,14 @@
+{
+    "args": ["somedb"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "mysql_databases": [
+            "somedb"
+        ]
+    },
+    "commands": [
+        "echo \"DROP DATABASE somedb;\" | mysql"
+    ]
+}

@@ -1,0 +1,25 @@
+{
+    "args": ["someuser", ["SELECT", "INSERT"]],
+    "kwargs": {
+        "table": "mytable"
+    },
+    "facts": {
+        "mysql_user_grants": {
+            "someuser": {
+                "localhost": {
+                    "*.*": {
+                        "permissions": []
+                    }
+                }
+            }
+        }
+    },
+    "commands": [
+        "echo \"GRANT SELECT, INSERT ON *.\\`mytable\\` TO \\\"someuser\\\"@\\\"localhost\\\";\" | mysql",
+        "echo \"FLUSH PRIVILEGES;\" | mysql"
+    ],
+    "exception": {
+        "name": "OperationError",
+        "message": "Cannot apply MySQL permissions on *.`mytable`, no database provided"
+    }
+}

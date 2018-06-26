@@ -1,0 +1,20 @@
+{
+    "args": ["somedb"],
+    "kwargs": {
+        "user": "someuser",
+        "user_permissions": "ALL"
+    },
+    "facts": {
+        "mysql_databases": [],
+        "mysql_user_grants": {
+            "someuser": {
+                "localhost": {}
+            }
+        }
+    },
+    "commands": [
+        "echo \"CREATE DATABASE somedb;\" | mysql",
+        "echo \"GRANT ALL ON \\`somedb\\`.* TO \\\"someuser\\\"@\\\"localhost\\\";\" | mysql",
+        "echo \"FLUSH PRIVILEGES;\" | mysql"
+    ]
+}
