@@ -12,6 +12,14 @@ from dateutil.parser import parse as parse_date
 from pyinfra.api import FactBase
 
 
+# TODO: find a nicer place for this!
+def _try_int(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return value
+
+
 class Home(FactBase):
     command = 'echo $HOME'
 
@@ -113,6 +121,42 @@ class LsbRelease(FactBase):
         return items
 
 
+class Sysctl(FactBase):
+    command = 'sysctl -a'
+    default = dict
+
+    @staticmethod
+    def process(output):
+        sysctls = {}
+
+        for line in output:
+            key = values = None
+
+            if '=' in line:
+                key, values = line.split('=', 1)
+            elif ':' in line:
+                key, values = line.split(':', 1)
+            else:
+                continue
+
+            if key and values:
+                key = key.strip()
+                values = values.strip()
+
+                if re.match(r'^[a-zA-Z0-9_\.\s]+$', values):
+                    values = [
+                        _try_int(item.strip())
+                        for item in values.split()
+                    ]
+
+                    if len(values) == 1:
+                        values = values[0]
+
+                sysctls[key] = values
+
+        return sysctls
+
+
 class Groups(FactBase):
     '''
     Returns a list of groups on the system.
@@ -130,14 +174,6 @@ class Groups(FactBase):
                 groups.append(line.split(':')[0])
 
         return groups
-
-
-# TODO: find a nicer place for this!
-def _try_int(value):
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return value
 
 
 class Crontab(FactBase):
