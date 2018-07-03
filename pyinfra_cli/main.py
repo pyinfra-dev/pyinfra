@@ -206,6 +206,11 @@ def main(*args, **kwargs):
         raise
 
     except Exception as e:
+        # Attach the tracback to the exception before returning as state (Py2
+        # does not have `Exception.__traceback__`).
+        _, _, traceback = sys.exc_info()
+        e._traceback = traceback
+
         # Re-raise any unexpected exceptions as UnexpectedError
         raise UnexpectedError(e)
 

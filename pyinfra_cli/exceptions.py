@@ -55,15 +55,16 @@ class UnexpectedError(click.ClickException):
         )))
         print()
 
-        traceback_lines = format_tb(self.e.__traceback__)
+        traceback = getattr(self.e, '_traceback')
+        traceback_lines = format_tb(traceback)
         traceback = ''.join(traceback_lines)
-        exception = ''.join(format_exception(self.e.__class__, self.e, None))
 
         # Syntax errors contain the filename/line/etc, but other exceptions
         # don't, so print the *last* call to stderr.
         if not isinstance(self.e, SyntaxError):
             sys.stderr.write(traceback_lines[-1])
 
+        exception = ''.join(format_exception(self.e.__class__, self.e, None))
         sys.stderr.write(exception)
 
         # Write the full trace + exception to pyinfra-debug.log
