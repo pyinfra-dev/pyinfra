@@ -106,7 +106,7 @@ class LsbRelease(FactBase):
             if ':' not in line:
                 continue
 
-            key, value = line.split(':')
+            key, value = line.split(':', 1)
 
             key = key.strip().lower()
 
