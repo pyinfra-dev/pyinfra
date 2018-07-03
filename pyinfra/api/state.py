@@ -5,6 +5,7 @@
 from __future__ import division, unicode_literals
 
 from contextlib import contextmanager
+from multiprocessing import cpu_count
 from uuid import uuid4
 
 import six
@@ -86,7 +87,6 @@ class State(object):
     print_output = False  # print output from the actual deploy (-v)
     print_fact_info = False  # log fact gathering as INFO > DEBUG (-v)
     print_fact_output = False  # print output from facts (-vv)
-    print_lines = False  # print blank lines between operations (always in CLI)
 
     # Used in CLI
     deploy_dir = None  # base directory for locating files/templates/etc
@@ -119,11 +119,16 @@ class State(object):
                 ))
 
         if not config.PARALLEL:
-            # If possible run everything in parallel, otherwise the max if defined above
+            # TODO: benchmark this
+            # In my own tests the optimum number of parallel SSH processes is
+            # ~20 per CPU core - no science here yet, needs benchmarking!
+            cpus = cpu_count()
+            ideal_parallel = cpus * 20
+
             config.PARALLEL = (
-                min(len(inventory), MAX_PARALLEL)
+                min(ideal_parallel, len(inventory), MAX_PARALLEL)
                 if MAX_PARALLEL is not None
-                else len(inventory)
+                else min(ideal_parallel, len(inventory))
             )
 
         # If explicitly set, just issue a warning
