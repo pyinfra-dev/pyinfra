@@ -6,6 +6,7 @@ import signal
 import sys
 
 import click
+import gevent
 
 from colorama import init as colorama_init
 
@@ -26,12 +27,14 @@ sys.path.append('.')
 click.disable_unicode_literals_warning = True  # noqa
 
 
-# Handle ctrl+c
-def _signal_handler(signum, frame):
-    print('Exiting upon user request!')
+
+def _handle_interrupt(signum, frame):
+    click.echo('Exiting upon user request!')
     sys.exit(0)
 
-signal.signal(signal.SIGINT, _signal_handler)  # noqa
+
+gevent.signal(signal.SIGINT, gevent.kill)  # kill any greenlets on ctrl+c
+signal.signal(signal.SIGINT, _handle_interrupt)  # print the message and exit main
 
 
 def execute_pyinfra():
