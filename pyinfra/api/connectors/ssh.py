@@ -22,12 +22,10 @@ from paramiko import (
     ProxyCommand,
     RSAKey,
     SFTPClient,
-    SSHClient,
-    SSHConfig,
     SSHException,
 )
 from paramiko.agent import AgentRequestHandler
-
+from sshuserclient import SSHClient
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import get_file_io, make_command, read_buffer
@@ -112,50 +110,17 @@ def _get_private_key(state, key_filename, key_password):
     return key
 
 
-def get_ssh_config(hostname):
-    ssh_config = SSHConfig()
-    user_config_file = path.expanduser('~/.ssh/config')
-    cfg = dict()
-
-    if path.exists(user_config_file):
-        with open(user_config_file) as f:
-            ssh_config.parse(f)
-            host_config = ssh_config.lookup(hostname)
-            if 'user' in host_config:
-                cfg['username'] = host_config['user']
-
-            if 'proxycommand' in host_config:
-                cfg['sock'] = ProxyCommand(host_config['proxycommand'])
-
-            if 'identityfile' in host_config:
-                cfg['pkey'] = _get_private_key(host_config['identityfile'])
-
-            if 'port' in host_config:
-                cfg['port'] = int(host_config['port'])
-
-            # Only apply the hostname if it differs (hostname alias)
-            host_config_hostname = host_config.get('hostname')
-            if host_config_hostname and host_config_hostname != hostname:
-                cfg['hostname'] = host_config['hostname']
-
-    return cfg
-
-
 def _make_paramiko_kwargs(state, host):
-    # Start by loading any SSH config for this host
-    kwargs = get_ssh_config(host.name)
 
-    # Now apply "defaults" - meaning if the user explicitly sets the SSH user,
-    # this will override the SSH config setting.
+    kwargs = {'allow_agent': False,
+              'look_for_keys': False}
+
     for key, value in (
         ('username', host.data.ssh_user),
-        ('port', int(host.data.ssh_port or 22)),
+        ('port', int(host.data.ssh_port or 0)),
         ('timeout', state.config.TIMEOUT),
-        # At this point we're assuming a password/key are provided
-        ('allow_agent', False),
-        ('look_for_keys', False),
     ):
-        if key not in kwargs:
+        if value:
             kwargs[key] = value
 
     # Password auth (boo!)
