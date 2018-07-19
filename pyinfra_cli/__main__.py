@@ -2,6 +2,7 @@
 # File: pyinfra_cli/__main__.py
 # Desc: bootstrap stuff for the pyinfra CLI and provide it's entry point
 
+import os
 import signal
 import sys
 
@@ -31,6 +32,9 @@ sys.path.append('.')
 # Shut it click
 click.disable_unicode_literals_warning = True  # noqa
 
+# Force line buffering
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1)
+sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 1)
 
 
 def _handle_interrupt(signum, frame):
