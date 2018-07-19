@@ -157,7 +157,6 @@ class TestSSHApi(TestCase):
                 allow_agent=False,
                 look_for_keys=False,
                 pkey=fake_key,
-                port=22,
                 timeout=10,
                 username='vagrant',
             )
