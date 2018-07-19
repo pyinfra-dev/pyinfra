@@ -254,7 +254,6 @@ class TestOperationsApi(PatchSSHTest):
         state.print_output = True
         state.print_fact_info = True
         state.print_fact_output = True
-        state.print_lines = True
 
         connect_all(state)
 
