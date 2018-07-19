@@ -14,6 +14,7 @@ executing in CLI mode).
 '''
 
 import sys
+
 import pyinfra
 
 

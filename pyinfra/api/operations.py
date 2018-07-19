@@ -4,6 +4,7 @@
 
 from __future__ import print_function, unicode_literals
 
+from itertools import product
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -21,9 +22,10 @@ import pyinfra
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import format_exception, log_host_command_error
+from pyinfra.progress import progress_spinner
 
 
-def _run_op(state, host, op_hash):
+def _run_server_op(state, host, op_hash):
     # Noop for this host?
     if op_hash not in state.ops[host]:
         logger.info('{0}{1}'.format(
@@ -201,6 +203,10 @@ def _run_op(state, host, op_hash):
 
 
 def _run_server_ops(state, host, progress=None):
+    '''
+    Run all ops for a single server.
+    '''
+
     logger.debug('Running all ops on {0}'.format(host))
 
     for op_hash in state.op_order:
@@ -212,11 +218,11 @@ def _run_server_ops(state, host, progress=None):
             click.style(host.name, bold=True),
         ))
 
-        result = _run_op(state, host, op_hash)
+        result = _run_server_op(state, host, op_hash)
 
         # Trigger CLI progress if provided
         if progress:
-            progress()
+            progress((host, op_hash))
 
         if result is False:
             raise PyinfraError('Error in operation {0} on {1}'.format(
@@ -227,7 +233,117 @@ def _run_server_ops(state, host, progress=None):
             print()
 
 
-def run_ops(state, serial=False, no_wait=False, progress=None):
+def _run_serial_ops(state):
+    '''
+    Run all ops for all servers, one server at a time.
+    '''
+
+    for host in list(state.inventory):
+        host_operations = product([host], state.op_order)
+        with progress_spinner(host_operations) as progress:
+            try:
+                _run_server_ops(
+                    state, host,
+                    progress=progress,
+                )
+            except PyinfraError:
+                state.fail_hosts({host})
+
+
+def _run_no_wait_ops(state):
+    '''
+    Run all ops for all servers at once.
+    '''
+
+    hosts_operations = product(state.inventory, state.op_order)
+    with progress_spinner(hosts_operations) as progress:
+        # Spawn greenlet for each host to run *all* ops
+        greenlets = [
+            state.pool.spawn(
+                _run_server_ops, state, host,
+                progress=progress,
+            )
+            for host in state.inventory
+        ]
+        gevent.joinall(greenlets)
+
+
+def _run_single_op(state, op_hash):
+    '''
+    Run a single operation for all servers. Can be configured to run in serial.
+    '''
+
+    op_meta = state.op_meta[op_hash]
+
+    op_types = []
+
+    if op_meta['serial']:
+        op_types.append('serial')
+
+    if op_meta['run_once']:
+        op_types.append('run once')
+
+    logger.info('{0} {1} {2}'.format(
+        click.style('--> Starting{0}operation:'.format(
+            ' {0} '.format(', '.join(op_types)) if op_types else ' ',
+        ), 'blue'),
+        click.style(', '.join(op_meta['names']), bold=True),
+        tuple(op_meta['args']) if op_meta['args'] else '',
+    ))
+
+    failed_hosts = set()
+
+    if op_meta['serial']:
+        with progress_spinner(state.inventory) as progress:
+            # For each host, run the op
+            for host in state.inventory:
+                result = _run_server_op(state, host, op_hash)
+                progress(host)
+
+                if not result:
+                    failed_hosts.add(host)
+
+    else:
+        # Start with the whole inventory in one batch
+        batches = [state.inventory]
+
+        # If parallel set break up the inventory into a series of batches
+        if op_meta['parallel']:
+            parallel = op_meta['parallel']
+            hosts = list(state.inventory)
+
+            batches = [
+                hosts[i:i + parallel]
+                for i in range(0, len(hosts), parallel)
+            ]
+
+        for batch in batches:
+            with progress_spinner(state.inventory) as progress:
+                # Spawn greenlet for each host
+                greenlet_to_host = {
+                    state.pool.spawn(_run_server_op, state, host, op_hash): host
+                    for host in batch
+                }
+
+                # Trigger CLI progress as hosts complete if provided
+                for greenlet in gevent.iwait(greenlet_to_host.keys()):
+                    host = greenlet_to_host[greenlet]
+                    progress(host)
+
+                # Get all the results
+                for greenlet, host in six.iteritems(greenlet_to_host):
+                    if not greenlet.get():
+                        failed_hosts.add(host)
+
+    # Now all the batches/hosts are complete, fail any failures
+    if not op_meta['ignore_errors']:
+        state.fail_hosts(failed_hosts)
+
+    if pyinfra.is_cli:
+        print()
+
+
+def run_ops(state, serial=False, no_wait=False):
     '''
     Runs all operations across all servers in a configurable manner.
 
@@ -242,100 +358,12 @@ def run_ops(state, serial=False, no_wait=False, progress=None):
 
     # Run all ops, but server by server
     if serial:
-        for host in state.inventory:
-            try:
-                _run_server_ops(
-                    state, host,
-                    progress=progress,
-                )
-            except PyinfraError:
-                state.fail_hosts({host})
-
-        return
+        _run_serial_ops(state)
 
     # Run all the ops on each server in parallel (not waiting at each operation)
     elif no_wait:
-        # Spawn greenlet for each host to run *all* ops
-        greenlets = [
-            state.pool.spawn(
-                _run_server_ops, state, host,
-                progress=progress,
-            )
-            for host in state.inventory
-        ]
-        gevent.joinall(greenlets)
-        return
+        _run_no_wait_ops(state)
 
     # Default: run all ops in order, waiting at each for all servers to complete
     for op_hash in state.op_order:
-        op_meta = state.op_meta[op_hash]
-
-        op_types = []
-
-        if op_meta['serial']:
-            op_types.append('serial')
-
-        if op_meta['run_once']:
-            op_types.append('run once')
-
-        logger.info('{0} {1} {2}'.format(
-            click.style('--> Starting{0}operation:'.format(
-                ' {0} '.format(', '.join(op_types)) if op_types else ' ',
-            ), 'blue'),
-            click.style(', '.join(op_meta['names']), bold=True),
-            tuple(op_meta['args']) if op_meta['args'] else '',
-        ))
-
-        failed_hosts = set()
-
-        if op_meta['serial']:
-            # For each host, run the op
-            for host in state.inventory:
-                result = _run_op(state, host, op_hash)
-
-                # Trigger CLI progress if provided
-                if progress:
-                    progress()
-
-                if not result:
-                    failed_hosts.add(host)
-
-        else:
-            # Start with the whole inventory in one batch
-            batches = [state.inventory]
-
-            # If parallel set break up the inventory into a series of batches
-            if op_meta['parallel']:
-                parallel = op_meta['parallel']
-                hosts = list(state.inventory)
-
-                batches = [
-                    hosts[i:i + parallel]
-                    for i in range(0, len(hosts), parallel)
-                ]
-
-            for batch in batches:
-                # Spawn greenlet for each host
-                greenlets = {
-                    host: state.pool.spawn(
-                        _run_op, state, host, op_hash,
-                    )
-                    for host in batch
-                }
-
-                # Trigger CLI progress as hosts complete if provided
-                if progress:
-                    for _ in gevent.iwait(greenlets.values()):
-                        progress()
-
-                # Get all the results
-                for host, greenlet in six.iteritems(greenlets):
-                    if not greenlet.get():
-                        failed_hosts.add(host)
-
-            # Now all the batches/hosts are complete, fail any failures
-            if not op_meta['ignore_errors']:
-                state.fail_hosts(failed_hosts)
-
-        if state.print_lines:
-            print()
+        _run_single_op(state, op_hash)

@@ -45,7 +45,6 @@ from .prints import (
 from .util import (
     get_operation_and_args,
     load_deploy_file,
-    progress_spinner,
     run_hook,
 )
 from .virtualenv import init_virtualenv
@@ -426,8 +425,7 @@ def _main(
 
     # Connect to all the servers
     print('--> Connecting to hosts...')
-    with progress_spinner(limit_hosts or state.inventory) as progress:
-        connect_all(state, progress=progress)
+    connect_all(state)
 
     # Run the before_connect hook if provided
     run_hook(state, 'before_facts', hook_data)
@@ -447,13 +445,12 @@ def _main(
 
         fact_data = {}
 
-        with progress_spinner(commands) as progress:
-            for i, (name, args) in enumerate(commands):
-                fact_data[name] = get_facts(
-                    state, name,
-                    args=args,
-                )
-                progress()
+        for i, command in enumerate(commands):
+            name, args = command
+            fact_data[name] = get_facts(
+                state, name,
+                args=args,
+            )
 
         print_facts(fact_data)
         _exit()
@@ -477,11 +474,9 @@ def _main(
         print('--> Preparing operations...')
 
         # Number of "steps" to make = number of files * number of hosts
-        prepare_steps = len(commands) * len(state.inventory)
-        with progress_spinner(prepare_steps) as progress:
-            for filename in commands:
-                load_deploy_file(state, filename, progress=progress)
-                progress()
+        for filename in commands:
+            logger.info('Loading: {0}'.format(click.style(filename, bold=True)))
+            load_deploy_file(state, filename)
 
     # Operation w/optional args
     elif command == 'op':
@@ -509,7 +504,7 @@ The deploy files are executed once per host; the operations need to share
 the same arguments otherwise pyinfra cannot run them in a consistent order.
 
 Please see: http://pyinfra.readthedocs.io/page/using_python.html.
-    '''.rstrip().format(', '.join(commands)))
+    '''.rstrip())
 
     # If --debug-facts or --debug-operations, print and exit
     if debug_facts or debug_operations:
@@ -537,16 +532,7 @@ Please see: http://pyinfra.readthedocs.io/page/using_python.html.
     run_hook(state, 'before_deploy', hook_data)
 
     print('--> Beginning operation run...')
-
-    # Number of "steps" to make = number of operations * number of hosts
-    operation_steps = len(state.op_order) * len(state.inventory)
-    with progress_spinner(operation_steps) as progress:
-        run_ops(
-            state,
-            serial=serial,
-            no_wait=no_wait,
-            progress=progress,
-        )
+    run_ops(state, serial=serial, no_wait=no_wait)
 
     # Run the after_deploy hook if provided
     run_hook(state, 'after_deploy', hook_data)

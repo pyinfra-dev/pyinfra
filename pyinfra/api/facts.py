@@ -17,15 +17,21 @@ from socket import (
 )
 
 import click
+import gevent
 import six
 
 from gevent.lock import BoundedSemaphore
 from paramiko import SSHException
 
 from pyinfra import logger
-
-from .attrs import wrap_attr_data
-from .util import get_arg_value, log_host_command_error, make_hash, underscore
+from pyinfra.api.attrs import wrap_attr_data
+from pyinfra.api.util import (
+    get_arg_value,
+    log_host_command_error,
+    make_hash,
+    underscore,
+)
+from pyinfra.progress import progress_spinner
 
 
 # Index of snake_case facts -> CamelCase classes
@@ -123,14 +129,14 @@ def get_facts(state, name, args=None, ensure_hosts=None):
             return current_facts
 
     with FACT_LOCK:
-        # Execute the command for each state inventory in a greenlet
-        greenlets = {}
-
         # Add any hosts we must have, whether considered in the inventory or not
         # (these hosts might be outside the --limit or current op limit_hosts).
         hosts = set(state.inventory)
         if ensure_hosts:
             hosts.update(ensure_hosts)
+
+        # Execute the command for each state inventory in a greenlet
+        greenlet_to_host = {}
 
         for host in hosts:
             if host in current_facts:
@@ -148,17 +154,31 @@ def get_facts(state, name, args=None, ensure_hosts=None):
 
                 command = command(*host_args)
 
-            greenlets[host] = state.fact_pool.spawn(
+            greenlet = state.fact_pool.spawn(
                 host.run_shell_command, state, command,
                 sudo=sudo, sudo_user=sudo_user, su_user=su_user,
                 print_output=state.print_fact_output,
             )
+            greenlet_to_host[greenlet] = host
+
+        # Wait for all the commands to execute
+        progress_prefix = 'fact: {0}'.format(name)
+        if args:
+            progress_prefix = '{0}{1}'.format(progress_prefix, args)
+
+        with progress_spinner(
+            greenlet_to_host.values(),
+            prefix_message=progress_prefix,
+        ) as progress:
+            for greenlet in gevent.iwait(greenlet_to_host.keys()):
+                host = greenlet_to_host[greenlet]
+                progress(host)
 
         hostname_facts = {}
         failed_hosts = set()
 
         # Collect the facts and any failures
-        for host, greenlet in six.iteritems(greenlets):
+        for greenlet, host in six.iteritems(greenlet_to_host):
             status = False
             stdout = []
 
@@ -166,16 +186,10 @@ def get_facts(state, name, args=None, ensure_hosts=None):
                 status, stdout, _ = greenlet.get()
 
             except (timeout_error, socket_error, SSHException) as e:
-                kwargs = {}
-
-                if not ignore_errors:
-                    kwargs['callback'] = lambda: failed_hosts.add(host)
-
+                failed_hosts.add(host)
                 log_host_command_error(
-                    host,
-                    e,
+                    host, e,
                     timeout=current_op_meta['timeout'],
-                    **kwargs
                 )
 
             data = fact.default()
