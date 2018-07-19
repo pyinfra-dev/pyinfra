@@ -187,7 +187,7 @@ def operation(func=None, pipeline_facts=None):
                 for name in names
             }
 
-        # Get the meta kwargps (globals that apply to all hosts)
+        # Get the meta kwargs (globals that apply to all hosts)
         op_meta_kwargs = pop_op_kwargs(state, kwargs)
 
         # If this op is being called inside another, just return here
@@ -234,8 +234,13 @@ def operation(func=None, pipeline_facts=None):
             'args': [],
         })
 
-        # Add any meta kwargs (sudo, etc) to the meta
-        op_meta.update(op_meta_kwargs)
+        # Add any meta kwargs (sudo, etc) to the meta - first parse any strings
+        # as jinja templates.
+        actual_op_meta_kwargs = {
+            key: get_arg_value(state, host, a)
+            for key, a in six.iteritems(op_meta_kwargs)
+        }
+        op_meta.update(actual_op_meta_kwargs)
 
         # Add any new names to the set
         op_meta['names'].update(names)
@@ -254,10 +259,6 @@ def operation(func=None, pipeline_facts=None):
                 arg = '='.join((str(key), str(value)))
                 if arg not in op_meta['args']:
                     op_meta['args'].append(arg)
-
-        # # Add the hash to the operational order if not already in there
-        # if op_hash not in state.op_order:
-        #     state.op_order.append(op_hash)
 
         # Add the hash to the operational order if not already in there. To
         # ensure that deploys run as defined in the deploy file *per host* we
