@@ -3,7 +3,9 @@
         "openbsd6": ["bsd"],
         "debian7": ["debian"],
         "debian8": ["debian"],
-        "debian9": ["debian"]
+        "debian9": ["debian"],
+        "centos6": ["centos"],
+        "centos7": ["centos"]
     },
     "data": {
         "ubuntu14": {
