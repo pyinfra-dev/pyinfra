@@ -49,7 +49,6 @@ server.user(
     {'Ensure pyinfra user exists'},
     'pyinfra',
     shell='/bin/sh',
-    ensure_home=True,
 
     # Global arguments available in all operations, for the full list see:
     # https://pyinfra.readthedocs.io/page/deploys.html#global-arguments
