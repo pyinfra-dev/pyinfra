@@ -4,6 +4,6 @@
         "flags": ["g", "i"]
     },
     "commands": [
-        "sed -i \"s/match/replace/gi\" filename"
+        "sed -i=\"\" \"s/match/replace/gi\" filename"
     ]
 }

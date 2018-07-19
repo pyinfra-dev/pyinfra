@@ -16,6 +16,6 @@
         }
     },
     "commands": [
-        "sed -i \"s/^nginx_enable=.*$//\" /etc/rc.conf.local"
+        "sed -i=\"\" \"s/^nginx_enable=.*$//\" /etc/rc.conf.local"
     ]
 }
