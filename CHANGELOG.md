@@ -1,13 +1,23 @@
-# v0.7 (WIP)
+# v0.7.dev0 (WIP)
 
-+ Add `server.modprobe` and `server.hostname` operations
-+ Add `kernel_modules` fact
++ Add **mysql** module
+    - Operations: `mysql.sql`, `mysql.user`, `mysql.database`, `mysql.permission`, `mysql.dump`, `mysql.load`
+    - Facts: `mysql_databases`, `mysql_users`, `mysql_user_grants`
++ Add **puppet** module with `puppet.agent` operation (@tobald)
++ Add `server.crontab`, `server.modprobe` and `server.hostname` operations
++ Add `kernel_modules` and `crontab` facts
 + Add global install virtualenv support (like iPython)
++ Massively improved progress bar which highlights remaining hosts and tracks progress per operation or fact
++ Improved SSH config parsing, including proxyjump support (@tobald)
++ Support for CONFIG variables defined in `local.include` files
+
+Internal changes:
++ **Replace** `--debug-state` with `--debug-operations` and `--debug-facts`
 + pyinfra now compiles the top-level scope of deploy code, meaning if statements no longer generate imbalanced operations
     * This means the recommendations to use `state.when` in place of conditional statements is invalid
     * Updated the warning shown, now once, with a link
     * Included a test `deploy_branches.py` which can be used to verify operations _do_ run in order for each host when compile is disabled
-    * Compiling can be disabled by setting `PYINFRA_NO_COMPILE=1` environment variable
+    * Compiling can be disabled by setting `PYINFRA_COMPILE=off` environment variable
 + **Deprecate** `state.limit` and replace with `state.hosts(hosts)` (consistency with global operation kwarg `hosts` not `limit`)
 + Major internal refactor of `AttrData` handling to reduce operation branching:
     * Generate `AttrData` on creation, rather than read
@@ -16,7 +26,7 @@
     * Make `host.name` an `AttrDataStr`
     * Hash `True`, `False` and `None` constants as the same so they can change between hosts without branching operations
     * Update docs and warning on operation branching
-+ **Replace** `--debug-state` with `--debug-operations` and `--debug-facts`
++ Better default for pool parallel size
 
 
 # v0.6.1
