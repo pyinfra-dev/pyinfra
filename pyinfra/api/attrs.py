@@ -115,19 +115,33 @@ class AttrData(dict):
     def __getattr__(self, key):
         return self.get(key)
 
+    def __setattr__(self, key, value):
+        self[key] = wrap_attr_data(key, value)
+
 
 class FallbackAttrData(object):
     '''
     Combines multiple AttrData's to search for attributes.
     '''
 
+    override_datas = None
+
     def __init__(self, *datas):
-        self.datas = datas
+        datas = list(datas)
+
+        # Inject an empty override data so we can assign during deploy
+        self.__dict__['override_datas'] = {}
+        datas.insert(0, self.override_datas)
+
+        self.__dict__['datas'] = tuple(datas)
 
     def __getattr__(self, key):
         for data in extract_callable_datas(self.datas):
             if key in data:
                 return data[key]
+
+    def __setattr__(self, key, value):
+        self.override_datas[key] = wrap_attr_data(key, value)
 
     def __str__(self):
         return six.text_type(self.datas)
