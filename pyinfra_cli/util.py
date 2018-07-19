@@ -5,15 +5,9 @@
 from __future__ import division, print_function
 
 import json
-import os
-import sys
 
-from collections import deque
-from contextlib import contextmanager
 from datetime import datetime
 from importlib import import_module
-from threading import Event, Thread
-from time import sleep
 from types import FunctionType
 
 # py2/3 switcheroo
@@ -37,79 +31,8 @@ from .compile import compile_deploy_code
 from .exceptions import CliError
 from .legacy import parse_legacy_argstring
 
+# Cache for compiled Python deploy code
 PYTHON_CODES = {}
-WAIT_CHARS = deque(('-', '/', '|', '\\'))
-
-
-def print_spinner(stop_event, progress_queue):
-    if os.environ.get('PYINFRA_PROGRESS') == 'off':
-        return
-
-    progress = ''
-    text = ''
-
-    while True:
-        # Stop when asked too
-        if stop_event.is_set():
-            break
-
-        WAIT_CHARS.rotate(1)
-
-        try:
-            progress = progress_queue[-1]
-        except IndexError:
-            pass
-
-        # Add 5 spaces on the end to overwrite any thing "pushed" right by the
-        # user typing.
-        text = '    {0}     \r'.format(
-            ' '.join((WAIT_CHARS[0], progress)),
-        )
-
-        sys.stdout.write(text)
-        sys.stdout.flush()
-
-        sleep(1 / 20)
-
-    # Write out spaces to clear/match the last printed text line
-    sys.stdout.write('{0}\r'.format(''.join(' ' for _ in range(len(text)))))
-
-
-@contextmanager
-def progress_spinner(length):
-    if not isinstance(length, int):
-        length = len(length)
-
-    stop_event = Event()
-    progress_queue = deque(('0% (0/{0})'.format(length),))
-    complete_items = []
-
-    def progress():
-        complete_items.append(True)
-        complete = len(complete_items)
-
-        percentage_complete = int(round(complete / length * 100))
-
-        progress_queue.append('{0}% ({1}/{2})'.format(
-            percentage_complete,
-            complete,
-            length,
-        ))
-
-    # Kick off the spinner thread
-    spinner_thread = Thread(
-        target=print_spinner,
-        args=(stop_event, progress_queue),
-    )
-    spinner_thread.daemon = True
-    spinner_thread.start()
-
-    # Yield allowing the actual code the spinner waits for to run
-    yield progress
-
-    # Finally, stop the spinner
-    stop_event.set()
-    spinner_thread.join()
 
 
 def exec_file(filename, return_locals=False, is_deploy_code=False):
@@ -245,8 +168,11 @@ def get_operation_and_args(commands):
     return op, (args, kwargs)
 
 
-def load_deploy_file(state, filename, progress):
-    for host in state.inventory:
+def load_deploy_file(state, filename):
+    # Copy the inventory hosts (some might be removed during deploy)
+    hosts = list(state.inventory)
+
+    for host in hosts:
         # Don't load for anything within our (top level, --limit) limit
         if (
             isinstance(state.limit_hosts, list)
@@ -257,7 +183,6 @@ def load_deploy_file(state, filename, progress):
         pseudo_host.set(host)
 
         exec_file(filename, is_deploy_code=True)
-        progress()
 
         logger.info('{0} {1} {2}'.format(
             host.print_prefix,
