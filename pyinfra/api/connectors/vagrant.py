@@ -6,12 +6,13 @@ from threading import Thread
 from six.moves.queue import Queue
 
 from pyinfra import local, logger
+from pyinfra.progress import progress_spinner
 
 VAGRANT_CONFIG = None
 VAGRANT_OPTIONS = None
 
 
-def _get_vagrant_ssh_config(queue, target):
+def _get_vagrant_ssh_config(queue, progress, target):
     logger.debug('Loading SSH config for {0}'.format(target))
 
     queue.put(local.shell(
@@ -19,18 +20,21 @@ def _get_vagrant_ssh_config(queue, target):
         splitlines=True,
     ))
 
+    progress(target)
+
 
 def _get_vagrant_config(limit=None):
     if limit and not isinstance(limit, list):
         limit = [limit]
 
-    output = local.shell(
-        'vagrant status --machine-readable',
-        splitlines=True,
-    )
+    with progress_spinner({'vagrant status'}) as progress:
+        output = local.shell(
+            'vagrant status --machine-readable',
+            splitlines=True,
+        )
+        progress('vagrant status')
 
-    config_queue = Queue()
-    threads = []
+    targets = []
 
     for line in output:
         _, target, type_, data = line.split(',', 3)
@@ -42,9 +46,16 @@ def _get_vagrant_config(limit=None):
         # For each running container - fetch it's SSH config in a thread - this
         # is because Vagrant *really* slow to run each command.
         if type_ == 'state' and data == 'running':
+            targets.append(target)
+
+    threads = []
+    config_queue = Queue()
+
+    with progress_spinner(targets) as progress:
+        for target in targets:
             thread = Thread(
                 target=_get_vagrant_ssh_config,
-                args=(config_queue, target),
+                args=(config_queue, progress, target),
             )
             threads.append(thread)
             thread.start()
