@@ -270,10 +270,10 @@ def make_command(
 
 def get_arg_value(state, host, arg):
     '''
-    Runs string arguments through the jinja2 templating system with a state and host. Used
-    to avoid string formatting in deploy operations which result in one operation per
-    host/variable. By parsing the commands after we generate the ``op_hash``, multiple
-    command variations can fall under one op.
+    Runs string arguments through the jinja2 templating system with a state and
+    host. Used to avoid string formatting in deploy operations which result in
+    one operation per host/variable. By parsing the commands after we generate
+    the ``op_hash``, multiple command variations can fall under one op.
     '''
 
     if isinstance(arg, six.string_types):
@@ -323,7 +323,7 @@ def make_hash(obj):
         hash_string = (
             # Constants - the values can change between hosts but we should still
             # group them under the same operation hash.
-            '' if obj in (True, False, None)
+            '_PYINFRA_CONSTANT' if obj in (True, False, None)
             # Plain strings
             else obj if isinstance(obj, six.string_types)
             # Objects with __name__s
