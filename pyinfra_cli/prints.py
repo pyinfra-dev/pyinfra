@@ -68,7 +68,7 @@ def _convert_attr_bools(data):
     return data
 
 
-def _jsonify(data, *args, **kwargs):
+def jsonify(data, *args, **kwargs):
     data = _convert_attr_bools(data)
     data = _stringify_host_keys(data)
     return json.dumps(data, *args, **kwargs)
@@ -86,16 +86,16 @@ def dump_trace(exc_info):
 def print_state_facts(state):
     print()
     print('--> Facts:')
-    print(_jsonify(state.facts, indent=4, default=json_encode))
+    print(jsonify(state.facts, indent=4, default=json_encode))
 
 
 def print_state_operations(state):
     print()
     print('--> Operations:')
-    print(_jsonify(state.ops, indent=4, default=json_encode))
+    print(jsonify(state.ops, indent=4, default=json_encode))
     print()
     print('--> Operation meta:')
-    print(_jsonify(state.op_meta, indent=4, default=json_encode))
+    print(jsonify(state.op_meta, indent=4, default=json_encode))
 
     print()
     print('--> Operation order:')
@@ -152,14 +152,14 @@ def print_operations_list():
 
 
 def print_fact(fact_data):
-    print(_jsonify(fact_data, indent=4, default=json_encode))
+    print(jsonify(fact_data, indent=4, default=json_encode))
 
 
 def print_inventory(inventory):
     for host in inventory:
         print()
         print('--> Data for: {0}'.format(click.style(host.name, bold=True)))
-        print(_jsonify(host.data, indent=4, default=json_encode))
+        print(jsonify(host.data, indent=4, default=json_encode))
 
 
 def print_facts(facts):
