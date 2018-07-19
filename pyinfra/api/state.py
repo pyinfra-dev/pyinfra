@@ -210,15 +210,13 @@ class State(object):
         # Assign state back references to inventory & config
         inventory.state = config.state = self
 
-    @contextmanager
     def limit(self, hosts):
         logger.warning((
             'Use of `State.limit` is deprecated, '
             'please use `State.hosts` instead.'
         ))
 
-        with self.hosts(hosts):
-            yield
+        return self.hosts(hosts)
 
     @contextmanager
     def hosts(self, hosts):
