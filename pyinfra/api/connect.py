@@ -37,6 +37,9 @@ def connect_all(state):
     failed_hosts = set()
 
     for greenlet, host in six.iteritems(greenlet_to_host):
+        # Raise any unexpected exception
+        greenlet.get()
+
         if host.connection:
             state.activate_host(host)
         else:
