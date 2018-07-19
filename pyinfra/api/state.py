@@ -256,22 +256,23 @@ class State(object):
             yield
 
     @contextmanager
-    def deploy(self, name, kwargs, data):
+    def deploy(self, name, kwargs, data, in_deploy=True):
         '''
-        Wraps a group of operations as a deploy, this should not be used directly,
-        instead use ``pyinfra.api.deploy.deploy``.
+        Wraps a group of operations as a deploy, this should not be used
+        directly, instead use ``pyinfra.api.deploy.deploy``.
         '''
 
         # Handle nested deploy names
         if self.deploy_name:
             name = _make_name(self.deploy_name, name)
 
-        self.in_deploy = True
-
         # Store the previous values
+        old_in_deploy = self.in_deploy
         old_deploy_name = self.deploy_name
         old_deploy_kwargs = self.deploy_kwargs
         old_deploy_data = self.deploy_data
+
+        self.in_deploy = in_deploy
 
         # Limit the new hosts to a subset of the old hosts if they existed
         if (
@@ -299,6 +300,7 @@ class State(object):
         yield
 
         # Restore the previous values
+        self.in_deploy = old_in_deploy
         self.deploy_name = old_deploy_name
         self.deploy_kwargs = old_deploy_kwargs
         self.deploy_data = old_deploy_data

@@ -11,6 +11,8 @@ import six
 
 from contextlib2 import ExitStack
 
+import pyinfra
+
 from . import logger, pseudo_state
 from .api.exceptions import PyinfraError
 from .api.util import read_buffer
@@ -25,6 +27,9 @@ def include(filename, hosts=False, when=True):
         hosts (string, list): group name or list of hosts to limit this include to
         when (bool): indicate whether to trigger operations in this include
     '''
+
+    if not pyinfra.is_cli:
+        raise PyinfraError('local.include is only available in CLI mode.')
 
     filename = path.join(pseudo_state.deploy_dir, filename)
 
@@ -41,7 +46,25 @@ def include(filename, hosts=False, when=True):
             # only thing (so should be `pyinfra_cli.local`). It is kept here
             # to maintain backwards compatability and the nicer public import
             # (ideally users never need to import from `pyinfra_cli`).
+
+            from pyinfra_cli.config import extract_file_config
             from pyinfra_cli.util import exec_file
+
+            # Load any config defined in the file and setup like a @deploy
+            config_data = extract_file_config(filename)
+            kwargs = {
+                key.lower(): value
+                for key, value in six.iteritems(config_data)
+                if key in [
+                    'SUDO', 'SUDO_USER', 'SU_USER',
+                    'PRESERVE_SUDO_ENV', 'IGNORE_ERRORS',
+                ]
+            }
+            stack.enter_context(pseudo_state.deploy(
+                filename, kwargs, None,
+                in_deploy=False,
+            ))
+
             exec_file(filename, is_deploy_code=True)
 
             # One potential solution to the above is to add local as an actual

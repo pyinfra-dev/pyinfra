@@ -13,11 +13,12 @@ from pyinfra.api import Config
 from .util import exec_file
 
 
-def _extract_config_assignments(filename, config):
+def extract_file_config(filename, config=None):
     with open(filename, 'r') as f:
         data = f.read()
 
     ast_data = ast.parse(data, filename=filename)
+    config_data = {}
 
     for node in ast_data.body:
         if not isinstance(node, ast.Assign):
@@ -51,8 +52,16 @@ def _extract_config_assignments(filename, config):
         # If one of the assignments matches a config variable (eg SUDO = True)
         # then assign it to the config object!
         for target in node.targets:
-            if hasattr(config, target.id):
-                setattr(config, target.id, value)
+            if target.id.isupper() and hasattr(Config, target.id):
+                config_data[target.id] = value
+
+    # If we have a config, update and exit
+    if config:
+        for key, value in six.iteritems(config_data):
+            setattr(config, key, value)
+        return
+
+    return config_data
 
 
 def load_config(deploy_dir):
@@ -64,7 +73,7 @@ def load_config(deploy_dir):
     config_filename = path.join(deploy_dir, 'config.py')
 
     if path.exists(config_filename):
-        _extract_config_assignments(config_filename, config)
+        extract_file_config(config_filename, config)
 
         # Now execute the file to trigger loading of any hooks
         exec_file(config_filename)
@@ -72,15 +81,18 @@ def load_config(deploy_dir):
     return config
 
 
-def load_deploy_config(deploy_filename, config):
+def load_deploy_config(deploy_filename, config=None):
     '''
     Loads any local config overrides in the deploy file.
     '''
+
+    if not config:
+        config = Config()
 
     if not deploy_filename:
         return
 
     if path.exists(deploy_filename):
-        _extract_config_assignments(deploy_filename, config)
+        extract_file_config(deploy_filename, config)
 
     return config
