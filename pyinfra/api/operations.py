@@ -16,6 +16,8 @@ import six
 
 from paramiko import SSHException
 
+import pyinfra
+
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import format_exception, log_host_command_error
@@ -221,7 +223,7 @@ def _run_server_ops(state, host, progress=None):
                 ', '.join(op_meta['names']), host,
             ))
 
-        if state.print_lines:
+        if pyinfra.is_cli:
             print()
 
 

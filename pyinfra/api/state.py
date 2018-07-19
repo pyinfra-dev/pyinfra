@@ -5,6 +5,7 @@
 from __future__ import division, unicode_literals
 
 from contextlib import contextmanager
+from multiprocessing import cpu_count
 from uuid import uuid4
 
 import six
@@ -86,11 +87,9 @@ class State(object):
     print_output = False  # print output from the actual deploy (-v)
     print_fact_info = False  # log fact gathering as INFO > DEBUG (-v)
     print_fact_output = False  # print output from facts (-vv)
-    print_lines = False  # print blank lines between operations (always in CLI)
 
     # Used in CLI
     deploy_dir = None  # base directory for locating files/templates/etc
-    is_cli = False
     has_imbalanced_operations = False  # have we seen imbalanced operations?
 
     def __init__(self, inventory, config=None, initial_limit=None):
@@ -119,11 +118,16 @@ class State(object):
                 ))
 
         if not config.PARALLEL:
-            # If possible run everything in parallel, otherwise the max if defined above
+            # TODO: benchmark this
+            # In my own tests the optimum number of parallel SSH processes is
+            # ~20 per CPU core - no science here yet, needs benchmarking!
+            cpus = cpu_count()
+            ideal_parallel = cpus * 20
+
             config.PARALLEL = (
-                min(len(inventory), MAX_PARALLEL)
+                min(ideal_parallel, len(inventory), MAX_PARALLEL)
                 if MAX_PARALLEL is not None
-                else len(inventory)
+                else min(ideal_parallel, len(inventory))
             )
 
         # If explicitly set, just issue a warning
@@ -252,22 +256,23 @@ class State(object):
             yield
 
     @contextmanager
-    def deploy(self, name, kwargs, data):
+    def deploy(self, name, kwargs, data, in_deploy=True):
         '''
-        Wraps a group of operations as a deploy, this should not be used directly,
-        instead use ``pyinfra.api.deploy.deploy``.
+        Wraps a group of operations as a deploy, this should not be used
+        directly, instead use ``pyinfra.api.deploy.deploy``.
         '''
 
         # Handle nested deploy names
         if self.deploy_name:
             name = _make_name(self.deploy_name, name)
 
-        self.in_deploy = True
-
         # Store the previous values
+        old_in_deploy = self.in_deploy
         old_deploy_name = self.deploy_name
         old_deploy_kwargs = self.deploy_kwargs
         old_deploy_data = self.deploy_data
+
+        self.in_deploy = in_deploy
 
         # Limit the new hosts to a subset of the old hosts if they existed
         if (
@@ -295,6 +300,7 @@ class State(object):
         yield
 
         # Restore the previous values
+        self.in_deploy = old_in_deploy
         self.deploy_name = old_deploy_name
         self.deploy_kwargs = old_deploy_kwargs
         self.deploy_data = old_deploy_data

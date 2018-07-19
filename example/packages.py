@@ -1,6 +1,7 @@
 from pyinfra import host
 from pyinfra.modules import apt, pip, pkg, server, yum
 
+# Global flag - this applies to all operations in this file!
 SUDO = True
 
 

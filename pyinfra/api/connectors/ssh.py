@@ -26,6 +26,9 @@ from paramiko import (
 )
 from paramiko.agent import AgentRequestHandler
 from sshuserclient import SSHClient
+
+import pyinfra
+
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import get_file_io, make_command, read_buffer
@@ -73,7 +76,7 @@ def _get_private_key(state, key_filename, key_password):
             # huge fan of having CLI specific code in here, but it doesn't really fit
             # anywhere else without duplicating lots of key related code into cli.py.
             if not key_password:
-                if state.is_cli:
+                if pyinfra.is_cli:
                     key_password = getpass(
                         'Enter password for private key: {0}: '.format(
                             key_filename,

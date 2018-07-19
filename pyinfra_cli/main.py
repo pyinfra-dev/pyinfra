@@ -206,6 +206,11 @@ def main(*args, **kwargs):
         raise
 
     except Exception as e:
+        # Attach the tracback to the exception before returning as state (Py2
+        # does not have `Exception.__traceback__`).
+        _, _, traceback = sys.exc_info()
+        e._traceback = traceback
+
         # Re-raise any unexpected exceptions as UnexpectedError
         raise UnexpectedError(e)
 
@@ -395,8 +400,7 @@ def _main(
     # Create/set the state, passing any initial --limit
     state = State(inventory, config, initial_limit=limit_hosts)
 
-    state.is_cli = True
-    state.print_lines = True
+    # Set the deploy directory
     state.deploy_dir = deploy_dir
 
     # Setup printing on the new state

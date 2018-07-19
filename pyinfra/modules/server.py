@@ -159,6 +159,39 @@ def hostname(state, host, hostname, hostname_file=None):
 
 
 @operation
+def sysctl(
+    state, host, name, value,
+    persist=False, persist_file='/etc/sysctl.conf',
+):
+    '''
+    Manage sysctl configuration.
+
+    + name: name of the sysctl setting to ensure
+    + value: the value or list of values the sysctl should be
+    + persist: whether to write this sysctl to the config
+    + persist_file: file to write the sysctl to persist on reboot
+    '''
+
+    string_value = (
+        ' '.join(value)
+        if isinstance(value, list)
+        else value
+    )
+
+    existing_value = host.fact.sysctl.get(name)
+    if not existing_value or existing_value != value:
+        yield 'sysctl {0}={1}'.format(name, string_value)
+
+    if persist:
+        yield files.line(
+            state, host,
+            persist_file,
+            '{0}[[:space:]]*=[[:space:]]*{1}'.format(name, string_value),
+            replace='{0} = {1}'.format(name, string_value),
+        )
+
+
+@operation
 def crontab(
     state, host, command, present=True, user=None,
     minute='*', hour='*', month='*', day_of_week='*', day_of_month='*',
@@ -283,7 +316,8 @@ def group(
 def user(
     state, host, name,
     present=True, home=None, shell=None, group=None, groups=None,
-    public_keys=None, delete_keys=False, ensure_home=True, system=False, uid=None,
+    public_keys=None, delete_keys=False, ensure_home=True,
+    system=False, uid=None,
 ):
     '''
     Manage system users & their ssh `authorized_keys`. Options:

@@ -2,16 +2,23 @@
 # File: pyinfra_cli/__main__.py
 # Desc: bootstrap stuff for the pyinfra CLI and provide it's entry point
 
+import os
 import signal
 import sys
 
 import click
+import gevent
 
 from colorama import init as colorama_init
+
+import pyinfra
 
 from .legacy import run_main_with_legacy_arguments
 from .main import cli, main
 
+
+# Set CLI mode
+pyinfra.is_cli = True
 
 # Init colorama for Windows ANSI color support
 colorama_init()
@@ -25,13 +32,18 @@ sys.path.append('.')
 # Shut it click
 click.disable_unicode_literals_warning = True  # noqa
 
+# Force line buffering
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1)
+sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 1)
 
-# Handle ctrl+c
-def _signal_handler(signum, frame):
-    print('Exiting upon user request!')
+
+def _handle_interrupt(signum, frame):
+    click.echo('Exiting upon user request!')
     sys.exit(0)
 
-signal.signal(signal.SIGINT, _signal_handler)  # noqa
+
+gevent.signal(signal.SIGINT, gevent.kill)  # kill any greenlets on ctrl+c
+signal.signal(signal.SIGINT, _handle_interrupt)  # print the message and exit main
 
 
 def execute_pyinfra():

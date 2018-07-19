@@ -9,6 +9,9 @@ Welcome to pyinfra.
 import logging
 
 
+# Global flag set True by `pyinfra_cli.__main__`
+is_cli = False
+
 # Global pyinfra logger
 logger = logging.getLogger('pyinfra')
 
