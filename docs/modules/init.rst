@@ -56,6 +56,23 @@ Manually enable /etc/init.d scripts by creating /etc/rcX.d/Y links.
 + **stop_levels**: which runlevels should the service stop when enabled
 
 
+:code:`init.launchd`
+~~~~~~~~~~~~~~~~~~~~
+
+Manage the state of systemd managed services.
+
+.. code:: python
+
+    init.launchd(name, running=True, restarted=False, command=None)
+
++ **name**: name of the service to manage
++ **running**: whether the service should be running
++ **restarted**: whether the service should be restarted
++ **command**: custom command to pass like: ``/etc/rc.d/<name> <command>``
++ **enabled**: whether this service should be enabled/disabled on boot
++ **daemon_reload**: reload the systemd daemon to read updated unit files
+
+
 :code:`init.rc`
 ~~~~~~~~~~~~~~~
 

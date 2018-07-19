@@ -5,6 +5,33 @@ Server
 The server module takes care of os-level state. Targets POSIX compatibility, tested on
 Linux/BSD.
 
+:code:`server.crontab`
+~~~~~~~~~~~~~~~~~~~~~~
+
+Manage crontab entries.
+
+.. code:: python
+
+    server.crontab(
+        command, present=True, user=None, minute='*', hour='*', month='*', day_of_week='*',
+        day_of_month='*'
+    )
+
++ **command**: the command for the cron
++ **present**: whether this cron command should exist
++ **user**: the user whose crontab to manage
++ **minute**: which minutes to execute the cron
++ **hour**: which hours to execute the cron
++ **month**: which months to execute the cron
++ **day_of_week**: which day of the week to execute the cron
++ **day_of_month**: which day of the month to execute the cron
+
+Cron commands:
+    The command is used to identify crontab entries - this means commands
+    must be unique within a given users crontab. If you require multiple
+    identical commands, prefix each with a nonce environment variable.
+
+
 :code:`server.group`
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -20,6 +47,37 @@ Manage system groups.
 
 System users:
     System users don't exist on BSD, so the argument is ignored for BSD targets.
+
+
+:code:`server.hostname`
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Manage the system hostname.
+
+.. code:: python
+
+    server.hostname(hostname, hostname_file=None)
+
++ **hostname**: the hostname that should be set
++ **hostname_file**: the file that permanently sets the hostname
+
+Hostname file:
+    By default pyinfra will auto detect this by targetting ``/etc/hostname``
+    on Linux and ``/etc/myname`` on OpenBSD.
+
+
+:code:`server.modprobe`
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Manage kernel modules.
+
+.. code:: python
+
+    server.modprobe(name, present=True, force=False)
+
++ **name**: name of the module to manage
++ **present**: whether the module should be loaded or not
++ **force**: whether to force any add/remove modules
 
 
 :code:`server.script`
@@ -59,6 +117,21 @@ Run raw shell code.
 
 + **commands**: command or list of commands to execute on the remote server
 + **chdir**: directory to cd into before executing commands
+
+
+:code:`server.sysctl`
+~~~~~~~~~~~~~~~~~~~~~
+
+Manage sysctl configuration.
+
+.. code:: python
+
+    server.sysctl(name, value, persist=False, persist_file='/etc/sysctl.conf')
+
++ **name**: name of the sysctl setting to ensure
++ **value**: the value or list of values the sysctl should be
++ **persist**: whether to write this sysctl to the config
++ **persist_file**: file to write the sysctl to persist on reboot
 
 
 :code:`server.user`

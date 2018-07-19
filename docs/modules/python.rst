@@ -37,3 +37,10 @@ into the operation directly, eg:
 
     python.execute(callback)
 
+
+:code:`python.raise_exception`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. code:: python
+
+    python.raise_exception(exception_class)
+

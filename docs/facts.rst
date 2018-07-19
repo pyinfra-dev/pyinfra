@@ -7,32 +7,32 @@ Facts Index
 Files
 -----
 
-:code:`directory`
-~~~~~~~~~~~~~~~~~
+:code:`directory(name)`
+~~~~~~~~~~~~~~~~~~~~~~~
 
 
-:code:`file`
-~~~~~~~~~~~~
+:code:`file(name)`
+~~~~~~~~~~~~~~~~~~
 
 
-:code:`find_directories`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`find_directories(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of directories from a start point, recursively using find.
     
 
 
-:code:`find_files`
-~~~~~~~~~~~~~~~~~~
+:code:`find_files(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of files from a start point, recursively using find.
     
 
 
-:code:`find_in_file`
-~~~~~~~~~~~~~~~~~~~~
+:code:`find_in_file(name, pattern)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Checks for the existence of text in a file using grep. Returns a list of matching
@@ -40,35 +40,35 @@ Files
     
 
 
-:code:`find_links`
-~~~~~~~~~~~~~~~~~~
+:code:`find_links(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of links from a start point, recursively using find.
     
 
 
-:code:`link`
-~~~~~~~~~~~~
+:code:`link(name)`
+~~~~~~~~~~~~~~~~~~
 
 
-:code:`sha1_file`
-~~~~~~~~~~~~~~~~~
+:code:`sha1_file(name)`
+~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a SHA1 hash of a file. Works with both sha1sum and sha1.
     
 
 
-:code:`socket`
-~~~~~~~~~~~~~~
+:code:`socket(name)`
+~~~~~~~~~~~~~~~~~~~~
 
 
 Git
 ---
 
-:code:`git_branch`
-~~~~~~~~~~~~~~~~~~
+:code:`git_branch(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Server
@@ -80,6 +80,25 @@ Server
 
 :code:`command`
 ~~~~~~~~~~~~~~~
+
+
+:code:`crontab`
+~~~~~~~~~~~~~~~
+
+
+    Returns a dict of cron command -> execution time.
+
+    .. code:: python
+
+        '/path/to/command': {
+            'minute': '*',
+            'hour': '*',
+            'month': '*',
+            'day_of_month': '*',
+            'day_of_week': '*',
+        },
+        ...
+    
 
 
 :code:`date`
@@ -104,6 +123,10 @@ Server
 
 :code:`hostname`
 ~~~~~~~~~~~~~~~~
+
+
+:code:`kernel_modules`
+~~~~~~~~~~~~~~~~~~~~~~
 
 
 :code:`linux_distribution`
@@ -140,6 +163,10 @@ Server
 ~~~~~~~~~~~~~~~~~~
 
 
+:code:`sysctl`
+~~~~~~~~~~~~~~
+
+
 :code:`users`
 ~~~~~~~~~~~~~
 
@@ -165,11 +192,42 @@ Server
 ~~~~~~~~~~~~~
 
 
+Docker
+------
+
+:code:`docker_containers`
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a list of all Docker containers.
+    
+
+
+:code:`docker_fact_base`
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+:code:`docker_images`
+~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a list of all Docker images.
+    
+
+
+:code:`docker_networks`
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a list of all Docker networks.
+    
+
+
 Npm
 ---
 
-:code:`npm_packages`
-~~~~~~~~~~~~~~~~~~~~
+:code:`npm_packages(directory)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of installed npm packages globally or in a given directory:
@@ -197,8 +255,8 @@ Yum
     
 
 
-:code:`rpm_package`
-~~~~~~~~~~~~~~~~~~~
+:code:`rpm_package(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns information on a .rpm file:
@@ -255,8 +313,8 @@ Apt
     
 
 
-:code:`deb_package`
-~~~~~~~~~~~~~~~~~~~
+:code:`deb_package(name)`
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns information on a .deb file.
@@ -314,8 +372,8 @@ Pkg
 Iptables
 --------
 
-:code:`ip6tables_chains`
-~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`ip6tables_chains(table)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of ip6tables chains & policies:
@@ -327,8 +385,8 @@ Iptables
     
 
 
-:code:`ip6tables_rules`
-~~~~~~~~~~~~~~~~~~~~~~~
+:code:`ip6tables_rules(table)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of ip6tables rules for a specific table:
@@ -343,8 +401,8 @@ Iptables
     
 
 
-:code:`iptables_chains`
-~~~~~~~~~~~~~~~~~~~~~~~
+:code:`iptables_chains(table)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of iptables chains & policies:
@@ -356,8 +414,8 @@ Iptables
     
 
 
-:code:`iptables_rules`
-~~~~~~~~~~~~~~~~~~~~~~
+:code:`iptables_rules(table)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of iptables rules for a specific table:
@@ -375,8 +433,8 @@ Iptables
 Pip
 ---
 
-:code:`pip_packages`
-~~~~~~~~~~~~~~~~~~~~
+:code:`pip_packages(pip)`
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of installed pip packages:
@@ -406,12 +464,11 @@ Init
     
 
 
-:code:`rcd_enabled`
-~~~~~~~~~~~~~~~~~~~
+:code:`launchd_status`
+~~~~~~~~~~~~~~~~~~~~~~
 
 
-    Returns a dict of service name -> whether enabled (on boot) status. Different
-    to Linux variants because BSD has no/one runlevel.
+    Returns a dict of name -> status for launchd managed services.
     
 
 
@@ -515,5 +572,41 @@ Devices
                 'size': '64',
                 'address': 'fe80::a00:27ff:fec3:36f0'
             }
+        },
+        ...
+    
+
+
+Mysql
+-----
+
+:code:`mysql_databases(mysql_user, mysql_password, mysql_host, mysql_port)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a list of existing MySQL databases.
+    
+
+
+:code:`mysql_fact_base(mysql_user, mysql_password, mysql_host, mysql_port)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+:code:`mysql_user_grants(user, hostname, mysql_user, mysql_password, mysql_host, mysql_port)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+:code:`mysql_users(mysql_user, mysql_password, mysql_host, mysql_port)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a dict of MySQL user@host's and their associated data:
+
+    .. code:: python
+
+        'user@host': {
+            'permissions': ['Alter', 'Grant'],
+            'max_connections': 5,
+            ...
         },
         ...
