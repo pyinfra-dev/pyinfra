@@ -122,7 +122,7 @@ def _run_server_op(state, host, op_hash):
             stderr = []
 
             try:
-                status, _, stderr = host.run_shell_command(
+                status, stdout, stderr = host.run_shell_command(
                     state,
                     command.strip(),
                     sudo=sudo,
@@ -144,11 +144,21 @@ def _run_server_op(state, host, op_hash):
 
             # If we failed and have no already printed the stderr, print it
             if status is False and not state.print_output:
+                has_stderr = False
                 for line in stderr:
+                    has_stderr = True
                     logger.error('{0}{1}'.format(
                         host.print_prefix,
                         click.style(line, 'red'),
                     ))
+
+                # Not all (like, most) programs output their errors to stderr!
+                if not has_stderr:
+                    for line in stdout:
+                        logger.error('{0}{1}'.format(
+                            host.print_prefix,
+                            click.style(line, 'red'),
+                        ))
 
         # Break the loop to trigger a failure
         if status is False:
