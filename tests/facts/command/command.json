@@ -1,4 +1,4 @@
 {
     "output": ["a", "nop"],
-    "fact": "a"
+    "fact": "a\nnop"
 }
