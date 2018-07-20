@@ -1,4 +1,4 @@
-# v0.7.dev0 (WIP)
+# v0.7.dev1 (WIP)
 
 + Add **mysql** module
     - Operations: `mysql.sql`, `mysql.user`, `mysql.database`, `mysql.permission`, `mysql.dump`, `mysql.load`
@@ -10,6 +10,7 @@
 + Massively improved progress bar which highlights remaining hosts and tracks progress per operation or fact
 + Improved SSH config parsing, including proxyjump support (@tobald)
 + Support for CONFIG variables defined in `local.include` files
++ Fix `command` fact now outputs everything not just the first line
 
 Internal changes:
 + **Replace** `--debug-state` with `--debug-operations` and `--debug-facts`
@@ -27,6 +28,7 @@ Internal changes:
     * Hash `True`, `False` and `None` constants as the same so they can change between hosts without branching operations
     * Update docs and warning on operation branching
 + Better default for pool parallel size
++ Show stdout if stderr is empty on command failure (surprisingly common)
 
 
 # v0.6.1
