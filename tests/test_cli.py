@@ -116,13 +116,13 @@ class TestCliExceptions(TestCase):
 
     def test_bad_deploy_file(self):
         self.assert_cli_exception(
-            ['example/inventories/dev.py', 'example/deploy.py', 'nop.py'],
+            ['my-server.net', 'nop.py'],
             'No deploy file: nop.py',
         )
 
     def test_bad_fact(self):
         self.assert_cli_exception(
-            ['example/inventories/dev.py', 'fact', 'thing'],
+            ['my-server.net', 'fact', 'thing'],
             'No fact: thing',
         )
 
