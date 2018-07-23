@@ -5,7 +5,8 @@
     - Facts: `mysql_databases`, `mysql_users`, `mysql_user_grants`
 + Add **puppet** module with `puppet.agent` operation (@tobald)
 + Add `server.crontab`, `server.modprobe` and `server.hostname` operations
-+ Add `kernel_modules` and `crontab` facts
++ Add `git.config` operation
++ Add `kernel_modules`, `crontab` and `git_config` facts
 + Add global install virtualenv support (like iPython)
 + Massively improved progress bar which highlights remaining hosts and tracks progress per operation or fact
 + Improved SSH config parsing, including proxyjump support (@tobald)
