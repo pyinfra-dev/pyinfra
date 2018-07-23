@@ -7,6 +7,8 @@
 from inspect import getargspec, getmembers, isclass
 from types import FunctionType, MethodType
 
+import six
+
 from six.moves import range
 
 from pyinfra import facts
@@ -50,13 +52,33 @@ def build_facts():
             command_attr = getattr(cls, 'command', None)
             if isinstance(command_attr, (FunctionType, MethodType)):
                 # Attach basic argspec to name
-                # Note only supports facts with one arg as this is all that's possible,
-                # will need to refactor to print properly in future.
+                # Note only supports facts with one arg as this is all that's
+                # possible, will need to refactor to print properly in future.
                 argspec = getargspec(command_attr)
-                if len(argspec.args) > 1:
+
+                arg_defaults = [
+                    "'{}'".format(arg) if isinstance(arg, six.string_types) else arg
+                    for arg in argspec.defaults
+                ] if argspec.defaults else None
+
+                # Create a dict of arg name -> default
+                defaults = dict(zip(
+                    argspec.args[-len(arg_defaults):],
+                    arg_defaults,
+                )) if arg_defaults else {}
+
+                if len(argspec.args):
                     name = '{0}({1})'.format(
                         name,
-                        ', '.join(arg for arg in argspec.args if arg != 'self'),
+                        ', '.join(
+                            (
+                                '{0}={1}'.format(arg, defaults[arg])
+                                if arg in defaults
+                                else arg
+                            )
+                            for arg in argspec.args
+                            if arg != 'self'
+                        ),
                     )
 
             name = ':code:`{0}`'.format(name)
