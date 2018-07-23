@@ -119,6 +119,7 @@ def _run_server_op(state, host, op_hash):
 
         # Must be a string/shell command: execute it on the server w/op-level preferences
         else:
+            stdout = []
             stderr = []
 
             try:
