@@ -69,6 +69,10 @@ def repo(
 
         if domain:
             yield ssh.keyscan(state, host, domain.group(1))
+        else:
+            raise OperationError(
+                'Could not parse domain (to SSH keyscan) from: {0}'.format(source),
+            )
 
     # Store git commands for directory prefix
     git_commands = []
