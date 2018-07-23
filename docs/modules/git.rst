@@ -4,6 +4,20 @@ Git
 
 Manage git repositories and configuration.
 
+:code:`git.config`
+~~~~~~~~~~~~~~~~~~
+
+Manage git config for a repository or globally.
+
+.. code:: python
+
+    git.config(key, value, repo=None)
+
++ **key**: the key of the config to ensure
++ **value**: the value this key should have
++ **repo**: specify the git repo path to edit local config (defaults to global)
+
+
 :code:`git.repo`
 ~~~~~~~~~~~~~~~~
 

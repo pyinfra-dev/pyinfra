@@ -67,8 +67,12 @@ Files
 Git
 ---
 
-:code:`git_branch(name)`
+:code:`git_branch(repo)`
 ~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+:code:`git_config(repo=None)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Server
@@ -78,12 +82,12 @@ Server
 ~~~~~~~~~~~~
 
 
-:code:`command`
-~~~~~~~~~~~~~~~
+:code:`command(command)`
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-:code:`crontab`
-~~~~~~~~~~~~~~~
+:code:`crontab(user=None)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of cron command -> execution time.
@@ -188,46 +192,15 @@ Server
     
 
 
-:code:`which`
-~~~~~~~~~~~~~
-
-
-Docker
-------
-
-:code:`docker_containers`
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-    Returns a list of all Docker containers.
-    
-
-
-:code:`docker_fact_base`
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-:code:`docker_images`
-~~~~~~~~~~~~~~~~~~~~~
-
-
-    Returns a list of all Docker images.
-    
-
-
-:code:`docker_networks`
-~~~~~~~~~~~~~~~~~~~~~~~
-
-
-    Returns a list of all Docker networks.
-    
+:code:`which(name)`
+~~~~~~~~~~~~~~~~~~~
 
 
 Npm
 ---
 
-:code:`npm_packages(directory)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`npm_packages(directory=None)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of installed npm packages globally or in a given directory:
@@ -372,8 +345,8 @@ Pkg
 Iptables
 --------
 
-:code:`ip6tables_chains(table)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`ip6tables_chains(table='filter')`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of ip6tables chains & policies:
@@ -385,8 +358,8 @@ Iptables
     
 
 
-:code:`ip6tables_rules(table)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`ip6tables_rules(table='filter')`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of ip6tables rules for a specific table:
@@ -401,8 +374,8 @@ Iptables
     
 
 
-:code:`iptables_chains(table)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`iptables_chains(table='filter')`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of iptables chains & policies:
@@ -414,8 +387,8 @@ Iptables
     
 
 
-:code:`iptables_rules(table)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`iptables_rules(table='filter')`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of iptables rules for a specific table:
@@ -433,8 +406,8 @@ Iptables
 Pip
 ---
 
-:code:`pip_packages(pip)`
-~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`pip_packages(pip='pip')`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of installed pip packages:
@@ -580,24 +553,24 @@ Devices
 Mysql
 -----
 
-:code:`mysql_databases(mysql_user, mysql_password, mysql_host, mysql_port)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`mysql_databases(mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a list of existing MySQL databases.
     
 
 
-:code:`mysql_fact_base(mysql_user, mysql_password, mysql_host, mysql_port)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`mysql_fact_base(mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-:code:`mysql_user_grants(user, hostname, mysql_user, mysql_password, mysql_host, mysql_port)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`mysql_user_grants(user, hostname='localhost', mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-:code:`mysql_users(mysql_user, mysql_password, mysql_host, mysql_port)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:code:`mysql_users(mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     Returns a dict of MySQL user@host's and their associated data:
