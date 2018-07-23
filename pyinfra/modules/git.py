@@ -11,10 +11,34 @@ from __future__ import unicode_literals
 import re
 
 from pyinfra import logger
-from pyinfra.api import operation
+from pyinfra.api import operation, OperationError
 
 from . import files, ssh
 from .util.files import chmod, chown
+
+
+@operation(pipeline_facts={
+    'git_config': 'repo',
+})
+def config(
+    state, host, key, value,
+    repo=None,
+):
+    '''
+    Manage git config for a repository or globally.
+
+    + key: the key of the config to ensure
+    + value: the value this key should have
+    + repo: specify the git repo path to edit local config (defaults to global)
+    '''
+
+    existing_config = host.fact.git_config(repo)
+
+    if key not in existing_config or existing_config[key] != value:
+        if repo is None:
+            yield 'git config --global {0} "{1}"'.format(key, value)
+        else:
+            yield 'cd {0} && git config --local {1} "{2}"'.format(repo, key, value)
 
 
 @operation(pipeline_facts={
