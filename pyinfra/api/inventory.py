@@ -180,7 +180,8 @@ class Inventory(object):
 
             # And push into any groups
             for group_name in host_groups:
-                self.groups[group_name].append(host)
+                if host not in self.groups[group_name]:
+                    self.groups[group_name].append(host)
 
         return hosts
 
