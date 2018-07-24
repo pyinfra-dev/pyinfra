@@ -5,16 +5,20 @@
 from gevent import monkey  # noqa
 monkey.patch_all()  # noqa async things (speed++, optional)
 
-import json
+import json  # noqa
 import logging
+
+from collections import defaultdict
 
 from pyinfra.api import Config, Inventory, State
 from pyinfra.api.connect import connect_all
+from pyinfra.api.connectors.vagrant import make_names_data
 from pyinfra.api.facts import get_facts
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
-
 from pyinfra.modules import files, server
+
+from pyinfra_cli.prints import jsonify
 
 
 # Enable pyinfra logging
@@ -22,30 +26,20 @@ logging.basicConfig(level=logging.WARNING)
 logging.getLogger('pyinfra').setLevel(logging.INFO)
 
 
+# Make our hosts and groups data (using the Vagrant connector in this case)
+hosts = []
+groups = defaultdict(lambda: ([], {}))
+
+for name, data, group_names in make_names_data():
+    hosts.append((name, data))
+    for group_name in group_names:
+        if name not in groups[group_name][0]:
+            groups[group_name][0].append(name)
+
+
 # First we setup some inventory we want to target
 # the first argument is a tuple of (list all all hosts, global/ALL data)
-inventory = Inventory(
-    ([
-        'centos6.pyinfra',
-        # Host-specific data can be attached in inventory
-        ('centos7.pyinfra', {'systemd': True}),
-        'ubuntu14.pyinfra',
-        'debian7.pyinfra',
-        'openbsd58.pyinfra',
-    ], {}),
-    bsd=([
-        'openbsd57.pyinfra',
-    ], {
-        # Group-specific data can be attached like so
-        'app_dir': '/opt/pyinfra/bsd',
-    }),
-    centos=([
-        'centos6.pyinfra',
-        'centos7.pyinfra',
-    ], {}),
-    ssh_user='vagrant',
-    ssh_key='./files/insecure_private_key',
-)
+inventory = Inventory((hosts, {}), **groups)
 
 # Now we create a new config (w/optional args)
 config = Config(
@@ -115,4 +109,4 @@ run_ops(state)
 
 # We can also get facts for all the hosts
 facts = get_facts(state, 'os')
-print(json.dumps(facts, indent=4))
+print(jsonify(facts, indent=4))
