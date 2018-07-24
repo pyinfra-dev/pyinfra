@@ -105,6 +105,9 @@ def get_facts(state, name, args=None, ensure_hosts=None):
     su_user = state.config.SU_USER
     ignore_errors = state.config.IGNORE_ERRORS
 
+    # Timeout for operations !== timeout for connect (config.TIMEOUT)
+    timeout = None
+
     # Get the current op meta
     current_op_hash = state.current_op_hash
     current_op_meta = state.op_meta.get(current_op_hash)
@@ -115,6 +118,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
         sudo_user = current_op_meta['sudo_user']
         su_user = current_op_meta['su_user']
         ignore_errors = current_op_meta['ignore_errors']
+        timeout = current_op_meta['timeout']
 
     # Make a hash which keeps facts unique - but usable cross-deploy/threads.
     # Locks are used to maintain order.
@@ -156,7 +160,8 @@ def get_facts(state, name, args=None, ensure_hosts=None):
 
             greenlet = state.fact_pool.spawn(
                 host.run_shell_command, state, command,
-                sudo=sudo, sudo_user=sudo_user, su_user=su_user,
+                sudo=sudo, sudo_user=sudo_user,
+                su_user=su_user, timeout=timeout,
                 print_output=state.print_fact_output,
             )
             greenlet_to_host[greenlet] = host
@@ -189,7 +194,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
                 failed_hosts.add(host)
                 log_host_command_error(
                     host, e,
-                    timeout=current_op_meta['timeout'],
+                    timeout=timeout,
                 )
 
             data = fact.default()
