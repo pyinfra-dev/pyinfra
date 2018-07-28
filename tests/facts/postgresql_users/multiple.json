@@ -1,0 +1,16 @@
+{
+    "output": [
+        "someuser|someuser|t|f|f|f|********||"
+    ],
+    "fact": {
+        "someuser": {
+            "usesysid": false,
+            "usecreatedb": true,
+            "usesuper": false,
+            "userepl": false,
+            "usebypassrls": false,
+            "valuntil": "",
+            "useconfig": ""
+        }
+    }
+}

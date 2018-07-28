@@ -1,0 +1,16 @@
+{
+    "kwargs": {
+        "username": "testuser",
+        "createdb": false,
+        "createrole": false,
+        "superuser": false,
+        "replication": false
+    },
+    "facts": {
+        "postgresql_users": {
+        }
+    },
+    "commands": [
+        "createuser --no-createdb --no-createrole --no-superuser --no-replication testuser"
+    ]
+}
