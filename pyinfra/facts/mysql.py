@@ -42,9 +42,10 @@ def make_mysql_command(
 
 
 def make_execute_mysql_command(command, **mysql_kwargs):
-    command = command.replace('"', '\\"')
-    mysql_command = make_mysql_command(**mysql_kwargs)
-    return 'echo "{0};" | {1}'.format(command, mysql_command)
+    return '{0} -e "{1}"'.format(
+        make_mysql_command(**mysql_kwargs),
+        command.replace('"', '\\"'),
+    )
 
 
 class MysqlFactBase(FactBase):
