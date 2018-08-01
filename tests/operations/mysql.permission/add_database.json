@@ -15,7 +15,7 @@
         }
     },
     "commands": [
-        "echo \"GRANT SELECT, INSERT ON \\`mydb\\`.* TO \\\"someuser\\\"@\\\"localhost\\\";\" | mysql",
-        "echo \"FLUSH PRIVILEGES;\" | mysql"
+        "mysql -e \"GRANT SELECT, INSERT ON \\`mydb\\`.* TO \\\"someuser\\\"@\\\"localhost\\\"\"",
+        "mysql -e \"FLUSH PRIVILEGES\""
     ]
 }

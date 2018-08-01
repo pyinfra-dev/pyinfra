@@ -10,6 +10,6 @@
         }
     },
     "commands": [
-        "echo \"DROP USER \\\"someuser\\\"@\\\"localwhat\\\";\" | mysql"
+        "mysql -e \"DROP USER \\\"someuser\\\"@\\\"localwhat\\\"\""
     ]
 }

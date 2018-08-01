@@ -18,22 +18,19 @@ if distro != 'Debian':
 
 apt.packages(
     {'Install mysql server & client'},
-    ['mysql-server', 'mysql-client'],
+    ['mysql-server'],
     update=True,
     cache_time=3600,
-    sudo=True,
 )
 
 
 mysql.user(
     {'Setup the pyinfra@localhost MySQL user'},
     'pyinfra',
-    sudo=True,
 )
 
 mysql.database(
     {'Setup the pyinfra_stuff database'},
     'pyinfra_stuff',
     user='pyinfra',
-    sudo=True,
 )

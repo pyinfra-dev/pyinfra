@@ -7,6 +7,6 @@
         "mysql_users": {}
     },
     "commands": [
-        "echo \"CREATE USER \\\"someuser\\\"@\\\"localwhat\\\";\" | mysql"
+        "mysql -e \"CREATE USER \\\"someuser\\\"@\\\"localwhat\\\"\""
     ]
 }

@@ -13,8 +13,8 @@
         }
     },
     "commands": [
-        "echo \"CREATE DATABASE somedb;\" | mysql",
-        "echo \"GRANT ALL ON \\`somedb\\`.* TO \\\"someuser\\\"@\\\"localhost\\\";\" | mysql",
-        "echo \"FLUSH PRIVILEGES;\" | mysql"
+        "mysql -e \"CREATE DATABASE somedb\"",
+        "mysql -e \"GRANT ALL ON \\`somedb\\`.* TO \\\"someuser\\\"@\\\"localhost\\\"\"",
+        "mysql -e \"FLUSH PRIVILEGES\""
     ]
 }
