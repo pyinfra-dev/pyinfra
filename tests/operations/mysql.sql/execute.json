@@ -1,6 +1,6 @@
 {
     "args": ["SELECT 1"],
     "commands": [
-        "echo \"SELECT 1;\" | mysql"
+        "mysql -e \"SELECT 1\""
     ]
 }

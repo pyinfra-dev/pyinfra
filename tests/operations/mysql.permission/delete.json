@@ -15,7 +15,7 @@
         }
     },
     "commands": [
-        "echo \"REVOKE SELECT, INSERT ON *.* FROM \\\"someuser\\\"@\\\"localhost\\\";\" | mysql",
-        "echo \"FLUSH PRIVILEGES;\" | mysql"
+        "mysql -e \"REVOKE SELECT, INSERT ON *.* FROM \\\"someuser\\\"@\\\"localhost\\\"\"",
+        "mysql -e \"FLUSH PRIVILEGES\""
     ]
 }

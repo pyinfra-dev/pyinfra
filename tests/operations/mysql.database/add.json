@@ -8,6 +8,6 @@
         "mysql_databases": []
     },
     "commands": [
-        "echo \"CREATE DATABASE somedb COLLATE utf8_bin CHARSET UTF-8;\" | mysql"
+        "mysql -e \"CREATE DATABASE somedb COLLATE utf8_bin CHARSET UTF-8\""
     ]
 }

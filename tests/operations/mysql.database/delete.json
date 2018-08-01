@@ -9,6 +9,6 @@
         ]
     },
     "commands": [
-        "echo \"DROP DATABASE somedb;\" | mysql"
+        "mysql -e \"DROP DATABASE somedb\""
     ]
 }
