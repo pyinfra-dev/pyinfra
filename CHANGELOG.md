@@ -1,8 +1,11 @@
 # v0.7.dev2 (WIP)
 
 + Add **mysql** module
-    - Operations: `mysql.sql`, `mysql.user`, `mysql.database`, `mysql.permission`, `mysql.dump`, `mysql.load`
+    - Operations: `mysql.sql`, `mysql.user`, `mysql.database`, `mysql.privileges`, `mysql.dump`, `mysql.load`
     - Facts: `mysql_databases`, `mysql_users`, `mysql_user_grants`
++ Add **postgresql** module
+    - Operations: `postgresql.sql`, `postgresql.role`, `postgresql.database`, `postgresql.dump`, `postgresql.load`
+    - Facts: `postgresql_databases`, `postgresql_roles`
 + Add **puppet** module with `puppet.agent` operation (@tobald)
 + Add `server.crontab`, `server.modprobe` and `server.hostname` operations
 + Add `git.config` operation
