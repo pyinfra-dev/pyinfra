@@ -1,0 +1,9 @@
+{
+    "args": ["testuser"],
+    "facts": {
+        "postgresql_roles": {}
+    },
+    "commands": [
+        "psql -Ac \"CREATE ROLE testuser LOGIN\""
+    ]
+}

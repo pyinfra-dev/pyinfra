@@ -5,11 +5,14 @@
             "someuser": {
                 "localhost": {
                     "*.*": {
-                        "permissions": ["SELECT", "INSERT"]
+                        "privileges": []
                     }
                 }
             }
         }
     },
-    "commands": []
+    "commands": [
+        "mysql -Be \"GRANT SELECT, INSERT ON *.* TO \\\"someuser\\\"@\\\"localhost\\\"\"",
+        "mysql -Be \"FLUSH PRIVILEGES\""
+    ]
 }

@@ -1,8 +1,9 @@
 {
-    "kwargs": {
-        "name": "somebase"
+    "args": ["somedb"],
+    "facts" :{
+        "postgresql_databases": {}
     },
     "commands": [
-        "createdb somebase"
+        "psql -Ac \"CREATE DATABASE somedb\""
     ]
 }

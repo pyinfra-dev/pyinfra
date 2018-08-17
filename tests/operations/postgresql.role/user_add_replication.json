@@ -1,0 +1,14 @@
+{
+    "args": ["testuser"],
+    "kwargs": {
+        "login": false,
+        "replication": true
+    },
+    "facts": {
+        "postgresql_roles": {
+        }
+    },
+    "commands": [
+        "psql -Ac \"CREATE ROLE testuser REPLICATION\""
+    ]
+}

@@ -1,16 +1,16 @@
 {
+    "args": ["testuser"],
     "kwargs": {
-        "username": "testuser",
         "createdb": true,
         "createrole": true,
         "superuser": true,
         "replication": true
     },
     "facts": {
-        "postgresql_users": {
+        "postgresql_roles": {
         }
     },
     "commands": [
-        "createuser --createdb --createrole --superuser --replication testuser"
+        "psql -Ac \"CREATE ROLE testuser LOGIN SUPERUSER CREATEDB CREATEROLE REPLICATION\""
     ]
 }

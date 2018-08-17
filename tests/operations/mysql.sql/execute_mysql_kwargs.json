@@ -7,6 +7,6 @@
         "mysql_port": 100
     },
     "commands": [
-        "mysql -u\"someuser\" -p\"somepass\" -h127.0.0.1 -P100 -e \"SELECT 1\""
+        "mysql -u\"someuser\" -p\"somepass\" -h127.0.0.1 -P100 -Be \"SELECT 1\""
     ]
 }

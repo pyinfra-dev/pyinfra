@@ -1,0 +1,38 @@
+{
+    "output": [
+        "rolname|rolsuper|rolinherit|rolcreaterole|rolcreatedb|rolcanlogin|rolreplication|rolconnlimit|rolpassword|rolvaliduntil|rolbypassrls|rolconfig|oid",
+        "postgres|t|t|t|t|t|t|-1|********||t||10",
+        "pyinfra|t|t|f|f|t|f|-1|********||f||16384",
+        "(7 rows)"
+    ],
+    "fact": {
+        "pyinfra": {
+            "super": true,
+            "inherit": true,
+            "createrole": false,
+            "createdb": false,
+            "canlogin": true,
+            "replication": false,
+            "connlimit": -1,
+            "password": "********",
+            "validuntil": null,
+            "bypassrls": false,
+            "config": null,
+            "oid": 16384
+        },
+        "postgres": {
+            "super": true,
+            "inherit": true,
+            "createrole": true,
+            "createdb": true,
+            "canlogin": true,
+            "replication": true,
+            "connlimit": -1,
+            "password": "********",
+            "validuntil": null,
+            "bypassrls": true,
+            "config": null,
+            "oid": 10
+        }
+    }
+}

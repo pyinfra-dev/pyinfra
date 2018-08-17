@@ -1,0 +1,13 @@
+{
+    "args": ["testuser"],
+    "kwargs": {
+        "superuser": true
+    },
+    "facts": {
+        "postgresql_roles": {
+        }
+    },
+    "commands": [
+        "psql -Ac \"CREATE ROLE testuser LOGIN SUPERUSER\""
+    ]
+}

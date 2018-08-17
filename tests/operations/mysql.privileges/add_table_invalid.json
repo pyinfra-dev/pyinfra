@@ -8,18 +8,18 @@
             "someuser": {
                 "localhost": {
                     "*.*": {
-                        "permissions": []
+                        "privileges": []
                     }
                 }
             }
         }
     },
     "commands": [
-        "mysql -e \"GRANT SELECT, INSERT ON *.\\`mytable\\` TO \\\"someuser\\\"@\\\"localhost\\\"\"",
-        "mysql -e \"FLUSH PRIVILEGES\""
+        "mysql -Be \"GRANT SELECT, INSERT ON *.\\`mytable\\` TO \\\"someuser\\\"@\\\"localhost\\\"\"",
+        "mysql -Be \"FLUSH PRIVILEGES\""
     ],
     "exception": {
         "name": "OperationError",
-        "message": "Cannot apply MySQL permissions on *.`mytable`, no database provided"
+        "message": "Cannot apply MySQL privileges on *.`mytable`, no database provided"
     }
 }

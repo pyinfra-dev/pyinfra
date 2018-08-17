@@ -1,6 +1,7 @@
 {
-    "args": ["somedb", "somefile"],
+    "args": ["somefile"],
     "kwargs": {
+        "database": "somedb",
         "mysql_user": "root"
     },
     "commands": [

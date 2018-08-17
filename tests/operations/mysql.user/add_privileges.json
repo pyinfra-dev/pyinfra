@@ -2,7 +2,7 @@
     "args": ["someuser"],
     "kwargs": {
         "user_hostname": "localwhat",
-        "permissions": ["SELECT"]
+        "privileges": ["SELECT"]
     },
     "facts": {
         "mysql_users": {},
@@ -13,8 +13,8 @@
         }
     },
     "commands": [
-        "mysql -e \"CREATE USER \\\"someuser\\\"@\\\"localwhat\\\"\"",
-        "mysql -e \"GRANT SELECT ON *.* TO \\\"someuser\\\"@\\\"localwhat\\\"\"",
-        "mysql -e \"FLUSH PRIVILEGES\""
+        "mysql -Be \"CREATE USER \\\"someuser\\\"@\\\"localwhat\\\"\"",
+        "mysql -Be \"GRANT SELECT ON *.* TO \\\"someuser\\\"@\\\"localwhat\\\"\"",
+        "mysql -Be \"FLUSH PRIVILEGES\""
     ]
 }

@@ -1,0 +1,9 @@
+{
+    "args": ["testuser"],
+    "facts": {
+        "postgresql_roles": {
+            "testuser": {}
+        }
+    },
+    "commands": []
+}

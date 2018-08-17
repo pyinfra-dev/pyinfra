@@ -1,0 +1,38 @@
+{
+    "output": [
+        "pg_encoding_to_char|datname|datdba|encoding|datcollate|datctype|datistemplate|datallowconn|datconnlimit|datlastsysoid|datfrozenxid|datminmxid|dattablespace|datacl",
+"UTF8|postgres|10|6|en_US.UTF-8|en_US.UTF-8|f|t|-1|13052|548|1|1663|",
+"UTF8|pyinfra_stuff|16384|6|en_US.UTF-8|en_US.UTF-8|f|t|-1|13052|548|1|1663|",
+        "(4 rows)"
+    ],
+    "fact": {
+        "postgres": {
+            "dba": 10,
+            "encoding": "UTF8",
+            "collate": "en_US.UTF-8",
+            "ctype": "en_US.UTF-8",
+            "istemplate": false,
+            "allowconn": true,
+            "connlimit": -1,
+            "lastsysoid": 13052,
+            "frozenxid": 548,
+            "minmxid": 1,
+            "tablespace": 1663,
+            "acl": null
+        },
+        "pyinfra_stuff": {
+            "dba": 16384,
+            "encoding": "UTF8",
+            "collate": "en_US.UTF-8",
+            "ctype": "en_US.UTF-8",
+            "istemplate": false,
+            "allowconn": true,
+            "connlimit": -1,
+            "lastsysoid": 13052,
+            "frozenxid": 548,
+            "minmxid": 1,
+            "tablespace": 1663,
+            "acl": null
+        }
+    }
+}

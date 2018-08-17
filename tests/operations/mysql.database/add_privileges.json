@@ -2,7 +2,7 @@
     "args": ["somedb"],
     "kwargs": {
         "user": "someuser",
-        "user_permissions": "ALL"
+        "user_privileges": "ALL"
     },
     "facts": {
         "mysql_databases": [],
@@ -13,8 +13,8 @@
         }
     },
     "commands": [
-        "mysql -e \"CREATE DATABASE somedb\"",
-        "mysql -e \"GRANT ALL ON \\`somedb\\`.* TO \\\"someuser\\\"@\\\"localhost\\\"\"",
-        "mysql -e \"FLUSH PRIVILEGES\""
+        "mysql -Be \"CREATE DATABASE somedb\"",
+        "mysql -Be \"GRANT ALL ON \\`somedb\\`.* TO \\\"someuser\\\"@\\\"localhost\\\"\"",
+        "mysql -Be \"FLUSH PRIVILEGES\""
     ]
 }

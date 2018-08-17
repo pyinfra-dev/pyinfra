@@ -1,0 +1,27 @@
+{
+    "output": [
+        "CATALOG_NAME\tSCHEMA_NAME\tDEFAULT_CHARACTER_SET_NAME\tDEFAULT_COLLATION_NAME\tSQL_PATH",
+        "def\tinformation_schema\tutf8\tutf8_general_ci\tNULL",
+        "def\tmysql\tutf8mb4\tutf8mb4_general_ci\tNULL",
+        "def\tperformance_schema\tutf8\tutf8_general_ci\tNULL",
+        "def\tpyinfra_stuff\tutf8\tutf8_general_ci\tNULL"
+    ],
+    "fact": {
+        "information_schema": {
+            "character_set": "utf8",
+            "collation_name": "utf8_general_ci"
+        },
+        "mysql": {
+            "character_set": "utf8mb4",
+            "collation_name": "utf8mb4_general_ci"
+        },
+        "performance_schema": {
+            "character_set": "utf8",
+            "collation_name": "utf8_general_ci"
+        },
+        "pyinfra_stuff": {
+            "character_set": "utf8",
+            "collation_name": "utf8_general_ci"
+        }
+    }
+}

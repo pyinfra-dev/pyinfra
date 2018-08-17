@@ -1,0 +1,12 @@
+{
+    "args": ["somedb"],
+    "kwargs": {
+        "owner": "someowner"
+    },
+    "facts" :{
+        "postgresql_databases": {}
+    },
+    "commands": [
+        "psql -Ac \"CREATE DATABASE somedb OWNER someowner\""
+    ]
+}
