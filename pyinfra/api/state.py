@@ -339,7 +339,7 @@ class State(object):
         activated_count = activated_count or len(self.activated_hosts)
 
         logger.debug('Failing hosts: {0}'.format(', '.join(
-            host.name for host in hosts_to_fail,
+            (host.name for host in hosts_to_fail),
         )))
 
         # Remove the failed hosts from the inventory
