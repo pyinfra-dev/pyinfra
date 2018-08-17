@@ -1,16 +1,15 @@
 {
     "groups": {
         "openbsd6": ["bsd"],
-        "debian7": ["debian"],
         "debian8": ["debian"],
         "debian9": ["debian"],
         "centos6": ["centos"],
         "centos7": ["centos"],
-        "ubuntu14": ["ubuntu"],
-        "ubuntu16": ["ubuntu"]
+        "ubuntu16": ["ubuntu"],
+        "ubuntu18": ["ubuntu"]
     },
     "data": {
-        "ubuntu14": {
+        "ubuntu16": {
             "ssh_user": "vagrant"
         }
     }
