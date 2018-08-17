@@ -58,7 +58,7 @@ def call(state, host, func, *args, **kwargs):
 
 @operation
 def raise_exception(state, host, exception_class, *args, **kwargs):
-    def raise_exc():
+    def raise_exc(*args, **kwargs):
         raise exception_class(*args, **kwargs)
 
-    yield (raise_exc)
+    yield (raise_exc, args, kwargs)
