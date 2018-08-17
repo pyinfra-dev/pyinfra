@@ -42,7 +42,7 @@ def make_mysql_command(
 
 
 def make_execute_mysql_command(command, **mysql_kwargs):
-    return '{0} -e "{1}"'.format(
+    return '{0} -Be "{1}"'.format(
         make_mysql_command(**mysql_kwargs),
         command.replace('"', '\\"'),
     )
