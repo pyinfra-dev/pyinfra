@@ -10,14 +10,7 @@ from datetime import datetime
 from dateutil.parser import parse as parse_date
 
 from pyinfra.api import FactBase
-
-
-# TODO: find a nicer place for this!
-def _try_int(value):
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return value
+from pyinfra.api.util import try_int
 
 
 class Home(FactBase):
@@ -145,7 +138,7 @@ class Sysctl(FactBase):
 
                 if re.match(r'^[a-zA-Z0-9_\.\s]+$', values):
                     values = [
-                        _try_int(item.strip())
+                        try_int(item.strip())
                         for item in values.split()
                     ]
 
@@ -212,11 +205,11 @@ class Crontab(FactBase):
 
             minute, hour, day_of_month, month, day_of_week, command = line.split(' ', 5)
             crons[command] = {
-                'minute': _try_int(minute),
-                'hour': _try_int(hour),
-                'month': _try_int(month),
-                'day_of_month': _try_int(day_of_month),
-                'day_of_week': _try_int(day_of_week),
+                'minute': try_int(minute),
+                'hour': try_int(hour),
+                'month': try_int(month),
+                'day_of_month': try_int(day_of_month),
+                'day_of_week': try_int(day_of_week),
             }
 
         return crons

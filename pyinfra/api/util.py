@@ -31,6 +31,13 @@ TEMPLATES = {}
 FILE_SHAS = {}
 
 
+def try_int(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return value
+
+
 def ensure_host_list(hosts, inventory):
     if hosts is None:
         return hosts
