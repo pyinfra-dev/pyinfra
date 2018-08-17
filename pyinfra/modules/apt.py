@@ -212,7 +212,7 @@ def update(state, host, cache_time=None, touch_periodic=False):
     if cache_time:
         yield 'touch {0}'.format(APT_UPDATE_FILENAME)
 
-_update = update  # noqa
+_update = update  # noqa: E305
 
 
 @operation
@@ -223,7 +223,7 @@ def upgrade(state, host):
 
     yield noninteractive_apt('upgrade')
 
-_upgrade = upgrade  # noqa
+_upgrade = upgrade  # noqa: E305 (for use below where update is a kwarg)
 
 
 @operation
