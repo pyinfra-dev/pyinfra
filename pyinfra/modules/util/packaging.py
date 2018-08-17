@@ -53,7 +53,7 @@ def ensure_packages(
     if version_join:
         # Split where versions present
         packages = [
-            package.split(version_join)
+            package.rsplit(version_join, 1)
             for package in packages
         ]
 

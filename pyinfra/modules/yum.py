@@ -140,7 +140,7 @@ def update(state, host):
 
     yield 'yum update -y'
 
-_update = update  # noqa
+_update = update  # noqa: E305 (for use below where update is a kwarg)
 
 
 @operation
@@ -156,6 +156,9 @@ def packages(
     + latest: whether to upgrade packages without a specified version
     + update: run yum update
     + clean: run yum clean
+
+    Versions:
+        Package versions can be pinned like yum: ``<pkg>-<version>``
     '''
 
     if clean:
@@ -169,5 +172,6 @@ def packages(
         install_command='yum install -y',
         uninstall_command='yum remove -y',
         upgrade_command='yum update -y',
+        version_join='-',
         latest=latest,
     )
