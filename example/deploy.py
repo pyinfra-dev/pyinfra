@@ -16,3 +16,7 @@ local.include('python_app.py')
 # Only suitable for Debian systems
 if 'debian' in host.groups:
     local.include('mysql.py')
+
+# And only for Debian
+if 'ubuntu' in host.groups:
+    local.include('postgresql.py')

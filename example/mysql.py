@@ -1,18 +1,15 @@
-from pyinfra import host
-from pyinfra.modules import apt, mysql, python
+from pyinfra import host, state
+from pyinfra.modules import apt, files, mysql, python
 
 SUDO = True
 
 
-distro = host.fact.linux_distribution['name']
-
-
-if distro != 'Debian':
+if host.fact.linux_distribution['name'] != 'Debian':
     # Raises an exception mid-deploy
     python.raise_exception(
         {'Ensure we are Debian'},
         NotImplementedError,
-        '`deploy_mysql.py` only works on Debian',
+        '`mysql.py` only works on Debian',
     )
 
 
@@ -24,13 +21,59 @@ apt.packages(
 )
 
 
+# Setup a MySQL role & database
+#
+
 mysql.user(
-    {'Setup the pyinfra@localhost MySQL user'},
+    {'Create the pyinfra@localhost MySQL user'},
     'pyinfra',
+    password='somepassword',
 )
 
 mysql.database(
-    {'Setup the pyinfra_stuff database'},
+    {'Create the pyinfra_stuff database'},
     'pyinfra_stuff',
     user='pyinfra',
+    user_privileges=['SELECT', 'INSERT'],
+    charset='utf8',
+)
+
+
+# Upload & import a SQL file into the pyinfra_stuff database
+#
+
+filename = 'files/mysql_db.sql'
+temp_filename = state.get_temp_filename(filename)
+
+files.put(
+    {'Upload the mysql_db.sql file'},
+    filename, temp_filename,
+)
+
+mysql.load(
+    {'Import the mysql_db.sql file'},
+    temp_filename,
+    database='pyinfra_stuff',
+)
+
+
+# Now duplicate the pyinfra_stuff database -> pyinfra_stuff_copy
+#
+
+mysql.database(
+    {'Create the pyinfra_stuff_copy database'},
+    'pyinfra_stuff_copy',
+    charset='utf8',
+)
+
+mysql.dump(
+    {'Dump the pyinfra_stuff database'},
+    '/tmp/dump.sql',
+    database='pyinfra_stuff',
+)
+
+mysql.load(
+    {'Import the pyinfra_stuff dump into pyinfra_stuff_copy'},
+    '/tmp/dump.sql',
+    database='pyinfra_stuff_copy',
 )
