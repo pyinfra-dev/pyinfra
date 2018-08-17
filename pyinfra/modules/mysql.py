@@ -305,7 +305,7 @@ _privileges = privileges  # noqa: E305 (for use where kwarg is the same)
 @operation
 def dump(
     state, host,
-    database, remote_filename,
+    remote_filename, database=None,
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
@@ -331,7 +331,7 @@ def dump(
 @operation
 def load(
     state, host,
-    database, remote_filename,
+    remote_filename, database=None,
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
