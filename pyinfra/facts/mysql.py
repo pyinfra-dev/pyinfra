@@ -6,9 +6,10 @@ import re
 
 from collections import defaultdict
 
-import six
-
 from pyinfra.api import FactBase
+from pyinfra.api.util import try_int
+
+from .util.databases import parse_columns_and_rows
 
 
 def make_mysql_command(
@@ -71,11 +72,24 @@ class MysqlDatabases(MysqlFactBase):
     Returns a list of existing MySQL databases.
     '''
 
-    default = list
-    mysql_command = 'SHOW DATABASES'
+    default = dict
+    mysql_command = 'SELECT * FROM information_schema.SCHEMATA'
 
     def process(self, output):
-        return output[1:]
+        rows = parse_columns_and_rows(
+            output, '\t',
+            title_parser=lambda title: title.lower(),
+        )
+
+        databases = {}
+
+        for details in rows:
+            databases[details.pop('schema_name')] = {
+                'character_set': details['default_character_set_name'],
+                'collation_name': details['default_collation_name'],
+            }
+
+        return databases
 
 
 class MysqlUsers(MysqlFactBase):
@@ -85,7 +99,7 @@ class MysqlUsers(MysqlFactBase):
     .. code:: python
 
         'user@host': {
-            'permissions': ['Alter', 'Grant'],
+            'privileges': ['Alter', 'Grant'],
             'max_connections': 5,
             ...
         },
@@ -97,36 +111,32 @@ class MysqlUsers(MysqlFactBase):
 
     @staticmethod
     def process(output):
+        rows = parse_columns_and_rows(output, '\t')
+
         users = {}
 
-        # Get the titles
-        titles = output[0]
-        titles = titles.split('\t')
+        for details in rows:
+            if 'Host' not in details or 'User' not in details:
+                continue
 
-        for row in output[1:]:
-            bits = row.split('\t')
-            details = {}
+            privileges = []
 
-            # Attach user columns by title
-            for i, bit in enumerate(bits):
-                if not bit:
-                    continue
+            for key, value in list(details.items()):
+                if key.endswith('_priv') and details.pop(key) == 'Y':
+                    privileges.append(key.replace('_priv', ''))
 
-                details[titles[i]] = bit
+                if key.startswith('max_'):
+                    details[key] = try_int(value)
 
-            if 'Host' in details and 'User' in details:
-                # Pop off any true permission values
-                permissions = [
-                    key.replace('_priv', '')
-                    for key in list(six.iterkeys(details))
-                    if key.endswith('_priv') and details.pop(key) == 'Y'
-                ]
-                details['permissions'] = permissions
+                if key in ('password_expired', 'is_role'):
+                    details[key] = value == 'Y'
 
-                # Attach the user in the format user@host
-                users['{0}@{1}'.format(
-                    details.pop('User'), details.pop('Host'),
-                )] = details
+            details['privileges'] = privileges
+
+            # Attach the user in the format user@host
+            users['{0}@{1}'.format(
+                details.pop('User'), details.pop('Host'),
+            )] = details
 
         return users
 
@@ -155,8 +165,8 @@ class MysqlUserGrants(MysqlFactBase):
 
     @staticmethod
     def process(output):
-        database_table_permissions = defaultdict(lambda: {
-            'permissions': set(),
+        database_table_privileges = defaultdict(lambda: {
+            'privileges': set(),
             'with_grant_option': False,
         })
 
@@ -165,16 +175,16 @@ class MysqlUserGrants(MysqlFactBase):
             if not matches:
                 continue
 
-            permissions, database_table, extras = matches.groups()
+            privileges, database_table, extras = matches.groups()
 
             # MySQL outputs this pre-escaped
             database_table = database_table.replace('\\\\', '\\')
 
-            for permission in permissions.split(','):
-                permission = permission.strip()
-                database_table_permissions[database_table]['permissions'].add(permission)
+            for privilege in privileges.split(','):
+                privilege = privilege.strip()
+                database_table_privileges[database_table]['privileges'].add(privilege)
 
             if 'WITH GRANT OPTION' in extras:
-                database_table_permissions[database_table]['with_grant_option'] = True
+                database_table_privileges[database_table]['with_grant_option'] = True
 
-        return database_table_permissions
+        return database_table_privileges

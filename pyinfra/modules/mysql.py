@@ -1,9 +1,9 @@
 # pyinfra
 # File: pyinfra/modules/mysql.py
-# Desc: manage MySQL databases/users/permissions
+# Desc: manage MySQL databases/users/privileges
 
 '''
-Manage MySQL databases, users and permissions.
+Manage MySQL databases, users and privileges.
 
 Requires the ``mysql`` CLI executable on the target host(s).
 
@@ -31,7 +31,7 @@ def sql(
     '''
     Execute arbitrary SQL against MySQL.
 
-    + sql: the SQL to send to MySQL
+    + sql: SQL command(s) to execute
     + database: optional database to open the connection with
     + mysql_*: global module arguments, see above
     '''
@@ -51,7 +51,7 @@ def user(
     state, host, name,
     # Desired user settings
     present=True,
-    user_hostname='localhost', password=None, permissions=None,
+    user_hostname='localhost', password=None, privileges=None,
     # Details for speaking to MySQL via `mysql` CLI via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
@@ -63,7 +63,7 @@ def user(
     + present: whether the user should exist or not
     + user_hostname: the hostname of the user
     + password: the password of the user (if created)
-    + permissions: the global permissions for this user
+    + privileges: the global privileges for this user
     + mysql_*: global module arguments, see above
 
     Hostname:
@@ -110,10 +110,10 @@ def user(
         )
 
     # If we're here either the user exists or we just created them; either way
-    # now we can check any permissions are set.
-    if permissions:
-        yield permission(
-            state, host, name, permissions,
+    # now we can check any privileges are set.
+    if privileges:
+        yield _privileges(
+            state, host, name, privileges,
             user_hostname=user_hostname,
             mysql_user=mysql_user, mysql_password=mysql_password,
             mysql_host=mysql_host, mysql_port=mysql_port,
@@ -126,7 +126,7 @@ def database(
     # Desired database settings
     present=True,
     collate=None, charset=None,
-    user=None, user_hostname='localhost', user_permissions='ALL',
+    user=None, user_hostname='localhost', user_privileges='ALL',
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
@@ -140,7 +140,7 @@ def database(
     + charset: the charset to use when creating the database
     + user: MySQL user to grant privileges on this database to
     + user_hostname: the hostname of the MySQL user to grant
-    + user_permissions: permissions to grant to any specified user
+    + user_privileges: privileges to grant to any specified user
     + mysql_*: global module arguments, see above
 
     Collate/charset:
@@ -184,20 +184,20 @@ def database(
             port=mysql_port,
         )
 
-    # Ensure any user permissions for this database
-    if user and user_permissions:
-        yield permission(
+    # Ensure any user privileges for this database
+    if user and user_privileges:
+        yield privileges(
             state, host, user,
             user_hostname=user_hostname,
-            permissions=user_permissions,
+            privileges=user_privileges,
             database=name,
         )
 
 
 @operation
-def permission(
+def privileges(
     state, host,
-    user, permissions,
+    user, privileges,
     user_hostname='localhost',
     database='*', table='*',
     present=True,
@@ -207,21 +207,21 @@ def permission(
     mysql_host=None, mysql_port=None,
 ):
     '''
-    Manage MySQL permissions for a user, either global, database or table specific.
+    Manage MySQL privileges for a user, either global, database or table specific.
 
-    + user: name of the user to manage permissions for
-    + permissions: list of permissions the user should have
+    + user: name of the user to manage privileges for
+    + privileges: list of privileges the user should have
     + user_hostname: the hostname of the user
-    + database: name of the database to grant user permissions to (defaults to all)
-    + table: name of the table to grant user permissions to (defaults to all)
-    + present: whether these permissions should exist (False to ``REVOKE)
-    + flush: whether to flush (and update) the permissions table after any changes
+    + database: name of the database to grant privileges to (defaults to all)
+    + table: name of the table to grant privileges to (defaults to all)
+    + present: whether these privileges should exist (False to ``REVOKE)
+    + flush: whether to flush (and update) the privileges table after any changes
     + mysql_*: global module arguments, see above
     '''
 
     # Ensure we have a list
-    if isinstance(permissions, six.string_types):
-        permissions = [permissions]
+    if isinstance(privileges, six.string_types):
+        privileges = [privileges]
 
     if database != '*':
         database = '`{0}`'.format(database)
@@ -229,10 +229,10 @@ def permission(
     if table != '*':
         table = '`{0}`'.format(table)
 
-        # We can't set permissions on *.tablename as MySQL won't allow it
+        # We can't set privileges on *.tablename as MySQL won't allow it
         if database == '*':
             raise OperationError((
-                'Cannot apply MySQL permissions on {0}.{1}, no database provided'
+                'Cannot apply MySQL privileges on {0}.{1}, no database provided'
             ).format(database, table))
 
     database_table = '{0}.{1}'.format(database, table)
@@ -242,41 +242,41 @@ def permission(
         mysql_host, mysql_port,
     )
 
-    has_permissions = False
+    has_privileges = False
 
     if database_table in user_grants:
-        existing_permissions = [
-            'ALL' if permission == 'ALL PRIVILEGES' else permission
-            for permission in user_grants[database_table]['permissions']
+        existing_privileges = [
+            'ALL' if privilege == 'ALL PRIVILEGES' else privilege
+            for privilege in user_grants[database_table]['privileges']
         ]
 
-        has_permissions = (
+        has_privileges = (
             database_table in user_grants
             and all(
-                permission in existing_permissions
-                for permission in permissions
+                privilege in existing_privileges
+                for privilege in privileges
             )
         )
 
     target = action = None
 
-    # No permission and we want it
-    if not has_permissions and present:
+    # No privilege and we want it
+    if not has_privileges and present:
         action = 'GRANT'
         target = 'TO'
 
     # Permission we don't want
-    elif has_permissions and not present:
+    elif has_privileges and not present:
         action = 'REVOKE'
         target = 'FROM'
 
     if target and action:
         command = (
-            '{action} {permissions} '
+            '{action} {privileges} '
             'ON {database}.{table} '
             '{target} "{user}"@"{user_hostname}"'
         ).format(
-            permissions=', '.join(permissions),
+            privileges=', '.join(privileges),
             action=action, target=target,
             database=database, table=table,
             user=user, user_hostname=user_hostname,
@@ -298,6 +298,8 @@ def permission(
                 host=mysql_host,
                 port=mysql_port,
             )
+
+_privileges = privileges  # noqa: E305 (for use where kwarg is the same)
 
 
 @operation
