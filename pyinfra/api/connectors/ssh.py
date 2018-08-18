@@ -347,6 +347,9 @@ def put_file(
         temp_file = state.get_temp_filename(remote_file)
         _put_file(host, filename_or_io, temp_file)
 
+        if print_output:
+            print('{0}file uploaded: {1}'.format(host.print_prefix, remote_file))
+
         # Execute run_shell_command w/sudo and/or su_user
         command = 'mv {0} {1}'.format(temp_file, remote_file)
 
@@ -372,5 +375,5 @@ def put_file(
     else:
         _put_file(host, filename_or_io, remote_file)
 
-    if print_output:
-        print('{0}file uploaded: {1}'.format(host.print_prefix, remote_file))
+        if print_output:
+            print('{0}file uploaded: {1}'.format(host.print_prefix, remote_file))
