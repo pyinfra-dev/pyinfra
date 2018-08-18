@@ -131,7 +131,7 @@ class MysqlUsers(MysqlFactBase):
                 if key in ('password_expired', 'is_role'):
                     details[key] = value == 'Y'
 
-            details['privileges'] = privileges
+            details['privileges'] = sorted(privileges)
 
             # Attach the user in the format user@host
             users['{0}@{1}'.format(
