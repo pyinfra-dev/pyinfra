@@ -45,16 +45,16 @@ postgresql.database(
 # Upload & import a SQL file into the pyinfra_stuff database
 #
 
-filename = 'files/postgresql_db.sql'
+filename = 'files/a_db.sql'
 temp_filename = state.get_temp_filename(filename)
 
 files.put(
-    {'Upload the postgresql_db.sql file'},
+    {'Upload the a_db.sql file'},
     filename, temp_filename,
 )
 
 postgresql.load(
-    {'Import the uploaded postgresql_db.sql file'},
+    {'Import the uploaded a_db.sql file'},
     temp_filename,
     database='pyinfra_stuff',
     sudo_user='postgres',
@@ -70,7 +70,7 @@ postgresql.database(
     sudo_user='postgres',
 )
 
-dump_filename = state.get_temp_filename()
+dump_filename = state.get_temp_filename('psql_dump')
 
 postgresql.dump(
     {'Dump the pyinfra_stuff database'},

@@ -42,16 +42,16 @@ mysql.database(
 # Upload & import a SQL file into the pyinfra_stuff database
 #
 
-filename = 'files/mysql_db.sql'
+filename = 'files/a_db.sql'
 temp_filename = state.get_temp_filename(filename)
 
 files.put(
-    {'Upload the mysql_db.sql file'},
+    {'Upload the a_db.sql file'},
     filename, temp_filename,
 )
 
 mysql.load(
-    {'Import the mysql_db.sql file'},
+    {'Import the a_db.sql file'},
     temp_filename,
     database='pyinfra_stuff',
 )
@@ -66,14 +66,16 @@ mysql.database(
     charset='utf8',
 )
 
+dump_filename = state.get_temp_filename('mysql_dump')
+
 mysql.dump(
     {'Dump the pyinfra_stuff database'},
-    '/tmp/dump.sql',
+    dump_filename,
     database='pyinfra_stuff',
 )
 
 mysql.load(
     {'Import the pyinfra_stuff dump into pyinfra_stuff_copy'},
-    '/tmp/dump.sql',
+    dump_filename,
     database='pyinfra_stuff_copy',
 )
