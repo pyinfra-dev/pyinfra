@@ -41,6 +41,7 @@ def build_facts():
                 and issubclass(value, FactBase)
                 and value.__module__ == module.__name__
                 and value is not FactBase
+                and not value.__name__.endswith('Base')  # hacky!
             )
         ]
 
