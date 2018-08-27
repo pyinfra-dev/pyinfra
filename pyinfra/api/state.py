@@ -369,7 +369,14 @@ class State(object):
         '''
 
         if not hash_key:
+            logger.warning((
+                'Use of `State.get_temp_filename` without a key is deprecated, '
+                'as it may generated imbalanced operations.'
+            ))
             hash_key = six.text_type(uuid4())
 
-        temp_filename = sha1_hash(hash_key)
-        return '{0}/{1}'.format(self.config.TEMP_DIR, temp_filename)
+        temp_filename = '{0}/{1}'.format(
+            self.config.TEMP_DIR, sha1_hash(hash_key),
+        )
+
+        return temp_filename
