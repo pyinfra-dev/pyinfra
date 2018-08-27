@@ -12,7 +12,7 @@ from .util.packaging import ensure_packages
 @operation
 def packages(state, host, packages=None, present=True, latest=False, directory=None):
     '''
-    Manage npm packages.
+    Install/remove/update npm packages.
 
     + packages: list of packages to ensure
     + present: whether the packages should be present

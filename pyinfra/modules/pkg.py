@@ -16,7 +16,7 @@ from .util.packaging import ensure_packages
 @operation
 def packages(state, host, packages=None, present=True, pkg_path=None):
     '''
-    Manage pkg_* packages.
+    Install/remove/update pkg_* packages.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed

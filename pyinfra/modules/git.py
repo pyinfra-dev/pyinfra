@@ -50,7 +50,7 @@ def repo(
     user=None, group=None, use_ssh_user=False, ssh_keyscan=False,
 ):
     '''
-    Manage git repositories.
+    Clone/pull git repositories.
 
     + source: the git source URL
     + target: target directory to clone to

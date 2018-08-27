@@ -98,7 +98,7 @@ def script_template(state, host, template_filename, chdir=None, **data):
 @operation
 def modprobe(state, host, name, present=True, force=False):
     '''
-    Manage kernel modules.
+    Load/unload kernel modules.
 
     + name: name of the module to manage
     + present: whether the module should be loaded or not
@@ -124,7 +124,7 @@ def modprobe(state, host, name, present=True, force=False):
 @operation
 def hostname(state, host, hostname, hostname_file=None):
     '''
-    Manage the system hostname.
+    Set the system hostname.
 
     + hostname: the hostname that should be set
     + hostname_file: the file that permanently sets the hostname
@@ -164,7 +164,7 @@ def sysctl(
     persist=False, persist_file='/etc/sysctl.conf',
 ):
     '''
-    Manage sysctl configuration.
+    Edit sysctl configuration.
 
     + name: name of the sysctl setting to ensure
     + value: the value or list of values the sysctl should be
@@ -197,7 +197,7 @@ def crontab(
     minute='*', hour='*', month='*', day_of_week='*', day_of_month='*',
 ):
     '''
-    Manage crontab entries.
+    Add/remove/update crontab entries.
 
     + command: the command for the cron
     + present: whether this cron command should exist
@@ -279,7 +279,7 @@ def group(
     state, host, name, present=True, system=False, gid=None,
 ):
     '''
-    Manage system groups.
+    Add/remove system groups.
 
     + name: name of the group to ensure
     + present: whether the group should be present or not
@@ -320,7 +320,7 @@ def user(
     system=False, uid=None,
 ):
     '''
-    Manage system users & their ssh `authorized_keys`. Options:
+    Add/remove/update system users & their ssh `authorized_keys`.
 
     + name: name of the user to ensure
     + present: whether this user should exist

@@ -20,7 +20,7 @@ def virtualenv(
     python=None, site_packages=False, always_copy=False, present=True,
 ):
     '''
-    Manage Python virtualenvs.
+    Add/remove Python virtualenvs.
 
     + python: python interpreter to use
     + site_packages: give access to the global site-packages
@@ -58,7 +58,7 @@ def packages(
     requirements=None, pip='pip', virtualenv=None, virtualenv_kwargs=None,
 ):
     '''
-    Manage pip packages.
+    Install/remove/update pip packages.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed

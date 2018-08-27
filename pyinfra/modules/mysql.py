@@ -57,7 +57,7 @@ def user(
     mysql_host=None, mysql_port=None,
 ):
     '''
-    Manage the state of MySQL users.
+    Add/remove/update MySQL users.
 
     + name: the name of the user
     + present: whether the user should exist or not
@@ -132,7 +132,7 @@ def database(
     mysql_host=None, mysql_port=None,
 ):
     '''
-    Manage the state of MySQL databases.
+    Add/remove MySQL databases.
 
     + name: the name of the database
     + present: whether the database should exist or not
@@ -207,7 +207,7 @@ def privileges(
     mysql_host=None, mysql_port=None,
 ):
     '''
-    Manage MySQL privileges for a user, either global, database or table specific.
+    Add/remove MySQL privileges for a user, either global, database or table specific.
 
     + user: name of the user to manage privileges for
     + privileges: list of privileges the user should have

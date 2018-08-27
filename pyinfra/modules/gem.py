@@ -14,7 +14,7 @@ from .util.packaging import ensure_packages
 @operation
 def packages(state, host, packages=None, present=True, latest=False):
     '''
-    Manage gem packages.
+    Add/remove/update gem packages.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed

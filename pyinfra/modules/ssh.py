@@ -16,7 +16,7 @@ from . import files
 @operation
 def keyscan(state, host, hostname, force=False):
     '''
-    Manage the hosts in ``~/.ssh/known_hosts``.
+    Check/add hosts to the ``~/.ssh/known_hosts`` file.
 
     + hostname: hostname that should have a key in ``known_hosts``
     + force: if the key already exists, remove and rescan

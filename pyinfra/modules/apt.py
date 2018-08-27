@@ -67,7 +67,7 @@ def key(state, host, key=None, keyserver=None, keyid=None):
 @operation
 def repo(state, host, name, present=True, filename=None):
     '''
-    Manage apt repositories.
+    Add/remove apt repositories.
 
     + name: apt source string eg ``deb http://X hardy main``
     + present: whether the repo should exist on the system
@@ -106,7 +106,7 @@ def repo(state, host, name, present=True, filename=None):
 @operation
 def ppa(state, host, name, present=True):
     '''
-    Manage Ubuntu ppa repositories.
+    Add/remove Ubuntu ppa repositories.
 
     + name: the PPA name (full ppa:user/repo format)
     + present: whether it should exist
@@ -125,7 +125,7 @@ def ppa(state, host, name, present=True):
 @operation
 def deb(state, host, source, present=True, force=False):
     '''
-    Install/manage ``.deb`` file packages.
+    Add/remove ``.deb`` file packages.
 
     + source: filename or URL of the ``.deb`` file
     + present: whether or not the package should exist on the system
@@ -234,7 +234,7 @@ def packages(
     force=False, no_recommends=False,
 ):
     '''
-    Install/remove/upgrade packages & update apt.
+    Install/remove/update packages & update apt.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed

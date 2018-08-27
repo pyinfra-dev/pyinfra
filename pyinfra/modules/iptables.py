@@ -20,7 +20,7 @@ def chain(
     table='filter', policy=None, version=4,
 ):
     '''
-    Manage iptables chains.
+    Add/remove/update iptables chains.
 
     + name: the name of the chain
     + present: whether the chain should exist
@@ -73,7 +73,7 @@ def rule(
     destination_port=None, source_port=None, extras='',
 ):
     '''
-    Manage iptables rules.
+    Add/remove iptables rules.
 
     + chain: the chain this rule should live in
     + jump: the target of the rule

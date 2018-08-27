@@ -37,7 +37,7 @@ def repo(
     present=True, description=None, enabled=True, gpgcheck=True, gpgkey=None,
 ):
     '''
-    Manage yum repositories.
+    Add/remove/update yum repositories.
 
     + name: filename for the repo (in ``/etc/yum/repos.d/``)
     + baseurl: the baseurl of the repo
@@ -80,7 +80,7 @@ def repo(
 @operation
 def rpm(state, host, source, present=True):
     '''
-    Install/manage ``.rpm`` file packages.
+    Add/remove ``.rpm`` file packages.
 
     + source: filename or URL of the ``.rpm`` package
     + present: whether ore not the package should exist on the system
@@ -149,7 +149,7 @@ def packages(
     present=True, latest=False, update=False, clean=False,
 ):
     '''
-    Manage yum packages & updates.
+    Install/remove/update yum packages & updates.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed

@@ -55,7 +55,7 @@ def role(
     postgresql_host=None, postgresql_port=None,
 ):
     '''
-    Manage PostgreSQL roles.
+    Add/remove PostgreSQL roles.
 
     + name: name of the role
     + present: whether the role should be present or absent
@@ -135,7 +135,7 @@ def database(
     postgresql_host=None, postgresql_port=None,
 ):
     '''
-    Manage PostgreSQL databases.
+    Add/remove PostgreSQL databases.
 
     + name: name of the database
     + present: whether the database should exist or not
@@ -206,7 +206,7 @@ def dump(
     postgresql_host=None, postgresql_port=None,
 ):
     '''
-    Dump a MySQL database into a ``.sql`` file. Requires ``mysqldump``.
+    Dump a PostgreSQL database into a ``.sql`` file. Requires ``mysqldump``.
 
     + database: name of the database to dump
     + remote_filename: name of the file to dump the SQL to

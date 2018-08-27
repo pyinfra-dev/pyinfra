@@ -89,7 +89,7 @@ def d(
     enabled=None, command=None,
 ):
     '''
-    Manage the state of SysV Init (/etc/init.d) service scripts.
+    Manage the state of SysV Init (/etc/init.d) services.
 
     + name: name of the service to manage
     + running: whether the service should be running
@@ -177,7 +177,7 @@ def rc(
     command=None, enabled=None,
 ):
     '''
-    Manage the state of BSD init (/etc/rc.d) service scripts.
+    Manage the state of BSD init (/etc/rc.d) services.
 
     + name: name of the service to manage
     + running: whether the service should be running

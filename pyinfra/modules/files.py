@@ -434,7 +434,7 @@ def link(
     target=None, present=True, user=None, group=None, symbolic=True,
 ):
     '''
-    Manage the state of links.
+    Add/remove/update links.
 
     + name: the name of the link
     + target: the file/directory the link points to
@@ -507,7 +507,7 @@ def file(
     present=True, user=None, group=None, mode=None, touch=False,
 ):
     '''
-    Manage the state of files.
+    Add/remove/update files.
 
     + name: name/path of the remote file
     + present: whether the file should exist
@@ -559,7 +559,7 @@ def directory(
     present=True, user=None, group=None, mode=None, recursive=False,
 ):
     '''
-    Manage the state of directories.
+    Add/remove/update directories.
 
     + name: name/patr of the remote folder
     + present: whether the folder should exist

@@ -25,7 +25,7 @@ def container(
     present=True, image='ubuntu:16.04',
 ):
     '''
-    Manage LXD containers.
+    Add/remove LXD containers.
 
     Note: does not check if an existing container is based on the specified
     image.
