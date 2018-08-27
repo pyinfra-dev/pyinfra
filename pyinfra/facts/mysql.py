@@ -69,7 +69,15 @@ class MysqlFactBase(FactBase):
 
 class MysqlDatabases(MysqlFactBase):
     '''
-    Returns a list of existing MySQL databases.
+    Returns a dict of existing MySQL databases and associated data:
+
+    .. code:: python
+
+        'mysql': {
+            'character_set': 'latin1',
+            'collation_name': 'latin1_swedish_ci'
+        },
+        ...
     '''
 
     default = dict
@@ -94,7 +102,7 @@ class MysqlDatabases(MysqlFactBase):
 
 class MysqlUsers(MysqlFactBase):
     '''
-    Returns a dict of MySQL user@host's and their associated data:
+    Returns a dict of MySQL ``user@host``'s and their associated data:
 
     .. code:: python
 
@@ -147,6 +155,21 @@ MYSQL_GRANT_REGEX = re.compile(
 
 
 class MysqlUserGrants(MysqlFactBase):
+    '''
+    Returns a dict of ``<database>`.<table>`` with granted privileges for each:
+
+    .. code:: python
+
+        '`pyinfra_stuff`.*': {
+            'privileges': [
+                'SELECT',
+                'INSERT'
+            ],
+            "with_grant_option": false
+        },
+        ...
+    '''
+
     default = dict
 
     def command(

@@ -64,13 +64,17 @@ class PostgresqlFactBase(FactBase):
 
 class PostgresqlRoles(PostgresqlFactBase):
     '''
-    Returns a list of PostgreSQL users.
+    Returns a dict of PostgreSQL roles and data:
 
-    This fact lists all users registered in PostgreSQL, as well as their basic
-    configuration and privileges.
+    .. code:: python
 
-    See PostgreSQL documentation for more information on the fields returned:
-    https://www.postgresql.org/docs/current/static/view-pg-user.html
+        'pyinfra': {
+            'super': true,
+            'createrole': false,
+            'createdb': false,
+            ...
+        },
+        ...
     '''
 
     default = dict
@@ -104,6 +108,20 @@ class PostgresqlRoles(PostgresqlFactBase):
 
 
 class PostgresqlDatabases(PostgresqlFactBase):
+    '''
+    Returns a dict of PostgreSQL databases and metadata:
+
+    .. code:: python
+
+        "pyinfra_stuff": {
+            "encoding": "UTF8",
+            "collate": "en_US.UTF-8",
+            "ctype": "en_US.UTF-8",
+            ...
+        },
+        ...
+    '''
+
     default = dict
     postgresql_command = '''
         SELECT pg_catalog.pg_encoding_to_char(encoding), *
