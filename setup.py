@@ -50,8 +50,8 @@ DEV_REQUIRES = TEST_REQUIRES + (
     'ipdbplugin==1.4.5',
 
     # Dev docs requirements
-    'sphinx==1.6.2',
-    'sphinx-autobuild==0.6.0',
+    'sphinx==1.7.7',
+    'sphinx-autobuild==0.7.1',
     'sphinx-better-theme==0.1.5',
 
     # Convert markdowns to rst for long_description
