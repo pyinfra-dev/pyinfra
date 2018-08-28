@@ -7,7 +7,7 @@ The LXD modules manage LXD containers
 :code:`lxd.container`
 ~~~~~~~~~~~~~~~~~~~~~
 
-Manage LXD containers.
+Add/remove LXD containers.
 
 .. code:: python
 

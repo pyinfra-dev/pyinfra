@@ -40,7 +40,7 @@ Download files from other servers using ``scp``.
 :code:`ssh.keyscan`
 ~~~~~~~~~~~~~~~~~~~
 
-Manage the hosts in ``~/.ssh/known_hosts``.
+Check/add hosts to the ``~/.ssh/known_hosts`` file.
 
 .. code:: python
 

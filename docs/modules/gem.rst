@@ -7,7 +7,7 @@ Mange gem packages.
 :code:`gem.packages`
 ~~~~~~~~~~~~~~~~~~~~
 
-Manage gem packages.
+Add/remove/update gem packages.
 
 .. code:: python
 

@@ -1,5 +1,5 @@
-pyinfra\.hook module
-====================
+pyinfra.hook module
+===================
 
 .. automodule:: pyinfra.hook
     :members:

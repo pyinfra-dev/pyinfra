@@ -1,5 +1,5 @@
-pyinfra\.local module
-=====================
+pyinfra.local module
+====================
 
 .. automodule:: pyinfra.local
     :members:

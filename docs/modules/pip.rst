@@ -7,7 +7,7 @@ Manage pip packages. Compatible globally or inside a virtualenv.
 :code:`pip.packages`
 ~~~~~~~~~~~~~~~~~~~~
 
-Manage pip packages.
+Install/remove/update pip packages.
 
 .. code:: python
 
@@ -36,7 +36,7 @@ Versions:
 :code:`pip.virtualenv`
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Manage Python virtualenvs.
+Add/remove Python virtualenvs.
 
 .. code:: python
 

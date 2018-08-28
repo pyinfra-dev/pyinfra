@@ -1,5 +1,5 @@
-pyinfra\.api\.connectors package
-================================
+pyinfra.api.connectors package
+==============================
 
 .. automodule:: pyinfra.api.connectors
     :members:

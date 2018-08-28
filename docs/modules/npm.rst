@@ -4,7 +4,7 @@ Npm
 :code:`npm.packages`
 ~~~~~~~~~~~~~~~~~~~~
 
-Manage npm packages.
+Install/remove/update npm packages.
 
 .. code:: python
 

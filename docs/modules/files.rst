@@ -7,7 +7,7 @@ The files module handles filesystem state, file uploads and template generation.
 :code:`files.directory`
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Manage the state of directories.
+Add/remove/update directories.
 
 .. code:: python
 
@@ -42,7 +42,7 @@ Download files from remote locations.
 :code:`files.file`
 ~~~~~~~~~~~~~~~~~~
 
-Manage the state of files.
+Add/remove/update files.
 
 .. code:: python
 
@@ -84,7 +84,7 @@ Regex line escaping:
 :code:`files.link`
 ~~~~~~~~~~~~~~~~~~
 
-Manage the state of links.
+Add/remove/update links.
 
 .. code:: python
 

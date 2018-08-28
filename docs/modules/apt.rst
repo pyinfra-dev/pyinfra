@@ -7,7 +7,7 @@ Manage apt packages and repositories.
 :code:`apt.deb`
 ~~~~~~~~~~~~~~~
 
-Install/manage ``.deb`` file packages.
+Add/remove ``.deb`` file packages.
 
 .. code:: python
 
@@ -49,7 +49,7 @@ keyserver/id:
 :code:`apt.packages`
 ~~~~~~~~~~~~~~~~~~~~
 
-Install/remove/upgrade packages & update apt.
+Install/remove/update packages & update apt.
 
 .. code:: python
 
@@ -79,7 +79,7 @@ Cache time:
 :code:`apt.ppa`
 ~~~~~~~~~~~~~~~
 
-Manage Ubuntu ppa repositories.
+Add/remove Ubuntu ppa repositories.
 
 .. code:: python
 
@@ -95,7 +95,7 @@ Note:
 :code:`apt.repo`
 ~~~~~~~~~~~~~~~~
 
-Manage apt repositories.
+Add/remove apt repositories.
 
 .. code:: python
 

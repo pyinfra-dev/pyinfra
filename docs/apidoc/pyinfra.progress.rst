@@ -1,5 +1,5 @@
-pyinfra\.progress module
-========================
+pyinfra.progress module
+=======================
 
 .. automodule:: pyinfra.progress
     :members:

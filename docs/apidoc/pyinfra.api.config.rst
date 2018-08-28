@@ -1,5 +1,5 @@
-pyinfra\.api\.config module
-===========================
+pyinfra.api.config module
+=========================
 
 .. automodule:: pyinfra.api.config
     :members:

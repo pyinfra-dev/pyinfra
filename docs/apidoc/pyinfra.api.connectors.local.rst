@@ -1,5 +1,5 @@
-pyinfra\.api\.connectors\.local module
-======================================
+pyinfra.api.connectors.local module
+===================================
 
 .. automodule:: pyinfra.api.connectors.local
     :members:

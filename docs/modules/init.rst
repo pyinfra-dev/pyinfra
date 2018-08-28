@@ -12,7 +12,7 @@ Manages the state and configuration of init services. Support for:
 :code:`init.d`
 ~~~~~~~~~~~~~~
 
-Manage the state of SysV Init (/etc/init.d) service scripts.
+Manage the state of SysV Init (/etc/init.d) services.
 
 .. code:: python
 
@@ -76,7 +76,7 @@ Manage the state of systemd managed services.
 :code:`init.rc`
 ~~~~~~~~~~~~~~~
 
-Manage the state of BSD init (/etc/rc.d) service scripts.
+Manage the state of BSD init (/etc/rc.d) services.
 
 .. code:: python
 

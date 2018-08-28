@@ -1,5 +1,5 @@
-pyinfra\.api\.connectors\.vagrant module
-========================================
+pyinfra.api.connectors.vagrant module
+=====================================
 
 .. automodule:: pyinfra.api.connectors.vagrant
     :members:

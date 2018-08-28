@@ -7,7 +7,7 @@ The iptables modules handles iptables rules
 :code:`iptables.chain`
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Manage iptables chains.
+Add/remove/update iptables chains.
 
 .. code:: python
 
@@ -26,7 +26,7 @@ Policy:
 :code:`iptables.rule`
 ~~~~~~~~~~~~~~~~~~~~~
 
-Manage iptables rules.
+Add/remove iptables rules.
 
 .. code:: python
 

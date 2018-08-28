@@ -1,5 +1,5 @@
-pyinfra\.api\.facts module
-==========================
+pyinfra.api.facts module
+========================
 
 .. automodule:: pyinfra.api.facts
     :members:

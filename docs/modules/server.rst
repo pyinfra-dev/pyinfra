@@ -8,7 +8,7 @@ Linux/BSD.
 :code:`server.crontab`
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Manage crontab entries.
+Add/remove/update crontab entries.
 
 .. code:: python
 
@@ -35,7 +35,7 @@ Cron commands:
 :code:`server.group`
 ~~~~~~~~~~~~~~~~~~~~
 
-Manage system groups.
+Add/remove system groups.
 
 .. code:: python
 
@@ -52,7 +52,7 @@ System users:
 :code:`server.hostname`
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Manage the system hostname.
+Set the system hostname.
 
 .. code:: python
 
@@ -69,7 +69,7 @@ Hostname file:
 :code:`server.modprobe`
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Manage kernel modules.
+Load/unload kernel modules.
 
 .. code:: python
 
@@ -122,7 +122,7 @@ Run raw shell code.
 :code:`server.sysctl`
 ~~~~~~~~~~~~~~~~~~~~~
 
-Manage sysctl configuration.
+Edit sysctl configuration.
 
 .. code:: python
 
@@ -137,7 +137,7 @@ Manage sysctl configuration.
 :code:`server.user`
 ~~~~~~~~~~~~~~~~~~~
 
-Manage system users & their ssh `authorized_keys`. Options:
+Add/remove/update system users & their ssh `authorized_keys`.
 
 .. code:: python
 

@@ -11,8 +11,7 @@ Or as part of :doc:`a deploy <deploys>`:
     if host.fact.linux_distribution['name'] == 'Ubuntu':
         spt.packages(...)
 
-Facts, like :doc:`operations <operations>`, are namespaced as different modules:
+All The Facts
+_____________
 
-.. contents::
-    :local:
-    :depth: 1
+Facts, like :doc:`operations <operations>`, are namespaced as different modules - shortcuts to each of these can be found in the sidebar.

@@ -21,7 +21,7 @@ Manage git config for a repository or globally.
 :code:`git.repo`
 ~~~~~~~~~~~~~~~~
 
-Manage git repositories.
+Clone/pull git repositories.
 
 .. code:: python
 

@@ -1,5 +1,5 @@
-pyinfra\.api\.attrs module
-==========================
+pyinfra.api.attrs module
+========================
 
 .. automodule:: pyinfra.api.attrs
     :members:

@@ -2,7 +2,7 @@ Mysql
 -----
 
 
-Manage MySQL databases, users and permissions.
+Manage MySQL databases, users and privileges.
 
 Requires the ``mysql`` CLI executable on the target host(s).
 
@@ -15,13 +15,13 @@ All operations in this module take four optional global arguments:
 :code:`mysql.database`
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Manage the state of MySQL databases.
+Add/remove MySQL databases.
 
 .. code:: python
 
     mysql.database(
         name, present=True, collate=None, charset=None, user=None, user_hostname='localhost',
-        user_permissions='ALL', mysql_user=None, mysql_password=None, mysql_host=None,
+        user_privileges='ALL', mysql_user=None, mysql_password=None, mysql_host=None,
         mysql_port=None
     )
 
@@ -31,7 +31,7 @@ Manage the state of MySQL databases.
 + **charset**: the charset to use when creating the database
 + **user**: MySQL user to grant privileges on this database to
 + **user_hostname**: the hostname of the MySQL user to grant
-+ **user_permissions**: permissions to grant to any specified user
++ **user_privileges**: privileges to grant to any specified user
 + **mysql_***: global module arguments, see above
 
 Collate/charset:
@@ -47,7 +47,7 @@ Dump a MySQL database into a ``.sql`` file. Requires ``mysqldump``.
 .. code:: python
 
     mysql.dump(
-        database, remote_filename, mysql_user=None, mysql_password=None, mysql_host=None,
+        remote_filename, database=None, mysql_user=None, mysql_password=None, mysql_host=None,
         mysql_port=None
     )
 
@@ -64,7 +64,7 @@ Load ``.sql`` file into a database.
 .. code:: python
 
     mysql.load(
-        database, remote_filename, mysql_user=None, mysql_password=None, mysql_host=None,
+        remote_filename, database=None, mysql_user=None, mysql_password=None, mysql_host=None,
         mysql_port=None
     )
 
@@ -73,25 +73,25 @@ Load ``.sql`` file into a database.
 + **mysql_***: global module arguments, see above
 
 
-:code:`mysql.permission`
+:code:`mysql.privileges`
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Manage MySQL permissions for a user, either global, database or table specific.
+Add/remove MySQL privileges for a user, either global, database or table specific.
 
 .. code:: python
 
-    mysql.permission(
-        user, permissions, user_hostname='localhost', database='*', table='*', present=True,
+    mysql.privileges(
+        user, privileges, user_hostname='localhost', database='*', table='*', present=True,
         flush=True, mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None
     )
 
-+ **user**: name of the user to manage permissions for
-+ **permissions**: list of permissions the user should have
++ **user**: name of the user to manage privileges for
++ **privileges**: list of privileges the user should have
 + **user_hostname**: the hostname of the user
-+ **database**: name of the database to grant user permissions to (defaults to all)
-+ **table**: name of the table to grant user permissions to (defaults to all)
-+ **present**: whether these permissions should exist (False to ``REVOKE)
-+ **flush**: whether to flush (and update) the permissions table after any changes
++ **database**: name of the database to grant privileges to (defaults to all)
++ **table**: name of the table to grant privileges to (defaults to all)
++ **present**: whether these privileges should exist (False to ``REVOKE)
++ **flush**: whether to flush (and update) the privileges table after any changes
 + **mysql_***: global module arguments, see above
 
 
@@ -104,7 +104,7 @@ Execute arbitrary SQL against MySQL.
 
     mysql.sql(sql, database=None, mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None)
 
-+ **sql**: the SQL to send to MySQL
++ **sql**: SQL command(s) to execute
 + **database**: optional database to open the connection with
 + **mysql_***: global module arguments, see above
 
@@ -112,12 +112,12 @@ Execute arbitrary SQL against MySQL.
 :code:`mysql.user`
 ~~~~~~~~~~~~~~~~~~
 
-Manage the state of MySQL users.
+Add/remove/update MySQL users.
 
 .. code:: python
 
     mysql.user(
-        name, present=True, user_hostname='localhost', password=None, permissions=None,
+        name, present=True, user_hostname='localhost', password=None, privileges=None,
         mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None
     )
 
@@ -125,7 +125,7 @@ Manage the state of MySQL users.
 + **present**: whether the user should exist or not
 + **user_hostname**: the hostname of the user
 + **password**: the password of the user (if created)
-+ **permissions**: the global permissions for this user
++ **privileges**: the global privileges for this user
 + **mysql_***: global module arguments, see above
 
 Hostname:

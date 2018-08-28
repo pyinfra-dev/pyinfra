@@ -22,7 +22,7 @@ Note:
 :code:`yum.packages`
 ~~~~~~~~~~~~~~~~~~~~
 
-Manage yum packages & updates.
+Install/remove/update yum packages & updates.
 
 .. code:: python
 
@@ -34,11 +34,14 @@ Manage yum packages & updates.
 + **update**: run yum update
 + **clean**: run yum clean
 
+Versions:
+    Package versions can be pinned like yum: ``<pkg>-<version>``
+
 
 :code:`yum.repo`
 ~~~~~~~~~~~~~~~~
 
-Manage yum repositories.
+Add/remove/update yum repositories.
 
 .. code:: python
 
@@ -55,7 +58,7 @@ Manage yum repositories.
 :code:`yum.rpm`
 ~~~~~~~~~~~~~~~
 
-Install/manage ``.rpm`` file packages.
+Add/remove ``.rpm`` file packages.
 
 .. code:: python
 

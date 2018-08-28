@@ -1,5 +1,5 @@
-pyinfra\.api\.connectors\.ssh module
-====================================
+pyinfra.api.connectors.ssh module
+=================================
 
 .. automodule:: pyinfra.api.connectors.ssh
     :members:

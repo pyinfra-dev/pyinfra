@@ -1,5 +1,5 @@
-pyinfra\.api\.exceptions module
-===============================
+pyinfra.api.exceptions module
+=============================
 
 .. automodule:: pyinfra.api.exceptions
     :members:

@@ -1,5 +1,5 @@
-pyinfra\.api\.host module
-=========================
+pyinfra.api.host module
+=======================
 
 .. automodule:: pyinfra.api.host
     :members:

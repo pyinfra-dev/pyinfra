@@ -4,6 +4,45 @@ Facts Index
 .. include:: facts_.rst
 
 
+Postgresql
+----------
+
+:code:`postgresql_databases(postgresql_user=None, postgresql_password=None, postgresql_host=None, postgresql_port=None)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a dict of PostgreSQL databases and metadata:
+
+    .. code:: python
+
+        "pyinfra_stuff": {
+            "encoding": "UTF8",
+            "collate": "en_US.UTF-8",
+            "ctype": "en_US.UTF-8",
+            ...
+        },
+        ...
+    
+
+
+:code:`postgresql_roles(postgresql_user=None, postgresql_password=None, postgresql_host=None, postgresql_port=None)`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    Returns a dict of PostgreSQL roles and data:
+
+    .. code:: python
+
+        'pyinfra': {
+            'super': true,
+            'createrole': false,
+            'createdb': false,
+            ...
+        },
+        ...
+    
+
+
 Files
 -----
 
@@ -557,28 +596,47 @@ Mysql
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    Returns a list of existing MySQL databases.
+    Returns a dict of existing MySQL databases and associated data:
+
+    .. code:: python
+
+        'mysql': {
+            'character_set': 'latin1',
+            'collation_name': 'latin1_swedish_ci'
+        },
+        ...
     
-
-
-:code:`mysql_fact_base(mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None)`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 :code:`mysql_user_grants(user, hostname='localhost', mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None)`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+    Returns a dict of ``<database>`.<table>`` with granted privileges for each:
+
+    .. code:: python
+
+        '`pyinfra_stuff`.*': {
+            'privileges': [
+                'SELECT',
+                'INSERT'
+            ],
+            "with_grant_option": false
+        },
+        ...
+    
+
+
 :code:`mysql_users(mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None)`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    Returns a dict of MySQL user@host's and their associated data:
+    Returns a dict of MySQL ``user@host``'s and their associated data:
 
     .. code:: python
 
         'user@host': {
-            'permissions': ['Alter', 'Grant'],
+            'privileges': ['Alter', 'Grant'],
             'max_connections': 5,
             ...
         },

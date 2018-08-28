@@ -1,5 +1,5 @@
-pyinfra\.api\.operation module
-==============================
+pyinfra.api.operation module
+============================
 
 .. automodule:: pyinfra.api.operation
     :members:

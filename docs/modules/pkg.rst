@@ -7,7 +7,7 @@ Manage BSD packages and repositories. Note that BSD package names are case-sensi
 :code:`pkg.packages`
 ~~~~~~~~~~~~~~~~~~~~
 
-Manage pkg_* packages.
+Install/remove/update pkg_* packages.
 
 .. code:: python
 

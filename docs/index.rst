@@ -16,11 +16,11 @@ Fedora & OpenBSD.
 
 .. compound::
     :doc:`operations`
-        All pyinfra operations.
+        A list of all available operations and their arguments, eg ``apt.packages``.
 
 .. compound::
     :doc:`facts`
-        All pyinfra facts.
+        A list of all facts pyinfra can gather from hosts, eg ``host.fact.os``.
 
 
 .. toctree::

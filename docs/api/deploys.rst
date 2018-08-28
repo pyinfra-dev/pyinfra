@@ -3,7 +3,7 @@ Packaging Deploys
 
 Operations represent low-level state that should be met and applied if needed. Deploys are more high-level, for example "install & configure service X". They represent a collection of operations. Like operations, deploys can be made into python packages making them reusable and shareable.
 
-Writing a deploy is similar to :doc:`writing an operation <api/modules>`:
+Writing a deploy is similar to :doc:`writing an operation <./modules>`:
 
 .. code:: py
 
