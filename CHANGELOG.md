@@ -1,4 +1,4 @@
-# v0.7.dev2 (WIP)
+# v0.7
 
 + Add **mysql** module
     - Operations: `mysql.sql`, `mysql.user`, `mysql.database`, `mysql.privileges`, `mysql.dump`, `mysql.load`
