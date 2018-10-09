@@ -95,7 +95,7 @@ class DebPackage(FactBase):
 
     _regexes = {
         'name': r'^Package: ([a-zA-Z0-9\-]+)$',
-        'version': r'^Version: ([0-9\.\-]+)$',
+        'version': r'^Version: ([0-9\:\.\-]+)$',
     }
 
     def command(self, name):
