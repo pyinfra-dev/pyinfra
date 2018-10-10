@@ -1,3 +1,7 @@
+# v0.7.1
+
++ Fix `deb_package` fact and don't assume we have a version in `apt.deb` operation
+
 # v0.7
 
 + Add **mysql** module
