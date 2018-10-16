@@ -27,7 +27,6 @@ from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.attrs import FallbackAttrData
 from pyinfra.hook import HOOKS
 
-from .compile import compile_deploy_code
 from .exceptions import CliError
 from .legacy import parse_legacy_argstring
 
@@ -43,9 +42,6 @@ def exec_file(filename, return_locals=False, is_deploy_code=False):
     if filename not in PYTHON_CODES:
         with open(filename, 'r') as f:
             code = f.read()
-
-        if is_deploy_code:
-            code = compile_deploy_code(code)
 
         code = compile(code, filename, 'exec')
         PYTHON_CODES[filename] = code
@@ -182,7 +178,7 @@ def load_deploy_file(state, filename):
 
         pseudo_host.set(host)
 
-        exec_file(filename, is_deploy_code=True)
+        exec_file(filename)
 
         logger.info('{0} {1} {2}'.format(
             host.print_prefix,

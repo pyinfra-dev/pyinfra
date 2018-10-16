@@ -220,7 +220,7 @@ def _run_server_ops(state, host, progress=None):
 
     logger.debug('Running all ops on {0}'.format(host))
 
-    for op_hash in state.op_order:
+    for op_hash in state.get_op_order():
         op_meta = state.op_meta[op_hash]
 
         logger.info('--> {0} {1} on {2}'.format(
@@ -250,7 +250,7 @@ def _run_serial_ops(state):
     '''
 
     for host in list(state.inventory):
-        host_operations = product([host], state.op_order)
+        host_operations = product([host], state.get_op_order())
         with progress_spinner(host_operations) as progress:
             try:
                 _run_server_ops(
@@ -266,7 +266,7 @@ def _run_no_wait_ops(state):
     Run all ops for all servers at once.
     '''
 
-    hosts_operations = product(state.inventory, state.op_order)
+    hosts_operations = product(state.inventory, state.get_op_order())
     with progress_spinner(hosts_operations) as progress:
         # Spawn greenlet for each host to run *all* ops
         greenlets = [
@@ -376,5 +376,5 @@ def run_ops(state, serial=False, no_wait=False):
         _run_no_wait_ops(state)
 
     # Default: run all ops in order, waiting at each for all servers to complete
-    for op_hash in state.op_order:
+    for op_hash in state.get_op_order():
         _run_single_op(state, op_hash)

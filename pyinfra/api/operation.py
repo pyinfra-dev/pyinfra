@@ -12,7 +12,7 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 from __future__ import unicode_literals
 
 from functools import wraps
-from inspect import stack
+from inspect import getframeinfo, stack
 from os import path
 from types import FunctionType
 
@@ -25,7 +25,13 @@ from .attrs import AttrBase, wrap_attr_data
 from .exceptions import PyinfraError
 from .host import Host
 from .state import State
-from .util import get_arg_value, make_hash, pop_op_kwargs, unroll_generators
+from .util import (
+    get_arg_value,
+    get_caller_frameinfo,
+    make_hash,
+    pop_op_kwargs,
+    unroll_generators,
+)
 
 
 # List of available operation names
@@ -64,6 +70,9 @@ def add_op(state, op_func, *args, **kwargs):
         args/kwargs: passed to the operation function
     '''
 
+    frameinfo = get_caller_frameinfo()
+    kwargs['frameinfo'] = frameinfo
+
     for host in state.inventory:
         op_func(state, host, *args, **kwargs)
 
@@ -99,11 +108,11 @@ def _get_call_location():
 
     # Frist two frames are this and the caller below, so get the third item on
     # the frame list, which should be the call to the actual operation.
-    frame = frames[2]
+    frame = getframeinfo(frames[2][0])
 
     return 'line {0} in {1}'.format(
-        frame[0].f_lineno,
-        path.relpath(frame[1]),
+        frame.lineno,
+        path.relpath(frame.filename),
     )
 
 
@@ -159,6 +168,10 @@ def operation(func=None, pipeline_facts=None):
             state, host = args[0], args[1]
             args = args_copy[2:]
 
+        # In API mode we have the kwarg - if a nested operation call we have
+        # current_frameinfo.
+        frameinfo = kwargs.pop('frameinfo', get_caller_frameinfo())
+
         # Configure operation
         #
 
@@ -195,38 +208,18 @@ def operation(func=None, pipeline_facts=None):
         if state.in_op:
             return func(state, host, *args, **kwargs) or []
 
+        filename = frameinfo.filename
+        line_number = frameinfo.lineno
+        code_context = frameinfo.code_context
+
         # Get/generate a hash for this op
         op_hash = op_meta_kwargs['op']
 
-        line_number = None
-        filename = None
-
         if op_hash is None:
-            # Get the line number where this operation was called by looking
-            # through the call stack for the first non-pyinfra line. This ensures
-            # two identical operations (in terms of arguments/meta) will still
-            # generate two hashes.
-            frames = stack()
-
-            for frame in frames:
-                if not (
-                    frame[3] in ('decorated_func', 'add_op', 'add_limited_op')
-                    and frame[1].endswith(path.join('pyinfra', 'api', 'operation.py'))
-                ):
-                    filename = getattr(frame, 'filename', '<unknown filename>')
-                    line_number = frame[0].f_lineno
-                    break
-
-            # The when kwarg might change between hosts - but we still want that
-            # to count as a single operation. Other meta kwargs are considered
-            # "global" and should be the same for every host.
-            op_meta_kwargs_copy = op_meta_kwargs.copy()
-            op_meta_kwargs_copy.pop('when', None)
-
-            op_hash = make_hash((
-                names, line_number, args, kwargs,
-                op_meta_kwargs_copy,
-            ))
+            # Hash using a combo of filename, line number and the line's code
+            # which should be guaranteed unique within this deploy (short of
+            # duplicating a file).
+            op_hash = make_hash((filename, line_number, code_context))
 
         # Ensure shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(op_hash, {
@@ -264,33 +257,16 @@ def operation(func=None, pipeline_facts=None):
         # ensure that deploys run as defined in the deploy file *per host* we
         # keep track of each hosts latest op hash, and use that to insert new
         # ones.
-        if op_hash not in state.op_order:
-            logger.debug((
-                'Pushing hash into operation order (host={0}, names={1}): {2}'
-            ).format(host.name, names, op_hash))
+        op_lines = [line_number]
 
-            previous_op_hash = state.meta[host]['latest_op_hash']
+        if state.deploy_line_numbers:
+            op_lines = state.deploy_line_numbers + op_lines
 
-            if previous_op_hash:
-                # Get the index of the previous op hash and bump after it
-                index = state.op_order.index(previous_op_hash) + 1
-            else:
-                index = 0
-
-            # We *expect* to always append operations - if not it's almost
-            # certainly to (mis)use of conditional branches. An unfortunate
-            # result of the way deploy files are executed (once per host).
-            if index < len(state.op_order):
-                state.has_imbalanced_operations = True
-
-                logger.warning('Imbalanced operation detected! ({0}{1})'.format(
-                    ', '.join(names),
-                    ', {0}:{1}'.format(filename, line_number) if filename else '',
-                ))
-
-            state.op_order.insert(index, op_hash)
-
-        state.meta[host]['latest_op_hash'] = op_hash
+        op_lines = tuple(op_lines)
+        state.op_line_numbers_to_hash[op_lines] = op_hash
+        logger.debug('Adding operation, called @ {0}:{1}, opLines={2}'.format(
+            filename, line_number, op_lines,
+        ))
 
         # Check if we're actually running the operation on this host
         #

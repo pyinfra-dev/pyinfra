@@ -22,7 +22,6 @@ from pyinfra.api.connectors import ssh
 from pyinfra.api.exceptions import NoGroupError, NoHostError, PyinfraError
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
-
 from pyinfra.modules import files, server
 
 from .paramiko_util import (
@@ -271,10 +270,12 @@ class TestOperationsApi(PatchSSHTest):
             },
         )
 
-        # Ensure we have an op
-        self.assertEqual(len(state.op_order), 1)
+        op_order = state.get_op_order()
 
-        first_op_hash = state.op_order[0]
+        # Ensure we have an op
+        self.assertEqual(len(op_order), 1)
+
+        first_op_hash = op_order[0]
 
         # Ensure the op name
         self.assertEqual(
@@ -349,10 +350,12 @@ class TestOperationsApi(PatchSSHTest):
                 su_user='pyinfra',
             )
 
-        # Ensure we have all ops
-        self.assertEqual(len(state.op_order), 3)
+        op_order = state.get_op_order()
 
-        first_op_hash = state.op_order[0]
+        # Ensure we have all ops
+        self.assertEqual(len(op_order), 3)
+
+        first_op_hash = op_order[0]
 
         # Ensure first op is the right one
         self.assertEqual(
@@ -372,11 +375,11 @@ class TestOperationsApi(PatchSSHTest):
         )
 
         # Ensure second op has sudo/sudo_user
-        self.assertEqual(state.op_meta[state.op_order[1]]['sudo'], True)
-        self.assertEqual(state.op_meta[state.op_order[1]]['sudo_user'], 'pyinfra')
+        self.assertEqual(state.op_meta[op_order[1]]['sudo'], True)
+        self.assertEqual(state.op_meta[op_order[1]]['sudo_user'], 'pyinfra')
 
         # Ensure third has su_user
-        self.assertEqual(state.op_meta[state.op_order[2]]['su_user'], 'pyinfra')
+        self.assertEqual(state.op_meta[op_order[2]]['su_user'], 'pyinfra')
 
         # Check run ops works
         with patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True):
@@ -408,7 +411,7 @@ class TestOperationsApi(PatchSSHTest):
         )
 
         # Ensure there are two ops
-        self.assertEqual(len(state.op_order), 2)
+        self.assertEqual(len(state.get_op_order()), 2)
 
         # Ensure somehost has two ops and anotherhost only has the one
         self.assertEqual(len(state.ops[inventory.get_host('somehost')]), 2)
@@ -438,7 +441,7 @@ class TestOperationsApi(PatchSSHTest):
             )
 
         # Ensure there are three ops
-        self.assertEqual(len(state.op_order), 3)
+        self.assertEqual(len(state.get_op_order()), 3)
 
         # Ensure somehost has two ops and anotherhost only has the one
         self.assertEqual(len(state.ops[inventory.get_host('somehost')]), 2)
@@ -453,7 +456,7 @@ class TestOperationsApi(PatchSSHTest):
         add_op(state, server.shell, 'echo "hi"', run_once=True, serial=True)
 
         # Ensure it's added to op_order
-        self.assertEqual(len(state.op_order), 1)
+        self.assertEqual(len(state.get_op_order()), 1)
 
         somehost = inventory.get_host('somehost')
         anotherhost = inventory.get_host('anotherhost')

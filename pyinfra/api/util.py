@@ -5,7 +5,9 @@
 from __future__ import division, print_function, unicode_literals
 
 import re
+
 from hashlib import sha1
+from inspect import getframeinfo, stack
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -50,6 +52,17 @@ def ensure_host_list(hosts, inventory):
         return [hosts]
 
     return hosts
+
+
+def get_caller_frameinfo():
+    stack_items = stack()
+
+    frame = stack_items[2][0]
+    info = getframeinfo(frame)
+
+    del stack_items
+
+    return info
 
 
 def pop_op_kwargs(state, kwargs):

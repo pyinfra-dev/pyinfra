@@ -100,7 +100,7 @@ def print_state_operations(state):
     print()
     print('--> Operation order:')
     print()
-    for op_hash in state.op_order:
+    for op_hash in state.get_op_order():
         meta = state.op_meta[op_hash]
         hosts = set(
             host for host, operations in six.iteritems(state.ops)

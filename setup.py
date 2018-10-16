@@ -25,7 +25,6 @@ INSTALL_REQUIRES = (
     'contextlib2<1',
     'colorama<1',  # Windows color support for click
     'docopt<1',  # legacy
-    'redbaron<1',
     'jinja2>2,<3',
     'python-dateutil>2,<3',
     'six>1,<2',

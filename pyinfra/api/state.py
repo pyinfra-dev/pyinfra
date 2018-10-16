@@ -82,6 +82,7 @@ class State(object):
     deploy_name = None
     deploy_kwargs = None
     deploy_data = None
+    deploy_line_numbers = None
 
     # Flags for printing
     print_output = False  # print output from the actual deploy (-v)
@@ -170,7 +171,7 @@ class State(object):
         self.limit_hosts = initial_limit
 
         # Op basics
-        self.op_order = []  # list of operation hashes
+        self.op_line_numbers_to_hash = {}
         self.op_meta = {}  # maps operation hash -> names/etc
         self.ops_run = set()  # list of ops which have been started/run
 
@@ -191,7 +192,6 @@ class State(object):
             host: {
                 'ops': 0,  # one function call in a deploy file
                 'commands': 0,  # actual # of commands to run
-                'latest_op_hash': None,
             }
             for host in inventory
         }
@@ -254,7 +254,7 @@ class State(object):
             yield
 
     @contextmanager
-    def deploy(self, name, kwargs, data, in_deploy=True):
+    def deploy(self, name, kwargs, data, line_number, in_deploy=True):
         '''
         Wraps a group of operations as a deploy, this should not be used
         directly, instead use ``pyinfra.api.deploy.deploy``.
@@ -269,6 +269,7 @@ class State(object):
         old_deploy_name = self.deploy_name
         old_deploy_kwargs = self.deploy_kwargs
         old_deploy_data = self.deploy_data
+        old_deploy_line_numbers = self.deploy_line_numbers
 
         self.in_deploy = in_deploy
 
@@ -287,10 +288,14 @@ class State(object):
             else:
                 kwargs['hosts'] = old_deploy_kwargs['hosts']
 
+        new_line_numbers = self.deploy_line_numbers or []
+        new_line_numbers.append(line_number)
+
         # Set the new values
         self.deploy_name = name
         self.deploy_kwargs = kwargs
         self.deploy_data = AttrData(data)
+        self.deploy_line_numbers = new_line_numbers
         logger.debug('Starting deploy {0} (args={1}, data={2})'.format(
             name, kwargs, data,
         ))
@@ -302,11 +307,20 @@ class State(object):
         self.deploy_name = old_deploy_name
         self.deploy_kwargs = old_deploy_kwargs
         self.deploy_data = old_deploy_data
+        self.deploy_line_numbers = old_deploy_line_numbers
+
         logger.debug('Reset deploy to {0} (args={1}, data={2})'.format(
             old_deploy_name, old_deploy_kwargs, old_deploy_data,
         ))
 
-        self.in_deploy = False
+    def get_op_order(self):
+        line_numbers_to_hash = self.op_line_numbers_to_hash
+        sorted_line_numbers = sorted(list(line_numbers_to_hash.keys()))
+
+        return [
+            line_numbers_to_hash[numbers]
+            for numbers in sorted_line_numbers
+        ]
 
     def activate_host(self, host):
         '''

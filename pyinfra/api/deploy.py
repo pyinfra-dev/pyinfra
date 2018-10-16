@@ -12,13 +12,13 @@ from functools import wraps
 
 import six
 
-from pyinfra import pseudo_host, pseudo_state
+from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.pseudo_modules import PseudoModule
 
 from .exceptions import PyinfraError
 from .host import Host
 from .state import State
-from .util import pop_op_kwargs
+from .util import get_caller_frameinfo, pop_op_kwargs
 
 
 def add_deploy(state, deploy_func, *args, **kwargs):
@@ -31,6 +31,9 @@ def add_deploy(state, deploy_func, *args, **kwargs):
         ie ``server.user``
         args/kwargs: passed to the operation function
     '''
+
+    frameinfo = get_caller_frameinfo()
+    kwargs['frameinfo'] = frameinfo
 
     for host in state.inventory:
         deploy_func(state, host, *args, **kwargs)
@@ -81,13 +84,20 @@ def deploy(func_or_name, data_defaults=None):
             state, host = args[0], args[1]
             args = args_copy[2:]
 
+        # In API mode we have the kwarg - if a nested deploy we actually
+        # want the frame of the caller (ie inside the deploy package).
+        frameinfo = kwargs.pop('frameinfo', get_caller_frameinfo())
+        logger.debug('Adding deploy, called @ {0}:{1}'.format(
+            frameinfo.filename, frameinfo.lineno,
+        ))
+
         deploy_kwargs = pop_op_kwargs(state, kwargs)
 
         # Name the deploy
         deploy_name = getattr(func, 'deploy_name', func.__name__)
         deploy_data = getattr(func, 'deploy_data', None)
 
-        with state.deploy(deploy_name, deploy_kwargs, deploy_data):
+        with state.deploy(deploy_name, deploy_kwargs, deploy_data, frameinfo.lineno):
             # Execute the deploy, passing state and host
             func(state, host, *args, **kwargs)
 

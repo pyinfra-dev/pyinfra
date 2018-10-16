@@ -15,7 +15,7 @@ import pyinfra
 
 from . import logger, pseudo_state
 from .api.exceptions import PyinfraError
-from .api.util import read_buffer
+from .api.util import get_caller_frameinfo, read_buffer
 
 
 def include(filename, hosts=False, when=True):
@@ -32,6 +32,7 @@ def include(filename, hosts=False, when=True):
         raise PyinfraError('local.include is only available in CLI mode.')
 
     filename = path.join(pseudo_state.deploy_dir, filename)
+    frameinfo = get_caller_frameinfo()
 
     logger.debug('Including local file: {0}'.format(filename))
 
@@ -61,11 +62,11 @@ def include(filename, hosts=False, when=True):
                 ]
             }
             stack.enter_context(pseudo_state.deploy(
-                filename, kwargs, None,
+                filename, kwargs, None, frameinfo.lineno,
                 in_deploy=False,
             ))
 
-            exec_file(filename, is_deploy_code=True)
+            exec_file(filename)
 
             # One potential solution to the above is to add local as an actual
             # module, ie `pyinfra.modules.local`.
