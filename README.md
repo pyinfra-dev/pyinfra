@@ -2,7 +2,9 @@
 
 [![PyPI version](https://badge.fury.io/py/pyinfra.svg)](https://pypi.python.org/pypi/pyinfra) [![Travis.CI status](https://travis-ci.org/Fizzadar/pyinfra.svg?branch=develop)](https://travis-ci.org/Fizzadar/pyinfra)
 
-pyinfra manages the state of one or more servers. It can be used for app/service deployment, config management and ad-hoc command execution. Deploys are asynchronous, highly performant and can target thousands of hosts in parallel. The inventory of servers and deploy state are written in Python, allowing for near-infinite extendability. pyinfra is available via the command line and as a Python API.
+pyinfra is designed to automate/provision/manage/deploy servers at scale.
+
+It can be used for ad-hoc command execution, service deployment, configuration management; you could say that pyinfra is like a combination of Ansible + Fabric. It is asynchronous, highly performant and can target thousands of hosts in parallel. The inventory of servers and deploy state are written in Python, allowing for near-infinite extendability.
 
 + [Getting started](https://pyinfra.readthedocs.org/page/getting_started.html)
 + [Documentation](https://pyinfra.readthedocs.org)
@@ -17,7 +19,7 @@ When you run pyinfra you'll see something like:
 
 ## Design Features
 
-pyinfra was designed to enable us to deploy things in a consistent, debuggable and maintainable manner. Notable design decisions:
+pyinfra was designed to deploy things in a consistent, debuggable and maintainable manner. Notable design decisions:
 
 + properly agentless - even Python isn't required on the remote side (just a shell!)
 + always print raw stderr on operation failure for _instant_ debugging
