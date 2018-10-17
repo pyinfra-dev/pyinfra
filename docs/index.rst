@@ -33,7 +33,6 @@ Fedora & OpenBSD.
     operations
     facts
     patterns
-    using_python
 
 .. toctree::
     :hidden:
