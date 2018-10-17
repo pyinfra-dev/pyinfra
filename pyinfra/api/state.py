@@ -192,6 +192,7 @@ class State(object):
             host: {
                 'ops': 0,  # one function call in a deploy file
                 'commands': 0,  # actual # of commands to run
+                'op_hashes': set(),
             }
             for host in inventory
         }

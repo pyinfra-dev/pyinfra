@@ -221,6 +221,20 @@ def operation(func=None, pipeline_facts=None):
             # duplicating a file).
             op_hash = make_hash((filename, line_number, code_context))
 
+        host_op_hashes = state.meta[host]['op_hashes']
+
+        # Avoid adding duplicates! This happens if an operation is called within
+        # a loop - such that the filename/lineno/code _are_ the same, but the
+        # arguments might be different. We just append an increasing number to
+        # the op hash and also handle below with the op order.
+        duplicate_op_count = 0
+        while op_hash in host_op_hashes:
+            logger.debug('Duplicate hash ({0}) detected!'.format(op_hash))
+            op_hash = '{0}-{1}'.format(op_hash, duplicate_op_count)
+            duplicate_op_count += 1
+
+        host_op_hashes.add(op_hash)
+
         # Ensure shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(op_hash, {
             'names': set(),
@@ -261,6 +275,9 @@ def operation(func=None, pipeline_facts=None):
 
         if state.deploy_line_numbers:
             op_lines = state.deploy_line_numbers + op_lines
+
+        if duplicate_op_count:
+            op_lines.append(duplicate_op_count)
 
         op_lines = tuple(op_lines)
         state.op_line_numbers_to_hash[op_lines] = op_hash
