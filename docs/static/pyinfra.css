@@ -73,6 +73,21 @@ pre code {
 }
 
 
+header#pageheader, footer#pagefooter, .related, .document {
+    max-width: 1050px;
+}
+
+.sphinxsidebar {
+    width: 230px;
+}
+.sphinxsidebarwrapper {
+    width: 214px;
+}
+
+.bodywrapper {
+    margin-left: 230px;
+}
+
 
 /*
     Sphinx specific
