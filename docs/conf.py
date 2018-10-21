@@ -2,10 +2,15 @@
 # File: docs/conf.py
 # Desc: minimal Sphinx config
 
+from datetime import date, datetime
+
 from better import better_theme_path
 
 from pyinfra import __version__
 
+
+_today = date.today()
+copyright = f'{datetime.strftime(_today, "%Y")}, Nick Barrett'
 
 extensions = [
     # Official
@@ -16,7 +21,6 @@ extensions = [
 source_suffix = '.rst'
 master_doc = 'index'
 project = 'pyinfra'
-copyright = '2017, Nick Barrett'
 author = 'Fizzadar'
 version = 'develop'
 pygments_style = 'sphinx'
