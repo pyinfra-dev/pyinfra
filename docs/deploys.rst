@@ -285,6 +285,7 @@ Privilege & user escalation
     + ``preserve_sudo_env=True``: Preserve the shell environment when using sudo.
 
 Operation control:
+    + ``env``: Dict of environment variables to set.
     + ``ignore_errors=True``: Ignore errors when excuting the operation.
     + ``serial=True``: Run this operation host by host, rather than in parallel.
     + ``parallel=10``: Run this operation in batches of hosts.

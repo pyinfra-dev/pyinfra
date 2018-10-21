@@ -46,6 +46,6 @@ Vagrant.configure('2') do |config|
     end
 
     config.vm.define :openbsd6 do |openbsd|
-        openbsd.vm.box = 'ryanmaclean/openbsd-6.0'
+        openbsd.vm.box = 'generic/openbsd6'
     end
 end

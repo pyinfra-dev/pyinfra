@@ -24,17 +24,13 @@ if 'bsd' in host.groups:
     server.shell({'BSD-1'}, 'echo BSD-1')
     server.shell({'BSD-2'}, 'echo BSD-2')
     server.shell({'BSD-3'}, 'echo BSD-3')
-    server.shell({'BSD-4'}, 'echo BSD-4')
-    server.shell({'BSD-5'}, 'echo BSD-5')
-    server.shell({'BSD-6'}, 'echo BSD-6')
-    server.shell({'BSD-7'}, 'echo BSD-7')
 
 
 server.shell({'EVERYONE-1'}, 'echo EVERYONE-1')
 
 
 if 'bsd' in host.groups:
-    server.shell('echo BSD_GROUP')
+    server.shell({'BSD_GROUP'}, 'echo BSD_GROUP')
 
 
 server.shell({'EVERYONE-2'}, 'echo EVERYONE-2')
