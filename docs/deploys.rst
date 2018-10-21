@@ -200,21 +200,6 @@ Adding data to inventories was :ref:`described above <data-ref-label>` - you can
         home=host.data.app_dir,
     )
 
-.. warning::
-    pyinfra supports jinja2 style string arguments, which should be used over Python's builtin string formatting where you expect the final string to change per host. This is because pyinfra groups operations by their arguments. See: :doc:`using Python <./using_python>` for more information; an example of this is:
-
-.. code:: python
-
-    from pyinfra import host
-    from pyinfra.modules import server
-
-    server.user(
-        {'Setup the app user'},
-        host.data.app_user,
-        '/opt/{{ host.data.app_dir }}', # for multiple values of host.data.app_dir we still
-                                        # generate a single operation
-    )
-
 Operation Meta
 ~~~~~~~~~~~~~~
 
@@ -222,7 +207,6 @@ Operation meta can be used during a deploy to change the desired operations:
 
 .. code:: python
 
-    from pyinfra import state
     from pyinfra.modules import server
 
     # Run an operation, collecting its meta output
@@ -232,11 +216,8 @@ Operation meta can be used during a deploy to change the desired operations:
     }
 
     # If we added a user above, do something extra
-    with state.when(create_user.changed):
+    if create_user.changed:
         server.shell('# add user to sudo, etc...')
-
-.. warning::
-    pyinfra supports conditional branches with the ``state.limit`` and ``state.when`` control structures (as shown above). These should be used in place of normal Python ``if`` statements. This prevents operations being executed in unexpected orders. For more information, see: :doc:`using Python <./using_python>`.
 
 Facts
 ~~~~~
@@ -246,9 +227,9 @@ Facts allow you to use information about the target host to change the operation
 .. code:: python
 
     from pyinfra import host
-    from pyinfra.modules import apt, yum
+    from pyinfra.modules import yum
 
-    with state.when(host.fact.linux_distribution['name'] == 'CentOS'):
+    if host.fact.linux_distribution['name'] == 'CentOS':
         yum.packages(
             'nano',
             sudo=True
@@ -285,7 +266,7 @@ Privilege & user escalation
     + ``preserve_sudo_env=True``: Preserve the shell environment when using sudo.
 
 Operation control:
-    + ``env``: Dict of environment variables to set.
+    + ``env``: Dictionary of environment variables to set.
     + ``ignore_errors=True``: Ignore errors when excuting the operation.
     + ``serial=True``: Run this operation host by host, rather than in parallel.
     + ``parallel=10``: Run this operation in batches of hosts.

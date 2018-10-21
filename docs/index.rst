@@ -1,10 +1,9 @@
 pyinfra Documentation
 =====================
 
-pyinfra manages the state of one or more servers. It can be used for app/service deployment, config management and ad-hoc command execution. Deploys are asynchronous, highly performant and can target thousands of hosts in parallel. The inventory of servers and deploy state are written in Python, allowing for near-infinite extendability.
+pyinfra is designed to automate/provision/manage/deploy servers at scale.
 
-pyinfra targets POSIX compatibility and is currently tested against Ubuntu, Debian, CentOS,
-Fedora & OpenBSD.
+It can be used for ad-hoc command execution, service deployment, configuration management; you could say that pyinfra is like a combination of Ansible + Fabric. It is asynchronous, highly performant and can target thousands of hosts in parallel. The inventory of servers and deploy state are written in Python, allowing for near-infinite extendability.
 
 .. compound::
     :doc:`getting_started`
