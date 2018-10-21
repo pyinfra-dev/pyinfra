@@ -78,7 +78,7 @@ def _print_operations(ctx, param, value):
 
 @click.command()
 @click.argument('inventory', nargs=1)
-@click.argument('commands', nargs=-1, required=True)
+@click.argument('operations', nargs=-1, required=True)
 @click.option(
     'verbosity', '-v',
     count=True,
@@ -119,7 +119,7 @@ def _print_operations(ctx, param, value):
     help='Print available facts list and exit.',
 )
 @click.option(
-    '--operations', is_flag=True, is_eager=True, callback=_print_operations,
+    'print_operations', '--operations', is_flag=True, is_eager=True, callback=_print_operations,
     help='Print available operations list and exit.',
 )
 @click.version_option(
@@ -142,7 +142,7 @@ def cli(*args, **kwargs):
     + Comma separated hostnames:
       host-1.net,host-2.net,@local
 
-    # COMMANDS
+    # OPERATIONS
 
     \b
     # Run one or more deploys against the inventory
@@ -214,13 +214,13 @@ def main(*args, **kwargs):
 
 
 def _main(
-    inventory, commands, verbosity,
+    inventory, operations, verbosity,
     user, port, key, key_password, password,
     sudo, sudo_user, su_user,
     parallel, fail_percent,
     dry, limit, no_wait, serial,
     debug, debug_data, debug_facts, debug_operations,
-    facts=None, operations=None,
+    facts=None, print_operations=None,
 ):
     print()
     print('### {0}'.format(click.style('Welcome to pyinfra', bold=True)))
@@ -239,8 +239,8 @@ def _main(
     # This is the most common case: we have a deploy file so use it's
     # pathname - we only look at the first file as we can't have multiple
     # deploy directories.
-    if commands[0].endswith('.py'):
-        deploy_file_dir, _ = path.split(commands[0])
+    if operations[0].endswith('.py'):
+        deploy_file_dir, _ = path.split(operations[0])
         above_deploy_file_dir, _ = path.split(deploy_file_dir)
 
         deploy_dir = deploy_file_dir
@@ -273,10 +273,10 @@ def _main(
             break
 
     # List facts
-    if commands[0] == 'fact':
+    if operations[0] == 'fact':
         command = 'fact'
 
-        fact_names = commands[1:]
+        fact_names = operations[1:]
         facts = []
 
         for name in fact_names:
@@ -291,36 +291,36 @@ def _main(
 
             facts.append((name, args))
 
-        commands = facts
+        operations = facts
 
     # Execute a raw command with server.shell
-    elif commands[0] == 'exec':
+    elif operations[0] == 'exec':
         command = 'exec'
-        commands = commands[1:]
+        operations = operations[1:]
 
     # Deploy files(s)
-    elif all(cmd.endswith('.py') for cmd in commands):
+    elif all(cmd.endswith('.py') for cmd in operations):
         command = 'deploy'
-        commands = commands[0:]
+        operations = operations[0:]
 
         # Check each file exists
-        for file in commands:
+        for file in operations:
             if not path.exists(file):
                 raise CliError('No deploy file: {0}'.format(file))
 
     # Operation w/optional args (<module>.<op> ARG1 ARG2 ...)
-    elif len(commands[0].split('.')) == 2:
+    elif len(operations[0].split('.')) == 2:
         command = 'op'
-        commands = get_operation_and_args(commands)
+        operations = get_operation_and_args(operations)
 
     else:
-        raise CliError('''Invalid commands: {0}
+        raise CliError('''Invalid operations: {0}
 
-    Command usage:
+    Operation usage:
     pyinfra INVENTORY deploy_web.py [deploy_db.py]...
     pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
     pyinfra INVENTORY exec -- echo "hello world"
-    pyinfra INVENTORY fact os [users]...'''.format(commands))
+    pyinfra INVENTORY fact os [users]...'''.format(operations))
 
     print('--> Loading config...')
 
@@ -329,7 +329,7 @@ def _main(
 
     # Load any hooks/config from the deploy file
     if command == 'deploy':
-        load_deploy_config(commands[0], config)
+        load_deploy_config(operations[0], config)
 
     # Arg based config overrides
     if sudo:
@@ -430,7 +430,7 @@ def _main(
 
         fact_data = {}
 
-        for i, command in enumerate(commands):
+        for i, command in enumerate(operations):
             name, args = command
             fact_data[name] = get_facts(
                 state, name,
@@ -450,7 +450,7 @@ def _main(
 
         add_op(
             state, server.shell,
-            ' '.join(commands),
+            ' '.join(operations),
         )
 
     # Deploy files(s)
@@ -459,7 +459,7 @@ def _main(
         print('--> Preparing operations...')
 
         # Number of "steps" to make = number of files * number of hosts
-        for filename in commands:
+        for filename in operations:
             logger.info('Loading: {0}'.format(click.style(filename, bold=True)))
             load_deploy_file(state, filename)
 
@@ -468,7 +468,7 @@ def _main(
         print()
         print('--> Preparing operation...')
 
-        op, args = commands
+        op, args = operations
 
         add_op(
             state, op,
