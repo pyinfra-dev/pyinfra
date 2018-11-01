@@ -384,10 +384,6 @@ class State(object):
         '''
 
         if not hash_key:
-            logger.warning((
-                'Use of `State.get_temp_filename` without a key is deprecated, '
-                'as it may generated imbalanced operations.'
-            ))
             hash_key = six.text_type(uuid4())
 
         temp_filename = '{0}/{1}'.format(
