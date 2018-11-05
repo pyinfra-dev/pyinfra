@@ -1,3 +1,13 @@
+# v0.8 [WIP]
+
++ Completely new operation ordering:
+    * different args *will not* generate imbalanced operations!
+    * no more deploy file compile needed
+
+Internal changes:
++ Inline `sshuserclient` package (original no longer maintained)
+
+
 # v0.7.1
 
 + Fix `deb_package` fact and don't assume we have a version in `apt.deb` operation
