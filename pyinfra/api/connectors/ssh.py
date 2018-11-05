@@ -24,13 +24,14 @@ from paramiko import (
     SSHException,
 )
 from paramiko.agent import AgentRequestHandler
-from sshuserclient import SSHClient
 
 import pyinfra
 
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import get_file_io, make_command, read_buffer
+
+from .sshuserclient import SSHClient
 
 SFTP_CONNECTIONS = {}
 

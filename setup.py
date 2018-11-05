@@ -29,7 +29,6 @@ INSTALL_REQUIRES = (
     'python-dateutil>2,<3',
     'six>1,<2',
     'setuptools',
-    'sshuserclient>0.2,<1'
 )
 
 TEST_REQUIRES = (
