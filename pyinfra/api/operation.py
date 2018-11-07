@@ -274,7 +274,7 @@ def operation(func=None, pipeline_facts=None):
         op_lines = [line_number]
 
         if state.deploy_line_numbers:
-            op_lines = state.deploy_line_numbers + op_lines
+            op_lines = list(state.deploy_line_numbers) + op_lines
 
         if duplicate_op_count:
             op_lines.append(duplicate_op_count)

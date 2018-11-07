@@ -271,7 +271,6 @@ class State(object):
         old_deploy_kwargs = self.deploy_kwargs
         old_deploy_data = self.deploy_data
         old_deploy_line_numbers = self.deploy_line_numbers
-
         self.in_deploy = in_deploy
 
         # Limit the new hosts to a subset of the old hosts if they existed
@@ -289,8 +288,11 @@ class State(object):
             else:
                 kwargs['hosts'] = old_deploy_kwargs['hosts']
 
-        new_line_numbers = self.deploy_line_numbers or []
+        # Make new line numbers - note convert from and back to tuple to avoid
+        # keeping deploy_line_numbers mutable.
+        new_line_numbers = list(self.deploy_line_numbers or [])
         new_line_numbers.append(line_number)
+        new_line_numbers = tuple(new_line_numbers)
 
         # Set the new values
         self.deploy_name = name
