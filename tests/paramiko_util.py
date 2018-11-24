@@ -3,6 +3,37 @@
 # Desc: paramiko fake test classes/shim for full API tests
 
 from inspect import isclass
+from unittest import TestCase
+
+from paramiko import (
+    RSAKey,
+    SFTPClient,
+    SSHClient,
+)
+from paramiko.agent import AgentRequestHandler
+
+from pyinfra.api.connectors import ssh
+
+
+class PatchSSHTestCase(TestCase):
+    '''
+    A test class that patches out the paramiko SSH parts such that they succeed as normal.
+    The SSH tests above check these are called correctly.
+    '''
+
+    @classmethod
+    def setUpClass(cls):
+        ssh.SSHClient = FakeSSHClient
+        ssh.SFTPClient = FakeSFTPClient
+        ssh.RSAKey = FakeRSAKey
+        ssh.AgentRequestHandler = FakeAgentRequestHandler
+
+    @classmethod
+    def tearDownClass(cls):
+        ssh.SSHClient = SSHClient
+        ssh.SFTPClient = SFTPClient
+        ssh.RSAKey = RSAKey
+        ssh.AgentRequestHandler = AgentRequestHandler
 
 
 class FakeAgentRequestHandler(object):

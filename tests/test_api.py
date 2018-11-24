@@ -2,6 +2,7 @@
 # File: tests/test_api.py
 # Desc: tests for the pyinfra API
 
+from inspect import currentframe, getframeinfo
 from unittest import TestCase
 
 import gevent.hub
@@ -9,45 +10,27 @@ import gevent.hub
 from mock import mock_open, patch
 from paramiko import (
     PasswordRequiredException,
-    RSAKey,
-    SFTPClient,
-    SSHClient,
     SSHException,
 )
-from paramiko.agent import AgentRequestHandler
 
-from pyinfra.api import Config, Inventory, State
+from pyinfra import pseudo_host, pseudo_state
+from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
-from pyinfra.api.connectors import ssh
 from pyinfra.api.exceptions import NoGroupError, NoHostError, PyinfraError
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.modules import files, server
 
 from .paramiko_util import (
-    FakeAgentRequestHandler,
     FakeBuffer,
     FakeChannel,
     FakeRSAKey,
-    FakeSFTPClient,
-    FakeSSHClient,
+    PatchSSHTestCase,
 )
+from .util import make_inventory
 
 # Don't print out exceptions inside greenlets (because here we expect them!)
 gevent.hub.Hub.NOT_ERROR = (Exception,)
-
-
-def make_inventory(hosts=('somehost', 'anotherhost'), **kwargs):
-    return Inventory(
-        (hosts, {}),
-        test_group=([
-            'somehost',
-        ], {
-            'group_data': 'hello world',
-        }),
-        ssh_user='vagrant',
-        **kwargs
-    )
 
 
 class TestInventoryApi(TestCase):
@@ -200,28 +183,7 @@ class TestSSHApi(TestCase):
         self.assertTrue(e.exception.args[0].startswith('No such private key file:'))
 
 
-class PatchSSHTest(TestCase):
-    '''
-    A test class that patches out the paramiko SSH parts such that they succeed as normal.
-    The SSH tests above check these are called correctly.
-    '''
-
-    @classmethod
-    def setUpClass(cls):
-        ssh.SSHClient = FakeSSHClient
-        ssh.SFTPClient = FakeSFTPClient
-        ssh.RSAKey = FakeRSAKey
-        ssh.AgentRequestHandler = FakeAgentRequestHandler
-
-    @classmethod
-    def tearDownClass(cls):
-        ssh.SSHClient = SSHClient
-        ssh.SFTPClient = SFTPClient
-        ssh.RSAKey = RSAKey
-        ssh.AgentRequestHandler = AgentRequestHandler
-
-
-class TestStateApi(PatchSSHTest):
+class TestStateApi(PatchSSHTestCase):
     def test_fail_percent(self):
         inventory = make_inventory((
             'somehost',
@@ -240,7 +202,7 @@ class TestStateApi(PatchSSHTest):
         self.assertEqual(len(state.active_hosts), 2)
 
 
-class TestOperationsApi(PatchSSHTest):
+class TestOperationsApi(PatchSSHTestCase):
     def test_op(self):
         inventory = make_inventory()
         somehost = inventory.get_host('somehost')
@@ -524,3 +486,65 @@ class TestOperationsApi(PatchSSHTest):
             self.assertEqual(state.results[somehost]['error_ops'], 1)
             # But not as a success
             self.assertEqual(state.results[somehost]['success_ops'], 0)
+
+    def test_no_invalid_op_call(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        connect_all(state)
+        pseudo_state.set(state)
+
+        state.in_op = True
+        with self.assertRaises(PyinfraError):
+            server.user('someuser')
+
+        state.in_op = False
+        state.in_deploy = True
+        with self.assertRaises(PyinfraError):
+            server.user('someuser')
+
+    def test_op_line_numbers(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        connect_all(state)
+
+        # Add op to both hosts
+        add_op(state, server.shell, 'echo "hi"')
+
+        # Add op to just the second host - using the pseudo modules such that
+        # it replicates a deploy file.
+        pseudo_state.set(state)
+        pseudo_host.set(inventory['anotherhost'])
+        first_pseudo_hash = server.user('anotherhost_user').hash
+        first_pseudo_call_line = getframeinfo(currentframe()).lineno - 1
+
+        # Add op to just the first host - using the pseudo modules such that
+        # it replicates a deploy file.
+        pseudo_state.set(state)
+        pseudo_host.set(inventory['somehost'])
+        second_pseudo_hash = server.user('somehost_user').hash
+        second_pseudo_call_line = getframeinfo(currentframe()).lineno - 1
+
+        pseudo_state.reset()
+        pseudo_host.reset()
+
+        # Ensure there are two ops
+        op_order = state.get_op_order()
+        self.assertEqual(len(op_order), 3)
+
+        # And that the two ops above were called in the expected order
+        self.assertEqual(op_order[1], first_pseudo_hash)
+        self.assertEqual(op_order[2], second_pseudo_hash)
+
+        # And that they have the expected line numbers
+        self.assertEqual(
+            state.op_line_numbers_to_hash.get((0, first_pseudo_call_line)),
+            first_pseudo_hash,
+        )
+        self.assertEqual(
+            state.op_line_numbers_to_hash.get((0, second_pseudo_call_line)),
+            second_pseudo_hash,
+        )
+
+        # Ensure somehost has two ops and anotherhost only has the one
+        self.assertEqual(len(state.ops[inventory.get_host('somehost')]), 2)
+        self.assertEqual(len(state.ops[inventory.get_host('anotherhost')]), 2)

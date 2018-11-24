@@ -4,6 +4,8 @@
 
 from collections import defaultdict
 from datetime import datetime
+from os import path
+from random import shuffle
 from unittest import TestCase
 
 import six
@@ -11,11 +13,71 @@ import six
 from click.testing import CliRunner
 from six.moves import cStringIO as StringIO
 
+import pyinfra
+
+from pyinfra import pseudo_state
+from pyinfra.api import Config, State
+from pyinfra.api.connect import connect_all
 from pyinfra.modules import server
 from pyinfra_cli.exceptions import CliError
 from pyinfra_cli.legacy import setup_arguments
 from pyinfra_cli.main import cli
-from pyinfra_cli.util import get_operation_and_args, json_encode
+from pyinfra_cli.util import get_operation_and_args, json_encode, load_deploy_file
+
+from .paramiko_util import PatchSSHTestCase
+from .util import make_inventory
+
+
+class TestCliDeployOperations(PatchSSHTestCase):
+    def test_deploy(self):
+        # Run 10 iterations of the test - each time shuffling the order of the
+        # hosts - ensuring that the ordering has no effect on the operation order.
+        for _ in range(10):
+            self._do_test_deploy()
+
+    def _do_test_deploy(self):
+        correct_op_name_and_host_names = [
+            ('First main operation', True),  # true for all hosts
+            ('Second main operation', ('somehost',)),
+            ('tests/test_deploy/a_task.py | First task operation', ('anotherhost',)),
+            ('tests/test_deploy/a_task.py | Second task operation', ('anotherhost',)),
+            ('tests/test_deploy/a_task.py | First task operation', True),
+            ('tests/test_deploy/a_task.py | Second task operation', True),
+            ('Loop-0 main operation', True),
+            ('Loop-1 main operation', True),
+            ('Third main operation', True),
+        ]
+
+        hosts = ['somehost', 'anotherhost', 'someotherhost']
+        shuffle(hosts)
+
+        inventory = make_inventory(hosts=hosts)
+        state = State(inventory, Config())
+        state.deploy_dir = path.join('tests', 'test_deploy')
+
+        connect_all(state)
+        pseudo_state.set(state)
+
+        pyinfra.is_cli = True
+        load_deploy_file(state, path.join(state.deploy_dir, 'deploy.py'))
+        pyinfra.is_cli = False
+
+        op_order = state.get_op_order()
+
+        for i, (correct_op_name, correct_host_names) in enumerate(
+            correct_op_name_and_host_names,
+        ):
+            op_hash = op_order[i]
+            op_meta = state.op_meta[op_hash]
+
+            self.assertEqual(list(op_meta['names'])[0], correct_op_name)
+
+            for host in inventory:
+                op_hashes = state.meta[host]['op_hashes']
+                if correct_host_names is True or host.name in correct_host_names:
+                    self.assertIn(op_hash, op_hashes)
+                else:
+                    self.assertNotIn(op_hash, op_hashes)
 
 
 class TestCliUtil(TestCase):

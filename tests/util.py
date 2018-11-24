@@ -11,6 +11,19 @@ from pyinfra.api import Config, Inventory
 from pyinfra.api.attrs import AttrData
 
 
+def make_inventory(hosts=('somehost', 'anotherhost'), **kwargs):
+    return Inventory(
+        (hosts, {}),
+        test_group=([
+            'somehost',
+        ], {
+            'group_data': 'hello world',
+        }),
+        ssh_user='vagrant',
+        **kwargs
+    )
+
+
 class FakeState(object):
     active = True
     deploy_dir = '/'
