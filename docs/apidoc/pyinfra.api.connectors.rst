@@ -6,6 +6,13 @@ pyinfra.api.connectors package
     :undoc-members:
     :show-inheritance:
 
+Subpackages
+-----------
+
+.. toctree::
+
+    pyinfra.api.connectors.sshuserclient
+
 Submodules
 ----------
 
