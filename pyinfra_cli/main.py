@@ -481,17 +481,6 @@ def _main(
     print('--> Proposed changes:')
     print_meta(state, inventory)
 
-    # Show warning if we detected any imbalanced operations
-    if state.has_imbalanced_operations:
-        logger.warning('''
-Imbalanced operations were detected!
-
-The deploy files are executed once per host; the operations need to share
-the same arguments otherwise pyinfra cannot run them in a consistent order.
-
-Please see: http://pyinfra.readthedocs.io/page/using_python.html.
-    '''.rstrip())
-
     # If --debug-facts or --debug-operations, print and exit
     if debug_facts or debug_operations:
         if debug_facts:
@@ -507,12 +496,6 @@ Please see: http://pyinfra.readthedocs.io/page/using_python.html.
         _exit()
 
     print()
-
-    # Confirm operation run if imbalanced
-    if state.has_imbalanced_operations and not click.confirm(
-        'Run ops with inbalanced operations?', default=False,
-    ):
-        _exit()
 
     # Run the before_deploy hook if provided
     run_hook(state, 'before_deploy', hook_data)
