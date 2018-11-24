@@ -23,7 +23,9 @@ if 'debian' in host.groups:
 if 'bsd' in host.groups:
     server.shell({'BSD-1'}, 'echo BSD-1')
     server.shell({'BSD-2'}, 'echo BSD-2')
-    server.shell({'BSD-3'}, 'echo BSD-3')
+
+    for i in range(3, 5):
+        server.shell({'BSD-{0}'.format(i)}, 'echo BSD-{0}'.format(i))
 
 
 server.shell({'EVERYONE-1'}, 'echo EVERYONE-1')
