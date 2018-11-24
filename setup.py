@@ -54,6 +54,12 @@ DEV_REQUIRES = TEST_REQUIRES + (
 
     # Convert markdowns to rst for long_description
     'pypandoc==1.4',
+
+    # Linting
+    'flake8',
+    'flake8-commas',
+    'flake8-quotes',
+    'flake8-import-order',
 )
 
 
