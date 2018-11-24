@@ -4,7 +4,7 @@
 
 pyinfra is designed to automate/provision/manage/deploy servers at scale.
 
-It can be used for ad-hoc command execution, service deployment, configuration management; you could say that pyinfra is like a combination of Ansible + Fabric. It is asynchronous, highly performant and can target thousands of hosts in parallel. The inventory of servers and deploy state are written in Python, allowing for near-infinite extendability.
+It can be used for ad-hoc command execution, service deployment, configuration management; you could say that pyinfra is like a combination of Ansible + Fabric. It is asynchronous, highly performant and can target thousands of hosts in parallel. It is entirely configured in Python, allowing for near-infinite extendability out of the box.
 
 + [Getting started](https://pyinfra.readthedocs.org/page/getting_started.html)
 + [Documentation](https://pyinfra.readthedocs.org)
