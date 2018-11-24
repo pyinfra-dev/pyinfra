@@ -210,23 +210,25 @@ def operation(func=None, pipeline_facts=None):
 
         filename = frameinfo.filename
         line_number = frameinfo.lineno
-        code_context = frameinfo.code_context
 
-        # Get/generate a hash for this op
-        op_hash = op_meta_kwargs['op']
+        # Figure out the lines this operation was called from (essentially like
+        # a line-call-stack).
+        op_lines = [line_number]
 
-        if op_hash is None:
-            # Hash using a combo of filename, line number and the line's code
-            # which should be guaranteed unique within this deploy (short of
-            # duplicating a file).
-            op_hash = make_hash((filename, line_number, code_context))
+        if state.deploy_line_numbers:
+            op_lines = list(state.deploy_line_numbers) + op_lines
 
-        host_op_hashes = state.meta[host]['op_hashes']
+        # Inject the current op file number (only incremented in CLI mode)
+        op_lines.insert(0, state.current_op_file)
+
+        # Make a hash from the call stack lines
+        op_hash = make_hash(op_lines)
 
         # Avoid adding duplicates! This happens if an operation is called within
         # a loop - such that the filename/lineno/code _are_ the same, but the
         # arguments might be different. We just append an increasing number to
         # the op hash and also handle below with the op order.
+        host_op_hashes = state.meta[host]['op_hashes']
         duplicate_op_count = 0
         while op_hash in host_op_hashes:
             logger.debug('Duplicate hash ({0}) detected!'.format(op_hash))
@@ -234,6 +236,15 @@ def operation(func=None, pipeline_facts=None):
             duplicate_op_count += 1
 
         host_op_hashes.add(op_hash)
+
+        if duplicate_op_count:
+            op_lines.append(duplicate_op_count)
+
+        op_lines = tuple(op_lines)
+        state.op_line_numbers_to_hash[op_lines] = op_hash
+        logger.debug('Adding operation, {0}, called @ {1}:{2}, opLines={3}, opHash={4}'.format(
+            names, filename, line_number, op_lines, op_hash,
+        ))
 
         # Ensure shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(op_hash, {
@@ -266,24 +277,6 @@ def operation(func=None, pipeline_facts=None):
                 arg = '='.join((str(key), str(value)))
                 if arg not in op_meta['args']:
                     op_meta['args'].append(arg)
-
-        # Add the hash to the operational order if not already in there. To
-        # ensure that deploys run as defined in the deploy file *per host* we
-        # keep track of each hosts latest op hash, and use that to insert new
-        # ones.
-        op_lines = [line_number]
-
-        if state.deploy_line_numbers:
-            op_lines = list(state.deploy_line_numbers) + op_lines
-
-        if duplicate_op_count:
-            op_lines.append(duplicate_op_count)
-
-        op_lines = tuple(op_lines)
-        state.op_line_numbers_to_hash[op_lines] = op_hash
-        logger.debug('Adding operation, called @ {0}:{1}, opLines={2}'.format(
-            filename, line_number, op_lines,
-        ))
 
         # Check if we're actually running the operation on this host
         #
