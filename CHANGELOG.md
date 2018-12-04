@@ -1,4 +1,4 @@
-# v0.8 [WIP]
+# v0.8
 
 + Completely new operation ordering:
     * different args *will not* generate imbalanced operations!
