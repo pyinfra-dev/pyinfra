@@ -10,7 +10,7 @@ from pyinfra import __version__
 
 
 _today = date.today()
-copyright = f'{datetime.strftime(_today, "%Y")}, Nick Barrett'
+copyright = '{0}, Nick Barrett'.format(datetime.strftime(_today, '%Y'))
 
 extensions = [
     # Official
