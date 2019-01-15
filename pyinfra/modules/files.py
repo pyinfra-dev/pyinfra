@@ -15,7 +15,8 @@ from fnmatch import fnmatch
 from os import path, walk
 
 import six
-from jinja2 import UndefinedError
+
+from jinja2 import TemplateSyntaxError, UndefinedError
 
 from pyinfra.api import operation, OperationError
 from pyinfra.api.util import get_file_sha1, get_template
@@ -381,17 +382,14 @@ def template(
     if state.deploy_dir:
         template_filename = path.join(state.deploy_dir, template_filename)
 
-    # Load the template into memory
-    template = get_template(template_filename)
-
     # Ensure host is always available inside templates
     data['host'] = host
     data['inventory'] = state.inventory
 
     # Render and make file-like it's output
     try:
-        output = template.render(data)
-    except UndefinedError as e:
+        output = get_template(template_filename).render(data)
+    except (TemplateSyntaxError, UndefinedError) as e:
         _, _, trace = sys.exc_info()
 
         # Jump through to the *second last* traceback, which contains the line number
