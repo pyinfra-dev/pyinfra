@@ -9,15 +9,21 @@ import sys
 from traceback import format_exception, format_tb
 
 import click
-import six
 
-from pyinfra import logger, pseudo_host
+from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.hook import Error as HookError
 
 
 class CliError(PyinfraError, click.ClickException):
     def show(self):
+        # Get any operation meta + name
+        op_name = None
+        current_op_hash = pseudo_state.current_op_hash
+        current_op_meta = pseudo_state.op_meta.get(current_op_hash)
+        if current_op_meta:
+            op_name = ', '.join(current_op_meta['names'])
+
         name = 'unknown error'
 
         if isinstance(self, HookError):
@@ -30,9 +36,10 @@ class CliError(PyinfraError, click.ClickException):
             name = 'local IO error'
 
         if pseudo_host.isset():
-            sys.stderr.write('--> [{0}]: {1}: '.format(
-                click.style(six.text_type(pseudo_host.name), bold=True),
+            sys.stderr.write('--> {0}{1}{2}: '.format(
+                pseudo_host.print_prefix,
                 click.style(name, 'red', bold=True),
+                ' (operation={0})'.format(op_name) if op_name else '',
             ))
         else:
             sys.stderr.write(
