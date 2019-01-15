@@ -17,7 +17,7 @@ from types import GeneratorType
 import click
 import six
 
-from jinja2 import Template
+from jinja2 import Template, TemplateSyntaxError, UndefinedError
 from paramiko import SSHException
 from six.moves import shlex_quote
 
@@ -348,13 +348,15 @@ def get_arg_value(state, host, arg):
     '''
 
     if isinstance(arg, six.string_types):
-        template = get_template(arg, is_string=True)
         data = {
             'host': host,
             'inventory': state.inventory,
         }
 
-        return template.render(data)
+        try:
+            return get_template(arg, is_string=True).render(data)
+        except (TemplateSyntaxError, UndefinedError) as e:
+            raise PyinfraError('Error in template string: {0}'.format(e))
 
     elif isinstance(arg, list):
         return [get_arg_value(state, host, value) for value in arg]
