@@ -12,7 +12,6 @@ import click
 import six
 
 from pyinfra import logger
-from pyinfra.api.attrs import AttrDataBool
 from pyinfra.api.facts import get_fact_names
 from pyinfra.api.host import Host
 from pyinfra.api.operation import get_operation_names
@@ -49,27 +48,7 @@ def _stringify_host_keys(data):
     return data
 
 
-def _convert_attr_bools(data):
-    if isinstance(data, dict):
-        return {
-            key: _convert_attr_bools(value)
-            for key, value in six.iteritems(data)
-        }
-
-    if isinstance(data, list):
-        return [
-            _convert_attr_bools(value)
-            for value in data
-        ]
-
-    if isinstance(data, AttrDataBool):
-        return bool(data)
-
-    return data
-
-
 def jsonify(data, *args, **kwargs):
-    data = _convert_attr_bools(data)
     data = _stringify_host_keys(data)
     return json.dumps(data, *args, **kwargs)
 

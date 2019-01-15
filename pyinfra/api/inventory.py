@@ -8,7 +8,6 @@ import six
 
 from pyinfra import logger
 
-from .attrs import AttrData, FallbackAttrData
 from .connectors import (
     ALL_CONNECTORS,
     EXECUTION_CONNECTORS,
@@ -75,7 +74,7 @@ class Inventory(object):
         names, data = names_data
 
         # Assign global data
-        self.data = AttrData(data)
+        self.data = data
 
         # Create the actual host instances and groups
         self.hosts = self.make_hosts_and_groups(names, groups)
@@ -88,7 +87,7 @@ class Inventory(object):
 
         for group_name, (group_names, group_data) in six.iteritems(groups):
             # Assign group data
-            self.group_data[group_name] = AttrData(group_data)
+            self.group_data[group_name] = group_data
 
             # For any hosts in the group, assign mappings
             for name, data in extract_name_data(group_names):
@@ -141,14 +140,14 @@ class Inventory(object):
                         sub_host_data.update(data)
 
                         # Assign the name/data/group_names from the connector
-                        self.host_data[name] = AttrData(sub_host_data)
+                        self.host_data[name] = sub_host_data
                         names_executors.append((name, executor))
                         name_to_group_names[name].extend(group_names)
 
                     continue
 
             # Assign the name/data
-            self.host_data[name] = AttrData(host_data)
+            self.host_data[name] = host_data
             names_executors.append((name, executor))
 
         # Now we can actually make Host instances
@@ -328,6 +327,6 @@ class Inventory(object):
         '''
 
         if self.state and self.state.deploy_data:
-            return AttrData(self.state.deploy_data)
+            return self.state.deploy_data
 
-        return AttrData()
+        return {}

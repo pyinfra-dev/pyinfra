@@ -24,7 +24,6 @@ from gevent.lock import BoundedSemaphore
 from paramiko import SSHException
 
 from pyinfra import logger
-from pyinfra.api.attrs import wrap_attr_data
 from pyinfra.api.util import (
     get_arg_value,
     log_host_command_error,
@@ -202,10 +201,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
             if status and stdout:
                 data = fact.process(stdout)
 
-            # Wrap the data with the fact name as the key, so when operations
-            # use the fact output as args/kwargs single operations are created
-            # for multiple values.
-            hostname_facts[host] = wrap_attr_data(name, data)
+            hostname_facts[host] = data
 
         log_name = click.style(name, bold=True)
 

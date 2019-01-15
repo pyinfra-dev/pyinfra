@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import click
 
-from .attrs import AttrDataStr, wrap_attr_data
 from .connectors import EXECUTION_CONNECTORS
 from .exceptions import PyinfraError
 from .facts import get_fact, is_fact
@@ -31,8 +30,7 @@ class HostFacts(object):
                 self.host, key,
             ))
 
-        fact = get_fact(self.inventory.state, self.host, key)
-        return wrap_attr_data(key, fact)
+        return get_fact(self.inventory.state, self.host, key)
 
 
 class Host(object):
@@ -51,9 +49,7 @@ class Host(object):
         self.groups = groups
         self.data = data
         self.executor = executor
-
-        # Make sure name can be used as a kwarg
-        self.name = AttrDataStr('name', name)
+        self.name = name
 
         # Attach the fact proxy
         self.fact = HostFacts(inventory, self)

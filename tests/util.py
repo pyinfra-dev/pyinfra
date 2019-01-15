@@ -8,7 +8,6 @@ import six
 from mock import patch
 
 from pyinfra.api import Config, Inventory
-from pyinfra.api.attrs import AttrData
 
 
 def make_inventory(hosts=('somehost', 'anotherhost'), **kwargs):
@@ -120,7 +119,7 @@ class FakeHost(object):
     def __init__(self, name, facts, data):
         self.name = name
         self.fact = FakeFacts(facts)
-        self.data = AttrData(data)
+        self.data = data
 
     @property
     def print_prefix(self):
