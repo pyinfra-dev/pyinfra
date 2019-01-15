@@ -24,7 +24,7 @@ except ImportError:
 import click
 
 from pyinfra import logger, pseudo_host, pseudo_state
-from pyinfra.api.attrs import FallbackAttrData
+from pyinfra.api.util import FallbackDict
 from pyinfra.hook import HOOKS
 
 from .exceptions import CliError
@@ -79,7 +79,7 @@ def json_encode(obj):
     elif isinstance(obj, datetime):
         return obj.isoformat()
 
-    elif isinstance(obj, FallbackAttrData):
+    elif isinstance(obj, FallbackDict):
         return obj.dict()
 
     elif isinstance(obj, io_bases):

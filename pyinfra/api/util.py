@@ -23,7 +23,7 @@ from six.moves import shlex_quote
 
 from pyinfra import logger
 
-from .attrs import AttrBase
+from .exceptions import PyinfraError
 
 # 64kb chunks
 BLOCKSIZE = 65536
@@ -63,6 +63,57 @@ def get_caller_frameinfo():
     del stack_items
 
     return info
+
+
+def extract_callable_datas(datas):
+    for data in datas:
+        # Support for dynamic data, ie @deploy wrapped data defaults where
+        # the data is stored on the state temporarily.
+        if callable(data):
+            data = data()
+
+        yield data
+
+
+class FallbackDict(object):
+    '''
+    Combines multiple AttrData's to search for attributes.
+    '''
+
+    override_datas = None
+
+    def __init__(self, *datas):
+        datas = list(datas)
+
+        # Inject an empty override data so we can assign during deploy
+        self.__dict__['override_datas'] = {}
+        datas.insert(0, self.override_datas)
+
+        self.__dict__['datas'] = tuple(datas)
+
+    def __getattr__(self, key):
+        for data in extract_callable_datas(self.datas):
+            if key in data:
+                return data[key]
+
+    def __setattr__(self, key, value):
+        self.override_datas[key] = value
+
+    def __str__(self):
+        return six.text_type(self.datas)
+
+    def dict(self):
+        out = {}
+
+        # Copy and reverse data objects (such that the first items override
+        # the last, matching __getattr__ output).
+        datas = list(self.datas)
+        datas.reverse()
+
+        for data in extract_callable_datas(datas):
+            out.update(data)
+
+        return out
 
 
 def pop_op_kwargs(state, kwargs):
@@ -325,10 +376,6 @@ def make_hash(obj):
     Make a hash from an arbitrary nested dictionary, list, tuple or set, used to generate
     ID's for operations based on their name & arguments.
     '''
-
-    # pyinfra attr key where available (host/inventory data), see attrs.py
-    if isinstance(obj, AttrBase):
-        return obj.pyinfra_attr_key
 
     if isinstance(obj, (set, tuple, list)):
         hash_string = ''.join([make_hash(e) for e in obj])

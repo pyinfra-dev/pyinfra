@@ -15,6 +15,7 @@ from .connectors import (
 )
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
 from .host import Host
+from .util import FallbackDict
 
 
 def extract_name_data(names):
@@ -157,7 +158,7 @@ class Inventory(object):
             host_groups = name_to_group_names[name]
 
             # Create the (waterfall data: override, host, group, global)
-            host_data = FallbackAttrData(
+            host_data = FallbackDict(
                 self.get_override_data(),
                 self.get_host_data(name),
                 self.get_groups_data(host_groups),

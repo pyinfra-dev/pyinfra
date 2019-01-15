@@ -19,12 +19,12 @@ from pyinfra import (
     pseudo_state,
 )
 from pyinfra.api import State
-from pyinfra.api.attrs import FallbackAttrData
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import NoGroupError, PyinfraError
 from pyinfra.api.facts import get_facts, is_fact
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
+from pyinfra.api.util import FallbackDict
 from pyinfra.modules import server
 
 from .config import load_config, load_deploy_config
@@ -399,7 +399,7 @@ def _main(
     pseudo_state.set(state)
 
     # Setup the data to be passed to config hooks
-    hook_data = FallbackAttrData(
+    hook_data = FallbackDict(
         state.inventory.get_override_data(),
         state.inventory.get_group_data(inventory_group),
         state.inventory.get_data(),
