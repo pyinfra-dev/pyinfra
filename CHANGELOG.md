@@ -1,3 +1,10 @@
+# v0.9.dev0 (WIP)
+
++ Handle template errors in arguments better
++ Capture/handle template syntax errors
++ Remove the `AttrData` and all `Attr*` classes now we have operation ordering
+
+
 # v0.8
 
 + Completely new operation ordering:
