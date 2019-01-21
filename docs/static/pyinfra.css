@@ -17,7 +17,7 @@ body {
 a, a:visited {
     text-decoration: none;
     border-bottom: 1px solid #D7D7D7;
-    color: green;
+    color: #1F8390;
 }
 a:visited {
     opacity: 0.9;
@@ -27,29 +27,11 @@ a:hover {
     text-decoration: none;
 }
 
-header h1:first-child {
-    margin-top: 30px;
+header {
+    height: 10px;
 }
-header h1 a:before {
-    font-size: 36px;
-    color: green !important;
-    content: 'pyinfra ';
-    font-weight: bold;
-    position: absolute;
-    background: white;
-    margin-left: -70px;
-    margin-top: -6px;
-}
-header h1 a {
-    border: none;
-    color: #DDD;
-    font-weight: normal;
-    font-size: 16px;
-    padding-left: 70px;
-    margin-top: 25px;
-}
-header h1 a:hover {
-    border-bottom: none;
+header h1 {
+    display: none;
 }
 
 h2, h2:first-child {
@@ -72,6 +54,11 @@ pre code {
     font-size: 14px;
 }
 
+.home-link, .home-link:hover {
+    border: none;
+    margin-top: 10px !important;
+    display: block;
+}
 
 header#pageheader, footer#pagefooter, .related, .document {
     max-width: 1050px;

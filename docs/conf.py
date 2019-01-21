@@ -2,15 +2,17 @@
 # File: docs/conf.py
 # Desc: minimal Sphinx config
 
-from datetime import date, datetime
+from datetime import date
 
 from better import better_theme_path
 
 from pyinfra import __version__
 
 
-_today = date.today()
-copyright = '{0}, Nick Barrett'.format(datetime.strftime(_today, '%Y'))
+copyright = 'pyinfra v{0} &mdash; {0}, Nick Barrett'.format(
+    __version__,
+    date.today().year,
+)
 
 extensions = [
     # Official
@@ -26,7 +28,6 @@ version = 'develop'
 pygments_style = 'sphinx'
 
 # Theme style override
-html_title = 'pyinfra {0}'.format(__version__)
 html_short_title = 'Home'
 html_theme = 'better'
 html_theme_path = [better_theme_path]
