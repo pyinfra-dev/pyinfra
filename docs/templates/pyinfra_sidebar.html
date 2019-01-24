@@ -1,5 +1,5 @@
-<a href="/" class="home-link">
-    <img src="/_static/logo_small.png" height="48px" />
+<a href="{{ pathto('index') }}" class="home-link">
+    <img src="{{ pathto('_static/logo_small.png', 1) }}" height="48px" />
 </a>
 
 {{ toctree(maxdepth=3, includehidden=true) }}
