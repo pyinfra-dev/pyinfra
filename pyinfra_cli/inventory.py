@@ -24,7 +24,7 @@ ALLOWED_DATA_TYPES = tuple(
 )
 
 
-def is_inventory_group(key, value):
+def _is_inventory_group(key, value):
     '''
     Verify that a module-level variable (key = value) is a valid inventory group.
     '''
@@ -49,7 +49,7 @@ def is_inventory_group(key, value):
     )
 
 
-def is_group_data(key, value):
+def _is_group_data(key, value):
     '''
     Verify that a module-level variable (key = value) is a valid bit of group data.
     '''
@@ -60,7 +60,7 @@ def is_group_data(key, value):
     )
 
 
-def get_group_data(deploy_dir):
+def _get_group_data(deploy_dir):
     group_data = {}
     group_data_directory = path.join(deploy_dir, 'group_data')
 
@@ -82,10 +82,20 @@ def get_group_data(deploy_dir):
             group_data[group_name] = {
                 key: value
                 for key, value in six.iteritems(attrs)
-                if is_group_data(key, value)
+                if _is_group_data(key, value)
             }
 
     return group_data
+
+
+def _get_groups_from_filename(inventory_filename):
+    attrs = exec_file(inventory_filename, return_locals=True)
+
+    return {
+        key: value
+        for key, value in six.iteritems(attrs)
+        if _is_inventory_group(key, value)
+    }
 
 
 def make_inventory(
@@ -107,24 +117,16 @@ def make_inventory(
 
     file_groupname = None
 
-    try:
-        attrs = exec_file(inventory_filename, return_locals=True)
-
-        groups = {
-            key: value
-            for key, value in six.iteritems(attrs)
-            if is_inventory_group(key, value)
-        }
-
-        # Used to set all the hosts to an additional group - that of the filename
-        # ie inventories/dev.py means all the hosts are in the dev group, if not present
-        file_groupname = path.basename(inventory_filename).split('.')[0]
-
-    except IOError:
-        # Otherwise we assume the inventory is actually a hostname or list of hostnames
+    # If we're not a valid file we assume a list of comma separated hostnames
+    if not path.exists(inventory_filename):
         groups = {
             'all': inventory_filename.split(','),
         }
+    else:
+        groups = _get_groups_from_filename(inventory_filename)
+        # Used to set all the hosts to an additional group - that of the filename
+        # ie inventories/dev.py means all the hosts are in the dev group, if not present
+        file_groupname = path.basename(inventory_filename).rsplit('.')[0]
 
     all_data = {}
 
@@ -170,7 +172,7 @@ def make_inventory(
     pseudo_inventory.set(fake_inventory)
 
     # Get all group data (group_data/*.py)
-    group_data = get_group_data(deploy_dir)
+    group_data = _get_group_data(deploy_dir)
 
     # Reset the pseudo inventory
     pseudo_inventory.reset()
