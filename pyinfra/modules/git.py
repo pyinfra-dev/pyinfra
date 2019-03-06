@@ -110,6 +110,7 @@ def repo(
     else:
         current_branch = host.fact.git_branch(target)
         if current_branch != branch:
+            git_commands.append('fetch')  # fetch to ensure we have the branch locally
             git_commands.append('checkout {0}'.format(branch))
 
         if pull:
