@@ -187,7 +187,7 @@ def connect(state, host, for_fact=None):
 
         return client
 
-    except AuthenticationException as e:
+    except AuthenticationException:
         auth_kwargs = {}
 
         for key, value in kwargs.items():
