@@ -10,7 +10,9 @@ import six
 from pyinfra import logger, pseudo_inventory
 from pyinfra.api.inventory import Inventory
 
-from .util import exec_file
+from pyinfra_cli.util import exec_file
+
+from .ansible import load_ansible_ini_inventory
 
 # Hosts in an inventory can be just the hostname or a tuple (hostname, data)
 ALLOWED_HOST_TYPES = tuple(
@@ -89,13 +91,24 @@ def _get_group_data(deploy_dir):
 
 
 def _get_groups_from_filename(inventory_filename):
-    attrs = exec_file(inventory_filename, return_locals=True)
+    try:
+        attrs = exec_file(inventory_filename, return_locals=True)
 
-    return {
-        key: value
-        for key, value in six.iteritems(attrs)
-        if _is_inventory_group(key, value)
-    }
+        return {
+            key: value
+            for key, value in six.iteritems(attrs)
+            if _is_inventory_group(key, value)
+        }
+
+    # Syntax error implies this is not a Python file! Let's try parsing as Ansible
+    except SyntaxError as syntax_error:
+        if inventory_filename.endswith('.py'):
+            raise
+
+        try:
+            return load_ansible_ini_inventory(inventory_filename)
+        except Exception:
+            raise syntax_error
 
 
 def make_inventory(
