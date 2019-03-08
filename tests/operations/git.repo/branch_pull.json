@@ -15,6 +15,7 @@
         }
     },
     "commands": [
+        "cd /home/myrepo && git fetch",
         "cd /home/myrepo && git checkout mybranch",
         "cd /home/myrepo && git pull"
     ]
