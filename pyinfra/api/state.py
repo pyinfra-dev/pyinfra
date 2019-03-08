@@ -213,13 +213,18 @@ class State(object):
     def limit(self, hosts):
         logger.warning((
             'Use of `State.limit` is deprecated, '
-            'please use `State.hosts` instead.'
+            'please use normal `if` statements instead.'
         ))
 
         return self.hosts(hosts)
 
     @contextmanager
     def hosts(self, hosts):
+        logger.warning((
+            'Use of `State.hosts` is deprecated, '
+            'please use normal `if` statements instead.'
+        ))
+
         hosts = ensure_host_list(hosts, inventory=self.inventory)
 
         # Store the previous value
@@ -244,6 +249,11 @@ class State(object):
 
     @contextmanager
     def when(self, predicate):
+        logger.warning((
+            'Use of `State.when` is deprecated, '
+            'please use normal `if` statements instead.'
+        ))
+
         # Truth-y? Just yield/end, nothing happens here!
         if predicate:
             yield
