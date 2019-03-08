@@ -1,6 +1,6 @@
 import re
 
-from configparser import ConfigParser
+from six.moves.configparser import ConfigParser
 
 from pyinfra import logger
 
