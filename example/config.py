@@ -7,7 +7,7 @@ from pyinfra import hook
 
 
 # These can be here or in deploy.py
-TIMEOUT = 5
+CONNECT_TIMEOUT = 5
 FAIL_PERCENT = 81
 
 

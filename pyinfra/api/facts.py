@@ -104,7 +104,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
     su_user = state.config.SU_USER
     ignore_errors = state.config.IGNORE_ERRORS
 
-    # Timeout for operations !== timeout for connect (config.TIMEOUT)
+    # Timeout for operations !== timeout for connect (config.CONNECT_TIMEOUT)
     timeout = None
 
     # Get the current op meta

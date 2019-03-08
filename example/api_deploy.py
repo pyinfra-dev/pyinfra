@@ -44,7 +44,7 @@ inventory = Inventory((hosts, {}), **groups)
 # Now we create a new config (w/optional args)
 config = Config(
     FAIL_PERCENT=81,
-    TIMEOUT=5,
+    CONNECT_TIMEOUT=5,
 )
 
 # Setup the pyinfra state for this deploy

@@ -121,7 +121,7 @@ def _make_paramiko_kwargs(state, host):
     for key, value in (
         ('username', host.data.ssh_user),
         ('port', int(host.data.ssh_port or 0)),
-        ('timeout', state.config.TIMEOUT),
+        ('timeout', state.config.CONNECT_TIMEOUT),
     ):
         if value:
             kwargs[key] = value

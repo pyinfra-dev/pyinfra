@@ -292,7 +292,7 @@ There are a number of configuration options for how deploys are managed. These c
     # config.py or top of deploy.py
 
     # SSH connect timeout
-    TIMEOUT = 1
+    CONNECT_TIMEOUT = 1
 
     # Fail the entire deploy after 10% of hosts fail
     FAIL_PERCENT = 10
