@@ -147,6 +147,7 @@ def pop_op_kwargs(state, kwargs):
         'hosts': hosts,
         # When to limit the op (default always)
         'when': get_kwarg('when', True),
+
         # Locally & globally configurable
         'sudo': get_kwarg('sudo', state.config.SUDO),
         'sudo_user': get_kwarg('sudo_user', state.config.SUDO_USER),
@@ -160,15 +161,16 @@ def pop_op_kwargs(state, kwargs):
             'ignore_errors', state.config.IGNORE_ERRORS,
         ),
         # Timeout on running the command
-        'timeout': get_kwarg('timeout'),
+        'timeout': get_kwarg('timeout', state.config.TIMEOUT),
+        # Execute in batches of X hosts rather than all at once
+        'parallel': get_kwarg('parallel', state.config.PARALLEL),
+
         # Get a PTY before executing commands
         'get_pty': get_kwarg('get_pty', False),
         # Forces serial mode for this operation (--serial for one op)
         'serial': get_kwarg('serial', False),
         # Only runs this operation once
         'run_once': get_kwarg('run_once', False),
-        # Execute in batches of X hosts rather than all at once
-        'parallel': get_kwarg('parallel'),
         # Callbacks
         'on_success': get_kwarg('on_success'),
         'on_error': get_kwarg('on_error'),
