@@ -9,19 +9,15 @@ These can be included within deploys using the ``pyinfra.local`` module. A list 
 
     # deploy.py
 
-    from pyinfra import local, inventory
+    from pyinfra import host, local
 
-    # Include the web role, targeted at the web group
-    local.include(
-        'tasks/web.py',
-        hosts=inventory.web_servers
-    )
+    # Include the web role for the web group
+    if 'web_servers' in host.groups:
+        local.include('tasks/web.py')
 
-    # And the same for the database role & servers
-    local.include(
-        'tasks/database.py',
-        hosts=inventory.db_servers
-    )
+    # And the same for the database role
+    if 'db_servers' in host.groups:
+        local.include('tasks/database.py')
 
     # This operation runs on all the hosts
     server.shell('Runs everywhere')
