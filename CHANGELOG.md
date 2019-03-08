@@ -5,8 +5,6 @@
 + Remove the `AttrData` and all `Attr*` classes now we have operation ordering
 + [Experimental]: parse Ansible inventory files
 + Fix execute `git fetch` before changing branch
-+ Fix `config.TIMEOUT` not being passed to operations by default
-+ Fix `config.PARALLEL` not being passed to operations by default
 
 
 # v0.8
