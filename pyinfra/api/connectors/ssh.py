@@ -220,8 +220,8 @@ def connect(state, host, for_fact=None):
 
 def run_shell_command(
     state, host, command,
-    sudo=False, sudo_user=None, su_user=None, preserve_sudo_env=False,
-    get_pty=False, env=None, timeout=None, print_output=False,
+    get_pty=False, timeout=None, print_output=False,
+    **command_kwargs
 ):
     '''
     Execute a command on the specified host.
@@ -241,14 +241,7 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
-    command = make_command(
-        command,
-        env=env,
-        sudo=sudo,
-        sudo_user=sudo_user,
-        su_user=su_user,
-        preserve_sudo_env=preserve_sudo_env,
-    )
+    command = make_command(command, **command_kwargs)
 
     logger.debug('Running command on {0}: {1}'.format(host.name, command))
 

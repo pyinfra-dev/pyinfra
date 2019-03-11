@@ -38,8 +38,8 @@ def connect(state, host, for_fact=None):
 
 def run_shell_command(
     state, host, command,
-    sudo=False, sudo_user=None, su_user=None, preserve_sudo_env=False,
-    get_pty=False, env=None, timeout=None, print_output=False,
+    get_pty=False, timeout=None, print_output=False,
+    **command_kwargs
 ):
     '''
     Execute a command on the local machine.
@@ -59,14 +59,7 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
-    command = make_command(
-        command,
-        env=env,
-        sudo=sudo,
-        sudo_user=sudo_user,
-        su_user=su_user,
-        preserve_sudo_env=preserve_sudo_env,
-    )
+    command = make_command(command, **command_kwargs)
 
     logger.debug('--> Running command on localhost: {0}'.format(command))
 
@@ -119,7 +112,8 @@ def run_shell_command(
 
 def put_file(
     state, host, filename_or_io, remote_filename,
-    sudo=False, sudo_user=None, su_user=None, print_output=False,
+    print_output=False,
+    **command_kwargs
 ):
     _, temp_filename = mkstemp()
 
@@ -136,8 +130,8 @@ def put_file(
     # Copy the file using `cp`
     status, _, stderr = run_shell_command(
         state, host, 'cp {0} {1}'.format(temp_filename, remote_filename),
-        sudo=sudo, sudo_user=sudo_user, su_user=su_user,
         print_output=print_output,
+        **command_kwargs
     )
 
     # Cleanup
