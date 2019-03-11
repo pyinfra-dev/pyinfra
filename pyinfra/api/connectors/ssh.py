@@ -333,7 +333,7 @@ def _put_file(host, filename_or_io, remote_location):
 
 
 def put_file(
-    state, host, filename_or_io, remote_file,
+    state, host, filename_or_io, remote_filename,
     sudo=False, sudo_user=None, su_user=None, print_output=False,
 ):
     '''
@@ -345,22 +345,22 @@ def put_file(
     # user connected, so upload to tmp and copy/chown w/sudo and/or su_user
     if sudo or su_user:
         # Get temp file location
-        temp_file = state.get_temp_filename(remote_file)
+        temp_file = state.get_temp_filename(remote_filename)
         _put_file(host, filename_or_io, temp_file)
 
         if print_output:
-            print('{0}file uploaded: {1}'.format(host.print_prefix, remote_file))
+            print('{0}file uploaded: {1}'.format(host.print_prefix, remote_filename))
 
         # Execute run_shell_command w/sudo and/or su_user
-        command = 'mv {0} {1}'.format(temp_file, remote_file)
+        command = 'mv {0} {1}'.format(temp_file, remote_filename)
 
         # Move it to the su_user if present
         if su_user:
-            command = '{0} && chown {1} {2}'.format(command, su_user, remote_file)
+            command = '{0} && chown {1} {2}'.format(command, su_user, remote_filename)
 
         # Otherwise any sudo_user
         elif sudo_user:
-            command = '{0} && chown {1} {2}'.format(command, sudo_user, remote_file)
+            command = '{0} && chown {1} {2}'.format(command, sudo_user, remote_filename)
 
         status, _, stderr = run_shell_command(
             state, host, command,
@@ -374,7 +374,7 @@ def put_file(
 
     # No sudo and no su_user, so just upload it!
     else:
-        _put_file(host, filename_or_io, remote_file)
+        _put_file(host, filename_or_io, remote_filename)
 
         if print_output:
-            print('{0}file uploaded: {1}'.format(host.print_prefix, remote_file))
+            print('{0}file uploaded: {1}'.format(host.print_prefix, remote_filename))
