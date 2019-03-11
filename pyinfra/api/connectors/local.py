@@ -134,11 +134,13 @@ def put_file(
         **command_kwargs
     )
 
-    # Cleanup
     if temp_filename:
         os.remove(temp_filename)
+
+    if not status:
+        raise IOError('\n'.join(stderr))
 
     if print_output:
         print('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
 
-    return True
+    return status
