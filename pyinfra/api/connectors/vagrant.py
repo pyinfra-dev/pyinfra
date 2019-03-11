@@ -6,6 +6,7 @@ from threading import Thread
 from six.moves.queue import Queue
 
 from pyinfra import local, logger
+from pyinfra.api.exceptions import InventoryError
 from pyinfra.progress import progress_spinner
 
 VAGRANT_CONFIG = None
@@ -157,6 +158,8 @@ def make_names_data(limit=None):
             logger.debug('Extra Vagrant SSH key/value ({0}={1})'.format(
                 key, value,
             ))
+    else:
+        raise InventoryError('No running Vagrant instances found!')
 
     # yield any leftover host
     if current_host:
