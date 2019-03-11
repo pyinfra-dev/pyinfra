@@ -146,3 +146,5 @@ def put_file(
 
     if print_output:
         print('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
+
+    return True
