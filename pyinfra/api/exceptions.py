@@ -22,6 +22,12 @@ class DeployError(PyinfraError):
     '''
 
 
+class InventoryError(PyinfraError):
+    '''
+    Exception raised for inventory related errors.
+    '''
+
+
 class NoConnectorError(PyinfraError, TypeError):
     '''
     Raised when a requested connector is missing.
