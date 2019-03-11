@@ -118,7 +118,7 @@ def run_shell_command(
 
 
 def put_file(
-    state, host, filename_or_io, remote_file,
+    state, host, filename_or_io, remote_filename,
     sudo=False, sudo_user=None, su_user=None, print_output=False,
 ):
     _, temp_filename = mkstemp()
@@ -135,7 +135,7 @@ def put_file(
 
     # Copy the file using `cp`
     status, _, stderr = run_shell_command(
-        state, host, 'cp {0} {1}'.format(temp_filename, remote_file),
+        state, host, 'cp {0} {1}'.format(temp_filename, remote_filename),
         sudo=sudo, sudo_user=sudo_user, su_user=su_user,
         print_output=print_output,
     )
@@ -145,4 +145,4 @@ def put_file(
         os.remove(temp_filename)
 
     if print_output:
-        print('{0}file copied: {1}'.format(host.print_prefix, remote_file))
+        print('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
