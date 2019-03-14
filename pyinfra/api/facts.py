@@ -59,8 +59,11 @@ class FactMeta(type):
         if attrs.get('abstract'):
             return
 
+        fact_name = underscore(name)
+        cls.name = fact_name
+
         # Get the an instance of the fact, attach to facts
-        FACTS[underscore(name)] = cls
+        FACTS[fact_name] = cls
 
 
 @six.add_metaclass(FactMeta)
@@ -84,19 +87,36 @@ class FactBase(object):
         }
 
 
+@six.add_metaclass(FactMeta)
+class ShortFactBase(object):
+    fact = None
+
+
+def get_short_facts(state, short_fact, **kwargs):
+    facts = get_facts(state, short_fact.fact.name, **kwargs)
+
+    return {
+        host: short_fact.process_data(data)
+        for host, data in six.iteritems(facts)
+    }
+
+
 def get_facts(state, name, args=None, ensure_hosts=None):
     '''
     Get a single fact for all hosts in the state.
     '''
+
+    # Create an instance of the fact
+    fact = FACTS[name]()
+
+    if isinstance(fact, ShortFactBase):
+        return get_short_facts(state, fact, args=args, ensure_hosts=ensure_hosts)
 
     logger.debug('Getting fact: {0} (ensure_hosts: {1})'.format(
         name, ensure_hosts,
     ))
 
     args = args or []
-
-    # Create an instance of the fact
-    fact = FACTS[name]()
 
     # Apply args or defaults
     sudo = state.config.SUDO
@@ -233,7 +253,7 @@ def get_fact(state, host, name):
     '''
 
     # Expecting a function to return
-    if callable(FACTS[name].command):
+    if callable(getattr(FACTS[name], 'command', None)):
         def wrapper(*args):
             fact_data = get_facts(state, name, args=args, ensure_hosts=(host,))
 
