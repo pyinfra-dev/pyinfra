@@ -9,7 +9,7 @@ from datetime import datetime
 
 from dateutil.parser import parse as parse_date
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, ShortFactBase
 from pyinfra.api.util import try_int
 
 
@@ -358,3 +358,15 @@ class LinuxDistribution(FactBase):
                 release_info['release_meta'][key] = value.strip('"')
 
         return release_info
+
+
+class LinuxName(ShortFactBase):
+    '''
+    Returns the name of the Linux distribution.
+    '''
+
+    fact = LinuxDistribution
+
+    @staticmethod
+    def process_data(data):
+        return data['name']
