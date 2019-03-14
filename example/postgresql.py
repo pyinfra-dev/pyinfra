@@ -4,7 +4,7 @@ from pyinfra.modules import apt, files, postgresql, python
 SUDO = True
 
 
-if host.fact.linux_distribution['name'] != 'Ubuntu':
+if host.fact.linux_name != 'Ubuntu':
     # Raises an exception mid-deploy
     python.raise_exception(
         {'Ensure we are Ubuntu'},

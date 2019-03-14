@@ -4,7 +4,7 @@ from pyinfra.modules import apt, files, mysql, python
 SUDO = True
 
 
-if host.fact.linux_distribution['name'] != 'Debian':
+if host.fact.linux_name != 'Debian':
     # Raises an exception mid-deploy
     python.raise_exception(
         {'Ensure we are Debian'},

@@ -42,7 +42,7 @@ if host.fact.os == 'OpenBSD':
     server.shell({'OS_OPENBSD'}, 'echo OS_OPENBSD')
 
 
-distro = host.fact.linux_distribution['name']
+distro = host.fact.linux_name
 
 if distro in ('Ubuntu', 'Debian'):
     server.shell({'UBUNTU_DEBIAN'}, 'echo UBUNTU_DEBIAN')

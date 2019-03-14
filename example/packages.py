@@ -21,11 +21,7 @@ if 'bsd' in host.groups:
 
 
 # Work with facts about the remote host
-# Storing this fact to avoid typing it so much (because the example targets a whole bunch
-# of distros [& 2 OSs]).
-distro = host.fact.linux_distribution['name']
-
-if distro in ('Ubuntu', 'Debian'):
+if host.fact.linux_name in ('Ubuntu', 'Debian'):
     apt.packages(
         {'Install Pip & Git with apt'},
         ['git', 'python-pip'],
@@ -33,8 +29,8 @@ if distro in ('Ubuntu', 'Debian'):
         cache_time=3600,
     )
 
-elif distro in ('CentOS', 'Fedora'):
-    if distro == 'CentOS':
+elif host.fact.linux_name in ('CentOS', 'Fedora'):
+    if host.fact.linux_name == 'CentOS':
         # Both missing in the CentOS 7 Vagrant image
         yum.packages(
             {'Install wget & net-tools with yum'},
