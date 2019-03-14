@@ -127,14 +127,14 @@ def make_names_data(limit=None):
 
     logger.debug('Got Vagrant SSH info: \n{0}'.format(vagrant_ssh_info))
 
+    hosts = []
     current_host = None
 
     for line in vagrant_ssh_info:
         # Vagrant outputs an empty line between each host
         if not line:
-            # yield any previous host
             if current_host:
-                yield _make_name_data(current_host)
+                hosts.append(_make_name_data(current_host))
 
             current_host = None
             continue
@@ -142,9 +142,8 @@ def make_names_data(limit=None):
         key, value = line.split(' ', 1)
 
         if key == 'Host':
-            # yield any previous host
             if current_host:
-                yield _make_name_data(current_host)
+                hosts.append(_make_name_data(current_host))
 
             # Set the new host
             current_host = {
@@ -158,9 +157,11 @@ def make_names_data(limit=None):
             logger.debug('Extra Vagrant SSH key/value ({0}={1})'.format(
                 key, value,
             ))
-    else:
+
+    if current_host:
+        hosts.append(_make_name_data(current_host))
+
+    if not hosts:
         raise InventoryError('No running Vagrant instances found!')
 
-    # yield any leftover host
-    if current_host:
-        yield _make_name_data(current_host)
+    return hosts
