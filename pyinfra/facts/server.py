@@ -324,6 +324,7 @@ class LinuxDistribution(FactBase):
         r'(Debian) GNU/Linux ([0-9])()',
         r'(Gentoo) Base System release ([0-9])\.([0-9])',
         r'(Fedora) release ([0-9]+)()',
+        r'(Alpine) Linux v([0-9]+).([0-9]+)',
     ]
 
     @staticmethod
