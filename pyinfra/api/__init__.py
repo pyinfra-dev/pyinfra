@@ -9,7 +9,7 @@ from .exceptions import (  # noqa: F401
     InventoryError,
     OperationError,
 )
-from .facts import FactBase  # noqa: F401
+from .facts import FactBase, ShortFactBase  # noqa: F401
 from .inventory import Inventory  # noqa: F401
 from .operation import operation  # noqa: F401
 from .state import State  # noqa: F401
