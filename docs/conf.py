@@ -9,7 +9,7 @@ from better import better_theme_path
 from pyinfra import __version__
 
 
-copyright = 'pyinfra v{0} &mdash; {0}, Nick Barrett'.format(
+copyright = 'pyinfra v{0} — {1}, Nick Barrett'.format(
     __version__,
     date.today().year,
 )
@@ -20,7 +20,11 @@ extensions = [
     'sphinx.ext.napoleon',
 ]
 
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
+source_parsers = {
+    '.md': 'recommonmark.parser.CommonMarkParser',
+}
+
 master_doc = 'index'
 project = 'pyinfra'
 author = 'Fizzadar'

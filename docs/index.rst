@@ -14,6 +14,17 @@ It can be used for ad-hoc command execution, service deployment, configuration m
         The definitive guide to building a deploy with pyinfra.
 
 .. compound::
+    :doc:`examples`
+        A set of documented example deploys highlighting common patterns.
+
+.. compound::
+    :doc:`connectors`
+        Connectors allow pyinfra to seamlessly integrate with other tools.
+
+Reference
+---------
+
+.. compound::
     :doc:`operations`
         A list of all available operations and their arguments, eg ``apt.packages``.
 
@@ -29,9 +40,26 @@ It can be used for ad-hoc command execution, service deployment, configuration m
 
     getting_started
     deploys
+    examples
+    connectors
+
+.. toctree::
+    :hidden:
+    :maxdepth: 1
+    :caption: Deploy Reference
+
     operations
     facts
-    patterns
+
+.. toctree::
+    :hidden:
+    :maxdepth: 1
+    :caption: pyinfra API
+
+    api/modules
+    api/deploys
+    api/example
+    api/reference
 
 .. toctree::
     :hidden:
@@ -41,16 +69,6 @@ It can be used for ad-hoc command execution, service deployment, configuration m
     deploy_process
     performance
     compatibility
-
-.. toctree::
-    :hidden:
-    :maxdepth: 1
-    :caption: API Documentation
-
-    api/example
-    api/reference
-    api/modules
-    api/deploys
 
 .. toctree::
     :hidden:

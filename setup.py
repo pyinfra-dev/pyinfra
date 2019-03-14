@@ -50,6 +50,7 @@ DEV_REQUIRES = TEST_REQUIRES + (
     'sphinx==1.7.7',
     'sphinx-autobuild==0.7.1',
     'sphinx-better-theme==0.1.5',
+    'recommonmark==0.5.0',
 
     # Convert markdowns to rst for long_description
     'pypandoc==1.4',
@@ -77,10 +78,8 @@ try:
     # Strip out the example image because pypi's RST processing ignores width
     long_description = '\n'.join(
         line for line in long_description.split('\n')
-        if line not in (
-            'When you run pyinfra you\'ll see something like:',
-            '![](https://raw.githubusercontent.com/Fizzadar/pyinfra/develop/docs/example_deploy.png)',
-        )
+        if 'example_deploy.png' not in line
+        and line is not 'When you run pyinfra you\'ll see something like:'
     )
 
     long_description = convert_text(long_description, 'rst', 'markdown')

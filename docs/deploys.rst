@@ -1,5 +1,5 @@
-Deploys
-=======
+Writing Deploys
+===============
 
 The definitive guide to writing a pyinfra deploys.
 
@@ -252,7 +252,7 @@ Roles can be used to break out deploy logic into multiple files. They can also b
     # Operations in this file will be added to the hosts in group "my_group"
     local.include('tasks/limited_role.py', hosts=inventory.my_group)
 
-See more in :doc:`patterns: groups & roles <./patterns/groups_roles>`.
+See more in :doc:`examples: groups & roles <./examples/groups_roles>`.
 
 Global Arguments
 ~~~~~~~~~~~~~~~~

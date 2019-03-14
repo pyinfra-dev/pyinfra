@@ -8,8 +8,8 @@ Or as part of :doc:`a deploy <deploys>`:
 
 .. code:: py
 
-    if host.fact.linux_distribution['name'] == 'Ubuntu':
-        spt.packages(...)
+    if host.fact.linux_name == 'Ubuntu':
+        apt.packages(...)
 
 All The Facts
 _____________

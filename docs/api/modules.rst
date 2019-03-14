@@ -1,5 +1,5 @@
 Writing Modules
-==================
+===============
 
 At the core of pyinfra lie facts and operations. These are namespaced as different
 modules. This guide should help you get started writing both operations and facts.

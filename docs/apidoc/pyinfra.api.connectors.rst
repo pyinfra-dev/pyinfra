@@ -18,6 +18,7 @@ Submodules
 
 .. toctree::
 
+   pyinfra.api.connectors.docker
    pyinfra.api.connectors.local
    pyinfra.api.connectors.ssh
    pyinfra.api.connectors.vagrant
