@@ -25,8 +25,8 @@ def _get_vagrant_ssh_config(queue, progress, target):
 
 
 def _get_vagrant_config(limit=None):
-    if limit:
-        limit = limit.split(',')  # accept multiple comma separated VM names
+    if limit and not isinstance(limit, list):
+        limit = [limit]
 
     with progress_spinner({'vagrant status'}) as progress:
         output = local.shell(
