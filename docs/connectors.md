@@ -11,7 +11,7 @@ The `@docker` connector allows you to build Docker containers using pyinfra.
 pyinfra @docker/alpine:3.8 deploy.py
 
 # pyinfra can build multiple Docker images in parallel
-pyinfra @docker/alpine:3.8,ubuntu:bionic deploy.py
+pyinfra @docker/alpine:3.8,@docker/ubuntu:bionic deploy.py
 ```
 
 ## `@local`
@@ -34,5 +34,5 @@ pyinfra @vagrant deploy.py
 pyinfra @vagrant/my-vm-name deploy.py
 
 # Run on multiple named VMs
-pyinfra @vagrant/my-vm-name,another-vm-name deploy.py
+pyinfra @vagrant/my-vm-name,@vagrant/another-vm-name deploy.py
 ```
