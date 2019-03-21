@@ -59,6 +59,8 @@ class State(object):
     Manages state for a pyinfra deploy.
     '''
 
+    initialised = False
+
     # A pyinfra.api.Inventory which stores all our pyinfra.api.Host's
     inventory = None
 
@@ -92,7 +94,11 @@ class State(object):
     deploy_dir = None  # base directory for locating files/templates/etc
     current_op_file = 0  # increments for each file excuted to maintain order
 
-    def __init__(self, inventory, config=None, initial_limit=None):
+    def __init__(self, inventory=None, config=None, **kwargs):
+        if inventory:
+            self.init(inventory, config, **kwargs)
+
+    def init(self, inventory, config, initial_limit=None):
         # Config validation
         #
 
@@ -209,6 +215,8 @@ class State(object):
 
         # Assign state back references to inventory & config
         inventory.state = config.state = self
+
+        self.initialised = True
 
     def limit(self, hosts):
         logger.warning((

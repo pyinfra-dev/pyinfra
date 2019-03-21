@@ -322,6 +322,18 @@ def _main(
     pyinfra INVENTORY exec -- echo "hello world"
     pyinfra INVENTORY fact os [users]...'''.format(operations))
 
+    # Create an empty/unitialised state object
+    state = State()
+    pseudo_state.set(state)
+
+    # Setup printing on the new state
+    print_output = verbosity > 0
+    print_fact_output = verbosity > 1
+
+    state.print_output = print_output  # -v
+    state.print_fact_info = print_output  # -v
+    state.print_fact_output = print_fact_output  # -vv
+
     print('--> Loading config...')
 
     # Load up any config.py from the filesystem
@@ -373,30 +385,19 @@ def _main(
                 if any(fnmatch(host.name, limit) for limit in limits)
             ]
 
-    # If --debug-data dump & exit
-    if debug_data:
-        print_inventory(inventory)
-        _exit()
-
     # Attach to pseudo inventory
     pseudo_inventory.set(inventory)
 
-    # Create/set the state, passing any initial --limit
-    state = State(inventory, config, initial_limit=limit_hosts)
+    # Initialise the state, passing any initial --limit
+    state.init(inventory, config, initial_limit=limit_hosts)
+
+    # If --debug-data dump & exit
+    if debug_data:
+        print_inventory(state)
+        _exit()
 
     # Set the deploy directory
     state.deploy_dir = deploy_dir
-
-    # Setup printing on the new state
-    print_output = verbosity > 0
-    print_fact_output = verbosity > 1
-
-    state.print_output = print_output  # -v
-    state.print_fact_info = print_output  # -v
-    state.print_fact_output = print_fact_output  # -vv
-
-    # Attach to pseudo state
-    pseudo_state.set(state)
 
     # Setup the data to be passed to config hooks
     hook_data = FallbackDict(
