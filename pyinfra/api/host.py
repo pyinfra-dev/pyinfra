@@ -87,6 +87,12 @@ class Host(object):
 
         return self.connection
 
+    def disconnect(self, state):
+        # Disconnect is an optional function for executors if needed
+        disconnect_func = getattr(self.executor, 'disconnect', None)
+        if disconnect_func:
+            return disconnect_func(state, self)
+
     def run_shell_command(self, state, *args, **kwargs):
         return self.executor.run_shell_command(state, self, *args, **kwargs)
 

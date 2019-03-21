@@ -45,3 +45,8 @@ def connect_all(state):
 
     # Remove those that failed, triggering FAIL_PERCENT check
     state.fail_hosts(failed_hosts, activated_count=len(hosts))
+
+
+def disconnect_all(state):
+    for host in state.activated_hosts:  # only hosts we connected to please!
+        host.disconnect(state)  # normally a noop

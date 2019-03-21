@@ -19,7 +19,7 @@ from pyinfra import (
     pseudo_state,
 )
 from pyinfra.api import State
-from pyinfra.api.connect import connect_all
+from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import NoGroupError, PyinfraError
 from pyinfra.api.facts import get_facts, is_fact
 from pyinfra.api.operation import add_op
@@ -508,5 +508,8 @@ def _main(
 
     print('--> Results:')
     print_results(state)
+
+    # Triggers any executor disconnect requirements
+    disconnect_all(state)
 
     _exit()
