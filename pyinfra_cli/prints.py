@@ -134,8 +134,11 @@ def print_fact(fact_data):
     print(jsonify(fact_data, indent=4, default=json_encode))
 
 
-def print_inventory(inventory):
-    for host in inventory:
+def print_inventory(state):
+    for host in state.inventory:
+        if not state.is_host_in_limit(host):
+            continue
+
         print()
         print('--> Data for: {0}'.format(click.style(host.name, bold=True)))
         print(jsonify(host.data, indent=4, default=json_encode))
