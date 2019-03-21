@@ -9,8 +9,6 @@ import sys
 import click
 import gevent
 
-from colorama import init as colorama_init
-
 import pyinfra
 
 from .legacy import run_main_with_legacy_arguments
@@ -19,9 +17,6 @@ from .main import cli, main
 
 # Set CLI mode
 pyinfra.is_cli = True
-
-# Init colorama for Windows ANSI color support
-colorama_init()
 
 # Don't write out deploy.pyc/config.pyc etc
 sys.dont_write_bytecode = True
