@@ -58,7 +58,7 @@ class OperationMeta(object):
 
 def add_op(state, op_func, *args, **kwargs):
     '''
-    Prepare & add an operation to pyinfra.state by executing it on all hosts.
+    Prepare & add an operation to ``pyinfra.state`` by executing it on all hosts.
 
     Args:
         state (``pyinfra.api.State`` obj): the deploy state to add the operation

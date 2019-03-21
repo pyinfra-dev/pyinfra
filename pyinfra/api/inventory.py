@@ -36,11 +36,11 @@ class Inventory(object):
 
     Args:
         names_data: tuple of ``(names, data)``
-        ssh_user: default SSH user
-        ssh_port: default SSH port
-        ssh_key: default SSH key filename
-        ssh_key_password: default password for the SSH key
-        ssh_password: default SSH password
+        ssh_user: override SSH user
+        ssh_port: override SSH port
+        ssh_key: override SSH key filename
+        ssh_key_password: override password for the SSH key
+        ssh_password: override SSH password
         **groups: map of group names -> ``(names, data)``
     '''
 

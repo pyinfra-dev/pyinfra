@@ -114,9 +114,10 @@ def _get_private_key(state, key_filename, key_password):
 
 
 def _make_paramiko_kwargs(state, host):
-
-    kwargs = {'allow_agent': False,
-              'look_for_keys': False}
+    kwargs = {
+        'allow_agent': False,
+        'look_for_keys': False,
+    }
 
     for key, value in (
         ('username', host.data.ssh_user),
