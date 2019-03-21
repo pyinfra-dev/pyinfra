@@ -16,11 +16,9 @@ def connect_all(state):
         state (``pyinfra.api.State`` obj): the state containing an inventory to connect to
     '''
 
-    # Don't connect to anything within our (top level, --limit) limit
     hosts = [
         host for host in state.inventory
-        if not isinstance(state.limit_hosts, list)
-        or host in state.limit_hosts
+        if state.is_host_in_limit(host)
     ]
 
     greenlet_to_host = {

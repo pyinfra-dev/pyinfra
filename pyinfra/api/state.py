@@ -389,6 +389,17 @@ class State(object):
                     int(round(percent_failed)),
                 ))
 
+    def is_host_in_limit(self, host):
+        '''
+        Returns a boolean indicating if the host is within the current state limit.
+        '''
+
+        limit_hosts = self.limit_hosts
+
+        if not isinstance(limit_hosts, list):
+            return True
+        return host in limit_hosts
+
     def get_temp_filename(self, hash_key=None):
         '''
         Generate a temporary filename for this deploy.

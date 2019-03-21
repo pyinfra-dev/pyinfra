@@ -193,15 +193,14 @@ def print_rows(rows):
         func(line)
 
 
-def print_meta(state, inventory):
-    group_combinations = _get_group_combinations(inventory)
+def print_meta(state):
+    group_combinations = _get_group_combinations(state.inventory)
     rows = []
 
     for i, (groups, hosts) in enumerate(six.iteritems(group_combinations), 1):
         hosts = [
             host for host in hosts
-            if not isinstance(state.limit_hosts, list)
-            or host in state.limit_hosts
+            if state.is_host_in_limit(host)
         ]
 
         if not hosts:
@@ -237,15 +236,14 @@ def print_meta(state, inventory):
     print_rows(rows)
 
 
-def print_results(state, inventory):
-    group_combinations = _get_group_combinations(inventory)
+def print_results(state):
+    group_combinations = _get_group_combinations(state.inventory)
     rows = []
 
     for i, (groups, hosts) in enumerate(six.iteritems(group_combinations), 1):
         hosts = [
             host for host in hosts
-            if not isinstance(state.limit_hosts, list)
-            or host in state.limit_hosts
+            if state.is_host_in_limit(host)
         ]
 
         if not hosts:

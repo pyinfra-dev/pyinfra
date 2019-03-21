@@ -479,7 +479,7 @@ def _main(
     # Always show meta output
     print()
     print('--> Proposed changes:')
-    print_meta(state, inventory)
+    print_meta(state)
 
     # If --debug-facts or --debug-operations, print and exit
     if debug_facts or debug_operations:
@@ -507,6 +507,6 @@ def _main(
     run_hook(state, 'after_deploy', hook_data)
 
     print('--> Results:')
-    print_results(state, inventory)
+    print_results(state)
 
     _exit()
