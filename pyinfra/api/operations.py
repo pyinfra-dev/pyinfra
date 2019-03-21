@@ -329,7 +329,7 @@ def _run_single_op(state, op_hash):
             ]
 
         for batch in batches:
-            with progress_spinner(state.inventory) as progress:
+            with progress_spinner(batch) as progress:
                 # Spawn greenlet for each host
                 greenlet_to_host = {
                     state.pool.spawn(_run_server_op, state, host, op_hash): host
