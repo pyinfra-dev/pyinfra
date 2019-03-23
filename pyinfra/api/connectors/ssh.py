@@ -244,7 +244,9 @@ def run_shell_command(
 
     command = make_command(command, **command_kwargs)
 
-    logger.debug('Running command on {0}: {1}'.format(host.name, command))
+    logger.debug('Running command on {0}: (pty={1}) {2}'.format(
+        host.name, get_pty, command,
+    ))
 
     if print_output:
         print('{0}>>> {1}'.format(host.print_prefix, command))
