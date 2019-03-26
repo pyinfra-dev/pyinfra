@@ -1,4 +1,4 @@
-<h1><a href="https://pyinfra.readthedocs.io"><img src="docs/static/logo_small.png" height="48px" /></a></h1>
+<h1><a href="https://pyinfra.readthedocs.io"><img src="docs/static/logo_full.png" height="48px" /></a></h1>
 
 [![PyPI version](https://badge.fury.io/py/pyinfra.svg)](https://pypi.python.org/pypi/pyinfra) [![Travis.CI status](https://travis-ci.org/Fizzadar/pyinfra.svg?branch=develop)](https://travis-ci.org/Fizzadar/pyinfra)
 
