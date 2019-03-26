@@ -1,10 +1,15 @@
-# v0.9.dev1 (WIP)
+# v0.9.dev2 (WIP)
 
++ Add `@docker` connector, to create docker images
+    * eg: `pyinfra @docker/ubuntu:bionic deploy.py`
+    * this will spawn a container, execute operations on it and save it as an image
++ Add `linux_name` "short" fact
++ [Experimental]: parse Ansible inventory files (ini format)
 + Handle template errors in arguments better
 + Capture/handle template syntax errors
 + Remove the `AttrData` and all `Attr*` classes now we have operation ordering
-+ [Experimental]: parse Ansible inventory files
 + Fix execute `git fetch` before changing branch
++ Rename `config.TIMEOUT` -> `config.CONNECT_TIMEOUT` (old deprecated)
 
 
 # v0.8
@@ -167,6 +172,7 @@ pyinfra @local fact arch
 
 ```py
 from pyinfra.api import deploy
+from pyinfra.modules import apt
 
 @deploy('Install Openstack controller')
 def install_openstack_controller(state, host):
