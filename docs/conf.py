@@ -39,6 +39,8 @@ html_static_path = ['static']
 
 templates_path = ['templates']
 
+html_favicon = 'static/logo_small.png'
+
 html_sidebars = {
     '**': ['pyinfra_sidebar.html'],
 }
