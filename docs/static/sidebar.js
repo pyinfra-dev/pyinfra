@@ -16,7 +16,14 @@
     }
 
     window.addEventListener('load', function() {
+        var content = document.querySelector('.documentwrapper');
         sidebar = document.querySelector('.sphinxsidebarwrapper');
+
+        // Catch the case where the sidebar is taller than the content
+        if (sidebar.clientHeight > content.clientHeight) {
+            return;
+        }
+
         sidebarTop = sidebar.offsetTop - 14;
 
         if (sidebar.clientHeight < window.innerHeight) {
