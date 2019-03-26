@@ -17,7 +17,7 @@ body {
 a, a:visited {
     text-decoration: none;
     border-bottom: 1px solid #D7D7D7;
-    color: #1F8390;
+    color: #4e8856;
 }
 a:visited {
     opacity: 0.9;
@@ -40,7 +40,7 @@ h2, h2:first-child {
 
 code {
     background: #F7F7F7;
-    color: #4070a0;
+    color: #4e8856;
     padding: 2px;
     border: 1px solid #E1E1E1;
 }
@@ -58,6 +58,10 @@ pre code {
     border: none;
     margin-top: 10px !important;
     display: block;
+    font-size: 1.5rem;
+}
+.home-link img {
+    vertical-align: middle;
 }
 
 header#pageheader, footer#pagefooter, .related, .document {
