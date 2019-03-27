@@ -25,7 +25,7 @@ def build_facts():
 
     # Now we generate a facts.rst describing the use of the facts as:
     # host.data.<snake_case_fact>
-    for module_name in facts.__all__:
+    for module_name in sorted(facts.__all__):
         print('--> Doing fact module: {0}'.format(module_name))
         module = getattr(facts, module_name)
 
