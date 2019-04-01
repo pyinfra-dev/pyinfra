@@ -1,6 +1,6 @@
 import re
 
-from six.moves.configparser import ConfigParser
+from configparser import ConfigParser
 
 from pyinfra import logger
 
@@ -22,14 +22,14 @@ def _parse_ansible_hosts(hosts):
 
 
 def load_ansible_ini_inventory(inventory_filename):
+    logger.info('Trying Ansible inventory format...')
+
     config = ConfigParser(
         delimiters=(' '),  # we only handle the hostnames for now
         allow_no_value=True,  # we don't by default have = values
         interpolation=None,  # remove any Python interpolation
     )
     config.read(inventory_filename)
-
-    logger.info('Parsing Ansible inventory...')
 
     groups = {}
 

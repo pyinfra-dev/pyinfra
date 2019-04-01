@@ -101,14 +101,11 @@ def _get_groups_from_filename(inventory_filename):
         }
 
     # Syntax error implies this is not a Python file! Let's try parsing as Ansible
-    except SyntaxError as syntax_error:
+    except SyntaxError:
         if inventory_filename.endswith('.py'):
             raise
 
-        try:
-            return load_ansible_ini_inventory(inventory_filename)
-        except Exception:
-            raise syntax_error
+        return load_ansible_ini_inventory(inventory_filename)
 
 
 def make_inventory(

@@ -28,6 +28,7 @@ INSTALL_REQUIRES = (
     'python-dateutil>2,<3',
     'six>1,<2',
     'setuptools',
+    'configparser',
 )
 
 TEST_REQUIRES = (
