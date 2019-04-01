@@ -1,4 +1,4 @@
-# v0.9.dev2 (WIP)
+# v0.9.dev3 (WIP)
 
 + Add `@docker` connector, to create docker images
     * eg: `pyinfra @docker/ubuntu:bionic deploy.py`
@@ -7,9 +7,12 @@
 + [Experimental]: parse Ansible inventory files (ini format)
 + Handle template errors in arguments better
 + Capture/handle template syntax errors
-+ Remove the `AttrData` and all `Attr*` classes now we have operation ordering
-+ Fix execute `git fetch` before changing branch
 + Rename `config.TIMEOUT` -> `config.CONNECT_TIMEOUT` (old deprecated)
++ Fix execute `git fetch` before changing branch
++ Fix `find_in_file` fact for files with `~` in the name
+
+Internal changes:
++ Remove the `AttrData` and all `Attr*` classes now we have operation ordering
 
 
 # v0.8
