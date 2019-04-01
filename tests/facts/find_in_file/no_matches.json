@@ -1,7 +1,6 @@
 {
     "arg": ["/home/pyinfra/mylink", "test"],
     "output": [
-        "/home/pyinfra/mylink",
         "_exists_/home/pyinfra/mylink"
     ],
     "fact": []
