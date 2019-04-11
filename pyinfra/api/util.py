@@ -486,7 +486,7 @@ def get_file_sha1(filename_or_io):
     return digest
 
 
-def read_buffer(io, print_output=False, print_func=False):
+def read_buffer(io, print_output=False, print_func=None):
     '''
     Reads a file-like buffer object into lines and optionally prints the output.
     '''
