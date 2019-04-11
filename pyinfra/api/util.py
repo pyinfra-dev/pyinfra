@@ -534,9 +534,11 @@ def read_buffer(io, print_output=False, print_func=None):
     def _print(line):
         if print_output:
             if print_func:
-                print(print_func(line))
+                formatted_line = print_func(line)
             else:
-                print(line)
+                formatted_line = line
+            encoded_line = unicode(formatted_line).encode('utf-8')
+            print(encoded_line)
 
     out = []
 
