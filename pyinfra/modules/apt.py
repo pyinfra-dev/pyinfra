@@ -232,6 +232,7 @@ def packages(
     packages=None, present=True, latest=False,
     update=False, cache_time=None, upgrade=False,
     force=False, no_recommends=False,
+    allow_downgrades=False,
 ):
     '''
     Install/remove/update packages & update apt.
@@ -244,6 +245,7 @@ def packages(
     + upgrade: run apt upgrade
     + force: whether to force package installs by passing `--force-yes` to apt
     + no_recommends: don't install recommended packages
+    + allow_downgrades: allow downgrading packages with version (--allow-downgrades)
 
     Versions:
         Package versions can be pinned like apt: ``<pkg>=<version>``
@@ -260,11 +262,11 @@ def packages(
     if upgrade:
         yield _upgrade(state, host)
 
-    install_command = (
-        'install --no-install-recommends'
-        if no_recommends is True
-        else 'install'
-    )
+    install_command = 'install'
+    if no_recommends is True:
+        install_command += ' --no-install-recommends'
+    if allow_downgrades:
+        install_command += ' --allow-downgrades'
 
     # Compare/ensure packages are present/not
     yield ensure_packages(
