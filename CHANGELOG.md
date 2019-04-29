@@ -1,13 +1,15 @@
-# v0.9.dev3 (WIP)
+# v0.9
 
 + Add `@docker` connector, to create docker images
     * eg: `pyinfra @docker/ubuntu:bionic deploy.py`
     * this will spawn a container, execute operations on it and save it as an image
 + Add `linux_name` "short" fact
++ Add `allow_downgrades` keyword argument to `apt.packages`
 + [Experimental]: parse Ansible inventory files (ini format)
 + Handle template errors in arguments better
 + Capture/handle template syntax errors
 + Rename `config.TIMEOUT` -> `config.CONNECT_TIMEOUT` (old deprecated)
++ Properly handle logging unicode output
 + Fix execute `git fetch` before changing branch
 + Fix `find_in_file` fact for files with `~` in the name
 
