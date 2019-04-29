@@ -55,7 +55,7 @@ Install/remove/update packages & update apt.
 
     apt.packages(
         packages=None, present=True, latest=False, update=False, cache_time=None, upgrade=False,
-        force=False, no_recommends=False
+        force=False, no_recommends=False, allow_downgrades=False
     )
 
 + **packages**: list of packages to ensure
@@ -66,6 +66,7 @@ Install/remove/update packages & update apt.
 + **upgrade**: run apt upgrade
 + **force**: whether to force package installs by passing `--force-yes` to apt
 + **no_recommends**: don't install recommended packages
++ **allow_downgrades**: allow downgrading packages with version (--allow-downgrades)
 
 Versions:
     Package versions can be pinned like apt: ``<pkg>=<version>``
