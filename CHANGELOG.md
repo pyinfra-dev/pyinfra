@@ -1,3 +1,7 @@
+# v0.9.1
+
++ Fix for Python 3 (use `six` > `unicode`)
+
 # v0.9
 
 + Add `@docker` connector, to create docker images
