@@ -537,7 +537,7 @@ def read_buffer(io, print_output=False, print_func=None):
                 formatted_line = print_func(line)
             else:
                 formatted_line = line
-            encoded_line = unicode(formatted_line).encode('utf-8')
+            encoded_line = six.text_type(formatted_line).encode('utf-8')
             print(encoded_line)
 
     out = []
