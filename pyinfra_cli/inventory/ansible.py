@@ -14,7 +14,7 @@ def _parse_ansible_hosts(hosts):
             start, end = int(bits[0]), int(bits[1])
             step = int(bits[2]) if len(bits) > 2 else 1
 
-            for n in range(start, end, step):
+            for n in range(start, end + 1, step):
                 hostname = host.replace(expand_string, '{0}'.format(n))
                 yield hostname
             continue
