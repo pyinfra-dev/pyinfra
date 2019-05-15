@@ -494,11 +494,12 @@ def read_buffer(io, print_output=False, print_func=None):
     def _print(line):
         if print_output:
             if print_func:
-                formatted_line = print_func(line)
-            else:
-                formatted_line = line
-            encoded_line = six.text_type(formatted_line).encode('utf-8')
-            print(encoded_line)
+                line = print_func(line)
+
+            if six.PY2:  # Python2 must print unicode as bytes (encoded)
+                line = line.encode('utf-8')
+
+            print(line)
 
     out = []
 
