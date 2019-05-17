@@ -60,7 +60,7 @@ nettools_1_regexes = [
 
 nettools_2_regexes = [
     (
-        r'^inet ([0-9\.]+)\s+netmask ([0-9\.fx]+)\s+broadcast ([0-9\.]+)$',
+        r'^inet ([0-9\.]+)\s+netmask ([0-9\.fx]+)(?:\s+broadcast ([0-9\.]+))?$',
         ('ipv4', 'address', 'netmask', 'broadcast'),
     ),
     (
@@ -116,13 +116,15 @@ class NetworkDevices(FactBase):
     command = 'ifconfig'
     default = dict
 
+    # Definition of valid interface names for Linux:
+    # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/net/core/dev.c?h=v5.1.3#n1020
     _start_regexes = [
         (
-            r'^([a-z0-9_:]+)\s+Link encap:',
+            r'^([^/: \s]+)\s+Link encap:',
             lambda lines: _parse_regexes(nettools_1_regexes, lines),
         ),
         (
-            r'^([a-z0-9_:]+): flags=',
+            r'^([^/: \s]+): flags=',
             lambda lines: _parse_regexes(nettools_2_regexes, lines),
         ),
     ]
