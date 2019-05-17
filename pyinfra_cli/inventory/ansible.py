@@ -11,11 +11,20 @@ def _parse_ansible_hosts(hosts):
         if expand_match:
             expand_string = host[expand_match.start():expand_match.end()]
             bits = expand_string[1:-1].split(':')  # remove the [] either side
+
+            zfill = 0
+            if bits[0].startswith('0'):
+                zfill = len(bits[0])
+
             start, end = int(bits[0]), int(bits[1])
             step = int(bits[2]) if len(bits) > 2 else 1
 
             for n in range(start, end + 1, step):
-                hostname = host.replace(expand_string, '{0}'.format(n))
+                number_as_string = '{0}'.format(n)
+                if zfill:
+                    number_as_string = number_as_string.zfill(zfill)
+
+                hostname = host.replace(expand_string, number_as_string)
                 yield hostname
             continue
         yield host
