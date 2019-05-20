@@ -53,9 +53,6 @@ DEV_REQUIRES = TEST_REQUIRES + (
     'sphinx-better-theme==0.1.5',
     'recommonmark==0.5.0',
 
-    # Convert markdowns to rst for long_description
-    'pypandoc==1.4',
-
     # Linting
     'flake8',
     'flake8-commas',
@@ -70,32 +67,11 @@ with open('pyinfra/version.py') as f:
     exec(f.read(), version_data)
 
 
-# Get the long_description from the README, hopefully as rst
-long_description = open('README.md', 'r').read()
-
-try:
-    from pypandoc import convert_text
-
-    # Strip out the example image because pypi's RST processing ignores width
-    long_description = '\n'.join(
-        line for line in long_description.split('\n')
-        if 'example_deploy.png' not in line
-        and line is not 'When you run pyinfra you\'ll see something like:'
-    )
-
-    long_description = convert_text(long_description, 'rst', 'markdown')
-
-except (ImportError, OSError):
-    # Ignore this - release.sh checks for making releases
-    pass
-
-
 if __name__ == '__main__':
     setup(
         version=version_data['__version__'],
         name='pyinfra',
         description='Deploy stuff by diff-ing the state you want against the remote server.',
-        long_description=long_description,
         author='Nick / Fizzadar',
         author_email='pointlessrambler@gmail.com',
         license='MIT',
@@ -111,7 +87,7 @@ if __name__ == '__main__':
             'dev': DEV_REQUIRES,
             'test': TEST_REQUIRES,
         },
-        classifiers=(
+        classifiers=[
             'Development Status :: 4 - Beta',
             'Intended Audience :: Developers',
             'Intended Audience :: System Administrators',
@@ -120,5 +96,5 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 2',
             'Programming Language :: Python :: 3',
             'Topic :: System :: Systems Administration',
-        ),
+        ],
     )
