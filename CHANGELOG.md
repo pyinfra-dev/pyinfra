@@ -1,3 +1,9 @@
+# v0.9.2
+
++ Improve parsing of `ifconfig` for `network_devices` fact (@gchazot)
++ Make printing unicode consistent between Python 2/3
++ Fix parsing Ansible inventories with left-padding in ranges
+
 # v0.9.1
 
 + Fix for Python 3 (use `six` > `unicode`)
