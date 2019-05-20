@@ -116,6 +116,7 @@ Copy a local file to the remote system.
 + **user**: user to own the files
 + **group**: group to own the files
 + **mode**: permissions of the files
++ **add_deploy_dir**: local_filename is relative to the deploy directory
 
 
 :code:`files.replace`
