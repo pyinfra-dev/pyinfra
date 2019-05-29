@@ -1,0 +1,22 @@
+{
+    "args": ["myrepo", "/home/myrepo"],
+    "kwargs": {
+        "update_submodules": true,
+        "recursive_submodules": true
+    },
+    "facts": {
+        "directory": {
+            "/home/myrepo": {},
+            "/home/myrepo/.git": {
+                "mode": 0
+            }
+        },
+        "git_branch": {
+            "/home/myrepo": "master"
+        }
+    },
+    "commands": [
+        "cd /home/myrepo && git pull",
+        "cd /home/myrepo && git submodule update --recursive"
+    ]
+}
