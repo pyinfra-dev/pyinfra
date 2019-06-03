@@ -48,6 +48,7 @@ def repo(
     state, host, source, target,
     branch='master', pull=True, rebase=False,
     user=None, group=None, use_ssh_user=False, ssh_keyscan=False,
+    update_submodules=False, recursive_submodules=False,
 ):
     '''
     Clone/pull git repositories.
@@ -60,6 +61,8 @@ def repo(
     + user: chown files to this user after
     + group: chown files to this group after
     + ssh_keyscan: keyscan the remote host if not in known_hosts before clone/pull
+    + update_submodules: update any git submodules
+    + recursive_submodules: update git submodules recursively
 
     + [DEPRECATED] use_ssh_user: whether to use the SSH user to clone/pull
 
@@ -118,6 +121,12 @@ def repo(
                 git_commands.append('pull --rebase')
             else:
                 git_commands.append('pull')
+
+    if update_submodules:
+        if recursive_submodules:
+            git_commands.append('submodule update --recursive')
+        else:
+            git_commands.append('submodule update')
 
     # Attach prefixes for directory
     command_prefix = 'cd {0} && git'.format(target)
