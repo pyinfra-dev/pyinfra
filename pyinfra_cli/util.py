@@ -22,6 +22,7 @@ except ImportError:
     io_bases = IOBase
 
 import click
+import six
 
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.util import FallbackDict
@@ -94,6 +95,9 @@ def json_encode(obj):
 
     elif isinstance(obj, set):
         return list(obj)
+
+    elif isinstance(obj, six.binary_type):
+        return obj.decode()
 
     else:
         raise TypeError('Cannot serialize: {0} ({1})'.format(type(obj), obj))
