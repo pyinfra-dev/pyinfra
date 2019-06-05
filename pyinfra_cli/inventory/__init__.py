@@ -9,7 +9,6 @@ import six
 
 from pyinfra import logger, pseudo_inventory
 from pyinfra.api.inventory import Inventory
-
 from pyinfra_cli.util import exec_file
 
 from .ansible import load_ansible_ini_inventory
@@ -21,7 +20,8 @@ ALLOWED_HOST_TYPES = tuple(
 
 # Group data can be any "core" Python type
 ALLOWED_DATA_TYPES = tuple(
-    six.string_types + six.integer_types
+    six.integer_types
+    + (six.text_type, six.binary_type)
     + (bool, dict, list, set, tuple, float, complex),
 )
 
