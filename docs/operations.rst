@@ -1,23 +1,9 @@
 Operations Index
 ================
 
-Operations are used to describe changes to make to systems in the inventory. You use them to define state and pyinfra will make any necessary changes to reach that state. They can be executed via the command line:
+Operations are used to describe changes to make to systems in the inventory. You use them to define state and pyinfra will make any necessary changes to reach that state. They can be executed via the `command line <getting_started.html#using-the-pyinfra-command-line>`_ or by :doc:`creating a deploy <deploys>`.
 
-.. code:: sh
-
-    pyinfra my-host.net files.directory /opt/my_app,user=ubuntu
-
-Or by :doc:`creating a deploy <deploys>`:
-
-.. code:: py
-
-    files.directory(
-        {'Create app directory'},
-        '/opt/my_app',
-        user='ubuntu',
-    )
-
-Operations are namespaced as different modules:
+All operations accept a set of `global arguments <deploys.html#global-arguments>`_ and are namespaced as different modules:
 
 .. toctree::
    :maxdepth: 2
