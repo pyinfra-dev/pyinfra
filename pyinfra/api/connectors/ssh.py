@@ -331,6 +331,7 @@ def _put_file(host, filename_or_io, remote_location):
 def put_file(
     state, host, filename_or_io, remote_filename,
     sudo=False, sudo_user=None, su_user=None, print_output=False,
+    **command_kwargs
 ):
     '''
     Upload file-ios to the specified host using SFTP. Supports uploading files
@@ -362,6 +363,7 @@ def put_file(
             state, host, command,
             sudo=sudo, sudo_user=sudo_user, su_user=su_user,
             print_output=print_output,
+            **command_kwargs
         )
 
         if status is False:

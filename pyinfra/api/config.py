@@ -42,6 +42,9 @@ class Config(object):
     # Only show errors, but don't count as failure
     IGNORE_ERRORS = False
 
+    # Shell to use to execute commands
+    SHELL = 'sh'
+
     def __init__(self, **kwargs):
         # Always apply some env
         env = kwargs.pop('ENV', {})

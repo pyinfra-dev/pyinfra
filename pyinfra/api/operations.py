@@ -50,6 +50,7 @@ def _run_server_op(state, host, op_hash):
     for i, command in enumerate(op_data['commands']):
         status = False
 
+        shell = op_meta['shell']
         sudo = op_meta['sudo']
         sudo_user = op_meta['sudo_user']
         su_user = op_meta['su_user']
@@ -66,6 +67,9 @@ def _run_server_op(state, host, op_hash):
 
             if 'su_user' in command:
                 su_user = command['su_user']
+
+            if 'shell' in command:
+                shell = command['shell']
 
             command = command['command']
 
@@ -104,6 +108,7 @@ def _run_server_op(state, host, op_hash):
                         state,
                         file_io,
                         remote_filename,
+                        shell=shell,
                         sudo=sudo,
                         sudo_user=sudo_user,
                         su_user=su_user,
@@ -126,6 +131,7 @@ def _run_server_op(state, host, op_hash):
                 status, stdout, stderr = host.run_shell_command(
                     state,
                     command.strip(),
+                    shell=shell,
                     sudo=sudo,
                     sudo_user=sudo_user,
                     su_user=su_user,
