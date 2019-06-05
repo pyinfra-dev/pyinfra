@@ -22,6 +22,7 @@ from paramiko import SSHException
 from six.moves import shlex_quote
 
 from pyinfra import logger
+from pyinfra.api import Config
 
 from .exceptions import PyinfraError
 
@@ -285,7 +286,7 @@ def make_command(
     sudo=False,
     sudo_user=None,
     preserve_sudo_env=False,
-    shell=None,
+    shell=Config.SHELL,
 ):
     '''
     Builds a shell command with various kwargs.
