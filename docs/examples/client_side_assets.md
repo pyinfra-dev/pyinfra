@@ -11,6 +11,7 @@ match) and the client assets are then built before pyinfra connects to any hosts
 
 from pyinfra import hook, local
 
+
 @hook.before_connect
 def check_branch(data, state):
     # Check local branch matches the deploy branch
@@ -22,6 +23,7 @@ def check_branch(data, state):
         raise hook.Error('We\'re on the wrong branch (want {0}, got {1})!'.format(
             branch, app_branch,
         ))
+
 
 @hook.before_connect
 def build_assets(data, state):

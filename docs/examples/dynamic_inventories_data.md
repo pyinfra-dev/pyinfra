@@ -9,6 +9,7 @@ For example, here we fetch the list of target hosts from some internal inventory
 
 import requests
 
+
 def get_servers():
     db = []
     web = []
@@ -23,6 +24,7 @@ def get_servers():
             web.append(server['hostname'])
 
     return db, web
+
 
 db_servers, web_servers = get_servers()
 ```
