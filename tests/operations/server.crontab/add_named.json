@@ -1,0 +1,14 @@
+{
+    "args": ["this_is_a_command"],
+    "kwargs": {
+        "name": "a-name"
+    },
+    "facts": {
+        "crontab": {}
+    },
+    "commands": [
+        "echo '# pyinfra-name=a-name' >> _tempfile_",
+        "echo '* * * * * this_is_a_command' >> _tempfile_",
+        "crontab  _tempfile_"
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "args": ["this_is_a_command"],
+    "kwargs": {
+        "user": "pyinfra"
+    },
+    "facts": {
+        "crontab": {
+            "pyinfra": {}
+        }
+    },
+    "commands": [
+        "echo '* * * * * this_is_a_command' >> _tempfile_",
+        "crontab -u pyinfra _tempfile_"
+    ]
+}

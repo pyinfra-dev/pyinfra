@@ -1,0 +1,29 @@
+{
+    "output": [
+        "* * * * * apt update",
+        "# this is a comment",
+        "# another line in the comment, wut!",
+        "0 0 * * * apt install -fy"
+    ],
+    "fact":  {
+        "apt update": {
+            "minute": "*",
+            "hour": "*",
+            "month": "*",
+            "day_of_month": "*",
+            "day_of_week": "*",
+            "comments": []
+        },
+        "apt install -fy": {
+            "minute": 0,
+            "hour": 0,
+            "month": "*",
+            "day_of_month": "*",
+            "day_of_week": "*",
+            "comments": [
+                "# this is a comment",
+                "# another line in the comment, wut!"
+            ]
+        }
+    }
+}
