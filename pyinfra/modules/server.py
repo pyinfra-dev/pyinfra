@@ -193,7 +193,7 @@ def sysctl(
 
 @operation
 def crontab(
-    state, host, command, present=True, user=None,
+    state, host, command, present=True, user=None, name=None,
     minute='*', hour='*', month='*', day_of_week='*', day_of_month='*',
 ):
     '''
@@ -202,6 +202,7 @@ def crontab(
     + command: the command for the cron
     + present: whether this cron command should exist
     + user: the user whose crontab to manage
+    + name: name the cronjob so future changes to the command will overwrite
     + minute: which minutes to execute the cron
     + hour: which hours to execute the cron
     + month: which months to execute the cron
@@ -209,13 +210,24 @@ def crontab(
     + day_of_month: which day of the month to execute the cron
 
     Cron commands:
-        The command is used to identify crontab entries - this means commands
-        must be unique within a given users crontab. If you require multiple
-        identical commands, prefix each with a nonce environment variable.
+        Unless ``name`` is specified the command is used to identify crontab entries.
+        This means commands must be unique within a given users crontab. If you require
+        multiple identical commands, provide a different name argument for each.
     '''
 
     crontab = host.fact.crontab(user)
-    exists = command in crontab
+    name_comment = '# pyinfra-name={0}'.format(name)
+
+    existing_crontab = crontab.get(command)
+    existing_crontab_match = command
+
+    if not existing_crontab and name:  # find the crontab by name if provided
+        for cmd, details in crontab.items():
+            if name_comment in details['comments']:
+                existing_crontab = details
+                existing_crontab_match = cmd
+
+    exists = existing_crontab is not None
 
     edit_commands = []
     temp_filename = state.get_temp_filename()
@@ -228,7 +240,7 @@ def crontab(
         day_of_week=day_of_week,
         day_of_month=day_of_month,
     )
-    existing_crontab_match = '.*{0}.*'.format(command)
+    existing_crontab_match = '.*{0}.*'.format(existing_crontab_match)
 
     # Don't want the cron and it does exist? Remove the line
     if not present and exists:
@@ -238,20 +250,23 @@ def crontab(
 
     # Want the cron but it doesn't exist? Append the line
     elif present and not exists:
+        if name:
+            edit_commands.append('echo {0} >> {1}'.format(
+                shlex_quote(name_comment), temp_filename,
+            ))
+
         edit_commands.append('echo {0} >> {1}'.format(
             shlex_quote(new_crontab_line), temp_filename,
         ))
 
     # We have the cron and it exists, do it's details? If not, replace the line
     elif present and exists:
-        existing_details = crontab[command]
-
         if any((
-            minute != existing_details['minute'],
-            hour != existing_details['hour'],
-            month != existing_details['month'],
-            day_of_week != existing_details['day_of_week'],
-            day_of_month != existing_details['day_of_month'],
+            minute != existing_crontab['minute'],
+            hour != existing_crontab['hour'],
+            month != existing_crontab['month'],
+            day_of_week != existing_crontab['day_of_week'],
+            day_of_month != existing_crontab['day_of_month'],
         )):
             edit_commands.append(sed_replace(
                 temp_filename, existing_crontab_match, new_crontab_line,
@@ -267,8 +282,8 @@ def crontab(
             yield 'crontab -l {0} > {1}'.format(' '.join(crontab_args), temp_filename)
 
         # Now yield any edits
-        for command in edit_commands:
-            yield command
+        for edit_command in edit_commands:
+            yield edit_command
 
         # Finally, use the tempfile to write a new crontab
         yield 'crontab {0} {1}'.format(' '.join(crontab_args), temp_filename)
