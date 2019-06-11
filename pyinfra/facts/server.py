@@ -197,10 +197,12 @@ class Crontab(FactBase):
     @staticmethod
     def process(output):
         crons = {}
+        current_comments = []
 
         for line in output:
             line = line.strip()
             if not line or line.startswith('#'):
+                current_comments.append(line)
                 continue
 
             minute, hour, day_of_month, month, day_of_week, command = line.split(' ', 5)
@@ -210,7 +212,9 @@ class Crontab(FactBase):
                 'month': try_int(month),
                 'day_of_month': try_int(day_of_month),
                 'day_of_week': try_int(day_of_week),
+                'comments': current_comments,
             }
+            current_comments = []
 
         return crons
 
