@@ -27,7 +27,8 @@ Clone/pull git repositories.
 
     git.repo(
         source, target, branch='master', pull=True, rebase=False, user=None, group=None,
-        use_ssh_user=False, ssh_keyscan=False, update_submodules=False, recursive_submodules=False
+        use_ssh_user=False, ssh_keyscan=False, update_submodules=False,
+        recursive_submodules=False
     )
 
 + **source**: the git source URL
@@ -38,8 +39,8 @@ Clone/pull git repositories.
 + **user**: chown files to this user after
 + **group**: chown files to this group after
 + **ssh_keyscan**: keyscan the remote host if not in known_hosts before clone/pull
-+ **update_submodules**: update any submodules in the repository
-+ **recursive_submodules**: recursively update submodules in the repository
++ **update_submodules**: update any git submodules
++ **recursive_submodules**: update git submodules recursively
 
 + [DEPRECATED] use_ssh_user: whether to use the SSH user to clone/pull
 

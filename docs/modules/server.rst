@@ -13,13 +13,14 @@ Add/remove/update crontab entries.
 .. code:: python
 
     server.crontab(
-        command, present=True, user=None, minute='*', hour='*', month='*', day_of_week='*',
-        day_of_month='*'
+        command, present=True, user=None, name=None, minute='*', hour='*', month='*',
+        day_of_week='*', day_of_month='*'
     )
 
 + **command**: the command for the cron
 + **present**: whether this cron command should exist
 + **user**: the user whose crontab to manage
++ **name**: name the cronjob so future changes to the command will overwrite
 + **minute**: which minutes to execute the cron
 + **hour**: which hours to execute the cron
 + **month**: which months to execute the cron
@@ -27,9 +28,9 @@ Add/remove/update crontab entries.
 + **day_of_month**: which day of the month to execute the cron
 
 Cron commands:
-    The command is used to identify crontab entries - this means commands
-    must be unique within a given users crontab. If you require multiple
-    identical commands, prefix each with a nonce environment variable.
+    Unless ``name`` is specified the command is used to identify crontab entries.
+    This means commands must be unique within a given users crontab. If you require
+    multiple identical commands, provide a different name argument for each.
 
 
 :code:`server.group`
