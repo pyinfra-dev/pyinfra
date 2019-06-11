@@ -58,7 +58,7 @@ def call(state, host, func, *args, **kwargs):
 
 @operation
 def raise_exception(state, host, exception_class, *args, **kwargs):
-    def raise_exc(*args, **kwargs):
+    def raise_exc(*args, **kwargs):  # pragma: no cover
         raise exception_class(*args, **kwargs)
 
     yield (raise_exc, args, kwargs)
