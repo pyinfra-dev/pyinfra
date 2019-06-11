@@ -3,12 +3,12 @@ from pyinfra.api import operation
 
 @operation
 def agent(state, host, server=None, port=None):
-    """
+    '''
     Run puppet agent
 
     + server: master server URL
     + port: puppet master port
-    """
+    '''
 
     args = []
 
