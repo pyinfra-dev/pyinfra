@@ -1,0 +1,9 @@
+{
+    "args": ["somemodule"],
+    "facts": {
+        "kernel_modules": {
+            "somemodule": {}
+        }
+    },
+    "commands": []
+}

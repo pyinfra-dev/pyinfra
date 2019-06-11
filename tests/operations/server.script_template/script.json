@@ -1,0 +1,14 @@
+{
+    "args": ["somefile.txt.j2"],
+    "files": ["somefile.txt.j2"],
+    "facts": {
+        "file": {
+            "_tempfile_": null
+        }
+    },
+    "commands": [
+        ["_test_data_", "_tempfile_"],
+        "chmod +x _tempfile_",
+        "_tempfile_"
+    ]
+}

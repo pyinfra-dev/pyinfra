@@ -1,0 +1,14 @@
+{
+    "args": ["key", "value"],
+    "kwargs": {
+        "repo": "/my/repo"
+    },
+    "facts": {
+        "git_config": {
+            "/my/repo": {}
+        }
+    },
+    "commands": [
+        "cd /my/repo && git config --local key \"value\""
+    ]
+}

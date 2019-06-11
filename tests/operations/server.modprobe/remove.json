@@ -1,0 +1,14 @@
+{
+    "args": ["somemodule"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "kernel_modules": {
+            "somemodule": {}
+        }
+    },
+    "commands": [
+        "modprobe -r somemodule"
+    ]
+}

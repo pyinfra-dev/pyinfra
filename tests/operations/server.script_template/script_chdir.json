@@ -1,0 +1,17 @@
+{
+    "args": ["somefile.txt.j2"],
+    "kwargs": {
+        "chdir": "/home/pyinfra"
+    },
+    "files": ["somefile.txt.j2"],
+    "facts": {
+        "file": {
+            "_tempfile_": null
+        }
+    },
+    "commands": [
+        ["_test_data_", "_tempfile_"],
+        "chmod +x _tempfile_",
+        "cd /home/pyinfra && _tempfile_"
+    ]
+}

@@ -1,0 +1,9 @@
+{
+    "kwargs": {
+        "server": "my-server.net",
+        "port": 3006
+    },
+    "commands": [
+        "puppet agent -t --server=my-server.net --masterport=3006"
+    ]
+}

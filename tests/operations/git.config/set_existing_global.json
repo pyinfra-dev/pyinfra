@@ -1,0 +1,9 @@
+{
+    "args": ["key", "value"],
+    "facts": {
+        "git_config": {
+            "key": "value"
+        }
+    },
+    "commands": []
+}
