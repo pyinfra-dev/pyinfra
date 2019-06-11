@@ -1,3 +1,9 @@
+# v0.9.3
+
++ Add `update_submodules` and `recursive_submodules` args to `git.repo` operation (@chrissinclair)
++ Add `name` args to `server.crontab` operation to allow changing of the command
++ Add global `shell` kwarg to all operations, defaults to `sh` as before
+
 # v0.9.2
 
 + Improve parsing of `ifconfig` for `network_devices` fact (@gchazot)
@@ -188,6 +194,7 @@ pyinfra @local fact arch
 ```py
 from pyinfra.api import deploy
 from pyinfra.modules import apt
+
 
 @deploy('Install Openstack controller')
 def install_openstack_controller(state, host):
