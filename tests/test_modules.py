@@ -7,6 +7,7 @@ from __future__ import print_function
 import json
 from importlib import import_module
 from os import listdir, path
+from types import FunctionType
 from unittest import TestCase
 
 import six
@@ -15,7 +16,6 @@ from nose.tools import nottest
 
 from pyinfra import pseudo_host, pseudo_state
 from pyinfra.api.util import unroll_generators
-
 from pyinfra_cli.util import json_encode
 
 from .util import create_host, FakeState, patch_files
@@ -77,6 +77,10 @@ def make_operation_tests(arg):
                     if command[0] == '__func__':
                         commands.append([
                             command[0], list(command[1]), command[2],
+                        ])
+                    elif isinstance(command[0], FunctionType):
+                        commands.append([
+                            command[0].__name__, list(command[1]), command[2],
                         ])
                     else:
                         if hasattr(command[0], 'read'):
