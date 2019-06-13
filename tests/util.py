@@ -170,7 +170,7 @@ class FakeFile(object):
 
 
 class patch_files(object):
-    def __init__(self, patch_files):
+    def __init__(self, patch_files, patch_directories):
         files = []
         files_data = {}
 
@@ -190,16 +190,12 @@ class patch_files(object):
         self.files = files
         self.files_data = files_data
 
+        self.directories = patch_directories
+
     def __enter__(self):
         self.patches = [
-            patch(
-                'pyinfra.modules.files.path.isfile',
-                lambda *args, **kwargs: True, create=True,
-            ),
-            patch(
-                'pyinfra.modules.files.path.isdir',
-                lambda *args, **kwargs: True, create=True,
-            ),
+            patch('pyinfra.modules.files.path.isfile', self.isfile, create=True),
+            patch('pyinfra.modules.files.path.isdir', self.isdir, create=True),
             patch('pyinfra.modules.files.open', self.get_file, create=True),
             patch('pyinfra.api.util.open', self.get_file, create=True),
         ]
@@ -217,6 +213,12 @@ class patch_files(object):
 
         raise IOError('Missing FakeFile: {0}'.format(filename))
 
+    def isfile(self, filename, *args):
+        return filename in self.files
+
+    def isdir(self, dirname, *args):
+        return dirname in self.directories
+
 
 def create_host(name=None, facts=None, data=None):
     '''
@@ -227,6 +229,6 @@ def create_host(name=None, facts=None, data=None):
     facts = facts or {}
 
     for name, fact_data in six.iteritems(facts):
-            real_facts[name] = fact_data
+        real_facts[name] = fact_data
 
     return FakeHost(name, facts=real_facts, data=data)

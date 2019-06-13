@@ -46,7 +46,7 @@ def make_operation_tests(arg):
 
             allowed_exception = test_data.get('exception')
 
-            with patch_files(test_data.get('files', [])):
+            with patch_files(test_data.get('files', []), test_data.get('directories', [])):
                 try:
                     output_commands = unroll_generators(op._pyinfra_op(
                         pseudo_state, pseudo_host,
