@@ -46,7 +46,7 @@ Add/remove/update files.
 
 .. code:: python
 
-    files.file(name, present=True, user=None, group=None, mode=None, touch=False)
+    files.file(name, present=True, user=None, group=None, mode=None, touch=False, create_remote_dir=False)
 
 + **name**: name/path of the remote file
 + **present**: whether the file should exist
@@ -54,6 +54,12 @@ Add/remove/update files.
 + **group**: group to own the files
 + **mode**: permissions of the files as an integer, eg: 755
 + **touch**: whether to touch the file
++ **create_remote_dir**: create the remote directory if it doesn't exist
+
+``create_remote_dir``:
+    If the remote directory does not exist it will be created using the same
+    user & group as passed to ``files.put``. The mode will *not* be copied over,
+    if this is required call ``files.directory`` separately.
 
 
 :code:`files.line`
@@ -88,7 +94,10 @@ Add/remove/update links.
 
 .. code:: python
 
-    files.link(name, target=None, present=True, user=None, group=None, symbolic=True)
+    files.link(
+        name, target=None, present=True, user=None, group=None, symbolic=True,
+        create_remote_dir=False
+    )
 
 + **name**: the name of the link
 + **target**: the file/directory the link points to
@@ -96,6 +105,12 @@ Add/remove/update links.
 + **user**: user to own the link
 + **group**: group to own the link
 + **symbolic**: whether to make a symbolic link (vs hard link)
++ **create_remote_dir**: create the remote directory if it doesn't exist
+
+``create_remote_dir``:
+    If the remote directory does not exist it will be created using the same
+    user & group as passed to ``files.put``. The mode will *not* be copied over,
+    if this is required call ``files.directory`` separately.
 
 Source changes:
     If the link exists and points to a different target, pyinfra will remove it and
@@ -109,7 +124,10 @@ Copy a local file to the remote system.
 
 .. code:: python
 
-    files.put(local_filename, remote_filename, user=None, group=None, mode=None, add_deploy_dir=True)
+    files.put(
+        local_filename, remote_filename, user=None, group=None, mode=None, add_deploy_dir=True,
+        create_remote_dir=False
+    )
 
 + **local_filename**: local filename
 + **remote_filename**: remote filename
@@ -117,6 +135,12 @@ Copy a local file to the remote system.
 + **group**: group to own the files
 + **mode**: permissions of the files
 + **add_deploy_dir**: local_filename is relative to the deploy directory
++ **create_remote_dir**: create the remote directory if it doesn't exist
+
+``create_remote_dir``:
+    If the remote directory does not exist it will be created using the same
+    user & group as passed to ``files.put``. The mode will *not* be copied over,
+    if this is required call ``files.directory`` separately.
 
 
 :code:`files.replace`
