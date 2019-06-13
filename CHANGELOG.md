@@ -1,3 +1,8 @@
+# v0.9.4
+
++ **Rename** `shell` global kwarg to `shell_executable`! (`server.user` uses `shell` already)
++ Add `create_remote_dir` arg to `files.put`, `files.file` and `files.link`
+
 # v0.9.3
 
 + Add `update_submodules` and `recursive_submodules` args to `git.repo` operation (@chrissinclair)
