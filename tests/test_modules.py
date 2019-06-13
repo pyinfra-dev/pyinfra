@@ -54,7 +54,11 @@ def make_operation_tests(arg):
                     )) or []
                 except Exception as e:
                     if allowed_exception:
-                        if e.__class__.__name__ != allowed_exception['name']:
+                        allowed_exception_names = allowed_exception.get('names')
+                        if not allowed_exception_names:
+                            allowed_exception_names = [allowed_exception['name']]
+
+                        if e.__class__.__name__ not in allowed_exception_names:
                             print('Wrong execption raised!')
                             raise
 
