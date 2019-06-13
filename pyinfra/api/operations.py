@@ -50,7 +50,7 @@ def _run_server_op(state, host, op_hash):
     for i, command in enumerate(op_data['commands']):
         status = False
 
-        shell = op_meta['shell']
+        shell_executable = op_meta['shell_executable']
         sudo = op_meta['sudo']
         sudo_user = op_meta['sudo_user']
         su_user = op_meta['su_user']
@@ -68,8 +68,8 @@ def _run_server_op(state, host, op_hash):
             if 'su_user' in command:
                 su_user = command['su_user']
 
-            if 'shell' in command:
-                shell = command['shell']
+            if 'shell_executable' in command:
+                shell_executable = command['shell_executable']
 
             command = command['command']
 
@@ -108,10 +108,10 @@ def _run_server_op(state, host, op_hash):
                         state,
                         file_io,
                         remote_filename,
-                        shell=shell,
                         sudo=sudo,
                         sudo_user=sudo_user,
                         su_user=su_user,
+                        shell_executable=shell_executable,
                         print_output=state.print_output,
                     )
 
@@ -131,11 +131,11 @@ def _run_server_op(state, host, op_hash):
                 status, stdout, stderr = host.run_shell_command(
                     state,
                     command.strip(),
-                    shell=shell,
                     sudo=sudo,
                     sudo_user=sudo_user,
                     su_user=su_user,
                     preserve_sudo_env=preserve_sudo_env,
+                    shell_executable=shell_executable,
                     timeout=op_meta['timeout'],
                     get_pty=op_meta['get_pty'],
                     env=op_meta['env'],

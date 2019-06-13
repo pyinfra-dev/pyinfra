@@ -149,7 +149,7 @@ def pop_op_kwargs(state, kwargs):
         # When to limit the op (default always)
         'when': get_kwarg('when', True),
         # Locally & globally configurable
-        'shell': get_kwarg('shell', state.config.SHELL),
+        'shell_executable': get_kwarg('shell_executable', state.config.SHELL),
         'sudo': get_kwarg('sudo', state.config.SUDO),
         'sudo_user': get_kwarg('sudo_user', state.config.SUDO_USER),
         'su_user': get_kwarg('su_user', state.config.SU_USER),
@@ -286,7 +286,7 @@ def make_command(
     sudo=False,
     sudo_user=None,
     preserve_sudo_env=False,
-    shell=Config.SHELL,
+    shell_executable=Config.SHELL,
 ):
     '''
     Builds a shell command with various kwargs.
@@ -295,7 +295,7 @@ def make_command(
     debug_meta = {}
 
     for key, value in (
-        ('shell', shell),
+        ('shell_executable', shell_executable),
         ('sudo', sudo),
         ('sudo_user', sudo_user),
         ('su_user', su_user),
@@ -322,11 +322,11 @@ def make_command(
 
     # Switch user with su
     if su_user:
-        command = '{0} {1} -c {2}'.format(shell, su_user, command)
+        command = '{0} {1} -c {2}'.format(shell_executable, su_user, command)
 
     # Otherwise just sh wrap the command
     else:
-        command = '{0} -c {1}'.format(shell, command)
+        command = '{0} -c {1}'.format(shell_executable, command)
 
     # Use sudo (w/user?)
     if sudo:
