@@ -8,6 +8,7 @@ The files module handles filesystem state, file uploads and template generation.
 
 from __future__ import unicode_literals
 
+import posixpath
 import sys
 
 from datetime import timedelta
@@ -290,6 +291,16 @@ def sync(
             yield file(state, host, filename, present=False)
 
 
+def _create_remote_dir(state, host, remote_filename, user, group):
+    # Always use POSIX style path as local might be Windows, remote always *nix
+    remote_dirname = posixpath.dirname(remote_filename)
+    if remote_dirname:
+        yield directory(
+            state, host, remote_dirname,
+            user=user, group=group,
+        )
+
+
 @operation(pipeline_facts={
     'file': 'remote_filename',
     'sha1_file': 'remote_filename',
@@ -297,6 +308,7 @@ def sync(
 def put(
     state, host, local_filename, remote_filename,
     user=None, group=None, mode=None, add_deploy_dir=True,
+    create_remote_dir=False,
 ):
     '''
     Copy a local file to the remote system.
@@ -307,6 +319,12 @@ def put(
     + group: group to own the files
     + mode: permissions of the files
     + add_deploy_dir: local_filename is relative to the deploy directory
+    + create_remote_dir: create the remote directory if it doesn't exist
+
+    ``create_remote_dir``:
+        If the remote directory does not exist it will be created using the same
+        user & group as passed to ``files.put``. The mode will *not* be copied over,
+        if this is required call ``files.directory`` separately.
     '''
 
     # Upload IO objects as-is
@@ -326,6 +344,9 @@ def put(
 
     mode = ensure_mode_int(mode)
     remote_file = host.fact.file(remote_filename)
+
+    if create_remote_dir:
+        yield _create_remote_dir(state, host, remote_filename, user, group)
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file:
@@ -431,6 +452,7 @@ def template(
 def link(
     state, host, name,
     target=None, present=True, user=None, group=None, symbolic=True,
+    create_remote_dir=False,
 ):
     '''
     Add/remove/update links.
@@ -441,6 +463,12 @@ def link(
     + user: user to own the link
     + group: group to own the link
     + symbolic: whether to make a symbolic link (vs hard link)
+    + create_remote_dir: create the remote directory if it doesn't exist
+
+    ``create_remote_dir``:
+        If the remote directory does not exist it will be created using the same
+        user & group as passed to ``files.put``. The mode will *not* be copied over,
+        if this is required call ``files.directory`` separately.
 
     Source changes:
         If the link exists and points to a different target, pyinfra will remove it and
@@ -465,6 +493,9 @@ def link(
 
     # No link and we want it
     if info is None and present:
+        if create_remote_dir:
+            yield _create_remote_dir(state, host, name, user, group)
+
         yield add_cmd
         if user or group:
             yield chown(name, user, group, dereference=False)
@@ -504,6 +535,7 @@ def link(
 def file(
     state, host, name,
     present=True, user=None, group=None, mode=None, touch=False,
+    create_remote_dir=False,
 ):
     '''
     Add/remove/update files.
@@ -514,6 +546,12 @@ def file(
     + group: group to own the files
     + mode: permissions of the files as an integer, eg: 755
     + touch: whether to touch the file
+    + create_remote_dir: create the remote directory if it doesn't exist
+
+    ``create_remote_dir``:
+        If the remote directory does not exist it will be created using the same
+        user & group as passed to ``files.put``. The mode will *not* be copied over,
+        if this is required call ``files.directory`` separately.
     '''
 
     mode = ensure_mode_int(mode)
@@ -525,6 +563,9 @@ def file(
 
     # Doesn't exist & we want it
     if info is None and present:
+        if create_remote_dir:
+            yield _create_remote_dir(state, host, name, user, group)
+
         yield 'touch {0}'.format(name)
 
         if mode:
