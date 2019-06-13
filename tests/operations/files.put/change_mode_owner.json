@@ -1,8 +1,8 @@
 {
     "args": ["somefile.txt", "/home/somefile.txt"],
     "kwargs": {
-        "user": "testuser",
-        "group": "testgroup",
+        "user": "another-testuser",
+        "group": "another-testgroup",
         "mode": 644
     },
     "files": ["somefile.txt"],
@@ -19,6 +19,7 @@
         }
     },
     "commands": [
-        "chmod 644 /home/somefile.txt"
+        "chmod 644 /home/somefile.txt",
+        "chown another-testuser:another-testgroup /home/somefile.txt"
     ]
 }

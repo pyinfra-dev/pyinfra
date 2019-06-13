@@ -1,7 +1,8 @@
 {
     "args": ["/somedir/", "/home/somedir"],
     "kwargs": {
-        "delete": true
+        "exclude": "somefile.txt",
+        "exclude_dir": "dir"
     },
     "directories": {
         "/somedir/": ["somefile.txt", "anotherfile.txt"]

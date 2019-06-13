@@ -1,0 +1,7 @@
+{
+    "args": ["somefile.txt", "/home/somefile.txt"],
+    "exception": {
+        "names": ["OSError", "IOError"],
+        "message": "No such file: /somefile.txt"
+    }
+}
