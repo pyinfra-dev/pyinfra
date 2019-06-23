@@ -5,16 +5,18 @@
         "shell": "shellbin",
         "group": "mygroup",
         "groups": ["secondary_group", "another"],
-        "uid" : 1000
+        "uid" : 1000,
+        "system": true
     },
     "facts": {
         "users": {},
         "directory": {
             "homedir": null
-        }
+        },
+        "os": "Linux"
     },
     "commands": [
-        "useradd -d homedir -s shellbin -g mygroup -G secondary_group,another --uid 1000 someuser",
+        "useradd -d homedir -s shellbin -g mygroup -G secondary_group,another -r --uid 1000 someuser",
         "mkdir -p homedir",
         "chown someuser:someuser homedir"
     ]

@@ -1,0 +1,48 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "home": "homedir",
+        "public_keys": ["abc", "def"],
+        "delete_keys": true
+    },
+    "facts": {
+        "users": {
+            "someuser": {
+                "home": "homedir",
+                "group": null,
+                "groups": []
+            }
+        },
+        "directory": {
+            "homedir": {
+                "user": "someuser",
+                "group": "someuser"
+            },
+            "homedir/.ssh": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 700
+            }
+        },
+        "file": {
+            "homedir/.ssh/authorized_keys": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 601
+            }
+        },
+        "find_in_file": {
+            "homedir/.ssh/authorized_keys": {
+                "^.*abc.*$": []
+            }
+        },
+        "sha1_file": {
+            "homedir/.ssh/authorized_keys": null
+        }
+    },
+    "commands": [
+        ["abc\ndef\n", "homedir/.ssh/authorized_keys"],
+        "chown someuser:someuser homedir/.ssh/authorized_keys",
+        "chmod 600 homedir/.ssh/authorized_keys"
+    ]
+}

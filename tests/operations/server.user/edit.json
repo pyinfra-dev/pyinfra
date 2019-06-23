@@ -3,7 +3,8 @@
     "kwargs": {
         "shell": "/bin/false",
         "group": "somegroup",
-        "groups": ["group1", "group2", "group3"]
+        "groups": ["group1", "group2", "group3"],
+        "home": "/home/someotheruser"
     },
     "facts": {
         "users": {
@@ -20,10 +21,14 @@
             "/home/someuser": {
                 "user": "someuser",
                 "group": "someuser"
+            },
+            "/home/someotheruser": {
+                "user": "someuser",
+                "group": "someuser"
             }
         }
     },
     "commands": [
-        "usermod -s /bin/false -g somegroup -G group1,group2,group3 someuser"
+        "usermod -d /home/someotheruser -s /bin/false -g somegroup -G group1,group2,group3 someuser"
     ]
 }

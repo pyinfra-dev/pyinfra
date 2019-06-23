@@ -1,11 +1,14 @@
 {
     "args": ["somegroup"],
     "kwargs": {
-        "gid" : 1000},
+        "gid" : 1000,
+        "system": true
+    },
     "facts": {
-        "groups": []
+        "groups": [],
+        "os": "Linux"
     },
     "commands": [
-        "groupadd somegroup --gid 1000"
+        "groupadd -r somegroup --gid 1000"
     ]
 }
