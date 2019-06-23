@@ -69,7 +69,7 @@ class FindInFile(FactBase):
 
         return '''
             grep "{0}" {1} || (find {1} -type f > /dev/null && echo "_exists_{1}")
-        '''.format(pattern, name)
+        '''.format(pattern, name).strip()
 
     def process(self, output):
         # If output is the special string: no matches, so return an empty list;
