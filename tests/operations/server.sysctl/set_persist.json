@@ -1,0 +1,18 @@
+{
+    "args": ["kern.max-files", 2000],
+    "kwargs": {
+        "persist": true
+    },
+    "facts": {
+        "sysctl": {},
+        "find_in_file": {
+            "/etc/sysctl.conf": {
+                "^.*kern.max-files[[:space:]]*=[[:space:]]*2000.*$": []
+            }
+        }
+    },
+    "commands": [
+        "sysctl kern.max-files=2000",
+        "echo \"kern.max-files = 2000\" >> /etc/sysctl.conf"
+    ]
+}
