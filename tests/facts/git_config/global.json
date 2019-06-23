@@ -1,0 +1,8 @@
+{
+    "output": [
+        "user.email=nick@gmail.com"
+    ],
+    "fact": {
+        "user.email": "nick@gmail.com"
+    }
+}

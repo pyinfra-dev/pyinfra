@@ -1,0 +1,10 @@
+{
+    "arg": "myrepo",
+    "command": "cd myrepo && git config --local -l",
+    "output": [
+        "user.email=nick@gmail.com"
+    ],
+    "fact": {
+        "user.email": "nick@gmail.com"
+    }
+}
