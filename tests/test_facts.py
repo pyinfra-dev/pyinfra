@@ -24,14 +24,18 @@ def make_fact_tests(fact_name):
     @six.add_metaclass(JsonTest)
     class TestTests(TestCase):
         jsontest_files = path.join('tests', 'facts', fact_name)
-        jsontest_prefix = 'test_{0}'.format(fact_name)
+        jsontest_prefix = 'test_{0}_'.format(fact_name)
 
         def jsontest_function(self, test_name, test_data):
-            if 'arg' in test_data:
-                if isinstance(test_data['arg'], list):
-                    fact.command(*test_data['arg'])
-                else:
-                    fact.command(test_data['arg'])
+            if callable(fact.command):
+                args = test_data.get('arg', [])
+                if not isinstance(args, list):
+                    args = [args]
+
+                command = fact.command(*args)
+
+                if args or 'command' in test_data:
+                    self.assertEqual(command, test_data['command'])
 
             data = fact.process(test_data['output'])
 

@@ -1,5 +1,6 @@
 {
     "arg": "/home/pyinfra/myd@-_ir",
+    "command": "ls -ld --time-style=long-iso /home/pyinfra/myd@-_ir || ls -ldT /home/pyinfra/myd@-_ir",
     "output": [
         "drwxrwxrwx 1 pyinfra pyinfra 8 2016-02-13 12:56 /home/pyinfra/myd@-_ir"
     ],

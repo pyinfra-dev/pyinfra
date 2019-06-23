@@ -1,5 +1,6 @@
 {
     "arg": "/home/pyinfra/fil-@_e.txt",
+    "command": "ls -ld --time-style=long-iso /home/pyinfra/fil-@_e.txt || ls -ldT /home/pyinfra/fil-@_e.txt",
     "output": [
         "-rwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56:00 2016 /home/pyinfra/fil-@_e.txt"
     ],

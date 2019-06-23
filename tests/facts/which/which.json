@@ -1,4 +1,6 @@
 {
+    "arg": "python",
+    "command": "which python",
     "output": ["/usr/local/bin/python"],
     "fact": "/usr/local/bin/python"
 }
