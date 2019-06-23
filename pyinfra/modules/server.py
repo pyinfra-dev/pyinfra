@@ -385,7 +385,7 @@ def user(
         if groups:
             args.append('-G {0}'.format(','.join(groups)))
 
-        if system and host.fact.os not in ('OpenBSD', 'NetBSD'):
+        if system and 'BSD' not in host.fact.os:
             args.append('-r')
 
         if uid:
