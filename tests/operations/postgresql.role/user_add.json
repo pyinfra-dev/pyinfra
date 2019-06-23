@@ -1,9 +1,13 @@
 {
     "args": ["testuser"],
+    "kwargs": {
+        "connection_limit": 15,
+        "password": "abc"
+    },
     "facts": {
         "postgresql_roles": {}
     },
     "commands": [
-        "psql -Ac \"CREATE ROLE testuser LOGIN\""
+        "psql -Ac \"CREATE ROLE testuser LOGIN CONNECTION LIMIT 15 PASSWORD 'abc'\""
     ]
 }

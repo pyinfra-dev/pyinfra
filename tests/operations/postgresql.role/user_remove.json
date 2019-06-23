@@ -1,0 +1,12 @@
+{
+    "args": ["testuser"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "postgresql_roles": {
+            "testuser": {}
+        }
+    },
+    "commands": ["psql -Ac \"DROP ROLE testuser\""]
+}

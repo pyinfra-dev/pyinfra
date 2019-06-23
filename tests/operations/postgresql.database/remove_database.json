@@ -1,0 +1,14 @@
+{
+    "args": ["somedb"],
+    "kwargs": {
+        "present": false
+    },
+    "facts" :{
+        "postgresql_databases": {
+            "somedb": {}
+        }
+    },
+    "commands": [
+        "psql -Ac \"DROP DATABASE somedb\""
+    ]
+}
