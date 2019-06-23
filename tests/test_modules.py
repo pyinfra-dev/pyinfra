@@ -89,6 +89,7 @@ def make_operation_tests(arg):
                         ])
                     else:
                         if hasattr(command[0], 'read'):
+                            command[0].seek(0)
                             data = command[0].read()
                         else:
                             data = command[0]
