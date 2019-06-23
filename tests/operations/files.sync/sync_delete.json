@@ -1,20 +1,51 @@
 {
     "args": ["/somedir/", "/home/somedir"],
     "kwargs": {
-        "delete": true
+        "delete": true,
+        "exclude": "*.pyc",
+        "exclude_dir": "__pycache__"
     },
+    "files": [
+        "/somedir/somefile.txt",
+        "/somedir/anotherfile.txt",
+        "/somedir/underthat/yet-another-file.txt"
+    ],
     "directories": {
-        "/somedir/": ["somefile.txt", "anotherfile.txt"]
+        "/somedir/": {
+            "/somedir/": ["somefile.txt", "anotherfile.txt", "thing.pyc"],
+            "/somedir/underthat": ["yet-another-file.txt"],
+            "/somedir/__pycache__": ["nope"]
+        }
     },
     "facts": {
+        "file": {
+            "/home/somedir/somefile.txt": null,
+            "/home/somedir/anotherfile.txt": null,
+            "/home/somedir/deleteme.txt": true,
+            "/home/somedir/nodelete.pyc": true,
+            "/home/somedir/underthat/yet-another-file.txt": null
+        },
         "directory": {
-            "/home/somedir": null
+            "/home/somedir": null,
+            "/home/somedir/underthat": null
         },
         "find_files": {
-            "/home/somedir": null
+            "/home/somedir": [
+                "/home/somedir/deleteme.txt",
+                "/home/somedir/nodelete.pyc"
+            ],
+            "/home/somedir/underthat": []
         }
     },
     "commands": [
-        "mkdir -p /home/somedir"
+        "mkdir -p /home/somedir",
+        "mkdir -p /home/somedir/underthat",
+        ["/somedir/somefile.txt", "/home/somedir/somefile.txt"],
+        ["/somedir/anotherfile.txt", "/home/somedir/anotherfile.txt"],
+        [
+            "/somedir/underthat/yet-another-file.txt",
+            "/home/somedir/underthat/yet-another-file.txt"
+        ],
+        "rm -f /home/somedir/deleteme.txt"
     ]
 }

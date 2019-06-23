@@ -184,7 +184,9 @@ class patch_files(object):
                 filename = filename_data
                 data = None
 
-            filename = '{0}{1}'.format(FakeState.deploy_dir, filename)
+            if not filename.startswith('/'):
+                filename = '{0}{1}'.format(FakeState.deploy_dir, filename)
+
             files.append(filename)
 
             if data:
@@ -197,8 +199,10 @@ class patch_files(object):
 
     def __enter__(self):
         self.patches = [
-            patch('pyinfra.modules.files.path.isfile', self.isfile, create=True),
-            patch('pyinfra.modules.files.path.isdir', self.isdir, create=True),
+            patch('pyinfra.modules.files.path.isfile', self.isfile),
+            patch('pyinfra.modules.files.path.isdir', self.isdir),
+            patch('pyinfra.modules.files.walk', self.walk),
+            # Builtin patches
             patch('pyinfra.modules.files.open', self.get_file, create=True),
             patch('pyinfra.api.util.open', self.get_file, create=True),
         ]
@@ -221,6 +225,13 @@ class patch_files(object):
 
     def isdir(self, dirname, *args):
         return dirname in self.directories
+
+    def walk(self, dirname):
+        if dirname not in self.directories:
+            return
+
+        for dirname, filenames in self.directories[dirname].items():
+            yield dirname, None, filenames
 
 
 def create_host(name=None, facts=None, data=None):
