@@ -97,6 +97,9 @@ class FakeFact(object):
     def __unicode__(self):
         return self.data
 
+    def __eq__(self, other_thing):
+        return self.data == other_thing
+
     def get(self, key, default=None):
         if key in self.data:
             return self.data[key]
