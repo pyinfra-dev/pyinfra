@@ -1,0 +1,15 @@
+{
+    "args": ["PREROUTING", "REDIRECT"],
+    "kwargs": {
+        "table": "nat",
+        "to_ports": "8000"
+    },
+    "facts": {
+        "iptables_rules": {
+            "nat": []
+        }
+    },
+    "commands": [
+        "iptables -t nat -A PREROUTING -j REDIRECT --to-ports 8000"
+    ]
+}

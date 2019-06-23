@@ -1,0 +1,15 @@
+{
+    "args": ["PREROUTING", "SNAT"],
+    "kwargs": {
+        "table": "nat",
+        "to_source": "10.0.0.0:8000"
+    },
+    "facts": {
+        "iptables_rules": {
+            "nat": []
+        }
+    },
+    "commands": [
+        "iptables -t nat -A PREROUTING -j SNAT --to-source 10.0.0.0:8000"
+    ]
+}

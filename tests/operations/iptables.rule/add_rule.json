@@ -1,13 +1,17 @@
 {
-    "args": ["PREROUTING", "DNAT"],
+    "args": ["PREROUTING", "OUTPUT"],
     "kwargs": {
         "table": "nat",
-        "to_destination": "10.10.10.10:8080",
         "destination_port": 8080,
         "source_port": 80,
         "protocol": "tcp",
+        "source": "0.0.0.0",
         "in_interface": "eth0",
-        "out_interface": "eth1"
+        "out_interface": "eth1",
+        "not_protocol": "udp",
+        "not_source": "192.168.1.0/24",
+        "not_in_interface": "eth10",
+        "not_out_interface": "eth10"
     },
     "facts": {
         "iptables_rules": {
@@ -15,6 +19,6 @@
         }
     },
     "commands": [
-        "iptables -t nat -A PREROUTING -p tcp -i eth0 -o eth1 --dport 8080 --sport 80 -j DNAT --to-destination 10.10.10.10:8080"
+        "iptables -t nat -A PREROUTING -p tcp -s 0.0.0.0 -i eth0 -o eth1 ! -p udp ! -s 192.168.1.0/24 ! -i eth10 ! -o eth10 --dport 8080 --sport 80 -j OUTPUT"
     ]
 }

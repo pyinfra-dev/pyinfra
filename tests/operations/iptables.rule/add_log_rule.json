@@ -1,0 +1,14 @@
+{
+    "args": ["INPUT", "LOG"],
+    "kwargs": {
+        "log_prefix": "log-prefix"
+    },
+    "facts": {
+        "iptables_rules": {
+            "filter": []
+        }
+    },
+    "commands": [
+        "iptables -t filter -A INPUT -j LOG --log-prefix log-prefix"
+    ]
+}

@@ -1,0 +1,10 @@
+{
+    "args": ["INPUT", "NOT_LOG"],
+    "kwargs": {
+        "log_prefix": "log-prefix"
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "iptables only supports log_prefix with the LOG jump (jump=NOT_LOG)"
+    }
+}
