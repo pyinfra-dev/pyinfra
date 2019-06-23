@@ -1,0 +1,14 @@
+{
+    "args": ["my-hostname.net"],
+    "facts": {
+        "os": "OpenBSD",
+        "hostname": "nope",
+        "file": {
+            "/etc/myname": {}
+        }
+    },
+    "commands": [
+        "hostname my-hostname.net",
+        ["my-hostname.net\n", "/etc/myname"]
+    ]
+}

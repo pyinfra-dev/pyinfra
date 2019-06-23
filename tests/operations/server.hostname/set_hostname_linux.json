@@ -1,0 +1,14 @@
+{
+    "args": ["my-hostname.net"],
+    "facts": {
+        "os": "Linux",
+        "hostname": "nope",
+        "file": {
+            "/etc/hostname": {}
+        }
+    },
+    "commands": [
+        "hostname my-hostname.net",
+        ["my-hostname.net\n", "/etc/hostname"]
+    ]
+}
