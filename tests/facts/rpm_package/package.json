@@ -1,0 +1,11 @@
+{
+    "arg": "somepackage",
+    "command": "rpm -qp somepackage",
+    "output": [
+        "pydash-3.48.0"
+    ],
+    "fact": {
+        "name": "pydash",
+        "version": "3.48"
+    }
+}
