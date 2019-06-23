@@ -14,7 +14,6 @@ from jsontest import JsonTest
 from nose.tools import nottest
 
 from pyinfra.api.facts import FACTS
-
 from pyinfra_cli.util import json_encode
 
 
@@ -25,6 +24,7 @@ def make_fact_tests(fact_name):
     @six.add_metaclass(JsonTest)
     class TestTests(TestCase):
         jsontest_files = path.join('tests', 'facts', fact_name)
+        jsontest_prefix = 'test_{0}'.format(fact_name)
 
         def jsontest_function(self, test_name, test_data):
             if 'arg' in test_data:

@@ -33,7 +33,7 @@ INSTALL_REQUIRES = (
 
 TEST_REQUIRES = (
     'nose==1.3.7',
-    'jsontest==1.3',
+    'jsontest==1.4',
     'coverage==4.4.1',
     'mock==1.3.0',
 )

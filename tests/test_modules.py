@@ -32,6 +32,7 @@ def make_operation_tests(arg):
     @six.add_metaclass(JsonTest)
     class TestTests(TestCase):
         jsontest_files = path.join('tests', 'operations', arg)
+        jsontest_prefix = 'test_{0}_{1}_'.format(module_name, op_name)
 
         @classmethod
         def setUpClass(cls):
@@ -111,15 +112,6 @@ def make_operation_tests(arg):
 
                 raise e
 
-    # Convert the op name (module.op) to a class name ModuleOp
-    test_name = (
-        arg.replace('.', ' ')
-        .title()
-        .replace(' ', '')
-    )
-
-    # Set the name
-    TestTests.__name__ = 'TestOperation{0}'.format(test_name)
     return TestTests
 
 
