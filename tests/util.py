@@ -230,7 +230,7 @@ class patch_files(object):
         if dirname not in self.directories:
             return
 
-        for dirname, filenames in self.directories[dirname].items():
+        for dirname, filenames in sorted(self.directories[dirname].items()):
             yield dirname, None, filenames
 
 
