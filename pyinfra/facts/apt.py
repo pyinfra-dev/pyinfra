@@ -14,7 +14,7 @@ from .util.packaging import parse_packages
 
 
 def parse_apt_repo(name):
-    regex = r'^(deb(?:-src)?)(?:\s+\[([a-zA-Z0-9=\s]+)\])?\s+([^\s]+)\s+([a-z-]+)\s+([a-z-\s]*)$'
+    regex = r'^(deb(?:-src)?)(?:\s+\[([a-zA-Z0-9=,\s]+)\])?\s+([^\s]+)\s+([a-z-]+)\s+([a-z-\s]*)$'
 
     matches = re.match(regex, name)
 
