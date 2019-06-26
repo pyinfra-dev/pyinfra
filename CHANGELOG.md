@@ -1,3 +1,8 @@
+# v0.9.5
+
++ Fix `apt_repos` fact when `/etc/apt/sources.list.d` doesn't exist
++ Fix parsing of apt repos with multiple option values
+
 # v0.9.4
 
 + **Rename** `shell` global kwarg to `shell_executable`! (`server.user` uses `shell` already)
