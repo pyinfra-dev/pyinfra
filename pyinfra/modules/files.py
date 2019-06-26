@@ -389,7 +389,8 @@ def put(
 @operation
 def template(
     state, host, template_filename, remote_filename,
-    user=None, group=None, mode=None, **data
+    user=None, group=None, mode=None, create_remote_dir=False,
+    **data
 ):
     '''
     Generate a template and write it to the remote system.
@@ -399,6 +400,12 @@ def template(
     + user: user to own the files
     + group: group to own the files
     + mode: permissions of the files
+    + create_remote_dir: create the remote directory if it doesn't exist
+
+    ``create_remote_dir``:
+        If the remote directory does not exist it will be created using the same
+        user & group as passed to ``files.put``. The mode will *not* be copied over,
+        if this is required call ``files.directory`` separately.
     '''
 
     if state.deploy_dir:
@@ -443,6 +450,7 @@ def template(
         output_file, remote_filename,
         user=user, group=group, mode=mode,
         add_deploy_dir=False,
+        create_remote_dir=create_remote_dir,
     )
 
 
