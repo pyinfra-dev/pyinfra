@@ -1,3 +1,7 @@
+# v0.9.6
+
++ Add `create_remote_dir` to `files.template` operation
+
 # v0.9.5
 
 + Fix `apt_repos` fact when `/etc/apt/sources.list.d` doesn't exist
