@@ -188,11 +188,20 @@ Generate a template and write it to the remote system.
 
 .. code:: python
 
-    files.template(template_filename, remote_filename, user=None, group=None, mode=None)
+    files.template(
+        template_filename, remote_filename, user=None, group=None, mode=None,
+        create_remote_dir=False
+    )
 
 + **template_filename**: local template filename
 + **remote_filename**: remote filename
 + **user**: user to own the files
 + **group**: group to own the files
 + **mode**: permissions of the files
++ **create_remote_dir**: create the remote directory if it doesn't exist
+
+``create_remote_dir``:
+    If the remote directory does not exist it will be created using the same
+    user & group as passed to ``files.put``. The mode will *not* be copied over,
+    if this is required call ``files.directory`` separately.
 
