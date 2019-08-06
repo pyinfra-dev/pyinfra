@@ -1,3 +1,7 @@
+# v0.9.7
+
++ Fix `@hook` functions by correctly checking `state.initialised`
+
 # v0.9.6
 
 + Add `create_remote_dir` to `files.template` operation
