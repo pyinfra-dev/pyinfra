@@ -322,7 +322,7 @@ def make_command(
 
     # Switch user with su
     if su_user:
-        command = '{0} {1} -c {2}'.format(shell_executable, su_user, command)
+        command = 'su {0} -c {1}'.format(su_user, command)
 
     # Otherwise just sh wrap the command
     else:
