@@ -15,7 +15,9 @@ else
     ARGS="${@:2}"
 
     if [ "${TEST}" = "cli" ]; then
-        ARGS="tests.test_${TEST} --cover-package pyinfra_${TEST} ${ARGS}"
+        ARGS="tests.test_cli --cover-package pyinfra_cli ${ARGS}"
+    elif [ "${TEST}" = "api_util" ]; then
+        ARGS="tests.test_api_util --cover-package pyinfra.api.util ${ARGS}"
     else
         ARGS="tests.test_${TEST} --cover-package pyinfra.${TEST} ${ARGS}"
     fi
