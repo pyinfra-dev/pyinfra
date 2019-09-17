@@ -459,7 +459,8 @@ def template(
 })
 def link(
     state, host, name,
-    target=None, present=True, user=None, group=None, symbolic=True,
+    target=None, present=True, assume_present=False,
+    user=None, group=None, symbolic=True,
     create_remote_dir=False,
 ):
     '''
@@ -468,6 +469,7 @@ def link(
     + name: the name of the link
     + target: the file/directory the link points to
     + present: whether the link should exist
+    + assume_present: whether to assume the link exists
     + user: user to own the link
     + group: group to own the link
     + symbolic: whether to make a symbolic link (vs hard link)
@@ -500,7 +502,7 @@ def link(
     remove_cmd = 'rm -f {0}'.format(name)
 
     # No link and we want it
-    if info is None and present:
+    if not assume_present and info is None and present:
         if create_remote_dir:
             yield _create_remote_dir(state, host, name, user, group)
 
@@ -509,11 +511,11 @@ def link(
             yield chown(name, user, group, dereference=False)
 
     # It exists and we don't want it
-    elif info and not present:
+    elif (assume_present or info) and not present:
         yield remove_cmd
 
     # Exists and want to ensure it's state
-    elif info and present:
+    elif (assume_present or info) and present:
         # If we have an absolute name - prepend to any non-absolute values from the fact
         # and/or the soruce.
         if path.isabs(name):
@@ -522,18 +524,22 @@ def link(
             if not path.isabs(target):
                 target = path.normpath('/'.join((link_dirname, target)))
 
-            if not path.isabs(info['link_target']):
+            if info and not path.isabs(info['link_target']):
                 info['link_target'] = path.normpath(
                     '/'.join((link_dirname, info['link_target'])),
                 )
 
         # If the target is wrong, remove & recreate the link
-        if info['link_target'] != target:
+        if not info or info['link_target'] != target:
             yield remove_cmd
             yield add_cmd
 
         # Check user/group
-        if (user and info['user'] != user) or (group and info['group'] != group):
+        if (
+            (not info and (user or group))
+            or (user and info['user'] != user)
+            or (group and info['group'] != group)
+        ):
             yield chown(name, user, group, dereference=False)
 
 
@@ -542,7 +548,8 @@ def link(
 })
 def file(
     state, host, name,
-    present=True, user=None, group=None, mode=None, touch=False,
+    present=True, assume_present=False,
+    user=None, group=None, mode=None, touch=False,
     create_remote_dir=False,
 ):
     '''
@@ -550,6 +557,7 @@ def file(
 
     + name: name/path of the remote file
     + present: whether the file should exist
+    + assume_present: whether to assume the file exists
     + user: user to own the files
     + group: group to own the files
     + mode: permissions of the files as an integer, eg: 755
@@ -570,7 +578,7 @@ def file(
         raise OperationError('{0} exists and is not a file'.format(name))
 
     # Doesn't exist & we want it
-    if info is None and present:
+    if not assume_present and info is None and present:
         if create_remote_dir:
             yield _create_remote_dir(state, host, name, user, group)
 
@@ -582,20 +590,24 @@ def file(
             yield chown(name, user, group)
 
     # It exists and we don't want it
-    elif info and not present:
+    elif (assume_present or info) and not present:
         yield 'rm -f {0}'.format(name)
 
     # It exists & we want to ensure its state
-    elif info and present:
+    elif (assume_present or info) and present:
         if touch:
             yield 'touch {0}'.format(name)
 
         # Check mode
-        if mode and info['mode'] != mode:
+        if mode and (not info or info['mode'] != mode):
             yield chmod(name, mode)
 
         # Check user/group
-        if (user and info['user'] != user) or (group and info['group'] != group):
+        if (
+            (not info and (user or group))
+            or (user and info['user'] != user)
+            or (group and info['group'] != group)
+        ):
             yield chown(name, user, group)
 
 
@@ -604,13 +616,15 @@ def file(
 })
 def directory(
     state, host, name,
-    present=True, user=None, group=None, mode=None, recursive=False,
+    present=True, assume_present=False,
+    user=None, group=None, mode=None, recursive=False,
 ):
     '''
     Add/remove/update directories.
 
     + name: name/patr of the remote folder
     + present: whether the folder should exist
+    + assume_present: whether to assume the directory exists
     + user: user to own the folder
     + group: group to own the folder
     + mode: permissions of the folder
@@ -625,7 +639,7 @@ def directory(
         raise OperationError('{0} exists and is not a directory'.format(name))
 
     # Doesn't exist & we want it
-    if info is None and present:
+    if not assume_present and info is None and present:
         yield 'mkdir -p {0}'.format(name)
         if mode:
             yield chmod(name, mode, recursive=recursive)
@@ -633,15 +647,19 @@ def directory(
             yield chown(name, user, group, recursive=recursive)
 
     # It exists and we don't want it
-    elif info and not present:
+    elif (assume_present or info) and not present:
         yield 'rm -rf {0}'.format(name)
 
     # It exists & we want to ensure its state
-    elif info and present:
+    elif (assume_present or info) and present:
         # Check mode
-        if mode and info['mode'] != mode:
+        if mode and (not info or info['mode'] != mode):
             yield chmod(name, mode, recursive=recursive)
 
         # Check user/group
-        if (user and info['user'] != user) or (group and info['group'] != group):
+        if (
+            (not info and (user or group))
+            or (user and info['user'] != user)
+            or (group and info['group'] != group)
+        ):
             yield chown(name, user, group, recursive=recursive)

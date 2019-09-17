@@ -1,0 +1,15 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "present": false,
+        "assume_present": true
+    },
+    "facts": {
+        "directory": {
+            "testdir": null
+        }
+    },
+    "commands": [
+        "rm -rf testdir"
+    ]
+}

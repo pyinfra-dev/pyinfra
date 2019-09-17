@@ -1,0 +1,18 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "user": "testuser",
+        "group": "testgroup",
+        "mode": 777,
+        "assume_present": true
+    },
+    "facts": {
+        "directory": {
+            "testdir": null
+        }
+    },
+    "commands": [
+        "chmod 777 testdir",
+        "chown testuser:testgroup testdir"
+    ]
+}

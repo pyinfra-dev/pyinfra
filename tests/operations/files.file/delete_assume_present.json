@@ -1,0 +1,15 @@
+{
+    "args": ["testfile"],
+    "kwargs": {
+        "present": false,
+        "assume_present": true
+    },
+    "facts": {
+        "file": {
+            "testfile": null
+        }
+    },
+    "commands": [
+        "rm -f testfile"
+    ]
+}
