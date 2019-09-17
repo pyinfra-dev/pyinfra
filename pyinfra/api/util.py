@@ -322,7 +322,10 @@ def make_command(
 
     # Switch user with su
     if su_user:
-        command = 'su {0} -c {1}'.format(su_user, command)
+        # note `which <shell>` usage here - su requires an absolute path
+        command = 'su {0} -s `which {1}` -c {2}'.format(
+            su_user, shell_executable, command,
+        )
 
     # Otherwise just sh wrap the command
     else:
