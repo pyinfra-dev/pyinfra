@@ -27,7 +27,7 @@ def wait(state, host, port=None):
     + port: port number to wait for
     '''
 
-    yield '''
+    yield r'''
         while ! (netstat -an | grep LISTEN | grep -e "\.{0}" -e ":{0}"); do
             echo "waiting for port {0}..."
             sleep 1
