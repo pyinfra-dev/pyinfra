@@ -215,6 +215,17 @@ def crontab(
         multiple identical commands, provide a different name argument for each.
     '''
 
+    def comma_sep(value):
+        if isinstance(value, (list, tuple)):
+            return ','.join('{0}'.format(v) for v in value)
+        return value
+
+    minute = comma_sep(minute)
+    hour = comma_sep(hour)
+    month = comma_sep(month)
+    day_of_week = comma_sep(day_of_week)
+    day_of_month = comma_sep(day_of_month)
+
     crontab = host.fact.crontab(user)
     name_comment = '# pyinfra-name={0}'.format(name)
 
