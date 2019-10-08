@@ -1,43 +1,63 @@
-Deploy Process
-==============
+Executing Deploys
+=================
 
-When you run a pyinfra deploy via the CLI or API, these are the high level steps taken:
+pyinfra executes in two main phases: **fact gathering** and **executing operations**. This split is what enables pyinfra to execute dry runs (``--dry``) and output a "diff" of commands & files (``--debug-operations``) to update a servers state as defined.
 
-+ Connect to each of the target hosts
-+ Generate operations for each host as defined by the user, gathering facts as required
-+ The operations are executed on the remote hosts, in a configurable manner
+**Fact gathering**:
+    During this phase information is collected from the remote servers and compared to the desired state defined by the user (ie a file of operations). This phase is **read only** and collects most of the information needed to execute the deploy.
 
+**Executing operations**:
+    This phase takes the commands/files/etc generated during fact gathering and executes the commands, uploads the files to the remote system. At the end of the operations the remote state should reflect that defined by the users operations.
 
-Connecting
-----------
-
-To connect to the target hosts, pyinfra uses an inventory. This contains metadata
-on all of the target machines, in addition to any user defined data for the deploy. Using
-this SSH connections are attempted in parallel until all hosts are either connected or have
-failed.
+This two phase deploy process enables pyinfra to do some really interesting things, however there are some limitations to consider.
 
 
-Generating Operations
----------------------
+Limitations
+-----------
 
-Operations define the desired state of the target hosts. When operations are added to
-a deploy, facts/state is read from each of the hosts, for example ``directory:/opt/my_app``.
-Based on these facts and the desired state, operations output a list of commands per target
-host.
+Interdependent operations
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The list of commands contains:
+The major disadvantage to separating the deploy into two phases comes into effect where operations rely on each other - ie the changes of one operation will affect a later operations facts. Consider the following example:
 
-+ simple shell commands
-+ local/remote filenames for uploading files
-+ Python functions which serve as mid-deploy callbacks
+.. code:: python
 
+    from pyinfra.modules import apt, files
 
-Executing Operations
---------------------
+    apt.packages(
+        {'Install nginx'},
+        'nginx',
+    )
 
-After all the operations & associated commands have been added to the deploy they are
-executed in parallel on the remote hosts. By default they are run in order, waiting between
-each operation for all hosts to complete or error. This behaviour can be changed to skip
-waiting by using ``--no-wait``, or all operations can be run one host after the other,
-using ``--serial``. Serial can also be applied on a per-operation level by setting
-``serial=True``.
+    files.link(
+        {'Remove default nginx site'},
+        '/etc/nginx/sites-enabled/default',
+        present=False,
+    )
+
+This is problematic because the link, ``/etc/nginx/sites-enabled/default``, won't exist during the first phase as it is created by the previous ``apt.packages`` operation. This means, on first run, the second operation will do nothing, leaving the link in place. Re-running the deploy would correct this, but we can also provide hints to pyinfra in such cases, ie:
+
+.. code:: python
+
+    from pyinfra.modules import apt, files
+
+    install_nginx = apt.packages(
+        {'Install nginx'},
+        'nginx',
+    )
+
+    files.link(
+        {'Remove default nginx site'},
+        '/etc/nginx/sites-enabled/default',
+        present=False,
+        assume_present=install_nginx.changed,
+    )
+
+The addition of ``assume_present`` will force pyinfra to remove the file without checking if it exists first.
+
+Dynamic operations
+~~~~~~~~~~~~~~~~~~
+
+Sometimes it is impossible to know all the facts before executing operations. For example the unique identifier for the server that a package generates, which happens inside an operation. This requires reading this state (the identifier) from the server *during* the deploy.
+
+See the :doc:`./examples/dynamic_execution_deploy` example.
