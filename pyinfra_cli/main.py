@@ -212,6 +212,11 @@ def main(*args, **kwargs):
         # Re-raise any unexpected exceptions as UnexpectedError
         raise UnexpectedError(e)
 
+    finally:
+        if pseudo_state.isset():
+            # Triggers any executor disconnect requirements
+            disconnect_all(pseudo_state)
+
 
 def _main(
     inventory, operations, verbosity,
@@ -509,8 +514,5 @@ def _main(
 
     print('--> Results:')
     print_results(state)
-
-    # Triggers any executor disconnect requirements
-    disconnect_all(state)
 
     _exit()
