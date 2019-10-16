@@ -11,10 +11,14 @@ Add/remove/update directories.
 
 .. code:: python
 
-    files.directory(name, present=True, user=None, group=None, mode=None, recursive=False)
+    files.directory(
+        name, present=True, assume_present=False, user=None, group=None, mode=None,
+        recursive=False
+    )
 
 + **name**: name/patr of the remote folder
 + **present**: whether the folder should exist
++ **assume_present**: whether to assume the directory exists
 + **user**: user to own the folder
 + **group**: group to own the folder
 + **mode**: permissions of the folder
@@ -46,10 +50,14 @@ Add/remove/update files.
 
 .. code:: python
 
-    files.file(name, present=True, user=None, group=None, mode=None, touch=False, create_remote_dir=False)
+    files.file(
+        name, present=True, assume_present=False, user=None, group=None, mode=None, touch=False,
+        create_remote_dir=False
+    )
 
 + **name**: name/path of the remote file
 + **present**: whether the file should exist
++ **assume_present**: whether to assume the file exists
 + **user**: user to own the files
 + **group**: group to own the files
 + **mode**: permissions of the files as an integer, eg: 755
@@ -95,13 +103,14 @@ Add/remove/update links.
 .. code:: python
 
     files.link(
-        name, target=None, present=True, user=None, group=None, symbolic=True,
-        create_remote_dir=False
+        name, target=None, present=True, assume_present=False, user=None, group=None,
+        symbolic=True, create_remote_dir=False
     )
 
 + **name**: the name of the link
 + **target**: the file/directory the link points to
 + **present**: whether the link should exist
++ **assume_present**: whether to assume the link exists
 + **user**: user to own the link
 + **group**: group to own the link
 + **symbolic**: whether to make a symbolic link (vs hard link)

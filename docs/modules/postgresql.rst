@@ -92,6 +92,7 @@ Add/remove PostgreSQL roles.
 
 + **name**: name of the role
 + **present**: whether the role should be present or absent
++ **password**: the password for the role
 + **login**: whether the role can login
 + **superuser**: whether role will be a superuser
 + **inherit**: whether the role inherits from other roles
