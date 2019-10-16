@@ -1,3 +1,11 @@
+# v0.9.8
+
++ Add `assume_present` (default `False`) kwarg to `files.[file|directory|link]` operations
++ Accept lists for time kwargs in `server.crontab`
++ Fix `su` usage and support w/`shell_executable`
++ Fix/cleanup Docker containers on error
++ Move to `.readthedocs.yml`
+
 # v0.9.7
 
 + Fix `@hook` functions by correctly checking `state.initialised`
@@ -20,7 +28,7 @@
 
 + Add `update_submodules` and `recursive_submodules` args to `git.repo` operation (@chrissinclair)
 + Add `name` args to `server.crontab` operation to allow changing of the command
-+ Add global `shell` kwarg to all operations, defaults to `sh` as before
++ Add global `shell_exectuable` kwarg to all operations, defaults to `sh` as before
 
 # v0.9.2
 
