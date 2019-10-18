@@ -1,3 +1,7 @@
+# v0.9.9
+
++ Add `--init` flag to git submodule update (@ryan109)
+
 # v0.9.8
 
 + Add `assume_present` (default `False`) kwarg to `files.[file|directory|link]` operations
