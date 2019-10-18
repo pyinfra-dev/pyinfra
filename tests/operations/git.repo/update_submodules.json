@@ -16,6 +16,6 @@
     },
     "commands": [
         "cd /home/myrepo && git pull",
-        "cd /home/myrepo && git submodule update"
+        "cd /home/myrepo && git submodule update --init"
     ]
 }

@@ -124,9 +124,9 @@ def repo(
 
     if update_submodules:
         if recursive_submodules:
-            git_commands.append('submodule update --recursive')
+            git_commands.append('submodule update --init --recursive')
         else:
-            git_commands.append('submodule update')
+            git_commands.append('submodule update --init')
 
     # Attach prefixes for directory
     command_prefix = 'cd {0} && git'.format(target)
