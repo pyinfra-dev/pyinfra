@@ -205,7 +205,6 @@ def operation(func=None, pipeline_facts=None):
         if state.in_op:
             return func(state, host, *args, **kwargs) or []
 
-        filename = frameinfo.filename
         line_number = frameinfo.lineno
 
         # Figure out the lines this operation was called from (essentially like
@@ -240,7 +239,7 @@ def operation(func=None, pipeline_facts=None):
         op_lines = tuple(op_lines)
         state.op_line_numbers_to_hash[op_lines] = op_hash
         logger.debug('Adding operation, {0}, called @ {1}:{2}, opLines={3}, opHash={4}'.format(
-            names, filename, line_number, op_lines, op_hash,
+            names, frameinfo.filename, line_number, op_lines, op_hash,
         ))
 
         # Ensure shared (between servers) operation meta
