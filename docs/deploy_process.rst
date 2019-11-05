@@ -61,3 +61,37 @@ Dynamic operations
 Sometimes it is impossible to know all the facts before executing operations. For example the unique identifier for the server that a package generates, which happens inside an operation. This requires reading this state (the identifier) from the server *during* the deploy.
 
 See the :doc:`./examples/dynamic_execution_deploy` example.
+
+Loops
+~~~~~
+
+pyinfra uses *line numbers* to determine the order in which operations are executed. While this is very effective and executing in an order users would expect, loops are an exception. pyinfra inclues a workaround for this:
+
+.. code:: python
+
+    items = ['a', 'b', 'c']
+
+
+    # This loop will be executed as:
+    # > item: a
+    # > item: b
+    # > item: c
+    # > end item: a
+    # > end item: b
+    # > end item: c
+    for item in items:
+        server.shell({'item: {0}'.format(item)}, 'hi')
+        server.shell({'end item: {0}'.format(item)}, 'hi')
+
+
+    # This loop will be executed as:
+    # > item: a
+    # > end item: a
+    # > item: b
+    # > end item: b
+    # > item: c
+    # > end item: c
+    with state.preserve_loop_order(items) as loop_items:
+        for item in loop_items():
+            server.shell({'item: {0}'.format(item)}, 'hi')
+            server.shell({'end item: {0}'.format(item)}, 'hi')
