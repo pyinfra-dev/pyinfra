@@ -17,7 +17,7 @@ from pyinfra import __version__, logger
 
 from .config import Config
 from .exceptions import PyinfraError
-from .util import ensure_host_list, sha1_hash
+from .util import ensure_host_list, get_caller_frameinfo, sha1_hash
 
 # Work out the max parallel we can achieve with the open files limit of the user/process,
 # take 10 for opening Python files and /3 for ~3 files per host during op runs.
@@ -77,6 +77,9 @@ class State(object):
 
     # Current op hash for use w/facts
     current_op_hash = None
+
+    loop_counter = None
+    loop_line = None
 
     # Name of the current deploy
     in_deploy = False
@@ -332,6 +335,21 @@ class State(object):
         logger.debug('Reset deploy to {0} (args={1}, data={2})'.format(
             old_deploy_name, old_deploy_kwargs, old_deploy_data,
         ))
+
+    @contextmanager
+    def preserve_loop_order(self, items):
+        frameinfo = get_caller_frameinfo(frame_offset=1)  # escape contextlib
+        self.loop_line = frameinfo.lineno
+
+        def item_generator():
+            for i, item in enumerate(items, 1):
+                self.loop_counter = i
+                yield item
+
+        yield item_generator
+
+        self.loop_counter = None
+        self.loop_line = None
 
     def get_op_order(self):
         line_numbers_to_hash = self.op_line_numbers_to_hash

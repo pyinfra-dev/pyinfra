@@ -214,6 +214,10 @@ def operation(func=None, pipeline_facts=None):
         if state.deploy_line_numbers:
             op_lines.extend(state.deploy_line_numbers)
 
+        # Add any current loop count
+        if state.loop_line:
+            op_lines.extend([state.loop_line, state.loop_counter])
+
         # Add the line number that called this operation
         op_lines.append(line_number)
 
