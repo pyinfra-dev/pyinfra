@@ -46,6 +46,10 @@ class TestCliDeployOperations(PatchSSHTestCase):
             ('Loop-0 main operation', True),
             ('Loop-1 main operation', True),
             ('Third main operation', True),
+            ('Order loop 1', True),
+            ('2nd Order loop 1', True),
+            ('Order loop 2', True),
+            ('2nd Order loop 2', True),
         ]
 
         hosts = ['somehost', 'anotherhost', 'someotherhost']
@@ -63,6 +67,11 @@ class TestCliDeployOperations(PatchSSHTestCase):
         pyinfra.is_cli = False
 
         op_order = state.get_op_order()
+
+        self.assertEqual(
+            len(correct_op_name_and_host_names), len(op_order),
+            'Incorrect number of operations detected',
+        )
 
         for i, (correct_op_name, correct_host_names) in enumerate(
             correct_op_name_and_host_names,

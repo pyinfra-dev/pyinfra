@@ -1,4 +1,4 @@
-from pyinfra import host, local
+from pyinfra import host, local, state
 from pyinfra.modules import server
 
 
@@ -30,3 +30,14 @@ server.shell(
     {'Third main operation'},
     'echo third_main_op',
 )
+
+with state.preserve_loop_order([1, 2]) as loop_items:
+    for item in loop_items():
+        server.shell(
+            {'Order loop {0}'.format(item)},
+            'echo loop_{0}'.format(item),
+        )
+        server.shell(
+            {'2nd Order loop {0}'.format(item)},
+            'echo loop_{0}'.format(item),
+        )
