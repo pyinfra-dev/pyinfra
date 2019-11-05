@@ -207,15 +207,15 @@ def operation(func=None, pipeline_facts=None):
 
         line_number = frameinfo.lineno
 
-        # Figure out the lines this operation was called from (essentially like
-        # a line-call-stack).
-        op_lines = [line_number]
-
-        if state.deploy_line_numbers:
-            op_lines = list(state.deploy_line_numbers) + op_lines
-
         # Inject the current op file number (only incremented in CLI mode)
-        op_lines.insert(0, state.current_op_file)
+        op_lines = [state.current_op_file]
+
+        # Add any current @deploy line numbers
+        if state.deploy_line_numbers:
+            op_lines.extend(state.deploy_line_numbers)
+
+        # Add the line number that called this operation
+        op_lines.append(line_number)
 
         # Make a hash from the call stack lines
         op_hash = make_hash(op_lines)
