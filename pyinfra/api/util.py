@@ -55,10 +55,15 @@ def ensure_host_list(hosts, inventory):
     return hosts
 
 
-def get_caller_frameinfo():
+def get_caller_frameinfo(frame_offset=0):
+    # Default frames to look at is 2; one for this function call itself
+    # in util.py and one for the caller of this function within pyinfra
+    # giving the external call frame (ie end user deploy code).
+    frame_shift = 2 + frame_offset
+
     stack_items = stack()
 
-    frame = stack_items[2][0]
+    frame = stack_items[frame_shift][0]
     info = getframeinfo(frame)
 
     del stack_items
