@@ -84,7 +84,7 @@ def script_template(state, host, template_filename, chdir=None, **data):
     + chdir: directory to cd into before executing the script
     '''
 
-    temp_file = state.get_temp_filename(template_filename)
+    temp_file = state.get_temp_filename('{0}{1}'.format(template_filename, data))
     yield files.template(state, host, template_filename, temp_file, **data)
 
     yield chmod(temp_file, '+x')
