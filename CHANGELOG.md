@@ -1,3 +1,10 @@
+# v0.10
+
++ Add `State.preserve_loop_order` to execute loops in order
+    * See: https://pyinfra.readthedocs.io/en/latest/deploy_process.html#loops
++ Fix: include data for temp filename hash in `server.script_template` operation
+
+
 # v0.9.9
 
 + Add `--init` flag to git submodule update (@ryan109)
