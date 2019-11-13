@@ -32,6 +32,12 @@ TEST_REQUIRES = (
     'jsontest==1.4',
     'coverage==4.4.1',
     'mock==1.3.0',
+
+    # Linting
+    'flake8',
+    'flake8-commas',
+    'flake8-quotes',
+    'flake8-import-order',
 )
 
 DEV_REQUIRES = TEST_REQUIRES + (
@@ -48,12 +54,6 @@ DEV_REQUIRES = TEST_REQUIRES + (
     'sphinx-autobuild==0.7.1',
     'sphinx-better-theme==0.1.5',
     'recommonmark==0.5.0',
-
-    # Linting
-    'flake8',
-    'flake8-commas',
-    'flake8-quotes',
-    'flake8-import-order',
 )
 
 
