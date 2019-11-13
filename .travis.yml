@@ -15,5 +15,11 @@ matrix:
 # Install pyinfra + test deps
 install: 'pip install -e .[test]'
 
-# Run the tests
-script: nosetests
+jobs:
+  include:
+    # Run the linting
+    - stage: Lint
+      script: flake8
+    # Run the tests
+    - stage: Test
+      script: nosetests
