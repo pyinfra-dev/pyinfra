@@ -84,7 +84,9 @@ class TestSSHApi(TestCase):
         self.fake_get_transport_patch = patch('pyinfra.api.connectors.ssh.SSHClient.get_transport')
         self.fake_get_transport_patch.start()
 
-        self.fake_agentrequesthandler_patch = patch('pyinfra.api.connectors.ssh.AgentRequestHandler')
+        self.fake_agentrequesthandler_patch = patch(
+            'pyinfra.api.connectors.ssh.AgentRequestHandler',
+        )
         self.fake_agentrequesthandler_patch.start()
 
     def tearDown(self):
