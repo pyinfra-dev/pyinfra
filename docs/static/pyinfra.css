@@ -1,157 +1,53 @@
-@import url('https://fonts.googleapis.com/css?family=Roboto+Slab:400,700');
-
-
-*::selection {
-    background: green;
-    color: white;
-}
-
 body {
-    margin: 0;
-    font-family: Roboto Slab;
-    line-height: 24px;
-    font-size: 16px;
-    color: #333;
+    background: white;
 }
 
-a, a:visited {
-    text-decoration: none;
-    border-bottom: 1px solid #D7D7D7;
-    color: #4e8856;
-}
-a:visited {
-    opacity: 0.9;
-}
-a:hover {
-    border-bottom: 1px solid #A0A0A0;
-    text-decoration: none;
-}
-
-header {
-    height: 10px;
-}
-header h1 {
-    display: none;
-}
-
-h2, h2:first-child {
-    margin-top: 30px;
-}
-
-code {
-    background: #F7F7F7;
-    color: #4e8856;
-    padding: 2px;
-    border: 1px solid #E1E1E1;
-}
-pre {
-    background: #F7F7F7;
-    border: 1px solid #E1E1E1;
-    padding: 10px;
-}
-pre code {
-    display: inline-block;
-    font-size: 14px;
-}
-
-.home-link, .home-link:hover {
-    border: none;
-    margin-top: 10px !important;
-    display: block;
-    font-size: 1.5rem;
-}
-.home-link img {
-    vertical-align: middle;
-}
-
-header#pageheader, footer#pagefooter, .related, .document {
-    max-width: 1050px;
-    width: 98%;
-}
-
-.sphinxsidebar {
-    width: 230px;
-    word-wrap: break-word;
-}
-.sphinxsidebarwrapper {
-    width: 214px;
-}
-
-.bodywrapper {
-    margin-left: 230px;
-}
-
-
-/*
-    Sphinx specific
-*/
-
-a.toc-backref {
-    color: #333;
-    border: none;
-}
-a.headerlink {
-    border: none;
-    color: green;
-}
-
-p.caption {
-    font-size: 18px;
+.sphinxsidebar p.caption {
     font-weight: bold;
+    text-transform: uppercase;
+    color: #606060;
+    font-size: 14px;
+    margin-left: 17px;
 }
 
-div.topic {
-    background: #F7F7F7;
-    border-color: #E1E1E1;
+div#right-column {
+    margin: 0 auto;
+    padding-left: 350px;
+    max-width: 1300px;
 }
 
-nav#breadcrumbs a, nav#rellinks a {
-    border: none;
-}
-
-div.sphinxsidebarwrapper a.current {
-    color: #333;
-    border-bottom: 1px solid #A0A0A0;
-}
-
-footer#pagefooter {
-    font-size: 12px;
-    color: #999;
-    text-align: left;
-    padding-top: 10px;
-}
-    footer#pagefooter a {
-        color: #666;
-        border: none;
+@media screen and (max-width: 768px) {
+    div#right-column {
+        padding-left: 20px;
     }
+}
 
-div.admonition {
+
+h1 {
+    background: transparent;
+    margin-left: 0;
+    padding-left: 0;
+    width: 100%;
+}
+
+h2 code {
+    font-size: 32px;
+}
+
+.breadcrumb {
+    padding: 8px 0;
+}
+
+.body {
     padding: 0;
-    border: none;
-}
-div.admonition p {
-    display: block !important;
-    padding: 5px;
-    margin: 0;
-}
-p.admonition-title {
-    font-weight: normal;
 }
 
-div.admonition.note {
-    background: #e7f2fa;
-}
-div.admonition.note p.admonition-title {
-    background: #6ab0de;
+a.text-logo, a.text-logo:active {
+    text-decoration: none;
     color: white;
 }
-
-div.admonition.warning {
-    background: #ffedcc;
-}
-div.admonition.warning p.admonition-title {
-    background: #f0b37e;
-    color: white;
+a.text-logo:hover {
+    background-color: #2a6496;
 }
 
 
@@ -161,6 +57,7 @@ div.admonition.warning p.admonition-title {
 div#pyinfra-documentation div.compound {
     width: 46%;
     margin-right: 3%;
+    margin-top: 20px;
     display: inline-block;
     vertical-align: top;
 }
@@ -170,13 +67,3 @@ div#pyinfra-documentation div.compound {
     div#pyinfra-documentation div.compound dd {
         margin-left: 0;
     }
-
-
-/*
-    Responsive */
-
-@media (max-width: 820px) {
-    .bodywrapper {
-        margin-left: 0;
-    }
-}

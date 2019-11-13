@@ -1,15 +1,12 @@
-<a href="{{ pathto('index') }}" class="home-link">
+<link rel="stylesheet" type="text/css" href="{{ pathto('_static/pyinfra.css', 1) }}" />
+
+<a href="{{ pathto('index') }}" class="text-logo">
     <img src="{{ pathto('_static/logo_small.png', 1) }}" height="48px" />
     pyinfra
 </a>
 
-{{ toctree(maxdepth=3, includehidden=true) }}
-
-<div id="searchbox" style="" role="search">
-    <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q"></div>
-      <div><input type="submit" value="Go"></div>
-      <input type="hidden" name="check_keywords" value="yes">
-      <input type="hidden" name="area" value="default">
-    </form>
+<div class="sidebar-block">
+    <div class="sidebar-toc">
+        {{ toctree(maxdepth=3, includehidden=true) }}
+    </div>
 </div>

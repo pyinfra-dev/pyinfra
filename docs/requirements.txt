@@ -1,2 +1,2 @@
-sphinx-better-theme==0.1.5
+guzzle_sphinx_theme==0.7.11
 recommonmark==0.5.0

@@ -1,6 +1,6 @@
 from datetime import date
 
-from better import better_theme_path
+import guzzle_sphinx_theme
 
 from pyinfra import __version__
 
@@ -16,6 +16,8 @@ extensions = [
     'sphinx.ext.napoleon',
 ]
 
+extensions.append('guzzle_sphinx_theme')
+
 source_suffix = ['.rst', '.md']
 source_parsers = {
     '.md': 'recommonmark.parser.CommonMarkParser',
@@ -29,8 +31,8 @@ pygments_style = 'sphinx'
 
 # Theme style override
 html_short_title = 'Home'
-html_theme = 'better'
-html_theme_path = [better_theme_path]
+html_theme = 'guzzle_sphinx_theme'
+html_theme_path = guzzle_sphinx_theme.html_theme_path()
 html_static_path = ['static']
 
 templates_path = ['templates']
@@ -38,10 +40,5 @@ templates_path = ['templates']
 html_favicon = 'static/logo_small.png'
 
 html_sidebars = {
-    '**': ['pyinfra_sidebar.html'],
-}
-
-html_theme_options = {
-    'cssfiles': ['_static/pyinfra.css'],
-    'scriptfiles': ['_static/sidebar.js'],
+    '**': ['pyinfra_sidebar.html', 'searchbox.html'],
 }
