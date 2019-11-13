@@ -120,11 +120,10 @@ def _run_server_op(state, host, op_hash):
 
         # Must be a string/shell command: execute it on the server w/op-level preferences
         else:
-            stdout = []
-            stderr = []
+            combined_output_lines = []
 
             try:
-                status, stdout, stderr = host.run_shell_command(
+                status, combined_output_lines = host.run_shell_command(
                     state,
                     command.strip(),
                     sudo=sudo,
@@ -136,6 +135,7 @@ def _run_server_op(state, host, op_hash):
                     get_pty=op_meta['get_pty'],
                     env=op_meta['env'],
                     print_output=state.print_output,
+                    return_combined_output=True,
                 )
 
             except (timeout_error, socket_error, SSHException) as e:
@@ -147,20 +147,16 @@ def _run_server_op(state, host, op_hash):
 
             # If we failed and have no already printed the stderr, print it
             if status is False and not state.print_output:
-                has_stderr = False
-                for line in stderr:
-                    has_stderr = True
-                    logger.error('{0}{1}'.format(
-                        host.print_prefix,
-                        click.style(line, 'red'),
-                    ))
-
-                # Not all (like, most) programs output their errors to stderr!
-                if not has_stderr:
-                    for line in stdout:
+                for type_, line in combined_output_lines:
+                    if type_ == 'stderr':
                         logger.error('{0}{1}'.format(
                             host.print_prefix,
                             click.style(line, 'red'),
+                        ))
+                    else:
+                        logger.error('{0}{1}'.format(
+                            host.print_prefix,
+                            line,
                         ))
 
         # Break the loop to trigger a failure
