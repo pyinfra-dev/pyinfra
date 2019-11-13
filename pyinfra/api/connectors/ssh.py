@@ -5,11 +5,9 @@ from os import path
 from socket import (
     error as socket_error,
     gaierror,
-    timeout as timeout_error,
 )
 
 import click
-import gevent
 
 from paramiko import (
     AuthenticationException,
@@ -25,9 +23,10 @@ import pyinfra
 
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.api.util import get_file_io, make_command, read_buffer
+from pyinfra.api.util import get_file_io, make_command
 
 from .sshuserclient import SSHClient
+from .util import read_buffers_into_queue, split_combined_output
 
 SFTP_CONNECTIONS = {}
 
@@ -218,6 +217,7 @@ def connect(state, host, for_fact=None):
 def run_shell_command(
     state, host, command,
     get_pty=False, timeout=None, print_output=False,
+    return_combined_output=False,
     **command_kwargs
 ):
     '''
@@ -253,45 +253,25 @@ def run_shell_command(
         get_pty=get_pty,
     )
 
-    channel = stdout_buffer.channel
-
-    # Iterate through outputs to get an exit status and generate desired list
-    # output, done in two greenlets so stdout isn't printed before stderr. Not
-    # attached to state.pool to avoid blocking it with 2x n-hosts greenlets.
-    stdout_reader = gevent.spawn(
-        read_buffer, stdout_buffer,
+    combined_output = read_buffers_into_queue(
+        host,
+        stdout_buffer,
+        stderr_buffer,
+        timeout=timeout,
         print_output=print_output,
-        print_func=lambda line: '{0}{1}'.format(host.print_prefix, line),
     )
-    stderr_reader = gevent.spawn(
-        read_buffer, stderr_buffer,
-        print_output=print_output,
-        print_func=lambda line: '{0}{1}'.format(
-            host.print_prefix, click.style(line, 'red'),
-        ),
-    )
-
-    # Wait on output, with our timeout (or None)
-    greenlets = gevent.wait((stdout_reader, stderr_reader), timeout=timeout)
-
-    # Timeout doesn't raise an exception, but gevent.wait returns the greenlets
-    # which did complete. So if both haven't completed, we kill them and fail
-    # with a timeout.
-    if len(greenlets) != 2:
-        stdout_reader.kill()
-        stderr_reader.kill()
-
-        raise timeout_error()
-
-    # Read the buffers into a list of lines
-    stdout = stdout_reader.get()
-    stderr = stderr_reader.get()
 
     logger.debug('Waiting for exit status...')
-    exit_status = channel.recv_exit_status()
-
+    exit_status = stdout_buffer.channel.recv_exit_status()
     logger.debug('Command exit status: {0}'.format(exit_status))
-    return exit_status == 0, stdout, stderr
+
+    status = exit_status == 0
+
+    if return_combined_output:
+        return status, combined_output
+
+    stdout, stderr = split_combined_output(combined_output)
+    return status, stdout, stderr
 
 
 def _get_sftp_connection(host):

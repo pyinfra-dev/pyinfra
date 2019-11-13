@@ -494,22 +494,19 @@ def get_file_sha1(filename_or_io):
     return digest
 
 
-def read_buffer(io, print_output=False, print_func=None):
+def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
     '''
     Reads a file-like buffer object into lines and optionally prints the output.
     '''
 
     def _print(line):
-        if print_output:
-            if print_func:
-                line = print_func(line)
+        if print_func:
+            line = print_func(line)
 
-            if six.PY2:  # Python2 must print unicode as bytes (encoded)
-                line = line.encode('utf-8')
+        if six.PY2:  # Python2 must print unicode as bytes (encoded)
+            line = line.encode('utf-8')
 
-            print(line)
-
-    out = []
+        print(line)
 
     for line in io:
         # Handle local Popen shells returning list of bytes, not strings
@@ -517,8 +514,7 @@ def read_buffer(io, print_output=False, print_func=None):
             line = line.decode('utf-8')
 
         line = line.strip()
-        out.append(line)
+        output_queue.put((type_, line))
 
-        _print(line)
-
-    return out
+        if print_output:
+            _print(line)

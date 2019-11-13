@@ -5,6 +5,8 @@ from subprocess import PIPE, Popen, STDOUT
 
 import six
 
+from gevent.queue import Queue
+
 import pyinfra
 
 from . import logger, pseudo_host, pseudo_state
@@ -105,11 +107,17 @@ def shell(commands, splitlines=False, ignore_errors=False):
 
         process = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
 
-        stdout = read_buffer(
+        stdout_queue = Queue()
+
+        read_buffer(
+            'stdout',
             process.stdout,
+            stdout_queue,
             print_output=print_output,
             print_func=lambda line: '{0}{1}'.format(print_prefix, line),
         )
+
+        stdout = [line for _, line in stdout_queue.queue]
 
         # Get & check result
         result = process.wait()
