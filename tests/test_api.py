@@ -442,7 +442,6 @@ class TestOperationsApi(PatchSSHTestCase):
             fake_run_command.return_value = (
                 False,
                 FakeBuffer('', fake_channel),
-                FakeBuffer('', fake_channel),
             )
 
             with self.assertRaises(PyinfraError) as e:
@@ -468,7 +467,6 @@ class TestOperationsApi(PatchSSHTestCase):
             fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
                 False,
-                FakeBuffer('', fake_channel),
                 FakeBuffer('', fake_channel),
             )
 
