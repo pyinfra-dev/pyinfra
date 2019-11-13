@@ -62,6 +62,7 @@ def disconnect(state, host):
 def run_shell_command(
     state, host, command,
     timeout=None, print_output=False,
+    return_combined_output=False,
     **kwargs  # ignored (sudo/etc)
 ):
     container_id = host.host_data['docker_container_id']
@@ -71,6 +72,7 @@ def run_shell_command(
         state, host, docker_command,
         timeout=timeout,
         print_output=print_output,
+        return_combined_output=return_combined_output,
     )
 
 
