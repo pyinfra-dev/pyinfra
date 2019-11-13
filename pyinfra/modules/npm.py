@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/npm.py
-# Desc: manage NPM packages
-
 from __future__ import unicode_literals
 
 from pyinfra.api import operation

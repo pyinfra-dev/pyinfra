@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/util/packaging.py
-# Desc: common functions for packaging facts
-
 import re
 
 

@@ -1,7 +1,3 @@
-# pyinfra
-# File: api/config.py
-# Desc: the default config
-
 import six
 
 from pyinfra import logger

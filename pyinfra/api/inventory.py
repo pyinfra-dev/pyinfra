@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/api/inventory.py
-# Desc: represents a pyinfra inventory
-
 from collections import defaultdict
 
 import six

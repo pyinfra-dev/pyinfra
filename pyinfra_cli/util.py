@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra_cli/arguments.py
-# Desc: general utilities for the pyinfra CLI
-
 from __future__ import division, print_function
 
 import json

@@ -1,7 +1,3 @@
-# pyinfra
-# File: tests/test_cli.py
-# Desc: tests for the pyinfra CLI
-
 from collections import defaultdict
 from datetime import datetime
 from os import path

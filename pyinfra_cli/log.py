@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra_cli/log.py
-# Desc: logging for the CLI
-
 from __future__ import division, print_function, unicode_literals
 
 import logging

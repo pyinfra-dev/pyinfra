@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/api/host.py
-# Desc: thin class that represents a target host in pyinfra
-
 from __future__ import unicode_literals
 
 import click

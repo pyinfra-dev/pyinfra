@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfa/facts/__init__.py
-# Desc: Load all modules to index facts
-
 from glob import glob
 from os import path
 

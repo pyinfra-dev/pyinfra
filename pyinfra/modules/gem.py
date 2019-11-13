@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/gem.py
-# Desc: manage gem packages
-
 '''
 Mange gem packages.
 '''

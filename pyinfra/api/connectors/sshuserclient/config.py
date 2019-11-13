@@ -42,7 +42,7 @@ class SSHConfig(ParamkoSSHConfig):
                 self._config.append(host)
                 host = {
                     'host': self._get_hosts(value),
-                    'config': {}
+                    'config': {},
                 }
             elif key == 'proxycommand' and value.lower() == 'none':
                 # Store 'none' as None; prior to 3.x, it will get stripped out
@@ -66,7 +66,9 @@ class SSHConfig(ParamkoSSHConfig):
                 for filename in glob.iglob(path):
                     if os.path.isfile(filename):
                         if filename in parsed_files:
-                            raise Exception('Include loop detected in ssh config file: %s' % filename)
+                            raise Exception(
+                                'Include loop detected in ssh config file: %s' % filename,
+                            )
                         with open(filename) as fd:
                             parsed_files.append(filename)
                             self.parse(fd, parsed_files)

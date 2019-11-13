@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/iptables.py
-# Desc: manage iptables rules
-
 '''
 The iptables modules handles iptables rules
 '''

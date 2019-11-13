@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/util/files.py
-# Desc: common functions for handling the filesystem
-
 from __future__ import unicode_literals
 
 
@@ -24,8 +20,8 @@ def ensure_mode_int(mode):
 def sed_replace(filename, line, replace, flags=None):
     flags = ''.join(flags) if flags else ''
 
-    line = line.replace('/', '\/')
-    replace = replace.replace('/', '\/')
+    line = line.replace('/', r'\/')
+    replace = replace.replace('/', r'\/')
 
     return 'sed -i="" "s/{0}/{1}/{2}" {3}'.format(
         line, replace, flags, filename,

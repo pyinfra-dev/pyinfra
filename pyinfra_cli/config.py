@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra_cli/config.py
-# Desc: config handling for the CLI
-
 import ast
 
 from os import path

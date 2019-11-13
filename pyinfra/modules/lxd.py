@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/lxd.py
-# Desc: manage LXD containers
-
 '''
 The LXD modules manage LXD containers
 '''

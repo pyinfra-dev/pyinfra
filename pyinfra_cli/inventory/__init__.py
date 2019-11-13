@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra_cli/inventory.py
-# Desc: inventory creation for the CLI
-
 from os import listdir, path
 from types import GeneratorType
 

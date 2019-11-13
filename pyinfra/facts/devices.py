@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/devices.py
-# Desc: device (nics, hdds, etc) facts
-
 import re
 
 from pyinfra.api import FactBase
@@ -24,7 +20,7 @@ class BlockDevices(FactBase):
     '''
 
     command = 'df'
-    regex = r'([a-zA-Z0-9\/\-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'
+    regex = r'([a-zA-Z0-9\/\-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)'  # noqa: E501
     default = dict
 
     def process(self, output):

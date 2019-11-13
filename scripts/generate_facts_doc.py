@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-# pyinfra
-# File: docs/generate_fact_docs.py
-# Desc: generate rst docs from the fact classes
-
 from inspect import getargspec, getmembers, isclass
 from types import FunctionType, MethodType
 

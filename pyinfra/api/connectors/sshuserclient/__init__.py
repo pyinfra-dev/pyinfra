@@ -1,1 +1,1 @@
-from .client import SSHClient
+from .client import SSHClient  # noqa: F401

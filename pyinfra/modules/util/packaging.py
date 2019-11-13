@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/util/packaging.py
-# Desc: common functions for packaging modules
-
 from __future__ import unicode_literals
 
 import six

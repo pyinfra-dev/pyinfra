@@ -33,7 +33,7 @@ class SSHClient(ParamikoClient):
             (self.hostname, self.config['port']))
 
     def parse_config(self, hostname):
-        cfg = {'port': 22, }
+        cfg = {'port': 22}
 
         user_config_file = os.path.expanduser('~/.ssh/config')
         if os.path.exists(user_config_file):

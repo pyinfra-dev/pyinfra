@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-# pyinfra
-# File: scripts/generate_empty_tests.py
-# Desc: generate empty test files
-
 from __future__ import print_function
 
 import sys

@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/pip.py
-# Desc: facts for the pip package manager
-
 from __future__ import unicode_literals
 
 from pyinfra.api import FactBase

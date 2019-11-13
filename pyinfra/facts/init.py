@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/init.py
-# Desc: init system facts
-
 import re
 
 from pyinfra.api import FactBase

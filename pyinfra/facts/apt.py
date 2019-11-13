@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/apt.py
-# Desc: facts for the apt package manager & deb files
-
 from __future__ import unicode_literals
 
 import re

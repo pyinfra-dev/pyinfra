@@ -1,7 +1,3 @@
-# pyinfra
-# File: tests/test_modules.py
-# Desc: generate tests for module operations
-
 from __future__ import print_function
 
 import json

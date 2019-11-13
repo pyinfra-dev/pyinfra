@@ -1,11 +1,8 @@
-# pyinfra
-# File: pyinfra_cli/main.py
-# Desc: the actual CLI implementation
-
 from __future__ import division, print_function
 
 import logging
 import sys
+import warnings
 
 from fnmatch import fnmatch
 from os import getcwd, path
@@ -99,7 +96,7 @@ def _print_operations(ctx, param, value):
 @click.option('--fail-percent', type=int, help='% of hosts allowed to fail.')
 @click.option(
     '--dry', is_flag=True, default=False,
-    help='Don\'t execute operations on the target hosts.',
+    help="Don't execute operations on the target hosts.",
 )
 @click.option(
     '--limit',
@@ -107,7 +104,7 @@ def _print_operations(ctx, param, value):
 )
 @click.option(
     '--no-wait', is_flag=True, default=False,
-    help='Don\'t wait between operations for hosts to complete.',
+    help="Don't wait between operations for hosts to complete.",
 )
 @click.option(
     '--serial', is_flag=True, default=False,
@@ -213,7 +210,7 @@ def main(*args, **kwargs):
         raise UnexpectedError(e)
 
     finally:
-        if pseudo_state.isset():
+        if pseudo_state.isset() and pseudo_state.initialised:
             # Triggers any executor disconnect requirements
             disconnect_all(pseudo_state)
 
@@ -227,6 +224,9 @@ def _main(
     debug, debug_data, debug_facts, debug_operations,
     facts=None, print_operations=None,
 ):
+    if not debug and not sys.warnoptions:
+        warnings.simplefilter('ignore')
+
     print()
     print('### {0}'.format(click.style('Welcome to pyinfra', bold=True)))
     print()

@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra_cli/exceptions.py
-# Desc: the pyinfra CLI exception
-
 from __future__ import print_function
 
 import sys

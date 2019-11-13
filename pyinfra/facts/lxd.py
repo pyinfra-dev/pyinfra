@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/lxd.py
-# Desc: LXD containers facts
-
 import json
 
 from pyinfra.api import FactBase

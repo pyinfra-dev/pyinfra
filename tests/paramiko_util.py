@@ -1,7 +1,3 @@
-# pyinfra
-# File: tests/paramiko_util.py
-# Desc: paramiko fake test classes/shim for full API tests
-
 from inspect import isclass
 from unittest import TestCase
 

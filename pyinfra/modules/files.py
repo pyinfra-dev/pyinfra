@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/files.py
-# Desc: manage files/templates <> server
-
 '''
 The files module handles filesystem state, file uploads and template generation.
 '''

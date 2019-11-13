@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/api/state.py
-# Desc: class that represents the current pyinfra.state
-
 from __future__ import division, unicode_literals
 
 from contextlib import contextmanager

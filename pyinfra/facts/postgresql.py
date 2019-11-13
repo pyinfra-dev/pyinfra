@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/postgresql.py
-# Desc: PostgreSQL facts
-
 from pyinfra.api import FactBase
 from pyinfra.api.util import try_int
 

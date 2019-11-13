@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/git.py
-# Desc: manage git repositories
-
 '''
 Manage git repositories and configuration.
 '''

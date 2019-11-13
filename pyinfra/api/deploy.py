@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/api/deploy.py
-# Desc: simple function wrapper that holds and namespaces operations
-
 '''
 Deploys come in two forms: on-disk, eg deploy.py, and @deploy wrapped functions.
 The latter enable re-usable (across CLI and API based execution) pyinfra extension

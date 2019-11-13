@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/pip.py
-# Desc: manage pip packages
-
 '''
 Manage pip packages. Compatible globally or inside a virtualenv.
 '''

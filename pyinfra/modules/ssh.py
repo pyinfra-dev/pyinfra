@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/ssh.py
-# Desc: use SSh from the remote server
-
 '''
 Execute commands and up/download files *from* the remote host.
 

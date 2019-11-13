@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/hardware.py
-# Desc: hardware facts (memory, CPUs, etc)
-
 from __future__ import division
 
 from pyinfra.api import FactBase

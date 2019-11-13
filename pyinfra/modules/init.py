@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/init.py
-# Desc: manage init systems
-
 '''
 Manages the state and configuration of init services. Support for:
 

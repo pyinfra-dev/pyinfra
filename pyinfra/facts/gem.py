@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/gem.py
-# Desc: facts for the RubyGems package manager
-
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages

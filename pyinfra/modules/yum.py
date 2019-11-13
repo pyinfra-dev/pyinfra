@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/yum.py
-# Desc: manage yum packages & repositories
-
 '''
 Manage yum packages and repositories. Note that yum package names are case-sensitive.
 '''

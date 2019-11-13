@@ -1,7 +1,3 @@
-# pyinfra
-# File: docs/conf.py
-# Desc: minimal Sphinx config
-
 from datetime import date
 
 from better import better_theme_path

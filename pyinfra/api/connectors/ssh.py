@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/api/ssh.py
-# Desc: handle all SSH related stuff
-
 from __future__ import print_function, unicode_literals
 
 from getpass import getpass

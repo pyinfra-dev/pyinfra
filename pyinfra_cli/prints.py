@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra_cli/prints.py
-# Desc: print utilities for the CLI
-
 from __future__ import print_function, unicode_literals
 
 import json

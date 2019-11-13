@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/server.py
-# Desc: the base os-level module
-
 '''
 The server module takes care of os-level state. Targets POSIX compatibility, tested on
 Linux/BSD.

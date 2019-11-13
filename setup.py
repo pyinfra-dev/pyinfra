@@ -1,7 +1,3 @@
-# pyinfra
-# File: setup.py
-# Desc: pyinfra package setup
-
 import sys
 
 try:

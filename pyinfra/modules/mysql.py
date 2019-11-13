@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/mysql.py
-# Desc: manage MySQL databases/users/privileges
-
 '''
 Manage MySQL databases, users and privileges.
 
@@ -280,7 +276,7 @@ def privileges(
             action=action, target=target,
             database=database, table=table,
             user=user, user_hostname=user_hostname,
-        ).replace('`', '\`')
+        ).replace('`', r'\`')
 
         yield make_execute_mysql_command(
             command,

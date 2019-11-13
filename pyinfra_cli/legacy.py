@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra_cli/legacy.py
-# Desc: the old, pre 0.4 CLI
-
 import shlex
 import sys
 

@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/mysql.py
-# Desc: facts for the MySQL server
-
 import re
 
 from collections import defaultdict

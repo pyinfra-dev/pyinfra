@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/api/facts.py
-# Desc: the facts API
-
 '''
 The pyinfra facts API. Facts enable pyinfra to collect remote server state which
 is used to "diff" with the desired state, producing the final commands required

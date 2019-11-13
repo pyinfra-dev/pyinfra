@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfa/modules/__init__.py
-# Desc: Define __all__ for pydocs
-
 from glob import glob
 from os import path
 

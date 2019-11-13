@@ -1,7 +1,3 @@
-# pyinfra
-# File: tests/test_facts.py
-# Desc: generate tests for facts
-
 from __future__ import print_function
 
 import json

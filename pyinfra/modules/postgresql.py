@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/postgresql.py
-# Desc: manage PostgreSQL databases
-
 '''
 The PostgreSQL modules manage PostgreSQL databases, users and privileges.
 

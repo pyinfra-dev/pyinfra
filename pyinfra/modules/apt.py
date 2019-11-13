@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/apt.py
-# Desc: manage apt packages & repositories
-
 '''
 Manage apt packages and repositories.
 '''

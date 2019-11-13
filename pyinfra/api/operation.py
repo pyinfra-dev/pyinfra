@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/api/operation.py
-# Desc: wraps deploy script operations and puts commands -> pyinfra._ops
-
 '''
 Operations are the core of pyinfra. The ``@operation`` wrapper intercepts calls
 to the function and instead diff against the remote server, outputting commands

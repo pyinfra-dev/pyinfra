@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/pseudo_modules.py
-# Desc: modules that shift and change as pyinfra executes deploys
-
 '''
 These three pseudo modules (state, inventory, host) are used throughout pyinfra
 and provide the magic that means "from pyinfra import host" inside a deploy

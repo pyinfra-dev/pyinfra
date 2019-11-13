@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/pkg.py
-# Desc: facts for the BSD pkg_* package manager
-
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages

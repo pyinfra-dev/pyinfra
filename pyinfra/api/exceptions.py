@@ -1,8 +1,3 @@
-# pyinfra
-# File: pyinfra/api/exceptions.py
-# Desc: pyinfra's exceptions!
-
-
 class PyinfraError(Exception):
     '''
     Generic pyinfra exception.

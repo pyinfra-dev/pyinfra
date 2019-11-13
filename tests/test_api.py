@@ -1,7 +1,3 @@
-# pyinfra
-# File: tests/test_api.py
-# Desc: tests for the pyinfra API
-
 from inspect import currentframe, getframeinfo
 from unittest import TestCase
 

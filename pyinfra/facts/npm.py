@@ -1,9 +1,5 @@
 # encoding: utf8
 
-# pyinfra
-# File: pyinfra/facts/npm.py
-# Desc: npm package manager facts
-
 from __future__ import unicode_literals
 
 from pyinfra.api import FactBase

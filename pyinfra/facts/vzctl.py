@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/vzctl.py
-# Desc: OpenVZ containers facts
-
 import json
 
 from pyinfra.api import FactBase

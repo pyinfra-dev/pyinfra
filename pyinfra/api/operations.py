@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/api/operations.py
-# Desc: Runs operations from pyinfra._ops in various modes (parallel, no_wait, serial)
-
 from __future__ import print_function, unicode_literals
 
 from itertools import product

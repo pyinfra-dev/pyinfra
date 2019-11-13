@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/util/files.py
-# Desc: file related fact utilities
-
 from __future__ import unicode_literals
 
 import re

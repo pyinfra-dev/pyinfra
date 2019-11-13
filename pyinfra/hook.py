@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/hook.py
-# Desc: Python hooks for CLI deploys
-
 from functools import wraps
 
 from click import ClickException

@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/python.py
-# Desc: module to enable execution Python code mid-deploy
-
 '''
 The Python module allows you to execute Python code within the context of a deploy.
 '''

@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/modules/vzctl.py
-# Desc: manage OpenVZ containers with vzctl
-
 '''
 Manage OpenVZ containers with ``vzctl``.
 '''

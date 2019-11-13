@@ -1,7 +1,3 @@
-# pyinfra
-# File: tests/util.py
-# Desc: utilities for fake pyinfra state/host objects
-
 from datetime import datetime
 
 import six

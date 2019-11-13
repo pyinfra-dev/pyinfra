@@ -1,7 +1,3 @@
-# pyinfra
-# File: pyinfra/facts/iptables.py
-# Desc: facts for the Linux iptables firewall
-
 from __future__ import unicode_literals
 
 from pyinfra.api import FactBase
