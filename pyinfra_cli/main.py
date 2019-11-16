@@ -48,10 +48,6 @@ from .virtualenv import init_virtualenv
 
 # Exit handler
 def _exit():
-    print()
-    print('<-- Thank you, goodbye')
-    print()
-
     sys.exit(0)
 
 
@@ -226,10 +222,6 @@ def _main(
 ):
     if not debug and not sys.warnoptions:
         warnings.simplefilter('ignore')
-
-    print()
-    print('### {0}'.format(click.style('Welcome to pyinfra', bold=True)))
-    print()
 
     # Setup logging
     log_level = logging.DEBUG if debug else logging.INFO
@@ -415,6 +407,7 @@ def _main(
     run_hook(state, 'before_connect', hook_data)
 
     # Connect to all the servers
+    print()
     print('--> Connecting to hosts...')
     connect_all(state)
 
