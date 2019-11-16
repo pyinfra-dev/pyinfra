@@ -62,12 +62,17 @@ version_data = {}
 with open('pyinfra/version.py') as f:
     exec(f.read(), version_data)
 
+with open('README.md', 'r', encoding='utf-8') as f:
+    readme = f.read()
+
 
 if __name__ == '__main__':
     setup(
         version=version_data['__version__'],
         name='pyinfra',
-        description='Deploy stuff by diff-ing the state you want against the remote server.',
+        description='pyinfra automates/provisions/manages/deploys infrastructure.',
+        long_description=readme,
+        long_description_content_type='text/markdown',
         author='Nick / Fizzadar',
         author_email='pointlessrambler@gmail.com',
         license='MIT',
@@ -83,14 +88,19 @@ if __name__ == '__main__':
             'dev': DEV_REQUIRES,
             'test': TEST_REQUIRES,
         },
+        include_package_data=True,
         classifiers=[
-            'Development Status :: 4 - Beta',
+            'Development Status :: 5 - Production/Stable',
+            'Environment :: Console',
             'Intended Audience :: Developers',
             'Intended Audience :: System Administrators',
+            'Intended Audience :: Information Technology',
             'License :: OSI Approved :: MIT License',
             'Operating System :: OS Independent',
             'Programming Language :: Python :: 2',
             'Programming Language :: Python :: 3',
             'Topic :: System :: Systems Administration',
+            'Topic :: System :: Installation/Setup',
+            'Topic :: Utilities',
         ],
     )
