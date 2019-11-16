@@ -16,7 +16,7 @@ pyinfra @docker/alpine:3.8,@docker/ubuntu:bionic deploy.py
 
 ## `@local`
 
-The `@local` connector executes changes on the local machine using subprocess.
+The `@local` connector executes changes on the local machine using subprocesses.
 
 ```sh
 pyinfra @local deploy.py

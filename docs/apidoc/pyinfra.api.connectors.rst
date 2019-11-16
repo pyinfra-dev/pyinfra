@@ -21,5 +21,6 @@ Submodules
    pyinfra.api.connectors.docker
    pyinfra.api.connectors.local
    pyinfra.api.connectors.ssh
+   pyinfra.api.connectors.util
    pyinfra.api.connectors.vagrant
 

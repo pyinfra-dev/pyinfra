@@ -1,23 +1,23 @@
 Getting Started
 ===============
 
-This guide should help describe the basics of deploying stuff with pyinfra. pyinfra can be installed with `pip <https://pip.pypa.io/en/stable/>`_:
+This guide should help describe the basics of deploying stuff with pyinfra. First install pyinfra using pip:
 
 .. code:: bash
 
     pip install pyinfra
 
-
-Using the ``pyinfra`` command line
-----------------------------------
-
 To do something with pyinfra you need two things:
 
 **Inventory**:
-    A set of hosts to target and any associated data. This can be a simple list of hosts or multiple gorups of different hosts with different data for each group.
+    A set of hosts to target and any data/variables. Hosts can be in one or more groups and both groups and hosts can have different data associated with them.
 
 **Operations**:
-    Things to execute or ensure on the hosts in the inventory. This can be anything from shell commands to ensuring a given apt package is installed. These can be passed to the CLI directly or written into Python files, ie ``deploy.py`` and persisted to disk (and source code management).
+    Actions to take or state to apply to/on the hosts in the inventory. From simple shell commands to specific state such as "ensure this apt package is installed".
+
+
+Using the ``pyinfra`` command line
+----------------------------------
 
 Let's start off executing a simple shell command. The first argument always specifies the inventory and the following arguments the operations to execute:
 
@@ -26,29 +26,25 @@ Let's start off executing a simple shell command. The first argument always spec
     # Usage:
     pyinfra INVENTORY OPERATIONS...
 
-    # On Unix systems:
-    pyinfra @local exec -- echo "hello world"
-
-    # On Windows you'll need a server to SSH into:
+    # Execute an arbitrary shell command
     pyinfra my-server.net exec -- echo "hello world"
 
 As you'll see, pyinfra runs the echo command and prints the output.
-
-``@local``:
-    On *nix systems this special hostname can be used to execute commands on the local machine, without the need for SSH.
 
 
 Create a Deploy
 ---------------
 
-To write persistent (on disk) deploys with pyinfra you just use Python files. These, along with any associated files/templates/etc are called **deploys**. For example, let's create an ``inventory.py``:
+A deploy simply refers to a collection of inventories and operations defined in Python files. These should then be committed to source control. Think of a deploy like Ansible's playbook or Chef's cookbook. We'll now replicate the above command line as a deploy.
+
+To get started let's create an ``inventory.py`` containing our hosts to target:
 
 .. code:: python
 
     # Define groups of hosts as lists
     my_hosts = ['my-server.net']
 
-And a ``deploy.py`` alongside:
+Now we need a ``deploy.py`` containing our operations to execute:
 
 .. code:: python
 
@@ -59,13 +55,12 @@ And a ``deploy.py`` alongside:
     server.shell(
         {'Execute hello world script'},  # name the operation
         'echo "hello world"',
-        sudo=True,
     )
 
-And execute the deploy with:
+We can now execute this deploy like so:
 
 .. code:: shell
 
-    pyinfra inventory.py deploy.py
+    pyinfra -v inventory.py deploy.py  # the -v will print the command output (optional)
 
-That's the basics of pyinfra! There's a lot of other features like facts, groups, data which are described in the :doc:`building a deploy guide <./deploys>`. Also see :doc:`the operations index <operations>` and `the example deploy on GitHub <http://github.com/Fizzadar/pyinfra/tree/develop/example>`_.
+That's the basics of pyinfra! If you like to dive right into the code check out `the example deploys on GitHub <https://github.com/Fizzadar/pyinfra/tree/develop/example>`_. You can also read the :doc:`building a deploy guide <./deploys>` which covers pyinfra's deploy features or :doc:`the CLI user guide <./cli>` which covers ad-hoc usage of pyinfra.

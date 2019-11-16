@@ -2,18 +2,24 @@ body {
     background: white;
 }
 
-.sphinxsidebar p.caption {
-    font-weight: bold;
-    text-transform: uppercase;
-    color: #606060;
-    font-size: 14px;
-    margin-left: 17px;
-}
 
-div#right-column {
+/*
+    Layout */
+
+div#right-column, div.footer {
     margin: 0 auto;
     padding-left: 350px;
     max-width: 1300px;
+}
+
+div.footer-relations {
+    padding: 12px 0;
+}
+
+div.footer {
+    padding-right: 0;
+    font-size: 12px;
+    text-align: left;
 }
 
 @media screen and (max-width: 768px) {
@@ -22,6 +28,17 @@ div#right-column {
     }
 }
 
+
+/*
+    Syles */
+
+.sphinxsidebar p.caption {
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #606060;
+    font-size: 14px;
+    margin-left: 17px;
+}
 
 h1 {
     background: transparent;
@@ -60,6 +77,9 @@ div#pyinfra-documentation div.compound {
     margin-top: 20px;
     display: inline-block;
     vertical-align: top;
+}
+div#pyinfra-documentation div.compound.toctree-wrapper {
+    display: none;
 }
     div#pyinfra-documentation div.compound a {
         font-size: 18px;

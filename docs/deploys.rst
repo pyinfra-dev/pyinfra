@@ -6,9 +6,6 @@ The definitive guide to writing a pyinfra deploys.
 What's a deploy?
     A deploy represents a collection of inventory (hosts to target), data (configuration, templates, files) and operations (changes/state to apply to the inventory). Deploys are written in standard Python, and other packages can be used as needed.
 
-.. contents::
-    :local:
-
 
 Layout
 ------
@@ -50,7 +47,7 @@ Inventory files contain groups of hosts. Groups are defined as a list or tuple o
 Data
 ----
 
-Data allows you to separate deploy variables from the deploy script. With data per host and per group, you can easily build deploys that satisfy multiple environments.
+Data allows you to separate deploy variables from the deploy script. With data per host and per group, you can easily build deploys that satisfy multiple environments. The :doc:`data example deploy <examples/data_multiple_environments>` shows this in action.
 
 Host Data
 ~~~~~~~~~
@@ -69,7 +66,7 @@ Arbitrary data can be assigned in the inventory and used at deploy-time. You jus
 Group Data
 ~~~~~~~~~~
 
-Group data files can be used to attach data to groups of host. They are placed in ``group_data/<group_name>.py``. This means ``group_data/all.py`` can be used to attach data to all hosts (unless you override the "all" group).
+Group data files can be used to attach data to groups of host. They are placed in ``group_data/<group_name>.py``. This means ``group_data/all.py`` can be used to attach data to all hosts.
 
 Data files are just Python, any core types will be included:
 
@@ -83,7 +80,7 @@ Data files are just Python, any core types will be included:
 Authenticating with Data
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-One of the most important use-cases for data is authenticating with the remote host. Instead of passing ``--key``, ``--user``, etc to the CLI, or running a SSH agent, you can define these details within host and group data. The attributes available:
+Instead of passing ``--key``, ``--user``, etc to the CLI, or running a SSH agent, you can define these details within host and group data. The attributes available:
 
 .. code:: python
 
@@ -105,43 +102,6 @@ The same keys can be defined for host and group data - this means we can set a d
 
 .. note::
     pyinfra contains a ``--debug-data`` option which can be used to explore the data output per-host for a given inventory/deploy.
-
-Data Example
-~~~~~~~~~~~~
-
-Lets say you have an app that you wish to deploy in two environments: staging and production, with the dev VM as the default. A good layout for this would be:
-
-+ ``deploy.py``
-+ ``inventories/production.py`` - production inventory
-+ ``inventories/staging.py`` - staging inventory
-+ ``group_data/all.py`` - shared data
-+ ``group_data/production.py`` - production data
-+ ``group_data/staging.py`` - staging data
-
-The "all" group data contains any shared info and defaults:
-
-.. code:: python
-
-    # group_data/all.py
-
-    env = 'dev'
-    git_repo = 'https://github.com/Fizzadar/pyinfra'
-
-And the production/staging data describe the differences:
-
-.. code:: python
-
-    # group_data/production.py
-
-    env = 'production'
-    git_branch = 'master'
-
-.. code:: python
-
-    # group_data/staging.py
-
-    env = 'staging'
-    git_branch = 'develop'
 
 
 Operations
@@ -182,6 +142,34 @@ Uses the :doc:`server module <./modules/server>` and :doc:`files module <./modul
 
 .. note::
     Pass a ``set`` object as the first argument to name the operation (as above), which will appear during a deploy. By default the operation module, name and arguments are shown.
+
+Global Arguments
+~~~~~~~~~~~~~~~~
+
+In addition to each operations own arguments, there are a number of keyword arguments available in all operations:
+
+Privilege & user escalation
+    + ``sudo=True``: Execute/apply any changes with sudo.
+    + ``sudo_user='username'``: Execute/apply any changes with sudo as a non-root user.
+    + ``su_user='username'``: Execute/apply any changes with su.
+    + ``preserve_sudo_env=True``: Preserve the shell environment when using sudo.
+
+Operation control:
+    + ``env``: Dictionary of environment variables to set.
+    + ``ignore_errors=True``: Ignore errors when excuting the operation.
+    + ``serial=True``: Run this operation host by host, rather than in parallel.
+    + ``parallel=10``: Run this operation in batches of hosts.
+    + ``run_once=True``: Only execute this operation once, on the first host to see it.
+    + ``timeout=10``: Timeout for *each* command executed during the operation.
+    + ``get_pty=True``: Whether to get a pseudoTTY when executing any commands.
+
+Callbacks:
+    + ``on_success=my_success_function``: Callback function to execute on success.
+    + ``on_error=my_error_function``: Callback function to execute on error.
+
+Limiting operations to subsets of the inventory:
+    + ``hosts='web'``: Limit the operation to a subset of the hosts (either a list of host objects or a group name).
+    + ``when=host.fact.os == 'Darwin'``: Limit the operaton based on a conditional/boolean.
 
 Using Data
 ~~~~~~~~~~
@@ -229,7 +217,7 @@ Facts allow you to use information about the target host to change the operation
     from pyinfra import host
     from pyinfra.modules import yum
 
-    if host.fact.linux_distribution['name'] == 'CentOS':
+    if host.fact.linux_name == 'CentOS':
         yum.packages(
             'nano',
             sudo=True
@@ -240,47 +228,17 @@ Some facts also take a single argument, for example the ``directory`` or ``file`
 Includes
 ~~~~~~~~
 
-Roles can be used to break out deploy logic into multiple files. They can also be used to limit the contained operations to a subset of hosts. Roles can be included using ``local.include``.
+Including files can be used to break out operations into multiple files, often referred to as tasks. Files can be included using ``local.include``.
 
 .. code:: python
 
     from pyinfra import local, inventory
 
-    # Operations in this file will be added to all hosts
-    local.include('tasks/my_role.py')
-
-    # Operations in this file will be added to the hosts in group "my_group"
-    local.include('tasks/limited_role.py', hosts=inventory.my_group)
+    # Include & call all the operations in tasks/install_something.py
+    local.include('tasks/install_something.py')
 
 See more in :doc:`examples: groups & roles <./examples/groups_roles>`.
 
-Global Arguments
-~~~~~~~~~~~~~~~~
-
-In addition to each operations own arguments, there are a number of keyword arguments available in all operations:
-
-Privilege & user escalation
-    + ``sudo=True``: Execute/apply any changes with sudo.
-    + ``sudo_user='username'``: Execute/apply any changes with sudo as a non-root user.
-    + ``su_user='username'``: Execute/apply any changes with su.
-    + ``preserve_sudo_env=True``: Preserve the shell environment when using sudo.
-
-Operation control:
-    + ``env``: Dictionary of environment variables to set.
-    + ``ignore_errors=True``: Ignore errors when excuting the operation.
-    + ``serial=True``: Run this operation host by host, rather than in parallel.
-    + ``parallel=10``: Run this operation in batches of hosts.
-    + ``run_once=True``: Only execute this operation once, on the first host to see it.
-    + ``timeout=10``: Timeout for *each* command executed during the operation.
-    + ``get_pty=True``: Whether to get a pseudoTTY when executing any commands.
-
-Callbacks:
-    + ``on_success=my_success_function``: Callback function to execute on success.
-    + ``on_error=my_error_function``: Callback function to execute on error.
-
-Limiting operations to subsets of the inventory:
-    + ``hosts='web'``: Limit the operation to a subset of the hosts (either a list of host objects or a group name).
-    + ``when=host.fact.os == 'Darwin'``: Limit the operaton based on a conditional/boolean.
 
 Config
 ------
@@ -298,7 +256,7 @@ There are a number of configuration options for how deploys are managed. These c
     FAIL_PERCENT = 10
 
 .. note::
-    When added to ``config.py`` (vs the deploy file), these options will take affect when using pyinfra ``--fact`` or ``--run``.
+    When added to ``config.py`` (vs the deploy file), these options will take affect for any CLI usage (ie ``pyinfra host exec -- 'tail -f /var/log/syslog'``).
 
 
 Hooks

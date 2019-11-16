@@ -1,9 +1,11 @@
 pyinfra Documentation
 =====================
 
-pyinfra is designed to automate/provision/manage/deploy servers at scale.
+Welcome to the pyinfra documentation; it is split into two sections - how to use pyinfra and the references. If you're new to pyinfra you should start with the :doc:`getting started <./getting_started>` page.
 
-It can be used for ad-hoc command execution, service deployment, configuration management; you could say that pyinfra is like a combination of Ansible + Fabric. It is asynchronous, highly performant and can target thousands of hosts in parallel. It is entirely configured in Python, allowing for near-infinite extendability out of the box.
+
+Using pyinfra
+-------------
 
 .. compound::
     :doc:`getting_started`
@@ -11,18 +13,19 @@ It can be used for ad-hoc command execution, service deployment, configuration m
 
 .. compound::
     :doc:`deploys`
-        The definitive guide to building a deploy with pyinfra.
+        The definitive guide to writing reusable, committable deploys (think plays/workflows/playbooks).
 
 .. compound::
-    :doc:`examples`
-        A set of documented example deploys highlighting common patterns.
+    :doc:`cli`
+        The pyinfra CLI is extremely powerful for ad hoc command execution and management.
 
 .. compound::
     :doc:`connectors`
         Connectors allow pyinfra to seamlessly integrate with other tools.
 
-Reference
----------
+
+Deploy Reference
+----------------
 
 .. compound::
     :doc:`operations`
@@ -32,15 +35,18 @@ Reference
     :doc:`facts`
         A list of all facts pyinfra can gather from hosts, eg ``host.fact.os``.
 
+.. compound::
+    :doc:`examples`
+        A set of documented example deploys highlighting common patterns.
+
 
 .. toctree::
     :hidden:
-    :maxdepth: 1
     :caption: Using pyinfra
 
     getting_started
     deploys
-    examples
+    cli
     connectors
 
 .. toctree::
@@ -50,10 +56,10 @@ Reference
 
     operations
     facts
+    examples
 
 .. toctree::
     :hidden:
-    :maxdepth: 1
     :caption: pyinfra API
 
     api/modules
@@ -63,7 +69,6 @@ Reference
 
 .. toctree::
     :hidden:
-    :maxdepth: 1
     :caption: How pyinfra Works
 
     deploy_process

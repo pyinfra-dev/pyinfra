@@ -5,9 +5,9 @@ import guzzle_sphinx_theme
 from pyinfra import __version__
 
 
-copyright = 'pyinfra v{0} — {1}, Nick Barrett'.format(
-    __version__,
+copyright = 'Nick Barrett {0} — pyinfra v{1}'.format(
     date.today().year,
+    __version__,
 )
 
 extensions = [

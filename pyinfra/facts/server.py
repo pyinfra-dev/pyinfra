@@ -10,32 +10,60 @@ from pyinfra.api.util import try_int
 
 
 class Home(FactBase):
+    '''
+    Returns the home directory of the current user.
+    '''
+
     command = 'echo $HOME'
 
 
 class Hostname(FactBase):
+    '''
+    Returns the current hostname of the server.
+    '''
+
     command = 'hostname'
 
 
 class Os(FactBase):
+    '''
+    Returns the OS name according to ``uname``.
+    '''
+
     command = 'uname -s'
 
 
 class OsVersion(FactBase):
+    '''
+    Returns the OS version according to ``uname``.
+    '''
+
     command = 'uname -r'
 
 
 class Arch(FactBase):
+    '''
+    Returns the system architecture according to ``uname``.
+    '''
+
     command = 'uname -p'
 
 
 class Command(FactBase):
+    '''
+    Returns the raw output lines of a given command.
+    '''
+
     @staticmethod
     def command(command):
         return command
 
 
 class Which(FactBase):
+    '''
+    Returns the path of a given command, if available.
+    '''
+
     @staticmethod
     def command(name):
         return 'which {0}'.format(name)
@@ -55,6 +83,19 @@ class Date(FactBase):
 
 
 class KernelModules(FactBase):
+    '''
+    Returns a dictionary of kernel module name -> info.
+
+    .. code:: python
+
+        'module_name': {
+            'size': 0,
+            'instances': 0,
+            'state': 'Live',
+        },
+        ...
+    '''
+
     command = 'cat /proc/modules'
     default = dict
 
@@ -85,6 +126,20 @@ class KernelModules(FactBase):
 
 
 class LsbRelease(FactBase):
+    '''
+    Returns a dictionary of release information using ``lsb_release``.
+
+    .. code:: python
+
+        {
+            "id": "Ubuntu",
+            "description": "Ubuntu 18.04.2 LTS",
+            "release": "18.04",
+            "codename": "bionic",
+            ...
+        }
+    '''
+
     command = 'lsb_release -ca'
 
     @staticmethod
@@ -111,6 +166,21 @@ class LsbRelease(FactBase):
 
 
 class Sysctl(FactBase):
+    '''
+    Returns a dictionary of sysctl settings and values.
+
+    .. code:: python
+
+        {
+            "fs.inotify.max_queued_events": 16384,
+            "fs.inode-state": [
+                44565,
+                360,
+            ],
+            ...
+        }
+    '''
+
     command = 'sysctl -a'
     default = dict
 
@@ -167,7 +237,7 @@ class Groups(FactBase):
 
 class Crontab(FactBase):
     '''
-    Returns a dict of cron command -> execution time.
+    Returns a dictionary of cron command -> execution time.
 
     .. code:: python
 
@@ -217,7 +287,7 @@ class Crontab(FactBase):
 
 class Users(FactBase):
     '''
-    Returns a dict of users -> details:
+    Returns a dictionary of users -> details.
 
     .. code:: python
 
@@ -363,7 +433,8 @@ class LinuxDistribution(FactBase):
 
 class LinuxName(ShortFactBase):
     '''
-    Returns the name of the Linux distribution.
+    Returns the name of the Linux distribution. Shortcut for
+    ``host.fact.linux_distribution['name']``.
     '''
 
     fact = LinuxDistribution

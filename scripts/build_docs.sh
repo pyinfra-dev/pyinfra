@@ -11,7 +11,7 @@ rm -f docs/modules/*.rst
 python scripts/generate_modules_docs.py
 
 # Build the facts.rst doc
-rm -f docs/facts.rst
+rm -f docs/facts/*.rst
 python scripts/generate_facts_doc.py
 
 # Build the HTML docs
