@@ -8,7 +8,7 @@ import six
 from six.moves import range
 
 from pyinfra import facts
-from pyinfra.api.facts import FactBase
+from pyinfra.api.facts import FactBase, ShortFactBase
 from pyinfra.api.util import underscore
 
 
@@ -17,11 +17,10 @@ def _title_line(char, string):
 
 
 def build_facts():
-    lines = []
-
     # Now we generate a facts.rst describing the use of the facts as:
     # host.data.<snake_case_fact>
     for module_name in sorted(facts.__all__):
+        lines = []
         print('--> Doing fact module: {0}'.format(module_name))
         module = getattr(facts, module_name)
 
@@ -34,7 +33,7 @@ def build_facts():
             for key, value in getmembers(module)
             if (
                 isclass(value)
-                and issubclass(value, FactBase)
+                and (issubclass(value, FactBase) or issubclass(value, ShortFactBase))
                 and value.__module__ == module.__name__
                 and value is not FactBase
                 and not value.__name__.endswith('Base')  # hacky!
@@ -44,6 +43,7 @@ def build_facts():
         for fact, cls in fact_classes:
             # FactClass -> fact_accessor on host object
             name = underscore(fact)
+            args_string_and_brackets = ''
 
             # Does this fact take args?
             command_attr = getattr(cls, 'command', None)
@@ -65,53 +65,51 @@ def build_facts():
                 )) if arg_defaults else {}
 
                 if len(argspec.args):
-                    name = '{0}({1})'.format(
-                        name,
-                        ', '.join(
-                            (
-                                '{0}={1}'.format(arg, defaults[arg])
-                                if arg in defaults
-                                else arg
-                            )
-                            for arg in argspec.args
-                            if arg != 'self'
-                        ),
-                    )
+                    args_string_and_brackets = '({0})'.format(', '.join(
+                        (
+                            '{0}={1}'.format(arg, defaults[arg])
+                            if arg in defaults
+                            else arg
+                        )
+                        for arg in argspec.args
+                        if arg != 'self'
+                    ))
 
-            name = ':code:`{0}`'.format(name)
-            lines.append(name)
+            title = ':code:`{0}`'.format(name)
+            lines.append(title)
 
             # Underline name with -'s for title
-            lines.append(_title_line('~', name))
+            lines.append(_title_line('~', title))
+            lines.append('')
+
+            # Atttach the code block
+            lines.append('''
+.. code:: python
+
+    host.fact.{1}{2}
+
+'''.strip().format(module_name, name, args_string_and_brackets))
 
             # Append any docstring
             doc = cls.__doc__
             if doc:
                 lines.append('')
                 lines.append('{0}'.format('\n'.join([
-                    line for line in doc.split('\n')
+                    line[4:] for line in doc.split('\n')
                 ])))
 
             lines.append('')
             lines.append('')
 
-    # Write out the file
-    print('--> Writing docs/facts.rst')
+        # Write out the file
+        module_filename = 'docs/facts/{0}.rst'.format(module_name)
+        print('--> Writing {0}'.format(module_filename))
 
-    out = '\n'.join(lines)
-    out = '''
-Facts Index
-===========
+        out = '\n'.join(lines)
 
-.. include:: facts_.rst
-
-
-{0}
-    '''.format(out).strip()
-
-    outfile = open('docs/facts.rst', 'w')
-    outfile.write(out)
-    outfile.close()
+        outfile = open(module_filename, 'w')
+        outfile.write(out)
+        outfile.close()
 
 
 if __name__ == '__main__':
