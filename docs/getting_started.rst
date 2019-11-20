@@ -16,10 +16,10 @@ To do something with pyinfra you need two things:
     Actions to take or state to apply to/on the hosts in the inventory. From simple shell commands to specific state such as "ensure this apt package is installed".
 
 
-Using the ``pyinfra`` command line
-----------------------------------
+Ad-hoc commands with ``pyinfra``
+--------------------------------
 
-Let's start off executing a simple shell command. The first argument always specifies the inventory and the following arguments the operations to execute:
+Let's start off executing a simple one off shell command. The first argument always specifies the inventory and the following arguments the operations to execute:
 
 .. code:: shell
 
@@ -29,13 +29,13 @@ Let's start off executing a simple shell command. The first argument always spec
     # Execute an arbitrary shell command
     pyinfra my-server.net exec -- echo "hello world"
 
-As you'll see, pyinfra runs the echo command and prints the output.
+As you'll see, pyinfra runs the echo command and prints the output. See the :ref:`available command line options <cli:CLI arguments & options>` and :ref:`examples of ad-hoc commands <cli:Ad-hoc command execution>`.
 
 
 Create a Deploy
 ---------------
 
-A deploy simply refers to a collection of inventories and operations defined in Python files. These should then be committed to source control. Think of a deploy like Ansible's playbook or Chef's cookbook. We'll now replicate the above command line as a deploy.
+A deploy simply refers to a collection of inventories and operations defined in Python files. Unlike ad-hoc commands, pyinfra deploys can be saved and reused. Think of a deploy like Ansible's playbook or Chef's cookbook. We'll now replicate the above command line as a deploy.
 
 To get started let's create an ``inventory.py`` containing our hosts to target:
 
@@ -63,4 +63,8 @@ We can now execute this deploy like so:
 
     pyinfra -v inventory.py deploy.py  # the -v will print the command output (optional)
 
-That's the basics of pyinfra! If you like to dive right into the code check out `the example deploys on GitHub <https://github.com/Fizzadar/pyinfra/tree/develop/example>`_. You can also read the :doc:`building a deploy guide <./deploys>` which covers pyinfra's deploy features or :doc:`the CLI user guide <./cli>` which covers ad-hoc usage of pyinfra.
+That's the basics of pyinfra! Possible next steps:
+
++ If you like to dive right into the code check out `the example deploys on GitHub <https://github.com/Fizzadar/pyinfra/tree/develop/example>`_
++ You can also read the :doc:`building a deploy guide <./deploys>` which covers pyinfra's deploy features
++ Or :doc:`the CLI user guide <./cli>` which covers ad-hoc usage of pyinfra
