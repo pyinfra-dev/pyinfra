@@ -43,7 +43,6 @@ class CliError(PyinfraError, click.ClickException):
             )
 
         logger.warning(self)
-        print()
 
 
 class UnexpectedError(click.ClickException):
