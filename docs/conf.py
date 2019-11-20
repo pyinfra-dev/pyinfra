@@ -14,7 +14,9 @@ extensions = [
     # Official
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    'sphinx.ext.autosectionlabel',
 ]
+autosectionlabel_prefix_document = True
 
 extensions.append('guzzle_sphinx_theme')
 
