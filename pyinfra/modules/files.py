@@ -428,7 +428,9 @@ def template(
         line_number = trace.tb_frame.f_lineno
 
         # Quickly read the line in question and one above/below for nicer debugging
-        template_lines = open(template_filename, 'r').readlines()
+        with open(template_filename, 'r') as f:
+            template_lines = f.readlines()
+
         template_lines = [line.strip() for line in template_lines]
         relevant_lines = template_lines[max(line_number - 2, 0):line_number + 1]
 
