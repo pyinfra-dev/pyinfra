@@ -1,0 +1,32 @@
+{
+    "command": "mounts",
+    "output": [
+        "/dev/sda1 on /boot type ext2 (rw,relatime,block_validity,barrier,user_xattr,acl)",
+        "/dev/disk1s4 on /private/var/vm (apfs, local, noexec, journaled, noatime, nobrowse)"
+    ],
+    "fact": {
+        "/boot": {
+            "device": "/dev/sda1",
+            "type": "ext2",
+            "options": [
+                "rw",
+                "relatime",
+                "block_validity",
+                "barrier",
+                "user_xattr",
+                "acl"
+            ]
+        },
+        "/private/var/vm": {
+            "device": "/dev/disk1s4",
+            "type": "apfs",
+            "options": [
+                "local",
+                "noexec",
+                "journaled",
+                "noatime",
+                "nobrowse"
+            ]
+        }
+    }
+}

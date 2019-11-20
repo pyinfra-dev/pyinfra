@@ -82,6 +82,36 @@ class Date(FactBase):
         return parse_date(output[0])
 
 
+class Mounts(FactBase):
+    command = 'mount'
+    defaukt = dict
+
+    @staticmethod
+    def process(output):
+        devices = {}
+
+        for line in output:
+            if line.startswith('map '):
+                line = line[4:]
+
+            device, _, path, other_bits = line.split(' ', 3)
+
+            if other_bits.startswith('type'):
+                _, type_, options = other_bits.split(' ', 2)
+                options = options.strip('()').split(',')
+            else:
+                options = other_bits.strip('()').split(',')
+                type_ = options.pop(0)
+
+            devices[path] = {
+                'device': device,
+                'type': type_,
+                'options': [option.strip() for option in options],
+            }
+
+        return devices
+
+
 class KernelModules(FactBase):
     '''
     Returns a dictionary of kernel module name -> info.
