@@ -32,12 +32,9 @@ div.footer {
 /*
     Syles */
 
-.sphinxsidebar p.caption {
-    font-weight: bold;
-    text-transform: uppercase;
-    color: #606060;
-    font-size: 14px;
-    margin-left: 17px;
+a:hover {
+    text-decoration-color: #E7E7E7;
+    text-decoration-thickness: 2px;
 }
 
 h1 {
@@ -49,6 +46,20 @@ h1 {
 
 h2 code {
     font-size: 32px;
+}
+
+pre::selection, pre *::selection,
+code::selection, code *::selection {
+    color: white;
+    background: green;
+}
+
+.sphinxsidebar p.caption {
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #606060;
+    font-size: 14px;
+    margin-left: 17px;
 }
 
 .breadcrumb {
