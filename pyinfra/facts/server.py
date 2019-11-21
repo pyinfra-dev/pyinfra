@@ -84,7 +84,7 @@ class Date(FactBase):
 
 class Mounts(FactBase):
     command = 'mount'
-    defaukt = dict
+    default = dict
 
     @staticmethod
     def process(output):
