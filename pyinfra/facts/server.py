@@ -83,6 +83,22 @@ class Date(FactBase):
 
 
 class Mounts(FactBase):
+    '''
+    Returns a dictionary of mounted filesystems and information.
+
+    .. code:: python
+
+        "/": {
+            "device": "/dev/mv2",
+            "type": "ext4",
+            "options": [
+                "rw",
+                "relatime"
+            ]
+        },
+        ...
+    '''
+
     command = 'mount'
     default = dict
 
