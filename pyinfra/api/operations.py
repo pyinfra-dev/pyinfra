@@ -126,7 +126,7 @@ def _run_server_op(state, host, op_hash):
                     )
 
         # Must be a string/shell command: execute it on the server w/op-level preferences
-        else:
+        elif isinstance(command, six.string_types):
             combined_output_lines = []
 
             try:
@@ -165,6 +165,8 @@ def _run_server_op(state, host, op_hash):
                             host.print_prefix,
                             line,
                         ))
+        else:
+            raise TypeError('{0} is an invalid pyinfra command!'.format(command))
 
         # Break the loop to trigger a failure
         if status is False:
