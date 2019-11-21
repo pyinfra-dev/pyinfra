@@ -346,7 +346,7 @@ def put(
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file:
-        yield (local_file, remote_filename)
+        yield ('upload', local_file, remote_filename)
 
         if user or group:
             yield chown(remote_filename, user, group)
@@ -361,7 +361,7 @@ def put(
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
-            yield (local_file, remote_filename)
+            yield ('upload', local_file, remote_filename)
 
             if user or group:
                 yield chown(remote_filename, user, group)

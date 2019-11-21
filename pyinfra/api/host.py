@@ -94,3 +94,6 @@ class Host(object):
 
     def put_file(self, state, *args, **kwargs):
         return self.executor.put_file(state, self, *args, **kwargs)
+
+    def get_file(self, state, *args, **kwargs):
+        return self.executor.get_file(state, self, *args, **kwargs)

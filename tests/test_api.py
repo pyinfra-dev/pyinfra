@@ -277,7 +277,7 @@ class TestOperationsApi(PatchSSHTestCase):
         run_ops(state, serial=True)
         run_ops(state, no_wait=True)
 
-    def test_file_op(self):
+    def test_file_upload_op(self):
         inventory = make_inventory()
 
         state = State(inventory, Config())
@@ -330,7 +330,7 @@ class TestOperationsApi(PatchSSHTestCase):
         self.assertEqual(
             state.ops[somehost][first_op_hash]['commands'],
             [
-                ('files/file.txt', '/home/vagrant/file.txt'),
+                ('upload', 'files/file.txt', '/home/vagrant/file.txt'),
             ],
         )
 

@@ -97,13 +97,20 @@ def _run_server_op(state, host, op_hash):
 
             # Non-function mean files to copy
             else:
-                file_io, remote_filename = command
+                method_type, first_file, second_file = command
+
+                if method_type == 'upload':
+                    method = host.put_file
+                elif method_type == 'download':
+                    method = host.get_file
+                else:
+                    raise TypeError('{0} is an invalid pyinfra command!'.format(command))
 
                 try:
-                    status = host.put_file(
+                    status = method(
                         state,
-                        file_io,
-                        remote_filename,
+                        first_file,
+                        second_file,
                         sudo=sudo,
                         sudo_user=sudo_user,
                         su_user=su_user,

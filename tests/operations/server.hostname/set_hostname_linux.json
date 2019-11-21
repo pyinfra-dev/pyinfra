@@ -9,6 +9,6 @@
     },
     "commands": [
         "hostname my-hostname.net",
-        ["my-hostname.net\n", "/etc/hostname"]
+        ["upload", "my-hostname.net\n", "/etc/hostname"]
     ]
 }

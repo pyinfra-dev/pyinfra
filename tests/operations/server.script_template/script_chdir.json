@@ -10,7 +10,7 @@
         }
     },
     "commands": [
-        ["_test_data_", "_tempfile_"],
+        ["upload", "_test_data_", "_tempfile_"],
         "chmod +x _tempfile_",
         "cd /home/pyinfra && _tempfile_"
     ]

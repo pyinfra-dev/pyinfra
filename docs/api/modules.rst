@@ -31,10 +31,13 @@ Operations are generator functions and ``yield`` three types of command:
     # Shell commands, simply represented by a string
     yield 'echo "Shell!"'
 
-    # File uploads represented by a tuple
-    yield (filename_or_io, remote_filename)
+    # File uploads represented by a tuple with where the first item is 'upload'
+    yield ('upload', filename_or_io, remote_filename)
 
-    # Python functions represented by a tuple
+    # File downloads represented by a tuple with where the first item is 'download'
+    yield ('download', filename_or_io, remote_filename)
+
+    # Python functions represented by a tuple where the first item is a function
     yield (function, args_list, kwargs_dict)
 
     # Additionally, commands can be wrapped in a dict, overriding sudo/sudo_user

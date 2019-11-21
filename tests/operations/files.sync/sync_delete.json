@@ -40,9 +40,10 @@
     "commands": [
         "mkdir -p /home/somedir",
         "mkdir -p /home/somedir/underthat",
-        ["/somedir/somefile.txt", "/home/somedir/somefile.txt"],
-        ["/somedir/anotherfile.txt", "/home/somedir/anotherfile.txt"],
+        ["upload", "/somedir/somefile.txt", "/home/somedir/somefile.txt"],
+        ["upload", "/somedir/anotherfile.txt", "/home/somedir/anotherfile.txt"],
         [
+            "upload",
             "/somedir/underthat/yet-another-file.txt",
             "/home/somedir/underthat/yet-another-file.txt"
         ],

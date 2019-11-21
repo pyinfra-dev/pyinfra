@@ -11,6 +11,7 @@
         }
     },
     "commands": [[
+        "upload",
         "[somerepo]\nname=description\nbaseurl=http://baseurl\nenabled=1\ngpgcheck=0\ngpgkey=test\n",
             "/etc/yum.repos.d/somerepo.repo"
     ]]

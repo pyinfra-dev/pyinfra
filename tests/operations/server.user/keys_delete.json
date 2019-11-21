@@ -41,7 +41,7 @@
         }
     },
     "commands": [
-        ["abc\ndef\n", "homedir/.ssh/authorized_keys"],
+        ["upload", "abc\ndef\n", "homedir/.ssh/authorized_keys"],
         "chown someuser:someuser homedir/.ssh/authorized_keys",
         "chmod 600 homedir/.ssh/authorized_keys"
     ]

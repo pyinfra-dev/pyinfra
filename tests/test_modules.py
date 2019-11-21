@@ -84,13 +84,13 @@ def make_operation_tests(arg):
                             command[0].__name__, list(command[1]), command[2],
                         ])
                     else:
-                        if hasattr(command[0], 'read'):
-                            command[0].seek(0)
-                            data = command[0].read()
+                        if hasattr(command[1], 'read'):
+                            command[1].seek(0)
+                            data = command[1].read()
                         else:
-                            data = command[0]
+                            data = command[1]
 
-                        commands.append([data, command[1]])
+                        commands.append([command[0], data, command[2]])
 
                 else:
                     commands.append(command)
