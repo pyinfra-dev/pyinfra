@@ -34,6 +34,7 @@ TEST_REQUIRES = (
     'jsontest==1.4',
     'coverage==4.4.1',
     'mock==1.3.0',
+    'codecov==2.0.15',
 
     # Linting
     'flake8',
