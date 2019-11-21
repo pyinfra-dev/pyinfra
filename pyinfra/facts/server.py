@@ -91,10 +91,15 @@ class Mounts(FactBase):
         devices = {}
 
         for line in output:
+            is_map = False
             if line.startswith('map '):
                 line = line[4:]
+                is_map = True
 
             device, _, path, other_bits = line.split(' ', 3)
+
+            if is_map:
+                device = 'map {0}'.format(device)
 
             if other_bits.startswith('type'):
                 _, type_, options = other_bits.split(' ', 2)
