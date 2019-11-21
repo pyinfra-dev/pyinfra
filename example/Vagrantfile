@@ -4,7 +4,6 @@ Vagrant.configure('2') do |config|
     # Disable /vagrant synced folder
     config.vm.synced_folder '.', '/vagrant', disabled: true
 
-    # Set the boxes memory (11 boxes = ~2.8G total)
     config.vm.provider 'virtualbox' do |v|
         v.memory = 256
     end
@@ -23,6 +22,9 @@ Vagrant.configure('2') do |config|
 
     config.vm.define :ubuntu18 do |ubuntu|
         ubuntu.vm.box = 'bento/ubuntu-18.04'
+        ubuntu.vm.provider 'virtualbox' do |v|
+            v.memory = 384  # ubuntu18 is memory hungry
+        end
     end
 
     config.vm.define :debian8 do |debian|
