@@ -1,5 +1,7 @@
 import sys
 
+from io import open
+
 try:
     from setuptools import setup, find_packages
 
