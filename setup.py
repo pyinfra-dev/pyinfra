@@ -30,10 +30,12 @@ INSTALL_REQUIRES = (
 )
 
 TEST_REQUIRES = (
-    'nose==1.3.7',
+    # Unit testing
+    'pytest==5.3.0',
+    'pytest-cov==2.8.1',
     'jsontest==1.4',
-    'coverage==4.4.1',
-    'mock==1.3.0',
+    'coverage==4.5.4',
+    'mock==3.0.5',
     'codecov==2.0.15',
 
     # Linting
