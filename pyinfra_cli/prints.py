@@ -49,15 +49,6 @@ def jsonify(data, *args, **kwargs):
     return json.dumps(data, *args, **kwargs)
 
 
-def dump_trace(exc_info):
-    # Dev mode, so lets dump as much data as we have
-    error_type, value, trace = exc_info
-    print('----------------------')
-    traceback.print_tb(trace)
-    logger.critical('{0}: {1}'.format(error_type.__name__, value))
-    print('----------------------')
-
-
 def print_state_facts(state):
     print()
     print('--> Facts:')
