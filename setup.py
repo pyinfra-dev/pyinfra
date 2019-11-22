@@ -31,7 +31,7 @@ INSTALL_REQUIRES = (
 
 TEST_REQUIRES = (
     # Unit testing
-    'pytest==5.3.0',
+    'pytest==4.6.6',
     'pytest-cov==2.8.1',
     'jsontest==1.4',
     'coverage==4.5.4',
