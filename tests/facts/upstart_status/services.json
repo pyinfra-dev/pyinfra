@@ -1,0 +1,11 @@
+{
+    "command": "initctl list",
+    "output": [
+        "something start/running, process 1493",
+        "plymouth-shutdown stop/waiting"
+    ],
+    "fact": {
+        "something": true,
+        "plymouth-shutdown": false
+    }
+}

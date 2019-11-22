@@ -1,0 +1,13 @@
+{
+    "command": "sysctl -a",
+    "output": [
+        "security.mac.sysvmsg_enforce: 1",
+        "security.mac.sysvsem_enforce: 1",
+        "security.mac.sysvshm_enforce: 1"
+    ],
+    "fact": {
+        "security.mac.sysvmsg_enforce": 1,
+        "security.mac.sysvsem_enforce": 1,
+        "security.mac.sysvshm_enforce": 1
+    }
+}

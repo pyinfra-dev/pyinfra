@@ -1,0 +1,16 @@
+{
+    "command": "launchctl list",
+    "output": [
+        "PID Status Label",
+        "411    0   com.google.android.mtpagent.21640",
+        "639    0   com.apple.appstoreagent",
+        "368    0   com.apple.soagent",
+        "-    0   com.apple.Spotlight"
+    ],
+    "fact": {
+        "com.google.android.mtpagent.21640": true,
+        "com.apple.appstoreagent": true,
+        "com.apple.soagent": true,
+        "com.apple.Spotlight": false
+    }
+}

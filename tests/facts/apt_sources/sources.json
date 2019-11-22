@@ -1,7 +1,8 @@
 {
     "output": [
         "deb http://archive.ubuntu.com/ubuntu trusty restricted",
-        "deb-src http://archive.ubuntu.com/ubuntu trusty main"
+        "deb-src [arch=amd64,i386] http://archive.ubuntu.com/ubuntu trusty main",
+        "nope"
     ],
     "fact": [
         {
@@ -20,7 +21,9 @@
             "components": [
                 "main"
             ],
-            "options": {}
+            "options": {
+                "arch": ["amd64", "i386"]
+            }
         }
     ]
 }

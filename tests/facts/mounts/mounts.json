@@ -2,7 +2,8 @@
     "command": "mounts",
     "output": [
         "/dev/sda1 on /boot type ext2 (rw,relatime,block_validity,barrier,user_xattr,acl)",
-        "/dev/disk1s4 on /private/var/vm (apfs, local, noexec, journaled, noatime, nobrowse)"
+        "/dev/disk1s4 on /private/var/vm (apfs, local, noexec, journaled, noatime, nobrowse)",
+        "map thing on / type something ()"
     ],
     "fact": {
         "/boot": {
@@ -26,6 +27,13 @@
                 "journaled",
                 "noatime",
                 "nobrowse"
+            ]
+        },
+        "/": {
+            "device": "map thing",
+            "type": "something",
+            "options": [
+                ""
             ]
         }
     }

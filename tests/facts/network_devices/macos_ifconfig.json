@@ -1,0 +1,24 @@
+{
+    "command": "ifconfig",
+    "output": [
+        "en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500",
+        "inet 1.2.3.4 netmask 0xffffff00 broadcast 255.255.255.255",
+        "inet6 2a01::01 prefixlen 64 autoconf temporary",
+        "nd6 options=201<PERFORMNUD,DAD>",
+        "media: autoselect",
+        "status: active"
+    ],
+    "fact": {
+        "en0": {
+            "ipv4": {
+                "address": "1.2.3.4",
+                "netmask": "0xffffff00",
+                "broadcast": "255.255.255.255"
+            },
+            "ipv6": {
+                "address": "2a01::01",
+                "size": "64"
+            }
+        }
+    }
+}

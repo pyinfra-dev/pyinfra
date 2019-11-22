@@ -1,0 +1,13 @@
+{
+    "command": "cat /etc/group",
+    "output": [
+        "lpadmin:x:114:vagrant",
+        "sambashare:x:115:vagrant",
+        "vboxsf:x:999:"
+    ],
+    "fact": [
+        "lpadmin",
+        "sambashare",
+        "vboxsf"
+    ]
+}

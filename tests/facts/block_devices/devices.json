@@ -1,0 +1,17 @@
+{
+    "command": "df",
+    "output": [
+        "Filesystem                     1K-blocks      Used Available Use% Mounted on",
+        "/dev/disk1s1                   500 100 400  36% /",
+        "none                   500 100 400  36% /"
+    ],
+    "fact": {
+        "/dev/disk1s1": {
+            "blocks": "500",
+            "used": "100",
+            "available": "400",
+            "used_percent": "36",
+            "mount": "/"
+        }
+    }
+}

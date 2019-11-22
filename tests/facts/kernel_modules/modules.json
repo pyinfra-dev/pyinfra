@@ -1,0 +1,40 @@
+{
+    "command": "cat /proc/modules",
+    "output": [
+        "libahci 32768 1 ahci, Live 0x0000000000000000",
+        "i2c_piix4 24576 0 - Live 0x0000000000000000",
+        "e1000 143360 0 - Live 0x0000000000000000",
+        "pata_acpi 16384 0 - Live 0x0000000000000000",
+        "video 45056 0 - Live 0x0000000000000000"
+    ],
+    "fact": {
+        "libahci": {
+            "size": "32768",
+            "instances": 1,
+            "state": "Live",
+            "depends": [
+                "ahci"
+            ]
+        },
+        "i2c_piix4": {
+            "size": "24576",
+            "instances": 0,
+            "state": "Live"
+        },
+        "e1000": {
+            "size": "143360",
+            "instances": 0,
+            "state": "Live"
+        },
+        "pata_acpi": {
+            "size": "16384",
+            "instances": 0,
+            "state": "Live"
+        },
+        "video": {
+            "size": "45056",
+            "instances": 0,
+            "state": "Live"
+        }
+    }
+}

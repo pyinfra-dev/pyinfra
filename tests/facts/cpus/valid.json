@@ -1,0 +1,5 @@
+{
+    "command": "getconf NPROCESSORS_ONLN || getconf _NPROCESSORS_ONLN",
+    "output": ["1"],
+    "fact": 1
+}

@@ -1,0 +1,8 @@
+{
+    "arg": "mydir",
+    "command": "find mydir -type l",
+    "output": [
+        "mylink"
+    ],
+    "fact": ["mylink"]
+}

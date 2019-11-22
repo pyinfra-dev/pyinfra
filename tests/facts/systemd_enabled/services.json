@@ -1,0 +1,11 @@
+{
+    "output": [
+        "vboxadd.service enabled",
+        "vgauth.service enabled",
+        "x11-common.service masked"
+    ],
+    "fact":  {
+        "vboxadd": true,
+        "vgauth": true
+    }
+}

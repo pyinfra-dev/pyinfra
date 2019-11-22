@@ -1,0 +1,9 @@
+{
+    "command": "docker container inspect `docker ps -qa`",
+    "output": [
+        "{\"hello\": \"world\"}"
+    ],
+    "fact": {
+        "hello": "world"
+    }
+}

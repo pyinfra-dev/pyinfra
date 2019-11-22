@@ -3,9 +3,11 @@
     "kwargs": {
         "database": "somedb",
         "postgresql_user": "root",
-        "postgresql_password": "somepass"
+        "postgresql_password": "somepass",
+        "postgresql_host": "localhost",
+        "postgresql_port": 3306
     },
     "commands": [
-        "PGPASSWORD=\"somepass\" pg_dump -d somedb -U root > somefile"
+        "PGPASSWORD=\"somepass\" pg_dump -d somedb -U root -h localhost -p 3306 > somefile"
     ]
 }

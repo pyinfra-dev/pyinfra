@@ -1,0 +1,10 @@
+{
+    "arg": "myid",
+    "command": "docker container inspect myid",
+    "output": [
+        "{\"hello\": \"world\"}"
+    ],
+    "fact": {
+        "hello": "world"
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "command": "lsb_release -ca",
+    "output": [
+        "No LSB modules are available.",
+        "Distributor ID: Ubuntu",
+        "Description:    Ubuntu 18.04.3 LTS",
+        "Release:    18.04",
+        "Codename:   bionic"
+    ],
+    "fact": {
+        "id": "Ubuntu",
+        "description": "Ubuntu 18.04.3 LTS",
+        "release": "18.04",
+        "codename": "bionic"
+    }
+}

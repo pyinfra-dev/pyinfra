@@ -1,0 +1,32 @@
+{
+    "command": "ifconfig",
+    "output": [
+        "131766608  total memory",
+        "10646204  used memory",
+        "1175052  active memory",
+        "7246796  inactive memory",
+        "121120408  free memory",
+        "462172  buffer memory",
+        "7716904  swap cache",
+        "4194236  total swap",
+        "0  used swap",
+        "4194236  free swap",
+        "17553436489 non-nice user cpu ticks",
+        "197845521 nice user cpu ticks",
+        "4154732459 system cpu ticks",
+        "61499550500 idle cpu ticks",
+        "29343621 IO-wait cpu ticks",
+        "441566 IRQ cpu ticks",
+        "2330236872 softirq cpu ticks",
+        "0 stolen cpu ticks",
+        "15845356104 pages paged in",
+        "70214659203 pages paged out",
+        "0 pages swapped in",
+        "0 pages swapped out",
+        "167369815 interrupts",
+        "1170722597 CPU context switches",
+        "1502370386 boot time",
+        "1100921978 forks"
+    ],
+    "fact": 128678
+}

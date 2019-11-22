@@ -1,0 +1,32 @@
+{
+    "command": "ifconfig",
+    "output": [
+        "eth0      Link encap:Ethernet  HWaddr 14:DD:A9:D3:36:0B",
+        "inet addr:1.2.3.4  Bcast:1.2.3.4  Mask:255.255.255.255",
+        "inet6 addr: 2a01::01/64 Scope:Global",
+        "UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1",
+        "RX packets:5088726642662 errors:0 dropped:0 overruns:75824296 frame:0",
+        "TX packets:204488770319 errors:0 dropped:0 overruns:0 carrier:0",
+        "collisions:0 txqueuelen:1000",
+        "RX bytes:1110992903295696 (1010.4 TiB)  TX bytes:68385443441652 (62.1 TiB)",
+        "Memory:fa100000-fa17ffff",
+        "eth1      Link encap:Ethernet  HWaddr 14:DD:A9:D3:36:0B"
+    ],
+    "fact": {
+        "eth0": {
+            "ipv4": {
+                "address": "1.2.3.4",
+                "broadcast": "1.2.3.4",
+                "netmask": "255.255.255.255"
+            },
+            "ipv6": {
+                "address": "2a01::01",
+                "size": "64"
+            }
+        },
+        "eth1": {
+            "ipv4": {},
+            "ipv6": {}
+        }
+    }
+}

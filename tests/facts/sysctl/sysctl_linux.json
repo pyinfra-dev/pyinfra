@@ -1,0 +1,12 @@
+{
+    "command": "sysctl -a",
+    "output": [
+        "vm.nr_hugepages_mempolicy = 0",
+        "nope what",
+        "vm.nr_overcommit_hugepages = 0"
+    ],
+    "fact": {
+        "vm.nr_hugepages_mempolicy": 0,
+        "vm.nr_overcommit_hugepages": 0
+    }
+}
