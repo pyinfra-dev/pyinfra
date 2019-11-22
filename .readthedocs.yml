@@ -8,6 +8,8 @@ formats: all
 python:
   version: 3.7
   system_packages: true
-  pip_install: true
-  extra_requirements:
-    - docs
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
