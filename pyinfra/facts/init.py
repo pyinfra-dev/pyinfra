@@ -29,7 +29,7 @@ class SystemdStatus(FactBase):
     '''
 
     command = 'systemctl -alt service list-units'
-    regex = r'^([a-z\-]+)\.service\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
+    regex = r'^([a-z\-0-9]+)\.service\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
     default = dict
 
     def process(self, output):
