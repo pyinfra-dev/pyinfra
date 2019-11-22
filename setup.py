@@ -45,7 +45,14 @@ TEST_REQUIRES = (
     'flake8-import-order',
 )
 
-DEV_REQUIRES = TEST_REQUIRES + (
+DOCS_REQUIRES = (
+    'sphinx==2.2.1',
+    'sphinx-autobuild==0.7.1',
+    'guzzle_sphinx_theme==0.7.11',
+    'recommonmark==0.5.0',
+)
+
+DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
     # Releasing
     'wheel',
     'twine==1.9.1',
@@ -53,12 +60,6 @@ DEV_REQUIRES = TEST_REQUIRES + (
     # Dev debugging
     'ipdb==0.10.3',
     'ipdbplugin==1.4.5',
-
-    # Dev docs requirements
-    'sphinx==1.7.7',
-    'sphinx-autobuild==0.7.1',
-    'sphinx-better-theme==0.1.5',
-    'recommonmark==0.5.0',
 )
 
 
@@ -90,8 +91,9 @@ if __name__ == '__main__':
         },
         install_requires=INSTALL_REQUIRES,
         extras_require={
-            'dev': DEV_REQUIRES,
             'test': TEST_REQUIRES,
+            'docs': DOCS_REQUIRES,
+            'dev': DEV_REQUIRES,
         },
         include_package_data=True,
         classifiers=[
