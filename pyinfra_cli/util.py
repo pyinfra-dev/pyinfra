@@ -90,7 +90,7 @@ def json_encode(obj):
         return 'In memory file: {0}'.format(obj.read())
 
     elif isinstance(obj, set):
-        return list(obj)
+        return sorted(list(obj))
 
     elif isinstance(obj, six.binary_type):
         return obj.decode()
