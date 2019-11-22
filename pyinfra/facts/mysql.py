@@ -120,7 +120,7 @@ class MysqlUsers(MysqlFactBase):
         users = {}
 
         for details in rows:
-            if 'Host' not in details or 'User' not in details:
+            if details.get('Host') is None or details.get('User') is None:
                 continue
 
             privileges = []
