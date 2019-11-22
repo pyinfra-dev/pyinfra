@@ -127,16 +127,11 @@ def _parse_regexes(regexes, lines):
 
     for line in lines:
         for regex, groups in regexes:
-            matched = False
             matches = re.match(regex, line)
             if matches:
                 for i, group in enumerate(groups[1:]):
                     data[groups[0]][group] = matches.group(i + 1)
 
-                matched = True
-                break
-
-            if matched:
                 break
 
     return data
