@@ -247,7 +247,7 @@ class Sysctl(FactBase):
             elif ':' in line:
                 key, values = line.split(':', 1)
             else:
-                continue
+                continue  # pragma: no cover
 
             if key and values:
                 key = key.strip()
