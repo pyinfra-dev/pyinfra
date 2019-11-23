@@ -7,13 +7,13 @@ from importlib import import_module
 from types import FunctionType
 
 # py2/3 switcheroo
-try:
+try:  # pragma: no cover
     from StringIO import StringIO
     from cStringIO import OutputType, InputType
     from types import FileType
     io_bases = (FileType, OutputType, InputType, StringIO)
 
-except ImportError:
+except ImportError:  # pragma: no cover
     from io import IOBase
     io_bases = IOBase
 

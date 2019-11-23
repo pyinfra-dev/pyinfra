@@ -193,7 +193,7 @@ def print_meta(state):
         ]
 
         if not hosts:
-            continue
+            continue  # pragma: no cover
 
         if groups:
             rows.append((logger.info, 'Groups: {0}'.format(
