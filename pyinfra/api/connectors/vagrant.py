@@ -7,10 +7,8 @@ from six.moves.queue import Queue
 
 from pyinfra import local, logger
 from pyinfra.api.exceptions import InventoryError
+from pyinfra.api.util import memoize
 from pyinfra.progress import progress_spinner
-
-VAGRANT_CONFIG = None
-VAGRANT_OPTIONS = None
 
 
 def _get_vagrant_ssh_config(queue, progress, target):
@@ -24,7 +22,10 @@ def _get_vagrant_ssh_config(queue, progress, target):
     progress(target)
 
 
-def _get_vagrant_config(limit=None):
+@memoize
+def get_vagrant_config(limit=None):
+    logger.info('Getting Vagrant config...')
+
     if limit and not isinstance(limit, list):
         limit = [limit]
 
@@ -73,28 +74,13 @@ def _get_vagrant_config(limit=None):
     return lines
 
 
-def get_vagrant_config(limit=None):
-    global VAGRANT_CONFIG
-
-    if VAGRANT_CONFIG is None:
-        logger.info('Getting vagrant config...')
-
-        VAGRANT_CONFIG = _get_vagrant_config(limit=limit)
-
-    return VAGRANT_CONFIG
-
-
+@memoize
 def get_vagrant_options():
-    global VAGRANT_OPTIONS
+    if path.exists('@vagrant.json'):
+        with open('@vagrant.json', 'r') as f:
+            return json.loads(f.read())
 
-    if VAGRANT_OPTIONS is None:
-        if path.exists('@vagrant.json'):
-            with open('@vagrant.json', 'r') as f:
-                VAGRANT_OPTIONS = json.loads(f.read())
-        else:
-            VAGRANT_OPTIONS = {}
-
-    return VAGRANT_OPTIONS
+    return {}
 
 
 def _make_name_data(host):
