@@ -4,3 +4,5 @@ hosts = ([
 ], {})
 
 generator_hosts = (host for host in ('hosta', 'hostb'))
+
+all = (['somehost'], {})

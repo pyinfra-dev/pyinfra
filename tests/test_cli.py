@@ -74,22 +74,41 @@ class TestCliDeploy(PatchSSHTestCase):
         )
         assert result.exit_code == 0
 
+    def test_deploy_operation_with_all(self):
+        result = run_cli(
+            path.join('tests', 'test_deploy', 'inventory_all.py'),
+            'server.shell',
+            'echo hi',
+        )
+        assert result.exit_code == 0
+
     def test_exec_command(self):
+        result = run_cli(
+            path.join('tests', 'test_deploy', 'inventory.py'),
+            'exec',
+            '--',
+            'echo hi',
+        )
+        assert result.exit_code == 0
+
+    def test_exec_command_with_options(self):
         result = run_cli(
             path.join('tests', 'test_deploy', 'inventory.py'),
             'exec',
             '--sudo',
             '--sudo-user', 'pyinfra',
             '--su-user', 'pyinfrawhat',
+            '--port', '1022',
+            '--user', 'ubuntu',
             '--',
             'echo hi',
         )
         assert result.exit_code == 0
 
     def test_deploy(self):
-        # Run 10 iterations of the test - each time shuffling the order of the
+        # Run 3 iterations of the test - each time shuffling the order of the
         # hosts - ensuring that the ordering has no effect on the operation order.
-        for _ in range(10):
+        for _ in range(3):
             self._do_test_deploy()
 
     def _do_test_deploy(self):
