@@ -37,7 +37,7 @@ class TestCliEagerFlags(TestCase):
         assert result.exit_code == 0
 
 
-class TestCliDeploy(PatchSSHTestCase):
+class TestCliDeployRuns(PatchSSHTestCase):
     def setUp(self):
         pseudo_state.reset()
 
@@ -105,6 +105,62 @@ class TestCliDeploy(PatchSSHTestCase):
         )
         assert result.exit_code == 0
 
+    def test_exec_command_with_serial(self):
+        result = run_cli(
+            path.join('tests', 'test_deploy', 'inventory.py'),
+            'exec',
+            '--serial',
+            '--',
+            'echo hi',
+        )
+        assert result.exit_code == 0
+
+    def test_exec_command_with_no_wait(self):
+        result = run_cli(
+            path.join('tests', 'test_deploy', 'inventory.py'),
+            'exec',
+            '--no-wait',
+            '--',
+            'echo hi',
+        )
+        assert result.exit_code == 0
+
+    def test_exec_command_with_debug_operations(self):
+        result = run_cli(
+            path.join('tests', 'test_deploy', 'inventory.py'),
+            'exec',
+            '--debug-operations',
+            '--',
+            'echo hi',
+        )
+        assert result.exit_code == 0
+
+    def test_exec_command_with_debug_facts(self):
+        result = run_cli(
+            path.join('tests', 'test_deploy', 'inventory.py'),
+            'exec',
+            '--debug-facts',
+            '--',
+            'echo hi',
+        )
+        assert result.exit_code == 0
+
+    def test_exec_command_with_debug_data_limit(self):
+        result = run_cli(
+            path.join('tests', 'test_deploy', 'inventory.py'),
+            'exec',
+            '--debug-data',
+            '--limit', 'somehost',
+            '--',
+            'echo hi',
+        )
+        assert result.exit_code == 0
+
+
+class TestCliDeployState(PatchSSHTestCase):
+    def setUp(self):
+        pseudo_state.reset()
+
     def test_deploy(self):
         # Run 3 iterations of the test - each time shuffling the order of the
         # hosts - ensuring that the ordering has no effect on the operation order.
@@ -115,10 +171,10 @@ class TestCliDeploy(PatchSSHTestCase):
         correct_op_name_and_host_names = [
             ('First main operation', True),  # true for all hosts
             ('Second main operation', ('somehost',)),
-            ('tests/test_deploy/a_task.py | First task operation', ('anotherhost',)),
-            ('tests/test_deploy/a_task.py | Second task operation', ('anotherhost',)),
-            ('tests/test_deploy/a_task.py | First task operation', True),
-            ('tests/test_deploy/a_task.py | Second task operation', True),
+            ('tests/test_deploy/tasks/a_task.py | First task operation', ('anotherhost',)),
+            ('tests/test_deploy/tasks/a_task.py | Second task operation', ('anotherhost',)),
+            ('tests/test_deploy/tasks/a_task.py | First task operation', True),
+            ('tests/test_deploy/tasks/a_task.py | Second task operation', True),
             ('Loop-0 main operation', True),
             ('Loop-1 main operation', True),
             ('Third main operation', True),
@@ -126,6 +182,7 @@ class TestCliDeploy(PatchSSHTestCase):
             ('2nd Order loop 1', True),
             ('Order loop 2', True),
             ('2nd Order loop 2', True),
+            ('Final limited operation', ('somehost',)),
         ]
 
         hosts = ['somehost', 'anotherhost', 'someotherhost']

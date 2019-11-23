@@ -1,5 +1,5 @@
 from pyinfra import host, local, state
-from pyinfra.modules import server
+from pyinfra.modules import files, server
 
 
 server.shell(
@@ -14,10 +14,10 @@ if host.name == 'somehost':
         'echo second_main_op',
     )
 elif host.name == 'anotherhost':
-    local.include('a_task.py')
+    local.include('tasks/a_task.py')
 
 # Include the whole file again, but for all hosts
-local.include('a_task.py')
+local.include('tasks/a_task.py')
 
 # Do a loop which will generate duplicate op hashes
 for i in range(2):
@@ -26,9 +26,10 @@ for i in range(2):
         'echo loop_{0}_main_operation'.format(i),
     )
 
-server.shell(
+files.file(
     {'Third main operation'},
-    'echo third_main_op',
+    'files/a_file',
+    '/a_file',
 )
 
 with state.preserve_loop_order([1, 2]) as loop_items:
@@ -41,3 +42,11 @@ with state.preserve_loop_order([1, 2]) as loop_items:
             {'2nd Order loop {0}'.format(item)},
             'echo loop_{0}'.format(item),
         )
+
+if host.name == 'somehost':
+    files.template(
+        {'Final limited operation'},
+        'templates/a_template.j2',
+        '/a_template',
+        is_template=True,
+    )
