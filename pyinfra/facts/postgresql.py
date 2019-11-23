@@ -52,7 +52,7 @@ class PostgresqlFactBase(FactBase):
         return make_execute_psql_command(
             self.postgresql_command,
             user=postgresql_user,
-            password=postgresql_port,
+            password=postgresql_password,
             host=postgresql_host,
             port=postgresql_port,
         )
