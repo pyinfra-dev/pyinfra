@@ -1,4 +1,7 @@
-import logging
+# Import `pyinfra_cli` to trigger gevent monkey patching
+import pyinfra_cli  # noqa: F401
+
+import logging  # noqa: I100
 
 import gevent.hub
 
