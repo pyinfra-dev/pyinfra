@@ -1,0 +1,10 @@
+{
+    "command": "cat /etc/*-release",
+    "output": [],
+    "fact": {
+        "name": null,
+        "major": null,
+        "minor": null,
+        "release_meta": {}
+    }
+}

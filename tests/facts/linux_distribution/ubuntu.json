@@ -1,0 +1,15 @@
+{
+    "command": "cat /etc/*-release",
+    "output": [
+        "Ubuntu 10.04",
+        "VERSION_ID=\"10\""
+    ],
+    "fact": {
+        "name": "Ubuntu",
+        "major": 10,
+        "minor": 4,
+        "release_meta": {
+            "VERSION_ID": "10"
+        }
+    }
+}
