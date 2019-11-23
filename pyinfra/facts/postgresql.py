@@ -1,10 +1,10 @@
 from pyinfra.api import FactBase
-from pyinfra.api.util import try_int
+from pyinfra.api.util import try_int  # pragma: no cover
 
-from .util.databases import parse_columns_and_rows
+from .util.databases import parse_columns_and_rows  # pragma: no cover
 
 
-def make_psql_command(
+def make_psql_command(  # pragma: no cover
     database=None,
     user=None,
     password=None,
@@ -34,7 +34,7 @@ def make_psql_command(
     return ' '.join(target_bits)
 
 
-def make_execute_psql_command(command, **postgresql_kwargs):
+def make_execute_psql_command(command, **postgresql_kwargs):  # pragma: no cover
     return '{0} -Ac "{1}"'.format(
         make_psql_command(**postgresql_kwargs),
         command.replace('"', '\\"'),

@@ -121,7 +121,7 @@ class MysqlUsers(MysqlFactBase):
 
         for details in rows:
             if details.get('Host') is None or details.get('User') is None:
-                continue
+                continue  # pragma: no cover
 
             privileges = []
 

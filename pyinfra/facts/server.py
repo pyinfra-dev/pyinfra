@@ -399,7 +399,7 @@ class Users(FactBase):
                     if name:
                         name = name.group(1)
                     else:
-                        continue
+                        continue  # pragma: no cover
 
                     # We only want secondary groups here
                     if name != group:

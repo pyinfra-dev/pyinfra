@@ -422,7 +422,7 @@ def template(
         while trace.tb_next:
             if trace.tb_next.tb_next:
                 trace = trace.tb_next
-            else:
+            else:  # pragma: no cover
                 break
 
         line_number = trace.tb_frame.f_lineno

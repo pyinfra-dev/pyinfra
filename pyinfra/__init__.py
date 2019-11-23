@@ -21,4 +21,4 @@ from . import pseudo_modules  # noqa
 from . import facts  # noqa
 
 # Trigger module imports
-from . import modules  # noqa
+from . import modules  # noqa # pragma: no cover
