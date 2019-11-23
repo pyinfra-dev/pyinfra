@@ -19,6 +19,8 @@ def make_names_data(image=None):
     if not image:
         raise InventoryError('No docker base image provided!')
 
+    logger.warning('The @docker connector is in Alpha!')
+
     # Save the image as the hostname, no data, @docker group
     yield image, {}, ['@docker']
 
