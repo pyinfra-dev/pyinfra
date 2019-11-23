@@ -1,0 +1,7 @@
+{
+    "command": "cat /etc/*-release",
+    "output": [
+        "Ubuntu 10.04"
+    ],
+    "fact": "Ubuntu"
+}
