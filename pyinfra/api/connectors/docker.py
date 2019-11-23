@@ -117,3 +117,11 @@ def put_file(
         print('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
 
     return status
+
+
+def get_file(
+    state, host, remote_filename, filename_or_io,
+    print_output=False,
+    **kwargs  # ignored (sudo/etc)
+):
+    raise NotImplementedError

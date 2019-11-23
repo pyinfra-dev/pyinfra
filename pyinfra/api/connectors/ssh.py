@@ -354,3 +354,11 @@ def put_file(
             print('{0}file uploaded: {1}'.format(host.print_prefix, remote_filename))
 
     return True
+
+
+def get_file(
+    state, host, filename_or_io, remote_filename,
+    sudo=False, sudo_user=None, su_user=None, print_output=False,
+    **command_kwargs
+):
+    raise NotImplementedError
