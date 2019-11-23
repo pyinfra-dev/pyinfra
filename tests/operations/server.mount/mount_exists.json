@@ -1,0 +1,9 @@
+{
+    "args": ["/data"],
+    "facts": {
+        "mounts": {
+            "/data": {}
+        }
+    },
+    "commands": []
+}

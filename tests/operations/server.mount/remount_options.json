@@ -1,0 +1,16 @@
+{
+    "args": ["/data"],
+    "kwargs": {
+        "options": ["rw", "noatime"]
+    },
+    "facts": {
+        "mounts": {
+            "/data": {
+                "options": ["rw"]
+            }
+        }
+    },
+    "commands": [
+        "mount -o remount,rw,noatime /data"
+    ]
+}

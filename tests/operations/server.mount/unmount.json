@@ -1,0 +1,14 @@
+{
+    "args": ["/data"],
+    "kwargs": {
+        "mounted": false
+    },
+    "facts": {
+        "mounts": {
+            "/data": {}
+        }
+    },
+    "commands": [
+        "umount /data"
+    ]
+}

@@ -118,6 +118,54 @@ def modprobe(state, host, name, present=True, force=False):
 
 
 @operation
+def mount(
+    state, host, name,
+    mounted=True, options=None,
+    # TODO: do we want to manage fstab here?
+    # update_fstab=False, device=None, fs_type=None,
+):
+    '''
+    Manage mounted filesystems.
+
+    + name: the path of the mounted filesystem
+    + mounted: whether the filesystem should be mounted
+    + options: the mount options
+
+    Options:
+        If the currently mounted filesystem does not have all of the provided
+        options it will be remounted with the options provided.
+
+    ``/etc/fstab``:
+        This operation does not attempt to modify the on disk fstab file - for
+        that you should use the `files.line operation <./files.html#files-line>`_.
+    '''
+
+    options = options or []
+    options_string = ','.join(options)
+
+    mounts = host.fact.mounts
+    is_mounted = name in mounts
+
+    # Want mount but don't have?
+    if mounted and not is_mounted:
+        yield 'mount{0} {1}'.format(
+            ' -o {0}'.format(options_string) if options_string else '',
+            name,
+        )
+
+    # Want no mount but mounted?
+    elif mounted is False and is_mounted:
+        yield 'umount {0}'.format(name)
+
+    # Want mount and is mounted! Check the options
+    elif is_mounted and mounted and options:
+        mounted_options = mounts[name]['options']
+        needed_options = set(options) - set(mounted_options)
+        if needed_options:
+            yield 'mount -o remount,{0} {1}'.format(options_string, name)
+
+
+@operation
 def hostname(state, host, hostname, hostname_file=None):
     '''
     Set the system hostname.
@@ -128,6 +176,8 @@ def hostname(state, host, hostname, hostname_file=None):
     Hostname file:
         By default pyinfra will auto detect this by targetting ``/etc/hostname``
         on Linux and ``/etc/myname`` on OpenBSD.
+
+        To completely disable writing the hostname file, set ``hostname_file=False``.
     '''
 
     if hostname_file is None:
