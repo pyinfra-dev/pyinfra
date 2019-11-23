@@ -51,6 +51,10 @@ class TestSSHUserConfig(TestCase):
         'pyinfra.api.connectors.sshuserclient.config.os.path.isfile',
         lambda path: True,
     )
+    @patch(
+        'pyinfra.api.connectors.sshuserclient.config.os.path.isabs',
+        lambda path: True,
+    )
     def test_load_ssh_config(self):
         client = SSHClient()
 
