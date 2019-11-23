@@ -9,7 +9,7 @@ import six
 from jsontest import JsonTest
 from nose.tools import nottest
 
-from pyinfra.api.facts import FACTS
+from pyinfra.api.facts import FACTS, ShortFactBase
 from pyinfra_cli.util import json_encode
 
 
@@ -22,7 +22,13 @@ def make_fact_tests(fact_name):
         jsontest_files = path.join('tests', 'facts', fact_name)
         jsontest_prefix = 'test_{0}_'.format(fact_name)
 
-        def jsontest_function(self, test_name, test_data):
+        def jsontest_function(self, test_name, test_data, fact=fact):
+            short_fact = None
+
+            if isinstance(fact, ShortFactBase):
+                short_fact = fact
+                fact = fact.fact()
+
             if callable(fact.command):
                 args = test_data.get('arg', [])
                 if not isinstance(args, list):
@@ -34,6 +40,8 @@ def make_fact_tests(fact_name):
                     self.assertEqual(command, test_data['command'])
 
             data = fact.process(test_data['output'])
+            if short_fact:
+                data = short_fact.process_data(data)
 
             # Encode/decode data to ensure datetimes/etc become JSON
             data = json.loads(json.dumps(data, default=json_encode))
