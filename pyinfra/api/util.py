@@ -2,6 +2,7 @@ from __future__ import division, print_function, unicode_literals
 
 import re
 
+from functools import wraps
 from hashlib import sha1
 from inspect import getframeinfo, stack
 from socket import (
@@ -49,6 +50,22 @@ def ensure_host_list(hosts, inventory):
         return [hosts]
 
     return hosts
+
+
+def memoize(func):
+    cache = {}
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        key = (args, tuple(sorted(kwargs.items())))
+        if key in cache:
+            return cache[key]
+
+        value = func(*args, **kwargs)
+        cache[key] = value
+        return value
+
+    return wrapper
 
 
 def get_caller_frameinfo(frame_offset=0):
