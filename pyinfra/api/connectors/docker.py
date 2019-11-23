@@ -9,17 +9,22 @@ import pyinfra
 
 from pyinfra import local, logger
 from pyinfra.api.exceptions import InventoryError
-from pyinfra.api.util import get_file_io
+from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
 from .local import run_shell_command as run_local_shell_command
+
+
+@memoize
+def show_warning():
+    logger.warning('The @docker connector is in Alpha!')
 
 
 def make_names_data(image=None):
     if not image:
         raise InventoryError('No docker base image provided!')
 
-    logger.warning('The @docker connector is in Alpha!')
+    show_warning()
 
     # Save the image as the hostname, no data, @docker group
     yield image, {}, ['@docker']
