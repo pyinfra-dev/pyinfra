@@ -11,7 +11,19 @@ from paramiko import (
     SSHClient as ParamikoClient,
 )
 
+from pyinfra.api.util import memoize
+
 from .config import SSHConfig
+
+
+@memoize
+def get_ssh_config():
+    user_config_file = os.path.expanduser('~/.ssh/config')
+    if os.path.exists(user_config_file):
+        with open(user_config_file) as f:
+            ssh_config = SSHConfig()
+            ssh_config.parse(f)
+            return ssh_config
 
 
 class SSHClient(ParamikoClient):
@@ -35,38 +47,36 @@ class SSHClient(ParamikoClient):
     def parse_config(self, hostname):
         cfg = {'port': 22}
 
-        user_config_file = os.path.expanduser('~/.ssh/config')
-        if os.path.exists(user_config_file):
-            with open(user_config_file) as f:
-                ssh_config = SSHConfig()
-                ssh_config.parse(f)
-                host_config = ssh_config.lookup(hostname)
-                if 'hostname' in host_config:
-                    hostname = host_config['hostname']
-                if 'user' in host_config:
-                    cfg['username'] = host_config['user']
-                if 'identityfile' in host_config:
-                    cfg['key_filename'] = host_config['identityfile']
-                if 'port' in host_config:
-                    cfg['port'] = int(host_config['port'])
-                if 'proxycommand' in host_config:
-                    cfg['sock'] = ProxyCommand(host_config['proxycommand'])
-                elif 'proxyjump' in host_config:
-                    hops = host_config['proxyjump'].split(',')
-                    sock = None
-                    for i, hop in enumerate(hops):
-                        hop_hostname, hop_config = self.derive_shorthand(hop)
-                        c = SSHClient()
-                        c.set_missing_host_key_policy(AutoAddPolicy())
-                        c.connect(hop_hostname, sock=sock, **hop_config)
-                        if i == len(hops) - 1:
-                            target = hostname
-                            target_config = {'port': cfg['port']}
-                        else:
-                            target, target_config = self.derive_shorthand(
-                                hops[i + 1])
-                        sock = c.gateway(target, target_config['port'])
-                    cfg['sock'] = sock
+        ssh_config = get_ssh_config()
+        host_config = ssh_config.lookup(hostname)
+
+        if 'hostname' in host_config:
+            hostname = host_config['hostname']
+        if 'user' in host_config:
+            cfg['username'] = host_config['user']
+        if 'identityfile' in host_config:
+            cfg['key_filename'] = host_config['identityfile']
+        if 'port' in host_config:
+            cfg['port'] = int(host_config['port'])
+        if 'proxycommand' in host_config:
+            cfg['sock'] = ProxyCommand(host_config['proxycommand'])
+        elif 'proxyjump' in host_config:
+            hops = host_config['proxyjump'].split(',')
+            sock = None
+            for i, hop in enumerate(hops):
+                hop_hostname, hop_config = self.derive_shorthand(hop)
+                c = SSHClient()
+                c.set_missing_host_key_policy(AutoAddPolicy())
+                c.connect(hop_hostname, sock=sock, **hop_config)
+                if i == len(hops) - 1:
+                    target = hostname
+                    target_config = {'port': cfg['port']}
+                else:
+                    target, target_config = self.derive_shorthand(
+                        hops[i + 1])
+                sock = c.gateway(target, target_config['port'])
+            cfg['sock'] = sock
+
         return hostname, cfg
 
     def derive_shorthand(self, host_string):
