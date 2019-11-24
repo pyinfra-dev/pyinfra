@@ -1,5 +1,5 @@
 <h1>
-    <a href="https://pyinfra.readthedocs.io">
+    <a href="https://pyinfra.com">
         <img src="docs/static/logo_full.png" height="48px" />
     </a>
 </h1>
