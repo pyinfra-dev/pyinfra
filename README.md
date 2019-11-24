@@ -60,8 +60,8 @@ pyinfra my-server.net deploy.py
 
 ## Documentation
 
-+ [Getting started](https://pyinfra.readthedocs.org/page/getting_started.html)
-+ [Documentation](https://pyinfra.readthedocs.org)
++ [Getting started](https://pyinfra.readthedocs.io/page/getting_started.html)
++ [Documentation](https://pyinfra.readthedocs.io)
 + [Example deploy](example)
-+ [API Example](https://pyinfra.readthedocs.org/page/api/example.html)
-+ [How the deploy works](https://pyinfra.readthedocs.org/page/deploy_process.html)
++ [API Example](https://pyinfra.readthedocs.io/page/api/example.html)
++ [How the deploy works](https://pyinfra.readthedocs.io/page/deploy_process.html)
