@@ -4,7 +4,11 @@
     </a>
 </h1>
 
-[![PyPI version](https://img.shields.io/pypi/v/pyinfra?color=blue)](https://pypi.python.org/pypi/pyinfra) [![Travis.CI status](https://img.shields.io/travis/Fizzadar/pyinfra)](https://travis-ci.org/Fizzadar/pyinfra) [![Codecov Coverage](https://img.shields.io/codecov/c/gh/Fizzadar/pyinfra)](https://codecov.io/github/Fizzadar/pyinfra) [![MIT Licensed](https://img.shields.io/pypi/l/pyinfra)](https://github.com/Fizzadar/pyinfra/blob/develop/LICENSE.md)
+[![PyPI version](https://img.shields.io/pypi/v/pyinfra?color=blue)](https://pypi.python.org/pypi/pyinfra)
+[![Docs status](https://img.shields.io/readthedocs/pyinfra)](https://pyinfra.readthedocs.io)
+[![Travis.CI status](https://img.shields.io/travis/Fizzadar/pyinfra)](https://travis-ci.org/Fizzadar/pyinfra)
+[![Codecov Coverage](https://img.shields.io/codecov/c/gh/Fizzadar/pyinfra)](https://codecov.io/github/Fizzadar/pyinfra)
+[![MIT Licensed](https://img.shields.io/pypi/l/pyinfra)](https://github.com/Fizzadar/pyinfra/blob/develop/LICENSE.md)
 
 pyinfra automates/provisions/manages/deploys infrastructure super fast at massive scale. It can be used for ad-hoc command execution, service deployment, configuration management and more. Core design features include:
 
