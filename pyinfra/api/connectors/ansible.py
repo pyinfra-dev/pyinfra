@@ -94,5 +94,7 @@ def make_names_data(inventory_filename=None):
             for host in sub_group_hosts:
                 host_to_groups[host].add(group_name)
 
-    for host in hosts:
-        yield host, {}, host_to_groups.get(host)
+    return [
+        (host, {}, sorted(list(host_to_groups.get(host))))
+        for host in hosts
+    ]
