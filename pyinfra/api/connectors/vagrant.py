@@ -26,7 +26,7 @@ def _get_vagrant_ssh_config(queue, progress, target):
 def get_vagrant_config(limit=None):
     logger.info('Getting Vagrant config...')
 
-    if limit and not isinstance(limit, list):
+    if limit and not isinstance(limit, (list, tuple)):
         limit = [limit]
 
     with progress_spinner({'vagrant status'}) as progress:
