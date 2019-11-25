@@ -1,0 +1,9 @@
+[webservers]
+webserver-[1:2].net
+
+[dbservers]
+dbserver-[01:02].net
+
+[web_and_db_servers:children]
+webservers
+dbservers

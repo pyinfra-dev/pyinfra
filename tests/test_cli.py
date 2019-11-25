@@ -51,7 +51,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_deploy_inventory(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventory.py'),
+            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
             'server.shell',
             '--debug-data',
         )
@@ -59,7 +59,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_get_facts(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventory.py'),
+            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
             'fact',
             'os',
         )
@@ -68,7 +68,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_deploy_operation(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventory.py'),
+            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
             'server.shell',
             'echo hi',
         )
@@ -84,7 +84,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventory.py'),
+            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
             'exec',
             '--',
             'echo hi',
@@ -93,7 +93,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command_with_options(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventory.py'),
+            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
             'exec',
             '--sudo',
             '--sudo-user', 'pyinfra',
@@ -107,7 +107,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command_with_serial(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventory.py'),
+            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
             'exec',
             '--serial',
             '--',
@@ -117,7 +117,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command_with_no_wait(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventory.py'),
+            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
             'exec',
             '--no-wait',
             '--',
@@ -127,7 +127,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command_with_debug_operations(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventory.py'),
+            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
             'exec',
             '--debug-operations',
             '--',
@@ -137,7 +137,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command_with_debug_facts(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventory.py'),
+            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
             'exec',
             '--debug-facts',
             '--',
@@ -147,7 +147,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command_with_debug_data_limit(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventory.py'),
+            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
             'exec',
             '--debug-data',
             '--limit', 'somehost',
@@ -227,7 +227,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
     def test_deploy_operation_direct(self):
         with self.assertRaises(SystemExit) as e:
             _main(
-                inventory=path.join('tests', 'test_deploy', 'inventory.py'),
+                inventory=path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
                 operations=['server.shell', 'echo hi'],
                 verbosity=0, user=None, port=None, key=None, key_password=None,
                 password=None, sudo=False, sudo_user=None, su_user=None, parallel=None,
