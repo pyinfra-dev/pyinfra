@@ -178,6 +178,30 @@ Returns a dictionary of release information using ``lsb_release``.
 
 
 
+:code:`mounts`
+~~~~~~~~~~~~~~
+
+.. code:: python
+
+    host.fact.mounts
+
+
+Returns a dictionary of mounted filesystems and information.
+
+.. code:: python
+
+    "/": {
+        "device": "/dev/mv2",
+        "type": "ext4",
+        "options": [
+            "rw",
+            "relatime"
+        ]
+    },
+    ...
+
+
+
 :code:`os`
 ~~~~~~~~~~
 

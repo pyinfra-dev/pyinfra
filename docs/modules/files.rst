@@ -129,7 +129,7 @@ Source changes:
 :code:`files.put`
 ~~~~~~~~~~~~~~~~~
 
-Copy a local file to the remote system.
+Upload a local file to the remote system.
 
 .. code:: python
 

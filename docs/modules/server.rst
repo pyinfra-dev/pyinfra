@@ -66,6 +66,8 @@ Hostname file:
     By default pyinfra will auto detect this by targetting ``/etc/hostname``
     on Linux and ``/etc/myname`` on OpenBSD.
 
+    To completely disable writing the hostname file, set ``hostname_file=False``.
+
 
 :code:`server.modprobe`
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -79,6 +81,28 @@ Load/unload kernel modules.
 + **name**: name of the module to manage
 + **present**: whether the module should be loaded or not
 + **force**: whether to force any add/remove modules
+
+
+:code:`server.mount`
+~~~~~~~~~~~~~~~~~~~~
+
+Manage mounted filesystems.
+
+.. code:: python
+
+    server.mount(name, mounted=True, options=None)
+
++ **name**: the path of the mounted filesystem
++ **mounted**: whether the filesystem should be mounted
++ **options**: the mount options
+
+Options:
+    If the currently mounted filesystem does not have all of the provided
+    options it will be remounted with the options provided.
+
+``/etc/fstab``:
+    This operation does not attempt to modify the on disk fstab file - for
+    that you should use the `files.line operation <./files.html#files-line>`_.
 
 
 :code:`server.script`
