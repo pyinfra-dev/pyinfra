@@ -1,3 +1,26 @@
+# v0.11 (WIP, dev0)
+
++ Add `files.get` operation to download remote files
++ Add `server.mount` operation and `mounts` fact to manage mounted filesystems
++ Add Docker facts (matching `docker inspect` output):
+    - `docker_system_info`
+    - `docker_containers`
+    - `docker_images`
+    - `docker_networks`
+    - `docker_container(ID)`
+    - `docker_image(ID)`
+    - `docker_network(ID)`
++ Add `@ansible` connector to read Ansible inventory files
++ Large ongoing documentation overhaul
++ Add a `CONTRIBUTORS.md`!
++ Fix passing of `postgresql_password` in `postgresql_*` facts
++ Large expansion of tests - 100% module + facts coverage
++ Remove lots of printing fluff from the CLI
++ Correctly use `with open...` in `files.template` operation
++ Internal change: file upload commands now tuple `('upload', local_file, remote_file)`
+    - also add a `download` version to download files
+
+
 # v0.10
 
 + Add `State.preserve_loop_order` to execute loops in order
@@ -240,7 +263,6 @@ def install_openstack_controller(state, host):
         {'Install openstack-client'},
         ['openstack-client'],
     )
-    ...
 ```
 
 + Add **SSH module** to execute SSH from others hosts: `ssh.keyscan`, `ssh.command`, `ssh.upload`, `ssh.download`
