@@ -3,3 +3,6 @@ show_missing = true
 skip_covered = true
 precision = 1
 include = pyinfra/*, pyinfra_cli/*
+
+[run]
+concurrency = gevent
