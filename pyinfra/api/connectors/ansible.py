@@ -16,7 +16,7 @@ def show_warning():
 
 @memoize
 def get_ansible_inventory(inventory_filename=None):
-    if not inventory_filename:
+    if not inventory_filename:  # pragma: no cover
         raise InventoryError('No Ansible inventory filename provided!')
 
     if not path.exists(inventory_filename):

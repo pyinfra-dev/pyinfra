@@ -57,7 +57,7 @@ def split_combined_output(combined_output):
             stdout.append(line)
         elif type_ == 'stderr':
             stderr.append(line)
-        else:
+        else:  # pragma: no cover
             raise ValueError('Incorrect output line type: {0}'.format(type_))
 
     return stdout, stderr
