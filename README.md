@@ -1,6 +1,6 @@
 <h1>
     <a href="https://pyinfra.com">
-        <img src="docs/static/logo_full.png" height="48px" />
+        <img src="https://raw.githubusercontent.com/Fizzadar/pyinfra/master/docs/static/logo_full.png" height="48px" />
     </a>
 </h1>
 
@@ -19,9 +19,9 @@ pyinfra automates/provisions/manages/deploys infrastructure super fast at massiv
 + 📦 **Extendable** with _any_ Python package as configured & written in standard Python.
 + 🔌 **Integrated** with Docker, Vagrant & Ansible out of the box.
 
-When you run pyinfra you'll see something like ([non animated version](docs/static/example_deploy.png)):
+When you run pyinfra you'll see something like ([non animated version](https://raw.githubusercontent.com/Fizzadar/pyinfra/master/docs/static/example_deploy.png)):
 
-<img width="100%" src="docs/static/example_deploy.gif" />
+<img width="100%" src="https://raw.githubusercontent.com/Fizzadar/pyinfra/master/docs/static/example_deploy.gif" />
 
 ## Quickstart
 
