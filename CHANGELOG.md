@@ -1,4 +1,4 @@
-# v0.11 (WIP, dev0)
+# v0.11 (WIP, dev1)
 
 + Add `files.get` operation to download remote files
 + Add `server.mount` operation and `mounts` fact to manage mounted filesystems
