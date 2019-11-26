@@ -59,10 +59,9 @@ And executed with:
 pyinfra my-server.net deploy.py
 ```
 
-## Documentation
+## [Documentation](https://pyinfra.readthedocs.io)
 
 + [Getting started](https://pyinfra.readthedocs.io/page/getting_started.html)
-+ [Documentation](https://pyinfra.readthedocs.io)
-+ [Example deploy](example)
-+ [API Example](https://pyinfra.readthedocs.io/page/api/example.html)
-+ [How the deploy works](https://pyinfra.readthedocs.io/page/deploy_process.html)
++ [Writing deploys](https://pyinfra.readthedocs.io/page/deploys.html)
++ [Using the CLI](https://pyinfra.readthedocs.io/page/cli.html)
++ [Connectors](https://pyinfra.readthedocs.io/page/connectors.html)

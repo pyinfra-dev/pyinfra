@@ -79,6 +79,5 @@ Deploy Reference
     :hidden:
     :caption: Elsewhere
 
-    pyinfra on GitHub <http://github.com/Fizzadar/pyinfra>
-
-..    pyinfra's website <http://pyinfra.com>
+    pyinfra.com <https://pyinfra.com>
+    pyinfra on GitHub <https://github.com/Fizzadar/pyinfra>
