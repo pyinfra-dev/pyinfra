@@ -55,7 +55,7 @@ DOCS_REQUIRES = (
 DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
     # Releasing
     'wheel',
-    'twine==1.9.1',
+    'twine==3.1.0',
 
     # Dev debugging
     'ipdb==0.10.3',
