@@ -39,6 +39,10 @@ Deploy Reference
     :doc:`examples`
         A set of documented example deploys highlighting common patterns.
 
+.. compound::
+    :doc:`api/deploys`
+        How to package, redistribute and share pyinfra deploys with other people.
+
 
 .. toctree::
     :hidden:
@@ -57,21 +61,14 @@ Deploy Reference
     operations
     facts
     examples
-
-.. toctree::
-    :hidden:
-    :caption: pyinfra API
-
-    api/modules
     api/deploys
-    api/example
-    api/reference
 
 .. toctree::
     :hidden:
     :caption: How pyinfra Works
 
     deploy_process
+    api/modules
     performance
     compatibility
 
