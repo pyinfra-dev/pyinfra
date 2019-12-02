@@ -198,6 +198,7 @@ class patch_files(object):
             patch('pyinfra.modules.files.path.isfile', self.isfile),
             patch('pyinfra.modules.files.path.isdir', self.isdir),
             patch('pyinfra.modules.files.walk', self.walk),
+            patch('pyinfra.modules.files.makedirs', lambda path: True),
             # Builtin patches
             patch('pyinfra.modules.files.open', self.get_file, create=True),
             patch('pyinfra.api.util.open', self.get_file, create=True),
