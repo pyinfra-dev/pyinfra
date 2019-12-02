@@ -53,18 +53,17 @@ def ensure_host_list(hosts, inventory):
 
 
 def memoize(func):
-    cache = {}
-
     @wraps(func)
     def wrapper(*args, **kwargs):
-        key = (args, tuple(sorted(kwargs.items())))
-        if key in cache:
-            return cache[key]
+        key = '{0}{1}'.format(args, kwargs)
+        if key in wrapper.cache:
+            return wrapper.cache[key]
 
         value = func(*args, **kwargs)
-        cache[key] = value
+        wrapper.cache[key] = value
         return value
 
+    wrapper.cache = {}
     return wrapper
 
 
