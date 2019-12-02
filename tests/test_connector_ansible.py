@@ -14,6 +14,7 @@ class TestAnsibleConnector(TestCase):
         assert data == [
             ('webserver-1.net', {}, ['web_and_db_servers', 'webservers']),
             ('webserver-2.net', {}, ['web_and_db_servers', 'webservers']),
+            ('webserver-3.net', {}, ['web_and_db_servers', 'webservers']),
             ('dbserver-01.net', {}, ['dbservers', 'web_and_db_servers']),
             ('dbserver-02.net', {}, ['dbservers', 'web_and_db_servers']),
         ]

@@ -1,5 +1,6 @@
 [webservers]
 webserver-[1:2].net
+webserver-3.net
 
 [dbservers]
 dbserver-[01:02].net
