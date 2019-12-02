@@ -3,10 +3,6 @@
 from inspect import getargspec, getmembers, isclass
 from types import FunctionType, MethodType
 
-import six
-
-from six.moves import range
-
 from pyinfra import facts
 from pyinfra.api.facts import FactBase, ShortFactBase
 from pyinfra.api.util import underscore
@@ -54,7 +50,7 @@ def build_facts():
                 argspec = getargspec(command_attr)
 
                 arg_defaults = [
-                    "'{}'".format(arg) if isinstance(arg, six.string_types) else arg
+                    "'{}'".format(arg) if isinstance(arg, str) else arg
                     for arg in argspec.defaults
                 ] if argspec.defaults else None
 

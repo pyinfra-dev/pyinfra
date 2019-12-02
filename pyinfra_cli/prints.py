@@ -1,10 +1,7 @@
-from __future__ import print_function, unicode_literals
-
 import json
 import re
 
 import click
-import six
 
 from pyinfra import logger
 from pyinfra.api.facts import get_fact_names
@@ -37,7 +34,7 @@ def _stringify_host_keys(data):
     if isinstance(data, dict):
         return {
             key.name if isinstance(key, Host) else key: _stringify_host_keys(value)
-            for key, value in six.iteritems(data)
+            for key, value in data.items()
         }
 
     return data
@@ -68,7 +65,7 @@ def print_state_operations(state):
     for op_hash in state.get_op_order():
         meta = state.op_meta[op_hash]
         hosts = set(
-            host for host, operations in six.iteritems(state.ops)
+            host for host, operations in state.ops.items()
             if op_hash in operations
         )
 
@@ -131,7 +128,7 @@ def print_inventory(state):
 
 
 def print_facts(facts):
-    for name, data in six.iteritems(facts):
+    for name, data in facts.items():
         print()
         print('--> Fact data for: {0}'.format(
             click.style(name, bold=True),
@@ -144,7 +141,7 @@ def print_rows(rows):
     column_widths = []
 
     for _, columns in rows:
-        if isinstance(columns, six.string_types):
+        if isinstance(columns, str):
             continue
 
         for i, column in enumerate(columns):
@@ -165,7 +162,7 @@ def print_rows(rows):
     for func, columns in rows:
         line = columns
 
-        if not isinstance(columns, six.string_types):
+        if not isinstance(columns, str):
             justified = []
 
             for i, column in enumerate(columns):
@@ -186,7 +183,7 @@ def print_meta(state):
     group_combinations = _get_group_combinations(state.inventory)
     rows = []
 
-    for i, (groups, hosts) in enumerate(six.iteritems(group_combinations), 1):
+    for i, (groups, hosts) in enumerate(group_combinations.items(), 1):
         hosts = [
             host for host in hosts
             if state.is_host_in_limit(host)
@@ -229,7 +226,7 @@ def print_results(state):
     group_combinations = _get_group_combinations(state.inventory)
     rows = []
 
-    for i, (groups, hosts) in enumerate(six.iteritems(group_combinations), 1):
+    for i, (groups, hosts) in enumerate(group_combinations.items(), 1):
         hosts = [
             host for host in hosts
             if state.is_host_in_limit(host)
@@ -276,8 +273,8 @@ def print_results(state):
 
             rows.append((logger.info, [
                 host.style_print_prefix(*host_args, **host_kwargs),
-                'Successful: {0}'.format(click.style(six.text_type(success_ops), bold=True)),
-                'Errors: {0}'.format(click.style(six.text_type(error_ops), bold=True)),
+                'Successful: {0}'.format(click.style(str(success_ops), bold=True)),
+                'Errors: {0}'.format(click.style(str(error_ops), bold=True)),
                 'Commands: {0}/{1}'.format(results['commands'], meta['commands']),
             ]))
 

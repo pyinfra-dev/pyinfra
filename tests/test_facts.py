@@ -1,11 +1,8 @@
-from __future__ import print_function
-
 import json
 
 from os import listdir, path
 from unittest import TestCase
 
-import six
 from jsontest import JsonTest
 from nose.tools import nottest
 
@@ -17,8 +14,7 @@ from pyinfra_cli.util import json_encode
 def make_fact_tests(fact_name):
     fact = FACTS[fact_name]()
 
-    @six.add_metaclass(JsonTest)
-    class TestTests(TestCase):
+    class TestTests(TestCase, metaclass=JsonTest):
         jsontest_files = path.join('tests', 'facts', fact_name)
         jsontest_prefix = 'test_{0}_'.format(fact_name)
 

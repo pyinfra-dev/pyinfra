@@ -6,8 +6,6 @@ creation (eg pyinfra-openstack).
 
 from functools import wraps
 
-import six
-
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.pseudo_modules import PseudoModule
 
@@ -42,7 +40,7 @@ def deploy(func_or_name, data_defaults=None):
     '''
 
     # If not decorating, return function with config attached
-    if isinstance(func_or_name, six.string_types):
+    if isinstance(func_or_name, str):
         name = func_or_name
 
         def decorator(f):

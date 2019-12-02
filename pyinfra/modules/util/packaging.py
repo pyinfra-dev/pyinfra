@@ -1,8 +1,3 @@
-from __future__ import unicode_literals
-
-import six
-
-
 def ensure_packages(
     packages, current_packages, present,
     install_command, uninstall_command,
@@ -35,7 +30,7 @@ def ensure_packages(
         return
 
     # Accept a single package as string
-    if isinstance(packages, six.string_types):
+    if isinstance(packages, str):
         packages = [packages]
 
     # Lowercase packaging?
@@ -77,11 +72,11 @@ def ensure_packages(
                 diff_packages.append(package)
 
             # String version, just check if not existing
-            if isinstance(package, six.string_types) and package not in current_packages:
+            if isinstance(package, str) and package not in current_packages:
                 diff_packages.append(package)
 
             # Present packages w/o version spec ified - for upgrade if latest
-            if isinstance(package, six.string_types) and package in current_packages:
+            if isinstance(package, str) and package in current_packages:
                 upgrade_packages.append(package)
 
     # Uninstalling?
@@ -95,7 +90,7 @@ def ensure_packages(
                 diff_packages.append(package)
 
             # String version, just check if existing
-            if isinstance(package, six.string_types) and package in current_packages:
+            if isinstance(package, str) and package in current_packages:
                 diff_packages.append(package)
 
     # Convert packages back to string(/version)

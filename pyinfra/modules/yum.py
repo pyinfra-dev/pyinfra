@@ -2,10 +2,8 @@
 Manage yum packages and repositories. Note that yum package names are case-sensitive.
 '''
 
-from __future__ import unicode_literals
-
-from six import StringIO
-from six.moves.urllib.parse import urlparse
+from io import StringIO
+from urllib.parse import urlparse
 
 from pyinfra.api import operation
 

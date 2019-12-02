@@ -2,8 +2,6 @@
 Manage BSD packages and repositories. Note that BSD package names are case-sensitive.
 '''
 
-from __future__ import unicode_literals
-
 from pyinfra.api import operation
 
 from .util.packaging import ensure_packages

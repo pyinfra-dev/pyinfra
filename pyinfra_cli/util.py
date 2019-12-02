@@ -1,24 +1,11 @@
-from __future__ import division, print_function
-
 import json
 
 from datetime import datetime
 from importlib import import_module
+from io import IOBase
 from types import FunctionType
 
-# py2/3 switcheroo
-try:  # pragma: no cover
-    from StringIO import StringIO
-    from cStringIO import OutputType, InputType
-    from types import FileType
-    io_bases = (FileType, OutputType, InputType, StringIO)
-
-except ImportError:  # pragma: no cover
-    from io import IOBase
-    io_bases = IOBase
-
 import click
-import six
 
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.util import FallbackDict
@@ -78,7 +65,7 @@ def json_encode(obj):
     elif isinstance(obj, FallbackDict):
         return obj.dict()
 
-    elif isinstance(obj, io_bases):
+    elif isinstance(obj, IOBase):
         if hasattr(obj, 'name'):
             return 'File: {0}'.format(obj.name)
 
@@ -91,7 +78,7 @@ def json_encode(obj):
     elif isinstance(obj, set):
         return sorted(list(obj))
 
-    elif isinstance(obj, six.binary_type):
+    elif isinstance(obj, bytes):
         return obj.decode()
 
     else:

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import sys
 
 from traceback import format_exception, format_tb

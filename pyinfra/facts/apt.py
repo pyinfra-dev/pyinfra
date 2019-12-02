@@ -1,8 +1,4 @@
-from __future__ import unicode_literals
-
 import re
-
-import six
 
 from pyinfra.api import FactBase
 
@@ -101,7 +97,7 @@ class DebPackage(FactBase):
         data = {}
 
         for line in output:
-            for key, regex in six.iteritems(self._regexes):
+            for key, regex in self._regexes.items():
                 matches = re.match(regex, line)
                 if matches:
                     value = matches.group(1)

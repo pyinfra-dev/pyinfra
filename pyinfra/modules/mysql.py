@@ -10,8 +10,6 @@ All operations in this module take four optional global arguments:
     + ``mysql_port``: the port of the server to connect to
 '''
 
-import six
-
 from pyinfra.api import operation, OperationError
 from pyinfra.facts.mysql import make_execute_mysql_command, make_mysql_command
 
@@ -216,7 +214,7 @@ def privileges(
     '''
 
     # Ensure we have a list
-    if isinstance(privileges, six.string_types):
+    if isinstance(privileges, str):
         privileges = [privileges]
 
     if database != '*':

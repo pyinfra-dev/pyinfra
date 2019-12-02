@@ -1,5 +1,3 @@
-from __future__ import print_function, unicode_literals
-
 from itertools import product
 from socket import (
     error as socket_error,
@@ -9,7 +7,6 @@ from types import FunctionType
 
 import click
 import gevent
-import six
 
 from paramiko import SSHException
 
@@ -126,7 +123,7 @@ def _run_server_op(state, host, op_hash):
                     )
 
         # Must be a string/shell command: execute it on the server w/op-level preferences
-        elif isinstance(command, six.string_types):
+        elif isinstance(command, str):
             combined_output_lines = []
 
             try:
@@ -349,7 +346,7 @@ def _run_single_op(state, op_hash):
                     progress(host)
 
                 # Get all the results
-                for greenlet, host in six.iteritems(greenlet_to_host):
+                for greenlet, host in greenlet_to_host.items():
                     if not greenlet.get():
                         failed_hosts.add(host)
 

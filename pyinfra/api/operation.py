@@ -5,14 +5,10 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 :doc:`./pyinfra.api.operations` module.
 '''
 
-from __future__ import unicode_literals
-
 from functools import wraps
 from inspect import getframeinfo, stack
 from os import path
 from types import FunctionType
-
-import six
 
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.pseudo_modules import PseudoModule
@@ -226,7 +222,7 @@ def operation(func=None, pipeline_facts=None):
         # as jinja templates.
         actual_op_meta_kwargs = {
             key: get_arg_value(state, host, a)
-            for key, a in six.iteritems(op_meta_kwargs)
+            for key, a in op_meta_kwargs.items()
         }
         op_meta.update(actual_op_meta_kwargs)
 
@@ -243,7 +239,7 @@ def operation(func=None, pipeline_facts=None):
                     op_meta['args'].append(arg)
 
             # Attach keyword args
-            for key, value in six.iteritems(kwargs):
+            for key, value in kwargs.items():
                 arg = '='.join((str(key), str(value)))
                 if arg not in op_meta['args']:
                     op_meta['args'].append(arg)
@@ -254,7 +250,7 @@ def operation(func=None, pipeline_facts=None):
         # Run once and we've already added meta for this op? Stop here.
         if op_meta_kwargs['run_once']:
             has_run = False
-            for ops in six.itervalues(state.ops):
+            for ops in state.ops.values():
                 if op_hash in ops:
                     has_run = True
                     break
@@ -298,7 +294,7 @@ def operation(func=None, pipeline_facts=None):
 
         actual_kwargs = {
             key: get_arg_value(state, host, a)
-            for key, a in six.iteritems(kwargs)
+            for key, a in kwargs.items()
         }
 
         # Convert to list as the result may be a generator

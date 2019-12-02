@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import six
 from mock import patch
 
 from pyinfra.api import Config, Inventory
@@ -41,7 +40,7 @@ def parse_fact(fact):
     '''
 
     # Handle datetimes
-    if isinstance(fact, six.string_types) and fact.startswith('datetime:'):
+    if isinstance(fact, str) and fact.startswith('datetime:'):
         return datetime.strptime(fact[9:], '%Y-%m-%dT%H:%M:%S')
 
     elif isinstance(fact, list):
@@ -54,7 +53,7 @@ def parse_fact(fact):
     elif isinstance(fact, dict):
         return {
             key: parse_fact(value)
-            for key, value in six.iteritems(fact)
+            for key, value in fact.items()
         }
 
     return fact
@@ -239,7 +238,7 @@ def create_host(name=None, facts=None, data=None):
     real_facts = {}
     facts = facts or {}
 
-    for name, fact_data in six.iteritems(facts):
+    for name, fact_data in facts.items():
         real_facts[name] = fact_data
 
     return FakeHost(name, facts=real_facts, data=data)

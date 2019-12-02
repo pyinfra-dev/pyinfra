@@ -2,8 +2,6 @@
 Manage pip packages. Compatible globally or inside a virtualenv.
 '''
 
-from __future__ import unicode_literals
-
 from pyinfra.api import operation
 from pyinfra.modules import files
 

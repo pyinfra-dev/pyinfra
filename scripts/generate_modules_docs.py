@@ -5,10 +5,6 @@ from importlib import import_module
 from inspect import getargspec, getmembers
 from types import FunctionType
 
-import six
-
-from six.moves import range
-
 from pyinfra import modules
 
 MODULE_DEF_LINE_MAX = 90
@@ -80,7 +76,7 @@ def build_facts():
 
             # Make default strings appear as strings
             arg_defaults = [
-                "'{}'".format(arg) if isinstance(arg, six.string_types) else arg
+                "'{}'".format(arg) if isinstance(arg, str) else arg
                 for arg in argspec.defaults
             ] if argspec.defaults else None
 

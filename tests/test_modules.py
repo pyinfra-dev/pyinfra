@@ -1,12 +1,10 @@
-from __future__ import print_function
-
 import json
+
 from importlib import import_module
 from os import listdir, path
 from types import FunctionType
 from unittest import TestCase
 
-import six
 from jsontest import JsonTest
 from nose.tools import nottest
 
@@ -25,8 +23,7 @@ def make_operation_tests(arg):
     op = getattr(module, op_name)
 
     # Generate a test class
-    @six.add_metaclass(JsonTest)
-    class TestTests(TestCase):
+    class TestTests(TestCase, metaclass=JsonTest):
         jsontest_files = path.join('tests', 'operations', arg)
         jsontest_prefix = 'test_{0}_{1}_'.format(module_name, op_name)
 
@@ -67,7 +64,7 @@ def make_operation_tests(arg):
             commands = []
 
             for command in output_commands:
-                if isinstance(command, six.string_types):
+                if isinstance(command, str):
                     commands.append(command.strip())
 
                 elif isinstance(command, dict):

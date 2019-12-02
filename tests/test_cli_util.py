@@ -1,7 +1,6 @@
 from datetime import datetime
+from io import StringIO
 from unittest import TestCase
-
-from six.moves import cStringIO as StringIO
 
 from pyinfra.modules import server
 from pyinfra_cli.exceptions import CliError

@@ -1,6 +1,3 @@
-import six
-
-
 class Config(object):
     '''
     The default/base configuration options for a pyinfra deploy.
@@ -45,5 +42,5 @@ class Config(object):
         self.ENV = env
 
         # Apply kwargs
-        for key, value in six.iteritems(kwargs):
+        for key, value in kwargs.items():
             setattr(self, key, value)

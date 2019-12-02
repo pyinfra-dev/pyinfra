@@ -1,9 +1,5 @@
-from __future__ import print_function, unicode_literals
-
 from os import path
 from subprocess import PIPE, Popen, STDOUT
-
-import six
 
 from gevent.queue import Queue
 
@@ -55,7 +51,7 @@ def include(filename, hosts=False, when=True):
         config_data = extract_file_config(filename)
         kwargs = {
             key.lower(): value
-            for key, value in six.iteritems(config_data)
+            for key, value in config_data.items()
             if key in [
                 'SUDO', 'SUDO_USER', 'SU_USER',
                 'PRESERVE_SUDO_ENV', 'IGNORE_ERRORS',
@@ -86,7 +82,7 @@ def shell(commands, splitlines=False, ignore_errors=False):
         ignore_errors (bool): ignore errors when executing these commands
     '''
 
-    if isinstance(commands, six.string_types):
+    if isinstance(commands, str):
         commands = [commands]
 
     all_stdout = []

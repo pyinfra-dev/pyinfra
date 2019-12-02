@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from pyinfra.api import operation
 
 from .util.packaging import ensure_packages

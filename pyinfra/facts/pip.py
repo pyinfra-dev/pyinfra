@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages

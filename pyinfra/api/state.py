@@ -1,10 +1,6 @@
-from __future__ import division, unicode_literals
-
 from contextlib import contextmanager
 from multiprocessing import cpu_count
 from uuid import uuid4
-
-import six
 
 from gevent.pool import Pool
 from pkg_resources import parse_version
@@ -110,7 +106,7 @@ class State(object):
             running_version = parse_version(__version__)
             needed_version = parse_version(
                 # Version must be a string
-                six.text_type(config.MIN_PYINFRA_VERSION),
+                str(config.MIN_PYINFRA_VERSION),
             )
 
             if needed_version > running_version:
@@ -375,7 +371,7 @@ class State(object):
         '''
 
         if not hash_key:
-            hash_key = six.text_type(uuid4())
+            hash_key = str(uuid4())
 
         temp_filename = '{0}/{1}'.format(
             self.config.TEMP_DIR, sha1_hash(hash_key),
