@@ -4,9 +4,6 @@
         "target": "/etc/init.d/nginx",
         "create_remote_dir": true
     },
-    "directories": {
-        "/home/testlink": null
-    },
     "facts": {
         "link": {
             "/home/testlink": null
