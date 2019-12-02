@@ -70,32 +70,6 @@ def add_op(state, op_func, *args, **kwargs):
         op_func(state, host, *args, **kwargs)
 
 
-def add_limited_op(state, op_func, hosts, *args, **kwargs):
-    '''
-    DEPRECATED: please use ``add_op`` with the ``hosts`` kwarg.
-    '''
-
-    # COMPAT w/ <0.4
-    # TODO: remove this function
-
-    logger.warning((
-        'Use of `add_limited_op` is deprecated, '
-        'please use `add_op` with the `hosts` kwarg instead.'
-    ))
-
-    if not isinstance(hosts, (list, tuple)):
-        hosts = [hosts]
-
-    # Set the limit
-    state.limit_hosts = hosts
-
-    # Add the op
-    add_op(state, op_func, *args, **kwargs)
-
-    # Remove the limit
-    state.limit_hosts = []
-
-
 def _get_call_location():
     frames = stack()
 
