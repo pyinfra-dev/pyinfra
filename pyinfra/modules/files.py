@@ -9,7 +9,7 @@ import sys
 
 from datetime import timedelta
 from fnmatch import fnmatch
-from os import path, walk
+from os import makedirs, path, walk
 
 import six
 
@@ -295,6 +295,52 @@ def _create_remote_dir(state, host, remote_filename, user, group):
             state, host, remote_dirname,
             user=user, group=group,
         )
+
+
+@operation(pipeline_facts={
+    'file': 'remote_filename',
+    'sha1_file': 'remote_filename',
+})
+def get(
+    state, host, remote_filename, local_filename,
+    add_deploy_dir=True, create_local_dir=False, force=False,
+):
+    '''
+    Download a file from the remote system.
+
+    + remote_filename: the remote filename to download
+    + local_filename: the local filename to download the file to
+    + add_deploy_dir: local_filename is relative to the deploy directory
+    + create_local_dir: create the local directory if it doesn't exist
+    + force: always download the file, even if the local copy matches
+
+    Note:
+        This operation is not suitable for large files as it may involve copying
+        the remote file before downloading it.
+    '''
+
+    if add_deploy_dir and state.deploy_dir:
+        local_filename = path.join(state.deploy_dir, local_filename)
+
+    if create_local_dir:
+        local_pathname = path.dirname(local_filename)
+        if not path.exists(local_pathname):
+            makedirs(local_pathname)
+
+    remote_file = host.fact.file(remote_filename)
+
+    # No remote file, so assume exists and download it "blind"
+    if not remote_file or force:
+        yield ('download', remote_filename, local_filename)
+
+    # Remote file exists - check if it matches our local
+    else:
+        local_sum = get_file_sha1(local_filename)
+        remote_sum = host.fact.sha1_file(remote_filename)
+
+        # Check sha1sum, upload if needed
+        if local_sum != remote_sum:
+            yield ('download', remote_filename, local_filename)
 
 
 @operation(pipeline_facts={
