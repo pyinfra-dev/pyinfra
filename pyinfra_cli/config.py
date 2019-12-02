@@ -2,8 +2,6 @@ import ast
 
 from os import path
 
-import six
-
 from pyinfra.api import Config
 
 from .util import exec_file
@@ -30,7 +28,7 @@ def extract_file_config(filename, config=None):
                 value = None
 
         # NameConstant is Python 3+ only
-        elif six.PY3 and isinstance(node.value, ast.NameConstant):
+        elif isinstance(node.value, ast.NameConstant):
             value = node.value.value
 
         # Strings
@@ -53,7 +51,7 @@ def extract_file_config(filename, config=None):
 
     # If we have a config, update and exit
     if config:
-        for key, value in six.iteritems(config_data):
+        for key, value in config_data.items():
             setattr(config, key, value)
         return
 

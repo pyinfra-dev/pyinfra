@@ -1,7 +1,5 @@
 from collections import defaultdict
 
-import six
-
 from pyinfra import logger
 
 from .connectors import (
@@ -63,7 +61,7 @@ class Inventory(object):
         # Strip None values
         override_data = {
             key: value
-            for key, value in six.iteritems(override_data)
+            for key, value in override_data.items()
             if value is not None
         }
         self.override_data = override_data
@@ -82,7 +80,7 @@ class Inventory(object):
         # Map name -> group names
         name_to_group_names = defaultdict(list)
 
-        for group_name, (group_names, group_data) in six.iteritems(groups):
+        for group_name, (group_names, group_data) in groups.items():
             # Assign group data
             self.group_data[group_name] = group_data
 
@@ -197,7 +195,7 @@ class Inventory(object):
         '''
 
         if not self.state or not self.state.active_hosts:
-            return six.itervalues(self.hosts)
+            return self.iter_all_hosts()
 
         return iter(self.state.active_hosts)
 
@@ -213,7 +211,7 @@ class Inventory(object):
         Iterates over all inventory hosts, active or not.
         '''
 
-        return six.itervalues(self.hosts)
+        return iter(self.hosts.values())
 
     def get_host(self, name, default=NoHostError):
         '''

@@ -2,9 +2,7 @@
 Manage yum packages and repositories. Note that yum package names are case-sensitive.
 '''
 
-from __future__ import unicode_literals
-
-from six import StringIO
+from io import StringIO
 
 from pyinfra.api import operation
 

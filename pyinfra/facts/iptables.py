@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from pyinfra.api import FactBase
 
 # Mapping for iptables code arguments to variable names

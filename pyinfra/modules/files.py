@@ -2,16 +2,13 @@
 The files module handles filesystem state, file uploads and template generation.
 '''
 
-from __future__ import unicode_literals
-
 import posixpath
 import sys
 
 from datetime import timedelta
 from fnmatch import fnmatch
+from io import StringIO
 from os import makedirs, path, walk
-
-import six
 
 from jinja2 import TemplateSyntaxError, UndefinedError
 
@@ -590,7 +587,7 @@ def template(
             template_filename, line_number, e, '\n'.join(relevant_lines),
         ))
 
-    output_file = six.StringIO(output)
+    output_file = StringIO(output)
     # Set the template attribute for nicer debugging
     output_file.template = template_filename
 

@@ -2,10 +2,6 @@
 The iptables modules handles iptables rules
 '''
 
-from __future__ import unicode_literals
-
-import six
-
 from pyinfra.api import operation
 from pyinfra.api.exceptions import OperationError
 
@@ -199,7 +195,7 @@ def rule(
             )
             else value
         )
-        for key, value in six.iteritems(definition)
+        for key, value in definition.items()
         if value
     }
 

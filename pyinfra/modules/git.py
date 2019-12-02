@@ -2,8 +2,6 @@
 Manage git repositories and configuration.
 '''
 
-from __future__ import unicode_literals
-
 import re
 
 from pyinfra.api import operation, OperationError

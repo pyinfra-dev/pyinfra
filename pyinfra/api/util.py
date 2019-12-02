@@ -1,6 +1,5 @@
-from __future__ import division, print_function, unicode_literals
-
 import re
+import shlex
 
 from functools import wraps
 from hashlib import sha1
@@ -12,11 +11,9 @@ from socket import (
 from types import GeneratorType
 
 import click
-import six
 
 from jinja2 import Template, TemplateSyntaxError, UndefinedError
 from paramiko import SSHException
-from six.moves import shlex_quote
 
 from pyinfra import logger
 from pyinfra.api import Config
@@ -43,7 +40,7 @@ def ensure_host_list(hosts, inventory):
         return hosts
 
     # If passed a string, treat as group name and get any hosts from inventory
-    if isinstance(hosts, six.string_types):
+    if isinstance(hosts, str):
         return inventory.get_group(hosts, [])
 
     if not isinstance(hosts, (list, tuple)):
@@ -118,7 +115,7 @@ class FallbackDict(object):
         self.override_datas[key] = value
 
     def __str__(self):
-        return six.text_type(self.datas)
+        return str(self.datas)
 
     def dict(self):
         out = {}
@@ -323,19 +320,19 @@ def make_command(
 
     logger.debug('Building command ({0}): {1}'.format(' '.join(
         '{0}: {1}'.format(key, value)
-        for key, value in six.iteritems(debug_meta)
+        for key, value in debug_meta.items()
     ), command))
 
     # Use env & build our actual command
     if env:
         env_string = ' '.join([
             '{0}={1}'.format(key, value)
-            for key, value in six.iteritems(env)
+            for key, value in env.items()
         ])
         command = 'export {0}; {1}'.format(env_string, command)
 
     # Quote the command as a string
-    command = shlex_quote(command)
+    command = shlex.quote(command)
 
     # Switch user with su
     if su_user:
@@ -371,7 +368,7 @@ def get_arg_value(state, host, arg):
     the ``op_hash``, multiple command variations can fall under one op.
     '''
 
-    if isinstance(arg, six.string_types):
+    if isinstance(arg, str):
         data = {
             'host': host,
             'inventory': state.inventory,
@@ -391,7 +388,7 @@ def get_arg_value(state, host, arg):
     elif isinstance(arg, dict):
         return {
             key: get_arg_value(state, host, value)
-            for key, value in six.iteritems(arg)
+            for key, value in arg.items()
         }
 
     return arg
@@ -409,7 +406,7 @@ def make_hash(obj):
     elif isinstance(obj, dict):
         hash_string = ''.join(
             ''.join((key, make_hash(value)))
-            for key, value in six.iteritems(obj)
+            for key, value in obj.items()
         )
 
     else:
@@ -418,7 +415,7 @@ def make_hash(obj):
             # group them under the same operation hash.
             '_PYINFRA_CONSTANT' if obj in (True, False, None)
             # Plain strings
-            else obj if isinstance(obj, six.string_types)
+            else obj if isinstance(obj, str)
             # Objects with __name__s
             else obj.__name__ if hasattr(obj, '__name__')
             # Objects with names
@@ -443,7 +440,7 @@ class get_file_io(object):
             # Check we can be read
             hasattr(filename_or_io, 'read')
             # Or we're a filename
-            or isinstance(filename_or_io, six.string_types)
+            or isinstance(filename_or_io, str)
         ):
             raise TypeError('Invalid filename or IO object: {0}'.format(
                 filename_or_io,
@@ -477,7 +474,7 @@ class get_file_io(object):
     def cache_key(self):
         # If we're a filename, cache against that - we don't cache in-memory
         # file objects.
-        if isinstance(self.filename_or_io, six.string_types):
+        if isinstance(self.filename_or_io, str):
             return self.filename_or_io
 
 
@@ -497,7 +494,7 @@ def get_file_sha1(filename_or_io):
         buff = file_io.read(BLOCKSIZE)
 
         while len(buff) > 0:
-            if isinstance(buff, six.text_type):
+            if isinstance(buff, str):
                 buff = buff.encode('utf-8')
 
             hasher.update(buff)
@@ -520,14 +517,11 @@ def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
         if print_func:
             line = print_func(line)
 
-        if six.PY2:  # Python2 must print unicode as bytes (encoded)
-            line = line.encode('utf-8')
-
         print(line)
 
     for line in io:
         # Handle local Popen shells returning list of bytes, not strings
-        if not isinstance(line, six.text_type):
+        if not isinstance(line, str):
             line = line.decode('utf-8')
 
         line = line.strip()

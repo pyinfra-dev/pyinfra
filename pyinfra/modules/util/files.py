@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-
-
 def ensure_mode_int(mode):
     # Already an int (/None)?
     if isinstance(mode, int) or mode is None:

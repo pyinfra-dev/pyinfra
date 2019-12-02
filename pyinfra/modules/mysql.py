@@ -13,8 +13,6 @@ See the example/mysql.py
 
 '''
 
-import six
-
 from pyinfra.api import operation, OperationError
 from pyinfra.facts.mysql import make_execute_mysql_command, make_mysql_command
 
@@ -242,7 +240,7 @@ def privileges(
     '''
 
     # Ensure we have a list
-    if isinstance(privileges, six.string_types):
+    if isinstance(privileges, str):
         privileges = [privileges]
 
     if database != '*':

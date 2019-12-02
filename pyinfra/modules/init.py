@@ -7,8 +7,6 @@ Manages the state and configuration of init services. Support for:
 + Systemctl
 '''
 
-from __future__ import unicode_literals
-
 from pyinfra.api import operation, OperationError
 
 from . import files

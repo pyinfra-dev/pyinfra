@@ -3,8 +3,6 @@ Manage pip (python) packages. Compatible globally or inside
 a virtualenv (virtual environment).
 '''
 
-from __future__ import unicode_literals
-
 from pyinfra.api import operation
 from pyinfra.modules import files
 

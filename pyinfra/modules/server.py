@@ -3,10 +3,9 @@ The server module takes care of os-level state. Targets POSIX compatibility, tes
 Linux/BSD.
 '''
 
-from __future__ import unicode_literals
+import shlex
 
-import six
-from six.moves import shlex_quote
+from io import StringIO
 
 from pyinfra.api import operation
 
@@ -41,7 +40,7 @@ def shell(state, host, commands, chdir=None):
     '''
 
     # Ensure we have a list
-    if isinstance(commands, six.string_types):
+    if isinstance(commands, str):
         commands = [commands]
 
     for command in commands:
@@ -204,7 +203,7 @@ def hostname(state, host, hostname, hostname_file=None):
 
     if hostname_file:
         # Create a whole new hostname file
-        file = six.StringIO('{0}\n'.format(hostname))
+        file = StringIO('{0}\n'.format(hostname))
 
         # And ensure it exists
         yield files.put(
@@ -344,11 +343,11 @@ def crontab(
     elif present and not exists:
         if name:
             edit_commands.append('echo {0} >> {1}'.format(
-                shlex_quote(name_comment), temp_filename,
+                shlex.quote(name_comment), temp_filename,
             ))
 
         edit_commands.append('echo {0} >> {1}'.format(
-            shlex_quote(new_crontab_line), temp_filename,
+            shlex.quote(new_crontab_line), temp_filename,
         ))
 
     # We have the cron and it exists, do it's details? If not, replace the line
@@ -569,7 +568,7 @@ def user(
 
         if delete_keys:
             # Create a whole new authorized_keys file
-            keys_file = six.StringIO('{0}\n'.format(
+            keys_file = StringIO('{0}\n'.format(
                 '\n'.join(public_keys),
             ))
 

@@ -1,5 +1,3 @@
-from __future__ import print_function, unicode_literals
-
 from getpass import getpass
 from os import path
 from socket import (

@@ -1,5 +1,3 @@
-import six
-
 from . import ansible, docker, local, mech, ssh, vagrant
 
 
@@ -19,6 +17,6 @@ INVENTORY_CONNECTORS = {  # pragma: no cover
 }
 
 ALL_CONNECTORS = (  # pragma: no cover
-    list(six.iterkeys(EXECUTION_CONNECTORS))
-    + list(six.iterkeys(INVENTORY_CONNECTORS))
+    list(EXECUTION_CONNECTORS.keys())
+    + list(INVENTORY_CONNECTORS.keys())
 )
