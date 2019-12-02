@@ -233,7 +233,7 @@ class TestOperationLimits(PatchSSHTestCase):
         add_op(
             state, server.user,
             'somehost_user',
-            hosts=inventory['somehost'],
+            hosts=inventory.get_host('somehost'),
         )
 
         # Ensure there are two ops
@@ -324,14 +324,14 @@ class TestOperationOrdering(PatchSSHTestCase):
         # Add op to just the second host - using the pseudo modules such that
         # it replicates a deploy file.
         pseudo_state.set(state)
-        pseudo_host.set(inventory['anotherhost'])
+        pseudo_host.set(inventory.get_host('anotherhost'))
         first_pseudo_hash = server.user('anotherhost_user').hash
         first_pseudo_call_line = getframeinfo(currentframe()).lineno - 1
 
         # Add op to just the first host - using the pseudo modules such that
         # it replicates a deploy file.
         pseudo_state.set(state)
-        pseudo_host.set(inventory['somehost'])
+        pseudo_host.set(inventory.get_host('somehost'))
         second_pseudo_hash = server.user('somehost_user').hash
         second_pseudo_call_line = getframeinfo(currentframe()).lineno - 1
 
