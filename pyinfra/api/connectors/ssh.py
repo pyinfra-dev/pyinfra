@@ -23,12 +23,10 @@ import pyinfra
 
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.api.util import get_file_io, make_command
+from pyinfra.api.util import get_file_io, make_command, memoize
 
 from .sshuserclient import SSHClient
 from .util import read_buffers_into_queue, split_combined_output
-
-SFTP_CONNECTIONS = {}
 
 
 def _log_connect_error(host, message, data):
@@ -274,17 +272,71 @@ def run_shell_command(
     return status, stdout, stderr
 
 
+@memoize
 def _get_sftp_connection(host):
-    # SFTP connections aren't *required* for deploys, so we create them on-demand
-    if host in SFTP_CONNECTIONS:
-        return SFTP_CONNECTIONS[host]
-
     transport = host.connection.get_transport()
-    client = SFTPClient.from_transport(transport)
+    return SFTPClient.from_transport(transport)
 
-    SFTP_CONNECTIONS[host] = client
 
-    return client
+def _get_file(host, remote_filename, filename_or_io):
+    with get_file_io(filename_or_io) as file_io:
+        sftp = _get_sftp_connection(host)
+        sftp.getfo(remote_filename, file_io)
+
+
+def get_file(
+    state, host, remote_filename, filename_or_io,
+    sudo=False, sudo_user=None, su_user=None, print_output=False,
+    **command_kwargs
+):
+    '''
+    Download a file from the remote host using SFTP. Supports download files
+    with sudo by copying to a temporary directory with read permissions,
+    downloading and then removing the copy.
+    '''
+
+    if sudo or su_user:
+        # Get temp file location
+        temp_file = state.get_temp_filename(remote_filename)
+
+        # Copy the file to the tempfile location and add read permissions
+        command = 'cp {0} {1} && chmod +r {0}'.format(remote_filename, temp_file)
+
+        copy_status, _, stderr = run_shell_command(
+            state, host, command,
+            sudo=sudo, sudo_user=sudo_user, su_user=su_user,
+            print_output=print_output,
+            **command_kwargs
+        )
+
+        if copy_status is False:
+            logger.error('File download copy temp error: {0}'.format('\n'.join(stderr)))
+            return False
+
+        try:
+            _get_file(host, temp_file, filename_or_io)
+
+        # Ensure that, even if we encounter an error, we (attempt to) remove the
+        # temporary copy of the file.
+        finally:
+            remove_status, _, stderr = run_shell_command(
+                state, host, 'rm -f {0}'.format(temp_file),
+                sudo=sudo, sudo_user=sudo_user, su_user=su_user,
+                print_output=print_output,
+                **command_kwargs
+            )
+
+        if remove_status is False:
+            logger.error('File download remove temp error: {0}'.format('\n'.join(stderr)))
+            return False
+
+    else:
+        _get_file(host, remote_filename, filename_or_io)
+
+    if print_output:
+        print('{0}file downloaded: {1}'.format(host.print_prefix, remote_filename))
+
+    return True
 
 
 def _put_file(host, filename_or_io, remote_location):
@@ -294,7 +346,6 @@ def _put_file(host, filename_or_io, remote_location):
 
         try:
             sftp.putfo(file_io, remote_location)
-
         except IOError as e:
             # IO mismatch errors might indicate full disks
             message = getattr(e, 'message', None)
@@ -321,9 +372,6 @@ def put_file(
         temp_file = state.get_temp_filename(remote_filename)
         _put_file(host, filename_or_io, temp_file)
 
-        if print_output:
-            print('{0}file uploaded: {1}'.format(host.print_prefix, remote_filename))
-
         # Execute run_shell_command w/sudo and/or su_user
         command = 'mv {0} {1}'.format(temp_file, remote_filename)
 
@@ -343,22 +391,14 @@ def put_file(
         )
 
         if status is False:
-            logger.error('File error: {0}'.format('\n'.join(stderr)))
+            logger.error('File upload error: {0}'.format('\n'.join(stderr)))
             return False
 
     # No sudo and no su_user, so just upload it!
     else:
         _put_file(host, filename_or_io, remote_filename)
 
-        if print_output:
-            print('{0}file uploaded: {1}'.format(host.print_prefix, remote_filename))
+    if print_output:
+        print('{0}file uploaded: {1}'.format(host.print_prefix, remote_filename))
 
     return True
-
-
-def get_file(
-    state, host, filename_or_io, remote_filename,
-    sudo=False, sudo_user=None, su_user=None, print_output=False,
-    **command_kwargs
-):
-    raise NotImplementedError

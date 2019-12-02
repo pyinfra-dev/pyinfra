@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import os
 
 from subprocess import PIPE, Popen
@@ -95,30 +93,35 @@ def put_file(
     print_output=False,
     **command_kwargs
 ):
+    '''
+    Upload a local file or IO object by copying it to a temporary directory
+    and then writing it to the upload location.
+    '''
+
     _, temp_filename = mkstemp()
 
-    # Load our file or IO object and write it to the temporary file
-    with get_file_io(filename_or_io) as file_io:
-        with open(temp_filename, 'wb') as temp_f:
-            data = file_io.read()
+    try:
+        # Load our file or IO object and write it to the temporary file
+        with get_file_io(filename_or_io) as file_io:
+            with open(temp_filename, 'wb') as temp_f:
+                data = file_io.read()
 
-            if isinstance(data, six.text_type):
-                data = data.encode()
+                if isinstance(data, six.text_type):
+                    data = data.encode()
 
-            temp_f.write(data)
+                temp_f.write(data)
 
-    # Copy the file using `cp`
-    status, _, stderr = run_shell_command(
-        state, host, 'cp {0} {1}'.format(temp_filename, remote_filename),
-        print_output=print_output,
-        **command_kwargs
-    )
+        # Copy the file using `cp` such that we support sudo/su
+        status, _, stderr = run_shell_command(
+            state, host, 'cp {0} {1}'.format(temp_filename, remote_filename),
+            print_output=print_output,
+            **command_kwargs
+        )
 
-    if temp_filename:
+        if not status:
+            raise IOError('\n'.join(stderr))
+    finally:
         os.remove(temp_filename)
-
-    if not status:
-        raise IOError('\n'.join(stderr))
 
     if print_output:
         print('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
@@ -131,4 +134,37 @@ def get_file(
     print_output=False,
     **command_kwargs
 ):
-    raise NotImplementedError
+    '''
+    Download a local file by copying it to a temporary location and then writing
+    it to our filename or IO object.
+    '''
+
+    _, temp_filename = mkstemp()
+
+    try:
+        # Copy the file using `cp` such that we support sudo/su
+        status, _, stderr = run_shell_command(
+            state, host, 'cp {0} {1}'.format(remote_filename, temp_filename),
+            print_output=print_output,
+            **command_kwargs
+        )
+
+        if not status:
+            raise IOError('\n'.join(stderr))
+
+        # Load our file or IO object and write it to the temporary file
+        with open(temp_filename) as temp_f:
+            with get_file_io(filename_or_io, 'wb') as file_io:
+                data = temp_f.read()
+
+                if isinstance(data, six.text_type):
+                    data = data.encode()
+
+                file_io.write(data)
+    finally:
+        os.remove(temp_filename)
+
+    if print_output:
+        print('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
+
+    return True

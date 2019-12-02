@@ -88,38 +88,45 @@ def put_file(
     print_output=False,
     **kwargs  # ignored (sudo/etc)
 ):
+    '''
+    Upload a file/IO object to the target Docker container by copying it to a
+    temporary location and then uploading it into the container using ``docker cp``.
+    '''
+
     _, temp_filename = mkstemp()
 
-    # Load our file or IO object and write it to the temporary file
-    with get_file_io(filename_or_io) as file_io:
-        with open(temp_filename, 'wb') as temp_f:
-            data = file_io.read()
+    try:
+        # Load our file or IO object and write it to the temporary file
+        with get_file_io(filename_or_io) as file_io:
+            with open(temp_filename, 'wb') as temp_f:
+                data = file_io.read()
 
-            if isinstance(data, six.text_type):
-                data = data.encode()
+                if isinstance(data, six.text_type):
+                    data = data.encode()
 
-            temp_f.write(data)
+                temp_f.write(data)
 
-    docker_id = host.host_data['docker_container_id']
-    docker_command = 'docker cp {0} {1}:{2}'.format(
-        temp_filename,
-        docker_id,
-        remote_filename,
-    )
+        docker_id = host.host_data['docker_container_id']
+        docker_command = 'docker cp {0} {1}:{2}'.format(
+            temp_filename,
+            docker_id,
+            remote_filename,
+        )
 
-    status, _, stderr = run_local_shell_command(
-        state, host, docker_command,
-        print_output=print_output,
-    )
-
-    if temp_filename:
+        status, _, stderr = run_local_shell_command(
+            state, host, docker_command,
+            print_output=print_output,
+        )
+    finally:
         os.remove(temp_filename)
 
     if not status:
         raise IOError('\n'.join(stderr))
 
     if print_output:
-        print('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
+        print('{0}file uploaded to container: {1}'.format(
+            host.print_prefix, remote_filename,
+        ))
 
     return status
 
@@ -129,4 +136,44 @@ def get_file(
     print_output=False,
     **kwargs  # ignored (sudo/etc)
 ):
-    raise NotImplementedError
+    '''
+    Download a file from the target Docker container by copying it to a temporary
+    location and then reading that into our final file/IO object.
+    '''
+
+    _, temp_filename = mkstemp()
+
+    try:
+        docker_id = host.host_data['docker_container_id']
+        docker_command = 'docker cp {0}:{1} {2}'.format(
+            docker_id,
+            remote_filename,
+            temp_filename,
+        )
+
+        status, _, stderr = run_local_shell_command(
+            state, host, docker_command,
+            print_output=print_output,
+        )
+
+        # Load the temporary file and write it to our file or IO object
+        with open(temp_filename) as temp_f:
+            with get_file_io(filename_or_io, 'wb') as file_io:
+                data = temp_f.read()
+
+                if isinstance(data, six.text_type):
+                    data = data.encode()
+
+                file_io.write(data)
+    finally:
+        os.remove(temp_filename)
+
+    if not status:
+        raise IOError('\n'.join(stderr))
+
+    if print_output:
+        print('{0}file downloaded from container: {1}'.format(
+            host.print_prefix, remote_filename,
+        ))
+
+    return status
