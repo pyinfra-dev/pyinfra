@@ -39,6 +39,9 @@ def make_fact_tests(fact_name):
                 if args or 'command' in test_data:
                     self.assertEqual(command, test_data['command'])
 
+            elif 'command' in test_data:
+                self.assertEqual(fact.command, test_data['command'])
+
             data = fact.process(test_data['output'])
             if short_fact:
                 data = short_fact.process_data(data)

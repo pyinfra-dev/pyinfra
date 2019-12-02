@@ -1,5 +1,4 @@
 {
-    "command": "launchctl list",
     "output": [
         "rpcsvcgssd=0",
         "rsyslog=4",

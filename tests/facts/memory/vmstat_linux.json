@@ -1,5 +1,5 @@
 {
-    "command": "ifconfig",
+    "command": "vmstat -s",
     "output": [
         "131766608  total memory",
         "10646204  used memory",
