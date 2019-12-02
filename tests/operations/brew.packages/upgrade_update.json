@@ -1,0 +1,16 @@
+{
+    "args": ["php"],
+    "kwargs": {
+        "update": true,
+        "upgrade": true
+    },
+    "facts": {
+        "brew_packages": {
+            "php": ["1"]
+        }
+    },
+    "commands": [
+        "brew update",
+        "brew upgrade"
+    ]
+}

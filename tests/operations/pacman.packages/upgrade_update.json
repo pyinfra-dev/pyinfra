@@ -1,0 +1,16 @@
+{
+    "args": ["curl"],
+    "kwargs": {
+        "update": true,
+        "upgrade": true
+    },
+    "facts": {
+        "pacman_packages": {
+            "curl": ["1"]
+        }
+    },
+    "commands": [
+        "pacman -Sy",
+        "pacman --noconfirm -Su"
+    ]
+}

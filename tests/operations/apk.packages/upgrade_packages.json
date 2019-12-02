@@ -1,0 +1,12 @@
+{
+    "args": ["curl"],
+    "kwargs": {
+        "latest": true
+    },
+    "facts": {
+        "apk_packages": {}
+    },
+    "commands": [
+        "apk add curl"
+    ]
+}

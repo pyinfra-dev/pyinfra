@@ -1,0 +1,43 @@
+{
+    "command": "brew list --versions",
+    "output": [
+        "tokyo-cabinet 1.4.48",
+        "unbound 1.9.5",
+        "unixodbc 2.3.7",
+        "watch 3.3.15",
+        "webalizer 2.23-08_2",
+        "webp 1.0.3",
+        "xz 5.2.4",
+        "yarn 1.19.2",
+        "zlib 1.2.11"
+    ],
+    "fact": {
+        "tokyo-cabinet": [
+            "1.4.48"
+        ],
+        "unbound": [
+            "1.9.5"
+        ],
+        "unixodbc": [
+            "2.3.7"
+        ],
+        "watch": [
+            "3.3.15"
+        ],
+        "webalizer": [
+            "2.23-08_2"
+        ],
+        "webp": [
+            "1.0.3"
+        ],
+        "xz": [
+            "5.2.4"
+        ],
+        "yarn": [
+            "1.19.2"
+        ],
+        "zlib": [
+            "1.2.11"
+        ]
+    }
+}

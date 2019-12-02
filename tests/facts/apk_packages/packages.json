@@ -1,0 +1,25 @@
+{
+    "command": "apk list --installed",
+    "output": [
+        "WARNING: Ignoring APKINDEX.00740ba1.tar.gz: No such file or directory",
+        "WARNING: Ignoring APKINDEX.d8b2a6f4.tar.gz: No such file or directory",
+        "musl-1.1.22-r3 x86_64 {musl} (MIT) [installed]",
+        "zlib-1.2.11-r1 x86_64 {zlib} (zlib) [installed]",
+        "apk-tools-2.10.4-r2 x86_64 {apk-tools} (GPL2) [installed]",
+        "musl-utils-1.1.22-r3 x86_64 {musl} (MIT BSD GPL2+) [installed]"
+    ],
+    "fact": {
+        "musl": [
+            "1.1.22-r3"
+        ],
+        "zlib": [
+            "1.2.11-r1"
+        ],
+        "apk-tools": [
+            "2.10.4-r2"
+        ],
+        "musl-utils": [
+            "1.1.22-r3"
+        ]
+    }
+}

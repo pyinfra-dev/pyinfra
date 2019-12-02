@@ -1,0 +1,11 @@
+{
+    "command": "brew tap",
+    "output": [
+        "homebrew/cask",
+        "homebrew/apache"
+    ],
+    "fact": [
+        "homebrew/cask",
+        "homebrew/apache"
+    ]
+}

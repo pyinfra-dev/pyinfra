@@ -1,0 +1,9 @@
+{
+    "args": ["curl"],
+    "facts": {
+        "pacman_packages": {}
+    },
+    "commands": [
+        "pacman --noconfirm -S curl"
+    ]
+}

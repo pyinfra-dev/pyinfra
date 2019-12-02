@@ -1,0 +1,14 @@
+{
+    "args": [["php", "i-dont-exist"]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "brew_packages": {
+            "php": "1"
+        }
+    },
+    "commands": [
+        "brew uninstall php"
+    ]
+}

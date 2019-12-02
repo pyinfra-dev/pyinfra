@@ -1,0 +1,12 @@
+{
+    "args": ["php"],
+    "kwargs": {
+        "latest": true
+    },
+    "facts": {
+        "brew_packages": {}
+    },
+    "commands": [
+        "brew install php"
+    ]
+}

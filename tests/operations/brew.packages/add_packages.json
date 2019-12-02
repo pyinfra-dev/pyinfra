@@ -1,0 +1,9 @@
+{
+    "args": ["php"],
+    "facts": {
+        "brew_packages": {}
+    },
+    "commands": [
+        "brew install php"
+    ]
+}

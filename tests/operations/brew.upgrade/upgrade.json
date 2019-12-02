@@ -1,0 +1,6 @@
+{
+    "args": [],
+    "commands": [
+        "brew upgrade"
+    ]
+}

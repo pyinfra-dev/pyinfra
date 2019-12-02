@@ -1,0 +1,10 @@
+{
+    "args": ["homebrew/cask"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "brew_taps": []
+    },
+    "commands": []
+}

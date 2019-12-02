@@ -1,0 +1,16 @@
+{
+    "args": ["curl"],
+    "kwargs": {
+        "update": true,
+        "upgrade": true
+    },
+    "facts": {
+        "apk_packages": {
+            "curl": ["1"]
+        }
+    },
+    "commands": [
+        "apk update",
+        "apk upgrade"
+    ]
+}
