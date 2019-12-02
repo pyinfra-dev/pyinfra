@@ -25,7 +25,6 @@ from pyinfra.api.util import FallbackDict
 from pyinfra.hook import HOOKS
 
 from .exceptions import CliError
-from .legacy import parse_legacy_argstring
 
 # Cache for compiled Python deploy code
 PYTHON_CODES = {}
@@ -146,12 +145,8 @@ def get_operation_and_args(commands):
         try:
             args, kwargs = json.loads(operation_args[0])
             return op, (args, kwargs)
-
         except ValueError:
-            # COMPAT w/ <0.7
-            # TODO: remove this conditional
-            if ',' in operation_args[0]:
-                operation_args = parse_legacy_argstring(operation_args[0])
+            pass
 
     args = [
         _parse_arg(arg)
