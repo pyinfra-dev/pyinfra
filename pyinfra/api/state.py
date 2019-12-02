@@ -13,7 +13,7 @@ from pyinfra import __version__, logger
 
 from .config import Config
 from .exceptions import PyinfraError
-from .util import ensure_host_list, get_caller_frameinfo, sha1_hash
+from .util import get_caller_frameinfo, sha1_hash
 
 # Work out the max parallel we can achieve with the open files limit of the user/process,
 # take 10 for opening Python files and /3 for ~3 files per host during op runs.
@@ -221,59 +221,6 @@ class State(object):
         inventory.state = config.state = self
 
         self.initialised = True
-
-    def limit(self, hosts):
-        logger.warning((
-            'Use of `State.limit` is deprecated, '
-            'please use normal `if` statements instead.'
-        ))
-
-        return self.hosts(hosts)
-
-    @contextmanager
-    def hosts(self, hosts):
-        logger.warning((
-            'Use of `State.hosts` is deprecated, '
-            'please use normal `if` statements instead.'
-        ))
-
-        hosts = ensure_host_list(hosts, inventory=self.inventory)
-
-        # Store the previous value
-        old_limit_hosts = self.limit_hosts
-
-        # Limit the new hosts to a subset of the old hosts if they existed
-        if old_limit_hosts is not None:
-            hosts = [
-                host for host in hosts
-                if host in old_limit_hosts
-            ]
-
-        # Set the new value
-        self.limit_hosts = hosts
-        logger.debug('Setting limit to hosts: {0}'.format(hosts))
-
-        yield
-
-        # Restore the old value
-        self.limit_hosts = old_limit_hosts
-        logger.debug('Reset limit to hosts: {0}'.format(old_limit_hosts))
-
-    @contextmanager
-    def when(self, predicate):
-        logger.warning((
-            'Use of `State.when` is deprecated, '
-            'please use normal `if` statements instead.'
-        ))
-
-        # Truth-y? Just yield/end, nothing happens here!
-        if predicate:
-            yield
-            return
-
-        # Otherwise limit any operations within to match no hosts
-        with self.hosts([]):
-            yield
 
     @contextmanager
     def deploy(self, name, kwargs, data, line_number, in_deploy=True):
