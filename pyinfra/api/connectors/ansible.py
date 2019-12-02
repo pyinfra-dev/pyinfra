@@ -56,8 +56,8 @@ def _parse_ansible_hosts(hosts):
 
                 hostname = host.replace(expand_string, number_as_string)
                 yield hostname
-            continue
-        yield host
+        else:
+            yield host
 
 
 def make_names_data(inventory_filename=None):
@@ -75,11 +75,10 @@ def make_names_data(inventory_filename=None):
             continue
 
         options = config.options(section)
-        for option in options:
-            for host in _parse_ansible_hosts(options):
-                hosts.append(host)
-                host_to_groups[host].add(section)
-                group_to_hosts[section].add(host)
+        for host in _parse_ansible_hosts(options):
+            hosts.append(host)
+            host_to_groups[host].add(section)
+            group_to_hosts[section].add(host)
 
     # Second pass - load any children groups
     for section in config.sections():
