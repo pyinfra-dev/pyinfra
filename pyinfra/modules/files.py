@@ -304,7 +304,7 @@ def _create_remote_dir(state, host, remote_filename, user, group):
 def put(
     state, host, local_filename, remote_filename,
     user=None, group=None, mode=None, add_deploy_dir=True,
-    create_remote_dir=False,
+    create_remote_dir=False, force=False,
 ):
     '''
     Upload a local file to the remote system.
@@ -316,6 +316,7 @@ def put(
     + mode: permissions of the files
     + add_deploy_dir: local_filename is relative to the deploy directory
     + create_remote_dir: create the remote directory if it doesn't exist
+    + force: always upload the file, even if the remote copy matches
 
     ``create_remote_dir``:
         If the remote directory does not exist it will be created using the same
@@ -349,7 +350,7 @@ def put(
         yield _create_remote_dir(state, host, remote_filename, user, group)
 
     # No remote file, always upload and user/group/mode if supplied
-    if not remote_file:
+    if not remote_file or force:
         yield ('upload', local_file, remote_filename)
 
         if user or group:
