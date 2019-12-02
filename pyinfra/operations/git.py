@@ -6,11 +6,10 @@ from __future__ import unicode_literals
 
 import re
 
-from pyinfra import logger
 from pyinfra.api import operation, OperationError
 
 from . import files, ssh
-from .util.files import chmod, chown
+from .util.files import chown
 
 
 @operation(pipeline_facts={
@@ -55,7 +54,7 @@ def config(
 def repo(
     state, host, source, target,
     branch='master', pull=True, rebase=False,
-    user=None, group=None, use_ssh_user=False, ssh_keyscan=False,
+    user=None, group=None, ssh_keyscan=False,
     update_submodules=False, recursive_submodules=False,
 ):
     '''
@@ -72,17 +71,6 @@ def repo(
     + update_submodules: update any git submodules
     + recursive_submodules: update git submodules recursively
 
-    + [DEPRECATED] use_ssh_user: whether to use the SSH user to clone/pull
-
-    SSH user (deprecated, please use ``preserve_sudo_env``):
-        This is an old hack from pyinfra <0.4 which did not support the global
-        kwarg ``preserve_sudo_env``. It does the following:
-
-        * makes the target directory writeable by all
-        * clones/pulls w/o sudo as the connecting SSH user
-        * removes other/group write permissions - unless group is defined, in
-          which case only other
-
     Example:
 
     .. code:: python
@@ -94,18 +82,8 @@ def repo(
         )
     '''
 
-    if use_ssh_user:
-        logger.warning(
-            'Use of `use_ssh_user` is deprecated, please use `preserve_sudo_env` instead.',
-        )
-
     # Ensure our target directory exists
     yield files.directory(state, host, target)
-
-    # If we're going to chown this after clone/pull, and we're sudo'd, we need to make the
-    # directory writeable by the SSH user
-    if use_ssh_user:
-        yield chmod(target, 'go+w', recursive=True)
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
@@ -153,26 +131,8 @@ def repo(
         for command in git_commands
     ]
 
-    if use_ssh_user:
-        git_commands = [
-            {
-                'command': command,
-                'sudo': False,
-                'sudo_user': False,
-            }
-            for command in git_commands
-        ]
-
     for cmd in git_commands:
         yield cmd
-
-    if use_ssh_user:
-        # Remove write permissions from other or other+group when no group
-        yield chmod(
-            target,
-            'o-w' if group else 'go-w',
-            recursive=True,
-        )
 
     # Apply any user or group
     if user or group:
