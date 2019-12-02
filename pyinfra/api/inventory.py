@@ -181,42 +181,6 @@ class Inventory(object):
 
         return hosts
 
-    def __getitem__(self, key):
-        '''
-        DEPRECATED: please use ``Inventory.get_host`` instead.
-        '''
-
-        # COMPAT w/ <0.4
-        # TODO: remove this function
-
-        logger.warning((
-            'Use of Inventory[<host_name>] is deprecated, '
-            'please use `Inventory.get_host` instead.'
-        ))
-
-        if key in self.hosts:
-            return self.hosts[key]
-
-        raise NoHostError('No such host: {0}'.format(key))
-
-    def __getattr__(self, key):
-        '''
-        DEPRECATED: please use ``Inventory.get_group`` instead.
-        '''
-
-        # COMPAT w/ <0.4
-        # TODO: remove this function
-
-        logger.warning((
-            'Use of Inventory.<group_name> is deprecated, '
-            'please use `Inventory.get_group` instead.'
-        ))
-
-        if key in self.groups:
-            return self.groups[key]
-
-        raise NoGroupError('No such group: {0}'.format(key))
-
     def __len__(self):
         '''
         Returns the number of active inventory hosts.
