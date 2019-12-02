@@ -7,8 +7,7 @@ import gevent
 
 import pyinfra
 
-from .legacy import run_main_with_legacy_arguments
-from .main import cli, main
+from .main import cli
 
 
 # Set CLI mode
@@ -37,13 +36,5 @@ gevent.signal_handler(signal.SIGINT, gevent.kill)  # kill any greenlets on ctrl+
 signal.signal(signal.SIGINT, _handle_interrupt)  # print the message and exit main
 
 
-def execute_pyinfra():
-    # Legacy support for pyinfra <0.4 using docopt
-    if '-i' in sys.argv:
-        run_main_with_legacy_arguments(main)
-    else:
-        cli()
-
-
 if __name__ == 'pyinfra_cli.__main__':
-    execute_pyinfra()
+    cli()
