@@ -1,8 +1,15 @@
-# v0.11 (WIP, dev1)
+# v0.11 (WIP, dev2)
 
-+ Add `files.get` operation to download remote files
-+ Add `server.mount` operation and `mounts` fact to manage mounted filesystems
-+ Add Docker facts (matching `docker inspect` output):
++ Add **apk** module
+    - Operations: `apk.packages`, `apk.update`, `apk.upgrade`
+    - Facts: `apk_packages`
++ Add **brew** module
+    - Operations: `brew.packages`, `brew.update`, `brew.upgrade`, `brew.casks`, `brew.cask_upgrade`, `brew.tap`
+    - Facts: `brew_packages`, `brew_casks`, `brew_taps`
++ Add **pacman** module
+    - Operations: `pacman.packages`, `pacman.update`, `pacman.upgrade`
+    - Facts: `pacman_packages`
++ Add **Docker** facts (matching `docker inspect` output):
     - `docker_system_info`
     - `docker_containers`
     - `docker_images`
@@ -10,10 +17,13 @@
     - `docker_container(ID)`
     - `docker_image(ID)`
     - `docker_network(ID)`
++ Add `files.get` operation to download remote files
++ Add `server.mount` operation and `mounts` fact to manage mounted filesystems
 + Add `@ansible` connector to read Ansible inventory files
 + Large ongoing documentation overhaul
 + Add a `CONTRIBUTORS.md`!
 + Fix passing of `postgresql_password` in `postgresql_*` facts
++ Only open/parse SSH config file once
 + Large expansion of tests - 100% module + facts coverage
 + Remove lots of printing fluff from the CLI
 + Correctly use `with open...` in `files.template` operation
