@@ -1,0 +1,17 @@
+{
+    "args": ["/home/somefile.txt", "/somedir/somefile.txt"],
+    "kwargs": {
+        "create_local_dir": true
+    },
+    "facts": {
+        "file": {
+            "/home/somefile.txt": null
+        }
+    },
+    "directories": {
+        "/somedir/": {}
+    },
+    "commands": [
+        ["download", "/home/somefile.txt", "/somedir/somefile.txt"]
+    ]
+}

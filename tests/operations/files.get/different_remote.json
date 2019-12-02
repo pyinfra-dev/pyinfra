@@ -1,0 +1,17 @@
+{
+    "args": ["/home/somefile.txt", "somefile.txt"],
+    "files": ["somefile.txt"],
+    "facts": {
+        "file": {
+            "/home/somefile.txt": {
+                "mode": 500
+            }
+        },
+        "sha1_file": {
+            "/home/somefile.txt": "abc"
+        }
+    },
+    "commands": [
+        ["download", "/home/somefile.txt", "/somefile.txt"]
+    ]
+}
