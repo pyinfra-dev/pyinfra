@@ -79,7 +79,6 @@ def get_vagrant_options():
     if path.exists('@vagrant.json'):
         with open('@vagrant.json', 'r') as f:
             return json.loads(f.read())
-
     return {}
 
 
@@ -87,13 +86,17 @@ def _make_name_data(host):
     vagrant_options = get_vagrant_options()
     vagrant_host = host['Host']
 
-    # Build data
     data = {
         'ssh_hostname': host['HostName'],
-        'ssh_port': host['Port'],
-        'ssh_user': host['User'],
-        'ssh_key': host['IdentityFile'],
     }
+
+    for config_key, data_key in (
+        ('Port', 'ssh_port'),
+        ('User', 'ssh_user'),
+        ('IdentityFile', 'ssh_key'),
+    ):
+        if config_key in host:
+            data[data_key] = host[config_key]
 
     # Update any configured JSON data
     if vagrant_host in vagrant_options.get('data', {}):
