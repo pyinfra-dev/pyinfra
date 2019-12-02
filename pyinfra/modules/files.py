@@ -307,7 +307,7 @@ def put(
     create_remote_dir=False,
 ):
     '''
-    Copy a local file to the remote system.
+    Upload a local file to the remote system.
 
     + local_filename: local filename
     + remote_filename: remote filename
@@ -321,6 +321,10 @@ def put(
         If the remote directory does not exist it will be created using the same
         user & group as passed to ``files.put``. The mode will *not* be copied over,
         if this is required call ``files.directory`` separately.
+
+    Note:
+        This operation is not suitable for large files as it may involve copying
+        the file before uploading it.
     '''
 
     # Upload IO objects as-is

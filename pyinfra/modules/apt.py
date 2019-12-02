@@ -183,7 +183,7 @@ def deb(state, host, source, present=True, force=False):
 @operation
 def update(state, host, cache_time=None, touch_periodic=False):
     '''
-    Updates apt repos.
+    Updates apt repositories.
 
     + cache_time: cache updates for this many seconds
     + touch_periodic: touch ``/var/lib/apt/periodic/update-success-stamp`` after update
@@ -236,9 +236,9 @@ def packages(
     + packages: list of packages to ensure
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
-    + update: run apt update
+    + update: run apt update before installing packages
     + cache_time: when used with update, cache for this many seconds
-    + upgrade: run apt upgrade
+    + upgrade: run apt upgrade before installing packages
     + force: whether to force package installs by passing `--force-yes` to apt
     + no_recommends: don't install recommended packages
     + allow_downgrades: allow downgrading packages with version (--allow-downgrades)
