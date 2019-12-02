@@ -13,7 +13,7 @@ def upgrade(state, host):
     Upgrades all pacman packages.
     '''
 
-    yield 'pacman -Syu'
+    yield 'pacman --noconfirm -Su'
 
 _upgrade = upgrade  # noqa: E305
 
@@ -55,6 +55,6 @@ def packages(
 
     yield ensure_packages(
         packages, host.fact.pacman_packages, present,
-        install_command='pacman -S',
-        uninstall_command='pacman -R',
+        install_command='pacman --noconfirm -S',
+        uninstall_command='pacman --noconfirm -R',
     )
