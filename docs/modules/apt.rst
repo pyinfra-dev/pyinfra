@@ -61,9 +61,9 @@ Install/remove/update packages & update apt.
 + **packages**: list of packages to ensure
 + **present**: whether the packages should be installed
 + **latest**: whether to upgrade packages without a specified version
-+ **update**: run apt update
++ **update**: run apt update before installing packages
 + **cache_time**: when used with update, cache for this many seconds
-+ **upgrade**: run apt upgrade
++ **upgrade**: run apt upgrade before installing packages
 + **force**: whether to force package installs by passing `--force-yes` to apt
 + **no_recommends**: don't install recommended packages
 + **allow_downgrades**: allow downgrading packages with version (--allow-downgrades)
@@ -111,7 +111,7 @@ Add/remove apt repositories.
 :code:`apt.update`
 ~~~~~~~~~~~~~~~~~~
 
-Updates apt repos.
+Updates apt repositories.
 
 .. code:: python
 

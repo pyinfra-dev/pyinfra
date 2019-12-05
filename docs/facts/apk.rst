@@ -1,15 +1,15 @@
-Pkg
+Apk
 ---
 
-:code:`pkg_packages`
+:code:`apk_packages`
 ~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
-    host.fact.pkg_packages
+    host.fact.apk_packages
 
 
-Returns a dict of installed pkg packages:
+Returns a dict of installed apk packages:
 
 .. code:: python
 

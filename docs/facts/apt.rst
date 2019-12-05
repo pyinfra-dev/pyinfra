@@ -47,7 +47,7 @@ Returns a dict of installed dpkg packages:
 
 .. code:: python
 
-    'package_name': 'version',
+    'package_name': ['version'],
     ...
 
 

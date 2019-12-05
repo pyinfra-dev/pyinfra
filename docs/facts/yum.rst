@@ -13,7 +13,7 @@ Returns a dict of installed rpm packages:
 
 .. code:: python
 
-    'package_name': 'version',
+    'package_name': ['version'],
     ...
 
 

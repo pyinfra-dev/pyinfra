@@ -70,6 +70,26 @@ Add/remove/update files.
     if this is required call ``files.directory`` separately.
 
 
+:code:`files.get`
+~~~~~~~~~~~~~~~~~
+
+Download a file from the remote system.
+
+.. code:: python
+
+    files.get(remote_filename, local_filename, add_deploy_dir=True, create_local_dir=False, force=False)
+
++ **remote_filename**: the remote filename to download
++ **local_filename**: the local filename to download the file to
++ **add_deploy_dir**: local_filename is relative to the deploy directory
++ **create_local_dir**: create the local directory if it doesn't exist
++ **force**: always download the file, even if the local copy matches
+
+Note:
+    This operation is not suitable for large files as it may involve copying
+    the remote file before downloading it.
+
+
 :code:`files.line`
 ~~~~~~~~~~~~~~~~~~
 
@@ -135,7 +155,7 @@ Upload a local file to the remote system.
 
     files.put(
         local_filename, remote_filename, user=None, group=None, mode=None, add_deploy_dir=True,
-        create_remote_dir=False
+        create_remote_dir=False, force=False
     )
 
 + **local_filename**: local filename
@@ -145,11 +165,16 @@ Upload a local file to the remote system.
 + **mode**: permissions of the files
 + **add_deploy_dir**: local_filename is relative to the deploy directory
 + **create_remote_dir**: create the remote directory if it doesn't exist
++ **force**: always upload the file, even if the remote copy matches
 
 ``create_remote_dir``:
     If the remote directory does not exist it will be created using the same
     user & group as passed to ``files.put``. The mode will *not* be copied over,
     if this is required call ``files.directory`` separately.
+
+Note:
+    This operation is not suitable for large files as it may involve copying
+    the file before uploading it.
 
 
 :code:`files.replace`
