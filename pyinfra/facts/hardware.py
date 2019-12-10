@@ -118,6 +118,17 @@ nettools_2_regexes = [
     ),
 ]
 
+iproute2_regexes = [
+    (
+        r'^inet ([0-9\.]+)\/([0-9]{1,2})(?:\s+brd ([0-9\.]+))?',
+        ('ipv4', 'address', 'mask_bits', 'broadcast'),
+    ),
+    (
+        r'^inet6 ([0-9a-z:]+)\/([0-9]{1,3})',
+        ('ipv6', 'address', 'mask_bits'),
+    ),
+]
+
 
 def _parse_regexes(regexes, lines):
     data = {
@@ -146,8 +157,10 @@ class NetworkDevices(FactBase):
         'eth0': {
             'ipv4': {
                 'address': '127.0.0.1',
+                'broadcast': '127.0.0.13',
+                # Only one of these will exist:
                 'netmask': '255.255.255.255',
-                'broadcast': '127.0.0.13'
+                'mask_bits': '32'
             },
             'ipv6': {
                 'size': '64',
@@ -157,7 +170,7 @@ class NetworkDevices(FactBase):
         ...
     '''
 
-    command = 'ifconfig'
+    command = 'ip addr show || ifconfig'
     default = dict
 
     # Definition of valid interface names for Linux:
@@ -170,6 +183,10 @@ class NetworkDevices(FactBase):
         (
             r'^([^/: \s]+): flags=',
             lambda lines: _parse_regexes(nettools_2_regexes, lines),
+        ),
+        (
+            r'^[0-9]+: ([^/: \s]+): ',
+            lambda lines: _parse_regexes(iproute2_regexes, lines),
         ),
     ]
 
