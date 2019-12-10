@@ -1,5 +1,5 @@
 {
-    "command": "ifconfig",
+    "command": "ip addr show || ifconfig",
     "output": [
         "en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500",
         "inet 1.2.3.4 netmask 0xffffff00 broadcast 255.255.255.255",
@@ -17,7 +17,8 @@
             },
             "ipv6": {
                 "address": "2a01::01",
-                "size": "64"
+                "size": "64",
+                "mask_bits": 64
             }
         }
     }

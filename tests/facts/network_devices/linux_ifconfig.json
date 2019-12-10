@@ -1,5 +1,5 @@
 {
-    "command": "ifconfig",
+    "command": "ip addr show || ifconfig",
     "output": [
         "eth0      Link encap:Ethernet  HWaddr 14:DD:A9:D3:36:0B",
         "inet addr:1.2.3.4  Bcast:1.2.3.4  Mask:255.255.255.255",
@@ -21,7 +21,8 @@
             },
             "ipv6": {
                 "address": "2a01::01",
-                "size": "64"
+                "size": "64",
+                "mask_bits": 64
             }
         },
         "eth1": {
