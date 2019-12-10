@@ -28,16 +28,6 @@ into the operation directly, eg:
     python.call(my_callback, hello='world')
 
 
-:code:`python.execute`
-~~~~~~~~~~~~~~~~~~~~~~
-
-[DEPRECATED], please use ``python.call``.
-
-.. code:: python
-
-    python.execute(callback)
-
-
 :code:`python.raise_exception`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. code:: python
