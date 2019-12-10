@@ -259,10 +259,11 @@ class Ipv4Addresses(ShortFactBase):
         addresses = {}
 
         for interface, details in data.items():
-            if self.ip_type not in details:
-                continue
+            ip_details = details.get(self.ip_type)
+            if not ip_details:
+                continue  # pramga: no cover
 
-            addresses[interface] = details[self.ip_type]['address']
+            addresses[interface] = ip_details['address']
 
         return addresses
 
