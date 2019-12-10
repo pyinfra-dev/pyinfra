@@ -103,7 +103,8 @@ nettools_1_regexes = [
     ),
     (
         r'^inet6 addr: ([0-9a-z:]+)\/([0-9]+) Scope:Global',
-        ('ipv6', 'address', 'size'),
+        ('ipv6', 'address', 'size'),  # COMPAT
+        # TODO: rename size -> mask_bits (pre-v0.11 compat)
     ),
 ]
 
@@ -114,7 +115,8 @@ nettools_2_regexes = [
     ),
     (
         r'^inet6 ([0-9a-z:]+)\s+prefixlen ([0-9]+)',
-        ('ipv6', 'address', 'size'),
+        ('ipv6', 'address', 'size'),  # COMPAT
+        # TODO: rename size -> mask_bits (pre-v0.11 compat)
     ),
 ]
 
@@ -140,8 +142,18 @@ def _parse_regexes(regexes, lines):
         for regex, groups in regexes:
             matches = re.match(regex, line)
             if matches:
+                target_group = data[groups[0]]
+
                 for i, group in enumerate(groups[1:]):
-                    data[groups[0]][group] = matches.group(i + 1)
+                    target_group[group] = matches.group(i + 1)
+
+                # COMPAT
+                # TODO: remove (for forwards compatability, see above)
+                if 'size' in target_group:
+                    target_group['mask_bits'] = target_group['size']
+
+                if 'mask_bits' in target_group:
+                    target_group['mask_bits'] = int(target_group['mask_bits'])
 
                 break
 
@@ -164,8 +176,8 @@ class NetworkDevices(FactBase):
                 'mask_bits': '32'
             },
             'ipv6': {
-                'size': '64',
-                'address': 'fe80::a00:27ff:fec3:36f0'
+                'address': 'fe80::a00:27ff:fec3:36f0',
+                'mask_bits': '64'
             }
         },
         ...
