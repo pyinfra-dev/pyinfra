@@ -1,4 +1,4 @@
-# v0.11 (WIP, dev2)
+# v0.11 (WIP, dev3)
 
 + Add **apk** module
     - Operations: `apk.packages`, `apk.update`, `apk.upgrade`
@@ -20,6 +20,8 @@
 + Add `files.get` operation to download remote files
 + Add `server.mount` operation and `mounts` fact to manage mounted filesystems
 + Add `@ansible` connector to read Ansible inventory files
++ Add `ipv4_addresses` and `ipv6_addresses` shortcut facts
++ Support `ip`/iproute2 for `network_devices` fact
 + Large ongoing documentation overhaul
 + Add a `CONTRIBUTORS.md`!
 + Fix passing of `postgresql_password` in `postgresql_*` facts
