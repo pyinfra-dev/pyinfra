@@ -2,7 +2,7 @@ from __future__ import division
 
 import re
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, ShortFactBase
 
 
 class Cpus(FactBase):
@@ -150,7 +150,8 @@ def _parse_regexes(regexes, lines):
 
 class NetworkDevices(FactBase):
     '''
-    Gets & returns a dict of network devices:
+    Gets & returns a dict of network devices. See the ``ipv4_addresses`` and
+    ``ipv6_addresses`` facts for easier-to-use shortcuts to get device addresses.
 
     .. code:: python
 
@@ -227,3 +228,41 @@ class NetworkDevices(FactBase):
             devices[matches.group(1)] = handler(line_buffer)
 
         return devices
+
+
+class Ipv4Addresses(ShortFactBase):
+    '''
+    Gets & returns a dictionary of network interface -> IPv4 address.
+
+    .. code:: python
+
+        'eth0': '127.0.0.1',
+        ...
+    '''
+
+    fact = NetworkDevices
+    ip_type = 'ipv4'
+
+    def process_data(self, data):
+        addresses = {}
+
+        for interface, details in data.items():
+            if self.ip_type not in details:
+                continue
+
+            addresses[interface] = details[self.ip_type]['address']
+
+        return addresses
+
+
+class Ipv6Addresses(Ipv4Addresses):
+    '''
+    Gets & returns a dictionary of network interface -> IPv6 address.
+
+    .. code:: python
+
+        'eth0': 'fe80::a00:27ff::2',
+        ...
+    '''
+
+    ip_type = 'ipv6'
