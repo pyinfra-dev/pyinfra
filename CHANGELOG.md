@@ -1,4 +1,4 @@
-# v0.11 (WIP, dev3)
+# v0.11
 
 + Add **apk** module
     - Operations: `apk.packages`, `apk.update`, `apk.upgrade`
