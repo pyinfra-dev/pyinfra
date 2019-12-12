@@ -19,15 +19,7 @@ pip install -e .[dev]
 
 ## Tests
 
-Use `nosetests` or the bundled helper script to run tests. This helper script also counts coverage:
-
-```sh
-# Test everything (API, modules & facts)
-scripts/test.sh
-
-# Set individual bits
-scripts/test.sh [api|modules|facts]
-```
+Use `pytest` to run tests, or `pytest --cov` to run with coverage.
 
 
 ## Guides
