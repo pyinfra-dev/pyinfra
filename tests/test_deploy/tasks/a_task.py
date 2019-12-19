@@ -2,7 +2,7 @@ from pyinfra.api import deploy
 from pyinfra.modules import server
 
 
-@deploy
+@deploy('Deploy', data_defaults={'hello': 'world'})
 def do_deploy(state, host):
     server.shell(
         state, host,
