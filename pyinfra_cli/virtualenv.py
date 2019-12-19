@@ -4,7 +4,7 @@ import sys
 from pyinfra import logger
 
 
-def init_virtualenv():
+def init_virtualenv():  # pragma: no cover
     '''
     Add a virtualenv to sys.path so the user can import modules from it.
     This isn't perfect: it doesn't use the Python interpreter with which the
