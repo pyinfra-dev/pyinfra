@@ -6,7 +6,7 @@ Connectors enable pyinfra to integrate with other tools out of the box. Connecto
 + Modify how commands are executed (`@local`)
 + Both of the above (`@docker`)
 
-If you're interested in building a connector, check out [the existing code](https://github.com/Fizzadar/pyinfra/tree/develop/pyinfra/api/connectors). Each connector is described below along with usage examples:
+If you're interested in building a connector, check out [the existing code](https://github.com/Fizzadar/pyinfra/tree/master/pyinfra/api/connectors). Each connector is described below along with usage examples:
 
 ## `@local`
 
