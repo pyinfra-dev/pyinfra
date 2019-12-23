@@ -5,7 +5,7 @@ The pyinfra is an extremely powerful tool for ad-hoc execution and management of
 
 ## CLI arguments & options
 
-As described in the [getting started page](./getting_started), pyinfra needs an **inventory** and some **operatons**. These are used with the CLI as below:
+As described in the [getting started page](./getting_started), pyinfra needs an **inventory** and some **operations**. These are used with the CLI as below:
 
 ```sh
 Usage: pyinfra [OPTIONS] INVENTORY OPERATIONS...
