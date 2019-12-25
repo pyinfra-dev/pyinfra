@@ -143,6 +143,7 @@ _update = update  # noqa: E305 (for use below where update is a kwarg)
 def packages(
     state, host, packages=None,
     present=True, latest=False, update=False, clean=False,
+    installArgs='', updateArgs='', uninstallArgs='',
 ):
     '''
     Install/remove/update yum packages & updates.
@@ -152,6 +153,9 @@ def packages(
     + latest: whether to upgrade packages without a specified version
     + update: run yum update
     + clean: run yum clean
+    + installArgs: additional arguments to the yum install command
+    + updateArgs: additional arguments to the yum update command
+    + uninstallArgs: additional arguments to the yum uninstall command
 
     Versions:
         Package versions can be pinned like yum: ``<pkg>-<version>``
@@ -165,9 +169,9 @@ def packages(
 
     yield ensure_packages(
         packages, host.fact.rpm_packages, present,
-        install_command='yum install -y',
-        uninstall_command='yum remove -y',
-        upgrade_command='yum update -y',
+        install_command='yum install -y' + installArgs,
+        uninstall_command='yum remove -y' + uninstallArgs,
+        upgrade_command='yum update -y' + updateArgs,
         version_join='-',
         latest=latest,
     )
