@@ -7,6 +7,10 @@ pyinfra uses facts to determine the existing state of a remote server. Operation
 
     pyinfra myhost.com fact date another_fact ...
 
+If you want to pass an argument to a fact, use `:` then the argument. For example:
+
+    pyinfra myhost.com fact deb_package:openssh-server
+
 Or as part of :doc:`a deploy <deploys>`:
 
 .. code:: py
