@@ -167,6 +167,15 @@ def packages(
     if update:
         yield _update(state, host)
 
+    if installArgs != '':
+        installArgs = ' ' + installArgs
+
+    if uninstallArgs != '':
+        uninstallArgs = ' ' + uninstallArgs
+
+    if updateArgs != '':
+        updateArgs = ' ' + updateArgs
+
     yield ensure_packages(
         packages, host.fact.rpm_packages, present,
         install_command='yum install -y' + installArgs,

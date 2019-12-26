@@ -1,0 +1,12 @@
+{
+    "args": [ "docker-ce"],
+    "kwargs": {
+        "installArgs": "--nobest" 
+    },
+    "facts": {
+        "rpm_packages": {}
+    },
+    "commands": [
+        "yum install -y --nobest docker-ce"
+    ]
+}
