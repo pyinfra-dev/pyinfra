@@ -86,7 +86,7 @@ class DebPackages(FactBase):
 
 class DebPackage(FactBase):
     '''
-    Returns information on a .deb file.
+    Returns information on a .deb archive or installed package.
     '''
 
     _regexes = {
@@ -95,7 +95,7 @@ class DebPackage(FactBase):
     }
 
     def command(self, name):
-        return 'dpkg -I {0}'.format(name)
+        return 'dpkg -I {0} || dpkg -s {0}'.format(name)
 
     def process(self, output):
         data = {}

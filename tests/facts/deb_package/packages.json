@@ -1,6 +1,6 @@
 {
     "arg": "package-name",
-    "command": "dpkg -I package-name",
+    "command": "dpkg -I package-name || dpkg -s package-name",
     "output": [
         "Package: package-name",
         "Version: 1"
