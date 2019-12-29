@@ -4,7 +4,7 @@
     ]],
     "kwargs": {
 		"present": false,
-        "uninstallArgs": "--force" 
+        "extra_uninstall_args": "--force"
     },
 	"facts": {
         "rpm_packages": {
