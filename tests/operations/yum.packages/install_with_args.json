@@ -1,0 +1,12 @@
+{
+    "args": [ "docker-ce"],
+    "kwargs": {
+        "extra_install_args": "--foo"
+    },
+    "facts": {
+        "rpm_packages": {}
+    },
+    "commands": [
+        "yum install -y --foo docker-ce"
+    ]
+}
