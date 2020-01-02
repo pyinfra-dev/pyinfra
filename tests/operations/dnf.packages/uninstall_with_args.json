@@ -1,0 +1,17 @@
+{
+	"args": [[
+        "git"
+    ]],
+    "kwargs": {
+		"present": false,
+        "extra_uninstall_args": "--force"
+    },
+	"facts": {
+        "rpm_packages": {
+            "git": [""]
+        }
+    },
+    "commands": [
+        "dnf remove -y --force git"
+    ]
+}
