@@ -27,6 +27,7 @@ def fake_mech_shell(command, splitlines=None):
              'ubuntu16	       192.168.2.226             bento/ubuntu-16.04	 201912.04.0	/Users/bob/somedir/ubuntu16',
              'centos7	       192.168.2.227                 bento/centos-7	 201912.05.0	/Users/bob/somedir/centos7',
              'centos6	       poweroff                      bento/centos-6	 201912.04.0	/Users/bob/somedir/centos6',
+             'fedora31	               	                    bento/fedora-31	 201912.04.0	/Users/bob/somedir/fedora31',
         ]
     elif command == 'mech ssh-config ubuntu16':
         return [

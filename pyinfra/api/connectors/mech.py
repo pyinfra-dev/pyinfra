@@ -40,14 +40,21 @@ def get_mech_config(limit=None):
     targets = []
 
     for line in output:
-        target, address, box, version, path = line.split()
+
+        address = ''
+
+        data = line.split()
+        target = data[0]
+
+        if len(data) == 5:
+            address = data[1]
 
         # Skip anything not in the limit
         if limit is not None and target not in limit:
             continue
 
-        # For each vm that has an address- fetch it's SSH config in a thread
-        if address[0].isdigit():
+        # For each vm that has an address, fetch it's SSH config in a thread
+        if address != '' and address[0].isdigit():
             targets.append(target)
 
     threads = []
