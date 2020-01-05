@@ -14,10 +14,22 @@ from pyinfra.progress import progress_spinner
 def _get_mech_ssh_config(queue, progress, target):
     logger.debug('Loading SSH config for {0}'.format(target))
 
-    queue.put(local.shell(
+    # Note: We have to work-around the fact that "mech ssh-config somehost"
+    # does not return the correct "Host" value. When "mech" fixes this
+    # issue we can simply this code.
+    lines = local.shell(
         'mech ssh-config {0}'.format(target),
         splitlines=True,
-    ))
+    )
+
+    newlines = []
+    for line in lines:
+        if line.startswith('Host '):
+            newlines.append('Host ' + target)
+        else:
+            newlines.append(line)
+
+    queue.put(newlines)
 
     progress(target)
 
