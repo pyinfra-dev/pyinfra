@@ -43,6 +43,10 @@ Vagrant.configure('2') do |config|
         centos.vm.box = 'bento/centos-7'
     end
 
+    config.vm.define :centos8 do |centos|
+        centos.vm.box = 'bento/centos-8'
+    end
+
     config.vm.define :fedora24 do |fedora|
         fedora.vm.box = 'bento/fedora-24'
     end

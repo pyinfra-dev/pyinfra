@@ -31,6 +31,16 @@ Let's start off executing a simple one off shell command. The first argument alw
 
 As you'll see, pyinfra runs the echo command and prints the output. See the :ref:`available command line options <cli:CLI arguments & options>` and :ref:`examples of ad-hoc commands <cli:Ad-hoc command execution>`.
 
+More examples:
+
+.. code:: shell
+
+    # Ensure a package is installed on a Centos 8 instance
+    pyinfra @vagrant/centos8 dnf.packages vim sudo=true
+
+    # Ensure a package is installed on multiple instances
+    pyinfra @vagrant/ubuntu18,@vagrant/debian9 apt.packages vim sudo=true
+
 
 Create a Deploy
 ---------------

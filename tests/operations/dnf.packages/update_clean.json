@@ -1,0 +1,13 @@
+{
+    "kwargs": {
+        "update": true,
+        "clean": true
+    },
+    "facts": {
+        "rpm_packages": {}
+    },
+    "commands": [
+        "dnf clean all",
+        "dnf update -y"
+    ]
+}
