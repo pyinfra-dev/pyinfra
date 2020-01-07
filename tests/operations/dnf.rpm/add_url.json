@@ -1,0 +1,15 @@
+{
+    "args": ["https://something.rpm"],
+    "facts": {
+        "file": {
+            "_tempfile_.rpm": null
+        },
+        "rpm_package": {
+            "_tempfile_.rpm": null
+        }
+    },
+    "commands": [
+        "wget -q https://something.rpm -O _tempfile_.rpm",
+        "rpm -qa | grep `rpm -qp _tempfile_.rpm` || rpm -U _tempfile_.rpm"
+    ]
+}
