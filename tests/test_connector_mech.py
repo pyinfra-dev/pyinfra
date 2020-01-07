@@ -23,11 +23,11 @@ FAKE_MECH_OPTIONS_DATA = json.dumps(FAKE_MECH_OPTIONS)
 def fake_mech_shell(command, splitlines=None):
     if command == 'mech ls':
         return [
-             'NAME	        ADDRESS	                                BOX	     VERSION	PATH',
-             'ubuntu16	       192.168.2.226             bento/ubuntu-16.04	 201912.04.0	/Users/bob/somedir/ubuntu16',
-             'centos7	       192.168.2.227                 bento/centos-7	 201912.05.0	/Users/bob/somedir/centos7',
-             'centos6	       poweroff                      bento/centos-6	 201912.04.0	/Users/bob/somedir/centos6',
-             'fedora31	               	                    bento/fedora-31	 201912.04.0	/Users/bob/somedir/fedora31',
+             'NAME	        ADDRESS	                                BOX	     VERSION	PATH',  # noqa: E501
+             'ubuntu16	       192.168.2.226             bento/ubuntu-16.04	 201912.04.0	/Users/bob/somedir/ubuntu16',  # noqa: E501
+             'centos7	       192.168.2.227                 bento/centos-7	 201912.05.0	/Users/bob/somedir/centos7',  # noqa: E501
+             'centos6	       poweroff                      bento/centos-6	 201912.04.0	/Users/bob/somedir/centos6',  # noqa: E501
+             'fedora31	               	                    bento/fedora-31	 201912.04.0	/Users/bob/somedir/fedora31',  # noqa: E501
         ]
     elif command == 'mech ssh-config ubuntu16':
         return [
@@ -59,7 +59,7 @@ def fake_mech_shell(command, splitlines=None):
         ]
     elif command == 'mech ssh-config centos6':
         return [
-            'ERROR: Error: The virtual machine is not powered on: /Users/mikekinney/Documents/python/mech/multiple-mech/instances/debian8/.mech/debian-8.11-amd64.vmx',
+            'ERROR: Error: The virtual machine is not powered on: /Users/bob/debian8/.mech/debian-8.11-amd64.vmx',  # noqa: E501
             'This Mech machine is reporting that it is not yet ready for SSH. Make',
             'sure your machine is created and running and try again. Additionally,',
             'check the output of `mech status` to verify that the machine is in the',
@@ -103,7 +103,7 @@ class TestMechConnector(TestCase):
                     'somedata': 'somevalue',
                 },
                 ['@mech'],
-            )
+            ),
         ]
 
     def test_make_names_data_with_limit(self):
