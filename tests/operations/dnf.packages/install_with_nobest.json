@@ -1,0 +1,12 @@
+{
+    "args": [ "docker-ce"],
+    "kwargs": {
+        "nobest": "true"
+    },
+    "facts": {
+        "rpm_packages": {}
+    },
+    "commands": [
+        "dnf install -y --nobest docker-ce"
+    ]
+}
