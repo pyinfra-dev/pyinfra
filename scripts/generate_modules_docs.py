@@ -3,6 +3,7 @@
 import re
 from importlib import import_module
 from inspect import getargspec, getmembers
+from os import path
 from types import FunctionType
 
 import six
@@ -27,6 +28,9 @@ def _format_doc_line(line):
 
 
 def build_facts():
+    this_dir = path.dirname(path.realpath(__file__))
+    docs_dir = path.abspath(path.join(this_dir, '..', 'docs'))
+
     for module_name in modules.__all__:
         lines = []
 
@@ -139,7 +143,7 @@ def build_facts():
             lines.append('')
 
         # Write out the file
-        module_filename = 'docs/modules/{0}.rst'.format(module_name)
+        module_filename = path.join(docs_dir, 'modules', '{0}.rst'.format(module_name))
         print('--> Writing {0}'.format(module_filename))
 
         out = '\n'.join(lines)

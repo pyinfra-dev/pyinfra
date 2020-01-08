@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from inspect import getargspec, getmembers, isclass
+from os import path
 from types import FunctionType, MethodType
 
 import six
@@ -17,6 +18,9 @@ def _title_line(char, string):
 
 
 def build_facts():
+    this_dir = path.dirname(path.realpath(__file__))
+    docs_dir = path.abspath(path.join(this_dir, '..', 'docs'))
+
     # Now we generate a facts.rst describing the use of the facts as:
     # host.data.<snake_case_fact>
     for module_name in sorted(facts.__all__):
@@ -102,7 +106,7 @@ def build_facts():
             lines.append('')
 
         # Write out the file
-        module_filename = 'docs/facts/{0}.rst'.format(module_name)
+        module_filename = path.join(docs_dir, 'facts', '{0}.rst'.format(module_name))
         print('--> Writing {0}'.format(module_filename))
 
         out = '\n'.join(lines)
