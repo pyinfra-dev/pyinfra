@@ -6,13 +6,5 @@ set -e
 rm -f docs/apidoc/*.rst
 sh scripts/generate_api_docs.sh
 
-# Build the modules/*.rst docs
-rm -f docs/modules/*.rst
-python scripts/generate_modules_docs.py
-
-# Build the facts.rst doc
-rm -f docs/facts/*.rst
-python scripts/generate_facts_doc.py
-
 # Build the HTML docs
 sphinx-build -a docs/ docs/build/
