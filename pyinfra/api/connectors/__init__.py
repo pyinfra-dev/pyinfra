@@ -1,6 +1,6 @@
 import six
 
-from . import ansible, docker, local, ssh, vagrant
+from . import ansible, docker, local, mech, ssh, vagrant
 
 
 # Connectors that handle execution of pyinfra operations
@@ -13,6 +13,7 @@ EXECUTION_CONNECTORS = {  # pragma: no cover
 # Connectors that handle generation of inventories
 INVENTORY_CONNECTORS = {  # pragma: no cover
     'docker': docker,
+    'mech': mech,
     'vagrant': vagrant,
     'ansible': ansible,
 }

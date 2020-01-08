@@ -97,3 +97,12 @@ Now that nginx is installed on the box, we can use pyinfra to control the ``ngin
 ```sh
 pyinfra inventory.py init.service nginx running=true enabled=true
 ```
+
+#### Additional debug info
+
+For additional debug info, use one of these options:
+
++ `--debug` Print debug info.
++ `--debug-data` Print host/group data before connecting and exit.
++ `--debug-facts` Print facts after generating operations and exit.
++ `--debug-operations` Print operations after generating and exit.
