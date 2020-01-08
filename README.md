@@ -17,7 +17,7 @@ pyinfra automates/provisions/manages/deploys infrastructure super fast at massiv
 + 💻 **Agentless execution** by speaking native SSH/Docker/subprocess depending on the target.
 + ❗️ **Two stage process** that enables `--dry` runs before making any changes.
 + 📦 **Extendable** with _any_ Python package as configured & written in standard Python.
-+ 🔌 **Integrated** with Docker, Vagrant & Ansible out of the box.
++ 🔌 **Integrated** with Docker, Vagrant/Mech & Ansible out of the box.
 
 When you run pyinfra you'll see something like ([non animated version](https://raw.githubusercontent.com/Fizzadar/pyinfra/master/docs/static/example_deploy.png)):
 
