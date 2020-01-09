@@ -1,5 +1,5 @@
 '''
-Mange gem packages.
+Manage gem packages.
 '''
 
 from pyinfra.api import operation

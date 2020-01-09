@@ -1,5 +1,5 @@
 '''
-Mange apk packages.
+Manage apk packages.
 '''
 
 from pyinfra.api import operation

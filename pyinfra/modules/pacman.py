@@ -1,5 +1,5 @@
 '''
-Mange pacman packages.
+Manage pacman packages.
 '''
 
 from pyinfra.api import operation

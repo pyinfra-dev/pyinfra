@@ -1,5 +1,5 @@
 '''
-Mange brew packages.
+Manage brew packages.
 '''
 
 from pyinfra.api import operation
