@@ -1,5 +1,5 @@
 '''
-Manage pacman packages.
+Manage pacman packages. (Arch Linux package manager)
 '''
 
 from pyinfra.api import operation
@@ -45,6 +45,16 @@ def packages(
 
     Versions:
         Package versions can be pinned like pacman: ``<pkg>=<version>``.
+
+    Example:
+
+    .. code:: python
+
+        pacman.packages(
+            {'Install Vim and a plugin'},
+            ['vim-fugitive', 'vim'],
+            update=True,
+        )
     '''
 
     if update:
