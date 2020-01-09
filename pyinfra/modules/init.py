@@ -104,6 +104,17 @@ def d(
 
         For other distributions and more granular service control, see the
         ``init.d_enable`` operation.
+
+    Example:
+
+    .. code:: python
+
+        init.d(
+            {'Restart and enable rsyslog'},
+            'rsyslog',
+            restarted=True,
+            enabled=True,
+        )
     '''
 
     yield _handle_service_control(
@@ -150,6 +161,17 @@ def d_enable(
     + stop_priority: priority to stop the service
     + start_levels: which runlevels should the service run when enabled
     + stop_levels: which runlevels should the service stop when enabled
+
+    Example:
+
+    .. code:: python
+
+        init.d_enable(
+            {'Finer control on which runlevels rsyslog should run'},
+            'rsyslog',
+            start_levels=(3, 4, 5),
+            stop_levels=(0, 1, 2, 6),
+        )
     '''
 
     # Build link list
@@ -322,6 +344,16 @@ def service(
     Manage the state of services. This command checks for the presence of all the
     init systems pyinfra can handle and executes the relevant operation. See init
     system sepcific operation for arguments.
+
+    Examples:
+
+    .. code:: python
+
+        init.service(
+            {'Enable open-vm-tools service'},
+            'open-vm-tools',
+            enabled=True,
+        )
     '''
 
     if host.fact.which('systemctl'):
