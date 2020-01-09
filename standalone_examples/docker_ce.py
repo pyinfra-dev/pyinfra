@@ -1,5 +1,5 @@
 from pyinfra import host
-from pyinfra.modules import apt, server, python, init
+from pyinfra.modules import apt, init, python
 
 # Standalone example to show how to install Docker CE using
 # https://docs.docker.com/install/linux/docker-ce/ubuntu/
@@ -24,7 +24,7 @@ if host.fact.linux_name == 'Ubuntu':
         [
             'apt-transport-https',
             'ca-certificates',
-            'curl', 
+            'curl',
             'gnupg-agent',
             'software-properties-common',
         ],
@@ -75,7 +75,7 @@ if host.fact.linux_name == 'Ubuntu':
     #       the output is not in sequence; is that output or does it really
     #       not run these sequentially?
     stdout = host.fact.command('docker run hello-world')
-    if stdout == None or 'Hello from Docker!' not in stdout:
+    if stdout is None or 'Hello from Docker!' not in stdout:
         python.raise_exception(
             {'Post docker validation'},
             NotImplementedError,

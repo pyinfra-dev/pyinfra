@@ -1,5 +1,6 @@
-from pyinfra import host
 from pyinfra.modules import brew
+
+# To run: "pyinfra @local brew.py"
 
 brew.packages(
     {'Install latest Vim'},
