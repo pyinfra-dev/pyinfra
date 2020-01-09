@@ -8,6 +8,9 @@ All operations in this module take four optional global arguments:
     + ``mysql_password``: the password for the connecting user
     + ``mysql_host``: the hostname of the server to connect to
     + ``mysql_port``: the port of the server to connect to
+
+See the example/mysql.py
+
 '''
 
 import six
@@ -70,6 +73,16 @@ def user(
         will only be applied if the user does not exist - ie pyinfra cannot
         detect if the current password doesn't match the one provided, so won't
         attempt to change it.
+
+    Example:
+
+    .. code:: python
+
+        mysql.user(
+            {'Create the pyinfra@localhost MySQL user'},
+            'pyinfra',
+            password='somepassword',
+        )
     '''
 
     current_users = host.fact.mysql_users(
@@ -142,6 +155,19 @@ def database(
     Collate/charset:
         these will only be applied if the database does not exist - ie pyinfra
         will not attempt to alter the existing databases collate/character sets.
+
+    Example:
+
+    .. code:: python
+
+        mysql.database(
+            {'Create the pyinfra_stuff database'},
+            'pyinfra_stuff',
+            user='pyinfra',
+            user_privileges=['SELECT', 'INSERT'],
+            charset='utf8',
+        )
+
     '''
 
     current_databases = host.fact.mysql_databases(
@@ -312,6 +338,15 @@ def dump(
     + database: name of the database to dump
     + remote_filename: name of the file to dump the SQL to
     + mysql_*: global module arguments, see above
+
+    Example:
+
+    .. code:: python
+        mysql.dump(
+            {'Dump the pyinfra_stuff database'},
+            '/tmp/pyinfra_stuff.dump',
+            database='pyinfra_stuff',
+        )
     '''
 
     yield '{0} > {1}'.format(make_mysql_command(
@@ -338,6 +373,16 @@ def load(
     + database: name of the database to import into
     + remote_filename: the filename to read from
     + mysql_*: global module arguments, see above
+
+    Example:
+
+    .. code:: python
+
+        mysql.load(
+            {'Import the pyinfra_stuff dump into pyinfra_stuff_copy'},
+            '/tmp/pyinfra_stuff.dump',
+            database='pyinfra_stuff_copy',
+        )
     '''
 
     yield '{0} < {1}'.format(make_mysql_command(
