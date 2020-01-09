@@ -31,13 +31,24 @@ def download(
     '''
     Download files from remote locations.
 
-    + source_url: source URl of the file
+    + source_url: source URL of the file
     + destination: where to save the file
     + user: user to own the files
     + group: group to own the files
     + mode: permissions of the files
-    + cache_time: if the file exists already, re-download after this time (in s)
+    + cache_time: if the file exists already, re-download after this time (in seconds)
     + force: always download the file, even if it already exists
+
+    Example:
+
+    .. code:: python
+
+        files.download(
+            {'Download the Docker repo file'},
+            'https://download.docker.com/linux/centos/docker-ce.repo',
+            '/etc/yum.repos.d/docker-ce.repo',
+        )
+
     '''
 
     # Get destination info
@@ -95,6 +106,29 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
     Regex line escaping:
         If matching special characters (eg a crontab line containing *), remember to escape
         it first using Python's ``re.escape``.
+
+
+    Examples:
+
+    .. code:: python
+
+        # prepare to do some maintenance
+        maintenance_line = 'SYSTEM IS DOWN FOR MAINTENANCE'
+        files.line(
+            {'Add the down-for-maintence line in /etc/motd'},
+            '/etc/motd',
+            maintenance_line,
+        )
+
+        # Then, after the mantenance is done, remove the maintenance line
+        files.line(
+            {'Remove the down-for-maintenance line in /etc/motd'},
+            '/etc/motd',
+            maintenance_line,
+            replace='',
+            present=False,
+        )
+
     '''
 
     match_line = line
@@ -170,7 +204,18 @@ def replace(state, host, name, match, replace, flags=None):
     + name: target remote file to edit
     + match: text/regex to match for
     + replace: text to replace with
-    + flags: list of flaggs to pass to sed
+    + flags: list of flags to pass to sed
+
+    Example:
+
+    .. code:: python
+
+        files.replace(
+            {'Change a value in a file'},
+            '/etc/motd',
+            'verboten',
+            'forbidden',
+        )
     '''
 
     yield sed_replace(name, match, replace, flags=flags)
@@ -196,6 +241,17 @@ def sync(
     + delete: delete remote files not present locally
     + exclude: string or list/tuple of strings to match & exclude files (eg *.pyc)
     + exclude_dir: string or list/tuple of strings to match & exclude directories (eg node_modules)
+
+    Example:
+
+    .. code:: python
+
+        # Sync local files/tempdir to remote /tmp/tempdir
+        files.sync(
+            {'Sync a local directory with remote'},
+            'files/tempdir',
+            '/tmp/tempdir',
+        )
     '''
 
     # If we don't enforce the source ending with /, remote_dirname below might start with
@@ -317,6 +373,17 @@ def get(
     Note:
         This operation is not suitable for large files as it may involve copying
         the remote file before downloading it.
+
+    Example:
+
+    .. code:: python
+
+        files.get(
+            {'Download a file from a remote'},
+            '/etc/centos-release',
+            '/tmp/whocares',
+        )
+
     '''
 
     if add_deploy_dir and state.deploy_dir:
@@ -372,6 +439,19 @@ def put(
     Note:
         This operation is not suitable for large files as it may involve copying
         the file before uploading it.
+
+    Examples:
+
+    .. code:: python
+
+        # Note: This requires a 'files/motd' file on the local filesystem
+        files.put(
+            {'Update the message of the day file'},
+            'files/motd',
+            '/etc/motd',
+            mode='644',
+        )
+
     '''
 
     # Upload IO objects as-is
@@ -453,6 +533,16 @@ def template(
         If the remote directory does not exist it will be created using the same
         user & group as passed to ``files.put``. The mode will *not* be copied over,
         if this is required call ``files.directory`` separately.
+
+    Example:
+
+    .. code:: python
+
+        files.template(
+            {'Create a templated file'},
+            'files/foo',
+            '/tmp/foo',
+        )
     '''
 
     if state.deploy_dir:
@@ -532,6 +622,16 @@ def link(
     Source changes:
         If the link exists and points to a different target, pyinfra will remove it and
         recreate a new one pointing to then new target.
+
+    Example:
+
+    .. code:: python
+
+        files.link(
+            {'Create link /etc/issue2 that points to /etc/issue'},
+            '/etc/issue2',
+            '/etc/issue',
+        )
     '''
 
     if present and not target:
@@ -617,6 +717,21 @@ def file(
         If the remote directory does not exist it will be created using the same
         user & group as passed to ``files.put``. The mode will *not* be copied over,
         if this is required call ``files.directory`` separately.
+
+    Example:
+
+    .. code:: python
+
+        # Note: The directory /tmp/secret will get created with the default umask.
+        files.file(
+            {'Create /tmp/secret/file'},
+            '/tmp/secret/file',
+            mode='600',
+            user='root',
+            group='root',
+            touch=True,
+            create_remote_dir=True,
+        )
     '''
 
     mode = ensure_mode_int(mode)
@@ -671,13 +786,23 @@ def directory(
     '''
     Add/remove/update directories.
 
-    + name: name/patr of the remote folder
+    + name: name/path of the remote folder
     + present: whether the folder should exist
     + assume_present: whether to assume the directory exists
     + user: user to own the folder
     + group: group to own the folder
     + mode: permissions of the folder
     + recursive: recursively apply user/group/mode
+
+    Example:
+
+    .. code:: python
+
+        files.directory(
+            {'Ensure the /tmp/dir_that_we_want_removed is removed'},
+            '/tmp/dir_that_we_want_removed',
+            present=False,
+        )
     '''
 
     mode = ensure_mode_int(mode)
