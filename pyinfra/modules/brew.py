@@ -46,6 +46,24 @@ def packages(
 
     Versions:
         Package versions can be pinned like brew: ``<pkg>@<version>``.
+
+    Examples:
+
+    .. code:: python
+
+        # Update package list and install packages
+        brew.packages(
+            {'Install Vim and vimpager'},
+            ['vimpager', 'vim'],
+            update=True,
+        )
+
+        # Install the latest versions of packages (always check)
+        brew.packages(
+            {'Install latest Vim'},
+            ['vim'],
+            latest=True,
+        )
     '''
 
     if update:
@@ -88,6 +106,18 @@ def casks(
 
     Versions:
         Package versions can be pinned like brew: ``<pkg>@<version>``.
+
+    Examples:
+
+    .. code:: python
+
+        brew.casks(
+            {'Upgrade and install the latest package via casks'},
+            ['godot'],
+            upgrade=True,
+            latest=True,
+        )
+
     '''
 
     if upgrade:
@@ -110,6 +140,15 @@ def tap(state, host, name, present=True):
 
     + name: the name of the tasp
     + present: whether this tap should be present or not
+
+    Example:
+
+    .. code:: python
+
+        brew.tap(
+            {'Add a brew tap'},
+            'includeos/includeos',
+        )
     '''
 
     taps = host.fact.brew_taps

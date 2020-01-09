@@ -250,6 +250,23 @@ def packages(
         When ``cache_time`` is set the ``/var/lib/apt/periodic/update-success-stamp`` file
         is touched upon successful update. Some distros already do this (Ubuntu), but others
         simply leave the periodic directory empty (Debian).
+
+    Examples:
+
+    .. code:: python
+
+        # Update package list and install packages
+        apt.packages(
+            {'Install Asterisk and Vim'},
+            ['asterisk', 'vim'],
+            update=True,
+        )
+        # Install the latest versions of packages (always check)
+        apt.packages(
+            {'Install latest Vim'},
+            ['vim'],
+            latest=True,
+        )
     '''
 
     if update:
