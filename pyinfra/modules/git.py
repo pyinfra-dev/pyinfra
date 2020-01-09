@@ -26,6 +26,18 @@ def config(
     + key: the key of the config to ensure
     + value: the value this key should have
     + repo: specify the git repo path to edit local config (defaults to global)
+
+    Example:
+
+    .. code:: python
+
+        git.config(
+            {'Ensure user name is set for a repo'},
+            key='user.name',
+            value='Anon E. Mouse',
+            repo='/usr/local/src/pyinfra',
+        )
+
     '''
 
     existing_config = host.fact.git_config(repo)
@@ -70,6 +82,16 @@ def repo(
         * clones/pulls w/o sudo as the connecting SSH user
         * removes other/group write permissions - unless group is defined, in
           which case only other
+
+    Example:
+
+    .. code:: python
+
+        git.repo(
+            {'Clone repo'},
+            'https://github.com/Fizzadar/pyinfra.git',
+            '/usr/local/src/pyinfra',
+        )
     '''
 
     if use_ssh_user:
