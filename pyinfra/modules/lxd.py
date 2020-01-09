@@ -29,6 +29,16 @@ def container(
     + name: name of the container
     + image: image to base the container on
     + present: whether the container should be present or absent
+
+    Example:
+
+    .. code:: python
+
+        lxd.container(
+            {'Add an ubuntu container'},
+            'ubuntu19',
+            image='ubuntu:19.10',
+        )
     '''
 
     container = get_container_named(name, host.fact.lxd_containers)
