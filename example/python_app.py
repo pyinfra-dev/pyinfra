@@ -14,7 +14,7 @@ git.repo(
     preserve_sudo_env=True,
 )
 
-# Manage pip (npm, gem) packages
+# Manage pip packages
 did_install = pip.packages(
     {'Install virtualenv with pip'},
     ['virtualenv'],
