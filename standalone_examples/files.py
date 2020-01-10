@@ -58,10 +58,9 @@ files.sync(
 #     '/tmp/whocares',
 # )
 
-# TODO: need more info about templating (the "{{ date }}" in the file will not work.
 files.template(
     {'Create a templated file'},
-    'files/foo',
+    'templates/foo.j2',
     '/tmp/foo',
 )
 

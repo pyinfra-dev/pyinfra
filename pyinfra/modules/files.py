@@ -534,13 +534,17 @@ def template(
         user & group as passed to ``files.put``. The mode will *not* be copied over,
         if this is required call ``files.directory`` separately.
 
+    Notes:
+       Common convention is to store templates in a "templates" directory and
+       have a filename suffix with '.j2' (for jinja2).
+
     Example:
 
     .. code:: python
 
         files.template(
             {'Create a templated file'},
-            'files/foo',
+            'templates/foo.j2',
             '/tmp/foo',
         )
     '''
