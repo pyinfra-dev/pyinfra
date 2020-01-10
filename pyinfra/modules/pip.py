@@ -1,5 +1,6 @@
 '''
-Manage pip packages. Compatible globally or inside a virtualenv.
+Manage pip (python) packages. Compatible globally or inside
+a virtualenv (virtual environment).
 '''
 
 from __future__ import unicode_literals
@@ -22,6 +23,15 @@ def virtualenv(
     + site_packages: give access to the global site-packages
     + always_copy: always copy files rather than symlinking
     + present: whether the virtualenv should exist
+
+    Example:
+
+    .. code:: python
+
+        pip.virtualenv(
+            {'Create a virtualenv'},
+            '/usr/local/bin/venv',
+        )
     '''
 
     if present is False and host.fact.directory(path):
@@ -71,6 +81,16 @@ def packages(
 
     Versions:
         Package versions can be pinned like pip: ``<pkg>==<version>``.
+
+    Example:
+
+    .. code:: python
+
+        pip.packages(
+            {'Install pyinfra into a virtualenv'},
+            'pyinfra',
+            virtualenv='/usr/local/bin/venv',
+        )
     '''
 
     virtualenv_kwargs = virtualenv_kwargs or {}
