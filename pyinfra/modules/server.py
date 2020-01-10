@@ -395,7 +395,7 @@ def group(
     System users:
         System users don't exist on BSD, so the argument is ignored for BSD targets.
 
-    Example:
+    Examples:
 
     .. code:: python
 
@@ -403,6 +403,13 @@ def group(
             {'Create docker group'},
             'docker',
         )
+
+        # multiple groups
+        for group in ['wheel', 'lusers']:
+            server.group(
+                {f'Create the group {group}'},
+                group,
+            )
 
 
     '''
@@ -454,6 +461,25 @@ def user(
     Home directory:
         When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
         ``/home/{name}``.
+
+    Examples:
+
+    .. code:: python
+
+        server.user(
+            {'Ensure user is removed'},
+            'kevin',
+            present=False,
+        )
+
+        # multiple users
+        for user in ['kevin', 'bob']:
+            server.user(
+                {f'Ensure user {user} is removed'},
+                user,
+                present=False,
+            )
+
     '''
 
     users = host.fact.users or {}

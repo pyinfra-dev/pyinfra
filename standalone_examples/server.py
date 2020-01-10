@@ -28,10 +28,25 @@ server.user(
     present=False,
 )
 
+# multiple users
+for user in ['kevin', 'bob']:
+    server.user(
+        {f'Ensure user {user} is removed'},
+        user,
+        present=False,
+    )
+
 server.group(
     {'Create uberadmin group'},
     'uberadmin',
 )
+
+# multiple groups
+for group in ['wheel', 'lusers']:
+    server.group(
+        {f'Create the group {group}'},
+        group,
+    )
 
 server.user(
     {'Ensure an admin user is present'},
