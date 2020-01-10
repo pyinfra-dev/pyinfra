@@ -178,6 +178,15 @@ def hostname(state, host, hostname, hostname_file=None):
         on Linux and ``/etc/myname`` on OpenBSD.
 
         To completely disable writing the hostname file, set ``hostname_file=False``.
+
+    Example:
+
+    .. code:: python
+
+        server.hostname(
+            {'Set the hostname'},
+            'server1.example.com',
+        )
     '''
 
     if hostname_file is None:
@@ -216,6 +225,17 @@ def sysctl(
     + value: the value or list of values the sysctl should be
     + persist: whether to write this sysctl to the config
     + persist_file: file to write the sysctl to persist on reboot
+
+    Example:
+
+    .. code:: python
+
+        server.sysctl(
+            {'Change the fs.file-max value'},
+            'fs.file-max',
+            '100000',
+            persist=True,
+        )
     '''
 
     string_value = (
@@ -259,6 +279,19 @@ def crontab(
         Unless ``name`` is specified the command is used to identify crontab entries.
         This means commands must be unique within a given users crontab. If you require
         multiple identical commands, provide a different name argument for each.
+
+    Example:
+
+    .. code:: python
+
+        # simple example for a crontab
+        server.crontab(
+            {'Backup /etc weekly'},
+            '/bin/tar cf /tmp/etc_bup.tar /etc',
+            name='backup_etc',
+            day_of_week=0,
+        )
+
     '''
 
     def comma_sep(value):
@@ -359,6 +392,17 @@ def group(
 
     System users:
         System users don't exist on BSD, so the argument is ignored for BSD targets.
+
+    Example:
+
+    .. code:: python
+
+        server.group(
+            {'Create docker group'},
+            'docker',
+        )
+
+
     '''
 
     groups = host.fact.groups or []
