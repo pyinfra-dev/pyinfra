@@ -8,6 +8,9 @@ All operations in this module take four optional global arguments:
     + ``postgresql_password``: the password for the connecting user
     + ``postgresql_host``: the hostname of the server to connect to
     + ``postgresql_port``: the port of the server to connect to
+
+See example/postgresql.py for detailed example
+
 '''
 
 from pyinfra.api import operation
@@ -69,6 +72,20 @@ def role(
         pyinfra will not attempt to change existing roles - it will either
         create or drop roles, but not alter them (if the role exists this
         operation will make no changes).
+
+    Example:
+
+    .. code:: python
+
+        postgresql.role(
+            {'Create the pyinfra PostgreSQL role'},
+            'pyinfra',
+            password='somepassword',
+            superuser=True,
+            login=True,
+            sudo_user='postgres',
+        )
+
     '''
 
     roles = host.fact.postgresql_roles(
@@ -149,6 +166,19 @@ def database(
         pyinfra will not attempt to change existing databases - it will either
         create or drop databases, but not alter them (if the db exists this
         operation will make no changes).
+
+    Example:
+
+    .. code:: python
+
+        postgresql.database(
+            {'Create the pyinfra_stuff database'},
+            'pyinfra_stuff',
+            owner='pyinfra',
+            encoding='UTF8',
+            sudo_user='postgres',
+        )
+
     '''
 
     current_databases = host.fact.postgresql_databases(
@@ -203,11 +233,23 @@ def dump(
     postgresql_host=None, postgresql_port=None,
 ):
     '''
-    Dump a PostgreSQL database into a ``.sql`` file. Requires ``mysqldump``.
+    Dump a PostgreSQL database into a ``.sql`` file. Requires ``pg_dump``.
 
     + database: name of the database to dump
     + remote_filename: name of the file to dump the SQL to
     + postgresql_*: global module arguments, see above
+
+    Example:
+
+    .. code:: python
+
+        postgresql.dump(
+            {'Dump the pyinfra_stuff database'},
+            '/tmp/pyinfra_stuff.dump',
+            database='pyinfra_stuff',
+            sudo_user='postgres',
+        )
+
     '''
 
     yield '{0} > {1}'.format(make_psql_command(
@@ -234,6 +276,18 @@ def load(
     + database: name of the database to import into
     + remote_filename: the filename to read from
     + postgresql_*: global module arguments, see above
+
+    Example:
+
+    .. code:: python
+
+        postgresql.load(
+            {'Import the pyinfra_stuff dump into pyinfra_stuff_copy'},
+            '/tmp/pyinfra_stuff.dump',
+            database='pyinfra_stuff_copy',
+            sudo_user='postgres',
+        )
+
     '''
 
     yield '{0} < {1}'.format(make_psql_command(
