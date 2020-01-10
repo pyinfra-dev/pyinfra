@@ -30,13 +30,18 @@ dnf.rpm(
 
 if host.fact.linux_name in ['CentOS', 'RedHat']:
 
-    # Note: Ignore the error if already installed
-    dnf.rpm(
-        {'Install EPEL rpm to enable EPEL repo'},
-        'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
-        '{{  host.fact.linux_distribution.major }}.noarch.rpm',
-        ignore_errors=True,
-    )
+    packages = host.fact.rpm_packages
+    epel_installed = False
+    for p in packages.keys():
+        if p.startswith('epel-release'):
+            epel_installed = True
+
+    if not epel_installed:
+        dnf.rpm(
+            {'Install EPEL rpm to enable EPEL repo'},
+            'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
+            '{{  host.fact.linux_distribution.major }}.noarch.rpm',
+        )
 
     dnf.packages(
         {'Install Zabbix and htop'},
