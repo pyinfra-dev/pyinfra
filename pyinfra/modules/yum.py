@@ -58,7 +58,7 @@ def repo(
         yum.repo(
             {'Add the Docker CentOS repo'},
             name='DockerCE',
-            baseurl='https://download.docker.com/linux/centos/docker-ce.repo',
+            baseurl='https://download.docker.com/linux/centos/7/$basearch/stable',
         )
     '''
 
