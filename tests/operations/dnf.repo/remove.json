@@ -5,10 +5,10 @@
     },
     "facts": {
         "file": {
-            "/etc/dnf.repos.d/somerepo.repo": {
+            "/etc/yum.repos.d/somerepo.repo": {
                 "mode": 0
             }
         }
     },
-    "commands": ["rm -f /etc/dnf.repos.d/somerepo.repo"]
+    "commands": ["rm -f /etc/yum.repos.d/somerepo.repo"]
 }
