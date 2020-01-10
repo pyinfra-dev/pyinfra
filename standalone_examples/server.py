@@ -31,7 +31,7 @@ server.user(
 # multiple users
 for user in ['kevin', 'bob']:
     server.user(
-        {f'Ensure user {user} is removed'},
+        {'Ensure user {} is removed'.format(user)},
         user,
         present=False,
     )
@@ -44,7 +44,7 @@ server.group(
 # multiple groups
 for group in ['wheel', 'lusers']:
     server.group(
-        {f'Create the group {group}'},
+        {'Create the group {}'.format(group)},
         group,
     )
 

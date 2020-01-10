@@ -24,6 +24,6 @@ brew.tap(
 taps = ['includeos/includeos', 'ktr0731/evans']
 for tap in taps:
     brew.tap(
-        {f'Add brew tap {tap}'},
+        {'Add brew tap {}'.format(tap)},
         tap,
     )
