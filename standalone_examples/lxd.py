@@ -1,5 +1,4 @@
-from pyinfra import host
-from pyinfra.modules import lxd
+from pyinfra.modules import lxd, server
 
 SUDO = True
 
