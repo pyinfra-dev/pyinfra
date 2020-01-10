@@ -15,7 +15,7 @@ def check_docker_works(state, host):
     command = 'docker run hello-world'
     status, stdout, stderr = host.run_shell_command(state, command=command, sudo=SUDO)
     if not status or 'Hello from Docker!' not in stdout:
-        raise Exception(f'`{command}` did not work as expected')
+        raise Exception('`{}` did not work as expected'.format(command))
 
 
 if host.fact.linux_name == 'Ubuntu':
