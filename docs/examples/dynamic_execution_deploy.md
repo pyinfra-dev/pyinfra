@@ -19,8 +19,8 @@ apt.packages(
 
 def authorize_server(state, host):
     # Run a command on the server and collect status, stderr and stdout
-    status, stdout, stderr = host.run_shell_command('cat /var/lib/zerotier-one/identity.public')
-    assert status == 0  # ensure the command executed OK
+    status, stdout, stderr = host.run_shell_command(state, 'cat /var/lib/zerotier-one/identity.public')
+    assert status is True  # ensure the command executed OK
 
     # First line of output is the identity
     server_id = stdout[0]
