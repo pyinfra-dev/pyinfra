@@ -4,7 +4,19 @@ from pyinfra.modules import apt, init, python
 # Standalone example to show how to install Docker CE using
 # https://docs.docker.com/install/linux/docker-ce/ubuntu/
 
+# This script just shows how some pieces might fit together.
+# Please see https://github.com/Fizzadar/pyinfra-docker
+# for a more complete pyinfra docker installation.
+
 SUDO = True
+
+
+def check_docker_works(state, host):
+    command = 'docker run hello-world'
+    status, stdout, stderr = host.run_shell_command(state, command=command, sudo=SUDO)
+    if not status or 'Hello from Docker!' not in stdout:
+        raise Exception(f'`{command}` did not work as expected')
+
 
 if host.fact.linux_name == 'Ubuntu':
 
@@ -69,15 +81,4 @@ if host.fact.linux_name == 'Ubuntu':
         enabled=True,
     )
 
-    # TODO: is NotImplementedEror the right value?
-    # TODO: show the stdout if there is an error
-    # TODO: when you change the docker to dockerf (to make it not found),
-    #       the output is not in sequence; is that output or does it really
-    #       not run these sequentially?
-    stdout = host.fact.command('docker run hello-world')
-    if stdout is None or 'Hello from Docker!' not in stdout:
-        python.raise_exception(
-            {'Post docker validation'},
-            NotImplementedError,
-            '`docker run hello-world` did not work as expected',
-        )
+    python.call(check_docker_works)
