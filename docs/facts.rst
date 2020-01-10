@@ -1,7 +1,11 @@
 Facts Index
 ===========
 
-pyinfra uses facts to determine the existing state of a remote server. Operations use this information to generate commands which alter the state. Facts can be executed/tested via the command line:
+pyinfra uses facts to determine the existing state of a remote server. Operations use this information to generate commands which alter the state.
+
+facts are read-only and is populated at the beginning of the deploy.
+
+Facts can be executed/tested via the command line:
 
 .. code:: sh
 
