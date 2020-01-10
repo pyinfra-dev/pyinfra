@@ -19,3 +19,11 @@ brew.tap(
     {'Add a brew tap'},
     'ktr0731/evans',
 )
+
+# multiple taps
+taps = ['includeos/includeos', 'ktr0731/evans']
+for tap in taps:
+    brew.tap(
+        {f'Add brew tap {tap}'},
+        tap,
+    )

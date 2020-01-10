@@ -141,7 +141,7 @@ def tap(state, host, name, present=True):
     + name: the name of the tasp
     + present: whether this tap should be present or not
 
-    Example:
+    Examples:
 
     .. code:: python
 
@@ -149,6 +149,15 @@ def tap(state, host, name, present=True):
             {'Add a brew tap'},
             'includeos/includeos',
         )
+
+        # multiple taps
+        taps = ['includeos/includeos', 'ktr0731/evans']
+        for tap in taps:
+            brew.tap(
+                {f'Add brew tap {tap}'},
+                tap,
+            )
+
     '''
 
     taps = host.fact.brew_taps
