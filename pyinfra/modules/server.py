@@ -290,6 +290,8 @@ def crontab(
             '/bin/tar cf /tmp/etc_bup.tar /etc',
             name='backup_etc',
             day_of_week=0,
+            hour=1,
+            minute=0,
         )
 
     '''
