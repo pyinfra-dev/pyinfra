@@ -95,7 +95,7 @@ def packages(
 
     virtualenv_kwargs = virtualenv_kwargs or {}
 
-    # Ensure any virutalenv
+    # Ensure any virtualenv
     if virtualenv:
         yield _virtualenv(state, host, virtualenv, **virtualenv_kwargs)
 

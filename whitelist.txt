@@ -248,7 +248,6 @@ up2
 v0
 venv
 virtualenv
-virutalenv
 vm
 vv
 vz
