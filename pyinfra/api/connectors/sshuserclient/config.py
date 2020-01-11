@@ -7,10 +7,10 @@ import glob
 import os
 import re
 
-from paramiko import SSHConfig as ParamkoSSHConfig
+from paramiko import SSHConfig as ParamikoSSHConfig
 
 
-class SSHConfig(ParamkoSSHConfig):
+class SSHConfig(ParamikoSSHConfig):
     '''
     an SSHConfig that supports includes directives
     https://github.com/paramiko/paramiko/pull/1194

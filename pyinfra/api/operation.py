@@ -99,7 +99,7 @@ def add_limited_op(state, op_func, hosts, *args, **kwargs):
 def _get_call_location():
     frames = stack()
 
-    # Frist two frames are this and the caller below, so get the third item on
+    # First two frames are this and the caller below, so get the third item on
     # the frame list, which should be the call to the actual operation.
     frame = getframeinfo(frames[2][0])
 

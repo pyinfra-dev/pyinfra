@@ -118,7 +118,7 @@ class Inventory(object):
                         'Invalid connector: {0}'.format(connector_name),
                     )
 
-                # Execution connector? Simple, just set it for ther host
+                # Execution connector? Simple, just set it for their host
                 if connector_name in EXECUTION_CONNECTORS:
                     executor = EXECUTION_CONNECTORS[connector_name]
 

@@ -126,7 +126,7 @@ def set(state, host, ctid, save=True, **settings):
         args.append('--save')
 
     for key, value in six.iteritems(settings):
-        # Handle list values (eg --nameserver X --nameserver X)
+        # Handle list values (e.g. --nameserver X --nameserver X)
         if isinstance(value, list):
             args.extend('--{0} {1}'.format(key, v) for v in value)
         else:

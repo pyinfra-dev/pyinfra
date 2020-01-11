@@ -16,7 +16,7 @@ class BrewPackages(FactBase):
     '''
 
     command = 'brew list --versions'
-    deafult = dict
+    default = dict
 
     def process(self, output):
         return parse_packages(BREW_REGEX, output)
