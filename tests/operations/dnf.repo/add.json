@@ -7,12 +7,12 @@
     },
     "facts": {
         "file": {
-            "/etc/dnf.repos.d/somerepo.repo": {}
+            "/etc/yum.repos.d/somerepo.repo": {}
         }
     },
     "commands": [[
         "upload",
         "[somerepo]\nname=description\nbaseurl=http://baseurl\nenabled=1\ngpgcheck=0\ngpgkey=test\n",
-            "/etc/dnf.repos.d/somerepo.repo"
+            "/etc/yum.repos.d/somerepo.repo"
     ]]
 }

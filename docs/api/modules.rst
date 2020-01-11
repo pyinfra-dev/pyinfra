@@ -90,8 +90,8 @@ passed (as a ``list`` of lines) to the ``process`` handler to generate fact data
 Facts can output any data structure, normally a ``list`` or ``dict``. They often make
 heavy use of regex to parse the output.
 
-Example: getting the sha1 of a file
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Example: getting the list of files in a directory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This fact returns a list of files found in a given directory.
 

@@ -78,3 +78,4 @@ That's the basics of pyinfra! Possible next steps:
 + If you like to dive right into the code check out `the example deploys on GitHub <https://github.com/Fizzadar/pyinfra/tree/master/example>`_
 + You can also read the :doc:`building a deploy guide <./deploys>` which covers pyinfra's deploy features
 + Or :doc:`the CLI user guide <./cli>` which covers ad-hoc usage of pyinfra
++ Or look in the standalone_examples directory

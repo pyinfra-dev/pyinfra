@@ -1,5 +1,5 @@
 '''
-Mange gem packages.
+Manage gem packages.
 '''
 
 from pyinfra.api import operation
@@ -18,6 +18,16 @@ def packages(state, host, packages=None, present=True, latest=False):
 
     Versions:
         Package versions can be pinned like gem: ``<pkg>:<version>``.
+
+    Example:
+
+    .. code:: python
+
+        # Note: Assumes that 'gem' is installed.
+        gem.packages(
+            {'Install rspec'},
+            'rspec',
+        )
     '''
 
     yield ensure_packages(

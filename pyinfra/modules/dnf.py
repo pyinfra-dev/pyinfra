@@ -22,6 +22,16 @@ def key(state, host, key):
 
     Note:
         always returns one command, not state checking
+
+    Example:
+
+    .. code:: python
+
+        dnf.key(
+            {'Add the Docker CentOS gpg key'},
+            'https://download.docker.com/linux/{{ host.fact.lsb_release.id|lower }}/gpg',
+        )
+
     '''
 
     yield 'rpm --import {0}'.format(key)
@@ -41,12 +51,22 @@ def repo(
     + description: optional verbose description
     + gpgcheck: whether set ``gpgcheck=1``
     + gpgkey: the URL to the gpg key for this repo
+
+    Example:
+
+    .. code:: python
+
+        dnf.repo(
+            {'Add the Docker CentOS repo'},
+            name='DockerCE',
+            baseurl='https://download.docker.com/linux/centos/7/$basearch/stable',
+        )
     '''
 
     # Description defaults to name
     description = description or name
 
-    filename = '/etc/dnf.repos.d/{0}.repo'.format(name)
+    filename = '/etc/yum.repos.d/{0}.repo'.format(name)
 
     # If we don't want the repo, just remove any existing file
     if not present:
@@ -79,11 +99,24 @@ def rpm(state, host, source, present=True):
     Add/remove ``.rpm`` file packages.
 
     + source: filename or URL of the ``.rpm`` package
-    + present: whether ore not the package should exist on the system
+    + present: whether or not the package should exist on the system
 
     URL sources with ``present=False``:
-        If the ``.rpm`` file isn't downloaded, pyinfra can't remove any existing
+        If the ``.rpm`` file is not downloaded, pyinfra cannot remove any existing
         package as the file won't exist until mid-deploy.
+
+    Example:
+
+    .. code:: python
+
+        # Note: Ignore the error if already installed
+        dnf.rpm(
+           {'Install EPEL rpm to enable EPEL repo'},
+           'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
+           '{{  host.fact.linux_distribution.major }}.noarch.rpm',
+           ignore_errors=True,
+        )
+
     '''
 
     # If source is a url
@@ -159,6 +192,24 @@ def packages(
 
     Versions:
         Package versions can be pinned like dnf: ``<pkg>-<version>``
+
+    Examples:
+
+    .. code:: python
+
+        # Update package list and install packages
+        dnf.packages(
+            {'Install Vim and Vim enhanced'},
+            ['vim-enhanced', 'vim'],
+            update=True,
+        )
+
+        # Install the latest versions of packages (always check)
+        dnf.packages(
+            {'Install latest Vim'},
+            ['vim'],
+            latest=True,
+        )
     '''
 
     if clean:
