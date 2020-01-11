@@ -124,7 +124,7 @@ def build_facts():
 
                 args_string = '\n{0}\n    '.format(',\n'.join(arg_lines))
 
-            # Atttach the code block
+            # Attach the code block
             lines.append('''
 .. code:: python
 
