@@ -86,7 +86,7 @@ def build_facts():
             lines.append(_title_line('~', title))
             lines.append('')
 
-            # Atttach the code block
+            # Attach the code block
             lines.append('''
 .. code:: python
 

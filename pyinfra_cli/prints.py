@@ -246,7 +246,7 @@ def print_results(state):
             rows.append((logger.info, 'Ungrouped:'))
 
         for host in hosts:
-            # Didn't conenct to this host?
+            # Didn't connect to this host?
             if host not in state.activated_hosts:
                 rows.append((logger.info, [
                     host.style_print_prefix('red', bold=True),
