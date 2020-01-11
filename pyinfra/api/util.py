@@ -170,7 +170,7 @@ def pop_op_kwargs(state, kwargs):
         'sudo': get_kwarg('sudo', state.config.SUDO),
         'sudo_user': get_kwarg('sudo_user', state.config.SUDO_USER),
         'su_user': get_kwarg('su_user', state.config.SU_USER),
-        # Whether to preserve ENVars when sudoing (eg SSH forward agent socket)
+        # Whether to preserve ENVars when sudoing (e.g. SSH forward agent socket)
         'preserve_sudo_env': get_kwarg(
             'preserve_sudo_env', state.config.PRESERVE_SUDO_ENV,
         ),

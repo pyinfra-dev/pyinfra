@@ -45,7 +45,7 @@ def include(filename, hosts=False, when=True):
     try:
         # Fixes a circular import because `pyinfra.local` is really a CLI
         # only thing (so should be `pyinfra_cli.local`). It is kept here
-        # to maintain backwards compatability and the nicer public import
+        # to maintain backwards compatibility and the nicer public import
         # (ideally users never need to import from `pyinfra_cli`).
 
         from pyinfra_cli.config import extract_file_config
@@ -92,7 +92,7 @@ def shell(commands, splitlines=False, ignore_errors=False):
     all_stdout = []
 
     # Checking for pseudo_state means this function works outside a deploy
-    # eg the vagrant connector.
+    # e.g.: the vagrant connector.
     print_output = (
         pseudo_state.print_output
         if pseudo_state.isset()

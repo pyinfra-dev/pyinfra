@@ -139,7 +139,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
     # Locks are used to maintain order.
     fact_hash = make_hash((name, args, sudo, sudo_user, su_user, ignore_errors))
 
-    # Already got this fact? Unlock and return 'em
+    # Already got this fact? Unlock and return them
     current_facts = state.facts.get(fact_hash, {})
     if current_facts:
         if not ensure_hosts or all(
@@ -168,7 +168,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
             command = fact.command
 
             if ismethod(command) or isfunction(command):
-                # Generate actual arguments by pasing strings as jinja2 templates
+                # Generate actual arguments by passing strings as jinja2 templates
                 host_args = [get_arg_value(state, host, arg) for arg in args]
 
                 command = command(*host_args)

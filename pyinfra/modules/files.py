@@ -670,7 +670,7 @@ def link(
     # Exists and want to ensure it's state
     elif (assume_present or info) and present:
         # If we have an absolute name - prepend to any non-absolute values from the fact
-        # and/or the soruce.
+        # and/or the source.
         if path.isabs(name):
             link_dirname = path.dirname(name)
 

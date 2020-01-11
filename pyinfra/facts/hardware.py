@@ -148,7 +148,7 @@ def _parse_regexes(regexes, lines):
                     target_group[group] = matches.group(i + 1)
 
                 # COMPAT
-                # TODO: remove (for forwards compatability, see above)
+                # TODO: remove (for forwards compatibility, see above)
                 if 'size' in target_group:
                     target_group['mask_bits'] = target_group['size']
 
