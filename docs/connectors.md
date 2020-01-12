@@ -3,6 +3,7 @@
 Connectors enable pyinfra to integrate with other tools out of the box. Connectors can do two things:
 
 + Generate inventory hosts and data (`@vagrant`)
++ Generate inventory hosts and data (`@mech`)
 + Modify how commands are executed (`@local`)
 + Both of the above (`@docker`)
 
