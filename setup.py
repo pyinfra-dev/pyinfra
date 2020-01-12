@@ -42,7 +42,7 @@ TEST_REQUIRES = (
     'flake8',
     'flake8-commas',
     'flake8-quotes',
-    'flake8-spellcheck',
+    'flake8-spellcheck ; python_version >= "3"',
     'flake8-import-order',
 )
 
