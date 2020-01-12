@@ -5,12 +5,11 @@ SUDO = True
 
 # Note: Using linux_distribution fact so running from docker
 # will show valid name, otherwise could just use host.fact.linux_name
-ld = host.fact.linux_distribution
-#print(ld)
-linux_name = ld.get('name', '')
-#rm = ld.get('release_meta', '')
-#code_name = rm.get('DISTRIB_CODENAME', '')
-#print(linux_name, code_name)
+linux_distribution = host.fact.linux_distribution
+linux_name = linux_distribution.get('name', '')
+release_meta = linux_distribution.get('release_meta', '')
+code_name = release_meta.get('DISTRIB_CODENAME', '')
+print(linux_name, code_name)
 
 if linux_name in ['Debian', 'Ubuntu']:
 
