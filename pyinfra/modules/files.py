@@ -524,7 +524,7 @@ def template(
     **data
 ):
     '''
-    Generate a template and write it to the remote system.
+    Generate a template using jinja2 and write it to the remote system.
 
     + template_filename: local template filename
     + remote_filename: remote filename
@@ -541,6 +541,9 @@ def template(
     Notes:
        Common convention is to store templates in a "templates" directory and
        have a filename suffix with '.j2' (for jinja2).
+
+       For information on the template syntax, see
+       `the jinja2 docs <https://jinja.palletsprojects.com>`_.
 
     Example:
 
