@@ -400,6 +400,10 @@ def get(
     if not remote_file or force:
         yield ('download', remote_filename, local_filename)
 
+    # No local file, so always download
+    elif not path.exists(local_filename):
+        yield ('download', remote_filename, local_filename)
+
     # Remote file exists - check if it matches our local
     else:
         local_sum = get_file_sha1(local_filename)
