@@ -5,12 +5,12 @@ Manage dnf packages and repositories. Note that dnf package names are case-sensi
 from __future__ import unicode_literals
 
 from six import StringIO
-from six.moves.urllib.parse import urlparse
 
 from pyinfra.api import operation
 
 from . import files
 from .util.packaging import ensure_packages
+from .yum import packages as yum_packages
 
 
 @operation
@@ -94,71 +94,12 @@ def repo(
 
 
 @operation
-def rpm(state, host, source, present=True):
-    '''
-    Add/remove ``.rpm`` file packages.
+def rpm(state, host, *args, **kwargs):
+    yield yum_packages(state, host, *args, **kwargs)
 
-    + source: filename or URL of the ``.rpm`` package
-    + present: whether or not the package should exist on the system
-
-    URL sources with ``present=False``:
-        If the ``.rpm`` file is not downloaded, pyinfra cannot remove any existing
-        package as the file won't exist until mid-deploy.
-
-    Example:
-
-    .. code:: python
-
-        # Note: Ignore the error if already installed
-        dnf.rpm(
-           {'Install EPEL rpm to enable EPEL repo'},
-           'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
-           '{{  host.fact.linux_distribution.major }}.noarch.rpm',
-           ignore_errors=True,
-        )
-
-    '''
-
-    # If source is a url
-    if urlparse(source).scheme:
-        # Generate a temp filename (with .rpm extension to please dnf)
-        temp_filename = '{0}.rpm'.format(state.get_temp_filename(source))
-
-        # Ensure it's downloaded
-        yield files.download(state, host, source, temp_filename)
-
-        # Override the source with the downloaded file
-        source = temp_filename
-
-    # Check for file .rpm information
-    info = host.fact.rpm_package(source)
-    exists = False
-
-    # We have info!
-    if info:
-        current_packages = host.fact.rpm_packages
-
-        if (
-            info['name'] in current_packages
-            and info['version'] in current_packages[info['name']]
-        ):
-            exists = True
-
-    # Package does not exist and we want?
-    if present and not exists:
-        # If we had info, always install
-        if info:
-            yield 'rpm -U {0}'.format(source)
-
-        # This happens if we download the package mid-deploy, so we have no info
-        # but also don't know if it's installed. So check at runtime, otherwise
-        # the install will fail.
-        else:
-            yield 'rpm -qa | grep `rpm -qp {0}` || rpm -U {0}'.format(source)
-
-    # Package exists but we don't want?
-    if exists and not present:
-        yield 'dnf remove -y {0}'.format(info['name'])
+rpm._pyinfra_op.__doc__ = (  # noqa: E305 (duplicate of `yum.rpm`)
+    yum_packages._pyinfra_op.__doc__.replace('yum', 'dnf')
+)
 
 
 @operation

@@ -69,10 +69,12 @@ class UnexpectedError(click.ClickException):
         exception = ''.join(format_exception(self.e.__class__, self.e, None))
         sys.stderr.write(exception)
 
-        # Write the full trace + exception to pyinfra-debug.log
         with open('pyinfra-debug.log', 'w') as f:
             f.write(traceback)
             f.write(exception)
+
+        logger.debug(traceback)
+        logger.debug(exception)
 
         print()
         print('--> The full traceback has been written to {0}'.format(
