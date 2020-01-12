@@ -29,20 +29,11 @@ yum.rpm(
 )
 
 if host.fact.linux_name in ['CentOS', 'RedHat']:
-
-    packages = host.fact.rpm_packages
-    epel_installed = False
-    for p in packages.keys():
-        if p.startswith('epel-release'):
-            epel_installed = True
-
-    if not epel_installed:
-        yum.rpm(
-            {'Install EPEL rpm to enable EPEL repo'},
-            'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
-            '{{  host.fact.linux_distribution.major }}.noarch.rpm',
-            ignore_errors=True,
-        )
+    yum.rpm(
+        {'Install EPEL rpm to enable EPEL repo'},
+        'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
+        '{{  host.fact.linux_distribution.major }}.noarch.rpm',
+    )
 
     yum.packages(
         {'Install Zabbix and htop'},
