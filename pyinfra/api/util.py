@@ -438,7 +438,7 @@ class get_file_io(object):
 
     close = False
 
-    def __init__(self, filename_or_io):
+    def __init__(self, filename_or_io, mode='rb'):
         if not (
             # Check we can be read
             hasattr(filename_or_io, 'read')
@@ -450,6 +450,7 @@ class get_file_io(object):
             ))
 
         self.filename_or_io = filename_or_io
+        self.mode = mode
 
     def __enter__(self):
         # If we have a read attribute, just use the object as-is
@@ -458,7 +459,7 @@ class get_file_io(object):
 
         # Otherwise, assume a filename and open it up
         else:
-            file_io = open(self.filename_or_io, 'rb')
+            file_io = open(self.filename_or_io, self.mode)
 
             # Attach to self for closing on __exit__
             self.file_io = file_io
