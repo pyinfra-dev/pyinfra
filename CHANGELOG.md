@@ -1,3 +1,9 @@
+# v0.12.1
+
++ Add `flake8-spellcheck` and fix spellings throughout (@mkinney)
++ Add large number of example deploys (@mkinney)
++ Fix multiple issues with the `files.get` operation
+
 # v0.12
 
 + Add **dnf** module (@mkinney), matching existing yum operations
