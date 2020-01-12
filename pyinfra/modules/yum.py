@@ -146,13 +146,13 @@ def rpm(state, host, source, present=True):
     if present and not exists:
         # If we had info, always install
         if info:
-            yield 'rpm -U {0}'.format(source)
+            yield 'rpm -i {0}'.format(source)
 
         # This happens if we download the package mid-deploy, so we have no info
         # but also don't know if it's installed. So check at runtime, otherwise
         # the install will fail.
         else:
-            yield 'rpm -qa | grep `rpm -qp {0}` || rpm -U {0}'.format(source)
+            yield 'rpm -q `rpm -qp {0}` || rpm -i {0}'.format(source)
 
     # Package exists but we don't want?
     if exists and not present:

@@ -5,7 +5,9 @@
     },
     "facts": {
         "git_config": {
-            "/my/repo": {}
+            "/my/repo": {
+                "another_key": "value"
+            }
         }
     },
     "commands": [
