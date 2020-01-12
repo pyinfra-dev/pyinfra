@@ -195,6 +195,7 @@ class patch_files(object):
 
     def __enter__(self):
         self.patches = [
+            patch('pyinfra.modules.files.path.exists', self.exists),
             patch('pyinfra.modules.files.path.isfile', self.isfile),
             patch('pyinfra.modules.files.path.isdir', self.isdir),
             patch('pyinfra.modules.files.walk', self.walk),
@@ -216,6 +217,9 @@ class patch_files(object):
             return FakeFile(filename, self.files_data.get(filename))
 
         raise IOError('Missing FakeFile: {0}'.format(filename))
+
+    def exists(self, filename, *args):
+        return filename in self.files or filename in self.directories
 
     def isfile(self, filename, *args):
         return filename in self.files
