@@ -1,0 +1,11 @@
+This file is maintained by pyinfra
+
+Example host templating values:
+hostname: {{ host.fact.hostname }}
+os: {{ host.fact.os }}
+arch: {{ host.fact.arch }}
+cpus: {{ host.fact.cpus }}
+os_version: {{ host.fact.os_version }}
+
+deb_packages: {{ host.fact.deb_packages|join(', ') }}
+

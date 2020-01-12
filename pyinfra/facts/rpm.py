@@ -43,7 +43,7 @@ class RpmPackage(FactBase):
     '''
 
     def command(self, name):
-        return 'rpm -qp {0}'.format(name)
+        return 'rpm -qp {0} 2> /dev/null || rpm -q {0}'.format(name)
 
     def process(self, output):
         for line in output:

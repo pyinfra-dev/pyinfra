@@ -6,10 +6,11 @@
             "something.rpm": {
                 "name": "something",
                 "version": "abc"
-            }
+            },
+            "something": null
         }
     },
     "commands": [
-        "rpm -U something.rpm"
+        "rpm -i something.rpm"
     ]
 }

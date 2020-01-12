@@ -12,6 +12,6 @@
         }
     },
     "commands": [
-        "# If the file now exists\n                if [ -f \"somefile\" ]; then\n                    # Grep for the line, sed if matches\n                    (grep \"^.*match_line.*$\" \"somefile\" && sed -i=\"\" \"s/^.*match_line.*$/replace_line/abc\" somefile) ||                     # Else echo\n                    echo \"replace_line\" >> somefile\n\n                # No file, just echo\n                else\n                    echo \"replace_line\" >> somefile\n                fi"
+        "# If the file now exists\n                if [ -f \"somefile\" ]; then\n                    # Grep for the line, sed if matches\n                    (grep \"^.*match_line.*$\" \"somefile\" && sed -i=\"\" \"s/^.*match_line.*$/replace_line/abc\" somefile) 2> /dev/null ||                     # Else echo\n                    echo \"replace_line\" >> somefile\n\n                # No file, just echo\n                else\n                    echo \"replace_line\" >> somefile\n                fi"
     ]
 }

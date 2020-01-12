@@ -1,7 +1,7 @@
 Example Deploys
 ===============
 
-If you're getting started with pyinfra checkout `the example deploy on Github <https://github.com/Fizzadar/pyinfra/tree/master/example>`_ which should properly introduce the file/folder structure as well as operation basics.
+If you're getting started with pyinfra checkout `the examples on Github <https://github.com/Fizzadar/pyinfra/tree/master/examples>`_ which should properly introduce the file/folder structure as well as operation basics.
 
 Included here is a set of documented example deploys highlighting common patterns and best practices:
 

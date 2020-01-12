@@ -11,7 +11,7 @@ dist/
 venv/
 .cache/
 
-example/.vagrant*
+.vagrant*
 
 .coverage
 

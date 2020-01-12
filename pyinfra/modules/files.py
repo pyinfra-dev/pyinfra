@@ -166,7 +166,7 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
                 # If the file now exists
                 if [ -f "{target}" ]; then
                     # Grep for the line, sed if matches
-                    (grep "{match_line}" "{target}" && {sed_replace_command}) || \
+                    (grep "{match_line}" "{target}" && {sed_replace_command}) 2> /dev/null || \
                     # Else echo
                     {echo_command}
 

@@ -42,7 +42,7 @@ def config(
 
     existing_config = host.fact.git_config(repo)
 
-    if key not in existing_config or existing_config[key] != value:
+    if not existing_config or existing_config.get(key) != value:
         if repo is None:
             yield 'git config --global {0} "{1}"'.format(key, value)
         else:
