@@ -51,6 +51,7 @@ def key(state, host, key=None, keyserver=None, keyid=None):
 
     .. code:: python
 
+        # Note: If using URL, wget is assumed to be installed.
         apt.key(
             {'Add the Docker apt gpg key'},
             key='https://download.docker.com/linux/ubuntu/gpg',
@@ -79,6 +80,16 @@ def repo(state, host, name, present=True, filename=None):
     + present: whether the repo should exist on the system
     + filename: optional filename to use ``/etc/apt/sources.list.d/<filename>.list``. By
       default uses ``/etc/apt/sources.list``.
+
+    Example:
+
+    .. code:: python
+
+        apt.repo(
+            {'Install VirtualBox repo'},
+            'deb https://download.virtualbox.org/virtualbox/debian bionic contrib',
+        )
+
     '''
 
     # Get the target .list file to manage
@@ -124,6 +135,7 @@ def ppa(state, host, name, present=True):
 
     .. code:: python
 
+        # Note: Assumes software-properties-common is installed.
         apt.ppa(
             {'Add the Bitcoin ppa'},
             'ppa:bitcoin/bitcoin',
@@ -154,6 +166,16 @@ def deb(state, host, source, present=True, force=False):
     URL sources with ``present=False``:
         If the ``.deb`` file isn't downloaded, pyinfra can't remove any existing
         package as the file won't exist until mid-deploy.
+
+    Example:
+
+    .. code:: python
+
+        # Note: Assumes wget is installed.
+        apt.deb(
+            {'Install Chrome via deb'},
+            'https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb',
+        )
     '''
 
     # If source is a url
@@ -281,12 +303,14 @@ def packages(
             ['asterisk', 'vim'],
             update=True,
         )
+
         # Install the latest versions of packages (always check)
         apt.packages(
             {'Install latest Vim'},
             ['vim'],
             latest=True,
         )
+
     '''
 
     if update:
