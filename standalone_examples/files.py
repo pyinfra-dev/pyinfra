@@ -22,13 +22,13 @@ files.put(
 # prepare to do some maintenance
 maintenance_line = 'SYSTEM IS DOWN FOR MAINTENANCE'
 # files.line(
-#     {'Add the down-for-maintence line in /etc/motd'},
+#     {'Add the down-for-maintenance line in /etc/motd'},
 #     '/etc/motd',
 #     maintenance_line,
 # )
 
 # do some maintenance...
-# Then, after the mantenance is done, remove the maintenance line
+# Then, after the maintenance is done, remove the maintenance line
 files.line(
     {'Remove the down-for-maintenance line in /etc/motd'},
     '/etc/motd',

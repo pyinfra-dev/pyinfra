@@ -1,4 +1,4 @@
-# piynfra
+# pyinfra
 # File: example/api_deploy.py
 # Desc: example of how to deploy via the pyinfra API
 

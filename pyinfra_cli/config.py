@@ -20,7 +20,7 @@ def extract_file_config(filename, config=None):
         if not isinstance(node, ast.Assign):
             continue
 
-        # Named Python objects (eg True/False/None)
+        # Named Python objects (e.g. True/False/None)
         if isinstance(node.value, ast.Name):
             if node.value.id == 'True':
                 value = True
@@ -45,7 +45,7 @@ def extract_file_config(filename, config=None):
         else:
             continue
 
-        # If one of the assignments matches a config variable (eg SUDO = True)
+        # If one of the assignments matches a config variable (e.g. SUDO = True)
         # then assign it to the config object!
         for target in node.targets:
             if target.id.isupper() and hasattr(Config, target.id):

@@ -80,7 +80,7 @@ def ensure_packages(
             if isinstance(package, six.string_types) and package not in current_packages:
                 diff_packages.append(package)
 
-            # Present packages w/o version spec ified - for upgrade if latest
+            # Present packages w/o version specified - for upgrade if latest
             if isinstance(package, six.string_types) and package in current_packages:
                 upgrade_packages.append(package)
 
