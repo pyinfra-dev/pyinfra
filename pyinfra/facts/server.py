@@ -216,6 +216,49 @@ class LsbRelease(FactBase):
         return items
 
 
+class OsRelease(FactBase):
+    '''
+    Returns a dictionary of release information from /etc/os-release.
+
+    .. code:: python
+
+        {
+            "NAME": "Ubuntu",
+            "VERSION": "18.04.3 LTS (Bionic Beaver)",
+            "ID": "ubuntu",
+            "ID_LIKE": "debian",
+            "PRETTY_NAME": "Ubuntu 18.04.3 LTS",
+            "VERSION_ID": "18.04",
+            "HOME_URL": "https://www.ubuntu.com/",
+            "SUPPORT_URL": "https://help.ubuntu.com/",
+            "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+            "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+            "VERSION_CODENAME": "bionic",
+            "UBUNTU_CODENAME": "bionic",
+            ...
+        }
+    '''
+
+    command = 'cat /etc/os-release'
+
+    @staticmethod
+    def process(output):
+        items = {}
+
+        for line in output:
+            if '=' not in line:
+                continue
+
+            key, value = line.split('=', 1)
+
+            # remove quotes and trailing newline
+            value = value.replace('"', '').strip()
+
+            items[key] = value
+
+        return items
+
+
 class Sysctl(FactBase):
     '''
     Returns a dictionary of sysctl settings and values.
