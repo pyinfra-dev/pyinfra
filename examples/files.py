@@ -53,7 +53,7 @@ files.sync(
 
 files.get(
     {'Download a file from a remote'},
-    '/etc/centos-release',
+    '/etc/os-release',
     '/tmp/whocares',
 )
 
