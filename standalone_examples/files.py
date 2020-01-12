@@ -51,12 +51,11 @@ files.sync(
     '/tmp/tempdir',
 )
 
-# TODO: not sure if bug or not
-# files.get(
-#     {'Download a file from a remote'},
-#     '/etc/centos-release',
-#     '/tmp/whocares',
-# )
+files.get(
+    {'Download a file from a remote'},
+    '/etc/centos-release',
+    '/tmp/whocares',
+)
 
 files.template(
     {'Create a templated file'},

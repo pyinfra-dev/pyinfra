@@ -189,6 +189,7 @@ pathname
 pipelining
 pkey
 ppa
+ppk
 pramga
 psql
 pty

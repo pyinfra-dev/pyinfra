@@ -46,6 +46,16 @@ def key(state, host, key=None, keyserver=None, keyid=None):
 
     keyserver/id:
         These must be provided together.
+
+    Example:
+
+    .. code:: python
+
+        apt.key(
+            {'Add the Docker apt gpg key'},
+            key='https://download.docker.com/linux/ubuntu/gpg',
+        )
+
     '''
 
     if key:
@@ -109,6 +119,16 @@ def ppa(state, host, name, present=True):
 
     Note:
         requires ``apt-add-repository`` on the remote host
+
+    Example:
+
+    .. code:: python
+
+        apt.ppa(
+            {'Add the Bitcoin ppa'},
+            'ppa:bitcoin/bitcoin',
+        )
+
     '''
 
     if present:
