@@ -37,6 +37,21 @@ pyinfra @vagrant/my-vm-name deploy.py
 pyinfra @vagrant/my-vm-name,@vagrant/another-vm-name deploy.py
 ```
 
+## `@mech`
+
+The `@mech` connector reads the current mech status and generates an inventory for any running VMs.
+
+```sh
+# Run on all hosts
+pyinfra @mech deploy.py
+
+# Run on a specific VM
+pyinfra @mech/my-vm-name deploy.py
+
+# Run on multiple named VMs
+pyinfra @mech/my-vm-name,@mech/another-vm-name deploy.py
+```
+
 ## `@docker`
 
 **Note**: this connector is a work in progress! It works but may leave containers leftover, and some operations may fail.
