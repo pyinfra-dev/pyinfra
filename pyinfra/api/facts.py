@@ -37,6 +37,10 @@ def is_fact(name):
     return name in FACTS
 
 
+def get_fact_class(name):
+    return FACTS[name]
+
+
 def get_fact_names():
     '''
     Returns a list of available facts in camel_case format.
@@ -102,7 +106,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
     '''
 
     # Create an instance of the fact
-    fact = FACTS[name]()
+    fact = get_fact_class(name)()
 
     if isinstance(fact, ShortFactBase):
         return get_short_facts(state, fact, args=args, ensure_hosts=ensure_hosts)
