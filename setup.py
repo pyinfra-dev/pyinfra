@@ -58,6 +58,9 @@ DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
     'wheel',
     'twine==3.1.0',
 
+    # Dev
+    'pre-commit==1.21.0',
+
     # Dev debugging
     'ipdb==0.10.3',
     'ipdbplugin==1.4.5',

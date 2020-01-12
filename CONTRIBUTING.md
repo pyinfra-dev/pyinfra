@@ -3,7 +3,7 @@
 Third party pull requests help expand pyinfra's functionality and are essential to it's continued growth. This guide should help get you started adding additional modules/facts to pyinfra.
 
 
-## Dev setup
+## Dev Setup
 
 ```sh
 # Create a virtualenv
@@ -14,8 +14,17 @@ git clone git@github.com:Fizzadar/pyinfra.git
 
 # Install the package in editable mode with development requirements
 pip install -e .[dev]
+
+# Configure git to use pre-commit hook
+flake8 --install-hook git
 ```
 
+## Running pyinfra from local directory
+If you want to make changes to pyinfra and test it, you can follow the Dev Setup steps above then run:
+
+```sh
+python setup.py install
+```
 
 ## Tests
 
