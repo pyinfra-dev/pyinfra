@@ -1,6 +1,6 @@
 {
     "arg": "myfile",
-    "command": "sha1sum myfile || sha1 myfile",
+    "command": "sha1sum myfile 2> /dev/null || sha1 myfile",
     "output": [
         "85746ef87ddabd9fdf4836c5835e34a030d2a141 myfile"
     ],

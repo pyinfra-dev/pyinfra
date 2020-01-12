@@ -9,8 +9,7 @@ from six import StringIO
 from pyinfra.api import operation
 
 from . import files
-from .util.packaging import ensure_packages
-from .yum import packages as yum_packages
+from .util.packaging import ensure_packages, ensure_rpm
 
 
 @operation
@@ -94,12 +93,29 @@ def repo(
 
 
 @operation
-def rpm(state, host, *args, **kwargs):
-    yield yum_packages(state, host, *args, **kwargs)
+def rpm(state, host, source, present=True):
+    '''
+    Add/remove ``.rpm`` file packages.
 
-rpm._pyinfra_op.__doc__ = (  # noqa: E305 (duplicate of `yum.rpm`)
-    yum_packages._pyinfra_op.__doc__.replace('yum', 'dnf')
-)
+    + source: filename or URL of the ``.rpm`` package
+    + present: whether ore not the package should exist on the system
+
+    URL sources with ``present=False``:
+        If the ``.rpm`` file isn't downloaded, pyinfra can't remove any existing
+        package as the file won't exist until mid-deploy.
+
+    Example:
+
+    .. code:: python
+
+        dnf.rpm(
+           {'Install EPEL rpm to enable EPEL repo'},
+           'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
+           '{{  host.fact.linux_distribution.major }}.noarch.rpm',
+        )
+    '''
+
+    yield ensure_rpm(state, host, files, source, present, 'dnf')
 
 
 @operation

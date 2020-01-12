@@ -18,7 +18,13 @@ from pyinfra import (
 from pyinfra.api import State
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import NoGroupError, PyinfraError
-from pyinfra.api.facts import get_facts, is_fact
+from pyinfra.api.facts import (
+    get_fact_class,
+    get_fact_names,
+    get_facts,
+    is_fact,
+    ShortFactBase,
+)
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.util import FallbackDict
@@ -152,6 +158,7 @@ def cli(*args, **kwargs):
     \b
     # Run one or more facts on the inventory
     pyinfra INVENTORY fact linux_distribution [users]...
+    pyinfra INVENTORY all-facts
     '''
 
     main(*args, **kwargs)
@@ -269,8 +276,23 @@ def _main(
             deploy_dir = potential_deploy_dir
             break
 
+    # List *all* facts
+    if operations[0] == 'all-facts':
+        command = 'fact'
+        fact_names = []
+
+        for fact_name in get_fact_names():
+            fact_class = get_fact_class(fact_name)
+            if (
+                not issubclass(fact_class, ShortFactBase)
+                and not callable(fact_class.command)
+            ):
+                fact_names.append(fact_name)
+
+        operations = [(name, None) for name in fact_names]
+
     # List facts
-    if operations[0] == 'fact':
+    elif operations[0] == 'fact':
         command = 'fact'
 
         fact_names = operations[1:]

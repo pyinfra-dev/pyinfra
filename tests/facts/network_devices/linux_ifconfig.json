@@ -1,5 +1,5 @@
 {
-    "command": "ip addr show || ifconfig",
+    "command": "ip addr show 2> /dev/null || ifconfig",
     "output": [
         "eth0      Link encap:Ethernet  HWaddr 14:DD:A9:D3:36:0B",
         "inet addr:1.2.3.4  Bcast:1.2.3.4  Mask:255.255.255.255",

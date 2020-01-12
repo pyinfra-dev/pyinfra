@@ -38,7 +38,7 @@ class DebPackage(FactBase):
     }
 
     def command(self, name):
-        return 'dpkg -I {0} || dpkg -s {0}'.format(name)
+        return 'dpkg -I {0} 2> /dev/null || dpkg -s {0}'.format(name)
 
     def process(self, output):
         data = {}

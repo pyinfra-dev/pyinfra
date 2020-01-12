@@ -1,6 +1,6 @@
 {
     "arg": "/home/pyinfra/my@-_link",
-    "command": "ls -ld --time-style=long-iso /home/pyinfra/my@-_link || ls -ldT /home/pyinfra/my@-_link",
+    "command": "ls -ld --time-style=long-iso /home/pyinfra/my@-_link 2> /dev/null || ls -ldT /home/pyinfra/my@-_link",
     "output": [
         "lrwxrwxrwx 1 pyinfra pyinfra 8 2016-02-13 12:56 /home/pyinfra/my@-_link -> my_f@-ile.txt"
     ],

@@ -13,7 +13,7 @@ class File(FactBase):
 
     def command(self, name):
         self.name = name
-        return 'ls -ld --time-style=long-iso {0} || ls -ldT {0}'.format(name)
+        return 'ls -ld --time-style=long-iso {0} 2> /dev/null || ls -ldT {0}'.format(name)
 
     def process(self, output):
         return parse_ls_output(output[0], self.type)
@@ -43,7 +43,7 @@ class Sha1File(FactBase):
 
     def command(self, name):
         self.name = name
-        return 'sha1sum {0} || sha1 {0}'.format(name)
+        return 'sha1sum {0} 2> /dev/null || sha1 {0}'.format(name)
 
     def process(self, output):
         for regex in self._regexes:
@@ -63,9 +63,10 @@ class FindInFile(FactBase):
     def command(self, name, pattern):
         self.name = name
 
-        return '''
-            grep "{0}" {1} || (find {1} -type f > /dev/null && echo "__pyinfra_exists_{1}")
-        '''.format(pattern, name).strip()
+        return (
+            'grep "{0}" {1} 2> /dev/null || '
+            '(find {1} -type f > /dev/null && echo "__pyinfra_exists_{1}")'
+        ).format(pattern, name).strip()
 
     def process(self, output):
         # If output is the special string: no matches, so return an empty list;
