@@ -108,12 +108,10 @@ def rpm(state, host, source, present=True):
 
     .. code:: python
 
-        # Note: Ignore the error if already installed
-        yum.rpm(
+        dnf.rpm(
            {'Install EPEL rpm to enable EPEL repo'},
            'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
            '{{  host.fact.linux_distribution.major }}.noarch.rpm',
-           ignore_errors=True,
         )
     '''
 
