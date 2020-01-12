@@ -12,8 +12,8 @@ print(linux_name)
 if linux_name in ['Debian', 'Ubuntu']:
 
     apt.packages(
-        {'Install Vim and Vim Addon Manager'},
-        ['vim-addon-manager', 'vim'],
+        {'Install Vim, Vim Addon Manager, and software-properties-common'},
+        ['vim-addon-manager', 'vim', 'software-properties-common'],
         update=True,
     )
 
