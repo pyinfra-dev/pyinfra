@@ -10,6 +10,6 @@
     },
     "commands": [
         "wget -q https://something.rpm -O _tempfile_.rpm",
-        "rpm -qa | grep `rpm -qp _tempfile_.rpm` || rpm -U _tempfile_.rpm"
+        "rpm -q `rpm -qp _tempfile_.rpm` || rpm -i _tempfile_.rpm"
     ]
 }
