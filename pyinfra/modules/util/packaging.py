@@ -155,7 +155,7 @@ def ensure_rpm(state, host, files, source, present, package_manager_command):
         # but also don't know if it's installed. So check at runtime, otherwise
         # the install will fail.
         else:
-            yield 'rpm -q `rpm -qp {0}` || rpm -i {0}'.format(source)
+            yield 'rpm -q `rpm -qp {0}` 2> /dev/null || rpm -i {0}'.format(source)
 
     # Package exists but we don't want?
     if exists and not present:

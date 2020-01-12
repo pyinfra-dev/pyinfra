@@ -3,8 +3,8 @@
     "command": "PGPASSWORD=\"mypassword\" psql -U myuser -h myhost -p myport -Ac \"SELECT * FROM pg_catalog.pg_roles\"",
     "output": [
         "rolname|rolsuper|rolinherit|rolcreaterole|rolcreatedb|rolcanlogin|rolreplication|rolconnlimit|rolpassword|rolvaliduntil|rolbypassrls|rolconfig|oid",
-        "postgres|t|t|t|t|t|t|-1|********2> /dev/null ||t2> /dev/null ||10",
-        "pyinfra|t|t|f|f|t|f|-1|********2> /dev/null ||f2> /dev/null ||16384",
+        "postgres|t|t|t|t|t|t|-1|********||t||10",
+        "pyinfra|t|t|f|f|t|f|-1|********||f||16384",
         "(7 rows)"
     ],
     "fact": {
