@@ -1,6 +1,6 @@
 {
     "arg": "somepackage",
-    "command": "rpm -qp somepackage",
+    "command": "rpm -qp somepackage 2> /dev/null || rpm -q somepackage",
     "output": [
         "pydash-3.48.0"
     ],
