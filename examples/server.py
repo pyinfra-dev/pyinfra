@@ -48,12 +48,12 @@ for group in ['wheel', 'lusers']:
         group,
     )
 
-#server.user(
-#    {'Ensure an admin user is present'},
-#    'uberadmin',
-#    shell='/bin/bash',
-#    groups=['wheel', 'uberadmin'],
-#)
+server.user(
+    {'Ensure an admin user is present'},
+    'uberadmin',
+    shell='/bin/bash',
+    groups=['wheel', 'uberadmin'],
+)
 
 # use "/sbin/sysctl -a | grep file-max" to check value
 server.sysctl(
