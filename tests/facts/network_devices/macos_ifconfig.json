@@ -1,5 +1,5 @@
 {
-    "command": "ip addr show || ifconfig",
+    "command": "ip addr show 2> /dev/null || ifconfig",
     "output": [
         "en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500",
         "inet 1.2.3.4 netmask 0xffffff00 broadcast 255.255.255.255",

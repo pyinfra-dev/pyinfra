@@ -10,7 +10,7 @@ class Cpus(FactBase):
     Returns the number of CPUs on this server.
     '''
 
-    command = 'getconf NPROCESSORS_ONLN || getconf _NPROCESSORS_ONLN'
+    command = 'getconf NPROCESSORS_ONLN 2> /dev/null || getconf _NPROCESSORS_ONLN'
 
     @staticmethod
     def process(output):
@@ -183,7 +183,7 @@ class NetworkDevices(FactBase):
         ...
     '''
 
-    command = 'ip addr show || ifconfig'
+    command = 'ip addr show 2> /dev/null || ifconfig'
     default = dict
 
     # Definition of valid interface names for Linux:

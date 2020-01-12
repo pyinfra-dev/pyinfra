@@ -1,5 +1,5 @@
 {
-    "command": "getconf NPROCESSORS_ONLN || getconf _NPROCESSORS_ONLN",
+    "command": "getconf NPROCESSORS_ONLN 2> /dev/null || getconf _NPROCESSORS_ONLN",
     "output": ["1"],
     "fact": 1
 }
