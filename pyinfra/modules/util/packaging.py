@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 
 import six
 
+from six.moves.urllib.parse import urlparse
+
 
 def ensure_packages(
     packages, current_packages, present,
@@ -119,3 +121,42 @@ def ensure_packages(
             upgrade_command,
             ' '.join(upgrade_packages),
         )
+
+
+def ensure_rpm(state, host, files, source, present, package_manager_command):
+    # If source is a url
+    if urlparse(source).scheme:
+        # Generate a temp filename (with .rpm extension to please yum)
+        temp_filename = '{0}.rpm'.format(state.get_temp_filename(source))
+
+        # Ensure it's downloaded
+        yield files.download(state, host, source, temp_filename)
+
+        # Override the source with the downloaded file
+        source = temp_filename
+
+    # Check for file .rpm information
+    info = host.fact.rpm_package(source)
+    exists = False
+
+    # We have info!
+    if info:
+        current_package = host.fact.rpm_package(info['name'])
+        if current_package and current_package['version'] == info['version']:
+            exists = True
+
+    # Package does not exist and we want?
+    if present and not exists:
+        # If we had info, always install
+        if info:
+            yield 'rpm -i {0}'.format(source)
+
+        # This happens if we download the package mid-deploy, so we have no info
+        # but also don't know if it's installed. So check at runtime, otherwise
+        # the install will fail.
+        else:
+            yield 'rpm -q `rpm -qp {0}` || rpm -i {0}'.format(source)
+
+    # Package exists but we don't want?
+    if exists and not present:
+        yield '{0} remove -y {1}'.format(package_manager_command, info['name'])
