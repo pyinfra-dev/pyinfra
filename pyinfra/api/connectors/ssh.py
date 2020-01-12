@@ -279,7 +279,7 @@ def _get_sftp_connection(host):
 
 
 def _get_file(host, remote_filename, filename_or_io):
-    with get_file_io(filename_or_io) as file_io:
+    with get_file_io(filename_or_io, 'wb') as file_io:
         sftp = _get_sftp_connection(host)
         sftp.getfo(remote_filename, file_io)
 
