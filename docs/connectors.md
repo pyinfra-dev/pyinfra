@@ -62,7 +62,7 @@ The `@docker` connector allows you to build Docker containers using pyinfra.
 # A Docker base image must be provided
 pyinfra @docker/alpine:3.8 deploy.py
 
-# pyinfra can build multiple Docker images in parallel
+# pyinfra can run on multiple Docker images in parallel
 pyinfra @docker/alpine:3.8,@docker/ubuntu:bionic deploy.py
 ```
 
