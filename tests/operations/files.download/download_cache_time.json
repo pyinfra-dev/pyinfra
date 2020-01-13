@@ -13,6 +13,6 @@
         }
     },
     "commands": [
-        "wget -q http://myfile -O /home/myfile"
+        "curl -s http://myfile -o /home/myfile 2> /dev/null || wget -q http://myfile -O /home/myfile"
     ]
 }
