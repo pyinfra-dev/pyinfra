@@ -50,6 +50,7 @@ apt.packages(
     {'Install iftop'},
     'iftop',
     sudo=True,
+    update=True,
 )
 ```
 
@@ -57,6 +58,12 @@ And executed with:
 
 ```sh
 pyinfra my-server.net deploy.py
+```
+
+or
+
+```sh
+pyinfra @docker/ubuntu deploy.py
 ```
 
 ## [Documentation](https://pyinfra.readthedocs.io)
