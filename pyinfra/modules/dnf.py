@@ -57,10 +57,17 @@ def repo(
         for manual construction of repository files. Use a URL to download and
         install remote repository files.
 
-    Example:
+    Examples:
 
     .. code:: python
 
+        # Download a repository file
+        dnf.rpm(
+            {'Install Docker-CE repo via URL'},
+            'https://download.docker.com/linux/centos/docker-ce.repo',
+        )
+
+        # Create the repository file from baseurl/etc
         dnf.repo(
             {'Add the Docker CentOS repo'},
             name='DockerCE',
