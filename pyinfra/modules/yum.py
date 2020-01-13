@@ -74,7 +74,7 @@ def repo(
         )
     '''
 
-    yield from ensure_yum_repo(
+    yield ensure_yum_repo(
         state, host, files,
         name, baseurl, present, description, enabled, gpgcheck, gpgkey,
         'yum-config-manager',
