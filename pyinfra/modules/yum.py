@@ -38,15 +38,23 @@ def repo(
     state, host, name, baseurl=None,
     present=True, description=None, enabled=True, gpgcheck=True, gpgkey=None,
 ):
+    # NOTE: if updating this docstring also update `dnf.repo`
+    # COMPAT: on v1 rearrange baseurl/present kwargs
     '''
     Add/remove/update yum repositories.
 
-    + name: filename for the repo (in ``/etc/yum/repos.d/``)
-    + baseurl: the baseurl of the repo
+    + name: URL or name for the ``.repo``   file
+    + baseurl: the baseurl of the repo (if ``name`` is not a URL)
     + present: whether the ``.repo`` file should be present
     + description: optional verbose description
+    + enabled: whether this repo is enabled
     + gpgcheck: whether set ``gpgcheck=1``
     + gpgkey: the URL to the gpg key for this repo
+
+    ``Baseurl``/``description``/``gpgcheck``/``gpgkey``:
+        These are only valid when ``name`` is a filename (ie not a URL). This is
+        for manual construction of repository files. Use a URL to download and
+        install remote repository files.
 
     Example:
 
@@ -62,11 +70,13 @@ def repo(
     yield from ensure_yum_repo(
         state, host, files,
         name, baseurl, present, description, enabled, gpgcheck, gpgkey,
+        'yum-config-manager',
     )
 
 
 @operation
 def rpm(state, host, source, present=True):
+    # NOTE: if updating this docstring also update `dnf.rpm`
     '''
     Add/remove ``.rpm`` file packages.
 
