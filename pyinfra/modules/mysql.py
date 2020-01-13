@@ -342,6 +342,7 @@ def dump(
     Example:
 
     .. code:: python
+
         mysql.dump(
             {'Dump the pyinfra_stuff database'},
             '/tmp/pyinfra_stuff.dump',
