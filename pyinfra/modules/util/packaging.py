@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import six
 
+from six import StringIO
 from six.moves.urllib.parse import urlparse
 
 
@@ -160,3 +161,37 @@ def ensure_rpm(state, host, files, source, present, package_manager_command):
     # Package exists but we don't want?
     if exists and not present:
         yield '{0} remove -y {1}'.format(package_manager_command, info['name'])
+
+
+def ensure_yum_repo(
+    state, host, files,
+    name_or_url, baseurl, present, description, enabled, gpgcheck, gpgkey,
+):
+    # Description defaults to name
+    description = description or name_or_url
+
+    filename = '/etc/yum.repos.d/{0}.repo'.format(name_or_url)
+
+    # If we don't want the repo, just remove any existing file
+    if not present:
+        yield files.file(state, host, filename, present=False)
+        return
+
+    # Build the repo file from string
+    repo_lines = [
+        '[{0}]'.format(name_or_url),
+        'name={0}'.format(description),
+        'baseurl={0}'.format(baseurl),
+        'enabled={0}'.format(1 if enabled else 0),
+        'gpgcheck={0}'.format(1 if gpgcheck else 0),
+    ]
+
+    if gpgkey:
+        repo_lines.append('gpgkey={0}'.format(gpgkey))
+
+    repo_lines.append('')
+    repo = '\n'.join(repo_lines)
+    repo = StringIO(repo)
+
+    # Ensure this is the file on the server
+    yield files.put(state, host, repo, filename)

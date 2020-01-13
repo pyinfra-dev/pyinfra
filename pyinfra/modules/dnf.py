@@ -4,12 +4,10 @@ Manage dnf packages and repositories. Note that dnf package names are case-sensi
 
 from __future__ import unicode_literals
 
-from six import StringIO
-
 from pyinfra.api import operation
 
 from . import files
-from .util.packaging import ensure_packages, ensure_rpm
+from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 
 
 @operation
@@ -62,34 +60,10 @@ def repo(
         )
     '''
 
-    # Description defaults to name
-    description = description or name
-
-    filename = '/etc/yum.repos.d/{0}.repo'.format(name)
-
-    # If we don't want the repo, just remove any existing file
-    if not present:
-        yield files.file(state, host, filename, present=False)
-        return
-
-    # Build the repo file from string
-    repo_lines = [
-        '[{0}]'.format(name),
-        'name={0}'.format(description),
-        'baseurl={0}'.format(baseurl),
-        'enabled={0}'.format(1 if enabled else 0),
-        'gpgcheck={0}'.format(1 if gpgcheck else 0),
-    ]
-
-    if gpgkey:
-        repo_lines.append('gpgkey={0}'.format(gpgkey))
-
-    repo_lines.append('')
-    repo = '\n'.join(repo_lines)
-    repo = StringIO(repo)
-
-    # Ensure this is the file on the server
-    yield files.put(state, host, repo, filename)
+    yield from ensure_yum_repo(
+        state, host, files,
+        name, baseurl, present, description, enabled, gpgcheck, gpgkey,
+    )
 
 
 @operation
