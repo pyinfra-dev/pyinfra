@@ -1,5 +1,5 @@
 from pyinfra import host
-from pyinfra.modules import apk, yum, apt, files, pip
+from pyinfra.modules import apk, apt, files, pip, yum
 
 SUDO = True
 
@@ -14,7 +14,7 @@ if host.fact.linux_name in ['Alpine']:
             'openssl-dev',
             'py3-pynacl',
             'py3-virtualenv',
-            'python3-dev'
+            'python3-dev',
         ],
     )
 
