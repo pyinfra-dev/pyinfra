@@ -78,7 +78,9 @@ def download(
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
-        yield 'wget -q {0} -O {1}'.format(source_url, destination)
+        yield 'curl -s {0} -o {1} 2> /dev/null || wget -q {0} -O {1}'.format(
+            source_url, destination,
+        )
 
         if user or group:
             yield chown(destination, user, group)
