@@ -3,14 +3,10 @@ from pyinfra.modules import apt
 
 SUDO = True
 
-# Note: Using linux_distribution fact so running from docker
-# will show valid name since the lsb-release tool is not installed,
-# otherwise could just use host.fact.linux_name
-linux_name = host.fact.linux_distribution.get('name', '')
 code_name = host.fact.linux_distribution['release_meta'].get('DISTRIB_CODENAME')
-print(linux_name, code_name)
+print(host.fact.linux_name, code_name)
 
-if linux_name in ['Debian', 'Ubuntu']:
+if host.fact.linux_name in ['Debian', 'Ubuntu']:
 
     apt.packages(
         {'Install some packages'},
