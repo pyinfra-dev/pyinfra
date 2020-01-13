@@ -38,7 +38,7 @@ Now you can execute commands & operations over SSH:
 pyinfra my-server.net exec -- echo "hello world"
 
 # Install iftop apt package if not present
-pyinfra my-server.net apt.packages iftop sudo=true
+pyinfra my-server.net apt.packages iftop sudo=true update=true
 ```
 
 These can then be saved to a _deploy file_, let's call it `deploy.py`:
