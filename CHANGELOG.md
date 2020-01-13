@@ -1,3 +1,13 @@
+# v0.12.2
+
++ Add URL support to `yum.repo` and `dnf.repo` operations
++ Support downloading files with `curl` (preferred over `wget`)
++ Add `pyinfra INVENTORY all-facts` to get all non-arg facts
++ Hide errors when we have a fallback command
++ Fix quotes in `@docker` connector
++ Fix installing packages in `yum.rpm` and `dnf.rpm`
++ Fix `git.config` check where the repository doesn't exist
+
 # v0.12.1
 
 + Add `flake8-spellcheck` and fix spellings throughout (@mkinney)

@@ -9,7 +9,7 @@
         }
     },
     "commands": [
-        "wget -q https://something.rpm -O _tempfile_.rpm",
+        "curl -s https://something.rpm -o _tempfile_.rpm 2> /dev/null || wget -q https://something.rpm -O _tempfile_.rpm",
         "rpm -q `rpm -qp _tempfile_.rpm` 2> /dev/null || rpm -i _tempfile_.rpm"
     ]
 }
