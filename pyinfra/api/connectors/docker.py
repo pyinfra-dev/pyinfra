@@ -5,6 +5,8 @@ from tempfile import mkstemp
 import click
 import six
 
+from six.moves import shlex_quote
+
 import pyinfra
 
 from pyinfra import local, logger
@@ -73,7 +75,8 @@ def run_shell_command(
     **kwargs  # ignored (sudo/etc)
 ):
     container_id = host.host_data['docker_container_id']
-    docker_command = 'docker exec {0} sh -c "{1}"'.format(container_id, command)
+    command = shlex_quote(command)
+    docker_command = 'docker exec {0} sh -c {1}'.format(container_id, command)
 
     return run_local_shell_command(
         state, host, docker_command,
