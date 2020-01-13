@@ -173,6 +173,8 @@ def ensure_yum_repo(
     if url_parts.scheme:
         url = name_or_url
         name_or_url = url_parts.path.split('/')[-1]
+        if name_or_url.endswith('.repo'):
+            name_or_url = name_or_url[:-5]
 
     filename = '/etc/yum.repos.d/{0}.repo'.format(name_or_url)
 
