@@ -1,20 +1,29 @@
 from pyinfra import host
-from pyinfra.modules import apk, apt, files, git
+from pyinfra.modules import apk, yum, apt, files, git
 
 SUDO = True
 
 linux_name = host.fact.linux_distribution.get('name', '')
 print(linux_name)
+
 if linux_name in ['Alpine']:
     apk.packages(
         {'Install git'},
         'git',
     )
 
+if linux_name in ['CentOS']:
+    yum.packages(
+        {'Install git'},
+        'git',
+        update=True,
+    )
+
 if linux_name in ['Ubuntu']:
     apt.packages(
         {'Install git'},
         'git',
+        update=True,
     )
 
 src_dir = '/usr/local/src'

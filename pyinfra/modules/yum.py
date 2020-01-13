@@ -26,10 +26,12 @@ def key(state, host, key):
 
     .. code:: python
 
+        linux_id = host.fact.linux_distribution['release_meta'].get('ID')
         yum.key(
             {'Add the Docker CentOS gpg key'},
-            'https://download.docker.com/linux/{{ host.fact.lsb_release.id|lower }}/gpg',
+            'https://download.docker.com/linux/{}/gpg'.format(linux_id),
         )
+
     '''
 
     yield 'rpm --import {0}'.format(key)
@@ -107,10 +109,11 @@ def rpm(state, host, source, present=True):
 
     .. code:: python
 
+        linux_major = host.fact.linux_distribution['release_meta'].get('VERSION_ID')
         yum.rpm(
            {'Install EPEL rpm to enable EPEL repo'},
            'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
-           '{{  host.fact.linux_distribution.major }}.noarch.rpm',
+           '{}.noarch.rpm'.format(linux_major),
         )
     '''
 

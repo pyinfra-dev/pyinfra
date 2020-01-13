@@ -54,12 +54,15 @@ if host.fact.linux_name == 'Ubuntu':
             key='https://download.docker.com/linux/ubuntu/gpg',
         )
 
+    linux_id = host.fact.linux_distribution['release_meta'].get('ID')
+    code_name = host.fact.linux_distribution['release_meta'].get('DISTRIB_CODENAME')
+    print(linux_id, code_name)
     apt.repo(
         {'Add the Docker CE apt repo'},
         (
             'deb [arch=amd64] https://download.docker.com/linux/'
-            '{{ host.fact.lsb_release.id|lower }} '
-            '{{ host.fact.lsb_release.codename }} stable'
+            '{} '
+            '{} stable'.format(linux_id, code_name)
         ),
         filename='docker-ce-stable',
     )
