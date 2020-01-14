@@ -37,17 +37,18 @@ def key(state, host, key):
 
 @operation
 def repo(
-    state, host, name, baseurl=None,
-    present=True, description=None, enabled=True, gpgcheck=True, gpgkey=None,
+    state, host, name,
+    present=True,
+    baseurl=None, description=None,
+    enabled=True, gpgcheck=True, gpgkey=None,
 ):
     # NOTE: if updating this docstring also update `dnf.repo`
-    # COMPAT: on v1 rearrange baseurl/present kwargs
     '''
     Add/remove/update yum repositories.
 
     + name: URL or name for the ``.repo``   file
-    + baseurl: the baseurl of the repo (if ``name`` is not a URL)
     + present: whether the ``.repo`` file should be present
+    + baseurl: the baseurl of the repo (if ``name`` is not a URL)
     + description: optional verbose description
     + enabled: whether this repo is enabled
     + gpgcheck: whether set ``gpgcheck=1``
