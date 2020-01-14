@@ -274,24 +274,6 @@ def operation(func=None, pipeline_facts=None):
             if has_run:
                 return OperationMeta(op_hash)
 
-        # If we're limited, stop here - *after* we've created op_meta. This
-        # ensures the meta object always exists, even if no hosts actually ever
-        # execute the op (due to limit or otherwise).
-        hosts = op_meta_kwargs['hosts']
-        when = op_meta_kwargs['when']
-
-        if (
-            # Limited by the state's limit_hosts?
-            (state.limit_hosts is not None and host not in state.limit_hosts)
-            # Limited by the operation kwarg hosts?
-            or (hosts is not None and host not in hosts)
-            # Limited by the operation kwarg when? We check == because when is
-            # normally attribute wrapped as a AttrDataBool, which is actually
-            # an integer (Python doesn't allow subclassing bool!).
-            or when == False  # noqa
-        ):
-            return OperationMeta(op_hash)
-
         # "Run" operation
         #
 
