@@ -87,3 +87,9 @@ server.script(
     {'Hello'},
     'files/hello.bash',
 )
+
+# To see output need to run pyinfra with '-v'
+server.shell(
+    {'Say Hello'},
+    'echo Hello',
+)

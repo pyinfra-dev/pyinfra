@@ -3,6 +3,7 @@
 '''
 '700'
 'c
+'cd
 'mech
 'none'
 's
@@ -15,6 +16,7 @@ APK
 ARG1
 ARG2
 Apk
+Autodetect
 Autogenerate
 BLOCKSIZE
 COMPAT
@@ -39,6 +41,7 @@ Ipv6
 JS
 Launchd
 Lsb
+Mware
 NOFILE
 NPM
 Noop
@@ -65,7 +68,9 @@ Sysctl
 Systemd
 TODO
 TTY
+Ubuntu18
 Unignored
+Vagrantfile
 W605
 addsitedir
 agentrequesthandler
@@ -105,18 +110,22 @@ currentframe
 cygdrive
 datas
 datetimes
+default'
 deque
 dereference
 dirnames
 distro
 distros
 dnf
+dnsmask
+dnsmasq
 docbits
 docopt
 dport
 epel
 excuted
 exe
+exists'
 favicon
 fileno
 filesystem
@@ -144,6 +153,7 @@ hostport
 identityfile
 iglob
 initd
+initrd
 ip6tables
 iproute2
 iptables
@@ -155,6 +165,7 @@ ismethod
 isset
 iterkeys
 iwait
+j2
 jinja
 jinja2
 joinall
@@ -172,6 +183,7 @@ memoize
 modprobe
 motd'
 nameserver
+netboot
 nettools
 nobest
 nofile
@@ -194,6 +206,8 @@ pramga
 psql
 pty
 putfo
+pxe
+pxelinux
 pyc
 pygments
 pyinfra
@@ -219,6 +233,8 @@ sed
 sftp
 sha
 sha1sum
+sha256file
+sha256sum
 shlex
 signum
 simplefilter
@@ -237,11 +253,18 @@ sudoing
 switcheroo
 sysctl
 sysctls
+syslog
+systemctl
 systemd
+systtetmctl
 tablename
 tablespace
+tarfile
 tcp
 tempdir
+tftp
+ubuntu18
+ubuntu18'
 udp
 unitialised
 unmount
@@ -252,6 +275,7 @@ v1
 venv
 virtualenv
 vm
+vmlinuz
 vv
 vz
 warnoptions

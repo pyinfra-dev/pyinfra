@@ -39,6 +39,8 @@ def download(
     + cache_time: if the file exists already, re-download after this time (in seconds)
     + force: always download the file, even if it already exists
 
+    Note: Assumes wget is installed.
+
     Example:
 
     .. code:: python
@@ -109,7 +111,6 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
         If matching special characters (eg a crontab line containing *), remember to escape
         it first using Python's ``re.escape``.
 
-
     Examples:
 
     .. code:: python
@@ -129,6 +130,15 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
             maintenance_line,
             replace='',
             present=False,
+        )
+
+        # example where there is '*' in the line
+        files.line(
+            {'Ensure /netboot/nfs is in /etc/exports'},
+            '/etc/exports',
+            r'/netboot/nfs .*',
+            replace='/netboot/nfs *(ro,sync,no_wdelay,insecure_locks,no_root_squash,'
+            'insecure,no_subtree_check)',
         )
 
     '''
@@ -807,7 +817,7 @@ def directory(
     + mode: permissions of the folder
     + recursive: recursively apply user/group/mode
 
-    Example:
+    Examples:
 
     .. code:: python
 
@@ -816,6 +826,14 @@ def directory(
             '/tmp/dir_that_we_want_removed',
             present=False,
         )
+
+        dirs = ['/netboot/tftp', '/netboot/nfs']
+        for dir in dirs:
+            files.directory(
+                {'Ensure the directory `{}` exists'.format(dir)},
+                dir,
+            )
+
     '''
 
     mode = ensure_mode_int(mode)
