@@ -210,30 +210,6 @@ class TestOperationsApi(PatchSSHTestCase):
         ) == 1
 
 
-class TestOperationLimits(PatchSSHTestCase):
-    def test_op_hosts_limit(self):
-        inventory = make_inventory()
-        state = State(inventory, Config())
-        connect_all(state)
-
-        # Add op to both hosts
-        add_op(state, server.shell, 'echo "hi"')
-
-        # Add op to just the first host
-        add_op(
-            state, server.user,
-            'somehost_user',
-            hosts=inventory.get_host('somehost'),
-        )
-
-        # Ensure there are two ops
-        assert len(state.get_op_order()) == 2
-
-        # Ensure somehost has two ops and anotherhost only has the one
-        assert len(state.ops[inventory.get_host('somehost')]) == 2
-        assert len(state.ops[inventory.get_host('anotherhost')]) == 1
-
-
 class TestOperationFailures(PatchSSHTestCase):
     def test_full_op_fail(self):
         inventory = make_inventory()
