@@ -140,6 +140,13 @@ def pop_global_op_kwargs(state, kwargs):
     Pop and return operation global keyword arguments.
     '''
 
+    for deprecated_key in ('when', 'hosts'):
+        if deprecated_key in kwargs:
+            logger.warning((
+                'Use of the `{0}` argument is deprecated, '
+                'please use normal `if` statements instead.'
+            ).format(deprecated_key))
+
     meta_kwargs = state.deploy_kwargs or {}
 
     def get_kwarg(key, default=None):

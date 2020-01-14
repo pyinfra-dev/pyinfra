@@ -27,6 +27,19 @@ def include(filename, hosts=False, when=True):
     if not pyinfra.is_cli:
         raise PyinfraError('local.include is only available in CLI mode.')
 
+    # TODO: remove this hosts/when
+    if hosts is not False:
+        logger.warning((
+            'Use of the `hosts` argument is deprecated, '
+            'please use normal `if` statements instead.'
+        ))
+
+    if when is not True:
+        logger.warning((
+            'Use of the `when` argument is deprecated, '
+            'please use normal `if` statements instead.'
+        ))
+
     if not when:
         return
 
@@ -34,6 +47,7 @@ def include(filename, hosts=False, when=True):
         hosts = ensure_host_list(hosts, inventory=pseudo_state.inventory)
         if pseudo_host not in hosts:
             return
+    # TODO: end remove hosts/when block
 
     if pseudo_state.deploy_dir:
         filename = path.join(pseudo_state.deploy_dir, filename)
