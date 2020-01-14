@@ -148,9 +148,8 @@ def build_facts():
 
         out = '\n'.join(lines)
 
-        outfile = open(module_filename, 'w')
-        outfile.write(out)
-        outfile.close()
+        with open(module_filename, 'w') as outfile:
+            outfile.write(out)
 
 
 if __name__ == '__main__':
