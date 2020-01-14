@@ -1,6 +1,7 @@
 {
-    "args": ["somerepo", "http://baseurl"],
+    "args": ["somerepo"],
     "kwargs": {
+        "baseurl": "http://baseurl",
         "description": "description",
         "gpgcheck": false,
         "gpgkey": "test"

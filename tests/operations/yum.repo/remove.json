@@ -1,5 +1,5 @@
 {
-    "args": ["somerepo", "http://baseurl"],
+    "args": ["somerepo"],
     "kwargs": {
         "present": false
     },
