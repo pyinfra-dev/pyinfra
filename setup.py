@@ -47,16 +47,17 @@ TEST_REQUIRES = (
 )
 
 DOCS_REQUIRES = (
-    'sphinx==2.2.1',
     'sphinx-autobuild==0.7.1',
     'guzzle_sphinx_theme==0.7.11',
     'recommonmark==0.5.0',
+    'sphinx==2.2.1 ; python_version >= "3"',
+    'sphinx==1.8.5 ; python_version < "3"',
 )
 
 DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
     # Releasing
     'wheel',
-    'twine==3.1.0',
+    'twine',
 
     # Dev debugging
     'ipdb==0.10.3',
