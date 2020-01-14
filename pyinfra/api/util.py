@@ -134,7 +134,7 @@ class FallbackDict(object):
         return out
 
 
-def pop_op_kwargs(state, kwargs):
+def pop_global_op_kwargs(state, kwargs):
     '''
     Pop and return operation global keyword arguments.
     '''

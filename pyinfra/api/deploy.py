@@ -14,7 +14,7 @@ from pyinfra.pseudo_modules import PseudoModule
 from .exceptions import PyinfraError
 from .host import Host
 from .state import State
-from .util import get_caller_frameinfo, pop_op_kwargs
+from .util import get_caller_frameinfo, pop_global_op_kwargs
 
 
 def add_deploy(state, deploy_func, *args, **kwargs):
@@ -87,7 +87,7 @@ def deploy(func_or_name, data_defaults=None):
             frameinfo.filename, frameinfo.lineno,
         ))
 
-        deploy_kwargs = pop_op_kwargs(state, kwargs)
+        deploy_kwargs = pop_global_op_kwargs(state, kwargs)
 
         # Name the deploy
         deploy_name = getattr(func, 'deploy_name', func.__name__)

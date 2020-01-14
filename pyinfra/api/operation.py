@@ -24,7 +24,7 @@ from .util import (
     get_arg_value,
     get_caller_frameinfo,
     make_hash,
-    pop_op_kwargs,
+    pop_global_op_kwargs,
     unroll_generators,
 )
 
@@ -194,7 +194,7 @@ def operation(func=None, pipeline_facts=None):
             }
 
         # Get the meta kwargs (globals that apply to all hosts)
-        op_meta_kwargs = pop_op_kwargs(state, kwargs)
+        op_meta_kwargs = pop_global_op_kwargs(state, kwargs)
 
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).
