@@ -7,46 +7,20 @@ import six
 
 import pyinfra
 
-from . import logger, pseudo_host, pseudo_state
+from . import logger, pseudo_state
 from .api.connectors.util import run_local_process, split_combined_output
 from .api.exceptions import PyinfraError
-from .api.util import ensure_host_list, get_caller_frameinfo
+from .api.util import get_caller_frameinfo
 
 
-def include(filename, hosts=False, when=True):
+def include(filename):
     '''
     Executes a local python file within the ``pyinfra.pseudo_state.deploy_dir``
     directory.
-
-    Args:
-        hosts (string, list): group name or list of hosts to limit this include to
-        when (bool): indicate whether to trigger operations in this include
     '''
 
     if not pyinfra.is_cli:
         raise PyinfraError('local.include is only available in CLI mode.')
-
-    # TODO: remove this hosts/when
-    if hosts is not False:
-        logger.warning((
-            'Use of the `hosts` argument is deprecated, '
-            'please use normal `if` statements instead.'
-        ))
-
-    if when is not True:
-        logger.warning((
-            'Use of the `when` argument is deprecated, '
-            'please use normal `if` statements instead.'
-        ))
-
-    if not when:
-        return
-
-    if hosts is not False:
-        hosts = ensure_host_list(hosts, inventory=pseudo_state.inventory)
-        if pseudo_host not in hosts:
-            return
-    # TODO: end remove hosts/when block
 
     if pseudo_state.deploy_dir:
         filename = path.join(pseudo_state.deploy_dir, filename)

@@ -36,20 +36,6 @@ def try_int(value):
         return value
 
 
-def ensure_host_list(hosts, inventory):
-    if hosts is None:
-        return hosts
-
-    # If passed a string, treat as group name and get any hosts from inventory
-    if isinstance(hosts, six.string_types):
-        return inventory.get_group(hosts, [])
-
-    if not isinstance(hosts, (list, tuple)):
-        return [hosts]
-
-    return hosts
-
-
 def memoize(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
