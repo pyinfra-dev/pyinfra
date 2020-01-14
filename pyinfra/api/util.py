@@ -22,6 +22,7 @@ from pyinfra import logger
 from pyinfra.api import Config
 
 from .exceptions import PyinfraError
+from .operation_kwargs import OPERATION_KWARGS
 
 # 64kb chunks
 BLOCKSIZE = 65536
@@ -144,10 +145,7 @@ def pop_global_op_kwargs(state, kwargs):
     def get_kwarg(key, default=None):
         return kwargs.pop(key, meta_kwargs.get(key, default))
 
-    # Get the env for this host: config env followed by command-level env
-    env = state.config.ENV.copy()
-    env.update(get_kwarg('env', {}))
-
+    # TODO: remove hosts/when
     hosts = get_kwarg('hosts')
     hosts = ensure_host_list(hosts, inventory=state.inventory)
 
@@ -158,42 +156,29 @@ def pop_global_op_kwargs(state, kwargs):
             if host in meta_kwargs['hosts']
         ]
 
-    return {
-        # ENVars for commands in this operation
-        'env': env,
-        # Hosts to limit the op to
+    global_kwargs = {
         'hosts': hosts,
-        # When to limit the op (default always)
         'when': get_kwarg('when', True),
-        # Locally & globally configurable
-        'shell_executable': get_kwarg('shell_executable', state.config.SHELL),
-        'sudo': get_kwarg('sudo', state.config.SUDO),
-        'sudo_user': get_kwarg('sudo_user', state.config.SUDO_USER),
-        'su_user': get_kwarg('su_user', state.config.SU_USER),
-        # Whether to preserve ENVars when sudoing (e.g. SSH forward agent socket)
-        'preserve_sudo_env': get_kwarg(
-            'preserve_sudo_env', state.config.PRESERVE_SUDO_ENV,
-        ),
-        # Ignore any errors during this operation
-        'ignore_errors': get_kwarg(
-            'ignore_errors', state.config.IGNORE_ERRORS,
-        ),
-        # Timeout on running the command
-        'timeout': get_kwarg('timeout'),
-        # Get a PTY before executing commands
-        'get_pty': get_kwarg('get_pty', False),
-        # Forces serial mode for this operation (--serial for one op)
-        'serial': get_kwarg('serial', False),
-        # Only runs this operation once
-        'run_once': get_kwarg('run_once', False),
-        # Execute in batches of X hosts rather than all at once
-        'parallel': get_kwarg('parallel'),
-        # Callbacks
-        'on_success': get_kwarg('on_success'),
-        'on_error': get_kwarg('on_error'),
-        # Operation hash
-        'op': get_kwarg('op'),
     }
+    # TODO: end remove hosts/when block
+
+    for _, kwarg_configs in OPERATION_KWARGS.items():
+        for key, config in kwarg_configs.items():
+            handler = None
+            default = None
+
+            if isinstance(config, dict):
+                handler = config.get('handler')
+                if 'default' in config:
+                    default = config['default'](state)
+
+            value = get_kwarg(key, default=default)
+            if handler:
+                value = handler(state, value)
+
+            global_kwargs[key] = value
+
+    return global_kwargs
 
 
 def unroll_generators(generator):
