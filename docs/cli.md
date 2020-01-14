@@ -29,6 +29,7 @@ pyinfra INVENTORY exec -- echo "hello world"
 
 # Run one or more facts on the inventory
 pyinfra INVENTORY fact linux_distribution [users]...
+pyinfra INVENTORY all-facts
 ```
 
 ### Options

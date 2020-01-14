@@ -345,7 +345,7 @@ def service(
     init systems pyinfra can handle and executes the relevant operation. See init
     system sepcific operation for arguments.
 
-    Examples:
+    Example:
 
     .. code:: python
 

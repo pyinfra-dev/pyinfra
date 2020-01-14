@@ -1,5 +1,5 @@
 '''
-Manage brew packages.
+Manage brew packages on mac/OSX. See https://brew.sh/
 '''
 
 from pyinfra.api import operation
@@ -107,7 +107,7 @@ def casks(
     Versions:
         Package versions can be pinned like brew: ``<pkg>@<version>``.
 
-    Examples:
+    Example:
 
     .. code:: python
 

@@ -1,6 +1,21 @@
-from pyinfra.modules import server
+from pyinfra import host
+from pyinfra.modules import apt, server, yum
 
 SUDO = True
+
+if host.fact.linux_name in ['CentOS', 'RedHat']:
+    yum.packages(
+        {'Install some packages'},
+        ['cronie'],
+        update=True,
+    )
+
+if host.fact.linux_name in ['Ubuntu']:
+    apt.packages(
+        {'Install some packages'},
+        ['cron'],
+        update=True,
+    )
 
 # simple example for a crontab
 server.crontab(
@@ -17,10 +32,29 @@ server.group(
     'docker',
 )
 
-server.hostname(
-    {'Set the hostname'},
-    'server1.example.com',
-)
+# if we are not running inside a docker container
+if not host.fact.file('/.dockerenv'):
+
+    # Cannot change hostname if running in a docker container
+    server.hostname(
+        {'Set the hostname'},
+        'server1.example.com',
+    )
+
+    # Cannot change value on read-only filesystem
+    # use "/sbin/sysctl -a | grep file-max" to check value
+    server.sysctl(
+        {'Change the fs.file-max value'},
+        'fs.file-max',
+        '100000',
+        persist=True,
+    )
+
+    if host.fact.linux_name in ['CentOS', 'RedHat']:
+        server.modprobe(
+            {'Silly example for modprobe'},
+            'floppy',
+        )
 
 server.user(
     {'Ensure user is removed'},
@@ -48,17 +82,8 @@ for group in ['wheel', 'lusers']:
         group,
     )
 
-server.user(
-    {'Ensure an admin user is present'},
-    'uberadmin',
-    shell='/bin/bash',
-    groups=['wheel', 'uberadmin'],
-)
-
-# use "/sbin/sysctl -a | grep file-max" to check value
-server.sysctl(
-    {'Change the fs.file-max value'},
-    'fs.file-max',
-    '100000',
-    persist=True,
+# To see output need to run pyinfra with '-v'
+server.script(
+    {'Hello'},
+    'files/hello.bash',
 )

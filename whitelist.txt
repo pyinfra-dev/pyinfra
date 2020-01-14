@@ -189,6 +189,7 @@ pathname
 pipelining
 pkey
 ppa
+ppk
 pramga
 psql
 pty
@@ -245,6 +246,7 @@ udp
 unitialised
 unmount
 up2
+v'
 v0
 v1
 venv

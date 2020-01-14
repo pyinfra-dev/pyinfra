@@ -11,6 +11,11 @@ Facts can be executed/tested via the command line:
 
     pyinfra myhost.com fact date another_fact ...
 
+If you want to see all facts:
+
+.. code:: sh
+    pyinfra myhost.com all-facts
+
 If you want to pass an argument to a fact, use `:` then the argument. For example:
 
     pyinfra myhost.com fact deb_package:openssh-server

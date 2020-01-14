@@ -10,16 +10,18 @@ SUDO = True
 if host.fact.linux_name in ['CentOS', 'RedHat']:
 
     yum.packages(
-        {'Install Vim and Vim enhanced'},
-        ['vim-enhanced', 'vim'],
+        {'Install some packages'},
+        ['vim-enhanced', 'vim', 'wget'],
         update=True,
     )
 
+linux_id = host.fact.linux_distribution['release_meta'].get('ID')
+print(linux_id)
 
 if host.fact.linux_name == 'CentOS':
     yum.key(
         {'Add the Docker CentOS gpg key'},
-        'https://download.docker.com/linux/{{ host.fact.lsb_release.id|lower }}/gpg',
+        'https://download.docker.com/linux/{}/gpg'.format(linux_id),
     )
 
 yum.rpm(

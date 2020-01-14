@@ -18,7 +18,7 @@ from .util.files import chmod, sed_replace
 def wait(state, host, port=None):
     '''
     Waits for a port to come active on the target machine. Requires netstat, checks every
-    1s.
+    second.
 
     + port: port number to wait for
     '''
@@ -34,10 +34,22 @@ def wait(state, host, port=None):
 @operation
 def shell(state, host, commands, chdir=None):
     '''
-    Run raw shell code.
+    Run raw shell code on server during a deploy. If the command would
+    modify data that would be in a fact, the fact would not be updated
+    since facts are only run at the start of a deploy.
 
     + commands: command or list of commands to execute on the remote server
     + chdir: directory to cd into before executing commands
+
+    Example:
+
+    .. code:: python
+
+        server.shell(
+            {'Run lxd auto init'},
+            'lxd init --auto',
+        )
+
     '''
 
     # Ensure we have a list
@@ -58,6 +70,17 @@ def script(state, host, filename, chdir=None):
 
     + filename: local script filename to upload & execute
     + chdir: directory to cd into before executing the script
+
+    Example:
+
+    .. code:: python
+
+        # Note: This assumes there is a file in files/hello.bash locally.
+        server.script(
+            {'Hello'},
+            'files/hello.bash',
+        )
+
     '''
 
     temp_file = state.get_temp_filename(filename)
@@ -99,6 +122,16 @@ def modprobe(state, host, name, present=True, force=False):
     + name: name of the module to manage
     + present: whether the module should be loaded or not
     + force: whether to force any add/remove modules
+
+    Example:
+
+    .. code:: python
+
+        server.modprobe(
+            {'Silly example for modprobe'},
+            'floppy',
+        )
+
     '''
 
     modules = host.fact.kernel_modules

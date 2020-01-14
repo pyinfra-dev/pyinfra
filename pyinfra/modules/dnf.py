@@ -24,9 +24,10 @@ def key(state, host, key):
 
     .. code:: python
 
+        linux_id = host.fact.linux_distribution['release_meta'].get('ID')
         dnf.key(
             {'Add the Docker CentOS gpg key'},
-            'https://download.docker.com/linux/{{ host.fact.lsb_release.id|lower }}/gpg',
+            'https://download.docker.com/linux/{}/gpg'.format(linux_id),
         )
 
     '''
