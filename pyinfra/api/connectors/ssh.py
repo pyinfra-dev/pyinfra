@@ -26,7 +26,7 @@ from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import get_file_io, make_command, memoize
 
 from .sshuserclient import SSHClient
-from .util import read_buffers_into_queue, split_combined_output
+from .util import read_buffers_into_queue, split_combined_output, write_stdin
 
 
 def _log_connect_error(host, message, data):
@@ -214,7 +214,10 @@ def connect(state, host, for_fact=None):
 
 def run_shell_command(
     state, host, command,
-    get_pty=False, timeout=None, print_output=False,
+    get_pty=False,
+    timeout=None,
+    stdin=None,
+    print_output=False,
     return_combined_output=False,
     **command_kwargs
 ):
@@ -246,10 +249,13 @@ def run_shell_command(
         print('{0}>>> {1}'.format(host.print_prefix, command))
 
     # Run it! Get stdout, stderr & the underlying channel
-    _, stdout_buffer, stderr_buffer = host.connection.exec_command(
+    stdin_buffer, stdout_buffer, stderr_buffer = host.connection.exec_command(
         command,
         get_pty=get_pty,
     )
+
+    if stdin:
+        write_stdin(stdin, stdin_buffer)
 
     combined_output = read_buffers_into_queue(
         host,

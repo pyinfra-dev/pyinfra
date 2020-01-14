@@ -70,17 +70,20 @@ def disconnect(state, host):
 
 def run_shell_command(
     state, host, command,
-    timeout=None, print_output=False,
+    timeout=None,
+    stdin=None,
+    print_output=False,
     return_combined_output=False,
     **kwargs  # ignored (sudo/etc)
 ):
     container_id = host.host_data['docker_container_id']
     command = shlex_quote(command)
-    docker_command = 'docker exec {0} sh -c {1}'.format(container_id, command)
+    docker_command = 'docker exec -i {0} sh -c {1}'.format(container_id, command)
 
     return run_local_shell_command(
         state, host, docker_command,
         timeout=timeout,
+        stdin=stdin,
         print_output=print_output,
         return_combined_output=return_combined_output,
     )
