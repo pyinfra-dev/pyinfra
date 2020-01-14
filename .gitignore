@@ -19,6 +19,8 @@ venv/
 docs/build/
 docs/facts/
 docs/modules/
+docs/_deploy_globals.rst
+
 .idea/
 
 pyinfra-debug.log

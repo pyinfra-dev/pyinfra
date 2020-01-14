@@ -57,6 +57,7 @@ def setup(app):
             mkdir(auto_docs_path)
 
     local.shell((
+        'python {0}/generate_global_kwargs_doc.py'.format(scripts_dir),
         'python {0}/generate_facts_docs.py'.format(scripts_dir),
         'python {0}/generate_modules_docs.py'.format(scripts_dir),
     ))

@@ -148,28 +148,7 @@ Global Arguments
 
 In addition to each operations own arguments, there are a number of keyword arguments available in all operations:
 
-Privilege & user escalation
-    + ``sudo=True``: Execute/apply any changes with sudo.
-    + ``sudo_user='username'``: Execute/apply any changes with sudo as a non-root user.
-    + ``su_user='username'``: Execute/apply any changes with su.
-    + ``preserve_sudo_env=True``: Preserve the shell environment when using sudo.
-
-Operation control:
-    + ``env``: Dictionary of environment variables to set.
-    + ``ignore_errors=True``: Ignore errors when excuting the operation.
-    + ``serial=True``: Run this operation host by host, rather than in parallel.
-    + ``parallel=10``: Run this operation in batches of hosts.
-    + ``run_once=True``: Only execute this operation once, on the first host to see it.
-    + ``timeout=10``: Timeout for *each* command executed during the operation.
-    + ``get_pty=True``: Whether to get a pseudoTTY when executing any commands.
-
-Callbacks:
-    + ``on_success=my_success_function``: Callback function to execute on success.
-    + ``on_error=my_error_function``: Callback function to execute on error.
-
-Limiting operations to subsets of the inventory:
-    + ``hosts='web'``: Limit the operation to a subset of the hosts (either a list of host objects or a group name).
-    + ``when=host.fact.os == 'Darwin'``: Limit the operaton based on a conditional/boolean.
+.. include:: _deploy_globals.rst
 
 Using Data
 ~~~~~~~~~~
