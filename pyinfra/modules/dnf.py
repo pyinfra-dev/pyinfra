@@ -100,11 +100,10 @@ def rpm(state, host, source, present=True):
 
     .. code:: python
 
-        linux_major = host.fact.linux_distribution['release_meta'].get('VERSION_ID')
         dnf.rpm(
            {'Install EPEL rpm to enable EPEL repo'},
            'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
-           '{}.noarch.rpm'.format(linux_major),
+           '{{  host.fact.linux_distribution.major }}.noarch.rpm',
         )
     '''
 

@@ -16,8 +16,7 @@ if host.fact.linux_name in ['CentOS', 'RedHat']:
     )
 
 linux_id = host.fact.linux_distribution['release_meta'].get('ID')
-linux_major = host.fact.linux_distribution['release_meta'].get('VERSION_ID')
-print(linux_id, linux_major)
+print(linux_id)
 
 if host.fact.linux_name == 'CentOS':
     yum.key(
@@ -35,7 +34,7 @@ if host.fact.linux_name in ['CentOS', 'RedHat']:
     yum.rpm(
         {'Install EPEL rpm to enable EPEL repo'},
         'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
-        '{}.noarch.rpm'.format(linux_major),
+        '{{  host.fact.linux_distribution.major }}.noarch.rpm',
     )
 
     yum.packages(
