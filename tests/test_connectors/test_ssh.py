@@ -4,7 +4,7 @@ from socket import (
 )
 from unittest import TestCase
 
-from mock import MagicMock, mock_open, patch
+from mock import call, MagicMock, mock_open, patch
 from paramiko import (
     AuthenticationException,
     PasswordRequiredException,
@@ -13,6 +13,7 @@ from paramiko import (
 
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
+from pyinfra.api.connectors.ssh import _get_sftp_connection
 from pyinfra.api.exceptions import PyinfraError
 
 from ..paramiko_util import FakeRSAKey
@@ -22,11 +23,11 @@ from ..util import make_inventory
 @patch('pyinfra.api.connectors.ssh.AgentRequestHandler', MagicMock())
 @patch('pyinfra.api.connectors.ssh.SSHClient.get_transport', MagicMock())
 @patch('pyinfra.api.connectors.ssh.open', mock_open(read_data='test!'), create=True)
-@patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True)
 class TestSSHConnector(TestCase):
     def setUp(self):
         self.fake_connect_patch = patch('pyinfra.api.connectors.ssh.SSHClient.connect')
         self.fake_connect_mock = self.fake_connect_patch.start()
+        _get_sftp_connection.cache = {}
 
     def tearDown(self):
         self.fake_connect_patch.stop()
@@ -241,33 +242,245 @@ class TestSSHConnector(TestCase):
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     @patch('pyinfra.api.connectors.ssh.SFTPClient')
-    def test_put_file(self, fake_ssh_client, fake_sftp_client):
-        fake_ssh = MagicMock()
-        fake_ssh.exec_command.return_value = MagicMock(), MagicMock(), MagicMock()
-        fake_ssh_client.return_value = fake_ssh
-
-        fake_sftp = MagicMock()
-        fake_sftp_client.return_value = fake_sftp
-
-        inventory = make_inventory(hosts=('somehost',))
+    def test_put_file(self, fake_sftp_client, fake_ssh_client):
+        inventory = make_inventory(hosts=('anotherhost',))
         state = State(inventory, Config())
-        host = inventory.get_host('somehost')
+        host = inventory.get_host('anotherhost')
         host.connect(state)
 
-        status = host.put_file(state, 'not-a-file', 'not-another-file', print_output=True)
+        fake_open = mock_open(read_data='test!')
+        with patch('pyinfra.api.util.open', fake_open, create=True):
+            status = host.put_file(
+                state, 'not-a-file', 'not-another-file',
+                print_output=True,
+            )
+
         assert status is True
+        fake_sftp_client.from_transport().putfo.assert_called_with(
+            fake_open(), 'not-another-file',
+        )
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     @patch('pyinfra.api.connectors.ssh.SFTPClient')
-    def test_get_file(self, fake_ssh_client, fake_sftp_client):
-        fake_ssh = MagicMock()
-        fake_ssh.exec_command.return_value = MagicMock(), MagicMock(), MagicMock()
-        fake_ssh_client.return_value = fake_ssh
+    def test_put_file_sudo(self, fake_sftp_client, fake_ssh_client):
+        inventory = make_inventory(hosts=('anotherhost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('anotherhost')
+        host.connect(state)
 
+        stdout_mock = MagicMock()
+        stdout_mock.channel.recv_exit_status.return_value = 0
+        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+
+        fake_open = mock_open(read_data='test!')
+        with patch('pyinfra.api.util.open', fake_open, create=True):
+            status = host.put_file(
+                state, 'not-a-file', 'not-another-file',
+                print_output=True,
+                sudo=True,
+                sudo_user='ubuntu',
+            )
+
+        assert status is True
+
+        fake_ssh_client().exec_command.assert_called_with((
+            "sudo -S -H -u ubuntu sh -c 'mv "
+            '/tmp/43db9984686317089fefcf2e38de527e4cb44487 '
+            "not-another-file && chown ubuntu not-another-file'"
+        ), get_pty=False)
+
+        fake_sftp_client.from_transport().putfo.assert_called_with(
+            fake_open(), '/tmp/43db9984686317089fefcf2e38de527e4cb44487',
+        )
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    def test_put_file_su_user_fail(self, fake_sftp_client, fake_ssh_client):
+        inventory = make_inventory(hosts=('anotherhost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('anotherhost')
+        host.connect(state)
+
+        stdout_mock = MagicMock()
+        stdout_mock.channel.recv_exit_status.return_value = 1
+        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+
+        fake_open = mock_open(read_data='test!')
+        with patch('pyinfra.api.util.open', fake_open, create=True):
+            status = host.put_file(
+                state, 'not-a-file', 'not-another-file',
+                print_output=True,
+                su_user='centos',
+            )
+
+        assert status is False
+
+        fake_ssh_client().exec_command.assert_called_with((
+            "su centos -s `which sh` -c 'mv "
+            '/tmp/43db9984686317089fefcf2e38de527e4cb44487 '
+            "not-another-file && chown centos not-another-file'"
+        ), get_pty=False)
+
+        fake_sftp_client.from_transport().putfo.assert_called_with(
+            fake_open(), '/tmp/43db9984686317089fefcf2e38de527e4cb44487',
+        )
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    def test_get_file(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('somehost',))
         state = State(inventory, Config())
         host = inventory.get_host('somehost')
         host.connect(state)
 
-        status = host.get_file(state, 'not-a-file', 'not-another-file', print_output=True)
+        fake_open = mock_open(read_data='test!')
+        with patch('pyinfra.api.util.open', fake_open, create=True):
+            status = host.get_file(
+                state, 'not-a-file', 'not-another-file',
+                print_output=True,
+            )
+
         assert status is True
+        fake_sftp_client.from_transport().getfo.assert_called_with(
+            'not-a-file', fake_open(),
+        )
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    def test_get_file_sudo(self, fake_sftp_client, fake_ssh_client):
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect(state)
+
+        stdout_mock = MagicMock()
+        stdout_mock.channel.recv_exit_status.return_value = 0
+        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+
+        fake_open = mock_open(read_data='test!')
+        with patch('pyinfra.api.util.open', fake_open, create=True):
+            status = host.get_file(
+                state, 'not-a-file', 'not-another-file',
+                print_output=True,
+                sudo=True,
+                sudo_user='ubuntu',
+            )
+
+        assert status is True
+
+        fake_ssh_client().exec_command.assert_has_calls([
+            call((
+                "sudo -S -H -u ubuntu sh -c 'cp not-a-file "
+                "/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r not-a-file'"
+            ), get_pty=False),
+            call((
+                "sudo -S -H -u ubuntu sh -c 'rm -f "
+                "/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"
+            ), get_pty=False),
+        ])
+
+        fake_sftp_client.from_transport().getfo.assert_called_with(
+            '/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508', fake_open(),
+        )
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    def test_get_file_sudo_copy_fail(self, fake_ssh_client):
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect(state)
+
+        stdout_mock = MagicMock()
+        stdout_mock.channel.recv_exit_status.return_value = 1
+        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+
+        status = host.get_file(
+            state, 'not-a-file', 'not-another-file',
+            print_output=True,
+            sudo=True,
+            sudo_user='ubuntu',
+        )
+
+        assert status is False
+
+        fake_ssh_client().exec_command.assert_has_calls([
+            call((
+                "sudo -S -H -u ubuntu sh -c 'cp not-a-file "
+                "/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r not-a-file'"
+            ), get_pty=False),
+        ])
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    def test_get_file_sudo_remove_fail(self, fake_sftp_client, fake_ssh_client):
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect(state)
+
+        stdout_mock = MagicMock()
+        stdout_mock.channel.recv_exit_status.side_effect = [0, 1]
+        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+
+        fake_open = mock_open(read_data='test!')
+        with patch('pyinfra.api.util.open', fake_open, create=True):
+            status = host.get_file(
+                state, 'not-a-file', 'not-another-file',
+                print_output=True,
+                sudo=True,
+                sudo_user='ubuntu',
+            )
+
+        assert status is False
+
+        fake_ssh_client().exec_command.assert_has_calls([
+            call((
+                "sudo -S -H -u ubuntu sh -c 'cp not-a-file "
+                "/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r not-a-file'"
+            ), get_pty=False),
+            call((
+                "sudo -S -H -u ubuntu sh -c 'rm -f "
+                "/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"
+            ), get_pty=False),
+        ])
+
+        fake_sftp_client.from_transport().getfo.assert_called_with(
+            '/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508', fake_open(),
+        )
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    def test_get_file_su_user(self, fake_sftp_client, fake_ssh_client):
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect(state)
+
+        stdout_mock = MagicMock()
+        stdout_mock.channel.recv_exit_status.return_value = 0
+        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+
+        fake_open = mock_open(read_data='test!')
+        with patch('pyinfra.api.util.open', fake_open, create=True):
+            status = host.get_file(
+                state, 'not-a-file', 'not-another-file',
+                print_output=True,
+                su_user='centos',
+            )
+
+        assert status is True
+
+        fake_ssh_client().exec_command.assert_has_calls([
+            call((
+                "su centos -s `which sh` -c 'cp not-a-file "
+                "/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r not-a-file'"
+            ), get_pty=False),
+            call((
+                "su centos -s `which sh` -c 'rm -f "
+                "/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"
+            ), get_pty=False),
+        ])
+
+        fake_sftp_client.from_transport().getfo.assert_called_with(
+            '/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508', fake_open(),
+        )
