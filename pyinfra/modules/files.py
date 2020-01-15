@@ -557,15 +557,26 @@ def template(
        For information on the template syntax, see
        `the jinja2 docs <https://jinja.palletsprojects.com>`_.
 
-    Example:
+    Examples:
 
     .. code:: python
 
         files.template(
             {'Create a templated file'},
+            'templates/somefile.conf.j2',
+            '/etc/somefile.conf',
+        )
+
+        # Example showing how to pass python variable to template file.
+        # The .j2 file can use `{{ foo_variable }}` to be interpolated.
+        foo_variable = 'This is some foo variable contents'
+        files.template(
+            {'Create a templated file'},
             'templates/foo.j2',
             '/tmp/foo',
+            foo_variable=foo_variable,
         )
+
     '''
 
     if state.deploy_dir:

@@ -63,6 +63,7 @@ files.template(
     {'Create a templated file'},
     'templates/foo.j2',
     '/tmp/foo',
+    foo_variable=foo_variable,
 )
 
 files.link(

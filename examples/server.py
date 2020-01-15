@@ -89,6 +89,14 @@ server.script(
 )
 
 # To see output need to run pyinfra with '-v'
+some_var = 'blah blah blah '
+server.script_template(
+    {'Hello from script'},
+    'templates/hello2.bash.j2',
+    some_var=some_var,
+)
+
+# To see output need to run pyinfra with '-v'
 server.shell(
     {'Say Hello'},
     'echo Hello',
