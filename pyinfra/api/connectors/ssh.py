@@ -69,7 +69,7 @@ def _get_private_key(state, key_filename, key_password):
             # huge fan of having CLI specific code in here, but it doesn't really fit
             # anywhere else without duplicating lots of key related code into cli.py.
             if not key_password:
-                if pyinfra.is_cli:
+                if pyinfra.is_cli:  # pragma: no cover
                     key_password = getpass(
                         'Enter password for private key: {0}: '.format(
                             key_filename,
