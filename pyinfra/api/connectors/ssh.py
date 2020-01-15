@@ -347,18 +347,8 @@ def get_file(
 
 def _put_file(host, filename_or_io, remote_location):
     with get_file_io(filename_or_io) as file_io:
-        # Upload it via SFTP
         sftp = _get_sftp_connection(host)
-
-        try:
-            sftp.putfo(file_io, remote_location)
-        except IOError as e:
-            # IO mismatch errors might indicate full disks
-            message = getattr(e, 'message', None)
-            if message and message.startswith('size mismatch in put!  0 !='):
-                raise IOError('{0} (disk may be full)'.format(e.message))
-
-            raise
+        sftp.putfo(file_io, remote_location)
 
 
 def put_file(
