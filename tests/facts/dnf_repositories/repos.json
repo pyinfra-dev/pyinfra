@@ -1,0 +1,19 @@
+{
+    "command": "cat /etc/dnf.conf /etc/dnf.repos.d/*.repo /etc/yum.repos.d/*.repo 2> /dev/null || true",
+    "output": [
+        "",
+        "[somerepo]",
+        "baseurl=abc",
+        "",
+        "[anotherrepo]"
+    ],
+    "fact": [
+        {
+            "name": "somerepo",
+            "baseurl": "abc"
+        },
+        {
+            "name": "anotherrepo"
+        }
+    ]
+}
