@@ -158,9 +158,6 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
 
 class TestCliDeployState(PatchSSHTestCase):
-    def setUp(self):
-        pseudo_state.reset()
-
     def test_deploy(self):
         # Run 3 iterations of the test - each time shuffling the order of the
         # hosts - ensuring that the ordering has no effect on the operation order.
@@ -168,6 +165,8 @@ class TestCliDeployState(PatchSSHTestCase):
             self._do_test_deploy()
 
     def _do_test_deploy(self):
+        pseudo_state.reset()
+
         correct_op_name_and_host_names = [
             ('First main operation', True),  # true for all hosts
             ('Second main operation', ('somehost',)),
