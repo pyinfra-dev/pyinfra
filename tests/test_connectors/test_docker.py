@@ -8,7 +8,7 @@ from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
 from pyinfra.api.util import make_command
 
-from .util import make_inventory
+from ..util import make_inventory
 
 
 def fake_docker_shell(command, splitlines=None):

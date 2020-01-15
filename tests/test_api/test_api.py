@@ -6,8 +6,8 @@ from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import NoGroupError, NoHostError, PyinfraError
 
-from .paramiko_util import PatchSSHTestCase
-from .util import make_inventory
+from ..paramiko_util import PatchSSHTestCase
+from ..util import make_inventory
 
 
 class TestInventoryApi(TestCase):

@@ -15,8 +15,8 @@ from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import PyinfraError
 
-from .paramiko_util import FakeRSAKey
-from .util import make_inventory
+from ..paramiko_util import FakeRSAKey
+from ..util import make_inventory
 
 
 class TestSSHConnector(TestCase):

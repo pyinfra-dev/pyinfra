@@ -9,7 +9,7 @@ import pyinfra
 from pyinfra import pseudo_state
 from pyinfra_cli.main import _main, cli
 
-from .paramiko_util import PatchSSHTestCase
+from ..paramiko_util import PatchSSHTestCase
 
 
 def run_cli(*arguments):
@@ -51,7 +51,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_deploy_inventory(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
             'server.shell',
             '--debug-data',
         )
@@ -59,7 +59,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_get_facts(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
             'fact',
             'os',
         )
@@ -68,7 +68,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_deploy_operation(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
             'server.shell',
             'echo hi',
         )
@@ -76,7 +76,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_deploy_operation_with_all(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventory_all.py'),
+            path.join('tests', 'deploy', 'inventory_all.py'),
             'server.shell',
             'echo hi',
         )
@@ -84,7 +84,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
             'exec',
             '--',
             'echo hi',
@@ -93,7 +93,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command_with_options(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
             'exec',
             '--sudo',
             '--sudo-user', 'pyinfra',
@@ -107,7 +107,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command_with_serial(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
             'exec',
             '--serial',
             '--',
@@ -117,7 +117,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command_with_no_wait(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
             'exec',
             '--no-wait',
             '--',
@@ -127,7 +127,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command_with_debug_operations(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
             'exec',
             '--debug-operations',
             '--',
@@ -137,7 +137,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command_with_debug_facts(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
             'exec',
             '--debug-facts',
             '--',
@@ -147,7 +147,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_exec_command_with_debug_data_limit(self):
         result = run_cli(
-            path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
             'exec',
             '--debug-data',
             '--limit', 'somehost',
@@ -171,10 +171,10 @@ class TestCliDeployState(PatchSSHTestCase):
         correct_op_name_and_host_names = [
             ('First main operation', True),  # true for all hosts
             ('Second main operation', ('somehost',)),
-            ('tests/test_deploy/tasks/a_task.py | First task operation', ('anotherhost',)),
-            ('tests/test_deploy/tasks/a_task.py | Second task operation', ('anotherhost',)),
-            ('tests/test_deploy/tasks/a_task.py | First task operation', True),
-            ('tests/test_deploy/tasks/a_task.py | Second task operation', True),
+            ('tests/deploy/tasks/a_task.py | First task operation', ('anotherhost',)),
+            ('tests/deploy/tasks/a_task.py | Second task operation', ('anotherhost',)),
+            ('tests/deploy/tasks/a_task.py | First task operation', True),
+            ('tests/deploy/tasks/a_task.py | Second task operation', True),
             ('Loop-0 main operation', True),
             ('Loop-1 main operation', True),
             ('Third main operation', True),
@@ -190,7 +190,7 @@ class TestCliDeployState(PatchSSHTestCase):
 
         result = run_cli(
             ','.join(hosts),
-            path.join('tests', 'test_deploy', 'deploy.py'),
+            path.join('tests', 'deploy', 'deploy.py'),
         )
         assert result.exit_code == 0
 
