@@ -47,6 +47,12 @@ class FakeChannel(object):
     def recv_exit_status(self):
         return self.exit_status
 
+    def write(self, data):
+        pass
+
+    def close(self):
+        pass
+
 
 class FakeBuffer(object):
     def __init__(self, data, channel):
@@ -86,6 +92,9 @@ class FakeSFTPClient(object):
         return cls()
 
     def putfo(self, file_io, remote_location):
+        pass
+
+    def getfo(self, remote_location, file_io):
         pass
 
 

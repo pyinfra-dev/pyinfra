@@ -9,7 +9,7 @@ import six
 from pyinfra import logger
 from pyinfra.api.util import get_file_io, make_command
 
-from .util import read_buffers_into_queue, split_combined_output
+from .util import read_buffers_into_queue, split_combined_output, write_stdin
 
 
 def connect(state, host, for_fact=None):
@@ -32,7 +32,10 @@ def connect(state, host, for_fact=None):
 
 def run_shell_command(
     state, host, command,
-    get_pty=False, timeout=None, print_output=False,
+    get_pty=False,  # ignored
+    timeout=None,
+    stdin=None,
+    print_output=False,
     return_combined_output=False,
     **command_kwargs
 ):
@@ -40,12 +43,11 @@ def run_shell_command(
     Execute a command on the local machine.
 
     Args:
-        state (``pyinfra.api.State`` obj): state object for this command
-        hostname (string): hostname of the target
+        state (``pyinfra.api.State`` object): state object for this command
+        host (``pyinfra.api.Host`` object): the target host
         command (string): actual command to execute
         sudo (boolean): whether to wrap the command with sudo
         sudo_user (string): user to sudo to
-        get_pty (boolean): whether to get a PTY before executing the command
         env (dict): envrionment variables to set
         timeout (int): timeout for this command to complete before erroring
 
@@ -61,7 +63,10 @@ def run_shell_command(
     if print_output:
         print('{0}>>> {1}'.format(host.print_prefix, command))
 
-    process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
+    process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+
+    if stdin:
+        write_stdin(stdin, process.stdin)
 
     combined_output = read_buffers_into_queue(
         host,

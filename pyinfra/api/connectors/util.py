@@ -61,3 +61,15 @@ def split_combined_output(combined_output):
             raise ValueError('Incorrect output line type: {0}'.format(type_))
 
     return stdout, stderr
+
+
+def write_stdin(stdin, buffer):
+    if not isinstance(stdin, (list, tuple)):
+        stdin = [stdin]
+
+    for line in stdin:
+        if not line.endswith('\n'):
+            line = '{0}\n'.format(line)
+        line = line.encode()
+        buffer.write(line)
+    buffer.close()

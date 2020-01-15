@@ -40,6 +40,7 @@ operation_kwargs = {
     },
     'timeout': 'Timeout for *each* command executed during the operation.',
     'get_pty': 'Whether to get a pseudoTTY when executing any commands.',
+    'stdin': 'String or buffer to send to the stdin of any commands',
 }
 
 execution_kwargs = {

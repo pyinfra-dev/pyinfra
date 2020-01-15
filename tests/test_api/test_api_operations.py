@@ -10,12 +10,12 @@ from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.modules import files, python, server
 
-from .paramiko_util import (
+from ..paramiko_util import (
     FakeBuffer,
     FakeChannel,
     PatchSSHTestCase,
 )
-from .util import make_inventory
+from ..util import make_inventory
 
 
 class TestOperationsApi(PatchSSHTestCase):
