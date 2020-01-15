@@ -2,6 +2,7 @@ from pyinfra import host
 from pyinfra.modules import apt, files, init, server
 
 # Create a simple PXE server that allows you to boot Ubuntu Desktop
+# Used https://linuxhint.com/pxe_boot_ubuntu_server/ as starting point.
 #
 # To try this out: (change ip to be on your local network)
 # 1. Modify the ../Vagrantfile and add this line the ubuntu18
@@ -19,15 +20,20 @@ from pyinfra.modules import apt, files, init, server
 #  5. Go into Network Adapter, and change to "Bridged Networking/Autodetect"
 #
 # Notes:
-# 1. This deploy requires two files (default.j2 and dnsmask.conf.j2)
-#    from templates/ directory.
-# 2. For troubleshooting, from 192.168.0.240, see /var/log/syslog or
+# 1. This deploy requires two files from templates/ directory:
+#    default.j2 and dnsmask.conf.j2
+# 2. For troubleshooting, connect to pxe_server and see /var/log/syslog or
 #    run "systemctl status dnsmasq" or
 #    run "systemctl status nfs-kernel-server".
+# 3. The vagrant box does not have ufw (firewall) enabled. You should/may.
 
 SUDO = True
 
-# TODO: Can I set "global" variables to be used in templates here?
+# If you change pxe_server value then check/change ../Vagrantfile
+pxe_server = '192.168.0.240'
+interface = 'eth1'
+dhcp_start = '192.168.0.220'
+dhcp_end = '192.168.0.230'
 
 # setup pxe infra
 
@@ -44,6 +50,10 @@ if host.fact.linux_name == 'Ubuntu':
         {'Create dnsmasq configuration file'},
         'templates/dnsmasq.conf.j2',
         '/etc/dnsmasq.conf',
+        pxe_server=pxe_server,
+        interface=interface,
+        dhcp_start=dhcp_start,
+        dhcp_end=dhcp_end,
     )
 
     # create necessary directories
@@ -77,13 +87,6 @@ if host.fact.linux_name == 'Ubuntu':
         'no_root_squash,insecure,no_subtree_check)',
     )
 
-    init.d(
-        {'Restart and enable nfs'},
-        'nfs-kernel-server',
-        restarted=True,
-        enabled=True,
-    )
-
     server.shell(
         {'Make share available'},
         'exportfs -a',
@@ -103,16 +106,11 @@ if host.fact.linux_name == 'Ubuntu':
                 'cp -v /usr/lib/syslinux/modules/bios/{} /netboot/tftp/'.format(file),
             )
 
-#    files.file(
-#        {'Ensure file exists'},
-#        '/netboot/tftp/pxelinux.cfg/default',
-#        touch=True,
-#    )
-
     files.template(
         {'Create a templated file'},
         'templates/default.j2',
         '/netboot/tftp/pxelinux.cfg/default',
+        pxe_server=pxe_server,
     )
 
     # TODO: check sha
@@ -145,14 +143,19 @@ if host.fact.linux_name == 'Ubuntu':
                 '/netboot/tftp/ubuntu1804/{}'.format(file, file),
             )
 
-    # TODO: do this conditionally?
     server.shell(
         {'Set permissions'},
         'chmod -Rfv 777 /netboot',
     )
 
-    # TODO: do this conditionally?
     server.shell(
         {'Unmount /mnt'},
         'umount /mnt',
+    )
+
+    init.d(
+        {'Restart and enable nfs'},
+        'nfs-kernel-server',
+        restarted=True,
+        enabled=True,
     )

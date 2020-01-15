@@ -1,14 +1,14 @@
-interface=eth1
+interface={{ interface }}
 bind-interfaces
 domain=linuxhint.local
  
-dhcp-range=eth1,192.168.0.220,192.168.0.230,255.255.255.0,8h
-dhcp-option=option:router,192.168.0.240
-dhcp-option=option:dns-server,192.168.0.240
+dhcp-range={{ interface }},{{ dhcp_start }},{{ dhcp_end }},255.255.255.0,8h
+dhcp-option=option:router,{{ pxe_server }}
+dhcp-option=option:dns-server,{{ pxe_server }}
 dhcp-option=option:dns-server,8.8.8.8
  
 enable-tftp
 tftp-root=/netboot/tftp
-dhcp-boot=pxelinux.0,linuxhint-s20,192.168.0.240
+dhcp-boot=pxelinux.0,linuxhint-s20,{{ pxe_server }}
 pxe-prompt="Press F8 for PXE Network boot.", 2
 pxe-service=x86PC, "Install OS via PXE",pxelinux

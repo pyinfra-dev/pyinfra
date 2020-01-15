@@ -113,6 +113,7 @@ datetimes
 default'
 deque
 dereference
+dhcp
 dirnames
 distro
 distros
@@ -266,6 +267,7 @@ tftp
 ubuntu18
 ubuntu18'
 udp
+ufw
 unitialised
 unmount
 up2
