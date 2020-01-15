@@ -7,8 +7,6 @@ import six
 
 from six.moves import shlex_quote
 
-import pyinfra
-
 from pyinfra import local, logger
 from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import get_file_io, memoize
@@ -47,9 +45,6 @@ def connect(state, host, for_fact=None):
 
 
 def disconnect(state, host):
-    if not pyinfra.is_cli:
-        return
-
     container_id = host.host_data['docker_container_id'][:12]
 
     with progress_spinner({'docker commit'}):
