@@ -26,8 +26,8 @@ def make_names_data(image=None):
 
     show_warning()
 
-    # Save the image as the hostname, no data, @docker group
-    yield image, {}, ['@docker']
+    # Save the image as the hostname, the image as data, @docker group
+    yield '@docker/{0}'.format(image), {'docker_image': image}, ['@docker']
 
 
 def connect(state, host, for_fact=None):
@@ -36,7 +36,7 @@ def connect(state, host, for_fact=None):
 
     with progress_spinner({'docker run'}):
         container_id = local.shell(
-            'docker run -d {0} sleep 10000'.format(host.name),
+            'docker run -d {0} sleep 10000'.format(host.data.docker_image),
             splitlines=True,
         )[-1]  # last line is the container ID
 

@@ -42,7 +42,7 @@ class TestDockerConnector(TestCase):
             ('@docker/not-an-image', {'docker_container_id': 'abc'}),
         ))
         state = State(inventory, Config())
-        host = inventory.get_host('not-an-image')
+        host = inventory.get_host('@docker/not-an-image')
         host.connect(state)
         assert host.data.docker_container_id == 'abc'
 
@@ -55,7 +55,7 @@ class TestDockerConnector(TestCase):
     def test_connect_disconnect_host(self):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
         state = State(inventory, Config())
-        host = inventory.get_host('not-an-image')
+        host = inventory.get_host('@docker/not-an-image')
         host.connect(state, for_fact=True)
         self.assertEqual(len(state.active_hosts), 0)
         host.disconnect(state)
@@ -66,7 +66,7 @@ class TestDockerConnector(TestCase):
 
         command = 'echo hi'
 
-        host = inventory.get_host('not-an-image')
+        host = inventory.get_host('@docker/not-an-image')
         host.connect(state)
         host.run_shell_command(state, command, stdin='hello', print_output=True)
 
@@ -83,7 +83,7 @@ class TestDockerConnector(TestCase):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
         state = State(inventory, Config())
 
-        host = inventory.get_host('not-an-image')
+        host = inventory.get_host('@docker/not-an-image')
         host.connect(state)
 
         fake_process = MagicMock(returncode=0)
@@ -100,7 +100,7 @@ class TestDockerConnector(TestCase):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
         state = State(inventory, Config())
 
-        host = inventory.get_host('not-an-image')
+        host = inventory.get_host('@docker/not-an-image')
         host.connect(state)
 
         fake_process = MagicMock(returncode=1)
@@ -113,7 +113,7 @@ class TestDockerConnector(TestCase):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
         state = State(inventory, Config())
 
-        host = inventory.get_host('not-an-image')
+        host = inventory.get_host('@docker/not-an-image')
         host.connect(state)
 
         fake_process = MagicMock(returncode=0)
@@ -130,7 +130,7 @@ class TestDockerConnector(TestCase):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
         state = State(inventory, Config())
 
-        host = inventory.get_host('not-an-image')
+        host = inventory.get_host('@docker/not-an-image')
         host.connect(state)
 
         fake_process = MagicMock(returncode=1)
