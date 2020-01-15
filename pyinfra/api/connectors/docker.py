@@ -17,7 +17,7 @@ from .local import run_shell_command as run_local_shell_command
 
 @memoize
 def show_warning():
-    logger.warning('The @docker connector is in Alpha!')
+    logger.warning('The @docker connector is in beta!')
 
 
 def make_names_data(image=None):
