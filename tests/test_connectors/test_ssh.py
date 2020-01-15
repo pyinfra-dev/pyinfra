@@ -4,7 +4,7 @@ from socket import (
 )
 from unittest import TestCase
 
-from mock import patch
+from mock import MagicMock, mock_open, patch
 from paramiko import (
     AuthenticationException,
     PasswordRequiredException,
@@ -19,23 +19,17 @@ from ..paramiko_util import FakeRSAKey
 from ..util import make_inventory
 
 
+@patch('pyinfra.api.connectors.ssh.AgentRequestHandler', MagicMock())
+@patch('pyinfra.api.connectors.ssh.SSHClient.get_transport', MagicMock())
+@patch('pyinfra.api.connectors.ssh.open', mock_open(read_data='test!'), create=True)
+@patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True)
 class TestSSHConnector(TestCase):
     def setUp(self):
         self.fake_connect_patch = patch('pyinfra.api.connectors.ssh.SSHClient.connect')
         self.fake_connect_mock = self.fake_connect_patch.start()
 
-        self.fake_get_transport_patch = patch('pyinfra.api.connectors.ssh.SSHClient.get_transport')
-        self.fake_get_transport_patch.start()
-
-        self.fake_agentrequesthandler_patch = patch(
-            'pyinfra.api.connectors.ssh.AgentRequestHandler',
-        )
-        self.fake_agentrequesthandler_patch.start()
-
     def tearDown(self):
         self.fake_connect_patch.stop()
-        self.fake_get_transport_patch.stop()
-        self.fake_agentrequesthandler_patch.stop()
 
     def test_connect_all(self):
         inventory = make_inventory()
@@ -219,3 +213,61 @@ class TestSSHConnector(TestCase):
 
         # Ensure pyinfra style IOError
         self.assertTrue(e.exception.args[0].startswith('No such private key file:'))
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    def test_run_shell_command(self, fake_ssh_client):
+        fake_ssh = MagicMock()
+        fake_ssh.exec_command.return_value = MagicMock(), MagicMock(), MagicMock()
+
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect(state)
+
+        command = 'echo hi'
+
+        out = host.run_shell_command(state, command, stdin='hello', print_output=True)
+        assert len(out) == 3
+
+        combined_out = host.run_shell_command(
+            state, command, stdin='hello', print_output=True,
+            return_combined_output=True,
+        )
+        assert len(combined_out) == 2
+
+        fake_ssh.exec_command.assert_called_with("sh -c 'echo hi'", get_pty=False)
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    def test_put_file(self, fake_ssh_client, fake_sftp_client):
+        fake_ssh = MagicMock()
+        fake_ssh.exec_command.return_value = MagicMock(), MagicMock(), MagicMock()
+        fake_ssh_client.return_value = fake_ssh
+
+        fake_sftp = MagicMock()
+        fake_sftp_client.return_value = fake_sftp
+
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect(state)
+
+        status = host.put_file(state, 'not-a-file', 'not-another-file', print_output=True)
+        assert status is True
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    def test_get_file(self, fake_ssh_client, fake_sftp_client):
+        fake_ssh = MagicMock()
+        fake_ssh.exec_command.return_value = MagicMock(), MagicMock(), MagicMock()
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect(state)
+
+        status = host.get_file(state, 'not-a-file', 'not-another-file', print_output=True)
+        assert status is True
