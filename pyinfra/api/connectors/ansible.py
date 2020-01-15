@@ -11,7 +11,7 @@ from pyinfra.api.util import memoize
 
 @memoize
 def show_warning():
-    logger.warning('The @ansible connector is in Alpha!')
+    logger.warning('The @ansible connector is in alpha!')
 
 
 @memoize

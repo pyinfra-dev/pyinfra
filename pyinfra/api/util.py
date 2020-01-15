@@ -137,7 +137,7 @@ class FallbackDict(object):
 
 @memoize
 def show_stdin_global_warning():
-    logger.warning('The stdin global argument is in Alpha!')
+    logger.warning('The stdin global argument is in alpha!')
 
 
 def pop_global_op_kwargs(state, kwargs):
