@@ -5,7 +5,7 @@ SUDO = True
 
 # If you change pxe_server value below then check/change Vagrantfile
 pxe_server = '192.168.0.240'
-interface = 'eth2'
+interface = 'eth1'
 dhcp_start = '192.168.0.220'
 dhcp_end = '192.168.0.230'
 
