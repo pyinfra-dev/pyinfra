@@ -1,35 +1,9 @@
 from pyinfra import host
 from pyinfra.modules import apt, files, init, server
 
-# Create a simple PXE server that allows you to boot Ubuntu Server
-# Used https://linuxhint.com/pxe_boot_ubuntu_server/ as starting point.
-#
-# To try this out: (change ip to be on your local network)
-# 1. Modify the ../Vagrantfile and add this line the ubuntu18
-#    ubuntu.vm.network "public_network", ip: "192.168.0.240"
-# 2. Spin up an Ubuntu18 instance ('cd ..; vagrant up ubuntu18')
-# 3. Modify the network to be "Bridged Networking/Autodetect" after VM has been booted.
-# 4. Run this deploy:
-#    pyinfra  --user vagrant --password vagrant 192.168.0.240 pxe_infra.py
-#
-# Test that it actually works from VMware by:
-#  1. Create a new custom virtual machine
-#  2. Linux/Other Linux 3.x kernel 64-bit
-#  3. Legacy BIOS
-#  4. Accept defaults for VM
-#  5. Go into Network Adapter, and change to "Bridged Networking/Autodetect"
-#
-# Notes:
-# 1. This deploy requires two files from templates/ directory:
-#    default.j2 and dnsmask.conf.j2
-# 2. For troubleshooting, connect to pxe_server and see /var/log/syslog or
-#    run "systemctl status dnsmasq" or
-#    run "systemctl status nfs-kernel-server".
-# 3. The vagrant box does not have ufw (firewall) enabled. You should/may.
-
 SUDO = True
 
-# If you change pxe_server value then check/change ../Vagrantfile
+# If you change pxe_server value below then check/change Vagrantfile
 pxe_server = '192.168.0.240'
 interface = 'eth1'
 dhcp_start = '192.168.0.220'
