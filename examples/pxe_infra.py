@@ -1,7 +1,7 @@
 from pyinfra import host
 from pyinfra.modules import apt, files, init, server
 
-# Create a simple PXE server that allows you to boot Ubuntu Desktop
+# Create a simple PXE server that allows you to boot Ubuntu Server
 # Used https://linuxhint.com/pxe_boot_ubuntu_server/ as starting point.
 #
 # To try this out: (change ip to be on your local network)
@@ -115,7 +115,8 @@ if host.fact.linux_name == 'Ubuntu':
 
     # TODO: check sha
     # TODO: check pgp?
-    iso = 'ubuntu-18.04.3-desktop-amd64.iso'
+    # iso = 'ubuntu-18.04.3-desktop-amd64.iso'
+    iso = 'ubuntu-18.04.3-live-server-amd64.iso'
     iso_full_path = '/tmp/{}'.format(iso)
     files.download(
         {'Download `{}` iso'.format(iso)},
