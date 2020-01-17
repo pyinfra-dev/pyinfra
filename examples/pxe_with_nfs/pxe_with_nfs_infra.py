@@ -5,7 +5,7 @@ SUDO = True
 
 # If you change pxe_server value below then check/change Vagrantfile
 pxe_server = '192.168.0.240'
-interface = 'eth1'
+interface = 'eth2'
 dhcp_start = '192.168.0.220'
 dhcp_end = '192.168.0.230'
 
@@ -45,10 +45,10 @@ if host.fact.linux_name == 'Ubuntu':
             dir,
         )
 
-    # TODO: how to see if the service started ok
-    init.d(
+    init.systemd(
         {'Restart and enable dnsmasq'},
         'dnsmasq',
+        running=True,
         restarted=True,
         enabled=True,
     )

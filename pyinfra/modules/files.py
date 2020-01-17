@@ -141,6 +141,13 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
             'insecure,no_subtree_check)',
         )
 
+        files.line(
+            {'Ensure myweb can run /usr/bin/python3 without password'},
+            '/etc/sudoers',
+            r'myweb .*',
+            replace='myweb ALL=(ALL) NOPASSWD: /usr/bin/python3',
+        )
+
     '''
 
     match_line = line
@@ -567,6 +574,15 @@ def template(
             '/etc/somefile.conf',
         )
 
+        files.template(
+            {'Create service file'},
+            'templates/myweb.service.j2',
+            '/etc/systemd/system/myweb.service',
+            mode='755',
+            user='root',
+            group='root',
+        )
+
         # Example showing how to pass python variable to template file.
         # The .j2 file can use `{{ foo_variable }}` to be interpolated.
         foo_variable = 'This is some foo variable contents'
@@ -836,6 +852,13 @@ def directory(
             {'Ensure the /tmp/dir_that_we_want_removed is removed'},
             '/tmp/dir_that_we_want_removed',
             present=False,
+        )
+
+        files.directory(
+            {'Ensure /web exists'},
+            '/web',
+            user='myweb',
+            group='myweb',
         )
 
         # multiple directories

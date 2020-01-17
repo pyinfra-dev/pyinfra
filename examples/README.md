@@ -7,3 +7,5 @@ Be sure to check out:
 [Simple PXE Server to install Ubuntu Server over network](pxe/README.md)
 
 [PXE Server using NFS for installation of Ubuntu Server](pxe_with_nfs/README.md)
+
+[Python web server](python_webserver/README.md)

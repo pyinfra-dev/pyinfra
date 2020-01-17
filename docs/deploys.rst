@@ -13,7 +13,7 @@ Layout
 + ``*.py`` - top-level operations
 + ``inventories/*.py`` - groups of hosts and individual host data
 + ``group_data/*.py`` - arbitrary data for host groups
-+ ``templates/*.jn2`` - templates files
++ ``templates/*.j2`` - jinja2 templates files (see <https://jinja.palletsprojects.com>)
 + ``files/*`` - normal/non-template files
 + ``tasks/*.py`` - operations to perform a specific task
 + ``config.py`` - optional config and hooks

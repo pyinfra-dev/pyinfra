@@ -21,6 +21,16 @@ def wait(state, host, port=None):
     second.
 
     + port: port number to wait for
+
+    Example:
+
+    .. code:: python
+
+        server.wait(
+            {'Wait for webserver to start'},
+            port=80,
+        )
+
     '''
 
     yield r'''
@@ -519,6 +529,12 @@ def user(
             {'Ensure user is removed'},
             'kevin',
             present=False,
+        )
+
+        server.user(
+            {'Ensure myweb user exists'},
+            'myweb',
+            shell='/bin/bash',
         )
 
         # multiple users
