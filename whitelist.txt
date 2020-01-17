@@ -120,6 +120,7 @@ dirnames
 distro
 distros
 dnf
+dns
 dnsmask
 dnsmasq
 docbits

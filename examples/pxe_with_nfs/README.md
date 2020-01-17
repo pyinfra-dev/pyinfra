@@ -1,7 +1,8 @@
+# Overview
 Create a simple PXE server that allows you to boot Ubuntu Server
-over tftp.
+over nfs.
 
-Used https://graspingtech.com/network-install-ubuntu-18-04 as a starting point.
+Used https://linuxhint.com/pxe_boot_ubuntu_server/ as starting point.
 
 # To try it out
 
@@ -11,9 +12,9 @@ To try this out:
 
     ubuntu.vm.network "public_network", ip: "192.168.0.240"
 
-2. Spin up an test VM
+2. Spin up an Ubuntu18 instance
 
-    vagrant up
+    vagrant up ubuntu18
 
 3. Modify the network to be "Bridged Networking/Autodetect" after VM has been booted.
 
@@ -32,8 +33,8 @@ Test that it actually works from VMware by:
 5. Go into Network Adapter, and change to "Bridged Networking/Autodetect"
 
 # Notes
-1. This deploy requires one file from templates/ directory:
-   dnsmask.conf.j2
+1. This deploy requires two files from templates/ directory:
+   default.j2 and dnsmask.conf.j2
 2. For troubleshooting, connect to pxe_server and see /var/log/syslog or
    run "systemctl status dnsmasq" or
    run "systemctl status nfs-kernel-server".

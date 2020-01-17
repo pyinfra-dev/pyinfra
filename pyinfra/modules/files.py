@@ -838,6 +838,7 @@ def directory(
             present=False,
         )
 
+        # multiple directories
         dirs = ['/netboot/tftp', '/netboot/nfs']
         for dir in dirs:
             files.directory(
