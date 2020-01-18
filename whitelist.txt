@@ -1,6 +1,7 @@
 '
 ''
 '''
+'4
 '700'
 'c
 'cd
@@ -137,6 +138,7 @@ frameinfo
 fs
 fstab
 gaierror
+generic'
 getargspec
 getfo
 getframeinfo
@@ -272,6 +274,7 @@ ubuntu18
 ubuntu18'
 udp
 ufw
+uname
 unitialised
 unmount
 up2
@@ -279,6 +282,7 @@ v'
 v0
 v1
 venv
+virtualbox
 virtualenv
 vm
 vmlinuz

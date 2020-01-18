@@ -12,7 +12,7 @@ To try this out:
 
     ubuntu.vm.network "public_network", ip: "192.168.0.240"
 
-2. Spin up an test VM
+2. Spin up a test VM
 
     vagrant up
 
@@ -20,7 +20,7 @@ To try this out:
 
 4. From this directory, run:
 
-    pyinfra  --user vagrant --password vagrant 192.168.0.240 pxe_with_nfs_infra.py
+    pyinfra --user vagrant --password vagrant 192.168.0.240 pxe_with_nfs_infra.py
 
 # Testing
 
