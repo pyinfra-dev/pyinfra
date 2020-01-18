@@ -16,6 +16,16 @@ def keyscan(state, host, hostname, force=False):
 
     + hostname: hostname that should have a key in ``known_hosts``
     + force: if the key already exists, remove and rescan
+
+    Example:
+
+    .. code:: python
+
+        ssh.keyscan(
+            {'Set add server two to known_hosts on one'},
+            'two.example.com',
+        )
+
     '''
 
     yield files.directory(
@@ -47,6 +57,18 @@ def command(state, host, hostname, command, ssh_user=None):
     + hostname: the hostname to connect to
     + command: the command to execute
     + ssh_user: connect with this user
+
+    Example:
+
+    .. code:: python
+
+        ssh.command(
+            {'Create file by running echo from host one to host two'},
+            'two.example.com',
+            'echo "one was here" > /tmp/one.txt',
+            ssh_user='vagrant',
+        )
+
     '''
 
     connection_target = hostname

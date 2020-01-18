@@ -48,6 +48,7 @@ if host.fact.linux_name in ['Ubuntu']:
         '/web/index.html',
     )
 
+    # Note: Allowing sudo to python is not a very secure.
     files.line(
         {'Ensure myweb can run /usr/bin/python3 without password'},
         '/etc/sudoers',
