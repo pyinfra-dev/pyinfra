@@ -7,6 +7,7 @@
 'cd
 'mech
 'none'
+'pyinfra
 's
 'ubuntu
 'vm'
@@ -215,6 +216,7 @@ pty
 putfo
 pxe
 pxelinux
+py'
 pyc
 pygments
 pyinfra

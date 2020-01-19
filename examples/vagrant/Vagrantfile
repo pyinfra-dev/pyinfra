@@ -1,4 +1,4 @@
-# pyinfra test vm for pxe_infra
+# pyinfra test vm
 
 Vagrant.configure('2') do |config|
     # Disable /vagrant synced folder
