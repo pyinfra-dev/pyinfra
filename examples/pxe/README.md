@@ -2,7 +2,7 @@
 Create a simple PXE server that allows you to boot Ubuntu Server
 over tftp.
 
-Used https://graspingtech.com/network-install-ubuntu-18-04 as a starting point.
+Used [this](https://graspingtech.com/network-install-ubuntu-18-04) as a starting point.
 
 # To try it out
 

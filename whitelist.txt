@@ -118,6 +118,7 @@ default'
 deque
 dereference
 dhcp
+digitalocean
 dirnames
 distro
 distros
@@ -247,6 +248,7 @@ shlex
 signum
 simplefilter
 somehost
+sshkeys
 sshuserclient
 status
 status'

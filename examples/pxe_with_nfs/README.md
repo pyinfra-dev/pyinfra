@@ -2,7 +2,7 @@
 Create a simple PXE server that allows you to boot Ubuntu Server
 over nfs.
 
-Used https://linuxhint.com/pxe_boot_ubuntu_server/ as starting point.
+Used [this](https://linuxhint.com/pxe_boot_ubuntu_server/) as starting point.
 
 # To try it out
 
