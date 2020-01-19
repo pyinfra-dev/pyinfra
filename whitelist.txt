@@ -219,6 +219,7 @@ repo
 repos
 rfind
 rol
+rsa
 rst
 runlevels
 s1

@@ -5,7 +5,13 @@ SUDO = True
 
 if host.name == '@vagrant/two':
 
-    # TODO: Is there a better way?
+    # TODO: Is there a better way to see if a key
+    # exists in authorized_keys, if not add it
+    # perhaps there should be a new operation:
+    # ssh.authorized_keys(user, pub_key_line, present, ensure_perms)
+    # where pub_key_line is the contents from id_rsa.pub
+    # and ensure_perms would check/fix .ssh dir and
+    # authorized_keys file perms
     files.put(
         {'Upload id_rsa.pub to two in file tmp_authorized_key'},
         '/tmp/one_vagrant_id_rsa.pub',
