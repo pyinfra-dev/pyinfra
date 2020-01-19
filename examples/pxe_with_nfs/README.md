@@ -34,7 +34,7 @@ Test that it actually works from VMware by:
 
 # Notes
 1. This deploy requires two files from templates/ directory:
-   default.j2 and dnsmask.conf.j2
+   default.j2 and dnsmasq.conf.j2
 2. For troubleshooting, connect to pxe_server and see /var/log/syslog or
    run "systemctl status dnsmasq" or
    run "systemctl status nfs-kernel-server".

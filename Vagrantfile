@@ -22,8 +22,6 @@ Vagrant.configure('2') do |config|
 
     config.vm.define :ubuntu18 do |ubuntu|
         ubuntu.vm.box = 'bento/ubuntu-18.04'
-        # uncomment the next line for examples/pxe_infra.py
-        # ubuntu.vm.network "public_network", ip: "192.168.0.240"
         ubuntu.vm.provider 'virtualbox' do |v|
             v.memory = 384  # ubuntu18 is memory hungry
         end
