@@ -32,9 +32,15 @@ To try this out:
 
     ./do.py add
 
-8. Interact with your new `Example` droplet:
+8. Interact with your new `Example` droplet (be sure to change ip):
 
     pyinfra --user root 138.68.59.39 exec -- echo hello
+
+    # TODO: Why do I have to to specify `--key` for this next example? 
+    # (when I didn't have to create it for the line above)
+    pyinfra --user root 64.225.38.33 --key ~/.ssh/id_rsa ../docker_ce.py
+    pyinfra --user root 64.225.38.33 --key ~/.ssh/id_rsa ../virtualbox/virtualbox.py
+    pyinfra --user root 64.225.38.33 --key ~/.ssh/id_rsa ../vagrant/vagrant.py
 
 9. Drop the `Example` droplet:
 
