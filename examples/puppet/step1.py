@@ -81,7 +81,7 @@ if host.name == '@vagrant/master':
         '/etc/sysconfig/puppetserver',
         r'^JAVA_ARGS=.*$',
         replace='JAVA_ARGS=\\"-Xms1g -Xmx1g -Djruby.logger.class=com.puppetlabs.'
-        'jruby_utils.jruby.Slf4jLogger\\"'
+        'jruby_utils.jruby.Slf4jLogger\\"',
     )
 
     if install.changed or config.changed or tune.changed:
