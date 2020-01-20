@@ -350,7 +350,7 @@ def make_command(
 
     # Use sudo (w/user?)
     if sudo:
-        sudo_bits = ['sudo', '-S', '-H']
+        sudo_bits = ['sudo', '-S', '-H', '-n']
 
         if preserve_sudo_env:
             sudo_bits.append('-E')

@@ -284,7 +284,7 @@ class TestSSHConnector(TestCase):
         assert status is True
 
         fake_ssh_client().exec_command.assert_called_with((
-            "sudo -S -H -u ubuntu sh -c 'mv "
+            "sudo -S -H -n -u ubuntu sh -c 'mv "
             '/tmp/43db9984686317089fefcf2e38de527e4cb44487 '
             "not-another-file && chown ubuntu not-another-file'"
         ), get_pty=False)
@@ -370,11 +370,11 @@ class TestSSHConnector(TestCase):
 
         fake_ssh_client().exec_command.assert_has_calls([
             call((
-                "sudo -S -H -u ubuntu sh -c 'cp not-a-file "
+                "sudo -S -H -n -u ubuntu sh -c 'cp not-a-file "
                 "/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r not-a-file'"
             ), get_pty=False),
             call((
-                "sudo -S -H -u ubuntu sh -c 'rm -f "
+                "sudo -S -H -n -u ubuntu sh -c 'rm -f "
                 "/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"
             ), get_pty=False),
         ])
@@ -405,7 +405,7 @@ class TestSSHConnector(TestCase):
 
         fake_ssh_client().exec_command.assert_has_calls([
             call((
-                "sudo -S -H -u ubuntu sh -c 'cp not-a-file "
+                "sudo -S -H -n -u ubuntu sh -c 'cp not-a-file "
                 "/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r not-a-file'"
             ), get_pty=False),
         ])
@@ -435,11 +435,11 @@ class TestSSHConnector(TestCase):
 
         fake_ssh_client().exec_command.assert_has_calls([
             call((
-                "sudo -S -H -u ubuntu sh -c 'cp not-a-file "
+                "sudo -S -H -n -u ubuntu sh -c 'cp not-a-file "
                 "/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r not-a-file'"
             ), get_pty=False),
             call((
-                "sudo -S -H -u ubuntu sh -c 'rm -f "
+                "sudo -S -H -n -u ubuntu sh -c 'rm -f "
                 "/tmp/e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"
             ), get_pty=False),
         ])
