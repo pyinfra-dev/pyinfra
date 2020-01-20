@@ -38,7 +38,7 @@ files.line(
 )
 
 files.replace(
-    {'Change a value in a file'},
+    {'Change part of a line in a file'},
     '/etc/motd',
     'verboten',
     'forbidden',

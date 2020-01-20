@@ -1,8 +1,12 @@
 # Puppet demo
 Spin up two VMs: a master and an agent.
 
-Note: Used [this](https://www.howtoforge.com/tutorial/centos-puppet-master-and-agent/) as
+Notes:
+
+1. Used [this](https://www.howtoforge.com/tutorial/centos-puppet-master-and-agent/) as
 a guide.
+
+2. Does not take any firewalls into account.
 
 # To try it out
 

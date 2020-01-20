@@ -92,9 +92,6 @@ if host.name == '@vagrant/master':
             enabled=True,
         )
 
-    # TODO: firewall-cmd --add-port=8140/tcp --permanent
-    # TODO: firewall-cmd --reload
-
 if host.name == '@vagrant/agent':
 
     yum.packages(
