@@ -107,3 +107,17 @@ For additional debug info, use one of these options:
 + `--debug-data` Print host/group data before connecting and exit.
 + `--debug-facts` Print facts after generating operations and exit.
 + `--debug-operations` Print operations after generating and exit.
+
+#### Printing output in color
+
+If you are developing a deploy script, and want to print the ouput in a differnt color,
+you can use [click](https://click.palletsprojects.com) like this:
+
+```sh
+import click
+
+from pyinfra import host
+
+print(click.style(host.fact.os_version, 'yellow'))
+```
+
