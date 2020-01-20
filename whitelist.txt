@@ -49,6 +49,7 @@ Pv6
 Pyinfra
 RLIMIT
 Rcd
+SELINUX
 SFTP
 SHAS
 SIGINT
@@ -227,6 +228,7 @@ samefile
 sbin
 scp
 sed
+sestatus
 sftp
 sha
 sha1sum
