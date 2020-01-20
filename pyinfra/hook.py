@@ -4,7 +4,7 @@ from click import ClickException
 
 from pyinfra.api.exceptions import PyinfraError
 
-from . import pseudo_state
+from . import logger, pseudo_state
 
 HOOKS = {
     'before_connect': [],
@@ -25,6 +25,13 @@ def _make_hook_wrapper(hook_name):
         # Only add hooks when the state is not initialised
         if pseudo_state.initialised:
             return
+
+        # COMPAT
+        # TODO: remove this + hooks
+        logger.warning((
+            'Use of hooks in pyinfra is deprecated, '
+            'please use the `python.call` operation instead.'
+        ))
 
         HOOKS[hook_name].append(func)
 

@@ -1,0 +1,13 @@
+{
+    "command": "cat /etc/yum.conf /etc/yum.repos.d/*.repo 2> /dev/null || true",
+    "output": [
+        "[somerepo]",
+        "baseurl=abc"
+    ],
+    "fact": [
+        {
+            "name": "somerepo",
+            "baseurl": "abc"
+        }
+    ]
+}

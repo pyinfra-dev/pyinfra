@@ -7,8 +7,6 @@ import six
 
 from six.moves import shlex_quote
 
-import pyinfra
-
 from pyinfra import local, logger
 from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import get_file_io, memoize
@@ -19,7 +17,7 @@ from .local import run_shell_command as run_local_shell_command
 
 @memoize
 def show_warning():
-    logger.warning('The @docker connector is in Alpha!')
+    logger.warning('The @docker connector is in beta!')
 
 
 def make_names_data(image=None):
@@ -28,8 +26,8 @@ def make_names_data(image=None):
 
     show_warning()
 
-    # Save the image as the hostname, no data, @docker group
-    yield image, {}, ['@docker']
+    # Save the image as the hostname, the image as data, @docker group
+    yield '@docker/{0}'.format(image), {'docker_image': image}, ['@docker']
 
 
 def connect(state, host, for_fact=None):
@@ -38,7 +36,7 @@ def connect(state, host, for_fact=None):
 
     with progress_spinner({'docker run'}):
         container_id = local.shell(
-            'docker run -d {0} sleep 10000'.format(host.name),
+            'docker run -d {0} sleep 10000'.format(host.data.docker_image),
             splitlines=True,
         )[-1]  # last line is the container ID
 
@@ -47,9 +45,6 @@ def connect(state, host, for_fact=None):
 
 
 def disconnect(state, host):
-    if not pyinfra.is_cli:
-        return
-
     container_id = host.host_data['docker_container_id'][:12]
 
     with progress_spinner({'docker commit'}):
@@ -70,17 +65,20 @@ def disconnect(state, host):
 
 def run_shell_command(
     state, host, command,
-    timeout=None, print_output=False,
+    timeout=None,
+    stdin=None,
+    print_output=False,
     return_combined_output=False,
     **kwargs  # ignored (sudo/etc)
 ):
     container_id = host.host_data['docker_container_id']
     command = shlex_quote(command)
-    docker_command = 'docker exec {0} sh -c {1}'.format(container_id, command)
+    docker_command = 'docker exec -i {0} sh -c {1}'.format(container_id, command)
 
     return run_local_shell_command(
         state, host, docker_command,
         timeout=timeout,
+        stdin=stdin,
         print_output=print_output,
         return_combined_output=return_combined_output,
     )

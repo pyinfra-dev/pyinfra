@@ -8,7 +8,7 @@ from pyinfra.api.exceptions import InventoryError
 class TestAnsibleConnector(TestCase):
     def test_make_names_data_with_limit(self):
         data = make_names_data(inventory_filename=path.join(
-            'tests', 'test_deploy', 'inventories', 'inventory_ansible',
+            'tests', 'deploy', 'inventories', 'inventory_ansible',
         ))
 
         assert data == [

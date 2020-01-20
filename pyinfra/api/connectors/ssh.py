@@ -26,7 +26,7 @@ from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import get_file_io, make_command, memoize
 
 from .sshuserclient import SSHClient
-from .util import read_buffers_into_queue, split_combined_output
+from .util import read_buffers_into_queue, split_combined_output, write_stdin
 
 
 def _log_connect_error(host, message, data):
@@ -69,7 +69,7 @@ def _get_private_key(state, key_filename, key_password):
             # huge fan of having CLI specific code in here, but it doesn't really fit
             # anywhere else without duplicating lots of key related code into cli.py.
             if not key_password:
-                if pyinfra.is_cli:
+                if pyinfra.is_cli:  # pragma: no cover
                     key_password = getpass(
                         'Enter password for private key: {0}: '.format(
                             key_filename,
@@ -214,7 +214,10 @@ def connect(state, host, for_fact=None):
 
 def run_shell_command(
     state, host, command,
-    get_pty=False, timeout=None, print_output=False,
+    get_pty=False,
+    timeout=None,
+    stdin=None,
+    print_output=False,
     return_combined_output=False,
     **command_kwargs
 ):
@@ -246,10 +249,13 @@ def run_shell_command(
         print('{0}>>> {1}'.format(host.print_prefix, command))
 
     # Run it! Get stdout, stderr & the underlying channel
-    _, stdout_buffer, stderr_buffer = host.connection.exec_command(
+    stdin_buffer, stdout_buffer, stderr_buffer = host.connection.exec_command(
         command,
         get_pty=get_pty,
     )
+
+    if stdin:
+        write_stdin(stdin, stdin_buffer)
 
     combined_output = read_buffers_into_queue(
         host,
@@ -341,18 +347,8 @@ def get_file(
 
 def _put_file(host, filename_or_io, remote_location):
     with get_file_io(filename_or_io) as file_io:
-        # Upload it via SFTP
         sftp = _get_sftp_connection(host)
-
-        try:
-            sftp.putfo(file_io, remote_location)
-        except IOError as e:
-            # IO mismatch errors might indicate full disks
-            message = getattr(e, 'message', None)
-            if message and message.startswith('size mismatch in put!  0 !='):
-                raise IOError('{0} (disk may be full)'.format(e.message))
-
-            raise
+        sftp.putfo(file_io, remote_location)
 
 
 def put_file(

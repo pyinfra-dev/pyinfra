@@ -1,25 +1,25 @@
 auth_kwargs = {
     'sudo': {
         'description': 'Execute/apply any changes with sudo.',
-        'default': lambda state: state.config.SUDO,
+        'default': lambda config: config.SUDO,
     },
     'sudo_user': {
         'description': 'Execute/apply any changes with sudo as a non-root user.',
-        'default': lambda state: state.config.SUDO_USER,
-    },
-    'su_user': {
-        'description': 'Execute/apply any changes with su.',
-        'default': lambda state: state.config.SU_USER,
+        'default': lambda config: config.SUDO_USER,
     },
     'preserve_sudo_env': {
         'description': 'Preserve the shell environment when using sudo.',
-        'default': lambda state: state.config.PRESERVE_SUDO_ENV,
+        'default': lambda config: config.PRESERVE_SUDO_ENV,
+    },
+    'su_user': {
+        'description': 'Execute/apply any changes with su.',
+        'default': lambda config: config.SU_USER,
     },
 }
 
 
-def generate_env(state, value):
-    env = state.config.ENV.copy()
+def generate_env(config, value):
+    env = config.ENV.copy()
     if value:
         env.update(value)
     return env
@@ -28,7 +28,7 @@ def generate_env(state, value):
 operation_kwargs = {
     'shell_executable': {
         'description': 'The shell executable to use',
-        'default': lambda state: state.config.SHELL,
+        'default': lambda config: config.SHELL,
     },
     'env': {
         'description': 'Dictionary of environment variables to set.',
@@ -36,10 +36,11 @@ operation_kwargs = {
     },
     'ignore_errors': {
         'description': 'Ignore errors when executing the operation.',
-        'default': lambda state: state.config.IGNORE_ERRORS,
+        'default': lambda config: config.IGNORE_ERRORS,
     },
     'timeout': 'Timeout for *each* command executed during the operation.',
     'get_pty': 'Whether to get a pseudoTTY when executing any commands.',
+    'stdin': 'String or buffer to send to the stdin of any commands',
 }
 
 execution_kwargs = {

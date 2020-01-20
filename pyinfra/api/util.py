@@ -135,6 +135,11 @@ class FallbackDict(object):
         return out
 
 
+@memoize
+def show_stdin_global_warning():
+    logger.warning('The stdin global argument is in alpha!')
+
+
 def pop_global_op_kwargs(state, kwargs):
     '''
     Pop and return operation global keyword arguments.
@@ -169,6 +174,9 @@ def pop_global_op_kwargs(state, kwargs):
     }
     # TODO: end remove hosts/when block
 
+    if 'stdin' in kwargs:
+        show_stdin_global_warning()
+
     for _, kwarg_configs in OPERATION_KWARGS.items():
         for key, config in kwarg_configs.items():
             handler = None
@@ -177,11 +185,11 @@ def pop_global_op_kwargs(state, kwargs):
             if isinstance(config, dict):
                 handler = config.get('handler')
                 if 'default' in config:
-                    default = config['default'](state)
+                    default = config['default'](state.config)
 
             value = get_kwarg(key, default=default)
             if handler:
-                value = handler(state, value)
+                value = handler(state.config, value)
 
             global_kwargs[key] = value
 
@@ -342,7 +350,7 @@ def make_command(
 
     # Use sudo (w/user?)
     if sudo:
-        sudo_bits = ['sudo', '-H']
+        sudo_bits = ['sudo', '-S', '-H', '-n']
 
         if preserve_sudo_env:
             sudo_bits.append('-E')
