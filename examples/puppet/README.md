@@ -23,6 +23,14 @@ To try out:
     # TODO: bug in the puppet.agent() not sourcing the .bash_profile?
     pyinfra @vagrant step2.py
 
-4. Destroy VMs when done with demo
+4. Deploy a manifest to master and do a puppet run on agent
+
+    pyinfra @vagrant step3.py
+
+5. Do an adhoc puppet run on just the agent:
+
+    pyinfra @vagrant/agent puppet.agent sudo=true
+
+6. Destroy VMs when done with demo
 
     vagrant destroy
