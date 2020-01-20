@@ -21,8 +21,8 @@ To try out:
     # TODO: had to break into 3 separate deploys to go in sequence.
     # Is there a better way?
     pyinfra @vagrant ssh_demo1.py
-    pyinfra @vagrant ssh_demo2.py
-    pyinfra @vagrant ssh_demo3.py
+    pyinfra @vagrant/two ssh_demo2.py
+    pyinfra @vagrant/one ssh_demo3.py
 
 4. Clean up tmp file
 
