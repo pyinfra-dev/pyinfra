@@ -4,14 +4,13 @@ from pyinfra.modules import files, init, server, yum
 SUDO = True
 
 
-# TODO: perhaps search by name not ip
 # update the /etc/hosts file
 def update_hosts_file(name, ip):
     name = name.replace('@vagrant/', '')
     files.line(
         {'Add hosts to /etc/hosts'},
         '/etc/hosts',
-        r'{} .*'.format(ip),
+        r' {}.example.com '.format(name),
         replace='{} {}.example.com {}'.format(ip, name, name),
     )
 

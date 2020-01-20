@@ -10,7 +10,7 @@ def update_hosts_file(name, ip):
     files.line(
         {'Add hosts to /etc/hosts'},
         '/etc/hosts',
-        r'{} .*'.format(ip),
+        r' {}.example.com '.format(name),
         replace='{} {}.example.com {}'.format(ip, name, name),
     )
 
