@@ -80,11 +80,28 @@ That's the basics of pyinfra! Possible next steps:
 + Or :doc:`the CLI user guide <./cli>` which covers ad-hoc usage of pyinfra
 
 
-Notes about windows: (Tested on WindowsServer2019)
---------------------------------------------------
+pyinfra from Windows
+--------------------
 
-+ Install Python from https://www.python.org/downloads/windows/ 
-  (ex: python-3.8.1-amd64.exe and run as Administrator and have the 'Add Python to PATH' option)
+Tested on WindowsServer2019 with python 3.7.
+
++ Download [Python](https://www.python.org/downloads/windows/) 
+  (ex: python-3.7.6-amd64.exe and run as Administrator and 
+  have the 'Add Python to PATH' option)
+
+If you need to build any python packages, you will need to do these steps:
+
++ Download [Visual Studio Community Edition](https://visualstudio.microsoft.com/downloads/)
+
++ Run Visual Studio installer as Administrator. Install the 'Desktop development with c++', 
+  uncheck all except for these:
+
+    + "MSVC v142..."
+    + "Windows 10 SDK..."
+    + "C++ cmake tools for windows"
+    + "C++ ATL for latest..."
+    + "C++/cli support for v142..."
+    + "C++ Modules for v142..."
 
 + Open a new powershell (as your login user), run:
 
@@ -109,18 +126,6 @@ Notes about windows: (Tested on WindowsServer2019)
 .. code:: shell
 
     .\venv\Scripts\activate
-
-+ Download Visual Studio Community Edition from https://visualstudio.microsoft.com/downloads/
-
-+ Run Visual Studio installer as Administrator. Install the 'Desktop development with c++', 
-  uncheck all except for these:
-
-    + "MSVC v142..."
-    + "Windows 10 SDK..."
-    + "C++ cmake tools for windows"
-    + "C++ ATL for latest..."
-    + "C++/cli support for v142..."
-    + "C++ Modules for v142..."
 
 - Install pyinfra:
 
