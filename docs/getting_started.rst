@@ -78,3 +78,53 @@ That's the basics of pyinfra! Possible next steps:
 + If you like to dive right into the code check out `the examples on GitHub <https://github.com/Fizzadar/pyinfra/tree/master/examples>`_
 + You can also read the :doc:`building a deploy guide <./deploys>` which covers pyinfra's deploy features
 + Or :doc:`the CLI user guide <./cli>` which covers ad-hoc usage of pyinfra
+
+
+Notes about windows: (Tested on WindowsServer2019)
+--------------------------------------------------
+
++ Install Python from https://www.python.org/downloads/windows/ 
+  (ex: python-3.8.1-amd64.exe and run as Administrator and have the 'Add Python to PATH' option)
+
++ Open a new powershell (as your login user), run:
+
+.. code:: shell
+
+    pip install virtualenv
+
++ Upgrade pip (optional):
+
+.. code:: shell
+
+    python -m pip install --upgrade pip
+
++ Create a new python virtual environment:
+
+.. code:: shell
+
+    virtualenv.exe venv
+
++ Activate the python virtual environment:
+
+.. code:: shell
+
+    .\venv\Scripts\activate
+
++ Download Visual Studio Community Edition from https://visualstudio.microsoft.com/downloads/
+
++ Run Visual Studio installer as Administrator. Install the 'Desktop development with c++', 
+  uncheck all except for these:
+
+    + "MSVC v142..."
+    + "Windows 10 SDK..."
+    + "C++ cmake tools for windows"
+    + "C++ ATL for latest..."
+    + "C++/cli support for v142..."
+    + "C++ Modules for v142..."
+
+- Install pyinfra:
+
+.. code:: shell
+
+    pip install pyinfra
+
