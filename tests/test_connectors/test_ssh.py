@@ -218,7 +218,9 @@ class TestSSHConnector(TestCase):
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     def test_run_shell_command(self, fake_ssh_client):
         fake_ssh = MagicMock()
-        fake_ssh.exec_command.return_value = MagicMock(), MagicMock(), MagicMock()
+        fake_stdin = MagicMock()
+        fake_stdout = MagicMock()
+        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, MagicMock()
 
         fake_ssh_client.return_value = fake_ssh
 
@@ -228,9 +230,14 @@ class TestSSHConnector(TestCase):
         host.connect(state)
 
         command = 'echo hi'
+        fake_stdout.channel.recv_exit_status.return_value = 0
 
         out = host.run_shell_command(state, command, stdin='hello', print_output=True)
         assert len(out) == 3
+
+        status, stdout, stderr = out
+        assert status is True
+        fake_stdin.write.assert_called_with(b'hello\n')
 
         combined_out = host.run_shell_command(
             state, command, stdin='hello', print_output=True,
@@ -239,6 +246,48 @@ class TestSSHConnector(TestCase):
         assert len(combined_out) == 2
 
         fake_ssh.exec_command.assert_called_with("sh -c 'echo hi'", get_pty=False)
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    def test_run_shell_command_success_exit_code(self, fake_ssh_client):
+        fake_ssh = MagicMock()
+        fake_stdin = MagicMock()
+        fake_stdout = MagicMock()
+        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, MagicMock()
+
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect(state)
+
+        command = 'echo hi'
+        fake_stdout.channel.recv_exit_status.return_value = 1
+
+        out = host.run_shell_command(state, command, success_exit_codes=[1])
+        assert len(out) == 3
+        assert out[0] is True
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    def test_run_shell_command_error(self, fake_ssh_client):
+        fake_ssh = MagicMock()
+        fake_stdin = MagicMock()
+        fake_stdout = MagicMock()
+        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, MagicMock()
+
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect(state)
+
+        command = 'echo hi'
+        fake_stdout.channel.recv_exit_status.return_value = 1
+
+        out = host.run_shell_command(state, command)
+        assert len(out) == 3
+        assert out[0] is False
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     @patch('pyinfra.api.connectors.ssh.SFTPClient')

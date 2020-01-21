@@ -35,7 +35,7 @@ def generate_env(config, value):
 
 operation_kwargs = {
     'shell_executable': {
-        'description': 'The shell executable to use',
+        'description': 'The shell executable to use.',
         'default': lambda config: config.SHELL,
     },
     'env': {
@@ -45,6 +45,10 @@ operation_kwargs = {
     'ignore_errors': {
         'description': 'Ignore errors when executing the operation.',
         'default': lambda config: config.IGNORE_ERRORS,
+    },
+    'success_exit_codes': {
+        'description': 'List of exit codes to consider a success',
+        'default': [0],
     },
     'timeout': 'Timeout for *each* command executed during the operation.',
     'get_pty': 'Whether to get a pseudoTTY when executing any commands.',

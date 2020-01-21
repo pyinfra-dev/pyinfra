@@ -6,7 +6,7 @@ from six.moves import shlex_quote
 
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
-from pyinfra.api.exceptions import InventoryError
+from pyinfra.api.exceptions import InventoryError, PyinfraError
 from pyinfra.api.util import make_command
 
 from ..util import make_inventory
@@ -18,6 +18,11 @@ def fake_docker_shell(command, splitlines=None):
 
     elif command == 'docker commit containerid':
         return ['sha256:blahsomerandomstringdata']
+
+    elif command == 'docker rm -f containerid':
+        return []
+
+    raise PyinfraError('Invalid command: {0}'.format(command))
 
 
 @patch('pyinfra.api.connectors.vagrant.local.shell', fake_docker_shell)
@@ -52,6 +57,13 @@ class TestDockerConnector(TestCase):
         connect_all(state)
         self.assertEqual(len(state.active_hosts), 1)
 
+    def test_connect_all_error(self):
+        inventory = make_inventory(hosts=('@docker/a-broken-image',))
+        state = State(inventory, Config())
+
+        with self.assertRaises(PyinfraError):
+            connect_all(state)
+
     def test_connect_disconnect_host(self):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
         state = State(inventory, Config())
@@ -65,10 +77,13 @@ class TestDockerConnector(TestCase):
         state = State(inventory, Config())
 
         command = 'echo hi'
+        self.fake_popen_mock().returncode = 0
 
         host = inventory.get_host('@docker/not-an-image')
         host.connect(state)
-        host.run_shell_command(state, command, stdin='hello', print_output=True)
+        out = host.run_shell_command(state, command, stdin='hello', print_output=True)
+        assert len(out) == 3
+        assert out[0] is True
 
         command = shlex_quote(command)
         docker_command = 'docker exec -i containerid sh -c {0}'.format(command)
@@ -78,6 +93,30 @@ class TestDockerConnector(TestCase):
             shell_command, shell=True,
             stdout=PIPE, stderr=PIPE, stdin=PIPE,
         )
+
+    def test_run_shell_command_success_exit_codes(self):
+        inventory = make_inventory(hosts=('@docker/not-an-image',))
+        state = State(inventory, Config())
+
+        command = 'echo hi'
+        self.fake_popen_mock().returncode = 1
+
+        host = inventory.get_host('@docker/not-an-image')
+        host.connect(state)
+        out = host.run_shell_command(state, command, success_exit_codes=[1])
+        assert out[0] is True
+
+    def test_run_shell_command_error(self):
+        inventory = make_inventory(hosts=('@docker/not-an-image',))
+        state = State(inventory, Config())
+
+        command = 'echo hi'
+        self.fake_popen_mock().returncode = 1
+
+        host = inventory.get_host('@docker/not-an-image')
+        host.connect(state)
+        out = host.run_shell_command(state, command)
+        assert out[0] is False
 
     def test_put_file(self):
         inventory = make_inventory(hosts=('@docker/not-an-image',))

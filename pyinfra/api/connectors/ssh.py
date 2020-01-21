@@ -200,6 +200,7 @@ def run_shell_command(
     get_pty=False,
     timeout=None,
     stdin=None,
+    success_exit_codes=None,
     print_output=False,
     return_combined_output=False,
     **command_kwargs
@@ -252,7 +253,10 @@ def run_shell_command(
     exit_status = stdout_buffer.channel.recv_exit_status()
     logger.debug('Command exit status: {0}'.format(exit_status))
 
-    status = exit_status == 0
+    if success_exit_codes:
+        status = exit_status in success_exit_codes
+    else:
+        status = exit_status == 0
 
     if return_combined_output:
         return status, combined_output

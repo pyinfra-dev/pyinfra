@@ -70,6 +70,7 @@ def run_shell_command(
     state, host, command,
     timeout=None,
     stdin=None,
+    success_exit_codes=None,
     print_output=False,
     return_combined_output=False,
     **kwargs  # ignored (sudo/etc)
@@ -82,6 +83,7 @@ def run_shell_command(
         state, host, docker_command,
         timeout=timeout,
         stdin=stdin,
+        success_exit_codes=success_exit_codes,
         print_output=print_output,
         return_combined_output=return_combined_output,
     )

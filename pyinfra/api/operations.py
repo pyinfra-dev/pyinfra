@@ -144,6 +144,7 @@ def _run_server_op(state, host, op_hash):
                     get_pty=op_meta['get_pty'],
                     env=op_meta['env'],
                     stdin=op_meta['stdin'],
+                    success_exit_codes=op_meta['success_exit_codes'],
                     print_output=state.print_output,
                     return_combined_output=True,
                 )
