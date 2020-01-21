@@ -114,6 +114,11 @@ def _parse_arg(arg):
     except (TypeError, ValueError):
         pass
 
+    try:
+        return json.loads(arg)
+    except ValueError:
+        pass
+
     return arg
 
 
