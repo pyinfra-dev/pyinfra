@@ -52,6 +52,10 @@ class TestMakeCommandApiUtil(TestCase):
         command = make_command('uptime', sudo=True, preserve_sudo_env=True)
         self.assertEqual(command, 'sudo -S -H -n -E sh -c uptime')
 
+    def test_use_sudo_login_command(self):
+        command = make_command('uptime', sudo=True, use_sudo_login=True)
+        self.assertEqual(command, 'sudo -S -H -n -i sh -c uptime')
+
     def test_sudo_user_command(self):
         command = make_command('uptime', sudo=True, sudo_user='pyinfra')
         self.assertEqual(command, 'sudo -S -H -n -u pyinfra sh -c uptime')
@@ -59,6 +63,10 @@ class TestMakeCommandApiUtil(TestCase):
     def test_su_command(self):
         command = make_command('uptime', su_user='pyinfra')
         self.assertEqual(command, 'su pyinfra -s `which sh` -c uptime')
+
+    def test_use_su_login_command(self):
+        command = make_command('uptime', su_user='pyinfra', use_su_login=True)
+        self.assertEqual(command, 'su -l pyinfra -s `which sh` -c uptime')
 
     def test_command_env(self):
         command = make_command('uptime', env={'key': 'value'})

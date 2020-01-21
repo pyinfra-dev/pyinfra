@@ -299,10 +299,12 @@ def log_host_command_error(host, e, timeout=0):
 def make_command(
     command,
     env=None,
-    su_user=None,
-    sudo=False,
-    sudo_user=None,
-    preserve_sudo_env=False,
+    su_user=Config.SU_USER,
+    use_su_login=Config.USE_SU_LOGIN,
+    sudo=Config.SUDO,
+    sudo_user=Config.SUDO_USER,
+    use_sudo_login=Config.USE_SUDO_LOGIN,
+    preserve_sudo_env=Config.PRESERVE_SUDO_ENV,
     shell_executable=Config.SHELL,
 ):
     '''
@@ -339,9 +341,14 @@ def make_command(
 
     # Switch user with su
     if su_user:
+        su_bits = ['su']
+
+        if use_su_login:
+            su_bits.append('-l')
+
         # note `which <shell>` usage here - su requires an absolute path
-        command = 'su {0} -s `which {1}` -c {2}'.format(
-            su_user, shell_executable, command,
+        command = '{0} {1} -s `which {2}` -c {3}'.format(
+            ' '.join(su_bits), su_user, shell_executable, command,
         )
 
     # Otherwise just sh wrap the command
@@ -351,6 +358,9 @@ def make_command(
     # Use sudo (w/user?)
     if sudo:
         sudo_bits = ['sudo', '-S', '-H', '-n']
+
+        if use_sudo_login:
+            sudo_bits.append('-i')
 
         if preserve_sudo_env:
             sudo_bits.append('-E')
