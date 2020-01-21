@@ -523,7 +523,7 @@ def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
         if six.PY2:  # Python2 must print unicode as bytes (encoded)
             line = line.encode('utf-8')
 
-        print(line)
+        click.echo(line)
 
     for line in io:
         # Handle local Popen shells returning list of bytes, not strings

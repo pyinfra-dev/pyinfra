@@ -49,22 +49,22 @@ def jsonify(data, *args, **kwargs):
 
 
 def print_state_facts(state):
-    print()
-    print('--> Facts:')
-    print(jsonify(state.facts, indent=4, default=json_encode))
+    click.echo()
+    click.echo('--> Facts:')
+    click.echo(jsonify(state.facts, indent=4, default=json_encode))
 
 
 def print_state_operations(state):
-    print()
-    print('--> Operations:')
-    print(jsonify(state.ops, indent=4, default=json_encode))
-    print()
-    print('--> Operation meta:')
-    print(jsonify(state.op_meta, indent=4, default=json_encode))
+    click.echo()
+    click.echo('--> Operations:')
+    click.echo(jsonify(state.ops, indent=4, default=json_encode))
+    click.echo()
+    click.echo('--> Operation meta:')
+    click.echo(jsonify(state.op_meta, indent=4, default=json_encode))
 
-    print()
-    print('--> Operation order:')
-    print()
+    click.echo()
+    click.echo('--> Operation order:')
+    click.echo()
     for op_hash in state.get_op_order():
         meta = state.op_meta[op_hash]
         hosts = set(
@@ -72,7 +72,7 @@ def print_state_operations(state):
             if op_hash in operations
         )
 
-        print('    {0} (names={1}, hosts={2})'.format(
+        click.echo('    {0} (names={1}, hosts={2})'.format(
             op_hash, meta['names'], hosts,
         ))
 
@@ -87,7 +87,7 @@ def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
             items.append(name)
 
         else:
-            print('    {0}'.format(', '.join((
+            click.echo('    {0}'.format(', '.join((
                 click.style(name, bold=True)
                 for name in items
             ))))
@@ -97,7 +97,7 @@ def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
         last_name = name
 
     if items:
-        print('    {0}'.format(', '.join((
+        click.echo('    {0}'.format(', '.join((
             click.style(name, bold=True)
             for name in items
         ))))
@@ -117,7 +117,7 @@ def print_operations_list():
 
 
 def print_fact(fact_data):
-    print(jsonify(fact_data, indent=4, default=json_encode))
+    click.echo(jsonify(fact_data, indent=4, default=json_encode))
 
 
 def print_inventory(state):
@@ -125,15 +125,15 @@ def print_inventory(state):
         if not state.is_host_in_limit(host):
             continue
 
-        print()
-        print('--> Data for: {0}'.format(click.style(host.name, bold=True)))
-        print(jsonify(host.data, indent=4, default=json_encode))
+        click.echo()
+        click.echo('--> Data for: {0}'.format(click.style(host.name, bold=True)))
+        click.echo(jsonify(host.data, indent=4, default=json_encode))
 
 
 def print_facts(facts):
     for name, data in six.iteritems(facts):
-        print()
-        print('--> Fact data for: {0}'.format(
+        click.echo()
+        click.echo('--> Fact data for: {0}'.format(
             click.style(name, bold=True),
         ))
         print_fact(data)

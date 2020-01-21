@@ -61,7 +61,7 @@ def _print_facts(ctx, param, value):
     if not value:
         return
 
-    print('--> Available facts:')
+    click.echo('--> Available facts:')
     print_facts_list()
     ctx.exit()
 
@@ -70,7 +70,7 @@ def _print_operations(ctx, param, value):
     if not value:
         return
 
-    print('--> Available operations:')
+    click.echo('--> Available operations:')
     print_operations_list()
     ctx.exit()
 
@@ -353,7 +353,7 @@ def _main(
     state.print_fact_info = print_output  # -v
     state.print_fact_output = print_fact_output  # -vv
 
-    print('--> Loading config...')
+    click.echo('--> Loading config...')
 
     # Load up any config.py from the filesystem
     config = load_config(deploy_dir)
@@ -377,7 +377,7 @@ def _main(
     if fail_percent is not None:
         config.FAIL_PERCENT = fail_percent
 
-    print('--> Loading inventory...')
+    click.echo('--> Loading inventory...')
 
     # Load up the inventory from the filesystem
     inventory, inventory_group = make_inventory(
@@ -429,8 +429,8 @@ def _main(
     run_hook(state, 'before_connect', hook_data)
 
     # Connect to all the servers
-    print()
-    print('--> Connecting to hosts...')
+    click.echo()
+    click.echo('--> Connecting to hosts...')
     connect_all(state)
 
     # Run the before_connect hook if provided
@@ -440,8 +440,8 @@ def _main(
     #
 
     if command == 'fact':
-        print()
-        print('--> Gathering facts...')
+        click.echo()
+        click.echo('--> Gathering facts...')
 
         # Print facts as we get them
         state.print_fact_info = True
@@ -476,8 +476,8 @@ def _main(
 
     # Deploy files(s)
     elif command == 'deploy':
-        print()
-        print('--> Preparing operations...')
+        click.echo()
+        click.echo('--> Preparing operations...')
 
         # Number of "steps" to make = number of files * number of hosts
         for i, filename in enumerate(operations):
@@ -487,8 +487,8 @@ def _main(
 
     # Operation w/optional args
     elif command == 'op':
-        print()
-        print('--> Preparing operation...')
+        click.echo()
+        click.echo('--> Preparing operation...')
 
         op, args = operations
 
@@ -498,8 +498,8 @@ def _main(
         )
 
     # Always show meta output
-    print()
-    print('--> Proposed changes:')
+    click.echo()
+    click.echo('--> Proposed changes:')
     print_meta(state)
 
     # If --debug-facts or --debug-operations, print and exit
@@ -516,18 +516,18 @@ def _main(
     if dry:
         _exit()
 
-    print()
+    click.echo()
 
     # Run the before_deploy hook if provided
     run_hook(state, 'before_deploy', hook_data)
 
-    print('--> Beginning operation run...')
+    click.echo('--> Beginning operation run...')
     run_ops(state, serial=serial, no_wait=no_wait)
 
     # Run the after_deploy hook if provided
     run_hook(state, 'after_deploy', hook_data)
 
-    print('--> Results:')
+    click.echo('--> Results:')
     print_results(state)
 
     _exit()

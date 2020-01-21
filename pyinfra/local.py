@@ -3,6 +3,7 @@ from __future__ import print_function, unicode_literals
 from os import path
 from subprocess import PIPE, Popen, STDOUT
 
+import click
 import six
 
 from gevent.queue import Queue
@@ -117,7 +118,7 @@ def shell(commands, splitlines=False, ignore_errors=False):
         print_prefix = 'localhost: '
 
         if print_output:
-            print('{0}>>> {1}'.format(print_prefix, command))
+            click.echo('{0}>>> {1}'.format(print_prefix, command))
 
         process = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
 

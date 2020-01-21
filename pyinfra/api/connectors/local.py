@@ -61,7 +61,7 @@ def run_shell_command(
     logger.debug('--> Running command on localhost: {0}'.format(command))
 
     if print_output:
-        print('{0}>>> {1}'.format(host.print_prefix, command))
+        click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
     process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
 
@@ -129,7 +129,7 @@ def put_file(
         os.remove(temp_filename)
 
     if print_output:
-        print('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
+        click.echo('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
 
     return status
 
@@ -170,6 +170,6 @@ def get_file(
         os.remove(temp_filename)
 
     if print_output:
-        print('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
+        click.echo('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
 
     return True
