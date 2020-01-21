@@ -1,0 +1,7 @@
+{
+    "args": [["testfile", "anotherfile"]],
+    "exception": {
+        "name": "OperationTypeError",
+        "message": "Name must be a string"
+    }
+}

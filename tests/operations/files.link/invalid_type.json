@@ -1,0 +1,7 @@
+{
+    "args": [["testlink", "anotherlink"]],
+    "exception": {
+        "name": "OperationTypeError",
+        "message": "Name must be a string"
+    }
+}

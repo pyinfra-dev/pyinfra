@@ -1,0 +1,7 @@
+{
+    "args": [["testdir", "anotherdir"]],
+    "exception": {
+        "name": "OperationTypeError",
+        "message": "Name must be a string"
+    }
+}
