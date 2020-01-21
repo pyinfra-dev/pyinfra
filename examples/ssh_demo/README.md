@@ -18,8 +18,6 @@ To try out:
 
 3. Run the ssh demo deploys:
 
-    # TODO: had to break into 3 separate deploys to go in sequence.
-    # Is there a better way?
     pyinfra @vagrant ssh_demo1.py
     pyinfra @vagrant/two ssh_demo2.py
     pyinfra @vagrant/one ssh_demo3.py

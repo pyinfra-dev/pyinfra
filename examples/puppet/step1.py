@@ -54,7 +54,7 @@ if host.fact.linux_name in ['CentOS', 'RedHat']:
         replace='SELINUX=disabled',
     )
 
-    # TODO: reboot after SELINUX is disabled (how to check/easy way to reboot)
+    # TODO: should reboot after SELINUX is disabled (how to check/easy way to reboot)
     # TODO: how to determine when reboot is complete
     # TODO: run sestatus
 

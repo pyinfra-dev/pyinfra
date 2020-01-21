@@ -20,7 +20,7 @@ tarfile_full_path = '/tmp/{}'.format(tarfile)
 sha256file = tarfile + '.sha256'
 sha256file_full_path = '/tmp/{}'.format(sha256file)
 
-# TODO: How to know if download was successful?
+# TODO: Check if download was successful
 files.download(
     {'Download `{}`'.format(tarfile)},
     'http://dl-cdn.alpinelinux.org/alpine/v3.11/releases/x86_64/{}'.format(tarfile),
@@ -32,5 +32,3 @@ files.download(
     'http://dl-cdn.alpinelinux.org/alpine/v3.11/releases/x86_64/{}'.format(sha256file),
     sha256file_full_path,
 )
-
-# TODO: how to sha256sum the file and fail if they do not match?

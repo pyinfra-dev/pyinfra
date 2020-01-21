@@ -27,9 +27,6 @@ if host.fact.linux_name == 'Ubuntu':
         '/tmp/downloads.html',
     )
 
-    # TODO: would like to be able to use files.download() but
-    # I don't know how to download a file, look for a pattern, then
-    # use that pattern in another files.download()
     server.script_template(
         {'Use wget to download and unzip to /usr/local/bin'},
         'templates/download_vagrant.bash.j2',

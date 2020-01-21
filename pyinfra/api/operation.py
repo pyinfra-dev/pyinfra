@@ -52,7 +52,7 @@ class OperationMeta(object):
         self.changed = len(self.commands) > 0
 
     def __repr__(self):
-        """Return Operation object as a string."""
+        '''Return Operation object as a string.'''
         return 'commands:{} changed:{} hash:{}'.format(
             self.commands, self.changed, self.hash)
 

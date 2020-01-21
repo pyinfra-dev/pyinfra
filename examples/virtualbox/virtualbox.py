@@ -10,7 +10,6 @@ def verify_virtualbox_version(state, host, version):
     command = '/usr/bin/virtualbox --help'
     status, stdout, stderr = host.run_shell_command(state, command=command, sudo=SUDO)
     assert status is True  # ensure the command executed OK
-    # TODO: how to return values from callback?
     if version not in str(stdout):
         raise Exception('`{}` did not work as expected.stdout:{} stderr:{}'.format(
             command, stdout, stderr))
