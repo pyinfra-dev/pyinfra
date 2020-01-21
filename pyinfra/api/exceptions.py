@@ -17,6 +17,12 @@ class OperationError(PyinfraError):
     '''
 
 
+class OperationTypeError(OperationError, TypeError):
+    '''
+    Exception raised when an operation is passed invalid argument types.
+    '''
+
+
 class DeployError(PyinfraError):
     '''
     User exception for raising in deploys or sub deploys.
