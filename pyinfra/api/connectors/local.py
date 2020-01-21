@@ -12,21 +12,7 @@ from pyinfra.api.util import get_file_io, make_command
 from .util import read_buffers_into_queue, split_combined_output, write_stdin
 
 
-def connect(state, host, for_fact=None):
-    # Log
-    log_message = '{0}{1}'.format(
-        host.print_prefix,
-        click.style('Connected', 'green'),
-    )
-
-    if for_fact:
-        log_message = '{0}{1}'.format(
-            log_message,
-            ' (for {0} fact)'.format(for_fact),
-        )
-
-    logger.info(log_message)
-
+def connect(state, host):
     return True
 
 
