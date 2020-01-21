@@ -184,8 +184,9 @@ def pop_global_op_kwargs(state, kwargs):
 
             if isinstance(config, dict):
                 handler = config.get('handler')
-                if 'default' in config:
-                    default = config['default'](state.config)
+                default = config.get('default')
+                if default and callable(default):
+                    default = default(state.config)
 
             value = get_kwarg(key, default=default)
             if handler:
