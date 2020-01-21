@@ -60,13 +60,13 @@ def run_hook(state, hook_name, hook_data):
 
     if hooks:
         for hook in hooks:
-            print('--> Running hook: {0}/{1}'.format(
+            click.echo('--> Running hook: {0}/{1}'.format(
                 hook_name,
                 click.style(hook.__name__, bold=True),
             ))
             hook(hook_data, state)
 
-        print()
+        click.echo()
 
 
 def json_encode(obj):

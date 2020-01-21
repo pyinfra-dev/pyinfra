@@ -17,7 +17,7 @@ WAIT_CHARS = deque(('-', '/', '|', '\\'))
 # Hacky way of getting terminal size (so can clear lines)
 # Source: http://stackoverflow.com/questions/566746
 TERMINAL_SIZE = os.popen('stty size', 'r').read().split()
-IS_TTY = bool(TERMINAL_SIZE)
+IS_TTY = sys.stdout.isatty() and sys.stderr.isatty()
 TERMINAL_WIDTH = (
     int(TERMINAL_SIZE[1])
     if IS_TTY else 0

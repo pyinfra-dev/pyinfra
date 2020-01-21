@@ -135,7 +135,9 @@ def _run_server_op(state, host, op_hash):
                     command.strip(),
                     sudo=sudo,
                     sudo_user=sudo_user,
+                    use_sudo_login=op_meta['use_sudo_login'],
                     su_user=su_user,
+                    use_su_login=op_meta['use_su_login'],
                     preserve_sudo_env=preserve_sudo_env,
                     shell_executable=shell_executable,
                     timeout=op_meta['timeout'],
@@ -249,7 +251,7 @@ def _run_server_ops(state, host, progress=None):
             ))
 
         if pyinfra.is_cli:
-            print()
+            click.echo()
 
 
 def _run_serial_ops(state):
@@ -359,7 +361,7 @@ def _run_single_op(state, op_hash):
         state.fail_hosts(failed_hosts)
 
     if pyinfra.is_cli:
-        print()
+        click.echo()
 
 
 def run_ops(state, serial=False, no_wait=False):

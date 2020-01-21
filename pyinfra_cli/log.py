@@ -1,7 +1,6 @@
 from __future__ import division, print_function, unicode_literals
 
 import logging
-import sys
 
 import click
 import six
@@ -10,6 +9,19 @@ from pyinfra import logger
 
 STDOUT_LOG_LEVELS = (logging.DEBUG, logging.INFO)
 STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
+
+
+class LogHandler(logging.Handler):
+    def __init__(self, use_stderr=False):
+        super(LogHandler, self).__init__()
+        self._use_stderr = use_stderr
+
+    def emit(self, record):
+        try:
+            message = self.format(record)
+            click.echo(message, err=self._use_stderr)
+        except Exception:
+            self.handleError(record)
 
 
 class LogFilter(logging.Filter):
@@ -63,8 +75,8 @@ def setup_logging(log_level):
     logger.setLevel(log_level)
 
     # Setup a new handler for stdout & stderr
-    stdout_handler = logging.StreamHandler(sys.stdout)
-    stderr_handler = logging.StreamHandler(sys.stderr)
+    stdout_handler = LogHandler()
+    stderr_handler = LogHandler(use_stderr=True)
 
     # Setup filters to push different levels to different streams
     stdout_filter = LogFilter(*STDOUT_LOG_LEVELS)

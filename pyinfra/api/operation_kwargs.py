@@ -7,6 +7,10 @@ auth_kwargs = {
         'description': 'Execute/apply any changes with sudo as a non-root user.',
         'default': lambda config: config.SUDO_USER,
     },
+    'use_sudo_login': {
+        'description': 'Execute ``sudo`` with a login shell.',
+        'default': lambda config: config.USE_SUDO_LOGIN,
+    },
     'preserve_sudo_env': {
         'description': 'Preserve the shell environment when using sudo.',
         'default': lambda config: config.PRESERVE_SUDO_ENV,
@@ -14,6 +18,10 @@ auth_kwargs = {
     'su_user': {
         'description': 'Execute/apply any changes with su.',
         'default': lambda config: config.SU_USER,
+    },
+    'use_su_login': {
+        'description': 'Execute ``su`` with a login shell.',
+        'default': lambda config: config.USE_SU_LOGIN,
     },
 }
 

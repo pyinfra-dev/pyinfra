@@ -29,11 +29,13 @@ class Config(object):
 
     # Switch to this user (from ssh_user) using su before executing operations
     SU_USER = None
+    USE_SU_LOGIN = False
 
     # Use sudo and optional user
     SUDO = False
     SUDO_USER = None
     PRESERVE_SUDO_ENV = False
+    USE_SUDO_LOGIN = False
 
     # Only show errors, but don't count as failure
     IGNORE_ERRORS = False

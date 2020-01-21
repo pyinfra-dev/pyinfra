@@ -48,6 +48,9 @@ class SSHClient(ParamikoClient):
         cfg = {'port': 22}
 
         ssh_config = get_ssh_config()
+        if not ssh_config:
+            return hostname, cfg
+
         host_config = ssh_config.lookup(hostname)
 
         if 'hostname' in host_config:

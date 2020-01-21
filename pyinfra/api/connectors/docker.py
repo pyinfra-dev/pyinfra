@@ -125,7 +125,7 @@ def put_file(
         raise IOError('\n'.join(stderr))
 
     if print_output:
-        print('{0}file uploaded to container: {1}'.format(
+        click.echo('{0}file uploaded to container: {1}'.format(
             host.print_prefix, remote_filename,
         ))
 
@@ -173,7 +173,7 @@ def get_file(
         raise IOError('\n'.join(stderr))
 
     if print_output:
-        print('{0}file downloaded from container: {1}'.format(
+        click.echo('{0}file downloaded from container: {1}'.format(
             host.print_prefix, remote_filename,
         ))
 
