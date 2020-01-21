@@ -54,6 +54,8 @@ from .virtualenv import init_virtualenv
 
 # Exit handler
 def _exit():
+    if pseudo_state.isset() and pseudo_state.failed_hosts:
+        sys.exit(1)
     sys.exit(0)
 
 
