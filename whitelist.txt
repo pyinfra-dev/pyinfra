@@ -149,6 +149,7 @@ ip6tables
 iproute2
 iptables
 isalpha
+isatty
 isfunction
 islink
 islower
