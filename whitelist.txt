@@ -172,6 +172,7 @@ lxd
 mech
 memoize
 modprobe
+motd
 motd'
 nameserver
 nettools
