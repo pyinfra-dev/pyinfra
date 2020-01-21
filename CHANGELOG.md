@@ -4,6 +4,7 @@ Gearing up for `v1` release, deprecating the last unused/old features, expanding
 
 **Improvements**:
 
++ Add global `use_sudo_login` and `use_su_login` arguments (and config settings)
 + Add `OperationTypeError` exception and reject invalid names for files operations
 + Implement stdin support! There's a global `stdin` argument for all operations
 + Pass `-S` to sudo so the `stdin` argument works
