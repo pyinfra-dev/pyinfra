@@ -68,7 +68,7 @@ class FindInFile(FactBase):
         pattern = shlex_quote(pattern)
 
         return (
-            'grep {0} {1} 2> /dev/null || '
+            'grep -e {0} {1} 2> /dev/null || '
             '(find {1} -type f > /dev/null && echo "__pyinfra_exists_{1}")'
         ).format(pattern, name).strip()
 
