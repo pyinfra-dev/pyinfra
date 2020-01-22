@@ -35,7 +35,7 @@ def reboot(state, host, delay=10, interval=1, timeout=300):
         'success_exit_codes': [-1],  # -1 being error/disconnected
     }
 
-    def wait_and_reconnect(state, host):
+    def wait_and_reconnect(state, host):  # pragma: no cover
         sleep(delay)
         max_retries = round(timeout / interval)
 
