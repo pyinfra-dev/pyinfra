@@ -1,3 +1,13 @@
+# v0.13.1
+
++ Add `success_exit_codes` global argument
++ Add `debug-inventory` command
++ Add `-e` to grep calls in `find_in_file` fact
++ Add `server.reboot` operation
++ Parse CLI operation args as JSON
++ Restore/fix `python -m pyinfra` functionality
++ Fix TTY detection on Windows
+
 # v0.13
 
 Gearing up for `v1` release, deprecating the last unused/old features, expanding the tests and documentation, closing off some really old issues (stdin support).
