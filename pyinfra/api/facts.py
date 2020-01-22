@@ -77,7 +77,9 @@ class FactBase(object):
 
     @staticmethod
     def process(output):
-        return '\n'.join(output)
+        # TODO:
+        return ''.join(output)
+        #return '\n'.join(output)
 
     def process_pipeline(self, args, output):
         return {

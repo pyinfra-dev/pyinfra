@@ -123,14 +123,29 @@ def run_shell_command(
 
     logger.debug('Running command on {0}: {1}'.format(host.name, command))
 
+    # get rid of leading/trailing quote
+    tmp_command = command.strip('\'')
+
     if print_output:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
     # TODO: not sure if we want powershell or command or both (probably)
-    # response = host.connection.run_cmd(command)
-    response = host.connection.run_ps(command)
+    response = host.connection.run_cmd(tmp_command)
+    #response = host.connection.run_ps(command)
 
     return_code = response.status_code
+
+    logger.debug('response:{}'.format(response))
+    logger.debug('response.status_code:{}'.format(response.status_code))
+    logger.debug('response.std_out:{}'.format(response.std_out))
+    logger.debug('response.std_err:{}'.format(response.std_err))
+
+    # remove the '\r\n' characters in std_out and std_err
+    std_out = response.std_out.decode('utf-8').replace('\r\n', '')
+    std_err = response.std_err.decode('utf-8').replace('\r\n', '')
+
+    logger.debug('std_out:' + std_out)
+    logger.debug('std_err:' + std_err)
 
     if success_exit_codes:
         status = return_code in success_exit_codes
@@ -140,9 +155,9 @@ def run_shell_command(
     logger.debug('Command exit status: {0}'.format(status))
 
     if return_combined_output:
-        return status, '{}{}'.format(response.std_out, response.std_err)
+        return status, std_out + std_err
 
-    return status, response.std_out, response.std_err
+    return status, std_out, std_err
 
 
 def get_file(

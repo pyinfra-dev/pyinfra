@@ -30,9 +30,9 @@ class Os(FactBase):
     Returns the OS name according to ``uname`` or ``systeminfo``.
     '''
 
-    command = 'uname -s'
+    #command = 'uname -s'
     # TODO: cmd or ps
-    # command = 'systeminfo | findstr /c:"OS Name:"'
+    command = 'systeminfo.exe | findstr /c:"OS Name:"'
 
 
 class OsVersion(FactBase):
