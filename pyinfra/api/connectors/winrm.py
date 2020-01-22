@@ -5,7 +5,7 @@ import winrm
 
 from pyinfra import logger
 from pyinfra.api.exceptions import ConnectError
-from pyinfra.api.util import make_command
+from pyinfra.api.util import make_command, memoize
 
 
 def _raise_connect_error(host, message, data):

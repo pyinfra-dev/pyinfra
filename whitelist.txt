@@ -1,3 +1,4 @@
+'systeminfo
 2x
 4
 64kb
@@ -20,7 +21,9 @@ E305
 E501
 F401
 Gevent
+HKLM
 Hacky
+Hotfixes
 I100
 IPTABLES
 Initd
@@ -128,6 +131,7 @@ favicon
 fg
 fileno
 filesystem
+findstr
 frameinfo
 fs
 fstab
@@ -181,6 +185,7 @@ keyserver
 launchd
 levelno
 localforward
+localgroup
 lxd
 mech
 memoize
@@ -188,6 +193,7 @@ modprobe
 motd
 nameserver
 netboot
+netsh
 nettools
 nobest
 nofile
@@ -237,6 +243,7 @@ runlevels
 s1
 samefile
 sbin
+schtasks
 scp
 secho
 sed
