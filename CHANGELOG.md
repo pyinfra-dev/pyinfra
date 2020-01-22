@@ -1,3 +1,31 @@
+# v0.13
+
+Gearing up for `v1` release, deprecating the last unused/old features, expanding the tests and documentation, closing off some really old issues (stdin support).
+
+**Improvements**:
+
++ Add global `use_sudo_login` and `use_su_login` arguments (and config settings)
++ Add `OperationTypeError` exception and reject invalid names for files operations
++ Implement stdin support! There's a global `stdin` argument for all operations
++ Pass `-S` to sudo so the `stdin` argument works
++ Autogenerate the documentation of global arguments
++ Extended examples and documentation (@mkinney)
++ Fully test SSH/local/Docker connectors
++ Add bash complete script (`scripts/pyinfra-complete.sh`)
+
+**Deprecated**:
+
++ Deprecate global `when` and `hosts` arguments
++ Deprecate hooks
+
+**Fixed**:
+
++ Fix logging escape sequences to files and on Windows
++ Fix/improve TTY detection for the progress bar
++ Fix issue with no SSH config causing an exception
++ Fix: exit 1 when hosts fail
+
+
 # v0.12.2
 
 + Add URL support to `yum.repo` and `dnf.repo` operations

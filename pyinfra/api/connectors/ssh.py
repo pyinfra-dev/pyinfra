@@ -22,19 +22,16 @@ from paramiko.agent import AgentRequestHandler
 import pyinfra
 
 from pyinfra import logger
-from pyinfra.api.exceptions import PyinfraError
+from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.api.util import get_file_io, make_command, memoize
 
 from .sshuserclient import SSHClient
 from .util import read_buffers_into_queue, split_combined_output, write_stdin
 
 
-def _log_connect_error(host, message, data):
-    logger.error('{0}{1} ({2})'.format(
-        host.print_prefix,
-        click.style(message, 'red'),
-        data,
-    ))
+def _raise_connect_error(host, message, data):
+    message = '{0} ({1})'.format(message, data)
+    raise ConnectError(message)
 
 
 def _get_private_key(state, key_filename, key_password):
@@ -140,7 +137,7 @@ def _make_paramiko_kwargs(state, host):
     return kwargs
 
 
-def connect(state, host, for_fact=None):
+def connect(state, host):
     '''
     Connect to a single host. Returns the SSH client if succesful. Stateless by
     design so can be run in parallel.
@@ -165,20 +162,6 @@ def connect(state, host, for_fact=None):
         session = client.get_transport().open_session()
         AgentRequestHandler(session)
 
-        # Log
-        log_message = '{0}{1}'.format(
-            host.print_prefix,
-            click.style('Connected', 'green'),
-        )
-
-        if for_fact:
-            log_message = '{0}{1}'.format(
-                log_message,
-                ' (for {0} fact)'.format(for_fact),
-            )
-
-        logger.info(log_message)
-
         return client
 
     except AuthenticationException:
@@ -197,19 +180,19 @@ def connect(state, host, for_fact=None):
             for key, value in auth_kwargs.items()
         )
 
-        _log_connect_error(host, 'Authentication error', auth_args)
+        _raise_connect_error(host, 'Authentication error', auth_args)
 
     except SSHException as e:
-        _log_connect_error(host, 'SSH error', e)
+        _raise_connect_error(host, 'SSH error', e)
 
     except gaierror:
-        _log_connect_error(host, 'Could not resolve hostname', hostname)
+        _raise_connect_error(host, 'Could not resolve hostname', hostname)
 
     except socket_error as e:
-        _log_connect_error(host, 'Could not connect', e)
+        _raise_connect_error(host, 'Could not connect', e)
 
     except EOFError as e:
-        _log_connect_error(host, 'EOF error', e)
+        _raise_connect_error(host, 'EOF error', e)
 
 
 def run_shell_command(
@@ -217,6 +200,7 @@ def run_shell_command(
     get_pty=False,
     timeout=None,
     stdin=None,
+    success_exit_codes=None,
     print_output=False,
     return_combined_output=False,
     **command_kwargs
@@ -269,7 +253,10 @@ def run_shell_command(
     exit_status = stdout_buffer.channel.recv_exit_status()
     logger.debug('Command exit status: {0}'.format(exit_status))
 
-    status = exit_status == 0
+    if success_exit_codes:
+        status = exit_status in success_exit_codes
+    else:
+        status = exit_status == 0
 
     if return_combined_output:
         return status, combined_output

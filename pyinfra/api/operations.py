@@ -51,6 +51,7 @@ def _run_server_op(state, host, op_hash):
         sudo_user = op_meta['sudo_user']
         su_user = op_meta['su_user']
         preserve_sudo_env = op_meta['preserve_sudo_env']
+        success_exit_codes = op_meta['success_exit_codes']
 
         # As dicts, individual commands can override meta settings (ie on a
         # per-host basis generated during deploy).
@@ -66,6 +67,9 @@ def _run_server_op(state, host, op_hash):
 
             if 'shell_executable' in command:
                 shell_executable = command['shell_executable']
+
+            if 'success_exit_codes' in command:
+                success_exit_codes = command['success_exit_codes']
 
             command = command['command']
 
@@ -144,6 +148,7 @@ def _run_server_op(state, host, op_hash):
                     get_pty=op_meta['get_pty'],
                     env=op_meta['env'],
                     stdin=op_meta['stdin'],
+                    success_exit_codes=success_exit_codes,
                     print_output=state.print_output,
                     return_combined_output=True,
                 )

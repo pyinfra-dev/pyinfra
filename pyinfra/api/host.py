@@ -2,8 +2,10 @@ from __future__ import unicode_literals
 
 import click
 
+from pyinfra import logger
+
 from .connectors import EXECUTION_CONNECTORS
-from .exceptions import PyinfraError
+from .exceptions import ConnectError, PyinfraError
 from .facts import get_fact, is_fact
 
 
@@ -77,9 +79,28 @@ class Host(object):
     # Connector proxy
     #
 
-    def connect(self, state, *args, **kwargs):
+    def connect(self, state, for_fact=None):
         if not self.connection:
-            self.connection = self.executor.connect(state, self, *args, **kwargs)
+            try:
+                self.connection = self.executor.connect(state, self)
+            except ConnectError as e:
+                log_message = '{0}{1}'.format(
+                    self.print_prefix,
+                    click.style(e.args[0], 'red'),
+                )
+                logger.error(log_message)
+            else:
+                log_message = '{0}{1}'.format(
+                    self.print_prefix,
+                    click.style('Connected', 'green'),
+                )
+                if for_fact:
+                    log_message = '{0}{1}'.format(
+                        log_message,
+                        ' (for {0} fact)'.format(for_fact),
+                    )
+
+                logger.info(log_message)
 
         return self.connection
 

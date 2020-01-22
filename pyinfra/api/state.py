@@ -170,6 +170,8 @@ class State(object):
         self.active_hosts = set()
         # Hosts that are ready to be deployed to
         self.ready_hosts = set()
+        # Hosts that have failed
+        self.failed_hosts = set()
 
         # Limit hosts changes dynamically to limit operations to a subset of hosts
         self.limit_hosts = initial_limit
@@ -390,7 +392,8 @@ class State(object):
             (host.name for host in hosts_to_fail),
         )))
 
-        # Remove the failed hosts from the inventory
+        self.failed_hosts.update(hosts_to_fail)
+
         self.active_hosts -= hosts_to_fail
 
         # Check we're not above the fail percent

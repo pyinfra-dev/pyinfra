@@ -12,21 +12,7 @@ from pyinfra.api.util import get_file_io, make_command
 from .util import read_buffers_into_queue, split_combined_output, write_stdin
 
 
-def connect(state, host, for_fact=None):
-    # Log
-    log_message = '{0}{1}'.format(
-        host.print_prefix,
-        click.style('Connected', 'green'),
-    )
-
-    if for_fact:
-        log_message = '{0}{1}'.format(
-            log_message,
-            ' (for {0} fact)'.format(for_fact),
-        )
-
-    logger.info(log_message)
-
+def connect(state, host):
     return True
 
 
@@ -35,6 +21,7 @@ def run_shell_command(
     get_pty=False,  # ignored
     timeout=None,
     stdin=None,
+    success_exit_codes=None,
     print_output=False,
     return_combined_output=False,
     **command_kwargs
@@ -84,7 +71,10 @@ def run_shell_command(
     process.stdout.close()
     process.stderr.close()
 
-    status = process.returncode == 0
+    if success_exit_codes:
+        status = process.returncode in success_exit_codes
+    else:
+        status = process.returncode == 0
 
     if return_combined_output:
         return status, combined_output

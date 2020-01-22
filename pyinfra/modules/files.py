@@ -15,7 +15,7 @@ import six
 
 from jinja2 import TemplateSyntaxError, UndefinedError
 
-from pyinfra.api import operation, OperationError
+from pyinfra.api import operation, OperationError, OperationTypeError
 from pyinfra.api.util import get_file_sha1, get_template
 
 from .util.files import chmod, chown, ensure_mode_int, sed_replace
@@ -684,6 +684,9 @@ def link(
         )
     '''
 
+    if not isinstance(name, six.string_types):
+        raise OperationTypeError('Name must be a string')
+
     if present and not target:
         raise OperationError('If present is True target must be provided')
 
@@ -784,6 +787,9 @@ def file(
         )
     '''
 
+    if not isinstance(name, six.string_types):
+        raise OperationTypeError('Name must be a string')
+
     mode = ensure_mode_int(mode)
     info = host.fact.file(name)
 
@@ -870,6 +876,9 @@ def directory(
             )
 
     '''
+
+    if not isinstance(name, six.string_types):
+        raise OperationTypeError('Name must be a string')
 
     mode = ensure_mode_int(mode)
     info = host.fact.directory(name)

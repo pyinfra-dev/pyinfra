@@ -4,6 +4,7 @@ from .exceptions import (  # noqa: F401 # pragma: no cover
     DeployError,
     InventoryError,
     OperationError,
+    OperationTypeError,
 )
 from .facts import FactBase, ShortFactBase  # noqa: F401 # pragma: no cover
 from .inventory import Inventory  # noqa: F401 # pragma: no cover

@@ -2,10 +2,13 @@
 
 from os import path
 
+from pyinfra.api import Config
 from pyinfra.api.operation_kwargs import OPERATION_KWARGS
 
 
 def build_global_kwargs_doc():
+    pyinfra_config = Config()
+
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, '..', 'docs'))
 
@@ -21,6 +24,11 @@ def build_global_kwargs_doc():
             description = config
             if isinstance(config, dict):
                 description = config.get('description')
+                default = config.get('default')
+                if callable(default):
+                    default = default(pyinfra_config)
+                if default:
+                    key = '{0}={1}'.format(key, default)
 
             lines.append('    + ``{0}``: {1}'.format(key, description))
 

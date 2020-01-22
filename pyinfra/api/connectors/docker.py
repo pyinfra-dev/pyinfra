@@ -8,7 +8,7 @@ import six
 from six.moves import shlex_quote
 
 from pyinfra import local, logger
-from pyinfra.api.exceptions import InventoryError
+from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
@@ -34,11 +34,14 @@ def connect(state, host, for_fact=None):
     if 'docker_container_id' in host.host_data:  # user can provide a docker_container_id
         return True
 
-    with progress_spinner({'docker run'}):
-        container_id = local.shell(
-            'docker run -d {0} sleep 10000'.format(host.data.docker_image),
-            splitlines=True,
-        )[-1]  # last line is the container ID
+    try:
+        with progress_spinner({'docker run'}):
+            container_id = local.shell(
+                'docker run -d {0} sleep 10000'.format(host.data.docker_image),
+                splitlines=True,
+            )[-1]  # last line is the container ID
+    except PyinfraError as e:
+        raise ConnectError(e.args[0])
 
     host.host_data['docker_container_id'] = container_id
     return True
@@ -67,6 +70,7 @@ def run_shell_command(
     state, host, command,
     timeout=None,
     stdin=None,
+    success_exit_codes=None,
     print_output=False,
     return_combined_output=False,
     **kwargs  # ignored (sudo/etc)
@@ -79,6 +83,7 @@ def run_shell_command(
         state, host, docker_command,
         timeout=timeout,
         stdin=stdin,
+        success_exit_codes=success_exit_codes,
         print_output=print_output,
         return_combined_output=return_combined_output,
     )

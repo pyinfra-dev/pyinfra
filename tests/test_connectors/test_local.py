@@ -41,9 +41,14 @@ class TestLocalConnector(TestCase):
         host = inventory.get_host('@local')
 
         command = 'echo hi'
+        self.fake_popen_mock().returncode = 0
 
         out = host.run_shell_command(state, command, stdin='hello', print_output=True)
         assert len(out) == 3
+
+        status, stdout, stderr = out
+        assert status is True
+        self.fake_popen_mock().stdin.write.assert_called_with(b'hello\n')
 
         combined_out = host.run_shell_command(
             state, command, stdin='hello', print_output=True,
@@ -56,6 +61,30 @@ class TestLocalConnector(TestCase):
             shell_command, shell=True,
             stdout=PIPE, stderr=PIPE, stdin=PIPE,
         )
+
+    def test_run_shell_command_success_exit_codes(self):
+        inventory = make_inventory(hosts=('@local',))
+        state = State(inventory, Config())
+        host = inventory.get_host('@local')
+
+        command = 'echo hi'
+        self.fake_popen_mock().returncode = 1
+
+        out = host.run_shell_command(state, command, success_exit_codes=[1])
+        assert len(out) == 3
+        assert out[0] is True
+
+    def test_run_shell_command_error(self):
+        inventory = make_inventory(hosts=('@local',))
+        state = State(inventory, Config())
+        host = inventory.get_host('@local')
+
+        command = 'echo hi'
+        self.fake_popen_mock().returncode = 1
+
+        out = host.run_shell_command(state, command)
+        assert len(out) == 3
+        assert out[0] is False
 
     def test_put_file(self):
         inventory = make_inventory(hosts=('@local',))

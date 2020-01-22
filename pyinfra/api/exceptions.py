@@ -4,10 +4,22 @@ class PyinfraError(Exception):
     '''
 
 
+class ConnectError(PyinfraError):
+    '''
+    Exception raised when connecting fails.
+    '''
+
+
 class OperationError(PyinfraError):
     '''
     Exception raised during fact gathering staging if an operation is unable to
     generate output/change state.
+    '''
+
+
+class OperationTypeError(OperationError, TypeError):
+    '''
+    Exception raised when an operation is passed invalid argument types.
     '''
 
 
