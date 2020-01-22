@@ -16,6 +16,7 @@
 }
 
 @test "adhoc do puppet run on agents" {
-  run pyinfra do_inv.py --limit agent_servers puppet.agent sudo=true use_sudo_login=true
+  run pyinfra do_inv.py --limit agent_servers puppet.agent sudo=true use_sudo_login=true success_exit_codes=[0,2]
   [ "$status" -eq 0 ]
 }
+

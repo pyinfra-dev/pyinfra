@@ -6,7 +6,6 @@ SUDO = True
 
 # update the /etc/hosts file
 def update_hosts_file(name, ip):
-    name = name.replace('@vagrant/', '')
     files.line(
         {'Add hosts to /etc/hosts'},
         '/etc/hosts',
@@ -17,9 +16,11 @@ def update_hosts_file(name, ip):
 
 # ensure all hosts are added to each /etc/hosts file
 masters = inventory.get_group('master_servers')
+for item in masters:
+    update_hosts_file('master', item.fact.ipv4_addresses['eth0'])
 agents = inventory.get_group('agent_servers')
-for item in masters + agents:
-    update_hosts_file(item.name, item.fact.ipv4_addresses['eth0'])
+for item in agents:
+    update_hosts_file('agent', item.fact.ipv4_addresses['eth0'])
 
 
 if host in masters:

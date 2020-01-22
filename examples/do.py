@@ -101,3 +101,5 @@ if __name__ == '__main__':
         down()
     elif op == 'create':
         create_inventory()
+    else:
+        print('invalid args')

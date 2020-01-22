@@ -68,4 +68,4 @@ if __name__ == '__main__':
     elif op == 'drop':
         drop()
     else:
-        print("invalid arg")
+        print('invalid arg')

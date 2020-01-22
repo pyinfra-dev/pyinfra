@@ -41,9 +41,16 @@ To try out:
     pyinfra @vagrant/agent yum.packages vim sudo=True present=True
     pyinfra @vagrant/agent init.systemd httpd sudo=True running=False
 
+or
+
     pyinfra inv.py --limit master_servers fact rpm_packages
     pyinfra inv.py yum.packages vim sudo=True present=True
     pyinfra inv.py --limit agent_servers init.systemd httpd sudo=True running=False
+
+    # If running against digital ocean instances
+    pyinfra do_inv.py --limit master_servers fact rpm_packages
+    pyinfra do_inv.py yum.packages vim sudo=True present=True
+    pyinfra do_inv.py --limit agent_servers init.systemd httpd sudo=True running=False
 
 7. Destroy vagrant VMs when done with demo
 

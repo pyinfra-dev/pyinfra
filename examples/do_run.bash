@@ -10,6 +10,7 @@ sleep 30
 ./test_do_deploy.bats
 
 cd puppet
+test_step0.bats
 test_step1.bats
 test_step2.bats
 test_step3.bats

@@ -19,6 +19,13 @@ def agent(state, host, server=None, port=None):
 
         puppet.agent()
 
+        # We also expect a return code of:
+        # 0=no changes or 2=changes applied
+        puppet.agent(
+            {'Run the puppet agent'},
+            success_exit_codes=[0, 2],
+        )
+
     '''
 
     args = []
