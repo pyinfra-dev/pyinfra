@@ -27,31 +27,38 @@ class Hostname(FactBase):
 
 class Os(FactBase):
     '''
-    Returns the OS name according to ``uname``.
+    Returns the OS name according to ``uname`` or ``systeminfo``.
     '''
 
     command = 'uname -s'
+    # TODO: cmd or ps
+    # command = 'systeminfo | findstr /c:"OS Name:"'
 
 
 class OsVersion(FactBase):
     '''
-    Returns the OS version according to ``uname``.
+    Returns the OS version according to ``uname`` or ``systeminfo``.
     '''
 
     command = 'uname -r'
+    # TODO: cmd or ps
+    # command = 'systeminfo | findstr /c:"OS Version:"'
 
 
 class Arch(FactBase):
     '''
-    Returns the system architecture according to ``uname``.
+    Returns the system architecture according to ``uname`` or ``systeminfo``.
     '''
 
     command = 'uname -p'
+    # TODO: cmd or ps
+    # command = 'systeminfo | findstr /c:"System Type:"'
 
 
 class Command(FactBase):
     '''
     Returns the raw output lines of a given command.
+    TODO: ps or cmd for winrm?
     '''
 
     @staticmethod
@@ -67,6 +74,7 @@ class Which(FactBase):
     @staticmethod
     def command(name):
         return 'which {0}'.format(name)
+        # TODO: only CMD: 'where {0}.format(name)
 
 
 class Date(FactBase):
@@ -75,6 +83,8 @@ class Date(FactBase):
     '''
 
     command = 'LANG=C date'
+    # TODO: cmd only
+    # command = 'date /T'
     default = datetime.now
 
     @staticmethod
@@ -100,6 +110,8 @@ class Mounts(FactBase):
     '''
 
     command = 'mount'
+    # TODO: cmd or ps
+    # command = 'net use'
     default = dict
 
     @staticmethod
@@ -148,6 +160,7 @@ class KernelModules(FactBase):
     '''
 
     command = 'cat /proc/modules'
+    # TODO: not sure if win equiv
     default = dict
 
     @staticmethod
@@ -178,7 +191,7 @@ class KernelModules(FactBase):
 
 class LsbRelease(FactBase):
     '''
-    Returns a dictionary of release information using ``lsb_release``.
+    Returns a dictionary of release information using ``lsb_release`` or ``systeminfo``.
 
     .. code:: python
 
@@ -192,6 +205,8 @@ class LsbRelease(FactBase):
     '''
 
     command = 'lsb_release -ca'
+    # TODO: all or part of systeminfo?
+    # OS Name, OS Version, Hotfixes?
 
     @staticmethod
     def process(output):
@@ -233,6 +248,10 @@ class Sysctl(FactBase):
     '''
 
     command = 'sysctl -a'
+    # TODO: not sure of a good equiv?
+    # look in registry? (example of a query)
+    #     REG QUERY HKLM\SOFTWARE
+    # netsh?
     default = dict
 
     @staticmethod
@@ -273,6 +292,8 @@ class Groups(FactBase):
     '''
 
     command = 'cat /etc/group'
+    # TODO: cmd or ps
+    # net localgroup
     default = list
 
     @staticmethod
@@ -286,6 +307,7 @@ class Groups(FactBase):
         return groups
 
 
+# TODO: schtasks ?
 class Crontab(FactBase):
     '''
     Returns a dictionary of cron command -> execution time.
@@ -361,6 +383,9 @@ class Users(FactBase):
             echo "$ID $META"
         done
     '''
+    # TODO: net user vagrant
+    # TODO: net users  (or 'dir /b C:\Users' if the user has logged in... I think)
+    # TODO: FOR /F %U IN ('dir /b c:\Users') DO net user %U
 
     default = dict
 

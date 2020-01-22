@@ -13,6 +13,12 @@ def _raise_connect_error(host, message, data):
     raise ConnectError(message)
 
 
+@memoize
+# TODO: where should show_warning() be added?
+def show_warning():
+    logger.warning('The @winrm connector is pre-alpha!')
+
+
 def _make_winrm_kwargs(state, host):
     kwargs = {
     }
