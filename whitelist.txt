@@ -77,12 +77,14 @@ automagically
 autoname
 autosectionlabel
 baseurl
+basic
 benchmarking
 build
 bytecode
 ccommands
 cd
 centos
+certificate
 cfg
 chdir
 chown
@@ -93,6 +95,7 @@ cp
 cpus
 createdb
 createrole
+credssp
 cron
 crons
 crontab
@@ -171,6 +174,7 @@ jinja2
 joinall
 jsonify
 jsontest
+kerberos
 keyid
 keyscan
 keyserver
@@ -194,12 +198,15 @@ noqa
 normcase
 nottest
 npm
+ntlm
 openvz
 pacman
 paramiko
 pathname
 pipelining
 pkey
+plaintext
+powershell
 ppa
 ppk
 pramga
@@ -212,6 +219,7 @@ py
 pyc
 pygments
 pyinfra
+pywinrm
 rcd
 readlink
 rebase
@@ -244,6 +252,7 @@ simplefilter
 somehost
 sshkeys
 sshuserclient
+ssl
 status
 stdlib
 stringify
@@ -286,6 +295,7 @@ vz
 warnoptions
 wget
 whocares
+winrm
 writeable
 yarn
 zfill

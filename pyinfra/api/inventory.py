@@ -38,7 +38,7 @@ class Inventory(object):
         ssh_key_password: override password for the SSH key
         ssh_password: override SSH password
         winrm_username: override WINRM username
-        winrm_password: override WINRM pasword 
+        winrm_password: override WINRM pasword
         winrm_port: override WINRM port
         **groups: map of group names -> ``(names, data)``
     '''
@@ -112,8 +112,8 @@ class Inventory(object):
 
             # Default to executing commands with the ssh connector
             # TODO: not sure how to determine which
-            #executor = EXECUTION_CONNECTORS['ssh']
-            #if host_data.winrm_username != '':
+            # executor = EXECUTION_CONNECTORS['ssh']
+            # if host_data.winrm_username != '':
             executor = EXECUTION_CONNECTORS['winrm']
 
             # Name is @connector?

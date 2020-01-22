@@ -3,10 +3,8 @@ from __future__ import print_function, unicode_literals
 import click
 import winrm
 
-import pyinfra
-
 from pyinfra import logger
-from pyinfra.api.exceptions import ConnectError, PyinfraError
+from pyinfra.api.exceptions import ConnectError
 from pyinfra.api.util import make_command
 
 
@@ -33,11 +31,11 @@ def _make_winrm_kwargs(state, host):
         kwargs['password'] = host.data.winrm_password
 
     # TODO: add more auth
-    # pywinrm supports: 
-    # ['basic', 'certificate', 'ntlm', 'kerberos', 'plaintext', 'ssl', 'credssp']
+    # pywinrm supports: basic, certificate, ntlm, kerberos, plaintext, ssl, credssp
     # see https://github.com/diyan/pywinrm/blob/master/winrm/__init__.py#L12
 
     return kwargs
+
 
 def connect(state, host):
     '''
@@ -61,11 +59,15 @@ def connect(state, host):
         # Create new session
         host_and_port = '{}:{}'.format(hostname, host.data.winrm_port)
         logger.debug('host_and_port: {}'.format(host_and_port))
-        session = winrm.Session(host_and_port, auth=(
-            host.data.winrm_username, host.data.winrm_password)
+
+        session = winrm.Session(
+            host_and_port,
+            auth=(
+                host.data.winrm_username,
+                host.data.winrm_password,
+            ),
         )
 
-        #logger.debug('session:{}'.format(session))
         return session
 
     # TODO: add exceptions here
@@ -83,7 +85,6 @@ def connect(state, host):
         )
         logger.debug(str(e))
         _raise_connect_error(host, 'Authentication error', auth_args)
-
 
 
 def run_shell_command(
@@ -119,9 +120,8 @@ def run_shell_command(
     if print_output:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
-    #logger.debug('host.connection:{}'.format(host.connection))
     # TODO: not sure if we want powershell or command or both (probably)
-    #response = host.connection.run_cmd(command)
+    # response = host.connection.run_cmd(command)
     response = host.connection.run_ps(command)
 
     return_code = response.status_code
@@ -145,7 +145,6 @@ def get_file(
 ):
     # TODO: implement
     return True
-
 
 
 def put_file(
