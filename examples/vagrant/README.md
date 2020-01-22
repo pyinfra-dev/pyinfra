@@ -11,8 +11,4 @@ To try this out:
 
 2. From this directory, run:
 
-    pyinfra --user vagrant --password vagrant @vagrant vagrant.py
-
-or
-
     pyinfra @vagrant vagrant.py

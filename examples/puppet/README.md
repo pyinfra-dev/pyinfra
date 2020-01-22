@@ -20,26 +20,31 @@ To try out:
 
 2. Install master and agent
 
-    pyinfra @vagrant step1.py
+    pyinfra inv.py step1.py
 
 3. Sign agent and do a puppet run
 
-    pyinfra @vagrant step2.py
+    pyinfra inv.py step2.py
 
 4. Deploy a manifest to master and do a puppet run on agent
 
-    pyinfra @vagrant step3.py
+    pyinfra inv.py step3.py
 
-5. Do an adhoc puppet run on just the agent:
+5. Do an adhoc puppet run on just the agents:
 
-    pyinfra @vagrant/agent puppet.agent sudo=true
+    pyinfra inv.py --limit agent_servers puppet.agent sudo=true use_sudo_login=true
 
-6. Misc pyinfra commands:
+6. Misc pyinfra commands (showing various options):
 
+    # If running from vagrant
     pyinfra @vagrant/agent fact rpm_packages
     pyinfra @vagrant/agent yum.packages vim sudo=True present=True
     pyinfra @vagrant/agent init.systemd httpd sudo=True running=False
 
-7. Destroy VMs when done with demo
+    pyinfra inv.py --limit master_servers fact rpm_packages
+    pyinfra inv.py yum.packages vim sudo=True present=True
+    pyinfra inv.py --limit agent_servers init.systemd httpd sudo=True running=False
+
+7. Destroy vagrant VMs when done with demo
 
     vagrant destroy

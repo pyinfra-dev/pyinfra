@@ -1,0 +1,17 @@
+./do.py up
+
+# TODO: improve sleep
+sleep 30
+
+# create do inventories
+./do.py create
+
+./test_do_adhocs.bats
+./test_do_deploy.bats
+
+cd puppet
+test_step1.bats
+test_step2.bats
+test_step3.bats
+test_post.bats
+cd ..

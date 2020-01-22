@@ -16,20 +16,21 @@ def update_hosts_file(name, ip):
 
 
 # ensure all hosts are added to each /etc/hosts file
-inv = inventory.get_group('@vagrant')
-for item in inv:
+masters = inventory.get_group('master_servers')
+agents = inventory.get_group('agent_servers')
+for item in masters + agents:
     update_hosts_file(item.name, item.fact.ipv4_addresses['eth0'])
 
 
-if host.name == '@vagrant/master':
+if host in masters:
     server.hostname(
         {'Set the hostname for the Puppet Master'},
         'master.example.com',
     )
 
-if host.name == '@vagrant/agent':
+if host in agents:
     server.hostname(
-        {'Set the hostname for the Puppet Master'},
+        {'Set the hostname for an agent'},
         'agent.example.com',
     )
 
@@ -58,7 +59,7 @@ if host.fact.linux_name in ['CentOS', 'RedHat']:
     # TODO: how to determine when reboot is complete
     # TODO: run sestatus
 
-if host.name == '@vagrant/master':
+if host in masters:
 
     install = yum.packages(
         {'Install puppet server'},
@@ -92,7 +93,7 @@ if host.name == '@vagrant/master':
             enabled=True,
         )
 
-if host.name == '@vagrant/agent':
+if host in agents:
 
     yum.packages(
         {'Install puppet agent'},
