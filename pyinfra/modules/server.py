@@ -28,7 +28,7 @@ def reboot(state, host, delay=10, interval=1, timeout=300):
     + timeout: total time before giving up reconnecting
     '''
 
-    logger.warning('The server.reboot is in beta!')
+    logger.warning('The server.reboot operation is in beta!')
 
     yield {
         'command': 'reboot',
