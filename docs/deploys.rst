@@ -101,7 +101,7 @@ The same keys can be defined for host and group data - this means we can set a d
 + "all" group data
 
 .. note::
-    pyinfra contains a ``--debug-data`` option which can be used to explore the data output per-host for a given inventory/deploy.
+    pyinfra contains a ``debug-inventory`` command which can be used to explore the data output per-host for a given inventory/deploy, ie ``pyinfra inventory.py debug-inventory``.
 
 
 Operations
