@@ -27,7 +27,12 @@ def list():
     manager = digitalocean.Manager(token=token)
     my_droplets = manager.get_all_droplets()
     for droplet in my_droplets:
-        print(droplet.name, droplet.status, droplet.networks['v4'][0]['ip_address'])
+        ip = ''
+        try:
+            ip = droplet.networks['v4'][0]['ip_address']
+        except IndexError:
+            pass
+        print(droplet.name, droplet.status, ip)
 
 
 def add():
@@ -39,6 +44,7 @@ def add():
                                    image='ubuntu-18-04-x64',
                                    size_slug='512mb',
                                    ssh_keys=keys,
+                                   private_networking='',
                                    backups=False)
     droplet.create()
 
@@ -61,3 +67,5 @@ if __name__ == '__main__':
         add()
     elif op == 'drop':
         drop()
+    else:
+        print("invalid arg")
