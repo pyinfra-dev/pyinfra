@@ -30,6 +30,9 @@ pyinfra INVENTORY exec -- echo "hello world"
 # Run one or more facts on the inventory
 pyinfra INVENTORY fact linux_distribution [users]...
 pyinfra INVENTORY all-facts
+
+# Debug (print) inventory hosts, groups and data
+pyinfra INVENTORY debug-inventory
 ```
 
 ### Options
@@ -104,7 +107,6 @@ pyinfra inventory.py init.service nginx running=true enabled=true
 For additional debug info, use one of these options:
 
 + `--debug` Print debug info.
-+ `--debug-data` Print host/group data before connecting and exit.
 + `--debug-facts` Print facts after generating operations and exit.
 + `--debug-operations` Print operations after generating and exit.
 

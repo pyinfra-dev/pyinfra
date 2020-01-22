@@ -278,8 +278,12 @@ def _main(
             deploy_dir = potential_deploy_dir
             break
 
-    # List *all* facts
-    if operations[0] == 'all-facts':
+    # Debug (print) inventory + group data
+    if operations[0] == 'debug-inventory':
+        command = 'debug-inventory'
+
+    # Get all non-arg facts
+    elif operations[0] == 'all-facts':
         command = 'fact'
         fact_names = []
 
@@ -293,7 +297,7 @@ def _main(
 
         operations = [(name, None) for name in fact_names]
 
-    # List facts
+    # Get one or more facts
     elif operations[0] == 'fact':
         command = 'fact'
 
@@ -319,12 +323,11 @@ def _main(
         command = 'exec'
         operations = operations[1:]
 
-    # Deploy files(s)
+    # Execute one or more deploy files
     elif all(cmd.endswith('.py') for cmd in operations):
         command = 'deploy'
         operations = operations[0:]
 
-        # Check each file exists
         for file in operations:
             if not path.exists(file):
                 raise CliError('No deploy file: {0}'.format(file))
@@ -413,7 +416,12 @@ def _main(
     state.init(inventory, config, initial_limit=limit_hosts)
 
     # If --debug-data dump & exit
-    if debug_data:
+    if command == 'debug-inventory' or debug_data:
+        if debug_data:
+            logger.warning((
+                '--debug-data is deprecated, '
+                'please use `pyinfra INVENTORY debug-inventory` instead.'
+            ))
         print_inventory(state)
         _exit()
 

@@ -242,11 +242,11 @@ def run_shell_command(
         write_stdin(stdin, stdin_buffer)
 
     combined_output = read_buffers_into_queue(
-        host,
         stdout_buffer,
         stderr_buffer,
         timeout=timeout,
         print_output=print_output,
+        print_prefix=host.print_prefix,
     )
 
     logger.debug('Waiting for exit status...')

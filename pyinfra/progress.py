@@ -16,12 +16,13 @@ WAIT_CHARS = deque(('-', '/', '|', '\\'))
 
 # Hacky way of getting terminal size (so can clear lines)
 # Source: http://stackoverflow.com/questions/566746
-TERMINAL_SIZE = os.popen('stty size', 'r').read().split()
 IS_TTY = sys.stdout.isatty() and sys.stderr.isatty()
-TERMINAL_WIDTH = (
-    int(TERMINAL_SIZE[1])
-    if IS_TTY else 0
-)
+TERMINAL_WIDTH = 0
+
+if IS_TTY:
+    terminal_size = os.popen('stty size', 'r').read().split()
+    if len(terminal_size) == 2:
+        TERMINAL_WIDTH = int(terminal_size[1])
 
 
 def _print_spinner(stop_event, progress_queue):
