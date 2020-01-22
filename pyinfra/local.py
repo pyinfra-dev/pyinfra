@@ -1,18 +1,16 @@
 from __future__ import print_function, unicode_literals
 
 from os import path
-from subprocess import PIPE, Popen, STDOUT
 
 import click
 import six
 
-from gevent.queue import Queue
-
 import pyinfra
 
 from . import logger, pseudo_host, pseudo_state
+from .api.connectors.util import run_local_process, split_combined_output
 from .api.exceptions import PyinfraError
-from .api.util import ensure_host_list, get_caller_frameinfo, read_buffer
+from .api.util import ensure_host_list, get_caller_frameinfo
 
 
 def include(filename, hosts=False, when=True):
@@ -120,29 +118,16 @@ def shell(commands, splitlines=False, ignore_errors=False):
         if print_output:
             click.echo('{0}>>> {1}'.format(print_prefix, command))
 
-        process = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
-
-        stdout_queue = Queue()
-
-        read_buffer(
-            'stdout',
-            process.stdout,
-            stdout_queue,
+        return_code, combined_output = run_local_process(
+            command,
             print_output=print_output,
-            print_func=lambda line: '{0}{1}'.format(print_prefix, line),
+            print_prefix=print_prefix,
         )
+        stdout, stderr = split_combined_output(combined_output)
 
-        stdout = [line for _, line in stdout_queue.queue]
-
-        # Get & check result
-        result = process.wait()
-
-        # Close any open file descriptor
-        process.stdout.close()
-
-        if result > 0 and not ignore_errors:
+        if return_code > 0 and not ignore_errors:
             raise PyinfraError(
-                'Local command failed: {0}\n{1}'.format(command, stdout),
+                'Local command failed: {0}\n{1}'.format(command, stderr),
             )
 
         all_stdout.extend(stdout)

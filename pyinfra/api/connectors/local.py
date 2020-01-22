@@ -1,6 +1,5 @@
 import os
 
-from subprocess import PIPE, Popen
 from tempfile import mkstemp
 
 import click
@@ -9,7 +8,7 @@ import six
 from pyinfra import logger
 from pyinfra.api.util import get_file_io, make_command
 
-from .util import read_buffers_into_queue, split_combined_output, write_stdin
+from .util import run_local_process, split_combined_output
 
 
 def connect(state, host):
@@ -50,31 +49,18 @@ def run_shell_command(
     if print_output:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
-    process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
-
-    if stdin:
-        write_stdin(stdin, process.stdin)
-
-    combined_output = read_buffers_into_queue(
-        host,
-        process.stdout,
-        process.stderr,
+    return_code, combined_output = run_local_process(
+        command,
+        stdin=stdin,
         timeout=timeout,
         print_output=print_output,
+        print_prefix=host.print_prefix,
     )
 
-    logger.debug('--> Waiting for exit status...')
-    process.wait()
-    logger.debug('--> Command exit status: {0}'.format(process.returncode))
-
-    # Close any open file descriptors
-    process.stdout.close()
-    process.stderr.close()
-
     if success_exit_codes:
-        status = process.returncode in success_exit_codes
+        status = return_code in success_exit_codes
     else:
-        status = process.returncode == 0
+        status = return_code == 0
 
     if return_combined_output:
         return status, combined_output

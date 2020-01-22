@@ -1,14 +1,49 @@
 from socket import timeout as timeout_error
+from subprocess import PIPE, Popen
 
 import click
 import gevent
 
 from gevent.queue import Queue
 
+from pyinfra import logger
 from pyinfra.api.util import read_buffer
 
 
-def read_buffers_into_queue(host, stdout_buffer, stderr_buffer, timeout, print_output):
+def run_local_process(
+    command,
+    stdin=None,
+    timeout=None,
+    print_output=False,
+    print_prefix=None,
+):
+    process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+
+    if stdin:
+        write_stdin(stdin, process.stdin)
+
+    combined_output = read_buffers_into_queue(
+        process.stdout,
+        process.stderr,
+        timeout=timeout,
+        print_output=print_output,
+        print_prefix=print_prefix,
+    )
+
+    logger.debug('--> Waiting for exit status...')
+    process.wait()
+    logger.debug('--> Command exit status: {0}'.format(process.returncode))
+
+    # Close any open file descriptors
+    process.stdout.close()
+    process.stderr.close()
+
+    return process.returncode, combined_output
+
+
+def read_buffers_into_queue(
+    stdout_buffer, stderr_buffer, timeout, print_output, print_prefix,
+):
     output_queue = Queue()
 
     # Iterate through outputs to get an exit status and generate desired list
@@ -20,7 +55,7 @@ def read_buffers_into_queue(host, stdout_buffer, stderr_buffer, timeout, print_o
         stdout_buffer,
         output_queue,
         print_output=print_output,
-        print_func=lambda line: '{0}{1}'.format(host.print_prefix, line),
+        print_func=lambda line: '{0}{1}'.format(print_prefix, line),
     )
     stderr_reader = gevent.spawn(
         read_buffer,
@@ -29,7 +64,7 @@ def read_buffers_into_queue(host, stdout_buffer, stderr_buffer, timeout, print_o
         output_queue,
         print_output=print_output,
         print_func=lambda line: '{0}{1}'.format(
-            host.print_prefix, click.style(line, 'red'),
+            print_prefix, click.style(line, 'red'),
         ),
     )
 

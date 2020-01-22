@@ -16,7 +16,7 @@ from ..util import make_inventory
 @patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True)
 class TestLocalConnector(TestCase):
     def setUp(self):
-        self.fake_popen_patch = patch('pyinfra.api.connectors.local.Popen')
+        self.fake_popen_patch = patch('pyinfra.api.connectors.util.Popen')
         self.fake_popen_mock = self.fake_popen_patch.start()
 
     def tearDown(self):
