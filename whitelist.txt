@@ -24,7 +24,6 @@ Hacky
 I100
 IPTABLES
 Initd
-ipdb
 Ip6tables
 Iptables
 Ipv4
@@ -123,6 +122,7 @@ excuted
 exe
 exists
 favicon
+fg
 fileno
 filesystem
 frameinfo
@@ -152,6 +152,7 @@ iglob
 initd
 initrd
 ip6tables
+ipdb
 iproute2
 iptables
 isalpha
@@ -229,6 +230,7 @@ s1
 samefile
 sbin
 scp
+secho
 sed
 sestatus
 sftp

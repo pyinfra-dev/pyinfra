@@ -110,7 +110,7 @@ For additional debug info, use one of these options:
 
 #### Printing output in color
 
-If you are developing a deploy script, and want to print the ouput in a differnt color,
+If you are developing a deploy script, and want to print the ouput in a different color,
 you can use [click](https://click.palletsprojects.com) like this:
 
 ```sh
@@ -118,6 +118,10 @@ import click
 
 from pyinfra import host
 
-print(click.style(host.fact.os_version, 'yellow'))
+# To run: pyinfra @docker/ubuntu print_in_color.py
+
+click.secho(host.fact.os_version, fg='yellow')
+click.secho(host.fact.linux_name, fg='red')
+
 ```
 
