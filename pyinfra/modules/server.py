@@ -21,6 +21,16 @@ def wait(state, host, port=None):
     second.
 
     + port: port number to wait for
+
+    Example:
+
+    .. code:: python
+
+        server.wait(
+            {'Wait for webserver to start'},
+            port=80,
+        )
+
     '''
 
     yield r'''
@@ -101,6 +111,22 @@ def script_template(state, host, template_filename, chdir=None, **data):
 
     + template_filename: local script template filename
     + chdir: directory to cd into before executing the script
+
+    Example:
+
+    .. code:: python
+
+        # Example showing how to pass python variable to a script template file.
+        # The .j2 file can use `{{ some_var }}` to be interpolated.
+        # To see output need to run pyinfra with '-v'
+        # Note: This assumes there is a file in templates/hello2.bash.j2 locally.
+        some_var = 'blah blah blah '
+        server.script_template(
+            {'Hello from script'},
+            'templates/hello2.bash.j2',
+            some_var=some_var,
+        )
+
     '''
 
     temp_file = state.get_temp_filename('{0}{1}'.format(template_filename, data))
@@ -503,6 +529,12 @@ def user(
             {'Ensure user is removed'},
             'kevin',
             present=False,
+        )
+
+        server.user(
+            {'Ensure myweb user exists'},
+            'myweb',
+            shell='/bin/bash',
         )
 
         # multiple users

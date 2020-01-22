@@ -8,6 +8,24 @@ def agent(state, host, server=None, port=None):
 
     + server: master server URL
     + port: puppet master port
+
+    Note: Either 'USE_SUDO_LOGIN=True' or 'USE_SU_LOGIN=True'
+    for puppet.agent() as `puppet` is added to the path in
+    the .bash_profile.
+
+    Example:
+
+    .. code:: python
+
+        puppet.agent()
+
+        # We also expect a return code of:
+        # 0=no changes or 2=changes applied
+        puppet.agent(
+            {'Run the puppet agent'},
+            success_exit_codes=[0, 2],
+        )
+
     '''
 
     args = []

@@ -282,6 +282,19 @@ def systemd(
     + command: custom command to pass like: ``/etc/rc.d/<name> <command>``
     + enabled: whether this service should be enabled/disabled on boot
     + daemon_reload: reload the systemd daemon to read updated unit files
+
+    Example:
+
+    .. code:: python
+
+        init.systemd(
+            {'Restart and enable dnsmasq'},
+            'dnsmasq',
+            running=True,
+            restarted=True,
+            enabled=True,
+        )
+
     '''
 
     if daemon_reload:

@@ -1,0 +1,27 @@
+# Global settings
+#domain-needed
+bogus-priv
+#no-resolv
+expand-hosts
+filterwin2k
+
+# Upstream nameservers
+server=8.8.4.4
+server=8.8.8.8
+
+interface={{ interface }}
+bind-interfaces
+
+domain=linuxhint.local
+ 
+dhcp-range={{ interface }},{{ dhcp_start }},{{ dhcp_end }},255.255.255.0,8h
+dhcp-option=option:router,{{ dns_server }}
+dhcp-option=option:dns-server,{{ dns_server }}
+dhcp-option=option:dns-server,8.8.8.8
+ 
+enable-tftp
+tftp-root=/srv/tftp
+dhcp-boot=pxelinux.0
+#dhcp-boot=pxelinux.0,linuxhint-s20,{{ pxe_server }}
+#pxe-prompt="Press F8 for PXE Network boot.", 2
+#pxe-service=x86PC, "Install OS via PXE",pxelinux

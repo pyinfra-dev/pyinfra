@@ -39,6 +39,8 @@ def download(
     + cache_time: if the file exists already, re-download after this time (in seconds)
     + force: always download the file, even if it already exists
 
+    Note: Assumes wget is installed.
+
     Example:
 
     .. code:: python
@@ -109,7 +111,6 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
         If matching special characters (eg a crontab line containing *), remember to escape
         it first using Python's ``re.escape``.
 
-
     Examples:
 
     .. code:: python
@@ -129,6 +130,22 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
             maintenance_line,
             replace='',
             present=False,
+        )
+
+        # example where there is '*' in the line
+        files.line(
+            {'Ensure /netboot/nfs is in /etc/exports'},
+            '/etc/exports',
+            r'/netboot/nfs .*',
+            replace='/netboot/nfs *(ro,sync,no_wdelay,insecure_locks,no_root_squash,'
+            'insecure,no_subtree_check)',
+        )
+
+        files.line(
+            {'Ensure myweb can run /usr/bin/python3 without password'},
+            '/etc/sudoers',
+            r'myweb .*',
+            replace='myweb ALL=(ALL) NOPASSWD: /usr/bin/python3',
         )
 
     '''
@@ -213,7 +230,7 @@ def replace(state, host, name, match, replace, flags=None):
     .. code:: python
 
         files.replace(
-            {'Change a value in a file'},
+            {'Change part of a line in a file'},
             '/etc/motd',
             'verboten',
             'forbidden',
@@ -547,15 +564,35 @@ def template(
        For information on the template syntax, see
        `the jinja2 docs <https://jinja.palletsprojects.com>`_.
 
-    Example:
+    Examples:
 
     .. code:: python
 
         files.template(
             {'Create a templated file'},
+            'templates/somefile.conf.j2',
+            '/etc/somefile.conf',
+        )
+
+        files.template(
+            {'Create service file'},
+            'templates/myweb.service.j2',
+            '/etc/systemd/system/myweb.service',
+            mode='755',
+            user='root',
+            group='root',
+        )
+
+        # Example showing how to pass python variable to template file.
+        # The .j2 file can use `{{ foo_variable }}` to be interpolated.
+        foo_variable = 'This is some foo variable contents'
+        files.template(
+            {'Create a templated file'},
             'templates/foo.j2',
             '/tmp/foo',
+            foo_variable=foo_variable,
         )
+
     '''
 
     if state.deploy_dir:
@@ -813,7 +850,7 @@ def directory(
     + mode: permissions of the folder
     + recursive: recursively apply user/group/mode
 
-    Example:
+    Examples:
 
     .. code:: python
 
@@ -822,6 +859,22 @@ def directory(
             '/tmp/dir_that_we_want_removed',
             present=False,
         )
+
+        files.directory(
+            {'Ensure /web exists'},
+            '/web',
+            user='myweb',
+            group='myweb',
+        )
+
+        # multiple directories
+        dirs = ['/netboot/tftp', '/netboot/nfs']
+        for dir in dirs:
+            files.directory(
+                {'Ensure the directory `{}` exists'.format(dir)},
+                dir,
+            )
+
     '''
 
     if not isinstance(name, six.string_types):

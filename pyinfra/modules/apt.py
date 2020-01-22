@@ -47,7 +47,7 @@ def key(state, host, key=None, keyserver=None, keyid=None):
     keyserver/id:
         These must be provided together.
 
-    Example:
+    Examples:
 
     .. code:: python
 
@@ -55,6 +55,11 @@ def key(state, host, key=None, keyserver=None, keyid=None):
         apt.key(
             {'Add the Docker apt gpg key'},
             key='https://download.docker.com/linux/ubuntu/gpg',
+        )
+
+        apt.key(
+            {'Install VirtualBox key'},
+            'https://www.virtualbox.org/download/oracle_vbox_2016.asc',
         )
 
     '''
@@ -309,6 +314,13 @@ def packages(
             {'Install latest Vim'},
             ['vim'],
             latest=True,
+        )
+
+        # Note: host.fact.os_version is the same as `uname -r` (ex: '4.15.0-72-generic')
+        apt.packages(
+            {'Install kernel headers'},
+            ['linux-headers-{}'.format(host.fact.os_version)],
+            update=True,
         )
 
     '''

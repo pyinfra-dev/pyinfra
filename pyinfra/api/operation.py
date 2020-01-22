@@ -51,6 +51,11 @@ class OperationMeta(object):
         # Changed flag = did we do anything?
         self.changed = len(self.commands) > 0
 
+    def __repr__(self):
+        '''Return Operation object as a string.'''
+        return 'commands:{} changed:{} hash:{}'.format(
+            self.commands, self.changed, self.hash)
+
 
 def add_op(state, op_func, *args, **kwargs):
     '''

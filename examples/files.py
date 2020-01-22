@@ -38,7 +38,7 @@ files.line(
 )
 
 files.replace(
-    {'Change a value in a file'},
+    {'Change part of a line in a file'},
     '/etc/motd',
     'verboten',
     'forbidden',
@@ -51,16 +51,19 @@ files.sync(
     '/tmp/tempdir',
 )
 
-files.get(
-    {'Download a file from a remote'},
-    '/etc/os-release',
-    '/tmp/whocares',
-)
+if host.fact.file('/etc/os-release'):
+    files.get(
+        {'Download a file from a remote'},
+        '/etc/os-release',
+        '/tmp/whocares',
+    )
 
+foo_variable = 'This is some foo variable contents'
 files.template(
     {'Create a templated file'},
     'templates/foo.j2',
     '/tmp/foo',
+    foo_variable=foo_variable,
 )
 
 files.link(
@@ -85,3 +88,11 @@ files.directory(
     '/tmp/dir_that_we_want_removed',
     present=False,
 )
+
+# multiple directories
+dirs = ['/tmp/aaa', '/tmp/bbb']
+for dir in dirs:
+    files.directory(
+        {'Ensure the directory `{}` exists'.format(dir)},
+        dir,
+    )
