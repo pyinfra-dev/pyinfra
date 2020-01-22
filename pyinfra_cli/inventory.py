@@ -102,6 +102,9 @@ def make_inventory(
     ssh_key=None,
     ssh_key_password=None,
     ssh_password=None,
+    winrm_username=None,
+    winrm_password=None,
+    winrm_port=None,
 ):
     '''
     Builds a ``pyinfra.api.Inventory`` from the filesystem. If the file does not exist
@@ -199,5 +202,8 @@ def make_inventory(
         ssh_key_password=ssh_key_password,
         ssh_port=ssh_port,
         ssh_password=ssh_password,
+        winrm_username=winrm_username,
+        winrm_password=winrm_password,
+        winrm_port=winrm_port,
         **groups
     ), file_groupname and file_groupname.lower()

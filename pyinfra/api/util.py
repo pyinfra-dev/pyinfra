@@ -354,7 +354,10 @@ def make_command(
 
     # Otherwise just sh wrap the command
     else:
-        command = '{0} -c {1}'.format(shell_executable, command)
+        if shell_executable != '':
+            command = '{0} -c {1}'.format(shell_executable, command)
+        else:
+            command = '{0}'.format(command)
 
     # Use sudo (w/user?)
     if sudo:

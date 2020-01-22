@@ -86,10 +86,13 @@ def _print_operations(ctx, param, value):
     help='Print std[out|err] from operations/facts.',
 )
 @click.option('--user', help='SSH user to connect as.')
+@click.option('--winrm_username', help='WINRM user to connect as.')
 @click.option('--port', type=int, help='SSH port to connect to.')
+@click.option('--winrm_port', help='WINRM port to connect to.')
 @click.option('--key', type=click.Path(), help='Private key filename.')
 @click.option('--key-password', help='Privte key password.')
 @click.option('--password', help='SSH password.')
+@click.option('--winrm_password', help='WINRM password.')
 @click.option(
     '--sudo', is_flag=True, default=False,
     help='Whether to execute operations with sudo.',
@@ -223,6 +226,7 @@ def main(*args, **kwargs):
 def _main(
     inventory, operations, verbosity,
     user, port, key, key_password, password,
+    winrm_username, winrm_password, winrm_port,
     sudo, sudo_user, su_user,
     parallel, fail_percent,
     dry, limit, no_wait, serial,
@@ -393,6 +397,9 @@ def _main(
         ssh_key=key,
         ssh_key_password=key_password,
         ssh_password=password,
+        winrm_username=winrm_username,
+        winrm_password=winrm_password,
+        winrm_port=winrm_port,
     )
 
     # Apply any --limit to the inventory
