@@ -1,11 +1,11 @@
 # Using the CLI
 
-The pyinfra is an extremely powerful tool for ad-hoc execution and management of remote servers.
+``pyinfra`` is an extremely powerful tool for ad-hoc execution and management of remote servers.
 
 
 ## CLI arguments & options
 
-As described in the [getting started page](./getting_started), pyinfra needs an **inventory** and some **operations**. These are used with the CLI as below:
+As described in the [getting started page](./getting_started), ``pyinfra`` needs an **inventory** and some **operations**. These are used with the CLI as below:
 
 ```sh
 Usage: pyinfra [OPTIONS] INVENTORY OPERATIONS...
@@ -72,9 +72,9 @@ pyinfra inventory.py exec -- my_command_goes_here --some-argument
 Note:
     Anything on the right hand side of the ``--`` will be passed into the target
 
-#### Example: debugging distributed services using pyinfra
+#### Example: debugging distributed services using ``pyinfra``
 
-One of pyinfra's top design features is its ability to return remote command output in realtime. This can be used to debug N remote services, and is perfect for debugging distributed services.
+One of ``pyinfra``'s top design features is its ability to return remote command output in real-time. This can be used to debug N remote services, and is perfect for debugging distributed services.
 
 For example - a large Elasticsearch cluster. It can be useful to stream the log of every instance in parallel, which can be achieved easily like so:
 
@@ -84,9 +84,9 @@ pyinfra inventory.py exec --sudo -- tail -f /var/log/elasticsearch/elasticsearch
 
 ### Executing ad-hoc operations
 
-In addition to executing simple commands, pyinfra can execute any of it's builtin operations on remote hosts direct via the CLI.
+In addition to executing simple commands, ``pyinfra`` can execute any of it's builtin operations on remote hosts direct via the CLI.
 
-#### Example: managing packages with ad-hoc pyinfra commands
+#### Example: managing packages with ad-hoc ``pyinfra`` commands
 
 For example here we ensure that `nginx` is installed on the remote servers:
 
@@ -94,9 +94,9 @@ For example here we ensure that `nginx` is installed on the remote servers:
 pyinfra inventory.py apt.packages nginx sudo=true
 ```
 
-#### Example: managing services with ad-hoc pyinfra commands
+#### Example: managing services with ad-hoc ``pyinfra`` commands
 
-Now that nginx is installed on the box, we can use pyinfra to control the ``nginx`` service - here we ensure it's running and enabled to start on system boot:
+Now that nginx is installed on the box, we can use ``pyinfra`` to control the ``nginx`` service - here we ensure it's running and enabled to start on system boot:
 
 ```sh
 pyinfra inventory.py init.service nginx running=true enabled=true
