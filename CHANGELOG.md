@@ -1,3 +1,7 @@
+# v0.13.2
+
++ Fix `server.reboot` argument clash (`timeout` -> `reboot_timeout`)
+
 # v0.13.1
 
 + Add `success_exit_codes` global argument
