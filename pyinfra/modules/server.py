@@ -19,13 +19,13 @@ from .util.files import chmod, sed_replace
 
 
 @operation
-def reboot(state, host, delay=10, interval=1, timeout=300):
+def reboot(state, host, delay=10, interval=1, reboot_timeout=300):
     '''
     Reboot the server and wait for reconnection.
 
     + delay: number of seconds to wait before attempting reconnect
     + interval: interval (s) between reconnect attempts
-    + timeout: total time before giving up reconnecting
+    + reboot_timeout: total time before giving up reconnecting
     '''
 
     logger.warning('The server.reboot operation is in beta!')
@@ -37,7 +37,7 @@ def reboot(state, host, delay=10, interval=1, timeout=300):
 
     def wait_and_reconnect(state, host):  # pragma: no cover
         sleep(delay)
-        max_retries = round(timeout / interval)
+        max_retries = round(reboot_timeout / interval)
 
         host.connection = None  # remove the connection object
         retries = 0
@@ -49,8 +49,8 @@ def reboot(state, host, delay=10, interval=1, timeout=300):
 
             if retries > max_retries:
                 raise Exception((
-                    'Server did not reboot in time (timeout={0}s)'
-                ).format(timeout))
+                    'Server did not reboot in time (reboot_timeout={0}s)'
+                ).format(reboot_timeout))
 
             sleep(interval)
             retries += 1
