@@ -148,6 +148,16 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
             replace='myweb ALL=(ALL) NOPASSWD: /usr/bin/python3',
         )
 
+        # example when there are double quotes (")
+        line = 'QUOTAUSER=""'
+        results = files.line(
+            {'Example with double quotes (")'},
+            '/etc/adduser.conf',
+            '^{}$'.format(line),
+            replace=line,
+        )
+        print(results.changed)
+
     '''
 
     match_line = line

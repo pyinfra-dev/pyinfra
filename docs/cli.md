@@ -88,10 +88,14 @@ In addition to executing simple commands, ``pyinfra`` can execute any of it's bu
 
 #### Example: managing packages with ad-hoc ``pyinfra`` commands
 
-For example here we ensure that `nginx` is installed on the remote servers:
+For example, here we ensure that `nginx` is installed on the remote servers:
 
 ```sh
-pyinfra inventory.py apt.packages nginx sudo=true
+# Ubuntu example
+pyinfra inventory.py apt.packages nginx sudo=true update=true
+
+# Centos example
+pyinfra inventory2.py yum.packages nginx sudo=true
 ```
 
 #### Example: managing services with ad-hoc ``pyinfra`` commands
@@ -100,6 +104,18 @@ Now that nginx is installed on the box, we can use ``pyinfra`` to control the ``
 
 ```sh
 pyinfra inventory.py init.service nginx running=true enabled=true
+```
+
+#### Example: rebooting with ad-hoc ``pyinfra`` commands
+
+We can reboot instances a couple of ways using adhoc commands:
+
+```sh
+# using server.reboot()
+pyinfra inventory.py service.reboot reboot_timeout=0 delay=0
+
+# using exec
+pyinfra inventory.py exec -- reboot
 ```
 
 #### Additional debug info
