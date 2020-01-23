@@ -275,6 +275,7 @@ sysctls
 syslog
 systemctl
 systemd
+systeminfo
 tablename
 tablespace
 tarfile
