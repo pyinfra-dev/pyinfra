@@ -673,15 +673,33 @@ def link(
         If the link exists and points to a different target, pyinfra will remove it and
         recreate a new one pointing to then new target.
 
-    Example:
+    Examples:
 
     .. code:: python
 
+        # simple example showing how to link to a file
         files.link(
             {'Create link /etc/issue2 that points to /etc/issue'},
             '/etc/issue2',
             '/etc/issue',
         )
+
+
+        # complex example demonstrating the assume_present option
+        from pyinfra.modules import apt, files
+
+        install_nginx = apt.packages(
+            {'Install nginx'},
+            'nginx',
+        )
+
+        files.link(
+            {'Remove default nginx site'},
+            '/etc/nginx/sites-enabled/default',
+            present=False,
+            assume_present=install_nginx.changed,
+        )
+
     '''
 
     if not isinstance(name, six.string_types):

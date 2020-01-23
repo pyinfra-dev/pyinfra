@@ -1,15 +1,15 @@
-pyinfra Documentation
-=====================
+``pyinfra`` Documentation
+=========================
 
-Welcome to the pyinfra documentation; it is split into two sections - how to use pyinfra and the references. If you're new to pyinfra you should start with the :doc:`getting started <./getting_started>` page.
+Welcome to the ``pyinfra`` documentation; it is split into two sections - Using ``pyinfra`` and Deploy References. If you're new to ``pyinfra`` you should start with the :doc:`getting started <./getting_started>` page.
 
 
-Using pyinfra
--------------
+Using ``pyinfra``
+-----------------
 
 .. compound::
     :doc:`getting_started`
-        A quickstart guide introducing the basics of pyinfra. Start here!
+        A quickstart guide introducing the basics of ``pyinfra``. Start here!
 
 .. compound::
     :doc:`deploys`
@@ -17,11 +17,11 @@ Using pyinfra
 
 .. compound::
     :doc:`cli`
-        The pyinfra CLI is extremely powerful for ad hoc command execution and management.
+        The ``pyinfra`` CLI is extremely powerful for ad hoc command execution and management.
 
 .. compound::
     :doc:`connectors`
-        Connectors allow pyinfra to seamlessly integrate with other tools.
+        Connectors allow ``pyinfra`` to seamlessly integrate with other tools.
 
 
 Deploy Reference
@@ -29,11 +29,11 @@ Deploy Reference
 
 .. compound::
     :doc:`operations`
-        A list of all available operations and their arguments, eg ``apt.packages``.
+        A list of all available operations and their arguments, e.g. ``apt.packages``.
 
 .. compound::
     :doc:`facts`
-        A list of all facts pyinfra can gather from hosts, eg ``host.fact.os``.
+        A list of all facts ``pyinfra`` can gather from hosts, e.g. ``host.fact.os``.
 
 .. compound::
     :doc:`examples`
@@ -41,12 +41,12 @@ Deploy Reference
 
 .. compound::
     :doc:`api/deploys`
-        How to package, redistribute and share pyinfra deploys with other people.
+        How to package, redistribute and share ``pyinfra`` deploys with other people.
 
 
 .. toctree::
     :hidden:
-    :caption: Using pyinfra
+    :caption: Using ``pyinfra``
 
     getting_started
     deploys
@@ -65,16 +65,17 @@ Deploy Reference
 
 .. toctree::
     :hidden:
-    :caption: How pyinfra Works
+    :caption: How ``pyinfra`` Works
 
     deploy_process
     api/modules
     performance
     compatibility
+    contributing
 
 .. toctree::
     :hidden:
     :caption: Elsewhere
 
-    pyinfra.com <https://pyinfra.com>
-    pyinfra on GitHub <https://github.com/Fizzadar/pyinfra>
+    `pyinfra.com <https://pyinfra.com>`
+    `pyinfra on GitHub <https://github.com/Fizzadar/pyinfra>`
