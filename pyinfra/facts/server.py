@@ -14,7 +14,10 @@ class Home(FactBase):
     Returns the home directory of the current user.
     '''
 
-    command = 'echo $HOME'
+    # command = 'echo $HOME'
+    # PS: echo $Env:HOMEPATH
+    # cmd: echo %HOMEPATH%
+    command = 'echo %HOMEPATH%'
 
 
 class Hostname(FactBase):
@@ -32,6 +35,7 @@ class Os(FactBase):
 
     # command = 'uname -s'
     # TODO: cmd or ps
+    # TODO: Need a conditional for which one to use. Any suggestions?
     command = 'systeminfo.exe | findstr /c:"OS Name:"'
 
 
@@ -40,9 +44,9 @@ class OsVersion(FactBase):
     Returns the OS version according to ``uname`` or ``systeminfo``.
     '''
 
-    command = 'uname -r'
+    # command = 'uname -r'
     # TODO: cmd or ps
-    # command = 'systeminfo | findstr /c:"OS Version:"'
+    command = 'systeminfo | findstr /c:"OS Version:"'
 
 
 class Arch(FactBase):
@@ -50,9 +54,9 @@ class Arch(FactBase):
     Returns the system architecture according to ``uname`` or ``systeminfo``.
     '''
 
-    command = 'uname -p'
+    # command = 'uname -p'
     # TODO: cmd or ps
-    # command = 'systeminfo | findstr /c:"System Type:"'
+    command = 'systeminfo | findstr /c:"System Type:"'
 
 
 class Command(FactBase):
@@ -73,7 +77,8 @@ class Which(FactBase):
 
     @staticmethod
     def command(name):
-        return 'which {0}'.format(name)
+        # return 'which {0}'.format(name)
+        return 'where {0}'.format(name)
         # TODO: only CMD: 'where {0}.format(name)
 
 
@@ -82,14 +87,16 @@ class Date(FactBase):
     Returns the current datetime on the server.
     '''
 
-    command = 'LANG=C date'
+    # command = 'LANG=C date'
     # TODO: cmd only
-    # command = 'date /T'
+    command = 'echo %date%-%time%'
     default = datetime.now
 
+    # TODO: re-add the linux way
     @staticmethod
     def process(output):
-        return parse_date(output[0])
+        new_output = ''.join(output)
+        return parse_date(new_output)
 
 
 class Mounts(FactBase):
@@ -97,6 +104,8 @@ class Mounts(FactBase):
     Returns a dictionary of mounted filesystems and information.
 
     .. code:: python
+
+# TODO: show windows data
 
         "/": {
             "device": "/dev/mv2",
@@ -109,40 +118,70 @@ class Mounts(FactBase):
         ...
     '''
 
-    command = 'mount'
+    # command = 'mount'
     # TODO: cmd or ps
-    # command = 'net use'
+    command = 'net use'
     default = dict
 
     @staticmethod
     def process(output):
         devices = {}
+        new_output = ''.join(output)
+        lines = new_output.split('\n')
 
-        for line in output:
-            is_map = False
-            if line.startswith('map '):
-                line = line[4:]
-                is_map = True
+        # Note: The first lines are header lines
+        lines.pop(0)
+        lines.pop(0)
+        lines.pop(0)
+        lines.pop(0)
+        lines.pop(0)
+        lines.pop(0)
 
-            device, _, path, other_bits = line.split(' ', 3)
+        # get rid of last lin
+        lines = lines[:-1]
 
-            if is_map:
-                device = 'map {0}'.format(device)
-
-            if other_bits.startswith('type'):
-                _, type_, options = other_bits.split(' ', 2)
-                options = options.strip('()').split(',')
-            else:
-                options = other_bits.strip('()').split(',')
-                type_ = options.pop(0)
-
-            devices[path] = {
-                'device': device,
-                'type': type_,
-                'options': [option.strip() for option in options],
-            }
-
+        for line in lines:
+            # TODO: Not sure why status always shows as 'Unavailable'
+            status = line[0:11].rstrip(' ')
+            path = line[13:14]
+            remote = line[23:].rstrip(' ')
+            # TODO: network?
+            if path != ' ':
+                devices[path] = {
+                    'status': status,
+                    'remote': remote,
+                }
         return devices
+
+#    @staticmethod
+#    def process(output):
+#        devices = {}
+#
+#        for line in output:
+#            is_map = False
+#            if line.startswith('map '):
+#                line = line[4:]
+#                is_map = True
+#
+#            device, _, path, other_bits = line.split(' ', 3)
+#
+#            if is_map:
+#                device = 'map {0}'.format(device)
+#
+#            if other_bits.startswith('type'):
+#                _, type_, options = other_bits.split(' ', 2)
+#                options = options.strip('()').split(',')
+#            else:
+#                options = other_bits.strip('()').split(',')
+#                type_ = options.pop(0)
+#
+#            devices[path] = {
+#                'device': device,
+#                'type': type_,
+#                'options': [option.strip() for option in options],
+#            }
+#
+#        return devices
 
 
 class KernelModules(FactBase):
@@ -291,20 +330,29 @@ class Groups(FactBase):
     Returns a list of groups on the system.
     '''
 
-    command = 'cat /etc/group'
+    # command = 'cat /etc/group'
     # TODO: cmd or ps
-    # net localgroup
+    command = 'net localgroup | findstr [^*]'
+
     default = list
 
     @staticmethod
     def process(output):
-        groups = []
-
-        for line in output:
-            if ':' in line:
-                groups.append(line.split(':')[0])
+        new_output = ''.join(output)
+        groups = new_output.split('\n')
 
         return groups
+
+# TODO: linux
+#    @staticmethod
+#    def process(output):
+#        groups = []
+#
+#        for line in output:
+#            if ':' in line:
+#                groups.append(line.split(':')[0])
+#
+#        return groups
 
 
 # TODO: schtasks ?
@@ -440,6 +488,7 @@ class Users(FactBase):
         return users
 
 
+# TODO: null?
 class LinuxDistribution(FactBase):
     '''
     Returns a dict of the Linux distribution version. Ubuntu, Debian, CentOS,
@@ -507,6 +556,7 @@ class LinuxDistribution(FactBase):
         return release_info
 
 
+# TODO: null?
 class LinuxName(ShortFactBase):
     '''
     Returns the name of the Linux distribution. Shortcut for

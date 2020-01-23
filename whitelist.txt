@@ -22,6 +22,7 @@ E501
 F401
 Gevent
 HKLM
+HOMEPATH
 Hacky
 Hotfixes
 I100

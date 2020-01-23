@@ -77,7 +77,7 @@ class FactBase(object):
 
     @staticmethod
     def process(output):
-        # TODO: Not sure why... 
+        # TODO: Not sure why...
         return ''.join(output)
         # return '\n'.join(output)
 
