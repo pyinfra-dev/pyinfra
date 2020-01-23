@@ -329,6 +329,9 @@ def make_command(
         for key, value in six.iteritems(debug_meta)
     ), command))
 
+    # TODO: Mike
+    logger.debug('##### shell_executable:{} Config.SHELL:{}'.format(shell_executable, Config.SHELL))
+
     # Use env & build our actual command
     if env:
         env_string = ' '.join([
@@ -352,9 +355,9 @@ def make_command(
             ' '.join(su_bits), su_user, shell_executable, command,
         )
 
-    # Otherwise just sh wrap the command
     else:
-        if shell_executable != '':
+        # Otherwise just sh wrap the command
+        if shell_executable == 'sh':
             command = '{0} -c {1}'.format(shell_executable, command)
         else:
             command = '{0}'.format(command)

@@ -20,6 +20,7 @@ def show_warning():
 
 
 def _make_winrm_kwargs(state, host):
+
     kwargs = {
     }
 
@@ -60,6 +61,7 @@ def connect(state, host):
     logger.debug('winrm_username:{}'.format(host.data.winrm_username))
     logger.debug('winrm_password:{}'.format(host.data.winrm_password))
     logger.debug('winrm_port:{}'.format(host.data.winrm_port))
+    logger.debug('use_shell:{}'.format(host.data.use_shell))
 
     try:
         # Create new session
@@ -119,6 +121,9 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
+    #_shell_executable = 'cmd'
+    #if host.data.use_shell:
+        #_shell_executable = host.data.use_shell
     command = make_command(command, **command_kwargs)
 
     logger.debug('Running command on {0}: {1}'.format(host.name, command))
@@ -129,9 +134,10 @@ def run_shell_command(
     if print_output:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
-    # TODO: not sure if we want powershell or command or both (probably)
-    response = host.connection.run_cmd(tmp_command)
-    # response = host.connection.run_ps(command)
+    if host.data.use_shell == 'cmd':
+        response = host.connection.run_cmd(tmp_command)
+    else:
+        response = host.connection.run_ps(tmp_command)
 
     return_code = response.status_code
 

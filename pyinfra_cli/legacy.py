@@ -43,6 +43,9 @@ Config options:
     -u --user USER       SSH user.
     --key FILE           SSH private key.
     --key-password PASS  SSH key password.
+    --winrm_password PWD WINRM password (bad practice).
+    --winrm_username USR WINRM username.
+    --winrm_port PORT    WINRM port.
     --sudo               Use sudo.
     --sudo-user USER     Which user to sudo to.
     --su-user USER
@@ -257,6 +260,7 @@ def setup_arguments(arguments):
         # Config options
         'user': arguments['--user'],
         'winrm_username': arguments['--winrm_username'],
+        'use_shell': arguments['--use_shell'],
         'winrm_password': arguments['--winrm_password'],
         'winrm_port': arguments['--winrm_port'],
         'key': arguments['--key'],

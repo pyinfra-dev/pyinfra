@@ -40,6 +40,7 @@ class Inventory(object):
         winrm_username: override WINRM username
         winrm_password: override WINRM pasword
         winrm_port: override WINRM port
+        use_shell: override shell 
         **groups: map of group names -> ``(names, data)``
     '''
 
@@ -49,13 +50,16 @@ class Inventory(object):
         self, names_data,
         ssh_user=None, ssh_port=None, ssh_key=None,
         ssh_key_password=None, ssh_password=None,
-        winrm_username=None, winrm_password=None, winrm_port=None,
+        winrm_username=None, winrm_password=None,
+        winrm_port=None, use_shell=None,
         **groups
     ):
         # Setup basics
         self.groups = defaultdict(list)  # lists of Host objects
         self.host_data = defaultdict(dict)  # dict of name -> data
         self.group_data = defaultdict(dict)  # dict of name -> data
+
+        self.use_shell = use_shell
 
         # In CLI mode these are --user, --key, etc
         override_data = {
@@ -111,10 +115,9 @@ class Inventory(object):
             host_data = name_to_data[name]
 
             # Default to executing commands with the ssh connector
-            # TODO: not sure how to determine which
-            # executor = EXECUTION_CONNECTORS['ssh']
-            # if host_data.winrm_username != '':
-            executor = EXECUTION_CONNECTORS['winrm']
+            executor = EXECUTION_CONNECTORS['ssh']
+            if self.use_shell in ['cmd', 'ps']:
+                executor = EXECUTION_CONNECTORS['winrm']
 
             # Name is @connector?
             if name[0] == '@':
