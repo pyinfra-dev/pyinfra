@@ -329,9 +329,6 @@ def make_command(
         for key, value in six.iteritems(debug_meta)
     ), command))
 
-    # TODO: Mike
-    logger.debug('##### shell_executable:{} Config.SHELL:{}'.format(shell_executable, Config.SHELL))
-
     # Use env & build our actual command
     if env:
         env_string = ' '.join([
@@ -376,6 +373,45 @@ def make_command(
             sudo_bits.extend(('-u', sudo_user))
 
         command = '{0} {1}'.format(' '.join(sudo_bits), command)
+
+    return command
+
+
+def make_win_command(
+    command,
+    env=None,
+    shell_executable=Config.SHELL,
+):
+    '''
+    Builds a windows command with various kwargs.
+    '''
+
+    debug_meta = {}
+
+    for key, value in (
+        ('shell_executable', shell_executable),
+        ('env', env),
+    ):
+        if value:
+            debug_meta[key] = value
+
+    logger.debug('Building command ({0}): {1}'.format(' '.join(
+        '{0}: {1}'.format(key, value)
+        for key, value in six.iteritems(debug_meta)
+    ), command))
+
+    # Use env & build our actual command
+    if env:
+        env_string = ' '.join([
+            '{0}={1}'.format(key, value)
+            for key, value in six.iteritems(env)
+        ])
+        command = 'export {0}; {1}'.format(env_string, command)
+
+    # Quote the command as a string
+    command = shlex_quote(command)
+
+    command = '{0}'.format(command)
 
     return command
 

@@ -5,7 +5,7 @@ import winrm
 
 from pyinfra import logger
 from pyinfra.api.exceptions import ConnectError
-from pyinfra.api.util import make_command, memoize
+from pyinfra.api.util import make_win_command, memoize
 
 
 def _raise_connect_error(host, message, data):
@@ -99,6 +99,12 @@ def connect(state, host):
 def run_shell_command(
     state, host, command,
     get_pty=False,
+    sudo=None,
+    sudo_user=None,
+    su_user=None,
+    use_sudo_login=False,
+    use_su_login=False,
+    preserve_sudo_env=False,
     timeout=None,
     stdin=None,
     success_exit_codes=None,
@@ -113,6 +119,11 @@ def run_shell_command(
         state (``pyinfra.api.State`` obj): state object for this command
         hostname (string): hostname of the target
         command (string): actual command to execute
+        sudo (boolean): Not used for WINRM
+        sudo_user (string): Not used for WINRM
+        use_sudo_login(boolean): Not used for WINRM
+        use_su_login(boolean): Not used for WINRM
+        preserve_sudo_env(boolean): Not used for WINRM
         get_pty (boolean): Not used for WINRM
         env (dict): envrionment variables to set
         timeout (int): timeout for this command to complete before erroring
@@ -122,10 +133,7 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
-    # _shell_executable = 'cmd'
-    # if host.data.use_shell:
-    #     _shell_executable = host.data.use_shell
-    command = make_command(command, **command_kwargs)
+    command = make_win_command(command, **command_kwargs)
 
     logger.debug('Running command on {0}: {1}'.format(host.name, command))
 
@@ -141,11 +149,7 @@ def run_shell_command(
         response = host.connection.run_ps(tmp_command)
 
     return_code = response.status_code
-
     logger.debug('response:{}'.format(response))
-    logger.debug('response.status_code:{}'.format(response.status_code))
-    logger.debug('response.std_out:{}'.format(response.std_out))
-    logger.debug('response.std_err:{}'.format(response.std_err))
 
     std_out_str = response.std_out.decode('utf-8')
     std_err_str = response.std_err.decode('utf-8')
@@ -153,6 +157,9 @@ def run_shell_command(
     # split on '\r\n' (windows newlines)
     std_out = std_out_str.split('\r\n')
     std_err = std_err_str.split('\r\n')
+
+    logger.debug('std_out:{}'.format(std_out))
+    logger.debug('std_err:{}'.format(std_err))
 
     if print_output:
         click.echo('{0}>>> {1}'.format(host.print_prefix, '\n'.join(std_out)))

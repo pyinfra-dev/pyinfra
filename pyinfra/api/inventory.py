@@ -59,6 +59,7 @@ class Inventory(object):
         self.host_data = defaultdict(dict)  # dict of name -> data
         self.group_data = defaultdict(dict)  # dict of name -> data
 
+        logger.debug('===> inventory use_shell:{}'.format(use_shell))
         self.use_shell = use_shell
 
         # In CLI mode these are --user, --key, etc
@@ -71,6 +72,7 @@ class Inventory(object):
             'winrm_username': winrm_username,
             'winrm_password': winrm_password,
             'winrm_port': winrm_port,
+            'use_shell': use_shell,
         }
         # Strip None values
         override_data = {
