@@ -78,6 +78,7 @@ class WinDate(FactBase):
     '''
 
     command = 'echo %date%-%time%'
+    # TODO: how to force use_shell='cmd'?
     default = datetime.now
 
     @staticmethod
