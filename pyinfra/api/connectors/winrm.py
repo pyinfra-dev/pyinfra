@@ -44,6 +44,10 @@ def _make_winrm_kwargs(state, host):
     return kwargs
 
 
+def make_names_data(hostname):
+    yield '@winrm/{0}'.format(hostname), {'winrm_hostname': hostname}, []
+
+
 def connect(state, host):
     '''
     Connect to a single host. Returns the winrm Session if successful.

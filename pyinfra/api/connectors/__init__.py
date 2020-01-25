@@ -17,6 +17,7 @@ INVENTORY_CONNECTORS = {  # pragma: no cover
     'mech': mech,
     'vagrant': vagrant,
     'ansible': ansible,
+    'winrm': winrm,
 }
 
 ALL_CONNECTORS = (  # pragma: no cover
