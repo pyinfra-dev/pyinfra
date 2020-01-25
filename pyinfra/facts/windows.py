@@ -1,12 +1,10 @@
 from __future__ import unicode_literals
 
-import re
 from datetime import datetime
 
 from dateutil.parser import parse as parse_date
 
-from pyinfra.api import FactBase, ShortFactBase
-from pyinfra.api.util import try_int
+from pyinfra.api import FactBase
 
 
 class WinHome(FactBase):
@@ -71,6 +69,7 @@ class WinDate(FactBase):
     def process(output):
         new_output = ''.join(output)
         return parse_date(new_output)
+
 
 class WinLocalGroups(FactBase):
     '''
