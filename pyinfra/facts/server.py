@@ -14,10 +14,7 @@ class Home(FactBase):
     Returns the home directory of the current user.
     '''
 
-    # command = 'echo $HOME'
-    # PS: echo $Env:HOMEPATH
-    # cmd: echo %HOMEPATH%
-    command = 'echo %HOMEPATH%'
+    command = 'echo $HOME'
 
 
 class Hostname(FactBase):
@@ -30,39 +27,31 @@ class Hostname(FactBase):
 
 class Os(FactBase):
     '''
-    Returns the OS name according to ``uname`` or ``systeminfo``.
+    Returns the OS name according to ``uname``.
     '''
 
-    # command = 'uname -s'
-    # TODO: cmd or ps
-    # TODO: Need a conditional for which one to use. Any suggestions?
-    command = 'systeminfo.exe | findstr /c:"OS Name:"'
+    command = 'uname -s'
 
 
 class OsVersion(FactBase):
     '''
-    Returns the OS version according to ``uname`` or ``systeminfo``.
+    Returns the OS version according to ``uname``.
     '''
 
-    # command = 'uname -r'
-    # TODO: cmd or ps
-    command = 'systeminfo | findstr /c:"OS Version:"'
+    command = 'uname -r'
 
 
 class Arch(FactBase):
     '''
-    Returns the system architecture according to ``uname`` or ``systeminfo``.
+    Returns the system architecture according to ``uname``.
     '''
 
-    # command = 'uname -p'
-    # TODO: cmd or ps
-    command = 'systeminfo | findstr /c:"System Type:"'
+    command = 'uname -p'
 
 
 class Command(FactBase):
     '''
     Returns the raw output lines of a given command.
-    TODO: ps or cmd for winrm?
     '''
 
     @staticmethod
@@ -77,9 +66,7 @@ class Which(FactBase):
 
     @staticmethod
     def command(name):
-        # return 'which {0}'.format(name)
-        return 'where {0}'.format(name)
-        # TODO: only CMD: 'where {0}.format(name)
+        return 'which {0}'.format(name)
 
 
 class Date(FactBase):
@@ -87,16 +74,12 @@ class Date(FactBase):
     Returns the current datetime on the server.
     '''
 
-    # command = 'LANG=C date'
-    # TODO: cmd only
-    command = 'echo %date%-%time%'
+    command = 'LANG=C date'
     default = datetime.now
 
-    # TODO: re-add the linux way
     @staticmethod
     def process(output):
-        new_output = ''.join(output)
-        return parse_date(new_output)
+        return parse_date(output[0])
 
 
 class Mounts(FactBase):
@@ -104,8 +87,6 @@ class Mounts(FactBase):
     Returns a dictionary of mounted filesystems and information.
 
     .. code:: python
-
-# TODO: show windows data
 
         "/": {
             "device": "/dev/mv2",
@@ -118,70 +99,38 @@ class Mounts(FactBase):
         ...
     '''
 
-    # command = 'mount'
-    # TODO: cmd or ps
-    command = 'net use'
+    command = 'mount'
     default = dict
 
     @staticmethod
     def process(output):
         devices = {}
-        new_output = ''.join(output)
-        lines = new_output.split('\n')
 
-        # Note: The first lines are header lines
-        lines.pop(0)
-        lines.pop(0)
-        lines.pop(0)
-        lines.pop(0)
-        lines.pop(0)
-        lines.pop(0)
+        for line in output:
+            is_map = False
+            if line.startswith('map '):
+                line = line[4:]
+                is_map = True
 
-        # get rid of last lin
-        lines = lines[:-1]
+            device, _, path, other_bits = line.split(' ', 3)
 
-        for line in lines:
-            # TODO: Not sure why status always shows as 'Unavailable'
-            status = line[0:11].rstrip(' ')
-            path = line[13:14]
-            remote = line[23:].rstrip(' ')
-            # TODO: network?
-            if path != ' ':
-                devices[path] = {
-                    'status': status,
-                    'remote': remote,
-                }
+            if is_map:
+                device = 'map {0}'.format(device)
+
+            if other_bits.startswith('type'):
+                _, type_, options = other_bits.split(' ', 2)
+                options = options.strip('()').split(',')
+            else:
+                options = other_bits.strip('()').split(',')
+                type_ = options.pop(0)
+
+            devices[path] = {
+                'device': device,
+                'type': type_,
+                'options': [option.strip() for option in options],
+            }
+
         return devices
-
-#    @staticmethod
-#    def process(output):
-#        devices = {}
-#
-#        for line in output:
-#            is_map = False
-#            if line.startswith('map '):
-#                line = line[4:]
-#                is_map = True
-#
-#            device, _, path, other_bits = line.split(' ', 3)
-#
-#            if is_map:
-#                device = 'map {0}'.format(device)
-#
-#            if other_bits.startswith('type'):
-#                _, type_, options = other_bits.split(' ', 2)
-#                options = options.strip('()').split(',')
-#            else:
-#                options = other_bits.strip('()').split(',')
-#                type_ = options.pop(0)
-#
-#            devices[path] = {
-#                'device': device,
-#                'type': type_,
-#                'options': [option.strip() for option in options],
-#            }
-#
-#        return devices
 
 
 class KernelModules(FactBase):
@@ -199,7 +148,6 @@ class KernelModules(FactBase):
     '''
 
     command = 'cat /proc/modules'
-    # TODO: not sure if win equiv
     default = dict
 
     @staticmethod
@@ -230,7 +178,7 @@ class KernelModules(FactBase):
 
 class LsbRelease(FactBase):
     '''
-    Returns a dictionary of release information using ``lsb_release`` or ``systeminfo``.
+    Returns a dictionary of release information using ``lsb_release``.
 
     .. code:: python
 
@@ -244,8 +192,6 @@ class LsbRelease(FactBase):
     '''
 
     command = 'lsb_release -ca'
-    # TODO: all or part of systeminfo?
-    # OS Name, OS Version, Hotfixes?
 
     @staticmethod
     def process(output):
@@ -287,10 +233,6 @@ class Sysctl(FactBase):
     '''
 
     command = 'sysctl -a'
-    # TODO: not sure of a good equiv?
-    # look in registry? (example of a query)
-    #     REG QUERY HKLM\SOFTWARE
-    # netsh?
     default = dict
 
     @staticmethod
@@ -330,32 +272,20 @@ class Groups(FactBase):
     Returns a list of groups on the system.
     '''
 
-    # command = 'cat /etc/group'
-    # TODO: cmd or ps
-    command = 'net localgroup | findstr [^*]'
-
+    command = 'cat /etc/group'
     default = list
 
     @staticmethod
     def process(output):
-        new_output = ''.join(output)
-        groups = new_output.split('\n')
+        groups = []
+
+        for line in output:
+            if ':' in line:
+                groups.append(line.split(':')[0])
 
         return groups
 
-# TODO: linux
-#    @staticmethod
-#    def process(output):
-#        groups = []
-#
-#        for line in output:
-#            if ':' in line:
-#                groups.append(line.split(':')[0])
-#
-#        return groups
 
-
-# TODO: schtasks ?
 class Crontab(FactBase):
     '''
     Returns a dictionary of cron command -> execution time.
@@ -431,9 +361,6 @@ class Users(FactBase):
             echo "$ID $META"
         done
     '''
-    # TODO: net user vagrant
-    # TODO: net users  (or 'dir /b C:\Users' if the user has logged in... I think)
-    # TODO: FOR /F %U IN ('dir /b c:\Users') DO net user %U
 
     default = dict
 
@@ -488,7 +415,6 @@ class Users(FactBase):
         return users
 
 
-# TODO: null?
 class LinuxDistribution(FactBase):
     '''
     Returns a dict of the Linux distribution version. Ubuntu, Debian, CentOS,
@@ -556,7 +482,6 @@ class LinuxDistribution(FactBase):
         return release_info
 
 
-# TODO: null?
 class LinuxName(ShortFactBase):
     '''
     Returns the name of the Linux distribution. Shortcut for

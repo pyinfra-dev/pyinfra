@@ -384,9 +384,6 @@ def _main(
     if use_shell:
         config.SHELL = use_shell
 
-    # TODO: MIKE remove
-    click.echo('==> use_shell:{} config.SHELL:{}'.format(use_shell, config.SHELL))
-
     if parallel:
         config.PARALLEL = parallel
 
