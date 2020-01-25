@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import re
 from datetime import datetime
 
 from dateutil.parser import parse as parse_date
@@ -25,36 +26,49 @@ class WinHostname(FactBase):
 
 class WinOs(FactBase):
     '''
-    Returns the OS name according to ``uname`` or ``systeminfo``.
+    Returns the OS name according to ``systeminfo``.
     '''
 
     command = 'systeminfo.exe | findstr /c:"OS Name:"'
 
+    @staticmethod
+    def process(output):
+        new_output = ''
+        match = re.match('OS Name:[ ]*(.*)', output[0])
+        if match:
+            new_output = match.group(1)
+        return new_output
+
 
 class WinOsVersion(FactBase):
     '''
-    Returns the OS version according to ``uname`` or ``systeminfo``.
+    Returns the OS version according to ``systeminfo``.
     '''
 
     command = 'systeminfo | findstr /c:"OS Version:"'
 
+    @staticmethod
+    def process(output):
+        new_output = ''
+        match = re.match('OS Version:[ ]*(.*)', output[0])
+        if match:
+            new_output = match.group(1)
+        return new_output
 
-class WinArch(FactBase):
+class WinSystemType(FactBase):
     '''
-    Returns the system architecture according to ``uname`` or ``systeminfo``.
+    Returns the system type according to ``systeminfo``.
     '''
 
     command = 'systeminfo | findstr /c:"System Type:"'
 
-
-class WinWhich(FactBase):
-    '''
-    Returns the path of a given command, if available.
-    '''
-
     @staticmethod
-    def command(name):
-        return 'where {0}'.format(name)
+    def process(output):
+        new_output = ''
+        match = re.match('System Type:[ ]*(.*)', output[0])
+        if match:
+            new_output = match.group(1)
+        return new_output
 
 
 class WinDate(FactBase):
