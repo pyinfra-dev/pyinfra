@@ -52,10 +52,11 @@ def connect(state, host):
     kwargs = _make_winrm_kwargs(state, host)
     logger.debug('Connecting to: {0} ({1})'.format(host.name, kwargs))
 
-    # Hostname can be provided via SSH config (alias), data, or the hosts name
+    # TODO: create a ~/.winrm/config file?
+    # Hostname can be provided via winrm config (alias), data, or the hosts name
     hostname = kwargs.pop(
         'hostname',
-        host.data.ssh_hostname or host.name,
+        host.data.winrm_hostname or host.name,
     )
 
     logger.debug('winrm_username:{}'.format(host.data.winrm_username))
@@ -121,9 +122,9 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
-    #_shell_executable = 'cmd'
-    #if host.data.use_shell:
-        #_shell_executable = host.data.use_shell
+    # _shell_executable = 'cmd'
+    # if host.data.use_shell:
+    #     _shell_executable = host.data.use_shell
     command = make_command(command, **command_kwargs)
 
     logger.debug('Running command on {0}: {1}'.format(host.name, command))
@@ -134,7 +135,7 @@ def run_shell_command(
     if print_output:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
-    if host.data.use_shell == 'cmd':
+    if state.config.SHELL == 'cmd':
         response = host.connection.run_cmd(tmp_command)
     else:
         response = host.connection.run_ps(tmp_command)
@@ -146,18 +147,15 @@ def run_shell_command(
     logger.debug('response.std_out:{}'.format(response.std_out))
     logger.debug('response.std_err:{}'.format(response.std_err))
 
-    # remove the '\r\n' characters in std_out and std_err
-    std_out = response.std_out.decode('utf-8').replace('\r\n', '\n')
-    std_err = response.std_err.decode('utf-8').replace('\r\n', '\n')
+    std_out_str = response.std_out.decode('utf-8')
+    std_err_str = response.std_err.decode('utf-8')
 
-    std_out = std_out.rstrip('\n')
-    std_err = std_err.rstrip('\n')
-
-    logger.debug('std_out:' + std_out)
-    logger.debug('std_err:' + std_err)
+    # split on '\r\n' (windows newlines)
+    std_out = std_out_str.split('\r\n')
+    std_err = std_err_str.split('\r\n')
 
     if print_output:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, std_out))
+        click.echo('{0}>>> {1}'.format(host.print_prefix, '\n'.join(std_out)))
 
     if success_exit_codes:
         status = return_code in success_exit_codes

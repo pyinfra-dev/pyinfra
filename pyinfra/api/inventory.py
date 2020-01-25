@@ -40,7 +40,7 @@ class Inventory(object):
         winrm_username: override WINRM username
         winrm_password: override WINRM pasword
         winrm_port: override WINRM port
-        use_shell: override shell 
+        use_shell: override shell
         **groups: map of group names -> ``(names, data)``
     '''
 
