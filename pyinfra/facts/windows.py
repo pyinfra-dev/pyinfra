@@ -55,6 +55,7 @@ class WinOsVersion(FactBase):
             new_output = match.group(1)
         return new_output
 
+
 class WinSystemType(FactBase):
     '''
     Returns the system type according to ``systeminfo``.
