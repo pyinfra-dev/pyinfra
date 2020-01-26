@@ -110,8 +110,8 @@ class Host(object):
         if disconnect_func:
             return disconnect_func(state, self)
 
-    def run_shell_command(self, state, *args, **kwargs):
-        return self.executor.run_shell_command(state, self, *args, **kwargs)
+    def run_shell_command(self, state, use_shell, *args, **kwargs):
+        return self.executor.run_shell_command(state, self, use_shell, *args, **kwargs)
 
     def put_file(self, state, *args, **kwargs):
         return self.executor.put_file(state, self, *args, **kwargs)

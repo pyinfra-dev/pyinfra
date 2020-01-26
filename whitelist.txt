@@ -254,6 +254,7 @@ sha
 sha1sum
 sha256file
 sha256sum
+shell2
 shlex
 signum
 simplefilter

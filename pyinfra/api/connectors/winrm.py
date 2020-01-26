@@ -114,6 +114,7 @@ def run_shell_command(
     success_exit_codes=None,
     print_output=False,
     return_combined_output=False,
+    use_shell2=None,
     **command_kwargs
 ):
     '''
@@ -147,7 +148,10 @@ def run_shell_command(
     if print_output:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
-    if state.config.SHELL == 'cmd':
+    if not use_shell2:
+        use_shell2 = state.config.SHELL
+
+    if use_shell2 == 'cmd':
         response = host.connection.run_cmd(tmp_command)
     else:
         response = host.connection.run_ps(tmp_command)
