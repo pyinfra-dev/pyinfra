@@ -132,6 +132,7 @@ favicon
 fg
 fileno
 filesystem
+filetype
 findstr
 frameinfo
 fs

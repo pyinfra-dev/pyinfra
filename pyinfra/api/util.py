@@ -307,6 +307,7 @@ def make_command(
     use_sudo_login=Config.USE_SUDO_LOGIN,
     preserve_sudo_env=Config.PRESERVE_SUDO_ENV,
     shell_executable=Config.SHELL,
+    use_shell2=None,
 ):
     '''
     Builds a shell command with various kwargs.

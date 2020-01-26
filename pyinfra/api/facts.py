@@ -122,7 +122,6 @@ def get_facts(state, name, args=None, ensure_hosts=None):
     sudo_user = state.config.SUDO_USER
     su_user = state.config.SU_USER
     ignore_errors = state.config.IGNORE_ERRORS
-    shell = state.config.SHELL
 
     # Timeout for operations !== timeout for connect (config.CONNECT_TIMEOUT)
     timeout = None
@@ -138,7 +137,6 @@ def get_facts(state, name, args=None, ensure_hosts=None):
         su_user = current_op_meta['su_user']
         ignore_errors = current_op_meta['ignore_errors']
         timeout = current_op_meta['timeout']
-        shell = current_op_meta['shell']
 
     # Make a hash which keeps facts unique - but usable cross-deploy/threads.
     # Locks are used to maintain order.
@@ -171,9 +169,6 @@ def get_facts(state, name, args=None, ensure_hosts=None):
 
             # Work out the command
             command = fact.command
-            # Work out the shell
-            shell = fact.shell
-            logger.debug('+++++++++  shell:{}'.format(shell))
 
             if callable(command):
                 # Generate actual arguments by passing strings as jinja2 templates
@@ -185,7 +180,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
                 host.run_shell_command, state, command,
                 sudo=sudo, sudo_user=sudo_user,
                 su_user=su_user, timeout=timeout,
-                print_output=state.print_fact_output, use_shell2=shell,
+                print_output=state.print_fact_output, use_shell2=state.config.SHELL,
             )
             greenlet_to_host[greenlet] = host
 

@@ -67,7 +67,6 @@ def parse_win_ls_output(output, wanted_type):
                     if tmp == 'system':
                         system = True
 
-
             mode = {
                 'archive': archive,
                 'hidden': hidden,
@@ -77,7 +76,7 @@ def parse_win_ls_output(output, wanted_type):
 
             date_and_time = '{} {}'.format(matches.group(2), matches.group(3))
 
-            size = "0"
+            size = '0'
             if type == 'file':
                 size = matches.group(4)
 

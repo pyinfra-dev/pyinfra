@@ -39,7 +39,7 @@ def file(
     if not isinstance(name, six.string_types):
         raise OperationTypeError('Name must be a string')
 
-    #mode = ensure_mode_int(mode)
+    # mode = ensure_mode_int(mode)
     info = host.fact.file(name)
 
     # Not a file?!

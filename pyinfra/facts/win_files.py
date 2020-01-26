@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-import re
-
 from pyinfra.api.facts import FactBase
 
 from .util.win_files import parse_win_ls_output
