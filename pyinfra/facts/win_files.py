@@ -14,18 +14,13 @@ class WinFile(FactBase):
 
     def command(self, name):
         self.name = name
-        print('mike name:{}'.format(name))
         return 'ls {0}'.format(name)
 
     def process(self, output):
         # Note: The first 7 lines are header lines
-        print('mike --- output[7]:{}'.format(output[7]))
-        print('self.type:{}'.format(self.type))
-        tmp = parse_win_ls_output(output[7], self.type)
-        print('tmp:{}'.format(tmp))
         return parse_win_ls_output(output[7], self.type)
 
-
+# TODO: work thru the rest below
 #class Link(File):
 #    type = 'link'
 #
