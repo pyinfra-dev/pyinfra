@@ -1,6 +1,6 @@
 {
     "arg": "c:\\Windows\\System32\\drivers\\etc\\hosts",
-    "command": "ls c:\\Windows\\System32\\drivers\\etc\\hosts",
+    "command": "Get-ItemProperty -Path c:\\Windows\\System32\\drivers\\etc\\hosts",
     "output": [
         "",
         "",

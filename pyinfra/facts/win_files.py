@@ -14,7 +14,21 @@ class WinFile(FactBase):
 
     def command(self, name):
         self.name = name
-        return 'ls {0}'.format(name)
+        return 'Get-ItemProperty -Path {0}'.format(name)
+
+    def process(self, output):
+        # Note: The first 7 lines are header lines
+        return parse_win_ls_output(output[7], self.type)
+
+
+class WinDir(FactBase):
+    # Types must match WIN_FLAG_TO_TYPE in .util.win_files.py
+    type = 'directory'
+    shell = 'ps'
+
+    def command(self, name):
+        self.name = name
+        return 'Get-ItemProperty -Path {0}'.format(name)
 
     def process(self, output):
         # Note: The first 7 lines are header lines

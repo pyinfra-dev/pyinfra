@@ -4,19 +4,13 @@ import re
 from datetime import datetime
 
 
-# examples from c:\Windows
-# d-----        1/25/2020  10:27 AM                WinSxS
-# d-r---       11/15/2019   6:39 AM                PrintDialog
-# d-r-s-        9/15/2018  12:19 AM                media
-# -a----        9/15/2018  12:12 AM          78848 bfsvc.exe
-# -a--s-        1/25/2020   8:19 AM          67584 bootstat.dat
 WIN_LS_REGEX = re.compile((
     # filetype and mode
     r'^([darhs\-]{6})\s+'
     # Windows date
     r'([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})\s+([0-9]{1,2}:[0-9]{1,2}\s[AP][M])\s+'
     # Size (Note: no size on directories)
-    r'([0-9]+)\s+'
+    r'([0-9]+)?\s+'
     # Size and Filename
     r'([\w\/\.@-]+)'
 ))
