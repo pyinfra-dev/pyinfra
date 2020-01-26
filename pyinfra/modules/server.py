@@ -26,6 +26,19 @@ def reboot(state, host, delay=10, interval=1, reboot_timeout=300):
     + delay: number of seconds to wait before attempting reconnect
     + interval: interval (s) between reconnect attempts
     + reboot_timeout: total time before giving up reconnecting
+
+    Note: Probably want sudo enabled.
+
+    Example:
+
+    .. code:: python
+
+        server.reboot(
+            {'Reboot the server and wait to reconnect'},
+            delay=5,
+            timeout=30,
+        )
+
     '''
 
     logger.warning('The server.reboot operation is in beta!')
