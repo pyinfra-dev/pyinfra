@@ -104,10 +104,12 @@ class WinLocalGroups(FactBase):
 
     @staticmethod
     def process(output):
-        groups = output
-        # remove empty group
-        groups.remove('')
-
+        groups = []
+        for group in output:
+            # Note: If run this command thru ps, there are headers/footer.
+            # remove empty groups and those groups that are not local
+            if group != '' and group[0] == '*':
+                groups.append(group)
         return groups
 
 
