@@ -98,6 +98,7 @@ class WinLocalGroups(FactBase):
     '''
 
     command = 'net localgroup | findstr [^*]'
+    shell = 'cmd'
 
     default = list
 
@@ -114,6 +115,8 @@ class WinWhich(FactBase):
     '''
     Returns the full path for a command, if available.
     '''
+
+    shell = 'cmd'
 
     @staticmethod
     def command(name):
