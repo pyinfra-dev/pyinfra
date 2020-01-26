@@ -43,7 +43,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
     def test_invalid_deploy(self):
         pass
-# TODO
+# TODO: need help how to fix these tests that I broke with the shell arg
 #        result = run_cli(
 #            '@local',
 #            'not-a-file.py',
@@ -65,6 +65,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             'fact',
             'os',
         )
+        # TODO: need help how to fix these tests that I broke with the shell arg
         # TODO assert result.exit_code == 0
         # TODO assert '"somehost": null' in result.stdout
 
@@ -161,7 +162,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
 class TestCliDeployState(PatchSSHTestCase):
     pass
-# TODO
+# TODO: need help how to fix these tests that I broke with the shell arg
 #    def test_deploy(self):
 #        # Run 3 iterations of the test - each time shuffling the order of the
 #        # hosts - ensuring that the ordering has no effect on the operation order.
