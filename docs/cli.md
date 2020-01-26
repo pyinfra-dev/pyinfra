@@ -108,7 +108,7 @@ pyinfra inventory.py init.service nginx running=true enabled=true
 
 #### Example: rebooting with ad-hoc ``pyinfra`` commands
 
-We can reboot instances a couple of ways using adhoc commands:
+We can reboot instances a couple of ways using adhoc commands (assuming *sudo* is enabled in inventory.py):
 
 ```sh
 # using server.reboot()
