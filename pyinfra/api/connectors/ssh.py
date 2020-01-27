@@ -29,6 +29,10 @@ from .sshuserclient import SSHClient
 from .util import read_buffers_into_queue, split_combined_output, write_stdin
 
 
+def make_names_data(hostname):
+    yield '@ssh/{0}'.format(hostname), {'ssh_hostname': hostname}, []
+
+
 def _raise_connect_error(host, message, data):
     message = '{0} ({1})'.format(message, data)
     raise ConnectError(message)

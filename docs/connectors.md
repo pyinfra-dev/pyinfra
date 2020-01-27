@@ -1,17 +1,19 @@
 # Connectors
 
-Connectors enable pyinfra to integrate with other tools out of the box. Connectors can do two things:
+Connectors enable ``pyinfra`` to integrate with other tools out of the box. Connectors can do two things:
 
 + Generate inventory hosts and data (`@vagrant` and `@mech`)
 + Modify how commands are executed (`@local`)
 + Both of the above (`@docker`)
 
 ## Running commands
-If you want to run a command consider use the host.run_shell_command().
+If you want to run a command consider using `host.run_shell_command()`.
 
 
 # Want a new connector?
-If interested in building a connector, check out [the existing code](https://github.com/Fizzadar/pyinfra/tree/master/pyinfra/api/connectors). Each connector is described below along with usage examples:
+If interested in building a connector, check out [the existing code](https://github.com/Fizzadar/pyinfra/tree/master/pyinfra/api/connectors). Be sure to add tests and documentation.
+
+Each connector is described below along with usage examples:
 
 
 ## `@local`

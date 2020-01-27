@@ -13,6 +13,7 @@ EXECUTION_CONNECTORS = {  # pragma: no cover
 
 # Connectors that handle generation of inventories
 INVENTORY_CONNECTORS = {  # pragma: no cover
+    'ssh': ssh,
     'docker': docker,
     'mech': mech,
     'vagrant': vagrant,

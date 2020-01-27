@@ -1,10 +1,10 @@
 # Compatibility
 
-pyinfra aims to be compatible with all Unix-like operating systems and is currently tested against:
+``pyinfra`` aims to be compatible with all Unix-like operating systems and is currently tested against:
 
 + Ubuntu 16/18
 + Debian 8/9
-+ CentOS 6/7
++ CentOS 6/7/8
 + Fedora 24
 + OpenBSD 6
 + macOS 10.14 (with [`@local` connector](connectors.html#local))

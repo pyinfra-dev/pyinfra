@@ -3,15 +3,72 @@ The server module takes care of os-level state. Targets POSIX compatibility, tes
 Linux/BSD.
 '''
 
-from __future__ import unicode_literals
+from __future__ import division, unicode_literals
+
+from time import sleep
 
 import six
+
 from six.moves import shlex_quote
 
+from pyinfra import logger
 from pyinfra.api import operation
 
 from . import files
 from .util.files import chmod, sed_replace
+
+
+@operation
+def reboot(state, host, delay=10, interval=1, reboot_timeout=300):
+    '''
+    Reboot the server and wait for reconnection.
+
+    + delay: number of seconds to wait before attempting reconnect
+    + interval: interval (s) between reconnect attempts
+    + reboot_timeout: total time before giving up reconnecting
+
+    Note: Probably want sudo enabled.
+
+    Example:
+
+    .. code:: python
+
+        server.reboot(
+            {'Reboot the server and wait to reconnect'},
+            delay=5,
+            timeout=30,
+        )
+
+    '''
+
+    logger.warning('The server.reboot operation is in beta!')
+
+    yield {
+        'command': 'reboot',
+        'success_exit_codes': [-1],  # -1 being error/disconnected
+    }
+
+    def wait_and_reconnect(state, host):  # pragma: no cover
+        sleep(delay)
+        max_retries = round(reboot_timeout / interval)
+
+        host.connection = None  # remove the connection object
+        retries = 0
+
+        while True:
+            host.connect(state, show_errors=False)
+            if host.connection:
+                break
+
+            if retries > max_retries:
+                raise Exception((
+                    'Server did not reboot in time (reboot_timeout={0}s)'
+                ).format(reboot_timeout))
+
+            sleep(interval)
+            retries += 1
+
+    yield (wait_and_reconnect, (), {})
 
 
 @operation

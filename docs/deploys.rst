@@ -1,9 +1,9 @@
 Writing Deploys
 ===============
 
-The definitive guide to writing a pyinfra deploys.
+The definitive guide to writing ``pyinfra`` deploys.
 
-What's a deploy?
+What is a ``pyinfra`` deploy?
     A deploy represents a collection of inventory (hosts to target), data (configuration, templates, files) and operations (changes/state to apply to the inventory). Deploys are written in standard Python, and other packages can be used as needed.
 
 
@@ -13,10 +13,10 @@ Layout
 + ``*.py`` - top-level operations
 + ``inventories/*.py`` - groups of hosts and individual host data
 + ``group_data/*.py`` - arbitrary data for host groups
-+ ``templates/*.j2`` - jinja2 templates files (see <https://jinja.palletsprojects.com>)
++ ``templates/*.j2`` - `jinja2 <https://jinja.palletsprojects.com>` template files 
 + ``files/*`` - normal/non-template files
 + ``tasks/*.py`` - operations to perform a specific task
-+ ``config.py`` - optional config and hooks
++ ``config.py`` - optional configuration and hooks
 
 
 Inventory
@@ -88,7 +88,7 @@ Instead of passing ``--key``, ``--user``, etc to the CLI, or running a SSH agent
     ssh_user = 'ubuntu'
     ssh_key = '~/.ssh/some_key'
     ssh_key_password = 'password for key'
-    # ssh_password = 'password auth is bad'
+    # ssh_password = 'Using password authorization is bad. Preferred option is ssh_key.'
 
 Data Hierarchy
 ~~~~~~~~~~~~~~
@@ -100,14 +100,14 @@ The same keys can be defined for host and group data - this means we can set a d
 + Normal group data
 + "all" group data
 
-.. note::
+.. Note::
     pyinfra contains a ``debug-inventory`` command which can be used to explore the data output per-host for a given inventory/deploy, ie ``pyinfra inventory.py debug-inventory``.
 
 
 Operations
 ----------
 
-Now that you've got an inventory of hosts and know how to auth with them, you can start writing operations. Operations are used to describe changes to make to the systems in the inventory. Operations are namespaced and imported from ``pyinfra.modules``.
+Now that you've got an inventory of hosts and know how to authenticate with them, you can start writing operations. Operations are used to describe changes to make to the systems in the inventory. Operations are namespaced and imported from ``pyinfra.modules``.
 
 For example, this deploy will ensure that user "pyinfra" exists with home directory ``/home/pyinfra``, and that the ``/var/log/pyinfra.log`` file exists and is owned by that user.
 
@@ -146,7 +146,7 @@ Uses the :doc:`server module <./modules/server>` and :doc:`files module <./modul
 Global Arguments
 ~~~~~~~~~~~~~~~~
 
-In addition to each operations own arguments, there are a number of keyword arguments available in all operations:
+In addition to each operations having its own arguments, there are a number of keyword arguments available for all operations:
 
 .. include:: _deploy_globals.rst
 
@@ -184,12 +184,12 @@ Operation meta can be used during a deploy to change the desired operations:
 
     # If we added a user above, do something extra
     if create_user.changed:
-        server.shell('# add user to sudo, etc...')
+        server.shell( # add user to sudo, etc...
 
 Facts
 ~~~~~
 
-Facts allow you to use information about the target host to change the operations you use. A good example is switching between apt & yum depending on the Linux distribution. Like data, facts are accessed on ``host.fact``:
+Facts allow you to use information about the target host to change the operations you use. A good example is switching between `apt` & `yum` depending on the Linux distribution. Like data, facts are accessed using ``host.fact``:
 
 .. code:: python
 
@@ -202,7 +202,7 @@ Facts allow you to use information about the target host to change the operation
             sudo=True
         )
 
-Some facts also take a single argument, for example the ``directory`` or ``file`` facts. The :doc:`facts index <./facts>` lists the available facts and their arguments.
+Some facts also take a single argument like the ``directory`` or ``file`` facts. The :doc:`facts index <./facts>` lists the available facts and their arguments.
 
 Includes
 ~~~~~~~~
@@ -248,7 +248,7 @@ Deploy hooks are executed by the CLI at various points during the deploy process
 + ``before_deploy``
 + ``after_deploy``
 
-These can be used, for example, to check the right branch before connecting or to build some clientside assets locally before fact gathering. Hooks all take ``data, state`` as arguments:
+These can be used, for example, to check the right branch before connecting or to build some client-side assets locally before fact gathering. All hooks take ``(data, state)`` as arguments:
 
 .. code:: python
 
@@ -262,7 +262,7 @@ These can be used, for example, to check the right branch before connecting or t
 
 To abort a deploy, a hook can raise a ``hook.Error`` which the CLI will handle.
 
-When executing commands locally inside a hook (ie ``webpack build``), you should always use the ``pyinfra.local`` module:
+When executing commands locally inside a hook (i.e. ``webpack build``), you should always use the ``pyinfra.local`` module:
 
 .. code:: python
 

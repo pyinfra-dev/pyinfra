@@ -43,6 +43,14 @@ open docs/build/index.html
 
 Use `pytest` to run tests, or `pytest --cov` to run with coverage.
 
+## Want code completion?
+
+See `scripts/pyinfra-complete.sh` or:
+
+
+```sh
+eval "$(_PYINFRA_COMPLETE=source pyinfra)"
+```
 
 ## Guides
 

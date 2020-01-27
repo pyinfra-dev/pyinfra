@@ -79,16 +79,17 @@ class Host(object):
     # Connector proxy
     #
 
-    def connect(self, state, for_fact=None):
+    def connect(self, state, for_fact=None, show_errors=True):
         if not self.connection:
             try:
                 self.connection = self.executor.connect(state, self)
             except ConnectError as e:
-                log_message = '{0}{1}'.format(
-                    self.print_prefix,
-                    click.style(e.args[0], 'red'),
-                )
-                logger.error(log_message)
+                if show_errors:
+                    log_message = '{0}{1}'.format(
+                        self.print_prefix,
+                        click.style(e.args[0], 'red'),
+                    )
+                    logger.error(log_message)
             else:
                 log_message = '{0}{1}'.format(
                     self.print_prefix,
