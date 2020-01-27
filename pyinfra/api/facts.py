@@ -69,6 +69,9 @@ class FactMeta(type):
 class FactBase(object):
     abstract = True
 
+    def shell_executable(self):
+        return None
+
     @staticmethod
     def default():
         '''
