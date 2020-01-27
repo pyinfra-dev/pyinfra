@@ -9,8 +9,7 @@ Connectors enable ``pyinfra`` to integrate with other tools out of the box. Conn
 ## Running commands
 If you want to run a command consider using `host.run_shell_command()`.
 
-
-# Want a new connector?
+## Want a new connector?
 If interested in building a connector, check out [the existing code](https://github.com/Fizzadar/pyinfra/tree/master/pyinfra/api/connectors). Be sure to add tests and documentation.
 
 Each connector is described below along with usage examples:
