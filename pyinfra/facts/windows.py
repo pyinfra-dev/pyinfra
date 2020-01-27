@@ -14,7 +14,6 @@ class WinHome(FactBase):
     '''
 
     command = 'echo %HOMEPATH%'
-    shell = 'cmd'
 
 
 class WinHostname(FactBase):
@@ -23,7 +22,6 @@ class WinHostname(FactBase):
     '''
 
     command = 'hostname'
-    shell = 'cmd'
 
 
 class WinOs(FactBase):
@@ -32,7 +30,6 @@ class WinOs(FactBase):
     '''
 
     command = 'systeminfo.exe | findstr /c:"OS Name:"'
-    shell = 'cmd'
 
     @staticmethod
     def process(output):
@@ -49,7 +46,6 @@ class WinOsVersion(FactBase):
     '''
 
     command = 'systeminfo | findstr /c:"OS Version:"'
-    shell = 'cmd'
 
     @staticmethod
     def process(output):
@@ -66,7 +62,6 @@ class WinSystemType(FactBase):
     '''
 
     command = 'systeminfo | findstr /c:"System Type:"'
-    shell = 'cmd'
 
     @staticmethod
     def process(output):
@@ -83,7 +78,6 @@ class WinDate(FactBase):
     '''
 
     command = 'echo %date%-%time%'
-    shell = 'cmd'
     default = datetime.now
 
     @staticmethod
@@ -98,7 +92,6 @@ class WinLocalGroups(FactBase):
     '''
 
     command = 'net localgroup | findstr [^*]'
-    shell = 'cmd'
 
     default = list
 
@@ -117,8 +110,6 @@ class WinWhich(FactBase):
     '''
     Returns the full path for a command, if available.
     '''
-
-    shell = 'cmd'
 
     @staticmethod
     def command(name):

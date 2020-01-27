@@ -8,7 +8,7 @@ from .util.win_files import parse_win_ls_output
 class WinFile(FactBase):
     # Types must match WIN_FLAG_TO_TYPE in .util.win_files.py
     type = 'file'
-    shell = 'ps'
+    shell_executable = 'ps'
 
     def command(self, name):
         self.name = name
@@ -22,7 +22,7 @@ class WinFile(FactBase):
 class WinDir(FactBase):
     # Types must match WIN_FLAG_TO_TYPE in .util.win_files.py
     type = 'directory'
-    shell = 'ps'
+    shell_executable = 'ps'
 
     def command(self, name):
         self.name = name
