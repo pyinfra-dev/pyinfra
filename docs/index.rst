@@ -4,8 +4,8 @@
 Welcome to the ``pyinfra`` documentation; it is split into two sections - Using ``pyinfra`` and Deploy References. If you're new to ``pyinfra`` you should start with the :doc:`getting started <./getting_started>` page.
 
 
-Using ``pyinfra``
------------------
+Using pyinfra
+-------------
 
 .. compound::
     :doc:`getting_started`
@@ -46,7 +46,7 @@ Deploy Reference
 
 .. toctree::
     :hidden:
-    :caption: Using ``pyinfra``
+    :caption: Using pyinfra
 
     getting_started
     deploys
@@ -65,7 +65,7 @@ Deploy Reference
 
 .. toctree::
     :hidden:
-    :caption: How ``pyinfra`` Works
+    :caption: How pyinfra Works
 
     deploy_process
     api/modules
@@ -77,5 +77,5 @@ Deploy Reference
     :hidden:
     :caption: Elsewhere
 
-    `pyinfra.com <https://pyinfra.com>`
-    `pyinfra on GitHub <https://github.com/Fizzadar/pyinfra>`
+    pyinfra.com <https://pyinfra.com>
+    pyinfra on GitHub <https://github.com/Fizzadar/pyinfra>

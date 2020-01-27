@@ -70,8 +70,7 @@ Now we need a ``deploy.py`` containing our operations to execute:
 
     # Run some simple command
     server.shell( # the module.operation
-        {'Execute hello world script'},  # This text print in the output of a deploy
-operation
+        {'Execute hello world script'},  # This text print in the output of a deploy operation
         'echo "hello world"',  # the argument(s) to the operation
     )
 
@@ -94,9 +93,9 @@ pyinfra from Windows
 
 Tested on WindowsServer2019 with python 3.7.
 
-+ Download `Python <https://www.python.org/downloads/windows/>`
++ Download Python https://www.python.org/downloads/windows/
   (ex: python-3.7.6-amd64.exe). Install as Administrator and 
-  ensure the 'Add Python to PATH' option is selected.)
+  ensure the **Add Python to PATH** option is selected.)
 
 + Open a new powershell (as your login user), run:
 
@@ -134,10 +133,10 @@ Tested on WindowsServer2019 with python 3.7.
     pip install pyinfra
 
 
-If you need to build any python packages on Windows, perhaps because one of the 'pip' packages above fails, you may need a c++ compiler. One possible solution is below.
+If you need to build any python packages on Windows, perhaps because one of the **pip** packages above fails, you may need a c++ compiler. One possible solution is below.
 
-+ Download `Visual Studio Community Edition <https://visualstudio.microsoft.com/downloads/>` and
-  install Visual Studio as Administrator. Select the 'Desktop development with C++' option and
++ Download Visual Studio Community Edition https://visualstudio.microsoft.com/downloads/ and
+  install Visual Studio as Administrator. Select the "Desktop development with C++" option and
   ensure at least these options are selected:
 
     + "MSVC v142..."
