@@ -124,14 +124,21 @@ def run_shell_command(
         state (``pyinfra.api.State`` obj): state object for this command
         hostname (string): hostname of the target
         command (string): actual command to execute
+        get_pty (boolean): Not used for WINRM
         sudo (boolean): Not used for WINRM
         sudo_user (string): Not used for WINRM
         use_sudo_login(boolean): Not used for WINRM
         use_su_login(boolean): Not used for WINRM
         preserve_sudo_env(boolean): Not used for WINRM
-        get_pty (boolean): Not used for WINRM
-        env (dict): envrionment variables to set
+    TODO: check if winrm has a timeout and use timeout param
         timeout (int): timeout for this command to complete before erroring
+        stdin (string): Not used for WINRM
+        success_exit_codes (list): all values in the list that will return success
+        print_output (boolean): print the output
+        return_combined_output (boolean): combine the stdout and stderr lists
+    TODO: if using winrm connector, default the shell to 'cmd' instead of 'sh'?
+        shell_executable (string): shell to use ('sh'=cmd, 'ps'=powershell)
+        env (dict): envrionment variables to set
 
     Returns:
         tuple: (exit_code, stdout, stderr)
@@ -148,8 +155,10 @@ def run_shell_command(
     if print_output:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
+    # TODO: how can I override which shell via cli?
+    shell_executable = 'ps'
     # If we explicitly request, execute as a powershell script
-    if shell_executable == ('ps', 'powershell'):
+    if shell_executable in ['ps', 'powershell']:
         response = host.connection.run_ps(tmp_command)
     else:
         response = host.connection.run_cmd(tmp_command)

@@ -5,7 +5,7 @@ from pyinfra.api.facts import FactBase
 from .util.win_files import parse_win_ls_output
 
 
-class WinFile(FactBase):
+class WindowsFile(FactBase):
     # Types must match WIN_FLAG_TO_TYPE in .util.win_files.py
     type = 'file'
     shell_executable = 'ps'
@@ -19,7 +19,7 @@ class WinFile(FactBase):
         return parse_win_ls_output(output[7], self.type)
 
 
-class WinDir(FactBase):
+class WindowsDirectory(FactBase):
     # Types must match WIN_FLAG_TO_TYPE in .util.win_files.py
     type = 'directory'
     shell_executable = 'ps'
