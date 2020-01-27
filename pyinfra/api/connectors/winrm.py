@@ -4,6 +4,7 @@ import click
 import winrm
 
 from pyinfra import logger
+from pyinfra.api import Config
 from pyinfra.api.exceptions import ConnectError
 from pyinfra.api.util import make_win_command, memoize
 
@@ -66,7 +67,6 @@ def connect(state, host):
     logger.debug('winrm_username:{}'.format(host.data.winrm_username))
     logger.debug('winrm_password:{}'.format(host.data.winrm_password))
     logger.debug('winrm_port:{}'.format(host.data.winrm_port))
-    logger.debug('use_shell:{}'.format(host.data.use_shell))
 
     try:
         # Create new session
@@ -114,7 +114,7 @@ def run_shell_command(
     success_exit_codes=None,
     print_output=False,
     return_combined_output=False,
-    use_shell2=None,
+    shell_executable=Config.SHELL,
     **command_kwargs
 ):
     '''
@@ -148,13 +148,11 @@ def run_shell_command(
     if print_output:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
-    if not use_shell2:
-        use_shell2 = state.config.SHELL
-
-    if use_shell2 == 'cmd':
-        response = host.connection.run_cmd(tmp_command)
-    else:
+    # If we explicitly request, execute as a powershell script
+    if shell_executable == ('ps', 'powershell'):
         response = host.connection.run_ps(tmp_command)
+    else:
+        response = host.connection.run_cmd(tmp_command)
 
     return_code = response.status_code
     logger.debug('response:{}'.format(response))
