@@ -95,8 +95,6 @@ def windows_file(
 def _create_remote_dir(state, host, remote_filename, user, group):
     # Always use POSIX style path as local might be Windows, remote always *nix
     remote_dirname = ntpath.dirname(remote_filename)
-    print('+++ mike remote_filename:{}'.format(remote_filename))
-    print('+++ mike remote_dirname:{}'.format(remote_dirname))
     if remote_dirname:
         yield windows_directory(
             state, host, remote_dirname,
