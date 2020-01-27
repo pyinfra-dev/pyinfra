@@ -8,7 +8,7 @@ from dateutil.parser import parse as parse_date
 from pyinfra.api import FactBase
 
 
-class WinHome(FactBase):
+class WindowsHome(FactBase):
     '''
     Returns the home directory of the current user.
     '''
@@ -16,7 +16,7 @@ class WinHome(FactBase):
     command = 'echo %HOMEPATH%'
 
 
-class WinHostname(FactBase):
+class WindowsHostname(FactBase):
     '''
     Returns the current hostname of the server.
     '''
@@ -24,7 +24,7 @@ class WinHostname(FactBase):
     command = 'hostname'
 
 
-class WinOs(FactBase):
+class WindowsOs(FactBase):
     '''
     Returns the OS name according to ``systeminfo``.
     '''
@@ -40,7 +40,7 @@ class WinOs(FactBase):
         return new_output
 
 
-class WinOsVersion(FactBase):
+class WindowsOsVersion(FactBase):
     '''
     Returns the OS version according to ``systeminfo``.
     '''
@@ -56,7 +56,7 @@ class WinOsVersion(FactBase):
         return new_output
 
 
-class WinSystemType(FactBase):
+class WindowsSystemType(FactBase):
     '''
     Returns the system type according to ``systeminfo``.
     '''
@@ -72,7 +72,7 @@ class WinSystemType(FactBase):
         return new_output
 
 
-class WinDate(FactBase):
+class WindowsDate(FactBase):
     '''
     Returns the current datetime on the server.
     '''
@@ -86,7 +86,7 @@ class WinDate(FactBase):
         return parse_date(new_output)
 
 
-class WinLocalGroups(FactBase):
+class WindowsLocalGroups(FactBase):
     '''
     Returns a list of groups on the system.
     '''
@@ -106,7 +106,7 @@ class WinLocalGroups(FactBase):
         return groups
 
 
-class WinWhich(FactBase):
+class WindowsWhere(FactBase):
     '''
     Returns the full path for a command, if available.
     '''
