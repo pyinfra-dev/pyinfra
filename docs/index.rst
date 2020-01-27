@@ -1,4 +1,4 @@
-``pyinfra`` Documentation
+pyinfra Documentation
 =========================
 
 Welcome to the ``pyinfra`` documentation; it is split into two sections - Using ``pyinfra`` and Deploy References. If you're new to ``pyinfra`` you should start with the :doc:`getting started <./getting_started>` page.
