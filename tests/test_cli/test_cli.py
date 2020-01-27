@@ -231,7 +231,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 verbosity=0, user=None, port=None, key=None, key_password=None,
                 password=None, sudo=False, sudo_user=None, su_user=None, parallel=None,
                 fail_percent=0, dry=False, limit=None, no_wait=False, serial=False,
-                winrm_username=None, winrm_password=None, winrm_port=None, use_shell=None,
+                winrm_username=None, winrm_password=None, winrm_port=None,
                 debug=False, debug_data=False, debug_facts=False, debug_operations=False,
             )
             assert e.args == (0,)

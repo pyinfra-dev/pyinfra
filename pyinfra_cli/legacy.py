@@ -260,7 +260,6 @@ def setup_arguments(arguments):
         # Config options
         'user': arguments['--user'],
         'winrm_username': arguments['--winrm_username'],
-        'use_shell': arguments['--use_shell'],
         'winrm_password': arguments['--winrm_password'],
         'winrm_port': arguments['--winrm_port'],
         'key': arguments['--key'],

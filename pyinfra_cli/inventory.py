@@ -105,7 +105,6 @@ def make_inventory(
     winrm_username=None,
     winrm_password=None,
     winrm_port=None,
-    use_shell=None,
 ):
     '''
     Builds a ``pyinfra.api.Inventory`` from the filesystem. If the file does not exist
@@ -206,6 +205,5 @@ def make_inventory(
         winrm_username=winrm_username,
         winrm_password=winrm_password,
         winrm_port=winrm_port,
-        use_shell=use_shell,
         **groups
     ), file_groupname and file_groupname.lower()
