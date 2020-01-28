@@ -5,7 +5,7 @@ from mock import MagicMock, mock_open, patch
 
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
-from pyinfra.api.util import make_command
+from pyinfra.api.connectors.util import make_unix_command
 
 from ..util import make_inventory
 
@@ -56,7 +56,7 @@ class TestLocalConnector(TestCase):
         )
         assert len(combined_out) == 2
 
-        shell_command = make_command(command)
+        shell_command = make_unix_command(command)
         self.fake_popen_mock.assert_called_with(
             shell_command, shell=True,
             stdout=PIPE, stderr=PIPE, stdin=PIPE,
