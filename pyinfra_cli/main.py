@@ -138,7 +138,7 @@ def _print_support(ctx, param, value):
 )
 @click.option(
     '--support', is_flag=True, is_eager=True, callback=_print_support,
-    help='Print useful information for support',
+    help='Print useful information for support and exit.',
 )
 @click.version_option(
     version=__version__,
