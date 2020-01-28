@@ -43,6 +43,7 @@ from .prints import (
     print_results,
     print_state_facts,
     print_state_operations,
+    print_support_info,
 )
 from .util import (
     get_operation_and_args,
@@ -74,6 +75,15 @@ def _print_operations(ctx, param, value):
 
     click.echo('--> Available operations:')
     print_operations_list()
+    ctx.exit()
+
+
+def _print_support(ctx, param, value):
+    if not value:
+        return
+
+    click.echo('--> Support information:')
+    print_support_info()
     ctx.exit()
 
 
@@ -118,19 +128,26 @@ def _print_operations(ctx, param, value):
     '--serial', is_flag=True, default=False,
     help='Run operations in serial, host by host.',
 )
-# Eager commands (pyinfra [--facts | --operations | --version])
+# Eager commands (pyinfra [--facts | --operations | --support | --version])
 @click.option(
     '--facts', is_flag=True, is_eager=True, callback=_print_facts,
     help='Print available facts list and exit.',
 )
 @click.option(
-    'print_operations', '--operations', is_flag=True, is_eager=True, callback=_print_operations,
+    'print_operations', '--operations',
+    is_flag=True,
+    is_eager=True,
+    callback=_print_operations,
     help='Print available operations list and exit.',
+)
+@click.option(
+    '--support', is_flag=True, is_eager=True, callback=_print_support,
+    help='Print useful information for support and exit.',
 )
 @click.version_option(
     version=__version__,
     prog_name='pyinfra',
-    message='%(prog)s: v%(version)s\nExecutable: {0}'.format(sys.argv[0]),
+    message='%(prog)s: v%(version)s',
 )
 def cli(*args, **kwargs):
     '''
@@ -233,7 +250,7 @@ def _main(
     parallel, fail_percent,
     dry, limit, no_wait, serial,
     debug, debug_data, debug_facts, debug_operations,
-    facts=None, print_operations=None,
+    facts=None, print_operations=None, support=None,
 ):
     if not debug and not sys.warnoptions:
         warnings.simplefilter('ignore')
