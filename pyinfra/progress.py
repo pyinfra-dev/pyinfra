@@ -20,9 +20,13 @@ IS_TTY = sys.stdout.isatty() and sys.stderr.isatty()
 TERMINAL_WIDTH = 0
 
 if IS_TTY:
-    terminal_size = os.popen('stty size', 'r').read().split()
-    if len(terminal_size) == 2:
-        TERMINAL_WIDTH = int(terminal_size[1])
+    try:
+        from os import get_terminal_size
+        TERMINAL_WIDTH = get_terminal_size().columns
+    except ImportError:
+        terminal_size = os.popen('stty size', 'r').read().split()
+        if len(terminal_size) == 2:
+            TERMINAL_WIDTH = int(terminal_size[1])
 
 
 def _print_spinner(stop_event, progress_queue):
