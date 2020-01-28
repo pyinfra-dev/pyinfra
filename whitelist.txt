@@ -1,4 +1,6 @@
 'systeminfo
+'testpass'
+'testuser'
 2x
 4
 64kb
@@ -77,6 +79,7 @@ argbits
 argspec
 argstring
 asn
+assertEqual
 automagically
 autoname
 autosectionlabel
@@ -285,6 +288,8 @@ tablespace
 tarfile
 tcp
 tempdir
+testpass
+testuser
 tftp
 ubuntu
 ubuntu18
