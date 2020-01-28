@@ -185,7 +185,7 @@ def load_deploy_file(state, filename):
 
         exec_file(filename)
 
-        logger.info('{0} {1} {2}'.format(
+        logger.info('{0}{1} {2}'.format(
             host.print_prefix,
             click.style('Ready:', 'green'),
             click.style(filename, bold=True),
