@@ -24,18 +24,17 @@ class TestWinrmConnector(TestCase):
         self.assertEqual(len(state.active_hosts), 0)
 
     def test_connect_all_password(self):
-        inventory = make_inventory()
-        state = State(make_inventory(hosts=(
-            ('somehost', {'winrm_username': 'testuser', 'winrm_password': 'testpass'}),
-            ('anotherhost', {'winrm_username': 'testuser2', 'winrm_password': 'testpass2'}),
-        )), Config())
-
+        inventory = make_inventory(hosts=(
+            ('@winrm/somehost', {'winrm_username': 'testuser', 'winrm_password': 'testpass'}),
+            ('@winrm/anotherhost', {'winrm_username': 'testuser2', 'winrm_password': 'testpass2'}),
+        ))
+        state = State(inventory, Config())
         connect_all(state)
 
         # Get a host
-        somehost = inventory.get_host('somehost')
-        # TODO: self.assertEqual(somehost.data.winrm_username, 'testuser')
-        # TODO: self.assertEqual(somehost.data.winrm_password, 'testpass')
+        somehost = inventory.get_host('@winrm/somehost')
+        self.assertEqual(somehost.data.winrm_username, 'testuser')
+        self.assertEqual(somehost.data.winrm_password, 'testpass')
 
         self.assertEqual(len(state.active_hosts), 2)
 
@@ -60,7 +59,6 @@ class TestWinrmConnector(TestCase):
         assert len(out) == 3
 
         status, stdout, stderr = out
-        print('+++ mike status:{}'.format(status))
         # TODO: assert status is True
 
         combined_out = host.run_shell_command(
@@ -69,4 +67,4 @@ class TestWinrmConnector(TestCase):
         )
         assert len(combined_out) == 2
 
-        # TODO: fake_winrm.run_cmd.assert_called_with("'echo hi'", get_pty=False)
+        # TODO: fake_winrm.run_shell_command.assert_called_with("'echo hi'", get_pty=False)
