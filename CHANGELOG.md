@@ -1,3 +1,11 @@
+# v0.13.3
+
++ Add `pyinfra --support`
++ Add `md5sum`/`sha1sum`/`sha256sum` arguments to `files.download` operation
++ Add `server.reboot` example (@mkinney
++ Make SSH a proper connector (ie `@ssh/my-host.net` works)
++ Fix terminal width detection on Windows (again)
+
 # v0.13.2
 
 + Fix `server.reboot` argument clash (`timeout` -> `reboot_timeout`)
