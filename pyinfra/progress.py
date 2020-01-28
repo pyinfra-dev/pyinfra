@@ -2,6 +2,7 @@ from __future__ import division
 
 import math
 import os
+import platform
 import sys
 
 from collections import deque
@@ -24,9 +25,10 @@ if IS_TTY:
         from os import get_terminal_size
         TERMINAL_WIDTH = get_terminal_size().columns
     except ImportError:
-        terminal_size = os.popen('stty size', 'r').read().split()
-        if len(terminal_size) == 2:
-            TERMINAL_WIDTH = int(terminal_size[1])
+        if platform.system() != 'Windows':
+            terminal_size = os.popen('stty size', 'r').read().split()
+            if len(terminal_size) == 2:
+                TERMINAL_WIDTH = int(terminal_size[1])
 
 
 def _print_spinner(stop_event, progress_queue):
