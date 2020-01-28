@@ -16,10 +16,8 @@ import six
 
 from jinja2 import Template, TemplateSyntaxError, UndefinedError
 from paramiko import SSHException
-from six.moves import shlex_quote
 
 from pyinfra import logger
-from pyinfra.api import Config
 
 from .exceptions import PyinfraError
 from .operation_kwargs import OPERATION_KWARGS
@@ -295,122 +293,6 @@ def log_host_command_error(host, e, timeout=0):
     # Still here? Re-raise!
     else:
         raise e
-
-
-def make_command(
-    command,
-    env=None,
-    su_user=Config.SU_USER,
-    use_su_login=Config.USE_SU_LOGIN,
-    sudo=Config.SUDO,
-    sudo_user=Config.SUDO_USER,
-    use_sudo_login=Config.USE_SUDO_LOGIN,
-    preserve_sudo_env=Config.PRESERVE_SUDO_ENV,
-    shell_executable=Config.SHELL,
-):
-    '''
-    Builds a shell command with various kwargs.
-    '''
-
-    debug_meta = {}
-
-    for key, value in (
-        ('shell_executable', shell_executable),
-        ('sudo', sudo),
-        ('sudo_user', sudo_user),
-        ('su_user', su_user),
-        ('env', env),
-    ):
-        if value:
-            debug_meta[key] = value
-
-    logger.debug('Building command ({0}): {1}'.format(' '.join(
-        '{0}: {1}'.format(key, value)
-        for key, value in six.iteritems(debug_meta)
-    ), command))
-
-    # Use env & build our actual command
-    if env:
-        env_string = ' '.join([
-            '{0}={1}'.format(key, value)
-            for key, value in six.iteritems(env)
-        ])
-        command = 'export {0}; {1}'.format(env_string, command)
-
-    # Quote the command as a string
-    command = shlex_quote(command)
-
-    # Switch user with su
-    if su_user:
-        su_bits = ['su']
-
-        if use_su_login:
-            su_bits.append('-l')
-
-        # note `which <shell>` usage here - su requires an absolute path
-        command = '{0} {1} -s `which {2}` -c {3}'.format(
-            ' '.join(su_bits), su_user, shell_executable, command,
-        )
-
-    else:
-        # Otherwise just sh wrap the command
-        command = '{0} -c {1}'.format(shell_executable, command)
-
-    # Use sudo (w/user?)
-    if sudo:
-        sudo_bits = ['sudo', '-S', '-H', '-n']
-
-        if use_sudo_login:
-            sudo_bits.append('-i')
-
-        if preserve_sudo_env:
-            sudo_bits.append('-E')
-
-        if sudo_user:
-            sudo_bits.extend(('-u', sudo_user))
-
-        command = '{0} {1}'.format(' '.join(sudo_bits), command)
-
-    return command
-
-
-def make_win_command(
-    command,
-    env=None,
-    shell_executable=Config.SHELL,
-):
-    '''
-    Builds a windows command with various kwargs.
-    '''
-
-    debug_meta = {}
-
-    for key, value in (
-        ('shell_executable', shell_executable),
-        ('env', env),
-    ):
-        if value:
-            debug_meta[key] = value
-
-    logger.debug('Building command ({0}): {1}'.format(' '.join(
-        '{0}: {1}'.format(key, value)
-        for key, value in six.iteritems(debug_meta)
-    ), command))
-
-    # Use env & build our actual command
-    if env:
-        env_string = ' '.join([
-            '{0}={1}'.format(key, value)
-            for key, value in six.iteritems(env)
-        ])
-        command = 'export {0}; {1}'.format(env_string, command)
-
-    # Quote the command as a string
-    command = shlex_quote(command)
-
-    command = '{0}'.format(command)
-
-    return command
 
 
 def get_arg_value(state, host, arg):

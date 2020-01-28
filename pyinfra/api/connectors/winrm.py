@@ -6,7 +6,9 @@ import winrm
 from pyinfra import logger
 from pyinfra.api import Config
 from pyinfra.api.exceptions import ConnectError
-from pyinfra.api.util import make_win_command, memoize
+from pyinfra.api.util import memoize
+
+from .util import make_win_command
 
 
 def _raise_connect_error(host, message, data):
@@ -20,7 +22,6 @@ def show_warning():
 
 
 def _make_winrm_kwargs(state, host):
-
     kwargs = {
     }
 
@@ -157,8 +158,6 @@ def run_shell_command(
     if print_output:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
-    # TODO: how can I override which shell via cli?
-    shell_executable = 'ps'
     # If we explicitly request, execute as a powershell script
     if shell_executable in ['ps', 'powershell']:
         response = host.connection.run_ps(tmp_command)
