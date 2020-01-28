@@ -54,4 +54,13 @@ Vagrant.configure('2') do |config|
     config.vm.define :openbsd6 do |openbsd|
         openbsd.vm.box = 'generic/openbsd6'
     end
+
+    config.vm.define :windows2019 do |windows|
+        windows.vm.box = 'StefanScherer/windows_2019'
+        windows.vm.provider "vmware_desktop" do |v|
+            v.vmx["memsize"] = "1024"
+            v.vmx["numvcpus"] = "2"
+            v.gui = true
+       end
+    end
 end
