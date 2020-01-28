@@ -15,9 +15,8 @@ def _raise_connect_error(host, message, data):
 
 
 @memoize
-# TODO: where should show_warning() be added?
 def show_warning():
-    logger.warning('The @winrm connector is pre-alpha!')
+    logger.warning('The @winrm connector is alpha!')
 
 
 def _make_winrm_kwargs(state, host):
@@ -46,6 +45,9 @@ def _make_winrm_kwargs(state, host):
 
 
 def make_names_data(hostname):
+
+    show_warning()
+
     yield '@winrm/{0}'.format(hostname), {'winrm_hostname': hostname}, []
 
 
