@@ -178,6 +178,7 @@ launchd
 levelno
 localforward
 lxd
+md5sum
 mech
 memoize
 modprobe
