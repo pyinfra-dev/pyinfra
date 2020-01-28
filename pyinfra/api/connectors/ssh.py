@@ -23,10 +23,15 @@ import pyinfra
 
 from pyinfra import logger
 from pyinfra.api.exceptions import ConnectError, PyinfraError
-from pyinfra.api.util import get_file_io, make_command, memoize
+from pyinfra.api.util import get_file_io, memoize
 
 from .sshuserclient import SSHClient
-from .util import read_buffers_into_queue, split_combined_output, write_stdin
+from .util import (
+    make_unix_command,
+    read_buffers_into_queue,
+    split_combined_output,
+    write_stdin,
+)
 
 
 def make_names_data(hostname):
@@ -227,7 +232,7 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
-    command = make_command(command, **command_kwargs)
+    command = make_unix_command(command, **command_kwargs)
 
     logger.debug('Running command on {0}: (pty={1}) {2}'.format(
         host.name, get_pty, command,
