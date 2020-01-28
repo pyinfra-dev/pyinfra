@@ -159,3 +159,43 @@ class WindowsWhere(FactBase):
     @staticmethod
     def process(output):
         return output[0].rstrip()
+
+# TODO: Listing installed hotfixes
+# Get-CimInstance -ClassName Win32_QuickFixEngineering | format-list
+
+# TODO: Getting local drive info
+# Get-CimInstance -ClassName Win32_LogicalDisk -Filter "DriveType=3" | format-list
+
+# TODO: Getting info about user logged in
+# Get-CimInstance -ClassName Win32_ComputerSystem -Property UserName
+
+# TODO: Getting Logon Session Information
+# Get-CimInstance -ClassName Win32_LogonSession
+
+# TODO: Show the aliases
+# Get-Alias
+
+# TODO: help pages
+# Get-Help Get-ChildItem
+# -Detailed or -Full or -Examples
+# Update-Help ?
+
+# TODO: Services (tip: 'Get-Command -Noun Service' or
+# simply 'Get-Command' to see what you can do...)
+# Get-CimInstance -ClassName Win32_Service | Format-List
+# Stop-Service -Name <name>
+# Suspend-Service -Name <name>
+# Restart-Service -Name <name>
+
+# TODO: Ip addresses
+# Get-CimInstance -Class Win32_NetworkAdapterConfiguration | format-list
+
+# TODO: Processes
+# Get-Process | Format-List
+# Stop-Process <id>
+
+# TODO: map network drive
+# net use B: \\FPS01\users
+
+# TODO: list windows installer applications
+# Get-CimInstance -Class Win32_Product | Format-List
