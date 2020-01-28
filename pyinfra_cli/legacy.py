@@ -45,6 +45,7 @@ Config options:
     --key-password PASS  SSH key password.
     --winrm_password PWD WINRM password (bad practice).
     --winrm_username USR WINRM username.
+    --shell_executable   Default shell to use (ex: 'sh' (default), 'ps', 'cmd')
     --winrm_port PORT    WINRM port.
     --sudo               Use sudo.
     --sudo-user USER     Which user to sudo to.

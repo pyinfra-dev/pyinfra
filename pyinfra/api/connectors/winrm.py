@@ -158,6 +158,8 @@ def run_shell_command(
     if print_output:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
+    logger.debug('shell_executable:{0}'.format(shell_executable))
+
     # If we explicitly request, execute as a powershell script
     if shell_executable in ['ps', 'powershell']:
         response = host.connection.run_ps(tmp_command)
