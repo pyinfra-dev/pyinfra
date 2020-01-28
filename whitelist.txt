@@ -222,6 +222,7 @@ powershell
 ppa
 ppk
 pramga
+procs
 psql
 pty
 putfo

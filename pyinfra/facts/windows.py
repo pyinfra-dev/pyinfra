@@ -40,6 +40,47 @@ class WindowsOs(FactBase):
         return new_output
 
 
+class WindowsBios(FactBase):
+    '''
+    Returns the BIOS info.
+    '''
+
+    command = 'Get-CimInstance -ClassName Win32_BIOS'
+
+    @staticmethod
+    def process(output):
+        bios = {}
+        for line in output:
+            line_data = line.split(':')
+            if len(line_data) > 1:
+                bios.update({line_data[0].strip(): line_data[1].strip()})
+        new_output = {'windows_bios': bios}
+        return new_output
+
+
+class WindowsProcessors(FactBase):
+    '''
+    Returns the processors info.
+    '''
+
+    command = 'Get-CimInstance -ClassName Win32_Processor | Format-List'
+
+    @staticmethod
+    def process(output):
+        procs = []
+        one_proc_data = {}
+        for line in output:
+            line_data = line.split(':')
+            if len(line_data) > 1:
+                one_proc_data.update({line_data[0].strip(): line_data[1].strip()})
+            else:
+                if one_proc_data:
+                    procs.append(one_proc_data)
+                    one_proc_data = {}
+        new_output = {'windows_processors': procs}
+        return new_output
+
+
 class WindowsOsVersion(FactBase):
     '''
     Returns the OS version according to ``systeminfo``.
