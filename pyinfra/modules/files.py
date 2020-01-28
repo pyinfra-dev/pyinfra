@@ -27,6 +27,7 @@ from .util.files import chmod, chown, ensure_mode_int, sed_replace
 def download(
     state, host, source_url, destination,
     user=None, group=None, mode=None, cache_time=None, force=False,
+    sha256sum=None, sha1sum=None, md5sum=None,
 ):
     '''
     Download files from remote locations.
@@ -38,6 +39,9 @@ def download(
     + mode: permissions of the files
     + cache_time: if the file exists already, re-download after this time (in seconds)
     + force: always download the file, even if it already exists
+    + sha256sum: sha256 hash to checksum the downloaded file against
+    + sha1sum: sha1 hash to checksum the downloaded file against
+    + md5sum: md5 hash to checksum the downloaded file against
 
     Note: Assumes wget is installed.
 
@@ -89,6 +93,24 @@ def download(
 
         if mode:
             yield chmod(destination, mode)
+
+        if sha1sum:
+            yield (
+                '((sha1sum {0} 2> /dev/null || sha1 {0}) | grep {1}) '
+                '|| (echo "SHA1 did not match!" && exit 1)'
+            ).format(destination, sha1sum)
+
+        if sha256sum:
+            yield (
+                '(sha256sum {0} 2> /dev/null | grep {1}) '
+                '|| (echo "SHA256 did not match!" && exit 1)'
+            ).format(destination, sha256sum)
+
+        if md5sum:
+            yield (
+                '((md5sum {0} 2> /dev/null || md5 {0}) | grep {1}) '
+                '|| (echo "MD5 did not match!" && exit 1)'
+            ).format(destination, md5sum)
 
 
 @operation

@@ -200,6 +200,7 @@ levelno
 localforward
 localgroup
 lxd
+md5sum
 mech
 memoize
 modprobe
