@@ -16,7 +16,7 @@ Steps to reproduce the behavior (include code & usage example):
 A clear and concise description of what you expected to happen.
 
 **Meta**
-+ Include output of `pyinfra --version`.
++ Include output of `pyinfra --support`.
 + How was pyinfra installed (source/pip)?
-+ Which OS are you using (incl. version)?
-+ Which Python version are you using?
++ Include pyinfra-debug.log (if one was created)
++ Consider including output with `-vv` and `--debug`.

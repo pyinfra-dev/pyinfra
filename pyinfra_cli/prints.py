@@ -143,12 +143,15 @@ def print_facts(facts):
 
 def print_support_info():
     click.echo('''
-    If you're having issues with pyinfra or wish to make feature requests, please
-    check out the GitHub issues at https://github.com/Fizzadar/pyinfra/issues.
+    If you are having issues with pyinfra or wish to make feature requests, please
+    check out the GitHub issues at https://github.com/Fizzadar/pyinfra/issues .
     When adding an issue, be sure to include the following:
 ''')
 
     click.echo('    System: {0}'.format(platform.system()))
+    click.echo('      Platform: {0}'.format(platform.platform()))
+    click.echo('      Release: {0}'.format(platform.uname().release))
+    click.echo('      Machine: {0}'.format(platform.uname().machine))
     click.echo('    pyinfra: v{0}'.format(__version__))
     click.echo('    Executable: {0}'.format(sys.argv[0]))
     click.echo('    Python: {0} ({1}, {2})'.format(
