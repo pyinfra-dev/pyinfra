@@ -312,6 +312,9 @@ def make_command(
     Builds a shell command with various kwargs.
     '''
 
+    if shell_executable is None:
+        shell_executable = 'sh'
+
     debug_meta = {}
 
     for key, value in (

@@ -41,7 +41,7 @@ class Config(object):
     IGNORE_ERRORS = False
 
     # Shell to use to execute commands
-    SHELL = 'sh'
+    SHELL = None
 
     def __init__(self, **kwargs):
         # Always apply some env
