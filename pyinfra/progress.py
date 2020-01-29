@@ -12,7 +12,9 @@ from time import sleep
 
 import pyinfra
 
-WAIT_TIME = 1 / 20
+IS_WINDOWS = platform.system() == 'Windows'
+
+WAIT_TIME = 1 / 5
 WAIT_CHARS = deque(('-', '/', '|', '\\'))
 
 # Hacky way of getting terminal size (so can clear lines)
@@ -25,7 +27,7 @@ if IS_TTY:
         from os import get_terminal_size
         TERMINAL_WIDTH = get_terminal_size().columns
     except ImportError:
-        if platform.system() != 'Windows':
+        if not IS_WINDOWS:
             terminal_size = os.popen('stty size', 'r').read().split()
             if len(terminal_size) == 2:
                 TERMINAL_WIDTH = int(terminal_size[1])
@@ -61,8 +63,9 @@ def _print_spinner(stop_event, progress_queue):
         # In pyinfra_cli's __main__ we set stdout & stderr to be line buffered,
         # so write this escape code (clear line) into the buffer but don't flush,
         # such that any next print/log/etc clear the line first.
-        sys.stdout.write('\033[K')
-        sys.stderr.write('\033[K')
+        if IS_WINDOWS:
+            sys.stdout.write('\033[K')
+            sys.stderr.write('\033[K')
 
         sleep(WAIT_TIME)
 
