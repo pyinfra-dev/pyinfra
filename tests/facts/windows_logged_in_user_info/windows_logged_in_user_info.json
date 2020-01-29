@@ -1,0 +1,30 @@
+{
+    "command": "Get-CimInstance -ClassName Win32_ComputerSystem -Property UserName | Format-List",
+    "output": [
+        "",
+        "",
+        "Domain              : ",
+        "Manufacturer        : ",
+        "Model               : ",
+        "Name                : VAGRANT",
+        "PrimaryOwnerName    : ",
+        "TotalPhysicalMemory : ",
+        "",
+        "",
+        "",
+        ""
+    ],
+    "fact": {
+        "windows_logged_in_user_info": {
+            "Name": {
+                "VAGRANT": {
+                    "Domain": "",
+                    "Manufacturer": "",
+                    "Model": "",
+                    "PrimaryOwnerName": "",
+                    "TotalPhysicalMemory": ""
+                }
+            }
+        }
+    }
+}

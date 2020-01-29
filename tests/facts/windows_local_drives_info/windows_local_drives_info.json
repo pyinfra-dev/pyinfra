@@ -1,0 +1,30 @@
+{
+    "command": "Get-CimInstance -ClassName Win32_LogicalDisk -Filter \"DriveType=3\" | Format-List",
+    "output": [
+        "",
+        "",
+        "DeviceID     : C:",
+        "DriveType    : 3",
+        "ProviderName : ",
+        "FreeSpace    : 49324904448",
+        "Size         : 64055406592",
+        "VolumeName   : Windows 2019",
+        "",
+        "",
+        "",
+        ""
+    ],
+    "fact": {
+        "windows_local_drives_info": {
+            "DeviceID": {
+                "C:": {
+                    "DriveType": "3",
+                    "ProviderName": "",
+                    "FreeSpace": "49324904448",
+                    "Size": "64055406592",
+                    "VolumeName": "Windows 2019"
+                }
+            }
+        }
+    }
+}

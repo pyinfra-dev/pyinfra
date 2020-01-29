@@ -1,0 +1,48 @@
+{
+    "command": "Get-CimInstance -Class Win32_NetworkAdapterConfiguration | Format-List",
+    "output": [
+        "",
+        "",
+        "DHCPEnabled      : True",
+        "IPAddress        : ",
+        "DefaultIPGateway : ",
+        "DNSDomain        : ",
+        "ServiceName      : kdnic",
+        "Description      : Microsoft Kernel Debug Network Adapter",
+        "Index            : 0",
+        "",
+        "DHCPEnabled      : True",
+        "IPAddress        : {192.168.3.144, fe80::846b:83ab:61dc:7058}",
+        "DefaultIPGateway : {192.168.3.2}",
+        "DNSDomain        : localdomain",
+        "ServiceName      : E1G60",
+        "Description      : Intel(R) PRO/1000 MT Network Connection",
+        "Index            : 1",
+        "",
+        "",
+        "",
+        ""
+    ],
+    "fact": {
+        "windows_network_configuration": {
+            "Index": {
+                "0": {
+                    "DHCPEnabled": "True",
+                    "IPAddress": "",
+                    "DefaultIPGateway": "",
+                    "DNSDomain": "",
+                    "ServiceName": "kdnic",
+                    "Description": "Microsoft Kernel Debug Network Adapter"
+                },
+                "1": {
+                    "DHCPEnabled": "True",
+                    "IPAddress": "{192.168.3.144, fe80::846b:83ab:61dc:7058}",
+                    "DefaultIPGateway": "{192.168.3.2}",
+                    "DNSDomain": "localdomain",
+                    "ServiceName": "E1G60",
+                    "Description": "Intel(R) PRO/1000 MT Network Connection"
+                }
+            }
+        }
+    }
+}

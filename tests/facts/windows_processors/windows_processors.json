@@ -22,23 +22,23 @@
         ""
     ],
     "fact": {
-        "windows_processors": [
-            {
-                "Caption": "Intel64 Family 6 Model 158 Stepping 13",
-                "DeviceID": "CPU0",
-                "Manufacturer": "GenuineIntel",
-                "MaxClockSpeed": "2400",
-                "Name": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
-                "SocketDesignation": "CPU #000"
-            },
-            {
-                "Caption": "Intel64 Family 6 Model 158 Stepping 13",
-                "DeviceID": "CPU1",
-                "Manufacturer": "GenuineIntel",
-                "MaxClockSpeed": "2400",
-                "Name": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
-                "SocketDesignation": "CPU #001"
+        "windows_processors": {
+            "DeviceID": {
+                "CPU0": {
+                    "Caption": "Intel64 Family 6 Model 158 Stepping 13",
+                    "Manufacturer": "GenuineIntel",
+                    "MaxClockSpeed": "2400",
+                    "Name": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+                    "SocketDesignation": "CPU #000"
+                },
+                "CPU1": {
+                    "Caption": "Intel64 Family 6 Model 158 Stepping 13",
+                    "Manufacturer": "GenuineIntel",
+                    "MaxClockSpeed": "2400",
+                    "Name": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+                    "SocketDesignation": "CPU #001"
+                }
             }
-        ]
+        }
     }
 }

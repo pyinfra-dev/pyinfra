@@ -1,0 +1,88 @@
+{
+    "command": "Get-CimInstance -Class Win32_Product | Format-List",
+    "output": [
+        "",
+        "",
+        "IdentifyingNumber : {B96F6FA1-530F-42F1-9F71-33C583716340}",
+        "Name              : Microsoft Visual C++ 2019 X86 Minimum Runtime - 14.20.27508",
+        "Vendor            : Microsoft Corporation",
+        "Version           : 14.20.27508",
+        "Caption           : Microsoft Visual C++ 2019 X86 Minimum Runtime - 14.20.27508",
+        "",
+        "IdentifyingNumber : {F3241984-5A0E-4632-9025-AA16E0780A4B}",
+        "Name              : Microsoft Visual C++ 2019 X64 Minimum Runtime - 14.20.27508",
+        "Vendor            : Microsoft Corporation",
+        "Version           : 14.20.27508",
+        "Caption           : Microsoft Visual C++ 2019 X64 Minimum Runtime - 14.20.27508",
+        "",
+        "IdentifyingNumber : {C9DE51F8-7846-4621-815D-E8AFD3E3C0FF}",
+        "Name              : Microsoft Visual C++ 2019 X86 Additional Runtime - 14.20.27508",
+        "Vendor            : Microsoft Corporation",
+        "Version           : 14.20.27508",
+        "Caption           : Microsoft Visual C++ 2019 X86 Additional Runtime - 14.20.27508",
+        "",
+        "IdentifyingNumber : {4931385B-094D-4DC5-BD6A-5188FE9C51DF}",
+        "Name              : Microsoft Visual C++ 2019 X64 Additional Runtime - 14.20.27508",
+        "Vendor            : Microsoft Corporation",
+        "Version           : 14.20.27508",
+        "Caption           : Microsoft Visual C++ 2019 X64 Additional Runtime - 14.20.27508",
+        "",
+        "IdentifyingNumber : {89F4137D-6C26-4A84-BDB8-2E5A4BB71E00}",
+        "Name              : Microsoft Silverlight",
+        "Vendor            : Microsoft Corporation",
+        "Version           : 5.1.50918.0",
+        "Caption           : Microsoft Silverlight",
+        "",
+        "IdentifyingNumber : {7B09CBED-1199-4BA3-9948-A28DB7C9C396}",
+        "Name              : VMware Tools",
+        "Vendor            : VMware, Inc.",
+        "Version           : 11.0.0.14549434",
+        "Caption           : VMware Tools",
+        "",
+        "",
+        "",
+        ""
+    ],
+    "fact": {
+        "windows_installer_applications": {
+            "IdentifyingNumber": {
+                "{B96F6FA1-530F-42F1-9F71-33C583716340}": {
+                    "Name": "Microsoft Visual C++ 2019 X86 Minimum Runtime - 14.20.27508",
+                    "Vendor": "Microsoft Corporation",
+                    "Version": "14.20.27508",
+                    "Caption": "Microsoft Visual C++ 2019 X86 Minimum Runtime - 14.20.27508"
+                },
+                "{F3241984-5A0E-4632-9025-AA16E0780A4B}": {
+                    "Name": "Microsoft Visual C++ 2019 X64 Minimum Runtime - 14.20.27508",
+                    "Vendor": "Microsoft Corporation",
+                    "Version": "14.20.27508",
+                    "Caption": "Microsoft Visual C++ 2019 X64 Minimum Runtime - 14.20.27508"
+                },
+                "{C9DE51F8-7846-4621-815D-E8AFD3E3C0FF}": {
+                    "Name": "Microsoft Visual C++ 2019 X86 Additional Runtime - 14.20.27508",
+                    "Vendor": "Microsoft Corporation",
+                    "Version": "14.20.27508",
+                    "Caption": "Microsoft Visual C++ 2019 X86 Additional Runtime - 14.20.27508"
+                },
+                "{4931385B-094D-4DC5-BD6A-5188FE9C51DF}": {
+                    "Name": "Microsoft Visual C++ 2019 X64 Additional Runtime - 14.20.27508",
+                    "Vendor": "Microsoft Corporation",
+                    "Version": "14.20.27508",
+                    "Caption": "Microsoft Visual C++ 2019 X64 Additional Runtime - 14.20.27508"
+                },
+                "{89F4137D-6C26-4A84-BDB8-2E5A4BB71E00}": {
+                    "Name": "Microsoft Silverlight",
+                    "Vendor": "Microsoft Corporation",
+                    "Version": "5.1.50918.0",
+                    "Caption": "Microsoft Silverlight"
+                },
+                "{7B09CBED-1199-4BA3-9948-A28DB7C9C396}": {
+                    "Name": "VMware Tools",
+                    "Vendor": "VMware, Inc.",
+                    "Version": "11.0.0.14549434",
+                    "Caption": "VMware Tools"
+                }
+            }
+        }
+    }
+}
