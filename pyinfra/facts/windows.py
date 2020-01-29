@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import re
+from collections import OrderedDict
 from datetime import datetime
 
 from dateutil.parser import parse as parse_date
@@ -59,7 +60,8 @@ class WindowsBios(FactBase):
         return new_output
 
 
-def _format_windows_for_key(subject, primary_key, output):
+# TODO: should we sort_by_key or not?
+def _format_windows_for_key(subject, primary_key, output, sort_by_key=False):
     '''Format the windows powershell output that uses 'Format-Line'
        into a dict of dicts
     '''
@@ -84,7 +86,12 @@ def _format_windows_for_key(subject, primary_key, output):
         else:
             # we probably came across a blank line, write the line of data
             if one_item:
-                lines[key_value] = one_item
+                if sort_by_key:
+                    one_item_sorted = OrderedDict(sorted(one_item.items(), key=lambda t: t[0]))
+                    lines[key_value] = one_item_sorted
+                else:
+                    # preserve insertion order
+                    lines[key_value] = one_item
                 one_item = {}
                 key_value = ''
     return {subject: {primary_key: lines}}
