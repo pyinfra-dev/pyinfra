@@ -12,7 +12,7 @@ from time import sleep
 
 import pyinfra
 
-WAIT_TIME = 1 / 20
+WAIT_TIME = 1 / 5
 WAIT_CHARS = deque(('-', '/', '|', '\\'))
 
 # Hacky way of getting terminal size (so can clear lines)
