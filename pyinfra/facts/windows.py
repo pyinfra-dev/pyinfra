@@ -95,7 +95,7 @@ class WindowsProcessors(FactBase):
     Returns the processors info.
     '''
 
-    command = 'Get-CimInstance -ClassName Win32_Processor | Format-List'
+    command = 'Get-CimInstance -ClassName Win32_Processor | Format-List -Property *'
     shell_executable = 'ps'
 
     @staticmethod
@@ -188,7 +188,7 @@ class WindowsHotfixes(FactBase):
     Returns the Windows hotfixes.
     '''
 
-    command = 'Get-CimInstance -ClassName Win32_QuickFixEngineering | Format-List'
+    command = 'Get-CimInstance -ClassName Win32_QuickFixEngineering | Format-List -Property *'
     shell_executable = 'ps'
 
     @staticmethod
@@ -201,7 +201,8 @@ class WindowsLocalDrivesInfo(FactBase):
     Returns the Windows local drives info.
     '''
 
-    command = 'Get-CimInstance -ClassName Win32_LogicalDisk -Filter "DriveType=3" | Format-List'
+    command = 'Get-CimInstance -ClassName Win32_LogicalDisk -Filter "DriveType=3" '\
+              '| Format-List -Property *'
     shell_executable = 'ps'
 
     @staticmethod
@@ -214,7 +215,8 @@ class WindowsLoggedInUserInfo(FactBase):
     Returns the Windows user logged in info.
     '''
 
-    command = 'Get-CimInstance -ClassName Win32_ComputerSystem -Property UserName | Format-List'
+    command = 'Get-CimInstance -ClassName Win32_ComputerSystem -Property UserName ' \
+              '| Format-List -Property *'
     shell_executable = 'ps'
 
     @staticmethod
@@ -227,7 +229,7 @@ class WindowsLogonSessionInfo(FactBase):
     Returns the Windows user logon session info.
     '''
 
-    command = 'Get-CimInstance -ClassName Win32_LogonSession | Format-List'
+    command = 'Get-CimInstance -ClassName Win32_LogonSession | Format-List -Property *'
     shell_executable = 'ps'
 
     @staticmethod
@@ -240,7 +242,7 @@ class WindowsAliases(FactBase):
     Returns the Windows aliases.
     '''
 
-    command = 'Get-Alias | Format-List'
+    command = 'Get-Alias | Format-List -Property *'
     shell_executable = 'ps'
 
     @staticmethod
@@ -258,7 +260,7 @@ class WindowsServices(FactBase):
     Returns the Windows services.
     '''
 
-    command = 'Get-CimInstance -ClassName Win32_Service | Format-List'
+    command = 'Get-CimInstance -ClassName Win32_Service | Format-List -Property *'
     shell_executable = 'ps'
 
     @staticmethod
@@ -272,7 +274,7 @@ class WindowsProcesses(FactBase):
     Returns the Windows processes.
     '''
 
-    command = 'Get-Process | Format-List'
+    command = 'Get-Process | Format-List -Property *'
     shell_executable = 'ps'
 
     @staticmethod
@@ -285,7 +287,7 @@ class WindowsNetworkConfiguration(FactBase):
     Returns the Windows network configuration.
     '''
 
-    command = 'Get-CimInstance -Class Win32_NetworkAdapterConfiguration | Format-List'
+    command = 'Get-CimInstance -Class Win32_NetworkAdapterConfiguration | Format-List -Property *'
     shell_executable = 'ps'
 
     @staticmethod
@@ -298,7 +300,7 @@ class WindowsInstallerApplications(FactBase):
     Returns the Windows installer applications.
     '''
 
-    command = 'Get-CimInstance -Class Win32_Product | Format-List'
+    command = 'Get-CimInstance -Class Win32_Product | Format-List -Property *'
     shell_executable = 'ps'
 
     @staticmethod
