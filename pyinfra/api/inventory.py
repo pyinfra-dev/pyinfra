@@ -4,11 +4,7 @@ import six
 
 from pyinfra import logger
 
-from .connectors import (
-    ALL_CONNECTORS,
-    EXECUTION_CONNECTORS,
-    INVENTORY_CONNECTORS,
-)
+from .connectors import ALL_CONNECTORS, EXECUTION_CONNECTORS
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
 from .host import Host
 from .util import FallbackDict
@@ -123,13 +119,13 @@ class Inventory(object):
                     executor = EXECUTION_CONNECTORS[connector_name]
 
                 # Inventory connector?
-                if connector_name in INVENTORY_CONNECTORS:
+                if connector_name in ALL_CONNECTORS:
                     logger.debug('Expanding inventory connector: {0}'.format(
                         connector_name,
                     ))
 
                     for name, data, group_names in (
-                        INVENTORY_CONNECTORS[connector_name].make_names_data(arg_string)
+                        ALL_CONNECTORS[connector_name].make_names_data(arg_string)
                     ):
                         # Make a copy of the host data, update with any from
                         # the connector.
