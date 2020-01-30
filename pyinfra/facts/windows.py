@@ -257,11 +257,6 @@ class WindowsAliases(FactBase):
         return _format_windows_for_key('windows_get_aliases', 'Definition', output)
 
 
-# TODO: Services (tip: 'Get-Command -Noun Service' or
-# simply 'Get-Command' to see what you can do...)
-# Stop-Service -Name <name>
-# Suspend-Service -Name <name>
-# Restart-Service -Name <name>
 class WindowsServices(FactBase):
     '''
     Returns the Windows services.
@@ -275,7 +270,6 @@ class WindowsServices(FactBase):
         return _format_windows_for_key('windows_services', 'Name', output)
 
 
-# TODO: for operations: Stop-Process <id>
 class WindowsProcesses(FactBase):
     '''
     Returns the Windows processes.
