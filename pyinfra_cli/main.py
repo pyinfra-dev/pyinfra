@@ -368,12 +368,15 @@ def _main(
     pseudo_state.set(state)
 
     # Setup printing on the new state
-    print_output = verbosity > 0
-    print_fact_output = verbosity > 1
+    print_operation_io = verbosity > 0
+    print_fact_io = verbosity > 1
 
-    state.print_output = print_output  # -v
-    state.print_fact_info = print_output  # -v
-    state.print_fact_output = print_fact_output  # -vv
+    state.print_output = print_operation_io  # -v
+    state.print_input = print_operation_io  # -v
+    state.print_fact_info = print_operation_io  # -v
+
+    state.print_fact_output = print_fact_io  # -vv
+    state.print_fact_input = print_fact_io  # -vv
 
     click.echo('--> Loading config...')
 
@@ -474,7 +477,8 @@ def _main(
         state.print_fact_info = True
 
         # Print fact output with -v
-        state.print_fact_output = print_output
+        state.print_fact_output = print_operation_io
+        state.print_fact_input = print_operation_io
 
         fact_data = {}
 
