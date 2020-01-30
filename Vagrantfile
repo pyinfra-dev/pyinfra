@@ -63,4 +63,13 @@ Vagrant.configure('2') do |config|
             v.gui = true
        end
     end
+
+    config.vm.define :windows10 do |windows|
+        windows.vm.box = "StefanScherer/windows_10"
+        windows.vm.provider "vmware_desktop" do |v|
+            v.vmx["memsize"] = "1024"
+            v.vmx["numvcpus"] = "2"
+            v.gui = true
+       end
+    end
 end
