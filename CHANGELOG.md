@@ -1,3 +1,10 @@
+# v0.13.4
+
++ Improve `pyinfra --support` output (@mkinney)
++ Add print input state flags and don't show input with `exec` command
++ Remove all ANSI escape codes from spinner on Windows
++ Reduce spinner interval to 0.2s
+
 # v0.13.3
 
 + Add `pyinfra --support`

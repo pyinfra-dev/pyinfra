@@ -1,5 +1,3 @@
-import six
-
 from . import ansible, docker, local, mech, ssh, vagrant, winrm
 
 
@@ -12,16 +10,12 @@ EXECUTION_CONNECTORS = {  # pragma: no cover
 }
 
 # Connectors that handle generation of inventories
-INVENTORY_CONNECTORS = {  # pragma: no cover
-    'ssh': ssh,
-    'docker': docker,
-    'mech': mech,
-    'vagrant': vagrant,
+ALL_CONNECTORS = {  # pragma: no cover
     'ansible': ansible,
+    'docker': docker,
+    'local': local,
+    'mech': mech,
+    'ssh': ssh,
+    'vagrant': vagrant,
     'winrm': winrm,
 }
-
-ALL_CONNECTORS = (  # pragma: no cover
-    list(six.iterkeys(EXECUTION_CONNECTORS))
-    + list(six.iterkeys(INVENTORY_CONNECTORS))
-)

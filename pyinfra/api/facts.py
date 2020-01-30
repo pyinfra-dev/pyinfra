@@ -192,6 +192,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
                 timeout=timeout,
                 shell_executable=shell_executable,
                 print_output=state.print_fact_output,
+                print_input=state.print_fact_input,
             )
             greenlet_to_host[greenlet] = host
 
