@@ -116,6 +116,7 @@ def run_shell_command(
     stdin=None,
     success_exit_codes=None,
     print_output=False,
+    print_input=False,
     return_combined_output=False,
     shell_executable=Config.SHELL,
     **command_kwargs
@@ -138,6 +139,7 @@ def run_shell_command(
         stdin (string): Not used for WINRM
         success_exit_codes (list): all values in the list that will return success
         print_output (boolean): print the output
+        TODO print_intput (boolean): print the input
         return_combined_output (boolean): combine the stdout and stderr lists
     TODO: if using winrm connector, default the shell to 'cmd' instead of 'sh'?
         shell_executable (string): shell to use ('sh'=cmd, 'ps'=powershell)

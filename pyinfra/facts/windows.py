@@ -56,16 +56,16 @@ class WindowsBios(FactBase):
             line_data = line.split(':')
             if len(line_data) > 1:
                 bios.update({line_data[0].strip(): line_data[1].strip()})
-        new_output = {'windows_bios': bios}
-        return new_output
+        return bios
 
 
-# TODO: should we sort_by_key or not?
-def _format_windows_for_key(subject, primary_key, output, sort_by_key=False):
+def _format_windows_for_key(primary_key, output, sort_by_key=False):
     '''Format the windows powershell output that uses 'Format-Line'
-       into a dict of dicts
+       into a dict of dicts. Note: We will lower case and sort
+       the keys to make it easier to use programmatically.
     '''
     primary_key = primary_key.strip()
+    # TODO primary_key = primary_key.lower().strip()
     lines = {}
     one_item = {}
     key_value = ''
@@ -75,6 +75,7 @@ def _format_windows_for_key(subject, primary_key, output, sort_by_key=False):
         if len(line_data) > 1:
             # we have a data line
             this_key = line_data[0].strip()
+            # TODO this_key = line_data[0].strip().lower()
             this_data = line_data[1].strip()
             if len(line_data) > 2:
                 # there was a ':' in the data, so reconstitute the value
@@ -94,7 +95,7 @@ def _format_windows_for_key(subject, primary_key, output, sort_by_key=False):
                     lines[key_value] = one_item
                 one_item = {}
                 key_value = ''
-    return {subject: {primary_key: lines}}
+    return {primary_key: lines}
 
 
 class WindowsProcessors(FactBase):
@@ -107,7 +108,7 @@ class WindowsProcessors(FactBase):
 
     @staticmethod
     def process(output):
-        return _format_windows_for_key('windows_processors', 'DeviceID', output)
+        return _format_windows_for_key('DeviceID', output)
 
 
 class WindowsOsVersion(FactBase):
@@ -200,7 +201,7 @@ class WindowsHotfixes(FactBase):
 
     @staticmethod
     def process(output):
-        return _format_windows_for_key('windows_hotfixes', 'HotFixID', output)
+        return _format_windows_for_key('HotFixID', output)
 
 
 class WindowsLocalDrivesInfo(FactBase):
@@ -214,7 +215,7 @@ class WindowsLocalDrivesInfo(FactBase):
 
     @staticmethod
     def process(output):
-        return _format_windows_for_key('windows_local_drives_info', 'DeviceID', output)
+        return _format_windows_for_key('DeviceID', output)
 
 
 class WindowsLoggedInUserInfo(FactBase):
@@ -228,7 +229,7 @@ class WindowsLoggedInUserInfo(FactBase):
 
     @staticmethod
     def process(output):
-        return _format_windows_for_key('windows_logged_in_user_info', 'Name', output)
+        return _format_windows_for_key('Name', output)
 
 
 class WindowsLogonSessionInfo(FactBase):
@@ -241,7 +242,7 @@ class WindowsLogonSessionInfo(FactBase):
 
     @staticmethod
     def process(output):
-        return _format_windows_for_key('windows_logon_session_info', 'LogonId', output)
+        return _format_windows_for_key('LogonId', output)
 
 
 class WindowsAliases(FactBase):
@@ -254,7 +255,7 @@ class WindowsAliases(FactBase):
 
     @staticmethod
     def process(output):
-        return _format_windows_for_key('windows_get_aliases', 'Definition', output)
+        return _format_windows_for_key('Definition', output)
 
 
 class WindowsServices(FactBase):
@@ -267,7 +268,7 @@ class WindowsServices(FactBase):
 
     @staticmethod
     def process(output):
-        return _format_windows_for_key('windows_services', 'Name', output)
+        return _format_windows_for_key('Name', output)
 
 
 class WindowsProcesses(FactBase):
@@ -280,7 +281,7 @@ class WindowsProcesses(FactBase):
 
     @staticmethod
     def process(output):
-        return _format_windows_for_key('windows_processes', 'Id', output)
+        return _format_windows_for_key('Id', output)
 
 
 class WindowsNetworkConfiguration(FactBase):
@@ -293,7 +294,7 @@ class WindowsNetworkConfiguration(FactBase):
 
     @staticmethod
     def process(output):
-        return _format_windows_for_key('windows_network_configuration', 'Index', output)
+        return _format_windows_for_key('Index', output)
 
 
 class WindowsInstallerApplications(FactBase):
@@ -306,5 +307,4 @@ class WindowsInstallerApplications(FactBase):
 
     @staticmethod
     def process(output):
-        return _format_windows_for_key('windows_installer_applications',
-                                       'IdentifyingNumber', output)
+        return _format_windows_for_key('IdentifyingNumber', output)
