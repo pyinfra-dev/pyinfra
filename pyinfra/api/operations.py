@@ -120,6 +120,7 @@ def _run_server_op(state, host, op_hash):
                         su_user=su_user,
                         shell_executable=shell_executable,
                         print_output=state.print_output,
+                        print_input=state.print_input,
                     )
 
                 except (timeout_error, socket_error, SSHException, IOError) as e:
@@ -150,6 +151,7 @@ def _run_server_op(state, host, op_hash):
                     stdin=op_meta['stdin'],
                     success_exit_codes=success_exit_codes,
                     print_output=state.print_output,
+                    print_input=state.print_input,
                     return_combined_output=True,
                 )
 

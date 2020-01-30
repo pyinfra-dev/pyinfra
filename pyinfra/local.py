@@ -106,16 +106,13 @@ def shell(commands, splitlines=False, ignore_errors=False):
 
     # Checking for pseudo_state means this function works outside a deploy
     # e.g.: the vagrant connector.
-    print_output = (
-        pseudo_state.print_output
-        if pseudo_state.isset()
-        else False
-    )
+    print_output = pseudo_state.print_output if pseudo_state.isset() else False
+    print_input = pseudo_state.print_input if pseudo_state.isset() else False
 
     for command in commands:
         print_prefix = 'localhost: '
 
-        if print_output:
+        if print_input:
             click.echo('{0}>>> {1}'.format(print_prefix, command))
 
         return_code, combined_output = run_local_process(

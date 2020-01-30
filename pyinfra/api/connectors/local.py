@@ -22,6 +22,7 @@ def run_shell_command(
     stdin=None,
     success_exit_codes=None,
     print_output=False,
+    print_input=False,
     return_combined_output=False,
     **command_kwargs
 ):
@@ -46,7 +47,7 @@ def run_shell_command(
 
     logger.debug('--> Running command on localhost: {0}'.format(command))
 
-    if print_output:
+    if print_input:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
     return_code, combined_output = run_local_process(
@@ -71,7 +72,7 @@ def run_shell_command(
 
 def put_file(
     state, host, filename_or_io, remote_filename,
-    print_output=False,
+    print_output=False, print_input=False,
     **command_kwargs
 ):
     '''
@@ -96,6 +97,7 @@ def put_file(
         status, _, stderr = run_shell_command(
             state, host, 'cp {0} {1}'.format(temp_filename, remote_filename),
             print_output=print_output,
+            print_input=print_input,
             **command_kwargs
         )
 
@@ -112,7 +114,7 @@ def put_file(
 
 def get_file(
     state, host, remote_filename, filename_or_io,
-    print_output=False,
+    print_output=False, print_input=False,
     **command_kwargs
 ):
     '''
@@ -127,6 +129,7 @@ def get_file(
         status, _, stderr = run_shell_command(
             state, host, 'cp {0} {1}'.format(remote_filename, temp_filename),
             print_output=print_output,
+            print_input=print_input,
             **command_kwargs
         )
 
