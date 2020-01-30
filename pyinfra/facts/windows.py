@@ -59,7 +59,7 @@ class WindowsBios(FactBase):
         return bios
 
 
-def _format_windows_for_key(primary_key, output, sort_by_key=False):
+def _format_windows_for_key(primary_key, output, sort_by_key=False, return_primary_key=True):
     '''Format the windows powershell output that uses 'Format-Line'
        into a dict of dicts. Note: We will lower case and sort
        the keys to make it easier to use programmatically.
@@ -95,7 +95,10 @@ def _format_windows_for_key(primary_key, output, sort_by_key=False):
                     lines[key_value] = one_item
                 one_item = {}
                 key_value = ''
-    return {primary_key: lines}
+    if return_primary_key:
+        return {primary_key: lines}
+    else:
+        return lines
 
 
 class WindowsProcessors(FactBase):
@@ -269,6 +272,20 @@ class WindowsServices(FactBase):
     @staticmethod
     def process(output):
         return _format_windows_for_key('Name', output)
+
+
+class WindowsService(FactBase):
+    '''
+    Returns info about a Windows service.
+    '''
+
+    shell_executable = 'ps'
+
+    def command(self, name):
+        return 'Get-Service -Name {} | Format-List -Property *'.format(name)
+
+    def process(self, output):
+        return _format_windows_for_key('Name', output, return_primary_key=False)
 
 
 class WindowsProcesses(FactBase):
