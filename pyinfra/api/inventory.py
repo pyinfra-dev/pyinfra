@@ -101,7 +101,6 @@ class Inventory(object):
             # Default to executing commands with the ssh connector
             executor = EXECUTION_CONNECTORS['ssh']
 
-            # Name is @connector?
             if name[0] == '@':
                 connector_name = name[1:]
                 arg_string = None
@@ -118,30 +117,20 @@ class Inventory(object):
                 if connector_name in EXECUTION_CONNECTORS:
                     executor = EXECUTION_CONNECTORS[connector_name]
 
-                # Inventory connector?
-                if connector_name in ALL_CONNECTORS:
-                    logger.debug('Expanding inventory connector: {0}'.format(
-                        connector_name,
-                    ))
+                names_data = ALL_CONNECTORS[connector_name].make_names_data(arg_string)
+            else:
+                names_data = [(name, {}, [])]
 
-                    for name, data, group_names in (
-                        ALL_CONNECTORS[connector_name].make_names_data(arg_string)
-                    ):
-                        # Make a copy of the host data, update with any from
-                        # the connector.
-                        sub_host_data = host_data.copy()
-                        sub_host_data.update(data)
+            for name, data, group_names in names_data:
+                # Make a copy of the host data, update with any from
+                # the connector.
+                sub_host_data = host_data.copy()
+                sub_host_data.update(data)
 
-                        # Assign the name/data/group_names from the connector
-                        self.host_data[name] = sub_host_data
-                        names_executors.append((name, executor))
-                        name_to_group_names[name].extend(group_names)
-
-                    continue
-
-            # Assign the name/data
-            self.host_data[name] = host_data
-            names_executors.append((name, executor))
+                # Assign the name/data/group_names from the connector
+                self.host_data[name] = sub_host_data
+                names_executors.append((name, executor))
+                name_to_group_names[name].extend(group_names)
 
         # Now we can actually make Host instances
         hosts = {}
