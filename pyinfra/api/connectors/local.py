@@ -6,9 +6,17 @@ import click
 import six
 
 from pyinfra import logger
+from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import get_file_io, make_command
 
 from .util import run_local_process, split_combined_output
+
+
+def make_names_data(hostname=None):
+    if hostname is not None:
+        raise InventoryError('Cannot have more than one @local')
+
+    yield '@local', {}, ['@local']
 
 
 def connect(state, host):
