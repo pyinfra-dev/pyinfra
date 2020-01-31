@@ -39,3 +39,14 @@ def packages(state, host, packages=None, present=True, latest=False):
         version_join=':',
         latest=latest,
     )
+
+
+@operation
+def install(state, host):
+    '''
+    Install choco (Chocolatey).
+    '''
+
+    yield 'Set-ExecutionPolicy Bypass -Scope Process -Force ;' \
+        'iex ((New-Object System.Net.WebClient).DownloadString' \
+        '("https://chocolatey.org/install.ps1"))'

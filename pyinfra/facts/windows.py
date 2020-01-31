@@ -73,6 +73,22 @@ class WindowsBios(FactBase):
         return bios
 
 
+def _format_windows(output):
+    lines = {}
+    for line in output:
+        # split line on ':'
+        line_data = line.split(':')
+        if len(line_data) > 1:
+            # we have a data line
+            this_key = line_data[0].strip()
+            this_data = line_data[1].strip()
+            if len(line_data) > 2:
+                # there was a ':' in the data, so reconstitute the value
+                this_data = ':'.join(line_data[1:]).strip()
+            lines[this_key] = this_data
+    return lines
+
+
 def _format_windows_for_key(primary_key, output, sort_by_key=False, return_primary_key=True):
     '''Format the windows powershell output that uses 'Format-Line'
        into a dict of dicts. Note: We will lower case and sort
@@ -339,3 +355,16 @@ class WindowsInstallerApplications(FactBase):
     @staticmethod
     def process(output):
         return _format_windows_for_key('IdentifyingNumber', output)
+
+
+class WindowsComputerInfo(FactBase):
+    '''
+    Returns the Windows info.
+    '''
+
+    command = 'Get-ComputerInfo | Format-List -Property *'
+    shell_executable = 'ps'
+
+    @staticmethod
+    def process(output):
+        return _format_windows(output)
