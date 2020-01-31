@@ -151,7 +151,6 @@ def windows_directory(
         raise OperationTypeError('Name must be a string')
 
     info = host.fact.windows_directory(name)
-    print('MIKE info:{}'.format(info))
 
     # Not a directory?!
     if info is False:
