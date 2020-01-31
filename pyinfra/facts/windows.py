@@ -25,6 +25,20 @@ class WindowsHostname(FactBase):
     command = 'hostname'
 
 
+class WindowsLastReboot(FactBase):
+    '''
+    Returns the date and time of the last reboot.
+    '''
+
+    command = 'Get-CimInstance -ClassName Win32_OperatingSystem | '\
+              'Select -ExpandProperty LastBootUptime'
+    shell_executable = 'ps'
+
+    @staticmethod
+    def process(output):
+        return ''.join(output).replace('\n', '')
+
+
 class WindowsOs(FactBase):
     '''
     Returns the OS name according to ``systeminfo``.

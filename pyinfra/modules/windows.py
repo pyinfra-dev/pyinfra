@@ -48,3 +48,12 @@ def service(state, host, name, running=True):
         yield 'Start-Service -Name {0}'.format(name)
     else:
         yield 'Stop-Service -Name {0}'.format(name)
+
+
+@operation
+def reboot(state, host):
+    '''
+    Restart the server.
+    '''
+    # TODO: shell_executable = 'ps'
+    yield 'Restart-Computer -Force'
