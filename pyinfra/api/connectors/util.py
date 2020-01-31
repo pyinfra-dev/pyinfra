@@ -128,7 +128,7 @@ def make_unix_command(
     Builds a shell command with various kwargs.
     '''
 
-    if shell_executable is None:
+    if shell_executable is None or not isinstance(shell_executable, six.string_types):
         shell_executable = 'sh'
 
     debug_meta = {}
