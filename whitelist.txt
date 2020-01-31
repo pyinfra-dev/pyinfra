@@ -12,9 +12,11 @@ Apk
 Autodetect
 Autogenerate
 BLOCKSIZE
+CHOCO
 COMPAT
 CTID
 CTRL
+Choco
 Cim
 ComputerSystem
 Cpus
@@ -102,6 +104,7 @@ centos
 certificate
 cfg
 chdir
+choco
 chown
 comparator
 compat
