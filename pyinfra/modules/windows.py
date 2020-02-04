@@ -16,8 +16,7 @@ from pyinfra.api import operation
 # ex: 'Get-Help Stop-Service -Detailed'
 # ex: 'Get-Help Stop-Service -Full'
 
-# TODO: for processes
-# Stop-Process <id>
+# FUTURE: add ability to stop processes (ex: "Stop-Process <id>")
 
 
 @operation
@@ -39,8 +38,6 @@ def service(state, host, name, running=True, restart=False, suspend=False):
         )
     '''
 
-    # TODO: how to set this? (for now, override using cli)
-    # shell_executable = 'ps'
     if suspend or not running:
         if suspend:
             yield 'Suspend-Service -Name {0}'.format(name)
@@ -59,5 +56,4 @@ def reboot(state, host):
     '''
     Restart the server.
     '''
-    # TODO: shell_executable = 'ps'
     yield 'Restart-Computer -Force'

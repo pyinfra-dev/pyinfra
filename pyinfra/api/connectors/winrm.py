@@ -38,7 +38,7 @@ def _make_winrm_kwargs(state, host):
     if host.data.winrm_password:
         kwargs['password'] = host.data.winrm_password
 
-    # TODO: add more auth
+    # FUTURE: add more auth
     # pywinrm supports: basic, certificate, ntlm, kerberos, plaintext, ssl, credssp
     # see https://github.com/diyan/pywinrm/blob/master/winrm/__init__.py#L12
 
@@ -60,16 +60,15 @@ def connect(state, host):
     kwargs = _make_winrm_kwargs(state, host)
     logger.debug('Connecting to: {0} ({1})'.format(host.name, kwargs))
 
-    # TODO: create a ~/.winrm/config file?
     # Hostname can be provided via winrm config (alias), data, or the hosts name
     hostname = kwargs.pop(
         'hostname',
         host.data.winrm_hostname or host.name,
     )
 
-    logger.debug('winrm_username:{}'.format(host.data.winrm_username))
-    logger.debug('winrm_password:{}'.format(host.data.winrm_password))
-    logger.debug('winrm_port:{}'.format(host.data.winrm_port))
+    logger.debug('winrm_username:{} winrm_password:{} '
+                 'winrm_port:{}'.format(host.data.winrm_username, host.data.winrm_password,
+                                        host.data.winrm_port))
 
     try:
         # Create new session
@@ -141,8 +140,7 @@ def run_shell_command(
         print_output (boolean): print the output
         TODO print_intput (boolean): print the input
         return_combined_output (boolean): combine the stdout and stderr lists
-    TODO: if using winrm connector, default the shell to 'cmd' instead of 'sh'?
-        shell_executable (string): shell to use ('sh'=cmd, 'ps'=powershell)
+        shell_executable (string): shell to use - 'sh'=cmd, 'ps'=powershell(default)
         env (dict): envrionment variables to set
 
     Returns:
@@ -160,13 +158,15 @@ def run_shell_command(
     if print_output:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
+    if not shell_executable:
+        shell_executable = 'ps'
     logger.debug('shell_executable:{0}'.format(shell_executable))
 
-    # If we explicitly request, execute as a powershell script
-    if shell_executable in ['ps', 'powershell']:
-        response = host.connection.run_ps(tmp_command)
-    else:
+    # default windows to use ps, but allow it to be overridden
+    if shell_executable in ['cmd']:
         response = host.connection.run_cmd(tmp_command)
+    else:
+        response = host.connection.run_ps(tmp_command)
 
     return_code = response.status_code
     logger.debug('response:{}'.format(response))

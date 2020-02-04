@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import re
-from collections import OrderedDict
 from datetime import datetime
 
 from dateutil.parser import parse as parse_date
@@ -15,6 +14,11 @@ class WindowsHome(FactBase):
     '''
 
     command = 'echo %HOMEPATH%'
+    shell_executable = 'cmd'
+
+    @staticmethod
+    def process(output):
+        return ''.join(output).replace('\n', '')
 
 
 class WindowsHostname(FactBase):
@@ -24,6 +28,10 @@ class WindowsHostname(FactBase):
 
     command = 'hostname'
 
+    @staticmethod
+    def process(output):
+        return ''.join(output).replace('\n', '')
+
 
 class WindowsLastReboot(FactBase):
     '''
@@ -32,7 +40,6 @@ class WindowsLastReboot(FactBase):
 
     command = 'Get-CimInstance -ClassName Win32_OperatingSystem | '\
               'Select -ExpandProperty LastBootUptime'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
@@ -61,7 +68,6 @@ class WindowsBios(FactBase):
     '''
 
     command = 'Get-CimInstance -ClassName Win32_BIOS'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
@@ -89,13 +95,11 @@ def _format_windows(output):
     return lines
 
 
-def _format_windows_for_key(primary_key, output, sort_by_key=False, return_primary_key=True):
+def _format_windows_for_key(primary_key, output, return_primary_key=True):
     '''Format the windows powershell output that uses 'Format-Line'
-       into a dict of dicts. Note: We will lower case and sort
-       the keys to make it easier to use programmatically.
+       into a dict of dicts.
     '''
     primary_key = primary_key.strip()
-    # TODO primary_key = primary_key.lower().strip()
     lines = {}
     one_item = {}
     key_value = ''
@@ -105,7 +109,6 @@ def _format_windows_for_key(primary_key, output, sort_by_key=False, return_prima
         if len(line_data) > 1:
             # we have a data line
             this_key = line_data[0].strip()
-            # TODO this_key = line_data[0].strip().lower()
             this_data = line_data[1].strip()
             if len(line_data) > 2:
                 # there was a ':' in the data, so reconstitute the value
@@ -117,12 +120,7 @@ def _format_windows_for_key(primary_key, output, sort_by_key=False, return_prima
         else:
             # we probably came across a blank line, write the line of data
             if one_item:
-                if sort_by_key:
-                    one_item_sorted = OrderedDict(sorted(one_item.items(), key=lambda t: t[0]))
-                    lines[key_value] = one_item_sorted
-                else:
-                    # preserve insertion order
-                    lines[key_value] = one_item
+                lines[key_value] = one_item
                 one_item = {}
                 key_value = ''
     if return_primary_key:
@@ -137,7 +135,6 @@ class WindowsProcessors(FactBase):
     '''
 
     command = 'Get-CimInstance -ClassName Win32_Processor | Format-List -Property *'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
@@ -182,6 +179,7 @@ class WindowsDate(FactBase):
     '''
 
     command = 'echo %date%-%time%'
+    shell_executable = 'cmd'
     default = datetime.now
 
     @staticmethod
@@ -215,6 +213,8 @@ class WindowsWhere(FactBase):
     Returns the full path for a command, if available.
     '''
 
+    shell_executable = 'cmd'
+
     @staticmethod
     def command(name):
         return 'where {0}'.format(name)
@@ -230,7 +230,6 @@ class WindowsHotfixes(FactBase):
     '''
 
     command = 'Get-CimInstance -ClassName Win32_QuickFixEngineering | Format-List -Property *'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
@@ -244,7 +243,6 @@ class WindowsLocalDrivesInfo(FactBase):
 
     command = 'Get-CimInstance -ClassName Win32_LogicalDisk -Filter "DriveType=3" '\
               '| Format-List -Property *'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
@@ -258,7 +256,6 @@ class WindowsLoggedInUserInfo(FactBase):
 
     command = 'Get-CimInstance -ClassName Win32_ComputerSystem -Property UserName ' \
               '| Format-List -Property *'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
@@ -271,7 +268,6 @@ class WindowsLogonSessionInfo(FactBase):
     '''
 
     command = 'Get-CimInstance -ClassName Win32_LogonSession | Format-List -Property *'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
@@ -284,11 +280,10 @@ class WindowsAliases(FactBase):
     '''
 
     command = 'Get-Alias | Format-List -Property *'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
-        return _format_windows_for_key('Definition', output)
+        return _format_windows_for_key('Name', output)
 
 
 class WindowsServices(FactBase):
@@ -297,7 +292,6 @@ class WindowsServices(FactBase):
     '''
 
     command = 'Get-CimInstance -ClassName Win32_Service | Format-List -Property *'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
@@ -308,8 +302,6 @@ class WindowsService(FactBase):
     '''
     Returns info about a Windows service.
     '''
-
-    shell_executable = 'ps'
 
     def command(self, name):
         return 'Get-Service -Name {} | Format-List -Property *'.format(name)
@@ -324,7 +316,6 @@ class WindowsProcesses(FactBase):
     '''
 
     command = 'Get-Process | Format-List -Property *'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
@@ -337,7 +328,6 @@ class WindowsNetworkConfiguration(FactBase):
     '''
 
     command = 'Get-CimInstance -Class Win32_NetworkAdapterConfiguration | Format-List -Property *'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
@@ -350,7 +340,6 @@ class WindowsInstallerApplications(FactBase):
     '''
 
     command = 'Get-CimInstance -Class Win32_Product | Format-List -Property *'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
@@ -363,7 +352,6 @@ class WindowsComputerInfo(FactBase):
     '''
 
     command = 'Get-ComputerInfo | Format-List -Property *'
-    shell_executable = 'ps'
 
     @staticmethod
     def process(output):
