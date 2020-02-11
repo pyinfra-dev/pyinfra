@@ -474,7 +474,7 @@ def get(
 def put(
     state, host, local_filename, remote_filename,
     user=None, group=None, mode=None, add_deploy_dir=True,
-    create_remote_dir=False, force=False,
+    create_remote_dir=False, force=False, assume_exists=False,
 ):
     '''
     Upload a local file to the remote system.
@@ -487,6 +487,7 @@ def put(
     + add_deploy_dir: local_filename is relative to the deploy directory
     + create_remote_dir: create the remote directory if it doesn't exist
     + force: always upload the file, even if the remote copy matches
+    + assume_exists: whether to assume the local file exists
 
     ``create_remote_dir``:
         If the remote directory does not exist it will be created using the same
@@ -523,7 +524,7 @@ def put(
 
         local_file = local_filename
 
-        if not path.isfile(local_file):
+        if not assume_exists and not path.isfile(local_file):
             raise IOError('No such file: {0}'.format(local_file))
 
     mode = ensure_mode_int(mode)
