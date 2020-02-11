@@ -82,13 +82,17 @@ def download(
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
-        # Only use wget if we don't find curl but do find wget, default to curl
-        if host.fact.which('curl') or not host.fact.which('wget'):
-            yield 'curl -sSf {0} -o {1}'.format(source_url, destination)
+        curl_command = 'curl -sSf {0} -o {1}'.format(source_url, destination)
+        wget_command = 'wget -q {0} -O {1} || rm -f {1}; exit 1'.format(
+            source_url, destination,
+        )
+
+        if host.fact.which('curl'):
+            yield curl_command
+        elif host.fact.which('wget'):
+            yield wget_command
         else:
-            yield 'wget -q {0} -O {1} || rm -f {1}; exit 1'.format(
-                source_url, destination,
-            )
+            yield '({0}) || ({1})'.format(curl_command, wget_command)
 
         if user or group:
             yield chown(destination, user, group)
