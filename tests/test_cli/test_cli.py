@@ -230,7 +230,8 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 operations=['server.shell', 'echo hi'],
                 verbosity=0, user=None, port=None, key=None, key_password=None,
                 password=None, sudo=False, sudo_user=None, su_user=None, parallel=None,
-                fail_percent=0, dry=False, limit=None, no_wait=False, serial=False,
+                fail_percent=0, dry=False, limit=None,
+                no_wait=False, serial=False, quiet=False,
                 debug=False, debug_data=False, debug_facts=False, debug_operations=False,
             )
             assert e.args == (0,)
