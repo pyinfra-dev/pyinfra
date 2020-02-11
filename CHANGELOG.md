@@ -1,3 +1,10 @@
+# v0.13.5
+
++ Improve use of `curl` and/or `wget` in `files.download` operation
++ Add `assume_exists` argument to `files.put` operaton
++ Ensure `@local` connector adds the host to the `@local` group
++ Add `--quiet` CLI flag to hide most output
+
 # v0.13.4
 
 + Improve `pyinfra --support` output (@mkinney)
