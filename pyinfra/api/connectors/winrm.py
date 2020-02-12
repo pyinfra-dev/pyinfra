@@ -5,7 +5,7 @@ import winrm
 
 from pyinfra import logger
 from pyinfra.api import Config
-from pyinfra.api.exceptions import ConnectError
+from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.api.util import memoize
 
 from .util import make_win_command
@@ -201,13 +201,11 @@ def get_file(
     state, host, remote_filename, filename_or_io,
     **command_kwargs
 ):
-    # TODO: implement
-    return True
+    raise PyinfraError('Not implemented')
 
 
 def put_file(
     state, host, filename_or_io, remote_filename,
     **command_kwargs
 ):
-    # TODO: implement
-    return True
+    raise PyinfraError('Not implemented')
