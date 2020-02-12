@@ -192,9 +192,7 @@
                 "ModuleName": "",
                 "Module": "",
                 "RemotingCapability": "PowerShell",
-                "Parameters": "{[Name, System.Management.Automation.ParameterMetadata], [PassThru,"
-            },
-            "": {
+                "Parameters": "{[Name, System.Management.Automation.ParameterMetadata], [PassThru,System.Management.Automation.ParameterMetadata], [Verbose,System.Management.Automation.ParameterMetadata], [Debug,System.Management.Automation.ParameterMetadata]...}",
                 "ParameterSets": ""
             },
             "cat": {
@@ -254,7 +252,8 @@
                 "ModuleName": "Microsoft.PowerShell.Utility",
                 "Module": "Microsoft.PowerShell.Utility",
                 "RemotingCapability": "PowerShell",
-                "Parameters": "{[Delimiter, System.Management.Automation.ParameterMetadata], [PropertyNames,"
+                "Parameters": "{[Delimiter, System.Management.Automation.ParameterMetadata], [PropertyNames,System.Management.Automation.ParameterMetadata], [TemplateFile,System.Management.Automation.ParameterMetadata], [TemplateContent,System.Management.Automation.ParameterMetadata]...}",
+                "ParameterSets": ""
             },
             "chdir": {
                 "HelpUri": "",

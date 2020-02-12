@@ -118,11 +118,16 @@ def _format_windows_for_key(primary_key, output, return_primary_key=True):
             else:
                 key_value = this_data
         else:
-            # we probably came across a blank line, write the line of data
-            if one_item:
-                lines[key_value] = one_item
-                one_item = {}
-                key_value = ''
+            if line == '':
+                if one_item:
+                    lines[key_value] = one_item
+                    one_item = {}
+                    key_value = ''
+            else:
+                # append this_data to the existing entry
+                this_data = line.strip()
+                appended_data = one_item[this_key] + this_data
+                one_item.update({this_key: appended_data})
     if return_primary_key:
         return {primary_key: lines}
     else:
