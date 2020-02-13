@@ -1,0 +1,51 @@
+#compdef _pyinfra pyinfra
+
+# zsh completion script for pyinfra
+#
+# 1. To use, create a directory:
+#       mkdir ~/.zsh-completions
+# 2. Add these lines to ~/.zshrc (without the leading "#")
+#       fpath=($HOME/.zsh-completions $fpath)
+#       enable autocomplete function
+#       autoload -U compinit
+#       compinit
+# 3. Copy script into place:
+#       cp scripts/_pyinfra ~/.zsh-completions/
+# 4. Reload zsh (or start a new shell)
+#       exec zsh
+
+function _pyinfra {
+  local line
+
+  _arguments -C \
+    "-h[Show help information]" \
+    "--help[Show help information]" \
+    "--debug[Show debug info]" \
+    "--debug-data[Show data debug info]" \
+    "--debug-facts[Show facts debug info]" \
+    "--debug-operations[Show operations debug info]" \
+    "--debug-state[Show state debug info]" \
+    "--dry[Dry run only. Don't execute operations on the target hosts]" \
+    "--facts[Print available facts]" \
+    "--fail-percent[% of hosts allowed to fail]" \
+    "--key=[private key filename]" \
+    "--key-password=[Private key password]" \
+    "--limit[Restrict the target hosts by name and group name]" \
+    "--no-wait[Don't wait between operations for hosts to complete]" \
+    "--operations[Print available operations list and exit]" \
+    "--parallel=[NUMBER of operations to run in parallel]" \
+    "--password=[PASSWORD to use for SSH]" \
+    "--port=[PORT to use for SSH]" \
+    "--quiet[Print minimal output during exec]" \
+    "--su-user=[USER to use for su]" \
+    "--sudo[Whether to execute operations with sudo]" \
+    "--sudo-user=[USER to use for sudo]" \
+    "--support[Print useful info for support]" \
+    "--version[Show version info]" \
+    "--help[Show help info]" \
+    "--user=[USERNAME for ssh]" \
+    "-v[Print stdout and stderr from operations/facts]"\
+    "1: :(exec fact all-facts)" \
+    "*::arg:->args"
+}
+# vim: ft=zsh sw=2 ts=2 et

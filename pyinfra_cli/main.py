@@ -98,7 +98,7 @@ def _print_support(ctx, param, value):
 @click.option('--user', help='SSH user to connect as.')
 @click.option('--port', type=int, help='SSH port to connect to.')
 @click.option('--key', type=click.Path(), help='Private key filename.')
-@click.option('--key-password', help='Privte key password.')
+@click.option('--key-password', help='Private key password.')
 @click.option('--password', help='SSH password.')
 @click.option(
     '--sudo', is_flag=True, default=False,
