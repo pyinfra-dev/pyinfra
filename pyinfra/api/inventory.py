@@ -33,6 +33,9 @@ class Inventory(object):
         ssh_key: override SSH key filename
         ssh_key_password: override password for the SSH key
         ssh_password: override SSH password
+        winrm_username: override WINRM username
+        winrm_password: override WINRM pasword
+        winrm_port: override WINRM port
         **groups: map of group names -> ``(names, data)``
     '''
 
@@ -41,7 +44,10 @@ class Inventory(object):
     def __init__(
         self, names_data,
         ssh_user=None, ssh_port=None, ssh_key=None,
-        ssh_key_password=None, ssh_password=None, **groups
+        ssh_key_password=None, ssh_password=None,
+        winrm_username=None, winrm_password=None,
+        winrm_port=None,
+        **groups
     ):
         # Setup basics
         self.groups = defaultdict(list)  # lists of Host objects
@@ -55,6 +61,9 @@ class Inventory(object):
             'ssh_key_password': ssh_key_password,
             'ssh_port': ssh_port,
             'ssh_password': ssh_password,
+            'winrm_username': winrm_username,
+            'winrm_password': winrm_password,
+            'winrm_port': winrm_port,
         }
         # Strip None values
         override_data = {

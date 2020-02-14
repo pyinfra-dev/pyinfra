@@ -35,7 +35,7 @@ def generate_env(config, value):
 
 operation_kwargs = {
     'shell_executable': {
-        'description': 'The shell executable to use.',
+        'description': 'The shell to use. Defaults to ``sh`` (Unix) or ``cmd`` (Windows).',
         'default': lambda config: config.SHELL,
     },
     'env': {

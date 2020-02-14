@@ -12,6 +12,9 @@ from nose.tools import nottest
 from pyinfra.api.facts import FACTS, ShortFactBase
 from pyinfra_cli.util import json_encode
 
+# show full diff on json
+TestCase.maxDiff = None
+
 
 @nottest
 def make_fact_tests(fact_name):

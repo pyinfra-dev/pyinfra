@@ -1,0 +1,17 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "windows_directory": {
+            "testdir": {
+                "type": "directory"
+            }
+        }
+    },
+    "commands": [
+        "Get-ChildItem testdir -Recurse | Remove-Item",
+        "Remove-Item testdir"
+    ]
+}

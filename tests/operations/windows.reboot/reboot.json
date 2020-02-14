@@ -1,0 +1,5 @@
+{
+    "commands": [
+        "Restart-Computer -Force"
+    ]
+}

@@ -7,9 +7,9 @@ import six
 
 from pyinfra import logger
 from pyinfra.api.exceptions import InventoryError
-from pyinfra.api.util import get_file_io, make_command
+from pyinfra.api.util import get_file_io
 
-from .util import run_local_process, split_combined_output
+from .util import make_unix_command, run_local_process, split_combined_output
 
 
 def make_names_data(hostname=None):
@@ -51,7 +51,7 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
-    command = make_command(command, **command_kwargs)
+    command = make_unix_command(command, **command_kwargs)
 
     logger.debug('--> Running command on localhost: {0}'.format(command))
 

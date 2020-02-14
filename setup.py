@@ -27,6 +27,7 @@ INSTALL_REQUIRES = (
     'six>1,<2',
     'setuptools',
     'configparser',
+    'pywinrm',
 )
 
 TEST_REQUIRES = (
