@@ -25,3 +25,4 @@ Submodules
    pyinfra.api.connectors.ssh
    pyinfra.api.connectors.util
    pyinfra.api.connectors.vagrant
+   pyinfra.api.connectors.winrm
