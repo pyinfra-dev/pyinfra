@@ -1,3 +1,12 @@
+# v0.14
+
++ Add `@winrm` connector, allowing pyinfra to manage Windows instances (@mkinney)
+    * Add **windows** module
+    * Add **windows_files** module
+    * Add many `Windows*` facts
++ Follow redirects when using `curl` in `files.download` operation
+
+
 # v0.13.5
 
 + Improve use of `curl` and/or `wget` in `files.download` operation
