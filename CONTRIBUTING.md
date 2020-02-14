@@ -45,11 +45,15 @@ Use `pytest` to run tests, or `pytest --cov` to run with coverage.
 
 ## Want code completion?
 
-See `scripts/pyinfra-complete.sh` or:
+For bash, see `scripts/pyinfra-complete.sh` or `source scripts/pyinfra-complete.sh`.
 
+For zsh, see `scripts/pyinfra-complete.sh` or `source scripts/pyinfra-complete.zsh`.
 
-```sh
-eval "$(_PYINFRA_COMPLETE=source pyinfra)"
+These were generated using these commands:
+
+```
+env _PYINFRA_COMPLETE=source pyinfra > pyinfra-complete.sh
+env _PYINFRA_COMPLETE=source_zsh pyinfra > pyinfra-complete.zsh
 ```
 
 ## Guides
