@@ -1,27 +1,21 @@
-#!/usr/bin/env bash
-#
-# bash completion file for pyinfra
-#
-# This script provides completion of:
-#  - commands and their options
-#
-# To enable the completions ensure that this
-# file (pyinfra-complete.sh) is sourced. For example:
-# run something like this: (where you change the path)
-#    echo "source /full_path_to/pyinfra-complete.sh" >> ~/.bashrc
-#
-_pyinfra() {
-  local cur prev opts base commands
-  COMPREPLY=()
-  cur="${COMP_WORDS[COMP_CWORD]}"
-  prev="${COMP_WORDS[COMP_CWORD-1]}"
-
-  #  Options that will complete
-  opts="exec fact all-facts"
-
-  commands="--debug --debug-data --debug-facts --debug-operations --debug-state --dry --facts --fail-percent --key --key-password --limit --no-wait --operations --parallel --password --port --quiet --su --su-user --sudo --sudo-user --support --version --help --user -v"
-  COMPREPLY=($(compgen -W "${commands} ${opts}" -- ${cur}))
+_pyinfra_completion() {
+    local IFS=$'
+'
+    COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \
+                   COMP_CWORD=$COMP_CWORD \
+                   _PYINFRA_COMPLETE=complete $1 ) )
+    return 0
 }
 
-complete -F _pyinfra pyinfra
-# vim: ft=bash sw=2 ts=2 et
+_pyinfra_completionetup() {
+    local COMPLETION_OPTIONS=""
+    local BASH_VERSION_ARR=(${BASH_VERSION//./ })
+    # Only BASH version 4.4 and later have the nosort option.
+    if [ ${BASH_VERSION_ARR[0]} -gt 4 ] || ([ ${BASH_VERSION_ARR[0]} -eq 4 ] && [ ${BASH_VERSION_ARR[1]} -ge 4 ]); then
+        COMPLETION_OPTIONS="-o nosort"
+    fi
+
+    complete $COMPLETION_OPTIONS -F _pyinfra_completion pyinfra
+}
+
+_pyinfra_completionetup;

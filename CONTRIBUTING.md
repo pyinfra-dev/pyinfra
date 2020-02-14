@@ -47,7 +47,14 @@ Use `pytest` to run tests, or `pytest --cov` to run with coverage.
 
 For bash, see `scripts/pyinfra-complete.sh` or `source scripts/pyinfra-complete.sh`.
 
-For zsh, see `scripts/_pyinfra`.
+For zsh, see `scripts/pyinfra-complete.sh` or `source scripts/pyinfra-complete.zsh`.
+
+These were generated using these commands:
+
+```
+env _PYINFRA_COMPLETE=source pyinfra > pyinfra-complete.sh
+env _PYINFRA_COMPLETE=source_zsh pyinfra > pyinfra-complete.zsh
+```
 
 ## Guides
 
