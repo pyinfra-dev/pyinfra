@@ -9,6 +9,6 @@
         }
     },
     "commands": [
-        "curl -sSf http://somesite/somerepo.repo -o /etc/yum.repos.d/somerepo.repo"
+        "curl -sSLf http://somesite/somerepo.repo -o /etc/yum.repos.d/somerepo.repo"
     ]
 }
