@@ -23,6 +23,7 @@ from pyinfra.api import operation
 def service(state, host, name, running=True, restart=False, suspend=False):
     '''
     Stop/Start a Windows service.
+
     + name: name of the service to manage
     + running: whether the the service should be running or stopped
     + restart: whether the the service should be restarted
@@ -31,6 +32,7 @@ def service(state, host, name, running=True, restart=False, suspend=False):
     Example:
 
     .. code:: python
+
         windows.service(
             {'Stop the spooler service'},
             'service',
