@@ -96,10 +96,14 @@ def _print_support(ctx, param, value):
     help='Print std[out|err] from operations/facts.',
 )
 @click.option('--user', help='SSH user to connect as.')
+@click.option('--shell-executable', help='shell to use (ex: "sh", "cmd", "ps")')
 @click.option('--port', type=int, help='SSH port to connect to.')
 @click.option('--key', type=click.Path(), help='Private key filename.')
 @click.option('--key-password', help='Privte key password.')
 @click.option('--password', help='SSH password.')
+@click.option('--winrm-username', help='WINRM user to connect as.')
+@click.option('--winrm-password', help='WINRM password.')
+@click.option('--winrm-port', help='WINRM port to connect to.')
 @click.option(
     '--sudo', is_flag=True, default=False,
     help='Whether to execute operations with sudo.',
@@ -123,6 +127,10 @@ def _print_support(ctx, param, value):
 @click.option(
     '--serial', is_flag=True, default=False,
     help='Run operations in serial, host by host.',
+)
+@click.option(
+    '--quiet', is_flag=True, default=False,
+    help='Hide most pyinfra output',
 )
 # Eager commands (pyinfra [--facts | --operations | --support | --version])
 @click.option(
@@ -240,9 +248,11 @@ def main(*args, **kwargs):
 def _main(
     inventory, operations, verbosity,
     user, port, key, key_password, password,
+    winrm_username, winrm_password, winrm_port,
+    shell_executable,
     sudo, sudo_user, su_user,
     parallel, fail_percent,
-    dry, limit, no_wait, serial,
+    dry, limit, no_wait, serial, quiet,
     debug, debug_data, debug_facts, debug_operations,
     facts=None, print_operations=None, support=None,
 ):
@@ -250,7 +260,12 @@ def _main(
         warnings.simplefilter('ignore')
 
     # Setup logging
-    log_level = logging.DEBUG if debug else logging.INFO
+    log_level = logging.INFO
+    if debug:
+        log_level = logging.DEBUG
+    elif quiet:
+        log_level = logging.WARNING
+
     setup_logging(log_level)
 
     # Bootstrap any virtualenv
@@ -368,14 +383,18 @@ def _main(
     pseudo_state.set(state)
 
     # Setup printing on the new state
-    print_output = verbosity > 0
-    print_fact_output = verbosity > 1
+    print_operation_io = verbosity > 0
+    print_fact_io = verbosity > 1
 
-    state.print_output = print_output  # -v
-    state.print_fact_info = print_output  # -v
-    state.print_fact_output = print_fact_output  # -vv
+    state.print_output = print_operation_io  # -v
+    state.print_input = print_operation_io  # -v
+    state.print_fact_info = print_operation_io  # -v
 
-    click.echo('--> Loading config...')
+    state.print_fact_output = print_fact_io  # -vv
+    state.print_fact_input = print_fact_io  # -vv
+
+    if not quiet:
+        click.echo('--> Loading config...')
 
     # Load up any config.py from the filesystem
     config = load_config(deploy_dir)
@@ -396,10 +415,14 @@ def _main(
     if parallel:
         config.PARALLEL = parallel
 
+    if shell_executable:
+        config.SHELL = shell_executable
+
     if fail_percent is not None:
         config.FAIL_PERCENT = fail_percent
 
-    click.echo('--> Loading inventory...')
+    if not quiet:
+        click.echo('--> Loading inventory...')
 
     # Load up the inventory from the filesystem
     inventory, inventory_group = make_inventory(
@@ -410,6 +433,9 @@ def _main(
         ssh_key=key,
         ssh_key_password=key_password,
         ssh_password=password,
+        winrm_username=winrm_username,
+        winrm_password=winrm_password,
+        winrm_port=winrm_port,
     )
 
     # Apply any --limit to the inventory
@@ -456,8 +482,9 @@ def _main(
     run_hook(state, 'before_connect', hook_data)
 
     # Connect to all the servers
-    click.echo()
-    click.echo('--> Connecting to hosts...')
+    if not quiet:
+        click.echo()
+        click.echo('--> Connecting to hosts...')
     connect_all(state)
 
     # Run the before_connect hook if provided
@@ -467,14 +494,16 @@ def _main(
     #
 
     if command == 'fact':
-        click.echo()
-        click.echo('--> Gathering facts...')
+        if not quiet:
+            click.echo()
+            click.echo('--> Gathering facts...')
 
         # Print facts as we get them
         state.print_fact_info = True
 
         # Print fact output with -v
-        state.print_fact_output = print_output
+        state.print_fact_output = print_operation_io
+        state.print_fact_input = print_operation_io
 
         fact_data = {}
 
@@ -503,8 +532,9 @@ def _main(
 
     # Deploy files(s)
     elif command == 'deploy':
-        click.echo()
-        click.echo('--> Preparing operations...')
+        if not quiet:
+            click.echo()
+            click.echo('--> Preparing operations...')
 
         # Number of "steps" to make = number of files * number of hosts
         for i, filename in enumerate(operations):
@@ -514,8 +544,9 @@ def _main(
 
     # Operation w/optional args
     elif command == 'op':
-        click.echo()
-        click.echo('--> Preparing operation...')
+        if not quiet:
+            click.echo()
+            click.echo('--> Preparing operation...')
 
         op, args = operations
 
@@ -525,8 +556,9 @@ def _main(
         )
 
     # Always show meta output
-    click.echo()
-    click.echo('--> Proposed changes:')
+    if not quiet:
+        click.echo()
+        click.echo('--> Proposed changes:')
     print_meta(state)
 
     # If --debug-facts or --debug-operations, print and exit
@@ -543,18 +575,21 @@ def _main(
     if dry:
         _exit()
 
-    click.echo()
+    if not quiet:
+        click.echo()
 
     # Run the before_deploy hook if provided
     run_hook(state, 'before_deploy', hook_data)
 
-    click.echo('--> Beginning operation run...')
+    if not quiet:
+        click.echo('--> Beginning operation run...')
     run_ops(state, serial=serial, no_wait=no_wait)
 
     # Run the after_deploy hook if provided
     run_hook(state, 'after_deploy', hook_data)
 
-    click.echo('--> Results:')
+    if not quiet:
+        click.echo('--> Results:')
     print_results(state)
 
     _exit()

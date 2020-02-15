@@ -1,0 +1,14 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "recursive": true
+    },
+    "facts": {
+        "windows_directory": {
+            "testdir": null
+        }
+    },
+    "commands": [
+        "mkdir -p testdir"
+    ]
+}

@@ -1,3 +1,26 @@
+# v0.14
+
++ Add `@winrm` connector, allowing pyinfra to manage Windows instances (@mkinney)
+    * Add **windows** module
+    * Add **windows_files** module
+    * Add many `Windows*` facts
++ Follow redirects when using `curl` in `files.download` operation
+
+
+# v0.13.5
+
++ Improve use of `curl` and/or `wget` in `files.download` operation
++ Add `assume_exists` argument to `files.put` operaton
++ Ensure `@local` connector adds the host to the `@local` group
++ Add `--quiet` CLI flag to hide most output
+
+# v0.13.4
+
++ Improve `pyinfra --support` output (@mkinney)
++ Add print input state flags and don't show input with `exec` command
++ Remove all ANSI escape codes from spinner on Windows
++ Reduce spinner interval to 0.2s
+
 # v0.13.3
 
 + Add `pyinfra --support`

@@ -6,8 +6,8 @@ from six.moves import shlex_quote
 
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
+from pyinfra.api.connectors.util import make_unix_command
 from pyinfra.api.exceptions import InventoryError, PyinfraError
-from pyinfra.api.util import make_command
 
 from ..util import make_inventory
 
@@ -87,7 +87,7 @@ class TestDockerConnector(TestCase):
 
         command = shlex_quote(command)
         docker_command = 'docker exec -i containerid sh -c {0}'.format(command)
-        shell_command = make_command(docker_command)
+        shell_command = make_unix_command(docker_command)
 
         self.fake_popen_mock.assert_called_with(
             shell_command, shell=True,

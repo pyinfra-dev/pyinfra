@@ -72,6 +72,7 @@ def run_shell_command(
     stdin=None,
     success_exit_codes=None,
     print_output=False,
+    print_input=False,
     return_combined_output=False,
     **kwargs  # ignored (sudo/etc)
 ):
@@ -85,13 +86,14 @@ def run_shell_command(
         stdin=stdin,
         success_exit_codes=success_exit_codes,
         print_output=print_output,
+        print_input=print_input,
         return_combined_output=return_combined_output,
     )
 
 
 def put_file(
     state, host, filename_or_io, remote_filename,
-    print_output=False,
+    print_output=False, print_input=False,
     **kwargs  # ignored (sudo/etc)
 ):
     '''
@@ -122,6 +124,7 @@ def put_file(
         status, _, stderr = run_local_shell_command(
             state, host, docker_command,
             print_output=print_output,
+            print_input=print_input,
         )
     finally:
         os.remove(temp_filename)
@@ -139,7 +142,7 @@ def put_file(
 
 def get_file(
     state, host, remote_filename, filename_or_io,
-    print_output=False,
+    print_output=False, print_input=False,
     **kwargs  # ignored (sudo/etc)
 ):
     '''
@@ -160,6 +163,7 @@ def get_file(
         status, _, stderr = run_local_shell_command(
             state, host, docker_command,
             print_output=print_output,
+            print_input=print_input,
         )
 
         # Load the temporary file and write it to our file or IO object

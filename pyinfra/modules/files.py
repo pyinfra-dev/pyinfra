@@ -30,7 +30,7 @@ def download(
     sha256sum=None, sha1sum=None, md5sum=None,
 ):
     '''
-    Download files from remote locations.
+    Download files from remote locations using curl or wget.
 
     + source_url: source URL of the file
     + destination: where to save the file
@@ -42,8 +42,6 @@ def download(
     + sha256sum: sha256 hash to checksum the downloaded file against
     + sha1sum: sha1 hash to checksum the downloaded file against
     + md5sum: md5 hash to checksum the downloaded file against
-
-    Note: Assumes wget is installed.
 
     Example:
 
@@ -84,9 +82,17 @@ def download(
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
-        yield 'curl -s {0} -o {1} 2> /dev/null || wget -q {0} -O {1}'.format(
+        curl_command = 'curl -sSLf {0} -o {1}'.format(source_url, destination)
+        wget_command = 'wget -q {0} -O {1} || rm -f {1}; exit 1'.format(
             source_url, destination,
         )
+
+        if host.fact.which('curl'):
+            yield curl_command
+        elif host.fact.which('wget'):
+            yield wget_command
+        else:
+            yield '({0}) || ({1})'.format(curl_command, wget_command)
 
         if user or group:
             yield chown(destination, user, group)
@@ -472,7 +478,7 @@ def get(
 def put(
     state, host, local_filename, remote_filename,
     user=None, group=None, mode=None, add_deploy_dir=True,
-    create_remote_dir=False, force=False,
+    create_remote_dir=False, force=False, assume_exists=False,
 ):
     '''
     Upload a local file to the remote system.
@@ -485,6 +491,7 @@ def put(
     + add_deploy_dir: local_filename is relative to the deploy directory
     + create_remote_dir: create the remote directory if it doesn't exist
     + force: always upload the file, even if the remote copy matches
+    + assume_exists: whether to assume the local file exists
 
     ``create_remote_dir``:
         If the remote directory does not exist it will be created using the same
@@ -521,7 +528,7 @@ def put(
 
         local_file = local_filename
 
-        if not path.isfile(local_file):
+        if not assume_exists and not path.isfile(local_file):
             raise IOError('No such file: {0}'.format(local_file))
 
     mode = ensure_mode_int(mode)

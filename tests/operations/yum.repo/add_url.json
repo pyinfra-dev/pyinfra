@@ -3,9 +3,12 @@
     "facts": {
         "file": {
             "/etc/yum.repos.d/somerepo.repo": null
+        },
+        "which": {
+            "curl": "yes"
         }
     },
     "commands": [
-        "curl -s http://somesite/somerepo.repo -o /etc/yum.repos.d/somerepo.repo 2> /dev/null || wget -q http://somesite/somerepo.repo -O /etc/yum.repos.d/somerepo.repo"
+        "curl -sSLf http://somesite/somerepo.repo -o /etc/yum.repos.d/somerepo.repo"
     ]
 }

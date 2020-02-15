@@ -8,10 +8,13 @@
     "facts": {
         "file": {
             "/home/myfile": null
+        },
+        "which": {
+            "curl": "yes"
         }
     },
     "commands": [
-        "curl -s http://myfile -o /home/myfile 2> /dev/null || wget -q http://myfile -O /home/myfile",
+        "curl -sSLf http://myfile -o /home/myfile",
         "chgrp mygroup /home/myfile",
         "chmod 777 /home/myfile"
     ]

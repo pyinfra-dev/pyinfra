@@ -17,6 +17,10 @@ pip install -e .[dev]
 
 # Configure git to use pre-commit hook
 flake8 --install-hook git
+
+# Install direnv (see https://direnv.net/ )
+# Note: The .env assumes the /path/to/venv is ./venv
+direnv allow
 ```
 
 ## Running pyinfra from local directory

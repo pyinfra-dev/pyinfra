@@ -1,0 +1,9 @@
+{
+    "args": ["notepadplusplus"],
+    "facts": {
+        "choco_packages": {}
+    },
+    "commands": [
+        "choco install -y notepadplusplus"
+    ]
+}

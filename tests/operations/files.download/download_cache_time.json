@@ -10,9 +10,12 @@
             "/home/myfile": {
                 "mtime": "datetime:2015-01-01T00:00:00"
             }
+        },
+        "which": {
+            "curl": "yes"
         }
     },
     "commands": [
-        "curl -s http://myfile -o /home/myfile 2> /dev/null || wget -q http://myfile -O /home/myfile"
+        "curl -sSLf http://myfile -o /home/myfile"
     ]
 }

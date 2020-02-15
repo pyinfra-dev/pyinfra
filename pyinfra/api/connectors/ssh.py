@@ -23,10 +23,15 @@ import pyinfra
 
 from pyinfra import logger
 from pyinfra.api.exceptions import ConnectError, PyinfraError
-from pyinfra.api.util import get_file_io, make_command, memoize
+from pyinfra.api.util import get_file_io, memoize
 
 from .sshuserclient import SSHClient
-from .util import read_buffers_into_queue, split_combined_output, write_stdin
+from .util import (
+    make_unix_command,
+    read_buffers_into_queue,
+    split_combined_output,
+    write_stdin,
+)
 
 
 def make_names_data(hostname):
@@ -206,6 +211,7 @@ def run_shell_command(
     stdin=None,
     success_exit_codes=None,
     print_output=False,
+    print_input=False,
     return_combined_output=False,
     **command_kwargs
 ):
@@ -227,13 +233,13 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
-    command = make_command(command, **command_kwargs)
+    command = make_unix_command(command, **command_kwargs)
 
     logger.debug('Running command on {0}: (pty={1}) {2}'.format(
         host.name, get_pty, command,
     ))
 
-    if print_output:
+    if print_input:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
     # Run it! Get stdout, stderr & the underlying channel
@@ -283,7 +289,8 @@ def _get_file(host, remote_filename, filename_or_io):
 
 def get_file(
     state, host, remote_filename, filename_or_io,
-    sudo=False, sudo_user=None, su_user=None, print_output=False,
+    sudo=False, sudo_user=None, su_user=None,
+    print_output=False, print_input=False,
     **command_kwargs
 ):
     '''
@@ -303,6 +310,7 @@ def get_file(
             state, host, command,
             sudo=sudo, sudo_user=sudo_user, su_user=su_user,
             print_output=print_output,
+            print_input=print_input,
             **command_kwargs
         )
 
@@ -320,6 +328,7 @@ def get_file(
                 state, host, 'rm -f {0}'.format(temp_file),
                 sudo=sudo, sudo_user=sudo_user, su_user=su_user,
                 print_output=print_output,
+                print_input=print_input,
                 **command_kwargs
             )
 
@@ -344,7 +353,8 @@ def _put_file(host, filename_or_io, remote_location):
 
 def put_file(
     state, host, filename_or_io, remote_filename,
-    sudo=False, sudo_user=None, su_user=None, print_output=False,
+    sudo=False, sudo_user=None, su_user=None,
+    print_output=False, print_input=False,
     **command_kwargs
 ):
     '''
@@ -374,6 +384,7 @@ def put_file(
             state, host, command,
             sudo=sudo, sudo_user=sudo_user, su_user=su_user,
             print_output=print_output,
+            print_input=print_input,
             **command_kwargs
         )
 

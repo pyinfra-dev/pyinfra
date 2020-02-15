@@ -69,6 +69,8 @@ class FactMeta(type):
 class FactBase(object):
     abstract = True
 
+    shell_executable = None
+
     @staticmethod
     def default():
         '''
@@ -122,6 +124,11 @@ def get_facts(state, name, args=None, ensure_hosts=None):
     sudo_user = state.config.SUDO_USER
     su_user = state.config.SU_USER
     ignore_errors = state.config.IGNORE_ERRORS
+    shell_executable = state.config.SHELL
+
+    # Facts can override the shell (winrm powershell vs cmd support)
+    if fact.shell_executable:
+        shell_executable = fact.shell_executable
 
     # Timeout for operations !== timeout for connect (config.CONNECT_TIMEOUT)
     timeout = None
@@ -178,9 +185,13 @@ def get_facts(state, name, args=None, ensure_hosts=None):
 
             greenlet = state.fact_pool.spawn(
                 host.run_shell_command, state, command,
-                sudo=sudo, sudo_user=sudo_user,
-                su_user=su_user, timeout=timeout,
+                sudo=sudo,
+                sudo_user=sudo_user,
+                su_user=su_user,
+                timeout=timeout,
+                shell_executable=shell_executable,
                 print_output=state.print_fact_output,
+                print_input=state.print_fact_input,
             )
             greenlet_to_host[greenlet] = host
 
