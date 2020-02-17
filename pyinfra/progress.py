@@ -24,9 +24,8 @@ TERMINAL_WIDTH = 0
 
 if IS_TTY:
     try:
-        from os import get_terminal_size
-        TERMINAL_WIDTH = get_terminal_size().columns
-    except ImportError:
+        TERMINAL_WIDTH = os.get_terminal_size().columns
+    except AttributeError:
         if not IS_WINDOWS:
             terminal_size = os.popen('stty size', 'r').read().split()
             if len(terminal_size) == 2:

@@ -198,7 +198,6 @@ def setup_op_and_args(op_string, args_string):
         # Either default to server.shell w/op as command if no args are passed
         if not args_string:
             args_string = op_string
-            op_bits = ['server', 'shell']
 
         # Or fail as it's an invalid op
         else:
