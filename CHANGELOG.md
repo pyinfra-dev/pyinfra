@@ -1,3 +1,8 @@
+# v0.14.1
+
++ Fix group names being passed to @connectors
++ Include group names in `debug-inventory` output
+
 # v0.14
 
 + Add `@winrm` connector, allowing pyinfra to manage Windows instances (@mkinney)
