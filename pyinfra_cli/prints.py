@@ -128,7 +128,9 @@ def print_inventory(state):
             continue
 
         click.echo()
-        click.echo('--> Data for: {0}'.format(click.style(host.name, bold=True)))
+        click.echo(host.print_prefix)
+        click.echo('--> Groups: {0}'.format(', '.join(host.groups)))
+        click.echo('--> Data:')
         click.echo(jsonify(host.data, indent=4, default=json_encode))
 
 
