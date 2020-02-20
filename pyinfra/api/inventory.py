@@ -127,8 +127,10 @@ class Inventory(object):
                     executor = EXECUTION_CONNECTORS[connector_name]
 
                 names_data = ALL_CONNECTORS[connector_name].make_names_data(arg_string)
+                connector_inventory_name = name
             else:
                 names_data = [(name, {}, [])]
+                connector_inventory_name = None
 
             for name, data, group_names in names_data:
                 # Make a copy of the host data, update with any from
@@ -140,6 +142,13 @@ class Inventory(object):
                 self.host_data[name] = sub_host_data
                 names_executors.append((name, executor))
                 name_to_group_names[name].extend(group_names)
+
+                # If we have a connector inventory name, copy any groups attached
+                # to the newly generated host name.
+                if connector_inventory_name:
+                    name_to_group_names[name].extend(
+                        name_to_group_names[connector_inventory_name],
+                    )
 
         # Now we can actually make Host instances
         hosts = {}
