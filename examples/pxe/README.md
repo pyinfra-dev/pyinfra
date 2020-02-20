@@ -4,6 +4,8 @@ over tftp.
 
 Used [this](https://graspingtech.com/network-install-ubuntu-18-04) as a starting point.
 
+Used [this](https://wiki.ubuntu.com/UEFI/PXE-netboot-install) to add UEFI booting.
+
 # To try it out
 
 To try this out:
@@ -20,7 +22,7 @@ To try this out:
 
 4. From this directory, run:
 
-    pyinfra --user vagrant --password vagrant 192.168.0.240 pxe_with_nfs_infra.py
+    pyinfra --user vagrant --password vagrant 192.168.0.240 pxe_infra.py
 
 # Testing
 
@@ -28,7 +30,7 @@ Test that it actually works from VMware by:
 
 1. Create a new custom virtual machine
 2. Linux/Other Linux 3.x kernel 64-bit
-3. Legacy BIOS
+3. Legacy BIOS or UEFI should work
 4. Accept defaults for VM
 5. Go into Network Adapter, and change to "Bridged Networking/Autodetect"
 
