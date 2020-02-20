@@ -10,7 +10,7 @@ if host.fact.linux_name in ['Debian', 'Ubuntu']:
 
     apt.packages(
         {'Install some packages'},
-        ['vim-addon-manager', 'vim', 'software-properties-common', 'wget', 'curl'],
+        ['vim-addon-manager', 'vim', 'software-properties-common', 'wget'],
         update=True,
     )
 

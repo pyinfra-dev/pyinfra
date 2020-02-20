@@ -81,7 +81,6 @@ Vagrantfile
 W605
 Win32
 addsitedir
-adhoc
 agentrequesthandler
 amd64
 anotherhost
@@ -210,7 +209,6 @@ mech
 memoize
 modprobe
 motd
-mult
 nameserver
 netboot
 netsh
