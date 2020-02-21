@@ -45,6 +45,27 @@ if host.fact.linux_name == 'Ubuntu':
         'chown -R nobody:nogroup {}'.format(tftp_dir),
     )
 
+    uefi_file = 'grubnetx64.efi.signed'
+    uefi_full_path = '{}/{}'.format(tftp_dir, uefi_file)
+    files.download(
+        {'Download `{}`'.format(uefi_file)},
+        'http://archive.ubuntu.com/ubuntu/dists/trusty/main/'
+        'uefi/grub2-amd64/current/grubnetx64.efi.signed',
+        uefi_full_path,
+    )
+
+    grub_dir = '{}/grub'.format(tftp_dir)
+    files.directory(
+        {'Ensure the `{}` exists'.format(grub_dir)},
+        grub_dir,
+    )
+
+    files.template(
+        {'Create a templated file'},
+        'templates/grub.cfg.j2',
+        '{}/grub.cfg'.format(grub_dir),
+    )
+
     # configure dnsmasq
     files.template(
         {'Create dnsmasq configuration file'},
