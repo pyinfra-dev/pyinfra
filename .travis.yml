@@ -14,7 +14,7 @@ install: 'pip install -e .[test]'
 
 script:
   - flake8
-  - pytest --cov
+  - pytest --cov -m"int or not int"
 
 after_success:
   - codecov
