@@ -1,10 +1,12 @@
 language: python
+
+services:
+    - docker
+
 python:
   - '2.7'
   - '3.5'
   - '3.6'
-
-services: docker
 
 # Enable 3.7 without globally enabling sudo and dist: xenial for other build jobs
 matrix:
