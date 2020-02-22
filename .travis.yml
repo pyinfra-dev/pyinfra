@@ -3,14 +3,15 @@ python:
   - '2.7'
   - '3.5'
   - '3.6'
+
+services: docker
+
 # Enable 3.7 without globally enabling sudo and dist: xenial for other build jobs
 matrix:
   include:
     - python: 3.7
       dist: xenial
       sudo: true
-
-services: docker
 
 install: 'pip install -e .[test]'
 
