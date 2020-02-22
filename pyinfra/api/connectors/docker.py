@@ -13,6 +13,7 @@ from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
 from .local import run_shell_command as run_local_shell_command
+from .util import make_unix_command
 
 
 @memoize
@@ -74,10 +75,19 @@ def run_shell_command(
     print_output=False,
     print_input=False,
     return_combined_output=False,
-    **kwargs  # ignored (sudo/etc)
+    **command_kwargs
 ):
     container_id = host.host_data['docker_container_id']
+
+    # Don't sudo/su in Docker - is this the right thing to do? Makes deploys that
+    # target SSH systems work w/Docker out of the box (ie most docker commands
+    # are run as root).
+    for key in ('sudo', 'su_user'):
+        command_kwargs.pop(key, None)
+
+    command = make_unix_command(command, **command_kwargs)
     command = shlex_quote(command)
+
     docker_command = 'docker exec -i {0} sh -c {1}'.format(container_id, command)
 
     return run_local_shell_command(

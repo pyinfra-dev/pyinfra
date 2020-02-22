@@ -310,6 +310,7 @@ tftp
 ubuntu
 ubuntu18
 udp
+uefi
 ufw
 uname
 unitialised
