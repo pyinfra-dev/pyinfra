@@ -1,3 +1,8 @@
+# v0.14.2
+
++ Improve PXE example (@mkinney)
++ Properly make commands when using the docker connector
+
 # v0.14.1
 
 + Fix group names being passed to @connectors
