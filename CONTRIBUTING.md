@@ -13,7 +13,7 @@ virtualenv /path/to/venv
 git clone git@github.com:Fizzadar/pyinfra.git
 
 # Install the package in editable mode with development requirements
-pip install -e .[dev]
+pip install -e ."[dev]"
 
 # Configure git to use pre-commit hook
 flake8 --install-hook git
