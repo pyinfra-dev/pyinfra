@@ -1,7 +1,7 @@
 import pytest
 
 
-@pytest.mark.int
+@pytest.mark.int_vagrant
 def test_int_vagrant(helpers):
     '''Test vagrant'''
     vagrant_dir = 'examples/vagrant'
