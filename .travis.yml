@@ -19,7 +19,7 @@ install: 'pip install -e .[test]'
 
 script:
   - flake8
-  - pytest --cov -m"int or not int and not vagrant"
+  - pytest --cov -m"not vagrant"
 
 after_success:
   - codecov
