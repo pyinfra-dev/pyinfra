@@ -85,6 +85,7 @@ class TestDockerConnector(TestCase):
         assert len(out) == 3
         assert out[0] is True
 
+        command = make_unix_command(command)
         command = shlex_quote(command)
         docker_command = 'docker exec -i containerid sh -c {0}'.format(command)
         shell_command = make_unix_command(docker_command)
