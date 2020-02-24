@@ -81,13 +81,18 @@ class TestDockerConnector(TestCase):
 
         host = inventory.get_host('@docker/not-an-image')
         host.connect(state)
-        out = host.run_shell_command(state, command, stdin='hello', print_output=True)
+        out = host.run_shell_command(
+            state, command,
+            stdin='hello',
+            get_pty=True,
+            print_output=True,
+        )
         assert len(out) == 3
         assert out[0] is True
 
         command = make_unix_command(command)
         command = shlex_quote(command)
-        docker_command = 'docker exec -i containerid sh -c {0}'.format(command)
+        docker_command = 'docker exec -it containerid sh -c {0}'.format(command)
         shell_command = make_unix_command(docker_command)
 
         self.fake_popen_mock.assert_called_with(
