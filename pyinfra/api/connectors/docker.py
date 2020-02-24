@@ -69,6 +69,7 @@ def disconnect(state, host):
 
 def run_shell_command(
     state, host, command,
+    get_pty=False,
     timeout=None,
     stdin=None,
     success_exit_codes=None,
@@ -88,7 +89,12 @@ def run_shell_command(
     command = make_unix_command(command, **command_kwargs)
     command = shlex_quote(command)
 
-    docker_command = 'docker exec -i {0} sh -c {1}'.format(container_id, command)
+    docker_flags = 'it' if get_pty else 'i'
+    docker_command = 'docker exec -{0} {1} sh -c {2}'.format(
+        docker_flags,
+        container_id,
+        command,
+    )
 
     return run_local_shell_command(
         state, host, docker_command,
