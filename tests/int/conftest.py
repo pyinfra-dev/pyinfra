@@ -16,13 +16,12 @@ class Helpers:
             expected_stderr_lines = ['']
         results = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, cwd=cwd)
-        returncode = results.wait()
         stdout, stderr = results.communicate()
         if type(stdout) is bytes:
             stdout = stdout.decode('utf-8')
         if type(stderr) is bytes:
             stderr = stderr.decode('utf-8')
-        assert returncode == 0
+        assert results.returncode == 0
         for line in expected_stdout_lines:
             print(line)
             assert re.search(line, stdout, re.MULTILINE)

@@ -66,7 +66,6 @@ def test_int_docker_adhoc_fact_os(helpers):
                 expected_stderr_lines=['is in beta'])
 
 
-@pytest.mark.skip(reason='Bug https://github.com/Fizzadar/pyinfra/issues/288')
 @pytest.mark.int
 def test_int_docker_adhoc_all_facts(helpers):
     '''Test docker'''
