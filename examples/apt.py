@@ -14,21 +14,17 @@ if host.fact.linux_name in ['Debian', 'Ubuntu']:
         update=True,
     )
 
-    apt.ppa(
-        {'Add the Bitcoin ppa'},
-        'ppa:bitcoin/bitcoin',
-    )
-
-    # typically after adding a ppk, you want to update
-    apt.update()
-
-    # but you could just include the update in the apt install step
-    # like this:
-    apt.packages(
-        {'Install Bitcoin'},
-        'bitcoin-qt',
-        update=True,
-    )
+    # NOTE: the bitcoin PPA is no longer supported
+    # apt.ppa(
+    #     {'Add the Bitcoin ppa'},
+    #     'ppa:bitcoin/bitcoin',
+    # )
+    #
+    # apt.packages(
+    #     {'Install Bitcoin'},
+    #     'bitcoin-qt',
+    #     update=True,
+    # )
 
     apt.deb(
         {'Install Chrome via deb'},
