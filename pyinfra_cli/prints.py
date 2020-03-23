@@ -15,7 +15,7 @@ from pyinfra.api.operation import get_operation_names
 
 from .util import json_encode
 
-ANSI_RE = re.compile('\033\[((?:\d|;)*)([a-zA-Z])')  # noqa: W605
+ANSI_RE = re.compile(r'\033\[((?:\d|;)*)([a-zA-Z])')
 
 
 def _strip_ansi(value):
