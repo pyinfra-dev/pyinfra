@@ -3,7 +3,7 @@ This file as originally part of the "sshuserclient" pypi package. The GitHub
 source has now vanished (https://github.com/tobald/sshuserclient).
 '''
 
-import os
+from os import path
 
 from paramiko import (
     AutoAddPolicy,
@@ -18,8 +18,8 @@ from .config import SSHConfig
 
 @memoize
 def get_ssh_config():
-    user_config_file = os.path.expanduser('~/.ssh/config')
-    if os.path.exists(user_config_file):
+    user_config_file = path.expanduser('~/.ssh/config')
+    if path.exists(user_config_file):
         with open(user_config_file) as f:
             ssh_config = SSHConfig()
             ssh_config.parse(f)

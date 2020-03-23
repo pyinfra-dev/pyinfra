@@ -32,6 +32,10 @@ Include other_file
 '''
 
 
+@patch(
+    'pyinfra.api.connectors.sshuserclient.client.path.exists',
+    lambda path: True,
+)
 class TestSSHUserConfig(TestCase):
     @patch(
         'pyinfra.api.connectors.sshuserclient.client.open',
