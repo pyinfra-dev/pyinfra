@@ -1,5 +1,7 @@
 from __future__ import print_function, unicode_literals
 
+import traceback
+
 from itertools import product
 from socket import (
     error as socket_error,
@@ -89,6 +91,7 @@ def _run_server_op(state, host, op_hash):
 
                 # Custom functions could do anything, so expect anything!
                 except Exception as e:
+                    logger.debug(traceback.format_exc())
                     logger.error('{0}{1}'.format(
                         host.print_prefix,
                         click.style(
