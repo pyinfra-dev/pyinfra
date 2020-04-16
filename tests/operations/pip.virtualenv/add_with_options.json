@@ -6,8 +6,8 @@
         "always_copy": true
     },
     "facts": {
-        "directory": {
-            "/some/virtualenv": false
+        "file": {
+            "/some/virtualenv/bin/activate": null
         }
     },
     "commands": [

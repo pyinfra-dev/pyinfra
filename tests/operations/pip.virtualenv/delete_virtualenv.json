@@ -4,6 +4,9 @@
         "present": false
     },
     "facts": {
+        "file": {
+            "/some/virtualenv/bin/activate": true
+        },
         "directory": {
             "/some/virtualenv": true
         }

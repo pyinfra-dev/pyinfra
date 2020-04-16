@@ -4,8 +4,11 @@
         "present": false
     },
     "facts": {
+        "file": {
+            "/some/virtualenv/bin/activate": null
+        },
         "directory": {
-            "/some/virtualenv": false
+            "/some/virtualenv": null
         }
     },
     "commands": []

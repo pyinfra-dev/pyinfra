@@ -4,8 +4,8 @@
         "python": "python3"
     },
     "facts": {
-        "directory": {
-            "/some/virtualenv": false
+        "file": {
+            "/some/virtualenv/bin/activate": null
         }
     },
     "commands": [

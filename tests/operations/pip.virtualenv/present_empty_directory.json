@@ -5,6 +5,9 @@
     "facts": {
         "file": {
             "/some/virtualenv/bin/activate": null
+        },
+        "directory": {
+            "/some/virtualenv": true
         }
     },
     "commands": [
