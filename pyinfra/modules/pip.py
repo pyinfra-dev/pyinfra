@@ -34,10 +34,14 @@ def virtualenv(
         )
     '''
 
-    if present is False and host.fact.directory(path):
+    # Check for *contents* of a virtualenv, ie don't accept an empty directory
+    # as a valid virtualenv but ensure the activate script exists.
+    activate_script_path = '{0}/bin/activate'.format(path)
+
+    if present is False and host.fact.file(activate_script_path):
         yield files.directory(state, host, path, present=False)
 
-    elif present and not host.fact.directory(path):
+    elif present and not host.fact.file(activate_script_path):
         # Create missing virtualenv
         command = ['virtualenv']
 
