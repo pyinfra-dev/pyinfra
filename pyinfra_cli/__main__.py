@@ -33,7 +33,7 @@ def _handle_interrupt(signum, frame):
     sys.exit(0)
 
 
-gevent.signal(signal.SIGINT, gevent.kill)  # kill any greenlets on ctrl+c
+gevent.signal_handler(signal.SIGINT, gevent.kill)  # kill any greenlets on ctrl+c
 signal.signal(signal.SIGINT, _handle_interrupt)  # print the message and exit main
 
 
