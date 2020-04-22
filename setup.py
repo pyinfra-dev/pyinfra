@@ -17,7 +17,7 @@ using a package manager (apt, yum, etc), normally named: python-setuptools
 
 
 INSTALL_REQUIRES = (
-    'gevent>1,<2,!=1.5a1',
+    'gevent>1,<2',
     'paramiko>1,<3',
     'click>2',
     'colorama<1',  # Windows color support for click

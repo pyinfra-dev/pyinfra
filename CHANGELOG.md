@@ -1,3 +1,11 @@
+# v0.14.3
+
++ Gevent 1.5 compatability
++ Improve check detecting whether a virtualenv exists
++ Rename `windows_files` operations (now `windows_files.[file|directory]`)
++ Fix tests when no SSH config is present
++ Dump (to debug) tracebacks from callback exceptions
+
 # v0.14.2
 
 + Improve PXE example (@mkinney)
