@@ -1,0 +1,27 @@
+{
+    "command": "brew cask list --versions",
+    "output": [
+        "1password-cli 0.10.0",
+        "google-chrome 76.0.3809.132",
+        "firefox 69.0",
+        "steam latest",
+        "vlc 3.0.8"
+    ],
+    "fact": {
+        "1password-cli": [
+            "0.10.0"
+        ],
+        "google-chrome": [
+            "76.0.3809.132"
+        ],
+        "firefox": [
+            "69.0"
+        ],
+        "steam": [
+            "latest"
+        ],
+        "vlc": [
+            "3.0.8"
+        ]
+    }
+}
