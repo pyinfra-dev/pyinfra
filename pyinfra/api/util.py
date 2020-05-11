@@ -346,9 +346,11 @@ def make_hash(obj):
 
     else:
         hash_string = (
+            # Capture integers first (as 1 == True)
+            '{0}'.format(obj) if isinstance(obj, int)
             # Constants - the values can change between hosts but we should still
             # group them under the same operation hash.
-            '_PYINFRA_CONSTANT' if obj in (True, False, None)
+            else '_PYINFRA_CONSTANT' if obj in (True, False, None)
             # Plain strings
             else obj if isinstance(obj, six.string_types)
             # Objects with __name__s
