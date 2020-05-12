@@ -1,3 +1,9 @@
+# v0.14.4
+
++ Allow leading numbers for brew cask names (@ryanwersal)
++ Correctly hash 1/0 line numbers when ordering operations
++ Fix Docker integration tests
+
 # v0.14.3
 
 + Gevent 1.5 compatability
