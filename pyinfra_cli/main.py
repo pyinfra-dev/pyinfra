@@ -310,6 +310,27 @@ def _main(
             deploy_dir = potential_deploy_dir
             break
 
+    # Create an empty/unitialised state object
+    state = State()
+    pseudo_state.set(state)
+
+    # Setup printing on the new state
+    print_operation_io = verbosity > 0
+    print_fact_io = verbosity > 1
+
+    state.print_output = print_operation_io  # -v
+    state.print_input = print_operation_io  # -v
+    state.print_fact_info = print_operation_io  # -v
+
+    state.print_fact_output = print_fact_io  # -vv
+    state.print_fact_input = print_fact_io  # -vv
+
+    if not quiet:
+        click.echo('--> Loading config...')
+
+    # Load up any config.py from the filesystem
+    config = load_config(deploy_dir)
+
     # Debug (print) inventory + group data
     if operations[0] == 'debug-inventory':
         command = 'debug-inventory'
@@ -377,27 +398,6 @@ def _main(
     pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
     pyinfra INVENTORY exec -- echo "hello world"
     pyinfra INVENTORY fact os [users]...'''.format(operations))
-
-    # Create an empty/unitialised state object
-    state = State()
-    pseudo_state.set(state)
-
-    # Setup printing on the new state
-    print_operation_io = verbosity > 0
-    print_fact_io = verbosity > 1
-
-    state.print_output = print_operation_io  # -v
-    state.print_input = print_operation_io  # -v
-    state.print_fact_info = print_operation_io  # -v
-
-    state.print_fact_output = print_fact_io  # -vv
-    state.print_fact_input = print_fact_io  # -vv
-
-    if not quiet:
-        click.echo('--> Loading config...')
-
-    # Load up any config.py from the filesystem
-    config = load_config(deploy_dir)
 
     # Load any hooks/config from the deploy file
     if command == 'deploy':
