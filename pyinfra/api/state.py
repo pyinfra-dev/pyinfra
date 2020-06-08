@@ -436,7 +436,7 @@ class State(object):
         if not hash_key:
             hash_key = six.text_type(uuid4())
 
-        temp_filename = '{0}/{1}'.format(
+        temp_filename = '{0}/pyinfra-{1}'.format(
             self.config.TEMP_DIR, sha1_hash(hash_key),
         )
 
