@@ -35,7 +35,7 @@ class SSHClient(ParamikoClient):
     def connect(self, hostname, **kwargs):
         self.hostname, self.config = self.parse_config(hostname)
         self.config.update(kwargs)
-        super(SSHClient, self).connect(hostname, **self.config)
+        super(SSHClient, self).connect(self.hostname, **self.config)
 
     def gateway(self, target, target_port):
         transport = self.get_transport()
