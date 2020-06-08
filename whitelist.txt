@@ -226,6 +226,7 @@ nottest
 npm
 ntlm
 ntpath
+openstack
 openvz
 pacman
 paramiko
