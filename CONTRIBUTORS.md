@@ -2,6 +2,7 @@
 
 Thank you to everyone who has contributed to pyinfra - in date-reverse order:
 
++ @stchris
 + @mkinney
 + @ryan109
 + @sfermigier
