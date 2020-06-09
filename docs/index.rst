@@ -68,7 +68,8 @@ Deploy Reference
     :caption: How pyinfra Works
 
     deploy_process
-    api/modules
+    api/operations
+    api/facts
     performance
     compatibility
     contributing

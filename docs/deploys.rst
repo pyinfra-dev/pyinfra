@@ -13,7 +13,7 @@ Layout
 + ``*.py`` - top-level operations
 + ``inventories/*.py`` - groups of hosts and individual host data
 + ``group_data/*.py`` - arbitrary data for host groups
-+ ``templates/*.j2`` - `jinja2 <https://jinja.palletsprojects.com>` template files 
++ ``templates/*.j2`` - `jinja2 <https://jinja.palletsprojects.com>` template files
 + ``files/*`` - normal/non-template files
 + ``tasks/*.py`` - operations to perform a specific task
 + ``config.py`` - optional configuration and hooks
@@ -138,7 +138,7 @@ For example, this deploy will ensure that user "pyinfra" exists with home direct
     # Execute with: pyinfra my-server.net deploy.py
 
 
-Uses the :doc:`server module <./modules/server>` and :doc:`files module <./modules/files>`. You can see all the modules in :doc:`the modules index <./operations>`.
+Uses the :doc:`server module <./modules/server>` and :doc:`files module <./modules/files>`. You can see all available operations in :doc:`the operations index <./operations>`.
 
 .. note::
     Pass a ``set`` object as the first argument to name the operation (as above), which will appear during a deploy. By default the operation module, name and arguments are shown.
