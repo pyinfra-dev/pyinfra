@@ -1,3 +1,9 @@
+# v0.14.5 WIP
+
++ Fix use `Host` variable when defined in SSH config (@stchris)
++ Prefix temporary filenames with `pyinfra-`
++ Fix custom fact loading from `config.py` when using `pyinfra fact...`
+
 # v0.14.4
 
 + Allow leading numbers for brew cask names (@ryanwersal)
