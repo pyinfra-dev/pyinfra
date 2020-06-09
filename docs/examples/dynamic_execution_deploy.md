@@ -7,7 +7,7 @@ In this example we install a service (ZeroTier) that generates a random ID for t
 ```py
 import requests
 
-from pyinfra.modules import apt, python, server
+from pyinfra.operations import apt, python, server
 
 
 # Assumes the repo is configured/apt is updated

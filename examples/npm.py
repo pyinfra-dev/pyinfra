@@ -1,4 +1,4 @@
-from pyinfra.modules import apt, npm
+from pyinfra.operations import apt, npm
 
 SUDO = True
 

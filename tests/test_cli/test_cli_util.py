@@ -3,7 +3,7 @@ from unittest import TestCase
 
 from six.moves import cStringIO as StringIO
 
-from pyinfra.modules import server
+from pyinfra.operations import server
 from pyinfra_cli.exceptions import CliError
 from pyinfra_cli.util import get_operation_and_args, json_encode
 

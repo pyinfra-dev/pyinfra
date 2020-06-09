@@ -1,5 +1,5 @@
 from pyinfra import host
-from pyinfra.modules import apk
+from pyinfra.operations import apk
 
 SUDO = True
 

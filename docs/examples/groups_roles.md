@@ -8,7 +8,7 @@ These can be included within deploys using the ``pyinfra.local`` module. A list 
 # deploy.py
 
 from pyinfra import host, local
-from pyinfra.modules import server
+from pyinfra.operations import server
 
 # Include the web role for the web group
 if 'web_servers' in host.groups:
@@ -32,7 +32,7 @@ db_servers = ['db1', 'db2', 'db3']
 ```py
 # tasks/web.py
 
-from pyinfra.modules import server
+from pyinfra.operations import server
 
 server.shell('install webserver')
 ...
@@ -41,7 +41,7 @@ server.shell('install webserver')
 ```py
 # tasks/database.py
 
-from pyinfra.modules import server
+from pyinfra.operations import server
 
 server.shell('install dbserver')
 ...

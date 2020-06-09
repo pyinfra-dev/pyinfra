@@ -45,7 +45,7 @@ pyinfra my-server.net apt.packages iftop sudo=true update=true
 These can then be saved to a _deploy file_, let's call it `deploy.py`:
 
 ```py
-from pyinfra.modules import apt
+from pyinfra.operations import apt
 
 apt.packages(
     {'Install iftop'},

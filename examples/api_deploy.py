@@ -16,7 +16,7 @@ from pyinfra.api.connectors.vagrant import make_names_data
 from pyinfra.api.facts import get_facts
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
-from pyinfra.modules import files, server
+from pyinfra.operations import files, server
 from pyinfra_cli.prints import jsonify
 
 

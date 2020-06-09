@@ -1,4 +1,4 @@
-from pyinfra.modules import files
+from pyinfra.operations import files
 
 SUDO = True
 

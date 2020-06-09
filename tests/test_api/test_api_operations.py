@@ -8,7 +8,7 @@ from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
-from pyinfra.modules import files, python, server
+from pyinfra.operations import files, python, server
 
 from ..paramiko_util import (
     FakeBuffer,
@@ -101,7 +101,7 @@ class TestOperationsApi(PatchSSHTestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch('pyinfra.modules.files.path.isfile', lambda *args, **kwargs: True):
+        with patch('pyinfra.operations.files.path.isfile', lambda *args, **kwargs: True):
             # Test normal
             add_op(
                 state, files.put,

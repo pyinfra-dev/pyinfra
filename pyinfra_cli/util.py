@@ -129,7 +129,7 @@ def get_operation_and_args(commands):
     op_module, op_name = operation_name.split('.')
 
     try:
-        op_module = import_module('pyinfra.modules.{0}'.format(op_module))
+        op_module = import_module('pyinfra.operations.{0}'.format(op_module))
     except ImportError:
         raise CliError('No such module: {0}'.format(op_module))
 

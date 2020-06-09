@@ -8,7 +8,7 @@ Writing a deploy is similar to :doc:`writing an operation <./modules>`:
 .. code:: py
 
     from pyinfra.api import deploy
-    from pyinfra.modules import apt
+    from pyinfra.operations import apt
 
     @deploy('Install MariaDB')
     def install_mariadb(state, host):

@@ -736,7 +736,7 @@ def link(
 
 
         # complex example demonstrating the assume_present option
-        from pyinfra.modules import apt, files
+        from pyinfra.operations import apt, files
 
         install_nginx = apt.packages(
             {'Install nginx'},

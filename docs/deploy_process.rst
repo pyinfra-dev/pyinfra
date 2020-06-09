@@ -22,7 +22,7 @@ The major disadvantage to separating the deploy into two phases comes into effec
 
 .. code:: python
 
-    from pyinfra.modules import apt, files
+    from pyinfra.operations import apt, files
 
     apt.packages(
         {'Install nginx'},
@@ -39,7 +39,7 @@ This is problematic because the link, ``/etc/nginx/sites-enabled/default``, won'
 
 .. code:: python
 
-    from pyinfra.modules import apt, files
+    from pyinfra.operations import apt, files
 
     install_nginx = apt.packages(
         {'Install nginx'},

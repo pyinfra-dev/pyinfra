@@ -393,7 +393,7 @@ pyinfra @local fact arch
 
 ```py
 from pyinfra.api import deploy
-from pyinfra.modules import apt
+from pyinfra.operations import apt
 
 
 @deploy('Install Openstack controller')

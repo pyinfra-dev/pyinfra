@@ -1,5 +1,5 @@
 from pyinfra import host
-from pyinfra.modules import dnf
+from pyinfra.operations import dnf
 
 SUDO = True
 

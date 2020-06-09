@@ -195,13 +195,13 @@ class patch_files(object):
 
     def __enter__(self):
         self.patches = [
-            patch('pyinfra.modules.files.path.exists', self.exists),
-            patch('pyinfra.modules.files.path.isfile', self.isfile),
-            patch('pyinfra.modules.files.path.isdir', self.isdir),
-            patch('pyinfra.modules.files.walk', self.walk),
-            patch('pyinfra.modules.files.makedirs', lambda path: True),
+            patch('pyinfra.operations.files.path.exists', self.exists),
+            patch('pyinfra.operations.files.path.isfile', self.isfile),
+            patch('pyinfra.operations.files.path.isdir', self.isdir),
+            patch('pyinfra.operations.files.walk', self.walk),
+            patch('pyinfra.operations.files.makedirs', lambda path: True),
             # Builtin patches
-            patch('pyinfra.modules.files.open', self.get_file, create=True),
+            patch('pyinfra.operations.files.open', self.get_file, create=True),
             patch('pyinfra.api.util.open', self.get_file, create=True),
         ]
 
