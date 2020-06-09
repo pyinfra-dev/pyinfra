@@ -28,7 +28,7 @@ from pyinfra.api.facts import (
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.util import FallbackDict
-from pyinfra.modules import server
+from pyinfra.operations import server
 
 from .config import load_config, load_deploy_config
 from .exceptions import CliError, UnexpectedError

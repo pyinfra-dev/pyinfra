@@ -6,8 +6,8 @@ a virtualenv (virtual environment).
 from __future__ import unicode_literals
 
 from pyinfra.api import operation
-from pyinfra.modules import files
 
+from . import files
 from .util.packaging import ensure_packages
 
 
