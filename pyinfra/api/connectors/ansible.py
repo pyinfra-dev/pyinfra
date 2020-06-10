@@ -16,7 +16,6 @@ def show_warning():
     logger.warning('The @ansible connector is in alpha!')
 
 
-# @memoize?
 def make_names_data(inventory_filename=None):
     show_warning()
 
