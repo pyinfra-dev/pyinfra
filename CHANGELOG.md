@@ -1,8 +1,9 @@
-# v0.14.5 WIP
+# v0.14.5
 
 + Fix use `Host` variable when defined in SSH config (@stchris)
 + Prefix temporary filenames with `pyinfra-`
 + Fix custom fact loading from `config.py` when using `pyinfra fact...`
++ Remove max gevent version to support v20+
 
 # v0.14.4
 
