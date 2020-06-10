@@ -1,5 +1,5 @@
 from pyinfra import host
-from pyinfra.modules import apt, server, yum
+from pyinfra.operations import apt, server, yum
 
 SUDO = True
 

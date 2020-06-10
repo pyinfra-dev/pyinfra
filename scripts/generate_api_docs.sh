@@ -10,4 +10,4 @@ rm -f \
     docs/apidoc/pyinfra.api.rst \
     docs/apidoc/pyinfra.version.rst \
     docs/apidoc/pyinfra.facts* \
-    docs/apidoc/pyinfra.modules*
+    docs/apidoc/pyinfra.operations*

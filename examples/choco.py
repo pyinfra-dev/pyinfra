@@ -1,5 +1,5 @@
 from pyinfra import host
-from pyinfra.modules import choco
+from pyinfra.operations import choco
 
 computer_info = host.fact.windows_computer_info
 if computer_info:

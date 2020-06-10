@@ -66,7 +66,7 @@ Now we need a ``deploy.py`` containing our operations to execute:
 .. code:: python
 
     # Import pyinfra modules, each containing operations to use
-    from pyinfra.modules import server
+    from pyinfra.operations import server
 
     # Run some simple command
     server.shell( # the module.operation
@@ -94,7 +94,7 @@ pyinfra from Windows
 Tested on WindowsServer2019 with python 3.7.
 
 + Download Python https://www.python.org/downloads/windows/
-  (ex: python-3.7.6-amd64.exe). Install as Administrator and 
+  (ex: python-3.7.6-amd64.exe). Install as Administrator and
   ensure the **Add Python to PATH** option is selected.)
 
 + Open a new powershell (as your login user), run:

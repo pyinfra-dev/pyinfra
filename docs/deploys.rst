@@ -107,7 +107,7 @@ The same keys can be defined for host and group data - this means we can set a d
 Operations
 ----------
 
-Now that you've got an inventory of hosts and know how to authenticate with them, you can start writing operations. Operations are used to describe changes to make to the systems in the inventory. Operations are namespaced and imported from ``pyinfra.modules``.
+Now that you've got an inventory of hosts and know how to authenticate with them, you can start writing operations. Operations are used to describe changes to make to the systems in the inventory. Operations are namespaced and imported from ``pyinfra.operations``.
 
 For example, this deploy will ensure that user "pyinfra" exists with home directory ``/home/pyinfra``, and that the ``/var/log/pyinfra.log`` file exists and is owned by that user.
 
@@ -116,7 +116,7 @@ For example, this deploy will ensure that user "pyinfra" exists with home direct
     # deploy.py
 
     # Import pyinfra modules, each containing operations to use
-    from pyinfra.modules import server, files
+    from pyinfra.operations import server, files
 
     # Ensure the state of a user
     server.user(
@@ -158,7 +158,7 @@ Adding data to inventories was :ref:`described above <data-ref-label>` - you can
 .. code:: python
 
     from pyinfra import host
-    from pyinfra.modules import server
+    from pyinfra.operations import server
 
     # Ensure the state of a user based on host/group data
     server.user(
@@ -174,7 +174,7 @@ Operation meta can be used during a deploy to change the desired operations:
 
 .. code:: python
 
-    from pyinfra.modules import server
+    from pyinfra.operations import server
 
     # Run an operation, collecting its meta output
     create_user = server.user(
@@ -194,7 +194,7 @@ Facts allow you to use information about the target host to change the operation
 .. code:: python
 
     from pyinfra import host
-    from pyinfra.modules import yum
+    from pyinfra.operations import yum
 
     if host.fact.linux_name == 'CentOS':
         yum.packages(

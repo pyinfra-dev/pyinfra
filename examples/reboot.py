@@ -1,4 +1,4 @@
-from pyinfra.modules import init, server
+from pyinfra.operations import init, server
 
 SUDO = True
 

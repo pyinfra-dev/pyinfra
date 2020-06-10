@@ -1,5 +1,5 @@
 from pyinfra import host, inventory
-from pyinfra.modules import files, server
+from pyinfra.operations import files, server
 
 SUDO = True
 

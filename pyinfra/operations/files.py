@@ -73,12 +73,23 @@ def download(
 
     # Destination file exists & cache_time: check when the file was last modified,
     # download if old
-    elif cache_time:
-        # Time on files is not tz-aware, and will be the same tz as the server's time,
-        # so we can safely remove the tzinfo from host.fact.date before comparison.
-        cache_time = host.fact.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
-        if info['mtime'] and info['mtime'] > cache_time:
-            download = True
+    else:
+        if cache_time:
+            # Time on files is not tz-aware, and will be the same tz as the server's time,
+            # so we can safely remove the tzinfo from host.fact.date before comparison.
+            cache_time = host.fact.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
+            if info['mtime'] and info['mtime'] > cache_time:
+                download = True
+
+        if sha1sum:
+            # CHECK SHA1SUM MATCHES
+            pass
+
+        if sha256sum:
+            pass
+
+        if md5sum:
+            pass
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
@@ -725,7 +736,7 @@ def link(
 
 
         # complex example demonstrating the assume_present option
-        from pyinfra.modules import apt, files
+        from pyinfra.operations import apt, files
 
         install_nginx = apt.packages(
             {'Install nginx'},

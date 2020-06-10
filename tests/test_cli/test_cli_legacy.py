@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import six
 
-from pyinfra.modules import server
+from pyinfra.operations import server
 from pyinfra_cli.exceptions import CliError
 from pyinfra_cli.legacy import setup_arguments
 from pyinfra_cli.util import get_operation_and_args

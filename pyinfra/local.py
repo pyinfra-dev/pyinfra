@@ -81,7 +81,7 @@ def include(filename, hosts=False, when=True):
             exec_file(filename)
 
         # One potential solution to the above is to add local as an actual
-        # module, ie `pyinfra.modules.local`.
+        # module, ie `pyinfra.operations.local`.
 
     except IOError as e:
         raise PyinfraError(

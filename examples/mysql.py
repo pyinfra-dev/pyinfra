@@ -1,5 +1,5 @@
 from pyinfra import host, state
-from pyinfra.modules import apt, files, mysql, python
+from pyinfra.operations import apt, files, mysql, python
 
 SUDO = True
 

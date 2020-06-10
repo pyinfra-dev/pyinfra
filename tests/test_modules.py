@@ -21,7 +21,7 @@ from .util import create_host, FakeState, patch_files
 def make_operation_tests(arg):
     # Get the operation we're testing against
     module_name, op_name = arg.split('.')
-    module = import_module('pyinfra.modules.{0}'.format(module_name))
+    module = import_module('pyinfra.operations.{0}'.format(module_name))
     op = getattr(module, op_name)
 
     # Generate a test class
