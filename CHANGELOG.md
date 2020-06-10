@@ -1,3 +1,10 @@
+# v0.15 (WIP)
+
+Final `v0.x` release before `v1`. Major change:
+
++ Rename `pyinfra.modules` -> `pyinfra.operations` (backwards compatible, will remain in v1)
+
+
 # v0.14.5
 
 + Fix use `Host` variable when defined in SSH config (@stchris)
