@@ -10,7 +10,7 @@ import six
 
 from six.moves import range
 
-from pyinfra import modules
+from pyinfra import operations
 
 MODULE_DEF_LINE_MAX = 90
 
@@ -31,7 +31,7 @@ def build_facts():
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, '..', 'docs'))
 
-    for module_name in modules.__all__:
+    for module_name in operations.__all__:
         lines = []
 
         print('--> Doing module: {0}'.format(module_name))
