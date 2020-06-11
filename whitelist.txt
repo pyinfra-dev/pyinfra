@@ -1,4 +1,4 @@
-'systeminfo
+systeminfo
 'testpass'
 'testuser'
 2x
@@ -25,6 +25,7 @@ Crontab
 Cygwin
 DOCOPT
 E305
+E402
 E501
 F401
 F403

@@ -1,23 +1,18 @@
-# pyinfra
-# File: example/api_deploy.py
-# Desc: example of how to deploy via the pyinfra API
-
 from gevent import monkey  # noqa
 monkey.patch_all()  # noqa async things (speed++, optional)
 
-import json  # noqa
-import logging
+import logging  # noqa: E402, I100
 
-from collections import defaultdict
+from collections import defaultdict  # noqa: E402
 
-from pyinfra.api import Config, Inventory, State
-from pyinfra.api.connect import connect_all
-from pyinfra.api.connectors.vagrant import make_names_data
-from pyinfra.api.facts import get_facts
-from pyinfra.api.operation import add_op
-from pyinfra.api.operations import run_ops
-from pyinfra.operations import files, server
-from pyinfra_cli.prints import jsonify
+from pyinfra.api import Config, Inventory, State  # noqa: E402
+from pyinfra.api.connect import connect_all  # noqa: E402
+from pyinfra.api.connectors.vagrant import make_names_data  # noqa: E402
+from pyinfra.api.facts import get_facts  # noqa: E402
+from pyinfra.api.operation import add_op  # noqa: E402
+from pyinfra.api.operations import run_ops  # noqa: E402
+from pyinfra.operations import files, server  # noqa: E402
+from pyinfra_cli.prints import jsonify  # noqa: E402
 
 
 # Enable pyinfra logging
