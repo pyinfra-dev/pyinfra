@@ -40,11 +40,11 @@ TEST_REQUIRES = (
     'codecov==2.0.15',
 
     # Linting
-    'flake8',
-    'flake8-commas',
-    'flake8-quotes',
+    'flake8==3.8.3',
+    'flake8-commas==2.0.0',
+    'flake8-quotes==3.2.0',
+    'flake8-import-order==0.18.1',
     'flake8-spellcheck==0.12.1 ; python_version >= "3"',
-    'flake8-import-order',
 )
 
 DOCS_REQUIRES = (
