@@ -6,7 +6,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/pyinfra?color=blue)](https://pypi.python.org/pypi/pyinfra)
 [![Docs status](https://img.shields.io/readthedocs/pyinfra)](https://pyinfra.readthedocs.io)
-[![Travis.CI status](https://img.shields.io/travis/Fizzadar/pyinfra/master)](https://travis-ci.org/Fizzadar/pyinfra)
+[![Travis.CI status](https://img.shields.io/travis/com/Fizzadar/pyinfra/master)](https://travis-ci.com/Fizzadar/pyinfra)
 [![Codecov Coverage](https://img.shields.io/codecov/c/gh/Fizzadar/pyinfra)](https://codecov.io/github/Fizzadar/pyinfra)
 [![MIT Licensed](https://img.shields.io/pypi/l/pyinfra)](https://github.com/Fizzadar/pyinfra/blob/develop/LICENSE.md)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pyinfra)
