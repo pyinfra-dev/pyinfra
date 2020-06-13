@@ -154,7 +154,7 @@ def make_unix_command(
             '{0}={1}'.format(key, value)
             for key, value in six.iteritems(env)
         ])
-        command = 'export {0}; {1}'.format(env_string, command)
+        command = 'env {0} {1}'.format(env_string, command)
 
     # Quote the command as a string
     command = shlex_quote(command)

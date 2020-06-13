@@ -49,8 +49,11 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         self.assertEqual(command, 'su -l pyinfra -s `which sh` -c uptime')
 
     def test_command_env(self):
-        command = make_unix_command('uptime', env={'key': 'value'})
-        self.assertEqual(command, "sh -c 'export key=value; uptime'")
+        command = make_unix_command('uptime', env={
+            'key': 'value',
+            'anotherkey': 'anothervalue',
+        })
+        self.assertEqual(command, "sh -c 'env key=value anotherkey=anothervalue uptime'")
 
     def test_custom_shell_command(self):
         command = make_unix_command('uptime', shell_executable='bash')
@@ -71,6 +74,6 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             (
                 'sudo -S -H -n -E -u root '  # sudo bit
                 'su pyinfra -s `which bash` -c '  # su bit
-                "'export key=value; uptime'"  # command bit
+                "'env key=value uptime'"  # command bit
             ),
         )
