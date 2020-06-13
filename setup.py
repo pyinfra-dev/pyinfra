@@ -65,6 +65,10 @@ DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
     'ipdbplugin==1.4.5',
 )
 
+ANSIBLE_REQUIRES = (
+    'pyyaml',
+)
+
 
 # Extract version info without importing entire pyinfra package
 version_data = {}
@@ -97,6 +101,7 @@ if __name__ == '__main__':
             'test': TEST_REQUIRES,
             'docs': DOCS_REQUIRES,
             'dev': DEV_REQUIRES,
+            'ansible': ANSIBLE_REQUIRES,
         },
         include_package_data=True,
         classifiers=[
