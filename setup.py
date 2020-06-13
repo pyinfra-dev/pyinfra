@@ -63,6 +63,7 @@ DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
     'twine',
 
     # Dev debugging
+    'ipython',
     'ipdb==0.10.3',
     'ipdbplugin==1.4.5',
 
