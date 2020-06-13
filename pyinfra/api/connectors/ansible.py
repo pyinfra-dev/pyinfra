@@ -6,6 +6,7 @@ from configparser import ConfigParser
 from os import path
 
 import yaml
+
 from pyinfra import logger
 from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import memoize
