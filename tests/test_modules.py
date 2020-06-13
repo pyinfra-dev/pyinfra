@@ -8,7 +8,6 @@ from unittest import TestCase
 
 import six
 from jsontest import JsonTest
-from nose.tools import nottest
 
 from pyinfra import pseudo_host, pseudo_state
 from pyinfra.api.util import unroll_generators
@@ -17,7 +16,6 @@ from pyinfra_cli.util import json_encode
 from .util import create_host, FakeState, patch_files
 
 
-@nottest
 def make_operation_tests(arg):
     # Get the operation we're testing against
     module_name, op_name = arg.split('.')

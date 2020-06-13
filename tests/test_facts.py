@@ -7,7 +7,6 @@ from unittest import TestCase
 
 import six
 from jsontest import JsonTest
-from nose.tools import nottest
 
 from pyinfra.api.facts import FACTS, ShortFactBase
 from pyinfra_cli.util import json_encode
@@ -16,7 +15,6 @@ from pyinfra_cli.util import json_encode
 TestCase.maxDiff = None
 
 
-@nottest
 def make_fact_tests(fact_name):
     fact = FACTS[fact_name]()
 
