@@ -24,7 +24,7 @@ class TestAnsibleConnector(TestCase):
             'tests', 'deploy', 'inventories', 'inventory_ansible',
         ))
 
-        assert data == [
+        test_data = [
             ('webserver-1.net', {}, ['web_and_db_servers', 'webservers']),
             ('webserver-2.net', {}, ['web_and_db_servers', 'webservers']),
             ('webserver-3.net', {}, ['web_and_db_servers', 'webservers']),
@@ -32,16 +32,18 @@ class TestAnsibleConnector(TestCase):
             ('dbserver-02.net', {}, ['dbservers', 'web_and_db_servers']),
         ]
 
+        assert sorted(data) == sorted(test_data)
+
     def test_make_names_data_json(self):
         data = make_names_data(inventory_filename=path.join(
             'tests', 'deploy', 'inventories', 'inventory_ansible.json',
         ))
 
-        assert data == TEST_DATA
+        assert sorted(data) == sorted(TEST_DATA)
 
     def test_make_names_data_yaml(self):
         data = make_names_data(inventory_filename=path.join(
             'tests', 'deploy', 'inventories', 'inventory_ansible.yml',
         ))
 
-        assert data == TEST_DATA
+        assert sorted(data) == sorted(TEST_DATA)
