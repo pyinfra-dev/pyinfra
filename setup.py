@@ -48,7 +48,6 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
     'flake8-commas==2.0.0',
     'flake8-quotes==3.2.0',
     'flake8-import-order==0.18.1',
-    'flake8-spellcheck==0.12.1 ; python_version >= "3"',
 )
 
 DOCS_REQUIRES = (
@@ -67,6 +66,9 @@ DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
     # Dev debugging
     'ipdb==0.10.3',
     'ipdbplugin==1.4.5',
+
+    # Lint spellchecking, dev only (don't fail CI)
+    'flake8-spellcheck==0.12.1 ; python_version >= "3"',
 )
 
 
