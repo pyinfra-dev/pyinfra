@@ -4,4 +4,4 @@ from pyinfra.operations import __all__
 
 __all__ = __all__
 
-logger.warning('Use of `pyinfra.operations` is deprecated, please use `pyinfra.operations`.')
+logger.warning('Use of `pyinfra.modules` is deprecated, please use `pyinfra.operations`.')
