@@ -30,7 +30,11 @@ INSTALL_REQUIRES = (
     'pywinrm',
 )
 
-TEST_REQUIRES = (
+ANSIBLE_REQUIRES = (  # extras for parsing Ansible inventory
+    'pyyaml',
+)
+
+TEST_REQUIRES = ANSIBLE_REQUIRES + (
     # Unit testing
     'pytest==4.6.6',
     'pytest-cov==2.8.1',
@@ -44,7 +48,6 @@ TEST_REQUIRES = (
     'flake8-commas==2.0.0',
     'flake8-quotes==3.2.0',
     'flake8-import-order==0.18.1',
-    'flake8-spellcheck==0.12.1 ; python_version >= "3"',
 )
 
 DOCS_REQUIRES = (
@@ -63,6 +66,9 @@ DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
     # Dev debugging
     'ipdb==0.10.3',
     'ipdbplugin==1.4.5',
+
+    # Lint spellchecking, dev only (don't fail CI)
+    'flake8-spellcheck==0.12.1 ; python_version >= "3"',
 )
 
 
@@ -97,6 +103,7 @@ if __name__ == '__main__':
             'test': TEST_REQUIRES,
             'docs': DOCS_REQUIRES,
             'dev': DEV_REQUIRES,
+            'ansible': ANSIBLE_REQUIRES,
         },
         include_package_data=True,
         classifiers=[
