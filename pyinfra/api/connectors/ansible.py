@@ -1,5 +1,5 @@
-import re
 import json
+import re
 
 from collections import defaultdict
 from configparser import ConfigParser
