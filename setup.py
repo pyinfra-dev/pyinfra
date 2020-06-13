@@ -51,7 +51,6 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
 )
 
 DOCS_REQUIRES = (
-    'sphinx-autobuild==0.7.1',
     'guzzle_sphinx_theme==0.7.11',
     'recommonmark==0.5.0',
     'sphinx==2.2.1 ; python_version >= "3"',
