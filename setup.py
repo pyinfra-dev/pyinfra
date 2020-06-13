@@ -30,7 +30,11 @@ INSTALL_REQUIRES = (
     'pywinrm',
 )
 
-TEST_REQUIRES = (
+ANSIBLE_REQUIRES = (  # extras for parsing Ansible inventory
+    'pyyaml',
+)
+
+TEST_REQUIRES = ANSIBLE_REQUIRES + (
     # Unit testing
     'pytest==4.6.6',
     'pytest-cov==2.8.1',
@@ -63,10 +67,6 @@ DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
     # Dev debugging
     'ipdb==0.10.3',
     'ipdbplugin==1.4.5',
-)
-
-ANSIBLE_REQUIRES = (
-    'pyyaml',
 )
 
 
