@@ -143,7 +143,7 @@ def parse_inventory_tree(inventory_tree, host_to_groups=dict(), group_stack=set(
                 append_groups_to_host(host, groups, host_to_groups)
 
         if 'children' in inventory_tree[group]:
-            # recurisively parse inventory tree
+            # recursively parse inventory tree
             parse_inventory_tree(inventory_tree[group]['children'], host_to_groups, groups)
 
     return host_to_groups
@@ -151,7 +151,7 @@ def parse_inventory_tree(inventory_tree, host_to_groups=dict(), group_stack=set(
 
 def append_groups_to_host(host, groups, host_to_groups):
     if host in host_to_groups:
-        # set logic handles deduplication
+        # set logic handles de-duplication
         host_to_groups[host] = host_to_groups[host].union(groups)
     else:
         host_to_groups[host] = groups
