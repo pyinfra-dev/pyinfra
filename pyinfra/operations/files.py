@@ -131,7 +131,12 @@ def download(
 
 
 @operation
-def line(state, host, name, line, present=True, replace=None, flags=None):
+def line(
+    state, host,
+    name, line,
+    present=True, replace=None, flags=None,
+    interpolate_variables=True,
+):
     '''
     Ensure lines in files using grep to locate and sed to replace.
 
@@ -223,6 +228,7 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
     sed_replace_command = sed_replace(
         name, match_line, replace,
         flags=flags,
+        interpolate_variables=interpolate_variables,
     )
 
     # No line and we want it, append it
@@ -255,7 +261,11 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
 
     # Line(s) exists and we want to remove them, replace with nothing
     elif present_lines and not present:
-        yield sed_replace(name, match_line, '', flags=flags)
+        yield sed_replace(
+            name, match_line, '',
+            flags=flags,
+            interpolate_variables=interpolate_variables,
+        )
 
     # Line(s) exists and we have want to ensure they're correct
     elif present_lines and present:
@@ -265,7 +275,7 @@ def line(state, host, name, line, present=True, replace=None, flags=None):
 
 
 @operation
-def replace(state, host, name, match, replace, flags=None):
+def replace(state, host, name, match, replace, flags=None, interpolate_variables=True):
     '''
     A simple shortcut for replacing text in files with sed.
 
@@ -273,6 +283,7 @@ def replace(state, host, name, match, replace, flags=None):
     + match: text/regex to match for
     + replace: text to replace with
     + flags: list of flags to pass to sed
+    + interpolate_variables: whether to interpolate variables in ``replace``
 
     Example:
 
@@ -286,7 +297,11 @@ def replace(state, host, name, match, replace, flags=None):
         )
     '''
 
-    yield sed_replace(name, match, replace, flags=flags)
+    yield sed_replace(
+        name, match, replace,
+        flags=flags,
+        interpolate_variables=interpolate_variables,
+    )
 
 
 @operation(pipeline_facts={

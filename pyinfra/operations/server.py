@@ -377,6 +377,7 @@ def sysctl(
 def crontab(
     state, host, command, present=True, user=None, name=None,
     minute='*', hour='*', month='*', day_of_week='*', day_of_month='*',
+    interpolate_variables=True,
 ):
     '''
     Add/remove/update crontab entries.
@@ -454,6 +455,7 @@ def crontab(
     if not present and exists:
         edit_commands.append(sed_replace(
             temp_filename, existing_crontab_match, '',
+            interpolate_variables=interpolate_variables,
         ))
 
     # Want the cron but it doesn't exist? Append the line
@@ -478,6 +480,7 @@ def crontab(
         )):
             edit_commands.append(sed_replace(
                 temp_filename, existing_crontab_match, new_crontab_line,
+                interpolate_variables=interpolate_variables,
             ))
 
     if edit_commands:

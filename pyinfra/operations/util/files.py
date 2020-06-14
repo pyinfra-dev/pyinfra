@@ -17,15 +17,19 @@ def ensure_mode_int(mode):
     return mode
 
 
-def sed_replace(filename, line, replace, flags=None):
+def sed_replace(filename, line, replace, flags=None, interpolate_variables=True):
     flags = ''.join(flags) if flags else ''
 
     line = line.replace('/', r'\/')
     replace = replace.replace('/', r'\/')
 
-    return 'sed -i="" "s/{0}/{1}/{2}" {3}'.format(
-        line, replace, flags, filename,
+    string_to_format = (
+        'sed -i="" "s/{0}/{1}/{2}" {3}'
+        if interpolate_variables else
+        "sed -i='' 's/{0}/{1}/{2}' {3}"
     )
+
+    return string_to_format.format(line, replace, flags, filename)
 
 
 def chmod(target, mode, recursive=False):

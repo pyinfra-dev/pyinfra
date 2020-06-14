@@ -1,0 +1,10 @@
+{
+    "args": ["filename", "match", "replace"],
+    "kwargs": {
+        "flags": ["g", "i"],
+        "interpolate_variables": false
+    },
+    "commands": [
+        "sed -i='' 's/match/replace/gi' filename"
+    ]
+}

@@ -1,7 +1,8 @@
 {
     "args": ["filename", "match", "replace"],
     "kwargs": {
-        "flags": ["g", "i"]
+        "flags": ["g", "i"],
+        "interpolate_variables": true
     },
     "commands": [
         "sed -i=\"\" \"s/match/replace/gi\" filename"
