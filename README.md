@@ -35,7 +35,7 @@ pip install pyinfra
 Now you can execute commands & operations over SSH:
 
 ```sh
-# Execute an abitrary shell command
+# Execute an arbitrary shell command
 pyinfra my-server.net exec -- echo "hello world"
 
 # Install iftop apt package if not present
