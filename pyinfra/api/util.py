@@ -257,7 +257,7 @@ def sha1_hash(string):
     '''
 
     hasher = sha1()
-    hasher.update(string.encode())
+    hasher.update(string.encode('utf-8'))
     return hasher.hexdigest()
 
 

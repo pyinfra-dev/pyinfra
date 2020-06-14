@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
 
@@ -127,6 +129,9 @@ def make_unix_command(
     '''
     Builds a shell command with various kwargs.
     '''
+
+    if isinstance(command, six.binary_type):
+        command = command.decode('utf-8')
 
     if shell_executable is None or not isinstance(shell_executable, six.string_types):
         shell_executable = 'sh'

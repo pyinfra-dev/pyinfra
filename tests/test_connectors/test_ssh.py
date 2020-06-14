@@ -1,3 +1,7 @@
+# encoding: utf-8
+
+from __future__ import unicode_literals
+
 from socket import (
     error as socket_error,
     gaierror,
@@ -229,7 +233,7 @@ class TestSSHConnector(TestCase):
         host = inventory.get_host('somehost')
         host.connect(state)
 
-        command = 'echo hi'
+        command = 'echo Šablony'
         fake_stdout.channel.recv_exit_status.return_value = 0
 
         out = host.run_shell_command(state, command, stdin='hello', print_output=True)
@@ -245,7 +249,7 @@ class TestSSHConnector(TestCase):
         )
         assert len(combined_out) == 2
 
-        fake_ssh.exec_command.assert_called_with("sh -c 'echo hi'", get_pty=False)
+        fake_ssh.exec_command.assert_called_with("sh -c 'echo Šablony'", get_pty=False)
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     def test_run_shell_command_success_exit_code(self, fake_ssh_client):

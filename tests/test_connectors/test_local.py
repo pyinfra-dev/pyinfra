@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 from subprocess import PIPE
 from unittest import TestCase
 
@@ -40,7 +42,7 @@ class TestLocalConnector(TestCase):
         state = State(inventory, Config())
         host = inventory.get_host('@local')
 
-        command = 'echo hi'
+        command = 'echo Šablony'
         self.fake_popen_mock().returncode = 0
 
         out = host.run_shell_command(state, command, stdin='hello', print_output=True)

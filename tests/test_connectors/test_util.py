@@ -1,3 +1,7 @@
+# encoding: utf-8
+
+from __future__ import unicode_literals
+
 from unittest import TestCase
 
 from pyinfra.api.connectors.util import make_unix_command, split_combined_output
@@ -21,8 +25,8 @@ class TestConnectorUtil(TestCase):
 
 class TestMakeUnixCommandConnectorUtil(TestCase):
     def test_command(self):
-        command = make_unix_command('uptime')
-        assert command == 'sh -c uptime'
+        command = make_unix_command('echo Šablony')
+        assert command == "sh -c 'echo Šablony'"
 
     def test_sudo_command(self):
         command = make_unix_command('uptime', sudo=True)
