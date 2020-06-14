@@ -57,7 +57,7 @@ def make_operation_tests(arg):
                             print('Wrong execption raised!')
                             raise
 
-                        self.assertEqual(e.args[0], allowed_exception['message'])
+                        assert e.args[0] == allowed_exception['message']
                         return
 
                     raise
@@ -94,7 +94,7 @@ def make_operation_tests(arg):
                     commands.append(command)
 
             try:
-                self.assertEqual(commands, test_data['commands'])
+                assert commands == test_data['commands']
             except AssertionError as e:
                 print()
                 print('--> COMMANDS OUTPUT:')

@@ -15,17 +15,16 @@ class TestInventoryApi(TestCase):
         inventory = make_inventory()
 
         # Check length
-        self.assertEqual(len(inventory.hosts), 2)
+        assert len(inventory.hosts) == 2
 
         # Get a host
         host = inventory['somehost']
-        self.assertEqual(host.data.ssh_user, 'vagrant')
+        assert host.data.ssh_user == 'vagrant'
 
         # Check our group data
-        self.assertEqual(
-            inventory.get_group_data('test_group'),
-            {'group_data': 'hello world'},
-        )
+        assert inventory.get_group_data('test_group') == {
+            'group_data': 'hello world',
+        }
 
     def test_tuple_host_group_inventory_creation(self):
         inventory = make_inventory(
@@ -41,11 +40,11 @@ class TestInventoryApi(TestCase):
 
         # Check host data
         host = inventory['somehost']
-        self.assertEqual(host.data.some_data, 'hello')
-        self.assertEqual(host.data.another_data, 'world')
+        assert host.data.some_data == 'hello'
+        assert host.data.another_data == 'world'
 
         # Check group data
-        self.assertEqual(host.data.tuple_group_data, 'word')
+        assert host.data.tuple_group_data == 'word'
 
     def test_host_and_group_errors(self):
         inventory = make_inventory()
@@ -70,7 +69,7 @@ class TestStateApi(PatchSSHTestCase):
         with self.assertRaises(PyinfraError) as context:
             connect_all(state)
 
-        self.assertEqual(context.exception.args[0], 'Over 1% of hosts failed (33%)')
+        assert context.exception.args[0] == 'Over 1% of hosts failed (33%)'
 
         # Ensure the other two did connect
-        self.assertEqual(len(state.active_hosts), 2)
+        assert len(state.active_hosts) == 2

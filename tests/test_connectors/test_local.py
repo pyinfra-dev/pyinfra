@@ -26,14 +26,14 @@ class TestLocalConnector(TestCase):
         inventory = make_inventory(hosts=('@local',))
         state = State(inventory, Config())
         connect_all(state)
-        self.assertEqual(len(state.active_hosts), 1)
+        assert len(state.active_hosts) == 1
 
     def test_connect_host(self):
         inventory = make_inventory(hosts=('@local',))
         state = State(inventory, Config())
         host = inventory.get_host('@local')
         host.connect(state, for_fact=True)
-        self.assertEqual(len(state.active_hosts), 0)
+        assert len(state.active_hosts) == 0
 
     def test_run_shell_command(self):
         inventory = make_inventory(hosts=('@local',))

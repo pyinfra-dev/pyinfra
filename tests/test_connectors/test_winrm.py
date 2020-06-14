@@ -21,7 +21,7 @@ class TestWinrmConnector(TestCase):
         state = State(inventory, Config())
         host = inventory.get_host('somehost')
         host.connect(state, for_fact=True)
-        self.assertEqual(len(state.active_hosts), 0)
+        assert len(state.active_hosts) == 0
 
     def test_connect_all_password(self):
         inventory = make_inventory(hosts=(
@@ -33,10 +33,10 @@ class TestWinrmConnector(TestCase):
 
         # Get a host
         somehost = inventory.get_host('@winrm/somehost')
-        self.assertEqual(somehost.data.winrm_username, 'testuser')
-        self.assertEqual(somehost.data.winrm_password, 'testpass')
+        assert somehost.data.winrm_username == 'testuser'
+        assert somehost.data.winrm_password == 'testpass'
 
-        self.assertEqual(len(state.active_hosts), 2)
+        assert len(state.active_hosts) == 2
 
     def test_run_shell_command(self):
         fake_winrm_session = MagicMock()

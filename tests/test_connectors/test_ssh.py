@@ -36,26 +36,26 @@ class TestSSHConnector(TestCase):
         inventory = make_inventory()
         state = State(inventory, Config())
         connect_all(state)
-        self.assertEqual(len(state.active_hosts), 2)
+        assert len(state.active_hosts) == 2
 
     def test_connect_host(self):
         inventory = make_inventory()
         state = State(inventory, Config())
         host = inventory.get_host('somehost')
         host.connect(state, for_fact=True)
-        self.assertEqual(len(state.active_hosts), 0)
+        assert len(state.active_hosts) == 0
 
     def test_connect_all_password(self):
         inventory = make_inventory(ssh_password='test')
 
         # Get a host
         somehost = inventory.get_host('somehost')
-        self.assertEqual(somehost.data.ssh_password, 'test')
+        assert somehost.data.ssh_password == 'test'
 
         state = State(inventory, Config())
         connect_all(state)
 
-        self.assertEqual(len(state.active_hosts), 2)
+        assert len(state.active_hosts) == 2
 
     @patch('pyinfra.api.connectors.ssh.path.isfile', lambda *args, **kwargs: True)
     @patch('pyinfra.api.connectors.ssh.RSAKey.from_private_key_file')

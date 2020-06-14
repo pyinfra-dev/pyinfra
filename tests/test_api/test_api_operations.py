@@ -51,45 +51,39 @@ class TestOperationsApi(PatchSSHTestCase):
         op_order = state.get_op_order()
 
         # Ensure we have an op
-        self.assertEqual(len(op_order), 1)
+        assert len(op_order) == 1
 
         first_op_hash = op_order[0]
 
         # Ensure the op name
-        self.assertEqual(
-            state.op_meta[first_op_hash]['names'],
-            {'Files/File'},
-        )
+        assert state.op_meta[first_op_hash]['names'] == {'Files/File'}
 
         # Ensure the commands
-        self.assertEqual(
-            state.ops[somehost][first_op_hash]['commands'],
-            [
-                'touch /var/log/pyinfra.log',
-                'chmod 644 /var/log/pyinfra.log',
-                'chown pyinfra:pyinfra /var/log/pyinfra.log',
-            ],
-        )
+        assert state.ops[somehost][first_op_hash]['commands'] == [
+            'touch /var/log/pyinfra.log',
+            'chmod 644 /var/log/pyinfra.log',
+            'chown pyinfra:pyinfra /var/log/pyinfra.log',
+        ]
 
         # Ensure the meta
         meta = state.op_meta[first_op_hash]
-        self.assertEqual(meta['sudo'], True)
-        self.assertEqual(meta['sudo_user'], 'test_sudo')
-        self.assertEqual(meta['su_user'], 'test_su')
-        self.assertEqual(meta['ignore_errors'], True)
+        assert meta['sudo'] is True
+        assert meta['sudo_user'] == 'test_sudo'
+        assert meta['su_user'] == 'test_su'
+        assert meta['ignore_errors'] is True
 
         # Ensure run ops works
         run_ops(state)
 
         # Ensure ops completed OK
-        self.assertEqual(state.results[somehost]['success_ops'], 1)
-        self.assertEqual(state.results[somehost]['ops'], 1)
-        self.assertEqual(state.results[anotherhost]['success_ops'], 1)
-        self.assertEqual(state.results[anotherhost]['ops'], 1)
+        assert state.results[somehost]['success_ops'] == 1
+        assert state.results[somehost]['ops'] == 1
+        assert state.results[anotherhost]['success_ops'] == 1
+        assert state.results[anotherhost]['ops'] == 1
 
         # And w/o errors
-        self.assertEqual(state.results[somehost]['error_ops'], 0)
-        self.assertEqual(state.results[anotherhost]['error_ops'], 0)
+        assert state.results[somehost]['error_ops'] == 0
+        assert state.results[anotherhost]['error_ops'] == 0
 
         # And with the different modes
         run_ops(state, serial=True)
@@ -131,47 +125,41 @@ class TestOperationsApi(PatchSSHTestCase):
         op_order = state.get_op_order()
 
         # Ensure we have all ops
-        self.assertEqual(len(op_order), 3)
+        assert len(op_order) == 3
 
         first_op_hash = op_order[0]
 
         # Ensure first op is the right one
-        self.assertEqual(
-            state.op_meta[first_op_hash]['names'],
-            {'First op name'},
-        )
+        assert state.op_meta[first_op_hash]['names'] == {'First op name'}
 
         somehost = inventory.get_host('somehost')
         anotherhost = inventory.get_host('anotherhost')
 
         # Ensure first op has the right (upload) command
-        self.assertEqual(
-            state.ops[somehost][first_op_hash]['commands'],
-            [
-                ('upload', 'files/file.txt', '/home/vagrant/file.txt'),
-            ],
-        )
+        assert state.ops[somehost][first_op_hash]['commands'] == [
+            ('upload', 'files/file.txt', '/home/vagrant/file.txt'),
+        ]
 
         # Ensure second op has sudo/sudo_user
-        self.assertEqual(state.op_meta[op_order[1]]['sudo'], True)
-        self.assertEqual(state.op_meta[op_order[1]]['sudo_user'], 'pyinfra')
+        assert state.op_meta[op_order[1]]['sudo'] is True
+        assert state.op_meta[op_order[1]]['sudo_user'] == 'pyinfra'
 
         # Ensure third has su_user
-        self.assertEqual(state.op_meta[op_order[2]]['su_user'], 'pyinfra')
+        assert state.op_meta[op_order[2]]['su_user'] == 'pyinfra'
 
         # Check run ops works
         with patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True):
             run_ops(state)
 
         # Ensure ops completed OK
-        self.assertEqual(state.results[somehost]['success_ops'], 3)
-        self.assertEqual(state.results[somehost]['ops'], 3)
-        self.assertEqual(state.results[anotherhost]['success_ops'], 3)
-        self.assertEqual(state.results[anotherhost]['ops'], 3)
+        assert state.results[somehost]['success_ops'] == 3
+        assert state.results[somehost]['ops'] == 3
+        assert state.results[anotherhost]['success_ops'] == 3
+        assert state.results[anotherhost]['ops'] == 3
 
         # And w/o errors
-        self.assertEqual(state.results[somehost]['error_ops'], 0)
-        self.assertEqual(state.results[anotherhost]['error_ops'], 0)
+        assert state.results[somehost]['error_ops'] == 0
+        assert state.results[anotherhost]['error_ops'] == 0
 
     def test_function_call_op(self):
         inventory = make_inventory()
@@ -188,7 +176,7 @@ class TestOperationsApi(PatchSSHTestCase):
         add_op(state, python.call, mocked_function)
 
         # Ensure there is one op
-        self.assertEqual(len(state.get_op_order()), 1)
+        assert len(state.get_op_order()) == 1
 
         run_ops(state)
 
@@ -203,21 +191,21 @@ class TestOperationsApi(PatchSSHTestCase):
         add_op(state, server.shell, 'echo "hi"', run_once=True, serial=True)
 
         # Ensure it's added to op_order
-        self.assertEqual(len(state.get_op_order()), 1)
+        assert len(state.get_op_order()) == 1
 
         somehost = inventory.get_host('somehost')
         anotherhost = inventory.get_host('anotherhost')
 
         # Ensure between the two hosts we only run the one op
-        self.assertEqual(len(state.ops[somehost]) + len(state.ops[anotherhost]), 1)
+        assert len(state.ops[somehost]) + len(state.ops[anotherhost]) == 1
 
         # Check run works
         run_ops(state)
 
-        self.assertEqual((
+        assert (
             state.results[somehost]['success_ops']
             + state.results[anotherhost]['success_ops']
-        ), 1)
+        ) == 1
 
 
 class TestOperationLimits(PatchSSHTestCase):
@@ -237,11 +225,11 @@ class TestOperationLimits(PatchSSHTestCase):
         )
 
         # Ensure there are two ops
-        self.assertEqual(len(state.get_op_order()), 2)
+        assert len(state.get_op_order()) == 2
 
         # Ensure somehost has two ops and anotherhost only has the one
-        self.assertEqual(len(state.ops[inventory.get_host('somehost')]), 2)
-        self.assertEqual(len(state.ops[inventory.get_host('anotherhost')]), 1)
+        assert len(state.ops[inventory.get_host('somehost')]) == 2
+        assert len(state.ops[inventory.get_host('anotherhost')]) == 1
 
     def test_op_state_hosts_limit(self):
         inventory = make_inventory()
@@ -267,11 +255,11 @@ class TestOperationLimits(PatchSSHTestCase):
             )
 
         # Ensure there are three ops
-        self.assertEqual(len(state.get_op_order()), 3)
+        assert len(state.get_op_order()) == 3
 
         # Ensure somehost has two ops and anotherhost only has the one
-        self.assertEqual(len(state.ops[inventory.get_host('somehost')]), 2)
-        self.assertEqual(len(state.ops[inventory.get_host('anotherhost')]), 1)
+        assert len(state.ops[inventory.get_host('somehost')]) == 2
+        assert len(state.ops[inventory.get_host('anotherhost')]) == 1
 
 
 class TestOperationFailures(PatchSSHTestCase):
@@ -292,14 +280,14 @@ class TestOperationFailures(PatchSSHTestCase):
             with self.assertRaises(PyinfraError) as e:
                 run_ops(state)
 
-            self.assertEqual(e.exception.args[0], 'No hosts remaining!')
+            assert e.exception.args[0] == 'No hosts remaining!'
 
             somehost = inventory.get_host('somehost')
 
             # Ensure the op was not flagged as success
-            self.assertEqual(state.results[somehost]['success_ops'], 0)
+            assert state.results[somehost]['success_ops'] == 0
             # And was flagged asn an error
-            self.assertEqual(state.results[somehost]['error_ops'], 1)
+            assert state.results[somehost]['error_ops'] == 1
 
     def test_ignore_errors_op_fail(self):
         inventory = make_inventory()
@@ -321,10 +309,10 @@ class TestOperationFailures(PatchSSHTestCase):
             somehost = inventory.get_host('somehost')
 
             # Ensure the op was added to results
-            self.assertEqual(state.results[somehost]['ops'], 1)
-            self.assertEqual(state.results[somehost]['error_ops'], 1)
+            assert state.results[somehost]['ops'] == 1
+            assert state.results[somehost]['error_ops'] == 1
             # But not as a success
-            self.assertEqual(state.results[somehost]['success_ops'], 0)
+            assert state.results[somehost]['success_ops'] == 0
 
     def test_no_invalid_op_call(self):
         inventory = make_inventory()
@@ -370,22 +358,16 @@ class TestOperationOrdering(PatchSSHTestCase):
 
         # Ensure there are two ops
         op_order = state.get_op_order()
-        self.assertEqual(len(op_order), 3)
+        assert len(op_order) == 3
 
         # And that the two ops above were called in the expected order
-        self.assertEqual(op_order[1], first_pseudo_hash)
-        self.assertEqual(op_order[2], second_pseudo_hash)
+        assert op_order[1] == first_pseudo_hash
+        assert op_order[2] == second_pseudo_hash
 
         # And that they have the expected line numbers
-        self.assertEqual(
-            state.op_line_numbers_to_hash.get((0, first_pseudo_call_line)),
-            first_pseudo_hash,
-        )
-        self.assertEqual(
-            state.op_line_numbers_to_hash.get((0, second_pseudo_call_line)),
-            second_pseudo_hash,
-        )
+        assert state.op_line_numbers_to_hash.get((0, first_pseudo_call_line)) == first_pseudo_hash
+        assert state.op_line_numbers_to_hash.get((0, second_pseudo_call_line)) == second_pseudo_hash
 
         # Ensure somehost has two ops and anotherhost only has the one
-        self.assertEqual(len(state.ops[inventory.get_host('somehost')]), 2)
-        self.assertEqual(len(state.ops[inventory.get_host('anotherhost')]), 2)
+        assert len(state.ops[inventory.get_host('somehost')]) == 2
+        assert len(state.ops[inventory.get_host('anotherhost')]) == 2

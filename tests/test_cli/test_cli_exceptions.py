@@ -28,7 +28,7 @@ class TestCliExceptions(TestCase):
         self.test_cli.invoke(cli, args)
 
         self.assertIsInstance(self.exception, CliError)
-        self.assertEqual(self.exception.message, message)
+        assert self.exception.message == message
 
     def test_bad_deploy_file(self):
         self.assert_cli_exception(

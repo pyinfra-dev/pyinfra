@@ -22,7 +22,7 @@ class TestLegacyCliArguments(TestCase):
 
         if check_arguments:
             for key, value in six.iteritems(check_arguments):
-                self.assertEqual(parsed_arguments[key], value)
+                assert parsed_arguments[key] == value
 
     def test_int_arguments(self):
         self.assert_valid_arguments({
@@ -60,34 +60,25 @@ class TestLegacyCliArguments(TestCase):
         op_string = 'server.user'
         args_string = 'one,two,hello=world'
 
-        self.assertEqual(
-            get_operation_and_args((op_string, args_string)),
-            (
-                server.user,
-                (['one', 'two'], {'hello': 'world'}),
-            ),
+        assert get_operation_and_args((op_string, args_string)) == (
+            server.user,
+            (['one', 'two'], {'hello': 'world'}),
         )
 
     def test_legacy_setup_op_and_args_list(self):
         op_string = 'server.user'
         args_string = '[one,two],hello=world'
 
-        self.assertEqual(
-            get_operation_and_args((op_string, args_string)),
-            (
-                server.user,
-                ([['one', 'two']], {'hello': 'world'}),
-            ),
+        assert get_operation_and_args((op_string, args_string)) == (
+            server.user,
+            ([['one', 'two']], {'hello': 'world'}),
         )
 
     def test_legacy_setup_op_and_json_args(self):
         op_string = 'server.user'
         args_string = '[["one", "two"], {"hello": "world"}]'
 
-        self.assertEqual(
-            get_operation_and_args((op_string, args_string)),
-            (
-                server.user,
-                (['one', 'two'], {'hello': 'world'}),
-            ),
+        assert get_operation_and_args((op_string, args_string)) == (
+            server.user,
+            (['one', 'two'], {'hello': 'world'}),
         )

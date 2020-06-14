@@ -38,10 +38,10 @@ def make_fact_tests(fact_name):
                 command = fact.command(*args)
 
                 if args or 'command' in test_data:
-                    self.assertEqual(command, test_data['command'])
+                    assert command == test_data['command']
 
             elif 'command' in test_data:
-                self.assertEqual(fact.command, test_data['command'])
+                assert fact.command == test_data['command']
 
             data = fact.process(test_data['output'])
             if short_fact:
@@ -50,7 +50,7 @@ def make_fact_tests(fact_name):
             # Encode/decode data to ensure datetimes/etc become JSON
             data = json.loads(json.dumps(data, default=json_encode))
             try:
-                self.assertEqual(data, test_data['fact'])
+                assert data == test_data['fact']
             except AssertionError as e:
                 print()
                 print('--> GOT:\n', json.dumps(data, indent=4, default=json_encode))

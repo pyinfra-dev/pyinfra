@@ -196,10 +196,9 @@ class TestCliDeployState(PatchSSHTestCase):
         state = pseudo_state
         op_order = state.get_op_order()
 
-        self.assertEqual(
-            len(correct_op_name_and_host_names), len(op_order),
-            'Incorrect number of operations detected',
-        )
+        assert (
+            len(correct_op_name_and_host_names) == len(op_order)
+        ), 'Incorrect number of operations detected'
 
         for i, (correct_op_name, correct_host_names) in enumerate(
             correct_op_name_and_host_names,
@@ -207,7 +206,7 @@ class TestCliDeployState(PatchSSHTestCase):
             op_hash = op_order[i]
             op_meta = state.op_meta[op_hash]
 
-            self.assertEqual(list(op_meta['names'])[0], correct_op_name)
+            assert list(op_meta['names'])[0] == correct_op_name
 
             for host in state.inventory:
                 op_hashes = state.meta[host]['op_hashes']

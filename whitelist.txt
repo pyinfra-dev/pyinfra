@@ -93,7 +93,6 @@ argbits
 argspec
 argstring
 asn
-assertEqual
 automagically
 autoname
 autosectionlabel
@@ -176,6 +175,7 @@ hostnames
 hostport
 identityfile
 iglob
+ini
 initd
 initrd
 ip6tables
@@ -318,7 +318,7 @@ ufw
 uname
 unitialised
 unmount
-up2
+up
 v
 v0
 v1
@@ -335,4 +335,5 @@ whocares
 winrm
 writeable
 yarn
+yaml
 zfill

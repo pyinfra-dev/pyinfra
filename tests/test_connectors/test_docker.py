@@ -55,7 +55,7 @@ class TestDockerConnector(TestCase):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
         state = State(inventory, Config())
         connect_all(state)
-        self.assertEqual(len(state.active_hosts), 1)
+        assert len(state.active_hosts) == 1
 
     def test_connect_all_error(self):
         inventory = make_inventory(hosts=('@docker/a-broken-image',))
@@ -69,7 +69,7 @@ class TestDockerConnector(TestCase):
         state = State(inventory, Config())
         host = inventory.get_host('@docker/not-an-image')
         host.connect(state, for_fact=True)
-        self.assertEqual(len(state.active_hosts), 0)
+        assert len(state.active_hosts) == 0
         host.disconnect(state)
 
     def test_run_shell_command(self):
