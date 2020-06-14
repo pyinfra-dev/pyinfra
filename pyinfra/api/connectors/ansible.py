@@ -5,7 +5,10 @@ from collections import defaultdict
 from configparser import ConfigParser
 from os import path
 
-import yaml
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 from pyinfra import logger
 from pyinfra.api.exceptions import InventoryError
@@ -46,6 +49,11 @@ def parse_inventory(inventory_filename):
             # close file early
         host_to_groups = parse_inventory_tree(inventory_tree)
     elif extension in ['yaml', 'yml']:
+        if yaml is None:
+            raise Exception((
+                'To parse YAML Ansible inventories requires `pyyaml`. '
+                'Install it with `pip install pyyaml`.'
+            ))
         with open(inventory_filename) as inventory_file:
             inventory_tree = yaml.safe_load(inventory_file)
             # close file early
