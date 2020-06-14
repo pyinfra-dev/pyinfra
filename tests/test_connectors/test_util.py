@@ -53,7 +53,10 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             'key': 'value',
             'anotherkey': 'anothervalue',
         })
-        self.assertEqual(command, "sh -c 'env key=value anotherkey=anothervalue uptime'")
+        assert command in [
+            "sh -c 'env key=value anotherkey=anothervalue uptime'",
+            "sh -c 'env anotherkey=anothervalue key=value uptime'",
+        ]
 
     def test_custom_shell_command(self):
         command = make_unix_command('uptime', shell_executable='bash')
