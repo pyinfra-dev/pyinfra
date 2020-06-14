@@ -152,8 +152,8 @@ def print_support_info():
 
     click.echo('    System: {0}'.format(platform.system()))
     click.echo('      Platform: {0}'.format(platform.platform()))
-    click.echo('      Release: {0}'.format(platform.uname().release))
-    click.echo('      Machine: {0}'.format(platform.uname().machine))
+    click.echo('      Release: {0}'.format(platform.uname()[2]))
+    click.echo('      Machine: {0}'.format(platform.uname()[4]))
     click.echo('    pyinfra: v{0}'.format(__version__))
     click.echo('    Executable: {0}'.format(sys.argv[0]))
     click.echo('    Python: {0} ({1}, {2})'.format(
