@@ -146,6 +146,7 @@ def _run_server_op(state, host, op_hash):
                     use_sudo_login=op_meta['use_sudo_login'],
                     su_user=su_user,
                     use_su_login=op_meta['use_su_login'],
+                    use_sudo_password=op_meta['use_sudo_password'],
                     preserve_sudo_env=preserve_sudo_env,
                     shell_executable=shell_executable,
                     timeout=op_meta['timeout'],

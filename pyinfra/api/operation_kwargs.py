@@ -11,6 +11,10 @@ auth_kwargs = {
         'description': 'Execute ``sudo`` with a login shell.',
         'default': lambda config: config.USE_SUDO_LOGIN,
     },
+    'use_sudo_password': {
+        'description': 'Whether to use a password with sudo (will ask).',
+        'default': lambda config: config.USE_SUDO_PASSWORD,
+    },
     'preserve_sudo_env': {
         'description': 'Preserve the shell environment when using sudo.',
         'default': lambda config: config.PRESERVE_SUDO_ENV,

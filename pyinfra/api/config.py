@@ -36,6 +36,7 @@ class Config(object):
     SUDO_USER = None
     PRESERVE_SUDO_ENV = False
     USE_SUDO_LOGIN = False
+    USE_SUDO_PASSWORD = False
 
     # Only show errors, but don't count as failure
     IGNORE_ERRORS = False
