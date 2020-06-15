@@ -11,7 +11,12 @@ from pyinfra import logger
 from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import get_file_io
 
-from .util import make_unix_command, run_local_process, split_combined_output
+from .util import (
+    get_sudo_password,
+    make_unix_command,
+    run_local_process,
+    split_combined_output,
+)
 
 
 def make_names_data(hostname=None):
@@ -34,6 +39,7 @@ def run_shell_command(
     print_output=False,
     print_input=False,
     return_combined_output=False,
+    use_sudo_password=False,
     **command_kwargs
 ):
     '''
@@ -52,6 +58,13 @@ def run_shell_command(
         tuple: (exit_code, stdout, stderr)
         stdout and stderr are both lists of strings from each buffer.
     '''
+
+    if use_sudo_password:
+        command_kwargs['use_sudo_password'] = get_sudo_password(
+            state, host, use_sudo_password,
+            run_shell_command=run_shell_command,
+            put_file=put_file,
+        )
 
     command = make_unix_command(command, **command_kwargs)
 

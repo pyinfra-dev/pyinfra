@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import re
 
+from getpass import getpass
 from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
 
@@ -15,6 +16,12 @@ from six.moves import shlex_quote
 from pyinfra import logger
 from pyinfra.api import Config
 from pyinfra.api.util import read_buffer
+
+SUDO_ASKPASS_ENV_VAR = 'PYINFRA_SUDO_PASSWORD'
+SUDO_ASKPASS_EXE_FILENAME = 'pyinfra-sudo-askpass'
+SUDO_ASKPASS_EXE = six.StringIO('''#!/bin/sh
+echo ${0}
+'''.format(SUDO_ASKPASS_ENV_VAR))
 
 UNIX_PATH_SPACE_REGEX = re.compile(r'([^\\]) ')
 
@@ -127,6 +134,26 @@ def write_stdin(stdin, buffer):
     buffer.close()
 
 
+def get_sudo_password(state, host, use_sudo_password, run_shell_command, put_file):
+    filename = state.get_temp_filename(SUDO_ASKPASS_EXE_FILENAME, hash_filename=False)
+
+    sudo_askpass_uploaded = host.connector_data.get('sudo_askpass_uploaded', False)
+    if not sudo_askpass_uploaded:
+        put_file(state, host, SUDO_ASKPASS_EXE, filename)
+        run_shell_command(state, host, 'chmod +x {0}'.format(filename))
+        host.connector_data['sudo_askpass_uploaded'] = True
+
+    if use_sudo_password is True:
+        sudo_password = host.connector_data.get('sudo_password')
+        if not sudo_password:
+            sudo_password = getpass('{0}sudo password: '.format(host.print_prefix))
+            host.connector_data['sudo_password'] = sudo_password
+    else:
+        sudo_password = use_sudo_password
+
+    return (filename, sudo_password)
+
+
 def make_unix_command(
     command,
     env=None,
@@ -135,6 +162,7 @@ def make_unix_command(
     sudo=Config.SUDO,
     sudo_user=Config.SUDO_USER,
     use_sudo_login=Config.USE_SUDO_LOGIN,
+    use_sudo_password=Config.USE_SUDO_PASSWORD,
     preserve_sudo_env=Config.PRESERVE_SUDO_ENV,
     shell_executable=Config.SHELL,
 ):
@@ -194,7 +222,12 @@ def make_unix_command(
 
     # Use sudo (w/user?)
     if sudo:
-        sudo_bits = ['sudo', '-S', '-H', '-n']
+        sudo_bits = ['sudo', '-H']
+
+        if use_sudo_password:
+            sudo_bits.extend(['-A', '-k'])  # use askpass, disable cache
+        else:
+            sudo_bits.append('-n')  # disable prompt/interactivity
 
         if use_sudo_login:
             sudo_bits.append('-i')
@@ -206,6 +239,12 @@ def make_unix_command(
             sudo_bits.extend(('-u', sudo_user))
 
         command = '{0} {1}'.format(' '.join(sudo_bits), command)
+
+        if use_sudo_password:
+            askpass_filename, sudo_password = use_sudo_password
+            command = 'env SUDO_ASKPASS={0} {1}={2} {3}'.format(
+                askpass_filename, SUDO_ASKPASS_ENV_VAR, sudo_password, command,
+            )
 
     return command
 
