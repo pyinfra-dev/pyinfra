@@ -52,6 +52,9 @@ class Host(object):
         # Attach the fact proxy
         self.fact = HostFacts(inventory, self)
 
+        # Arbitrary dict for connector use
+        self.connector_data = {}
+
     def __repr__(self):
         return self.name
 
