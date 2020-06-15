@@ -45,19 +45,19 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_sudo_command(self):
         command = make_unix_command('uptime', sudo=True)
-        assert command == 'sudo -S -H -n sh -c uptime'
+        assert command == 'sudo -H -n sh -c uptime'
 
     def test_sudo_preserve_env_command(self):
         command = make_unix_command('uptime', sudo=True, preserve_sudo_env=True)
-        assert command == 'sudo -S -H -n -E sh -c uptime'
+        assert command == 'sudo -H -n -E sh -c uptime'
 
     def test_use_sudo_login_command(self):
         command = make_unix_command('uptime', sudo=True, use_sudo_login=True)
-        assert command == 'sudo -S -H -n -i sh -c uptime'
+        assert command == 'sudo -H -n -i sh -c uptime'
 
     def test_sudo_user_command(self):
         command = make_unix_command('uptime', sudo=True, sudo_user='pyinfra')
-        assert command == 'sudo -S -H -n -u pyinfra sh -c uptime'
+        assert command == 'sudo -H -n -u pyinfra sh -c uptime'
 
     def test_su_command(self):
         command = make_unix_command('uptime', su_user='pyinfra')
@@ -92,7 +92,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             shell_executable='bash',
         )
         assert command == (
-            'sudo -S -H -n -E -u root '  # sudo bit
+            'sudo -H -n -E -u root '  # sudo bit
             'su pyinfra -s `which bash` -c '  # su bit
             "'env key=value uptime'"  # command bit
         )
