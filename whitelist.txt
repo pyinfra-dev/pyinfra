@@ -8,6 +8,7 @@ systeminfo
 APK
 ARG1
 ARG2
+ASKPASS
 Apk
 Autodetect
 Autogenerate
