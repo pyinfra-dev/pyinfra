@@ -4,6 +4,7 @@ import re
 
 from six.moves import shlex_quote
 
+from pyinfra.api.connectors.util import escape_unix_path
 from pyinfra.api.facts import FactBase
 
 from .util.files import parse_ls_output
@@ -13,8 +14,9 @@ class File(FactBase):
     # Types must match FLAG_TO_TYPE in .util.files.py
     type = 'file'
 
-    def command(self, name):
-        self.name = name
+    @staticmethod
+    def command(name):
+        name = escape_unix_path(name)
         return 'ls -ld --time-style=long-iso {0} 2> /dev/null || ls -ldT {0}'.format(name)
 
     def process(self, output):
@@ -44,6 +46,7 @@ class Sha1File(FactBase):
     ]
 
     def command(self, name):
+        name = escape_unix_path(name)
         self.name = name
         return 'sha1sum {0} 2> /dev/null || sha1 {0}'.format(name)
 
@@ -63,9 +66,10 @@ class FindInFile(FactBase):
     '''
 
     def command(self, name, pattern):
-        self.name = name
-
+        name = escape_unix_path(name)
         pattern = shlex_quote(pattern)
+
+        self.name = name
 
         return (
             'grep -e {0} {1} 2> /dev/null || '
@@ -87,10 +91,12 @@ class FindFiles(FactBase):
     Returns a list of files from a start point, recursively using find.
     '''
 
-    def command(self, name):
-        return 'find {0} -type f'.format(name)
+    @staticmethod
+    def command(name):
+        return 'find {0} -type f'.format(escape_unix_path(name))
 
-    def process(self, output):
+    @staticmethod
+    def process(output):
         return output
 
 
@@ -99,8 +105,9 @@ class FindLinks(FindFiles):
     Returns a list of links from a start point, recursively using find.
     '''
 
-    def command(self, name):
-        return 'find {0} -type l'.format(name)
+    @staticmethod
+    def command(name):
+        return 'find {0} -type l'.format(escape_unix_path(name))
 
 
 class FindDirectories(FindFiles):
@@ -108,5 +115,6 @@ class FindDirectories(FindFiles):
     Returns a list of directories from a start point, recursively using find.
     '''
 
-    def command(self, name):
-        return 'find {0} -type d'.format(name)
+    @staticmethod
+    def command(name):
+        return 'find {0} -type d'.format(escape_unix_path(name))

@@ -16,6 +16,7 @@ import six
 from jinja2 import TemplateSyntaxError, UndefinedError
 
 from pyinfra.api import operation, OperationError, OperationTypeError
+from pyinfra.api.connectors.util import escape_unix_path
 from pyinfra.api.util import get_file_sha1, get_template
 
 from .util.files import chmod, chown, ensure_mode_int, sed_replace
@@ -55,9 +56,9 @@ def download(
 
     '''
 
-    # Get destination info
-    info = host.fact.file(destination)
+    destination = escape_unix_path(destination)
 
+    info = host.fact.file(destination)
     # Destination is a directory?
     if info is False:
         raise OperationError(
@@ -205,6 +206,8 @@ def line(
 
     '''
 
+    name = escape_unix_path(name)
+
     match_line = line
 
     # Ensure we're matching a whole ^line$
@@ -298,6 +301,7 @@ def replace(state, host, name, match, replace, flags=None, interpolate_variables
         )
     '''
 
+    name = escape_unix_path(name)
     yield sed_replace(
         name, match, replace,
         flags=flags,
@@ -470,6 +474,8 @@ def get(
 
     '''
 
+    remote_filename = escape_unix_path(remote_filename)
+
     if add_deploy_dir and state.deploy_dir:
         local_filename = path.join(state.deploy_dir, local_filename)
 
@@ -542,6 +548,8 @@ def put(
         )
 
     '''
+
+    remote_filename = escape_unix_path(remote_filename)
 
     # Upload IO objects as-is
     if hasattr(local_filename, 'read'):
@@ -661,6 +669,8 @@ def template(
 
     '''
 
+    remote_filename = escape_unix_path(remote_filename)
+
     if state.deploy_dir:
         template_filename = path.join(state.deploy_dir, template_filename)
 
@@ -774,6 +784,7 @@ def link(
     if present and not target:
         raise OperationError('If present is True target must be provided')
 
+    name = escape_unix_path(name)
     info = host.fact.link(name)
 
     # Not a link?
@@ -875,6 +886,7 @@ def file(
         raise OperationTypeError('Name must be a string')
 
     mode = ensure_mode_int(mode)
+    name = escape_unix_path(name)
     info = host.fact.file(name)
 
     # Not a file?!
@@ -965,6 +977,7 @@ def directory(
         raise OperationTypeError('Name must be a string')
 
     mode = ensure_mode_int(mode)
+    name = escape_unix_path(name)
     info = host.fact.directory(name)
 
     # Not a directory?!
