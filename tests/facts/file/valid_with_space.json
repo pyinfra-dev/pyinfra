@@ -1,0 +1,14 @@
+{
+    "arg": "/home/pyinfra dir/fil-@_e.txt",
+    "command": "ls -ld --time-style=long-iso /home/pyinfra\\ dir/fil-@_e.txt 2> /dev/null || ls -ldT /home/pyinfra\\ dir/fil-@_e.txt",
+    "output": [
+        "-rwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56:00 2016 /home/pyinfra\\ dir/fil-@_e.txt"
+    ],
+    "fact": {
+        "group": "pyinfra",
+        "user": "pyinfra",
+        "mode": 777,
+        "mtime": "2016-02-13T12:56:00",
+        "size": "8"
+    }
+}
