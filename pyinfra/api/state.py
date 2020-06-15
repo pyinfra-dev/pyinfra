@@ -428,7 +428,7 @@ class State(object):
             return True
         return host in limit_hosts
 
-    def get_temp_filename(self, hash_key=None):
+    def get_temp_filename(self, hash_key=None, hash_filename=True):
         '''
         Generate a temporary filename for this deploy.
         '''
@@ -436,8 +436,7 @@ class State(object):
         if not hash_key:
             hash_key = six.text_type(uuid4())
 
-        temp_filename = '{0}/pyinfra-{1}'.format(
-            self.config.TEMP_DIR, sha1_hash(hash_key),
-        )
+        if hash_filename:
+            hash_key = sha1_hash(hash_key)
 
-        return temp_filename
+        return '{0}/pyinfra-{1}'.format(self.config.TEMP_DIR, hash_key)
