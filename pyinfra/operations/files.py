@@ -145,6 +145,7 @@ def line(
     + present: whether the line should be in the file
     + replace: text to replace entire matching lines when ``present=True``
     + flags: list of flags to pass to sed when replacing/deleting
+    + interpolate_variables: whether to interpolate variables in ``replace``
 
     Regex line matching:
         Unless line matches a line (starts with ^, ends $), pyinfra will wrap it such that

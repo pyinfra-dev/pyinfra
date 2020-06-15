@@ -391,6 +391,7 @@ def crontab(
     + month: which months to execute the cron
     + day_of_week: which day of the week to execute the cron
     + day_of_month: which day of the month to execute the cron
+    + interpolate_variables: whether to interpolate variables in ``command``
 
     Cron commands:
         Unless ``name`` is specified the command is used to identify crontab entries.
