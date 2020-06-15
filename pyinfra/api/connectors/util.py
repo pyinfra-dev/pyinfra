@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import re
+
 from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
 
@@ -13,6 +15,16 @@ from six.moves import shlex_quote
 from pyinfra import logger
 from pyinfra.api import Config
 from pyinfra.api.util import read_buffer
+
+UNIX_PATH_SPACE_REGEX = re.compile(r'([^\\]) ')
+
+
+def escape_unix_path(path):
+    '''
+    Escape unescaped spaces in a (unix) path.
+    '''
+
+    return UNIX_PATH_SPACE_REGEX.sub(r'\1\\ ', path)
 
 
 def run_local_process(
