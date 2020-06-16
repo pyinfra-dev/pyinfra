@@ -1,9 +1,14 @@
 # v0.15 (WIP)
 
-Final `v0.x` release before `v1`. Major change:
+Final `v0.x` release before `v1`. Changes:
 
++ Add `use_sudo_password=[True|False|str]` global operation argument
 + Rename `pyinfra.modules` -> `pyinfra.operations` (backwards compatible, will remain in v1)
-
++ Support YAML+JSON `@ansible` connector inventories (@ricardbejarano)
+    * requires `pyyaml` which is an extra requirement (`pip install pyinfra[ansible]`)
++ Python2 unicode fixes for `files` operations + facts
++ Properly escape/support paths with spaces
++ Add python3.8 to travis tests
 
 # v0.14.5
 
