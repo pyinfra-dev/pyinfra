@@ -1,0 +1,17 @@
+{
+    "command": "cat /etc/*-release",
+    "output": [
+        "CentOS release 6.9 (Final)",
+        "LSB_VERSION=base-4.0-amd64:base-4.0-noarch:core-4.0-amd64:core-4.0-noarch",
+        "CentOS release 6.9 (Final)",
+        "CentOS release 6.9 (Final)"
+    ],
+    "fact": {
+        "name": "CentOS",
+        "major": 6,
+        "minor": 9,
+        "release_meta": {
+            "LSB_VERSION": "base-4.0-amd64:base-4.0-noarch:core-4.0-amd64:core-4.0-noarch"
+        }
+    }
+}

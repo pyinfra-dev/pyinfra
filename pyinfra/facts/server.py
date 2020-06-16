@@ -448,6 +448,10 @@ class LinuxDistribution(FactBase):
         r'(Alpine) Linux v([0-9]+).([0-9]+)',
     ]
 
+    name_to_pretty_name = {
+        'Centos': 'CentOS',
+    }
+
     @staticmethod
     def default():
         return {
@@ -457,27 +461,44 @@ class LinuxDistribution(FactBase):
         }
 
     def process(self, output):
-        release_info = {
-            'release_meta': {},
-        }
-
-        # Start with a copy of the default (None) data
-        release_info.update(self.default())
+        meta = {}
 
         for line in output:
-            # Check if we match a known version/major/minor string
-            for regex in self.regexes:
-                matches = re.search(regex, line)
-                if matches:
-                    release_info.update({
-                        'name': matches.group(1),
-                        'major': matches.group(2) and int(matches.group(2)) or None,
-                        'minor': matches.group(3) and int(matches.group(3)) or None,
-                    })
-
             if '=' in line:
                 key, value = line.split('=')
-                release_info['release_meta'][key] = value.strip('"')
+                meta[key] = value.strip('"')
+
+        name = None
+        major = None
+        minor = None
+
+        if 'ID' in meta and 'VERSION_ID' in meta:
+            name = meta['ID'].title()
+            version_bits = meta['VERSION_ID'].split('.')
+            major = version_bits[0]
+            if len(version_bits) > 1:
+                minor = version_bits[1]
+        else:
+            for line in output:
+                matched = False
+                for regex in self.regexes:
+                    matches = re.search(regex, line)
+                    if matches:
+                        name = matches.group(1)
+                        major = matches.group(2)
+                        minor = matches.group(3)
+                        matched = True
+                        break
+                if matched:
+                    break
+
+        release_info = self.default()
+        release_info.update({
+            'name': self.name_to_pretty_name.get(name, name),
+            'major': try_int(major),
+            'minor': try_int(minor),
+            'release_meta': meta,
+        })
 
         return release_info
 
