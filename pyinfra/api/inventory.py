@@ -207,6 +207,9 @@ class Inventory(object):
         DEPRECATED: please use ``Inventory.get_group`` instead.
         '''
 
+        if key.startswith('_'):
+            return
+
         # COMPAT w/ <0.4
         # TODO: remove this function
 
