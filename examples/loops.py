@@ -4,7 +4,7 @@ an example of looping while preserving the order.
 '''
 
 from pyinfra import state
-from pyinfra.operations import server
+from pyinfra.modules import server
 
 SUDO = True
 

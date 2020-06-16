@@ -1,4 +1,4 @@
-from pyinfra.operations import pacman
+from pyinfra.modules import pacman
 
 SUDO = True
 

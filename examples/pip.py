@@ -1,5 +1,5 @@
 from pyinfra import host
-from pyinfra.operations import apk, apt, files, pip, yum
+from pyinfra.modules import apk, apt, files, pip, yum
 
 SUDO = True
 

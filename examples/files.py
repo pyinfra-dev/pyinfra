@@ -1,5 +1,5 @@
 from pyinfra import host
-from pyinfra.operations import files
+from pyinfra.modules import files
 
 # Note: This requires files in the files/ directory.
 

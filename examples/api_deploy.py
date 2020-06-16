@@ -11,7 +11,7 @@ from pyinfra.api.connectors.vagrant import make_names_data  # noqa: E402
 from pyinfra.api.facts import get_facts  # noqa: E402
 from pyinfra.api.operation import add_op  # noqa: E402
 from pyinfra.api.operations import run_ops  # noqa: E402
-from pyinfra.operations import files, server  # noqa: E402
+from pyinfra.modules import files, server  # noqa: E402
 from pyinfra_cli.prints import jsonify  # noqa: E402
 
 

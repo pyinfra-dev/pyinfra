@@ -1,5 +1,5 @@
 from pyinfra import host, state
-from pyinfra.operations import apt, files, postgresql, python
+from pyinfra.modules import apt, files, postgresql, python
 
 SUDO = True
 

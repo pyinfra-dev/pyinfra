@@ -1,4 +1,4 @@
-from pyinfra.operations import python
+from pyinfra.modules import python
 
 # Tip: Can run try it out using: 'pyinfra @docker/python python.py'
 

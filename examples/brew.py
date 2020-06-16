@@ -1,4 +1,4 @@
-from pyinfra.operations import brew
+from pyinfra.modules import brew
 
 # To run: "pyinfra @local brew.py"
 

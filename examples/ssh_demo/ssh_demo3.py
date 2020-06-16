@@ -1,5 +1,5 @@
 from pyinfra import host
-from pyinfra.operations import ssh
+from pyinfra.modules import ssh
 
 # Note: Not running as sudo, use the vagrant user.
 SUDO = False

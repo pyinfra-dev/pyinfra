@@ -1,6 +1,5 @@
 from pyinfra import host
-from pyinfra.operations import git, pip, server
-
+from pyinfra.modules import git, pip, server
 
 # Ensure the state of git repositories
 git.repo(

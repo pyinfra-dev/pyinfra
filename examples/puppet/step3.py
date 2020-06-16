@@ -1,5 +1,5 @@
 from pyinfra import host, inventory
-from pyinfra.operations import files, puppet
+from pyinfra.modules import files, puppet
 
 SUDO = True
 USE_SUDO_LOGIN = True
