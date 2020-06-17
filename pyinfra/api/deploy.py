@@ -13,8 +13,9 @@ from pyinfra.pseudo_modules import PseudoModule
 
 from .exceptions import PyinfraError
 from .host import Host
+from .operation_kwargs import pop_global_op_kwargs
 from .state import State
-from .util import get_caller_frameinfo, pop_global_op_kwargs
+from .util import get_caller_frameinfo
 
 
 def add_deploy(state, deploy_func, *args, **kwargs):

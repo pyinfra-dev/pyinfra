@@ -19,12 +19,12 @@ from pyinfra.pseudo_modules import PseudoModule
 
 from .exceptions import PyinfraError
 from .host import Host
+from .operation_kwargs import pop_global_op_kwargs
 from .state import State
 from .util import (
     get_arg_value,
     get_caller_frameinfo,
     make_hash,
-    pop_global_op_kwargs,
     unroll_generators,
 )
 

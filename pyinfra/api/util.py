@@ -20,7 +20,6 @@ from paramiko import SSHException
 from pyinfra import logger
 
 from .exceptions import PyinfraError
-from .operation_kwargs import OPERATION_KWARGS
 
 # 64kb chunks
 BLOCKSIZE = 65536
@@ -131,68 +130,6 @@ class FallbackDict(object):
             out.update(data)
 
         return out
-
-
-@memoize
-def show_stdin_global_warning():
-    logger.warning('The stdin global argument is in alpha!')
-
-
-def pop_global_op_kwargs(state, kwargs):
-    '''
-    Pop and return operation global keyword arguments.
-    '''
-
-    for deprecated_key in ('when', 'hosts'):
-        if deprecated_key in kwargs:
-            logger.warning((
-                'Use of the `{0}` argument is deprecated, '
-                'please use normal `if` statements instead.'
-            ).format(deprecated_key))
-
-    meta_kwargs = state.deploy_kwargs or {}
-
-    def get_kwarg(key, default=None):
-        return kwargs.pop(key, meta_kwargs.get(key, default))
-
-    # TODO: remove hosts/when
-    hosts = get_kwarg('hosts')
-    hosts = ensure_host_list(hosts, inventory=state.inventory)
-
-    # Filter out any hosts not in the meta kwargs (nested support)
-    if meta_kwargs.get('hosts') is not None:
-        hosts = [
-            host for host in hosts
-            if host in meta_kwargs['hosts']
-        ]
-
-    global_kwargs = {
-        'hosts': hosts,
-        'when': get_kwarg('when', True),
-    }
-    # TODO: end remove hosts/when block
-
-    if 'stdin' in kwargs:
-        show_stdin_global_warning()
-
-    for _, kwarg_configs in OPERATION_KWARGS.items():
-        for key, config in kwarg_configs.items():
-            handler = None
-            default = None
-
-            if isinstance(config, dict):
-                handler = config.get('handler')
-                default = config.get('default')
-                if default and callable(default):
-                    default = default(state.config)
-
-            value = get_kwarg(key, default=default)
-            if handler:
-                value = handler(state.config, value)
-
-            global_kwargs[key] = value
-
-    return global_kwargs
 
 
 def unroll_generators(generator):
