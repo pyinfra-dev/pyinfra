@@ -18,8 +18,6 @@ from paramiko import SSHException
 import pyinfra
 
 from pyinfra import logger
-from pyinfra.api.exceptions import PyinfraError
-from pyinfra.api.util import format_exception, log_host_command_error
 from pyinfra.progress import progress_spinner
 
 from .exceptions import PyinfraError
@@ -28,15 +26,8 @@ from .util import format_exception, log_host_command_error
 
 
 def _run_server_op(state, host, op_hash):
-    # Noop for this host?
     if op_hash not in state.ops[host]:
-        logger.info('{0}{1}'.format(
-            host.print_prefix,
-            click.style(
-                'Skipped',
-                'blue',
-            ),
-        ))
+        logger.info('{0}{1}'.format(host.print_prefix, click.style('Skipped', 'blue')))
         return True
 
     op_data = state.ops[host][op_hash]
