@@ -1,3 +1,8 @@
+from pyinfra import logger
+
+from .util import ensure_host_list, memoize
+
+
 auth_kwargs = {
     'sudo': {
         'description': 'Execute/apply any changes with sudo.',
@@ -81,7 +86,16 @@ OPERATION_KWARGS = {
     'Callbacks': callback_kwargs,
     None: hidden_commands,
 }
+
+
 @memoize
+def get_executor_kwarg_keys():
+    keys = set()
+    keys.update(auth_kwargs.keys())
+    keys.update(operation_kwargs.keys())
+    keys.remove('ignore_errors')
+    return list(keys)
+
 
 @memoize
 def show_stdin_global_warning():

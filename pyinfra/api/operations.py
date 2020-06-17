@@ -22,6 +22,10 @@ from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import format_exception, log_host_command_error
 from pyinfra.progress import progress_spinner
 
+from .exceptions import PyinfraError
+from .operation_kwargs import get_executor_kwarg_keys
+from .util import format_exception, log_host_command_error
+
 
 def _run_server_op(state, host, op_hash):
     # Noop for this host?
@@ -48,30 +52,19 @@ def _run_server_op(state, host, op_hash):
     for i, command in enumerate(op_data['commands']):
         status = False
 
-        shell_executable = op_meta['shell_executable']
-        sudo = op_meta['sudo']
-        sudo_user = op_meta['sudo_user']
-        su_user = op_meta['su_user']
-        preserve_sudo_env = op_meta['preserve_sudo_env']
-        success_exit_codes = op_meta['success_exit_codes']
+        executor_kwarg_keys = get_executor_kwarg_keys()
+        executor_kwargs = {
+            key: op_meta[key]
+            for key in executor_kwarg_keys
+            if key in op_meta
+        }
 
         # As dicts, individual commands can override meta settings (ie on a
         # per-host basis generated during deploy).
         if isinstance(command, dict):
-            if 'sudo' in command:
-                sudo = command['sudo']
-
-            if 'sudo_user' in command:
-                sudo_user = command['sudo_user']
-
-            if 'su_user' in command:
-                su_user = command['su_user']
-
-            if 'shell_executable' in command:
-                shell_executable = command['shell_executable']
-
-            if 'success_exit_codes' in command:
-                success_exit_codes = command['success_exit_codes']
+            for key in executor_kwarg_keys:
+                if key in command:
+                    executor_kwargs[key] = command[key]
 
             command = command['command']
 
@@ -118,12 +111,9 @@ def _run_server_op(state, host, op_hash):
                         state,
                         first_file,
                         second_file,
-                        sudo=sudo,
-                        sudo_user=sudo_user,
-                        su_user=su_user,
-                        shell_executable=shell_executable,
                         print_output=state.print_output,
                         print_input=state.print_input,
+                        **executor_kwargs
                     )
 
                 except (timeout_error, socket_error, SSHException, IOError) as e:
@@ -141,22 +131,10 @@ def _run_server_op(state, host, op_hash):
                 status, combined_output_lines = host.run_shell_command(
                     state,
                     command.strip(),
-                    sudo=sudo,
-                    sudo_user=sudo_user,
-                    use_sudo_login=op_meta['use_sudo_login'],
-                    su_user=su_user,
-                    use_su_login=op_meta['use_su_login'],
-                    use_sudo_password=op_meta['use_sudo_password'],
-                    preserve_sudo_env=preserve_sudo_env,
-                    shell_executable=shell_executable,
-                    timeout=op_meta['timeout'],
-                    get_pty=op_meta['get_pty'],
-                    env=op_meta['env'],
-                    stdin=op_meta['stdin'],
-                    success_exit_codes=success_exit_codes,
                     print_output=state.print_output,
                     print_input=state.print_input,
                     return_combined_output=True,
+                    **executor_kwargs
                 )
 
             except (timeout_error, socket_error, SSHException) as e:
