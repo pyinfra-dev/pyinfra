@@ -12,7 +12,8 @@ from .util.packaging import ensure_packages
 @operation
 def packages(state, host, packages=None, present=True, pkg_path=None):
     '''
-    Install/remove/update pkg_* packages.
+    Install/remove/update pkg packages. This will use ``pkg ...`` where available
+    (FreeBSD) and the ``pkg_*`` variants elsewhere.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed
@@ -48,8 +49,13 @@ def packages(state, host, packages=None, present=True, pkg_path=None):
                 arch=host.fact.arch,
             )
 
+    # FreeBSD used "pkg ..." and OpenBSD uses "pkg_[add|delete]"
+    is_pkg = host.fact.which('pkg')
+    install_command = 'pkg install -y' if is_pkg else 'pkg_add'
+    uninstall_command = 'pkg delete -y' if is_pkg else 'pkg_delete'
+
     yield ensure_packages(
         packages, host.fact.pkg_packages, present,
-        install_command='PKG_PATH={0} pkg_add'.format(pkg_path),
-        uninstall_command='pkg_delete',
+        install_command='PKG_PATH={0} {1}'.format(pkg_path, install_command),
+        uninstall_command=uninstall_command,
     )

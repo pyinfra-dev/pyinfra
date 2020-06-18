@@ -13,7 +13,7 @@ class PkgPackages(FactBase):
         ...
     '''
 
-    command = 'pkg_info'
+    command = 'pkg info || pkg_info'
     regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.]+)'
     default = dict
 
