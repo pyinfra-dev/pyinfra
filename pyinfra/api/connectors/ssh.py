@@ -27,6 +27,7 @@ from pyinfra.api.util import get_file_io, memoize
 
 from .sshuserclient import SSHClient
 from .util import (
+    get_safe_unix_command,
     get_sudo_password,
     make_unix_command,
     read_buffers_into_queue,
@@ -243,13 +244,14 @@ def run_shell_command(
         )
 
     command = make_unix_command(command, **command_kwargs)
+    printable_command = get_safe_unix_command(command)
 
     logger.debug('Running command on {0}: (pty={1}) {2}'.format(
-        host.name, get_pty, command,
+        host.name, get_pty, printable_command,
     ))
 
     if print_input:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, command))
+        click.echo('{0}>>> {1}'.format(host.print_prefix, printable_command))
 
     # Run it! Get stdout, stderr & the underlying channel
     stdin_buffer, stdout_buffer, stderr_buffer = host.connection.exec_command(

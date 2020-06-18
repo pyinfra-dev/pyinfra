@@ -12,6 +12,7 @@ from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import get_file_io
 
 from .util import (
+    get_safe_unix_command,
     get_sudo_password,
     make_unix_command,
     run_local_process,
@@ -67,11 +68,12 @@ def run_shell_command(
         )
 
     command = make_unix_command(command, **command_kwargs)
+    printable_command = get_safe_unix_command(command)
 
-    logger.debug('--> Running command on localhost: {0}'.format(command))
+    logger.debug('--> Running command on localhost: {0}'.format(printable_command))
 
     if print_input:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, command))
+        click.echo('{0}>>> {1}'.format(host.print_prefix, printable_command))
 
     return_code, combined_output = run_local_process(
         command,
