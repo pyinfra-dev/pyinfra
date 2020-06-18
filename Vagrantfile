@@ -55,6 +55,10 @@ Vagrant.configure('2') do |config|
         openbsd.vm.box = 'generic/openbsd6'
     end
 
+    config.vm.define :freebsd12 do |openbsd|
+        openbsd.vm.box = 'generic/freebsd12'
+    end
+
     config.vm.define :windows2019 do |windows|
         windows.vm.box = 'StefanScherer/windows_2019'
         windows.vm.provider "vmware_desktop" do |v|
