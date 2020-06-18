@@ -1,4 +1,4 @@
-# v0.15 (WIP)
+# v0.15 (WIP, dev0)
 
 Final `v0.x` release before `v1`. Changes:
 
