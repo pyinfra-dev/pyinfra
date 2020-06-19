@@ -5,7 +5,7 @@
     },
     "facts": {
         "systemd_status": {
-            "redis-server": true
+            "redis-server.service": true
         }
     },
     "commands": [

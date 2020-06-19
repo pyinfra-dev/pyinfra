@@ -273,14 +273,14 @@ def systemd(
     command=None, enabled=None, daemon_reload=False,
 ):
     '''
-    Manage the state of systemd managed services.
+    Manage the state of systemd managed units.
 
-    + name: name of the service to manage
-    + running: whether the service should be running
-    + restarted: whether the service should be restarted
-    + reloaded: whether the service should be reloaded
+    + name: name of the systemd unit to manage
+    + running: whether the unit should be running
+    + restarted: whether the unit should be restarted
+    + reloaded: whether the unit should be reloaded
     + command: custom command to pass like: ``/etc/rc.d/<name> <command>``
-    + enabled: whether this service should be enabled/disabled on boot
+    + enabled: whether this unit should be enabled/disabled on boot
     + daemon_reload: reload the systemd daemon to read updated unit files
 
     Example:
@@ -288,8 +288,8 @@ def systemd(
     .. code:: python
 
         init.systemd(
-            {'Restart and enable dnsmasq'},
-            'dnsmasq',
+            {'Restart and enable the dnsmasq service'},
+            'dnsmasq.service',
             running=True,
             restarted=True,
             enabled=True,
@@ -297,12 +297,15 @@ def systemd(
 
     '''
 
+    if '.' not in name:
+        name = '{0}.service'.format(name)
+
     if daemon_reload:
         yield 'systemctl daemon-reload'
 
     yield _handle_service_control(
         name, host.fact.systemd_status,
-        'systemctl {1} {0}.service',
+        'systemctl {1} {0}',
         running, restarted, reloaded, command,
     )
 
@@ -311,11 +314,11 @@ def systemd(
 
         # Isn't enabled and want enabled?
         if not is_enabled and enabled is True:
-            yield 'systemctl enable {0}.service'.format(name)
+            yield 'systemctl enable {0}'.format(name)
 
         # Is enabled and want disabled?
         elif is_enabled and enabled is False:
-            yield 'systemctl disable {0}.service'.format(name)
+            yield 'systemctl disable {0}'.format(name)
 
 
 @operation

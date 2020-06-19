@@ -5,10 +5,10 @@
     },
     "facts": {
         "systemd_status": {
-            "redis-server": true
+            "redis-server.service": true
         },
         "systemd_enabled": {
-            "redis-server": false
+            "redis-server.service": false
         }
     },
     "commands": [
