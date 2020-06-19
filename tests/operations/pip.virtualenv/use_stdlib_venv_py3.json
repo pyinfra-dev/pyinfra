@@ -1,0 +1,15 @@
+{
+    "kwargs": {
+        "path": "/some/virtualenv",
+        "python": "python3",
+	"venv": true
+    },
+    "facts": {
+        "file": {
+            "/some/virtualenv/bin/activate": null
+        }
+    },
+    "commands": [
+        "python3 -m venv /some/virtualenv"
+    ]
+}

@@ -14,12 +14,13 @@ from .util.packaging import ensure_packages
 @operation
 def virtualenv(
     state, host, path,
-    python=None, site_packages=False, always_copy=False, present=True,
+    python=None, venv=False, site_packages=False, always_copy=False, present=True,
 ):
     '''
     Add/remove Python virtualenvs.
 
     + python: python interpreter to use
+    + venv: use standard venv module instead of virtualenv
     + site_packages: give access to the global site-packages
     + always_copy: always copy files rather than symlinking
     + present: whether the virtualenv should exist
@@ -45,14 +46,19 @@ def virtualenv(
         # Create missing virtualenv
         command = ['virtualenv']
 
-        if python:
+        if venv:
+            command = [python or 'python', '-m', 'venv']
+
+        if python and not venv:
             command.append('-p {0}'.format(python))
 
         if site_packages:
             command.append('--system-site-packages')
 
-        if always_copy:
+        if always_copy and not venv:
             command.append('--always-copy')
+        elif always_copy and venv:
+            command.append('--copies')
 
         command.append(path)
 
