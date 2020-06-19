@@ -1,4 +1,4 @@
-# v0.15 (WIP, dev0)
+# v0.15 (WIP, dev1)
 
 Final `v0.x` release before `v1`. Changes:
 
@@ -6,6 +6,9 @@ Final `v0.x` release before `v1`. Changes:
 + Rename `pyinfra.modules` -> `pyinfra.operations` (backwards compatible, will remain in v1)
 + Support YAML+JSON `@ansible` connector inventories (@ricardbejarano)
     * requires `pyyaml` which is an extra requirement (`pip install pyinfra[ansible]`)
++ Enable managing all systemd unit types (not just service) (@nikaro)
++ Enable using `venv` instead of `virtualenv` (@nikaro)
++ Support `pkg ...` FreeBSD commands in `pkg.packages` operation + fact
 + Python2 unicode fixes for `files` operations + facts
 + Properly escape/support paths with spaces
 + Add python3.8 to travis tests
