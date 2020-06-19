@@ -58,7 +58,7 @@ class SystemdEnabled(FactBase):
         done
     '''
 
-    regex = r'^([a-zA-Z@\-]+\.[a-z]+)\s+([a-z]+)'
+    regex = r'^([a-zA-Z0-9@\-]+\.[a-z]+)\s+([a-z]+)'
     default = dict
 
     def process(self, output):
