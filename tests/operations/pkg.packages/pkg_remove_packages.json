@@ -9,9 +9,12 @@
         "arch": "arch",
         "pkg_packages": {
             "py-pip": []
+        },
+        "which": {
+            "pkg": "/bin/pkg"
         }
     },
     "commands": [
-        "pkg_delete py-pip"
+        "pkg delete -y py-pip"
     ]
 }
