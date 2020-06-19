@@ -1,11 +1,11 @@
 {
-    "args": ["redis-server"],
+    "args": ["redis-server.service"],
     "kwargs": {
         "daemon_reload": true
     },
     "facts": {
         "systemd_status": {
-            "redis-server": true
+            "redis-server.service": true
         }
     },
     "commands": [

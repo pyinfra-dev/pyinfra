@@ -1,0 +1,11 @@
+{
+    "args": ["logrotate.timer"],
+    "facts": {
+        "systemd_status": {
+            "logrotate.timer": false
+        }
+    },
+    "commands": [
+        "systemctl start logrotate.timer"
+    ]
+}

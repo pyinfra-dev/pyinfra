@@ -5,7 +5,7 @@
         "x11-common.service masked"
     ],
     "fact":  {
-        "vboxadd": true,
-        "vgauth": true
+        "vboxadd.service": true,
+        "vgauth.service": true
     }
 }

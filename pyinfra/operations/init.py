@@ -289,9 +289,16 @@ def systemd(
 
         init.systemd(
             {'Restart and enable dnsmasq'},
-            'dnsmasq',
+            'dnsmasq.service',
             running=True,
             restarted=True,
+            enabled=True,
+        )
+
+        init.systemd(
+            {'Enable logrotate timer'},
+            'logrotate.timer',
+            running=True,
             enabled=True,
         )
 
@@ -302,7 +309,7 @@ def systemd(
 
     yield _handle_service_control(
         name, host.fact.systemd_status,
-        'systemctl {1} {0}.service',
+        'systemctl {1} {0}',
         running, restarted, reloaded, command,
     )
 
@@ -311,11 +318,11 @@ def systemd(
 
         # Isn't enabled and want enabled?
         if not is_enabled and enabled is True:
-            yield 'systemctl enable {0}.service'.format(name)
+            yield 'systemctl enable {0}'.format(name)
 
         # Is enabled and want disabled?
         elif is_enabled and enabled is False:
-            yield 'systemctl disable {0}.service'.format(name)
+            yield 'systemctl disable {0}'.format(name)
 
 
 @operation
