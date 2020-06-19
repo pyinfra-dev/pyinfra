@@ -29,7 +29,7 @@ class SystemdStatus(FactBase):
     '''
 
     command = 'systemctl -al list-units'
-    regex = r'^([a-z\-0-9]+\.[a-z]+)\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
+    regex = r'^([a-zA-Z\-0-9]+\.[a-z]+)\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
     default = dict
 
     def process(self, output):
@@ -58,7 +58,7 @@ class SystemdEnabled(FactBase):
         done
     '''
 
-    regex = r'^([a-z@\-]+\.[a-z]+)\s+([a-z]+)'
+    regex = r'^([a-zA-Z@\-]+\.[a-z]+)\s+([a-z]+)'
     default = dict
 
     def process(self, output):

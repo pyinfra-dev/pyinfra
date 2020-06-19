@@ -1,0 +1,20 @@
+{
+    "args": ["py-pip"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "os": "os",
+        "os_version": "os_version",
+        "arch": "arch",
+        "pkg_packages": {
+            "py-pip": []
+        },
+        "which": {
+            "pkg": null
+        }
+    },
+    "commands": [
+        "pkg_delete py-pip"
+    ]
+}
