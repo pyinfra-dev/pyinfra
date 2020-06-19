@@ -1,11 +1,12 @@
 {
     "output": [
         "vboxadd.service enabled",
-        "vgauth.service enabled",
+        "vgauth.timer enabled",
         "x11-common.service masked"
     ],
     "fact":  {
-        "vboxadd": true,
-        "vgauth": true
+        "vboxadd.service": true,
+        "vgauth.timer": true,
+        "x11-common.service": false
     }
 }

@@ -3,12 +3,12 @@
         "lvm2-activation.service      not-found inactive dead    lvm2-activation.service",
         "lvm2-lvmetad.service         loaded    active   running LVM2 metadata daemon",
         "lvm2-lvmpolld.service        loaded    inactive dead    LVM2 poll daemon",
-        "ebtables.service             loaded    active   exited  ebtables ruleset management"
+        "ebtables.timer             loaded    active   exited  ebtables ruleset management"
     ],
     "fact":  {
-        "lvm2-activation": false,
-        "lvm2-lvmetad": true,
-        "lvm2-lvmpolld": false,
-        "ebtables": false
+        "lvm2-activation.service": false,
+        "lvm2-lvmetad.service": true,
+        "lvm2-lvmpolld.service": false,
+        "ebtables.timer": false
     }
 }

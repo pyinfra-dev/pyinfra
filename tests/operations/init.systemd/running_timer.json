@@ -1,0 +1,11 @@
+{
+    "args": ["some-timer.timer"],
+    "facts": {
+        "systemd_status": {
+            "some-timer.timer": false
+        }
+    },
+    "commands": [
+        "systemctl start some-timer.timer"
+    ]
+}
