@@ -295,6 +295,13 @@ def systemd(
             enabled=True,
         )
 
+        init.systemd(
+            {'Enable logrotate timer'},
+            'logrotate.timer',
+            running=True,
+            enabled=True,
+        )
+
     '''
 
     if '.' not in name:

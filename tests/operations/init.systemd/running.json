@@ -1,5 +1,5 @@
 {
-    "args": ["redis-server"],
+    "args": ["redis-server.service"],
     "facts": {
         "systemd_status": {
             "redis-server.service": false

@@ -29,7 +29,7 @@ class SystemdStatus(FactBase):
     '''
 
     command = 'systemctl -al list-units'
-    regex = r'^([a-zA-Z\-0-9\.]+)\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
+    regex = r'^([a-zA-Z\-0-9]+\.[a-z]+)\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
     default = dict
 
     def process(self, output):
@@ -49,29 +49,29 @@ class SystemdEnabled(FactBase):
     '''
 
     command = '''
-        systemctl --no-legend -al list-unit-files | while read -r SERVICE STATUS; do
+        systemctl --no-legend -al list-unit-files | while read -r UNIT STATUS; do
             if [ "$STATUS" = generated ] &&
-                systemctl is-enabled $SERVICE >/dev/null 2>&1; then
+                systemctl is-enabled $UNIT >/dev/null 2>&1; then
                 STATUS=enabled
             fi
-            echo $SERVICE $STATUS
+            echo $UNIT $STATUS
         done
     '''
 
-    regex = r'^([a-zA-Z\-0-9\.]+)\s+([a-z]+)'
+    regex = r'^([a-zA-Z@\-]+\.[a-z]+)\s+([a-z]+)'
     default = dict
 
     def process(self, output):
-        services = {}
+        units = {}
 
         for line in output:
             matches = re.match(self.regex, line)
             if matches:
-                services[matches.group(1)] = (
+                units[matches.group(1)] = (
                     matches.group(2) in ('enabled', 'static')
                 )
 
-        return services
+        return units
 
 
 class InitdStatus(FactBase):

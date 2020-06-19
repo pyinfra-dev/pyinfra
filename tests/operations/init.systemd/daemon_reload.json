@@ -1,5 +1,5 @@
 {
-    "args": ["redis-server"],
+    "args": ["redis-server.service"],
     "kwargs": {
         "daemon_reload": true
     },
