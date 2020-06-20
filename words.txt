@@ -1,3 +1,5 @@
+# This is a list of additional allowed words for flake8-spellcheck
+
 systeminfo
 'testpass'
 'testuser'
