@@ -91,7 +91,11 @@ if __name__ == '__main__':
         author='Nick / Fizzadar',
         author_email='pointlessrambler@gmail.com',
         license='MIT',
-        url='http://github.com/Fizzadar/pyinfra',
+        url='https://pyinfra.com',
+        project_urls={
+            'Documentation': 'https://docs.pyinfra.com',
+            'GitHub': 'https://github.com/Fizzadar/pyinfra',
+        },
         packages=find_packages(exclude=['tests']),
         entry_points={
             'console_scripts': (
