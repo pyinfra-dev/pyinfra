@@ -1,9 +1,10 @@
-from . import ansible, docker, local, mech, ssh, vagrant, winrm
+from . import ansible, chroot, docker, local, mech, ssh, vagrant, winrm
 
 
 # Connectors that handle execution of pyinfra operations
 EXECUTION_CONNECTORS = {  # pragma: no cover
     'docker': docker,
+    'chroot': chroot,
     'local': local,
     'ssh': ssh,
     'winrm': winrm,
@@ -13,6 +14,7 @@ EXECUTION_CONNECTORS = {  # pragma: no cover
 ALL_CONNECTORS = {  # pragma: no cover
     'ansible': ansible,
     'docker': docker,
+    'chroot': chroot,
     'local': local,
     'mech': mech,
     'ssh': ssh,

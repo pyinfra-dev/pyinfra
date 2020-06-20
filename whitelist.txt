@@ -110,6 +110,7 @@ cfg
 chdir
 choco
 chown
+chroot
 comparator
 compat
 configparser
@@ -320,6 +321,7 @@ uname
 unitialised
 unmount
 up
+up2
 v
 v0
 v1
