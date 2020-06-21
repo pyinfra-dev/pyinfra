@@ -63,7 +63,7 @@ def repo(
     .. code:: python
 
         # Download a repository file
-        yum.rpm(
+        yum.repo(
             {'Install Docker-CE repo via URL'},
             'https://download.docker.com/linux/centos/docker-ce.repo',
         )
