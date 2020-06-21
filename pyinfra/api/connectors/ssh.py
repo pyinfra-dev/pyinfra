@@ -11,6 +11,9 @@ import click
 
 from paramiko import (
     AuthenticationException,
+    DSSKey,
+    ECDSAKey,
+    Ed25519Key,
     MissingHostKeyPolicy,
     PasswordRequiredException,
     RSAKey,
@@ -45,6 +48,52 @@ def _raise_connect_error(host, message, data):
     raise ConnectError(message)
 
 
+def _load_private_key_file(filename, key_filename, key_password):
+    exception = PyinfraError('Invalid key: {0}'.format(filename))
+
+    for key_cls in (RSAKey, DSSKey, ECDSAKey, Ed25519Key):
+        try:
+            return key_cls.from_private_key_file(
+                filename=filename,
+            )
+
+        except PasswordRequiredException:
+            if not key_password:
+                # If password is not provided, but we're in CLI mode, ask for it. I'm not a
+                # huge fan of having CLI specific code in here, but it doesn't really fit
+                # anywhere else without duplicating lots of key related code into cli.py.
+                if pyinfra.is_cli:
+                    key_password = getpass(
+                        'Enter password for private key: {0}: '.format(
+                            key_filename,
+                        ),
+                    )
+
+                # API mode and no password? We can't continue!
+                else:
+                    raise PyinfraError(
+                        'Private key file ({0}) is encrypted, set ssh_key_password to '
+                        'use this key'.format(key_filename),
+                    )
+
+            # Now, try opening the key with the password
+            try:
+                return key_cls.from_private_key_file(
+                    filename=filename,
+                    password=key_password,
+                )
+            except SSHException:
+                raise PyinfraError(
+                    'Incorrect password for private key: {0}'.format(
+                        key_filename,
+                    ),
+                )
+
+        except SSHException as e:  # key does not match key_cls type
+            exception = e
+    raise exception
+
+
 def _get_private_key(state, key_filename, key_password):
     if key_filename in state.private_keys:
         return state.private_keys[key_filename]
@@ -64,47 +113,11 @@ def _get_private_key(state, key_filename, key_password):
         if not path.isfile(filename):
             continue
 
-        # First, lets try the key without a password
         try:
-            key = RSAKey.from_private_key_file(
-                filename=filename,
-            )
+            key = _load_private_key_file(filename, key_filename, key_password)
             break
-
-        # Key is encrypted!
-        except PasswordRequiredException:
-            # If password is not provided, but we're in CLI mode, ask for it. I'm not a
-            # huge fan of having CLI specific code in here, but it doesn't really fit
-            # anywhere else without duplicating lots of key related code into cli.py.
-            if not key_password:
-                if pyinfra.is_cli:  # pragma: no cover
-                    key_password = getpass(
-                        'Enter password for private key: {0}: '.format(
-                            key_filename,
-                        ),
-                    )
-
-            # API mode and no password? We can't continue!
-                else:
-                    raise PyinfraError(
-                        'Private key file ({0}) is encrypted, set ssh_key_password to '
-                        'use this key'.format(key_filename),
-                    )
-
-            # Now, try opening the key with the password
-            try:
-                key = RSAKey.from_private_key_file(
-                    filename=filename,
-                    password=key_password,
-                )
-                break
-
-            except SSHException:
-                raise PyinfraError(
-                    'Incorrect password for private key: {0}'.format(
-                        key_filename,
-                    ),
-                )
+        except SSHException:
+            pass
 
     # No break, so no key found
     else:

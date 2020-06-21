@@ -1,5 +1,5 @@
 '''
-Manage choco (Chocolatey) packages. (see https://chocolatey.org/ )
+Manage ``choco`` (Chocolatey) packages (https://chocolatey.org).
 '''
 
 from pyinfra.api import operation
@@ -10,7 +10,7 @@ from .util.packaging import ensure_packages
 @operation
 def packages(state, host, packages=None, present=True, latest=False):
     '''
-    Add/remove/update choco packages.
+    Add/remove/update ``choco`` packages.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed
@@ -44,7 +44,7 @@ def packages(state, host, packages=None, present=True, latest=False):
 @operation
 def install(state, host):
     '''
-    Install choco (Chocolatey).
+    Install ``choco`` (Chocolatey).
     '''
 
     yield 'Set-ExecutionPolicy Bypass -Scope Process -Force ;' \

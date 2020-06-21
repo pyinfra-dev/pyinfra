@@ -27,11 +27,13 @@ Cpus
 Crontab
 Cygwin
 DOCOPT
+dss
 E305
 E402
 E501
 F401
 F403
+Ed25519
 Gevent
 HKLM
 HOMEPATH
