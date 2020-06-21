@@ -25,5 +25,5 @@ jobs:
   include:
     - stage: Docker test
       python: '3.8'
-      script: pytest -m 'int and not vagrant'
+      script: pytest -v -m 'int and not vagrant'
       if: branch = master
