@@ -19,7 +19,7 @@ def file(
     state, host, name,
     present=True, assume_present=False,
     user=None, group=None, mode=None, touch=False,
-    create_remote_dir=False,
+    create_remote_dir=True,
 ):
     '''
     Add/remove/update files.
