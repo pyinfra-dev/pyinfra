@@ -19,6 +19,7 @@ Submodules
 .. toctree::
 
    pyinfra.api.connectors.ansible
+   pyinfra.api.connectors.chroot
    pyinfra.api.connectors.docker
    pyinfra.api.connectors.local
    pyinfra.api.connectors.mech
