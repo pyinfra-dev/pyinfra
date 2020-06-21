@@ -25,7 +25,7 @@ def parse_yum_repositories(output):
     current_repo = {}
     for line in output:
         line = line.strip()
-        if not line:
+        if not line or line.startswith('#'):
             continue
 
         if line.startswith('['):

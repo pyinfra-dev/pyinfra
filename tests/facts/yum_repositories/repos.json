@@ -1,8 +1,11 @@
 {
     "command": "cat /etc/yum.conf /etc/yum.repos.d/*.repo 2> /dev/null || true",
     "output": [
+        "# comment line",
+        " # comment line with whitespaces",
         "[somerepo]",
         "baseurl=abc"
+
     ],
     "fact": [
         {
