@@ -136,7 +136,7 @@ def line(
     state, host,
     name, line,
     present=True, replace=None, flags=None,
-    interpolate_variables=True,
+    interpolate_variables=False,
 ):
     '''
     Ensure lines in files using grep to locate and sed to replace.
@@ -280,7 +280,7 @@ def line(
 
 
 @operation
-def replace(state, host, name, match, replace, flags=None, interpolate_variables=True):
+def replace(state, host, name, match, replace, flags=None, interpolate_variables=False):
     '''
     A simple shortcut for replacing text in files with sed.
 

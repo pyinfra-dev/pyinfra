@@ -377,7 +377,7 @@ def sysctl(
 def crontab(
     state, host, command, present=True, user=None, name=None,
     minute='*', hour='*', month='*', day_of_week='*', day_of_month='*',
-    interpolate_variables=True,
+    interpolate_variables=False,
 ):
     '''
     Add/remove/update crontab entries.
