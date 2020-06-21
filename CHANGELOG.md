@@ -1,14 +1,19 @@
 # v0.15 (WIP, dev1)
 
-Final `v0.x` release before `v1`. Changes:
+Final `v0.x` release before `v1`. To-be-breaking changes:
+
++ Rename `pyinfra.modules` -> `pyinfra.operations` (backwards compatible, will remain in v1)
+
+Other changes:
 
 + Add `use_sudo_password=[True|False|str]` global operation argument
-+ Rename `pyinfra.modules` -> `pyinfra.operations` (backwards compatible, will remain in v1)
 + Support YAML+JSON `@ansible` connector inventories (@ricardbejarano)
     * requires `pyyaml` which is an extra requirement (`pip install pyinfra[ansible]`)
 + Enable managing all systemd unit types (not just service) (@nikaro)
 + Enable using `venv` instead of `virtualenv` (@nikaro)
++ Add `@chroot` connector (@FooBarQuaxx)
 + Support `pkg ...` FreeBSD commands in `pkg.packages` operation + fact
++ Support non-RSA key files (DSS/ECDSA/Ed25519)
 + Python2 unicode fixes for `files` operations + facts
 + Properly escape/support paths with spaces
 + Add python3.8 to travis tests
@@ -245,6 +250,7 @@ Gearing up for `v1` release, deprecating the last unused/old features, expanding
 + Fix `find_in_file` fact for files with `~` in the name
 
 Internal changes:
+
 + Remove the `AttrData` and all `Attr*` classes now we have operation ordering
 
 
@@ -255,6 +261,7 @@ Internal changes:
     * no more deploy file compile needed
 
 Internal changes:
+
 + Inline `sshuserclient` package (original no longer maintained)
 
 
@@ -281,6 +288,7 @@ Internal changes:
 + Fix `command` fact now outputs everything not just the first line
 
 Internal changes:
+
 + **Replace** `--debug-state` with `--debug-operations` and `--debug-facts`
 + pyinfra now compiles the top-level scope of deploy code, meaning if statements no longer generate imbalanced operations
     * This means the recommendations to use `state.when` in place of conditional statements is invalid
