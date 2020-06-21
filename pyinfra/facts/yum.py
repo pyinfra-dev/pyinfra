@@ -11,7 +11,7 @@ class YumRepositories(FactBase):
 
         {
             'name': 'CentOS-$releasever - AppStream',
-            'mirrorlist': 'http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=AppStream&infra=$infra',
+            'baseurl': 'http://mirror.centos.org/$contentdir/$releasever/AppStream/$basearch/os/',
             'gpgcheck': '1',
             'enabled': '1',
             'gpgkey': 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial',
