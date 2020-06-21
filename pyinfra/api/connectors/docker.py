@@ -38,7 +38,7 @@ def connect(state, host, for_fact=None):
     try:
         with progress_spinner({'docker run'}):
             container_id = local.shell(
-                'docker run -d {0} sleep 10000'.format(host.data.docker_image),
+                'docker run -d {0} tail -f /dev/null'.format(host.data.docker_image),
                 splitlines=True,
             )[-1]  # last line is the container ID
     except PyinfraError as e:

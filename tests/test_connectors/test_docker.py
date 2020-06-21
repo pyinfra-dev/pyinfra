@@ -13,7 +13,7 @@ from ..util import make_inventory
 
 
 def fake_docker_shell(command, splitlines=None):
-    if command == 'docker run -d not-an-image sleep 10000':
+    if command == 'docker run -d not-an-image tail -f /dev/null':
         return ['containerid']
 
     elif command == 'docker commit containerid':
