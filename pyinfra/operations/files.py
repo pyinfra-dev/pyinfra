@@ -512,7 +512,7 @@ def get(
 def put(
     state, host, local_filename, remote_filename,
     user=None, group=None, mode=None, add_deploy_dir=True,
-    create_remote_dir=False, force=False, assume_exists=False,
+    create_remote_dir=True, force=False, assume_exists=False,
 ):
     '''
     Upload a local file to the remote system.
@@ -614,7 +614,7 @@ def put(
 @operation
 def template(
     state, host, template_filename, remote_filename,
-    user=None, group=None, mode=None, create_remote_dir=False,
+    user=None, group=None, mode=None, create_remote_dir=True,
     **data
 ):
     '''
@@ -727,7 +727,7 @@ def link(
     state, host, name,
     target=None, present=True, assume_present=False,
     user=None, group=None, symbolic=True,
-    create_remote_dir=False,
+    create_remote_dir=True,
 ):
     '''
     Add/remove/update links.
@@ -848,7 +848,7 @@ def file(
     state, host, name,
     present=True, assume_present=False,
     user=None, group=None, mode=None, touch=False,
-    create_remote_dir=False,
+    create_remote_dir=True,
 ):
     '''
     Add/remove/update files.
