@@ -1,4 +1,4 @@
-# v0.15 (WIP, dev1)
+# v0.15
 
 Final `v0.x` release before `v1`. To-be-breaking changes:
 
@@ -12,11 +12,14 @@ Other changes:
 + Enable managing all systemd unit types (not just service) (@nikaro)
 + Enable using `venv` instead of `virtualenv` (@nikaro)
 + Add `@chroot` connector (@FooBarQuaxx)
++ Don't include comment lines in `yum_repositories` fact (@FooBarQuaxx)
++ Use `tail -f /dev/null` instead of sleep for `@docker` containers (@FooBarQuaxx)
 + Support `pkg ...` FreeBSD commands in `pkg.packages` operation + fact
 + Support non-RSA key files (DSS/ECDSA/Ed25519)
 + Python2 unicode fixes for `files` operations + facts
 + Properly escape/support paths with spaces
 + Add python3.8 to travis tests
+
 
 # v0.14.5
 
@@ -476,12 +479,10 @@ To-be-breaking changes (deprecated):
 + Fix bug in parsing of network interfaces
 + Fix `--limit` with a group name
 
-
 # v0.2.1
 
 + Use wget & pipe when adding apt keys via URL, rather than `apt-key adv` which breaks with HTTPs
 + Fix bug where file-based group names were uppercased incorrectly (ie dev.py made group DEV, rather than dev)
-
 
 # v0.2
 
@@ -516,28 +517,23 @@ Internal changes:
 
 + Fix `--run` arg parsing splutting up `[],`
 
-
 # v0.1.4
 
 + Enable passing of multiple, comma separated hosts, as inventory
 + Use `getpass`, not `raw_input` for collecting key passwords in CLI mode
 
-
 # v0.1.3
 
 + Fix issue when removing users that don't exist
-
 
 # v0.1.2
 
 + Improve private key error handling
 + Ask for encrypted private key passwords in CLI mode
 
-
 # v0.1.1
 
 + Don't generate set groups when `groups` is an empty list in `server.user`.
-
 
 # v0.1
 
