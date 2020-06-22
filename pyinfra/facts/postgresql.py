@@ -1,5 +1,6 @@
 from pyinfra.api import FactBase
 from pyinfra.api.util import try_int
+from pyinfra.api import StringCommand, Mask
 
 from .util.databases import parse_columns_and_rows
 
@@ -15,7 +16,7 @@ def make_psql_command(
     target_bits = []
 
     if password:
-        target_bits.append('PGPASSWORD="{0}"'.format(password))
+        target_bits.append(Mask('PGPASSWORD="{0}"'.format(password)))
 
     target_bits.append(executable)
 
@@ -31,7 +32,7 @@ def make_psql_command(
     if port:
         target_bits.append('-p {0}'.format(port))
 
-    return ' '.join(target_bits)
+    return StringCommand.join(target_bits)
 
 
 def make_execute_psql_command(command, **postgresql_kwargs):

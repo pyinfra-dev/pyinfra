@@ -68,7 +68,7 @@ def run_shell_command(
         )
 
     command = make_unix_command(command, **command_kwargs)
-    printable_command = get_safe_unix_command(command)
+    printable_command = repr(command)
 
     logger.debug('--> Running command on localhost: {0}'.format(printable_command))
 
