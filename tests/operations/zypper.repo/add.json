@@ -1,0 +1,18 @@
+{
+    "args": ["somerepo", "http://baseurl"],
+    "kwargs": {
+        "description": "description",
+        "gpgcheck": false,
+        "gpgkey": "test"
+    },
+    "facts": {
+        "file": {
+            "/etc/zypp/repos.d/somerepo.repo": {}
+        }
+    },
+    "commands": [[
+        "upload",
+        "[somerepo]\nname=description\nbaseurl=http://baseurl\nenabled=1\ngpgcheck=0\ntype=rpm-md\ngpgkey=test\n",
+            "/etc/zypp/repos.d/somerepo.repo"
+    ]]
+}

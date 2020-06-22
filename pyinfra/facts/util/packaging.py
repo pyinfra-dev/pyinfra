@@ -19,7 +19,7 @@ def parse_packages(regex, output, lower=True):
     return packages
 
 
-def parse_yum_repositories(output):
+def _parse_yum_or_zypper_repositories(output):
     repos = []
 
     current_repo = {}
@@ -43,3 +43,8 @@ def parse_yum_repositories(output):
         repos.append(current_repo)
 
     return repos
+
+
+parse_yum_repositories = _parse_yum_or_zypper_repositories
+
+parse_zypper_repositories = _parse_yum_or_zypper_repositories
