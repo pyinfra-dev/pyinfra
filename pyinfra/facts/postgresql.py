@@ -32,7 +32,7 @@ def make_psql_command(
     if port:
         target_bits.append('-p {0}'.format(port))
 
-    return StringCommand.join(target_bits)
+    return StringCommand(target_bits)
 
 
 def make_execute_psql_command(command, **postgresql_kwargs):
