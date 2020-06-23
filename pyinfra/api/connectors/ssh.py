@@ -257,7 +257,7 @@ def run_shell_command(
         )
 
     command = make_unix_command(command, **command_kwargs)
-    printable_command = repr(command)
+    printable_command = getattr(command, "masked", command)
 
     logger.debug('Running command on {0}: (pty={1}) {2}'.format(
         host.name, get_pty, printable_command,
