@@ -30,7 +30,6 @@ from pyinfra.api.util import get_file_io, memoize
 
 from .sshuserclient import SSHClient
 from .util import (
-    get_safe_unix_command,
     get_sudo_password,
     make_unix_command,
     read_buffers_into_queue,

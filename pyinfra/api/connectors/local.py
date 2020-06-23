@@ -12,7 +12,6 @@ from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import get_file_io
 
 from .util import (
-    get_safe_unix_command,
     get_sudo_password,
     make_unix_command,
     run_local_process,
