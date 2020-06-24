@@ -450,6 +450,8 @@ class LinuxDistribution(FactBase):
 
     name_to_pretty_name = {
         'Centos': 'CentOS',
+        'Opensuse-Tumbleweed': 'openSUSE',
+        'Opensuse-Leap': 'openSUSE',
     }
 
     @staticmethod
@@ -464,7 +466,7 @@ class LinuxDistribution(FactBase):
         meta = {}
 
         for line in output:
-            if '=' in line:
+            if '=' in line and not line.startswith('#'):
                 key, value = line.split('=')
                 meta[key] = value.strip('"')
 

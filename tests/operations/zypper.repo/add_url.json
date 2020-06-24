@@ -1,0 +1,14 @@
+{
+    "args": ["http://somesite/somerepo.repo"],
+    "facts": {
+        "file": {
+            "/etc/zypp/repos.d/somerepo.repo": null
+        },
+        "which": {
+            "curl": "yes"
+        }
+    },
+    "commands": [
+        "curl -sSLf http://somesite/somerepo.repo -o /etc/zypp/repos.d/somerepo.repo"
+    ]
+}
