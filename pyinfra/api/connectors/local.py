@@ -66,7 +66,9 @@ def run_shell_command(
             put_file=put_file,
         )
 
-    command, printable_command = make_unix_command(command, **command_kwargs)
+    command = make_unix_command(command, **command_kwargs)
+    actual_command = command.get_raw_value()
+    printable_command = command.get_masked_value()
 
     logger.debug('--> Running command on localhost: {0}'.format(printable_command))
 
@@ -74,7 +76,7 @@ def run_shell_command(
         click.echo('{0}>>> {1}'.format(host.print_prefix, printable_command))
 
     return_code, combined_output = run_local_process(
-        command,
+        actual_command,
         stdin=stdin,
         timeout=timeout,
         print_output=print_output,

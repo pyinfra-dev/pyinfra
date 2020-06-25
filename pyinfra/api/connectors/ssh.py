@@ -255,7 +255,9 @@ def run_shell_command(
             put_file=put_file,
         )
 
-    command, printable_command = make_unix_command(command, **command_kwargs)
+    command = make_unix_command(command, **command_kwargs)
+    actual_command = command.get_raw_value()
+    printable_command = command.get_masked_value()
 
     logger.debug('Running command on {0}: (pty={1}) {2}'.format(
         host.name, get_pty, printable_command,
@@ -266,7 +268,7 @@ def run_shell_command(
 
     # Run it! Get stdout, stderr & the underlying channel
     stdin_buffer, stdout_buffer, stderr_buffer = host.connection.exec_command(
-        command,
+        actual_command,
         get_pty=get_pty,
     )
 

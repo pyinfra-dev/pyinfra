@@ -71,10 +71,10 @@ class TestChrootConnector(TestCase):
         assert len(out) == 3
         assert out[0] is True
 
-        command, _ = make_unix_command(command)
+        command = make_unix_command(command).get_raw_value()
         command = shlex_quote(command)
         docker_command = 'chroot /not-a-chroot sh -c {0}'.format(command)
-        shell_command, _ = make_unix_command(docker_command)
+        shell_command = make_unix_command(docker_command).get_raw_value()
 
         self.fake_popen_mock.assert_called_with(
             shell_command, shell=True,

@@ -4,9 +4,9 @@ from tempfile import mkstemp
 
 import click
 import six
-from six.moves import shlex_quote
 
 from pyinfra import local, logger
+from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
@@ -72,7 +72,8 @@ def run_shell_command(
 
     chroot_directory = host.host_data['chroot_directory']
 
-    command, _ = make_unix_command(command, **command_kwargs)
+    command = make_unix_command(command, **command_kwargs)
+    command = QuoteString(command)
 
     logger.debug(
         '--> Running chroot command on ({0}):{1}'.format(
@@ -80,9 +81,10 @@ def run_shell_command(
         ),
     )
 
-    command = shlex_quote(command)
-
-    chroot_command = 'chroot {0} sh -c {1}'.format(chroot_directory, command)
+    chroot_command = StringCommand(
+        'chroot', chroot_directory,
+        'sh', '-c', command,
+    )
 
     return run_local_shell_command(
         state,

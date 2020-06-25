@@ -14,7 +14,7 @@ from gevent.queue import Queue
 from six.moves import shlex_quote
 
 from pyinfra import logger
-from pyinfra.api import Config, MaskString, StringCommand
+from pyinfra.api import Config, MaskString, QuoteString, StringCommand
 from pyinfra.api.util import read_buffer
 
 SUDO_ASKPASS_ENV_VAR = 'PYINFRA_SUDO_PASSWORD'
@@ -223,14 +223,8 @@ def make_unix_command(
     # OK, now parse the command!
     #
 
-    command = printable_command = command
-
     if isinstance(command, six.binary_type):
-        command = printable_command = command.decode('utf-8')
-
-    if isinstance(command, StringCommand):
-        printable_command = command.get_masked_value()
-        command = command.get_raw_value()
+        command = command.decode('utf-8')
 
     # Use env & build our actual command
     if env:
@@ -238,18 +232,14 @@ def make_unix_command(
             '{0}={1}'.format(key, value)
             for key, value in six.iteritems(env)
         ])
-        command = 'env {0} {1}'.format(env_string, command)
-        printable_command = 'env {0} {1}'.format(env_string, printable_command)
+        command = StringCommand('env', env_string, command)
 
     # Quote the command as a string
-    command = shlex_quote(command)
+    command = QuoteString(command)
+    command_bits.append(command)
 
-    command_bits = StringCommand(*command_bits)
-
-    command = '{0} {1}'.format(command_bits.get_raw_value(), command)
-    printable_command = '{0} {1}'.format(command_bits.get_masked_value(), printable_command)
-
-    return command, printable_command
+    return StringCommand(*command_bits)
+    # return command.get_raw_value(), command.get_masked_value()
 
 
 def make_win_command(

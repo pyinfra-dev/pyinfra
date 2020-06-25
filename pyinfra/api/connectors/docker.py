@@ -5,9 +5,8 @@ from tempfile import mkstemp
 import click
 import six
 
-from six.moves import shlex_quote
-
 from pyinfra import local, logger
+from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
@@ -86,14 +85,13 @@ def run_shell_command(
     for key in ('sudo', 'su_user'):
         command_kwargs.pop(key, None)
 
-    command, _ = make_unix_command(command, **command_kwargs)
-    command = shlex_quote(command)
+    command = make_unix_command(command, **command_kwargs)
+    command = QuoteString(command)
 
-    docker_flags = 'it' if get_pty else 'i'
-    docker_command = 'docker exec -{0} {1} sh -c {2}'.format(
-        docker_flags,
-        container_id,
-        command,
+    docker_flags = '-it' if get_pty else '-i'
+    docker_command = StringCommand(
+        'docker', 'exec', docker_flags, container_id,
+        'sh', '-c', command,
     )
 
     return run_local_shell_command(
