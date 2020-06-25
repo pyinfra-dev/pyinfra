@@ -8,6 +8,9 @@
         "postgresql_port": 3306
     },
     "commands": [
-        "PGPASSWORD=\"somepass\" pg_dump -d somedb -U root -h localhost -p 3306 > somefile"
+        [
+            "PGPASSWORD=\"somepass\" pg_dump -d somedb -U root -h localhost -p 3306 > somefile",
+            "*** pg_dump -d somedb -U root -h localhost -p 3306 > somefile"
+        ]
     ]
 }

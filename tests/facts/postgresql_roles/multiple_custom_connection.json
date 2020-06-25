@@ -1,6 +1,9 @@
 {
     "arg": ["myuser", "mypassword", "myhost", "myport"],
-    "command": "PGPASSWORD=\"mypassword\" psql -U myuser -h myhost -p myport -Ac \"SELECT * FROM pg_catalog.pg_roles\"",
+    "command": [
+        "PGPASSWORD=\"mypassword\" psql -U myuser -h myhost -p myport -Ac 'SELECT * FROM pg_catalog.pg_roles'",
+        "*** psql -U myuser -h myhost -p myport -Ac 'SELECT * FROM pg_catalog.pg_roles'"
+    ],
     "output": [
         "rolname|rolsuper|rolinherit|rolcreaterole|rolcreatedb|rolcanlogin|rolreplication|rolconnlimit|rolpassword|rolvaliduntil|rolbypassrls|rolconfig|oid",
         "postgres|t|t|t|t|t|t|-1|********||t||10",
