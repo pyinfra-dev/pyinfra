@@ -15,7 +15,7 @@ from paramiko import (
     SSHException,
 )
 
-from pyinfra.api import Config, State
+from pyinfra.api import Config, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.connectors.ssh import _get_sftp_connection
 from pyinfra.api.exceptions import PyinfraError
@@ -292,6 +292,38 @@ class TestSSHConnector(TestCase):
         assert len(combined_out) == 2
 
         fake_ssh.exec_command.assert_called_with("sh -c 'echo Šablony'", get_pty=False)
+
+    @patch('pyinfra.api.connectors.ssh.click')
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    def test_run_shell_command_masked(self, fake_ssh_client, fake_click):
+        fake_ssh = MagicMock()
+        fake_stdout = MagicMock()
+        fake_ssh.exec_command.return_value = MagicMock(), fake_stdout, MagicMock()
+
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect(state)
+
+        command = StringCommand('echo', MaskString('top-secret-stuff'))
+        fake_stdout.channel.recv_exit_status.return_value = 0
+
+        out = host.run_shell_command(state, command, print_output=True, print_input=True)
+        assert len(out) == 3
+
+        status, stdout, stderr = out
+        assert status is True
+
+        fake_ssh.exec_command.assert_called_with(
+            "sh -c 'echo top-secret-stuff'",
+            get_pty=False,
+        )
+
+        fake_click.echo.assert_called_with(
+            "{0}>>> sh -c 'echo ***'".format(host.print_prefix),
+        )
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     def test_run_shell_command_success_exit_code(self, fake_ssh_client):

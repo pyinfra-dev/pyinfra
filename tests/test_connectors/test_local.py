@@ -5,7 +5,7 @@ from unittest import TestCase
 
 from mock import MagicMock, mock_open, patch
 
-from pyinfra.api import Config, State
+from pyinfra.api import Config, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.connectors.util import make_unix_command
 
@@ -62,6 +62,31 @@ class TestLocalConnector(TestCase):
         self.fake_popen_mock.assert_called_with(
             shell_command, shell=True,
             stdout=PIPE, stderr=PIPE, stdin=PIPE,
+        )
+
+    @patch('pyinfra.api.connectors.local.click')
+    def test_run_shell_command_masked(self, fake_click):
+        inventory = make_inventory(hosts=('@local',))
+        state = State(inventory, Config())
+        host = inventory.get_host('@local')
+
+        command = StringCommand('echo', MaskString('top-secret-stuff'))
+        self.fake_popen_mock().returncode = 0
+
+        out = host.run_shell_command(state, command, print_output=True, print_input=True)
+        assert len(out) == 3
+
+        status, stdout, stderr = out
+        assert status is True
+
+        self.fake_popen_mock.assert_called_with(
+            "sh -c 'echo top-secret-stuff'",
+            shell=True,
+            stdout=PIPE, stderr=PIPE, stdin=PIPE,
+        )
+
+        fake_click.echo.assert_called_with(
+            "{0}>>> sh -c 'echo ***'".format(host.print_prefix),
         )
 
     def test_run_shell_command_success_exit_codes(self):
