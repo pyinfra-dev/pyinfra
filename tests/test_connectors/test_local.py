@@ -58,7 +58,7 @@ class TestLocalConnector(TestCase):
         )
         assert len(combined_out) == 2
 
-        shell_command = make_unix_command(command)
+        shell_command, _ = make_unix_command(command)
         self.fake_popen_mock.assert_called_with(
             shell_command, shell=True,
             stdout=PIPE, stderr=PIPE, stdin=PIPE,

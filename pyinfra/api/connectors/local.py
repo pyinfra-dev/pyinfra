@@ -66,12 +66,12 @@ def run_shell_command(
             put_file=put_file,
         )
 
-    command = make_unix_command(command, **command_kwargs)
+    command, printable_command = make_unix_command(command, **command_kwargs)
 
-    logger.debug('--> Running command on localhost: {0}'.format(command))
+    logger.debug('--> Running command on localhost: {0}'.format(printable_command))
 
     if print_input:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, command))
+        click.echo('{0}>>> {1}'.format(host.print_prefix, printable_command))
 
     return_code, combined_output = run_local_process(
         command,

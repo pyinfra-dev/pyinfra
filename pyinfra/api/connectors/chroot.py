@@ -72,7 +72,7 @@ def run_shell_command(
 
     chroot_directory = host.host_data['chroot_directory']
 
-    command = make_unix_command(command, **command_kwargs)
+    command, _ = make_unix_command(command, **command_kwargs)
 
     logger.debug(
         '--> Running chroot command on ({0}):{1}'.format(

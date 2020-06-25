@@ -26,7 +26,7 @@ def fake_chroot_shell(command, splitlines=None):
 @patch('pyinfra.api.connectors.chroot.os.remove', lambda f: None)
 @patch('pyinfra.api.connectors.chroot.open', mock_open(read_data='test!'), create=True)
 @patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True)
-class TestLocalConnector(TestCase):
+class TestChrootConnector(TestCase):
     def setUp(self):
         self.fake_popen_patch = patch('pyinfra.api.connectors.util.Popen')
         self.fake_popen_mock = self.fake_popen_patch.start()
@@ -71,10 +71,10 @@ class TestLocalConnector(TestCase):
         assert len(out) == 3
         assert out[0] is True
 
-        command = make_unix_command(command)
+        command, _ = make_unix_command(command)
         command = shlex_quote(command)
         docker_command = 'chroot /not-a-chroot sh -c {0}'.format(command)
-        shell_command = make_unix_command(docker_command)
+        shell_command, _ = make_unix_command(docker_command)
 
         self.fake_popen_mock.assert_called_with(
             shell_command, shell=True,
