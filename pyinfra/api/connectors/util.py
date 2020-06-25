@@ -14,7 +14,7 @@ from gevent.queue import Queue
 from six.moves import shlex_quote
 
 from pyinfra import logger
-from pyinfra.api import Config, StringCommand
+from pyinfra.api import Config, MaskString, StringCommand
 from pyinfra.api.util import read_buffer
 
 SUDO_ASKPASS_ENV_VAR = 'PYINFRA_SUDO_PASSWORD'
@@ -165,6 +165,7 @@ def make_unix_command(
     use_sudo_password=Config.USE_SUDO_PASSWORD,
     preserve_sudo_env=Config.PRESERVE_SUDO_ENV,
     shell_executable=Config.SHELL,
+    raw=True,
 ):
     '''
     Builds a shell command with various kwargs.
@@ -173,58 +174,18 @@ def make_unix_command(
     if shell_executable is None or not isinstance(shell_executable, six.string_types):
         shell_executable = 'sh'
 
-    debug_meta = {}
-
-    for key, value in (
-        ('shell_executable', shell_executable),
-        ('sudo', sudo),
-        ('sudo_user', sudo_user),
-        ('su_user', su_user),
-        ('env', env),
-    ):
-        if value:
-            debug_meta[key] = value
-
-    logger.debug('Building command ({0}): {1}'.format(' '.join(
-        '{0}: {1}'.format(key, value)
-        for key, value in six.iteritems(debug_meta)
-    ), command))
-
-    if isinstance(command, StringCommand):
-        command = command.get_raw_value()
-
-    if isinstance(command, six.binary_type):
-        command = command.decode('utf-8')
-
-    # Use env & build our actual command
-    if env:
-        env_string = ' '.join([
-            '{0}={1}'.format(key, value)
-            for key, value in six.iteritems(env)
-        ])
-        command = 'env {0} {1}'.format(env_string, command)
-
-    # Quote the command as a string
-    command = shlex_quote(command)
-
-    # Switch user with su
-    if su_user:
-        su_bits = ['su']
-
-        if use_su_login:
-            su_bits.append('-l')
-
-        # note `which <shell>` usage here - su requires an absolute path
-        command = '{0} {1} -s `which {2}` -c {3}'.format(
-            ' '.join(su_bits), su_user, shell_executable, command,
-        )
-
-    else:
-        # Otherwise just sh wrap the command
-        command = '{0} -c {1}'.format(shell_executable, command)
+    command_bits = []
 
     # Use sudo (w/user?)
     if sudo:
+        if use_sudo_password:
+            askpass_filename, sudo_password = use_sudo_password
+            command_bits.extend([
+                'env',
+                'SUDO_ASKPASS={0}'.format(askpass_filename),
+                MaskString('{0}={1}'.format(SUDO_ASKPASS_ENV_VAR, sudo_password)),
+            ])
+
         sudo_bits = ['sudo', '-H']
 
         if use_sudo_password:
@@ -241,15 +202,54 @@ def make_unix_command(
         if sudo_user:
             sudo_bits.extend(('-u', sudo_user))
 
-        command = '{0} {1}'.format(' '.join(sudo_bits), command)
+        command_bits.extend(sudo_bits)
 
-        if use_sudo_password:
-            askpass_filename, sudo_password = use_sudo_password
-            command = "env SUDO_ASKPASS={0} {1}='{2}' {3}".format(
-                askpass_filename, SUDO_ASKPASS_ENV_VAR, sudo_password, command,
-            )
+    # Switch user with su
+    if su_user:
+        su_bits = ['su']
 
-    return command
+        if use_su_login:
+            su_bits.append('-l')
+
+        # note `which <shell>` usage here - su requires an absolute path
+        command_bits.extend(su_bits)
+        command_bits.extend([su_user, '-s', '`which {0}`'.format(shell_executable), '-c'])
+
+    else:
+        # Otherwise just sh wrap the command
+        command_bits.extend([shell_executable, '-c'])
+
+    #
+    # OK, now parse the command!
+    #
+
+    command = printable_command = command
+
+    if isinstance(command, six.binary_type):
+        command = printable_command = command.decode('utf-8')
+
+    if isinstance(command, StringCommand):
+        printable_command = command.get_masked_value()
+        command = command.get_raw_value()
+
+    # Use env & build our actual command
+    if env:
+        env_string = ' '.join([
+            '{0}={1}'.format(key, value)
+            for key, value in six.iteritems(env)
+        ])
+        command = 'env {0} {1}'.format(env_string, command)
+        printable_command = 'env {0} {1}'.format(env_string, printable_command)
+
+    # Quote the command as a string
+    command = shlex_quote(command)
+
+    command_bits = StringCommand(*command_bits)
+
+    command = '{0} {1}'.format(command_bits.get_raw_value(), command)
+    printable_command = '{0} {1}'.format(command_bits.get_masked_value(), printable_command)
+
+    return command, printable_command
 
 
 def make_win_command(
