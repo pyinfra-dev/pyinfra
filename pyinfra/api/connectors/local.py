@@ -67,7 +67,7 @@ def run_shell_command(
         )
 
     command = make_unix_command(command, **command_kwargs)
-    printable_command = getattr(command, "masked", command)
+    printable_command = getattr(command, 'masked', command)
 
     logger.debug('--> Running command on localhost: {0}'.format(printable_command))
 

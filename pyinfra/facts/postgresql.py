@@ -1,6 +1,5 @@
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, Mask, StringCommand
 from pyinfra.api.util import try_int
-from pyinfra.api import StringCommand, Mask
 
 from .util.databases import parse_columns_and_rows
 
