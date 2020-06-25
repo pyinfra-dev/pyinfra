@@ -40,35 +40,35 @@ class TestEscapeUnixPathUtil(TestCase):
 
 class TestMakeUnixCommandConnectorUtil(TestCase):
     def test_command(self):
-        command = make_unix_command('echo Šablony')
+        command, _ = make_unix_command('echo Šablony')
         assert command == "sh -c 'echo Šablony'"
 
     def test_sudo_command(self):
-        command = make_unix_command('uptime', sudo=True)
+        command, _ = make_unix_command('uptime', sudo=True)
         assert command == 'sudo -H -n sh -c uptime'
 
     def test_sudo_preserve_env_command(self):
-        command = make_unix_command('uptime', sudo=True, preserve_sudo_env=True)
+        command, _ = make_unix_command('uptime', sudo=True, preserve_sudo_env=True)
         assert command == 'sudo -H -n -E sh -c uptime'
 
     def test_use_sudo_login_command(self):
-        command = make_unix_command('uptime', sudo=True, use_sudo_login=True)
+        command, _ = make_unix_command('uptime', sudo=True, use_sudo_login=True)
         assert command == 'sudo -H -n -i sh -c uptime'
 
     def test_sudo_user_command(self):
-        command = make_unix_command('uptime', sudo=True, sudo_user='pyinfra')
+        command, _ = make_unix_command('uptime', sudo=True, sudo_user='pyinfra')
         assert command == 'sudo -H -n -u pyinfra sh -c uptime'
 
     def test_su_command(self):
-        command = make_unix_command('uptime', su_user='pyinfra')
+        command, _ = make_unix_command('uptime', su_user='pyinfra')
         assert command == 'su pyinfra -s `which sh` -c uptime'
 
     def test_use_su_login_command(self):
-        command = make_unix_command('uptime', su_user='pyinfra', use_su_login=True)
+        command, _ = make_unix_command('uptime', su_user='pyinfra', use_su_login=True)
         assert command == 'su -l pyinfra -s `which sh` -c uptime'
 
     def test_command_env(self):
-        command = make_unix_command('uptime', env={
+        command, _ = make_unix_command('uptime', env={
             'key': 'value',
             'anotherkey': 'anothervalue',
         })
@@ -78,11 +78,11 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         ]
 
     def test_custom_shell_command(self):
-        command = make_unix_command('uptime', shell_executable='bash')
+        command, _ = make_unix_command('uptime', shell_executable='bash')
         assert command == 'bash -c uptime'
 
     def test_mixed_command(self):
-        command = make_unix_command(
+        command, _ = make_unix_command(
             'uptime',
             env={'key': 'value'},
             sudo=True,

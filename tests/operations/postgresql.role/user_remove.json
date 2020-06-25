@@ -8,5 +8,5 @@
             "testuser": {}
         }
     },
-    "commands": ["psql -Ac \"DROP ROLE testuser\""]
+    "commands": ["psql -Ac 'DROP ROLE testuser'"]
 }

@@ -30,7 +30,6 @@ from pyinfra.api.util import get_file_io, memoize
 
 from .sshuserclient import SSHClient
 from .util import (
-    get_safe_unix_command,
     get_sudo_password,
     make_unix_command,
     read_buffers_into_queue,
@@ -256,8 +255,7 @@ def run_shell_command(
             put_file=put_file,
         )
 
-    command = make_unix_command(command, **command_kwargs)
-    printable_command = get_safe_unix_command(command)
+    command, printable_command = make_unix_command(command, **command_kwargs)
 
     logger.debug('Running command on {0}: (pty={1}) {2}'.format(
         host.name, get_pty, printable_command,

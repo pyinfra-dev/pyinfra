@@ -1,6 +1,6 @@
 {
     "args": ["SELECT 1"],
     "commands": [
-        "psql -Ac \"SELECT 1\""
+        "psql -Ac 'SELECT 1'"
     ]
 }

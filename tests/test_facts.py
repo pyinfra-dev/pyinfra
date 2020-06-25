@@ -11,6 +11,8 @@ from jsontest import JsonTest
 from pyinfra.api.facts import FACTS, ShortFactBase
 from pyinfra_cli.util import json_encode
 
+from .util import get_command_string
+
 # show full diff on json
 TestCase.maxDiff = None
 
@@ -30,6 +32,8 @@ def make_fact_tests(fact_name):
                 short_fact = fact
                 fact = fact.fact()
 
+            command_to_check = None
+
             if callable(fact.command):
                 args = test_data.get('arg', [])
                 if not isinstance(args, list):
@@ -38,10 +42,13 @@ def make_fact_tests(fact_name):
                 command = fact.command(*args)
 
                 if args or 'command' in test_data:
-                    assert command == test_data['command']
+                    command_to_check = command
 
             elif 'command' in test_data:
-                assert fact.command == test_data['command']
+                command_to_check = fact.command
+
+            if command_to_check:
+                assert get_command_string(command_to_check) == test_data['command']
 
             data = fact.process(test_data['output'])
             if short_fact:

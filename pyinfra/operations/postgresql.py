@@ -13,7 +13,7 @@ See example/postgresql.py for detailed example
 
 '''
 
-from pyinfra.api import operation
+from pyinfra.api import MaskString, operation, StringCommand
 from pyinfra.facts.postgresql import make_execute_psql_command, make_psql_command
 
 
@@ -126,10 +126,10 @@ def role(
             sql_bits.append('CONNECTION LIMIT {0}'.format(connection_limit))
 
         if password:
-            sql_bits.append("PASSWORD '{0}'".format(password))
+            sql_bits.append(MaskString("PASSWORD '{0}'".format(password)))
 
         yield make_execute_psql_command(
-            ' '.join(sql_bits),
+            StringCommand(*sql_bits),
             user=postgresql_user,
             password=postgresql_password,
             host=postgresql_host,
@@ -216,7 +216,7 @@ def database(
                 sql_bits.append('{0} {1}'.format(key, value))
 
         yield make_execute_psql_command(
-            ' '.join(sql_bits),
+            StringCommand(*sql_bits),
             user=postgresql_user,
             password=postgresql_password,
             host=postgresql_host,
@@ -252,14 +252,14 @@ def dump(
 
     '''
 
-    yield '{0} > {1}'.format(make_psql_command(
+    yield StringCommand(make_psql_command(
         executable='pg_dump',
         database=database,
         user=postgresql_user,
         password=postgresql_password,
         host=postgresql_host,
         port=postgresql_port,
-    ), remote_filename)
+    ), '>', remote_filename)
 
 
 @operation
@@ -290,10 +290,10 @@ def load(
 
     '''
 
-    yield '{0} < {1}'.format(make_psql_command(
+    yield StringCommand(make_psql_command(
         database=database,
         user=postgresql_user,
         password=postgresql_password,
         host=postgresql_host,
         port=postgresql_port,
-    ), remote_filename)
+    ), '<', remote_filename)

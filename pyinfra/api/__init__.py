@@ -1,3 +1,4 @@
+from .command import MaskString, QuoteString, StringCommand  # noqa: F401 # pragma: no cover
 from .config import Config  # noqa: F401 # pragma: no cover
 from .deploy import deploy  # noqa: F401 # pragma: no cover
 from .exceptions import (  # noqa: F401 # pragma: no cover
