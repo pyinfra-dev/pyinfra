@@ -74,10 +74,9 @@ def run_shell_command(
 
     command = make_unix_command(command, **command_kwargs)
 
-    printable_command = getattr(command, 'masked', command)
     logger.debug(
         '--> Running chroot command on ({0}):{1}'.format(
-            chroot_directory, printable_command,
+            chroot_directory, command,
         ),
     )
 

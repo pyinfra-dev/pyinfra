@@ -67,12 +67,11 @@ def run_shell_command(
         )
 
     command = make_unix_command(command, **command_kwargs)
-    printable_command = getattr(command, 'masked', command)
 
-    logger.debug('--> Running command on localhost: {0}'.format(printable_command))
+    logger.debug('--> Running command on localhost: {0}'.format(command))
 
     if print_input:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, printable_command))
+        click.echo('{0}>>> {1}'.format(host.print_prefix, command))
 
     return_code, combined_output = run_local_process(
         command,
