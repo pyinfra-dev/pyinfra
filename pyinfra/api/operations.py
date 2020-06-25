@@ -20,6 +20,7 @@ import pyinfra
 from pyinfra import logger
 from pyinfra.progress import progress_spinner
 
+from .command import StringCommand
 from .exceptions import PyinfraError
 from .operation_kwargs import get_executor_kwarg_keys
 from .util import format_exception, log_host_command_error
@@ -115,13 +116,13 @@ def _run_server_op(state, host, op_hash):
                     )
 
         # Must be a string/shell command: execute it on the server w/op-level preferences
-        elif isinstance(command, six.string_types):
+        elif isinstance(command, six.string_types + (StringCommand,)):
             combined_output_lines = []
 
             try:
                 status, combined_output_lines = host.run_shell_command(
                     state,
-                    command.strip(),
+                    command,
                     print_output=state.print_output,
                     print_input=state.print_input,
                     return_combined_output=True,
