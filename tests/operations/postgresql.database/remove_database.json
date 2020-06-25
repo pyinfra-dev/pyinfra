@@ -9,6 +9,6 @@
         }
     },
     "commands": [
-        "psql -Ac \"DROP DATABASE somedb\""
+        "psql -Ac 'DROP DATABASE somedb'"
     ]
 }

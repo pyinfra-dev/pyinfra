@@ -8,6 +8,6 @@
         }
     },
     "commands": [
-        "psql -Ac \"CREATE ROLE testuser\""
+        "psql -Ac 'CREATE ROLE testuser'"
     ]
 }
