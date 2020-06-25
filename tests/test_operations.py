@@ -13,7 +13,7 @@ from pyinfra import pseudo_host, pseudo_state
 from pyinfra.api.util import unroll_generators
 from pyinfra_cli.util import json_encode
 
-from .util import create_host, FakeState, patch_files
+from .util import create_host, FakeState, get_command_string, patch_files
 
 
 def make_operation_tests(arg):
@@ -69,7 +69,7 @@ def make_operation_tests(arg):
                     commands.append(command.strip())
 
                 elif isinstance(command, dict):
-                    command['command'] = command['command'].strip()
+                    command['command'] = get_command_string(command['command']).strip()
                     commands.append(command)
 
                 elif isinstance(command, tuple):
@@ -91,7 +91,7 @@ def make_operation_tests(arg):
                         commands.append([command[0], data, command[2]])
 
                 else:
-                    commands.append(command)
+                    commands.append(get_command_string(command))
 
             try:
                 assert commands == test_data['commands']
