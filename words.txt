@@ -33,6 +33,7 @@ E402
 E501
 F401
 F403
+FIXME
 Ed25519
 Gevent
 HKLM
@@ -344,3 +345,4 @@ writeable
 yarn
 yaml
 zfill
+zypper

@@ -166,7 +166,7 @@ def ensure_rpm(state, host, files, source, present, package_manager_command):
 def ensure_yum_repo(
     state, host, files,
     name_or_url, baseurl, present, description, enabled, gpgcheck, gpgkey,
-    package_config_command,
+    package_config_command,  # FIXME: parameter not used.
 ):
     url = None
     url_parts = urlparse(name_or_url)
@@ -199,6 +199,57 @@ def ensure_yum_repo(
         'baseurl={0}'.format(baseurl),
         'enabled={0}'.format(1 if enabled else 0),
         'gpgcheck={0}'.format(1 if gpgcheck else 0),
+    ]
+
+    if gpgkey:
+        repo_lines.append('gpgkey={0}'.format(gpgkey))
+
+    repo_lines.append('')
+    repo = '\n'.join(repo_lines)
+    repo = StringIO(repo)
+
+    # Ensure this is the file on the server
+    yield files.put(state, host, repo, filename)
+
+
+# FIXME: the function is almost identical to ensure_yum_repo.
+# TODO: Find a way DRY the code.
+def ensure_zypper_repo(
+    state, host, files,
+    name_or_url, baseurl, present, description, enabled, gpgcheck, gpgkey, type,
+):
+    url = None
+    url_parts = urlparse(name_or_url)
+    if url_parts.scheme:
+        url = name_or_url
+        name_or_url = url_parts.path.split('/')[-1]
+        if name_or_url.endswith('.repo'):
+            name_or_url = name_or_url[:-5]
+
+    filename = '/etc/zypp/repos.d/{0}.repo'.format(name_or_url)
+
+    # If we don't want the repo, just remove any existing file
+    if not present:
+        yield files.file(state, host, filename, present=False)
+        return
+
+    # If we're a URL, download the repo if it doesn't exist
+    if url:
+        if not host.fact.file(filename):
+            yield files.download(state, host, url, filename)
+        return
+
+    # Description defaults to name
+    description = description or name_or_url
+
+    # Build the repo file from string
+    repo_lines = [
+        '[{0}]'.format(name_or_url),
+        'name={0}'.format(description),
+        'baseurl={0}'.format(baseurl),
+        'enabled={0}'.format(1 if enabled else 0),
+        'gpgcheck={0}'.format(1 if gpgcheck else 0),
+        'type={0}'.format(type if type else 'rpm-md'),
     ]
 
     if gpgkey:
