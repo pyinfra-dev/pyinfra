@@ -25,22 +25,6 @@ echo ${0}
 
 UNIX_PATH_SPACE_REGEX = re.compile(r'([^\\]) ')
 
-SENSITIVE_REGEXES = (
-    (
-        re.compile(r"{0}='([^']+)'".format(SUDO_ASKPASS_ENV_VAR)),
-        r"{0}='***'".format(SUDO_ASKPASS_ENV_VAR),
-    ),
-    # TODO: don't have these here (specific to *sql modules)
-    (re.compile(r'PGPASSWORD="([^"]+)"'), 'PGPASSWORD="***"'),  # postgresql
-    (re.compile(r'-p"([^"]+)"'), '-p"***"'),  # mysql
-)
-
-
-def get_safe_unix_command(command):
-    for regex, replacement in SENSITIVE_REGEXES:
-        command = regex.sub(replacement, command)
-    return command
-
 
 def escape_unix_path(path):
     '''
