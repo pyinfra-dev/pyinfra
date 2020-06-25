@@ -14,7 +14,7 @@ from gevent.queue import Queue
 from six.moves import shlex_quote
 
 from pyinfra import logger
-from pyinfra.api import Config
+from pyinfra.api import Config, StringCommand
 from pyinfra.api.util import read_buffer
 
 SUDO_ASKPASS_ENV_VAR = 'PYINFRA_SUDO_PASSWORD'
@@ -170,9 +170,6 @@ def make_unix_command(
     Builds a shell command with various kwargs.
     '''
 
-    if isinstance(command, six.binary_type):
-        command = command.decode('utf-8')
-
     if shell_executable is None or not isinstance(shell_executable, six.string_types):
         shell_executable = 'sh'
 
@@ -192,6 +189,12 @@ def make_unix_command(
         '{0}: {1}'.format(key, value)
         for key, value in six.iteritems(debug_meta)
     ), command))
+
+    if isinstance(command, StringCommand):
+        command = command.get_raw_value()
+
+    if isinstance(command, six.binary_type):
+        command = command.decode('utf-8')
 
     # Use env & build our actual command
     if env:
