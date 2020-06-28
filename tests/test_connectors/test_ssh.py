@@ -15,6 +15,8 @@ from paramiko import (
     SSHException,
 )
 
+import pyinfra
+
 from pyinfra.api import Config, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.connectors.ssh import _get_sftp_connection
@@ -150,12 +152,39 @@ class TestSSHConnector(TestCase):
             # Check the certificate file was then loaded
             fake_key.load_certificate.assert_called_with('testkey.pub')
 
+    def test_connect_with_rsa_ssh_key_password_from_prompt(self):
+        state = State(make_inventory(hosts=(
+            ('somehost', {'ssh_key': 'testkey'}),
+        )), Config())
+
+        with patch(
+            'pyinfra.api.connectors.ssh.path.isfile',
+            lambda *args, **kwargs: True,
+        ), patch(
+            'pyinfra.api.connectors.ssh.getpass',
+            lambda *args, **kwargs: 'testpass',
+        ), patch(
+            'pyinfra.api.connectors.ssh.RSAKey.from_private_key_file',
+        ) as fake_key_open:
+            fake_key = MagicMock()
+
+            def fake_key_open_fail(*args, **kwargs):
+                if 'password' not in kwargs:
+                    raise PasswordRequiredException()
+                return fake_key
+
+            fake_key_open.side_effect = fake_key_open_fail
+
             state.deploy_dir = '/'
 
+            pyinfra.is_cli = True
             connect_all(state)
+            pyinfra.is_cli = False
 
             # Check the key was created properly
             fake_key_open.assert_called_with(filename='testkey', password='testpass')
+            # Check the certificate file was then loaded
+            fake_key.load_certificate.assert_called_with('testkey.pub')
 
     def test_connect_with_rsa_ssh_key_missing_password(self):
         state = State(make_inventory(hosts=(
