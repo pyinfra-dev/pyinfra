@@ -5,7 +5,7 @@
 </h1>
 
 [![PyPI version](https://img.shields.io/pypi/v/pyinfra?color=blue)](https://pypi.python.org/pypi/pyinfra)
-[![Docs status](https://img.shields.io/readthedocs/pyinfra)](https://pyinfra.readthedocs.io)
+[![Docs status](https://img.shields.io/readthedocs/pyinfra)](https://docs.pyinfra.com)
 [![Travis.CI status](https://img.shields.io/travis/com/Fizzadar/pyinfra/master)](https://travis-ci.com/Fizzadar/pyinfra)
 [![Codecov Coverage](https://img.shields.io/codecov/c/gh/Fizzadar/pyinfra)](https://codecov.io/github/Fizzadar/pyinfra)
 [![MIT Licensed](https://img.shields.io/pypi/l/pyinfra)](https://github.com/Fizzadar/pyinfra/blob/develop/LICENSE.md)
@@ -67,9 +67,9 @@ or
 pyinfra @docker/ubuntu deploy.py
 ```
 
-## [Documentation](https://pyinfra.readthedocs.io)
+## [Documentation](https://docs.pyinfra.com)
 
-+ [Getting started](https://pyinfra.readthedocs.io/page/getting_started.html)
-+ [Writing deploys](https://pyinfra.readthedocs.io/page/deploys.html)
-+ [Using the CLI](https://pyinfra.readthedocs.io/page/cli.html)
++ [Getting started](https://docs.pyinfra.com/page/getting_started.html)
++ [Writing deploys](https://docs.pyinfra.com/page/deploys.html)
++ [Using the CLI](https://docs.pyinfra.com/page/cli.html)
 + [Connectors](https://pyinfra.readthedocs.io/page/connectors.html)
