@@ -121,6 +121,15 @@ def _get_private_key(state, key_filename, key_password):
     else:
         raise IOError('No such private key file: {0}'.format(key_filename))
 
+    # Load any certificate, names from OpenSSH:
+    # https://github.com/openssh/openssh-portable/blob/049297de975b92adcc2db77e3fb7046c0e3c695d/ssh-keygen.c#L2453  # noqa
+    for certificate_filename in (
+        '{0}-cert.pub'.format(key_filename),
+        '{0}.pub'.format(key_filename),
+    ):
+        if path.exists(certificate_filename):
+            key.load_certificate(certificate_filename)
+
     state.private_keys[key_filename] = key
     return key
 
@@ -179,7 +188,6 @@ def connect(state, host):
         client = SSHClient()
         client.set_missing_host_key_policy(MissingHostKeyPolicy())
         client.connect(hostname, **kwargs)
-
         return client
 
     except AuthenticationException:

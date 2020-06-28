@@ -24,7 +24,6 @@ from ..paramiko_util import FakeRSAKey
 from ..util import make_inventory
 
 
-@patch('pyinfra.api.connectors.ssh.AgentRequestHandler', MagicMock())
 @patch('pyinfra.api.connectors.ssh.SSHClient.get_transport', MagicMock())
 @patch('pyinfra.api.connectors.ssh.open', mock_open(read_data='test!'), create=True)
 class TestSSHConnector(TestCase):
