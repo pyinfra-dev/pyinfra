@@ -51,7 +51,8 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
 )
 
 DOCS_REQUIRES = (
-    'guzzle_sphinx_theme==0.7.11',
+    # 'guzzle_sphinx_theme==0.7.11',  # Custom guzzle theme:
+    'https://github.com/Fizzadar/guzzle_sphinx_theme/archive/39202c0a036c8b46d4c26e704b714a68bdcf5408.zip',  # noqa
     'recommonmark==0.5.0',
     'sphinx==2.2.1 ; python_version >= "3"',
     'sphinx==1.8.5 ; python_version < "3"',

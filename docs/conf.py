@@ -30,7 +30,7 @@ master_doc = 'index'
 project = 'pyinfra'
 author = 'Fizzadar'
 version = 'develop'
-pygments_style = 'sphinx'
+pygments_style = 'monokai'
 
 # Theme style override
 html_short_title = 'Home'

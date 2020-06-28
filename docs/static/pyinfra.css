@@ -70,14 +70,6 @@ code::selection, code *::selection {
     padding: 0;
 }
 
-a.text-logo, a.text-logo:active {
-    text-decoration: none;
-    color: white;
-}
-a.text-logo:hover {
-    background-color: #2a6496;
-}
-
 
 /*
     Index only */
