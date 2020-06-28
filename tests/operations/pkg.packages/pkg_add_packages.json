@@ -7,6 +7,9 @@
         "pkg_packages": {},
         "which": {
             "pkg": null
+        },
+        "file": {
+            "/etc/installurl": false
         }
     },
     "commands": [

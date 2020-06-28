@@ -6,13 +6,15 @@
         "arch": "arch",
         "pkg_packages": {},
         "which": {
-            "pkg": "/bin/pkg"
+            "pkg": null
         },
         "file": {
-            "/etc/installurl": null
+            "/etc/installurl": {
+                "size": 0
+            }
         }
     },
     "commands": [
-        "PKG_PATH=http://ftp.os.org/pub/os/os_version/packages/arch/ pkg install -y py-pip"
+        "pkg_add py-pip"
     ]
 }
