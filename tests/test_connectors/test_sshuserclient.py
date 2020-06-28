@@ -107,6 +107,10 @@ class TestSSHUserConfig(TestCase):
         'pyinfra.api.connectors.sshuserclient.config.os.path.isfile',
         lambda path: True,
     )
+    @patch(
+        'pyinfra.api.connectors.sshuserclient.config.os.path.expanduser',
+        lambda path: path,
+    )
     def test_include_loop_ssh_config(self):
         client = SSHClient()
 
