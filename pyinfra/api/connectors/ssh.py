@@ -20,7 +20,6 @@ from paramiko import (
     SFTPClient,
     SSHException,
 )
-from paramiko.agent import AgentRequestHandler
 
 import pyinfra
 
@@ -180,10 +179,6 @@ def connect(state, host):
         client = SSHClient()
         client.set_missing_host_key_policy(MissingHostKeyPolicy())
         client.connect(hostname, **kwargs)
-
-        # Enable SSH forwarding
-        session = client.get_transport().open_session()
-        AgentRequestHandler(session)
 
         return client
 

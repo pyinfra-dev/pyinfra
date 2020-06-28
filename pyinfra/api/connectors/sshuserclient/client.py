@@ -10,6 +10,7 @@ from paramiko import (
     ProxyCommand,
     SSHClient as ParamikoClient,
 )
+from paramiko.agent import AgentRequestHandler
 
 from pyinfra.api.util import memoize
 
@@ -29,13 +30,18 @@ def get_ssh_config():
 class SSHClient(ParamikoClient):
     '''
     An SSHClient which honors ssh_config and supports proxyjumping
-    original idea at http://bitprophet.org/blog/2012/11/05/gateway-solutions/
+    original idea at http://bitprophet.org/blog/2012/11/05/gateway-solutions/.
     '''
 
     def connect(self, hostname, **kwargs):
-        self.hostname, self.config = self.parse_config(hostname)
+        self.hostname, self.config, forward_agent = self.parse_config(hostname)
         self.config.update(kwargs)
         super(SSHClient, self).connect(self.hostname, **self.config)
+
+        if forward_agent:
+            # Enable SSH forwarding
+            session = self.get_transport().open_session()
+            AgentRequestHandler(session)
 
     def gateway(self, target, target_port):
         transport = self.get_transport()
@@ -46,21 +52,27 @@ class SSHClient(ParamikoClient):
 
     def parse_config(self, hostname):
         cfg = {'port': 22}
+        forward_agent = False
 
         ssh_config = get_ssh_config()
         if not ssh_config:
-            return hostname, cfg
+            return hostname, cfg, forward_agent
 
         host_config = ssh_config.lookup(hostname)
+        forward_agent = host_config.get('forwardagent') == 'yes'
 
         if 'hostname' in host_config:
             hostname = host_config['hostname']
+
         if 'user' in host_config:
             cfg['username'] = host_config['user']
+
         if 'identityfile' in host_config:
             cfg['key_filename'] = host_config['identityfile']
+
         if 'port' in host_config:
             cfg['port'] = int(host_config['port'])
+
         if 'proxycommand' in host_config:
             cfg['sock'] = ProxyCommand(host_config['proxycommand'])
         elif 'proxyjump' in host_config:
@@ -80,7 +92,7 @@ class SSHClient(ParamikoClient):
                 sock = c.gateway(target, target_config['port'])
             cfg['sock'] = sock
 
-        return hostname, cfg
+        return hostname, cfg, forward_agent
 
     def derive_shorthand(self, host_string):
         config = {}
