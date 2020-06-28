@@ -21,6 +21,7 @@ SSH_CONFIG_OTHER_FILE = '''
 Host 192.168.1.1
     User "otheruser"
     ProxyCommand None
+    ForwardAgent yes
 '''
 
 BAD_SSH_CONFIG_DATA = '''
@@ -62,16 +63,18 @@ class TestSSHUserConfig(TestCase):
     def test_load_ssh_config(self):
         client = SSHClient()
 
-        _, config = client.parse_config('127.0.0.1')
+        _, config, forward_agent = client.parse_config('127.0.0.1')
 
         assert config.get('key_filename') == ['/id_rsa', '/id_rsa2']
         assert config.get('username') == 'testuser'
         assert config.get('port') == 33
         assert isinstance(config.get('sock'), ProxyCommand)
+        assert forward_agent is False
 
-        _, other_config = client.parse_config('192.168.1.1')
+        _, other_config, forward_agent = client.parse_config('192.168.1.1')
 
         assert other_config.get('username') == 'otheruser'
+        assert forward_agent is True
 
     @patch(
         'pyinfra.api.connectors.sshuserclient.client.open',
@@ -81,8 +84,10 @@ class TestSSHUserConfig(TestCase):
     def test_invalid_ssh_config(self):
         client = SSHClient()
 
-        with self.assertRaises(Exception):
-            _, config = client.parse_config('127.0.0.1')
+        with self.assertRaises(Exception) as context:
+            client.parse_config('127.0.0.1')
+
+        assert context.exception.args[0] == 'Unparsable line &'
 
     @patch(
         'pyinfra.api.connectors.sshuserclient.client.open',
@@ -105,5 +110,7 @@ class TestSSHUserConfig(TestCase):
     def test_include_loop_ssh_config(self):
         client = SSHClient()
 
-        with self.assertRaises(Exception):
-            _, config = client.parse_config('127.0.0.1')
+        with self.assertRaises(Exception) as context:
+            client.parse_config('127.0.0.1')
+
+        assert context.exception.args[0] == 'Include loop detected in ssh config file: other_file'
