@@ -18,7 +18,7 @@ using a package manager (apt, yum, etc), normally named: python-setuptools
 
 INSTALL_REQUIRES = (
     'gevent>1',
-    'paramiko>1,<3',
+    'paramiko>=2.2,<3',  # 2.2 (2017) adds Ed25519Key
     'click>2',
     'colorama<1',  # Windows color support for click
     'docopt<1',  # legacy
