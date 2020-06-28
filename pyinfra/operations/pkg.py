@@ -39,8 +39,7 @@ def packages(state, host, packages=None, present=True, pkg_path=None):
     '''
 
     if present is True:
-        # Autogenerate package path
-        if not pkg_path:
+        if not pkg_path and not host.fact.file('/etc/installurl'):
             host_os = host.fact.os or ''
             pkg_path = 'http://ftp.{http}.org/pub/{os}/{version}/packages/{arch}/'.format(
                 http=host_os.lower(),
@@ -54,8 +53,11 @@ def packages(state, host, packages=None, present=True, pkg_path=None):
     install_command = 'pkg install -y' if is_pkg else 'pkg_add'
     uninstall_command = 'pkg delete -y' if is_pkg else 'pkg_delete'
 
+    if pkg_path:
+        install_command = 'PKG_PATH={0} {1}'.format(pkg_path, install_command)
+
     yield ensure_packages(
         packages, host.fact.pkg_packages, present,
-        install_command='PKG_PATH={0} {1}'.format(pkg_path, install_command),
+        install_command=install_command,
         uninstall_command=uninstall_command,
     )
