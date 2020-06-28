@@ -125,21 +125,3 @@ For additional debug info, use one of these options:
 + `--debug` Print debug info.
 + `--debug-facts` Print facts after generating operations and exit.
 + `--debug-operations` Print operations after generating and exit.
-
-#### Printing output in color
-
-If you are developing a deploy script, and want to print the ouput in a different color,
-you can use [click](https://click.palletsprojects.com) like this:
-
-```sh
-import click
-
-from pyinfra import host
-
-# To run: pyinfra @docker/ubuntu print_in_color.py
-
-click.secho(host.fact.os_version, fg='yellow')
-click.secho(host.fact.linux_name, fg='red')
-
-```
-

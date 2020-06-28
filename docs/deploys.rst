@@ -211,7 +211,7 @@ Including files can be used to break out operations into multiple files, often r
 
 .. code:: python
 
-    from pyinfra import local, inventory
+    from pyinfra import local
 
     # Include & call all the operations in tasks/install_something.py
     local.include('tasks/install_something.py')

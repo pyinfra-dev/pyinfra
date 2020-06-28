@@ -1,27 +1,44 @@
 # Connectors
 
-Connectors enable ``pyinfra`` to integrate with other tools out of the box. Connectors can do two things:
+Connectors enable ``pyinfra`` to integrate with other tools out of the box. Connectors can do one of three things:
 
 + Generate inventory hosts and data (`@vagrant` and `@mech`)
-+ Modify how commands are executed (`@local`)
++ Modify how commands are executed (`@ssh`, `@local`)
 + Both of the above (`@docker`)
 
 Each connector is described below along with usage examples.
 
-### Running commands
+**Want a new connector?** If interested in building a connector, check out [the existing code](https://github.com/Fizzadar/pyinfra/tree/master/pyinfra/api/connectors). Be sure to add tests and documentation.
 
-If you want to run a command consider using `host.run_shell_command()`.
+## `@ssh`
 
-### Want a new connector?
+This is the default connector and all targets default to this meaning you do not need to specify it - ie the following two commands are identical:
 
-If interested in building a connector, check out [the existing code](https://github.com/Fizzadar/pyinfra/tree/master/pyinfra/api/connectors). Be sure to add tests and documentation.
+```sh
+pyinfra my-host.net ...
+pyinfra @ssh/my-host.net ...
+```
 
 ## `@local`
 
 The `@local` connector executes changes on the local machine using subprocesses.
 
 ```sh
-pyinfra @local deploy.py
+pyinfra @local ...
+```
+
+## `@docker`
+
+**Note**: this connector is in beta!
+
+The `@docker` connector allows you to build Docker containers using pyinfra.
+
+```sh
+# A Docker base image must be provided
+pyinfra @docker/alpine:3.8 ...
+
+# pyinfra can run on multiple Docker images in parallel
+pyinfra @docker/alpine:3.8,@docker/ubuntu:bionic ...
 ```
 
 ## `@vagrant`
@@ -30,13 +47,13 @@ The `@vagrant` connector reads the current Vagrant status and generates an inven
 
 ```sh
 # Run on all hosts
-pyinfra @vagrant deploy.py
+pyinfra @vagrant ...
 
 # Run on a specific VM
-pyinfra @vagrant/my-vm-name deploy.py
+pyinfra @vagrant/my-vm-name ...
 
 # Run on multiple named VMs
-pyinfra @vagrant/my-vm-name,@vagrant/another-vm-name deploy.py
+pyinfra @vagrant/my-vm-name,@vagrant/another-vm-name ...
 ```
 
 ## `@mech`
@@ -45,27 +62,13 @@ The `@mech` connector reads the current mech status and generates an inventory f
 
 ```sh
 # Run on all hosts
-pyinfra @mech deploy.py
+pyinfra @mech ...
 
 # Run on a specific VM
-pyinfra @mech/my-vm-name deploy.py
+pyinfra @mech/my-vm-name ...
 
 # Run on multiple named VMs
-pyinfra @mech/my-vm-name,@mech/another-vm-name deploy.py
-```
-
-## `@docker`
-
-**Note**: this connector is a work in progress! It works but may leave containers leftover, and some operations may fail.
-
-The `@docker` connector allows you to build Docker containers using pyinfra.
-
-```sh
-# A Docker base image must be provided
-pyinfra @docker/alpine:3.8 deploy.py
-
-# pyinfra can run on multiple Docker images in parallel
-pyinfra @docker/alpine:3.8,@docker/ubuntu:bionic deploy.py
+pyinfra @mech/my-vm-name,@mech/another-vm-name ...
 ```
 
 ## `@ansible`
