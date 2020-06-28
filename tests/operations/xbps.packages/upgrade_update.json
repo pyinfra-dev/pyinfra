@@ -1,0 +1,16 @@
+{
+    "args": ["curl"],
+    "kwargs": {
+        "update": true,
+        "upgrade": true
+    },
+    "facts": {
+        "xbps_packages": {
+            "curl": ["1"]
+        }
+    },
+    "commands": [
+        "xbps-install -S",
+        "xbps-install -y -u"
+    ]
+}

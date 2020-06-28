@@ -1,0 +1,14 @@
+{
+    "args": [["curl", "i-dont-exist"]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "xbps_packages": {
+            "curl": "1"
+        }
+    },
+    "commands": [
+        "xbps-remove -y curl"
+    ]
+}
