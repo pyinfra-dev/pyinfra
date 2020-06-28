@@ -20,7 +20,6 @@ from pyinfra.api.connect import connect_all
 from pyinfra.api.connectors.ssh import _get_sftp_connection
 from pyinfra.api.exceptions import PyinfraError
 
-from ..paramiko_util import FakeRSAKey
 from ..util import make_inventory
 
 
@@ -92,7 +91,7 @@ class TestSSHConnector(TestCase):
         with patch('pyinfra.api.connectors.ssh.path.isfile', lambda *args, **kwargs: True), \
                 patch('pyinfra.api.connectors.ssh.RSAKey.from_private_key_file') as fake_key_open:
 
-            fake_key = FakeRSAKey()
+            fake_key = MagicMock()
             fake_key_open.return_value = fake_key
 
             state.deploy_dir = '/'
@@ -101,6 +100,8 @@ class TestSSHConnector(TestCase):
 
             # Check the key was created properly
             fake_key_open.assert_called_with(filename='testkey')
+            # Check the certificate file was then loaded
+            fake_key.load_certificate.assert_called_with('testkey.pub')
 
             # And check the Paramiko SSH call was correct
             self.fake_connect_mock.assert_called_with(
@@ -131,15 +132,23 @@ class TestSSHConnector(TestCase):
         ), patch(
             'pyinfra.api.connectors.ssh.RSAKey.from_private_key_file',
         ) as fake_key_open:
+            fake_key = MagicMock()
 
             def fake_key_open_fail(*args, **kwargs):
                 if 'password' not in kwargs:
                     raise PasswordRequiredException()
+                return fake_key
 
             fake_key_open.side_effect = fake_key_open_fail
 
-            fake_key = FakeRSAKey()
-            fake_key_open.return_value = fake_key
+            state.deploy_dir = '/'
+
+            connect_all(state)
+
+            # Check the key was created properly
+            fake_key_open.assert_called_with(filename='testkey', password='testpass')
+            # Check the certificate file was then loaded
+            fake_key.load_certificate.assert_called_with('testkey.pub')
 
             state.deploy_dir = '/'
 
@@ -165,7 +174,7 @@ class TestSSHConnector(TestCase):
 
             fake_key_open.side_effect = fake_key_open_fail
 
-            fake_key = FakeRSAKey()
+            fake_key = MagicMock()
             fake_key_open.return_value = fake_key
 
             state.deploy_dir = '/'
@@ -197,7 +206,7 @@ class TestSSHConnector(TestCase):
 
             fake_key_open.side_effect = fake_key_open_fail
 
-            fake_key = FakeRSAKey()
+            fake_key = MagicMock()
             fake_key_open.return_value = fake_key
 
             state.deploy_dir = '/'
@@ -221,7 +230,7 @@ class TestSSHConnector(TestCase):
 
             fake_rsa_key_open.side_effect = fake_rsa_key_open_fail
 
-            fake_key = FakeRSAKey()
+            fake_key = MagicMock()
             fake_key_open.return_value = fake_key
 
             state.deploy_dir = '/'

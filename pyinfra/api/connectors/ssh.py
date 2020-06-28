@@ -127,7 +127,7 @@ def _get_private_key(state, key_filename, key_password):
         '{0}-cert.pub'.format(key_filename),
         '{0}.pub'.format(key_filename),
     ):
-        if path.exists(certificate_filename):
+        if path.isfile(certificate_filename):
             key.load_certificate(certificate_filename)
 
     state.private_keys[key_filename] = key
