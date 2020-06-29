@@ -12,6 +12,6 @@
         }
     },
     "commands": [
-        "if [ -f 'somefile' ]; then\n                    (grep \"^.*match_line.*$\" 'somefile' && sed -i=\"\" \"s/^.*match_line.*$/replace_line/abc\" somefile) 2> /dev/null ||                     echo \"replace_line\" >> somefile;\n                else\n                    echo \"replace_line\" >> somefile;\n                fi"
+        "if [ -f 'somefile' ]; then\n                    (grep '^.*match_line.*$' 'somefile' && sed -i='' 's/^.*match_line.*$/replace_line/abc' somefile) 2> /dev/null ||                     echo 'replace_line' >> somefile;\n                else\n                    echo 'replace_line' >> somefile;\n                fi"
     ]
 }

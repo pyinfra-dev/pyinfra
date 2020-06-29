@@ -38,6 +38,6 @@
     },
     "commands": [
         "chmod 600 homedir/.ssh/authorized_keys",
-        "echo \"abc\" >> homedir/.ssh/authorized_keys"
+        "echo 'abc' >> homedir/.ssh/authorized_keys"
     ]
 }

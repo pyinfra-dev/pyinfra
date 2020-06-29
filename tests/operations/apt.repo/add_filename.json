@@ -12,6 +12,6 @@
         }
     },
     "commands": [
-        "echo \"deb http://archive.canonical.com/ubuntu hardy partner\" >> /etc/apt/sources.list.d/somefile.list"
+        "echo 'deb http://archive.canonical.com/ubuntu hardy partner' >> /etc/apt/sources.list.d/somefile.list"
     ]
 }
