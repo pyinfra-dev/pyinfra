@@ -427,6 +427,7 @@ def sync(
             local_filename, remote_filename,
             user=user, group=group, mode=mode,
             add_deploy_dir=False,
+            create_remote_dir=False,  # handled above
         )
 
     # Delete any extra files
