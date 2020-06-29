@@ -7,7 +7,6 @@ from socket import (
     error as socket_error,
     timeout as timeout_error,
 )
-from types import FunctionType
 
 import click
 import gevent
@@ -20,7 +19,13 @@ import pyinfra
 from pyinfra import logger
 from pyinfra.progress import progress_spinner
 
-from .command import StringCommand
+from .command import (
+    FileDownloadCommand,
+    FileUploadCommand,
+    FunctionCommand,
+    PyinfraCommand,
+    StringCommand,
+)
 from .exceptions import PyinfraError
 from .operation_kwargs import get_executor_kwarg_keys
 from .util import format_exception, log_host_command_error
@@ -42,6 +47,9 @@ def _run_server_op(state, host, op_hash):
 
     # ...loop through each command
     for i, command in enumerate(op_data['commands']):
+        if not isinstance(command, PyinfraCommand):
+            raise TypeError('Command: {0} is not a valid pyinfra command!'.format(command))
+
         status = False
 
         executor_kwarg_keys = get_executor_kwarg_keys()
@@ -51,72 +59,64 @@ def _run_server_op(state, host, op_hash):
             if key in op_meta
         }
 
-        # As dicts, individual commands can override meta settings (ie on a
-        # per-host basis generated during deploy).
-        if isinstance(command, dict):
-            for key in executor_kwarg_keys:
-                if key in command:
-                    executor_kwargs[key] = command[key]
-
-            command = command['command']
+        executor_kwargs.update(command.executor_kwargs)
 
         # Now we attempt to execute the command
+        #
 
-        # Tuples stand for callbacks & file uploads
-        if isinstance(command, tuple):
-            # If first element is function, it's a callback
-            if isinstance(command[0], FunctionType):
-                func, args, kwargs = command
-
-                try:
-                    status = func(
-                        state, host,
-                        *args, **kwargs
-                    )
-
-                # Custom functions could do anything, so expect anything!
-                except Exception as e:
-                    logger.debug(traceback.format_exc())
-                    logger.error('{0}{1}'.format(
-                        host.print_prefix,
-                        click.style(
-                            'Unexpected error in Python callback: {0}'.format(
-                                format_exception(e),
-                            ),
-                            'red',
+        if isinstance(command, FunctionCommand):
+            try:
+                status = command.function(
+                    state, host,
+                    *command.args, **command.kwargs
+                )
+            except Exception as e:  # Custom functions could do anything, so expect anything!
+                logger.debug(traceback.format_exc())
+                logger.error('{0}{1}'.format(
+                    host.print_prefix,
+                    click.style(
+                        'Unexpected error in Python callback: {0}'.format(
+                            format_exception(e),
                         ),
-                    ))
+                        'red',
+                    ),
+                ))
 
-            # Non-function mean files to copy
-            else:
-                method_type, first_file, second_file = command
+        elif isinstance(command, FileUploadCommand):
+            try:
+                status = host.put_file(
+                    state,
+                    command.source_filename_or_io,
+                    command.remote_filename,
+                    print_output=state.print_output,
+                    print_input=state.print_input,
+                    **executor_kwargs
+                )
+            except (timeout_error, socket_error, SSHException, IOError) as e:
+                log_host_command_error(
+                    host,
+                    e,
+                    timeout=op_meta['timeout'],
+                )
 
-                if method_type == 'upload':
-                    method = host.put_file
-                elif method_type == 'download':
-                    method = host.get_file
-                else:
-                    raise TypeError('{0} is an invalid pyinfra command!'.format(command))
+        elif isinstance(command, FileDownloadCommand):
+            try:
+                status = host.get_file(
+                    state,
+                    command.remote_filename,
+                    command.source_filename_or_io,
+                    print_output=state.print_output,
+                    print_input=state.print_input,
+                    **executor_kwargs
+                )
+            except (timeout_error, socket_error, SSHException, IOError) as e:
+                log_host_command_error(
+                    host,
+                    e,
+                    timeout=op_meta['timeout'],
+                )
 
-                try:
-                    status = method(
-                        state,
-                        first_file,
-                        second_file,
-                        print_output=state.print_output,
-                        print_input=state.print_input,
-                        **executor_kwargs
-                    )
-
-                except (timeout_error, socket_error, SSHException, IOError) as e:
-                    log_host_command_error(
-                        host,
-                        e,
-                        timeout=op_meta['timeout'],
-                    )
-
-        # Must be a string/shell command: execute it on the server w/op-level preferences
-        elif isinstance(command, six.string_types + (StringCommand,)):
+        elif isinstance(command, StringCommand):
             combined_output_lines = []
 
             try:
@@ -128,7 +128,6 @@ def _run_server_op(state, host, op_hash):
                     return_combined_output=True,
                     **executor_kwargs
                 )
-
             except (timeout_error, socket_error, SSHException) as e:
                 log_host_command_error(
                     host,
