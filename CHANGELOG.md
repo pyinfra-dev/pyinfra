@@ -1,6 +1,16 @@
+# v0.16
+
++ Add **zypper** module (@FooBarQuaxx)
++ Add **xbps** module (@leahneukirchen)
++ Add first command class, `StringCommand`, with masking support (@meantheory)
+    * Mask postgresql, mysql and sudo passwords
++ Fix `pkg.packages`: don't provide `PKG_PATH` envvar if `/etc/installurl` exists
++ Load any SSH certificates when loading private keys
+
+
 # v0.15
 
-Final `v0.x` release before `v1`. To-be-breaking changes:
+To-be-breaking changes:
 
 + Rename `pyinfra.modules` -> `pyinfra.operations` (backwards compatible, will remain in v1)
 
