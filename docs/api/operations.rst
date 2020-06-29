@@ -1,18 +1,12 @@
 Writing Operations
 ==================
 
-Operations are, in general, simple Python functions. They are passed the current deploy
-state and a target host, along with any operation arguments. The function reads state
-from the host, comparing it to the arguments, and yields **commands**.
+Operations are defined as Python functions. They are passed the current deploy state, the target host and any operation arguments. Operation functions read state from the host, comparing it to the arguments, and yield **commands**.
 
 Input: reserved arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following keyword arguments are reserved for controlling how operations deploy, and
-cannot be used within operations: ``sudo``, ``sudo_user``, ``ignore_errors``, ``serial``,
-``run_once``, ``timeout``, ``env``, ``name``, ``op``, ``get_pty``. In addition to this,
-the *first* argument cannot accept ``set`` objects, as these will be removed for use as
-the operation name.
+There are a number of `global arguments <../deploys.html#global-arguments>`_ reserved for controlling how operations are executed. These cannot be used in operation functions. In addition to this, the *first* argument cannot accept ``set`` objects, as these will be removed for use as the operation name.
 
 Output: commands
 ~~~~~~~~~~~~~~~~
@@ -21,23 +15,21 @@ Operations are generator functions and ``yield`` three types of command:
 
 .. code:: python
 
-    # Shell commands, simply represented by a string
+    # Shell commands, simply represented by a string OR the `StringCommand` class
     yield 'echo "Shell!"'
+    yield StringCommand('echo "Shell!"')
 
-    # File uploads represented by a tuple with where the first item is 'upload'
-    yield ('upload', filename_or_io, remote_filename)
+    # File uploads represented by the `FileUploadCommand` class
+    yield FileUploadCommand(filename_or_io, remote_filename)
 
-    # File downloads represented by a tuple with where the first item is 'download'
-    yield ('download', filename_or_io, remote_filename)
+    # File downloads represented by the `FileDownloadCommand` class
+    yield FileDownloadCommand(remote_filename, filename_or_io)
 
-    # Python functions represented by a tuple where the first item is a function
-    yield (function, args_list, kwargs_dict)
+    # Python functions represented by the `FunctionCommand` class
+    yield FunctionCommand(function, args_list, kwargs_dict)
 
-    # Additionally, commands can be wrapped in a dict, overriding sudo/sudo_user
-    yield {
-        'command': 'echo "Shell!"',
-        'sudo': True
-    }
+    # Additionally, commands can override some of the global arguments
+    yield StringCommand('echo "Shell!"', sudo=True)
 
 Example: managing files
 ~~~~~~~~~~~~~~~~~~~~~~~
