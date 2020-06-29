@@ -9,6 +9,9 @@
     "facts": {
         "file": {
             "/home/somefile.txt.j2": null
+        },
+        "directory": {
+            "/home": true
         }
     },
     "commands": [

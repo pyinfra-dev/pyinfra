@@ -5,6 +5,9 @@
         "hostname": "nope",
         "file": {
             "/etc/hostname": {}
+        },
+        "directory": {
+            "/etc": true
         }
     },
     "commands": [
