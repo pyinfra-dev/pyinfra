@@ -303,7 +303,8 @@ def operation(func=None, pipeline_facts=None):
             **actual_kwargs
         ))
         commands = [  # convert any strings -> StringCommand's
-            StringCommand(command) if isinstance(command, six.string_types) else command
+            StringCommand(command.strip())
+            if isinstance(command, six.string_types) else command
             for command in commands
         ]
 
