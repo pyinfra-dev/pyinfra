@@ -14,6 +14,9 @@
                 "group": "testgroup"
             }
         },
+        "directory": {
+            "/home": true
+        },
         "sha1_file": {
             "/home/somefile.txt": "nowt"
         }

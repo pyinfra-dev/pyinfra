@@ -13,6 +13,15 @@
             "/etc/rc6.d/K80nginx": {
                 "link_target": "../init.d/nginx"
             }
+        },
+        "directory": {
+            "/etc/rc0.d": true,
+            "/etc/rc1.d": true,
+            "/etc/rc2.d": true,
+            "/etc/rc3.d": true,
+            "/etc/rc4.d": true,
+            "/etc/rc5.d": true,
+            "/etc/rc6.d": true
         }
     },
     "commands": [

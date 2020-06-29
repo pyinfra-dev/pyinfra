@@ -9,6 +9,9 @@
     "facts": {
         "file": {
             "/etc/yum.repos.d/somerepo.repo": {}
+        },
+        "directory": {
+            "/etc/yum.repos.d": true
         }
     },
     "commands": [[
