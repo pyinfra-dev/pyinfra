@@ -125,3 +125,18 @@ For additional debug info, use one of these options:
 + `--debug` Print debug info.
 + `--debug-facts` Print facts after generating operations and exit.
 + `--debug-operations` Print operations after generating and exit.
+
+
+## Shell Autocompletion
+
+Add the following to your `~/.bash_profile` or `~/.profile` files:
+
++ **bash** `source scripts/pyinfra-complete.sh`.
++ **zsh** `source scripts/pyinfra-complete.zsh`.
+
+These files were generated using these commands:
+
+```
+env _PYINFRA_COMPLETE=source pyinfra > pyinfra-complete.sh
+env _PYINFRA_COMPLETE=source_zsh pyinfra > pyinfra-complete.zsh
+```
