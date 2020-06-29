@@ -237,24 +237,25 @@ def line(
 
     # No line and we want it, append it
     if not present_lines and present:
+        quoted_match_line = (
+            '"{0}"'.format(match_line)
+            if interpolate_variables else
+            "'{0}'".format(match_line)
+        )
+
         # If the file does not exist - it *might* be created, so we handle it
         # dynamically with a little script.
         if present_lines is None:
             yield '''
-                # If the file now exists
-                if [ -f "{target}" ]; then
-                    # Grep for the line, sed if matches
-                    (grep "{match_line}" "{target}" && {sed_replace_command}) 2> /dev/null || \
-                    # Else echo
-                    {echo_command}
-
-                # No file, just echo
+                if [ -f '{target}' ]; then
+                    (grep {quoted_match_line} '{target}' && {sed_replace_command}) 2> /dev/null || \
+                    {echo_command};
                 else
-                    {echo_command}
+                    {echo_command};
                 fi
             '''.format(
                 target=name,
-                match_line=match_line,
+                quoted_match_line=quoted_match_line,
                 echo_command=echo_command,
                 sed_replace_command=sed_replace_command,
             )
