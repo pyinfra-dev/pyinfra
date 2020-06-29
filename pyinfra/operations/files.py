@@ -234,7 +234,11 @@ def line(
         replace = ''
 
     # Save commands for re-use in dynamic script when file not present at fact stage
-    echo_command = 'echo "{0}" >> {1}'.format(line, name)
+    echo_command = (
+        'echo "{0}" >> {1}'.format(line, name)
+        if interpolate_variables else
+        "echo '{0}' >> {1}".format(line, name)
+    )
     sed_replace_command = sed_replace(
         name, match_line, replace,
         flags=flags,
