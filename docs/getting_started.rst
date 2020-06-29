@@ -1,7 +1,10 @@
 Getting Started
 ===============
 
-This guide should help describe the basics of deploying stuff with pyinfra. Install ``pyinfra`` with pip or `pipx <https://pipxproject.github.io/pipx/>`_:
+This guide should help describe the basics of deploying stuff with ``pyinfra``.
+
+
+Install ``pyinfra`` with pip or `pipx <https://pipxproject.github.io/pipx/>`_ (see :doc:`full install instructions <./install>`):
 
 .. code:: bash
 
@@ -14,7 +17,6 @@ To do something with pyinfra you need two things:
 
 **Operations**:
     Commands to execute or state to apply to the target hosts in the inventory. These can be simple shell commands (``uptime``) or state definitions such as "ensure the ``iftop`` apt package is installed".
-
 
 Ad-hoc commands with ``pyinfra``
 --------------------------------
@@ -36,7 +38,7 @@ As you'll see, ``pyinfra`` runs the echo command and prints the output. See the 
 State definitions
 ~~~~~~~~~~~~~~~~~
 
-Now that we can execute ad-hoc shell commands, let's define some state to ensure. The key feature here is that when you run these commands for a second time, ``pyinfra`` won't need to do execute anything because the state is already up to date. You can read more about how this works in :doc:`./deploy_process`.
+Now that we can execute ad-hoc shell commands, let's define some state to ensure. The key feature here is that when you run these commands for a second time, ``pyinfra`` won't need to do execute anything because the target is already up to date. You can read more about how this works in :doc:`./deploy_process`.
 
 .. code:: shell
 
@@ -53,7 +55,7 @@ Now that we can execute ad-hoc shell commands, let's define some state to ensure
 Create a Deploy
 ---------------
 
-A deploy simply refers to a collection of inventories and operations defined in Python files. Unlike ad-hoc commands, ``pyinfra`` deploys can be saved and reused (committed to git, etc). Think of a deploy like Ansible's playbook or Chef's cookbook. We'll now replicate the above hello world ad-hoc command as a deploy.
+A deploy is a collection of inventories and operations defined in Python files. These deploys can be saved and reused (committed to git, etc). Think of a deploy like Ansible's playbook or Chef's cookbook. We'll now replicate the above hello world ad-hoc command as a deploy.
 
 To get started let's create an ``inventory.py`` containing our hosts to target:
 
@@ -71,7 +73,7 @@ Now we need a ``deploy.py`` containing our operations to execute:
     # Run an ad-hoc command
     server.shell(
         {'Execute hello world script'},  # Use a set as the first argument to name the operation
-        'echo "hello world"',  # the argument(s) to the operation
+        'echo "hello world"',
     )
 
     # Define some state - this operation will do nothing on subsequent runs
@@ -92,63 +94,3 @@ That's the basics of ``pyinfra``! Possible next steps:
 + If you like to dive right into the code check out `the examples on GitHub <https://github.com/Fizzadar/pyinfra/tree/master/examples>`_
 + You can also read the :doc:`building a deploy guide <./deploys>` which covers pyinfra's deploy features
 + Or :doc:`the CLI user guide <./cli>` which covers ad-hoc usage of ``pyinfra``.
-
-
-pyinfra from Windows
---------------------
-
-Tested on WindowsServer2019 with python 3.7.
-
-+ Download Python https://www.python.org/downloads/windows/
-  (ex: python-3.7.6-amd64.exe). Install as Administrator and
-  ensure the **Add Python to PATH** option is selected.)
-
-+ Open a new powershell (as your login user), run:
-
-.. code:: shell
-
-    # install python virtual environment package
-    pip install virtualenv
-
-+ Upgrade pip (optional):
-
-.. code:: shell
-
-    # upgrade pip (optional)
-    python -m pip install --upgrade pip
-
-+ Create a new python virtual environment:
-
-.. code:: shell
-
-    # create a new python virtual environment
-    virtualenv.exe venv
-
-+ Activate the python virtual environment:
-
-.. code:: shell
-
-    # activate the python virtual environment
-    .\venv\Scripts\activate
-
-- Install pyinfra:
-
-.. code:: shell
-
-    # install pyinfra using pip
-    pip install pyinfra
-
-
-If you need to build any python packages on Windows, perhaps because one of the **pip** packages above fails, you may need a c++ compiler. One possible solution is below.
-
-+ Download Visual Studio Community Edition https://visualstudio.microsoft.com/downloads/ and
-  install Visual Studio as Administrator. Select the "Desktop development with C++" option and
-  ensure at least these options are selected:
-
-    + "MSVC v142..."
-    + "Windows 10 SDK..."
-    + "C++ cmake tools for windows"
-    + "C++ ATL for latest..."
-    + "C++/cli support for v142..."
-    + "C++ Modules for v142..."
-

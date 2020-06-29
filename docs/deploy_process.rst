@@ -1,7 +1,7 @@
 Executing Deploys
 =================
 
-``pyinfra`` executes in two main phases: **fact gathering** and **executing operations**. This split is what enables pyinfra to execute dry runs (``--dry``) and output a "diff" of commands & files (``--debug-operations``) to update a servers state as defined.
+``pyinfra`` executes in two main phases: **fact gathering** and **executing operations**. This split is what enables ``pyinfra`` to execute dry runs (``--dry``) and output a "diff" of commands & files (``--debug-operations``) to update a servers state as defined.
 
 **Fact gathering**:
     During this phase information is collected from the remote servers and compared to the desired state defined by the user (ie a file of operations). This phase is **read only** and collects most of the information needed to execute the deploy.
@@ -65,7 +65,7 @@ See the :doc:`./examples/dynamic_execution_deploy` example.
 Loops
 ~~~~~
 
-``pyinfra`` uses *line numbers* to determine the order in which operations are executed. While this is very effective and executing in an order users would expect, loops are an exception. ``pyinfra`` inclues a workaround for this with the `state.preserve_loop_order` function:
+In CLI mode ``pyinfra`` uses *line numbers* to determine the order in which operations are executed. While this is very effective and executing in an order users would expect, loops are an exception. ``pyinfra`` inclues a workaround for this with the ``state.preserve_loop_order`` function:
 
 .. code:: python
 
