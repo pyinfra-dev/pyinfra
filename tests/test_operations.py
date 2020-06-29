@@ -70,8 +70,8 @@ def make_operation_tests(arg):
             commands = []
 
             for command in output_commands:
-                if isinstance(command, six.string_types):
-                    command = StringCommand(command)
+                if isinstance(command, six.string_types):  # matches pyinfra/api/operation.py
+                    command = StringCommand(command.strip())
 
                 if isinstance(command, StringCommand):
                     json_command = get_command_string(command)
