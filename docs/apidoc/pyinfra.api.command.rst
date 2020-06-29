@@ -1,7 +1,7 @@
-pyinfra.api.connect module
+pyinfra.api.command module
 ==========================
 
-.. automodule:: pyinfra.api.connect
+.. automodule:: pyinfra.api.command
     :members:
     :undoc-members:
     :show-inheritance:
