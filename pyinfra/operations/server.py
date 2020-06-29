@@ -13,7 +13,7 @@ import six
 from six.moves import shlex_quote
 
 from pyinfra import logger
-from pyinfra.api import operation
+from pyinfra.api import FunctionCommand, operation, StringCommand
 
 from . import files
 from .util.files import chmod, sed_replace
@@ -43,10 +43,7 @@ def reboot(state, host, delay=10, interval=1, reboot_timeout=300):
 
     logger.warning('The server.reboot operation is in beta!')
 
-    yield {
-        'command': 'reboot',
-        'success_exit_codes': [-1],  # -1 being error/disconnected
-    }
+    yield StringCommand('reboot', success_exit_codes=[-1])  # -1 being error/disconnected
 
     def wait_and_reconnect(state, host):  # pragma: no cover
         sleep(delay)
@@ -68,7 +65,7 @@ def reboot(state, host, delay=10, interval=1, reboot_timeout=300):
             sleep(interval)
             retries += 1
 
-    yield (wait_and_reconnect, (), {})
+    yield FunctionCommand(wait_and_reconnect, (), {})
 
 
 @operation

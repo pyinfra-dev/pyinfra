@@ -15,7 +15,13 @@ import six
 
 from jinja2 import TemplateSyntaxError, UndefinedError
 
-from pyinfra.api import operation, OperationError, OperationTypeError
+from pyinfra.api import (
+    FileDownloadCommand,
+    FileUploadCommand,
+    operation,
+    OperationError,
+    OperationTypeError,
+)
 from pyinfra.api.connectors.util import escape_unix_path
 from pyinfra.api.util import get_file_sha1, get_template
 
@@ -489,11 +495,11 @@ def get(
 
     # No remote file, so assume exists and download it "blind"
     if not remote_file or force:
-        yield ('download', remote_filename, local_filename)
+        yield FileDownloadCommand(remote_filename, local_filename)
 
     # No local file, so always download
     elif not path.exists(local_filename):
-        yield ('download', remote_filename, local_filename)
+        yield FileDownloadCommand(remote_filename, local_filename)
 
     # Remote file exists - check if it matches our local
     else:
@@ -502,7 +508,7 @@ def get(
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
-            yield ('download', remote_filename, local_filename)
+            yield FileDownloadCommand(remote_filename, local_filename)
 
 
 @operation(pipeline_facts={
@@ -575,7 +581,7 @@ def put(
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
-        yield ('upload', local_file, remote_filename)
+        yield FileUploadCommand(local_file, remote_filename)
 
         if user or group:
             yield chown(remote_filename, user, group)
@@ -590,7 +596,7 @@ def put(
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
-            yield ('upload', local_file, remote_filename)
+            yield FileUploadCommand(local_file, remote_filename)
 
             if user or group:
                 yield chown(remote_filename, user, group)

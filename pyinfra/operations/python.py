@@ -2,7 +2,7 @@
 The Python module allows you to execute Python code within the context of a deploy.
 '''
 
-from pyinfra.api import operation
+from pyinfra.api import FunctionCommand, operation
 
 
 @operation
@@ -33,7 +33,7 @@ def call(state, host, func, *args, **kwargs):
 
     '''
 
-    yield (func, args, kwargs)
+    yield FunctionCommand(func, args, kwargs)
 
 
 @operation
@@ -41,4 +41,4 @@ def raise_exception(state, host, exception_class, *args, **kwargs):
     def raise_exc(*args, **kwargs):  # pragma: no cover
         raise exception_class(*args, **kwargs)
 
-    yield (raise_exc, args, kwargs)
+    yield FunctionCommand(raise_exc, args, kwargs)

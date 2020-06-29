@@ -3,18 +3,16 @@ from datetime import datetime
 import six
 from mock import patch
 
-from pyinfra.api import Config, Inventory, StringCommand
+from pyinfra.api import Config, Inventory
 
 
 def get_command_string(command):
-    if isinstance(command, StringCommand):
-        value = command.get_raw_value()
-        masked_value = command.get_masked_value()
-        if value == masked_value:
-            return value
-        else:
-            return [value, masked_value]
-    return command
+    value = command.get_raw_value()
+    masked_value = command.get_masked_value()
+    if value == masked_value:
+        return value
+    else:
+        return [value, masked_value]
 
 
 def make_inventory(hosts=('somehost', 'anotherhost'), **kwargs):

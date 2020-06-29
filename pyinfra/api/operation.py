@@ -19,6 +19,7 @@ import pyinfra
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.pseudo_modules import PseudoModule
 
+from .command import StringCommand
 from .exceptions import PyinfraError
 from .host import Host
 from .operation_kwargs import pop_global_op_kwargs
@@ -301,6 +302,10 @@ def operation(func=None, pipeline_facts=None):
             *actual_args,
             **actual_kwargs
         ))
+        commands = [  # convert any strings -> StringCommand's
+            StringCommand(command) if isinstance(command, six.string_types) else command
+            for command in commands
+        ]
 
         state.in_op = False
         state.current_op_hash = None
