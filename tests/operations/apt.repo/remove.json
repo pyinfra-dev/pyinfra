@@ -20,6 +20,6 @@
         }
     },
     "commands": [
-        "sed -i=\"\" \"s/^.*deb http:\\/\\/archive.canonical.com\\/ubuntu hardy partner.*$//\" /etc/apt/sources.list"
+        "sed -i='' 's/^.*deb http:\\/\\/archive.canonical.com\\/ubuntu hardy partner.*$//' /etc/apt/sources.list"
     ]
 }

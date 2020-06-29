@@ -18,7 +18,7 @@
     },
     "commands": [
         "crontab -l  > _tempfile_",
-        "sed -i=\"\" \"s/.*this_is_a_command.*/* * * 1 1,2,3 this_is_a_command/\" _tempfile_",
+        "sed -i='' 's/.*this_is_a_command.*/* * * 1 1,2,3 this_is_a_command/' _tempfile_",
         "crontab  _tempfile_"
     ]
 }
