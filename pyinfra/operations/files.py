@@ -450,6 +450,7 @@ def _create_remote_dir(state, host, remote_filename, user, group):
         yield directory(
             state, host, remote_dirname,
             user=user, group=group,
+            no_check_owner_mode=True,
         )
 
 
@@ -946,6 +947,7 @@ def directory(
     state, host, name,
     present=True, assume_present=False,
     user=None, group=None, mode=None, recursive=False,
+    no_check_owner_mode=False,
 ):
     '''
     Add/remove/update directories.
@@ -1010,6 +1012,9 @@ def directory(
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
+        if no_check_owner_mode:
+            return
+
         # Check mode
         if mode and (not info or info['mode'] != mode):
             yield chmod(name, mode, recursive=recursive)
