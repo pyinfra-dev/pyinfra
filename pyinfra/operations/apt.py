@@ -33,11 +33,11 @@ def noninteractive_apt(command, force=False):
 
 
 @operation
-def key(state, host, key=None, keyserver=None, keyid=None):
+def key(state, host, src=None, keyserver=None, keyid=None):
     '''
     Add apt gpg keys with ``apt-key``.
 
-    + key: filename or URL
+    + src: filename or URL
     + keyserver: URL of keyserver to fetch key from
     + keyid: key identifier when using keyserver
 
@@ -61,27 +61,26 @@ def key(state, host, key=None, keyserver=None, keyid=None):
             name='Install VirtualBox key',
             src='https://www.virtualbox.org/download/oracle_vbox_2016.asc',
         )
-
     '''
 
-    if key:
+    if src:
         # If URL, wget the key to stdout and pipe into apt-key, because the "adv"
         # apt-key passes to gpg which doesn't always support https!
-        if urlparse(key).scheme:
-            yield 'wget -O- {0} | apt-key add -'.format(key)
+        if urlparse(src).scheme:
+            yield 'wget -O- {0} | apt-key add -'.format(src)
         else:
-            yield 'apt-key add {0}'.format(key)
+            yield 'apt-key add {0}'.format(src)
 
     if keyserver and keyid:
         yield 'apt-key adv --keyserver {0} --recv-keys {1}'.format(keyserver, keyid)
 
 
 @operation
-def repo(state, host, name, present=True, filename=None):
+def repo(state, host, src, present=True, filename=None):
     '''
     Add/remove apt repositories.
 
-    + name: apt source string eg ``deb http://X hardy main``
+    + src: apt source string eg ``deb http://X hardy main``
     + present: whether the repo should exist on the system
     + filename: optional filename to use ``/etc/apt/sources.list.d/<filename>.list``. By
       default uses ``/etc/apt/sources.list``.
@@ -94,7 +93,6 @@ def repo(state, host, name, present=True, filename=None):
             name='Install VirtualBox repo',
             src='deb https://download.virtualbox.org/virtualbox/debian bionic contrib',
         )
-
     '''
 
     # Get the target .list file to manage
@@ -107,30 +105,30 @@ def repo(state, host, name, present=True, filename=None):
     apt_sources = host.fact.apt_sources
 
     is_present = False
-    repo = parse_apt_repo(name)
+    repo = parse_apt_repo(src)
     if repo and repo in apt_sources:
         is_present = True
 
     # Doesn't exist and we want it
     if not is_present and present:
         yield files.line(
-            state, host, filename, name,
+            state, host, filename, src,
         )
 
     # Exists and we don't want it
     if is_present and not present:
         yield files.line(
-            state, host, filename, name,
+            state, host, filename, src,
             present=False,
         )
 
 
 @operation
-def ppa(state, host, name, present=True):
+def ppa(state, host, src, present=True):
     '''
     Add/remove Ubuntu ppa repositories.
 
-    + name: the PPA name (full ppa:user/repo format)
+    + src: the PPA name (full ppa:user/repo format)
     + present: whether it should exist
 
     Note:
@@ -149,18 +147,18 @@ def ppa(state, host, name, present=True):
     '''
 
     if present:
-        yield 'apt-add-repository -y "{0}"'.format(name)
+        yield 'apt-add-repository -y "{0}"'.format(src)
 
     if not present:
-        yield 'apt-add-repository -y --remove "{0}"'.format(name)
+        yield 'apt-add-repository -y --remove "{0}"'.format(src)
 
 
 @operation
-def deb(state, host, source, present=True, force=False):
+def deb(state, host, src, present=True, force=False):
     '''
     Add/remove ``.deb`` file packages.
 
-    + source: filename or URL of the ``.deb`` file
+    + src: filename or URL of the ``.deb`` file
     + present: whether or not the package should exist on the system
     + force: whether to force the package install by passing `--force-yes` to apt
 
@@ -184,18 +182,18 @@ def deb(state, host, source, present=True, force=False):
     '''
 
     # If source is a url
-    if urlparse(source).scheme:
+    if urlparse(src).scheme:
         # Generate a temp filename
-        temp_filename = state.get_temp_filename(source)
+        temp_filename = state.get_temp_filename(src)
 
         # Ensure it's downloaded
-        yield files.download(state, host, source, temp_filename)
+        yield files.download(state, host, src, temp_filename)
 
         # Override the source with the downloaded file
-        source = temp_filename
+        src = temp_filename
 
     # Check for file .deb information (if file is present)
-    info = host.fact.deb_package(source)
+    info = host.fact.deb_package(src)
 
     exists = False
 
@@ -212,12 +210,12 @@ def deb(state, host, source, present=True, force=False):
     # Package does not exist and we want?
     if present and not exists:
         # Install .deb file - ignoring failure (on unmet dependencies)
-        yield 'dpkg --force-confdef --force-confold -i {0} 2> /dev/null || true'.format(source)
+        yield 'dpkg --force-confdef --force-confold -i {0} 2> /dev/null || true'.format(src)
         # Attempt to install any missing dependencies
         yield '{0} -f'.format(noninteractive_apt('install', force=force))
         # Now reinstall, and critically configure, the package - if there are still
         # missing deps, now we error
-        yield 'dpkg --force-confdef --force-confold -i {0}'.format(source)
+        yield 'dpkg --force-confdef --force-confold -i {0}'.format(src)
 
     # Package exists but we don't want?
     if exists and not present:
@@ -234,6 +232,15 @@ def update(state, host, cache_time=None, touch_periodic=False):
 
     + cache_time: cache updates for this many seconds
     + touch_periodic: touch ``/var/lib/apt/periodic/update-success-stamp`` after update
+
+    Example:
+
+    .. code:: python
+
+        apt.update(
+            name='Update apt repositories',
+            cache_time=3600,
+        )
     '''
 
     # If cache_time check when apt was last updated, prevent updates if within time
@@ -262,6 +269,14 @@ _update = update  # noqa: E305
 def upgrade(state, host):
     '''
     Upgrades all apt packages.
+
+    Example:
+
+    .. code:: python
+
+        apt.upgrade(
+            name='Upgrade apt packages',
+        )
     '''
 
     yield noninteractive_apt('upgrade')
@@ -322,7 +337,6 @@ def packages(
             packages=['linux-headers-{}'.format(host.fact.os_version)],
             update=True,
         )
-
     '''
 
     if update:

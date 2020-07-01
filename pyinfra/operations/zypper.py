@@ -13,7 +13,7 @@ key = yum_key
 def repo(
     state,
     host,
-    name,
+    src,
     baseurl=None,
     present=True,
     description=None,
@@ -25,7 +25,7 @@ def repo(
     '''
     Add/remove/update zypper repositories.
 
-    + name: URL or name for the ``.repo``   file
+    + src: URL or name for the ``.repo``   file
     + baseurl: the baseurl of the repo (if ``name`` is not a URL)
     + present: whether the ``.repo`` file should be present
     + description: optional verbose description
@@ -61,7 +61,7 @@ def repo(
         state,
         host,
         files,
-        name,
+        src,
         baseurl,
         present,
         description,
@@ -73,12 +73,12 @@ def repo(
 
 
 @operation
-def rpm(state, host, source, present=True):
+def rpm(state, host, src, present=True):
     # NOTE: if updating this docstring also update `dnf.rpm`
     '''
     Add/remove ``.rpm`` file packages.
 
-    + source: filename or URL of the ``.rpm`` package
+    + src: filename or URL of the ``.rpm`` package
     + present: whether ore not the package should exist on the system
 
     URL sources with ``present=False``:
@@ -95,7 +95,7 @@ def rpm(state, host, source, present=True):
         )
     '''
 
-    yield ensure_rpm(state, host, files, source, present, 'zypper --non-interactive')
+    yield ensure_rpm(state, host, files, src, present, 'zypper --non-interactive')
 
 
 @operation

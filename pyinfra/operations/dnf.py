@@ -11,7 +11,7 @@ from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 
 
 @operation
-def key(state, host, key):
+def key(state, host, src):
     '''
     Add dnf gpg keys with ``rpm``.
 
@@ -32,12 +32,12 @@ def key(state, host, key):
 
     '''
 
-    yield 'rpm --import {0}'.format(key)
+    yield 'rpm --import {0}'.format(src)
 
 
 @operation
 def repo(
-    state, host, name,
+    state, host, src,
     present=True,
     baseurl=None, description=None,
     enabled=True, gpgcheck=True, gpgkey=None,
@@ -71,26 +71,26 @@ def repo(
 
         # Create the repository file from baseurl/etc
         dnf.repo(
-            {'Add the Docker CentOS repo'},
-            name='DockerCE',
+            name='Add the Docker CentOS repo',
+            src='DockerCE',
             baseurl='https://download.docker.com/linux/centos/7/$basearch/stable',
         )
     '''
 
     yield ensure_yum_repo(
         state, host, files,
-        name, baseurl, present, description, enabled, gpgcheck, gpgkey,
+        src, baseurl, present, description, enabled, gpgcheck, gpgkey,
         'dnf-config-manager',
     )
 
 
 @operation
-def rpm(state, host, source, present=True):
+def rpm(state, host, src, present=True):
     # NOTE: if updating this docstring also update `yum.rpm`
     '''
     Add/remove ``.rpm`` file packages.
 
-    + source: filename or URL of the ``.rpm`` package
+    + src: filename or URL of the ``.rpm`` package
     + present: whether ore not the package should exist on the system
 
     URL sources with ``present=False``:
@@ -108,7 +108,7 @@ def rpm(state, host, source, present=True):
         )
     '''
 
-    yield ensure_rpm(state, host, files, source, present, 'dnf')
+    yield ensure_rpm(state, host, files, src, present, 'dnf')
 
 
 @operation
