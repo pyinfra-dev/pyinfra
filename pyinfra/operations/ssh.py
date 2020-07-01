@@ -22,8 +22,8 @@ def keyscan(state, host, hostname, force=False):
     .. code:: python
 
         ssh.keyscan(
-            {'Set add server two to known_hosts on one'},
-            'two.example.com',
+            name='Set add server two to known_hosts on one',
+            hostname='two.example.com',
         )
 
     '''
@@ -63,9 +63,9 @@ def command(state, host, hostname, command, ssh_user=None):
     .. code:: python
 
         ssh.command(
-            {'Create file by running echo from host one to host two'},
-            'two.example.com',
-            'echo "one was here" > /tmp/one.txt',
+            name='Create file by running echo from host one to host two',
+            hostname='two.example.com',
+            command='echo "one was here" > /tmp/one.txt',
             ssh_user='vagrant',
         )
 

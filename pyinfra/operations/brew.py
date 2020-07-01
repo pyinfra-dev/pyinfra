@@ -53,15 +53,15 @@ def packages(
 
         # Update package list and install packages
         brew.packages(
-            {'Install Vim and vimpager'},
-            ['vimpager', 'vim'],
+            name='Install Vim and vimpager',
+            packages=['vimpager', 'vim'],
             update=True,
         )
 
         # Install the latest versions of packages (always check)
         brew.packages(
-            {'Install latest Vim'},
-            ['vim'],
+            name='Install latest Vim',
+            packages=['vim'],
             latest=True,
         )
     '''
@@ -112,8 +112,8 @@ def casks(
     .. code:: python
 
         brew.casks(
-            {'Upgrade and install the latest package via casks'},
-            ['godot'],
+            name='Upgrade and install the latest cask',
+            casks=['godot'],
             upgrade=True,
             latest=True,
         )
@@ -146,8 +146,8 @@ def tap(state, host, name, present=True):
     .. code:: python
 
         brew.tap(
-            {'Add a brew tap'},
-            'includeos/includeos',
+            name='Add a brew tap',
+            src='includeos/includeos',
         )
 
         # multiple taps

@@ -79,8 +79,8 @@ def user(
     .. code:: python
 
         mysql.user(
-            {'Create the pyinfra@localhost MySQL user'},
-            'pyinfra',
+            name='Create the pyinfra@localhost MySQL user',
+            user='pyinfra',
             password='somepassword',
         )
     '''
@@ -161,8 +161,8 @@ def database(
     .. code:: python
 
         mysql.database(
-            {'Create the pyinfra_stuff database'},
-            'pyinfra_stuff',
+            name='Create the pyinfra_stuff database',
+            database='pyinfra_stuff',
             user='pyinfra',
             user_privileges=['SELECT', 'INSERT'],
             charset='utf8',
@@ -344,8 +344,8 @@ def dump(
     .. code:: python
 
         mysql.dump(
-            {'Dump the pyinfra_stuff database'},
-            '/tmp/pyinfra_stuff.dump',
+            name='Dump the pyinfra_stuff database',
+            dest='/tmp/pyinfra_stuff.dump',
             database='pyinfra_stuff',
         )
     '''
@@ -380,8 +380,8 @@ def load(
     .. code:: python
 
         mysql.load(
-            {'Import the pyinfra_stuff dump into pyinfra_stuff_copy'},
-            '/tmp/pyinfra_stuff.dump',
+            name='Import the pyinfra_stuff dump into pyinfra_stuff_copy',
+            src='/tmp/pyinfra_stuff.dump',
             database='pyinfra_stuff_copy',
         )
     '''

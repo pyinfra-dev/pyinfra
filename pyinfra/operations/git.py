@@ -31,7 +31,7 @@ def config(
     .. code:: python
 
         git.config(
-            {'Ensure user name is set for a repo'},
+            name='Ensure user name is set for a repo',
             key='user.name',
             value='Anon E. Mouse',
             repo='/usr/local/src/pyinfra',
@@ -76,9 +76,9 @@ def repo(
     .. code:: python
 
         git.repo(
-            {'Clone repo'},
-            'https://github.com/Fizzadar/pyinfra.git',
-            '/usr/local/src/pyinfra',
+            name='Clone repo',
+            src='https://github.com/Fizzadar/pyinfra.git',
+            dest='/usr/local/src/pyinfra',
         )
     '''
 

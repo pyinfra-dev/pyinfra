@@ -53,15 +53,15 @@ def packages(
 
         # Update package list and install packages
         apk.packages(
-            {'Install Asterisk and Vim'},
-            ['asterisk', 'vim'],
+            name='Install Asterisk and Vim',
+            packages=['asterisk', 'vim'],
             update=True,
         )
 
         # Install the latest versions of packages (always check)
         apk.packages(
-            {'Install latest Vim'},
-            ['vim'],
+            name='Install latest Vim',
+            packages=['vim'],
             latest=True,
         )
     '''

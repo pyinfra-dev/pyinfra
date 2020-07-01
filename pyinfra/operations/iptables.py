@@ -99,18 +99,18 @@ def rule(
 
     .. code:: python
 
-        # Block SSH traffic
-
         iptables.rule(
-            'INPUT', 'DROP',
+            name='Block SSH traffic',
+            chain='INPUT',
+            jump='DROP',
             destination_port=22
         )
 
-
-        # NAT traffic on from 8.8.8.8:53 to 8.8.4.4:8080
-
         iptables.rule(
-            'PREROUTING', 'DNAT', table='nat',
+            name='NAT traffic on from 8.8.8.8:53 to 8.8.4.4:8080',
+            chain='PREROUTING',
+            jump='DNAT',
+            table='nat',
             source='8.8.8.8', destination_port=53,
             to_destination='8.8.4.4:8080'
         )

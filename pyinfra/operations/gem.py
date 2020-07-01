@@ -25,8 +25,8 @@ def packages(state, host, packages=None, present=True, latest=False):
 
         # Note: Assumes that 'gem' is installed.
         gem.packages(
-            {'Install rspec'},
-            'rspec',
+            name='Install rspec',
+            packages=['rspec'],
         )
     '''
 

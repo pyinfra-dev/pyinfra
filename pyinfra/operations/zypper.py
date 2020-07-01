@@ -45,14 +45,14 @@ def repo(
 
         # Download a repository file
         zypper.repo(
-            {'Install container virtualization repo via URL'},
-            'https://download.opensuse.org/repositories/Virtualization:containers/openSUSE_Tumbleweed/Virtualization:containers.repo',
+            name='Install container virtualization repo via URL',
+            src='https://download.opensuse.org/repositories/Virtualization:containers/openSUSE_Tumbleweed/Virtualization:containers.repo',
         )
 
         # Create the repository file from baseurl/etc
         zypper.repo(
-            {'Install container virtualization repo'},
-            name='Virtualization:containers (openSUSE_Tumbleweed)',
+            name='Install container virtualization repo',
+            src=='Virtualization:containers (openSUSE_Tumbleweed)',
             baseurl='https://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Tumbleweed/',
         )
     '''
@@ -90,8 +90,8 @@ def rpm(state, host, source, present=True):
     .. code:: python
 
         zypper.rpm(
-           {'Install task from rpm'},
-           'https://github.com/go-task/task/releases/download/v2.8.1/task_linux_amd64.rpm'
+           name='Install task from rpm',
+           src='https://github.com/go-task/task/releases/download/v2.8.1/task_linux_amd64.rpm'
         )
     '''
 
@@ -146,15 +146,15 @@ def packages(
 
         # Update package list and install packages
         zypper.packages(
-            {'Install Vim and Vim enhanced'},
-            ['vim-enhanced', 'vim'],
+            name='Install Vim and Vim enhanced',
+            packages=['vim-enhanced', 'vim'],
             update=True,
         )
 
         # Install the latest versions of packages (always check)
         zypper.packages(
-            {'Install latest Vim'},
-            ['vim'],
+            name='Install latest Vim',
+            packages=['vim'],
             latest=True,
         )
     '''

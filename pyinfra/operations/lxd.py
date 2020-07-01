@@ -35,8 +35,8 @@ def container(
     .. code:: python
 
         lxd.container(
-            {'Add an ubuntu container'},
-            'ubuntu19',
+            name='Add an ubuntu container',
+            id='ubuntu19',
             image='ubuntu:19.10',
         )
     '''
