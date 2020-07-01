@@ -94,18 +94,18 @@ def cask_upgrade(state, host):
 @operation
 def casks(
     state, host,
-    packages=None, present=True, latest=False, upgrade=False,
+    casks=None, present=True, latest=False, upgrade=False,
 ):
     '''
     Add/remove/update brew casks.
 
-    + packages: list of packages to ensure
-    + present: whether the packages should be installed
-    + latest: whether to upgrade packages without a specified version
-    + upgrade: run brew cask upgrade before installing packages
+    + casks: list of casks to ensure
+    + present: whether the casks should be installed
+    + latest: whether to upgrade casks without a specified version
+    + upgrade: run brew cask upgrade before installing casks
 
     Versions:
-        Package versions can be pinned like brew: ``<pkg>@<version>``.
+        Cask versions can be pinned like brew: ``<pkg>@<version>``.
 
     Example:
 
@@ -124,7 +124,7 @@ def casks(
         yield cask_upgrade(state, host)
 
     yield ensure_packages(
-        packages, host.fact.brew_casks, present,
+        casks, host.fact.brew_casks, present,
         install_command='brew cask install',
         uninstall_command='brew cask uninstall',
         upgrade_command='brew cask upgrade',
@@ -134,11 +134,11 @@ def casks(
 
 
 @operation
-def tap(state, host, name, present=True):
+def tap(state, host, src, present=True):
     '''
     Add/remove brew taps.
 
-    + name: the name of the tasp
+    + src: the name of the tasp
     + present: whether this tap should be present or not
 
     Examples:
@@ -154,17 +154,17 @@ def tap(state, host, name, present=True):
         taps = ['includeos/includeos', 'ktr0731/evans']
         for tap in taps:
             brew.tap(
-                {f'Add brew tap {tap}'},
-                tap,
+                name={f'Add brew tap {tap}'},
+                src=tap,
             )
 
     '''
 
     taps = host.fact.brew_taps
-    is_tapped = name in taps
+    is_tapped = src in taps
 
     if present and not is_tapped:
-        yield 'brew tap {0}'.format(name)
+        yield 'brew tap {0}'.format(src)
 
     elif not present and is_tapped:
-        yield 'brew untap {0}'.format(name)
+        yield 'brew untap {0}'.format(src)
