@@ -122,7 +122,7 @@ def build_facts():
                     for line_args in arg_lines
                 ]
 
-                args_string = '\n{0}\n    '.format(',\n'.join(arg_lines))
+                args_string = '\n{0},\n    '.format(',\n'.join(arg_lines))
 
             # Attach the code block
             lines.append('''
