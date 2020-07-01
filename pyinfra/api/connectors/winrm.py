@@ -209,3 +209,6 @@ def put_file(
     **command_kwargs
 ):
     raise PyinfraError('Not implemented')
+
+
+EXECUTION_CONNECTOR = True

@@ -1,5 +1,4 @@
 import sys
-
 from io import open
 
 try:
@@ -101,6 +100,16 @@ if __name__ == '__main__':
             'console_scripts': (
                 'pyinfra=pyinfra_cli.__main__:execute_pyinfra',
             ),
+            'pyinfra.connectors': [
+                'ansible = pyinfra.api.connectors.ansible',
+                'chroot = pyinfra.api.connectors.chroot',
+                'docker = pyinfra.api.connectors.docker',
+                'local = pyinfra.api.connectors.local',
+                'mech = pyinfra.api.connectors.mech',
+                'ssh = pyinfra.api.connectors.ssh',
+                'vagrant = pyinfra.api.connectors.vagrant',
+                'winrm = pyinfra.api.connectors.winrm',
+            ]
         },
         install_requires=INSTALL_REQUIRES,
         extras_require={

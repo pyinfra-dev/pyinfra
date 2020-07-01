@@ -177,3 +177,6 @@ def get_file(
         click.echo('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
 
     return True
+
+
+EXECUTION_CONNECTOR = True
