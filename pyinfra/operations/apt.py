@@ -53,13 +53,13 @@ def key(state, host, key=None, keyserver=None, keyid=None):
 
         # Note: If using URL, wget is assumed to be installed.
         apt.key(
-            {'Add the Docker apt gpg key'},
-            key='https://download.docker.com/linux/ubuntu/gpg',
+            name='Add the Docker apt gpg key',
+            src='https://download.docker.com/linux/ubuntu/gpg',
         )
 
         apt.key(
-            {'Install VirtualBox key'},
-            'https://www.virtualbox.org/download/oracle_vbox_2016.asc',
+            name='Install VirtualBox key',
+            src='https://www.virtualbox.org/download/oracle_vbox_2016.asc',
         )
 
     '''
@@ -91,8 +91,8 @@ def repo(state, host, name, present=True, filename=None):
     .. code:: python
 
         apt.repo(
-            {'Install VirtualBox repo'},
-            'deb https://download.virtualbox.org/virtualbox/debian bionic contrib',
+            name='Install VirtualBox repo',
+            src='deb https://download.virtualbox.org/virtualbox/debian bionic contrib',
         )
 
     '''
@@ -142,8 +142,8 @@ def ppa(state, host, name, present=True):
 
         # Note: Assumes software-properties-common is installed.
         apt.ppa(
-            {'Add the Bitcoin ppa'},
-            'ppa:bitcoin/bitcoin',
+            name='Add the Bitcoin ppa',
+            src='ppa:bitcoin/bitcoin',
         )
 
     '''
@@ -178,8 +178,8 @@ def deb(state, host, source, present=True, force=False):
 
         # Note: Assumes wget is installed.
         apt.deb(
-            {'Install Chrome via deb'},
-            'https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb',
+            name='Install Chrome via deb',
+            src='https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb',
         )
     '''
 
@@ -304,22 +304,22 @@ def packages(
 
         # Update package list and install packages
         apt.packages(
-            {'Install Asterisk and Vim'},
-            ['asterisk', 'vim'],
+            name='Install Asterisk and Vim',
+            packages=['asterisk', 'vim'],
             update=True,
         )
 
         # Install the latest versions of packages (always check)
         apt.packages(
-            {'Install latest Vim'},
-            ['vim'],
+            name='Install latest Vim',
+            packages=['vim'],
             latest=True,
         )
 
         # Note: host.fact.os_version is the same as `uname -r` (ex: '4.15.0-72-generic')
         apt.packages(
-            {'Install kernel headers'},
-            ['linux-headers-{}'.format(host.fact.os_version)],
+            name='Install kernel headers',
+            packages=['linux-headers-{}'.format(host.fact.os_version)],
             update=True,
         )
 

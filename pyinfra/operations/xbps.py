@@ -46,8 +46,8 @@ def packages(
     .. code:: python
 
         xbps.packages(
-            {'Install Vim and Vim Pager'},
-            ['vimpager', 'vim'],
+            name='Install Vim and Vim Pager',
+            packages=['vimpager', 'vim'],
         )
 
     '''

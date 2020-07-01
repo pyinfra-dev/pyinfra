@@ -32,8 +32,8 @@ def packages(state, host, packages=None, present=True, pkg_path=None):
     .. code:: python
 
         pkg.packages(
-            {'Install Vim and Vim Addon Manager'},
-            ['vim-addon-manager', 'vim'],
+            name='Install Vim and Vim Addon Manager',
+            packages=['vim-addon-manager', 'vim'],
         )
 
     '''

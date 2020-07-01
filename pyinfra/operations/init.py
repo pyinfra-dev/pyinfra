@@ -110,8 +110,8 @@ def d(
     .. code:: python
 
         init.d(
-            {'Restart and enable rsyslog'},
-            'rsyslog',
+            name='Restart and enable rsyslog',
+            service='rsyslog',
             restarted=True,
             enabled=True,
         )
@@ -167,8 +167,8 @@ def d_enable(
     .. code:: python
 
         init.d_enable(
-            {'Finer control on which runlevels rsyslog should run'},
-            'rsyslog',
+            name='Finer control on which runlevels rsyslog should run',
+            service='rsyslog',
             start_levels=(3, 4, 5),
             stop_levels=(0, 1, 2, 6),
         )
@@ -288,16 +288,16 @@ def systemd(
     .. code:: python
 
         init.systemd(
-            {'Restart and enable the dnsmasq service'},
-            'dnsmasq.service',
+            name='Restart and enable the dnsmasq service',
+            service='dnsmasq.service',
             running=True,
             restarted=True,
             enabled=True,
         )
 
         init.systemd(
-            {'Enable logrotate timer'},
-            'logrotate.timer',
+            name='Enable logrotate timer',
+            service='logrotate.timer',
             running=True,
             enabled=True,
         )
@@ -373,8 +373,8 @@ def service(
     .. code:: python
 
         init.service(
-            {'Enable open-vm-tools service'},
-            'open-vm-tools',
+            name='Enable open-vm-tools service',
+            service='open-vm-tools',
             enabled=True,
         )
     '''

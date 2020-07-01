@@ -29,7 +29,11 @@ def call(state, host, func, *args, **kwargs):
                 raise Exception('`{}` problem with callback stdout:{} stderr:{}'.format(
                     command, stdout, stderr))
 
-        python.call(my_callback, hello='world')
+        python.call(
+            name='Run my_callback function',
+            function=my_callback,
+            hello='world',
+        )
 
     '''
 

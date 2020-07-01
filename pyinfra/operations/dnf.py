@@ -26,8 +26,8 @@ def key(state, host, key):
 
         linux_id = host.fact.linux_distribution['release_meta'].get('ID')
         dnf.key(
-            {'Add the Docker CentOS gpg key'},
-            'https://download.docker.com/linux/{}/gpg'.format(linux_id),
+            name='Add the Docker CentOS gpg key',
+            src='https://download.docker.com/linux/{}/gpg'.format(linux_id),
         )
 
     '''
@@ -65,8 +65,8 @@ def repo(
 
         # Download a repository file
         dnf.rpm(
-            {'Install Docker-CE repo via URL'},
-            'https://download.docker.com/linux/centos/docker-ce.repo',
+            name='Install Docker-CE repo via URL',
+            src='https://download.docker.com/linux/centos/docker-ce.repo',
         )
 
         # Create the repository file from baseurl/etc
@@ -102,8 +102,8 @@ def rpm(state, host, source, present=True):
     .. code:: python
 
         dnf.rpm(
-           {'Install EPEL rpm to enable EPEL repo'},
-           'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
+           name='Install EPEL rpm to enable EPEL repo',
+           src='https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
            '{{  host.fact.linux_distribution.major }}.noarch.rpm',
         )
     '''
@@ -149,15 +149,15 @@ def packages(
 
         # Update package list and install packages
         dnf.packages(
-            {'Install Vim and Vim enhanced'},
-            ['vim-enhanced', 'vim'],
+            name='Install Vim and Vim enhanced',
+            packages=['vim-enhanced', 'vim'],
             update=True,
         )
 
         # Install the latest versions of packages (always check)
         dnf.packages(
-            {'Install latest Vim'},
-            ['vim'],
+            name='Install latest Vim',
+            packages=['vim'],
             latest=True,
         )
     '''

@@ -35,7 +35,7 @@ def reboot(state, host, delay=10, interval=1, reboot_timeout=300):
     .. code:: python
 
         server.reboot(
-            {'Reboot the server and wait to reconnect'},
+            name='Reboot the server and wait to reconnect',
             delay=5,
             timeout=30,
         )
@@ -81,7 +81,7 @@ def wait(state, host, port=None):
     .. code:: python
 
         server.wait(
-            {'Wait for webserver to start'},
+            name='Wait for webserver to start',
             port=80,
         )
     '''
@@ -109,8 +109,8 @@ def shell(state, host, commands, chdir=None):
     .. code:: python
 
         server.shell(
-            {'Run lxd auto init'},
-            'lxd init --auto',
+            name='Run lxd auto init',
+            commands=['lxd init --auto'],
         )
     '''
 
@@ -139,8 +139,8 @@ def script(state, host, filename, chdir=None):
 
         # Note: This assumes there is a file in files/hello.bash locally.
         server.script(
-            {'Hello'},
-            'files/hello.bash',
+            name='Hello',
+            src='files/hello.bash',
         )
     '''
 
@@ -173,8 +173,8 @@ def script_template(state, host, template_filename, chdir=None, **data):
         # Note: This assumes there is a file in templates/hello2.bash.j2 locally.
         some_var = 'blah blah blah '
         server.script_template(
-            {'Hello from script'},
-            'templates/hello2.bash.j2',
+            name='Hello from script',
+            src='templates/hello2.bash.j2',
             some_var=some_var,
         )
     '''
@@ -292,8 +292,8 @@ def hostname(state, host, hostname, hostname_file=None):
     .. code:: python
 
         server.hostname(
-            {'Set the hostname'},
-            'server1.example.com',
+            name='Set the hostname',
+            hostname='server1.example.com',
         )
     '''
 
@@ -339,9 +339,9 @@ def sysctl(
     .. code:: python
 
         server.sysctl(
-            {'Change the fs.file-max value'},
-            'fs.file-max',
-            '100000',
+            name='Change the fs.file-max value',
+            key='fs.file-max',
+            value='100000',
             persist=True,
         )
     '''
@@ -402,8 +402,8 @@ def crontab(
 
         # simple example for a crontab
         server.crontab(
-            {'Backup /etc weekly'},
-            '/bin/tar cf /tmp/etc_bup.tar /etc',
+            name='Backup /etc weekly',
+            command='/bin/tar cf /tmp/etc_bup.tar /etc',
             name='backup_etc',
             day_of_week=0,
             hour=1,
@@ -521,15 +521,15 @@ def group(
     .. code:: python
 
         server.group(
-            {'Create docker group'},
-            'docker',
+            name='Create docker group',
+            group='docker',
         )
 
         # multiple groups
         for group in ['wheel', 'lusers']:
             server.group(
-                {f'Create the group {group}'},
-                group,
+                name=f'Create the group {group}',
+                group=group,
             )
     '''
 
@@ -591,22 +591,22 @@ def user(
     .. code:: python
 
         server.user(
-            {'Ensure user is removed'},
-            'kevin',
+            name='Ensure user is removed',
+            user='kevin',
             present=False,
         )
 
         server.user(
-            {'Ensure myweb user exists'},
-            'myweb',
+            name='Ensure myweb user exists',
+            user='myweb',
             shell='/bin/bash',
         )
 
         # multiple users
         for user in ['kevin', 'bob']:
             server.user(
-                {f'Ensure user {user} is removed'},
-                user,
+                name=f'Ensure user {user} is removed',
+                user=user,
                 present=False,
             )
     '''

@@ -78,8 +78,8 @@ def role(
     .. code:: python
 
         postgresql.role(
-            {'Create the pyinfra PostgreSQL role'},
-            'pyinfra',
+            name='Create the pyinfra PostgreSQL role',
+            role='pyinfra',
             password='somepassword',
             superuser=True,
             login=True,
@@ -172,8 +172,8 @@ def database(
     .. code:: python
 
         postgresql.database(
-            {'Create the pyinfra_stuff database'},
-            'pyinfra_stuff',
+            name='Create the pyinfra_stuff database',
+            database='pyinfra_stuff',
             owner='pyinfra',
             encoding='UTF8',
             sudo_user='postgres',
@@ -244,8 +244,8 @@ def dump(
     .. code:: python
 
         postgresql.dump(
-            {'Dump the pyinfra_stuff database'},
-            '/tmp/pyinfra_stuff.dump',
+            name='Dump the pyinfra_stuff database',
+            dest='/tmp/pyinfra_stuff.dump',
             database='pyinfra_stuff',
             sudo_user='postgres',
         )
@@ -282,8 +282,8 @@ def load(
     .. code:: python
 
         postgresql.load(
-            {'Import the pyinfra_stuff dump into pyinfra_stuff_copy'},
-            '/tmp/pyinfra_stuff.dump',
+            name='Import the pyinfra_stuff dump into pyinfra_stuff_copy',
+            src='/tmp/pyinfra_stuff.dump',
             database='pyinfra_stuff_copy',
             sudo_user='postgres',
         )

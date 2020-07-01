@@ -55,9 +55,9 @@ def download(
     .. code:: python
 
         files.download(
-            {'Download the Docker repo file'},
-            'https://download.docker.com/linux/centos/docker-ce.repo',
-            '/etc/yum.repos.d/docker-ce.repo',
+            name='Download the Docker repo file',
+            src='https://download.docker.com/linux/centos/docker-ce.repo',
+            dest='/etc/yum.repos.d/docker-ce.repo',
         )
 
     '''
@@ -170,42 +170,42 @@ def line(
         # prepare to do some maintenance
         maintenance_line = 'SYSTEM IS DOWN FOR MAINTENANCE'
         files.line(
-            {'Add the down-for-maintence line in /etc/motd'},
-            '/etc/motd',
-            maintenance_line,
+            name='Add the down-for-maintence line in /etc/motd',
+            src='/etc/motd',
+            line=maintenance_line,
         )
 
         # Then, after the mantenance is done, remove the maintenance line
         files.line(
-            {'Remove the down-for-maintenance line in /etc/motd'},
-            '/etc/motd',
-            maintenance_line,
+            name='Remove the down-for-maintenance line in /etc/motd',
+            src='/etc/motd',
+            line=maintenance_line,
             replace='',
             present=False,
         )
 
         # example where there is '*' in the line
         files.line(
-            {'Ensure /netboot/nfs is in /etc/exports'},
-            '/etc/exports',
-            r'/netboot/nfs .*',
+            name='Ensure /netboot/nfs is in /etc/exports',
+            src='/etc/exports',
+            line=r'/netboot/nfs .*',
             replace='/netboot/nfs *(ro,sync,no_wdelay,insecure_locks,no_root_squash,'
             'insecure,no_subtree_check)',
         )
 
         files.line(
-            {'Ensure myweb can run /usr/bin/python3 without password'},
-            '/etc/sudoers',
-            r'myweb .*',
+            name='Ensure myweb can run /usr/bin/python3 without password',
+            src='/etc/sudoers',
+            line=r'myweb .*',
             replace='myweb ALL=(ALL) NOPASSWD: /usr/bin/python3',
         )
 
         # example when there are double quotes (")
         line = 'QUOTAUSER=""'
         results = files.line(
-            {'Example with double quotes (")'},
-            '/etc/adduser.conf',
-            '^{}$'.format(line),
+            name='Example with double quotes (")',
+            src='/etc/adduser.conf',
+            line='^{}$'.format(line),
             replace=line,
         )
         print(results.changed)
@@ -305,10 +305,10 @@ def replace(state, host, name, match, replace, flags=None, interpolate_variables
     .. code:: python
 
         files.replace(
-            {'Change part of a line in a file'},
-            '/etc/motd',
-            'verboten',
-            'forbidden',
+            name='Change part of a line in a file',
+            src='/etc/motd',
+            match='verboten',
+            replace='forbidden',
         )
     '''
 
@@ -347,9 +347,9 @@ def sync(
 
         # Sync local files/tempdir to remote /tmp/tempdir
         files.sync(
-            {'Sync a local directory with remote'},
-            'files/tempdir',
-            '/tmp/tempdir',
+            name='Sync a local directory with remote',
+            src='files/tempdir',
+            dest='/tmp/tempdir',
         )
     '''
 
@@ -480,9 +480,9 @@ def get(
     .. code:: python
 
         files.get(
-            {'Download a file from a remote'},
-            '/etc/centos-release',
-            '/tmp/whocares',
+            name='Download a file from a remote',
+            src='/etc/centos-release',
+            dest='/tmp/whocares',
         )
 
     '''
@@ -554,9 +554,9 @@ def put(
 
         # Note: This requires a 'files/motd' file on the local filesystem
         files.put(
-            {'Update the message of the day file'},
-            'files/motd',
-            '/etc/motd',
+            name='Update the message of the day file',
+            src='files/motd',
+            dest='/etc/motd',
             mode='644',
         )
 
@@ -656,15 +656,15 @@ def template(
     .. code:: python
 
         files.template(
-            {'Create a templated file'},
-            'templates/somefile.conf.j2',
-            '/etc/somefile.conf',
+            name='Create a templated file',
+            src='templates/somefile.conf.j2',
+            dest='/etc/somefile.conf',
         )
 
         files.template(
-            {'Create service file'},
-            'templates/myweb.service.j2',
-            '/etc/systemd/system/myweb.service',
+            name='Create service file',
+            src='templates/myweb.service.j2',
+            dest='/etc/systemd/system/myweb.service',
             mode='755',
             user='root',
             group='root',
@@ -674,9 +674,9 @@ def template(
         # The .j2 file can use `{{ foo_variable }}` to be interpolated.
         foo_variable = 'This is some foo variable contents'
         files.template(
-            {'Create a templated file'},
-            'templates/foo.j2',
-            '/tmp/foo',
+            name='Create a templated file',
+            src='templates/foo.j2',
+            dest='/tmp/foo',
             foo_variable=foo_variable,
         )
 
@@ -768,9 +768,9 @@ def link(
 
         # simple example showing how to link to a file
         files.link(
-            {'Create link /etc/issue2 that points to /etc/issue'},
-            '/etc/issue2',
-            '/etc/issue',
+            name='Create link /etc/issue2 that points to /etc/issue',
+            path='/etc/issue2',
+            target='/etc/issue',
         )
 
 
@@ -778,13 +778,13 @@ def link(
         from pyinfra.operations import apt, files
 
         install_nginx = apt.packages(
-            {'Install nginx'},
-            'nginx',
+            name='Install nginx',
+            packages=['nginx'],
         )
 
         files.link(
-            {'Remove default nginx site'},
-            '/etc/nginx/sites-enabled/default',
+            name='Remove default nginx site',
+            path='/etc/nginx/sites-enabled/default',
             present=False,
             assume_present=install_nginx.changed,
         )
@@ -885,8 +885,8 @@ def file(
 
         # Note: The directory /tmp/secret will get created with the default umask.
         files.file(
-            {'Create /tmp/secret/file'},
-            '/tmp/secret/file',
+            name='Create /tmp/secret/file',
+            path='/tmp/secret/file',
             mode='600',
             user='root',
             group='root',
@@ -965,8 +965,8 @@ def directory(
     .. code:: python
 
         files.directory(
-            {'Ensure the /tmp/dir_that_we_want_removed is removed'},
-            '/tmp/dir_that_we_want_removed',
+            name='Ensure the /tmp/dir_that_we_want_removed is removed',
+            path='/tmp/dir_that_we_want_removed',
             present=False,
         )
 
