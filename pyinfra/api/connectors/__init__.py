@@ -11,5 +11,5 @@ ALL_CONNECTORS = {
 EXECUTION_CONNECTORS = {
     connector: connector_mod
     for connector, connector_mod in ALL_CONNECTORS.items()
-    if getattr(connector_mod, "EXECUTION_CONNECTOR", False)
+    if getattr(connector_mod, 'EXECUTION_CONNECTOR', False)
 }
