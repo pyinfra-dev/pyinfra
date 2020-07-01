@@ -31,7 +31,7 @@ Let's start off executing a simple ad-hoc shell command. The first argument alwa
     pyinfra my-server.net exec -- echo "hello world"
 
     # Execute a shell command within a docker container
-    pyinfra @docker/ubuntu exec -- bash --version
+    pyinfra @docker/ubuntu:18.04 exec -- bash --version
 
 As you'll see, ``pyinfra`` runs the echo command and prints the output. See the :ref:`available command line options <cli:CLI arguments & options>` and :ref:`examples of ad-hoc commands <cli:Ad-hoc command execution>`.
 
@@ -43,10 +43,10 @@ Now that we can execute ad-hoc shell commands, let's define some state to ensure
 .. code:: shell
 
     # Ensure a package is installed on a Centos 8 instance
-    pyinfra @docker/centos8 dnf.packages vim sudo=true
+    pyinfra @docker/centos:8 dnf.packages vim sudo=true
 
     # Ensure a package is installed on multiple instances
-    pyinfra @docker/ubuntu18,@docker/debian9 apt.packages vim sudo=true
+    pyinfra @docker/ubuntu:18.04,@docker/debian:9 apt.packages vim sudo=true
 
     # Stop a service on a remote host
     pyinfra some_remote_host init.systemd httpd sudo=True running=False
@@ -61,8 +61,7 @@ To get started let's create an ``inventory.py`` containing our hosts to target:
 
 .. code:: python
 
-    # Define groups of hosts as lists
-    my_hosts = ['my-server.net']
+    my_hosts = ['my-server.net', '@docker/ubuntu:18.04']  # define a group as a list of hosts
 
 Now we need a ``deploy.py`` containing our operations to execute:
 
@@ -70,16 +69,15 @@ Now we need a ``deploy.py`` containing our operations to execute:
 
     from pyinfra.operations import apt, server
 
-    # Run an ad-hoc command
     server.shell(
-        {'Execute hello world script'},  # Use a set as the first argument to name the operation
-        'echo "hello world"',
+        name='Run an ad-hoc command',  # optional name for the operation
+        commands='echo "hello world"',
     )
 
     # Define some state - this operation will do nothing on subsequent runs
     apt.packages(
-        {'Install vim apt package'},
-        'vim',
+        name='Install vim via apt',
+        packages='vim',
         sudo=True,  # use sudo when installing the packages
     )
 
