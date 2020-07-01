@@ -80,19 +80,19 @@ def _handle_service_control(
 
 @operation
 def d(
-    state, host, name,
+    state, host, service,
     running=True, restarted=False, reloaded=False,
     enabled=None, command=None,
 ):
     '''
     Manage the state of SysV Init (/etc/init.d) services.
 
-    + name: name of the service to manage
+    + service: name of the service to manage
     + running: whether the service should be running
     + restarted: whether the service should be restarted
     + reloaded: whether the service should be reloaded
     + enabled: whether this service should be enabled/disabled
-    + command: command (eg. reload) to run like: ``/etc/init.d/<name> <command>``
+    + command: command (eg. reload) to run like: ``/etc/init.d/<service> <command>``
 
     Enabled:
         Because managing /etc/rc.d/X files is a mess, only certain Linux distributions
@@ -118,29 +118,29 @@ def d(
     '''
 
     yield _handle_service_control(
-        name, host.fact.initd_status,
+        service, host.fact.initd_status,
         '/etc/init.d/{0} {1}',
         running, restarted, reloaded, command,
     )
 
     if isinstance(enabled, bool):
-        start_links = host.fact.find_links('/etc/rc*.d/S*{0}'.format(name)) or []
+        start_links = host.fact.find_links('/etc/rc*.d/S*{0}'.format(service)) or []
 
         # If no links exist, attempt to enable the service using distro-specific commands
         if enabled is True and not start_links:
             distro = host.fact.linux_distribution.get('name')
 
             if distro in ('Ubuntu', 'Debian'):
-                yield 'update-rc.d {0} defaults'.format(name)
+                yield 'update-rc.d {0} defaults'.format(service)
 
             elif distro in ('CentOS', 'Fedora', 'Red Hat Enterprise Linux'):
-                yield 'chkconfig {0} --add'.format(name)
-                yield 'chkconfig {0} on'.format(name)
+                yield 'chkconfig {0} --add'.format(service)
+                yield 'chkconfig {0} on'.format(service)
 
             elif distro == 'Gentoo':
-                yield 'rc-update add {0} default'.format(name)
+                yield 'rc-update add {0} default'.format(service)
 
-        # Remove any /etc/rcX.d/<name> start links
+        # Remove any /etc/rcX.d/<service> start links
         elif enabled is False:
             # No state checking, just blindly remove any that exist
             for link in start_links:
@@ -149,14 +149,14 @@ def d(
 
 @operation
 def d_enable(
-    state, host, name,
+    state, host, service,
     start_priority=20, stop_priority=80,
     start_levels=(2, 3, 4, 5), stop_levels=(0, 1, 6),
 ):
     '''
     Manually enable /etc/init.d scripts by creating /etc/rcX.d/Y links.
 
-    + name: name of the service to enable
+    + service: name of the service to enable
     + start_priority: priority to start the service
     + stop_priority: priority to stop the service
     + start_levels: which runlevels should the service run when enabled
@@ -178,65 +178,65 @@ def d_enable(
     links = []
 
     for level in start_levels:
-        links.append('/etc/rc{0}.d/S{1}{2}'.format(level, start_priority, name))
+        links.append('/etc/rc{0}.d/S{1}{2}'.format(level, start_priority, service))
 
     for level in stop_levels:
-        links.append('/etc/rc{0}.d/K{1}{2}'.format(level, stop_priority, name))
+        links.append('/etc/rc{0}.d/K{1}{2}'.format(level, stop_priority, service))
 
     # Ensure all the new links exist
     for link in links:
-        yield files.link(state, host, link, '/etc/init.d/{0}'.format(name))
+        yield files.link(state, host, link, '/etc/init.d/{0}'.format(service))
 
 
 @operation
 def rc(
-    state, host, name,
+    state, host, service,
     running=True, restarted=False, reloaded=False,
     command=None, enabled=None,
 ):
     '''
     Manage the state of BSD init (/etc/rc.d) services.
 
-    + name: name of the service to manage
+    + service: name of the service to manage
     + running: whether the service should be running
     + restarted: whether the service should be restarted
     + reloaded: whether the service should be reloaded
-    + command: custom command to pass like: ``/etc/rc.d/<name> <command>``
+    + command: custom command to pass like: ``/etc/rc.d/<service> <command>``
     + enabled: whether this service should be enabled/disabled on boot
     '''
 
     yield _handle_service_control(
-        name, host.fact.rcd_status,
+        service, host.fact.rcd_status,
         '/etc/rc.d/{0} {1}',
         running, restarted, reloaded, command,
         status_argument='check',
     )
 
-    # BSD init is simple, just add/remove <name>_enabled="YES"
+    # BSD init is simple, just add/remove <service>_enabled="YES"
     if isinstance(enabled, bool):
         yield files.line(
             state, host,
             '/etc/rc.conf.local',
-            '^{0}_enable='.format(name),
-            replace='{0}_enable="YES"'.format(name),
+            '^{0}_enable='.format(service),
+            replace='{0}_enable="YES"'.format(service),
             present=enabled,
         )
 
 
 @operation
 def upstart(
-    state, host, name,
+    state, host, service,
     running=True, restarted=False, reloaded=False,
     command=None, enabled=None,
 ):
     '''
     Manage the state of upstart managed services.
 
-    + name: name of the service to manage
+    + service: name of the service to manage
     + running: whether the service should be running
     + restarted: whether the service should be restarted
     + reloaded: whether the service should be reloaded
-    + command: custom command to pass like: ``/etc/rc.d/<name> <command>``
+    + command: custom command to pass like: ``/etc/rc.d/<service> <command>``
     + enabled: whether this service should be enabled/disabled on boot
 
     Enabling/disabling services:
@@ -247,7 +247,7 @@ def upstart(
     '''
 
     yield _handle_service_control(
-        name, host.fact.upstart_status,
+        service, host.fact.upstart_status,
         'initctl {1} {0}',
         running, restarted, reloaded, command,
     )
@@ -257,25 +257,25 @@ def upstart(
     if enabled is True:
         yield files.file(
             state, host,
-            '/etc/init/{0}.override'.format(name),
+            '/etc/init/{0}.override'.format(service),
             present=False,
         )
 
     # Set the override file to "manual" to disable automatic start
     elif enabled is False:
-        yield 'echo "manual" > /etc/init/{0}.override'.format(name)
+        yield 'echo "manual" > /etc/init/{0}.override'.format(service)
 
 
 @operation
 def systemd(
-    state, host, name,
+    state, host, service,
     running=True, restarted=False, reloaded=False,
     command=None, enabled=None, daemon_reload=False,
 ):
     '''
     Manage the state of systemd managed units.
 
-    + name: name of the systemd unit to manage
+    + service: name of the systemd unit to manage
     + running: whether the unit should be running
     + restarted: whether the unit should be restarted
     + reloaded: whether the unit should be reloaded
@@ -304,39 +304,39 @@ def systemd(
 
     '''
 
-    if '.' not in name:
-        name = '{0}.service'.format(name)
+    if '.' not in service:
+        service = '{0}.service'.format(service)
 
     if daemon_reload:
         yield 'systemctl daemon-reload'
 
     yield _handle_service_control(
-        name, host.fact.systemd_status,
+        service, host.fact.systemd_status,
         'systemctl {1} {0}',
         running, restarted, reloaded, command,
     )
 
     if isinstance(enabled, bool):
-        is_enabled = host.fact.systemd_enabled.get(name, False)
+        is_enabled = host.fact.systemd_enabled.get(service, False)
 
         # Isn't enabled and want enabled?
         if not is_enabled and enabled is True:
-            yield 'systemctl enable {0}'.format(name)
+            yield 'systemctl enable {0}'.format(service)
 
         # Is enabled and want disabled?
         elif is_enabled and enabled is False:
-            yield 'systemctl disable {0}'.format(name)
+            yield 'systemctl disable {0}'.format(service)
 
 
 @operation
 def launchd(
-    state, host, name,
+    state, host, service,
     running=True, restarted=False, command=None,
 ):
     '''
     Manage the state of systemd managed services.
 
-    + name: name of the service to manage
+    + service: name of the service to manage
     + running: whether the service should be running
     + restarted: whether the service should be restarted
     + command: custom command to pass like: ``/etc/rc.d/<name> <command>``
@@ -345,17 +345,17 @@ def launchd(
     '''
 
     yield _handle_service_control(
-        name, host.fact.launchd_status,
+        service, host.fact.launchd_status,
         'launchctl {1} {0}',
         # No support for restart/reload/command
         running, None, None, None,
     )
 
     # No restart command, so just stop/start
-    is_running = host.fact.launchd_status.get(name, None)
+    is_running = host.fact.launchd_status.get(service, None)
     if restarted and is_running:
-        yield 'launchctl stop {0}'.format(name)
-        yield 'launchctl start {0}'.format(name)
+        yield 'launchctl stop {0}'.format(service)
+        yield 'launchctl start {0}'.format(service)
 
 
 @operation
