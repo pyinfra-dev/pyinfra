@@ -52,7 +52,7 @@ def config(
     'git_branch': 'target',
 })
 def repo(
-    state, host, source, target,
+    state, host, src, dest,
     branch='master', pull=True, rebase=False,
     user=None, group=None, ssh_keyscan=False,
     update_submodules=False, recursive_submodules=False,
@@ -60,8 +60,8 @@ def repo(
     '''
     Clone/pull git repositories.
 
-    + source: the git source URL
-    + target: target directory to clone to
+    + src: the git source URL
+    + dest: directory to clone to
     + branch: branch to pull/checkout
     + pull: pull any changes for the branch
     + rebase: when pulling, use ``--rebase``
@@ -83,31 +83,31 @@ def repo(
     '''
 
     # Ensure our target directory exists
-    yield files.directory(state, host, target)
+    yield files.directory(state, host, dest)
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
         # Attempt to parse the domain from the git repository
-        domain = re.match(r'^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)', source)
+        domain = re.match(r'^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)', src)
 
         if domain:
             yield ssh.keyscan(state, host, domain.group(1))
         else:
             raise OperationError(
-                'Could not parse domain (to SSH keyscan) from: {0}'.format(source),
+                'Could not parse domain (to SSH keyscan) from: {0}'.format(src),
             )
 
     # Store git commands for directory prefix
     git_commands = []
-    is_repo = host.fact.directory('/'.join((target, '.git')))
+    is_repo = host.fact.directory('/'.join((dest, '.git')))
 
     # Cloning new repo?
     if not is_repo:
-        git_commands.append('clone {0} --branch {1} .'.format(source, branch))
+        git_commands.append('clone {0} --branch {1} .'.format(src, branch))
 
     # Ensuring existing repo
     else:
-        current_branch = host.fact.git_branch(target)
+        current_branch = host.fact.git_branch(dest)
         if current_branch != branch:
             git_commands.append('fetch')  # fetch to ensure we have the branch locally
             git_commands.append('checkout {0}'.format(branch))
@@ -125,7 +125,7 @@ def repo(
             git_commands.append('submodule update --init')
 
     # Attach prefixes for directory
-    command_prefix = 'cd {0} && git'.format(target)
+    command_prefix = 'cd {0} && git'.format(dest)
     git_commands = [
         '{0} {1}'.format(command_prefix, command)
         for command in git_commands
@@ -136,4 +136,4 @@ def repo(
 
     # Apply any user or group
     if user or group:
-        yield chown(target, user, group, recursive=True)
+        yield chown(dest, user, group, recursive=True)
