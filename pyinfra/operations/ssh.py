@@ -25,7 +25,6 @@ def keyscan(state, host, hostname, force=False):
             name='Set add server two to known_hosts on one',
             hostname='two.example.com',
         )
-
     '''
 
     yield files.directory(
@@ -68,7 +67,6 @@ def command(state, host, hostname, command, ssh_user=None):
             command='echo "one was here" > /tmp/one.txt',
             ssh_user='vagrant',
         )
-
     '''
 
     connection_target = hostname

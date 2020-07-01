@@ -2,7 +2,7 @@
     "args": ["this_is_another_command"],
     "kwargs": {
         "month": 1,
-        "name": "this_is_a_command"
+        "cron_name": "this_is_a_command"
     },
     "facts": {
         "crontab": {

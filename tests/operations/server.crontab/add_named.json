@@ -1,7 +1,7 @@
 {
     "args": ["this_is_a_command"],
     "kwargs": {
-        "name": "a-name"
+        "cron_name": "a-name"
     },
     "facts": {
         "crontab": {}

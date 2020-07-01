@@ -126,11 +126,11 @@ def shell(state, host, commands, chdir=None):
 
 
 @operation
-def script(state, host, filename, chdir=None):
+def script(state, host, src, chdir=None):
     '''
     Upload and execute a local script on the remote host.
 
-    + filename: local script filename to upload & execute
+    + src: local script filename to upload & execute
     + chdir: directory to cd into before executing the script
 
     Example:
@@ -144,8 +144,8 @@ def script(state, host, filename, chdir=None):
         )
     '''
 
-    temp_file = state.get_temp_filename(filename)
-    yield files.put(state, host, filename, temp_file)
+    temp_file = state.get_temp_filename(src)
+    yield files.put(state, host, src, temp_file)
 
     yield chmod(temp_file, '+x')
 
@@ -156,11 +156,11 @@ def script(state, host, filename, chdir=None):
 
 
 @operation
-def script_template(state, host, template_filename, chdir=None, **data):
+def script_template(state, host, src, chdir=None, **data):
     '''
     Generate, upload and execute a local script template on the remote host.
 
-    + template_filename: local script template filename
+    + src: local script template filename
     + chdir: directory to cd into before executing the script
 
     Example:
@@ -179,8 +179,8 @@ def script_template(state, host, template_filename, chdir=None, **data):
         )
     '''
 
-    temp_file = state.get_temp_filename('{0}{1}'.format(template_filename, data))
-    yield files.template(state, host, template_filename, temp_file, **data)
+    temp_file = state.get_temp_filename('{0}{1}'.format(src, data))
+    yield files.template(state, host, src, temp_file, **data)
 
     yield chmod(temp_file, '+x')
 
@@ -191,11 +191,11 @@ def script_template(state, host, template_filename, chdir=None, **data):
 
 
 @operation
-def modprobe(state, host, name, present=True, force=False):
+def modprobe(state, host, module, present=True, force=False):
     '''
     Load/unload kernel modules.
 
-    + name: name of the module to manage
+    + module: name of the module to manage
     + present: whether the module should be loaded or not
     + force: whether to force any add/remove modules
 
@@ -204,13 +204,13 @@ def modprobe(state, host, name, present=True, force=False):
     .. code:: python
 
         server.modprobe(
-            {'Silly example for modprobe'},
-            'floppy',
+            name='Silly example for modprobe',
+            module='floppy',
         )
     '''
 
     modules = host.fact.kernel_modules
-    is_present = name in modules
+    is_present = module in modules
 
     args = ''
     if force:
@@ -218,16 +218,16 @@ def modprobe(state, host, name, present=True, force=False):
 
     # Module is loaded and we don't want it?
     if not present and is_present:
-        yield 'modprobe{0} -r {1}'.format(args, name)
+        yield 'modprobe{0} -r {1}'.format(args, module)
 
     # Module isn't loaded and we want it?
     elif present and not is_present:
-        yield 'modprobe{0} {1}'.format(args, name)
+        yield 'modprobe{0} {1}'.format(args, module)
 
 
 @operation
 def mount(
-    state, host, name,
+    state, host, path,
     mounted=True, options=None,
     # TODO: do we want to manage fstab here?
     # update_fstab=False, device=None, fs_type=None,
@@ -235,7 +235,7 @@ def mount(
     '''
     Manage mounted filesystems.
 
-    + name: the path of the mounted filesystem
+    + path: the path of the mounted filesystem
     + mounted: whether the filesystem should be mounted
     + options: the mount options
 
@@ -252,25 +252,25 @@ def mount(
     options_string = ','.join(options)
 
     mounts = host.fact.mounts
-    is_mounted = name in mounts
+    is_mounted = path in mounts
 
     # Want mount but don't have?
     if mounted and not is_mounted:
         yield 'mount{0} {1}'.format(
             ' -o {0}'.format(options_string) if options_string else '',
-            name,
+            path,
         )
 
     # Want no mount but mounted?
     elif mounted is False and is_mounted:
-        yield 'umount {0}'.format(name)
+        yield 'umount {0}'.format(path)
 
     # Want mount and is mounted! Check the options
     elif is_mounted and mounted and options:
-        mounted_options = mounts[name]['options']
+        mounted_options = mounts[path]['options']
         needed_options = set(options) - set(mounted_options)
         if needed_options:
-            yield 'mount -o remount,{0} {1}'.format(options_string, name)
+            yield 'mount -o remount,{0} {1}'.format(options_string, path)
 
 
 @operation
@@ -323,13 +323,13 @@ def hostname(state, host, hostname, hostname_file=None):
 
 @operation
 def sysctl(
-    state, host, name, value,
+    state, host, key, value,
     persist=False, persist_file='/etc/sysctl.conf',
 ):
     '''
     Edit sysctl configuration.
 
-    + name: name of the sysctl setting to ensure
+    + key: name of the sysctl setting to ensure
     + value: the value or list of values the sysctl should be
     + persist: whether to write this sysctl to the config
     + persist_file: file to write the sysctl to persist on reboot
@@ -352,22 +352,22 @@ def sysctl(
         else value
     )
 
-    existing_value = host.fact.sysctl.get(name)
+    existing_value = host.fact.sysctl.get(key)
     if not existing_value or existing_value != value:
-        yield 'sysctl {0}={1}'.format(name, string_value)
+        yield 'sysctl {0}={1}'.format(key, string_value)
 
     if persist:
         yield files.line(
             state, host,
             persist_file,
-            '{0}[[:space:]]*=[[:space:]]*{1}'.format(name, string_value),
-            replace='{0} = {1}'.format(name, string_value),
+            '{0}[[:space:]]*=[[:space:]]*{1}'.format(key, string_value),
+            replace='{0} = {1}'.format(key, string_value),
         )
 
 
 @operation
 def crontab(
-    state, host, command, present=True, user=None, name=None,
+    state, host, command, present=True, user=None, cron_name=None,
     minute='*', hour='*', month='*', day_of_week='*', day_of_month='*',
     special_time=None,
     interpolate_variables=False,
@@ -378,7 +378,7 @@ def crontab(
     + command: the command for the cron
     + present: whether this cron command should exist
     + user: the user whose crontab to manage
-    + name: name the cronjob so future changes to the command will overwrite
+    + cron_name: name the cronjob so future changes to the command will overwrite
     + minute: which minutes to execute the cron
     + hour: which hours to execute the cron
     + month: which months to execute the cron
@@ -423,12 +423,12 @@ def crontab(
     day_of_month = comma_sep(day_of_month)
 
     crontab = host.fact.crontab(user)
-    name_comment = '# pyinfra-name={0}'.format(name)
+    name_comment = '# pyinfra-name={0}'.format(cron_name)
 
     existing_crontab = crontab.get(command)
     existing_crontab_match = command
 
-    if not existing_crontab and name:  # find the crontab by name if provided
+    if not existing_crontab and cron_name:  # find the crontab by name if provided
         for cmd, details in crontab.items():
             if name_comment in details['comments']:
                 existing_crontab = details
@@ -462,7 +462,7 @@ def crontab(
 
     # Want the cron but it doesn't exist? Append the line
     elif present and not exists:
-        if name:
+        if cron_name:
             edit_commands.append('echo {0} >> {1}'.format(
                 shlex_quote(name_comment), temp_filename,
             ))
@@ -504,12 +504,12 @@ def crontab(
 
 @operation
 def group(
-    state, host, name, present=True, system=False, gid=None,
+    state, host, group, present=True, system=False, gid=None,
 ):
     '''
     Add/remove system groups.
 
-    + name: name of the group to ensure
+    + group: name of the group to ensure
     + present: whether the group should be present or not
     + system: whether to create a system group
 
@@ -534,11 +534,11 @@ def group(
     '''
 
     groups = host.fact.groups or []
-    is_present = name in groups
+    is_present = group in groups
 
     # Group exists but we don't want them?
     if not present and is_present:
-        yield 'groupdel {0}'.format(name)
+        yield 'groupdel {0}'.format(group)
 
     # Group doesn't exist and we want it?
     elif present and not is_present:
@@ -548,7 +548,7 @@ def group(
         if system and 'BSD' not in host.fact.os:
             args.append('-r')
 
-        args.append(name)
+        args.append(group)
 
         if gid:
             args.append('--gid {0}'.format(gid))
@@ -558,7 +558,7 @@ def group(
 
 @operation
 def user(
-    state, host, name,
+    state, host, user,
     present=True, home=None, shell=None, group=None, groups=None,
     public_keys=None, delete_keys=False, ensure_home=True,
     system=False, uid=None, add_deploy_dir=True,
@@ -566,7 +566,7 @@ def user(
     '''
     Add/remove/update system users & their ssh `authorized_keys`.
 
-    + name: name of the user to ensure
+    + user: name of the user to ensure
     + present: whether this user should exist
     + home: the users home directory
     + shell: the users shell
@@ -612,22 +612,22 @@ def user(
     '''
 
     users = host.fact.users or {}
-    user = users.get(name)
+    existing_user = users.get(user)
 
     if groups is None:
         groups = []
 
     if home is None:
-        home = '/home/{0}'.format(name)
+        home = '/home/{0}'.format(user)
 
     # User not wanted?
     if not present:
-        if user:
-            yield 'userdel {0}'.format(name)
+        if existing_user:
+            yield 'userdel {0}'.format(user)
         return
 
     # User doesn't exist but we want them?
-    if present and user is None:
+    if present and existing_user is None:
         # Create the user w/home/shell
         args = []
 
@@ -649,37 +649,37 @@ def user(
         if uid:
             args.append('--uid {0}'.format(uid))
 
-        yield 'useradd {0} {1}'.format(' '.join(args), name)
+        yield 'useradd {0} {1}'.format(' '.join(args), user)
 
     # User exists and we want them, check home/shell/keys
     else:
         args = []
 
         # Check homedir
-        if home and user['home'] != home:
+        if home and existing_user['home'] != home:
             args.append('-d {0}'.format(home))
 
         # Check shell
-        if shell and user['shell'] != shell:
+        if shell and existing_user['shell'] != shell:
             args.append('-s {0}'.format(shell))
 
         # Check primary group
-        if group and user['group'] != group:
+        if group and existing_user['group'] != group:
             args.append('-g {0}'.format(group))
 
         # Check secondary groups, if defined
-        if groups and set(user['groups']) != set(groups):
+        if groups and set(existing_user['groups']) != set(groups):
             args.append('-G {0}'.format(','.join(groups)))
 
         # Need to mod the user?
         if args:
-            yield 'usermod {0} {1}'.format(' '.join(args), name)
+            yield 'usermod {0} {1}'.format(' '.join(args), user)
 
     # Ensure home directory ownership
     if ensure_home:
         yield files.directory(
             state, host, home,
-            user=name, group=name,
+            user=user, group=user,
         )
 
     # Add SSH keys
@@ -706,7 +706,7 @@ def user(
         yield files.directory(
             state, host,
             '{0}/.ssh'.format(home),
-            user=name, group=name,
+            user=user, group=user,
             mode=700,
         )
 
@@ -722,7 +722,7 @@ def user(
             yield files.put(
                 state, host,
                 keys_file, filename,
-                user=name, group=name,
+                user=user, group=user,
                 mode=600,
             )
 
@@ -730,7 +730,7 @@ def user(
             # Ensure authorized_keys exists
             yield files.file(
                 state, host, filename,
-                user=name, group=name,
+                user=user, group=user,
                 mode=600,
             )
 
