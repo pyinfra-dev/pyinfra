@@ -10,8 +10,8 @@ SUDO = True
 if host.fact.linux_name in ['CentOS', 'RedHat']:
 
     dnf.packages(
-        {'Install some packages'},
-        ['vim-enhanced', 'vim', 'wget'],
+        name='Install some packages',
+        packages=['vim-enhanced', 'vim', 'wget'],
         update=True,
     )
 
@@ -20,13 +20,13 @@ print(linux_id)
 
 if host.fact.linux_name == 'CentOS':
     dnf.key(
-        {'Add the Docker CentOS gpg key'},
-        'https://download.docker.com/linux/{}/gpg'.format(linux_id),
+        name='Add the Docker CentOS gpg key',
+        src='https://download.docker.com/linux/{}/gpg'.format(linux_id),
     )
 
 dnf.rpm(
-    {'Ensure an rpm is not installed'},
-    'snappy',
+    name='Ensure an rpm is not installed',
+    src='snappy',
     present=False,
 )
 
@@ -40,13 +40,13 @@ if host.fact.linux_name in ['CentOS', 'RedHat']:
 
     if not epel_installed:
         dnf.rpm(
-            {'Install EPEL rpm to enable EPEL repo'},
-            'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
+            name='Install EPEL rpm to enable EPEL repo',
+            src='https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
             '{{  host.fact.linux_distribution.major }}.noarch.rpm',
         )
 
     dnf.packages(
-        {'Install Zabbix and htop'},
-        ['zabbix', 'htop'],
+        name='Install Zabbix and htop',
+        packages=['zabbix', 'htop'],
         update=True,
     )

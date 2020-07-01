@@ -4,12 +4,12 @@ SUDO = True
 
 # Note: This is an example of running a command on remote
 server.shell(
-    {'Run lxd auto init'},
-    'lxd init --auto',
+    name='Run lxd auto init',
+    commands='lxd init --auto',
 )
 
 lxd.container(
-    {'Add an ubuntu container'},
-    'ubuntu19',
+    name='Add an ubuntu container',
+    id='ubuntu19',
     image='ubuntu:19.10',
 )

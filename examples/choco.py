@@ -11,6 +11,6 @@ if computer_info:
             choco.install()
 
             choco.packages(
-                {'Install notepadplusplus'},
-                'notepadplusplus',
+                name='Install notepadplusplus',
+                packages='notepadplusplus',
             )

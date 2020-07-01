@@ -7,22 +7,22 @@ SUDO = True
 
 if host.fact.linux_name in ['CentOS', 'RedHat']:
     files.download(
-        {'Download the Docker repo file'},
-        'https://download.docker.com/linux/centos/docker-ce.repo',
-        '/etc/yum.repos.d/docker-ce.repo',
+        name='Download the Docker repo file',
+        src='https://download.docker.com/linux/centos/docker-ce.repo',
+        dest='/etc/yum.repos.d/docker-ce.repo',
     )
 
 files.put(
-    {'Update the message of the day file'},
-    'files/motd',
-    '/etc/motd',
+    name='Update the message of the day file',
+    src='files/motd',
+    dest='/etc/motd',
     mode='644',
 )
 
 # prepare to do some maintenance
 maintenance_line = 'SYSTEM IS DOWN FOR MAINTENANCE'
 # files.line(
-#     {'Add the down-for-maintenance line in /etc/motd'},
+#     name='Add the down-for-maintenance line in /etc/motd',
 #     '/etc/motd',
 #     maintenance_line,
 # )
@@ -30,52 +30,52 @@ maintenance_line = 'SYSTEM IS DOWN FOR MAINTENANCE'
 # do some maintenance...
 # Then, after the maintenance is done, remove the maintenance line
 files.line(
-    {'Remove the down-for-maintenance line in /etc/motd'},
-    '/etc/motd',
-    maintenance_line,
+    name='Remove the down-for-maintenance line in /etc/motd',
+    path='/etc/motd',
+    line=maintenance_line,
     replace='',
     present=False,
 )
 
 files.replace(
-    {'Change part of a line in a file'},
-    '/etc/motd',
-    'verboten',
-    'forbidden',
+    name='Change part of a line in a file',
+    path='/etc/motd',
+    match='verboten',
+    replace='forbidden',
 )
 
 # Sync local files/tempdir to remote /tmp/tempdir
 files.sync(
-    {'Sync a local directory with remote'},
-    'files/tempdir',
-    '/tmp/tempdir',
+    name='Sync a local directory with remote',
+    src='files/tempdir',
+    dest='/tmp/tempdir',
 )
 
 if host.fact.file('/etc/os-release'):
     files.get(
-        {'Download a file from a remote'},
-        '/etc/os-release',
-        '/tmp/whocares',
+        name='Download a file from a remote',
+        src='/etc/os-release',
+        dest='/tmp/whocares',
     )
 
 foo_variable = 'This is some foo variable contents'
 files.template(
-    {'Create a templated file'},
-    'templates/foo.j2',
-    '/tmp/foo',
+    name='Create a templated file',
+    src='templates/foo.j2',
+    dest='/tmp/foo',
     foo_variable=foo_variable,
 )
 
 files.link(
-    {'Create link /etc/issue2 that points to /etc/issue'},
-    '/etc/issue2',
-    '/etc/issue',
+    name='Create link /etc/issue2 that points to /etc/issue',
+    src='/etc/issue2',
+    dest='/etc/issue',
 )
 
 # Note: The directory /tmp/secret will get created with the default umask.
 files.file(
-    {'Create /tmp/secret/file'},
-    '/tmp/secret/file',
+    name='Create /tmp/secret/file',
+    path='/tmp/secret/file',
     mode='600',
     user='root',
     group='root',
@@ -84,8 +84,8 @@ files.file(
 )
 
 files.directory(
-    {'Ensure the /tmp/dir_that_we_want_removed is removed'},
-    '/tmp/dir_that_we_want_removed',
+    name='Ensure the /tmp/dir_that_we_want_removed is removed',
+    path='/tmp/dir_that_we_want_removed',
     present=False,
 )
 
@@ -93,6 +93,6 @@ files.directory(
 dirs = ['/tmp/aaa', '/tmp/bbb']
 for dir in dirs:
     files.directory(
-        {'Ensure the directory `{}` exists'.format(dir)},
-        dir,
+        name='Ensure the directory `{}` exists'.format(dir),
+        path=dir,
     )

@@ -6,14 +6,14 @@ SUDO = True
 
 # To see output need to run pyinfra with '-v'
 a = server.script(
-    {'Hello'},
-    'files/hello.bash',
+    name='Hello',
+    src='files/hello.bash',
 )
 print('a', a)
 
 # To see output need to run pyinfra with '-v'
 b = server.shell(
-    {'Say Hello'},
-    'echo Hello',
+    name='Say Hello',
+    commands='echo Hello',
 )
 print('b', b)

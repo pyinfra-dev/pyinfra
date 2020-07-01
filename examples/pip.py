@@ -5,8 +5,8 @@ SUDO = True
 
 if host.fact.linux_name in ['Alpine']:
     apk.packages(
-        {'Install packages for python virtual environments'},
-        [
+        name='Install packages for python virtual environments',
+        packages=[
             'gcc',
             'libffi-dev',
             'make',
@@ -20,38 +20,38 @@ if host.fact.linux_name in ['Alpine']:
 
 if host.fact.linux_name in ['CentOS']:
     yum.packages(
-        {'Install pip3 so you can install virtualenv'},
-        'python3-pip',
+        name='Install pip3 so you can install virtualenv',
+        packages='python3-pip',
     )
 
 if host.fact.linux_name in ['Ubuntu']:
     apt.packages(
-        {'Install pip3 so you can install virtualenv'},
-        'python3-pip',
+        name='Install pip3 so you can install virtualenv',
+        packages='python3-pip',
         update=True,
     )
 
 if not host.fact.file('/usr/bin/pip'):
     files.link(
-        {'Create link /usr/bin/pip that points to /usr/bin/pip3'},
-        '/usr/bin/pip',
-        '/usr/bin/pip3',
+        name='Create link /usr/bin/pip that points to /usr/bin/pip3',
+        path='/usr/bin/pip',
+        target='/usr/bin/pip3',
     )
 
 pip.packages(
-    {'Install virtualenv using pip'},
-    'virtualenv',
+    name='Install virtualenv using pip',
+    packages='virtualenv',
 )
 
 pip.virtualenv(
-    {'Create a virtualenv'},
-    '/usr/local/bin/venv',
+    name='Create a virtualenv',
+    path='/usr/local/bin/venv',
 )
 
 # use that virtualenv to install pyinfra
 pip.packages(
-    {'Install pyinfra into a virtualenv'},
-    'pyinfra',
+    name='Install pyinfra into a virtualenv',
+    packages='pyinfra',
     virtualenv='/usr/local/bin/venv',
 )
 

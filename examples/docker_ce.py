@@ -21,8 +21,8 @@ def check_docker_works(state, host):
 if host.fact.linux_name == 'Ubuntu':
 
     apt.packages(
-        {'Ensure old docker packages are not present'},
-        [
+        name='Ensure old docker packages are not present',
+        packages=[
             'docker',
             'docker-engine',
             'docker.io',
@@ -32,8 +32,8 @@ if host.fact.linux_name == 'Ubuntu':
     )
 
     apt.packages(
-        {'Ensure Docker CE prerequisites are present'},
-        [
+        name='Ensure Docker CE prerequisites are present',
+        packages=[
             'apt-transport-https',
             'ca-certificates',
             'curl',
@@ -50,7 +50,7 @@ if host.fact.linux_name == 'Ubuntu':
 
     if not docker_key_exists:
         apt.key(
-            {'Add the Docker apt gpg key if we need to'},
+            name='Add the Docker apt gpg key if we need to',
             key='https://download.docker.com/linux/ubuntu/gpg',
         )
 
@@ -58,8 +58,8 @@ if host.fact.linux_name == 'Ubuntu':
     code_name = host.fact.linux_distribution['release_meta'].get('DISTRIB_CODENAME')
     print(linux_id, code_name)
     apt.repo(
-        {'Add the Docker CE apt repo'},
-        (
+        name='Add the Docker CE apt repo',
+        src=(
             'deb [arch=amd64] https://download.docker.com/linux/'
             '{} '
             '{} stable'.format(linux_id, code_name)
@@ -68,8 +68,8 @@ if host.fact.linux_name == 'Ubuntu':
     )
 
     apt.packages(
-        {'Ensure Docker CE is installed'},
-        [
+        name='Ensure Docker CE is installed',
+        packages=[
             'docker-ce',
             'docker-ce-cli',
             'containerd.io',
@@ -78,8 +78,8 @@ if host.fact.linux_name == 'Ubuntu':
     )
 
     init.service(
-        {'Ensure docker service is running'},
-        'docker',
+        name='Ensure docker service is running',
+        service='docker',
         running=True,
         enabled=True,
     )

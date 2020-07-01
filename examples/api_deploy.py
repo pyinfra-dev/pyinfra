@@ -62,8 +62,8 @@ add_op(
 
 add_op(
     state, server.group,
-    {'Ensure pyinfra2 group exists'},  # set as the first arg names the operation
     'pyinfra2',
+    name='Ensure pyinfra2 group exists',
     sudo=True,
     # Add an op only to a subset of hosts
     # (in this case, the inventory.centos group)

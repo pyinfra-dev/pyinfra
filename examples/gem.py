@@ -6,11 +6,11 @@ SUDO = True
 if host.fact.linux_name in ['Debian', 'Ubuntu']:
 
     apt.packages(
-        {'Install rubygems'},
-        'rubygems',
+        name='Install rubygems',
+        packages=['rubygems'],
     )
 
     gem.packages(
-        {'Install rspec'},
-        'rspec',
+        name='Install rspec',
+        packages=['rspec'],
     )

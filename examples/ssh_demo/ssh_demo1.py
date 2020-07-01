@@ -8,9 +8,9 @@ SUDO = True
 def update_hosts_file(name, ip):
     name = name.replace('@vagrant/', '')
     files.line(
-        {'Add hosts to /etc/hosts'},
-        '/etc/hosts',
-        r' {}.example.com '.format(name),
+        name='Add hosts to /etc/hosts',
+        path='/etc/hosts',
+        line=r' {}.example.com '.format(name),
         replace='{} {}.example.com {}'.format(ip, name, name),
     )
 
@@ -22,25 +22,27 @@ for item in inv:
 
 if host.name == '@vagrant/two':
     server.hostname(
-        {'Set the hostname for two'},
-        'two.example.com',
+        name='Set the hostname for two',
+        hostname='two.example.com',
     )
 
 if host.name == '@vagrant/one':
 
     server.hostname(
-        {'Set the hostname for one'},
-        'one.example.com',
+        name='Set the hostname for one',
+        hostname='one.example.com',
     )
 
     server.shell(
-        {'Generate vagrant ssh key'},
-        'sudo -u vagrant ssh-keygen -t rsa -C vagrant@example.com '
-        '-b 4096 -N "" -q -f /home/vagrant/.ssh/id_rsa',
+        name='Generate vagrant ssh key',
+        commands=(
+            'sudo -u vagrant ssh-keygen -t rsa -C vagrant@example.com '
+            '-b 4096 -N "" -q -f /home/vagrant/.ssh/id_rsa'
+        ),
     )
 
     files.get(
-        {'Download id_rsa.pub from one'},
-        '/home/vagrant/.ssh/id_rsa.pub',
-        '/tmp/one_vagrant_id_rsa.pub',
+        name='Download id_rsa.pub from one',
+        src='/home/vagrant/.ssh/id_rsa.pub',
+        dest='/tmp/one_vagrant_id_rsa.pub',
     )
