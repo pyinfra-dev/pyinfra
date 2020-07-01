@@ -2,8 +2,8 @@ import pkg_resources
 
 # Connectors that handle generation of inventories
 ALL_CONNECTORS = {
-    ep.name: ep.load()
-    for ep in pkg_resources.iter_entry_points('pyinfra.connectors')
+    entrypoint.name: entrypoint.load()
+    for entrypoint in pkg_resources.iter_entry_points('pyinfra.connectors')
 }
 
 

@@ -109,7 +109,7 @@ if __name__ == '__main__':
                 'ssh = pyinfra.api.connectors.ssh',
                 'vagrant = pyinfra.api.connectors.vagrant',
                 'winrm = pyinfra.api.connectors.winrm',
-            ]
+            ],
         },
         install_requires=INSTALL_REQUIRES,
         extras_require={
