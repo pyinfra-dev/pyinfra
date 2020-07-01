@@ -4,9 +4,9 @@ from pyinfra.operations import git, pip, server
 
 # Ensure the state of git repositories
 git.repo(
-    {'Clone pyinfra repository'},
-    'git@github.com:Fizzadar/pyinfra',
-    host.data.app_dir,
+    name='Clone pyinfra repository',
+    src='git@github.com:Fizzadar/pyinfra',
+    dest=host.data.app_dir,
     branch='develop',
     ssh_keyscan=True,
     sudo=True,
@@ -16,8 +16,8 @@ git.repo(
 
 # Manage pip packages
 did_install = pip.packages(
-    {'Install virtualenv with pip'},
-    ['virtualenv'],
+    name='Install virtualenv with pip',
+    packages=['virtualenv'],
     sudo=True,
 )
 # Use operation meta to affect the deploy
@@ -28,15 +28,15 @@ if did_install.changed:
 
 # Create a virtualenv
 server.shell(
-    {'Setup the virtualenv'},
-    'virtualenv {{ host.data.env_dir }}',
+    name='Setup the virtualenv',
+    commands='virtualenv {{ host.data.env_dir }}',
     sudo=True,
     sudo_user='pyinfra',
 )
 # and manage pip within it
 pip.packages(
-    {'Install Python packages with pip'},
-    ['ElasticQuery', 'JsonTest'],
+    name='Install Python packages with pip',
+    packages=['ElasticQuery', 'JsonTest'],
     virtualenv=host.data.env_dir,
     sudo=True,
     sudo_user='pyinfra',

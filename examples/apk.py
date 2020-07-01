@@ -6,7 +6,7 @@ SUDO = True
 if host.fact.linux_name == 'Alpine':
 
     apk.packages(
-        {'Install Asterisk and Vim'},
-        ['asterisk', 'vim'],
+        name='Install Asterisk and Vim',
+        packages=['asterisk', 'vim'],
         update=True,
     )

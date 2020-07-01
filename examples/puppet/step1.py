@@ -7,9 +7,9 @@ SUDO = True
 # update the /etc/hosts file
 def update_hosts_file(name, ip):
     files.line(
-        {'Add hosts to /etc/hosts'},
-        '/etc/hosts',
-        r' {}.example.com '.format(name),
+        name='Add hosts to /etc/hosts',
+        path='/etc/hosts',
+        line=r' {}.example.com '.format(name),
         replace='{} {}.example.com {}'.format(ip, name, name),
     )
 
@@ -25,34 +25,34 @@ for item in agents:
 
 if host in masters:
     server.hostname(
-        {'Set the hostname for the Puppet Master'},
-        'master.example.com',
+        name='Set the hostname for the Puppet Master',
+        hostname='master.example.com',
     )
 
 if host in agents:
     server.hostname(
-        {'Set the hostname for an agent'},
-        'agent.example.com',
+        name='Set the hostname for an agent',
+        hostname='agent.example.com',
     )
 
 if host.fact.linux_name in ['CentOS', 'RedHat']:
 
     yum.packages(
-        {'Install chrony for Network Time Protocol (NTP)'},
-        ['chrony'],
+        name='Install chrony for Network Time Protocol (NTP)',
+        packages=['chrony'],
     )
 
     major = host.fact.linux_distribution['major']
     yum.rpm(
-        {'Install Puppet Repo'},
-        'https://yum.puppet.com/puppet6-release-el-{}.noarch.rpm'
+        name='Install Puppet Repo',
+        src='https://yum.puppet.com/puppet6-release-el-{}.noarch.rpm'
         .format(major),
     )
 
     files.line(
-        {'Ensure SELINUX is disabled'},
-        '/etc/sysconfig/selinux',
-        r'SELINUX=.*',
+        name='Ensure SELINUX is disabled',
+        path='/etc/sysconfig/selinux',
+        line=r'SELINUX=.*',
         replace='SELINUX=disabled',
     )
 
@@ -63,14 +63,14 @@ if host.fact.linux_name in ['CentOS', 'RedHat']:
 if host in masters:
 
     install = yum.packages(
-        {'Install puppet server'},
-        ['puppetserver'],
+        name='Install puppet server',
+        packages=['puppetserver'],
     )
 
     config = files.template(
-        {'Manage the puppet master configuration'},
-        'templates/master_puppet.conf.j2',
-        '/etc/puppetlabs/puppet/puppet.conf',
+        name='Manage the puppet master configuration',
+        src='templates/master_puppet.conf.j2',
+        dest='/etc/puppetlabs/puppet/puppet.conf',
     )
 
     # TODO: tune always shows as changed
@@ -78,17 +78,17 @@ if host in masters:
     # Might have to add a suffix to the sed -i option, then move file only if
     # there is a diff. Maybe?
     tune = files.line(
-        {'Tune the puppet server jvm to only use 1gb'},
-        '/etc/sysconfig/puppetserver',
-        r'^JAVA_ARGS=.*$',
+        name='Tune the puppet server jvm to only use 1gb',
+        path='/etc/sysconfig/puppetserver',
+        line=r'^JAVA_ARGS=.*$',
         replace='JAVA_ARGS=\\"-Xms1g -Xmx1g -Djruby.logger.class=com.puppetlabs.'
         'jruby_utils.jruby.Slf4jLogger\\"',
     )
 
     if install.changed or config.changed or tune.changed:
         init.systemd(
-            {'Restart and enable puppetserver'},
-            'puppetserver',
+            name='Restart and enable puppetserver',
+            service='puppetserver',
             running=True,
             restarted=True,
             enabled=True,
@@ -97,19 +97,19 @@ if host in masters:
 if host in agents:
 
     yum.packages(
-        {'Install puppet agent'},
-        ['puppet-agent'],
+        name='Install puppet agent',
+        packages=['puppet-agent'],
     )
 
     files.template(
-        {'Manage the puppet agent configuration'},
-        'templates/agent_puppet.conf.j2',
-        '/etc/puppetlabs/puppet/puppet.conf',
+        name='Manage the puppet agent configuration',
+        src='templates/agent_puppet.conf.j2',
+        dest='/etc/puppetlabs/puppet/puppet.conf',
     )
 
     init.systemd(
-        {'Restart and enable puppet agent'},
-        'puppet',
+        name='Restart and enable puppet agent',
+        service='puppet',
         running=True,
         restarted=True,
         enabled=True,

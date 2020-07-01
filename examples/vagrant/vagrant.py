@@ -16,23 +16,23 @@ def verify_vagrant(state, host):
 if host.fact.linux_name == 'Ubuntu':
 
     apt.packages(
-        {'Install required packages'},
-        ['wget', 'unzip', 'python3'],
+        name='Install required packages',
+        packages=['wget', 'unzip', 'python3'],
         update=True,
     )
 
     files.download(
-        {'Download the Vagrantup Downloads page'},
-        'https://www.vagrantup.com/downloads.html',
-        '/tmp/downloads.html',
+        name='Download the Vagrantup Downloads page',
+        src='https://www.vagrantup.com/downloads.html',
+        dest='/tmp/downloads.html',
     )
 
     server.script_template(
-        {'Use wget to download and unzip to /usr/local/bin'},
-        'templates/download_vagrant.bash.j2',
+        name='Use wget to download and unzip to /usr/local/bin',
+        src='templates/download_vagrant.bash.j2',
     )
 
     python.call(
-        {'Verify vagrant is installed by running version command'},
-        verify_vagrant,
+        name='Verify vagrant is installed by running version command',
+        function=verify_vagrant,
     )

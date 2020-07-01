@@ -14,16 +14,16 @@ dhcp_end = '192.168.0.230'
 if host.fact.linux_name == 'Ubuntu':
 
     apt.packages(
-        {'Install packages'},
-        ['dnsmasq', 'nfs-kernel-server', 'syslinux', 'pxelinux'],
+        name='Install packages',
+        packages=['dnsmasq', 'nfs-kernel-server', 'syslinux', 'pxelinux'],
         update=True,
     )
 
     # configure dnsmasq
     files.template(
-        {'Create dnsmasq configuration file'},
-        'templates/dnsmasq.conf.j2',
-        '/etc/dnsmasq.conf',
+        name='Create dnsmasq configuration file',
+        src='templates/dnsmasq.conf.j2',
+        dest='/etc/dnsmasq.conf',
         pxe_server=pxe_server,
         interface=interface,
         dhcp_start=dhcp_start,
@@ -41,49 +41,49 @@ if host.fact.linux_name == 'Ubuntu':
     ]
     for dir in dirs:
         files.directory(
-            {'Ensure the directory `{}` exists'.format(dir)},
-            dir,
+            name='Ensure the directory `{}` exists'.format(dir),
+            path=dir,
         )
 
     init.systemd(
-        {'Restart and enable dnsmasq'},
-        'dnsmasq',
+        name='Restart and enable dnsmasq',
+        service='dnsmasq',
         running=True,
         restarted=True,
         enabled=True,
     )
 
     files.line(
-        {'Ensure /netboot/nfs is in /etc/exports'},
-        '/etc/exports',
-        r'/netboot/nfs .*',
+        name='Ensure /netboot/nfs is in /etc/exports',
+        path='/etc/exports',
+        line=r'/netboot/nfs .*',
         replace='/netboot/nfs *(ro,sync,no_wdelay,insecure_locks,'
         'no_root_squash,insecure,no_subtree_check)',
     )
 
     server.shell(
-        {'Make share available'},
-        'exportfs -a',
+        name='Make share available',
+        commands='exportfs -a',
     )
 
     if not host.fact.file('/netboot/tftp/pxelinux.0'):
         server.shell(
-            {'Copy pxelinux.0 '},
-            'cp -v /usr/lib/PXELINUX/pxelinux.0 /netboot/tftp/',
+            name='Copy pxelinux.0 ',
+            commands='cp -v /usr/lib/PXELINUX/pxelinux.0 /netboot/tftp/',
         )
 
     files_to_create = ['ldlinux.c32', 'libcom32.c32', 'libutil.c32', 'vesamenu.c32']
     for file in files_to_create:
         if not host.fact.file('/netboot/tftp/{}'.format(file)):
             server.shell(
-                {'Copy `{}` to /net/tftp directory'.format(file)},
-                'cp -v /usr/lib/syslinux/modules/bios/{} /netboot/tftp/'.format(file),
+                name='Copy `{}` to /net/tftp directory'.format(file),
+                commands='cp -v /usr/lib/syslinux/modules/bios/{} /netboot/tftp/'.format(file),
             )
 
     files.template(
-        {'Create a templated file'},
-        'templates/default.j2',
-        '/netboot/tftp/pxelinux.cfg/default',
+        name='Create a templated file',
+        src='templates/default.j2',
+        dest='/netboot/tftp/pxelinux.cfg/default',
         pxe_server=pxe_server,
     )
 
@@ -93,19 +93,19 @@ if host.fact.linux_name == 'Ubuntu':
     iso = 'ubuntu-18.04.3-live-server-amd64.iso'
     iso_full_path = '/tmp/{}'.format(iso)
     files.download(
-        {'Download `{}` iso'.format(iso)},
-        'http://releases.ubuntu.com/18.04/{}'.format(iso),
-        iso_full_path,
+        name='Download `{}` iso'.format(iso),
+        src='http://releases.ubuntu.com/18.04/{}'.format(iso),
+        dest=iso_full_path,
     )
 
     server.shell(
-        {'Mount iso'},
-        'mount -o loop {} /mnt'.format(iso_full_path),
+        name='Mount iso',
+        commands='mount -o loop {} /mnt'.format(iso_full_path),
     )
 
     server.shell(
-        {'Copy contents of ISO to mount'},
-        'cp -Rfv /mnt/* /netboot/nfs/ubuntu1804/',
+        name='Copy contents of ISO to mount',
+        commands='cp -Rfv /mnt/* /netboot/nfs/ubuntu1804/',
     )
 
     # copy vmlinuz and initrd files
@@ -113,24 +113,26 @@ if host.fact.linux_name == 'Ubuntu':
     for file in init_files:
         if not host.fact.file('/netboot/tftp/ubuntu1804/{}'.format(file)):
             server.shell(
-                {'Copy `{}` file'.format(file)},
-                'cp -v /netboot/nfs/ubuntu1804/casper/{} '
-                '/netboot/tftp/ubuntu1804/{}'.format(file, file),
+                name='Copy `{}` file'.format(file),
+                commands=(
+                    'cp -v /netboot/nfs/ubuntu1804/casper/{} '
+                    '/netboot/tftp/ubuntu1804/{}'.format(file, file)
+                ),
             )
 
     server.shell(
-        {'Set permissions'},
-        'chmod -Rfv 777 /netboot',
+        name='Set permissions',
+        commands='chmod -Rfv 777 /netboot',
     )
 
     server.shell(
-        {'Unmount /mnt'},
-        'umount /mnt',
+        name='Unmount /mnt',
+        commands='umount /mnt',
     )
 
     init.systemd(
-        {'Restart and enable nfs'},
-        'nfs-kernel-server',
+        name='Restart and enable nfs',
+        service='nfs-kernel-server',
         restarted=True,
         running=True,
         enabled=True,

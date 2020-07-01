@@ -6,9 +6,9 @@ SUDO = True
 
 line = 'QUOTAUSER=""'
 results = files.line(
-    {'Example with double quotes (")'},
-    '/etc/adduser.conf',
-    '^{}$'.format(line),
+    name='Example with double quotes (")',
+    path='/etc/adduser.conf',
+    line='^{}$'.format(line),
     replace=line,
 )
 print(results.changed)

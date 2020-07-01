@@ -6,7 +6,7 @@ from pyinfra.api import FunctionCommand, operation
 
 
 @operation
-def call(state, host, function, *args, **kwargs):
+def call(state, host, function, args=None, kwargs=None):
     '''
     Execute a Python function within a deploy.
 

@@ -9,8 +9,8 @@ print(host.fact.linux_name, code_name)
 if host.fact.linux_name in ['Debian', 'Ubuntu']:
 
     apt.packages(
-        {'Install some packages'},
-        ['vim-addon-manager', 'vim', 'software-properties-common', 'wget', 'curl'],
+        name='Install some packages',
+        packages=['vim-addon-manager', 'vim', 'software-properties-common', 'wget', 'curl'],
         update=True,
     )
 
@@ -27,16 +27,16 @@ if host.fact.linux_name in ['Debian', 'Ubuntu']:
     # )
 
     apt.deb(
-        {'Install Chrome via deb'},
-        'https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb',
+        name='Install Chrome via deb',
+        src='https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb',
     )
 
     apt.key(
-        {'Install VirtualBox key'},
-        'https://www.virtualbox.org/download/oracle_vbox_2016.asc',
+        name='Install VirtualBox key',
+        src='https://www.virtualbox.org/download/oracle_vbox_2016.asc',
     )
 
     apt.repo(
-        {'Install VirtualBox repo'},
-        'deb https://download.virtualbox.org/virtualbox/debian {} contrib'.format(code_name),
+        name='Install VirtualBox repo',
+        src='deb https://download.virtualbox.org/virtualbox/debian {} contrib'.format(code_name),
     )
