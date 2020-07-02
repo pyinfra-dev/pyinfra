@@ -88,6 +88,7 @@ Unignored
 Vagrantfile
 W605
 Win32
+Xbps
 addsitedir
 adhoc
 agentrequesthandler
@@ -148,6 +149,7 @@ dnsmasq
 docbits
 docopt
 dport
+entrypoint
 epel
 excuted
 exe
@@ -342,6 +344,7 @@ wget
 whocares
 winrm
 writeable
+xbps
 yarn
 yaml
 zfill

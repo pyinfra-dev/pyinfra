@@ -1,23 +1,15 @@
-from . import ansible, chroot, docker, local, mech, ssh, vagrant, winrm
+import pkg_resources
+
+# Connectors that handle generation of inventories
+ALL_CONNECTORS = {
+    entrypoint.name: entrypoint.load()
+    for entrypoint in pkg_resources.iter_entry_points('pyinfra.connectors')
+}
 
 
 # Connectors that handle execution of pyinfra operations
-EXECUTION_CONNECTORS = {  # pragma: no cover
-    'docker': docker,
-    'chroot': chroot,
-    'local': local,
-    'ssh': ssh,
-    'winrm': winrm,
-}
-
-# Connectors that handle generation of inventories
-ALL_CONNECTORS = {  # pragma: no cover
-    'ansible': ansible,
-    'docker': docker,
-    'chroot': chroot,
-    'local': local,
-    'mech': mech,
-    'ssh': ssh,
-    'vagrant': vagrant,
-    'winrm': winrm,
+EXECUTION_CONNECTORS = {
+    connector: connector_mod
+    for connector, connector_mod in ALL_CONNECTORS.items()
+    if getattr(connector_mod, 'EXECUTION_CONNECTOR', False)
 }

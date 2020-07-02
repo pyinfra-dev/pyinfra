@@ -200,3 +200,6 @@ def get_file(
         )
 
     return status
+
+
+EXECUTION_CONNECTOR = True
