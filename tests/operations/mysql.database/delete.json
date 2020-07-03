@@ -9,6 +9,6 @@
         ]
     },
     "commands": [
-        "mysql -Be \"DROP DATABASE somedb\""
+        "mysql -Be 'DROP DATABASE somedb'"
     ]
 }

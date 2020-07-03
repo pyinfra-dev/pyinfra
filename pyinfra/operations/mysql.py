@@ -15,7 +15,7 @@ See the example/mysql.py
 
 import six
 
-from pyinfra.api import operation, OperationError
+from pyinfra.api import MaskString, operation, OperationError, StringCommand
 from pyinfra.facts.mysql import make_execute_mysql_command, make_mysql_command
 
 
@@ -108,10 +108,10 @@ def user(
     if present and not is_present:
         sql_bits = ['CREATE USER "{0}"@"{1}"'.format(name, user_hostname)]
         if password:
-            sql_bits.append('IDENTIFIED BY "{0}"'.format(password))
+            sql_bits.append(MaskString('IDENTIFIED BY "{0}"'.format(password)))
 
         yield make_execute_mysql_command(
-            ' '.join(sql_bits),
+            StringCommand(*sql_bits),
             user=mysql_user,
             password=mysql_password,
             host=mysql_host,

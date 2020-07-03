@@ -13,8 +13,8 @@
         }
     },
     "commands": [
-        "mysql -Be \"CREATE USER \\\"someuser\\\"@\\\"localwhat\\\"\"",
-        "mysql -Be \"GRANT SELECT ON *.* TO \\\"someuser\\\"@\\\"localwhat\\\"\"",
-        "mysql -Be \"FLUSH PRIVILEGES\""
+        "mysql -Be 'CREATE USER \"someuser\"@\"localwhat\"'",
+        "mysql -Be 'GRANT SELECT ON *.* TO \"someuser\"@\"localwhat\"'",
+        "mysql -Be 'FLUSH PRIVILEGES'"
     ]
 }

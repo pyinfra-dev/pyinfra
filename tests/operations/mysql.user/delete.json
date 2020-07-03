@@ -10,6 +10,6 @@
         }
     },
     "commands": [
-        "mysql -Be \"DROP USER \\\"someuser\\\"@\\\"localwhat\\\"\""
+        "mysql -Be 'DROP USER \"someuser\"@\"localwhat\"'"
     ]
 }

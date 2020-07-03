@@ -15,7 +15,7 @@
         }
     },
     "commands": [
-        "mysql -Be \"REVOKE SELECT, INSERT ON *.* FROM \\\"someuser\\\"@\\\"localhost\\\"\"",
-        "mysql -Be \"FLUSH PRIVILEGES\""
+        "mysql -Be 'REVOKE SELECT, INSERT ON *.* FROM \"someuser\"@\"localhost\"'",
+        "mysql -Be 'FLUSH PRIVILEGES'"
     ]
 }

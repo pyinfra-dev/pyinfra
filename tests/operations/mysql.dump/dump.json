@@ -6,6 +6,6 @@
         "mysql_password": "somepass"
     },
     "commands": [
-        "mysqldump somedb -u\"root\" -p\"somepass\" > somefile"
+        "mysqldump somedb -u\"root\" *** > somefile"
     ]
 }

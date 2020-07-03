@@ -2,7 +2,7 @@ import re
 
 from collections import defaultdict
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, MaskString, QuoteString, StringCommand
 from pyinfra.api.util import try_int
 
 from .util.databases import parse_columns_and_rows
@@ -27,7 +27,7 @@ def make_mysql_command(
 
     if password:
         # Quote the password as it may contain special characters
-        target_bits.append('-p"{0}"'.format(password))
+        target_bits.append(MaskString('-p"{0}"'.format(password)))
 
     if host:
         target_bits.append('-h{0}'.format(host))
@@ -35,13 +35,14 @@ def make_mysql_command(
     if port:
         target_bits.append('-P{0}'.format(port))
 
-    return ' '.join(target_bits)
+    return StringCommand(*target_bits)
 
 
 def make_execute_mysql_command(command, **mysql_kwargs):
-    return '{0} -Be "{1}"'.format(
+    return StringCommand(
         make_mysql_command(**mysql_kwargs),
-        command.replace('"', '\\"'),
+        '-Be',
+        QuoteString(command),  # quote this whole item as a single shell argument
     )
 
 
