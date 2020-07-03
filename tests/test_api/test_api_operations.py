@@ -2,6 +2,8 @@ from inspect import currentframe, getframeinfo
 
 from mock import mock_open, patch
 
+import pyinfra
+
 from pyinfra import pseudo_host, pseudo_state
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
@@ -339,6 +341,8 @@ class TestOperationOrdering(PatchSSHTestCase):
         # Add op to both hosts
         add_op(state, server.shell, 'echo "hi"')
 
+        pyinfra.is_cli = True
+
         # Add op to just the second host - using the pseudo modules such that
         # it replicates a deploy file.
         pseudo_state.set(state)
@@ -355,6 +359,8 @@ class TestOperationOrdering(PatchSSHTestCase):
 
         pseudo_state.reset()
         pseudo_host.reset()
+
+        pyinfra.is_cli = False
 
         # Ensure there are two ops
         op_order = state.get_op_order()

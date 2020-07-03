@@ -14,6 +14,8 @@ from types import FunctionType
 
 import six
 
+import pyinfra
+
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.pseudo_modules import PseudoModule
 
@@ -147,6 +149,11 @@ def operation(func=None, pipeline_facts=None):
             isinstance(args[0], (State, PseudoModule))
             and isinstance(args[1], (Host, PseudoModule))
         ):
+            if not pyinfra.is_cli:
+                raise PyinfraError((
+                    'API operation called without state/host: {0} ({1})'
+                ).format(op_name, _get_call_location()))
+
             state = pseudo_state._module
             host = pseudo_host._module
 
