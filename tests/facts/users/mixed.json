@@ -6,6 +6,7 @@
         "uid=1002(noshell) gid=1002(noshell) groups=1002(noshell) /home/noshell:",
         "uid=1002(nohome) gid=1002(nohome) groups=1002(nohome) :/bin/bash"
     ],
+    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ID=`id $i`;\n            META=`cat /etc/passwd | grep ^$i: | cut -d: -f6-7`;\n            echo \"$ID $META\";\n        done",
     "fact": {
         "root": {
             "home": "/root",
