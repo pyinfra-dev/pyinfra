@@ -141,6 +141,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
     if current_op_meta:
         sudo = current_op_meta['sudo']
         sudo_user = current_op_meta['sudo_user']
+        use_sudo_password = current_op_meta['use_sudo_password']
         su_user = current_op_meta['su_user']
         ignore_errors = current_op_meta['ignore_errors']
         timeout = current_op_meta['timeout']
@@ -187,6 +188,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
                 host.run_shell_command, state, command,
                 sudo=sudo,
                 sudo_user=sudo_user,
+                use_sudo_password=use_sudo_password,
                 su_user=su_user,
                 timeout=timeout,
                 shell_executable=shell_executable,
