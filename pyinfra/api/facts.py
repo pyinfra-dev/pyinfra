@@ -125,6 +125,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
     su_user = state.config.SU_USER
     ignore_errors = state.config.IGNORE_ERRORS
     shell_executable = state.config.SHELL
+    use_sudo_password = state.config.USE_SUDO_PASSWORD
 
     # Facts can override the shell (winrm powershell vs cmd support)
     if fact.shell_executable:
