@@ -101,16 +101,16 @@ class TestOperationsApi(PatchSSHTestCase):
             # Test normal
             add_op(
                 state, files.put,
-                {'First op name'},
-                'files/file.txt',
-                '/home/vagrant/file.txt',
+                name='First op name',
+                src='files/file.txt',
+                dest='/home/vagrant/file.txt',
             )
 
             # And with sudo
             add_op(
                 state, files.put,
-                'files/file.txt',
-                '/home/vagrant/file.txt',
+                src='files/file.txt',
+                dest='/home/vagrant/file.txt',
                 sudo=True,
                 sudo_user='pyinfra',
             )
@@ -118,8 +118,8 @@ class TestOperationsApi(PatchSSHTestCase):
             # And with su
             add_op(
                 state, files.put,
-                'files/file.txt',
-                '/home/vagrant/file.txt',
+                src='files/file.txt',
+                dest='/home/vagrant/file.txt',
                 sudo=True,
                 su_user='pyinfra',
             )
