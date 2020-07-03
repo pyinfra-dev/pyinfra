@@ -1,3 +1,9 @@
+# v0.16.1
+
++ Declare connectors as setuptools entrypoints (@FooBarQuaxx)
++ Fix `use_sudo_password` with facts
++ Fix actually mask MySQL operation + facts output
+
 # v0.16
 
 + Add **zypper** module (@FooBarQuaxx)
