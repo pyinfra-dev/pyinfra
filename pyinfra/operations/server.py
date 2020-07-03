@@ -681,6 +681,9 @@ def user(
 
     # Add SSH keys
     if public_keys is not None:
+        if isinstance(public_keys, six.string_types):
+            public_keys = [public_keys]
+
         # Ensure .ssh directory
         # note that this always outputs commands unless the SSH user has access to the
         # authorized_keys file, ie the SSH user is the user defined in this function
