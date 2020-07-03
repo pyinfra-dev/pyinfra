@@ -356,11 +356,11 @@ class Users(FactBase):
 
     command = '''
         for i in `cat /etc/passwd | cut -d: -f1`; do
-            ID=`id $i`
-            META=`cat /etc/passwd | grep ^$i: | cut -d: -f6-7`
-            echo "$ID $META"
+            ID=`id $i`;
+            META=`cat /etc/passwd | grep ^$i: | cut -d: -f6-7`;
+            echo "$ID $META";
         done
-    '''
+    '''.strip()
 
     default = dict
 
