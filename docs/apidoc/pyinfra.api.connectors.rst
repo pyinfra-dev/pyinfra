@@ -2,16 +2,16 @@ pyinfra.api.connectors package
 ==============================
 
 .. automodule:: pyinfra.api.connectors
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Subpackages
 -----------
 
 .. toctree::
 
-    pyinfra.api.connectors.sshuserclient
+   pyinfra.api.connectors.sshuserclient
 
 Submodules
 ----------
@@ -27,4 +27,3 @@ Submodules
    pyinfra.api.connectors.util
    pyinfra.api.connectors.vagrant
    pyinfra.api.connectors.winrm
-
