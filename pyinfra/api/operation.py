@@ -8,8 +8,6 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 from __future__ import unicode_literals
 
 from functools import wraps
-from inspect import getframeinfo, stack
-from os import path
 from types import FunctionType
 
 import six
@@ -26,6 +24,7 @@ from .operation_kwargs import pop_global_op_kwargs
 from .state import State
 from .util import (
     get_arg_value,
+    get_call_location,
     get_caller_frameinfo,
     make_hash,
     unroll_generators,
@@ -71,24 +70,14 @@ def add_op(state, op_func, *args, **kwargs):
         args/kwargs: passed to the operation function
     '''
 
-    frameinfo = get_caller_frameinfo()
-    kwargs['frameinfo'] = frameinfo
+    kwargs['frameinfo'] = get_caller_frameinfo()
+
+    # This ensures that every time an operation is added (API mode), it is simply
+    # appended to the operation order.
+    kwargs['_line_number'] = len(state.op_meta)
 
     for host in state.inventory:
         op_func(state, host, *args, **kwargs)
-
-
-def _get_call_location():
-    frames = stack()
-
-    # First two frames are this and the caller below, so get the third item on
-    # the frame list, which should be the call to the actual operation.
-    frame = getframeinfo(frames[2][0])
-
-    return 'line {0} in {1}'.format(
-        frame.lineno,
-        path.relpath(frame.filename),
-    )
 
 
 def operation(func=None, pipeline_facts=None):
@@ -127,7 +116,7 @@ def operation(func=None, pipeline_facts=None):
             if not pyinfra.is_cli:
                 raise PyinfraError((
                     'API operation called without state/host: {0} ({1})'
-                ).format(op_name, _get_call_location()))
+                ).format(op_name, get_call_location()))
 
             state = pseudo_state._module
             host = pseudo_host._module
@@ -135,14 +124,14 @@ def operation(func=None, pipeline_facts=None):
             if state.in_op:
                 raise PyinfraError((
                     'Nested operation called without state/host: {0} ({1})'
-                ).format(op_name, _get_call_location()))
+                ).format(op_name, get_call_location()))
 
             if state.in_deploy:
                 raise PyinfraError((
                     'Nested deploy operation called without state/host: {0} ({1})'
-                ).format(op_name, _get_call_location()))
+                ).format(op_name, get_call_location()))
 
-        # Otherwise (API mode) we just trim off the commands
+        # Otherwise (API, nested op, @deploy op) we just trim off the commands
         else:
             args_copy = list(args)
             state, host = args[0], args[1]
@@ -188,7 +177,7 @@ def operation(func=None, pipeline_facts=None):
         if state.in_op:
             return func(state, host, *args, **kwargs) or []
 
-        line_number = frameinfo.lineno
+        line_number = kwargs.pop('_line_number', frameinfo.lineno)
 
         # Inject the current op file number (only incremented in CLI mode)
         op_lines = [state.current_op_file]
@@ -224,10 +213,11 @@ def operation(func=None, pipeline_facts=None):
             op_lines.append(duplicate_op_count)
 
         op_lines = tuple(op_lines)
-        state.op_line_numbers_to_hash[op_lines] = op_hash
+
         logger.debug('Adding operation, {0}, called @ {1}:{2}, opLines={3}, opHash={4}'.format(
             names, frameinfo.filename, line_number, op_lines, op_hash,
         ))
+        state.op_line_numbers_to_hash[op_lines] = op_hash
 
         # Ensure shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(op_hash, {

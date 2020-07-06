@@ -5,6 +5,7 @@ import re
 from functools import wraps
 from hashlib import sha1
 from inspect import getframeinfo, stack
+from os import path
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -49,6 +50,14 @@ def memoize(func):
 
     wrapper.cache = {}
     return wrapper
+
+
+def get_call_location(frame_offset=0):
+    frame = get_caller_frameinfo(frame_offset=frame_offset)
+    return 'line {0} in {1}'.format(
+        frame.lineno,
+        path.relpath(frame.filename),
+    )
 
 
 def get_caller_frameinfo(frame_offset=0):
