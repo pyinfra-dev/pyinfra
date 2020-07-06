@@ -8,6 +8,8 @@ from functools import wraps
 
 import six
 
+import pyinfra
+
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.pseudo_modules import PseudoModule
 
@@ -15,7 +17,7 @@ from .exceptions import PyinfraError
 from .host import Host
 from .operation_kwargs import pop_global_op_kwargs
 from .state import State
-from .util import get_caller_frameinfo
+from .util import get_call_location, get_caller_frameinfo
 
 
 def add_deploy(state, deploy_func, *args, **kwargs):
@@ -29,8 +31,16 @@ def add_deploy(state, deploy_func, *args, **kwargs):
         args/kwargs: passed to the operation function
     '''
 
-    frameinfo = get_caller_frameinfo()
-    kwargs['frameinfo'] = frameinfo
+    if pyinfra.is_cli:
+        raise PyinfraError((
+            '`add_deploy` should not be called when pyinfra is executing in CLI mode! ({0})'
+        ).format(get_call_location))
+
+    kwargs['frameinfo'] = get_caller_frameinfo()
+
+    # This ensures that ever time a deploy is added (API mode), it is simply
+    # appended to the operation order.
+    kwargs['_line_number'] = len(state.op_meta)
 
     for host in state.inventory:
         deploy_func(state, host, *args, **kwargs)
@@ -67,15 +77,20 @@ def deploy(func_or_name, data_defaults=None):
             isinstance(args[0], (State, PseudoModule))
             and isinstance(args[1], (Host, PseudoModule))
         ):
+            if not pyinfra.is_cli:
+                raise PyinfraError((
+                    'Deploy called without state/host: {0} ({1})'
+                ).format(func, get_call_location()))
+
             state = pseudo_state._module
             host = pseudo_host._module
 
             if state.in_deploy:
                 raise PyinfraError((
-                    'Nested deploy called without state/host: {0}'
-                ).format(func))
+                    'Nested deploy called without state/host: {0} ({1})'
+                ).format(func, get_call_location()))
 
-        # Otherwise (API mode) we just trim off the commands
+        # Otherwise (API, nested @deploy op) we just trim off the commands
         else:
             args_copy = list(args)
             state, host = args[0], args[1]
@@ -94,7 +109,9 @@ def deploy(func_or_name, data_defaults=None):
         deploy_name = getattr(func, 'deploy_name', func.__name__)
         deploy_data = getattr(func, 'deploy_data', None)
 
-        with state.deploy(deploy_name, deploy_kwargs, deploy_data, frameinfo.lineno):
+        line_number = kwargs.pop('_line_number', frameinfo.lineno)
+
+        with state.deploy(deploy_name, deploy_kwargs, deploy_data, line_number):
             # Execute the deploy, passing state and host
             func(state, host, *args, **kwargs)
 
