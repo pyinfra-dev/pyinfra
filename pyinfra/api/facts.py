@@ -71,6 +71,11 @@ class FactBase(object):
 
     shell_executable = None
 
+    # Use the default value after encountering a *command* error, ie when the command
+    # fails *not* the processing of it's output. Useful for facts that target system
+    # specific stuff, like `apt` or `yum`.
+    use_default_on_error = False
+
     @staticmethod
     def default():
         '''
@@ -233,6 +238,8 @@ def get_facts(state, name, args=None, ensure_hosts=None):
 
             if status and stdout:
                 data = fact.process(stdout)
+            elif not fact.use_default_on_error:
+                failed_hosts.add(host)
 
             hostname_facts[host] = data
 
