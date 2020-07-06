@@ -454,6 +454,8 @@ class LinuxDistribution(FactBase):
         'Opensuse-Leap': 'openSUSE',
     }
 
+    use_default_on_error = True
+
     @staticmethod
     def default():
         return {

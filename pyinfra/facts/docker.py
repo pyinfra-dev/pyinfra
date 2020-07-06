@@ -5,6 +5,7 @@ from pyinfra.api import FactBase
 
 class DockerFactBase(FactBase):
     abstract = True
+    use_default_on_error = True
 
     def process(self, output):
         output = ''.join(output)

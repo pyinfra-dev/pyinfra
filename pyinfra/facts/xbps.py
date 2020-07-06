@@ -16,6 +16,7 @@ class XbpsPackages(FactBase):
     command = 'xbps-query -l'
     regex = r'^.. ([a-zA-Z0-9_\-\+]+)\-([0-9a-z_\.]+)'
     default = dict
+    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(self.regex, output)
