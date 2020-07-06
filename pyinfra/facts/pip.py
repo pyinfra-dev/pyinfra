@@ -18,6 +18,7 @@ class PipPackages(FactBase):
     '''
 
     default = dict
+    use_default_on_error = True
 
     def command(self, pip='pip'):
         return '{0} freeze --all'.format(pip)

@@ -21,6 +21,7 @@ class NpmPackages(FactBase):
 
     command = 'npm list -g --depth=0'
     default = dict
+    use_default_on_error = True
 
     def command(self, directory=None):
         if directory:

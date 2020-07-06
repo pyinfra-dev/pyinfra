@@ -19,6 +19,7 @@ class ChocoPackages(FactBase):
     shell_executable = 'ps'
 
     default = dict
+    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(CHOCO_REGEX, output)
@@ -30,6 +31,7 @@ class ChocoVersion(FactBase):
     '''
 
     command = 'choco --version'
+    use_default_on_error = True
 
     @staticmethod
     def process(output):

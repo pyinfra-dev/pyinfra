@@ -17,6 +17,7 @@ class ApkPackages(FactBase):
 
     command = 'apk list --installed'
     default = dict
+    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(APK_REGEX, output)

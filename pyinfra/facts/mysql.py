@@ -48,6 +48,7 @@ def make_execute_mysql_command(command, **mysql_kwargs):
 
 class MysqlFactBase(FactBase):
     abstract = True
+    use_default_on_error = True
 
     def command(
         self,
