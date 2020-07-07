@@ -78,16 +78,11 @@ callback_kwargs = {
     'on_error': 'Callback function to execute on error.',
 }
 
-hidden_commands = {
-    'op': {},
-}
-
 OPERATION_KWARGS = {
     'Privilege & user escalation': auth_kwargs,
     'Operation control': operation_kwargs,
     'Operation execution': execution_kwargs,
     'Callbacks': callback_kwargs,
-    None: hidden_commands,
 }
 
 
