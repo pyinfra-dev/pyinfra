@@ -14,6 +14,9 @@ class File(FactBase):
     # Types must match FLAG_TO_TYPE in .util.files.py
     type = 'file'
 
+    # If the file doesn't exist, return `None` instead of failing
+    use_default_on_error = True
+
     @staticmethod
     def command(name):
         name = escape_unix_path(name)
@@ -64,6 +67,8 @@ class FindInFile(FactBase):
     Checks for the existence of text in a file using grep. Returns a list of matching
     lines if the file exists, and ``None`` if the file does not.
     '''
+
+    use_default_on_error = True
 
     def command(self, name, pattern):
         name = escape_unix_path(name)
