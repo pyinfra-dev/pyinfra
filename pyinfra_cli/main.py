@@ -526,8 +526,10 @@ def _main(
         state.print_output = True
 
         add_op(
-            state, server.shell,
+            state,
+            server.shell,
             ' '.join(operations),
+            _allow_cli_mode=True,
         )
 
     # Deploy files(s)
@@ -549,11 +551,10 @@ def _main(
             click.echo('--> Preparing operation...')
 
         op, args = operations
+        args, kwargs = args
+        kwargs['_allow_cli_mode'] = True
 
-        add_op(
-            state, op,
-            *args[0], **args[1]
-        )
+        add_op(state, op, *args, **kwargs)
 
     # Always show meta output
     if not quiet:
