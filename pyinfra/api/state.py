@@ -219,6 +219,8 @@ class State(object):
 
         # Assign state back references to inventory & config
         inventory.state = config.state = self
+        for host in inventory:
+            host.state = self
 
         self.initialised = True
 
