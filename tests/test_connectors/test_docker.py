@@ -46,9 +46,9 @@ class TestDockerConnector(TestCase):
         inventory = make_inventory(hosts=(
             ('@docker/not-an-image', {'docker_container_id': 'abc'}),
         ))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('@docker/not-an-image')
-        host.connect(state)
+        host.connect()
         assert host.data.docker_container_id == 'abc'
 
     def test_connect_all(self):
@@ -68,21 +68,21 @@ class TestDockerConnector(TestCase):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
         state = State(inventory, Config())
         host = inventory.get_host('@docker/not-an-image')
-        host.connect(state, for_fact=True)
+        host.connect(for_fact=True)
         assert len(state.active_hosts) == 0
-        host.disconnect(state)
+        host.disconnect()
 
     def test_run_shell_command(self):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
-        state = State(inventory, Config())
+        State(inventory, Config())
 
         command = 'echo hi'
         self.fake_popen_mock().returncode = 0
 
         host = inventory.get_host('@docker/not-an-image')
-        host.connect(state)
+        host.connect()
         out = host.run_shell_command(
-            state, command,
+            command,
             stdin='hello',
             get_pty=True,
             print_output=True,
@@ -102,14 +102,14 @@ class TestDockerConnector(TestCase):
 
     def test_run_shell_command_success_exit_codes(self):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
-        state = State(inventory, Config())
+        State(inventory, Config())
 
         command = 'echo hi'
         self.fake_popen_mock().returncode = 1
 
         host = inventory.get_host('@docker/not-an-image')
-        host.connect(state)
-        out = host.run_shell_command(state, command, success_exit_codes=[1])
+        host.connect()
+        out = host.run_shell_command(command, success_exit_codes=[1])
         assert out[0] is True
 
     def test_run_shell_command_error(self):
@@ -121,20 +121,20 @@ class TestDockerConnector(TestCase):
 
         host = inventory.get_host('@docker/not-an-image')
         host.connect(state)
-        out = host.run_shell_command(state, command)
+        out = host.run_shell_command(command)
         assert out[0] is False
 
     def test_put_file(self):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
-        state = State(inventory, Config())
+        State(inventory, Config())
 
         host = inventory.get_host('@docker/not-an-image')
-        host.connect(state)
+        host.connect()
 
         fake_process = MagicMock(returncode=0)
         self.fake_popen_mock.return_value = fake_process
 
-        host.put_file(state, 'not-a-file', 'not-another-file', print_output=True)
+        host.put_file('not-a-file', 'not-another-file', print_output=True)
 
         self.fake_popen_mock.assert_called_with(
             "sh -c 'docker cp __tempfile__ containerid:not-another-file'", shell=True,
@@ -143,28 +143,28 @@ class TestDockerConnector(TestCase):
 
     def test_put_file_error(self):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
-        state = State(inventory, Config())
+        State(inventory, Config())
 
         host = inventory.get_host('@docker/not-an-image')
-        host.connect(state)
+        host.connect()
 
         fake_process = MagicMock(returncode=1)
         self.fake_popen_mock.return_value = fake_process
 
         with self.assertRaises(IOError):
-            host.put_file(state, 'not-a-file', 'not-another-file', print_output=True)
+            host.put_file('not-a-file', 'not-another-file', print_output=True)
 
     def test_get_file(self):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
-        state = State(inventory, Config())
+        State(inventory, Config())
 
         host = inventory.get_host('@docker/not-an-image')
-        host.connect(state)
+        host.connect()
 
         fake_process = MagicMock(returncode=0)
         self.fake_popen_mock.return_value = fake_process
 
-        host.get_file(state, 'not-a-file', 'not-another-file', print_output=True)
+        host.get_file('not-a-file', 'not-another-file', print_output=True)
 
         self.fake_popen_mock.assert_called_with(
             "sh -c 'docker cp containerid:not-a-file __tempfile__'", shell=True,
@@ -173,13 +173,13 @@ class TestDockerConnector(TestCase):
 
     def test_get_file_error(self):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
-        state = State(inventory, Config())
+        State(inventory, Config())
 
         host = inventory.get_host('@docker/not-an-image')
-        host.connect(state)
+        host.connect()
 
         fake_process = MagicMock(returncode=1)
         self.fake_popen_mock.return_value = fake_process
 
         with self.assertRaises(IOError):
-            host.get_file(state, 'not-a-file', 'not-another-file', print_output=True)
+            host.get_file('not-a-file', 'not-another-file', print_output=True)

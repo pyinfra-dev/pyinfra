@@ -46,7 +46,7 @@ class TestSSHConnector(TestCase):
         inventory = make_inventory()
         state = State(inventory, Config())
         host = inventory.get_host('somehost')
-        host.connect(state, for_fact=True)
+        host.connect(for_fact=True)
         assert len(state.active_hosts) == 0
 
     def test_connect_all_password(self):
@@ -308,14 +308,14 @@ class TestSSHConnector(TestCase):
         fake_ssh_client.return_value = fake_ssh
 
         inventory = make_inventory(hosts=('somehost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('somehost')
-        host.connect(state)
+        host.connect()
 
         command = 'echo Šablony'
         fake_stdout.channel.recv_exit_status.return_value = 0
 
-        out = host.run_shell_command(state, command, stdin='hello', print_output=True)
+        out = host.run_shell_command(command, stdin='hello', print_output=True)
         assert len(out) == 3
 
         status, stdout, stderr = out
@@ -323,7 +323,7 @@ class TestSSHConnector(TestCase):
         fake_stdin.write.assert_called_with(b'hello\n')
 
         combined_out = host.run_shell_command(
-            state, command, stdin='hello', print_output=True,
+            command, stdin='hello', print_output=True,
             return_combined_output=True,
         )
         assert len(combined_out) == 2
@@ -340,14 +340,14 @@ class TestSSHConnector(TestCase):
         fake_ssh_client.return_value = fake_ssh
 
         inventory = make_inventory(hosts=('somehost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('somehost')
-        host.connect(state)
+        host.connect()
 
         command = StringCommand('echo', MaskString('top-secret-stuff'))
         fake_stdout.channel.recv_exit_status.return_value = 0
 
-        out = host.run_shell_command(state, command, print_output=True, print_input=True)
+        out = host.run_shell_command(command, print_output=True, print_input=True)
         assert len(out) == 3
 
         status, stdout, stderr = out
@@ -360,6 +360,7 @@ class TestSSHConnector(TestCase):
 
         fake_click.echo.assert_called_with(
             "{0}>>> sh -c 'echo ***'".format(host.print_prefix),
+            err=True,
         )
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')
@@ -372,14 +373,14 @@ class TestSSHConnector(TestCase):
         fake_ssh_client.return_value = fake_ssh
 
         inventory = make_inventory(hosts=('somehost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('somehost')
-        host.connect(state)
+        host.connect()
 
         command = 'echo hi'
         fake_stdout.channel.recv_exit_status.return_value = 1
 
-        out = host.run_shell_command(state, command, success_exit_codes=[1])
+        out = host.run_shell_command(command, success_exit_codes=[1])
         assert len(out) == 3
         assert out[0] is True
 
@@ -400,7 +401,7 @@ class TestSSHConnector(TestCase):
         command = 'echo hi'
         fake_stdout.channel.recv_exit_status.return_value = 1
 
-        out = host.run_shell_command(state, command)
+        out = host.run_shell_command(command)
         assert len(out) == 3
         assert out[0] is False
 
@@ -408,14 +409,14 @@ class TestSSHConnector(TestCase):
     @patch('pyinfra.api.connectors.ssh.SFTPClient')
     def test_put_file(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('anotherhost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('anotherhost')
-        host.connect(state)
+        host.connect()
 
         fake_open = mock_open(read_data='test!')
         with patch('pyinfra.api.util.open', fake_open, create=True):
             status = host.put_file(
-                state, 'not-a-file', 'not-another-file',
+                'not-a-file', 'not-another-file',
                 print_output=True,
             )
 
@@ -428,9 +429,9 @@ class TestSSHConnector(TestCase):
     @patch('pyinfra.api.connectors.ssh.SFTPClient')
     def test_put_file_sudo(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('anotherhost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('anotherhost')
-        host.connect(state)
+        host.connect()
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.return_value = 0
@@ -439,7 +440,7 @@ class TestSSHConnector(TestCase):
         fake_open = mock_open(read_data='test!')
         with patch('pyinfra.api.util.open', fake_open, create=True):
             status = host.put_file(
-                state, 'not-a-file', 'not-another-file',
+                'not-a-file', 'not-another-file',
                 print_output=True,
                 sudo=True,
                 sudo_user='ubuntu',
@@ -461,9 +462,9 @@ class TestSSHConnector(TestCase):
     @patch('pyinfra.api.connectors.ssh.SFTPClient')
     def test_put_file_su_user_fail(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('anotherhost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('anotherhost')
-        host.connect(state)
+        host.connect()
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.return_value = 1
@@ -472,7 +473,7 @@ class TestSSHConnector(TestCase):
         fake_open = mock_open(read_data='test!')
         with patch('pyinfra.api.util.open', fake_open, create=True):
             status = host.put_file(
-                state, 'not-a-file', 'not-another-file',
+                'not-a-file', 'not-another-file',
                 print_output=True,
                 su_user='centos',
             )
@@ -493,14 +494,14 @@ class TestSSHConnector(TestCase):
     @patch('pyinfra.api.connectors.ssh.SFTPClient')
     def test_get_file(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('somehost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('somehost')
-        host.connect(state)
+        host.connect()
 
         fake_open = mock_open(read_data='test!')
         with patch('pyinfra.api.util.open', fake_open, create=True):
             status = host.get_file(
-                state, 'not-a-file', 'not-another-file',
+                'not-a-file', 'not-another-file',
                 print_output=True,
             )
 
@@ -513,9 +514,9 @@ class TestSSHConnector(TestCase):
     @patch('pyinfra.api.connectors.ssh.SFTPClient')
     def test_get_file_sudo(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('somehost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('somehost')
-        host.connect(state)
+        host.connect()
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.return_value = 0
@@ -524,7 +525,7 @@ class TestSSHConnector(TestCase):
         fake_open = mock_open(read_data='test!')
         with patch('pyinfra.api.util.open', fake_open, create=True):
             status = host.get_file(
-                state, 'not-a-file', 'not-another-file',
+                'not-a-file', 'not-another-file',
                 print_output=True,
                 sudo=True,
                 sudo_user='ubuntu',
@@ -550,16 +551,16 @@ class TestSSHConnector(TestCase):
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     def test_get_file_sudo_copy_fail(self, fake_ssh_client):
         inventory = make_inventory(hosts=('somehost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('somehost')
-        host.connect(state)
+        host.connect()
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.return_value = 1
         fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
 
         status = host.get_file(
-            state, 'not-a-file', 'not-another-file',
+            'not-a-file', 'not-another-file',
             print_output=True,
             sudo=True,
             sudo_user='ubuntu',
@@ -578,9 +579,9 @@ class TestSSHConnector(TestCase):
     @patch('pyinfra.api.connectors.ssh.SFTPClient')
     def test_get_file_sudo_remove_fail(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('somehost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('somehost')
-        host.connect(state)
+        host.connect()
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.side_effect = [0, 1]
@@ -589,7 +590,7 @@ class TestSSHConnector(TestCase):
         fake_open = mock_open(read_data='test!')
         with patch('pyinfra.api.util.open', fake_open, create=True):
             status = host.get_file(
-                state, 'not-a-file', 'not-another-file',
+                'not-a-file', 'not-another-file',
                 print_output=True,
                 sudo=True,
                 sudo_user='ubuntu',
@@ -616,9 +617,9 @@ class TestSSHConnector(TestCase):
     @patch('pyinfra.api.connectors.ssh.SFTPClient')
     def test_get_file_su_user(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('somehost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('somehost')
-        host.connect(state)
+        host.connect()
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.return_value = 0
@@ -627,7 +628,7 @@ class TestSSHConnector(TestCase):
         fake_open = mock_open(read_data='test!')
         with patch('pyinfra.api.util.open', fake_open, create=True):
             status = host.get_file(
-                state, 'not-a-file', 'not-another-file',
+                'not-a-file', 'not-another-file',
                 print_output=True,
                 su_user='centos',
             )
