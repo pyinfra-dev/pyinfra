@@ -85,7 +85,6 @@ def _run_server_op(state, host, op_hash):
         elif isinstance(command, FileUploadCommand):
             try:
                 status = host.put_file(
-                    state,
                     command.src, command.dest,
                     print_output=state.print_output,
                     print_input=state.print_input,
@@ -101,7 +100,6 @@ def _run_server_op(state, host, op_hash):
         elif isinstance(command, FileDownloadCommand):
             try:
                 status = host.get_file(
-                    state,
                     command.src, command.dest,
                     print_output=state.print_output,
                     print_input=state.print_input,
@@ -119,7 +117,6 @@ def _run_server_op(state, host, op_hash):
 
             try:
                 status, combined_output_lines = host.run_shell_command(
-                    state,
                     command,
                     print_output=state.print_output,
                     print_input=state.print_input,
