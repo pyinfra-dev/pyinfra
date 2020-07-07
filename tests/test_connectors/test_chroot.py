@@ -44,7 +44,7 @@ class TestChrootConnector(TestCase):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
         state = State(inventory, Config())
         host = inventory.get_host('@chroot/not-a-chroot')
-        host.connect(state, for_fact=True)
+        host.connect(for_fact=True)
         assert len(state.active_hosts) == 0
 
     def test_connect_all_error(self):
@@ -56,14 +56,14 @@ class TestChrootConnector(TestCase):
 
     def test_run_shell_command(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('@chroot/not-a-chroot')
-        host.connect(state)
+        host.connect()
 
         command = 'echo hoi'
         self.fake_popen_mock().returncode = 0
         out = host.run_shell_command(
-            state, command,
+            command,
             stdin='hello',
             get_pty=True,
             print_output=True,
@@ -83,38 +83,38 @@ class TestChrootConnector(TestCase):
 
     def test_run_shell_command_success_exit_codes(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('@chroot/not-a-chroot')
 
         command = 'echo hoi'
         self.fake_popen_mock().returncode = 1
 
-        out = host.run_shell_command(state, command, success_exit_codes=[1])
+        out = host.run_shell_command(command, success_exit_codes=[1])
         assert len(out) == 3
         assert out[0] is True
 
     def test_run_shell_command_error(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('@chroot/not-a-chroot')
 
         command = 'echo hoi'
         self.fake_popen_mock().returncode = 1
 
-        out = host.run_shell_command(state, command)
+        out = host.run_shell_command(command)
         assert len(out) == 3
         assert out[0] is False
 
     def test_put_file(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        state = State(inventory, Config())
+        State(inventory, Config())
 
         host = inventory.get_host('@chroot/not-a-chroot')
 
         fake_process = MagicMock(returncode=0)
         self.fake_popen_mock.return_value = fake_process
 
-        host.put_file(state, 'not-a-file', 'not-another-file', print_output=True)
+        host.put_file('not-a-file', 'not-another-file', print_output=True)
 
         self.fake_popen_mock.assert_called_with(
             "sh -c 'cp __tempfile__ /not-a-chroot/not-another-file'", shell=True,
@@ -123,7 +123,7 @@ class TestChrootConnector(TestCase):
 
     def test_put_file_error(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        state = State(inventory, Config())
+        State(inventory, Config())
 
         host = inventory.get_host('@chroot/not-a-chroot')
 
@@ -131,18 +131,18 @@ class TestChrootConnector(TestCase):
         self.fake_popen_mock.return_value = fake_process
 
         with self.assertRaises(IOError):
-            host.put_file(state, 'not-a-file', 'not-another-file', print_output=True)
+            host.put_file('not-a-file', 'not-another-file', print_output=True)
 
     def test_get_file(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        state = State(inventory, Config())
+        State(inventory, Config())
 
         host = inventory.get_host('@chroot/not-a-chroot')
 
         fake_process = MagicMock(returncode=0)
         self.fake_popen_mock.return_value = fake_process
 
-        host.get_file(state, 'not-a-file', 'not-another-file', print_output=True)
+        host.get_file('not-a-file', 'not-another-file', print_output=True)
 
         self.fake_popen_mock.assert_called_with(
             "sh -c 'cp /not-a-chroot/not-a-file __tempfile__'", shell=True,
@@ -151,7 +151,7 @@ class TestChrootConnector(TestCase):
 
     def test_get_file_error(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        state = State(inventory, Config())
+        State(inventory, Config())
 
         host = inventory.get_host('@chroot/not-a-chroot')
 
@@ -159,4 +159,4 @@ class TestChrootConnector(TestCase):
         self.fake_popen_mock.return_value = fake_process
 
         with self.assertRaises(IOError):
-            host.get_file(state, 'not-a-file', 'not-another-file', print_output=True)
+            host.get_file('not-a-file', 'not-another-file', print_output=True)
