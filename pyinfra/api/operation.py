@@ -27,6 +27,7 @@ from .util import (
     get_call_location,
     get_caller_frameinfo,
     make_hash,
+    memoize,
     unroll_generators,
 )
 
@@ -78,6 +79,13 @@ def add_op(state, op_func, *args, **kwargs):
 
     for host in state.inventory:
         op_func(state, host, *args, **kwargs)
+
+@memoize
+def show_set_name_warning():
+    logger.warning((
+        'Use of a set to name operations is deprecated, '
+        'please us the `name` argument.'
+    ))
 
 
 def operation(func=None, pipeline_facts=None):
@@ -150,6 +158,7 @@ def operation(func=None, pipeline_facts=None):
 
         # Look for a set as the first argument
         if len(args) > 0 and isinstance(args[0], set):
+            show_set_name_warning()
             names = args[0]
             args_copy = list(args)
             args = args[1:]
