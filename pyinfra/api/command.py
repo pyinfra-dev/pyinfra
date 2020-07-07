@@ -62,17 +62,17 @@ class StringCommand(PyinfraCommand):
 
 
 class FileUploadCommand(PyinfraCommand):
-    def __init__(self, source_filename_or_io, remote_filename, **kwargs):
+    def __init__(self, src, dest, **kwargs):
         super(FileUploadCommand, self).__init__(**kwargs)
-        self.source_filename_or_io = source_filename_or_io
-        self.remote_filename = remote_filename
+        self.src = src
+        self.dest = dest
 
 
 class FileDownloadCommand(PyinfraCommand):
-    def __init__(self, remote_filename, source_filename_or_io, **kwargs):
+    def __init__(self, src, dest, **kwargs):
         super(FileDownloadCommand, self).__init__(**kwargs)
-        self.remote_filename = remote_filename
-        self.source_filename_or_io = source_filename_or_io
+        self.src = src
+        self.dest = dest
 
 
 class FunctionCommand(PyinfraCommand):

@@ -86,8 +86,7 @@ def _run_server_op(state, host, op_hash):
             try:
                 status = host.put_file(
                     state,
-                    command.source_filename_or_io,
-                    command.remote_filename,
+                    command.src, command.dest,
                     print_output=state.print_output,
                     print_input=state.print_input,
                     **executor_kwargs
@@ -103,8 +102,7 @@ def _run_server_op(state, host, op_hash):
             try:
                 status = host.get_file(
                     state,
-                    command.remote_filename,
-                    command.source_filename_or_io,
+                    command.src, command.dest,
                     print_output=state.print_output,
                     print_input=state.print_input,
                     **executor_kwargs
