@@ -49,7 +49,7 @@ class TestWinrmConnector(TestCase):
         fake_winrm_session.return_value = fake_winrm
 
         inventory = make_inventory(hosts=('@winrm/somehost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('@winrm/somehost')
         host.connect()
 
