@@ -244,7 +244,7 @@ def print_meta(state):
             ]))
 
         if i != len(group_combinations):
-            rows.append((print, []))
+            rows.append((lambda m: click.echo(m, err=True), []))
 
     print_rows(rows)
 
@@ -306,6 +306,6 @@ def print_results(state):
             ]))
 
         if i != len(group_combinations):
-            rows.append((print, []))
+            rows.append((lambda m: click.echo(m, err=True), []))
 
     print_rows(rows)
