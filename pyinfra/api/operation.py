@@ -84,8 +84,13 @@ def add_op(state, op_func, *args, **kwargs):
     # appended to the operation order.
     kwargs['_line_number'] = len(state.op_meta)
 
+    results = {}
+
     for host in state.inventory:
-        op_func(state, host, *args, **kwargs)
+        results[host] = op_func(state, host, *args, **kwargs)
+
+    return results
+
 
 @memoize
 def show_set_name_warning():
