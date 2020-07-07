@@ -71,6 +71,13 @@ def add_op(state, op_func, *args, **kwargs):
         args/kwargs: passed to the operation function
     '''
 
+    allow_cli_mode = kwargs.pop('_allow_cli_mode', False)
+
+    if pyinfra.is_cli and not allow_cli_mode:
+        raise PyinfraError((
+            '`add_op` should not be called when pyinfra is executing in CLI mode! ({0})'
+        ).format(get_call_location()))
+
     kwargs['frameinfo'] = get_caller_frameinfo()
 
     # This ensures that every time an operation is added (API mode), it is simply
