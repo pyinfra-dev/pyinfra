@@ -64,6 +64,8 @@ class Which(FactBase):
     Returns the path of a given command, if available.
     '''
 
+    use_default_on_error = True
+
     @staticmethod
     def command(name):
         return 'which {0}'.format(name)

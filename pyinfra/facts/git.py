@@ -4,12 +4,16 @@ from pyinfra.api.facts import FactBase
 
 
 class GitBranch(FactBase):
+    use_default_on_error = True
+
     @staticmethod
     def command(repo):
         return 'cd {0} && git rev-parse --abbrev-ref HEAD'.format(repo)
 
 
 class GitConfig(FactBase):
+    use_default_on_error = True
+
     @staticmethod
     def command(repo=None):
         if repo is None:
