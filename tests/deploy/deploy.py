@@ -26,7 +26,7 @@ for i in range(2):
         commands='echo loop_{0}_main_operation'.format(i),
     )
 
-files.file(
+files.put(
     name='Third main operation',
     src='files/a_file',
     dest='/a_file',
