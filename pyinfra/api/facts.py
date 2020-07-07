@@ -237,8 +237,9 @@ def get_facts(state, name, args=None, ensure_hosts=None):
 
             data = fact.default()
 
-            if status and stdout:
-                data = fact.process(stdout)
+            if status:
+                if stdout:
+                    data = fact.process(stdout)
             elif not fact.use_default_on_error:
                 failed_hosts.add(host)
 
