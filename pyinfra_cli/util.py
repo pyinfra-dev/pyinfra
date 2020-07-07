@@ -21,6 +21,7 @@ import click
 import six
 
 from pyinfra import logger, pseudo_host, pseudo_state
+from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.util import FallbackDict
 from pyinfra.hook import HOOKS
 
@@ -69,14 +70,19 @@ def run_hook(state, hook_name, hook_data):
 
 
 def json_encode(obj):
-    if isinstance(obj, FunctionType):
+    # pyinfra types
+    if isinstance(obj, FallbackDict):
+        return obj.dict()
+
+    elif isinstance(obj, PyinfraCommand):
+        return repr(obj)
+
+    # Python types
+    elif isinstance(obj, FunctionType):
         return obj.__name__
 
     elif isinstance(obj, datetime):
         return obj.isoformat()
-
-    elif isinstance(obj, FallbackDict):
-        return obj.dict()
 
     elif isinstance(obj, io_bases):
         if hasattr(obj, 'name'):
