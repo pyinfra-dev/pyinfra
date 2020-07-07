@@ -164,12 +164,17 @@ def operation(func=None, pipeline_facts=None):
         # Configure operation
         #
 
+        # Get the meta kwargs (globals that apply to all hosts)
+        op_meta_kwargs = pop_global_op_kwargs(state, kwargs)
+
         # Name the operation
-        names = None
-        autoname = False
+        name = op_meta_kwargs.get('name')
+        if name:
+            names = {name}
 
         # Look for a set as the first argument
-        if len(args) > 0 and isinstance(args[0], set):
+        # TODO: remove this! COMPAT w/<1
+        elif len(args) > 0 and isinstance(args[0], set):
             show_set_name_warning()
             names = args[0]
             args_copy = list(args)
@@ -177,7 +182,6 @@ def operation(func=None, pipeline_facts=None):
 
         # Generate an operation name if needed (Module/Operation format)
         else:
-            autoname = True
             module_bits = func.__module__.split('.')
             module_name = module_bits[-1]
             names = {
@@ -190,15 +194,10 @@ def operation(func=None, pipeline_facts=None):
                 for name in names
             }
 
-        # Get the meta kwargs (globals that apply to all hosts)
-        op_meta_kwargs = pop_global_op_kwargs(state, kwargs)
-
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).
         if state.in_op:
             return func(state, host, *args, **kwargs) or []
-
-        line_number = kwargs.pop('_line_number', frameinfo.lineno)
 
         # Inject the current op file number (only incremented in CLI mode)
         op_lines = [state.current_op_file]
@@ -212,6 +211,7 @@ def operation(func=None, pipeline_facts=None):
             op_lines.extend([state.loop_line, state.loop_counter])
 
         # Add the line number that called this operation
+        line_number = kwargs.pop('_line_number', frameinfo.lineno)
         op_lines.append(line_number)
 
         # Make a hash from the call stack lines
@@ -258,19 +258,18 @@ def operation(func=None, pipeline_facts=None):
         op_meta['names'].update(names)
 
         # Attach normal args, if we're auto-naming this operation
-        if autoname:
-            for arg in args:
-                if isinstance(arg, FunctionType):
-                    arg = arg.__name__
+        for arg in args:
+            if isinstance(arg, FunctionType):
+                arg = arg.__name__
 
-                if arg not in op_meta['args']:
-                    op_meta['args'].append(arg)
+            if arg not in op_meta['args']:
+                op_meta['args'].append(arg)
 
-            # Attach keyword args
-            for key, value in six.iteritems(kwargs):
-                arg = '='.join((str(key), str(value)))
-                if arg not in op_meta['args']:
-                    op_meta['args'].append(arg)
+        # Attach keyword args
+        for key, value in six.iteritems(kwargs):
+            arg = '='.join((str(key), str(value)))
+            if arg not in op_meta['args']:
+                op_meta['args'].append(arg)
 
         # Check if we're actually running the operation on this host
         #
