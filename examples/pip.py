@@ -1,5 +1,5 @@
 from pyinfra import host
-from pyinfra.operations import apk, apt, files, pip, yum
+from pyinfra.operations import apk, apt, files, pip, python, yum
 
 SUDO = True
 
@@ -55,7 +55,13 @@ pip.packages(
     virtualenv='/usr/local/bin/venv',
 )
 
-# show that we can actually run the pyinfra command from that virtualenv
-cmd = '/bin/bash -c "source /usr/local/bin/venv/bin/activate && pyinfra --version"'
-stdout = host.fact.command(cmd)
-print('\n\nstdout:', stdout, '\n\n')
+
+# Show that we can actually run the pyinfra command from that virtualenv
+def run_pyinfra_version(state, host):
+    status, stdout, stderr = host.run_shell_command(
+        'sh -c -c "source /usr/local/bin/venv/bin/activate && pyinfra --version"',
+    )
+    assert status
+    print(stdout)
+
+python.call(run_pyinfra_version)  # noqa: E305
