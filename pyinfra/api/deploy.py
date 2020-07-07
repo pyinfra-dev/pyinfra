@@ -34,7 +34,7 @@ def add_deploy(state, deploy_func, *args, **kwargs):
     if pyinfra.is_cli:
         raise PyinfraError((
             '`add_deploy` should not be called when pyinfra is executing in CLI mode! ({0})'
-        ).format(get_call_location))
+        ).format(get_call_location()))
 
     kwargs['frameinfo'] = get_caller_frameinfo()
 
