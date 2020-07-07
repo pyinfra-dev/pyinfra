@@ -5,7 +5,7 @@ from mock import mock_open, patch
 import pyinfra
 
 from pyinfra import pseudo_host, pseudo_state
-from pyinfra.api import Config, State
+from pyinfra.api import Config, FileUploadCommand, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.operation import add_op
@@ -41,6 +41,7 @@ class TestOperationsApi(PatchSSHTestCase):
             user='pyinfra',
             group='pyinfra',
             mode='644',
+            create_remote_dir=False,
             sudo=True,
             sudo_user='test_sudo',
             su_user='test_su',
@@ -62,9 +63,9 @@ class TestOperationsApi(PatchSSHTestCase):
 
         # Ensure the commands
         assert state.ops[somehost][first_op_hash]['commands'] == [
-            'touch /var/log/pyinfra.log',
-            'chmod 644 /var/log/pyinfra.log',
-            'chown pyinfra:pyinfra /var/log/pyinfra.log',
+            StringCommand('touch /var/log/pyinfra.log'),
+            StringCommand('chmod 644 /var/log/pyinfra.log'),
+            StringCommand('chown pyinfra:pyinfra /var/log/pyinfra.log'),
         ]
 
         # Ensure the meta
@@ -97,7 +98,7 @@ class TestOperationsApi(PatchSSHTestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch('pyinfra.operations.files.path.isfile', lambda *args, **kwargs: True):
+        with patch('pyinfra.operations.files.os_path.isfile', lambda *args, **kwargs: True):
             # Test normal
             add_op(
                 state, files.put,
@@ -139,7 +140,8 @@ class TestOperationsApi(PatchSSHTestCase):
 
         # Ensure first op has the right (upload) command
         assert state.ops[somehost][first_op_hash]['commands'] == [
-            ('upload', 'files/file.txt', '/home/vagrant/file.txt'),
+            StringCommand('mkdir -p /home/vagrant'),
+            FileUploadCommand('files/file.txt', '/home/vagrant/file.txt'),
         ]
 
         # Ensure second op has sudo/sudo_user
