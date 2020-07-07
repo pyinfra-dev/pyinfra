@@ -146,6 +146,7 @@ def put_file(
             '{0}file uploaded to chroot: {1}'.format(
                 host.print_prefix, remote_filename,
             ),
+            err=True,
         )
 
     return status
@@ -197,6 +198,7 @@ def get_file(
             '{0}file downloaded from chroot: {1}'.format(
                 host.print_prefix, remote_filename,
             ),
+            err=True,
         )
 
     return status

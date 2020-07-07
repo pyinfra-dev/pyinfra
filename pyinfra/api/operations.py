@@ -226,7 +226,7 @@ def _run_server_ops(state, host, progress=None):
             ))
 
         if pyinfra.is_cli:
-            click.echo()
+            click.echo(err=True)
 
 
 def _run_serial_ops(state):
@@ -336,7 +336,7 @@ def _run_single_op(state, op_hash):
         state.fail_hosts(failed_hosts)
 
     if pyinfra.is_cli:
-        click.echo()
+        click.echo(err=True)
 
 
 def run_ops(state, serial=False, no_wait=False):

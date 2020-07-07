@@ -267,7 +267,7 @@ def run_shell_command(
     ))
 
     if print_input:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, printable_command))
+        click.echo('{0}>>> {1}'.format(host.print_prefix, printable_command), err=True)
 
     # Run it! Get stdout, stderr & the underlying channel
     stdin_buffer, stdout_buffer, stderr_buffer = host.connection.exec_command(
@@ -367,7 +367,10 @@ def get_file(
         _get_file(host, remote_filename, filename_or_io)
 
     if print_output:
-        click.echo('{0}file downloaded: {1}'.format(host.print_prefix, remote_filename))
+        click.echo(
+            '{0}file downloaded: {1}'.format(host.print_prefix, remote_filename),
+            err=True,
+        )
 
     return True
 
@@ -424,7 +427,10 @@ def put_file(
         _put_file(host, filename_or_io, remote_filename)
 
     if print_output:
-        click.echo('{0}file uploaded: {1}'.format(host.print_prefix, remote_filename))
+        click.echo(
+            '{0}file uploaded: {1}'.format(host.print_prefix, remote_filename),
+            err=True,
+        )
 
     return True
 

@@ -149,7 +149,7 @@ def put_file(
     if print_output:
         click.echo('{0}file uploaded to container: {1}'.format(
             host.print_prefix, remote_filename,
-        ))
+        ), err=True)
 
     return status
 
@@ -198,7 +198,7 @@ def get_file(
     if print_output:
         click.echo('{0}file downloaded from container: {1}'.format(
             host.print_prefix, remote_filename,
-        ))
+        ), err=True)
 
     return status
 
