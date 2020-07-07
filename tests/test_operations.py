@@ -90,17 +90,15 @@ def make_operation_tests(arg):
                     ]
 
                 elif isinstance(command, FileUploadCommand):
-                    if hasattr(command.source_filename_or_io, 'read'):
-                        command.source_filename_or_io.seek(0)
-                        data = command.source_filename_or_io.read()
+                    if hasattr(command.src, 'read'):
+                        command.src.seek(0)
+                        data = command.src.read()
                     else:
-                        data = command.source_filename_or_io
-                    json_command = ['upload', data, command.remote_filename]
+                        data = command.src
+                    json_command = ['upload', data, command.dest]
 
                 elif isinstance(command, FileDownloadCommand):
-                    json_command = [
-                        'download', command.remote_filename, command.source_filename_or_io,
-                    ]
+                    json_command = ['download', command.src, command.dest]
 
                 else:
                     raise Exception('{0} is not a valid command!'.format(command))
