@@ -20,6 +20,11 @@ class PyinfraCommand(object):
             if key in kwargs
         }
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__) and repr(self) == repr(other):
+            return True
+        return False
+
 
 class StringCommand(PyinfraCommand):
     def __init__(self, *bits, **kwargs):
@@ -67,12 +72,18 @@ class FileUploadCommand(PyinfraCommand):
         self.src = src
         self.dest = dest
 
+    def __repr__(self):
+        return 'FileUploadCommand({0}, {1})'.format(self.src, self.dest)
+
 
 class FileDownloadCommand(PyinfraCommand):
     def __init__(self, src, dest, **kwargs):
         super(FileDownloadCommand, self).__init__(**kwargs)
         self.src = src
         self.dest = dest
+
+    def __repr__(self):
+        return 'FileDownloadCommand({0}, {1})'.format(self.src, self.dest)
 
 
 class FunctionCommand(PyinfraCommand):
@@ -81,3 +92,6 @@ class FunctionCommand(PyinfraCommand):
         self.function = function
         self.args = args
         self.kwargs = func_kwargs
+
+    def __repr__(self):
+        return 'FunctionCommand({0})'.format(self.function.__name__)
