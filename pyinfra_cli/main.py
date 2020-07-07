@@ -64,7 +64,7 @@ def _print_facts(ctx, param, value):
     if not value:
         return
 
-    click.echo('--> Available facts:')
+    click.echo('--> Available facts:', err=True)
     print_facts_list()
     ctx.exit()
 
@@ -73,7 +73,7 @@ def _print_operations(ctx, param, value):
     if not value:
         return
 
-    click.echo('--> Available operations:')
+    click.echo('--> Available operations:', err=True)
     print_operations_list()
     ctx.exit()
 
@@ -82,7 +82,7 @@ def _print_support(ctx, param, value):
     if not value:
         return
 
-    click.echo('--> Support information:')
+    click.echo('--> Support information:', err=True)
     print_support_info()
     ctx.exit()
 
@@ -326,7 +326,7 @@ def _main(
     state.print_fact_input = print_fact_io  # -vv
 
     if not quiet:
-        click.echo('--> Loading config...')
+        click.echo('--> Loading config...', err=True)
 
     # Load up any config.py from the filesystem
     config = load_config(deploy_dir)
@@ -422,7 +422,7 @@ def _main(
         config.FAIL_PERCENT = fail_percent
 
     if not quiet:
-        click.echo('--> Loading inventory...')
+        click.echo('--> Loading inventory...', err=True)
 
     # Load up the inventory from the filesystem
     inventory, inventory_group = make_inventory(
@@ -483,8 +483,8 @@ def _main(
 
     # Connect to all the servers
     if not quiet:
-        click.echo()
-        click.echo('--> Connecting to hosts...')
+        click.echo(err=True)
+        click.echo('--> Connecting to hosts...', err=True)
     connect_all(state)
 
     # Run the before_connect hook if provided
@@ -495,8 +495,8 @@ def _main(
 
     if command == 'fact':
         if not quiet:
-            click.echo()
-            click.echo('--> Gathering facts...')
+            click.echo(err=True)
+            click.echo('--> Gathering facts...', err=True)
 
         # Print facts as we get them
         state.print_fact_info = True
@@ -535,8 +535,8 @@ def _main(
     # Deploy files(s)
     elif command == 'deploy':
         if not quiet:
-            click.echo()
-            click.echo('--> Preparing operations...')
+            click.echo(err=True)
+            click.echo('--> Preparing operations...', err=True)
 
         # Number of "steps" to make = number of files * number of hosts
         for i, filename in enumerate(operations):
@@ -547,8 +547,8 @@ def _main(
     # Operation w/optional args
     elif command == 'op':
         if not quiet:
-            click.echo()
-            click.echo('--> Preparing operation...')
+            click.echo(err=True)
+            click.echo('--> Preparing operation...', err=True)
 
         op, args = operations
         args, kwargs = args
@@ -558,8 +558,8 @@ def _main(
 
     # Always show meta output
     if not quiet:
-        click.echo()
-        click.echo('--> Proposed changes:')
+        click.echo(err=True)
+        click.echo('--> Proposed changes:', err=True)
     print_meta(state)
 
     # If --debug-facts or --debug-operations, print and exit
@@ -577,20 +577,20 @@ def _main(
         _exit()
 
     if not quiet:
-        click.echo()
+        click.echo(err=True)
 
     # Run the before_deploy hook if provided
     run_hook(state, 'before_deploy', hook_data)
 
     if not quiet:
-        click.echo('--> Beginning operation run...')
+        click.echo('--> Beginning operation run...', err=True)
     run_ops(state, serial=serial, no_wait=no_wait)
 
     # Run the after_deploy hook if provided
     run_hook(state, 'after_deploy', hook_data)
 
     if not quiet:
-        click.echo('--> Results:')
+        click.echo('--> Results:', err=True)
     print_results(state)
 
     _exit()

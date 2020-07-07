@@ -87,7 +87,7 @@ def shell(commands, splitlines=False, ignore_errors=False):
         print_prefix = 'localhost: '
 
         if print_input:
-            click.echo('{0}>>> {1}'.format(print_prefix, command))
+            click.echo('{0}>>> {1}'.format(print_prefix, command), err=True)
 
         return_code, combined_output = run_local_process(
             command,

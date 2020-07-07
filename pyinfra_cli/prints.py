@@ -1,4 +1,4 @@
-from __future__ import print_function, unicode_literals
+from __future__ import unicode_literals
 
 import json
 import platform
@@ -51,22 +51,22 @@ def jsonify(data, *args, **kwargs):
 
 
 def print_state_facts(state):
-    click.echo()
-    click.echo('--> Facts:')
-    click.echo(jsonify(state.facts, indent=4, default=json_encode))
+    click.echo(err=True)
+    click.echo('--> Facts:', err=True)
+    click.echo(jsonify(state.facts, indent=4, default=json_encode), err=True)
 
 
 def print_state_operations(state):
-    click.echo()
-    click.echo('--> Operations:')
-    click.echo(jsonify(state.ops, indent=4, default=json_encode))
-    click.echo()
-    click.echo('--> Operation meta:')
-    click.echo(jsonify(state.op_meta, indent=4, default=json_encode))
+    click.echo(err=True)
+    click.echo('--> Operations:', err=True)
+    click.echo(jsonify(state.ops, indent=4, default=json_encode), err=True)
+    click.echo(err=True)
+    click.echo('--> Operation meta:', err=True)
+    click.echo(jsonify(state.op_meta, indent=4, default=json_encode), err=True)
 
-    click.echo()
-    click.echo('--> Operation order:')
-    click.echo()
+    click.echo(err=True)
+    click.echo('--> Operation order:', err=True)
+    click.echo(err=True)
     for op_hash in state.get_op_order():
         meta = state.op_meta[op_hash]
         hosts = set(
@@ -76,7 +76,7 @@ def print_state_operations(state):
 
         click.echo('    {0} (names={1}, hosts={2})'.format(
             op_hash, meta['names'], hosts,
-        ))
+        ), err=True)
 
 
 def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
@@ -92,7 +92,7 @@ def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
             click.echo('    {0}'.format(', '.join((
                 click.style(name, bold=True)
                 for name in items
-            ))))
+            ))), err=True)
 
             items = [name]
 
@@ -102,7 +102,7 @@ def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
         click.echo('    {0}'.format(', '.join((
             click.style(name, bold=True)
             for name in items
-        ))))
+        ))), err=True)
 
 
 def print_facts_list():
@@ -119,7 +119,7 @@ def print_operations_list():
 
 
 def print_fact(fact_data):
-    click.echo(jsonify(fact_data, indent=4, default=json_encode))
+    click.echo(jsonify(fact_data, indent=4, default=json_encode), err=True)
 
 
 def print_inventory(state):
@@ -127,19 +127,19 @@ def print_inventory(state):
         if not state.is_host_in_limit(host):
             continue
 
-        click.echo()
-        click.echo(host.print_prefix)
-        click.echo('--> Groups: {0}'.format(', '.join(host.groups)))
-        click.echo('--> Data:')
-        click.echo(jsonify(host.data, indent=4, default=json_encode))
+        click.echo(err=True)
+        click.echo(host.print_prefix, err=True)
+        click.echo('--> Groups: {0}'.format(', '.join(host.groups)), err=True)
+        click.echo('--> Data:', err=True)
+        click.echo(jsonify(host.data, indent=4, default=json_encode), err=True)
 
 
 def print_facts(facts):
     for name, data in six.iteritems(facts):
-        click.echo()
+        click.echo(err=True)
         click.echo('--> Fact data for: {0}'.format(
             click.style(name, bold=True),
-        ))
+        ), err=True)
         print_fact(data)
 
 
@@ -150,17 +150,17 @@ def print_support_info():
     When adding an issue, be sure to include the following:
 ''')
 
-    click.echo('    System: {0}'.format(platform.system()))
-    click.echo('      Platform: {0}'.format(platform.platform()))
-    click.echo('      Release: {0}'.format(platform.uname()[2]))
-    click.echo('      Machine: {0}'.format(platform.uname()[4]))
-    click.echo('    pyinfra: v{0}'.format(__version__))
-    click.echo('    Executable: {0}'.format(sys.argv[0]))
+    click.echo('    System: {0}'.format(platform.system()), err=True)
+    click.echo('      Platform: {0}'.format(platform.platform()), err=True)
+    click.echo('      Release: {0}'.format(platform.uname()[2]), err=True)
+    click.echo('      Machine: {0}'.format(platform.uname()[4]), err=True)
+    click.echo('    pyinfra: v{0}'.format(__version__), err=True)
+    click.echo('    Executable: {0}'.format(sys.argv[0]), err=True)
     click.echo('    Python: {0} ({1}, {2})'.format(
         platform.python_version(),
         platform.python_implementation(),
         platform.python_compiler(),
-    ))
+    ), err=True)
 
 
 def print_rows(rows):

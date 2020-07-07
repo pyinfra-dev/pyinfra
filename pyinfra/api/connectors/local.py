@@ -73,7 +73,7 @@ def run_shell_command(
     logger.debug('--> Running command on localhost: {0}'.format(printable_command))
 
     if print_input:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, printable_command))
+        click.echo('{0}>>> {1}'.format(host.print_prefix, printable_command), err=True)
 
     return_code, combined_output = run_local_process(
         actual_command,
@@ -132,7 +132,10 @@ def put_file(
         os.remove(temp_filename)
 
     if print_output:
-        click.echo('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
+        click.echo(
+            '{0}file copied: {1}'.format(host.print_prefix, remote_filename),
+            err=True,
+        )
 
     return status
 
@@ -174,7 +177,10 @@ def get_file(
         os.remove(temp_filename)
 
     if print_output:
-        click.echo('{0}file copied: {1}'.format(host.print_prefix, remote_filename))
+        click.echo(
+            '{0}file copied: {1}'.format(host.print_prefix, remote_filename),
+            err=True,
+        )
 
     return True
 

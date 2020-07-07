@@ -12,24 +12,12 @@ STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
 
 
 class LogHandler(logging.Handler):
-    def __init__(self, use_stderr=False):
-        super(LogHandler, self).__init__()
-        self._use_stderr = use_stderr
-
     def emit(self, record):
         try:
             message = self.format(record)
-            click.echo(message, err=self._use_stderr)
+            click.echo(message, err=True)
         except Exception:
             self.handleError(record)
-
-
-class LogFilter(logging.Filter):
-    def __init__(self, *levels):
-        self.levels = levels
-
-    def filter(self, record):
-        return record.levelno in self.levels
 
 
 class LogFormatter(logging.Formatter):
@@ -71,25 +59,8 @@ class LogFormatter(logging.Formatter):
 
 
 def setup_logging(log_level):
-    # Set the log level
     logger.setLevel(log_level)
-
-    # Setup a new handler for stdout & stderr
-    stdout_handler = LogHandler()
-    stderr_handler = LogHandler(use_stderr=True)
-
-    # Setup filters to push different levels to different streams
-    stdout_filter = LogFilter(*STDOUT_LOG_LEVELS)
-    stdout_handler.addFilter(stdout_filter)
-
-    stderr_filter = LogFilter(*STDERR_LOG_LEVELS)
-    stderr_handler.addFilter(stderr_filter)
-
-    # Setup a formatter
+    handler = LogHandler()
     formatter = LogFormatter()
-    stdout_handler.setFormatter(formatter)
-    stderr_handler.setFormatter(formatter)
-
-    # Add the handlers
-    logger.addHandler(stdout_handler)
-    logger.addHandler(stderr_handler)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
