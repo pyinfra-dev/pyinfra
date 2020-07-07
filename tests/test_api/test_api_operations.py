@@ -281,26 +281,30 @@ class TestOperationFailures(PatchSSHTestCase):
 
 
 class TestOperationOrdering(PatchSSHTestCase):
-    def test_op_line_numbers(self):
+    # In CLI mode, pyinfra uses *line numbers* to order operations as defined by
+    # the user. This makes reasoning about user-written deploys simple and easy
+    # to understand.
+    def test_cli_op_line_numbers(self):
         inventory = make_inventory()
         state = State(inventory, Config())
         connect_all(state)
 
-        # Add op to both hosts
-        add_op(state, server.shell, 'echo "hi"')
-
         pyinfra.is_cli = True
+        pseudo_state.set(state)
+
+        # Add op to both hosts
+        for name in ('anotherhost', 'somehost'):
+            pseudo_host.set(inventory.get_host(name))
+            server.shell('echo hi')  # note this is called twice but on *the same line*
 
         # Add op to just the second host - using the pseudo modules such that
         # it replicates a deploy file.
-        pseudo_state.set(state)
         pseudo_host.set(inventory.get_host('anotherhost'))
         first_pseudo_hash = server.user('anotherhost_user').hash
         first_pseudo_call_line = getframeinfo(currentframe()).lineno - 1
 
         # Add op to just the first host - using the pseudo modules such that
         # it replicates a deploy file.
-        pseudo_state.set(state)
         pseudo_host.set(inventory.get_host('somehost'))
         second_pseudo_hash = server.user('somehost_user').hash
         second_pseudo_call_line = getframeinfo(currentframe()).lineno - 1
@@ -325,3 +329,24 @@ class TestOperationOrdering(PatchSSHTestCase):
         # Ensure somehost has two ops and anotherhost only has the one
         assert len(state.ops[inventory.get_host('somehost')]) == 2
         assert len(state.ops[inventory.get_host('anotherhost')]) == 2
+
+    # In API mode, pyinfra *overrides* the line numbers such that whenever an
+    # operation or deploy is added it is simply appended. This makes sense as
+    # the user writing the API calls has full control over execution order.
+    def test_api_op_line_numbers(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+
+        another_host = inventory.get_host('anotherhost')
+
+        def add_another_op():
+            return add_op(state, server.shell, 'echo second-op')[another_host].hash
+
+        first_op_hash = add_op(state, server.shell, 'echo first-op')[another_host].hash
+        second_op_hash = add_another_op()  # note `add_op` will be called on an earlier line
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 2
+
+        assert op_order[0] == first_op_hash
+        assert op_order[1] == second_op_hash
