@@ -60,7 +60,7 @@ operation_kwargs = {
     },
     'success_exit_codes': {
         'description': 'List of exit codes to consider a success',
-        'default': [0],
+        'default': lambda config: [0],
     },
     'timeout': 'Timeout for *each* command executed during the operation.',
     'get_pty': 'Whether to get a pseudoTTY when executing any commands.',
@@ -124,7 +124,7 @@ def pop_global_op_kwargs(state, kwargs):
             if isinstance(config, dict):
                 handler = config.get('handler')
                 default = config.get('default')
-                if default and callable(default):
+                if default:
                     default = default(state.config)
 
             value = get_kwarg(key, default=default)
