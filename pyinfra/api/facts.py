@@ -191,7 +191,8 @@ def get_facts(state, name, args=None, ensure_hosts=None):
                 command = command(*host_args)
 
             greenlet = state.fact_pool.spawn(
-                host.run_shell_command, state, command,
+                host.run_shell_command,
+                command,
                 sudo=sudo,
                 sudo_user=sudo_user,
                 use_sudo_password=use_sudo_password,
