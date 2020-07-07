@@ -43,6 +43,9 @@ def generate_env(config, value):
 
 
 operation_kwargs = {
+    'name': {
+        'description': 'Name of the operation',
+    },
     'shell_executable': {
         'description': 'The shell to use. Defaults to ``sh`` (Unix) or ``cmd`` (Windows).',
         'default': lambda config: config.SHELL,
@@ -94,6 +97,7 @@ def get_executor_kwarg_keys():
     keys.update(auth_kwargs.keys())
     keys.update(operation_kwargs.keys())
     keys.remove('ignore_errors')
+    keys.remove('name')
     return list(keys)
 
 
