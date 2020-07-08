@@ -23,7 +23,6 @@ import six
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.util import FallbackDict
-from pyinfra.hook import HOOKS
 
 from .exceptions import CliError
 
@@ -53,20 +52,6 @@ def exec_file(filename, return_locals=False, is_deploy_code=False):
     exec(PYTHON_CODES[filename], data)
 
     return data
-
-
-def run_hook(state, hook_name, hook_data):
-    hooks = HOOKS[hook_name]
-
-    if hooks:
-        for hook in hooks:
-            click.echo('--> Running hook: {0}/{1}'.format(
-                hook_name,
-                click.style(hook.__name__, bold=True),
-            ))
-            hook(hook_data, state)
-
-        click.echo()
 
 
 def json_encode(obj):

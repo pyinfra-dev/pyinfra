@@ -27,7 +27,6 @@ from pyinfra.api.facts import (
 )
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
-from pyinfra.api.util import FallbackDict
 from pyinfra.operations import server
 
 from .config import load_config, load_deploy_config
@@ -48,7 +47,6 @@ from .prints import (
 from .util import (
     get_operation_and_args,
     load_deploy_file,
-    run_hook,
 )
 from .virtualenv import init_virtualenv
 
@@ -471,24 +469,11 @@ def _main(
     # Set the deploy directory
     state.deploy_dir = deploy_dir
 
-    # Setup the data to be passed to config hooks
-    hook_data = FallbackDict(
-        state.inventory.get_override_data(),
-        state.inventory.get_group_data(inventory_group),
-        state.inventory.get_data(),
-    )
-
-    # Run the before_connect hook if provided
-    run_hook(state, 'before_connect', hook_data)
-
     # Connect to all the servers
     if not quiet:
         click.echo(err=True)
         click.echo('--> Connecting to hosts...', err=True)
     connect_all(state)
-
-    # Run the before_connect hook if provided
-    run_hook(state, 'before_facts', hook_data)
 
     # Just getting a fact?
     #
@@ -579,15 +564,9 @@ def _main(
     if not quiet:
         click.echo(err=True)
 
-    # Run the before_deploy hook if provided
-    run_hook(state, 'before_deploy', hook_data)
-
     if not quiet:
         click.echo('--> Beginning operation run...', err=True)
     run_ops(state, serial=serial, no_wait=no_wait)
-
-    # Run the after_deploy hook if provided
-    run_hook(state, 'after_deploy', hook_data)
 
     if not quiet:
         click.echo('--> Results:', err=True)
