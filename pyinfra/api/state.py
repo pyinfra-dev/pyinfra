@@ -224,6 +224,15 @@ class State(object):
 
         self.initialised = True
 
+    def to_dict(self):
+        return {
+            'op_order': self.get_op_order(),
+            'ops': self.ops,
+            'facts': self.facts,
+            'meta': self.meta,
+            'results': self.results,
+        }
+
     @contextmanager
     def deploy(self, name, kwargs, data, line_number, in_deploy=True):
         '''
