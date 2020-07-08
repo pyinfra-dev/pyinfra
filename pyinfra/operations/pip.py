@@ -124,7 +124,7 @@ def packages(
         yield ensure_packages(
             packages, current_packages, present,
             install_command='{0} install'.format(pip),
-            uninstall_command='{0} uninstall'.format(pip),
+            uninstall_command='{0} uninstall --yes'.format(pip),
             upgrade_command='{0} install --upgrade'.format(pip),
             version_join='==',
             latest=latest,
