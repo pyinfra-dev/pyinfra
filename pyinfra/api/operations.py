@@ -71,7 +71,7 @@ def _run_server_op(state, host, op_hash):
                     *command.args, **command.kwargs
                 )
             except Exception as e:  # Custom functions could do anything, so expect anything!
-                logger.debug(traceback.format_exc())
+                logger.warning(traceback.format_exc())
                 logger.error('{0}{1}'.format(
                     host.print_prefix,
                     click.style(
