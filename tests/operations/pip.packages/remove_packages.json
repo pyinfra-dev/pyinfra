@@ -13,6 +13,6 @@
         }
     },
     "commands": [
-        "pip uninstall pyinfra test==1.1"
+        "pip uninstall --yes pyinfra test==1.1"
     ]
 }
