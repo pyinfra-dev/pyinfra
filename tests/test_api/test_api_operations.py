@@ -1,4 +1,5 @@
 from inspect import currentframe, getframeinfo
+from unittest import TestCase
 
 from mock import mock_open, patch
 
@@ -17,7 +18,7 @@ from ..paramiko_util import (
     FakeChannel,
     PatchSSHTestCase,
 )
-from ..util import make_inventory
+from ..util import FakeState, make_inventory
 
 
 class TestOperationsApi(PatchSSHTestCase):
@@ -256,13 +257,13 @@ class TestOperationFailures(PatchSSHTestCase):
             # This should run OK
             run_ops(state)
 
-            somehost = inventory.get_host('somehost')
+        somehost = inventory.get_host('somehost')
 
-            # Ensure the op was added to results
-            assert state.results[somehost]['ops'] == 1
-            assert state.results[somehost]['error_ops'] == 1
-            # But not as a success
-            assert state.results[somehost]['success_ops'] == 0
+        # Ensure the op was added to results
+        assert state.results[somehost]['ops'] == 1
+        assert state.results[somehost]['error_ops'] == 1
+        # But not as a success
+        assert state.results[somehost]['success_ops'] == 0
 
     def test_no_invalid_op_call(self):
         inventory = make_inventory()
@@ -350,3 +351,62 @@ class TestOperationOrdering(PatchSSHTestCase):
 
         assert op_order[0] == first_op_hash
         assert op_order[1] == second_op_hash
+
+
+class TestOperationExceptions(TestCase):
+    def test_add_op_rejects_cli(self):
+        pyinfra.is_cli = True
+
+        with self.assertRaises(PyinfraError) as context:
+            add_op(None, server.shell)
+
+        pyinfra.is_cli = False
+
+        assert context.exception.args[0] == (
+            '`add_op` should not be called when pyinfra is executing in CLI mode! '
+            '(line 361 in tests/test_api/test_api_operations.py)'
+        )
+
+    def test_op_call_rejects_no_cli(self):
+        with self.assertRaises(PyinfraError) as context:
+            server.shell()
+
+        assert context.exception.args[0] == (
+            'API operation called without state/host: '
+            'server.shell (line 372 in tests/test_api/test_api_operations.py)'
+        )
+
+    def test_op_call_rejects_in_op(self):
+        state = FakeState()
+
+        pyinfra.is_cli = True
+        pseudo_state.set(state)
+
+        with self.assertRaises(PyinfraError) as context:
+            server.shell()
+
+        pyinfra.is_cli = False
+        pseudo_state.reset()
+
+        assert context.exception.args[0] == (
+            'Nested operation called without state/host: '
+            'server.shell (line 386 in tests/test_api/test_api_operations.py)'
+        )
+
+    def test_op_call_rejects_in_deploy(self):
+        state = FakeState()
+        state.in_op = False
+
+        pyinfra.is_cli = True
+        pseudo_state.set(state)
+
+        with self.assertRaises(PyinfraError) as context:
+            server.shell()
+
+        pyinfra.is_cli = False
+        pseudo_state.reset()
+
+        assert context.exception.args[0] == (
+            'Nested deploy operation called without state/host: '
+            'server.shell (line 404 in tests/test_api/test_api_operations.py)'
+        )

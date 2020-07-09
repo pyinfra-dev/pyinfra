@@ -32,6 +32,7 @@ class FakeState(object):
     active = True
     deploy_dir = '/'
     in_op = True
+    in_deploy = True
     pipelining = False
     deploy_name = None
     deploy_kwargs = None
