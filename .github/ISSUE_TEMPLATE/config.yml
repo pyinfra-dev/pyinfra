@@ -1,5 +1,10 @@
 blank_issues_enabled: true
+
 contact_links:
 - name: 📖 Documentation
   url: https://docs.pyinfra.com
   about: View the pyinfra documentation.
+
+- name: 💬 Ask Questions on the pyinfra Reddit
+  url: https://reddit.com/r/pyinfra
+  about: Please ask and answer usage questions here.
