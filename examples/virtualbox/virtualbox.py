@@ -20,19 +20,19 @@ if host.fact.linux_name == 'Ubuntu':
     print(host.fact.linux_name, code_name)
 
     apt.packages(
-        {'Install packages'},
-        ['wget'],
+        name='Install packages',
+        packages=['wget'],
         update=True,
     )
 
     apt.key(
-        {'Install VirtualBox key'},
-        'https://www.virtualbox.org/download/oracle_vbox_2016.asc',
+        name='Install VirtualBox key',
+        src='https://www.virtualbox.org/download/oracle_vbox_2016.asc',
     )
 
     apt.repo(
-        {'Install VirtualBox repo'},
-        'deb https://download.virtualbox.org/virtualbox/debian {} contrib'.format(code_name),
+        name='Install VirtualBox repo',
+        src='deb https://download.virtualbox.org/virtualbox/debian {} contrib'.format(code_name),
     )
 
     # install kernel headers
@@ -50,12 +50,12 @@ if host.fact.linux_name == 'Ubuntu':
     )
 
     server.shell(
-        {'Run vboxconfig which will stop/start VirtualBox services and build kernel modules'},
-        '/sbin/vboxconfig',
+        name='Run vboxconfig which will stop/start VirtualBox services and build kernel modules',
+        commands='/sbin/vboxconfig',
     )
 
     python.call(
-        {'Verify VirtualBox version'},
-        verify_virtualbox_version,
+        name='Verify VirtualBox version',
+        function=verify_virtualbox_version,
         version=virtualbox_version,
     )

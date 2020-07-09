@@ -5,31 +5,31 @@ SUDO = True
 
 if host.fact.linux_name in ['CentOS', 'RedHat']:
     yum.packages(
-        {'Install some packages'},
-        ['cronie'],
+        name='Install some packages',
+        packages=['cron'],
         update=True,
     )
 
 if host.fact.linux_name in ['Ubuntu']:
     apt.packages(
-        {'Install some packages'},
-        ['cron'],
+        name='Install some packages',
+        packages=['cron'],
         update=True,
     )
 
 # simple example for a crontab
 server.crontab(
-    {'Backup /etc weekly'},
-    '/bin/tar cf /tmp/etc_bup.tar /etc',
-    name='backup_etc',
+    name='Backup /etc weekly',
+    command='/bin/tar cf /tmp/etc_bup.tar /etc',
+    cron_name='backup_etc',
     day_of_week=0,
     hour=1,
     minute=0,
 )
 
 server.group(
-    {'Create docker group'},
-    'docker',
+    name='Create docker group',
+    group='docker',
 )
 
 # if we are not running inside a docker container
@@ -37,67 +37,67 @@ if not host.fact.file('/.dockerenv'):
 
     # Cannot change hostname if running in a docker container
     server.hostname(
-        {'Set the hostname'},
-        'server1.example.com',
+        name='Set the hostname',
+        hostname='server1.example.com',
     )
 
     # Cannot change value on read-only filesystem
     # use "/sbin/sysctl -a | grep file-max" to check value
     server.sysctl(
-        {'Change the fs.file-max value'},
-        'fs.file-max',
-        '100000',
+        name='Change the fs.file-max value',
+        key='fs.file-max',
+        value='100000',
         persist=True,
     )
 
     if host.fact.linux_name in ['CentOS', 'RedHat']:
         server.modprobe(
-            {'Silly example for modprobe'},
-            'floppy',
+            name='Silly example for modprobe',
+            modprobe='floppy',
         )
 
 server.user(
-    {'Ensure user is removed'},
-    'kevin',
+    name='Ensure user is removed',
+    user='kevin',
     present=False,
 )
 
 # multiple users
 for user in ['kevin', 'bob']:
     server.user(
-        {'Ensure user {} is removed'.format(user)},
-        user,
+        name='Ensure user {} is removed'.format(user),
+        user=user,
         present=False,
     )
 
 server.group(
-    {'Create uberadmin group'},
-    'uberadmin',
+    name='Create uberadmin group',
+    group='uberadmin',
 )
 
 # multiple groups
 for group in ['wheel', 'lusers']:
     server.group(
-        {'Create the group {}'.format(group)},
-        group,
+        name='Create the group {}'.format(group),
+        group=group,
     )
 
 # To see output need to run pyinfra with '-v'
 server.script(
-    {'Hello'},
-    'files/hello.bash',
+    name='Hello',
+    src='files/hello.bash',
 )
 
 # To see output need to run pyinfra with '-v'
 some_var = 'blah blah blah '
 server.script_template(
-    {'Hello from script'},
-    'templates/hello2.bash.j2',
+    name='Hello from script',
+    src='templates/hello2.bash.j2',
     some_var=some_var,
 )
 
 # To see output need to run pyinfra with '-v'
 server.shell(
-    {'Say Hello'},
-    'echo Hello',
+    name='Say Hello',
+    commands='echo Hello',
 )

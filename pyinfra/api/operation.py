@@ -8,8 +8,6 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 from __future__ import unicode_literals
 
 from functools import wraps
-from inspect import getframeinfo, stack
-from os import path
 from types import FunctionType
 
 import six
@@ -19,14 +17,17 @@ import pyinfra
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.pseudo_modules import PseudoModule
 
+from .command import StringCommand
 from .exceptions import PyinfraError
 from .host import Host
 from .operation_kwargs import pop_global_op_kwargs
 from .state import State
 from .util import (
     get_arg_value,
+    get_call_location,
     get_caller_frameinfo,
     make_hash,
+    memoize,
     unroll_generators,
 )
 
@@ -70,50 +71,33 @@ def add_op(state, op_func, *args, **kwargs):
         args/kwargs: passed to the operation function
     '''
 
-    frameinfo = get_caller_frameinfo()
-    kwargs['frameinfo'] = frameinfo
+    allow_cli_mode = kwargs.pop('_allow_cli_mode', False)
+
+    if pyinfra.is_cli and not allow_cli_mode:
+        raise PyinfraError((
+            '`add_op` should not be called when pyinfra is executing in CLI mode! ({0})'
+        ).format(get_call_location()))
+
+    kwargs['frameinfo'] = get_caller_frameinfo()
+
+    # This ensures that every time an operation is added (API mode), it is simply
+    # appended to the operation order.
+    kwargs['_line_number'] = len(state.op_meta)
+
+    results = {}
 
     for host in state.inventory:
-        op_func(state, host, *args, **kwargs)
+        results[host] = op_func(state, host, *args, **kwargs)
+
+    return results
 
 
-def add_limited_op(state, op_func, hosts, *args, **kwargs):
-    '''
-    DEPRECATED: please use ``add_op`` with the ``hosts`` kwarg.
-    '''
-
-    # COMPAT w/ <0.4
-    # TODO: remove this function
-
+@memoize
+def show_set_name_warning():
     logger.warning((
-        'Use of `add_limited_op` is deprecated, '
-        'please use `add_op` with the `hosts` kwarg instead.'
+        'Use of a set to name operations is deprecated, '
+        'please us the `name` argument.'
     ))
-
-    if not isinstance(hosts, (list, tuple)):
-        hosts = [hosts]
-
-    # Set the limit
-    state.limit_hosts = hosts
-
-    # Add the op
-    add_op(state, op_func, *args, **kwargs)
-
-    # Remove the limit
-    state.limit_hosts = []
-
-
-def _get_call_location():
-    frames = stack()
-
-    # First two frames are this and the caller below, so get the third item on
-    # the frame list, which should be the call to the actual operation.
-    frame = getframeinfo(frames[2][0])
-
-    return 'line {0} in {1}'.format(
-        frame.lineno,
-        path.relpath(frame.filename),
-    )
 
 
 def operation(func=None, pipeline_facts=None):
@@ -152,7 +136,7 @@ def operation(func=None, pipeline_facts=None):
             if not pyinfra.is_cli:
                 raise PyinfraError((
                     'API operation called without state/host: {0} ({1})'
-                ).format(op_name, _get_call_location()))
+                ).format(op_name, get_call_location()))
 
             state = pseudo_state._module
             host = pseudo_host._module
@@ -160,14 +144,14 @@ def operation(func=None, pipeline_facts=None):
             if state.in_op:
                 raise PyinfraError((
                     'Nested operation called without state/host: {0} ({1})'
-                ).format(op_name, _get_call_location()))
+                ).format(op_name, get_call_location()))
 
             if state.in_deploy:
                 raise PyinfraError((
                     'Nested deploy operation called without state/host: {0} ({1})'
-                ).format(op_name, _get_call_location()))
+                ).format(op_name, get_call_location()))
 
-        # Otherwise (API mode) we just trim off the commands
+        # Otherwise (API, nested op, @deploy op) we just trim off the commands
         else:
             args_copy = list(args)
             state, host = args[0], args[1]
@@ -180,19 +164,24 @@ def operation(func=None, pipeline_facts=None):
         # Configure operation
         #
 
+        # Get the meta kwargs (globals that apply to all hosts)
+        op_meta_kwargs = pop_global_op_kwargs(state, kwargs)
+
         # Name the operation
-        names = None
-        autoname = False
+        name = op_meta_kwargs.get('name')
+        if name:
+            names = {name}
 
         # Look for a set as the first argument
-        if len(args) > 0 and isinstance(args[0], set):
+        # TODO: remove this! COMPAT w/<1
+        elif len(args) > 0 and isinstance(args[0], set):
+            show_set_name_warning()
             names = args[0]
             args_copy = list(args)
             args = args[1:]
 
         # Generate an operation name if needed (Module/Operation format)
         else:
-            autoname = True
             module_bits = func.__module__.split('.')
             module_name = module_bits[-1]
             names = {
@@ -205,15 +194,10 @@ def operation(func=None, pipeline_facts=None):
                 for name in names
             }
 
-        # Get the meta kwargs (globals that apply to all hosts)
-        op_meta_kwargs = pop_global_op_kwargs(state, kwargs)
-
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).
         if state.in_op:
             return func(state, host, *args, **kwargs) or []
-
-        line_number = frameinfo.lineno
 
         # Inject the current op file number (only incremented in CLI mode)
         op_lines = [state.current_op_file]
@@ -227,6 +211,7 @@ def operation(func=None, pipeline_facts=None):
             op_lines.extend([state.loop_line, state.loop_counter])
 
         # Add the line number that called this operation
+        line_number = kwargs.pop('_line_number', frameinfo.lineno)
         op_lines.append(line_number)
 
         # Make a hash from the call stack lines
@@ -249,10 +234,11 @@ def operation(func=None, pipeline_facts=None):
             op_lines.append(duplicate_op_count)
 
         op_lines = tuple(op_lines)
-        state.op_line_numbers_to_hash[op_lines] = op_hash
+
         logger.debug('Adding operation, {0}, called @ {1}:{2}, opLines={3}, opHash={4}'.format(
             names, frameinfo.filename, line_number, op_lines, op_hash,
         ))
+        state.op_line_numbers_to_hash[op_lines] = op_hash
 
         # Ensure shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(op_hash, {
@@ -272,19 +258,18 @@ def operation(func=None, pipeline_facts=None):
         op_meta['names'].update(names)
 
         # Attach normal args, if we're auto-naming this operation
-        if autoname:
-            for arg in args:
-                if isinstance(arg, FunctionType):
-                    arg = arg.__name__
+        for arg in args:
+            if isinstance(arg, FunctionType):
+                arg = arg.__name__
 
-                if arg not in op_meta['args']:
-                    op_meta['args'].append(arg)
+            if arg not in op_meta['args']:
+                op_meta['args'].append(arg)
 
-            # Attach keyword args
-            for key, value in six.iteritems(kwargs):
-                arg = '='.join((str(key), str(value)))
-                if arg not in op_meta['args']:
-                    op_meta['args'].append(arg)
+        # Attach keyword args
+        for key, value in six.iteritems(kwargs):
+            arg = '='.join((str(key), str(value)))
+            if arg not in op_meta['args']:
+                op_meta['args'].append(arg)
 
         # Check if we're actually running the operation on this host
         #
@@ -299,24 +284,6 @@ def operation(func=None, pipeline_facts=None):
 
             if has_run:
                 return OperationMeta(op_hash)
-
-        # If we're limited, stop here - *after* we've created op_meta. This
-        # ensures the meta object always exists, even if no hosts actually ever
-        # execute the op (due to limit or otherwise).
-        hosts = op_meta_kwargs['hosts']
-        when = op_meta_kwargs['when']
-
-        if (
-            # Limited by the state's limit_hosts?
-            (state.limit_hosts is not None and host not in state.limit_hosts)
-            # Limited by the operation kwarg hosts?
-            or (hosts is not None and host not in hosts)
-            # Limited by the operation kwarg when? We check == because when is
-            # normally attribute wrapped as a AttrDataBool, which is actually
-            # an integer (Python doesn't allow subclassing bool!).
-            or when == False  # noqa
-        ):
-            return OperationMeta(op_hash)
 
         # "Run" operation
         #
@@ -345,6 +312,11 @@ def operation(func=None, pipeline_facts=None):
             *actual_args,
             **actual_kwargs
         ))
+        commands = [  # convert any strings -> StringCommand's
+            StringCommand(command.strip())
+            if isinstance(command, six.string_types) else command
+            for command in commands
+        ]
 
         state.in_op = False
         state.current_op_hash = None

@@ -13,7 +13,7 @@ Layout
 + ``*.py`` - top-level operations
 + ``inventories/*.py`` - groups of hosts and individual host data
 + ``group_data/*.py`` - arbitrary data for host groups
-+ ``templates/*.j2`` - `jinja2 <https://jinja.palletsprojects.com>` template files
++ ``templates/*.j2`` - `jinja2 <https://jinja.palletsprojects.com>`_ template files
 + ``files/*`` - normal/non-template files
 + ``tasks/*.py`` - operations to perform a specific task
 + ``config.py`` - optional configuration and hooks
@@ -118,17 +118,15 @@ For example, this deploy will ensure that user "pyinfra" exists with home direct
     # Import pyinfra modules, each containing operations to use
     from pyinfra.operations import server, files
 
-    # Ensure the state of a user
     server.user(
-        {'Create pyinfra user'},
-        'pyinfra',
+        name='Create pyinfra user',
+        user='pyinfra',
         home='/home/pyinfra',
     )
 
-    # Ensure the state of files
     files.file(
-        {'Create pyinfra log file'},
-        '/var/log/pyinfra.log',
+        name='Create pyinfra log file',
+        path='/var/log/pyinfra.log',
         user='pyinfra',
         group='pyinfra',
         permissions='644',
@@ -162,8 +160,8 @@ Adding data to inventories was :ref:`described above <data-ref-label>` - you can
 
     # Ensure the state of a user based on host/group data
     server.user(
-        {'Setup the app user'},
-        host.data.app_user,
+        name='Setup the app user',
+        user=host.data.app_user,
         home=host.data.app_dir,
     )
 
@@ -178,8 +176,8 @@ Operation meta can be used during a deploy to change the desired operations:
 
     # Run an operation, collecting its meta output
     create_user = server.user(
-        {'Create user myuser'},
-        'myuser',
+        name='Create user myuser',
+        user='myuser',
     }
 
     # If we added a user above, do something extra
@@ -198,7 +196,8 @@ Facts allow you to use information about the target host to change the operation
 
     if host.fact.linux_name == 'CentOS':
         yum.packages(
-            'nano',
+            name='Install nano via yum',
+            packages=['nano'],
             sudo=True
         )
 
@@ -236,44 +235,3 @@ There are a number of configuration options for how deploys are managed. These c
 
 .. note::
     When added to ``config.py`` (vs the deploy file), these options will take effect for any CLI usage (ie ``pyinfra host exec -- 'tail -f /var/log/syslog'``).
-
-
-Hooks
------
-
-Deploy hooks are executed by the CLI at various points during the deploy process. These can be defined in a ``config.py``:
-
-+ ``before_connect``
-+ ``before_facts``
-+ ``before_deploy``
-+ ``after_deploy``
-
-These can be used, for example, to check the right branch before connecting or to build some client-side assets locally before fact gathering. All hooks take ``(data, state)`` as arguments:
-
-.. code:: python
-
-    # config.py
-
-    from pyinfra import hook
-
-    @hook.before_connect
-    def my_callback(data, state):
-        print('Before connect hook!')
-
-To abort a deploy, a hook can raise a ``hook.Error`` which the CLI will handle.
-
-When executing commands locally inside a hook (i.e. ``webpack build``), you should always use the ``pyinfra.local`` module:
-
-.. code:: python
-
-    @hook.before_connect
-    def my_callback(data, state):
-        # Check something local is correct, etc
-        branch = local.shell('git rev-parse --abbrev-ref HEAD')
-        app_branch = data.app_branch
-
-        if branch != app_branch:
-            # Raise hook.Error for pyinfra to handle
-            raise hook.Error('We\'re on the wrong branch (want {0}, got {1})!'.format(
-                branch, app_branch
-            ))

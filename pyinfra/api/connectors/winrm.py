@@ -156,7 +156,10 @@ def run_shell_command(
     tmp_command = command.strip("'")
 
     if print_output:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, command))
+        click.echo(
+            '{0}>>> {1}'.format(host.print_prefix, command),
+            err=True,
+        )
 
     if not shell_executable:
         shell_executable = 'ps'
@@ -182,7 +185,10 @@ def run_shell_command(
     logger.debug('std_err:{}'.format(std_err))
 
     if print_output:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, '\n'.join(std_out)))
+        click.echo(
+            '{0}>>> {1}'.format(host.print_prefix, '\n'.join(std_out)),
+            err=True,
+        )
 
     if success_exit_codes:
         status = return_code in success_exit_codes

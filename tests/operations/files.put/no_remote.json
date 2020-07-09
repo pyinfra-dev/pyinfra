@@ -9,6 +9,9 @@
     "facts": {
         "file": {
             "/home/somefile.txt": null
+        },
+        "directory": {
+            "/home": true
         }
     },
     "commands": [

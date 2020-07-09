@@ -4,6 +4,9 @@
     "facts": {
         "file": {
             "/home/some\\ file.txt": null
+        },
+        "directory": {
+            "/home": true
         }
     },
     "commands": [

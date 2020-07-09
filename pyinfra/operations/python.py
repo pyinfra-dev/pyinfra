@@ -2,34 +2,11 @@
 The Python module allows you to execute Python code within the context of a deploy.
 '''
 
-from pyinfra import logger
-from pyinfra.api import operation
+from pyinfra.api import FunctionCommand, operation
 
 
 @operation
-def execute(state, host, callback, *args, **kwargs):
-    '''
-    [DEPRECATED], please use ``python.call``.
-    '''
-
-    # COMPAT w/ <0.4
-    # TODO: remove this function
-
-    logger.warning((
-        'Use of `python.execute` is deprecated, '
-        'please use `python.call` instead.'
-    ))
-
-    # Pre pyinfra 0.4 the operation execution passed (state, host, host.name)
-    # as args, so here we replicate that - hence ``python.call`` which replaces
-    # this function going forward.
-    args = (host.name,) + args
-
-    yield (callback, args, kwargs)
-
-
-@operation
-def call(state, host, func, *args, **kwargs):
+def call(state, host, function, *args, **kwargs):
     '''
     Execute a Python function within a deploy.
 
@@ -52,16 +29,20 @@ def call(state, host, func, *args, **kwargs):
                 raise Exception('`{}` problem with callback stdout:{} stderr:{}'.format(
                     command, stdout, stderr))
 
-        python.call(my_callback, hello='world')
+        python.call(
+            name='Run my_callback function',
+            function=my_callback,
+            hello='world',
+        )
 
     '''
 
-    yield (func, args, kwargs)
+    yield FunctionCommand(function, args, kwargs)
 
 
 @operation
-def raise_exception(state, host, exception_class, *args, **kwargs):
+def raise_exception(state, host, exception, *args, **kwargs):
     def raise_exc(*args, **kwargs):  # pragma: no cover
-        raise exception_class(*args, **kwargs)
+        raise exception(*args, **kwargs)
 
-    yield (raise_exc, args, kwargs)
+    yield FunctionCommand(raise_exc, args, kwargs)

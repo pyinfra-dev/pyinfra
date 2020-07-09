@@ -19,7 +19,7 @@ class HostFacts(object):
             raise AttributeError('No such fact: {0}'.format(key))
 
         # Ensure this host is connected
-        connection = self.host.connect(self.inventory.state, for_fact=key)
+        connection = self.host.connect(for_fact=key)
 
         # If we can't connect - fail immediately as we specifically need this
         # fact for this host and without it we cannot satisfy the deploy.
@@ -38,6 +38,7 @@ class Host(object):
     '''
 
     connection = None
+    state = None
 
     def __init__(
         self, name, inventory, groups, data,
@@ -79,13 +80,18 @@ class Host(object):
             click.style(self.name, *args, **kwargs),
         )
 
+    def _check_state(self):
+        if not self.state:
+            raise TypeError('Cannot call this function with no state!')
+
     # Connector proxy
     #
 
-    def connect(self, state, for_fact=None, show_errors=True):
+    def connect(self, for_fact=None, show_errors=True):
+        self._check_state()
         if not self.connection:
             try:
-                self.connection = self.executor.connect(state, self)
+                self.connection = self.executor.connect(self.state, self)
             except ConnectError as e:
                 if show_errors:
                     log_message = '{0}{1}'.format(
@@ -108,17 +114,21 @@ class Host(object):
 
         return self.connection
 
-    def disconnect(self, state):
+    def disconnect(self):
+        self._check_state()
         # Disconnect is an optional function for executors if needed
         disconnect_func = getattr(self.executor, 'disconnect', None)
         if disconnect_func:
-            return disconnect_func(state, self)
+            return disconnect_func(self.state, self)
 
-    def run_shell_command(self, state, *args, **kwargs):
-        return self.executor.run_shell_command(state, self, *args, **kwargs)
+    def run_shell_command(self, *args, **kwargs):
+        self._check_state()
+        return self.executor.run_shell_command(self.state, self, *args, **kwargs)
 
-    def put_file(self, state, *args, **kwargs):
-        return self.executor.put_file(state, self, *args, **kwargs)
+    def put_file(self, *args, **kwargs):
+        self._check_state()
+        return self.executor.put_file(self.state, self, *args, **kwargs)
 
-    def get_file(self, state, *args, **kwargs):
-        return self.executor.get_file(state, self, *args, **kwargs)
+    def get_file(self, *args, **kwargs):
+        self._check_state()
+        return self.executor.get_file(self.state, self, *args, **kwargs)

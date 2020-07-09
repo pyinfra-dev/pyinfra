@@ -21,6 +21,7 @@ class RPMPackages(FactBase):
 
     command = 'rpm -qa'
     default = dict
+    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(
@@ -41,6 +42,8 @@ class RpmPackage(FactBase):
             'version': '1.0.0'
         }
     '''
+
+    use_default_on_error = True
 
     def command(self, name):
         return 'rpm -qp {0} 2> /dev/null || rpm -q {0}'.format(name)

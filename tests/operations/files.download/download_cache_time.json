@@ -1,7 +1,7 @@
 {
     "args": ["http://myfile"],
     "kwargs": {
-        "destination": "/home/myfile",
+        "dest": "/home/myfile",
         "cache_time": 3600
     },
     "facts": {

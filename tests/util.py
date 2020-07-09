@@ -3,18 +3,16 @@ from datetime import datetime
 import six
 from mock import patch
 
-from pyinfra.api import Config, Inventory, StringCommand
+from pyinfra.api import Config, Inventory
 
 
 def get_command_string(command):
-    if isinstance(command, StringCommand):
-        value = command.get_raw_value()
-        masked_value = command.get_masked_value()
-        if value == masked_value:
-            return value
-        else:
-            return [value, masked_value]
-    return command
+    value = command.get_raw_value()
+    masked_value = command.get_masked_value()
+    if value == masked_value:
+        return value
+    else:
+        return [value, masked_value]
 
 
 def make_inventory(hosts=('somehost', 'anotherhost'), **kwargs):
@@ -34,6 +32,7 @@ class FakeState(object):
     active = True
     deploy_dir = '/'
     in_op = True
+    in_deploy = True
     pipelining = False
     deploy_name = None
     deploy_kwargs = None
@@ -206,9 +205,9 @@ class patch_files(object):
 
     def __enter__(self):
         self.patches = [
-            patch('pyinfra.operations.files.path.exists', self.exists),
-            patch('pyinfra.operations.files.path.isfile', self.isfile),
-            patch('pyinfra.operations.files.path.isdir', self.isdir),
+            patch('pyinfra.operations.files.os_path.exists', self.exists),
+            patch('pyinfra.operations.files.os_path.isfile', self.isfile),
+            patch('pyinfra.operations.files.os_path.isdir', self.isdir),
             patch('pyinfra.operations.files.walk', self.walk),
             patch('pyinfra.operations.files.makedirs', lambda path: True),
             # Builtin patches

@@ -47,7 +47,7 @@ def sql(
 
 @operation
 def user(
-    state, host, name,
+    state, host, user,
     # Desired user settings
     present=True,
     user_hostname='localhost', password=None, privileges=None,
@@ -58,7 +58,7 @@ def user(
     '''
     Add/remove/update MySQL users.
 
-    + name: the name of the user
+    + user: the name of the user
     + present: whether the user should exist or not
     + user_hostname: the hostname of the user
     + password: the password of the user (if created)
@@ -79,8 +79,8 @@ def user(
     .. code:: python
 
         mysql.user(
-            {'Create the pyinfra@localhost MySQL user'},
-            'pyinfra',
+            name='Create the pyinfra@localhost MySQL user',
+            user='pyinfra',
             password='somepassword',
         )
     '''
@@ -89,14 +89,14 @@ def user(
         mysql_user, mysql_password, mysql_host, mysql_port,
     )
 
-    user_host = '{0}@{1}'.format(name, user_hostname)
+    user_host = '{0}@{1}'.format(user, user_hostname)
     is_present = user_host in current_users
 
     # User not wanted?
     if not present:
         if is_present:
             yield make_execute_mysql_command(
-                'DROP USER "{0}"@"{1}"'.format(name, user_hostname),
+                'DROP USER "{0}"@"{1}"'.format(user, user_hostname),
                 user=mysql_user,
                 password=mysql_password,
                 host=mysql_host,
@@ -106,7 +106,7 @@ def user(
 
     # If we want the user and they don't exist
     if present and not is_present:
-        sql_bits = ['CREATE USER "{0}"@"{1}"'.format(name, user_hostname)]
+        sql_bits = ['CREATE USER "{0}"@"{1}"'.format(user, user_hostname)]
         if password:
             sql_bits.append(MaskString('IDENTIFIED BY "{0}"'.format(password)))
 
@@ -122,7 +122,7 @@ def user(
     # now we can check any privileges are set.
     if privileges:
         yield _privileges(
-            state, host, name, privileges,
+            state, host, user, privileges,
             user_hostname=user_hostname,
             mysql_user=mysql_user, mysql_password=mysql_password,
             mysql_host=mysql_host, mysql_port=mysql_port,
@@ -131,7 +131,7 @@ def user(
 
 @operation
 def database(
-    state, host, name,
+    state, host, database,
     # Desired database settings
     present=True,
     collate=None, charset=None,
@@ -161,13 +161,12 @@ def database(
     .. code:: python
 
         mysql.database(
-            {'Create the pyinfra_stuff database'},
-            'pyinfra_stuff',
+            name='Create the pyinfra_stuff database',
+            database='pyinfra_stuff',
             user='pyinfra',
             user_privileges=['SELECT', 'INSERT'],
             charset='utf8',
         )
-
     '''
 
     current_databases = host.fact.mysql_databases(
@@ -175,12 +174,12 @@ def database(
         mysql_host, mysql_port,
     )
 
-    is_present = name in current_databases
+    is_present = database in current_databases
 
     if not present:
         if is_present:
             yield make_execute_mysql_command(
-                'DROP DATABASE {0}'.format(name),
+                'DROP DATABASE {0}'.format(database),
                 user=mysql_user,
                 password=mysql_password,
                 host=mysql_host,
@@ -190,7 +189,7 @@ def database(
 
     # We want the database but it doesn't exist
     if present and not is_present:
-        sql_bits = ['CREATE DATABASE {0}'.format(name)]
+        sql_bits = ['CREATE DATABASE {0}'.format(database)]
 
         if collate:
             sql_bits.append('COLLATE {0}'.format(collate))
@@ -212,7 +211,7 @@ def database(
             state, host, user,
             user_hostname=user_hostname,
             privileges=user_privileges,
-            database=name,
+            database=database,
         )
 
 
@@ -327,7 +326,7 @@ _privileges = privileges  # noqa: E305 (for use where kwarg is the same)
 @operation
 def dump(
     state, host,
-    remote_filename, database=None,
+    dest, database=None,
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
@@ -335,8 +334,8 @@ def dump(
     '''
     Dump a MySQL database into a ``.sql`` file. Requires ``mysqldump``.
 
+    + dest: name of the file to dump the SQL to
     + database: name of the database to dump
-    + remote_filename: name of the file to dump the SQL to
     + mysql_*: global module arguments, see above
 
     Example:
@@ -344,8 +343,8 @@ def dump(
     .. code:: python
 
         mysql.dump(
-            {'Dump the pyinfra_stuff database'},
-            '/tmp/pyinfra_stuff.dump',
+            name='Dump the pyinfra_stuff database',
+            dest='/tmp/pyinfra_stuff.dump',
             database='pyinfra_stuff',
         )
     '''
@@ -357,13 +356,13 @@ def dump(
         password=mysql_password,
         host=mysql_host,
         port=mysql_port,
-    ), remote_filename)
+    ), dest)
 
 
 @operation
 def load(
     state, host,
-    remote_filename, database=None,
+    src, database=None,
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
@@ -371,8 +370,8 @@ def load(
     '''
     Load ``.sql`` file into a database.
 
+    + src: the filename to read from
     + database: name of the database to import into
-    + remote_filename: the filename to read from
     + mysql_*: global module arguments, see above
 
     Example:
@@ -380,8 +379,8 @@ def load(
     .. code:: python
 
         mysql.load(
-            {'Import the pyinfra_stuff dump into pyinfra_stuff_copy'},
-            '/tmp/pyinfra_stuff.dump',
+            name='Import the pyinfra_stuff dump into pyinfra_stuff_copy',
+            src='/tmp/pyinfra_stuff.dump',
             database='pyinfra_stuff_copy',
         )
     '''
@@ -392,4 +391,4 @@ def load(
         password=mysql_password,
         host=mysql_host,
         port=mysql_port,
-    ), remote_filename)
+    ), src)

@@ -8,6 +8,9 @@
     "facts": {
         "file": {
             "/etc/zypp/repos.d/somerepo.repo": {}
+        },
+        "directory": {
+            "/etc/zypp/repos.d": true
         }
     },
     "commands": [[

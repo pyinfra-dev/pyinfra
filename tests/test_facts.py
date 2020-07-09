@@ -8,6 +8,7 @@ from unittest import TestCase
 import six
 from jsontest import JsonTest
 
+from pyinfra.api import StringCommand
 from pyinfra.api.facts import FACTS, ShortFactBase
 from pyinfra_cli.util import json_encode
 
@@ -48,7 +49,7 @@ def make_fact_tests(fact_name):
                 command_to_check = fact.command
 
             if command_to_check:
-                assert get_command_string(command_to_check) == test_data['command']
+                assert get_command_string(StringCommand(command_to_check)) == test_data['command']
 
             data = fact.process(test_data['output'])
             if short_fact:

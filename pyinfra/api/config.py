@@ -1,7 +1,5 @@
 import six
 
-from pyinfra import logger
-
 
 class Config(object):
     '''
@@ -48,14 +46,6 @@ class Config(object):
         # Always apply some env
         env = kwargs.pop('ENV', {})
         self.ENV = env
-
-        # Replace TIMEOUT -> CONNECT_TIMEOUT
-        if 'TIMEOUT' in kwargs:
-            logger.warning((
-                'Config.TIMEOUT is deprecated, '
-                'please use Config.CONNECT_TIMEOUT instead'
-            ))
-            kwargs['CONNECT_TIMEOUT'] = kwargs.pop('TIMEOUT')
 
         # Apply kwargs
         for key, value in six.iteritems(kwargs):

@@ -14,6 +14,9 @@
                 "group": "testgroup"
             }
         },
+        "directory": {
+            "/home": true
+        },
         "sha1_file": {
             "/home/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
         }

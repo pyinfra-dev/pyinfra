@@ -2,7 +2,7 @@
     "args": ["this_is_another_command"],
     "kwargs": {
         "month": 1,
-        "name": "this_is_a_command"
+        "cron_name": "this_is_a_command"
     },
     "facts": {
         "crontab": {
@@ -20,7 +20,7 @@
     },
     "commands": [
         "crontab -l  > _tempfile_",
-        "sed -i=\"\" \"s/.*this_is_a_command.*/* * * 1 * this_is_another_command/\" _tempfile_",
+        "sed -i='' 's/.*this_is_a_command.*/* * * 1 * this_is_another_command/' _tempfile_",
         "crontab  _tempfile_"
     ]
 }

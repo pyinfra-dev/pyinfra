@@ -6,11 +6,10 @@ from __future__ import unicode_literals
 
 import re
 
-from pyinfra import logger
 from pyinfra.api import operation, OperationError
 
 from . import files, ssh
-from .util.files import chmod, chown
+from .util.files import chown
 
 
 @operation(pipeline_facts={
@@ -32,7 +31,7 @@ def config(
     .. code:: python
 
         git.config(
-            {'Ensure user name is set for a repo'},
+            name='Ensure user name is set for a repo',
             key='user.name',
             value='Anon E. Mouse',
             repo='/usr/local/src/pyinfra',
@@ -53,16 +52,16 @@ def config(
     'git_branch': 'target',
 })
 def repo(
-    state, host, source, target,
+    state, host, src, dest,
     branch='master', pull=True, rebase=False,
-    user=None, group=None, use_ssh_user=False, ssh_keyscan=False,
+    user=None, group=None, ssh_keyscan=False,
     update_submodules=False, recursive_submodules=False,
 ):
     '''
     Clone/pull git repositories.
 
-    + source: the git source URL
-    + target: target directory to clone to
+    + src: the git source URL
+    + dest: directory to clone to
     + branch: branch to pull/checkout
     + pull: pull any changes for the branch
     + rebase: when pulling, use ``--rebase``
@@ -72,64 +71,43 @@ def repo(
     + update_submodules: update any git submodules
     + recursive_submodules: update git submodules recursively
 
-    + [DEPRECATED] use_ssh_user: whether to use the SSH user to clone/pull
-
-    SSH user (deprecated, please use ``preserve_sudo_env``):
-        This is an old hack from pyinfra <0.4 which did not support the global
-        kwarg ``preserve_sudo_env``. It does the following:
-
-        * makes the target directory writeable by all
-        * clones/pulls w/o sudo as the connecting SSH user
-        * removes other/group write permissions - unless group is defined, in
-          which case only other
-
     Example:
 
     .. code:: python
 
         git.repo(
-            {'Clone repo'},
-            'https://github.com/Fizzadar/pyinfra.git',
-            '/usr/local/src/pyinfra',
+            name='Clone repo',
+            src='https://github.com/Fizzadar/pyinfra.git',
+            dest='/usr/local/src/pyinfra',
         )
     '''
 
-    if use_ssh_user:
-        logger.warning(
-            'Use of `use_ssh_user` is deprecated, please use `preserve_sudo_env` instead.',
-        )
-
     # Ensure our target directory exists
-    yield files.directory(state, host, target)
-
-    # If we're going to chown this after clone/pull, and we're sudo'd, we need to make the
-    # directory writeable by the SSH user
-    if use_ssh_user:
-        yield chmod(target, 'go+w', recursive=True)
+    yield files.directory(state, host, dest)
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
         # Attempt to parse the domain from the git repository
-        domain = re.match(r'^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)', source)
+        domain = re.match(r'^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)', src)
 
         if domain:
             yield ssh.keyscan(state, host, domain.group(1))
         else:
             raise OperationError(
-                'Could not parse domain (to SSH keyscan) from: {0}'.format(source),
+                'Could not parse domain (to SSH keyscan) from: {0}'.format(src),
             )
 
     # Store git commands for directory prefix
     git_commands = []
-    is_repo = host.fact.directory('/'.join((target, '.git')))
+    is_repo = host.fact.directory('/'.join((dest, '.git')))
 
     # Cloning new repo?
     if not is_repo:
-        git_commands.append('clone {0} --branch {1} .'.format(source, branch))
+        git_commands.append('clone {0} --branch {1} .'.format(src, branch))
 
     # Ensuring existing repo
     else:
-        current_branch = host.fact.git_branch(target)
+        current_branch = host.fact.git_branch(dest)
         if current_branch != branch:
             git_commands.append('fetch')  # fetch to ensure we have the branch locally
             git_commands.append('checkout {0}'.format(branch))
@@ -147,33 +125,15 @@ def repo(
             git_commands.append('submodule update --init')
 
     # Attach prefixes for directory
-    command_prefix = 'cd {0} && git'.format(target)
+    command_prefix = 'cd {0} && git'.format(dest)
     git_commands = [
         '{0} {1}'.format(command_prefix, command)
         for command in git_commands
     ]
 
-    if use_ssh_user:
-        git_commands = [
-            {
-                'command': command,
-                'sudo': False,
-                'sudo_user': False,
-            }
-            for command in git_commands
-        ]
-
     for cmd in git_commands:
         yield cmd
 
-    if use_ssh_user:
-        # Remove write permissions from other or other+group when no group
-        yield chmod(
-            target,
-            'o-w' if group else 'go-w',
-            recursive=True,
-        )
-
     # Apply any user or group
     if user or group:
-        yield chown(target, user, group, recursive=True)
+        yield chown(dest, user, group, recursive=True)

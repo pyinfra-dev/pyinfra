@@ -6,15 +6,15 @@ USE_SUDO_LOGIN = True
 
 if host in inventory.get_group('master_servers'):
     server.script_template(
-        {'Sign the agent, if needed'},
-        'templates/sign_agent.bash.j2',
+        name='Sign the agent, if needed',
+        src='templates/sign_agent.bash.j2',
     )
 
 if host in inventory.get_group('agent_servers'):
 
     init.systemd(
-        {'Temp stop puppet agent so we can ensure a good run'},
-        'puppet',
+        name='Temp stop puppet agent so we can ensure a good run',
+        service='puppet',
         running=False,
     )
 
@@ -24,6 +24,6 @@ if host in inventory.get_group('agent_servers'):
     # We also expect a return code of:
     # 0=no changes or 2=changes applied
     puppet.agent(
-        {'Run the puppet agent'},
+        name='Run the puppet agent',
         success_exit_codes=[0, 2],
     )

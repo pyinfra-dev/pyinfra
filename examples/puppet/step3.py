@@ -6,9 +6,9 @@ USE_SUDO_LOGIN = True
 
 if host in inventory.get_group('master_servers'):
     files.template(
-        {'Create a puppet manifest'},
-        'templates/environments/production/manifests/httpd.pp.j2',
-        '/etc/puppetlabs/code/environments/production/manifests/httpd.pp',
+        name='Create a puppet manifest',
+        src='templates/environments/production/manifests/httpd.pp.j2',
+        dest='/etc/puppetlabs/code/environments/production/manifests/httpd.pp',
     )
 
 if host in inventory.get_group('agent_servers'):
@@ -18,6 +18,6 @@ if host in inventory.get_group('agent_servers'):
     # We also expect a return code of:
     # 0=no changes or 2=changes applied
     puppet.agent(
-        {'Run the puppet agent'},
+        name='Run the puppet agent',
         success_exit_codes=[0, 2],
     )

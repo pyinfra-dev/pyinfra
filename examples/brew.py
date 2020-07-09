@@ -3,27 +3,27 @@ from pyinfra.operations import brew
 # To run: "pyinfra @local brew.py"
 
 brew.packages(
-    {'Install latest Vim'},
-    ['vim'],
+    name='Install latest Vim',
+    packages=['vim'],
     update=True,
 )
 
 brew.casks(
-    {'Upgrade and install the latest package via casks'},
-    ['godot'],
+    name='Upgrade and install the latest package via casks',
+    packages=['godot'],
     upgrade=True,
     latest=True,
 )
 
 brew.tap(
-    {'Add a brew tap'},
-    'ktr0731/evans',
+    name='Add a brew tap',
+    src='ktr0731/evans',
 )
 
 # multiple taps
 taps = ['includeos/includeos', 'ktr0731/evans']
 for tap in taps:
     brew.tap(
-        {'Add brew tap {}'.format(tap)},
-        tap,
+        name='Add brew tap {}'.format(tap),
+        src=tap,
     )

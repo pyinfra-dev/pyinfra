@@ -2,8 +2,6 @@ from collections import defaultdict
 
 import six
 
-from pyinfra import logger
-
 from .connectors import ALL_CONNECTORS, EXECUTION_CONNECTORS
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
 from .host import Host
@@ -183,45 +181,6 @@ class Inventory(object):
                     self.groups[group_name].append(host)
 
         return hosts
-
-    def __getitem__(self, key):
-        '''
-        DEPRECATED: please use ``Inventory.get_host`` instead.
-        '''
-
-        # COMPAT w/ <0.4
-        # TODO: remove this function
-
-        logger.warning((
-            'Use of Inventory[<host_name>] is deprecated, '
-            'please use `Inventory.get_host` instead.'
-        ))
-
-        if key in self.hosts:
-            return self.hosts[key]
-
-        raise NoHostError('No such host: {0}'.format(key))
-
-    def __getattr__(self, key):
-        '''
-        DEPRECATED: please use ``Inventory.get_group`` instead.
-        '''
-
-        if key.startswith('_'):
-            return
-
-        # COMPAT w/ <0.4
-        # TODO: remove this function
-
-        logger.warning((
-            'Use of Inventory.<group_name> is deprecated, '
-            'please use `Inventory.get_group` instead.'
-        ))
-
-        if key in self.groups:
-            return self.groups[key]
-
-        raise NoGroupError('No such group: {0}'.format(key))
 
     def __len__(self):
         '''

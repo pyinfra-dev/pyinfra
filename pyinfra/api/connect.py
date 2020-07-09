@@ -18,7 +18,7 @@ def connect_all(state):
     ]
 
     greenlet_to_host = {
-        state.pool.spawn(host.connect, state): host
+        state.pool.spawn(host.connect): host
         for host in hosts
     }
 
@@ -45,4 +45,4 @@ def connect_all(state):
 
 def disconnect_all(state):
     for host in state.activated_hosts:  # only hosts we connected to please!
-        host.disconnect(state)  # normally a noop
+        host.disconnect()  # normally a noop

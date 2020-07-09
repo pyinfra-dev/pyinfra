@@ -71,6 +71,11 @@ class FactBase(object):
 
     shell_executable = None
 
+    # Use the default value after encountering a *command* error, ie when the command
+    # fails *not* the processing of it's output. Useful for facts that target system
+    # specific stuff, like `apt` or `yum`.
+    use_default_on_error = False
+
     @staticmethod
     def default():
         '''
@@ -186,7 +191,8 @@ def get_facts(state, name, args=None, ensure_hosts=None):
                 command = command(*host_args)
 
             greenlet = state.fact_pool.spawn(
-                host.run_shell_command, state, command,
+                host.run_shell_command,
+                command,
                 sudo=sudo,
                 sudo_user=sudo_user,
                 use_sudo_password=use_sudo_password,
@@ -201,7 +207,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
         # Wait for all the commands to execute
         progress_prefix = 'fact: {0}'.format(name)
         if args:
-            progress_prefix = '{0}{1}'.format(progress_prefix, args)
+            progress_prefix = '{0}{1}'.format(progress_prefix, args[0])
 
         with progress_spinner(
             greenlet_to_host.values(),
@@ -231,8 +237,11 @@ def get_facts(state, name, args=None, ensure_hosts=None):
 
             data = fact.default()
 
-            if status and stdout:
-                data = fact.process(stdout)
+            if status:
+                if stdout:
+                    data = fact.process(stdout)
+            elif not fact.use_default_on_error:
+                failed_hosts.add(host)
 
             hostname_facts[host] = data
 

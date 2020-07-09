@@ -9,13 +9,19 @@ import sys
 
 from datetime import timedelta
 from fnmatch import fnmatch
-from os import makedirs, path, walk
+from os import makedirs, path as os_path, walk
 
 import six
 
 from jinja2 import TemplateSyntaxError, UndefinedError
 
-from pyinfra.api import operation, OperationError, OperationTypeError
+from pyinfra.api import (
+    FileDownloadCommand,
+    FileUploadCommand,
+    operation,
+    OperationError,
+    OperationTypeError,
+)
 from pyinfra.api.connectors.util import escape_unix_path
 from pyinfra.api.util import get_file_sha1, get_template
 
@@ -23,18 +29,18 @@ from .util.files import chmod, chown, ensure_mode_int, sed_replace
 
 
 @operation(pipeline_facts={
-    'file': 'destination',
+    'file': 'dest',
 })
 def download(
-    state, host, source_url, destination,
+    state, host, src, dest,
     user=None, group=None, mode=None, cache_time=None, force=False,
     sha256sum=None, sha1sum=None, md5sum=None,
 ):
     '''
     Download files from remote locations using curl or wget.
 
-    + source_url: source URL of the file
-    + destination: where to save the file
+    + src: source URL of the file
+    + dest: where to save the file
     + user: user to own the files
     + group: group to own the files
     + mode: permissions of the files
@@ -49,20 +55,19 @@ def download(
     .. code:: python
 
         files.download(
-            {'Download the Docker repo file'},
-            'https://download.docker.com/linux/centos/docker-ce.repo',
-            '/etc/yum.repos.d/docker-ce.repo',
+            name='Download the Docker repo file',
+            src='https://download.docker.com/linux/centos/docker-ce.repo',
+            dest='/etc/yum.repos.d/docker-ce.repo',
         )
-
     '''
 
-    destination = escape_unix_path(destination)
+    dest = escape_unix_path(dest)
 
-    info = host.fact.file(destination)
+    info = host.fact.file(dest)
     # Destination is a directory?
     if info is False:
         raise OperationError(
-            'Destination {0} already exists and is not a file'.format(destination),
+            'Destination {0} already exists and is not a file'.format(dest),
         )
 
     # Do we download the file? Force by default
@@ -94,10 +99,8 @@ def download(
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
-        curl_command = 'curl -sSLf {0} -o {1}'.format(source_url, destination)
-        wget_command = 'wget -q {0} -O {1} || rm -f {1}; exit 1'.format(
-            source_url, destination,
-        )
+        curl_command = 'curl -sSLf {0} -o {1}'.format(src, dest)
+        wget_command = 'wget -q {0} -O {1} || rm -f {1}; exit 1'.format(src, dest)
 
         if host.fact.which('curl'):
             yield curl_command
@@ -107,41 +110,41 @@ def download(
             yield '({0}) || ({1})'.format(curl_command, wget_command)
 
         if user or group:
-            yield chown(destination, user, group)
+            yield chown(dest, user, group)
 
         if mode:
-            yield chmod(destination, mode)
+            yield chmod(dest, mode)
 
         if sha1sum:
             yield (
                 '((sha1sum {0} 2> /dev/null || sha1 {0}) | grep {1}) '
                 '|| (echo "SHA1 did not match!" && exit 1)'
-            ).format(destination, sha1sum)
+            ).format(dest, sha1sum)
 
         if sha256sum:
             yield (
-                '(sha256sum {0} 2> /dev/null | grep {1}) '
+                '((sha256sum {0} 2> /dev/null || sha256 {0}) | grep {1}) '
                 '|| (echo "SHA256 did not match!" && exit 1)'
-            ).format(destination, sha256sum)
+            ).format(dest, sha256sum)
 
         if md5sum:
             yield (
                 '((md5sum {0} 2> /dev/null || md5 {0}) | grep {1}) '
                 '|| (echo "MD5 did not match!" && exit 1)'
-            ).format(destination, md5sum)
+            ).format(dest, md5sum)
 
 
 @operation
 def line(
     state, host,
-    name, line,
+    path, line,
     present=True, replace=None, flags=None,
-    interpolate_variables=True,
+    interpolate_variables=False,
 ):
     '''
     Ensure lines in files using grep to locate and sed to replace.
 
-    + name: target remote file to edit
+    + path: target remote file to edit
     + line: string or regex matching the target line
     + present: whether the line should be in the file
     + replace: text to replace entire matching lines when ``present=True``
@@ -164,49 +167,47 @@ def line(
         # prepare to do some maintenance
         maintenance_line = 'SYSTEM IS DOWN FOR MAINTENANCE'
         files.line(
-            {'Add the down-for-maintence line in /etc/motd'},
-            '/etc/motd',
-            maintenance_line,
+            name='Add the down-for-maintence line in /etc/motd',
+            path='/etc/motd',
+            line=maintenance_line,
         )
 
         # Then, after the mantenance is done, remove the maintenance line
         files.line(
-            {'Remove the down-for-maintenance line in /etc/motd'},
-            '/etc/motd',
-            maintenance_line,
+            name='Remove the down-for-maintenance line in /etc/motd',
+            path='/etc/motd',
+            line=maintenance_line,
             replace='',
             present=False,
         )
 
         # example where there is '*' in the line
         files.line(
-            {'Ensure /netboot/nfs is in /etc/exports'},
-            '/etc/exports',
-            r'/netboot/nfs .*',
+            name='Ensure /netboot/nfs is in /etc/exports',
+            path='/etc/exports',
+            line=r'/netboot/nfs .*',
             replace='/netboot/nfs *(ro,sync,no_wdelay,insecure_locks,no_root_squash,'
             'insecure,no_subtree_check)',
         )
 
         files.line(
-            {'Ensure myweb can run /usr/bin/python3 without password'},
-            '/etc/sudoers',
-            r'myweb .*',
+            name='Ensure myweb can run /usr/bin/python3 without password',
+            path='/etc/sudoers',
+            line=r'myweb .*',
             replace='myweb ALL=(ALL) NOPASSWD: /usr/bin/python3',
         )
 
         # example when there are double quotes (")
         line = 'QUOTAUSER=""'
-        results = files.line(
-            {'Example with double quotes (")'},
-            '/etc/adduser.conf',
-            '^{}$'.format(line),
+        files.line(
+            name='Example with double quotes (")',
+            path='/etc/adduser.conf',
+            line='^{}$'.format(line),
             replace=line,
         )
-        print(results.changed)
-
     '''
 
-    name = escape_unix_path(name)
+    path = escape_unix_path(path)
 
     match_line = line
 
@@ -218,7 +219,7 @@ def line(
         match_line = '{0}.*$'.format(match_line)
 
     # Is there a matching line in this file?
-    present_lines = host.fact.find_in_file(name, match_line)
+    present_lines = host.fact.find_in_file(path, match_line)
 
     # If replace present, use that over the matching line
     if replace:
@@ -228,9 +229,13 @@ def line(
         replace = ''
 
     # Save commands for re-use in dynamic script when file not present at fact stage
-    echo_command = 'echo "{0}" >> {1}'.format(line, name)
+    echo_command = (
+        'echo "{0}" >> {1}'.format(line, path)
+        if interpolate_variables else
+        "echo '{0}' >> {1}".format(line, path)
+    )
     sed_replace_command = sed_replace(
-        name, match_line, replace,
+        path, match_line, replace,
         flags=flags,
         interpolate_variables=interpolate_variables,
     )
@@ -254,7 +259,7 @@ def line(
                     {echo_command};
                 fi
             '''.format(
-                target=name,
+                target=path,
                 quoted_match_line=quoted_match_line,
                 echo_command=echo_command,
                 sed_replace_command=sed_replace_command,
@@ -267,7 +272,7 @@ def line(
     # Line(s) exists and we want to remove them, replace with nothing
     elif present_lines and not present:
         yield sed_replace(
-            name, match_line, '',
+            path, match_line, '',
             flags=flags,
             interpolate_variables=interpolate_variables,
         )
@@ -280,11 +285,11 @@ def line(
 
 
 @operation
-def replace(state, host, name, match, replace, flags=None, interpolate_variables=True):
+def replace(state, host, path, match, replace, flags=None, interpolate_variables=False):
     '''
     A simple shortcut for replacing text in files with sed.
 
-    + name: target remote file to edit
+    + path: target remote file to edit
     + match: text/regex to match for
     + replace: text to replace with
     + flags: list of flags to pass to sed
@@ -295,16 +300,16 @@ def replace(state, host, name, match, replace, flags=None, interpolate_variables
     .. code:: python
 
         files.replace(
-            {'Change part of a line in a file'},
-            '/etc/motd',
-            'verboten',
-            'forbidden',
+            name='Change part of a line in a file',
+            path='/etc/motd',
+            match='verboten',
+            replace='forbidden',
         )
     '''
 
-    name = escape_unix_path(name)
+    path = escape_unix_path(path)
     yield sed_replace(
-        name, match, replace,
+        path, match, replace,
         flags=flags,
         interpolate_variables=interpolate_variables,
     )
@@ -314,7 +319,7 @@ def replace(state, host, name, match, replace, flags=None, interpolate_variables
     'find_files': 'destination',
 })
 def sync(
-    state, host, source, destination,
+    state, host, src, dest,
     user=None, group=None, mode=None, delete=False,
     exclude=None, exclude_dir=None, add_deploy_dir=True,
 ):
@@ -322,8 +327,8 @@ def sync(
     Syncs a local directory with a remote one, with delete support. Note that delete will
     remove extra files on the remote side, but not extra directories.
 
-    + source: local directory to sync
-    + destination: remote directory to sync to
+    + src: local directory to sync
+    + dest: remote directory to sync to
     + user: user to own the files and directories
     + group: group to own the files and directories
     + mode: permissions of the files
@@ -337,24 +342,24 @@ def sync(
 
         # Sync local files/tempdir to remote /tmp/tempdir
         files.sync(
-            {'Sync a local directory with remote'},
-            'files/tempdir',
-            '/tmp/tempdir',
+            name='Sync a local directory with remote',
+            src='files/tempdir',
+            dest='/tmp/tempdir',
         )
     '''
 
     # If we don't enforce the source ending with /, remote_dirname below might start with
-    # a /, which makes the path.join cut off the destination bit.
-    if not source.endswith(path.sep):
-        source = '{0}{1}'.format(source, path.sep)
+    # a /, which makes the os_path.join cut off the destination bit.
+    if not src.endswith(os_path.sep):
+        src = '{0}{1}'.format(src, os_path.sep)
 
     # Add deploy directory?
     if add_deploy_dir and state.deploy_dir:
-        source = path.join(state.deploy_dir, source)
+        src = os_path.join(state.deploy_dir, src)
 
     # Ensure the source directory exists
-    if not path.isdir(source):
-        raise IOError('No such directory: {0}'.format(source))
+    if not os_path.isdir(src):
+        raise IOError('No such directory: {0}'.format(src))
 
     # Ensure exclude is a list/tuple
     if exclude is not None:
@@ -368,8 +373,8 @@ def sync(
 
     put_files = []
     ensure_dirnames = []
-    for dirname, _, filenames in walk(source):
-        remote_dirname = dirname.replace(source, '')
+    for dirname, _, filenames in walk(src):
+        remote_dirname = dirname.replace(src, '')
 
         # Should we exclude this dir?
         if exclude_dir and any(fnmatch(remote_dirname, match) for match in exclude_dir):
@@ -379,7 +384,7 @@ def sync(
             ensure_dirnames.append(remote_dirname)
 
         for filename in filenames:
-            full_filename = path.join(dirname, filename)
+            full_filename = os_path.join(dirname, filename)
 
             # Should we exclude this file?
             if exclude and any(fnmatch(full_filename, match) for match in exclude):
@@ -391,14 +396,14 @@ def sync(
                 # Join remote as unix like
                 '/'.join(
                     item for item in
-                    (destination, remote_dirname, filename)
+                    (dest, remote_dirname, filename)
                     if item
                 ),
             ))
 
     # Ensure the destination directory
     yield directory(
-        state, host, destination,
+        state, host, dest,
         user=user, group=group,
     )
 
@@ -406,7 +411,7 @@ def sync(
     for dirname in ensure_dirnames:
         yield directory(
             state, host,
-            '/'.join((destination, dirname)),
+            '/'.join((dest, dirname)),
             user=user, group=group,
         )
 
@@ -417,11 +422,12 @@ def sync(
             local_filename, remote_filename,
             user=user, group=group, mode=mode,
             add_deploy_dir=False,
+            create_remote_dir=False,  # handled above
         )
 
     # Delete any extra files
     if delete:
-        remote_filenames = set(host.fact.find_files(destination) or [])
+        remote_filenames = set(host.fact.find_files(dest) or [])
         wanted_filenames = set([remote_filename for _, remote_filename in put_files])
         files_to_delete = remote_filenames - wanted_filenames
         for filename in files_to_delete:
@@ -439,23 +445,24 @@ def _create_remote_dir(state, host, remote_filename, user, group):
         yield directory(
             state, host, remote_dirname,
             user=user, group=group,
+            no_check_owner_mode=True,
         )
 
 
 @operation(pipeline_facts={
-    'file': 'remote_filename',
-    'sha1_file': 'remote_filename',
+    'file': 'src',
+    'sha1_file': 'src',
 })
 def get(
-    state, host, remote_filename, local_filename,
+    state, host, src, dest,
     add_deploy_dir=True, create_local_dir=False, force=False,
 ):
     '''
     Download a file from the remote system.
 
-    + remote_filename: the remote filename to download
-    + local_filename: the local filename to download the file to
-    + add_deploy_dir: local_filename is relative to the deploy directory
+    + src: the remote filename to download
+    + dest: the local filename to download the file to
+    + add_deploy_dir: dest is relative to the deploy directory
     + create_local_dir: create the local directory if it doesn't exist
     + force: always download the file, even if the local copy matches
 
@@ -468,61 +475,60 @@ def get(
     .. code:: python
 
         files.get(
-            {'Download a file from a remote'},
-            '/etc/centos-release',
-            '/tmp/whocares',
+            name='Download a file from a remote',
+            src='/etc/centos-release',
+            dest='/tmp/whocares',
         )
-
     '''
 
-    remote_filename = escape_unix_path(remote_filename)
+    src = escape_unix_path(src)
 
     if add_deploy_dir and state.deploy_dir:
-        local_filename = path.join(state.deploy_dir, local_filename)
+        dest = os_path.join(state.deploy_dir, dest)
 
     if create_local_dir:
-        local_pathname = path.dirname(local_filename)
-        if not path.exists(local_pathname):
+        local_pathname = os_path.dirname(dest)
+        if not os_path.exists(local_pathname):
             makedirs(local_pathname)
 
-    remote_file = host.fact.file(remote_filename)
+    remote_file = host.fact.file(src)
 
     # No remote file, so assume exists and download it "blind"
     if not remote_file or force:
-        yield ('download', remote_filename, local_filename)
+        yield FileDownloadCommand(src, dest)
 
     # No local file, so always download
-    elif not path.exists(local_filename):
-        yield ('download', remote_filename, local_filename)
+    elif not os_path.exists(dest):
+        yield FileDownloadCommand(src, dest)
 
     # Remote file exists - check if it matches our local
     else:
-        local_sum = get_file_sha1(local_filename)
-        remote_sum = host.fact.sha1_file(remote_filename)
+        local_sum = get_file_sha1(dest)
+        remote_sum = host.fact.sha1_file(src)
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
-            yield ('download', remote_filename, local_filename)
+            yield FileDownloadCommand(src, dest)
 
 
 @operation(pipeline_facts={
-    'file': 'remote_filename',
-    'sha1_file': 'remote_filename',
+    'file': 'dest',
+    'sha1_file': 'dest',
 })
 def put(
-    state, host, local_filename, remote_filename,
+    state, host, src, dest,
     user=None, group=None, mode=None, add_deploy_dir=True,
-    create_remote_dir=False, force=False, assume_exists=False,
+    create_remote_dir=True, force=False, assume_exists=False,
 ):
     '''
     Upload a local file to the remote system.
 
-    + local_filename: local filename
-    + remote_filename: remote filename
+    + src: local filename to upload
+    + dest: remote filename to upload to
     + user: user to own the files
     + group: group to own the files
     + mode: permissions of the files
-    + add_deploy_dir: local_filename is relative to the deploy directory
+    + add_deploy_dir: src is relative to the deploy directory
     + create_remote_dir: create the remote directory if it doesn't exist
     + force: always upload the file, even if the remote copy matches
     + assume_exists: whether to assume the local file exists
@@ -542,86 +548,85 @@ def put(
 
         # Note: This requires a 'files/motd' file on the local filesystem
         files.put(
-            {'Update the message of the day file'},
-            'files/motd',
-            '/etc/motd',
+            name='Update the message of the day file',
+            src='files/motd',
+            dest='/etc/motd',
             mode='644',
         )
-
     '''
 
-    remote_filename = escape_unix_path(remote_filename)
+    dest = escape_unix_path(dest)
 
     # Upload IO objects as-is
-    if hasattr(local_filename, 'read'):
-        local_file = local_filename
+    if hasattr(src, 'read'):
+        local_file = src
 
     # Assume string filename
     else:
         # Add deploy directory?
         if add_deploy_dir and state.deploy_dir:
-            local_filename = path.join(state.deploy_dir, local_filename)
+            src = os_path.join(state.deploy_dir, src)
 
-        local_file = local_filename
+        local_file = src
 
-        if not assume_exists and not path.isfile(local_file):
+        if not assume_exists and not os_path.isfile(local_file):
             raise IOError('No such file: {0}'.format(local_file))
 
     mode = ensure_mode_int(mode)
-    remote_file = host.fact.file(remote_filename)
+    remote_file = host.fact.file(dest)
 
     if create_remote_dir:
-        yield _create_remote_dir(state, host, remote_filename, user, group)
+        yield _create_remote_dir(state, host, dest, user, group)
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
-        yield ('upload', local_file, remote_filename)
+        yield FileUploadCommand(local_file, dest)
 
         if user or group:
-            yield chown(remote_filename, user, group)
+            yield chown(dest, user, group)
 
         if mode:
-            yield chmod(remote_filename, mode)
+            yield chmod(dest, mode)
 
     # File exists, check sum and check user/group/mode if supplied
     else:
-        local_sum = get_file_sha1(local_filename)
-        remote_sum = host.fact.sha1_file(remote_filename)
+        local_sum = get_file_sha1(src)
+        remote_sum = host.fact.sha1_file(dest)
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
-            yield ('upload', local_file, remote_filename)
+            yield FileUploadCommand(local_file, dest)
 
             if user or group:
-                yield chown(remote_filename, user, group)
+                yield chown(dest, user, group)
 
             if mode:
-                yield chmod(remote_filename, mode)
+                yield chmod(dest, mode)
 
         else:
             # Check mode
             if mode and remote_file['mode'] != mode:
-                yield chmod(remote_filename, mode)
+                yield chmod(dest, mode)
 
             # Check user/group
             if (
                 (user and remote_file['user'] != user)
                 or (group and remote_file['group'] != group)
             ):
-                yield chown(remote_filename, user, group)
+                yield chown(dest, user, group)
 
 
 @operation
 def template(
-    state, host, template_filename, remote_filename,
-    user=None, group=None, mode=None, create_remote_dir=False,
+    state, host, src, dest,
+    user=None, group=None, mode=None, create_remote_dir=True,
     **data
 ):
     '''
     Generate a template using jinja2 and write it to the remote system.
 
-    + template_filename: local template filename
-    + remote_filename: remote filename
+    + src: local template filename
+    + dest: remote filename
     + user: user to own the files
     + group: group to own the files
     + mode: permissions of the files
@@ -644,15 +649,15 @@ def template(
     .. code:: python
 
         files.template(
-            {'Create a templated file'},
-            'templates/somefile.conf.j2',
-            '/etc/somefile.conf',
+            name='Create a templated file',
+            src='templates/somefile.conf.j2',
+            dest='/etc/somefile.conf',
         )
 
         files.template(
-            {'Create service file'},
-            'templates/myweb.service.j2',
-            '/etc/systemd/system/myweb.service',
+            name='Create service file',
+            src='templates/myweb.service.j2',
+            dest='/etc/systemd/system/myweb.service',
             mode='755',
             user='root',
             group='root',
@@ -662,18 +667,17 @@ def template(
         # The .j2 file can use `{{ foo_variable }}` to be interpolated.
         foo_variable = 'This is some foo variable contents'
         files.template(
-            {'Create a templated file'},
-            'templates/foo.j2',
-            '/tmp/foo',
+            name='Create a templated file',
+            src='templates/foo.j2',
+            dest='/tmp/foo',
             foo_variable=foo_variable,
         )
-
     '''
 
-    remote_filename = escape_unix_path(remote_filename)
+    dest = escape_unix_path(dest)
 
     if state.deploy_dir:
-        template_filename = path.join(state.deploy_dir, template_filename)
+        src = os_path.join(state.deploy_dir, src)
 
     # Ensure host is always available inside templates
     data['host'] = host
@@ -681,7 +685,7 @@ def template(
 
     # Render and make file-like it's output
     try:
-        output = get_template(template_filename).render(data)
+        output = get_template(src).render(data)
     except (TemplateSyntaxError, UndefinedError) as e:
         _, _, trace = sys.exc_info()
 
@@ -696,24 +700,24 @@ def template(
         line_number = trace.tb_frame.f_lineno
 
         # Quickly read the line in question and one above/below for nicer debugging
-        with open(template_filename, 'r') as f:
+        with open(src, 'r') as f:
             template_lines = f.readlines()
 
         template_lines = [line.strip() for line in template_lines]
         relevant_lines = template_lines[max(line_number - 2, 0):line_number + 1]
 
         raise OperationError('Error in template: {0} (L{1}): {2}\n...\n{3}\n...'.format(
-            template_filename, line_number, e, '\n'.join(relevant_lines),
+            src, line_number, e, '\n'.join(relevant_lines),
         ))
 
     output_file = six.StringIO(output)
     # Set the template attribute for nicer debugging
-    output_file.template = template_filename
+    output_file.template = src
 
     # Pass to the put function
     yield put(
         state, host,
-        output_file, remote_filename,
+        output_file, dest,
         user=user, group=group, mode=mode,
         add_deploy_dir=False,
         create_remote_dir=create_remote_dir,
@@ -721,18 +725,18 @@ def template(
 
 
 @operation(pipeline_facts={
-    'link': 'name',
+    'link': 'path',
 })
 def link(
-    state, host, name,
+    state, host, path,
     target=None, present=True, assume_present=False,
     user=None, group=None, symbolic=True,
-    create_remote_dir=False,
+    create_remote_dir=True,
 ):
     '''
     Add/remove/update links.
 
-    + name: the name of the link
+    + path: the name of the link
     + target: the file/directory the link points to
     + present: whether the link should exist
     + assume_present: whether to assume the link exists
@@ -756,9 +760,9 @@ def link(
 
         # simple example showing how to link to a file
         files.link(
-            {'Create link /etc/issue2 that points to /etc/issue'},
-            '/etc/issue2',
-            '/etc/issue',
+            name='Create link /etc/issue2 that points to /etc/issue',
+            path='/etc/issue2',
+            target='/etc/issue',
         )
 
 
@@ -766,47 +770,46 @@ def link(
         from pyinfra.operations import apt, files
 
         install_nginx = apt.packages(
-            {'Install nginx'},
-            'nginx',
+            name='Install nginx',
+            packages=['nginx'],
         )
 
         files.link(
-            {'Remove default nginx site'},
-            '/etc/nginx/sites-enabled/default',
+            name='Remove default nginx site',
+            path='/etc/nginx/sites-enabled/default',
             present=False,
             assume_present=install_nginx.changed,
         )
-
     '''
 
-    if not isinstance(name, six.string_types):
+    if not isinstance(path, six.string_types):
         raise OperationTypeError('Name must be a string')
 
     if present and not target:
         raise OperationError('If present is True target must be provided')
 
-    name = escape_unix_path(name)
-    info = host.fact.link(name)
+    path = escape_unix_path(path)
+    info = host.fact.link(path)
 
     # Not a link?
     if info is False:
-        raise OperationError('{0} exists and is not a link'.format(name))
+        raise OperationError('{0} exists and is not a link'.format(path))
 
     add_cmd = 'ln{0} {1} {2}'.format(
         ' -s' if symbolic else '',
-        target, name,
+        target, path,
     )
 
-    remove_cmd = 'rm -f {0}'.format(name)
+    remove_cmd = 'rm -f {0}'.format(path)
 
     # No link and we want it
     if not assume_present and info is None and present:
         if create_remote_dir:
-            yield _create_remote_dir(state, host, name, user, group)
+            yield _create_remote_dir(state, host, path, user, group)
 
         yield add_cmd
         if user or group:
-            yield chown(name, user, group, dereference=False)
+            yield chown(path, user, group, dereference=False)
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
@@ -814,16 +817,16 @@ def link(
 
     # Exists and want to ensure it's state
     elif (assume_present or info) and present:
-        # If we have an absolute name - prepend to any non-absolute values from the fact
+        # If we have an absolute path - prepend to any non-absolute values from the fact
         # and/or the source.
-        if path.isabs(name):
-            link_dirname = path.dirname(name)
+        if os_path.isabs(path):
+            link_dirname = os_path.dirname(path)
 
-            if not path.isabs(target):
-                target = path.normpath('/'.join((link_dirname, target)))
+            if not os_path.isabs(target):
+                target = os_path.normpath('/'.join((link_dirname, target)))
 
-            if info and not path.isabs(info['link_target']):
-                info['link_target'] = path.normpath(
+            if info and not os_path.isabs(info['link_target']):
+                info['link_target'] = os_path.normpath(
                     '/'.join((link_dirname, info['link_target'])),
                 )
 
@@ -838,22 +841,22 @@ def link(
             or (user and info['user'] != user)
             or (group and info['group'] != group)
         ):
-            yield chown(name, user, group, dereference=False)
+            yield chown(path, user, group, dereference=False)
 
 
 @operation(pipeline_facts={
-    'file': 'name',
+    'file': 'path',
 })
 def file(
-    state, host, name,
+    state, host, path,
     present=True, assume_present=False,
     user=None, group=None, mode=None, touch=False,
-    create_remote_dir=False,
+    create_remote_dir=True,
 ):
     '''
     Add/remove/update files.
 
-    + name: name/path of the remote file
+    + path: name/path of the remote file
     + present: whether the file should exist
     + assume_present: whether to assume the file exists
     + user: user to own the files
@@ -873,8 +876,8 @@ def file(
 
         # Note: The directory /tmp/secret will get created with the default umask.
         files.file(
-            {'Create /tmp/secret/file'},
-            '/tmp/secret/file',
+            name='Create /tmp/secret/file',
+            path='/tmp/secret/file',
             mode='600',
             user='root',
             group='root',
@@ -883,41 +886,41 @@ def file(
         )
     '''
 
-    if not isinstance(name, six.string_types):
+    if not isinstance(path, six.string_types):
         raise OperationTypeError('Name must be a string')
 
     mode = ensure_mode_int(mode)
-    name = escape_unix_path(name)
-    info = host.fact.file(name)
+    path = escape_unix_path(path)
+    info = host.fact.file(path)
 
     # Not a file?!
     if info is False:
-        raise OperationError('{0} exists and is not a file'.format(name))
+        raise OperationError('{0} exists and is not a file'.format(path))
 
     # Doesn't exist & we want it
     if not assume_present and info is None and present:
         if create_remote_dir:
-            yield _create_remote_dir(state, host, name, user, group)
+            yield _create_remote_dir(state, host, path, user, group)
 
-        yield 'touch {0}'.format(name)
+        yield 'touch {0}'.format(path)
 
         if mode:
-            yield chmod(name, mode)
+            yield chmod(path, mode)
         if user or group:
-            yield chown(name, user, group)
+            yield chown(path, user, group)
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
-        yield 'rm -f {0}'.format(name)
+        yield 'rm -f {0}'.format(path)
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
         if touch:
-            yield 'touch {0}'.format(name)
+            yield 'touch {0}'.format(path)
 
         # Check mode
         if mode and (not info or info['mode'] != mode):
-            yield chmod(name, mode)
+            yield chmod(path, mode)
 
         # Check user/group
         if (
@@ -925,21 +928,22 @@ def file(
             or (user and info['user'] != user)
             or (group and info['group'] != group)
         ):
-            yield chown(name, user, group)
+            yield chown(path, user, group)
 
 
 @operation(pipeline_facts={
-    'directory': 'name',
+    'directory': 'path',
 })
 def directory(
-    state, host, name,
+    state, host, path,
     present=True, assume_present=False,
     user=None, group=None, mode=None, recursive=False,
+    no_check_owner_mode=False,
 ):
     '''
     Add/remove/update directories.
 
-    + name: name/path of the remote folder
+    + path: path of the remote folder
     + present: whether the folder should exist
     + assume_present: whether to assume the directory exists
     + user: user to own the folder
@@ -952,14 +956,14 @@ def directory(
     .. code:: python
 
         files.directory(
-            {'Ensure the /tmp/dir_that_we_want_removed is removed'},
-            '/tmp/dir_that_we_want_removed',
+            name='Ensure the /tmp/dir_that_we_want_removed is removed',
+            path='/tmp/dir_that_we_want_removed',
             present=False,
         )
 
         files.directory(
-            {'Ensure /web exists'},
-            '/web',
+            name='Ensure /web exists',
+            path='/web',
             user='myweb',
             group='myweb',
         )
@@ -968,40 +972,42 @@ def directory(
         dirs = ['/netboot/tftp', '/netboot/nfs']
         for dir in dirs:
             files.directory(
-                {'Ensure the directory `{}` exists'.format(dir)},
-                dir,
+                name='Ensure the directory `{}` exists'.format(dir),
+                path=dir,
             )
-
     '''
 
-    if not isinstance(name, six.string_types):
+    if not isinstance(path, six.string_types):
         raise OperationTypeError('Name must be a string')
 
     mode = ensure_mode_int(mode)
-    name = escape_unix_path(name)
-    info = host.fact.directory(name)
+    path = escape_unix_path(path)
+    info = host.fact.directory(path)
 
     # Not a directory?!
     if info is False:
-        raise OperationError('{0} exists and is not a directory'.format(name))
+        raise OperationError('{0} exists and is not a directory'.format(path))
 
     # Doesn't exist & we want it
     if not assume_present and info is None and present:
-        yield 'mkdir -p {0}'.format(name)
+        yield 'mkdir -p {0}'.format(path)
         if mode:
-            yield chmod(name, mode, recursive=recursive)
+            yield chmod(path, mode, recursive=recursive)
         if user or group:
-            yield chown(name, user, group, recursive=recursive)
+            yield chown(path, user, group, recursive=recursive)
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
-        yield 'rm -rf {0}'.format(name)
+        yield 'rm -rf {0}'.format(path)
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
+        if no_check_owner_mode:
+            return
+
         # Check mode
         if mode and (not info or info['mode'] != mode):
-            yield chmod(name, mode, recursive=recursive)
+            yield chmod(path, mode, recursive=recursive)
 
         # Check user/group
         if (
@@ -1009,4 +1015,4 @@ def directory(
             or (user and info['user'] != user)
             or (group and info['group'] != group)
         ):
-            yield chown(name, user, group, recursive=recursive)
+            yield chown(path, user, group, recursive=recursive)

@@ -11,7 +11,7 @@ from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 
 
 @operation
-def key(state, host, key):
+def key(state, host, src):
     '''
     Add dnf gpg keys with ``rpm``.
 
@@ -26,28 +26,29 @@ def key(state, host, key):
 
         linux_id = host.fact.linux_distribution['release_meta'].get('ID')
         dnf.key(
-            {'Add the Docker CentOS gpg key'},
-            'https://download.docker.com/linux/{}/gpg'.format(linux_id),
+            name='Add the Docker CentOS gpg key',
+            src='https://download.docker.com/linux/{}/gpg'.format(linux_id),
         )
 
     '''
 
-    yield 'rpm --import {0}'.format(key)
+    yield 'rpm --import {0}'.format(src)
 
 
 @operation
 def repo(
-    state, host, name, baseurl=None,
-    present=True, description=None, enabled=True, gpgcheck=True, gpgkey=None,
+    state, host, src,
+    present=True,
+    baseurl=None, description=None,
+    enabled=True, gpgcheck=True, gpgkey=None,
 ):
     # NOTE: if updating this docstring also update `yum.repo`
-    # COMPAT: on v1 rearrange baseurl/present kwargs
     '''
     Add/remove/update dnf repositories.
 
     + name: URL or name for the ``.repo``   file
-    + baseurl: the baseurl of the repo (if ``name`` is not a URL)
     + present: whether the ``.repo`` file should be present
+    + baseurl: the baseurl of the repo (if ``name`` is not a URL)
     + description: optional verbose description
     + enabled: whether this repo is enabled
     + gpgcheck: whether set ``gpgcheck=1``
@@ -64,32 +65,32 @@ def repo(
 
         # Download a repository file
         dnf.rpm(
-            {'Install Docker-CE repo via URL'},
-            'https://download.docker.com/linux/centos/docker-ce.repo',
+            name='Install Docker-CE repo via URL',
+            src='https://download.docker.com/linux/centos/docker-ce.repo',
         )
 
         # Create the repository file from baseurl/etc
         dnf.repo(
-            {'Add the Docker CentOS repo'},
-            name='DockerCE',
+            name='Add the Docker CentOS repo',
+            src='DockerCE',
             baseurl='https://download.docker.com/linux/centos/7/$basearch/stable',
         )
     '''
 
     yield ensure_yum_repo(
         state, host, files,
-        name, baseurl, present, description, enabled, gpgcheck, gpgkey,
+        src, baseurl, present, description, enabled, gpgcheck, gpgkey,
         'dnf-config-manager',
     )
 
 
 @operation
-def rpm(state, host, source, present=True):
+def rpm(state, host, src, present=True):
     # NOTE: if updating this docstring also update `yum.rpm`
     '''
     Add/remove ``.rpm`` file packages.
 
-    + source: filename or URL of the ``.rpm`` package
+    + src: filename or URL of the ``.rpm`` package
     + present: whether ore not the package should exist on the system
 
     URL sources with ``present=False``:
@@ -101,13 +102,13 @@ def rpm(state, host, source, present=True):
     .. code:: python
 
         dnf.rpm(
-           {'Install EPEL rpm to enable EPEL repo'},
-           'https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
+           name='Install EPEL rpm to enable EPEL repo',
+           src='https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
            '{{  host.fact.linux_distribution.major }}.noarch.rpm',
         )
     '''
 
-    yield ensure_rpm(state, host, files, source, present, 'dnf')
+    yield ensure_rpm(state, host, files, src, present, 'dnf')
 
 
 @operation
@@ -148,15 +149,15 @@ def packages(
 
         # Update package list and install packages
         dnf.packages(
-            {'Install Vim and Vim enhanced'},
-            ['vim-enhanced', 'vim'],
+            name='Install Vim and Vim enhanced',
+            packages=['vim-enhanced', 'vim'],
             update=True,
         )
 
         # Install the latest versions of packages (always check)
         dnf.packages(
-            {'Install latest Vim'},
-            ['vim'],
+            name='Install latest Vim',
+            packages=['vim'],
             latest=True,
         )
     '''

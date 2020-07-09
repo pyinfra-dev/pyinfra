@@ -19,7 +19,7 @@ def file(
     state, host, name,
     present=True, assume_present=False,
     user=None, group=None, mode=None, touch=False,
-    create_remote_dir=False,
+    create_remote_dir=True,
 ):
     '''
     Add/remove/update files.
@@ -43,8 +43,8 @@ def file(
     .. code:: python
 
         files.file(
-            {'Create c:\\temp\\hello.txt'},
-            'c:\\temp\\hello.txt',
+            name='Create c:\\temp\\hello.txt',
+            path='c:\\temp\\hello.txt',
             touch=True,
         )
     '''
@@ -137,14 +137,14 @@ def directory(
     .. code:: python
 
         files.directory(
-            {'Ensure the c:\\temp\\dir_that_we_want_removed is removed'},
-            'c:\\temp\\dir_that_we_want_removed',
+            name='Ensure the c:\\temp\\dir_that_we_want_removed is removed',
+            path='c:\\temp\\dir_that_we_want_removed',
             present=False,
         )
 
         files.directory(
-            {'Ensure c:\\temp\\foo\\foo_dir exists'},
-            'c:\\temp\\foo\\foo_dir',
+            name='Ensure c:\\temp\\foo\\foo_dir exists',
+            path='c:\\temp\\foo\\foo_dir',
             recursive=True,
         )
 
@@ -152,8 +152,8 @@ def directory(
         dirs = ['c:\\temp\\foo_dir1', 'c:\\temp\\foo_dir2']
         for dir in dirs:
             files.directory(
-                {'Ensure the directory `{}` exists'.format(dir)},
-                dir,
+                name='Ensure the directory `{}` exists'.format(dir),
+                path=dir,
             )
 
     '''

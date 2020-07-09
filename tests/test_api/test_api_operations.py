@@ -1,11 +1,12 @@
 from inspect import currentframe, getframeinfo
+from unittest import TestCase
 
 from mock import mock_open, patch
 
 import pyinfra
 
 from pyinfra import pseudo_host, pseudo_state
-from pyinfra.api import Config, State
+from pyinfra.api import Config, FileUploadCommand, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.operation import add_op
@@ -17,7 +18,7 @@ from ..paramiko_util import (
     FakeChannel,
     PatchSSHTestCase,
 )
-from ..util import make_inventory
+from ..util import FakeState, make_inventory
 
 
 class TestOperationsApi(PatchSSHTestCase):
@@ -41,6 +42,7 @@ class TestOperationsApi(PatchSSHTestCase):
             user='pyinfra',
             group='pyinfra',
             mode='644',
+            create_remote_dir=False,
             sudo=True,
             sudo_user='test_sudo',
             su_user='test_su',
@@ -62,9 +64,9 @@ class TestOperationsApi(PatchSSHTestCase):
 
         # Ensure the commands
         assert state.ops[somehost][first_op_hash]['commands'] == [
-            'touch /var/log/pyinfra.log',
-            'chmod 644 /var/log/pyinfra.log',
-            'chown pyinfra:pyinfra /var/log/pyinfra.log',
+            StringCommand('touch /var/log/pyinfra.log'),
+            StringCommand('chmod 644 /var/log/pyinfra.log'),
+            StringCommand('chown pyinfra:pyinfra /var/log/pyinfra.log'),
         ]
 
         # Ensure the meta
@@ -97,20 +99,20 @@ class TestOperationsApi(PatchSSHTestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch('pyinfra.operations.files.path.isfile', lambda *args, **kwargs: True):
+        with patch('pyinfra.operations.files.os_path.isfile', lambda *args, **kwargs: True):
             # Test normal
             add_op(
                 state, files.put,
-                {'First op name'},
-                'files/file.txt',
-                '/home/vagrant/file.txt',
+                name='First op name',
+                src='files/file.txt',
+                dest='/home/vagrant/file.txt',
             )
 
             # And with sudo
             add_op(
                 state, files.put,
-                'files/file.txt',
-                '/home/vagrant/file.txt',
+                src='files/file.txt',
+                dest='/home/vagrant/file.txt',
                 sudo=True,
                 sudo_user='pyinfra',
             )
@@ -118,8 +120,8 @@ class TestOperationsApi(PatchSSHTestCase):
             # And with su
             add_op(
                 state, files.put,
-                'files/file.txt',
-                '/home/vagrant/file.txt',
+                src='files/file.txt',
+                dest='/home/vagrant/file.txt',
                 sudo=True,
                 su_user='pyinfra',
             )
@@ -139,7 +141,8 @@ class TestOperationsApi(PatchSSHTestCase):
 
         # Ensure first op has the right (upload) command
         assert state.ops[somehost][first_op_hash]['commands'] == [
-            ('upload', 'files/file.txt', '/home/vagrant/file.txt'),
+            StringCommand('mkdir -p /home/vagrant'),
+            FileUploadCommand('files/file.txt', '/home/vagrant/file.txt'),
         ]
 
         # Ensure second op has sudo/sudo_user
@@ -210,60 +213,6 @@ class TestOperationsApi(PatchSSHTestCase):
         ) == 1
 
 
-class TestOperationLimits(PatchSSHTestCase):
-    def test_op_hosts_limit(self):
-        inventory = make_inventory()
-        state = State(inventory, Config())
-        connect_all(state)
-
-        # Add op to both hosts
-        add_op(state, server.shell, 'echo "hi"')
-
-        # Add op to just the first host
-        add_op(
-            state, server.user,
-            'somehost_user',
-            hosts=inventory['somehost'],
-        )
-
-        # Ensure there are two ops
-        assert len(state.get_op_order()) == 2
-
-        # Ensure somehost has two ops and anotherhost only has the one
-        assert len(state.ops[inventory.get_host('somehost')]) == 2
-        assert len(state.ops[inventory.get_host('anotherhost')]) == 1
-
-    def test_op_state_hosts_limit(self):
-        inventory = make_inventory()
-        state = State(inventory, Config())
-        connect_all(state)
-
-        # Add op to both hosts
-        add_op(state, server.shell, 'echo "hi"')
-
-        # Add op to just the first host
-        with state.hosts('test_group'):
-            add_op(
-                state, server.user,
-                'somehost_user',
-            )
-
-            # Now, also limited but set hosts to the non-limited hosts, which
-            # should mean this operation applies to no hosts.
-            add_op(
-                state, server.user,
-                'somehost_user',
-                hosts=inventory.get_host('anotherhost'),
-            )
-
-        # Ensure there are three ops
-        assert len(state.get_op_order()) == 3
-
-        # Ensure somehost has two ops and anotherhost only has the one
-        assert len(state.ops[inventory.get_host('somehost')]) == 2
-        assert len(state.ops[inventory.get_host('anotherhost')]) == 1
-
-
 class TestOperationFailures(PatchSSHTestCase):
     def test_full_op_fail(self):
         inventory = make_inventory()
@@ -308,13 +257,13 @@ class TestOperationFailures(PatchSSHTestCase):
             # This should run OK
             run_ops(state)
 
-            somehost = inventory.get_host('somehost')
+        somehost = inventory.get_host('somehost')
 
-            # Ensure the op was added to results
-            assert state.results[somehost]['ops'] == 1
-            assert state.results[somehost]['error_ops'] == 1
-            # But not as a success
-            assert state.results[somehost]['success_ops'] == 0
+        # Ensure the op was added to results
+        assert state.results[somehost]['ops'] == 1
+        assert state.results[somehost]['error_ops'] == 1
+        # But not as a success
+        assert state.results[somehost]['success_ops'] == 0
 
     def test_no_invalid_op_call(self):
         inventory = make_inventory()
@@ -333,27 +282,31 @@ class TestOperationFailures(PatchSSHTestCase):
 
 
 class TestOperationOrdering(PatchSSHTestCase):
-    def test_op_line_numbers(self):
+    # In CLI mode, pyinfra uses *line numbers* to order operations as defined by
+    # the user. This makes reasoning about user-written deploys simple and easy
+    # to understand.
+    def test_cli_op_line_numbers(self):
         inventory = make_inventory()
         state = State(inventory, Config())
         connect_all(state)
 
-        # Add op to both hosts
-        add_op(state, server.shell, 'echo "hi"')
-
         pyinfra.is_cli = True
+        pseudo_state.set(state)
+
+        # Add op to both hosts
+        for name in ('anotherhost', 'somehost'):
+            pseudo_host.set(inventory.get_host(name))
+            server.shell('echo hi')  # note this is called twice but on *the same line*
 
         # Add op to just the second host - using the pseudo modules such that
         # it replicates a deploy file.
-        pseudo_state.set(state)
-        pseudo_host.set(inventory['anotherhost'])
+        pseudo_host.set(inventory.get_host('anotherhost'))
         first_pseudo_hash = server.user('anotherhost_user').hash
         first_pseudo_call_line = getframeinfo(currentframe()).lineno - 1
 
         # Add op to just the first host - using the pseudo modules such that
         # it replicates a deploy file.
-        pseudo_state.set(state)
-        pseudo_host.set(inventory['somehost'])
+        pseudo_host.set(inventory.get_host('somehost'))
         second_pseudo_hash = server.user('somehost_user').hash
         second_pseudo_call_line = getframeinfo(currentframe()).lineno - 1
 
@@ -377,3 +330,83 @@ class TestOperationOrdering(PatchSSHTestCase):
         # Ensure somehost has two ops and anotherhost only has the one
         assert len(state.ops[inventory.get_host('somehost')]) == 2
         assert len(state.ops[inventory.get_host('anotherhost')]) == 2
+
+    # In API mode, pyinfra *overrides* the line numbers such that whenever an
+    # operation or deploy is added it is simply appended. This makes sense as
+    # the user writing the API calls has full control over execution order.
+    def test_api_op_line_numbers(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+
+        another_host = inventory.get_host('anotherhost')
+
+        def add_another_op():
+            return add_op(state, server.shell, 'echo second-op')[another_host].hash
+
+        first_op_hash = add_op(state, server.shell, 'echo first-op')[another_host].hash
+        second_op_hash = add_another_op()  # note `add_op` will be called on an earlier line
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 2
+
+        assert op_order[0] == first_op_hash
+        assert op_order[1] == second_op_hash
+
+
+class TestOperationExceptions(TestCase):
+    def test_add_op_rejects_cli(self):
+        pyinfra.is_cli = True
+
+        with self.assertRaises(PyinfraError) as context:
+            add_op(None, server.shell)
+
+        pyinfra.is_cli = False
+
+        assert context.exception.args[0] == (
+            '`add_op` should not be called when pyinfra is executing in CLI mode! '
+            '(line 361 in tests/test_api/test_api_operations.py)'
+        )
+
+    def test_op_call_rejects_no_cli(self):
+        with self.assertRaises(PyinfraError) as context:
+            server.shell()
+
+        assert context.exception.args[0] == (
+            'API operation called without state/host: '
+            'server.shell (line 372 in tests/test_api/test_api_operations.py)'
+        )
+
+    def test_op_call_rejects_in_op(self):
+        state = FakeState()
+
+        pyinfra.is_cli = True
+        pseudo_state.set(state)
+
+        with self.assertRaises(PyinfraError) as context:
+            server.shell()
+
+        pyinfra.is_cli = False
+        pseudo_state.reset()
+
+        assert context.exception.args[0] == (
+            'Nested operation called without state/host: '
+            'server.shell (line 386 in tests/test_api/test_api_operations.py)'
+        )
+
+    def test_op_call_rejects_in_deploy(self):
+        state = FakeState()
+        state.in_op = False
+
+        pyinfra.is_cli = True
+        pseudo_state.set(state)
+
+        with self.assertRaises(PyinfraError) as context:
+            server.shell()
+
+        pyinfra.is_cli = False
+        pseudo_state.reset()
+
+        assert context.exception.args[0] == (
+            'Nested deploy operation called without state/host: '
+            'server.shell (line 404 in tests/test_api/test_api_operations.py)'
+        )

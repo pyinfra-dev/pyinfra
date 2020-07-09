@@ -2,7 +2,7 @@
     "args": ["someuser"],
     "kwargs": {
         "home": "homedir",
-        "public_keys": ["abc"]
+        "public_keys": "abc"
     },
     "facts": {
         "users": {

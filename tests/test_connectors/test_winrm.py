@@ -20,7 +20,7 @@ class TestWinrmConnector(TestCase):
         inventory = make_inventory()
         state = State(inventory, Config())
         host = inventory.get_host('somehost')
-        host.connect(state, for_fact=True)
+        host.connect(for_fact=True)
         assert len(state.active_hosts) == 0
 
     def test_connect_all_password(self):
@@ -49,20 +49,20 @@ class TestWinrmConnector(TestCase):
         fake_winrm_session.return_value = fake_winrm
 
         inventory = make_inventory(hosts=('@winrm/somehost',))
-        state = State(inventory, Config())
+        State(inventory, Config())
         host = inventory.get_host('@winrm/somehost')
-        host.connect(state)
+        host.connect()
 
         command = 'echo hi'
 
-        out = host.run_shell_command(state, command, stdin='hello', print_output=True)
+        out = host.run_shell_command(command, stdin='hello', print_output=True)
         assert len(out) == 3
 
         status, stdout, stderr = out
         # TODO: assert status is True
 
         combined_out = host.run_shell_command(
-            state, command, print_output=True,
+            command, print_output=True,
             return_combined_output=True,
         )
         assert len(combined_out) == 2

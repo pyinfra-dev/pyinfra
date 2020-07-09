@@ -23,18 +23,18 @@ def run_cli(*arguments):
 class TestCliEagerFlags(TestCase):
     def test_print_help(self):
         result = run_cli('--version')
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
         result = run_cli('--help')
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
     def test_print_facts_list(self):
         result = run_cli('--facts')
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
     def test_print_operations_list(self):
         result = run_cli('--operations')
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
 
 class TestCliDeployRuns(PatchSSHTestCase):
@@ -46,7 +46,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             '@local',
             'not-a-file.py',
         )
-        assert result.exit_code == 1
+        assert result.exit_code == 1, result.stderr
         assert 'No deploy file: not-a-file.py' in result.stdout
 
     def test_deploy_inventory(self):
@@ -55,7 +55,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             'server.shell',
             '--debug-data',
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
     def test_get_facts(self):
         result = run_cli(
@@ -63,7 +63,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             'fact',
             'os',
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
         assert '"somehost": null' in result.stdout
 
     def test_deploy_operation(self):
@@ -72,7 +72,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             'server.shell',
             'echo hi',
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
     def test_deploy_operation_with_all(self):
         result = run_cli(
@@ -80,7 +80,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             'server.shell',
             'echo hi',
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
     def test_exec_command(self):
         result = run_cli(
@@ -89,7 +89,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             '--',
             'echo hi',
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
     def test_exec_command_with_options(self):
         result = run_cli(
@@ -103,7 +103,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             '--',
             'echo hi',
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
     def test_exec_command_with_serial(self):
         result = run_cli(
@@ -113,7 +113,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             '--',
             'echo hi',
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
     def test_exec_command_with_no_wait(self):
         result = run_cli(
@@ -123,7 +123,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             '--',
             'echo hi',
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
     def test_exec_command_with_debug_operations(self):
         result = run_cli(
@@ -133,7 +133,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             '--',
             'echo hi',
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
     def test_exec_command_with_debug_facts(self):
         result = run_cli(
@@ -143,7 +143,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             '--',
             'echo hi',
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
     def test_exec_command_with_debug_data_limit(self):
         result = run_cli(
@@ -154,7 +154,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             '--',
             'echo hi',
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
 
 class TestCliDeployState(PatchSSHTestCase):
@@ -174,6 +174,8 @@ class TestCliDeployState(PatchSSHTestCase):
             ('tests/deploy/tasks/a_task.py | Second task operation', ('anotherhost',)),
             ('tests/deploy/tasks/a_task.py | First task operation', True),
             ('tests/deploy/tasks/a_task.py | Second task operation', True),
+            ('My deploy | First deploy operation', True),
+            ('My deploy | Second deploy operation', True),
             ('Loop-0 main operation', True),
             ('Loop-1 main operation', True),
             ('Third main operation', True),
@@ -191,7 +193,7 @@ class TestCliDeployState(PatchSSHTestCase):
             ','.join(hosts),
             path.join('tests', 'deploy', 'deploy.py'),
         )
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.stderr
 
         state = pseudo_state
         op_order = state.get_op_order()

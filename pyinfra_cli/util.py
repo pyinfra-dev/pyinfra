@@ -21,11 +21,10 @@ import click
 import six
 
 from pyinfra import logger, pseudo_host, pseudo_state
+from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.util import FallbackDict
-from pyinfra.hook import HOOKS
 
 from .exceptions import CliError
-from .legacy import parse_legacy_argstring
 
 # Cache for compiled Python deploy code
 PYTHON_CODES = {}
@@ -55,29 +54,20 @@ def exec_file(filename, return_locals=False, is_deploy_code=False):
     return data
 
 
-def run_hook(state, hook_name, hook_data):
-    hooks = HOOKS[hook_name]
-
-    if hooks:
-        for hook in hooks:
-            click.echo('--> Running hook: {0}/{1}'.format(
-                hook_name,
-                click.style(hook.__name__, bold=True),
-            ))
-            hook(hook_data, state)
-
-        click.echo()
-
-
 def json_encode(obj):
-    if isinstance(obj, FunctionType):
+    # pyinfra types
+    if isinstance(obj, FallbackDict):
+        return obj.dict()
+
+    elif isinstance(obj, PyinfraCommand):
+        return repr(obj)
+
+    # Python types
+    elif isinstance(obj, FunctionType):
         return obj.__name__
 
     elif isinstance(obj, datetime):
         return obj.isoformat()
-
-    elif isinstance(obj, FallbackDict):
-        return obj.dict()
 
     elif isinstance(obj, io_bases):
         if hasattr(obj, 'name'):
@@ -146,12 +136,8 @@ def get_operation_and_args(commands):
         try:
             args, kwargs = json.loads(operation_args[0])
             return op, (args, kwargs)
-
         except ValueError:
-            # COMPAT w/ <0.7
-            # TODO: remove this conditional
-            if ',' in operation_args[0]:
-                operation_args = parse_legacy_argstring(operation_args[0])
+            pass
 
     args = [
         _parse_arg(arg)

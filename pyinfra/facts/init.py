@@ -11,6 +11,7 @@ class UpstartStatus(FactBase):
     command = 'initctl list'
     regex = r'^([a-z\-]+) [a-z]+\/([a-z]+)'
     default = dict
+    use_default_on_error = True
 
     def process(self, output):
         services = {}
@@ -31,6 +32,7 @@ class SystemdStatus(FactBase):
     command = 'systemctl -al list-units'
     regex = r'^([a-zA-Z\-0-9]+\.[a-z]+)\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
     default = dict
+    use_default_on_error = True
 
     def process(self, output):
         services = {}
@@ -60,6 +62,7 @@ class SystemdEnabled(FactBase):
 
     regex = r'^([a-zA-Z0-9@\-]+\.[a-z]+)\s+([a-z]+)'
     default = dict
+    use_default_on_error = True
 
     def process(self, output):
         units = {}
@@ -99,6 +102,7 @@ class InitdStatus(FactBase):
 
     regex = r'([a-zA-Z0-9\-]+)=([0-9]+)'
     default = dict
+    use_default_on_error = True
 
     def process(self, output):
         services = {}
@@ -143,6 +147,7 @@ class RcdStatus(InitdStatus):
     '''
 
     default = dict
+    use_default_on_error = True
 
 
 class LaunchdStatus(FactBase):
@@ -152,6 +157,7 @@ class LaunchdStatus(FactBase):
 
     command = 'launchctl list'
     default = dict
+    use_default_on_error = True
 
     def process(self, output):
         services = {}

@@ -5,6 +5,7 @@ import re
 from functools import wraps
 from hashlib import sha1
 from inspect import getframeinfo, stack
+from os import path
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -36,20 +37,6 @@ def try_int(value):
         return value
 
 
-def ensure_host_list(hosts, inventory):
-    if hosts is None:
-        return hosts
-
-    # If passed a string, treat as group name and get any hosts from inventory
-    if isinstance(hosts, six.string_types):
-        return inventory.get_group(hosts, [])
-
-    if not isinstance(hosts, (list, tuple)):
-        return [hosts]
-
-    return hosts
-
-
 def memoize(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -63,6 +50,14 @@ def memoize(func):
 
     wrapper.cache = {}
     return wrapper
+
+
+def get_call_location():
+    frame = get_caller_frameinfo(frame_offset=1)  # escape *this* function
+    return 'line {0} in {1}'.format(
+        frame.lineno,
+        path.relpath(frame.filename),
+    )
 
 
 def get_caller_frameinfo(frame_offset=0):
@@ -232,12 +227,18 @@ def log_host_command_error(host, e, timeout=0):
         raise e
 
 
+@memoize
+def show_get_arg_value_warning():
+    logger.warning((
+        'Use of jinja2 templating in arguments is deprecated, '
+        'please use builtin Python string formatting.'
+    ))
+
+
+# TODO: remove this! COMPAT w/<1
 def get_arg_value(state, host, arg):
     '''
-    Runs string arguments through the jinja2 templating system with a state and
-    host. Used to avoid string formatting in deploy operations which result in
-    one operation per host/variable. By parsing the commands after we generate
-    the ``op_hash``, multiple command variations can fall under one op.
+    This functions is **deprecated**.
     '''
 
     if isinstance(arg, six.string_types):
@@ -247,9 +248,13 @@ def get_arg_value(state, host, arg):
         }
 
         try:
-            return get_template(arg, is_string=True).render(data)
+            rendered_arg = get_template(arg, is_string=True).render(data)
         except (TemplateSyntaxError, UndefinedError) as e:
             raise PyinfraError('Error in template string: {0}'.format(e))
+        else:
+            if rendered_arg != arg:
+                show_get_arg_value_warning()
+            return rendered_arg
 
     elif isinstance(arg, list):
         return [get_arg_value(state, host, value) for value in arg]
@@ -394,7 +399,7 @@ def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
         if six.PY2:  # Python2 must print unicode as bytes (encoded)
             line = line.encode('utf-8')
 
-        click.echo(line)
+        click.echo(line, err=True)
 
     for line in io:
         # Handle local Popen shells returning list of bytes, not strings

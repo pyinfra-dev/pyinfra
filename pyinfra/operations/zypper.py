@@ -13,7 +13,7 @@ key = yum_key
 def repo(
     state,
     host,
-    name,
+    src,
     baseurl=None,
     present=True,
     description=None,
@@ -25,7 +25,7 @@ def repo(
     '''
     Add/remove/update zypper repositories.
 
-    + name: URL or name for the ``.repo``   file
+    + src: URL or name for the ``.repo``   file
     + baseurl: the baseurl of the repo (if ``name`` is not a URL)
     + present: whether the ``.repo`` file should be present
     + description: optional verbose description
@@ -45,14 +45,14 @@ def repo(
 
         # Download a repository file
         zypper.repo(
-            {'Install container virtualization repo via URL'},
-            'https://download.opensuse.org/repositories/Virtualization:containers/openSUSE_Tumbleweed/Virtualization:containers.repo',
+            name='Install container virtualization repo via URL',
+            src='https://download.opensuse.org/repositories/Virtualization:containers/openSUSE_Tumbleweed/Virtualization:containers.repo',
         )
 
         # Create the repository file from baseurl/etc
         zypper.repo(
-            {'Install container virtualization repo'},
-            name='Virtualization:containers (openSUSE_Tumbleweed)',
+            name='Install container virtualization repo',
+            src=='Virtualization:containers (openSUSE_Tumbleweed)',
             baseurl='https://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Tumbleweed/',
         )
     '''
@@ -61,7 +61,7 @@ def repo(
         state,
         host,
         files,
-        name,
+        src,
         baseurl,
         present,
         description,
@@ -73,12 +73,12 @@ def repo(
 
 
 @operation
-def rpm(state, host, source, present=True):
+def rpm(state, host, src, present=True):
     # NOTE: if updating this docstring also update `dnf.rpm`
     '''
     Add/remove ``.rpm`` file packages.
 
-    + source: filename or URL of the ``.rpm`` package
+    + src: filename or URL of the ``.rpm`` package
     + present: whether ore not the package should exist on the system
 
     URL sources with ``present=False``:
@@ -90,12 +90,12 @@ def rpm(state, host, source, present=True):
     .. code:: python
 
         zypper.rpm(
-           {'Install task from rpm'},
-           'https://github.com/go-task/task/releases/download/v2.8.1/task_linux_amd64.rpm'
+           name='Install task from rpm',
+           src='https://github.com/go-task/task/releases/download/v2.8.1/task_linux_amd64.rpm'
         )
     '''
 
-    yield ensure_rpm(state, host, files, source, present, 'zypper --non-interactive')
+    yield ensure_rpm(state, host, files, src, present, 'zypper --non-interactive')
 
 
 @operation
@@ -146,15 +146,15 @@ def packages(
 
         # Update package list and install packages
         zypper.packages(
-            {'Install Vim and Vim enhanced'},
-            ['vim-enhanced', 'vim'],
+            name='Install Vim and Vim enhanced',
+            packages=['vim-enhanced', 'vim'],
             update=True,
         )
 
         # Install the latest versions of packages (always check)
         zypper.packages(
-            {'Install latest Vim'},
-            ['vim'],
+            name='Install latest Vim',
+            packages=['vim'],
             latest=True,
         )
     '''

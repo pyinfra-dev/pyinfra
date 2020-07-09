@@ -9,7 +9,6 @@ For example, here we fetch the list of target hosts from some internal inventory
 
 import requests
 
-
 def get_servers():
     db = []
     web = []

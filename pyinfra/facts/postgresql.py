@@ -44,6 +44,7 @@ def make_execute_psql_command(command, **postgresql_kwargs):
 
 class PostgresqlFactBase(FactBase):
     abstract = True
+    use_default_on_error = True
 
     def command(
         self,

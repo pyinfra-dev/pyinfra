@@ -3,12 +3,12 @@ from pyinfra.operations import apt, npm
 SUDO = True
 
 apt.packages(
-    {'Install node'},
-    ['nodejs', 'npm'],
+    name='Install node',
+    packages=['nodejs', 'npm'],
     update=True,
 )
 
 npm.packages(
-    {'Install some npm packages'},
-    ['react', 'express'],
+    name='Install some npm packages',
+    packages=['react', 'express'],
 )

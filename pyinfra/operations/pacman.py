@@ -51,8 +51,8 @@ def packages(
     .. code:: python
 
         pacman.packages(
-            {'Install Vim and a plugin'},
-            ['vim-fugitive', 'vim'],
+            name='Install Vim and a plugin',
+            packages=['vim-fugitive', 'vim'],
             update=True,
         )
     '''

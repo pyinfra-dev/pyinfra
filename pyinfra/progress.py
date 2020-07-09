@@ -56,14 +56,13 @@ def _print_spinner(stop_event, progress_queue):
         )
         text = '{0}\r'.format(text)
 
-        sys.stdout.write(text)
-        sys.stdout.flush()
+        sys.stderr.write(text)
+        sys.stderr.flush()
 
         # In pyinfra_cli's __main__ we set stdout & stderr to be line buffered,
         # so write this escape code (clear line) into the buffer but don't flush,
         # such that any next print/log/etc clear the line first.
         if not IS_WINDOWS:
-            sys.stdout.write('\033[K')
             sys.stderr.write('\033[K')
 
         sleep(WAIT_TIME)

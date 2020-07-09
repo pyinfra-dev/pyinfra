@@ -21,7 +21,6 @@
             },
             "ipv6": {
                 "address": "2a01::01",
-                "size": "64",
                 "mask_bits": 64
             }
         },

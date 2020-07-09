@@ -3,13 +3,18 @@ from __future__ import print_function
 import json
 from importlib import import_module
 from os import listdir, path
-from types import FunctionType
 from unittest import TestCase
 
 import six
 from jsontest import JsonTest
 
 from pyinfra import pseudo_host, pseudo_state
+from pyinfra.api import (
+    FileDownloadCommand,
+    FileUploadCommand,
+    FunctionCommand,
+    StringCommand,
+)
 from pyinfra.api.util import unroll_generators
 from pyinfra_cli.util import json_encode
 
@@ -65,33 +70,44 @@ def make_operation_tests(arg):
             commands = []
 
             for command in output_commands:
-                if isinstance(command, six.string_types):
-                    commands.append(command.strip())
+                if isinstance(command, six.string_types):  # matches pyinfra/api/operation.py
+                    command = StringCommand(command.strip())
+
+                if isinstance(command, StringCommand):
+                    json_command = get_command_string(command)
 
                 elif isinstance(command, dict):
                     command['command'] = get_command_string(command['command']).strip()
-                    commands.append(command)
+                    json_command = command
 
-                elif isinstance(command, tuple):
-                    if command[0] == '__func__':
-                        commands.append([
-                            command[0], list(command[1]), command[2],
-                        ])
-                    elif isinstance(command[0], FunctionType):
-                        commands.append([
-                            command[0].__name__, list(command[1]), command[2],
-                        ])
+                elif isinstance(command, FunctionCommand):
+                    func_name = (
+                        command.function if command.function == '__func__'
+                        else command.function.__name__
+                    )
+                    json_command = [
+                        func_name, list(command.args), command.kwargs,
+                    ]
+
+                elif isinstance(command, FileUploadCommand):
+                    if hasattr(command.src, 'read'):
+                        command.src.seek(0)
+                        data = command.src.read()
                     else:
-                        if hasattr(command[1], 'read'):
-                            command[1].seek(0)
-                            data = command[1].read()
-                        else:
-                            data = command[1]
+                        data = command.src
+                    json_command = ['upload', data, command.dest]
 
-                        commands.append([command[0], data, command[2]])
+                elif isinstance(command, FileDownloadCommand):
+                    json_command = ['download', command.src, command.dest]
 
                 else:
-                    commands.append(get_command_string(command))
+                    raise Exception('{0} is not a valid command!'.format(command))
+
+                if command.executor_kwargs:
+                    command.executor_kwargs['command'] = json_command
+                    json_command = command.executor_kwargs
+
+                commands.append(json_command)
 
             try:
                 assert commands == test_data['commands']

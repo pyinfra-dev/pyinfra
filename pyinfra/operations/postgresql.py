@@ -45,7 +45,7 @@ def sql(
 
 @operation
 def role(
-    state, host, name,
+    state, host, role,
     present=True,
     password=None, login=True, superuser=False, inherit=False,
     createdb=False, createrole=False, replication=False, connection_limit=None,
@@ -56,7 +56,7 @@ def role(
     '''
     Add/remove PostgreSQL roles.
 
-    + name: name of the role
+    + role: name of the role
     + present: whether the role should be present or absent
     + password: the password for the role
     + login: whether the role can login
@@ -78,8 +78,8 @@ def role(
     .. code:: python
 
         postgresql.role(
-            {'Create the pyinfra PostgreSQL role'},
-            'pyinfra',
+            name='Create the pyinfra PostgreSQL role',
+            role='pyinfra',
             password='somepassword',
             superuser=True,
             login=True,
@@ -93,13 +93,13 @@ def role(
         postgresql_host, postgresql_port,
     )
 
-    is_present = name in roles
+    is_present = role in roles
 
     # User not wanted?
     if not present:
         if is_present:
             yield make_execute_psql_command(
-                'DROP ROLE {0}'.format(name),
+                'DROP ROLE {0}'.format(role),
                 user=postgresql_user,
                 password=postgresql_password,
                 host=postgresql_host,
@@ -109,7 +109,7 @@ def role(
 
     # If we want the user and they don't exist
     if not is_present:
-        sql_bits = ['CREATE ROLE {0}'.format(name)]
+        sql_bits = ['CREATE ROLE {0}'.format(role)]
 
         for key, value in (
             ('LOGIN', login),
@@ -139,7 +139,7 @@ def role(
 
 @operation
 def database(
-    state, host, name,
+    state, host, database,
     present=True, owner=None,
     template=None, encoding=None,
     lc_collate=None, lc_ctype=None, tablespace=None,
@@ -172,8 +172,8 @@ def database(
     .. code:: python
 
         postgresql.database(
-            {'Create the pyinfra_stuff database'},
-            'pyinfra_stuff',
+            name='Create the pyinfra_stuff database',
+            database='pyinfra_stuff',
             owner='pyinfra',
             encoding='UTF8',
             sudo_user='postgres',
@@ -186,12 +186,12 @@ def database(
         postgresql_host, postgresql_port,
     )
 
-    is_present = name in current_databases
+    is_present = database in current_databases
 
     if not present:
         if is_present:
             yield make_execute_psql_command(
-                'DROP DATABASE {0}'.format(name),
+                'DROP DATABASE {0}'.format(database),
                 user=postgresql_user,
                 password=postgresql_password,
                 host=postgresql_host,
@@ -201,7 +201,7 @@ def database(
 
     # We want the database but it doesn't exist
     if present and not is_present:
-        sql_bits = ['CREATE DATABASE {0}'.format(name)]
+        sql_bits = ['CREATE DATABASE {0}'.format(database)]
 
         for key, value in (
             ('OWNER', owner),
@@ -227,7 +227,7 @@ def database(
 @operation
 def dump(
     state, host,
-    remote_filename, database=None,
+    dest, database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
     postgresql_user=None, postgresql_password=None,
     postgresql_host=None, postgresql_port=None,
@@ -235,8 +235,8 @@ def dump(
     '''
     Dump a PostgreSQL database into a ``.sql`` file. Requires ``pg_dump``.
 
+    + dest: name of the file to dump the SQL to
     + database: name of the database to dump
-    + remote_filename: name of the file to dump the SQL to
     + postgresql_*: global module arguments, see above
 
     Example:
@@ -244,8 +244,8 @@ def dump(
     .. code:: python
 
         postgresql.dump(
-            {'Dump the pyinfra_stuff database'},
-            '/tmp/pyinfra_stuff.dump',
+            name='Dump the pyinfra_stuff database',
+            dest='/tmp/pyinfra_stuff.dump',
             database='pyinfra_stuff',
             sudo_user='postgres',
         )
@@ -259,13 +259,13 @@ def dump(
         password=postgresql_password,
         host=postgresql_host,
         port=postgresql_port,
-    ), '>', remote_filename)
+    ), '>', dest)
 
 
 @operation
 def load(
     state, host,
-    remote_filename, database=None,
+    src, database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
     postgresql_user=None, postgresql_password=None,
     postgresql_host=None, postgresql_port=None,
@@ -273,8 +273,8 @@ def load(
     '''
     Load ``.sql`` file into a database.
 
+    + src: the filename to read from
     + database: name of the database to import into
-    + remote_filename: the filename to read from
     + postgresql_*: global module arguments, see above
 
     Example:
@@ -282,8 +282,8 @@ def load(
     .. code:: python
 
         postgresql.load(
-            {'Import the pyinfra_stuff dump into pyinfra_stuff_copy'},
-            '/tmp/pyinfra_stuff.dump',
+            name='Import the pyinfra_stuff dump into pyinfra_stuff_copy',
+            src='/tmp/pyinfra_stuff.dump',
             database='pyinfra_stuff_copy',
             sudo_user='postgres',
         )
@@ -296,4 +296,4 @@ def load(
         password=postgresql_password,
         host=postgresql_host,
         port=postgresql_port,
-    ), '<', remote_filename)
+    ), '<', src)

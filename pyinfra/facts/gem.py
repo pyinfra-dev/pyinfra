@@ -17,6 +17,7 @@ class GemPackages(FactBase):
 
     command = 'gem list --local'
     default = dict
+    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(GEM_REGEX, output)

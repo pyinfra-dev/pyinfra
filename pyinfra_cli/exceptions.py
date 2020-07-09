@@ -8,17 +8,13 @@ import click
 
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.hook import Error as HookError
 
 
 class CliError(PyinfraError, click.ClickException):
     def show(self):
         name = 'unknown error'
 
-        if isinstance(self, HookError):
-            name = 'hook error'
-
-        elif isinstance(self, PyinfraError):
+        if isinstance(self, PyinfraError):
             name = 'pyinfra error'
 
         elif isinstance(self, IOError):

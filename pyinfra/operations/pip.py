@@ -30,8 +30,8 @@ def virtualenv(
     .. code:: python
 
         pip.virtualenv(
-            {'Create a virtualenv'},
-            '/usr/local/bin/venv',
+            name='Create a virtualenv',
+            path='/usr/local/bin/venv',
         )
     '''
 
@@ -97,8 +97,8 @@ def packages(
     .. code:: python
 
         pip.packages(
-            {'Install pyinfra into a virtualenv'},
-            'pyinfra',
+            name='Install pyinfra into a virtualenv',
+            packages=['pyinfra'],
             virtualenv='/usr/local/bin/venv',
         )
     '''

@@ -1,6 +1,6 @@
 from pyinfra import logger
 
-from .util import ensure_host_list, memoize
+from .util import memoize
 
 
 auth_kwargs = {
@@ -43,6 +43,9 @@ def generate_env(config, value):
 
 
 operation_kwargs = {
+    'name': {
+        'description': 'Name of the operation',
+    },
     'shell_executable': {
         'description': 'The shell to use. Defaults to ``sh`` (Unix) or ``cmd`` (Windows).',
         'default': lambda config: config.SHELL,
@@ -57,7 +60,7 @@ operation_kwargs = {
     },
     'success_exit_codes': {
         'description': 'List of exit codes to consider a success',
-        'default': [0],
+        'default': lambda config: [0],
     },
     'timeout': 'Timeout for *each* command executed during the operation.',
     'get_pty': 'Whether to get a pseudoTTY when executing any commands.',
@@ -75,16 +78,11 @@ callback_kwargs = {
     'on_error': 'Callback function to execute on error.',
 }
 
-hidden_commands = {
-    'op': {},
-}
-
 OPERATION_KWARGS = {
     'Privilege & user escalation': auth_kwargs,
     'Operation control': operation_kwargs,
     'Operation execution': execution_kwargs,
     'Callbacks': callback_kwargs,
-    None: hidden_commands,
 }
 
 
@@ -94,6 +92,7 @@ def get_executor_kwarg_keys():
     keys.update(auth_kwargs.keys())
     keys.update(operation_kwargs.keys())
     keys.remove('ignore_errors')
+    keys.remove('name')
     return list(keys)
 
 
@@ -107,34 +106,12 @@ def pop_global_op_kwargs(state, kwargs):
     Pop and return operation global keyword arguments.
     '''
 
-    for deprecated_key in ('when', 'hosts'):
-        if deprecated_key in kwargs:
-            logger.warning((
-                'Use of the `{0}` argument is deprecated, '
-                'please use normal `if` statements instead.'
-            ).format(deprecated_key))
-
     meta_kwargs = state.deploy_kwargs or {}
 
     def get_kwarg(key, default=None):
         return kwargs.pop(key, meta_kwargs.get(key, default))
 
-    # TODO: remove hosts/when
-    hosts = get_kwarg('hosts')
-    hosts = ensure_host_list(hosts, inventory=state.inventory)
-
-    # Filter out any hosts not in the meta kwargs (nested support)
-    if meta_kwargs.get('hosts') is not None:
-        hosts = [
-            host for host in hosts
-            if host in meta_kwargs['hosts']
-        ]
-
-    global_kwargs = {
-        'hosts': hosts,
-        'when': get_kwarg('when', True),
-    }
-    # TODO: end remove hosts/when block
+    global_kwargs = {}
 
     if 'stdin' in kwargs:
         show_stdin_global_warning()
@@ -147,7 +124,7 @@ def pop_global_op_kwargs(state, kwargs):
             if isinstance(config, dict):
                 handler = config.get('handler')
                 default = config.get('default')
-                if default and callable(default):
+                if default:
                     default = default(state.config)
 
             value = get_kwarg(key, default=default)

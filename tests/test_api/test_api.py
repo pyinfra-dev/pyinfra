@@ -18,7 +18,7 @@ class TestInventoryApi(TestCase):
         assert len(inventory.hosts) == 2
 
         # Get a host
-        host = inventory['somehost']
+        host = inventory.get_host('somehost')
         assert host.data.ssh_user == 'vagrant'
 
         # Check our group data
@@ -39,7 +39,7 @@ class TestInventoryApi(TestCase):
         )
 
         # Check host data
-        host = inventory['somehost']
+        host = inventory.get_host('somehost')
         assert host.data.some_data == 'hello'
         assert host.data.another_data == 'world'
 
@@ -50,10 +50,10 @@ class TestInventoryApi(TestCase):
         inventory = make_inventory()
 
         with self.assertRaises(NoHostError):
-            inventory['i-dont-exist']
+            inventory.get_host('i-dont-exist')
 
         with self.assertRaises(NoGroupError):
-            getattr(inventory, 'i-dont-exist')
+            inventory.get_group('i-dont-exist')
 
 
 class TestStateApi(PatchSSHTestCase):

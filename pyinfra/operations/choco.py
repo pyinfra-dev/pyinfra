@@ -26,8 +26,8 @@ def packages(state, host, packages=None, present=True, latest=False):
         # Note: Assumes that 'choco' is installed and
         #       user has Administrator permission.
         choco.packages(
-            {'Install Notepad++'},
-            'notepadplusplus',
+            name='Install Notepad++',
+            packages=['notepadplusplus'],
         )
     '''
 

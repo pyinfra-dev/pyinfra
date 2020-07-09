@@ -12,13 +12,13 @@ from pyinfra.api.exceptions import OperationError
 
 @operation
 def chain(
-    state, host, name, present=True,
+    state, host, chain, present=True,
     table='filter', policy=None, version=4,
 ):
     '''
     Add/remove/update iptables chains.
 
-    + name: the name of the chain
+    + chain: the name of the chain
     + present: whether the chain should exist
     + table: the iptables table this chain should belong to
     + policy: the policy this table should have
@@ -38,19 +38,19 @@ def chain(
     command = '{0} -t {1}'.format(command, table)
 
     # Doesn't exist but we want it?
-    if present and name not in chains:
-        yield '{0} -N {1}'.format(command, name)
+    if present and chain not in chains:
+        yield '{0} -N {1}'.format(command, chain)
 
         if policy:
-            yield '{0} -P {1} {2}'.format(command, name, policy)
+            yield '{0} -P {1} {2}'.format(command, chain, policy)
 
     # Exists and we don't want it?
-    if not present and name in chains:
-        yield '{0} -X {1}'.format(command, name)
+    if not present and chain in chains:
+        yield '{0} -X {1}'.format(command, chain)
 
     # Exists, we want it, but the policies don't match?
-    if present and name in chains and policy and chains[name] != policy:
-        yield '{0} -P {1} {2}'.format(command, name, policy)
+    if present and chain in chains and policy and chains[chain] != policy:
+        yield '{0} -P {1} {2}'.format(command, chain, policy)
 
 
 @operation
@@ -99,18 +99,18 @@ def rule(
 
     .. code:: python
 
-        # Block SSH traffic
-
         iptables.rule(
-            'INPUT', 'DROP',
+            name='Block SSH traffic',
+            chain='INPUT',
+            jump='DROP',
             destination_port=22
         )
 
-
-        # NAT traffic on from 8.8.8.8:53 to 8.8.4.4:8080
-
         iptables.rule(
-            'PREROUTING', 'DNAT', table='nat',
+            name='NAT traffic on from 8.8.8.8:53 to 8.8.4.4:8080',
+            chain='PREROUTING',
+            jump='DNAT',
+            table='nat',
             source='8.8.8.8', destination_port=53,
             to_destination='8.8.4.4:8080'
         )

@@ -20,7 +20,6 @@ INSTALL_REQUIRES = (
     'paramiko>=2.2,<3',  # 2.2 (2017) adds Ed25519Key
     'click>2',
     'colorama<1',  # Windows color support for click
-    'docopt<1',  # legacy
     'jinja2>2,<3',
     'python-dateutil>2,<3',
     'six>1,<2',
@@ -50,7 +49,7 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
 )
 
 DOCS_REQUIRES = (
-    'pyinfra-guzzle_sphinx_theme==0.1',  # Custom guzzle theme
+    'pyinfra-guzzle_sphinx_theme==0.2',  # Custom guzzle theme
     'recommonmark==0.5.0',
     'sphinx==2.2.1 ; python_version >= "3"',
     'sphinx==1.8.5 ; python_version < "3"',

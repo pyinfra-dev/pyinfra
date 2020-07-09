@@ -4,20 +4,20 @@ SUDO = True
 
 
 init.systemd(
-    {'Disable ufw'},
-    'ufw',
+    name='Disable ufw',
+    service='ufw',
     running=False,
     enabled=False,
 )
 
 server.reboot(
-    {'Reboot the server'},
+    name='Reboot the server',
     delay=5,
     timeout=30,
 )
 
 server.shell(
-    {'Ensure ufw is not running'},
-    'systemctl status ufw',
+    name='Ensure ufw is not running',
+    commands='systemctl status ufw',
     success_exit_codes=[3],
 )

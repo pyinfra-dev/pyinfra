@@ -17,6 +17,7 @@ class PacmanPackages(FactBase):
 
     command = 'pacman -Q'
     default = dict
+    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(PACMAN_REGEX, output)
