@@ -5,6 +5,7 @@ Linux/BSD.
 
 from __future__ import division, unicode_literals
 
+from os import path
 from time import sleep
 
 import six
@@ -38,7 +39,6 @@ def reboot(state, host, delay=10, interval=1, reboot_timeout=300):
             delay=5,
             timeout=30,
         )
-
     '''
 
     logger.warning('The server.reboot operation is in beta!')
@@ -87,7 +87,6 @@ def wait(state, host, port=None):
             {'Wait for webserver to start'},
             port=80,
         )
-
     '''
 
     yield r'''
@@ -116,7 +115,6 @@ def shell(state, host, commands, chdir=None):
             {'Run lxd auto init'},
             'lxd init --auto',
         )
-
     '''
 
     # Ensure we have a list
@@ -147,7 +145,6 @@ def script(state, host, filename, chdir=None):
             {'Hello'},
             'files/hello.bash',
         )
-
     '''
 
     temp_file = state.get_temp_filename(filename)
@@ -183,7 +180,6 @@ def script_template(state, host, template_filename, chdir=None, **data):
             'templates/hello2.bash.j2',
             some_var=some_var,
         )
-
     '''
 
     temp_file = state.get_temp_filename('{0}{1}'.format(template_filename, data))
@@ -214,7 +210,6 @@ def modprobe(state, host, name, present=True, force=False):
             {'Silly example for modprobe'},
             'floppy',
         )
-
     '''
 
     modules = host.fact.kernel_modules
@@ -411,7 +406,6 @@ def crontab(
             hour=1,
             minute=0,
         )
-
     '''
 
     def comma_sep(value):
@@ -530,8 +524,6 @@ def group(
                 {f'Create the group {group}'},
                 group,
             )
-
-
     '''
 
     groups = host.fact.groups or []
@@ -562,7 +554,7 @@ def user(
     state, host, name,
     present=True, home=None, shell=None, group=None, groups=None,
     public_keys=None, delete_keys=False, ensure_home=True,
-    system=False, uid=None,
+    system=False, uid=None, add_deploy_dir=True,
 ):
     '''
     Add/remove/update system users & their ssh `authorized_keys`.
@@ -577,10 +569,15 @@ def user(
     + delete_keys: whether to remove any keys not specified in ``public_keys``
     + ensure_home: whether to ensure the ``home`` directory exists
     + system: whether to create a system account
+    + add_deploy_dir: any public_key filenames are relative to the deploy directory
 
     Home directory:
         When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
         ``/home/{name}``.
+
+    Public keys:
+        These can be provided as strings containing the public key or as a path to
+        a public key file which ``pyinfra`` will read.
 
     Examples:
 
@@ -605,7 +602,6 @@ def user(
                 user,
                 present=False,
             )
-
     '''
 
     users = host.fact.users or {}
@@ -683,6 +679,19 @@ def user(
     if public_keys is not None:
         if isinstance(public_keys, six.string_types):
             public_keys = [public_keys]
+
+        def read_any_pub_key_file(key):
+            try_path = key
+            if add_deploy_dir and state.deploy_dir:
+                try_path = path.join(state.deploy_dir, key)
+
+            if path.exists(try_path):
+                with open(try_path, 'r') as f:
+                    return f.read()
+
+            return key
+
+        public_keys = list(map(read_any_pub_key_file, public_keys))
 
         # Ensure .ssh directory
         # note that this always outputs commands unless the SSH user has access to the
