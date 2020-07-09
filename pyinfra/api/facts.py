@@ -207,7 +207,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
         # Wait for all the commands to execute
         progress_prefix = 'fact: {0}'.format(name)
         if args:
-            progress_prefix = '{0}{1}'.format(progress_prefix, args)
+            progress_prefix = '{0}{1}'.format(progress_prefix, args[0])
 
         with progress_spinner(
             greenlet_to_host.values(),
