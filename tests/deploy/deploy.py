@@ -1,5 +1,21 @@
 from pyinfra import host, local, state
+from pyinfra.api import deploy
 from pyinfra.operations import files, server
+
+
+@deploy('My deploy')
+def my_deploy(state, host):
+    server.shell(
+        state, host,
+        name='First deploy operation',
+        commands='echo first_deploy_op',
+    )
+
+    server.shell(
+        state, host,
+        name='Second deploy operation',
+        commands='echo second_deploy_op',
+    )
 
 
 server.shell(
@@ -18,6 +34,9 @@ elif host.name == 'anotherhost':
 
 # Include the whole file again, but for all hosts
 local.include('tasks/a_task.py')
+
+# Execute the @deploy function
+my_deploy()
 
 # Do a loop which will generate duplicate op hashes
 for i in range(2):

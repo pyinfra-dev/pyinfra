@@ -174,6 +174,8 @@ class TestCliDeployState(PatchSSHTestCase):
             ('tests/deploy/tasks/a_task.py | Second task operation', ('anotherhost',)),
             ('tests/deploy/tasks/a_task.py | First task operation', True),
             ('tests/deploy/tasks/a_task.py | Second task operation', True),
+            ('My deploy | First deploy operation', True),
+            ('My deploy | Second deploy operation', True),
             ('Loop-0 main operation', True),
             ('Loop-1 main operation', True),
             ('Third main operation', True),
