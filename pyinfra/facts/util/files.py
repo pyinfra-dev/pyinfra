@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 
 import re
-from datetime import datetime
 
+from dateutil.parser import parse as parse_date
 
 LS_REGEX = re.compile((
     # Type flag
@@ -67,20 +67,6 @@ def _parse_mode(mode):
     return int(result)
 
 
-def _parse_time(time):
-    # Try matching with BSD format
-    try:
-        return datetime.strptime(time, '%b %d %H:%M:%S %Y')
-    except ValueError:
-        pass
-
-    # Try matching ISO format
-    try:
-        return datetime.strptime(time, '%Y-%m-%d %H:%M')
-    except ValueError:
-        pass
-
-
 def parse_ls_output(output, wanted_type):
     if output:
         matches = re.match(LS_REGEX, output)
@@ -90,12 +76,18 @@ def parse_ls_output(output, wanted_type):
             if type != wanted_type:
                 return False
 
+            try:
+                # ignoretz because times are always relative to the server
+                mtime = parse_date(matches.group(5), ignoretz=True)
+            except ValueError:
+                mtime = None
+
             out = {
                 'mode': _parse_mode(matches.group(1)),
                 'user': matches.group(2),
                 'group': matches.group(3),
                 'size': matches.group(4),
-                'mtime': _parse_time(matches.group(5)),
+                'mtime': mtime,
             }
 
             if type == 'link':
