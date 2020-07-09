@@ -206,7 +206,6 @@ class patch_files(object):
 
     def __enter__(self):
         self.patches = [
-            patch('pyinfra.operations.server.path.exists', self.exists),
             patch('pyinfra.operations.files.path.exists', self.exists),
             patch('pyinfra.operations.files.path.isfile', self.isfile),
             patch('pyinfra.operations.files.path.isdir', self.isdir),
