@@ -1,3 +1,12 @@
+# v0.16.2
+
++ Add `special_time` argument to `server.crontab` operation
++ Support public key filenames in `server.user`
++ Support BusyBox style `ls` time formats for `file`/`directory`/`link` facts
++ Fix uninstalling packages with `pip.packages` (@FooBarQuaxx)
++ Fix compatibility with older gevent versions
++ Fix typo in deploys doc (@harold-b)
+
 # v0.16.1
 
 + Declare connectors as setuptools entrypoints (@FooBarQuaxx)
