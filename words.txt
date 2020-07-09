@@ -47,6 +47,7 @@ Ip6tables
 Iptables
 Ipv4
 Ipv6
+ignoretz
 JS
 Launchd
 LogicalDisk
