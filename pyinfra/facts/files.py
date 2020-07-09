@@ -14,10 +14,17 @@ class File(FactBase):
     # Types must match FLAG_TO_TYPE in .util.files.py
     type = 'file'
 
-    @staticmethod
-    def command(name):
+    _ls_commands = [
+        'ls -ld --time-style=long-iso {0} 2> /dev/null',  # Ubuntu, CentOS
+        'ls -ld --full-time {0} 2> /dev/null',  # Newer BusyBox
+        'ls -lde {0} 2> /dev/null',  # Older BusyBox
+        'ls -ldT {0}',  # BSD, MacOS
+    ]
+
+    def command(self, name):
         name = escape_unix_path(name)
-        return 'ls -ld --time-style=long-iso {0} 2> /dev/null || ls -ldT {0}'.format(name)
+        commands = [ls_command.format(name) for ls_command in self._ls_commands]
+        return ' || '.join(commands)
 
     def process(self, output):
         return parse_ls_output(output[0], self.type)

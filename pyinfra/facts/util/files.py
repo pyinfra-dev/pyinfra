@@ -19,8 +19,12 @@ LS_REGEX = re.compile((
     r'((?:'
     # BSD format
     r'[a-zA-Z]{3}\s+[0-9]{1,2}\s+[0-9:]{8}\s+[0-9]{4}'
-    # Or Linux format (ISO)
+    # Or Linux format (--time-style=long-iso)
     r'|[0-9]{4}\-[0-9]{2}\-[0-9]{2}\s+[0-9:]{5}'
+    # Or Linux format (BusyBox --full-time)
+    r'|[0-9]{4}\-[0-9]{2}\-[0-9]{2}\s+[0-9:]{8}\s+[+-][0-9]{4}'
+    # Or Linux format (BusyBox -e)
+    r'|[A-Za-z]{3}\s[A-Za-z]{3}\s+[0-9]+\s[0-9:]{8}\s+[0-9]{4}'
     # Date end
     r'))\s+'
     # Filename
