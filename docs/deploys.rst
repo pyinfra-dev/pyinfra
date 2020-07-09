@@ -235,7 +235,7 @@ There are a number of configuration options for how deploys are managed. These c
     FAIL_PERCENT = 10
 
 .. note::
-    When added to ``config.py`` (vs the deploy file), these options will take affect for any CLI usage (ie ``pyinfra host exec -- 'tail -f /var/log/syslog'``).
+    When added to ``config.py`` (vs the deploy file), these options will take effect for any CLI usage (ie ``pyinfra host exec -- 'tail -f /var/log/syslog'``).
 
 
 Hooks
