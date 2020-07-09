@@ -1,7 +1,8 @@
 {
     "args": ["myrepo", "/home/myrepo"],
     "kwargs": {
-        "branch": "mybranch"
+        "branch": "mybranch",
+        "user": "myuser"
     },
     "facts": {
         "directory": {
@@ -10,6 +11,7 @@
         }
     },
     "commands": [
-        "cd /home/myrepo && git clone myrepo --branch mybranch ."
+        "cd /home/myrepo && git clone myrepo --branch mybranch .",
+        "chown -R myuser /home/myrepo"
     ]
 }

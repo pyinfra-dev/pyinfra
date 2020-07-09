@@ -1,0 +1,43 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "home": "homedir",
+        "public_keys": "abc"
+    },
+    "facts": {
+        "users": {
+            "someuser": {
+                "home": "homedir",
+                "group": null,
+                "groups": []
+            }
+        },
+        "directory": {
+            "homedir": {
+                "user": "someuser",
+                "group": "someuser"
+            },
+            "homedir/.ssh": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 700
+            }
+        },
+        "file": {
+            "homedir/.ssh/authorized_keys": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 601
+            }
+        },
+        "find_in_file": {
+            "homedir/.ssh/authorized_keys": {
+                "^.*abc.*$": []
+            }
+        }
+    },
+    "commands": [
+        "chmod 600 homedir/.ssh/authorized_keys",
+        "echo 'abc' >> homedir/.ssh/authorized_keys"
+    ]
+}

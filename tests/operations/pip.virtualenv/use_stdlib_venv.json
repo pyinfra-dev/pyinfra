@@ -1,7 +1,8 @@
 {
     "kwargs": {
         "path": "/some/virtualenv",
-	"venv": true
+        "venv": true,
+        "always_copy": true
     },
     "facts": {
         "file": {
@@ -9,6 +10,6 @@
         }
     },
     "commands": [
-        "python -m venv /some/virtualenv"
+        "python -m venv --copies /some/virtualenv"
     ]
 }

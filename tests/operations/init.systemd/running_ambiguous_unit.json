@@ -1,0 +1,11 @@
+{
+    "args": ["redis-server"],
+    "facts": {
+        "systemd_status": {
+            "redis-server.service": false
+        }
+    },
+    "commands": [
+        "systemctl start redis-server.service"
+    ]
+}
