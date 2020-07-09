@@ -372,6 +372,7 @@ def sysctl(
 def crontab(
     state, host, command, present=True, user=None, name=None,
     minute='*', hour='*', month='*', day_of_week='*', day_of_month='*',
+    special_time=None,
     interpolate_variables=True,
 ):
     '''
@@ -386,12 +387,17 @@ def crontab(
     + month: which months to execute the cron
     + day_of_week: which day of the week to execute the cron
     + day_of_month: which day of the month to execute the cron
+    + special_time: cron "nickname" time (@reboot, @daily, etc), overrides others
     + interpolate_variables: whether to interpolate variables in ``command``
 
     Cron commands:
         Unless ``name`` is specified the command is used to identify crontab entries.
         This means commands must be unique within a given users crontab. If you require
         multiple identical commands, provide a different name argument for each.
+
+    Special times:
+        When provided, ``special_time`` will be used instead of any values passed in
+        for ``minute``/``hour``/``month``/``day_of_week``/``day_of_month``.
 
     Example:
 
@@ -436,14 +442,18 @@ def crontab(
     edit_commands = []
     temp_filename = state.get_temp_filename()
 
-    new_crontab_line = '{minute} {hour} {day_of_month} {month} {day_of_week} {command}'.format(
-        command=command,
-        minute=minute,
-        hour=hour,
-        month=month,
-        day_of_week=day_of_week,
-        day_of_month=day_of_month,
-    )
+    if special_time:
+        new_crontab_line = '{0} {1}'.format(special_time, command)
+    else:
+        new_crontab_line = '{minute} {hour} {day_of_month} {month} {day_of_week} {command}'.format(
+            minute=minute,
+            hour=hour,
+            day_of_month=day_of_month,
+            month=month,
+            day_of_week=day_of_week,
+            command=command,
+        )
+
     existing_crontab_match = '.*{0}.*'.format(existing_crontab_match)
 
     # Don't want the cron and it does exist? Remove the line
