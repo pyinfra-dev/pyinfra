@@ -157,6 +157,11 @@ def operation(func=None, pipeline_facts=None):
             state, host = args[0], args[1]
             args = args_copy[2:]
 
+            if isinstance(state, PseudoModule):
+                state = state._module
+            if isinstance(host, PseudoModule):
+                host = host._module
+
         # In API mode we have the kwarg - if a nested operation call we have
         # current_frameinfo.
         frameinfo = kwargs.pop('frameinfo', get_caller_frameinfo())
