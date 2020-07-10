@@ -14,7 +14,7 @@ from ..paramiko_util import PatchSSHTestCase
 
 def run_cli(*arguments):
     pyinfra.is_cli = True
-    runner = CliRunner()
+    runner = CliRunner(mix_stderr=False)
     result = runner.invoke(cli, arguments)
     pyinfra.is_cli = False
     return result
@@ -47,7 +47,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             'not-a-file.py',
         )
         assert result.exit_code == 1, result.stderr
-        assert 'No deploy file: not-a-file.py' in result.stdout
+        assert 'No deploy file: not-a-file.py' in result.stderr
 
     def test_deploy_inventory(self):
         result = run_cli(
@@ -64,7 +64,7 @@ class TestCliDeployRuns(PatchSSHTestCase):
             'os',
         )
         assert result.exit_code == 0, result.stderr
-        assert '"somehost": null' in result.stdout
+        assert '"somehost": null' in result.stderr
 
     def test_deploy_operation(self):
         result = run_cli(
