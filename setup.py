@@ -49,7 +49,7 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
 )
 
 DOCS_REQUIRES = (
-    'pyinfra-guzzle_sphinx_theme==0.2',  # Custom guzzle theme
+    'pyinfra-guzzle_sphinx_theme==0.3',  # Custom guzzle theme
     'recommonmark==0.5.0',
     'sphinx==2.2.1 ; python_version >= "3"',
     'sphinx==1.8.5 ; python_version < "3"',
