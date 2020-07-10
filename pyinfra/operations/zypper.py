@@ -11,8 +11,6 @@ key = yum_key
 
 @operation
 def repo(
-    state,
-    host,
     src,
     baseurl=None,
     present=True,
@@ -21,6 +19,8 @@ def repo(
     gpgcheck=True,
     gpgkey=None,
     type=None,
+    state=None,
+    host=None,
 ):
     '''
     Add/remove/update zypper repositories.
@@ -73,7 +73,7 @@ def repo(
 
 
 @operation
-def rpm(state, host, src, present=True):
+def rpm(src, present=True, state=None, host=None):
     # NOTE: if updating this docstring also update `dnf.rpm`
     '''
     Add/remove ``.rpm`` file packages.
@@ -99,7 +99,7 @@ def rpm(state, host, src, present=True):
 
 
 @operation
-def update(state, host):
+def update(state=None, host=None):
     '''
     Updates all zypper packages.
     '''
@@ -112,8 +112,6 @@ _update = update  # noqa: E305 (for use below where update is a kwarg)
 
 @operation
 def packages(
-    state,
-    host,
     packages=None,
     present=True,
     latest=False,
@@ -123,6 +121,8 @@ def packages(
     extra_install_args=None,
     extra_global_uninstall_args=None,
     extra_uninstall_args=None,
+    state=None,
+    host=None,
 ):
     '''
     Install/remove/update zypper packages & updates.
@@ -163,7 +163,7 @@ def packages(
         yield 'zypper clean --all'
 
     if update:
-        yield _update(state, host)
+        yield _update(state=state, host=host)
 
     install_command = ['zypper', '--non-interactive', 'install', '-y']
 

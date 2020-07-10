@@ -11,7 +11,7 @@ from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 
 
 @operation
-def key(state, host, src):
+def key(src, state=None, host=None):
     '''
     Add yum gpg keys with ``rpm``.
 
@@ -37,10 +37,11 @@ def key(state, host, src):
 
 @operation
 def repo(
-    state, host, src,
+    src,
     present=True,
     baseurl=None, description=None,
     enabled=True, gpgcheck=True, gpgkey=None,
+    state=None, host=None,
 ):
     # NOTE: if updating this docstring also update `dnf.repo`
     '''
@@ -85,7 +86,7 @@ def repo(
 
 
 @operation
-def rpm(state, host, src, present=True):
+def rpm(src, present=True, state=None, host=None):
     # NOTE: if updating this docstring also update `dnf.rpm`
     '''
     Add/remove ``.rpm`` file packages.
@@ -112,7 +113,7 @@ def rpm(state, host, src, present=True):
 
 
 @operation
-def update(state, host):
+def update(state=None, host=None):
     '''
     Updates all yum packages.
     '''
@@ -124,9 +125,10 @@ _update = update  # noqa: E305 (for use below where update is a kwarg)
 
 @operation
 def packages(
-    state, host, packages=None,
+    packages=None,
     present=True, latest=False, update=False, clean=False, nobest=False,
     extra_install_args='', extra_uninstall_args='',
+    state=None, host=None,
 ):
     '''
     Install/remove/update yum packages & updates.
@@ -166,7 +168,7 @@ def packages(
         yield 'yum clean all'
 
     if update:
-        yield _update(state, host)
+        yield _update(state=state, host=host)
 
     nobest_option = ''
     if nobest:

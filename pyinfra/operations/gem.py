@@ -8,7 +8,7 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def packages(state, host, packages=None, present=True, latest=False):
+def packages(packages=None, present=True, latest=False, state=None, host=None):
     '''
     Add/remove/update gem packages.
 

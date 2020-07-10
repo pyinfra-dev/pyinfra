@@ -10,7 +10,7 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def packages(state, host, packages=None, present=True, latest=False, directory=None):
+def packages(packages=None, present=True, latest=False, directory=None, state=None, host=None):
     '''
     Install/remove/update npm packages.
 

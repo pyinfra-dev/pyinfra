@@ -32,9 +32,10 @@ from .util.files import chmod, chown, ensure_mode_int, sed_replace
     'file': 'dest',
 })
 def download(
-    state, host, src, dest,
+    src, dest,
     user=None, group=None, mode=None, cache_time=None, force=False,
     sha256sum=None, sha1sum=None, md5sum=None,
+    state=None, host=None,
 ):
     '''
     Download files from remote locations using curl or wget.
@@ -136,10 +137,10 @@ def download(
 
 @operation
 def line(
-    state, host,
     path, line,
     present=True, replace=None, flags=None,
     interpolate_variables=False,
+    state=None, host=None,
 ):
     '''
     Ensure lines in files using grep to locate and sed to replace.
@@ -285,7 +286,12 @@ def line(
 
 
 @operation
-def replace(state, host, path, match, replace, flags=None, interpolate_variables=False):
+def replace(
+    path, match, replace,
+    flags=None,
+    interpolate_variables=False,
+    state=None, host=None,
+):
     '''
     A simple shortcut for replacing text in files with sed.
 
@@ -319,9 +325,10 @@ def replace(state, host, path, match, replace, flags=None, interpolate_variables
     'find_files': 'destination',
 })
 def sync(
-    state, host, src, dest,
+    src, dest,
     user=None, group=None, mode=None, delete=False,
     exclude=None, exclude_dir=None, add_deploy_dir=True,
+    state=None, host=None,
 ):
     '''
     Syncs a local directory with a remote one, with delete support. Note that delete will
@@ -403,26 +410,27 @@ def sync(
 
     # Ensure the destination directory
     yield directory(
-        state, host, dest,
+        dest,
         user=user, group=group,
+        state=state, host=host,
     )
 
     # Ensure any remote dirnames
     for dirname in ensure_dirnames:
         yield directory(
-            state, host,
             '/'.join((dest, dirname)),
             user=user, group=group,
+            state=state, host=host,
         )
 
     # Put each file combination
     for local_filename, remote_filename in put_files:
         yield put(
-            state, host,
             local_filename, remote_filename,
             user=user, group=group, mode=mode,
             add_deploy_dir=False,
             create_remote_dir=False,  # handled above
+            state=state, host=host,
         )
 
     # Delete any extra files
@@ -435,7 +443,7 @@ def sync(
             if exclude and any(fnmatch(filename, match) for match in exclude):
                 continue
 
-            yield file(state, host, filename, present=False)
+            yield file(filename, present=False, state=state, host=host)
 
 
 def _create_remote_dir(state, host, remote_filename, user, group):
@@ -443,9 +451,10 @@ def _create_remote_dir(state, host, remote_filename, user, group):
     remote_dirname = posixpath.dirname(remote_filename)
     if remote_dirname:
         yield directory(
-            state, host, remote_dirname,
+            path=remote_dirname,
             user=user, group=group,
             no_check_owner_mode=True,
+            state=state, host=host,
         )
 
 
@@ -454,8 +463,9 @@ def _create_remote_dir(state, host, remote_filename, user, group):
     'sha1_file': 'src',
 })
 def get(
-    state, host, src, dest,
+    src, dest,
     add_deploy_dir=True, create_local_dir=False, force=False,
+    state=None, host=None,
 ):
     '''
     Download a file from the remote system.
@@ -516,9 +526,10 @@ def get(
     'sha1_file': 'dest',
 })
 def put(
-    state, host, src, dest,
+    src, dest,
     user=None, group=None, mode=None, add_deploy_dir=True,
     create_remote_dir=True, force=False, assume_exists=False,
+    state=None, host=None,
 ):
     '''
     Upload a local file to the remote system.
@@ -618,8 +629,9 @@ def put(
 
 @operation
 def template(
-    state, host, src, dest,
+    src, dest,
     user=None, group=None, mode=None, create_remote_dir=True,
+    state=None, host=None,
     **data
 ):
     '''
@@ -716,11 +728,11 @@ def template(
 
     # Pass to the put function
     yield put(
-        state, host,
         output_file, dest,
         user=user, group=group, mode=mode,
         add_deploy_dir=False,
         create_remote_dir=create_remote_dir,
+        state=state, host=host,
     )
 
 
@@ -728,10 +740,11 @@ def template(
     'link': 'path',
 })
 def link(
-    state, host, path,
+    path,
     target=None, present=True, assume_present=False,
     user=None, group=None, symbolic=True,
     create_remote_dir=True,
+    state=None, host=None,
 ):
     '''
     Add/remove/update links.
@@ -848,10 +861,11 @@ def link(
     'file': 'path',
 })
 def file(
-    state, host, path,
+    path,
     present=True, assume_present=False,
     user=None, group=None, mode=None, touch=False,
     create_remote_dir=True,
+    state=None, host=None,
 ):
     '''
     Add/remove/update files.
@@ -935,10 +949,11 @@ def file(
     'directory': 'path',
 })
 def directory(
-    state, host, path,
+    path,
     present=True, assume_present=False,
     user=None, group=None, mode=None, recursive=False,
     no_check_owner_mode=False,
+    state=None, host=None,
 ):
     '''
     Add/remove/update directories.

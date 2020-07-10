@@ -17,8 +17,9 @@ def get_container_named(name, containers):
 
 @operation
 def container(
-    state, host, id,
+    id,
     present=True, image='ubuntu:16.04',
+    state=None, host=None,
 ):
     '''
     Add/remove LXD containers.

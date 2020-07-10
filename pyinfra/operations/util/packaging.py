@@ -131,7 +131,7 @@ def ensure_rpm(state, host, files, source, present, package_manager_command):
         temp_filename = '{0}.rpm'.format(state.get_temp_filename(source))
 
         # Ensure it's downloaded
-        yield files.download(state, host, source, temp_filename)
+        yield files.download(source, temp_filename, state=state, host=host)
 
         # Override the source with the downloaded file
         source = temp_filename
@@ -180,13 +180,13 @@ def ensure_yum_repo(
 
     # If we don't want the repo, just remove any existing file
     if not present:
-        yield files.file(state, host, filename, present=False)
+        yield files.file(filename, present=False, state=state, host=host)
         return
 
     # If we're a URL, download the repo if it doesn't exist
     if url:
         if not host.fact.file(filename):
-            yield files.download(state, host, url, filename)
+            yield files.download(url, filename, state=state, host=host)
         return
 
     # Description defaults to name
@@ -209,7 +209,7 @@ def ensure_yum_repo(
     repo = StringIO(repo)
 
     # Ensure this is the file on the server
-    yield files.put(state, host, repo, filename)
+    yield files.put(repo, filename, state=state, host=host)
 
 
 # FIXME: the function is almost identical to ensure_yum_repo.
@@ -230,13 +230,13 @@ def ensure_zypper_repo(
 
     # If we don't want the repo, just remove any existing file
     if not present:
-        yield files.file(state, host, filename, present=False)
+        yield files.file(filename, present=False, state=state, host=host)
         return
 
     # If we're a URL, download the repo if it doesn't exist
     if url:
         if not host.fact.file(filename):
-            yield files.download(state, host, url, filename)
+            yield files.download(url, filename, state=state, host=host)
         return
 
     # Description defaults to name
@@ -260,4 +260,4 @@ def ensure_zypper_repo(
     repo = StringIO(repo)
 
     # Ensure this is the file on the server
-    yield files.put(state, host, repo, filename)
+    yield files.put(repo, filename, state=state, host=host)

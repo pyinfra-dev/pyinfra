@@ -16,10 +16,11 @@ from pyinfra.api import operation, OperationError, OperationTypeError
     'windows_file': 'name',
 })
 def file(
-    state, host, name,
+    name,
     present=True, assume_present=False,
     user=None, group=None, mode=None, touch=False,
     create_remote_dir=True,
+    state=None, host=None,
 ):
     '''
     Add/remove/update files.
@@ -117,9 +118,10 @@ def _create_remote_dir(state, host, remote_filename, user, group):
     'windows_directory': 'name',
 })
 def directory(
-    state, host, name,
+    name,
     present=True, assume_present=False,
     user=None, group=None, mode=None, recursive=False,
+    state=None, host=None,
 ):
     '''
     Add/remove/update directories.

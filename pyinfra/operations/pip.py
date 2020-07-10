@@ -13,8 +13,9 @@ from .util.packaging import ensure_packages
 
 @operation
 def virtualenv(
-    state, host, path,
+    path,
     python=None, venv=False, site_packages=False, always_copy=False, present=True,
+    state=None, host=None,
 ):
     '''
     Add/remove Python virtualenvs.
@@ -40,7 +41,7 @@ def virtualenv(
     activate_script_path = '{0}/bin/activate'.format(path)
 
     if present is False and host.fact.file(activate_script_path):
-        yield files.directory(state, host, path, present=False)
+        yield files.directory(path, present=False, state=state, host=host)
 
     elif present and not host.fact.file(activate_script_path):
         # Create missing virtualenv
@@ -69,9 +70,9 @@ _virtualenv = virtualenv  # noqa
 
 @operation
 def packages(
-    state, host,
     packages=None, present=True, latest=False,
     requirements=None, pip='pip', virtualenv=None, virtualenv_kwargs=None,
+    state=None, host=None,
 ):
     '''
     Install/remove/update pip packages.
@@ -107,7 +108,7 @@ def packages(
 
     # Ensure any virtualenv
     if virtualenv:
-        yield _virtualenv(state, host, virtualenv, **virtualenv_kwargs)
+        yield _virtualenv(virtualenv, state=state, host=host, **virtualenv_kwargs)
 
         # And update pip path
         virtualenv = virtualenv.rstrip('/')

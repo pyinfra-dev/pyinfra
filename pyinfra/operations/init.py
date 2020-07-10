@@ -80,9 +80,10 @@ def _handle_service_control(
 
 @operation
 def d(
-    state, host, service,
+    service,
     running=True, restarted=False, reloaded=False,
     enabled=None, command=None,
+    state=None, host=None,
 ):
     '''
     Manage the state of SysV Init (/etc/init.d) services.
@@ -149,9 +150,10 @@ def d(
 
 @operation
 def d_enable(
-    state, host, service,
+    service,
     start_priority=20, stop_priority=80,
     start_levels=(2, 3, 4, 5), stop_levels=(0, 1, 6),
+    state=None, host=None,
 ):
     '''
     Manually enable /etc/init.d scripts by creating /etc/rcX.d/Y links.
@@ -185,14 +187,19 @@ def d_enable(
 
     # Ensure all the new links exist
     for link in links:
-        yield files.link(state, host, link, '/etc/init.d/{0}'.format(service))
+        yield files.link(
+            path=link,
+            target='/etc/init.d/{0}'.format(service),
+            state=state, host=host,
+        )
 
 
 @operation
 def rc(
-    state, host, service,
+    service,
     running=True, restarted=False, reloaded=False,
     command=None, enabled=None,
+    state=None, host=None,
 ):
     '''
     Manage the state of BSD init (/etc/rc.d) services.
@@ -215,19 +222,20 @@ def rc(
     # BSD init is simple, just add/remove <service>_enabled="YES"
     if isinstance(enabled, bool):
         yield files.line(
-            state, host,
             '/etc/rc.conf.local',
             '^{0}_enable='.format(service),
             replace='{0}_enable="YES"'.format(service),
             present=enabled,
+            state=state, host=host,
         )
 
 
 @operation
 def upstart(
-    state, host, service,
+    service,
     running=True, restarted=False, reloaded=False,
     command=None, enabled=None,
+    state=None, host=None,
 ):
     '''
     Manage the state of upstart managed services.
@@ -256,9 +264,9 @@ def upstart(
     # there's no override file.
     if enabled is True:
         yield files.file(
-            state, host,
             '/etc/init/{0}.override'.format(service),
             present=False,
+            state=state, host=host,
         )
 
     # Set the override file to "manual" to disable automatic start
@@ -268,9 +276,10 @@ def upstart(
 
 @operation
 def systemd(
-    state, host, service,
+    service,
     running=True, restarted=False, reloaded=False,
     command=None, enabled=None, daemon_reload=False,
+    state=None, host=None,
 ):
     '''
     Manage the state of systemd managed units.
@@ -330,8 +339,9 @@ def systemd(
 
 @operation
 def launchd(
-    state, host, service,
+    service,
     running=True, restarted=False, command=None,
+    state=None, host=None,
 ):
     '''
     Manage the state of systemd managed services.
@@ -359,10 +369,7 @@ def launchd(
 
 
 @operation
-def service(
-    state, host,
-    *args, **kwargs
-):
+def service(*args, **kwargs):
     '''
     Manage the state of services. This command checks for the presence of all the
     init systems pyinfra can handle and executes the relevant operation. See init
@@ -379,20 +386,22 @@ def service(
         )
     '''
 
+    host = kwargs['host']
+
     if host.fact.which('systemctl'):
-        yield systemd(state, host, *args, **kwargs)
+        yield systemd(*args, **kwargs)
         return
 
     if host.fact.which('initctl'):
-        yield upstart(state, host, *args, **kwargs)
+        yield upstart(*args, **kwargs)
         return
 
     if host.fact.directory('/etc/init.d'):
-        yield d(state, host, *args, **kwargs)
+        yield d(*args, **kwargs)
         return
 
     if host.fact.directory('/etc/rc.d'):
-        yield rc(state, host, *args, **kwargs)
+        yield rc(*args, **kwargs)
         return
 
     raise OperationError((

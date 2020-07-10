@@ -19,11 +19,12 @@ from pyinfra.facts.postgresql import make_execute_psql_command, make_psql_comman
 
 @operation
 def sql(
-    state, host, sql,
+    sql,
     database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
     postgresql_user=None, postgresql_password=None,
     postgresql_host=None, postgresql_port=None,
+    state=None, host=None,
 ):
     '''
     Execute arbitrary SQL against PostgreSQL.
@@ -45,13 +46,14 @@ def sql(
 
 @operation
 def role(
-    state, host, role,
+    role,
     present=True,
     password=None, login=True, superuser=False, inherit=False,
     createdb=False, createrole=False, replication=False, connection_limit=None,
     # Details for speaking to PostgreSQL via `psql` CLI
     postgresql_user=None, postgresql_password=None,
     postgresql_host=None, postgresql_port=None,
+    state=None, host=None,
 ):
     '''
     Add/remove PostgreSQL roles.
@@ -139,7 +141,7 @@ def role(
 
 @operation
 def database(
-    state, host, database,
+    database,
     present=True, owner=None,
     template=None, encoding=None,
     lc_collate=None, lc_ctype=None, tablespace=None,
@@ -147,6 +149,7 @@ def database(
     # Details for speaking to PostgreSQL via `psql` CLI
     postgresql_user=None, postgresql_password=None,
     postgresql_host=None, postgresql_port=None,
+    state=None, host=None,
 ):
     '''
     Add/remove PostgreSQL databases.
@@ -226,11 +229,11 @@ def database(
 
 @operation
 def dump(
-    state, host,
     dest, database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
     postgresql_user=None, postgresql_password=None,
     postgresql_host=None, postgresql_port=None,
+    state=None, host=None,
 ):
     '''
     Dump a PostgreSQL database into a ``.sql`` file. Requires ``pg_dump``.
@@ -264,11 +267,11 @@ def dump(
 
 @operation
 def load(
-    state, host,
     src, database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
     postgresql_user=None, postgresql_password=None,
     postgresql_host=None, postgresql_port=None,
+    state=None, host=None,
 ):
     '''
     Load ``.sql`` file into a database.

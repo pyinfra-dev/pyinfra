@@ -8,7 +8,7 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def update(state, host):
+def update(state=None, host=None):
     '''
     Updates brew repositories.
     '''
@@ -19,7 +19,7 @@ _update = update  # noqa: E305
 
 
 @operation
-def upgrade(state, host):
+def upgrade(state=None, host=None):
     '''
     Upgrades all brew packages.
     '''
@@ -31,9 +31,9 @@ _upgrade = upgrade  # noqa: E305
 
 @operation
 def packages(
-    state, host,
     packages=None, present=True, latest=False,
     update=False, upgrade=False,
+    state=None, host=None,
 ):
     '''
     Add/remove/update brew packages.
@@ -67,10 +67,10 @@ def packages(
     '''
 
     if update:
-        yield _update(state, host)
+        yield _update(state=state, host=host)
 
     if upgrade:
-        yield _upgrade(state, host)
+        yield _upgrade(state=state, host=host)
 
     yield ensure_packages(
         packages, host.fact.brew_packages, present,
@@ -83,7 +83,7 @@ def packages(
 
 
 @operation
-def cask_upgrade(state, host):
+def cask_upgrade(state=None, host=None):
     '''
     Upgrades all brew casks.
     '''
@@ -93,8 +93,8 @@ def cask_upgrade(state, host):
 
 @operation
 def casks(
-    state, host,
     casks=None, present=True, latest=False, upgrade=False,
+    state=None, host=None,
 ):
     '''
     Add/remove/update brew casks.
@@ -121,7 +121,7 @@ def casks(
     '''
 
     if upgrade:
-        yield cask_upgrade(state, host)
+        yield cask_upgrade(state=state, host=host)
 
     yield ensure_packages(
         casks, host.fact.brew_casks, present,
@@ -134,7 +134,7 @@ def casks(
 
 
 @operation
-def tap(state, host, src, present=True):
+def tap(src, present=True, state=None, host=None):
     '''
     Add/remove brew taps.
 

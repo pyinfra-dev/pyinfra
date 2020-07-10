@@ -6,7 +6,7 @@ from pyinfra.api import FunctionCommand, operation
 
 
 @operation
-def call(state, host, function, *args, **kwargs):
+def call(function, *args, **kwargs):
     '''
     Execute a Python function within a deploy.
 
@@ -37,12 +37,16 @@ def call(state, host, function, *args, **kwargs):
 
     '''
 
+    kwargs.pop('state', None)
+    kwargs.pop('host', None)
     yield FunctionCommand(function, args, kwargs)
 
 
 @operation
-def raise_exception(state, host, exception, *args, **kwargs):
+def raise_exception(exception, *args, **kwargs):
     def raise_exc(*args, **kwargs):  # pragma: no cover
         raise exception(*args, **kwargs)
 
+    kwargs.pop('state', None)
+    kwargs.pop('host', None)
     yield FunctionCommand(raise_exc, args, kwargs)

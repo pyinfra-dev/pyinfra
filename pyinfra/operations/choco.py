@@ -8,7 +8,7 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def packages(state, host, packages=None, present=True, latest=False):
+def packages(packages=None, present=True, latest=False, state=None, host=None):
     '''
     Add/remove/update ``choco`` packages.
 
@@ -42,7 +42,7 @@ def packages(state, host, packages=None, present=True, latest=False):
 
 
 @operation
-def install(state, host):
+def install(state=None, host=None):
     '''
     Install ``choco`` (Chocolatey).
     '''

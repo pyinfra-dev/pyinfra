@@ -8,7 +8,7 @@ from pyinfra.api import operation, OperationError
 
 
 @operation
-def start(state, host, ctid, force=False):
+def start(ctid, force=False, state=None, host=None):
     '''
     Start OpenVZ containers.
 
@@ -25,7 +25,7 @@ def start(state, host, ctid, force=False):
 
 
 @operation
-def stop(state, host, ctid):
+def stop(ctid, state=None, host=None):
     '''
     Stop OpenVZ containers.
 
@@ -38,7 +38,7 @@ def stop(state, host, ctid):
 
 
 @operation
-def restart(state, host, ctid, force=False):
+def restart(ctid, force=False, state=None, host=None):
     '''
     Restart OpenVZ containers.
 
@@ -46,12 +46,12 @@ def restart(state, host, ctid, force=False):
     + force: whether to force container start
     '''
 
-    yield stop(state, host, ctid)
-    yield start(state, host, ctid, force=force)
+    yield stop(ctid, state=state, host=host)
+    yield start(ctid, force=force, state=state, host=host)
 
 
 @operation
-def mount(state, host, ctid):
+def mount(ctid, state=None, host=None):
     '''
     Mount OpenVZ container filesystems.
 
@@ -62,7 +62,7 @@ def mount(state, host, ctid):
 
 
 @operation
-def unmount(state, host, ctid):
+def unmount(ctid, state=None, host=None):
     '''
     Unmount OpenVZ container filesystems.
 
@@ -73,7 +73,7 @@ def unmount(state, host, ctid):
 
 
 @operation
-def delete(state, host, ctid):
+def delete(ctid, state=None, host=None):
     '''
     Delete OpenVZ containers.
 
@@ -84,7 +84,7 @@ def delete(state, host, ctid):
 
 
 @operation
-def create(state, host, ctid, template=None):
+def create(ctid, template=None, state=None, host=None):
     '''
     Create OpenVZ containers.
 
@@ -107,7 +107,7 @@ def create(state, host, ctid, template=None):
 
 
 @operation
-def set(state, host, ctid, save=True, **settings):
+def set(ctid, save=True, state=None, host=None, **settings):
     '''
     Set OpenVZ container details.
 

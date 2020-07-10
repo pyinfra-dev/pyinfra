@@ -21,11 +21,12 @@ from pyinfra.facts.mysql import make_execute_mysql_command, make_mysql_command
 
 @operation
 def sql(
-    state, host, sql,
+    sql,
     database=None,
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
+    state=None, host=None,
 ):
     '''
     Execute arbitrary SQL against MySQL.
@@ -47,13 +48,14 @@ def sql(
 
 @operation
 def user(
-    state, host, user,
+    user,
     # Desired user settings
     present=True,
     user_hostname='localhost', password=None, privileges=None,
     # Details for speaking to MySQL via `mysql` CLI via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
+    state=None, host=None,
 ):
     '''
     Add/remove/update MySQL users.
@@ -122,16 +124,17 @@ def user(
     # now we can check any privileges are set.
     if privileges:
         yield _privileges(
-            state, host, user, privileges,
+            user, privileges,
             user_hostname=user_hostname,
             mysql_user=mysql_user, mysql_password=mysql_password,
             mysql_host=mysql_host, mysql_port=mysql_port,
+            state=state, host=host,
         )
 
 
 @operation
 def database(
-    state, host, database,
+    database,
     # Desired database settings
     present=True,
     collate=None, charset=None,
@@ -139,6 +142,7 @@ def database(
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
+    state=None, host=None,
 ):
     '''
     Add/remove MySQL databases.
@@ -208,16 +212,17 @@ def database(
     # Ensure any user privileges for this database
     if user and user_privileges:
         yield privileges(
-            state, host, user,
+            user,
             user_hostname=user_hostname,
             privileges=user_privileges,
             database=database,
+            state=state,
+            host=host,
         )
 
 
 @operation
 def privileges(
-    state, host,
     user, privileges,
     user_hostname='localhost',
     database='*', table='*',
@@ -226,6 +231,7 @@ def privileges(
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
+    state=None, host=None,
 ):
     '''
     Add/remove MySQL privileges for a user, either global, database or table specific.
@@ -325,11 +331,11 @@ _privileges = privileges  # noqa: E305 (for use where kwarg is the same)
 
 @operation
 def dump(
-    state, host,
     dest, database=None,
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
+    state=None, host=None,
 ):
     '''
     Dump a MySQL database into a ``.sql`` file. Requires ``mysqldump``.
@@ -361,11 +367,11 @@ def dump(
 
 @operation
 def load(
-    state, host,
     src, database=None,
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
+    state=None, host=None,
 ):
     '''
     Load ``.sql`` file into a database.

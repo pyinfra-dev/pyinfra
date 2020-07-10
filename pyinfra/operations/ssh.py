@@ -10,7 +10,7 @@ from . import files
 
 
 @operation
-def keyscan(state, host, hostname, force=False):
+def keyscan(hostname, force=False, state=None, host=None):
     '''
     Check/add hosts to the ``~/.ssh/known_hosts`` file.
 
@@ -28,9 +28,10 @@ def keyscan(state, host, hostname, force=False):
     '''
 
     yield files.directory(
-        state, host,
         '~/.ssh',
         mode=700,
+        state=state,
+        host=host,
     )
 
     hostname_present = host.fact.find_in_file(
@@ -49,7 +50,7 @@ def keyscan(state, host, hostname, force=False):
 
 
 @operation
-def command(state, host, hostname, command, ssh_user=None):
+def command(hostname, command, ssh_user=None, state=None, host=None):
     '''
     Execute commands on other servers over SSH.
 
@@ -78,9 +79,10 @@ def command(state, host, hostname, command, ssh_user=None):
 
 @operation
 def upload(
-    state, host, hostname, filename,
+    hostname, filename,
     remote_filename=None, use_remote_sudo=False,
     ssh_keyscan=False, ssh_user=None,
+    state=None, host=None,
 ):
     '''
     Upload files to other servers using ``scp``.
@@ -101,7 +103,7 @@ def upload(
         connection_target = '@'.join((ssh_user, hostname))
 
     if ssh_keyscan:
-        yield keyscan(state, host, hostname)
+        yield keyscan(hostname, state=state, host=host)
 
     # If we're not using sudo on the remote side, just scp the file over
     if not use_remote_sudo:
@@ -119,16 +121,20 @@ def upload(
         yield upload_cmd
 
         # And sudo sudo to move it
-        yield command(state, host, connection_target, 'sudo mv {0} {1}'.format(
-            temp_remote_filename, remote_filename,
-        ))
+        yield command(
+            hostname=connection_target,
+            command='sudo mv {0} {1}'.format(temp_remote_filename, remote_filename),
+            state=state,
+            host=host,
+        )
 
 
 @operation
 def download(
-    state, host, hostname, filename,
+    hostname, filename,
     local_filename=None, force=False,
     ssh_keyscan=False, ssh_user=None,
+    state=None, host=None,
 ):
     '''
     Download files from other servers using ``scp``.
@@ -164,7 +170,7 @@ def download(
         connection_target = '@'.join((ssh_user, hostname))
 
     if ssh_keyscan:
-        yield keyscan(state, host, hostname)
+        yield keyscan(hostname, state=state, host=host)
 
     # Download the file with scp
     yield 'scp {0}:{1} {2}'.format(connection_target, filename, local_filename)

@@ -8,7 +8,7 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def upgrade(state, host):
+def upgrade(state=None, host=None):
     '''
     Upgrades all pacman packages.
     '''
@@ -19,7 +19,7 @@ _upgrade = upgrade  # noqa: E305
 
 
 @operation
-def update(state, host):
+def update(state=None, host=None):
     '''
     Updates pacman repositories.
     '''
@@ -31,9 +31,9 @@ _update = update  # noqa: E305
 
 @operation
 def packages(
-    state, host,
     packages=None, present=True,
     update=False, upgrade=False,
+    state=None, host=None,
 ):
     '''
     Add/remove pacman packages.
@@ -58,10 +58,10 @@ def packages(
     '''
 
     if update:
-        yield _update(state, host)
+        yield _update(state=state, host=host)
 
     if upgrade:
-        yield _upgrade(state, host)
+        yield _upgrade(state=state, host=host)
 
     yield ensure_packages(
         packages, host.fact.pacman_packages, present,

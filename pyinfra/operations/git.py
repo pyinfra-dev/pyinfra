@@ -16,8 +16,9 @@ from .util.files import chown
     'git_config': 'repo',
 })
 def config(
-    state, host, key, value,
+    key, value,
     repo=None,
+    state=None, host=None,
 ):
     '''
     Manage git config for a repository or globally.
@@ -52,10 +53,11 @@ def config(
     'git_branch': 'target',
 })
 def repo(
-    state, host, src, dest,
+    src, dest,
     branch='master', pull=True, rebase=False,
     user=None, group=None, ssh_keyscan=False,
     update_submodules=False, recursive_submodules=False,
+    state=None, host=None,
 ):
     '''
     Clone/pull git repositories.
@@ -83,7 +85,7 @@ def repo(
     '''
 
     # Ensure our target directory exists
-    yield files.directory(state, host, dest)
+    yield files.directory(dest, state=state, host=host)
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
@@ -91,7 +93,7 @@ def repo(
         domain = re.match(r'^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)', src)
 
         if domain:
-            yield ssh.keyscan(state, host, domain.group(1))
+            yield ssh.keyscan(domain.group(1), state=state, host=host)
         else:
             raise OperationError(
                 'Could not parse domain (to SSH keyscan) from: {0}'.format(src),

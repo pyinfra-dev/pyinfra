@@ -12,8 +12,9 @@ from pyinfra.api.exceptions import OperationError
 
 @operation
 def chain(
-    state, host, chain, present=True,
+    chain, present=True,
     table='filter', policy=None, version=4,
+    state=None, host=None,
 ):
     '''
     Add/remove/update iptables chains.
@@ -55,7 +56,7 @@ def chain(
 
 @operation
 def rule(
-    state, host, chain, jump, present=True,
+    chain, jump, present=True,
     table='filter', append=True, version=4,
     # Core iptables filter arguments
     protocol=None, not_protocol=None,
@@ -67,6 +68,7 @@ def rule(
     to_destination=None, to_source=None, to_ports=None, log_prefix=None,
     # Extras and extra shortcuts
     destination_port=None, source_port=None, extras='',
+    state=None, host=None,
 ):
     '''
     Add/remove iptables rules.

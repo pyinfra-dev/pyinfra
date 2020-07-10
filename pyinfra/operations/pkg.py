@@ -10,7 +10,7 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def packages(state, host, packages=None, present=True, pkg_path=None):
+def packages(packages=None, present=True, pkg_path=None, state=None, host=None):
     '''
     Install/remove/update pkg packages. This will use ``pkg ...`` where available
     (FreeBSD) and the ``pkg_*`` variants elsewhere.

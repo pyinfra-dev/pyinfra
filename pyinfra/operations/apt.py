@@ -33,7 +33,7 @@ def noninteractive_apt(command, force=False):
 
 
 @operation
-def key(state, host, src=None, keyserver=None, keyid=None):
+def key(src=None, keyserver=None, keyid=None, state=None, host=None):
     '''
     Add apt gpg keys with ``apt-key``.
 
@@ -76,7 +76,7 @@ def key(state, host, src=None, keyserver=None, keyid=None):
 
 
 @operation
-def repo(state, host, src, present=True, filename=None):
+def repo(src, present=True, filename=None, state=None, host=None):
     '''
     Add/remove apt repositories.
 
@@ -111,20 +111,15 @@ def repo(state, host, src, present=True, filename=None):
 
     # Doesn't exist and we want it
     if not is_present and present:
-        yield files.line(
-            state, host, filename, src,
-        )
+        yield files.line(filename, src, state=state, host=host)
 
     # Exists and we don't want it
     if is_present and not present:
-        yield files.line(
-            state, host, filename, src,
-            present=False,
-        )
+        yield files.line(filename, src, present=False, state=state, host=host)
 
 
 @operation
-def ppa(state, host, src, present=True):
+def ppa(src, present=True, state=None, host=None):
     '''
     Add/remove Ubuntu ppa repositories.
 
@@ -154,7 +149,7 @@ def ppa(state, host, src, present=True):
 
 
 @operation
-def deb(state, host, src, present=True, force=False):
+def deb(src, present=True, force=False, state=None, host=None):
     '''
     Add/remove ``.deb`` file packages.
 
@@ -187,7 +182,7 @@ def deb(state, host, src, present=True, force=False):
         temp_filename = state.get_temp_filename(src)
 
         # Ensure it's downloaded
-        yield files.download(state, host, src, temp_filename)
+        yield files.download(src, temp_filename, state=state, host=host)
 
         # Override the source with the downloaded file
         src = temp_filename
@@ -226,7 +221,7 @@ def deb(state, host, src, present=True, force=False):
 
 
 @operation
-def update(state, host, cache_time=None, touch_periodic=False):
+def update(cache_time=None, touch_periodic=False, state=None, host=None):
     '''
     Updates apt repositories.
 
@@ -286,11 +281,11 @@ _upgrade = upgrade  # noqa: E305 (for use below where update is a kwarg)
 
 @operation
 def packages(
-    state, host,
     packages=None, present=True, latest=False,
     update=False, cache_time=None, upgrade=False,
     force=False, no_recommends=False,
     allow_downgrades=False,
+    state=None, host=None,
 ):
     '''
     Install/remove/update packages & update apt.
@@ -340,10 +335,10 @@ def packages(
     '''
 
     if update:
-        yield _update(state, host, cache_time=cache_time)
+        yield _update(cache_time=cache_time, state=state, host=host)
 
     if upgrade:
-        yield _upgrade(state, host)
+        yield _upgrade(state=state, host=host)
 
     install_command = 'install'
     if no_recommends is True:

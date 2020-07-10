@@ -20,7 +20,7 @@ from pyinfra.api import operation
 
 
 @operation
-def service(state, host, name, running=True, restart=False, suspend=False):
+def service(name, running=True, restart=False, suspend=False, state=None, host=None):
     '''
     Stop/Start a Windows service.
 
@@ -54,7 +54,7 @@ def service(state, host, name, running=True, restart=False, suspend=False):
 
 
 @operation
-def reboot(state, host):
+def reboot(state=None, host=None):
     '''
     Restart the server.
     '''
