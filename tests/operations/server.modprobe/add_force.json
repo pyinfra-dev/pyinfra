@@ -7,6 +7,6 @@
         "kernel_modules": {}
     },
     "commands": [
-        "modprobe -f somemodule"
+        "modprobe -f -a somemodule"
     ]
 }

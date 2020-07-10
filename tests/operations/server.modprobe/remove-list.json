@@ -1,14 +1,14 @@
 {
-    "args": ["somemodule"],
+    "args": [["mod1", "mod2", "mod3"]],
     "kwargs": {
         "present": false
     },
     "facts": {
         "kernel_modules": {
-            "somemodule": {}
+            "mod1": {}
         }
     },
     "commands": [
-        "modprobe -r -a somemodule"
+        "modprobe -r -a mod1"
     ]
 }
