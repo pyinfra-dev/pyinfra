@@ -98,7 +98,8 @@ def build_facts():
             args = [
                 '{0}={1}'.format(arg, defaults[arg])
                 if arg in defaults else arg
-                for arg in argspec.args[2:]
+                for arg in argspec.args
+                if arg not in ('state', 'host')
             ]
 
             if len(', '.join(args)) <= MODULE_DEF_LINE_MAX:
