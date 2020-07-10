@@ -1,7 +1,12 @@
 pyinfra Documentation
 =========================
 
-Welcome to the ``pyinfra`` documentation; it is split into two sections - Using ``pyinfra`` and Deploy References. If you're new to ``pyinfra`` you should start with the :doc:`getting started <./getting_started>` page.
+Welcome to the ``pyinfra`` v1 documentation; it is split into two sections - Using ``pyinfra`` and Deploy References. If you're new to ``pyinfra`` you should start with the :doc:`getting started <./getting_started>` page.
+
+.. Important::
+    This is the documentation for ``pyinfra`` **v1**, it is highly recommended to use this version!
+
+    If you're upgrading from ``0.x`` see `the 0->1 upgrade notes <../compatibility.html#upgrading-pyinfra-from-0-x-1-x>`_.
 
 
 Using pyinfra
