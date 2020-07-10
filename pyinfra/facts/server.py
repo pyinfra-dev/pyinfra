@@ -305,6 +305,7 @@ class Crontab(FactBase):
     '''
 
     default = dict
+    use_default_on_error = True
 
     @staticmethod
     def command(user=None):
