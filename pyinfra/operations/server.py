@@ -5,9 +5,9 @@ Linux/BSD.
 
 from __future__ import division, unicode_literals
 
+import itertools
 from os import path
 from time import sleep
-import itertools
 
 import six
 
