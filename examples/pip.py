@@ -59,9 +59,10 @@ pip.packages(
 # Show that we can actually run the pyinfra command from that virtualenv
 def run_pyinfra_version(state, host):
     status, stdout, stderr = host.run_shell_command(
-        'sh -c -c "source /usr/local/bin/venv/bin/activate && pyinfra --version"',
+        '/usr/local/bin/venv/bin/pyinfra --version',
+        env={'LC_ALL': 'C.UTF-8', 'LANG': 'C.UTF-8,'},
     )
-    assert status
-    print(stdout)
+    assert status, 'pyinfra command failed: {0}'.format((stdout, stderr))
+    assert 'pyinfra: ' in stdout[0]
 
 python.call(run_pyinfra_version)  # noqa: E305
