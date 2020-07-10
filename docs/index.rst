@@ -6,7 +6,7 @@ Welcome to the ``pyinfra`` v1 documentation; it is split into two sections - Usi
 .. Important::
     This is the documentation for ``pyinfra`` **v1**, it is highly recommended to use this version!
 
-    If you're upgrading from ``0.x`` see `the 0->1 upgrade notes <../compatibility.html#upgrading-pyinfra-from-0-x-1-x>`_.
+    If you're upgrading from ``0.x`` see `the 0->1 upgrade notes <compatibility.html#upgrading-pyinfra-from-0-x-1-x>`_.
 
 
 Using pyinfra
