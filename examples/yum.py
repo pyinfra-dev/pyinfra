@@ -26,7 +26,7 @@ if host.fact.linux_name == 'CentOS':
 
 yum.rpm(
     name='Ensure an rpm is not installed',
-    packages='snappy',
+    src='snappy',
     present=False,
 )
 

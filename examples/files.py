@@ -68,8 +68,8 @@ files.template(
 
 files.link(
     name='Create link /etc/issue2 that points to /etc/issue',
-    src='/etc/issue2',
-    dest='/etc/issue',
+    path='/etc/issue2',
+    target='/etc/issue',
 )
 
 # Note: The directory /tmp/secret will get created with the default umask.
