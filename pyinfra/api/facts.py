@@ -107,7 +107,7 @@ def get_short_facts(state, short_fact, **kwargs):
     }
 
 
-def get_facts(state, name, args=None, ensure_hosts=None):
+def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True):
     '''
     Get a single fact for all hosts in the state.
     '''
@@ -259,7 +259,7 @@ def get_facts(state, name, args=None, ensure_hosts=None):
             logger.debug(log)
 
         # Check we've not failed
-        if not ignore_errors:
+        if not ignore_errors and apply_failed_hosts:
             state.fail_hosts(failed_hosts)
 
         # Assign the facts

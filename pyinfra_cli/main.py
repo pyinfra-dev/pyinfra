@@ -498,6 +498,7 @@ def _main(
                 fact_data[name] = get_facts(
                     state, name,
                     args=args,
+                    apply_failed_hosts=False,
                 )
             except PyinfraError:
                 pass
