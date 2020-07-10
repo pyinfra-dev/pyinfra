@@ -1,0 +1,11 @@
+{
+    "args": [["mod1", "mod2", "mod3"]],
+    "facts": {
+        "kernel_modules": {
+            "mod2": {}
+        }
+    },
+    "commands": [
+        "modprobe -a mod1 mod3"
+    ]
+}

@@ -7,6 +7,7 @@ from __future__ import division, unicode_literals
 
 from os import path
 from time import sleep
+import itertools
 
 import six
 
@@ -211,21 +212,31 @@ def modprobe(state, host, name, present=True, force=False):
             'floppy',
         )
     '''
+    list_value = (
+        [name]
+        if isinstance(name, str)
+        else name
+    )
+
+    # NOTE: https://docs.python.org/3/library/itertools.html#itertools-recipes
+    def partition(pred, iterable):
+        t1, t2 = itertools.tee(iterable)
+        return list(filter(pred, t2)), list(itertools.filterfalse(pred, t1))
 
     modules = host.fact.kernel_modules
-    is_present = name in modules
+    present_mods, missing_mods = partition(lambda mod: mod in modules, list_value)
 
     args = ''
     if force:
         args = ' -f'
 
     # Module is loaded and we don't want it?
-    if not present and is_present:
-        yield 'modprobe{0} -r {1}'.format(args, name)
+    if not present and present_mods:
+        yield 'modprobe{0} -r -a {1}'.format(args, ' '.join(present_mods))
 
     # Module isn't loaded and we want it?
-    elif present and not is_present:
-        yield 'modprobe{0} {1}'.format(args, name)
+    elif present and missing_mods:
+        yield 'modprobe{0} -a {1}'.format(args, ' '.join(missing_mods))
 
 
 @operation
