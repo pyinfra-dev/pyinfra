@@ -20,6 +20,12 @@ class PseudoModule(object):
     def __getattr__(self, key):
         return getattr(self._module, key)
 
+    def __iter__(self):
+        return iter(self._module)
+
+    def __len__(self):
+        return len(self._module)
+
     def set(self, module):
         self._module = module
 
