@@ -5,7 +5,10 @@ Linux/BSD.
 
 from __future__ import division, unicode_literals
 
-import itertools
+try:
+    from itertools import filterfalse, tee
+except ImportError:
+    from itertools import ifilterfalse as filterfalse, tee
 from os import path
 from time import sleep
 
@@ -211,14 +214,14 @@ def modprobe(module, present=True, force=False, state=None, host=None):
     '''
     list_value = (
         [module]
-        if isinstance(module, str)
+        if isinstance(module, six.string_types)
         else module
     )
 
     # NOTE: https://docs.python.org/3/library/itertools.html#itertools-recipes
     def partition(pred, iterable):
-        t1, t2 = itertools.tee(iterable)
-        return list(filter(pred, t2)), list(itertools.filterfalse(pred, t1))
+        t1, t2 = tee(iterable)
+        return list(filter(pred, t2)), list(filterfalse(pred, t1))
 
     modules = host.fact.kernel_modules
     present_mods, missing_mods = partition(lambda mod: mod in modules, list_value)
