@@ -494,10 +494,13 @@ def _main(
 
         for i, command in enumerate(operations):
             name, args = command
-            fact_data[name] = get_facts(
-                state, name,
-                args=args,
-            )
+            try:
+                fact_data[name] = get_facts(
+                    state, name,
+                    args=args,
+                )
+            except PyinfraError:
+                pass
 
         print_facts(fact_data)
         _exit()
