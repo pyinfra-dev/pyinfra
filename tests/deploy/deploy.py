@@ -3,18 +3,29 @@ from pyinfra.api import deploy
 from pyinfra.operations import files, server
 
 
+@deploy('My nested deploy')
+def my_nested_deploy(state, host):
+    server.shell(
+        name='First nested deploy operation',
+        commands='echo first nested_deploy_op',
+        state=state, host=host,
+    )
+
+
 @deploy('My deploy')
 def my_deploy(state, host):
     server.shell(
-        state, host,
         name='First deploy operation',
         commands='echo first_deploy_op',
+        state=state, host=host,
     )
 
+    my_nested_deploy(state=state, host=host)
+
     server.shell(
-        state, host,
         name='Second deploy operation',
         commands='echo second_deploy_op',
+        state=state, host=host,
     )
 
 

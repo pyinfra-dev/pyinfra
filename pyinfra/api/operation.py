@@ -15,7 +15,6 @@ import six
 import pyinfra
 
 from pyinfra import logger, pseudo_host, pseudo_state
-from pyinfra.pseudo_modules import PseudoModule
 
 from .command import StringCommand
 from .exceptions import PyinfraError
@@ -86,18 +85,28 @@ def add_op(state, op_func, *args, **kwargs):
 
     results = {}
 
+    kwargs['state'] = state
     for host in state.inventory:
-        results[host] = op_func(state, host, *args, **kwargs)
+        kwargs['host'] = host
+        results[host] = op_func(*args, **kwargs)
 
     return results
 
 
 @memoize
-def show_set_name_warning():
+def show_set_name_warning(call_location):
     logger.warning((
-        'Use of a set to name operations is deprecated, '
-        'please us the `name` argument.'
-    ))
+        '{0}:\n\tUse of a `set` to name operations is deprecated, '
+        'please us the `name` keyword argument.'
+    ).format(call_location))
+
+
+@memoize
+def show_state_host_arguments_warning(call_location):
+    logger.warning((
+        '{0}:\n\tPassing `state` and `host` as the first two arguments to operations is '
+        'deprecated, please us `state` and `host` keyword arguments.'
+    ).format(call_location))
 
 
 def operation(func=None, pipeline_facts=None):
@@ -127,19 +136,23 @@ def operation(func=None, pipeline_facts=None):
         # Prepare state/host
         #
 
-        # If we're in CLI mode, there's no state/host passed down, we need to
-        # use the global "pseudo" modules.
-        if len(args) < 2 or not (
-            isinstance(args[0], (State, PseudoModule))
-            and isinstance(args[1], (Host, PseudoModule))
-        ):
-            if not pyinfra.is_cli:
-                raise PyinfraError((
-                    'API operation called without state/host: {0} ({1})'
-                ).format(op_name, get_call_location()))
+        # State & host passed in as kwargs (API, nested op, @deploy op)
+        if 'state' in kwargs and 'host' in kwargs:
+            state = kwargs['state']
+            host = kwargs['host']
 
-            state = pseudo_state._module
-            host = pseudo_host._module
+        # State & host passed in as first two arguments (LEGACY)
+        elif len(args) >= 2 and isinstance(args[0], State) and isinstance(args[1], Host):
+            show_state_host_arguments_warning(get_call_location())
+            state = kwargs['state'] = args[0]
+            host = kwargs['host'] = args[1]
+            args_copy = list(args)
+            args = args_copy[2:]
+
+        # Finally, still no state+host? Use pseudo if we're CLI mode, or fail
+        elif pyinfra.is_cli:
+            state = kwargs['state'] = pseudo_state._module
+            host = kwargs['host'] = pseudo_host._module
 
             if state.in_op:
                 raise PyinfraError((
@@ -151,16 +164,10 @@ def operation(func=None, pipeline_facts=None):
                     'Nested deploy operation called without state/host: {0} ({1})'
                 ).format(op_name, get_call_location()))
 
-        # Otherwise (API, nested op, @deploy op) we just trim off the commands
         else:
-            args_copy = list(args)
-            state, host = args[0], args[1]
-            args = args_copy[2:]
-
-            if isinstance(state, PseudoModule):
-                state = state._module
-            if isinstance(host, PseudoModule):
-                host = host._module
+            raise PyinfraError((
+                'API operation called without state/host: {0} ({1})'
+            ).format(op_name, get_call_location()))
 
         # In API mode we have the kwarg - if a nested operation call we have
         # current_frameinfo.
@@ -180,7 +187,7 @@ def operation(func=None, pipeline_facts=None):
         # Look for a set as the first argument
         # TODO: remove this! COMPAT w/<1
         elif len(args) > 0 and isinstance(args[0], set):
-            show_set_name_warning()
+            show_set_name_warning(get_call_location())
             names = args[0]
             args_copy = list(args)
             args = args[1:]
@@ -202,7 +209,7 @@ def operation(func=None, pipeline_facts=None):
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).
         if state.in_op:
-            return func(state, host, *args, **kwargs) or []
+            return func(*args, **kwargs) or []
 
         # Inject the current op file number (only incremented in CLI mode)
         op_lines = [state.current_op_file]
@@ -272,6 +279,9 @@ def operation(func=None, pipeline_facts=None):
 
         # Attach keyword args
         for key, value in six.iteritems(kwargs):
+            if key in ('state', 'host'):
+                continue
+
             arg = '='.join((str(key), str(value)))
             if arg not in op_meta['args']:
                 op_meta['args'].append(arg)
@@ -312,11 +322,7 @@ def operation(func=None, pipeline_facts=None):
         }
 
         # Convert to list as the result may be a generator
-        commands = unroll_generators(func(
-            state, host,
-            *actual_args,
-            **actual_kwargs
-        ))
+        commands = unroll_generators(func(*actual_args, **actual_kwargs))
         commands = [  # convert any strings -> StringCommand's
             StringCommand(command.strip())
             if isinstance(command, six.string_types) else command

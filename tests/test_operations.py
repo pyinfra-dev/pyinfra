@@ -46,11 +46,15 @@ def make_operation_tests(arg):
 
             allowed_exception = test_data.get('exception')
 
+            kwargs = test_data.get('kwargs', {})
+            kwargs['state'] = pseudo_state
+            kwargs['host'] = pseudo_host
+
             with patch_files(test_data.get('files', []), test_data.get('directories', [])):
                 try:
                     output_commands = unroll_generators(op._pyinfra_op(
-                        pseudo_state, pseudo_host,
-                        *test_data.get('args', []), **test_data.get('kwargs', {})
+                        *test_data.get('args', []),
+                        **kwargs
                     )) or []
                 except Exception as e:
                     if allowed_exception:

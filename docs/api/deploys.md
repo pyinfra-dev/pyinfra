@@ -7,7 +7,7 @@ Deploys are usually defined by the user (see [writing deploys](../deploys)). It 
 Packaging a deploy essentially requires two changes from the usual deploy code:
 
 + Wrap everything in a function, itself decorated with `@deploy(NAME)`
-+ Include `state, host` as the first two arguments of any call to operations
++ Include `state` and `host` as keyword arguments to all operation calls
 
 ```py
 from pyinfra.api import deploy
@@ -16,17 +16,16 @@ from pyinfra.operations import apt
 @deploy('Install MariaDB')
 def install_mariadb(state, host):
     apt.packages(
-        state, host,  # note passing of state & host here
         name='Install MariaDB apt package',
         packages=['mariadb-server'],
+        state=state,  # note passing of state & host here
+        host=host,
     )
 ```
 
 This could then be used like so:
 
 ```py
-# my_deploy.py
-
 from packaged_deploy import install_mariadb
 install_mariadb()
 ```
@@ -39,7 +38,6 @@ Deploys accept the same [global arguments as as operations](/deploys.html#global
 
 
 ```py
-
 from packaged_deploy import install_mariadb
 install_mariadb(sudo=True)
 ```
