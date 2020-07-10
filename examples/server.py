@@ -6,7 +6,7 @@ SUDO = True
 if host.fact.linux_name in ['CentOS', 'RedHat']:
     yum.packages(
         name='Install some packages',
-        packages=['cron'],
+        packages=['cronie'],
         update=True,
     )
 
