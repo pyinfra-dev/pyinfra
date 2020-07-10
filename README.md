@@ -48,8 +48,8 @@ These can then be saved to a _deploy file_, let's call it `deploy.py`:
 from pyinfra.operations import apt
 
 apt.packages(
-    {'Install iftop'},
-    'iftop',
+    name='Ensure iftop is installed',
+    packages=['iftop'],
     sudo=True,
     update=True,
 )
