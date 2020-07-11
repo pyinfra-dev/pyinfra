@@ -58,7 +58,7 @@ class Sha1File(FactBase):
     def command(self, name):
         name = escape_unix_path(name)
         self.name = name
-        return 'sha1sum {0} 2> /dev/null || sha1 {0}'.format(name)
+        return 'sha1sum {0} 2> /dev/null || shasum {0} 2> /dev/null || sha1 {0}'.format(name)
 
     def process(self, output):
         for regex in self._regexes:
