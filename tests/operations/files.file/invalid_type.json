@@ -2,6 +2,6 @@
     "args": [["testfile", "anotherfile"]],
     "exception": {
         "name": "OperationTypeError",
-        "message": "Name must be a string"
+        "message": "`path` must be a string or `Path` object"
     }
 }

@@ -7,6 +7,11 @@ from __future__ import unicode_literals
 import posixpath
 import sys
 
+try:
+    import pathlib
+except ImportError:
+    pathlib = None
+
 from datetime import timedelta
 from fnmatch import fnmatch
 from os import makedirs, path as os_path, walk
@@ -736,6 +741,15 @@ def template(
     )
 
 
+def _validate_path(path):
+    valid_path_types = six.string_types
+    if pathlib:
+        valid_path_types = six.string_types + (pathlib.Path,)
+
+    if not isinstance(path, valid_path_types):
+        raise OperationTypeError('`path` must be a string or `Path` object')
+
+
 @operation(pipeline_facts={
     'link': 'path',
 })
@@ -795,8 +809,7 @@ def link(
         )
     '''
 
-    if not isinstance(path, six.string_types):
-        raise OperationTypeError('Name must be a string')
+    _validate_path(path)
 
     if present and not target:
         raise OperationError('If present is True target must be provided')
@@ -900,8 +913,7 @@ def file(
         )
     '''
 
-    if not isinstance(path, six.string_types):
-        raise OperationTypeError('Name must be a string')
+    _validate_path(path)
 
     mode = ensure_mode_int(mode)
     path = escape_unix_path(path)
@@ -992,8 +1004,7 @@ def directory(
             )
     '''
 
-    if not isinstance(path, six.string_types):
-        raise OperationTypeError('Name must be a string')
+    _validate_path(path)
 
     mode = ensure_mode_int(mode)
     path = escape_unix_path(path)
