@@ -1,6 +1,13 @@
 from __future__ import print_function
 
 from unittest import TestCase
+import sys
+
+try:
+    from pathlib import Path
+    HAVE_PATHLIB = True
+except ImportError:
+    HAVE_PATHLIB = False
 
 import pytest
 
@@ -56,3 +63,7 @@ class TestCompatFSPath(TestCase):
 
         with pytest.raises(AttributeError):
             _ = fspath(FakePathLike_3('/path/to/file'))
+
+    @pytest.mark.skipif(not HAVE_PATHLIB, reason="requires pathlib module")
+    def test_fspath_with_pathlib_object(self):
+        assert '/path/to/file' == fspath(Path('/path/to/file'))
