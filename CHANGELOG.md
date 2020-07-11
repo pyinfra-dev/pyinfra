@@ -1,4 +1,4 @@
-# v1.dev2
+# v1.0
 
 The first `1.x` release!
 
@@ -11,6 +11,9 @@ What's new:
 + [CLI] write progress/user info/logs to `stderr` only
 + [API] Consistent ordering when `add_op` and `add_deploy` functions
 + [API] Return a dictionary of `host` -> `OperationMeta` when using `add_op`
++ Enable passing a list of modules to `server.modprobe` (@FooBarQuaxx)
++ Support `Path` objects in `files.[file|directory|link]` operations
++ Support `shasum` (MacOS) in `sha1_file` fact
 
 Breaking changes:
 
