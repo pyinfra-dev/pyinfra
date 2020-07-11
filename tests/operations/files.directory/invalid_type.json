@@ -2,6 +2,6 @@
     "args": [["testdir", "anotherdir"]],
     "exception": {
         "name": "OperationTypeError",
-        "message": "Name must be a string"
+        "message": "`name` must be a string or `Path` object"
     }
 }

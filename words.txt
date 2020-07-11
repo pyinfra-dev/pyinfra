@@ -242,6 +242,7 @@ openstack
 openvz
 pacman
 paramiko
+pathlib
 pathname
 pipelining
 pkey
