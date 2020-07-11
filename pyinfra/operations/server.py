@@ -5,6 +5,10 @@ Linux/BSD.
 
 from __future__ import division, unicode_literals
 
+try:
+    from itertools import filterfalse, tee
+except ImportError:
+    from itertools import ifilterfalse as filterfalse, tee
 from os import path
 from time import sleep
 
@@ -208,21 +212,31 @@ def modprobe(module, present=True, force=False, state=None, host=None):
             module='floppy',
         )
     '''
+    list_value = (
+        [module]
+        if isinstance(module, six.string_types)
+        else module
+    )
+
+    # NOTE: https://docs.python.org/3/library/itertools.html#itertools-recipes
+    def partition(pred, iterable):
+        t1, t2 = tee(iterable)
+        return list(filter(pred, t2)), list(filterfalse(pred, t1))
 
     modules = host.fact.kernel_modules
-    is_present = module in modules
+    present_mods, missing_mods = partition(lambda mod: mod in modules, list_value)
 
     args = ''
     if force:
         args = ' -f'
 
     # Module is loaded and we don't want it?
-    if not present and is_present:
-        yield 'modprobe{0} -r {1}'.format(args, module)
+    if not present and present_mods:
+        yield 'modprobe{0} -r -a {1}'.format(args, ' '.join(present_mods))
 
     # Module isn't loaded and we want it?
-    elif present and not is_present:
-        yield 'modprobe{0} {1}'.format(args, module)
+    elif present and missing_mods:
+        yield 'modprobe{0} -a {1}'.format(args, ' '.join(missing_mods))
 
 
 @operation

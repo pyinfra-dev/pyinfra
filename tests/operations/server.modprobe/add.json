@@ -4,6 +4,6 @@
         "kernel_modules": {}
     },
     "commands": [
-        "modprobe somemodule"
+        "modprobe -a somemodule"
     ]
 }
