@@ -1,5 +1,5 @@
 {
-    "command": "cat /etc/*-release",
+    "command": "cd /etc/ && for file in $(ls -pdL *-release | grep -v /); do echo \"/etc/${file}\"; cat \"/etc/${file}\"; echo ---; done",
     "output": [],
     "fact": {
         "name": null,

@@ -1,6 +1,7 @@
 {
-    "command": "cat /etc/*-release",
+    "command": "cd /etc/ && for file in $(ls -pdL *-release | grep -v /); do echo \"/etc/${file}\"; cat \"/etc/${file}\"; echo ---; done",
     "output": [
+        "/etc/os-release",
         "CentOS Linux release 7.7.1908 (Core)",
         "NAME=\"CentOS Linux\"",
         "VERSION=\"7 (Core)\"",
@@ -17,7 +18,8 @@
         "REDHAT_SUPPORT_PRODUCT=\"centos\"",
         "REDHAT_SUPPORT_PRODUCT_VERSION=\"7\"",
         "CentOS Linux release 7.7.1908 (Core)",
-        "CentOS Linux release 7.7.1908 (Core)"
+        "CentOS Linux release 7.7.1908 (Core)",
+        "---"
     ],
     "fact": {
         "name": "CentOS",
@@ -37,7 +39,8 @@
             "CENTOS_MANTISBT_PROJECT": "CentOS-7",
             "CENTOS_MANTISBT_PROJECT_VERSION": "7",
             "REDHAT_SUPPORT_PRODUCT": "centos",
-            "REDHAT_SUPPORT_PRODUCT_VERSION": "7"
+            "REDHAT_SUPPORT_PRODUCT_VERSION": "7",
+            "CODENAME": "Core"
         }
     }
 }
