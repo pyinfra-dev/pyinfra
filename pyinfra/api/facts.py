@@ -21,6 +21,7 @@ from paramiko import SSHException
 from pyinfra import logger
 from pyinfra.api.util import (
     get_arg_value,
+    log_error_or_warning,
     log_host_command_error,
     make_hash,
     underscore,
@@ -242,6 +243,9 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
                     data = fact.process(stdout)
             elif not fact.use_default_on_error:
                 failed_hosts.add(host)
+                log_error_or_warning(host, ignore_errors, description=(
+                    'could not load fact: {0}{1}'
+                ).format(name, args or ''))
 
             hostname_facts[host] = data
 
