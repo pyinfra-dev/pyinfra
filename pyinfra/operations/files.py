@@ -30,6 +30,7 @@ from pyinfra.api import (
 from pyinfra.api.connectors.util import escape_unix_path
 from pyinfra.api.util import get_file_sha1, get_template
 
+from .util.compat import fspath
 from .util.files import chmod, chown, ensure_mode_int, sed_replace
 
 
@@ -742,12 +743,10 @@ def template(
 
 
 def _validate_path(path):
-    valid_path_types = six.string_types
-    if pathlib:
-        valid_path_types = six.string_types + (pathlib.Path,)
-
-    if not isinstance(path, valid_path_types):
-        raise OperationTypeError('`path` must be a string or `Path` object')
+    try:
+        path = fspath(path)
+    except TypeError:
+        raise OperationTypeError('`path` must be a string or `os.PathLike` object')
 
 
 @operation(pipeline_facts={
