@@ -76,8 +76,8 @@ Now we need a ``deploy.py`` containing our operations to execute:
 
     # Define some state - this operation will do nothing on subsequent runs
     apt.packages(
-        name='Install vim via apt',
-        packages='vim',
+        name='Ensure the vim apt package is installed',
+        packages=['vim'],
         sudo=True,  # use sudo when installing the packages
     )
 
