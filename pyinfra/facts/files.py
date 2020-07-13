@@ -50,6 +50,9 @@ class Sha1File(FactBase):
     Returns a SHA1 hash of a file. Works with both sha1sum and sha1.
     '''
 
+    # If the file doesn't exist, return `None` instead of failing
+    use_default_on_error = True
+
     _regexes = [
         r'^([a-zA-Z0-9]{40})\s+%s$',
         r'^SHA1\s+\(%s\)\s+=\s+([a-zA-Z0-9]{40})$',
