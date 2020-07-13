@@ -1,3 +1,11 @@
+# v1.0.1
+
++ Log host fact errors/warnings
++ Switch to `distro` package for `linux_distribution` fact (@FooBarQuaxx)
++ Expand support for `os.PathLike` path variables (@FooBarQuaxx)
++ Improve checking state/host presence when calling operations (@FooBarQuaxx)
++ Don't error in `sha1_file` fact when no file exists
+
 # v1.0
 
 The first `1.x` release!
