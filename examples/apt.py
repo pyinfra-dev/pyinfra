@@ -3,7 +3,7 @@ from pyinfra.operations import apt
 
 SUDO = True
 
-code_name = host.fact.linux_distribution['release_meta'].get('DISTRIB_CODENAME')
+code_name = host.fact.linux_distribution['release_meta'].get('CODENAME')
 print(host.fact.linux_name, code_name)
 
 if host.fact.linux_name in ['Debian', 'Ubuntu']:

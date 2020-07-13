@@ -1,12 +1,17 @@
 from __future__ import unicode_literals
 
+import os
 import re
+import shutil
 from datetime import datetime
+from tempfile import mkdtemp
 
 from dateutil.parser import parse as parse_date
 
 from pyinfra.api import FactBase, ShortFactBase
 from pyinfra.api.util import try_int
+
+from .util.distro import get_distro_info
 
 
 class Home(FactBase):
@@ -427,34 +432,28 @@ class LinuxDistribution(FactBase):
     .. code:: python
 
         {
-            'name': 'CentOS',
-            'major': 6,
-            'minor': 5,
+            'name': 'Ubuntu',
+            'major': 20,
+            'minor': 04,
             'release_meta': {
-                'DISTRIB_CODENAME': 'trusty',
+                'CODENAME': 'focal',
+                'ID_LIKE': 'debian',
                 ...
             }
         }
     '''
-
-    command = 'cat /etc/*-release'
-
-    # Currently supported distros
-    regexes = [
-        r'(Ubuntu) ([0-9]{2})\.([0-9]{2})',
-        r'(CentOS) release ([0-9]).([0-9])',
-        r'(Red Hat Enterprise Linux) Server release ([0-9]).([0-9])',
-        r'(CentOS) Linux release ([0-9])\.([0-9])',
-        r'(Debian) GNU/Linux ([0-9])()',
-        r'(Gentoo) Base System release ([0-9])\.([0-9])',
-        r'(Fedora) release ([0-9]+)()',
-        r'(Alpine) Linux v([0-9]+).([0-9]+)',
-    ]
+    command = ('cd /etc/ && for file in $(ls -pdL *-release | grep -v /); '
+               'do echo "/etc/${file}"; cat "/etc/${file}"; echo ---; '
+               'done')
 
     name_to_pretty_name = {
-        'Centos': 'CentOS',
-        'Opensuse-Tumbleweed': 'openSUSE',
-        'Opensuse-Leap': 'openSUSE',
+        'alpine': 'Alpine',
+        'centos': 'CentOS',
+        'fedora': 'Fedora',
+        'gentoo': 'Gentoo',
+        'opensuse': 'openSUSE',
+        'rhel': 'RedHat',
+        'ubuntu': 'Ubuntu',
     }
 
     use_default_on_error = True
@@ -465,47 +464,42 @@ class LinuxDistribution(FactBase):
             'name': None,
             'major': None,
             'minor': None,
+            'release_meta': {},
         }
 
     def process(self, output):
-        meta = {}
-
-        for line in output:
-            if '=' in line and not line.startswith('#'):
-                key, value = line.split('=')
-                meta[key] = value.strip('"')
-
-        name = None
-        major = None
-        minor = None
-
-        if 'ID' in meta and 'VERSION_ID' in meta:
-            name = meta['ID'].title()
-            version_bits = meta['VERSION_ID'].split('.')
-            major = version_bits[0]
-            if len(version_bits) > 1:
-                minor = version_bits[1]
-        else:
-            for line in output:
-                matched = False
-                for regex in self.regexes:
-                    matches = re.search(regex, line)
-                    if matches:
-                        name = matches.group(1)
-                        major = matches.group(2)
-                        minor = matches.group(3)
-                        matched = True
-                        break
-                if matched:
-                    break
+        parts = {}
+        for part in '\n'.join(output).strip().split('---'):
+            if not part.strip():
+                continue
+            filename, content = part.strip().split('\n', 1)
+            parts[filename] = content
 
         release_info = self.default()
-        release_info.update({
-            'name': self.name_to_pretty_name.get(name, name),
-            'major': try_int(major),
-            'minor': try_int(minor),
-            'release_meta': meta,
-        })
+        if not parts:
+            return release_info
+
+        temp_root = mkdtemp()
+        try:
+            temp_etc_dir = os.path.join(temp_root, 'etc')
+            os.mkdir(temp_etc_dir)
+
+            for filename, content in parts.items():
+                with open(os.path.join(temp_etc_dir, os.path.basename(filename)), 'w') as fp:
+                    fp.write(content)
+
+            parsed = get_distro_info(temp_root)
+
+            release_meta = {key.upper(): value for key, value in parsed.os_release_info().items()}
+            release_info.update({
+                'name': self.name_to_pretty_name.get(parsed.id(), parsed.name()),
+                'major': try_int(parsed.major_version()),
+                'minor': try_int(parsed.minor_version()) or None,
+                'release_meta': release_meta,
+            })
+
+        finally:
+            shutil.rmtree(temp_root)
 
         return release_info
 
