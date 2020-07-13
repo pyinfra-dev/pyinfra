@@ -28,7 +28,7 @@ from .command import (
 )
 from .exceptions import PyinfraError
 from .operation_kwargs import get_executor_kwarg_keys
-from .util import format_exception, log_host_command_error
+from .util import format_exception, log_error_or_warning, log_host_command_error
 
 
 def _run_server_op(state, host, op_hash):
@@ -175,16 +175,7 @@ def _run_server_op(state, host, op_hash):
     # Up error_ops & log
     state.results[host]['error_ops'] += 1
 
-    if op_meta['ignore_errors']:
-        logger.warning('{0}{1}'.format(
-            host.print_prefix,
-            click.style('Error (ignored)', 'yellow'),
-        ))
-    else:
-        logger.error('{0}{1}'.format(
-            host.print_prefix,
-            click.style('Error', 'red'),
-        ))
+    log_error_or_warning(host, op_meta['ignore_errors'])
 
     # Always trigger any error handler
     if op_meta['on_error']:

@@ -197,6 +197,23 @@ def format_exception(e):
     return '{0}{1}'.format(e.__class__.__name__, e.args)
 
 
+def log_error_or_warning(host, ignore_errors, description=''):
+    log_func = logger.error
+    log_color = 'red'
+    log_text = 'Error: ' if description else 'Error'
+
+    if ignore_errors:
+        log_func = logger.warning
+        log_color = 'yellow'
+        log_text = 'Error (ignored): ' if description else 'Error (ignored)'
+
+    log_func('{0}{1}{2}'.format(
+        host.print_prefix,
+        click.style(log_text, log_color),
+        description,
+    ))
+
+
 def log_host_command_error(host, e, timeout=0):
     if isinstance(e, timeout_error):
         logger.error('{0}{1}'.format(
