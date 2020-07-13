@@ -5,7 +5,6 @@ import six
 
 # NOTE https://github.com/python/cpython/blob/master/Lib/os.py#L1025
 def fspath(path):
-
     path_types = six.string_types
     path_type_names = [pt.__name__ for pt in path_types]
 
@@ -20,7 +19,8 @@ def fspath(path):
             raise
         else:
             raise TypeError('expected {} or os.PathLike object, '
-                            'not {}'.format(','.join(path_types), path_type.__name__))
+                            'not {}'.format(','.join(path_type_names), path_type.__name__))
+
     if isinstance(path_repr, path_types):
         return path_repr
     else:
