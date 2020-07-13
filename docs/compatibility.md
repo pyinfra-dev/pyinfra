@@ -5,9 +5,11 @@ This page describes the compatibility guarantees ``pyinfra`` offers.
 
 ## ``pyinfra`` Versions
 
-``pyinfra`` follows [semantic versioning](https://semver.org/) rules. This means no breaking changes between minor versions (`1.0` -> `1.1`). Such changes are reserved for major version increases only. ``pyinfra`` will also generate warnings in CLI mode for any deprecated features due to be removed at the next major release.
+Where possible ``pyinfra`` follows  [semantic versioning](https://semver.org/) rules. This means no breaking changes between minor versions (`1.0` -> `1.1`). Such changes are reserved for major version increases only. ``pyinfra`` will also generate warnings in CLI mode for any deprecated features due to be removed at the next major release. These are the `pyinfra` specific semver rules:
 
-In general upgrading between major versions should be painless so long as no warnings are generated when ``pyinfra`` executes a given deploy.
++ **Major**: breaking changes, warnings will show on latest previous major version
++ **Minor**: new operations, new APIs, new global arguments, deprecate & add warnings
++ **Patch**: new operation arguments for existing operations, bug fixes, documentation updates
 
 
 ## Remote Systems
