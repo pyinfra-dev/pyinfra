@@ -4,9 +4,9 @@ from unittest import TestCase
 
 try:
     from pathlib import Path
-    HAVE_PATHLIB = True
+    HAS_FSPATH = hasattr(Path, '__fspath__')
 except ImportError:
-    HAVE_PATHLIB = False
+    HAS_FSPATH = False
 
 import pytest
 
@@ -63,6 +63,9 @@ class TestCompatFSPath(TestCase):
         with pytest.raises(AttributeError):
             _ = fspath(FakePathLike_3('/path/to/file'))
 
-    @pytest.mark.skipif(not HAVE_PATHLIB, reason='requires pathlib module')
+    @pytest.mark.skipif(
+        not HAS_FSPATH,
+        reason='requires Python 3.6+ (pathlib module + __fspath__)',
+    )
     def test_fspath_with_pathlib_object(self):
         assert '/path/to/file' == fspath(Path('/path/to/file'))
