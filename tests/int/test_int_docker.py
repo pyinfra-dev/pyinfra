@@ -29,7 +29,7 @@ def test_int_docker_apt_and_npm_on_ubuntu(helpers):
 def test_int_docker_git_gem_and_pip_on_mult(helpers):
     helpers.run(
         (
-            'pyinfra '
+            'pyinfra -v '
             '@docker/ubuntu:18.04,@docker/centos:8,@docker/alpine:3.11 '
             'git.py gem.py pip.py'
         ),
