@@ -1,3 +1,11 @@
+# v1.0.2
+
++ Further improve fact output when errors are encountered
+    * Will now output stdout + stderr when a fact command fails unexpectedly
+    * This brings the same instant debugging feel to facts that operations have
++ Fix `wget` failure handling in `files.download` operation (@artizirk)
++ Improve files facts handling when file/directory/link does not exist
+
 # v1.0.1
 
 + Log host fact errors/warnings
