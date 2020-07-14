@@ -19,11 +19,13 @@ from gevent.lock import BoundedSemaphore
 from paramiko import SSHException
 
 from pyinfra import logger
+from pyinfra.api.connectors.util import split_combined_output
 from pyinfra.api.util import (
     get_arg_value,
     log_error_or_warning,
     log_host_command_error,
     make_hash,
+    print_host_combined_output,
     underscore,
 )
 from pyinfra.progress import progress_spinner
@@ -202,6 +204,7 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
                 shell_executable=shell_executable,
                 print_output=state.print_fact_output,
                 print_input=state.print_fact_input,
+                return_combined_output=True,
             )
             greenlet_to_host[greenlet] = host
 
@@ -227,7 +230,7 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
             stdout = []
 
             try:
-                status, stdout, _ = greenlet.get()
+                status, combined_output_lines = greenlet.get()
 
             except (timeout_error, socket_error, SSHException) as e:
                 failed_hosts.add(host)
@@ -236,6 +239,8 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
                     timeout=timeout,
                 )
 
+            stdout, _ = split_combined_output(combined_output_lines)
+
             data = fact.default()
 
             if status:
@@ -243,6 +248,11 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
                     data = fact.process(stdout)
             elif not fact.use_default_on_error:
                 failed_hosts.add(host)
+
+                # If we failed and have no already printed the stderr, print it
+                if status is False and not state.print_fact_output:
+                    print_host_combined_output(host, combined_output_lines)
+
                 log_error_or_warning(host, ignore_errors, description=(
                     'could not load fact: {0}{1}'
                 ).format(name, args or ''))

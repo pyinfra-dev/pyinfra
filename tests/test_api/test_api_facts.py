@@ -21,10 +21,10 @@ class TestOperationsApi(PatchSSHTestCase):
         connect_all(state)
 
         with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
-            fake_run_command.return_value = MagicMock(), MagicMock(), MagicMock()
+            fake_run_command.return_value = MagicMock(), [('stdout', 'some-output')]
             fact_data = get_facts(state, 'command', ('yes',))
 
-        assert fact_data == {anotherhost: ''}
+        assert fact_data == {anotherhost: 'some-output'}
 
         fake_run_command.assert_called_with(
             state,
@@ -38,6 +38,7 @@ class TestOperationsApi(PatchSSHTestCase):
             sudo_user=None,
             timeout=None,
             use_sudo_password=False,
+            return_combined_output=True,
         )
 
     def test_get_fact_current_op_meta(self):
@@ -58,10 +59,10 @@ class TestOperationsApi(PatchSSHTestCase):
         }
 
         with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
-            fake_run_command.return_value = MagicMock(), MagicMock(), MagicMock()
+            fake_run_command.return_value = MagicMock(), [('stdout', 'some-output')]
             fact_data = get_facts(state, 'command', ('yes',))
 
-        assert fact_data == {anotherhost: ''}
+        assert fact_data == {anotherhost: 'some-output'}
 
         fake_run_command.assert_called_with(
             state,
@@ -75,6 +76,7 @@ class TestOperationsApi(PatchSSHTestCase):
             sudo_user='someuser',
             timeout=10,
             use_sudo_password=True,
+            return_combined_output=True,
         )
 
     def test_get_fact_error(self):
@@ -86,7 +88,7 @@ class TestOperationsApi(PatchSSHTestCase):
         connect_all(state)
 
         with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
-            fake_run_command.return_value = False, MagicMock(), MagicMock()
+            fake_run_command.return_value = False, MagicMock()
 
             with self.assertRaises(PyinfraError) as context:
                 get_facts(state, 'command', ('fail command',))
@@ -105,6 +107,7 @@ class TestOperationsApi(PatchSSHTestCase):
             sudo_user=None,
             timeout=None,
             use_sudo_password=False,
+            return_combined_output=True,
         )
 
     def test_get_fact_error_ignore(self):
@@ -125,7 +128,7 @@ class TestOperationsApi(PatchSSHTestCase):
         }
 
         with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
-            fake_run_command.return_value = False, MagicMock(), MagicMock()
+            fake_run_command.return_value = False, MagicMock()
             fact_data = get_facts(state, 'command', ('fail command',))
 
         assert fact_data == {anotherhost: None}
@@ -142,4 +145,5 @@ class TestOperationsApi(PatchSSHTestCase):
             sudo_user=None,
             timeout=None,
             use_sudo_password=False,
+            return_combined_output=True,
         )
