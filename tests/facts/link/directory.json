@@ -1,6 +1,6 @@
 {
     "arg": "/home/pyinfra/mylink",
-    "command": "find /home/pyinfra/mylink 2> /dev/null && (ls -ld --time-style=long-iso /home/pyinfra/mylink 2> /dev/null || ls -ld --full-time /home/pyinfra/mylink 2> /dev/null || ls -lde /home/pyinfra/mylink 2> /dev/null || ls -ldT /home/pyinfra/mylink)",
+    "command": "find /home/pyinfra/mylink &> /dev/null && (ls -ld --time-style=long-iso /home/pyinfra/mylink 2> /dev/null || ls -ld --full-time /home/pyinfra/mylink 2> /dev/null || ls -lde /home/pyinfra/mylink 2> /dev/null || ls -ldT /home/pyinfra/mylink)",
     "output": [
         "drwxrwxrwx 1 pyinfra pyinfra 8 2016-02-13 12:56 /home/pyinfra/mylink"
     ],

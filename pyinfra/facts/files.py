@@ -28,7 +28,7 @@ class File(FactBase):
         name = escape_unix_path(name)
         commands = [ls_command.format(name) for ls_command in self._ls_commands]
         ls_command = ' || '.join(commands)
-        return 'find {0} 2> /dev/null && ({1})'.format(name, ls_command)
+        return 'find {0} &> /dev/null && ({1})'.format(name, ls_command)
 
     def process(self, output):
         return parse_ls_output(output[0], self.type)

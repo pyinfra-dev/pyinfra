@@ -1,6 +1,6 @@
 {
     "arg": "/home/pyinfra/fil-@_e.txt",
-    "command": "find /home/pyinfra/fil-@_e.txt 2> /dev/null && (ls -ld --time-style=long-iso /home/pyinfra/fil-@_e.txt 2> /dev/null || ls -ld --full-time /home/pyinfra/fil-@_e.txt 2> /dev/null || ls -lde /home/pyinfra/fil-@_e.txt 2> /dev/null || ls -ldT /home/pyinfra/fil-@_e.txt)",
+    "command": "find /home/pyinfra/fil-@_e.txt &> /dev/null && (ls -ld --time-style=long-iso /home/pyinfra/fil-@_e.txt 2> /dev/null || ls -ld --full-time /home/pyinfra/fil-@_e.txt 2> /dev/null || ls -lde /home/pyinfra/fil-@_e.txt 2> /dev/null || ls -ldT /home/pyinfra/fil-@_e.txt)",
     "output": [
         "-rwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56:00 2016 /home/pyinfra/fil-@_e.txt"
     ],
