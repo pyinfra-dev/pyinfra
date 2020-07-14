@@ -28,7 +28,12 @@ from .command import (
 )
 from .exceptions import PyinfraError
 from .operation_kwargs import get_executor_kwarg_keys
-from .util import format_exception, log_error_or_warning, log_host_command_error
+from .util import (
+    format_exception,
+    log_error_or_warning,
+    log_host_command_error,
+    print_host_combined_output,
+)
 
 
 def _run_server_op(state, host, op_hash):
@@ -132,17 +137,7 @@ def _run_server_op(state, host, op_hash):
 
             # If we failed and have no already printed the stderr, print it
             if status is False and not state.print_output:
-                for type_, line in combined_output_lines:
-                    if type_ == 'stderr':
-                        logger.error('{0}{1}'.format(
-                            host.print_prefix,
-                            click.style(line, 'red'),
-                        ))
-                    else:
-                        logger.error('{0}{1}'.format(
-                            host.print_prefix,
-                            line,
-                        ))
+                print_host_combined_output(host, combined_output_lines)
         else:
             raise TypeError('{0} is an invalid pyinfra command!'.format(command))
 

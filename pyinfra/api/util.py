@@ -197,6 +197,20 @@ def format_exception(e):
     return '{0}{1}'.format(e.__class__.__name__, e.args)
 
 
+def print_host_combined_output(host, combined_output_lines):
+    for type_, line in combined_output_lines:
+        if type_ == 'stderr':
+            logger.error('{0}{1}'.format(
+                host.print_prefix,
+                click.style(line, 'red'),
+            ))
+        else:
+            logger.error('{0}{1}'.format(
+                host.print_prefix,
+                line,
+            ))
+
+
 def log_error_or_warning(host, ignore_errors, description=''):
     log_func = logger.error
     log_color = 'red'
