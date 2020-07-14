@@ -107,7 +107,7 @@ def download(
     # If we download, always do user/group/mode as SSH user may be different
     if download:
         curl_command = 'curl -sSLf {0} -o {1}'.format(src, dest)
-        wget_command = 'wget -q {0} -O {1} || rm -f {1}; exit 1'.format(src, dest)
+        wget_command = 'wget -q {0} -O {1} || (rm -f {1}; exit 1)'.format(src, dest)
 
         if host.fact.which('curl'):
             yield curl_command

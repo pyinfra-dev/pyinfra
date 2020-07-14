@@ -15,7 +15,7 @@
         }
     },
     "commands": [
-        "wget -q http://myfile -O /home/myfile || rm -f /home/myfile; exit 1",
+        "wget -q http://myfile -O /home/myfile || (rm -f /home/myfile; exit 1)",
         "chgrp mygroup /home/myfile",
         "chmod 777 /home/myfile"
     ]
