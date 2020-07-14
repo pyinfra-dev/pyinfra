@@ -53,7 +53,7 @@ if not host.fact.file('/.dockerenv'):
     if host.fact.linux_name in ['CentOS', 'RedHat']:
         server.modprobe(
             name='Silly example for modprobe',
-            modprobe='floppy',
+            module='floppy',
         )
 
 server.user(
