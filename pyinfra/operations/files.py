@@ -7,11 +7,6 @@ from __future__ import unicode_literals
 import posixpath
 import sys
 
-try:
-    import pathlib
-except ImportError:
-    pathlib = None
-
 from datetime import timedelta
 from fnmatch import fnmatch
 from os import makedirs, path as os_path, walk
