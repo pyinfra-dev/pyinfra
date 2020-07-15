@@ -90,7 +90,7 @@ class File(FactBase):
             elif key in ('atime', 'mtime', 'ctime'):
                 value = try_int(value)
                 if isinstance(value, int):
-                    value = datetime.fromtimestamp(value)
+                    value = datetime.utcfromtimestamp(value)
 
             data[key] = value
 
