@@ -1,8 +1,8 @@
 {
-    "arg": "/home/pyinfra/mylink",
-    "command": "find /home/pyinfra/mylink &> /dev/null && (ls -ld --time-style=long-iso /home/pyinfra/mylink 2> /dev/null || ls -ld --full-time /home/pyinfra/mylink 2> /dev/null || ls -lde /home/pyinfra/mylink 2> /dev/null || ls -ldT /home/pyinfra/mylink)",
+    "arg": "/path/to/a/file",
+    "command": "stat /path/to/a/file 1> /dev/null 2> /dev/null && (stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /path/to/a/file 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /path/to/a/file) || true",
     "output": [
-        "-rwxrwxrwx 1 pyinfra pyinfra 8 2016-02-13 12:56 /home/pyinfra/file.txt"
+        "user=pyinfra group=pyinfra mode=-rwxrwxrwx atime=1594804767 mtime=1594804767 ctime=0 size=8 '/path/to/a/file'"
     ],
     "fact": false
 }

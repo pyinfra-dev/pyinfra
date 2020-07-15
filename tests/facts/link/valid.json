@@ -1,15 +1,17 @@
 {
     "arg": "/home/pyinfra/my@-_link",
-    "command": "find /home/pyinfra/my@-_link &> /dev/null && (ls -ld --time-style=long-iso /home/pyinfra/my@-_link 2> /dev/null || ls -ld --full-time /home/pyinfra/my@-_link 2> /dev/null || ls -lde /home/pyinfra/my@-_link 2> /dev/null || ls -ldT /home/pyinfra/my@-_link)",
+    "command": "stat /home/pyinfra/my@-_link 1> /dev/null 2> /dev/null && (stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /home/pyinfra/my@-_link 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /home/pyinfra/my@-_link) || true",
     "output": [
-        "lrwxrwxrwx 1 pyinfra pyinfra 8 2016-02-13 12:56 /home/pyinfra/my@-_link -> my_f@-ile.txt"
+        "user=pyinfra group=pyinfra mode=lrwxrwxrwx atime=1594804774 mtime=1594804770 ctime=0 size=6 '/home/pyinfra/my@-_link' -> 'my_f@-ile.txt'"
     ],
     "fact": {
         "group": "pyinfra",
         "user": "pyinfra",
         "mode": 777,
         "link_target": "my_f@-ile.txt",
-        "mtime": "2016-02-13T12:56:00",
-        "size": "8"
+        "atime": "2020-07-15T10:19:34",
+        "mtime": "2020-07-15T10:19:30",
+        "ctime": "1970-01-01T01:00:00",
+        "size": 6
     }
 }

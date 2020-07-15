@@ -2,36 +2,106 @@ from __future__ import unicode_literals
 
 import re
 
+from datetime import datetime
+
 from six.moves import shlex_quote
 
 from pyinfra.api.connectors.util import escape_unix_path
 from pyinfra.api.facts import FactBase
+from pyinfra.api.util import try_int
 
-from .util.files import parse_ls_output
+LINUX_STAT_COMMAND = (
+    "stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N'"
+)
+BSD_STAT_COMMAND = (
+    "stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY'"
+)
+
+FLAG_TO_TYPE = {
+    'b': 'block',
+    'c': 'character',
+    'd': 'directory',
+    'l': 'link',
+    's': 'socket',
+    'p': 'fifo',
+    '-': 'file',
+}
+
+SYMBOL_TO_OCTAL_PERMISSIONS = {
+    'rwx': '7',
+    'rw-': '6',
+    'r-x': '5',
+    'r--': '4',
+    '-wx': '3',
+    '-w-': '2',
+    '--x': '1',
+}
+
+
+def _parse_mode(mode):
+    '''
+    Converts ls mode output (rwxrwxrwx) -> integer (755).
+    '''
+
+    result = ''
+    # owner, group, world
+    for group in [mode[0:3], mode[3:6], mode[6:9]]:
+        if group in SYMBOL_TO_OCTAL_PERMISSIONS:
+            result = '{0}{1}'.format(result, SYMBOL_TO_OCTAL_PERMISSIONS[group])
+        else:
+            result = '{0}0'.format(result)
+
+    return int(result)
 
 
 class File(FactBase):
     # Types must match FLAG_TO_TYPE in .util.files.py
     type = 'file'
 
-    # If the file doesn't exist, return `None` instead of failing
-    use_default_on_error = True
-
-    _ls_commands = [
-        'ls -ld --time-style=long-iso {0} 2> /dev/null',  # Ubuntu, CentOS
-        'ls -ld --full-time {0} 2> /dev/null',  # Newer BusyBox
-        'ls -lde {0} 2> /dev/null',  # Older BusyBox
-        'ls -ldT {0}',  # BSD, MacOS
-    ]
-
-    def command(self, name):
-        name = escape_unix_path(name)
-        commands = [ls_command.format(name) for ls_command in self._ls_commands]
-        ls_command = ' || '.join(commands)
-        return 'find {0} &> /dev/null && ({1})'.format(name, ls_command)
+    def command(self, path):
+        path = escape_unix_path(path)
+        return (
+            'stat {path} 1> /dev/null 2> /dev/null && '  # check file exists
+            '({linux_stat_command} {path} 2> /dev/null || {bsd_stat_command} {path}) '
+            '|| true'  # don't error if the file does not exist (return None)
+        ).format(
+            path=path,
+            linux_stat_command=LINUX_STAT_COMMAND,
+            bsd_stat_command=BSD_STAT_COMMAND,
+        )
 
     def process(self, output):
-        return parse_ls_output(output[0], self.type)
+        stat_bits = output[0].split(None, 7)
+        stat_bits, filename = stat_bits[:-1], stat_bits[-1]
+
+        data = {}
+        path_type = None
+
+        for bit in stat_bits:
+            key, value = bit.split('=')
+
+            if key == 'mode':
+                path_type = FLAG_TO_TYPE[value[0]]
+                value = _parse_mode(value[1:])
+
+            elif key == 'size':
+                value = try_int(value)
+
+            elif key in ('atime', 'mtime', 'ctime'):
+                value = try_int(value)
+                if isinstance(value, int):
+                    value = datetime.fromtimestamp(value)
+
+            data[key] = value
+
+        if path_type != self.type:
+            return False
+
+        if path_type == 'link':
+            filename, target = filename.split(' -> ')
+            data['link_target'] = target.strip("'")
+
+        return data
 
 
 class Link(File):

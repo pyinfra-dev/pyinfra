@@ -1,14 +1,16 @@
 {
     "arg": "/home/pyinfra\\ dir/fil-@_e.txt",
-    "command": "find /home/pyinfra\\ dir/fil-@_e.txt &> /dev/null && (ls -ld --time-style=long-iso /home/pyinfra\\ dir/fil-@_e.txt 2> /dev/null || ls -ld --full-time /home/pyinfra\\ dir/fil-@_e.txt 2> /dev/null || ls -lde /home/pyinfra\\ dir/fil-@_e.txt 2> /dev/null || ls -ldT /home/pyinfra\\ dir/fil-@_e.txt)",
+    "command": "stat /home/pyinfra\\ dir/fil-@_e.txt 1> /dev/null 2> /dev/null && (stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /home/pyinfra\\ dir/fil-@_e.txt 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /home/pyinfra\\ dir/fil-@_e.txt) || true",
     "output": [
-        "-rwxrwxrwx 1 pyinfra pyinfra 8 Feb 13 12:56:00 2016 /home/pyinfra\\ dir/fil-@_e.txt"
+        "user=pyinfra group=pyinfra mode=-rw-r--r-- atime=1594804348 mtime=1594804348 ctime=0 size=0 '/home/pyinfra dir/fil-@_e.txt'"
     ],
     "fact": {
         "group": "pyinfra",
         "user": "pyinfra",
-        "mode": 777,
-        "mtime": "2016-02-13T12:56:00",
-        "size": "8"
+        "mode": 644,
+        "atime": "2020-07-15T10:12:28",
+        "mtime": "2020-07-15T10:12:28",
+        "ctime": "1970-01-01T01:00:00",
+        "size": 0
     }
 }

@@ -1,14 +1,16 @@
 {
     "arg": "/home/pyinfra/myd@-_ir",
-    "command": "find /home/pyinfra/myd@-_ir &> /dev/null && (ls -ld --time-style=long-iso /home/pyinfra/myd@-_ir 2> /dev/null || ls -ld --full-time /home/pyinfra/myd@-_ir 2> /dev/null || ls -lde /home/pyinfra/myd@-_ir 2> /dev/null || ls -ldT /home/pyinfra/myd@-_ir)",
+    "command": "stat /home/pyinfra/myd@-_ir 1> /dev/null 2> /dev/null && (stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /home/pyinfra/myd@-_ir 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /home/pyinfra/myd@-_ir) || true",
     "output": [
-        "drwxrwxrwx 1 pyinfra pyinfra 8 2016-02-13 12:56 /home/pyinfra/myd@-_ir"
+        "user=pyinfra group=pyinfra mode=drw-r--r-- atime=1594804583 mtime=1594804583 ctime=0 size=0 '/home/pyinfra/myd@-_ir'"
     ],
     "fact": {
         "group": "pyinfra",
         "user": "pyinfra",
-        "mode": 777,
-        "mtime": "2016-02-13T12:56:00",
-        "size": "8"
+        "mode": 644,
+        "atime": "2020-07-15T10:16:23",
+        "mtime": "2020-07-15T10:16:23",
+        "ctime": "1970-01-01T01:00:00",
+        "size": 0
     }
 }
