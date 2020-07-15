@@ -1,0 +1,19 @@
+{
+    "args": [[
+        "git",
+        "vim"
+    ]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "rpm_packages": {
+            "git": ["2.26.2-1.fc32"],
+            "vim-enhanced": ["8.2.1081-1.fc32"],
+            "vim-common": ["8.2.1081-1.fc32"]
+        }
+    },
+    "commands": [
+        "dnf remove -y git vim"
+    ]
+}
