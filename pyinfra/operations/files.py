@@ -413,7 +413,7 @@ def sync(
     # the link target is a directory.
     dest_to_ensure = dest
     dest_link_info = host.fact.link(dest)
-    if dest_link_info is not False:
+    if dest_link_info:
         dest_to_ensure = dest_link_info['link_target']
 
     yield directory(
