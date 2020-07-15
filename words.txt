@@ -163,6 +163,7 @@ filetype
 findstr
 frameinfo
 fs
+fspath
 fstab
 gaierror
 generic
