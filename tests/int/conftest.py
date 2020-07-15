@@ -28,7 +28,8 @@ class Helpers:
         assert results.returncode == 0, stderr
 
         for line in expected_lines:
-            assert re.search(line, stderr, re.MULTILINE)
+            assert re.search(line, stderr, re.MULTILINE), \
+                'Line "{0}" not found in output!'.format(line)
 
 
 @pytest.fixture

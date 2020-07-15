@@ -2,6 +2,7 @@ import pytest
 
 
 @pytest.mark.int
+@pytest.mark.docker
 def test_int_docker_install_package_ubuntu(helpers):
     helpers.run(
         'pyinfra -v @docker/ubuntu:18.04 apt.packages iftop sudo=true update=true',
@@ -10,6 +11,7 @@ def test_int_docker_install_package_ubuntu(helpers):
 
 
 @pytest.mark.int
+@pytest.mark.docker
 def test_int_docker_apk_on_alpine(helpers):
     helpers.run(
         'pyinfra -v @docker/alpine:3.11 apk.py',
@@ -18,6 +20,7 @@ def test_int_docker_apk_on_alpine(helpers):
 
 
 @pytest.mark.int
+@pytest.mark.docker
 def test_int_docker_apt_and_npm_on_ubuntu(helpers):
     helpers.run(
         'pyinfra -v @docker/ubuntu:18.04 apt.py npm.py',
@@ -26,6 +29,7 @@ def test_int_docker_apt_and_npm_on_ubuntu(helpers):
 
 
 @pytest.mark.int
+@pytest.mark.docker
 def test_int_docker_git_gem_and_pip_on_mult(helpers):
     helpers.run(
         (
@@ -38,6 +42,7 @@ def test_int_docker_git_gem_and_pip_on_mult(helpers):
 
 
 @pytest.mark.int
+@pytest.mark.docker
 def test_int_docker_pacman_on_arch(helpers):
     helpers.run(
         'pyinfra -v @docker/archlinux pacman.py',
@@ -46,6 +51,7 @@ def test_int_docker_pacman_on_arch(helpers):
 
 
 @pytest.mark.int
+@pytest.mark.docker
 def test_int_docker_files_dnf_server_on_centos(helpers):
     helpers.run(
         'pyinfra -v @docker/centos:8 files.py dnf.py server.py',
@@ -54,6 +60,7 @@ def test_int_docker_files_dnf_server_on_centos(helpers):
 
 
 @pytest.mark.int
+@pytest.mark.docker
 def test_int_docker_yum_on_centos(helpers):
     helpers.run(
         'pyinfra -v @docker/centos:8 yum.py',
@@ -62,6 +69,7 @@ def test_int_docker_yum_on_centos(helpers):
 
 
 @pytest.mark.int
+@pytest.mark.docker
 def test_int_docker_adhoc_apt_packages(helpers):
     helpers.run(
         'pyinfra -v @docker/ubuntu:18.04 apt.packages iftop sudo=true update=true',
@@ -70,6 +78,7 @@ def test_int_docker_adhoc_apt_packages(helpers):
 
 
 @pytest.mark.int
+@pytest.mark.docker
 def test_int_docker_adhoc_fact_os(helpers):
     helpers.run(
         'pyinfra -v @docker/ubuntu:18.04,@docker/centos:8 fact os',
@@ -78,6 +87,7 @@ def test_int_docker_adhoc_fact_os(helpers):
 
 
 @pytest.mark.int
+@pytest.mark.docker
 def test_int_docker_adhoc_all_facts(helpers):
     helpers.run(
         'pyinfra -v @docker/ubuntu:18.04,@docker/centos:8 all-facts',
