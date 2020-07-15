@@ -409,9 +409,15 @@ def sync(
                 ),
             ))
 
-    # Ensure the destination directory
+    # Ensure the destination directory - if the destination is a link, ensure
+    # the link target is a directory.
+    dest_to_ensure = dest
+    dest_link_info = host.fact.link(dest)
+    if dest_link_info is not False:
+        dest_to_ensure = dest_link_info['link_target']
+
     yield directory(
-        dest,
+        dest_to_ensure,
         user=user, group=group,
         state=state, host=host,
     )

@@ -1,7 +1,6 @@
 {
     "args": ["/somedir/", "/home/somedir"],
     "kwargs": {
-        "delete": true,
         "exclude": "*.pyc",
         "exclude_dir": "__pycache__"
     },
@@ -26,7 +25,8 @@
             "/home/somedir/underthat/yet-another-file.txt": null
         },
         "directory": {
-            "/home/somedir": null,
+            "/home/somedir": false,
+            "/home/some-actual-dir": true,
             "/home/somedir/underthat": null
         },
         "find_files": {
@@ -37,11 +37,12 @@
             "/home/somedir/underthat": []
         },
         "link": {
-            "/home/somedir": false
+            "/home/somedir": {
+                "link_target": "/home/some-actual-dir"
+            }
         }
     },
     "commands": [
-        "mkdir -p /home/somedir",
         "mkdir -p /home/somedir/underthat",
         ["upload", "/somedir/somefile.txt", "/home/somedir/somefile.txt"],
         ["upload", "/somedir/anotherfile.txt", "/home/somedir/anotherfile.txt"],
@@ -49,7 +50,6 @@
             "upload",
             "/somedir/underthat/yet-another-file.txt",
             "/home/somedir/underthat/yet-another-file.txt"
-        ],
-        "rm -f /home/somedir/deleteme.txt"
+        ]
     ]
 }
