@@ -494,8 +494,11 @@ def _main(
 
         for i, command in enumerate(operations):
             name, args = command
+            fact_key = name
+            if args:
+                fact_key = '{0}{1}'.format(name, tuple(args))
             try:
-                fact_data[name] = get_facts(
+                fact_data[fact_key] = get_facts(
                     state, name,
                     args=args,
                     apply_failed_hosts=False,
