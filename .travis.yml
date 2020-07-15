@@ -23,10 +23,10 @@ after_success:
 
 jobs:
   include:
-    - stage: Docker integration test
-      python: '3.8'
-      script: pytest -v -m docker
-
     - stage: Local integration test
       python: '3.8'
       script: pytest -v -m local
+
+    - stage: Docker integration test
+      python: '3.8'
+      script: pytest -v -m docker
