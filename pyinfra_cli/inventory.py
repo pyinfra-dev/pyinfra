@@ -1,5 +1,5 @@
 from os import listdir, path
-from types import GeneratorType
+from types import GeneratorType, SimpleNamespace
 
 import six
 
@@ -16,7 +16,7 @@ ALLOWED_HOST_TYPES = tuple(
 ALLOWED_DATA_TYPES = tuple(
     six.integer_types
     + (six.text_type, six.binary_type)
-    + (bool, dict, list, set, tuple, float, complex),
+    + (bool, dict, list, set, tuple, float, complex, SimpleNamespace),
 )
 
 
