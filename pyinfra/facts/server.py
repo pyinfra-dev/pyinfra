@@ -515,3 +515,39 @@ class LinuxName(ShortFactBase):
     @staticmethod
     def process_data(data):
         return data['name']
+
+
+class Selinux(FactBase):
+    '''
+    Discovers the SELinux related facts on the target host.
+
+    .. code:: python
+
+        {
+            'mode': 'enabled',
+        }
+    '''
+    command = 'sestatus 2> /dev/null'
+
+    use_default_on_error = True
+
+    @staticmethod
+    def default():
+        return {
+            'mode': None,
+        }
+
+    def process(self, output):
+        selinux_info = self.default()
+
+        if not output:
+            return selinux_info
+
+        match = re.match(r'^SELinux status:\s+(\S+)', '\n'.join(output))
+
+        if not match:
+            return selinux_info
+
+        selinux_info['mode'] = match.group(1)
+
+        return selinux_info
