@@ -9,7 +9,8 @@
         },
         "find_in_file": {
             "/etc/rc.conf.local": {
-                "^nginx_enable=.*$": []
+                "^nginx_enable=.*$": [],
+                "^.*nginx_enable=\"YES\".*$": []
             }
         }
     },

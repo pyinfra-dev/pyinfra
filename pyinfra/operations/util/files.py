@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from datetime import datetime
+
 
 def ensure_mode_int(mode):
     # Already an int (/None)?
@@ -17,19 +19,50 @@ def ensure_mode_int(mode):
     return mode
 
 
-def sed_replace(filename, line, replace, flags=None, interpolate_variables=False):
+def ensure_whole_line_match(line):
+    # Ensure we're matching a whole ^line$
+    if not line.startswith('^'):
+        line = '^.*{0}'.format(line)
+
+    if not line.endswith('$'):
+        line = '{0}.*$'.format(line)
+
+    return line
+
+
+def _get_timestamp():
+    return datetime.now().strftime('%y%m%d%H%M')
+
+
+def sed_replace(
+    filename,
+    line,
+    replace,
+    flags=None,
+    backup=False,
+    interpolate_variables=False,
+):
     flags = ''.join(flags) if flags else ''
 
     line = line.replace('/', r'\/')
     replace = replace.replace('/', r'\/')
+    backup_extension = _get_timestamp()
 
     string_to_format = (
-        'sed -i="" "s/{0}/{1}/{2}" {3}'
+        'sed -i.{backup_extension} "s/{0}/{1}/{2}" {3}'
         if interpolate_variables else
-        "sed -i='' 's/{0}/{1}/{2}' {3}"
+        "sed -i.{backup_extension} 's/{0}/{1}/{2}' {3}"
     )
 
-    return string_to_format.format(line, replace, flags, filename)
+    sed_command = string_to_format.format(
+        line, replace, flags, filename,
+        backup_extension=backup_extension,
+    )
+
+    if not backup:  # if we're not backing up, remove the file *if* sed succeeds
+        sed_command = '{0} && rm -f {1}.{2}'.format(sed_command, filename, backup_extension)
+
+    return sed_command
 
 
 def chmod(target, mode, recursive=False):

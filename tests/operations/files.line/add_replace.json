@@ -7,7 +7,8 @@
     "facts": {
         "find_in_file": {
             "somefile": {
-                "^.*match_line.*$": []
+                "^.*match_line.*$": [],
+                "^.*replace_line.*$": []
             }
         }
     },

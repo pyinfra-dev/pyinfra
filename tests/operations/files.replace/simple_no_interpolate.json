@@ -5,6 +5,6 @@
         "interpolate_variables": false
     },
     "commands": [
-        "sed -i='' 's/match/replace/gi' filename"
+        "sed -i.a-timestamp 's/match/replace/gi' filename && rm -f filename.a-timestamp"
     ]
 }

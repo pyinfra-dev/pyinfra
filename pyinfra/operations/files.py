@@ -26,7 +26,13 @@ from pyinfra.api.connectors.util import escape_unix_path
 from pyinfra.api.util import get_file_sha1, get_template
 
 from .util.compat import fspath
-from .util.files import chmod, chown, ensure_mode_int, sed_replace
+from .util.files import (
+    chmod,
+    chown,
+    ensure_mode_int,
+    ensure_whole_line_match,
+    sed_replace,
+)
 
 
 @operation(pipeline_facts={
@@ -139,7 +145,7 @@ def download(
 @operation
 def line(
     path, line,
-    present=True, replace=None, flags=None,
+    present=True, replace=None, flags=None, backup=False,
     interpolate_variables=False,
     state=None, host=None,
 ):
@@ -151,6 +157,7 @@ def line(
     + present: whether the line should be in the file
     + replace: text to replace entire matching lines when ``present=True``
     + flags: list of flags to pass to sed when replacing/deleting
+    + backup: whether to backup the file (see below)
     + interpolate_variables: whether to interpolate variables in ``replace``
 
     Regex line matching:
@@ -161,6 +168,11 @@ def line(
     Regex line escaping:
         If matching special characters (eg a crontab line containing *), remember to escape
         it first using Python's ``re.escape``.
+
+    Backup:
+        If set to ``True``, any editing of the file will place an old copy with the ISO
+        date (taken from the machine running ``pyinfra``) appended as the extension. If
+        you pass a string value this will be used as the extension of the backed up file.
 
     Examples:
 
@@ -211,14 +223,7 @@ def line(
 
     path = escape_unix_path(path)
 
-    match_line = line
-
-    # Ensure we're matching a whole ^line$
-    if not match_line.startswith('^'):
-        match_line = '^.*{0}'.format(match_line)
-
-    if not match_line.endswith('$'):
-        match_line = '{0}.*$'.format(match_line)
+    match_line = ensure_whole_line_match(line)
 
     # Is there a matching line in this file?
     present_lines = host.fact.find_in_file(path, match_line)
@@ -239,6 +244,7 @@ def line(
     sed_replace_command = sed_replace(
         path, match_line, replace,
         flags=flags,
+        backup=backup,
         interpolate_variables=interpolate_variables,
     )
 
@@ -267,15 +273,24 @@ def line(
                 sed_replace_command=sed_replace_command,
             )
 
-        # Otherwise the file exists and there is no matching line, so append it
+        # File exists but has no matching lines - append it.
         else:
-            yield echo_command
+            # If we're doing replacement, only append if the *replacement* line
+            # does not exist (as we are appending the replacement).
+            if replace:
+                present_lines = host.fact.find_in_file(
+                    path, ensure_whole_line_match(replace),
+                )
+
+            if not present_lines:
+                yield echo_command
 
     # Line(s) exists and we want to remove them, replace with nothing
     elif present_lines and not present:
         yield sed_replace(
             path, match_line, '',
             flags=flags,
+            backup=backup,
             interpolate_variables=interpolate_variables,
         )
 
@@ -289,7 +304,7 @@ def line(
 @operation
 def replace(
     path, match, replace,
-    flags=None,
+    flags=None, backup=False,
     interpolate_variables=False,
     state=None, host=None,
 ):
@@ -300,7 +315,13 @@ def replace(
     + match: text/regex to match for
     + replace: text to replace with
     + flags: list of flags to pass to sed
+    + backup: whether to backup the file (see below)
     + interpolate_variables: whether to interpolate variables in ``replace``
+
+    Backup:
+        If set to ``True``, any editing of the file will place an old copy with the ISO
+        date (taken from the machine running ``pyinfra``) appended as the extension. If
+        you pass a string value this will be used as the extension of the backed up file.
 
     Example:
 
@@ -318,6 +339,7 @@ def replace(
     yield sed_replace(
         path, match, replace,
         flags=flags,
+        backup=backup,
         interpolate_variables=interpolate_variables,
     )
 

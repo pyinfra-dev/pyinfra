@@ -16,6 +16,6 @@
         }
     },
     "commands": [
-        "sed -i='' 's/^nginx_enable=.*$//' /etc/rc.conf.local"
+        "sed -i.a-timestamp 's/^nginx_enable=.*$//' /etc/rc.conf.local && rm -f /etc/rc.conf.local.a-timestamp"
     ]
 }
