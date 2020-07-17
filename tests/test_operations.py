@@ -7,6 +7,7 @@ from unittest import TestCase
 
 import six
 from jsontest import JsonTest
+from mock import patch
 
 from pyinfra import pseudo_host, pseudo_state
 from pyinfra.api import (
@@ -28,6 +29,7 @@ def make_operation_tests(arg):
     op = getattr(module, op_name)
 
     # Generate a test class
+    @patch('pyinfra.operations.util.files._get_timestamp', lambda: 'a-timestamp')
     @six.add_metaclass(JsonTest)
     class TestTests(TestCase):
         jsontest_files = path.join('tests', 'operations', arg)

@@ -7,7 +7,8 @@
         "sysctl": {},
         "find_in_file": {
             "/etc/sysctl.conf": {
-                "^.*kern.max-files[[:space:]]*=[[:space:]]*2000.*$": []
+                "^.*kern.max-files[[:space:]]*=[[:space:]]*2000.*$": [],
+                "^.*kern.max-files = 2000.*$": []
             }
         }
     },

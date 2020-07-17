@@ -10,13 +10,38 @@ What is a ``pyinfra`` deploy?
 Layout
 ------
 
-+ ``*.py`` - top-level operations
-+ ``inventories/*.py`` - groups of hosts and individual host data
+The layout of a ``pyinfra`` deploy is generally very flexible. Only two paths are hard-coded, both relative to the Python file being executed:
+
 + ``group_data/*.py`` - arbitrary data for host groups
++ ``config.py`` - optional configuration
+
+Although optional, it is recommended to use the following layout for other files:
+
++ ``*.py`` - top-level operation definitions
++ ``inventory.py`` or ``inventories/*.py`` - inventory definitions
 + ``templates/*.j2`` - `jinja2 <https://jinja.palletsprojects.com>`_ template files
 + ``files/*`` - normal/non-template files
 + ``tasks/*.py`` - operations to perform a specific task
-+ ``config.py`` - optional configuration and hooks
+
+An example layout:
+
+.. code:: sh
+
+    - setup_server.py  # deploy file containing operations to execute
+    - update_server.py  # another deploy file with different operations
+    - config.py  # optional pyinfra configuration
+    inventories/
+        - production.py  # production inventory targets
+        - staging.py  # staging inventory targets
+    group_data/
+        - all.py  # global data variables
+        - production.py  # production inventory only data variables
+    tasks/
+        - nginx.py  # deploy file containing task-specific operations
+    files/
+        - nginx.conf  # a file that can be uploaded with the `files.put` operation
+    templates/
+        - web.conf.j2  # a template that can be rendered & uploaded with the `files.template` operation
 
 
 Inventory

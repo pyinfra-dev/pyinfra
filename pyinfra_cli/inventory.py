@@ -1,6 +1,11 @@
 from os import listdir, path
 from types import GeneratorType
 
+try:
+    from types import SimpleNamespace
+except ImportError:
+    SimpleNamespace = dict
+
 import six
 
 from pyinfra import logger, pseudo_inventory
@@ -16,7 +21,7 @@ ALLOWED_HOST_TYPES = tuple(
 ALLOWED_DATA_TYPES = tuple(
     six.integer_types
     + (six.text_type, six.binary_type)
-    + (bool, dict, list, set, tuple, float, complex),
+    + (bool, dict, list, set, tuple, float, complex, SimpleNamespace),
 )
 
 
