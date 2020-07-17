@@ -1,5 +1,10 @@
 from os import listdir, path
-from types import GeneratorType, SimpleNamespace
+from types import GeneratorType
+
+try:
+    from types import SimpleNamespace
+except ImportError:
+    SimpleNamespace = dict
 
 import six
 
