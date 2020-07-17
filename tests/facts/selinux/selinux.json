@@ -1,0 +1,9 @@
+{
+    "output": [
+        "SELinux status: enabled",
+        "SELinuxfs mount: /selinux"
+    ],
+    "fact": {
+        "mode": "enabled"
+    }
+}
