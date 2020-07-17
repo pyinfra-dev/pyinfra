@@ -77,3 +77,36 @@ def test_int_local_link_no_changes(helpers):
         )
     finally:
         rmtree(temp_dir)
+
+
+@pytest.mark.int
+@pytest.mark.local
+def test_int_local_line_no_changes(helpers):
+    temp_dir = mkdtemp()
+
+    try:
+        helpers.run(  # first run = create the line
+            'pyinfra -v @local files.line _testfile someline',
+            expected_lines=['@local] Success'],
+            cwd=temp_dir,
+        )
+
+        helpers.run(  # second run = no changes
+            'pyinfra -v @local files.line _testfile someline',
+            expected_lines=['@local] No changes'],
+            cwd=temp_dir,
+        )
+
+        helpers.run(  # replace the line
+            'pyinfra -v @local files.line _testfile someline replace=anotherline',
+            expected_lines=['@local] Success'],
+            cwd=temp_dir,
+        )
+
+        helpers.run(  # second run replace the line = no changes
+            'pyinfra -v @local files.line _testfile someline replace=anotherline',
+            expected_lines=['@local] No changes'],
+            cwd=temp_dir,
+        )
+    finally:
+        rmtree(temp_dir)
