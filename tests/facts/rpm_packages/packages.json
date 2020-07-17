@@ -1,8 +1,8 @@
 {
     "output": [
-        "pydash-3.48.0"
+        "pydash 3.48.0"
     ],
     "fact": {
-        "pydash": ["3.48"]
+        "pydash": ["3.48.0"]
     }
 }
