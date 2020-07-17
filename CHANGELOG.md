@@ -1,3 +1,14 @@
+# v1.0.3
+
++ Reimplement `file`/`directory`/`link` facts using `stat`
+    * No breaking changes
+    * Adds `ctime` and `atime` to the output dictionary
++ Add `backup` argument to the `files.line` and `files.replace` operations
++ Add `SimpleNamespace` to the list of allowed data types
++ Don't fail when the destination directory is a symlink in the `files.sync` operation
++ Fix running the same fact in CLI w/different arguments
++ Add local integration tests that check idempotency (of files operations only for now)
+
 # v1.0.2
 
 + Further improve fact output when errors are encountered
