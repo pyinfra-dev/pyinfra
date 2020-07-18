@@ -6,7 +6,8 @@ from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
 
-rpm_regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.\-]+)\.[a-z0-9_\.]+$'
+rpm_regex = r'^(\S+)\ (\S+)$'
+rpm_query_format = '%{NAME} %{VERSION}-%{RELEASE}\\n'
 
 
 class RPMPackages(FactBase):
@@ -19,7 +20,7 @@ class RPMPackages(FactBase):
         ...
     '''
 
-    command = 'rpm -qa'
+    command = 'rpm --queryformat "{0}" -qa'.format(rpm_query_format)
     default = dict
     use_default_on_error = True
 
@@ -46,7 +47,8 @@ class RpmPackage(FactBase):
     use_default_on_error = True
 
     def command(self, name):
-        return 'rpm -qp {0} 2> /dev/null || rpm -q {0}'.format(name)
+        return ('rpm --queryformat "{0}" -qp {1} 2> /dev/null || '
+                'rpm --queryformat "{0}" -q {1}'.format(rpm_query_format, name))
 
     def process(self, output):
         for line in output:
