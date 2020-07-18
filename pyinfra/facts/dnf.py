@@ -10,7 +10,11 @@ class DnfRepositories(FactBase):
     .. code:: python
 
         {
-            'baseurl': 'http://archive.ubuntu.org',
+            'name': 'CentOS-$releasever - AppStream',
+            'baseurl': 'http://mirror.centos.org/$contentdir/$releasever/AppStream/$basearch/os/',
+            'gpgcheck': '1',
+            'enabled': '1',
+            'gpgkey': 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial',
         },
         ...
     '''
