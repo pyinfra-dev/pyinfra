@@ -1,5 +1,4 @@
 import os
-
 from tempfile import mkstemp
 
 import click
@@ -11,9 +10,27 @@ from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
-from .ssh import run_shell_command as run_remote_shell_command
-from .ssh import connect as ssh_connect
+from . import ssh
 from .util import make_unix_command
+
+def remote_remove(state, host, filename, print_output=False, print_input=False):
+    remove_status, _, remove_stderr = run_shell_command(
+        state, host, 'rm -f {0}'.format(filename),
+        print_output=print_output,
+        print_input=print_input)
+
+    if not remove_status:
+        raise IOError('\n'.join(remove_stderr))
+
+def remote_mkstemp(state, host):
+    status, [temp_filename], stderr = ssh.run_shell_command(state, host,
+                          "python -c 'import tempfile; print(tempfile.mkstemp()[1])'"
+                          )
+
+    if not status:
+        raise IOError('\n'.join(stderr))
+
+    return temp_filename
 
 
 @memoize
@@ -31,32 +48,42 @@ def make_names_data(host_image_str):
 
 
 def connect(state, host):
-    client = ssh_connect(state, host)
-    # FIXME: kludgy connection setup so we can call run_remote_shell_command()
-    host.connection = client
+    if not host.connection:
+        client = ssh.connect(state, host)
+        # FIXME: kludgy connection setup so we can call ssh.run_shell_command()
+        host.connection = client
+
+    if 'docker_container_id' in host.host_data:  # user can provide a docker_container_id
+        return host.connection
+
     try:
         with progress_spinner({'docker run'}):
-            container_id = run_remote_shell_command(
+            # last line is the container ID
+            status, stdout, stderr = ssh.run_shell_command(
                 state, host,
                 'docker run -d {0} tail -f /dev/null'.format(host.data.docker_image),
-            )[1][-1]  # last line is the container ID
+            )
+            if not status:
+                raise IOError('\n'.join(stderr))
+            container_id = stdout[-1]
+
     except PyinfraError as e:
         raise ConnectError(e.args[0])
 
     host.host_data['docker_container_id'] = container_id
-    return client
+    return host.connection
 
 def disconnect(state, host):
     container_id = host.host_data['docker_container_id'][:12]
 
     with progress_spinner({'docker commit'}):
-        image_id = run_remote_shell_command(
+        image_id = ssh.run_shell_command(
             state, host,
             'docker commit {0}'.format(container_id),
         )[1][-1][7:19]  # last line is the image ID, get sha256:[XXXXXXXXXX]...
 
     with progress_spinner({'docker rm'}):
-        run_remote_shell_command(
+        ssh.run_shell_command(
             state, host,
             'docker rm -f {0}'.format(container_id),
         )
@@ -94,7 +121,7 @@ def run_shell_command(
         'sh', '-c', command,
     )
 
-    return run_remote_shell_command(
+    return ssh.run_shell_command(
         state, host, docker_command,
         timeout=timeout,
         stdin=stdin,
@@ -116,6 +143,7 @@ def put_file(
     '''
 
     _, temp_filename = mkstemp()
+    remote_temp_filename = remote_mkstemp(state, host)
 
     try:
         # Load our file or IO object and write it to the temporary file
@@ -128,20 +156,24 @@ def put_file(
 
                 temp_f.write(data)
 
+        # upload file to remote server
+        ssh.put_file(state, host, temp_filename, remote_temp_filename)
+
         docker_id = host.host_data['docker_container_id']
         docker_command = 'docker cp {0} {1}:{2}'.format(
-            temp_filename,
+            remote_temp_filename,
             docker_id,
             remote_filename,
         )
 
-        status, _, stderr = run_remote_shell_command(
+        status, _, stderr = ssh.run_shell_command(
             state, host, docker_command,
             print_output=print_output,
             print_input=print_input,
         )
     finally:
-        os.remove(temp_filename)
+        remote_remove(state, host, temp_filename, print_output=print_output,
+                      print_input=print_input)
 
     if not status:
         raise IOError('\n'.join(stderr))
@@ -164,7 +196,12 @@ def get_file(
     location and then reading that into our final file/IO object.
     '''
 
-    _, temp_filename = mkstemp()
+    # FIXME: I want to run mkstemp on a remote machine, but tempfile doesn't
+    # support creation of remote files. I don't like assuming the remote machine
+    # has python, but I also don't want the behavior to be wrong (e.g. accidentally
+    # stomping a remote tempfile or not having access to a /tmp dir or something)
+
+    temp_filename = remote_mkstemp(state, host)
 
     try:
         docker_id = host.host_data['docker_container_id']
@@ -174,23 +211,16 @@ def get_file(
             temp_filename,
         )
 
-        status, _, stderr = run_remote_shell_command(
+        status, _, stderr = ssh.run_shell_command(
             state, host, docker_command,
             print_output=print_output,
             print_input=print_input,
         )
 
-        # Load the temporary file and write it to our file or IO object
-        with open(temp_filename) as temp_f:
-            with get_file_io(filename_or_io, 'wb') as file_io:
-                data = temp_f.read()
-
-                if isinstance(data, six.text_type):
-                    data = data.encode()
-
-                file_io.write(data)
+        ssh.get_file(state, host, temp_filename, filename_or_io)
     finally:
-        os.remove(temp_filename)
+        remote_remove(state, host, temp_filename, print_output=print_output,
+                      print_input=print_input)
 
     if not status:
         raise IOError('\n'.join(stderr))
@@ -201,6 +231,5 @@ def get_file(
         ), err=True)
 
     return status
-
 
 EXECUTION_CONNECTOR = True
