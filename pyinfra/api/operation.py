@@ -187,6 +187,8 @@ def operation(func=None, pipeline_facts=None):
 
         # Name the operation
         name = op_meta_kwargs.get('name')
+        add_args = False
+
         if name:
             names = {name}
 
@@ -200,6 +202,7 @@ def operation(func=None, pipeline_facts=None):
 
         # Generate an operation name if needed (Module/Operation format)
         else:
+            add_args = True
             module_bits = func.__module__.split('.')
             module_name = module_bits[-1]
             names = {
@@ -276,21 +279,22 @@ def operation(func=None, pipeline_facts=None):
         op_meta['names'].update(names)
 
         # Attach normal args, if we're auto-naming this operation
-        for arg in args:
-            if isinstance(arg, FunctionType):
-                arg = arg.__name__
+        if add_args:
+            for arg in args:
+                if isinstance(arg, FunctionType):
+                    arg = arg.__name__
 
-            if arg not in op_meta['args']:
-                op_meta['args'].append(arg)
+                if arg not in op_meta['args']:
+                    op_meta['args'].append(arg)
 
-        # Attach keyword args
-        for key, value in six.iteritems(kwargs):
-            if key in ('state', 'host'):
-                continue
+            # Attach keyword args
+            for key, value in six.iteritems(kwargs):
+                if key in ('state', 'host'):
+                    continue
 
-            arg = '='.join((str(key), str(value)))
-            if arg not in op_meta['args']:
-                op_meta['args'].append(arg)
+                arg = '='.join((str(key), str(value)))
+                if arg not in op_meta['args']:
+                    op_meta['args'].append(arg)
 
         # Check if we're actually running the operation on this host
         #
