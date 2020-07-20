@@ -1,3 +1,9 @@
+# v1.0.4
+
++ Add `selinux` fact (@FooBarQuaxx)
++ Improve/fix `rpm_packages` fact parsing (@FooBarQuaxx)
++ Stop showing arguments on operations with names
+
 # v1.0.3
 
 + Reimplement `file`/`directory`/`link` facts using `stat`
