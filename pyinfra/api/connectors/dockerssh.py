@@ -1,4 +1,3 @@
-import os
 from tempfile import mkstemp
 
 import click
@@ -14,24 +13,17 @@ from . import ssh
 from .util import make_unix_command
 
 def remote_remove(state, host, filename, print_output=False, print_input=False):
-    remove_status, _, remove_stderr = run_shell_command(
-        state, host, 'rm -f {0}'.format(filename),
+    '''
+    Deletes a file on a remote machine over ssh.
+    '''
+    remove_status, _, remove_stderr = ssh.run_shell_command(
+        state, host,
+        'rm -f {0}'.format(filename),
         print_output=print_output,
         print_input=print_input)
 
     if not remove_status:
         raise IOError('\n'.join(remove_stderr))
-
-def remote_mkstemp(state, host):
-    status, [temp_filename], stderr = ssh.run_shell_command(state, host,
-                          "python -c 'import tempfile; print(tempfile.mkstemp()[1])'"
-                          )
-
-    if not status:
-        raise IOError('\n'.join(stderr))
-
-    return temp_filename
-
 
 @memoize
 def show_warning():
@@ -44,14 +36,14 @@ def make_names_data(host_image_str):
 
     show_warning()
 
-    yield '@dockerssh/{0}:{1}'.format(hostname, image), {'ssh_hostname': hostname, 'docker_image': image}, ['@dockerssh']
+    yield ('@dockerssh/{0}:{1}'.format(hostname, image),
+           {'ssh_hostname': hostname, 'docker_image': image},
+           ['@dockerssh'])
 
 
 def connect(state, host):
     if not host.connection:
-        client = ssh.connect(state, host)
-        # FIXME: kludgy connection setup so we can call ssh.run_shell_command()
-        host.connection = client
+        host.connection = ssh.connect(state, host)
 
     if 'docker_container_id' in host.host_data:  # user can provide a docker_container_id
         return host.connection
@@ -92,7 +84,6 @@ def disconnect(state, host):
         host.print_prefix, click.style(image_id, bold=True),
     ))
 
-
 def run_shell_command(
     state, host, command,
     get_pty=False,
@@ -122,7 +113,8 @@ def run_shell_command(
     )
 
     return ssh.run_shell_command(
-        state, host, docker_command,
+        state, host,
+        docker_command,
         timeout=timeout,
         stdin=stdin,
         success_exit_codes=success_exit_codes,
@@ -143,7 +135,7 @@ def put_file(
     '''
 
     _, temp_filename = mkstemp()
-    remote_temp_filename = remote_mkstemp(state, host)
+    remote_temp_filename = state.get_temp_filename(temp_filename)
 
     try:
         # Load our file or IO object and write it to the temporary file
@@ -167,7 +159,8 @@ def put_file(
         )
 
         status, _, stderr = ssh.run_shell_command(
-            state, host, docker_command,
+            state, host,
+            docker_command,
             print_output=print_output,
             print_input=print_input,
         )
@@ -196,12 +189,7 @@ def get_file(
     location and then reading that into our final file/IO object.
     '''
 
-    # FIXME: I want to run mkstemp on a remote machine, but tempfile doesn't
-    # support creation of remote files. I don't like assuming the remote machine
-    # has python, but I also don't want the behavior to be wrong (e.g. accidentally
-    # stomping a remote tempfile or not having access to a /tmp dir or something)
-
-    temp_filename = remote_mkstemp(state, host)
+    temp_filename = state.get_temp_filename(remote_filename)
 
     try:
         docker_id = host.host_data['docker_container_id']
@@ -212,7 +200,8 @@ def get_file(
         )
 
         status, _, stderr = ssh.run_shell_command(
-            state, host, docker_command,
+            state, host,
+            docker_command,
             print_output=print_output,
             print_input=print_input,
         )
