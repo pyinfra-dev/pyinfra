@@ -6,7 +6,7 @@ from pyinfra import logger
 
 from .connectors import EXECUTION_CONNECTORS
 from .exceptions import ConnectError, PyinfraError
-from .facts import get_fact, is_fact
+from .facts import get_fact, is_fact, set_fact
 
 
 class HostFacts(object):
@@ -29,6 +29,10 @@ class HostFacts(object):
             ))
 
         return get_fact(self.inventory.state, self.host, key)
+
+    def __create__(self, key, value):
+        creator = set_fact(self.inventory.state, self.host, key, value)
+        return creator
 
 
 class Host(object):

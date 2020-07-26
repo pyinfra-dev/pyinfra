@@ -292,7 +292,6 @@ def get_fact(state, host, name):
     if callable(getattr(FACTS[name], 'command', None)):
         def wrapper(*args):
             fact_data = get_facts(state, name, args=args, ensure_hosts=(host,))
-
             return fact_data.get(host)
         return wrapper
 
@@ -300,5 +299,19 @@ def get_fact(state, host, name):
     else:
         # Get the fact
         fact_data = get_facts(state, name, ensure_hosts=(host,))
-
         return fact_data.get(host)
+
+
+def set_fact(state, host, name, fact_data):
+    # Expecting a function to return
+    if callable(getattr(FACTS[name], 'command', None)):
+        def wrapper(*args):
+            fact_data = get_facts(state, name, args=args, ensure_hosts=(host,))
+            fact_data[host] = fact_data
+        return wrapper
+
+    # Expecting the fact as a return value
+    else:
+        # Get the fact
+        fact_data = get_facts(state, name, ensure_hosts=(host,))
+        fact_data[host] = fact_data
