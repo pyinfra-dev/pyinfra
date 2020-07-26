@@ -212,6 +212,26 @@ class TestCliDeployState(PatchSSHTestCase):
 
         self._assert_op_data(correct_op_name_and_host_names)
 
+    def test_interdependent_deploy(self):
+        pseudo_state.reset()
+
+        result = run_cli(
+            'somehost',
+            path.join('tests', 'deploy', 'deploy_interdependent.py'),
+        )
+        assert result.exit_code == 0, result.stderr
+
+        correct_op_name_and_host_names = [
+            ('Files/File', True),
+            ('Files/File', True),
+            ('Apt/Repo', True),
+            ('Apt/Repo', True),
+            ('Apt/Packages', True),
+            ('Apt/Packages', True),
+        ]
+
+        self._assert_op_data(correct_op_name_and_host_names)
+
     def _assert_op_data(self, correct_op_name_and_host_names):
         state = pseudo_state
         op_order = state.get_op_order()
