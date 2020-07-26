@@ -112,10 +112,17 @@ def repo(src, present=True, filename=None, state=None, host=None):
     # Doesn't exist and we want it
     if not is_present and present:
         yield files.line(filename, src, state=state, host=host)
+        apt_sources.append(repo)
 
     # Exists and we don't want it
     if is_present and not present:
-        yield files.line(filename, src, present=False, state=state, host=host)
+        yield files.line(
+            filename, src,
+            present=False,
+            assume_present=True,
+            state=state, host=host,
+        )
+        apt_sources.remove(repo)
 
 
 @operation

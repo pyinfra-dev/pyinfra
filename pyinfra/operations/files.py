@@ -148,6 +148,7 @@ def line(
     present=True, replace=None, flags=None, backup=False,
     interpolate_variables=False,
     state=None, host=None,
+    assume_present=False,
 ):
     '''
     Ensure lines in files using grep to locate and sed to replace.
@@ -226,7 +227,10 @@ def line(
     match_line = ensure_whole_line_match(line)
 
     # Is there a matching line in this file?
-    present_lines = host.fact.find_in_file(path, match_line)
+    if assume_present:
+        present_lines = [line]
+    else:
+        present_lines = host.fact.find_in_file(path, match_line)
 
     # If replace present, use that over the matching line
     if replace:
