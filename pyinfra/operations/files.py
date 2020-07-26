@@ -961,6 +961,14 @@ def file(
         if user or group:
             yield chown(path, user, group)
 
+        # TODO: this is *awful*!
+        file_fact = {
+            'mode': mode,
+            'group': group,
+            'user': user,
+        }
+        host.fact.__create__('file', file_fact)(path)
+
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield 'rm -f {0}'.format(path)
