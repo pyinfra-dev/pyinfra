@@ -563,6 +563,7 @@ def group(group, present=True, system=False, gid=None, state=None, host=None):
     # Group exists but we don't want them?
     if not present and is_present:
         yield 'groupdel {0}'.format(group)
+        groups.remove(group)
 
     # Group doesn't exist and we want it?
     elif present and not is_present:
@@ -578,6 +579,7 @@ def group(group, present=True, system=False, gid=None, state=None, host=None):
             args.append('--gid {0}'.format(gid))
 
         yield 'groupadd {0}'.format(' '.join(args))
+        groups.append(group)
 
 
 @operation
@@ -636,7 +638,7 @@ def user(
             )
     '''
 
-    users = host.fact.users or {}
+    users = host.fact.users
     existing_user = users.get(user)
 
     if groups is None:
@@ -649,6 +651,7 @@ def user(
     if not present:
         if existing_user:
             yield 'userdel {0}'.format(user)
+            users.pop(user)
         return
 
     # User doesn't exist but we want them?
@@ -675,6 +678,12 @@ def user(
             args.append('--uid {0}'.format(uid))
 
         yield 'useradd {0} {1}'.format(' '.join(args), user)
+        users[user] = {
+            'home': home,
+            'shell': shell,
+            'group': group,
+            'groups': groups,
+        }
 
     # User exists and we want them, check home/shell/keys
     else:
@@ -699,6 +708,14 @@ def user(
         # Need to mod the user?
         if args:
             yield 'usermod {0} {1}'.format(' '.join(args), user)
+            if home:
+                existing_user['home'] = home
+            if shell:
+                existing_user['shell'] = shell
+            if group:
+                existing_user['group'] = group
+            if groups:
+                existing_user['groups'] = groups
 
     # Ensure home directory ownership
     if ensure_home:
