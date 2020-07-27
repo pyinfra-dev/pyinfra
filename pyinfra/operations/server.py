@@ -219,9 +219,9 @@ def modprobe(module, present=True, force=False, state=None, host=None):
     )
 
     # NOTE: https://docs.python.org/3/library/itertools.html#itertools-recipes
-    def partition(pred, iterable):
+    def partition(predicate, iterable):
         t1, t2 = tee(iterable)
-        return list(filter(pred, t2)), list(filterfalse(pred, t1))
+        return list(filter(predicate, t2)), list(filterfalse(predicate, t1))
 
     modules = host.fact.kernel_modules
     present_mods, missing_mods = partition(lambda mod: mod in modules, list_value)
