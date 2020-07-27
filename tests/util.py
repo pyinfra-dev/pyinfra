@@ -126,6 +126,12 @@ class FakeFacts(object):
         else:
             return FakeFact(self.facts[key])
 
+    def _create(self, key, data=None, args=None):
+        pass
+
+    def _delete(self, key, args=None):
+        pass
+
 
 class FakeHost(object):
     def __init__(self, name, facts, data):
