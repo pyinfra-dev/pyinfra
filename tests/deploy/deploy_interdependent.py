@@ -1,4 +1,4 @@
-from pyinfra.operations import apt, files
+from pyinfra.operations import apt, files, server
 
 
 # Add/remove/add same file
@@ -43,6 +43,21 @@ files.link(
 files.link(
     path='/somelink',
     target='/elsewhere',
+)
+
+
+# Add/remove/add same user
+server.user(
+    user='someuser',
+)
+
+server.user(
+    user='someuser',
+    present=False,
+)
+
+server.user(
+    user='someuser',
 )
 
 
