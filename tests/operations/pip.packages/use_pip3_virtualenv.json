@@ -6,7 +6,7 @@
     },
     "facts": {
         "pip_packages": {
-            "testdir/bin/pip3": []
+            "testdir/bin/pip3": {}
         },
         "file": {
             "testdir/bin/activate": true
