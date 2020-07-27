@@ -1,7 +1,7 @@
 from pyinfra.operations import apt, files
 
 
-# Add/remove same file
+# Add/remove/add same file
 files.file(
     path='/somefile',
 )
@@ -9,6 +9,40 @@ files.file(
 files.file(
     path='/somefile',
     present=False,
+)
+
+files.file(
+    path='/somefile',
+)
+
+# Add/remove/add same directory
+files.directory(
+    path='/somedir',
+)
+
+files.directory(
+    path='/somedir',
+    present=False,
+)
+
+files.directory(
+    path='/somedir',
+)
+
+# Add/remove/add same link
+files.link(
+    path='/somelink',
+    target='/elsewhere',
+)
+
+files.link(
+    path='/somelink',
+    present=False,
+)
+
+files.link(
+    path='/somelink',
+    target='/elsewhere',
 )
 
 

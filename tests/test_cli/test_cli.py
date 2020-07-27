@@ -224,6 +224,13 @@ class TestCliDeployState(PatchSSHTestCase):
         correct_op_name_and_host_names = [
             ('Files/File', True),
             ('Files/File', True),
+            ('Files/File', True),
+            ('Files/Directory', True),
+            ('Files/Directory', True),
+            ('Files/Directory', True),
+            ('Files/Link', True),
+            ('Files/Link', True),
+            ('Files/Link', True),
             ('Apt/Repo', True),
             ('Apt/Repo', True),
             ('Apt/Packages', True),
@@ -231,6 +238,11 @@ class TestCliDeployState(PatchSSHTestCase):
         ]
 
         self._assert_op_data(correct_op_name_and_host_names)
+
+        # Check every operation had commands/changes
+        for host, ops in pseudo_state.ops.items():
+            for _, op in ops.items():
+                assert len(op['commands']) > 0
 
     def _assert_op_data(self, correct_op_name_and_host_names):
         state = pseudo_state
