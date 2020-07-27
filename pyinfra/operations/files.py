@@ -867,11 +867,7 @@ def link(
         host.fact._create(
             'link',
             args=(path,),
-            data={
-                'link_target': target,
-                'group': group,
-                'user': user,
-            },
+            data={'link_target': target, 'group': group, 'user': user},
         )
 
     # It exists and we don't want it
@@ -881,6 +877,10 @@ def link(
 
     # Exists and want to ensure it's state
     elif (assume_present or info) and present:
+        if assume_present and not info:
+            info = {'link_target': None, 'group': None, 'user': None}
+            host.fact._create('link', args=(path,), data=info)
+
         # If we have an absolute path - prepend to any non-absolute values from the fact
         # and/or the source.
         if os_path.isabs(path):
@@ -981,11 +981,7 @@ def file(
         host.fact._create(
             'file',
             args=(path,),
-            data={
-                'mode': mode,
-                'group': group,
-                'user': user,
-            },
+            data={'mode': mode, 'group': group, 'user': user},
         )
 
     # It exists and we don't want it
@@ -995,6 +991,10 @@ def file(
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
+        if assume_present and not info:
+            info = {'mode': None, 'group': None, 'user': None}
+            host.fact._create('file', args=(path,), data=info)
+
         if touch:
             yield 'touch {0}'.format(path)
 
@@ -1084,11 +1084,7 @@ def directory(
         host.fact._create(
             'directory',
             args=(path,),
-            data={
-                'mode': mode,
-                'group': group,
-                'user': user,
-            },
+            data={'mode': mode, 'group': group, 'user': user},
         )
 
     # It exists and we don't want it
@@ -1098,6 +1094,10 @@ def directory(
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
+        if assume_present and not info:
+            info = {'mode': None, 'group': None, 'user': None}
+            host.fact._create('directory', args=(path,), data=info)
+
         if no_check_owner_mode:
             return
 
