@@ -437,7 +437,7 @@ def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
         if not isinstance(line, six.text_type):
             line = line.decode('utf-8')
 
-        line = line.strip('\n')
+        line = line.rstrip('\n')
         output_queue.put((type_, line))
 
         if print_output:
