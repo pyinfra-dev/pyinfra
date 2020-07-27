@@ -860,12 +860,24 @@ def link(
             yield _create_remote_dir(state, host, path, user, group)
 
         yield add_cmd
+
         if user or group:
             yield chown(path, user, group, dereference=False)
+
+        host.fact._create(
+            'link',
+            args=(path,),
+            data={
+                'link_target': target,
+                'group': group,
+                'user': user,
+            },
+        )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield remove_cmd
+        host.fact._delete('link', args=(path,))
 
     # Exists and want to ensure it's state
     elif (assume_present or info) and present:
@@ -886,6 +898,7 @@ def link(
         if not info or info['link_target'] != target:
             yield remove_cmd
             yield add_cmd
+            info['link_target'] = target
 
         # Check user/group
         if (
@@ -894,6 +907,10 @@ def link(
             or (group and info['group'] != group)
         ):
             yield chown(path, user, group, dereference=False)
+            if user:
+                info['user'] = user
+            if group:
+                info['group'] = group
 
 
 @operation(pipeline_facts={
@@ -961,17 +978,20 @@ def file(
         if user or group:
             yield chown(path, user, group)
 
-        # TODO: this is *awful*!
-        file_fact = {
-            'mode': mode,
-            'group': group,
-            'user': user,
-        }
-        host.fact.__create__('file', file_fact)(path)
+        host.fact._create(
+            'file',
+            args=(path,),
+            data={
+                'mode': mode,
+                'group': group,
+                'user': user,
+            },
+        )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield 'rm -f {0}'.format(path)
+        host.fact._delete('file', args=(path,))
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
@@ -981,6 +1001,7 @@ def file(
         # Check mode
         if mode and (not info or info['mode'] != mode):
             yield chmod(path, mode)
+            info['mode'] = mode
 
         # Check user/group
         if (
@@ -989,6 +1010,10 @@ def file(
             or (group and info['group'] != group)
         ):
             yield chown(path, user, group)
+            if user:
+                info['user'] = user
+            if group:
+                info['group'] = group
 
 
 @operation(pipeline_facts={
@@ -1056,9 +1081,20 @@ def directory(
         if user or group:
             yield chown(path, user, group, recursive=recursive)
 
+        host.fact._create(
+            'directory',
+            args=(path,),
+            data={
+                'mode': mode,
+                'group': group,
+                'user': user,
+            },
+        )
+
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield 'rm -rf {0}'.format(path)
+        host.fact._delete('directory', args=(path,))
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
@@ -1068,6 +1104,7 @@ def directory(
         # Check mode
         if mode and (not info or info['mode'] != mode):
             yield chmod(path, mode, recursive=recursive)
+            info['mode'] = mode
 
         # Check user/group
         if (
@@ -1076,3 +1113,7 @@ def directory(
             or (group and info['group'] != group)
         ):
             yield chown(path, user, group, recursive=recursive)
+            if user:
+                info['user'] = user
+            if group:
+                info['group'] = group
