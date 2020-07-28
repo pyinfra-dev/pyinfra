@@ -16,8 +16,17 @@ import pyinfra
 
 class PseudoModule(object):
     _module = None
+    _base_module = None
+
+    def __dir__(self):
+        return dir(self._base_module)
 
     def __getattr__(self, key):
+        if self._module is None:
+            raise AttributeError((
+                'This pyinfra pseudo module has not been set! This occurs when '
+                'accessing `pyinfra.[host|inventory|state]` outside of a deploy. '
+            ))
         return getattr(self._module, key)
 
     def __iter__(self):
@@ -29,6 +38,9 @@ class PseudoModule(object):
     def set(self, module):
         self._module = module
 
+    def set_base(self, module):
+        self._base_module = module
+
     def reset(self):
         self._module = None
 
@@ -37,16 +49,27 @@ class PseudoModule(object):
 
 
 # The current deploy state
-sys.modules['pyinfra.pseudo_state'] = sys.modules['pyinfra.state'] = \
+pseudo_state = \
+    sys.modules['pyinfra.pseudo_state'] = sys.modules['pyinfra.state'] = \
     pyinfra.pseudo_state = pyinfra.state = \
     PseudoModule()
 
 # The current deploy inventory
-sys.modules['pyinfra.pseudo_inventory'] = sys.modules['pyinfra.inventory'] = \
+pseudo_inventory = \
+    sys.modules['pyinfra.pseudo_inventory'] = sys.modules['pyinfra.inventory'] = \
     pyinfra.pseudo_inventory = pyinfra.inventory = \
     PseudoModule()
 
 # The current target host
-sys.modules['pyinfra.pseudo_host'] = sys.modules['pyinfra.host'] = \
+pseudo_host = \
+    sys.modules['pyinfra.pseudo_host'] = sys.modules['pyinfra.host'] = \
     pyinfra.pseudo_host = pyinfra.host = \
     PseudoModule()
+
+
+def init_base_classes():
+    from pyinfra.api import Host, Inventory, State
+
+    pseudo_host.set_base(Host)
+    pseudo_inventory.set_base(Inventory)
+    pseudo_state.set_base(State)

@@ -22,3 +22,7 @@ from . import facts  # noqa
 
 # Trigger module imports
 from . import operations  # noqa # pragma: no cover
+
+# Initialise base classes - this sets the pseudo modules to point at the underlying
+# class objects (Host, etc), which makes ipython/etc work as expected.
+pseudo_modules.init_base_classes()
