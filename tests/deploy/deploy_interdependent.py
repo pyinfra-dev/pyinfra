@@ -60,6 +60,20 @@ server.user(
     user='someuser',
 )
 
+# Add/remove/add same group
+server.group(
+    group='somegroup',
+)
+
+server.group(
+    group='somegroup',
+    present=False,
+)
+
+server.group(
+    group='somegroup',
+)
+
 
 # Add/remove same apt repo
 apt.repo(
