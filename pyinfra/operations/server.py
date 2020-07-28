@@ -557,7 +557,7 @@ def group(group, present=True, system=False, gid=None, state=None, host=None):
             )
     '''
 
-    groups = host.fact.groups or []
+    groups = host.fact.groups
     is_present = group in groups
 
     # Group exists but we don't want them?

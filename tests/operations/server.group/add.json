@@ -9,6 +9,6 @@
         "os": "Linux"
     },
     "commands": [
-        "groupadd -r somegroup --gid 1000"
+        "grep 'somegroup:' /etc/group || groupadd -r somegroup --gid 1000"
     ]
 }
