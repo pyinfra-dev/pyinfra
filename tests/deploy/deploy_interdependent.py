@@ -1,4 +1,4 @@
-from pyinfra.operations import apt, files, server
+from pyinfra.operations import apt, brew, files, server
 
 
 # Add/remove/add same file
@@ -93,4 +93,19 @@ apt.packages(
 apt.packages(
     packages=['htop'],
     present=False,
+)
+
+
+# Add/remove/add same brew tap
+brew.tap(
+    'sometap/somewhere',
+)
+
+brew.tap(
+    'sometap/somewhere',
+    present=False,
+)
+
+brew.tap(
+    'sometap/somewhere',
 )
