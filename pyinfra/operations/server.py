@@ -578,7 +578,12 @@ def group(group, present=True, system=False, gid=None, state=None, host=None):
         if gid:
             args.append('--gid {0}'.format(gid))
 
-        yield 'groupadd {0}'.format(' '.join(args))
+        # Groups are often added by other operations (package installs), so check
+        # for the group at runtime before adding.
+        yield "grep '{0}:' /etc/group || groupadd {1}".format(
+            group,
+            ' '.join(args),
+        )
         groups.append(group)
 
 
@@ -677,7 +682,12 @@ def user(
         if uid:
             args.append('--uid {0}'.format(uid))
 
-        yield 'useradd {0} {1}'.format(' '.join(args), user)
+        # Users are often added by other operations (package installs), so check
+        # for the user at runtime before adding.
+        yield "grep '{1}:' /etc/passwd || useradd {0} {1}".format(
+            ' '.join(args),
+            user,
+        )
         users[user] = {
             'home': home,
             'shell': shell,
