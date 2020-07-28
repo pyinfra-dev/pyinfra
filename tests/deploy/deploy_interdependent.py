@@ -1,4 +1,4 @@
-from pyinfra.operations import apt, brew, files, server
+from pyinfra.operations import apt, brew, files, git, server
 
 
 # Add/remove/add same file
@@ -108,4 +108,21 @@ brew.tap(
 
 brew.tap(
     'sometap/somewhere',
+)
+
+
+# Add/change/add same git config
+git.config(
+    'somekey',
+    'somevalue',
+)
+
+git.config(
+    'somekey',
+    'someothervalue',
+)
+
+git.config(
+    'somekey',
+    'somevalue',
 )
