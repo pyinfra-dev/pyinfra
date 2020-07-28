@@ -193,6 +193,7 @@ ip6tables
 ipdb
 iproute2
 iptables
+ipython
 isalpha
 isatty
 isfunction
