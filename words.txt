@@ -264,6 +264,8 @@ pyc
 pygments
 pyinfra
 pywinrm
+postcondition
+precondition
 rcd
 readlink
 rebase
