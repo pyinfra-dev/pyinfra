@@ -70,7 +70,7 @@ def get_vagrant_config(limit=None):
 
     lines = []
     for output in queue_items:
-        lines.extend([line.strip() for line in output])
+        lines.extend([ln.strip() for ln in output])
 
     return lines
 
