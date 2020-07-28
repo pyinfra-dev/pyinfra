@@ -23,7 +23,6 @@ from .command import (
     FileDownloadCommand,
     FileUploadCommand,
     FunctionCommand,
-    PyinfraCommand,
     StringCommand,
 )
 from .exceptions import PyinfraError
@@ -52,8 +51,6 @@ def _run_server_op(state, host, op_hash):
 
     # ...loop through each command
     for i, command in enumerate(op_data['commands']):
-        if not isinstance(command, PyinfraCommand):
-            raise TypeError('Command: {0} is not a valid pyinfra command!'.format(command))
 
         status = False
 
