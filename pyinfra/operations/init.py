@@ -18,7 +18,6 @@ def _handle_service_control(
     name, statuses, formatter, running, restarted, reloaded, command,
     status_argument='status',
 ):
-    statuses = statuses or {}
     status = statuses.get(name, None)
 
     # If we don't know the status, we need to check if it's up before starting
@@ -54,15 +53,18 @@ def _handle_service_control(
                 if reloaded else 'true'
             ),
         )
+        statuses[name] = running
 
     else:
         # Need down but running
         if running is False and status:
             yield formatter.format(name, 'stop')
+            statuses[name] = False
 
         # Need running but down
         if running is True and not status:
             yield formatter.format(name, 'start')
+            statuses[name] = True
 
         # Only restart if the service is already running
         if restarted and status:
@@ -331,10 +333,12 @@ def systemd(
         # Isn't enabled and want enabled?
         if not is_enabled and enabled is True:
             yield 'systemctl enable {0}'.format(service)
+            host.fact.systemd_enabled[service] = True
 
         # Is enabled and want disabled?
         elif is_enabled and enabled is False:
             yield 'systemctl disable {0}'.format(service)
+            host.fact.systemd_enabled[service] = False
 
 
 @operation
