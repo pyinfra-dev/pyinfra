@@ -39,6 +39,7 @@ def get_vagrant_config(limit=None):
     targets = []
 
     for line in output:
+        line = line.strip()
         _, target, type_, data = line.split(',', 3)
 
         # Skip anything not in the limit
@@ -69,7 +70,7 @@ def get_vagrant_config(limit=None):
 
     lines = []
     for output in queue_items:
-        lines.extend(output)
+        lines.extend([line.strip() for line in output])
 
     return lines
 
