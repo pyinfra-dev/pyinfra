@@ -28,17 +28,18 @@ from six.moves import shlex_quote
 
 from ..util import make_inventory
 
+
 def fake_ssh_docker_shell(state, host, command,
-    get_pty=False,
-    timeout=None,
-    stdin=None,
-    success_exit_codes=None,
-    print_output=False,
-    print_input=False,
-    return_combined_output=False,
-    use_sudo_password=False,
-    **command_kwargs
-):
+                          get_pty=False,
+                          timeout=None,
+                          stdin=None,
+                          success_exit_codes=None,
+                          print_output=False,
+                          print_input=False,
+                          return_combined_output=False,
+                          use_sudo_password=False,
+                          **command_kwargs
+                          ):
     if host.data.ssh_hostname not in ('somehost', 'anotherhost'):
         raise PyinfraError('Invalid host', host.data.ssh_hostname)
 
@@ -64,11 +65,13 @@ def fake_ssh_docker_shell(state, host, command,
 
     raise PyinfraError("Invalid Command: {0}".format(command))
 
+
 def get_docker_command(command):
     shell_command = make_unix_command(command).get_raw_value()
     shell_command = shlex_quote(shell_command)
     docker_command = 'docker exec -it containerid sh -c {0}'.format(shell_command)
     return docker_command
+
 
 @patch('pyinfra.api.connectors.ssh.connect', MagicMock())
 @patch('pyinfra.api.connectors.ssh.run_shell_command', fake_ssh_docker_shell)
@@ -163,7 +166,8 @@ class TestDockerSSHConnector(TestCase):
     @patch('pyinfra.api.connectors.dockerssh.mkstemp', lambda: (None, 'local_tempfile'))
     @patch('pyinfra.api.connectors.dockerssh.ssh.put_file')
     def test_put_file(self, fake_put_file):
-        fake_ssh_docker_shell.custom_command = ['docker cp remote_tempfile containerid:not-another-file', True, [], []]
+        fake_ssh_docker_shell.custom_command = [
+            'docker cp remote_tempfile containerid:not-another-file', True, [], []]
 
         inventory = make_inventory(hosts=('@dockerssh/somehost:not-an-image',))
         state = State(inventory, Config())

@@ -12,6 +12,7 @@ from pyinfra.progress import progress_spinner
 from . import ssh
 from .util import make_unix_command
 
+
 def remote_remove(state, host, filename, print_output=False, print_input=False):
     '''
     Deletes a file on a remote machine over ssh.
@@ -25,9 +26,11 @@ def remote_remove(state, host, filename, print_output=False, print_input=False):
     if not remove_status:
         raise IOError('\n'.join(remove_stderr))
 
+
 @memoize
 def show_warning():
     logger.warning('The @dockerssh connector is in beta!')
+
 
 def make_names_data(host_image_str):
     try:
@@ -70,6 +73,7 @@ def connect(state, host):
     host.host_data['docker_container_id'] = container_id
     return host.connection
 
+
 def disconnect(state, host):
     container_id = host.host_data['docker_container_id'][:12]
 
@@ -88,6 +92,7 @@ def disconnect(state, host):
     logger.info('{0}docker build complete, image ID: {1}'.format(
         host.print_prefix, click.style(image_id, bold=True),
     ))
+
 
 def run_shell_command(
     state, host, command,
@@ -230,5 +235,6 @@ def get_file(
         ), err=True)
 
     return status
+
 
 EXECUTION_CONNECTOR = True
