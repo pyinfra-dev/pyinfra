@@ -23,10 +23,7 @@ class PseudoModule(object):
 
     def __getattr__(self, key):
         if self._module is None:
-            raise AttributeError((
-                'This pyinfra pseudo module has not been set! This occurs when '
-                'accessing `pyinfra.[host|inventory|state]` outside of a deploy. '
-            ))
+            return getattr(self._base_module, key)
         return getattr(self._module, key)
 
     def __iter__(self):
