@@ -158,6 +158,29 @@ class TestCliDeployRuns(PatchSSHTestCase):
 
 
 class TestCliDeployState(PatchSSHTestCase):
+    def _assert_op_data(self, correct_op_name_and_host_names):
+        state = pseudo_state
+        op_order = state.get_op_order()
+
+        assert (
+            len(correct_op_name_and_host_names) == len(op_order)
+        ), 'Incorrect number of operations detected'
+
+        for i, (correct_op_name, correct_host_names) in enumerate(
+            correct_op_name_and_host_names,
+        ):
+            op_hash = op_order[i]
+            op_meta = state.op_meta[op_hash]
+
+            assert list(op_meta['names'])[0] == correct_op_name
+
+            for host in state.inventory:
+                op_hashes = state.meta[host]['op_hashes']
+                if correct_host_names is True or host.name in correct_host_names:
+                    self.assertIn(op_hash, op_hashes)
+                else:
+                    self.assertNotIn(op_hash, op_hashes)
+
     def test_deploy(self):
         correct_op_name_and_host_names = [
             ('First main operation', True),  # true for all hosts
@@ -212,28 +235,20 @@ class TestCliDeployState(PatchSSHTestCase):
 
         self._assert_op_data(correct_op_name_and_host_names)
 
-    def _assert_op_data(self, correct_op_name_and_host_names):
-        state = pseudo_state
-        op_order = state.get_op_order()
+    def test_interdependent_deploy(self):
+        pseudo_state.reset()
 
-        assert (
-            len(correct_op_name_and_host_names) == len(op_order)
-        ), 'Incorrect number of operations detected'
+        result = run_cli(
+            'somehost',
+            path.join('tests', 'deploy', 'deploy_interdependent.py'),
+        )
+        assert result.exit_code == 0, result.stderr
 
-        for i, (correct_op_name, correct_host_names) in enumerate(
-            correct_op_name_and_host_names,
-        ):
-            op_hash = op_order[i]
-            op_meta = state.op_meta[op_hash]
-
-            assert list(op_meta['names'])[0] == correct_op_name
-
-            for host in state.inventory:
-                op_hashes = state.meta[host]['op_hashes']
-                if correct_host_names is True or host.name in correct_host_names:
-                    self.assertIn(op_hash, op_hashes)
-                else:
-                    self.assertNotIn(op_hash, op_hashes)
+        # Check every operation had commands/changes - this ensures that each
+        # combo (add/remove/add) always had changes.
+        for host, ops in pseudo_state.ops.items():
+            for _, op in ops.items():
+                assert len(op['commands']) > 0
 
 
 class TestDirectMainExecution(PatchSSHTestCase):

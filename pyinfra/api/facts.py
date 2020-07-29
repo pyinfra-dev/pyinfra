@@ -282,7 +282,7 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
     return state.facts[fact_hash]
 
 
-def get_fact(state, host, name):
+def get_host_fact(state, host, name):
     '''
     Wrapper around ``get_facts`` returning facts for one host or a function
     that does.
@@ -292,7 +292,6 @@ def get_fact(state, host, name):
     if callable(getattr(FACTS[name], 'command', None)):
         def wrapper(*args):
             fact_data = get_facts(state, name, args=args, ensure_hosts=(host,))
-
             return fact_data.get(host)
         return wrapper
 
@@ -300,5 +299,14 @@ def get_fact(state, host, name):
     else:
         # Get the fact
         fact_data = get_facts(state, name, ensure_hosts=(host,))
-
         return fact_data.get(host)
+
+
+def create_host_fact(state, host, name, data, args=None):
+    fact_data = get_facts(state, name, args=args, ensure_hosts=(host,))
+    fact_data[host] = data
+
+
+def delete_host_fact(state, host, name, args=None):
+    fact_data = get_facts(state, name, args=args, ensure_hosts=(host,))
+    fact_data.pop(host, None)

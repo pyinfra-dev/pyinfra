@@ -132,7 +132,7 @@ The same keys can be defined for host and group data - this means we can set a d
 Operations
 ----------
 
-Now that you've got an inventory of hosts and know how to authenticate with them, you can start writing operations. Operations are used to describe changes to make to the systems in the inventory. Operations are namespaced and imported from ``pyinfra.operations``.
+Now that you've got an inventory of hosts and know how to authenticate with them, you can start writing operations. Operations are used to describe changes to make to the systems in the inventory. Operations are imported from ``pyinfra.operations``.
 
 For example, this deploy will ensure that user "pyinfra" exists with home directory ``/home/pyinfra``, and that the ``/var/log/pyinfra.log`` file exists and is owned by that user.
 
@@ -163,8 +163,8 @@ For example, this deploy will ensure that user "pyinfra" exists with home direct
 
 Uses the :doc:`server module <./modules/server>` and :doc:`files module <./modules/files>`. You can see all available operations in :doc:`the operations index <./operations>`.
 
-.. note::
-    Pass a ``set`` object as the first argument to name the operation (as above), which will appear during a deploy. By default the operation module, name and arguments are shown.
+.. Important::
+    Operations that rely on one another (interdependency) must be treated with caution. See: `deploy limitations <deploy_process.html#limitations>`_.
 
 Global Arguments
 ~~~~~~~~~~~~~~~~

@@ -10,7 +10,7 @@ def call(function, *args, **kwargs):
     '''
     Execute a Python function within a deploy.
 
-    + func: the function to execute
+    + function: the function to execute
     + args: additional arguments to pass to the function
     + kwargs: additional keyword arguments to pass to the function
 

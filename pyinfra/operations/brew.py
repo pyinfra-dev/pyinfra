@@ -138,7 +138,7 @@ def tap(src, present=True, state=None, host=None):
     '''
     Add/remove brew taps.
 
-    + src: the name of the tasp
+    + src: the name of the tap
     + present: whether this tap should be present or not
 
     Examples:
@@ -165,6 +165,8 @@ def tap(src, present=True, state=None, host=None):
 
     if present and not is_tapped:
         yield 'brew tap {0}'.format(src)
+        taps.append(src)
 
     elif not present and is_tapped:
         yield 'brew untap {0}'.format(src)
+        taps.remove(src)

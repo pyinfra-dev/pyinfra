@@ -83,6 +83,9 @@ class FakeFact(object):
     def __getitem__(self, key):
         return self.data[key]
 
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
     def __contains__(self, key):
         return key in self.data
 
@@ -122,6 +125,12 @@ class FakeFacts(object):
             return None
         else:
             return FakeFact(self.facts[key])
+
+    def _create(self, key, data=None, args=None):
+        pass
+
+    def _delete(self, key, args=None):
+        pass
 
 
 class FakeHost(object):

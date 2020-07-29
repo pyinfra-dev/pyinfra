@@ -15,6 +15,7 @@ from .exceptions import (  # noqa: F401 # pragma: no cover
     OperationTypeError,
 )
 from .facts import FactBase, ShortFactBase  # noqa: F401 # pragma: no cover
+from .host import Host  # noqa: F401 # pragma: no cover
 from .inventory import Inventory  # noqa: F401 # pragma: no cover
 from .operation import operation  # noqa: F401 # pragma: no cover
 from .state import State  # noqa: F401 # pragma: no cover

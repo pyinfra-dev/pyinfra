@@ -12,6 +12,7 @@ class GitBranch(FactBase):
 
 
 class GitConfig(FactBase):
+    default = dict
     use_default_on_error = True
 
     @staticmethod

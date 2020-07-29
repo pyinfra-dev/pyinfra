@@ -6,15 +6,29 @@ from pyinfra import logger
 
 from .connectors import EXECUTION_CONNECTORS
 from .exceptions import ConnectError, PyinfraError
-from .facts import get_fact, is_fact
+from .facts import (
+    create_host_fact,
+    delete_host_fact,
+    get_fact_names,
+    get_host_fact,
+    is_fact,
+)
 
 
 class HostFacts(object):
-    def __init__(self, inventory, host):
-        self.inventory = inventory
+    def __init__(self, host=None):
         self.host = host
 
+    def __dir__(self):
+        return get_fact_names()
+
+    def _check_host(self):
+        if not self.host:
+            raise TypeError('Cannot call this function with no host!')
+
     def __getattr__(self, key):
+        self._check_host()
+
         if not is_fact(key):
             raise AttributeError('No such fact: {0}'.format(key))
 
@@ -28,7 +42,15 @@ class HostFacts(object):
                 self.host, key,
             ))
 
-        return get_fact(self.inventory.state, self.host, key)
+        return get_host_fact(self.host.state, self.host, key)
+
+    def _create(self, key, data=None, args=None):
+        self._check_host()
+        return create_host_fact(self.host.state, self.host, key, data, args)
+
+    def _delete(self, key, args=None):
+        self._check_host()
+        return delete_host_fact(self.host.state, self.host, key, args)
 
 
 class Host(object):
@@ -39,6 +61,7 @@ class Host(object):
 
     connection = None
     state = None
+    fact = HostFacts()  # this isn't usable, but provides support for dir()
 
     def __init__(
         self, name, inventory, groups, data,
@@ -51,7 +74,7 @@ class Host(object):
         self.name = name
 
         # Attach the fact proxy
-        self.fact = HostFacts(inventory, self)
+        self.fact = HostFacts(self)
 
         # Arbitrary dict for connector use
         self.connector_data = {}

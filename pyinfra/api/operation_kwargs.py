@@ -71,6 +71,8 @@ execution_kwargs = {
     'parallel': 'Run this operation in batches of hosts.',
     'run_once': 'Only execute this operation once, on the first host to see it.',
     'serial': 'Run this operation host by host, rather than in parallel.',
+    'precondition': 'Command to execute & check before the operation commands begin.',
+    'postcondition': 'Command to execute & check after the operation commands complete.',
 }
 
 callback_kwargs = {

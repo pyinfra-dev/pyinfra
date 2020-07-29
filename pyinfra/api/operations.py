@@ -23,7 +23,6 @@ from .command import (
     FileDownloadCommand,
     FileUploadCommand,
     FunctionCommand,
-    PyinfraCommand,
     StringCommand,
 )
 from .exceptions import PyinfraError
@@ -32,8 +31,40 @@ from .util import (
     format_exception,
     log_error_or_warning,
     log_host_command_error,
+    memoize,
     print_host_combined_output,
 )
+
+
+@memoize
+def show_pre_or_post_condition_warning(condition_name):
+    logger.warning('The `{0}` argument is in beta!'.format(condition_name))
+
+
+def _run_shell_command(state, host, command, op_meta, executor_kwargs):
+    status = False
+    combined_output_lines = []
+
+    try:
+        status, combined_output_lines = host.run_shell_command(
+            command,
+            print_output=state.print_output,
+            print_input=state.print_input,
+            return_combined_output=True,
+            **executor_kwargs
+        )
+    except (timeout_error, socket_error, SSHException) as e:
+        log_host_command_error(
+            host,
+            e,
+            timeout=op_meta['timeout'],
+        )
+
+    # If we failed and have no already printed the stderr, print it
+    if status is False and not state.print_output:
+        print_host_combined_output(host, combined_output_lines)
+
+    return status
 
 
 def _run_server_op(state, host, op_hash):
@@ -44,26 +75,40 @@ def _run_server_op(state, host, op_hash):
     op_data = state.ops[host][op_hash]
     op_meta = state.op_meta[op_hash]
 
+    ignore_errors = op_meta['ignore_errors']
+
     logger.debug('Starting operation {0} on {1}'.format(
         ', '.join(op_meta['names']), host,
     ))
+
+    executor_kwarg_keys = get_executor_kwarg_keys()
+    base_executor_kwargs = {
+        key: op_meta[key]
+        for key in executor_kwarg_keys
+        if key in op_meta
+    }
+
+    precondition = op_meta['precondition']
+    if precondition:
+        show_pre_or_post_condition_warning('precondition')
+    if precondition and not _run_shell_command(
+        state, host, precondition, op_meta, base_executor_kwargs,
+    ):
+        log_error_or_warning(
+            host, ignore_errors,
+            description='precondition failed: {0}'.format(precondition),
+        )
+        if not ignore_errors:
+            return False
 
     state.ops_run.add(op_hash)
 
     # ...loop through each command
     for i, command in enumerate(op_data['commands']):
-        if not isinstance(command, PyinfraCommand):
-            raise TypeError('Command: {0} is not a valid pyinfra command!'.format(command))
 
         status = False
 
-        executor_kwarg_keys = get_executor_kwarg_keys()
-        executor_kwargs = {
-            key: op_meta[key]
-            for key in executor_kwarg_keys
-            if key in op_meta
-        }
-
+        executor_kwargs = base_executor_kwargs.copy()
         executor_kwargs.update(command.executor_kwargs)
 
         # Now we attempt to execute the command
@@ -118,37 +163,32 @@ def _run_server_op(state, host, op_hash):
                 )
 
         elif isinstance(command, StringCommand):
-            combined_output_lines = []
+            status = _run_shell_command(state, host, command, op_meta, executor_kwargs)
 
-            try:
-                status, combined_output_lines = host.run_shell_command(
-                    command,
-                    print_output=state.print_output,
-                    print_input=state.print_input,
-                    return_combined_output=True,
-                    **executor_kwargs
-                )
-            except (timeout_error, socket_error, SSHException) as e:
-                log_host_command_error(
-                    host,
-                    e,
-                    timeout=op_meta['timeout'],
-                )
-
-            # If we failed and have no already printed the stderr, print it
-            if status is False and not state.print_output:
-                print_host_combined_output(host, combined_output_lines)
         else:
             raise TypeError('{0} is an invalid pyinfra command!'.format(command))
 
         # Break the loop to trigger a failure
         if status is False:
             break
-        else:
-            state.results[host]['commands'] += 1
+
+        state.results[host]['commands'] += 1
 
     # Commands didn't break, so count our successes & return True!
     else:
+        postcondition = op_meta['postcondition']
+        if postcondition:
+            show_pre_or_post_condition_warning('postcondition')
+        if postcondition and not _run_shell_command(
+            state, host, postcondition, op_meta, base_executor_kwargs,
+        ):
+            log_error_or_warning(
+                host, ignore_errors,
+                description='postcondition failed: {0}'.format(postcondition),
+            )
+            if not ignore_errors:
+                return False
+
         # Count success
         state.results[host]['ops'] += 1
         state.results[host]['success_ops'] += 1
@@ -170,14 +210,14 @@ def _run_server_op(state, host, op_hash):
     # Up error_ops & log
     state.results[host]['error_ops'] += 1
 
-    log_error_or_warning(host, op_meta['ignore_errors'])
+    log_error_or_warning(host, ignore_errors)
 
     # Always trigger any error handler
     if op_meta['on_error']:
         op_meta['on_error'](state, host, op_hash)
 
     # Ignored, op "completes" w/ ignored error
-    if op_meta['ignore_errors']:
+    if ignore_errors:
         state.results[host]['ops'] += 1
 
     # Unignored error -> False

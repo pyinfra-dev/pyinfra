@@ -48,6 +48,8 @@ def config(
         else:
             yield 'cd {0} && git config --local {1} "{2}"'.format(repo, key, value)
 
+        existing_config[key] = value
+
 
 @operation(pipeline_facts={
     'git_branch': 'target',

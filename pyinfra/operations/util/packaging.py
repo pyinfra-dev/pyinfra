@@ -117,6 +117,12 @@ def ensure_packages(
             ' '.join(diff_packages),
         )
 
+        for package in diff_packages:  # add/remove from current packages
+            if present:
+                current_packages[package] = ['unknown']
+            else:
+                current_packages.pop(package, None)
+
     if latest and upgrade_command and upgrade_packages:
         yield '{0} {1}'.format(
             upgrade_command,
