@@ -2,29 +2,15 @@
 
 from __future__ import unicode_literals
 
-from socket import (
-    error as socket_error,
-    gaierror,
-)
 from unittest import TestCase
 
-from mock import call, MagicMock, mock_open, patch
-from paramiko import (
-    AuthenticationException,
-    PasswordRequiredException,
-    SSHException,
-)
-
-import pyinfra
-import tempfile
-
-from pyinfra.api import Config, MaskString, State, StringCommand
-from pyinfra.api.connect import connect_all
-import pyinfra.api.connectors.dockerssh
-from pyinfra.api.connectors.ssh import _get_sftp_connection
-from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
-from pyinfra.api.connectors.util import make_unix_command
+from mock import MagicMock, mock_open, patch
 from six.moves import shlex_quote
+
+from pyinfra.api import Config, State
+from pyinfra.api.connect import connect_all
+from pyinfra.api.connectors.util import make_unix_command
+from pyinfra.api.exceptions import InventoryError, PyinfraError
 
 from ..util import make_inventory
 
@@ -63,7 +49,7 @@ def fake_ssh_docker_shell(state, host, command,
             fake_ssh_docker_shell.ran_custom_command = True
             return (status, stdout, stderr)
 
-    raise PyinfraError("Invalid Command: {0}".format(command))
+    raise PyinfraError('Invalid Command: {0}'.format(command))
 
 
 def get_docker_command(command):
@@ -201,7 +187,7 @@ class TestDockerSSHConnector(TestCase):
         # docker copy error
         fake_ssh_docker_shell.custom_command = [
             'docker cp remote_tempfile containerid:not-another-file',
-            False, [], ["docker error"]]
+            False, [], ['docker error']]
         fake_put_file.return_value = True
 
         with self.assertRaises(IOError) as exn:
