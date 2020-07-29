@@ -30,7 +30,11 @@ def show_warning():
     logger.warning('The @dockerssh connector is in beta!')
 
 def make_names_data(host_image_str):
-    hostname, image = host_image_str.split(':', 1)
+    try:
+        hostname, image = host_image_str.split(':', 1)
+    except (AttributeError, ValueError):  # failure to parse the host_image_str
+        raise InventoryError('No ssh host or docker base image provided!')
+
     if not image:
         raise InventoryError('No docker base image provided!')
 
@@ -60,6 +64,7 @@ def connect(state, host):
             container_id = stdout[-1]
 
     except PyinfraError as e:
+        host.connection = None  # fail connection
         raise ConnectError(e.args[0])
 
     host.host_data['docker_container_id'] = container_id
@@ -137,20 +142,22 @@ def put_file(
     _, temp_filename = mkstemp()
     remote_temp_filename = state.get_temp_filename(temp_filename)
 
+    # Load our file or IO object and write it to the temporary file
+    with get_file_io(filename_or_io) as file_io:
+        with open(temp_filename, 'wb') as temp_f:
+            data = file_io.read()
+
+            if isinstance(data, six.text_type):
+                data = data.encode()
+
+            temp_f.write(data)
+
+    # upload file to remote server
+    ssh_status = ssh.put_file(state, host, temp_filename, remote_temp_filename)
+    if not ssh_status:
+        raise IOError('Failed to copy file over ssh')
+
     try:
-        # Load our file or IO object and write it to the temporary file
-        with get_file_io(filename_or_io) as file_io:
-            with open(temp_filename, 'wb') as temp_f:
-                data = file_io.read()
-
-                if isinstance(data, six.text_type):
-                    data = data.encode()
-
-                temp_f.write(data)
-
-        # upload file to remote server
-        ssh.put_file(state, host, temp_filename, remote_temp_filename)
-
         docker_id = host.host_data['docker_container_id']
         docker_command = 'docker cp {0} {1}:{2}'.format(
             remote_temp_filename,
@@ -206,10 +213,13 @@ def get_file(
             print_input=print_input,
         )
 
-        ssh.get_file(state, host, temp_filename, filename_or_io)
+        ssh_status = ssh.get_file(state, host, temp_filename, filename_or_io)
     finally:
         remote_remove(state, host, temp_filename, print_output=print_output,
                       print_input=print_input)
+
+    if not ssh_status:
+        raise IOError('failed to copy file over ssh')
 
     if not status:
         raise IOError('\n'.join(stderr))
