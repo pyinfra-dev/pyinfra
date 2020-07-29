@@ -219,9 +219,9 @@ def modprobe(module, present=True, force=False, state=None, host=None):
     )
 
     # NOTE: https://docs.python.org/3/library/itertools.html#itertools-recipes
-    def partition(pred, iterable):
+    def partition(predicate, iterable):
         t1, t2 = tee(iterable)
-        return list(filter(pred, t2)), list(filterfalse(pred, t1))
+        return list(filter(predicate, t2)), list(filterfalse(predicate, t1))
 
     modules = host.fact.kernel_modules
     present_mods, missing_mods = partition(lambda mod: mod in modules, list_value)
@@ -557,12 +557,13 @@ def group(group, present=True, system=False, gid=None, state=None, host=None):
             )
     '''
 
-    groups = host.fact.groups or []
+    groups = host.fact.groups
     is_present = group in groups
 
     # Group exists but we don't want them?
     if not present and is_present:
         yield 'groupdel {0}'.format(group)
+        groups.remove(group)
 
     # Group doesn't exist and we want it?
     elif present and not is_present:
@@ -577,7 +578,13 @@ def group(group, present=True, system=False, gid=None, state=None, host=None):
         if gid:
             args.append('--gid {0}'.format(gid))
 
-        yield 'groupadd {0}'.format(' '.join(args))
+        # Groups are often added by other operations (package installs), so check
+        # for the group at runtime before adding.
+        yield "grep '{0}:' /etc/group || groupadd {1}".format(
+            group,
+            ' '.join(args),
+        )
+        groups.append(group)
 
 
 @operation
@@ -636,7 +643,7 @@ def user(
             )
     '''
 
-    users = host.fact.users or {}
+    users = host.fact.users
     existing_user = users.get(user)
 
     if groups is None:
@@ -649,6 +656,7 @@ def user(
     if not present:
         if existing_user:
             yield 'userdel {0}'.format(user)
+            users.pop(user)
         return
 
     # User doesn't exist but we want them?
@@ -674,7 +682,18 @@ def user(
         if uid:
             args.append('--uid {0}'.format(uid))
 
-        yield 'useradd {0} {1}'.format(' '.join(args), user)
+        # Users are often added by other operations (package installs), so check
+        # for the user at runtime before adding.
+        yield "grep '{1}:' /etc/passwd || useradd {0} {1}".format(
+            ' '.join(args),
+            user,
+        )
+        users[user] = {
+            'home': home,
+            'shell': shell,
+            'group': group,
+            'groups': groups,
+        }
 
     # User exists and we want them, check home/shell/keys
     else:
@@ -699,6 +718,14 @@ def user(
         # Need to mod the user?
         if args:
             yield 'usermod {0} {1}'.format(' '.join(args), user)
+            if home:
+                existing_user['home'] = home
+            if shell:
+                existing_user['shell'] = shell
+            if group:
+                existing_user['group'] = group
+            if groups:
+                existing_user['groups'] = groups
 
     # Ensure home directory ownership
     if ensure_home:

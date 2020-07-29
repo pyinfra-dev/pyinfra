@@ -34,6 +34,7 @@ E501
 F401
 F403
 FIXME
+filterfalse
 Ed25519
 Gevent
 HKLM
@@ -48,6 +49,7 @@ Iptables
 Ipv4
 Ipv6
 ignoretz
+ifilterfalse
 JS
 Launchd
 LogicalDisk
@@ -317,6 +319,8 @@ syslog
 systemctl
 systemd
 systeminfo
+t1
+t2
 tablename
 tablespace
 tarfile

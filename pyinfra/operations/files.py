@@ -148,6 +148,7 @@ def line(
     present=True, replace=None, flags=None, backup=False,
     interpolate_variables=False,
     state=None, host=None,
+    assume_present=False,
 ):
     '''
     Ensure lines in files using grep to locate and sed to replace.
@@ -226,7 +227,10 @@ def line(
     match_line = ensure_whole_line_match(line)
 
     # Is there a matching line in this file?
-    present_lines = host.fact.find_in_file(path, match_line)
+    if assume_present:
+        present_lines = [line]
+    else:
+        present_lines = host.fact.find_in_file(path, match_line)
 
     # If replace present, use that over the matching line
     if replace:
@@ -856,15 +860,27 @@ def link(
             yield _create_remote_dir(state, host, path, user, group)
 
         yield add_cmd
+
         if user or group:
             yield chown(path, user, group, dereference=False)
+
+        host.fact._create(
+            'link',
+            args=(path,),
+            data={'link_target': target, 'group': group, 'user': user},
+        )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield remove_cmd
+        host.fact._delete('link', args=(path,))
 
     # Exists and want to ensure it's state
     elif (assume_present or info) and present:
+        if assume_present and not info:
+            info = {'link_target': None, 'group': None, 'user': None}
+            host.fact._create('link', args=(path,), data=info)
+
         # If we have an absolute path - prepend to any non-absolute values from the fact
         # and/or the source.
         if os_path.isabs(path):
@@ -882,6 +898,7 @@ def link(
         if not info or info['link_target'] != target:
             yield remove_cmd
             yield add_cmd
+            info['link_target'] = target
 
         # Check user/group
         if (
@@ -890,6 +907,10 @@ def link(
             or (group and info['group'] != group)
         ):
             yield chown(path, user, group, dereference=False)
+            if user:
+                info['user'] = user
+            if group:
+                info['group'] = group
 
 
 @operation(pipeline_facts={
@@ -957,18 +978,30 @@ def file(
         if user or group:
             yield chown(path, user, group)
 
+        host.fact._create(
+            'file',
+            args=(path,),
+            data={'mode': mode, 'group': group, 'user': user},
+        )
+
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield 'rm -f {0}'.format(path)
+        host.fact._delete('file', args=(path,))
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
+        if assume_present and not info:
+            info = {'mode': None, 'group': None, 'user': None}
+            host.fact._create('file', args=(path,), data=info)
+
         if touch:
             yield 'touch {0}'.format(path)
 
         # Check mode
         if mode and (not info or info['mode'] != mode):
             yield chmod(path, mode)
+            info['mode'] = mode
 
         # Check user/group
         if (
@@ -977,6 +1010,10 @@ def file(
             or (group and info['group'] != group)
         ):
             yield chown(path, user, group)
+            if user:
+                info['user'] = user
+            if group:
+                info['group'] = group
 
 
 @operation(pipeline_facts={
@@ -1044,18 +1081,30 @@ def directory(
         if user or group:
             yield chown(path, user, group, recursive=recursive)
 
+        host.fact._create(
+            'directory',
+            args=(path,),
+            data={'mode': mode, 'group': group, 'user': user},
+        )
+
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield 'rm -rf {0}'.format(path)
+        host.fact._delete('directory', args=(path,))
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
+        if assume_present and not info:
+            info = {'mode': None, 'group': None, 'user': None}
+            host.fact._create('directory', args=(path,), data=info)
+
         if no_check_owner_mode:
             return
 
         # Check mode
         if mode and (not info or info['mode'] != mode):
             yield chmod(path, mode, recursive=recursive)
+            info['mode'] = mode
 
         # Check user/group
         if (
@@ -1064,3 +1113,7 @@ def directory(
             or (group and info['group'] != group)
         ):
             yield chown(path, user, group, recursive=recursive)
+            if user:
+                info['user'] = user
+            if group:
+                info['group'] = group

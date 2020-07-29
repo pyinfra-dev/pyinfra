@@ -34,7 +34,6 @@ class BrewCasks(BrewPackages):
     '''
 
     command = 'brew cask list --versions'
-    use_default_on_error = True
 
 
 class BrewTaps(FactBase):
@@ -43,6 +42,7 @@ class BrewTaps(FactBase):
     '''
 
     command = 'brew tap'
+    default = list
     use_default_on_error = True
 
     def process(self, output):
