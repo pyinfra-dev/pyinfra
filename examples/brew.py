@@ -10,7 +10,7 @@ brew.packages(
 
 brew.casks(
     name='Upgrade and install the latest package via casks',
-    packages=['godot'],
+    casks=['godot'],
     upgrade=True,
     latest=True,
 )
