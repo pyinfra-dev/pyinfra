@@ -144,6 +144,9 @@ def download(
                 '|| (echo "MD5 did not match!" && exit 1)'
             ).format(dest, md5sum)
 
+    else:
+        host.noop('file: {0} has already been downloaded'.format(dest))
+
 
 @operation
 def line(
@@ -655,9 +658,12 @@ def put(
                 yield chmod(dest, mode)
 
         else:
+            changed = False
+
             # Check mode
             if mode and remote_file['mode'] != mode:
                 yield chmod(dest, mode)
+                changed = True
 
             # Check user/group
             if (
@@ -665,6 +671,10 @@ def put(
                 or (group and remote_file['group'] != group)
             ):
                 yield chown(dest, user, group)
+                changed = True
+
+            if not changed:
+                host.noop('file {0} is already uploaded'.format(dest))
 
 
 @operation
@@ -1108,19 +1118,24 @@ def directory(
         if no_check_owner_mode:
             return
 
-        # Check mode
+        changed = False
+
         if mode and (not info or info['mode'] != mode):
             yield chmod(path, mode, recursive=recursive)
             info['mode'] = mode
+            changed = True
 
-        # Check user/group
         if (
             (not info and (user or group))
             or (user and info['user'] != user)
             or (group and info['group'] != group)
         ):
             yield chown(path, user, group, recursive=recursive)
+            changed = True
             if user:
                 info['user'] = user
             if group:
                 info['group'] = group
+
+        if not changed:
+            host.noop('directory {0} already exists'.format(path))
