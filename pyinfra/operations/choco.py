@@ -32,7 +32,7 @@ def packages(packages=None, present=True, latest=False, state=None, host=None):
     '''
 
     yield ensure_packages(
-        packages, host.fact.choco_packages, present,
+        host, packages, host.fact.choco_packages, present,
         install_command='choco install -y',
         uninstall_command='choco uninstall -y -x',
         upgrade_command='choco update -y',

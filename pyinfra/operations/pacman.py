@@ -64,7 +64,7 @@ def packages(
         yield _upgrade(state=state, host=host)
 
     yield ensure_packages(
-        packages, host.fact.pacman_packages, present,
+        host, packages, host.fact.pacman_packages, present,
         install_command='pacman --noconfirm -S',
         uninstall_command='pacman --noconfirm -R',
     )

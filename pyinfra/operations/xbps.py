@@ -59,7 +59,7 @@ def packages(
         yield _upgrade(state=state, host=host)
 
     yield ensure_packages(
-        packages, host.fact.xbps_packages, present,
+        host, packages, host.fact.xbps_packages, present,
         install_command='xbps-install -y -u',
         uninstall_command='xbps-remove -y',
     )

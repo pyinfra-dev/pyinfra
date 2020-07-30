@@ -370,7 +370,7 @@ def packages(
 
     # Compare/ensure packages are present/not
     yield ensure_packages(
-        packages, host.fact.deb_packages, present,
+        host, packages, host.fact.deb_packages, present,
         install_command=noninteractive_apt(install_command, force=force),
         uninstall_command=noninteractive_apt(uninstall_command, force=force),
         upgrade_command=noninteractive_apt(upgrade_command, force=force),

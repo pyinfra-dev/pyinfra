@@ -73,7 +73,7 @@ def packages(
         yield _upgrade(state=state, host=host)
 
     yield ensure_packages(
-        packages, host.fact.brew_packages, present,
+        host, packages, host.fact.brew_packages, present,
         install_command='brew install',
         uninstall_command='brew uninstall',
         upgrade_command='brew upgrade',
@@ -124,7 +124,7 @@ def casks(
         yield cask_upgrade(state=state, host=host)
 
     yield ensure_packages(
-        casks, host.fact.brew_casks, present,
+        host, casks, host.fact.brew_casks, present,
         install_command='brew cask install',
         uninstall_command='brew cask uninstall',
         upgrade_command='brew cask upgrade',
@@ -163,10 +163,16 @@ def tap(src, present=True, state=None, host=None):
     taps = host.fact.brew_taps
     is_tapped = src in taps
 
-    if present and not is_tapped:
-        yield 'brew tap {0}'.format(src)
-        taps.append(src)
+    if present:
+        if is_tapped:
+            host.noop('tap {0} already exists'.format(src))
+        else:
+            yield 'brew tap {0}'.format(src)
+            taps.append(src)
 
-    elif not present and is_tapped:
-        yield 'brew untap {0}'.format(src)
-        taps.remove(src)
+    elif not present:
+        if is_tapped:
+            yield 'brew untap {0}'.format(src)
+            taps.remove(src)
+        else:
+            host.noop('tap {0} does not exist'.format(src))

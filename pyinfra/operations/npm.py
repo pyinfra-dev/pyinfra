@@ -44,7 +44,7 @@ def packages(packages=None, present=True, latest=False, directory=None, state=No
     )
 
     yield ensure_packages(
-        packages, current_packages, present,
+        host, packages, current_packages, present,
         install_command=install_command,
         uninstall_command=uninstall_command,
         upgrade_command=upgrade_command,

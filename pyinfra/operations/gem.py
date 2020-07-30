@@ -31,7 +31,7 @@ def packages(packages=None, present=True, latest=False, state=None, host=None):
     '''
 
     yield ensure_packages(
-        packages, host.fact.gem_packages, present,
+        host, packages, host.fact.gem_packages, present,
         install_command='gem install',
         uninstall_command='gem uninstall',
         upgrade_command='gem update',

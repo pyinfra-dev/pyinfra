@@ -7,7 +7,7 @@ from six.moves.urllib.parse import urlparse
 
 
 def ensure_packages(
-    packages, current_packages, present,
+    host, packages, current_packages, present,
     install_command, uninstall_command,
     latest=False, upgrade_command=None,
     version_join=None, lower=True,
@@ -80,12 +80,17 @@ def ensure_packages(
                 diff_packages.append(package)
 
             # String version, just check if not existing
-            if isinstance(package, six.string_types) and package not in current_packages:
+            elif isinstance(package, six.string_types) and package not in current_packages:
                 diff_packages.append(package)
 
             # Present packages w/o version specified - for upgrade if latest
-            if isinstance(package, six.string_types) and package in current_packages:
+            elif isinstance(package, six.string_types) and package in current_packages:
                 upgrade_packages.append(package)
+
+                if not latest:
+                    host.noop('package {0} is already installed ({1})'.format(
+                        package, ', '.join(current_packages[package]),
+                    ))
 
     # Uninstalling?
     else:
@@ -98,8 +103,11 @@ def ensure_packages(
                 diff_packages.append(package)
 
             # String version, just check if existing
-            if isinstance(package, six.string_types) and package in current_packages:
+            elif isinstance(package, six.string_types) and package in current_packages:
                 diff_packages.append(package)
+
+            else:
+                host.noop('package {0} is not installed'.format(package))
 
     # Convert packages back to string(/version)
     diff_packages = [

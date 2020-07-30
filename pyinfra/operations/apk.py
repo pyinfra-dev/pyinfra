@@ -73,7 +73,7 @@ def packages(
         yield _upgrade(state=state, host=host)
 
     yield ensure_packages(
-        packages, host.fact.apk_packages, present,
+        host, packages, host.fact.apk_packages, present,
         install_command='apk add',
         uninstall_command='apk remove',
         upgrade_command='apk upgrade',

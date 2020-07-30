@@ -183,7 +183,7 @@ def packages(
         uninstall_command.append(extra_uninstall_args)
 
     yield ensure_packages(
-        packages, host.fact.rpm_packages, present,
+        host, packages, host.fact.rpm_packages, present,
         install_command=' '.join(install_command),
         uninstall_command=' '.join(uninstall_command),
         upgrade_command='dnf update -y',

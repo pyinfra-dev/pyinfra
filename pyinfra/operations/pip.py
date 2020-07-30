@@ -123,7 +123,7 @@ def packages(
         current_packages = host.fact.pip_packages(pip)
 
         yield ensure_packages(
-            packages, current_packages, present,
+            host, packages, current_packages, present,
             install_command='{0} install'.format(pip),
             uninstall_command='{0} uninstall --yes'.format(pip),
             upgrade_command='{0} install --upgrade'.format(pip),
