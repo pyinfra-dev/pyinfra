@@ -103,12 +103,19 @@ class Host(object):
             click.style(self.name, *args, **kwargs),
         )
 
-    def _check_state(self):
-        if not self.state:
-            raise TypeError('Cannot call this function with no state!')
+    def noop(self, description):
+        '''
+        Log a description for a noop operation.
+        '''
+
+        logger.info('{0}noop: {1}'.format(self.print_prefix, description))
 
     # Connector proxy
     #
+
+    def _check_state(self):
+        if not self.state:
+            raise TypeError('Cannot call this function with no state!')
 
     def connect(self, for_fact=None, show_errors=True):
         self._check_state()
