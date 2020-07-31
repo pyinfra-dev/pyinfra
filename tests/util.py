@@ -143,6 +143,9 @@ class FakeHost(object):
     def print_prefix(self):
         return ''
 
+    def noop(self, description):
+        pass
+
 
 class FakeFile(object):
     _read = False
