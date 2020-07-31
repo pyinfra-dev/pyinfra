@@ -107,6 +107,7 @@ if __name__ == '__main__':
                 'local = pyinfra.api.connectors.local',
                 'mech = pyinfra.api.connectors.mech',
                 'ssh = pyinfra.api.connectors.ssh',
+                'dockerssh = pyinfra.api.connectors.dockerssh',
                 'vagrant = pyinfra.api.connectors.vagrant',
                 'winrm = pyinfra.api.connectors.winrm',
             ],
