@@ -82,23 +82,23 @@ def deploy(func_or_name, data_defaults=None):
     def decorated_func(*args, **kwargs):
         # State & host passed in as kwargs (API, nested op, @deploy op)
         if 'state' in kwargs and 'host' in kwargs:
-            state = kwargs.pop('state')
-            host = kwargs.pop('host')
+            state = kwargs['state']
+            host = kwargs['host']
 
         # State & host passed in as first two arguments (LEGACY)
         elif len(args) >= 2 and isinstance(args[0], State) and isinstance(args[1], Host):
             show_state_host_arguments_warning(get_call_location())
-            state = args[0]
-            host = args[1]
+            state = kwargs['state'] = args[0]
+            host = kwargs['host'] = args[1]
             args_copy = list(args)
             args = args_copy[2:]
 
         # Finally, still no state+host? Use pseudo if we're CLI mode, or fail
         elif pyinfra.is_cli:
-            state = pseudo_state._module
-            host = pseudo_host._module
+            state = kwargs['state'] = pseudo_state._module
+            host = kwargs['host'] = pseudo_host._module
 
-            if state.in_deploy:
+            if not state or not host or state.in_deploy:
                 raise PyinfraError((
                     'Nested deploy called without state/host: {0} ({1})'
                 ).format(func, get_call_location()))
@@ -125,6 +125,6 @@ def deploy(func_or_name, data_defaults=None):
 
         with state.deploy(deploy_name, deploy_kwargs, deploy_data, line_number):
             # Execute the deploy, passing state and host
-            func(state, host, *args, **kwargs)
+            func(*args, **kwargs)
 
     return decorated_func

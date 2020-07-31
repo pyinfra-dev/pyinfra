@@ -40,7 +40,7 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
     'jsontest==1.4',
     'coverage==4.5.4',
     'mock==3.0.5',
-    'codecov==2.0.15',
+    'codecov==2.1.8',
 
     # Linting
     'flake8==3.8.3',

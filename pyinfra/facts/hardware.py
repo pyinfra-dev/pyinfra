@@ -32,6 +32,7 @@ class Memory(FactBase):
         data = {}
 
         for line in output:
+            line = line.strip()
             value, key = line.split(' ', 1)
 
             try:
@@ -205,6 +206,8 @@ class NetworkDevices(FactBase):
         line_buffer = []
 
         for line in output:
+            line = line.strip()
+
             matched = False
 
             # Look for start lines
