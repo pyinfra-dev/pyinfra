@@ -112,7 +112,7 @@ We can reboot instances a couple of ways using adhoc commands (assuming *sudo* i
 
 ```sh
 # using server.reboot()
-pyinfra inventory.py service.reboot reboot_timeout=0 delay=0
+pyinfra inventory.py server.reboot reboot_timeout=0 delay=0
 
 # using exec
 pyinfra inventory.py exec -- reboot
