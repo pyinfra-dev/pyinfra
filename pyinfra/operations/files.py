@@ -97,13 +97,16 @@ def download(
 
         if sha1sum:
             # CHECK SHA1SUM MATCHES
-            pass
+            if sha1sum != host.fact.sha1_file(dest):
+                download = True
 
         if sha256sum:
-            pass
+            if sha256sum != host.fact.sha256_file(dest):
+                download = True
 
         if md5sum:
-            pass
+            if md5sum != host.fact.md5_file(dest):
+                download = True
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
