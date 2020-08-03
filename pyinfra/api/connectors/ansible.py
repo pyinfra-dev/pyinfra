@@ -40,6 +40,7 @@ def parse_inventory(inventory_filename):
 
     # host:set(groups) mapping
     host_to_groups = {}
+    vars_to_groups = {}
 
     if extension in ['ini']:
         host_to_groups = parse_inventory_ini(inventory_filename)
@@ -48,6 +49,7 @@ def parse_inventory(inventory_filename):
             inventory_tree = json.load(inventory_file)
             # close file early
         host_to_groups = parse_inventory_tree(inventory_tree)
+        vars_to_hosts = parse_inventory_tree_vars(inventory_tree)
     elif extension in ['yaml', 'yml']:
         if yaml is None:
             raise Exception((
@@ -58,15 +60,23 @@ def parse_inventory(inventory_filename):
             inventory_tree = yaml.safe_load(inventory_file)
             # close file early
         host_to_groups = parse_inventory_tree(inventory_tree)
+        vars_to_hosts = parse_inventory_tree_vars(inventory_tree)
+
     else:
         raise InventoryError((
             'Ansible inventory file format not supported: {0}'
         ).format(extension))
 
-    return [
-        (host, {}, sorted(list(host_to_groups.get(host))))
-        for host in host_to_groups
-    ]
+    l = list()
+    for host in host_to_groups:
+        l.append((host, vars_to_hosts.get(host), sorted(list(host_to_groups.get(host)))))
+
+    return l
+
+    # return [
+    #    (host, {}, sorted(list(host_to_groups.get(host))))
+    #    for host in host_to_groups
+    # ]
 
 
 def parse_inventory_ini(inventory_filename):
@@ -133,23 +143,46 @@ def _parse_ansible_hosts(hosts):
             yield host
 
 
-def parse_inventory_tree(inventory_tree, host_to_groups=dict(), group_stack=set()):
+def parse_inventory_tree(inventory_tree, host_to_groups=dict(), group_stack=set(), group_varz=dict()):
     for group in inventory_tree:
         # set logic adds tolerance for duplicate group names
         groups = group_stack.union({group})
 
+        if 'vars' in inventory_tree[group]:
+            group_varz[group] = inventory_tree[group]['vars']
+
         if 'hosts' in inventory_tree[group]:
             for host in inventory_tree[group]['hosts']:
-                append_groups_to_host(host, groups, host_to_groups)
+                append_groups_to_host(host, groups, host_to_groups, group_varz)
 
         if 'children' in inventory_tree[group]:
             # recursively parse inventory tree
-            parse_inventory_tree(inventory_tree[group]['children'], host_to_groups, groups)
+            parse_inventory_tree(inventory_tree[group]['children'], host_to_groups, groups, group_varz)
 
     return host_to_groups
 
 
-def append_groups_to_host(host, groups, host_to_groups):
+
+def parse_inventory_tree_vars(inventory_tree, host_to_groups=dict(), group_stack=set(), group_varz=dict()):
+    for group in inventory_tree:
+        # set logic adds tolerance for duplicate group names
+        groups = group_stack.union({group})
+
+
+        if 'hosts' in inventory_tree[group]:
+            for host in inventory_tree[group]['hosts']:
+                if 'vars' in inventory_tree[group]:
+                    group_varz[host] = inventory_tree[group]['vars']
+
+        if 'children' in inventory_tree[group]:
+            # recursively parse inventory tree
+            parse_inventory_tree_vars(inventory_tree[group]['children'], host_to_groups, groups, group_varz)
+
+    return group_varz
+
+
+
+def append_groups_to_host(host, groups, host_to_groups, group_varz):
     if host in host_to_groups:
         # set logic handles de-duplication
         host_to_groups[host] = host_to_groups[host].union(groups)
