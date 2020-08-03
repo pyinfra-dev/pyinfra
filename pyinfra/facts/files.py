@@ -157,8 +157,8 @@ class Sha256File(FactBase):
     def command(self, name):
         name = escape_unix_path(name)
         self.name = name
-        return "sha256sum {0} 2> /dev/null || shasum -a 256 {0} 2> /dev/null \
-                || sha256 {0}".format(name)
+        return 'sha256sum {0} 2> /dev/null || shasum -a 256 {0} 2> /dev/null \
+                || sha256 {0}'.format(name)
 
     def process(self, output):
         for regex in self._regexes:
@@ -183,7 +183,7 @@ class Md5File(FactBase):
     def command(self, name):
         name = escape_unix_path(name)
         self.name = name
-        return "md5sum {0} 2> /dev/null || md5 {0}".format(name)
+        return 'md5sum {0} 2> /dev/null || md5 {0}'.format(name)
 
     def process(self, output):
         for regex in self._regexes:
