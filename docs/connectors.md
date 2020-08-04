@@ -41,6 +41,20 @@ pyinfra @docker/alpine:3.8 ...
 pyinfra @docker/alpine:3.8,@docker/ubuntu:bionic ...
 ```
 
+## `@dockerssh`
+
+**Note**: this connector is in beta!
+
+The `@dockerssh` connector allows you to run commands on Docker containers on a remote machine.
+
+```sh
+# A Docker base image must be provided
+pyinfra @dockerssh/remotehost:alpine:3.8 ...
+
+# pyinfra can run on multiple Docker images in parallel
+pyinfra @dockerssh/remotehost:alpine:3.8,@dockerssh/remotehost:ubuntu:bionic ...
+```
+
 ## `@vagrant`
 
 The `@vagrant` connector reads the current Vagrant status and generates an inventory for any running VMs.
