@@ -224,6 +224,22 @@ def _run_server_op(state, host, op_hash):
     return False
 
 
+def _log_operation_start(op_meta):
+    op_types = []
+    if op_meta['serial']:
+        op_types.append('serial')
+    if op_meta['run_once']:
+        op_types.append('run once')
+
+    logger.info('{0} {1} {2}'.format(
+        click.style('--> Starting{0}operation:'.format(
+            ' {0} '.format(', '.join(op_types)) if op_types else ' ',
+        ), 'blue'),
+        click.style(', '.join(op_meta['names']), bold=True),
+        tuple(op_meta['args']) if op_meta['args'] else '',
+    ))
+
+
 def _run_server_ops(state, host, progress=None):
     '''
     Run all ops for a single server.
@@ -233,12 +249,7 @@ def _run_server_ops(state, host, progress=None):
 
     for op_hash in state.get_op_order():
         op_meta = state.op_meta[op_hash]
-
-        logger.info('--> {0} {1} on {2}'.format(
-            click.style('--> Starting operation:', 'blue'),
-            click.style(', '.join(op_meta['names']), bold=True),
-            click.style(host.name, bold=True),
-        ))
+        _log_operation_start(op_meta)
 
         result = _run_server_op(state, host, op_hash)
 
@@ -296,22 +307,7 @@ def _run_single_op(state, op_hash):
     '''
 
     op_meta = state.op_meta[op_hash]
-
-    op_types = []
-
-    if op_meta['serial']:
-        op_types.append('serial')
-
-    if op_meta['run_once']:
-        op_types.append('run once')
-
-    logger.info('{0} {1} {2}'.format(
-        click.style('--> Starting{0}operation:'.format(
-            ' {0} '.format(', '.join(op_types)) if op_types else ' ',
-        ), 'blue'),
-        click.style(', '.join(op_meta['names']), bold=True),
-        tuple(op_meta['args']) if op_meta['args'] else '',
-    ))
+    _log_operation_start(op_meta)
 
     failed_hosts = set()
 
@@ -387,5 +383,6 @@ def run_ops(state, serial=False, no_wait=False):
         _run_no_wait_ops(state)
 
     # Default: run all ops in order, waiting at each for all servers to complete
-    for op_hash in state.get_op_order():
-        _run_single_op(state, op_hash)
+    else:
+        for op_hash in state.get_op_order():
+            _run_single_op(state, op_hash)
