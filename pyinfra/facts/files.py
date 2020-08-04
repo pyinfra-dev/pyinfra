@@ -161,7 +161,7 @@ class Sha256File(FactBase):
             'sha256sum {0} 2> /dev/null '
             '|| shasum -a 256 {0} 2> /dev/null '
             '|| sha256 {0}'
-         ).format(name)
+        ).format(name)
 
     def process(self, output):
         for regex in self._regexes:
