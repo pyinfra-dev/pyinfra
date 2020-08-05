@@ -83,10 +83,14 @@ def add_op(state, op_func, *args, **kwargs):
     # appended to the operation order.
     kwargs['_line_number'] = len(state.op_meta)
 
-    results = {}
-
     kwargs['state'] = state
-    for host in state.inventory:
+
+    hosts = kwargs.pop('host', state.inventory)
+    if not isinstance(hosts, (list, tuple)):
+        hosts = [hosts]
+
+    results = {}
+    for host in hosts:
         kwargs['host'] = host
         results[host] = op_func(*args, **kwargs)
 
