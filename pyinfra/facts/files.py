@@ -138,7 +138,60 @@ class Sha1File(FactBase):
         for regex in self._regexes:
             regex = regex % self.name
             matches = re.match(regex, output[0])
+            if matches:
+                return matches.group(1)
 
+
+class Sha256File(FactBase):
+    '''
+    Returns a SHA256 hash of a file.
+    '''
+
+    use_default_on_error = True
+
+    _regexes = [
+        r'^([a-zA-Z0-9]{64})\s+%s$',
+        r'^SHA256\s+\(%s\)\s+=\s+([a-zA-Z0-9]{64})$',
+    ]
+
+    def command(self, name):
+        name = escape_unix_path(name)
+        self.name = name
+        return (
+            'sha256sum {0} 2> /dev/null '
+            '|| shasum -a 256 {0} 2> /dev/null '
+            '|| sha256 {0}'
+        ).format(name)
+
+    def process(self, output):
+        for regex in self._regexes:
+            regex = regex % self.name
+            matches = re.match(regex, output[0])
+            if matches:
+                return matches.group(1)
+
+
+class Md5File(FactBase):
+    '''
+    Returns an MD5 hash of a file.
+    '''
+
+    use_default_on_error = True
+
+    _regexes = [
+        r'^([a-zA-Z0-9]{32})\s+%s$',
+        r'^SHA256\s+\(%s\)\s+=\s+([a-zA-Z0-9]{32})$',
+    ]
+
+    def command(self, name):
+        name = escape_unix_path(name)
+        self.name = name
+        return 'md5sum {0} 2> /dev/null || md5 {0}'.format(name)
+
+    def process(self, output):
+        for regex in self._regexes:
+            regex = regex % self.name
+            matches = re.match(regex, output[0])
             if matches:
                 return matches.group(1)
 
