@@ -15,7 +15,6 @@ from pyinfra.operations import files, server  # noqa: E402
 from pyinfra_cli.prints import jsonify  # noqa: E402
 
 
-# Enable pyinfra logging
 class StateCallback(BaseStateCallback):
     @staticmethod
     def operation_start(state, op_hash):
@@ -30,6 +29,7 @@ logging.basicConfig(level=logging.CRITICAL)
 
 
 # Make our hosts and groups data (using the Vagrant connector in this case)
+print('Loading Vagrant config...')
 hosts = []
 groups = defaultdict(lambda: ([], {}))
 
@@ -63,27 +63,30 @@ connect_all(state)
 # Start adding operations
 print('Generating operations...')
 add_op(
-    state, server.user,
-    'pyinfra',
+    state,
+    server.user,
+    user='pyinfra',
     home='/home/pyinfra',
     shell='/bin/bash',
     sudo=True,
 )
 
 add_op(
-    state, server.group,
-    'pyinfra2',
+    state,
+    server.group,
+    group='pyinfra2',
     name='Ensure pyinfra2 group exists',
     sudo=True,
     # Add an op only to a subset of hosts
     # (in this case, the inventory.centos group)
-    hosts=inventory.get_group('centos'),
+    host=inventory.get_group('centos', default=[]),
 )
 
 # Ensure the state of files
 add_op(
-    state, files.file,
-    '/var/log/pyinfra.log',
+    state,
+    files.file,
+    path='/var/log/pyinfra.log',
     user='pyinfra',
     group='pyinfra',
     mode='644',
@@ -92,8 +95,9 @@ add_op(
 
 # Ensure the state of directories
 add_op(
-    state, files.directory,
-    '/tmp/email',
+    state,
+    files.directory,
+    path='/tmp/email',
     user='pyinfra',
     group='pyinfra',
     mode='755',
@@ -102,8 +106,10 @@ add_op(
 
 # Copy local files to remote host
 add_op(
-    state, files.put,
-    'files/file.txt', '/home/vagrant/file.txt',
+    state,
+    files.put,
+    src='files/motd',
+    dest='/home/vagrant/motd',
 )
 
 
