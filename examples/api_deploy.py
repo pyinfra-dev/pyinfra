@@ -5,7 +5,7 @@ import logging  # noqa: E402, I100
 
 from collections import defaultdict  # noqa: E402
 
-from pyinfra.api import Config, Inventory, State  # noqa: E402
+from pyinfra.api import BaseStateCallback, Config, Inventory, State  # noqa: E402
 from pyinfra.api.connect import connect_all  # noqa: E402
 from pyinfra.api.connectors.vagrant import make_names_data  # noqa: E402
 from pyinfra.api.facts import get_facts  # noqa: E402
@@ -16,8 +16,17 @@ from pyinfra_cli.prints import jsonify  # noqa: E402
 
 
 # Enable pyinfra logging
-logging.basicConfig(level=logging.WARNING)
-logging.getLogger('pyinfra').setLevel(logging.INFO)
+class StateCallback(BaseStateCallback):
+    @staticmethod
+    def operation_start(state, op_hash):
+        print('Start operation: {0}'.format(op_hash))
+
+    @staticmethod
+    def operation_end(state, op_hash):
+        print('End operation: {0}'.format(op_hash))
+
+
+logging.basicConfig(level=logging.CRITICAL)
 
 
 # Make our hosts and groups data (using the Vagrant connector in this case)
@@ -43,6 +52,7 @@ config = Config(
 
 # Setup the pyinfra state for this deploy
 state = State(inventory, config)
+state.add_callback_handler(StateCallback())
 
 
 # Connect to all the hosts
