@@ -29,6 +29,28 @@ except ImportError:
     MAX_PARALLEL = None
 
 
+class BaseStateCallback(object):
+    @staticmethod
+    def operation_start(state, op_hash):
+        pass
+
+    @staticmethod
+    def operation_host_start(state, host, op_hash):
+        pass
+
+    @staticmethod
+    def operation_host_success(state, host, op_hash):
+        pass
+
+    @staticmethod
+    def operation_host_error(state, host, op_hash):
+        pass
+
+    @staticmethod
+    def operation_end(state, op_hash):
+        pass
+
+
 class State(object):
     '''
     Manages state for a pyinfra deploy.
@@ -127,6 +149,8 @@ class State(object):
         # Actually initialise the state object
         #
 
+        self.callback_handlers = []
+
         # Setup greenlet pools
         self.pool = Pool(config.PARALLEL)
         self.fact_pool = Pool(config.PARALLEL)
@@ -211,6 +235,18 @@ class State(object):
             'meta': self.meta,
             'results': self.results,
         }
+
+    def add_callback_handler(self, handler):
+        if not isinstance(handler, BaseStateCallback):
+            raise TypeError((
+                '{0} is not a valid callback handler (use `BaseStateCallback`)'
+            ).format(handler))
+        self.callback_handlers.append(handler)
+
+    def trigger_callbacks(self, method_name, *args, **kwargs):
+        for handler in self.callback_handlers:
+            func = getattr(handler, method_name)
+            func(self, *args, **kwargs)
 
     @contextmanager
     def deploy(self, name, kwargs, data, line_number, in_deploy=True):
@@ -297,6 +333,12 @@ class State(object):
             line_numbers_to_hash[numbers]
             for numbers in sorted_line_numbers
         ]
+
+    def get_op_meta(self, op_hash):
+        return self.op_meta[op_hash]
+
+    def get_op_data(self, host, op_hash):
+        return self.ops[host][op_hash]
 
     def activate_host(self, host):
         '''

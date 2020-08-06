@@ -68,12 +68,14 @@ def _run_shell_command(state, host, command, op_meta, executor_kwargs):
 
 
 def _run_server_op(state, host, op_hash):
+    state.trigger_callbacks('operation_host_start', host, op_hash)
+
     if op_hash not in state.ops[host]:
         logger.info('{0}{1}'.format(host.print_prefix, click.style('Skipped', 'blue')))
         return True
 
-    op_data = state.ops[host][op_hash]
-    op_meta = state.op_meta[op_hash]
+    op_data = state.get_op_data(host, op_hash)
+    op_meta = state.get_op_meta(op_hash)
 
     ignore_errors = op_meta['ignore_errors']
 
@@ -99,6 +101,7 @@ def _run_server_op(state, host, op_hash):
             description='precondition failed: {0}'.format(precondition),
         )
         if not ignore_errors:
+            state.trigger_callbacks('operation_host_error', host, op_hash)
             return False
 
     state.ops_run.add(op_hash)
@@ -187,6 +190,7 @@ def _run_server_op(state, host, op_hash):
                 description='postcondition failed: {0}'.format(postcondition),
             )
             if not ignore_errors:
+                state.trigger_callbacks('operation_host_error', host, op_hash)
                 return False
 
         # Count success
@@ -205,6 +209,7 @@ def _run_server_op(state, host, op_hash):
         if op_meta['on_success']:
             op_meta['on_success'](state, host, op_hash)
 
+        state.trigger_callbacks('operation_host_success', host, op_hash)
         return True
 
     # Up error_ops & log
@@ -221,6 +226,7 @@ def _run_server_op(state, host, op_hash):
         state.results[host]['ops'] += 1
 
     # Unignored error -> False
+    state.trigger_callbacks('operation_host_error', host, op_hash)
     return False
 
 
@@ -248,7 +254,7 @@ def _run_server_ops(state, host, progress=None):
     logger.debug('Running all ops on {0}'.format(host))
 
     for op_hash in state.get_op_order():
-        op_meta = state.op_meta[op_hash]
+        op_meta = state.get_op_meta(op_hash)
         _log_operation_start(op_meta)
 
         result = _run_server_op(state, host, op_hash)
@@ -306,7 +312,9 @@ def _run_single_op(state, op_hash):
     Run a single operation for all servers. Can be configured to run in serial.
     '''
 
-    op_meta = state.op_meta[op_hash]
+    state.trigger_callbacks('operation_start', op_hash)
+
+    op_meta = state.get_op_meta(op_hash)
     _log_operation_start(op_meta)
 
     failed_hosts = set()
@@ -359,6 +367,8 @@ def _run_single_op(state, op_hash):
 
     if pyinfra.is_cli:
         click.echo(err=True)
+
+    state.trigger_callbacks('operation_end', op_hash)
 
 
 def run_ops(state, serial=False, no_wait=False):
