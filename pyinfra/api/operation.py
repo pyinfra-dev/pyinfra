@@ -19,6 +19,7 @@ from pyinfra import logger, pseudo_host, pseudo_state
 from .command import StringCommand
 from .exceptions import PyinfraError
 from .host import Host
+from .inventory import Inventory
 from .operation_kwargs import pop_global_op_kwargs
 from .state import State
 from .util import (
@@ -86,7 +87,7 @@ def add_op(state, op_func, *args, **kwargs):
     kwargs['state'] = state
 
     hosts = kwargs.pop('host', state.inventory)
-    if not isinstance(hosts, (list, tuple)):
+    if not isinstance(hosts, (list, tuple, Inventory)):
         hosts = [hosts]
 
     results = {}
