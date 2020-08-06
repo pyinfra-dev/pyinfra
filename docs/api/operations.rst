@@ -6,7 +6,11 @@ Operations are defined as Python functions. They are passed the current deploy s
 Input: reserved arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are a number of `global arguments <../deploys.html#global-arguments>`_ reserved for controlling how operations are executed. These cannot be used in operation functions. In addition to this, the *first* argument cannot accept ``set`` objects, as these will be removed for use as the operation name.
+There are a number of arguments ``pyinfra`` uses that cannot be used within operations:
+
++ All the `global operation arguments <../deploys.html#global-arguments>`_ are reserved for controlling how operations are executed
++ The arguments ``state``, ``host``, ``frameinfo`` and ``_line_number`` are reserved for internal use within ``pyinfra``
++ The *first* argument cannot accept ``set`` objects, as these will be removed for use as the operation name (this is legacy support for 0.x and will be removed in v2)
 
 Output: commands
 ~~~~~~~~~~~~~~~~
