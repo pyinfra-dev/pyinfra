@@ -135,12 +135,10 @@ def write_stdin(stdin, buffer):
 
 
 def get_sudo_password(state, host, use_sudo_password, run_shell_command, put_file):
-    filename = state.get_temp_filename(SUDO_ASKPASS_EXE_FILENAME, hash_filename=False)
-
     sudo_askpass_uploaded = host.connector_data.get('sudo_askpass_uploaded', False)
     if not sudo_askpass_uploaded:
-        put_file(state, host, SUDO_ASKPASS_EXE, filename)
-        run_shell_command(state, host, 'chmod +x {0}'.format(filename))
+        put_file(state, host, SUDO_ASKPASS_EXE, SUDO_ASKPASS_EXE_FILENAME)
+        run_shell_command(state, host, 'chmod +x {0}'.format(SUDO_ASKPASS_EXE_FILENAME))
         host.connector_data['sudo_askpass_uploaded'] = True
 
     if use_sudo_password is True:
@@ -151,7 +149,7 @@ def get_sudo_password(state, host, use_sudo_password, run_shell_command, put_fil
     else:
         sudo_password = use_sudo_password
 
-    return (filename, sudo_password)
+    return (SUDO_ASKPASS_EXE_FILENAME, sudo_password)
 
 
 def make_unix_command(
