@@ -21,6 +21,7 @@ Submodules
    pyinfra.api.connectors.ansible
    pyinfra.api.connectors.chroot
    pyinfra.api.connectors.docker
+   pyinfra.api.connectors.dockerssh
    pyinfra.api.connectors.local
    pyinfra.api.connectors.mech
    pyinfra.api.connectors.ssh
