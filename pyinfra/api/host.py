@@ -134,6 +134,7 @@ class Host(object):
                     )
 
                 logger.info(log_message)
+                self.state.trigger_callbacks('host_connect', self)
 
         return self.connection
 
@@ -143,6 +144,8 @@ class Host(object):
         disconnect_func = getattr(self.executor, 'disconnect', None)
         if disconnect_func:
             return disconnect_func(self.state, self)
+
+        self.state.trigger_callbacks('host_disconnect', self)
 
     def run_shell_command(self, *args, **kwargs):
         self._check_state()

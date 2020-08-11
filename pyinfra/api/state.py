@@ -30,6 +30,20 @@ except ImportError:
 
 
 class BaseStateCallback(object):
+    # Host callbacks
+    #
+
+    @staticmethod
+    def host_connect(state, host):
+        pass
+
+    @staticmethod
+    def host_disconnect(state, host):
+        pass
+
+    # Operation callbacks
+    #
+
     @staticmethod
     def operation_start(state, op_hash):
         pass

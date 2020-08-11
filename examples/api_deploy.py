@@ -17,6 +17,10 @@ from pyinfra_cli.prints import jsonify  # noqa: E402
 
 class StateCallback(BaseStateCallback):
     @staticmethod
+    def host_connect(state, host):
+        print('Host connected: {0}'.format(host))
+
+    @staticmethod
     def operation_start(state, op_hash):
         print('Start operation: {0}'.format(op_hash))
 
