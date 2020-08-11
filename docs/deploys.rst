@@ -47,7 +47,7 @@ An example layout:
 Inventory
 ---------
 
-Inventory files contain groups of hosts. Groups are defined as a list or tuple of hosts. For example, this inventory creates two groups, "app_servers" and "db_servers":
+Inventory files contain groups of hosts. Groups are defined as a list of hosts. For example, this inventory creates two groups, ``app_servers`` and ``db_servers``:
 
 .. code:: python
 
@@ -64,18 +64,19 @@ Inventory files contain groups of hosts. Groups are defined as a list or tuple o
         'db-3.net'
     ]
 
-**In addition to the groups defined in the inventory, all the hosts are added to two more groups: "all" and the name of the inventory file, in this case "production"**. Both can be overriden by defining them in the inventory.
+.. Important::
+    In addition to the groups defined in the inventory, all the hosts are added to two more groups: ``all`` and the name of the inventory file, in this case ``production``. Both can be overriden by defining them in the inventory.
 
 
 .. _data-ref-label:
 
 Data
-----
+~~~~
 
 Data allows you to separate deploy variables from the deploy script. With data per host and per group, you can easily build deploys that satisfy multiple environments. The :doc:`data example deploy <examples/data_multiple_environments>` shows this in action.
 
 Host Data
-~~~~~~~~~
+*********
 
 Arbitrary data can be assigned in the inventory and used at deploy-time. You just pass a tuple ``(hostname, data)`` instead of just the hostname:
 
@@ -89,7 +90,7 @@ Arbitrary data can be assigned in the inventory and used at deploy-time. You jus
     ]
 
 Group Data
-~~~~~~~~~~
+**********
 
 Group data files can be used to attach data to groups of host. They are placed in ``group_data/<group_name>.py``. This means ``group_data/all.py`` can be used to attach data to all hosts.
 
@@ -103,7 +104,7 @@ Data files are just Python, any core types will be included:
     app_dir = '/opt/myapp'
 
 Authenticating with Data
-~~~~~~~~~~~~~~~~~~~~~~~~
+************************
 
 Instead of passing ``--key``, ``--user``, etc to the CLI, or running a SSH agent, you can define these details within host and group data. The attributes available:
 
@@ -116,7 +117,7 @@ Instead of passing ``--key``, ``--user``, etc to the CLI, or running a SSH agent
     # ssh_password = 'Using password authorization is bad. Preferred option is ssh_key.'
 
 Data Hierarchy
-~~~~~~~~~~~~~~
+**************
 
 The same keys can be defined for host and group data - this means we can set a default in *all.py* and override it on a group or host basis. When accessing data, the first match in the following is returned:
 
@@ -173,8 +174,13 @@ In addition to each operations having its own arguments, there are a number of k
 
 .. include:: _deploy_globals.rst
 
-Using Data
-~~~~~~~~~~
+Data & Facts
+~~~~~~~~~~~~
+
+Both data (supplied by the user as part of the inventory) and facts (information about the target host) are often used in operation arguments or as conditional statements (``if ...``).
+
+Data
+****
 
 Adding data to inventories was :ref:`described above <data-ref-label>` - you can access it within a deploy on ``host.data``:
 
@@ -190,27 +196,8 @@ Adding data to inventories was :ref:`described above <data-ref-label>` - you can
         home=host.data.app_dir,
     )
 
-Operation Meta
-~~~~~~~~~~~~~~
-
-Operation meta can be used during a deploy to change the desired operations:
-
-.. code:: python
-
-    from pyinfra.operations import server
-
-    # Run an operation, collecting its meta output
-    create_user = server.user(
-        name='Create user myuser',
-        user='myuser',
-    }
-
-    # If we added a user above, do something extra
-    if create_user.changed:
-        server.shell( # add user to sudo, etc...
-
 Facts
-~~~~~
+*****
 
 Facts allow you to use information about the target host to change the operations you use. A good example is switching between `apt` & `yum` depending on the Linux distribution. Like data, facts are accessed using ``host.fact``:
 
@@ -228,8 +215,27 @@ Facts allow you to use information about the target host to change the operation
 
 Some facts also take a single argument like the ``directory`` or ``file`` facts. The :doc:`facts index <./facts>` lists the available facts and their arguments.
 
-Includes
-~~~~~~~~
+Operation Meta
+~~~~~~~~~~~~~~
+
+All operations return an operation meta object which provides information about the changes the operation will execute. This can be used for subsequent operations:
+
+.. code:: python
+
+    from pyinfra.operations import server
+
+    # Run an operation, collecting its meta output
+    create_user = server.user(
+        name='Create user myuser',
+        user='myuser',
+    }
+
+    # If we added a user above, do something extra
+    if create_user.changed:
+        server.shell( # add user to sudo, etc...
+
+Includes / Nested operations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Including files can be used to break out operations into multiple files, often referred to as tasks. Files can be included using ``local.include``.
 
@@ -241,6 +247,9 @@ Including files can be used to break out operations into multiple files, often r
     local.include('tasks/install_something.py')
 
 See more in :doc:`examples: groups & roles <./examples/groups_roles>`.
+
+.. Important::
+    It is also possible to bundle operations into Python functions - this requires a slightly different syntax to maintain correct operation order; see :doc:`packaging deploys <./api/deploys>` for more information.
 
 
 Config
