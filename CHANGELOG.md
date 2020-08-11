@@ -1,3 +1,23 @@
+# v1.1.dev0
+
+This is a big release with some major additions & improvements on `v1`:
+
++ Add `@dockerssh` connector that enables pyinfra to **build Docker containers on remote machines over SSH** (@charles-l)
++ Add global `precondition` and `postcondition` operation arguments
++ Implement state callback classes dramatically improving the API experience (see `examples/api_deploy.py`)
++ Start modifying facts during fact gathering phase, resolving common issues with interdependent operations, expand documentation on this (see: https://docs.pyinfra.com/en/latest/deploy_process.html#interdependent-operations)
+
+Smaller bits:
+
++ Validate existing files in `file.download` with checksum arguments (@sysadmin75)
++ Stop stripping fact output (fixes `command` fact, @sysadmin75)
++ Add `--use-sudo-password` CLI argument
++ Fix using sudo password with a SSH user that doesn't have access to `/tmp`
++ Fix `python.call` docstring (@leahneukirchen)
++ Fix `--serial` and `--no-wait` executing operations twice
++ Improve autocomplete/intellisense handling of pseudo modules `pyinfra.[host|state|inventory]`
+
+
 # v1.0.4
 
 + Add `selinux` fact (@FooBarQuaxx)
