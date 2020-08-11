@@ -107,6 +107,10 @@ def _print_support(ctx, param, value):
     help='Whether to execute operations with sudo.',
 )
 @click.option('--sudo-user', help='Which user to sudo when sudoing.')
+@click.option(
+    '--use-sudo-password', is_flag=True, default=False,
+    help='Whether to use a password with sudo.',
+)
 @click.option('--su-user', help='Which user to su to.')
 @click.option('--parallel', type=int, help='Number of operations to run in parallel.')
 @click.option('--fail-percent', type=int, help='% of hosts allowed to fail.')
@@ -248,7 +252,7 @@ def _main(
     user, port, key, key_password, password,
     winrm_username, winrm_password, winrm_port,
     shell_executable,
-    sudo, sudo_user, su_user,
+    sudo, sudo_user, use_sudo_password, su_user,
     parallel, fail_percent,
     dry, limit, no_wait, serial, quiet,
     debug, debug_data, debug_facts, debug_operations,
@@ -406,6 +410,9 @@ def _main(
         config.SUDO = True
         if sudo_user:
             config.SUDO_USER = sudo_user
+
+        if use_sudo_password:
+            config.USE_SUDO_PASSWORD = use_sudo_password
 
     if su_user:
         config.SU_USER = su_user
