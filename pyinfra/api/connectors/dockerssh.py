@@ -1,3 +1,4 @@
+from os import unlink
 from tempfile import mkstemp
 
 import click
@@ -177,8 +178,12 @@ def put_file(
             print_input=print_input,
         )
     finally:
-        remote_remove(state, host, temp_filename, print_output=print_output,
-                      print_input=print_input)
+        unlink(temp_filename)
+        remote_remove(
+            state, host, temp_filename,
+            print_output=print_output,
+            print_input=print_input,
+        )
 
     if not status:
         raise IOError('\n'.join(stderr))
