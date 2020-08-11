@@ -14,7 +14,7 @@ from pyinfra.api import deploy
 from pyinfra.operations import apt
 
 @deploy('Install MariaDB')
-def install_mariadb(state, host):
+def install_mariadb(state=None, host=None):
     apt.packages(
         name='Install MariaDB apt package',
         packages=['mariadb-server'],
@@ -54,7 +54,7 @@ DEFAULTS = {
 }
 
 @deploy('Install mariadb', data_defaults=DEFAULTS)
-def install_mariadb(state, host):
+def install_mariadb(state=None, host=None):
     if not host.data.mariadb_version:
         raise DeployError(
             'No mariadb_version set for this host, refusing to install mariadb!',
