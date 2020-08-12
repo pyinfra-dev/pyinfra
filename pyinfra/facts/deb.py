@@ -47,6 +47,7 @@ class DebPackage(FactBase):
         data = {}
 
         for line in output:
+            line = line.strip()
             for key, regex in six.iteritems(self._regexes):
                 matches = re.match(regex, line)
                 if matches:
