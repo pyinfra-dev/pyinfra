@@ -38,6 +38,7 @@ class SystemdStatus(FactBase):
         services = {}
 
         for line in output:
+            line = line.strip()
             matches = re.match(self.regex, line)
             if matches:
                 services[matches.group(1)] = matches.group(2) == 'running'
