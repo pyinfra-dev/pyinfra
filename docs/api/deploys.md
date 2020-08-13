@@ -7,7 +7,7 @@ Deploys are usually defined by the user (see [writing deploys](../deploys)). It 
 Packaging a deploy essentially requires two changes from the usual deploy code:
 
 + Wrap everything in a function, itself decorated with `@deploy(NAME)`
-+ Include `state` and `host` as keyword arguments to all operation calls
++ Pass `state` and `host` as keyword arguments to all operation calls
 
 ```py
 from pyinfra.api import deploy
@@ -30,7 +30,10 @@ from packaged_deploy import install_mariadb
 install_mariadb()
 ```
 
-See the [`pyinfra-docker`](https://github.com/Fizzadar/pyinfra-docker) repository for an example of a packaged deploy.
+## Examples
+
++ [`pyinfra-docker`](https://github.com/Fizzadar/pyinfra-docker) is a basic, no argument deploy that simply installs Docker
++ [`pyinfra-prometheus`](https://github.com/grantstephens/pyinfra-prometheus) is a more complex package containing multiple deploys that can be used to install Prometheus instances and various exporter services
 
 ## Global Arguments
 
@@ -47,17 +50,19 @@ install_mariadb(sudo=True)
 Deploys can define their own set of data defaults. Any user provided host or group data with the same name will take precedent. This enables deploys to provide their own sensible default options and enable end-users to customise this by modifying group/host data.
 
 ```py
-from pyinfra.api import deploy, DeployError
+from pyinfra.api import deploy
+from pyinfra.operations import apt
 
 DEFAULTS = {
-    'etcd_version': '1.2.3',
+    'mariadb_version': '1.2.3',
 }
 
 @deploy('Install mariadb', data_defaults=DEFAULTS)
 def install_mariadb(state=None, host=None):
-    if not host.data.mariadb_version:
-        raise DeployError(
-            'No mariadb_version set for this host, refusing to install mariadb!',
-        )
-    ...
+    apt.packages(
+        name='Install MariaDB apt package',
+        packages=[f'mariadb-server={host.data.mariadb_version}'],
+        state=state,
+        host=host,
+    )
 ```
