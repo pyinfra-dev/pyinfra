@@ -27,9 +27,10 @@ class PyinfraCommand(object):
 
 
 class StringCommand(PyinfraCommand):
-    def __init__(self, *bits, **kwargs):
+    def __init__(self, *bits, separator=' ', **kwargs):
         super(StringCommand, self).__init__(**kwargs)
         self.bits = bits
+        self.separator = separator
 
     def __str__(self):
         return self.get_masked_value()
@@ -57,10 +58,12 @@ class StringCommand(PyinfraCommand):
         return all_bits
 
     def get_raw_value(self):
-        return ' '.join(self._get_all_bits(lambda bit: bit.get_raw_value()))
+        return self.separator.join(self._get_all_bits(
+            lambda bit: bit.get_raw_value(),
+        ))
 
     def get_masked_value(self):
-        return ' '.join([
+        return self.separator.join([
             '***' if isinstance(bit, MaskString) else bit
             for bit in self._get_all_bits(lambda bit: bit.get_masked_value())
         ])
