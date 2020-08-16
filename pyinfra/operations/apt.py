@@ -290,8 +290,8 @@ _upgrade = upgrade  # noqa: E305 (for use below where update is a kwarg)
 def packages(
     packages=None, present=True, latest=False,
     update=False, cache_time=None, upgrade=False,
-    force=False, no_recommends=False,
-    allow_downgrades=False,
+    force=False, no_recommends=False, allow_downgrades=False,
+    extra_install_args=None, extra_uninstall_args=None,
     state=None, host=None,
 ):
     '''
@@ -306,6 +306,8 @@ def packages(
     + force: whether to force package installs by passing `--force-yes` to apt
     + no_recommends: don't install recommended packages
     + allow_downgrades: allow downgrading packages with version (--allow-downgrades)
+    + extra_install_args: additional arguments to the apt install command
+    + extra_uninstall_args: additional arguments to the apt uninstall command
 
     Versions:
         Package versions can be pinned like apt: ``<pkg>=<version>``
@@ -347,18 +349,31 @@ def packages(
     if upgrade:
         yield _upgrade(state=state, host=host)
 
-    install_command = 'install'
+    install_command = ['install']
     if no_recommends is True:
-        install_command += ' --no-install-recommends'
+        install_command.append('--no-install-recommends')
     if allow_downgrades:
-        install_command += ' --allow-downgrades'
+        install_command.append('--allow-downgrades')
+
+    upgrade_command = ' '.join(install_command)
+
+    if extra_install_args:
+        install_command.append(extra_install_args)
+
+    install_command = ' '.join(install_command)
+
+    uninstall_command = ['remove']
+    if extra_uninstall_args:
+        uninstall_command.append(extra_uninstall_args)
+
+    uninstall_command = ' '.join(uninstall_command)
 
     # Compare/ensure packages are present/not
     yield ensure_packages(
         packages, host.fact.deb_packages, present,
         install_command=noninteractive_apt(install_command, force=force),
-        uninstall_command=noninteractive_apt('remove', force=force),
-        upgrade_command=noninteractive_apt(install_command, force=force),
+        uninstall_command=noninteractive_apt(uninstall_command, force=force),
+        upgrade_command=noninteractive_apt(upgrade_command, force=force),
         version_join='=',
         latest=latest,
     )

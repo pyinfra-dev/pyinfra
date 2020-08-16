@@ -1,0 +1,12 @@
+{
+    "args": ["git"],
+    "kwargs": {
+        "extra_install_args": "--extra-install-arg"
+    },
+    "facts": {
+        "deb_packages": {}
+    },
+    "commands": [
+        "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" install --extra-install-arg git"
+    ]
+}
