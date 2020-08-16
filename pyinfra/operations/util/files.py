@@ -30,7 +30,7 @@ def ensure_whole_line_match(line):
     return line
 
 
-def _get_timestamp():
+def get_timestamp():
     return datetime.now().strftime('%y%m%d%H%M')
 
 
@@ -46,7 +46,7 @@ def sed_replace(
 
     line = line.replace('/', r'\/')
     replace = replace.replace('/', r'\/')
-    backup_extension = _get_timestamp()
+    backup_extension = get_timestamp()
 
     string_to_format = (
         'sed -i.{backup_extension} "s/{0}/{1}/{2}" {3}'

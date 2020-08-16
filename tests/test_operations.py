@@ -29,7 +29,8 @@ def make_operation_tests(arg):
     op = getattr(module, op_name)
 
     # Generate a test class
-    @patch('pyinfra.operations.util.files._get_timestamp', lambda: 'a-timestamp')
+    @patch('pyinfra.operations.files.get_timestamp', lambda: 'a-timestamp')
+    @patch('pyinfra.operations.util.files.get_timestamp', lambda: 'a-timestamp')
     @six.add_metaclass(JsonTest)
     class TestTests(TestCase):
         jsontest_files = path.join('tests', 'operations', arg)

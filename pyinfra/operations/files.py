@@ -31,6 +31,7 @@ from .util.files import (
     chown,
     ensure_mode_int,
     ensure_whole_line_match,
+    get_timestamp,
     sed_replace,
 )
 
@@ -243,10 +244,14 @@ def line(
         replace = ''
 
     # Save commands for re-use in dynamic script when file not present at fact stage
+    make_backup_command = ''
+    if backup:
+        make_backup_command = 'cp {0} {0}.{1} && '.format(path, get_timestamp())
+
     echo_command = (
-        'echo "{0}" >> {1}'.format(line, path)
+        '{0}echo "{1}" >> {2}'.format(make_backup_command, line, path)
         if interpolate_variables else
-        "echo '{0}' >> {1}".format(line, path)
+        "{0}echo '{1}' >> {2}".format(make_backup_command, line, path)
     )
     sed_replace_command = sed_replace(
         path, match_line, replace,
