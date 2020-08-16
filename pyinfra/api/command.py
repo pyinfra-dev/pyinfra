@@ -94,4 +94,8 @@ class FunctionCommand(PyinfraCommand):
         self.kwargs = func_kwargs
 
     def __repr__(self):
-        return 'FunctionCommand({0})'.format(self.function.__name__)
+        return 'FunctionCommand({0}, {1}, {2})'.format(
+            self.function.__name__,
+            self.args,
+            self.kwargs,
+        )
