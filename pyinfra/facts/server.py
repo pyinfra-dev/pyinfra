@@ -198,6 +198,7 @@ class LsbRelease(FactBase):
         }
     '''
 
+    use_default_on_error = True
     command = 'lsb_release -ca'
 
     @staticmethod
