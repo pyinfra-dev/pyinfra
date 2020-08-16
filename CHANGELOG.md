@@ -1,6 +1,8 @@
-# v1.1.dev0
+# v1.1.dev1
 
-This is a big release with some major additions & improvements on `v1`:
+This is a big release with some major additions & improvements on `v1`, especially around API usage and packaing deploys using the `@deploy` decorator.
+
+What's new:
 
 + Add `@dockerssh` connector that enables pyinfra to **build Docker containers on remote machines over SSH** (@charles-l)
 + Add global `precondition` and `postcondition` operation arguments
@@ -15,6 +17,7 @@ Smaller bits:
 
 + Validate existing files in `file.download` with checksum arguments (@sysadmin75)
 + Stop stripping fact output (fixes `command` fact, @sysadmin75)
++ Add `extra_install_args` and `extra_uninstall_args` kwargs to `apt.packages` operation
 + Add `--use-sudo-password` CLI argument
 + Fix using sudo password with a SSH user that doesn't have access to `/tmp`
 + Fix `python.call` docstring (@leahneukirchen)
