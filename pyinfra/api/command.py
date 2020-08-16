@@ -27,10 +27,10 @@ class PyinfraCommand(object):
 
 
 class StringCommand(PyinfraCommand):
-    def __init__(self, *bits, separator=' ', **kwargs):
+    def __init__(self, *bits, **kwargs):
         super(StringCommand, self).__init__(**kwargs)
         self.bits = bits
-        self.separator = separator
+        self.separator = kwargs.pop('separator', ' ')
 
     def __str__(self):
         return self.get_masked_value()
