@@ -97,7 +97,6 @@ def download(
                 download = True
 
         if sha1sum:
-            # CHECK SHA1SUM MATCHES
             if sha1sum != host.fact.sha1_file(dest):
                 download = True
 
