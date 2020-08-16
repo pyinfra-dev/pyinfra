@@ -126,7 +126,7 @@ _update = update  # noqa: E305 (for use below where update is a kwarg)
 def packages(
     packages=None,
     present=True, latest=False, update=False, clean=False, nobest=False,
-    extra_install_args='', extra_uninstall_args='',
+    extra_install_args=None, extra_uninstall_args=None,
     state=None, host=None,
 ):
     '''
@@ -142,7 +142,7 @@ def packages(
     + extra_uninstall_args: additional arguments to the dnf uninstall command
 
     Versions:
-        Package versions can be pinned like dnf: ``<pkg>-<version>``
+        Package versions can be pinned as follows: ``<pkg>=<version>``
 
     Examples:
 
@@ -169,21 +169,24 @@ def packages(
     if update:
         yield _update(state=state, host=host)
 
-    nobest_option = ''
+    install_command = ['dnf', 'install', '-y']
+
     if nobest:
-        nobest_option = ' --nobest'
+        install_command.append('--nobest')
 
-    if extra_install_args != '':
-        extra_install_args = ' ' + extra_install_args
+    if extra_install_args:
+        install_command.append(extra_install_args)
 
-    if extra_uninstall_args != '':
-        extra_uninstall_args = ' ' + extra_uninstall_args
+    uninstall_command = ['dnf', 'remove', '-y']
+
+    if extra_uninstall_args:
+        uninstall_command.append(extra_uninstall_args)
 
     yield ensure_packages(
         packages, host.fact.rpm_packages, present,
-        install_command='dnf install -y' + nobest_option + extra_install_args,
-        uninstall_command='dnf remove -y' + extra_uninstall_args,
+        install_command=' '.join(install_command),
+        uninstall_command=' '.join(uninstall_command),
         upgrade_command='dnf update -y',
-        version_join='-',
+        version_join='=',
         latest=latest,
     )

@@ -7,6 +7,10 @@ This is a big release with some major additions & improvements on `v1`:
 + Implement state callback classes dramatically improving the API experience (see `examples/api_deploy.py`)
 + Start modifying facts during fact gathering phase, resolving common issues with interdependent operations, expand documentation on this (see: https://docs.pyinfra.com/en/latest/deploy_process.html#interdependent-operations)
 
+Notable change:
+
+The `yum.packages` and `dnf.packages` operations have _changed_ their "version join" string value - both package managers use `-` to join name + version while allowing `-` in the name. This leads to ambiguous behaviour for packages containing dashes, as such the version join value has been changed to `=`. This means to specify a specific version of a yum/dnf package you should use `<name>=<version>` rather than `<name>-<version>`
+
 Smaller bits:
 
 + Validate existing files in `file.download` with checksum arguments (@sysadmin75)
