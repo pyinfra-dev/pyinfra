@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from pyinfra.api import operation
 
 from . import files
-from .util.packaging import ensure_packages, ensure_rpm, ensure_zypper_repo
+from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 from .yum import key as yum_key
 
 key = yum_key
@@ -18,7 +18,7 @@ def repo(
     enabled=True,
     gpgcheck=True,
     gpgkey=None,
-    type=None,
+    type='rpm-md',
     state=None,
     host=None,
 ):
@@ -57,7 +57,7 @@ def repo(
         )
     '''
 
-    yield ensure_zypper_repo(
+    yield ensure_yum_repo(
         state,
         host,
         files,
@@ -68,7 +68,8 @@ def repo(
         enabled,
         gpgcheck,
         gpgkey,
-        type,
+        type_=type,
+        repo_directory='/etc/zypp/repos.d/',
     )
 
 

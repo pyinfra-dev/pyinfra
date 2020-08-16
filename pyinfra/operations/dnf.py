@@ -81,7 +81,6 @@ def repo(
     yield ensure_yum_repo(
         state, host, files,
         src, baseurl, present, description, enabled, gpgcheck, gpgkey,
-        'dnf-config-manager',
     )
 
 
