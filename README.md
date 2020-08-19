@@ -13,11 +13,11 @@
 
 pyinfra automates/provisions/manages/deploys infrastructure super fast at massive scale. It can be used for ad-hoc command execution, service deployment, configuration management and more. Core design features include:
 
-+ 🚀 **Super fast** execution over thousands of targets with predictable performance.
-+ 🚨 **Instant debugging** with stdout + stderr output on error, and `-v` to print it always.
-+ 💻 **Agentless execution** by speaking native SSH/Docker/subprocess depending on the target.
-+ ❗️ **Two stage process** that enables `--dry` runs before making any changes.
++ 🚀 **Super fast** execution over thousands of hosts with predictable performance.
++ 🚨 **Instant debugging** with stdout & stderr output on error or as required (`-v`|`-vv`|`-vvv`).
 + 📦 **Extendable** with _any_ Python package as configured & written in standard Python.
++ 💻 **Agentless execution** against SSH/Docker/subprocess/winrm hosts.
++ ❗️ **Two stage process** that enables `--dry` runs before executing any changes.
 + 🔌 **Integrated** with Docker, Vagrant/Mech & Ansible out of the box.
 
 When you run pyinfra you'll see something like ([non animated version](https://raw.githubusercontent.com/Fizzadar/pyinfra/master/docs/static/example_deploy.png)):
