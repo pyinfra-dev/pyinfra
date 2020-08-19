@@ -108,7 +108,8 @@ class Host(object):
         Log a description for a noop operation.
         '''
 
-        logger.info('{0}noop: {1}'.format(self.print_prefix, description))
+        handler = logger.info if self.state.print_noop_info else logger.debug
+        handler('{0}noop: {1}'.format(self.print_prefix, description))
 
     # Connector proxy
     #

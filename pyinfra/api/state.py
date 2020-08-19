@@ -99,13 +99,12 @@ class State(object):
     deploy_data = None
     deploy_line_numbers = None
 
-    # Flags for printing
-    print_output = False  # print output from the actual deploy (-v)
+    print_noop_info = False  # print "[host] noop: reason for noop"
+    print_fact_info = False  # print "loaded fact X"
     print_input = False
-
-    print_fact_info = False  # log fact gathering as INFO > DEBUG (-v)
-    print_fact_output = False  # print output from facts (-vv)
     print_fact_input = False
+    print_output = False
+    print_fact_output = False
 
     # Used in CLI
     deploy_dir = None  # base directory for locating files/templates/etc

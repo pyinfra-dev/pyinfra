@@ -31,8 +31,9 @@ class TestOperationsApi(PatchSSHTestCase):
 
         # Enable printing on this test to catch any exceptions in the formatting
         state.print_output = True
+        state.print_input = True
         state.print_fact_info = True
-        state.print_fact_output = True
+        state.print_noop_info = True
 
         connect_all(state)
 

@@ -5,7 +5,7 @@
 
 ## CLI arguments & options
 
-As described in the [getting started page](./getting_started), ``pyinfra`` needs an **inventory** and some **operations**. These are used with the CLI as below:
+As described in the [getting started page](./getting_started), `pyinfra` needs an **inventory** and some **operations**. These are used with the CLI as below:
 
 ```sh
 Usage: pyinfra [OPTIONS] INVENTORY OPERATIONS...
@@ -35,35 +35,17 @@ pyinfra INVENTORY all-facts
 pyinfra INVENTORY debug-inventory
 ```
 
-### Options
+## Verbosity
 
-```sh
-Options:
-  -v                      Print std[out|err] from operations/facts.
-  --user TEXT             SSH user to connect as.
-  --port INTEGER          SSH port to connect to.
-  --key PATH              Private key filename.
-  --key-password TEXT     Privte key password.
-  --password TEXT         SSH password.
-  --sudo                  Whether to execute operations with sudo.
-  --sudo-user TEXT        Which user to sudo when sudoing.
-  --su-user TEXT          Which user to su to.
-  --parallel INTEGER      Number of operations to run in parallel.
-  --fail-percent INTEGER  % of hosts allowed to fail.
-  --dry                   Don't execute operations on the target hosts.
-  --limit TEXT            Restrict the target hosts by name and group name.
-  --no-wait               Don't wait between operations for hosts to complete.
-  --serial                Run operations in serial, host by host.
-  --facts                 Print available facts list and exit.
-  --operations            Print available operations list and exit.
-  --version               Show the version and exit.
-  --help                  Show this message and exit.
-```
+By default `pyinfra` only prints high level information (this host connected, this operation started), this can be increased as follows:
 
++ `-v`: print out facts collected as well as noop information (package X already installed)
++ `-vv`: as above plus print shell input to the remote host
++ `-vvv` as above plus print shell output from the remote host
 
 ## Ad-hoc command execution
 
-pyinfra can execute shell commands on remote hosts by using ``pyinfra exec``. For example:
+pyinfra can execute shell commands on remote hosts by using `pyinfra exec`. For example:
 
 ```sh
 pyinfra inventory.py exec -- my_command_goes_here --some-argument

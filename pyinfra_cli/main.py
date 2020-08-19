@@ -91,7 +91,7 @@ def _print_support(ctx, param, value):
 @click.option(
     'verbosity', '-v',
     count=True,
-    help='Print std[out|err] from operations/facts.',
+    help='Print meta (-v), input (-vv) and output (-vvv).',
 )
 @click.option('--user', help='SSH user to connect as.')
 @click.option('--shell-executable', help='shell to use (ex: "sh", "cmd", "ps")')
@@ -316,16 +316,15 @@ def _main(
     state = State()
     pseudo_state.set(state)
 
-    # Setup printing on the new state
-    print_operation_io = verbosity > 0
-    print_fact_io = verbosity > 1
+    if verbosity > 0:
+        state.print_fact_info = True
+        state.print_noop_info = True
 
-    state.print_output = print_operation_io  # -v
-    state.print_input = print_operation_io  # -v
-    state.print_fact_info = print_operation_io  # -v
+    if verbosity > 1:
+        state.print_input = state.print_fact_input = True
 
-    state.print_fact_output = print_fact_io  # -vv
-    state.print_fact_input = print_fact_io  # -vv
+    if verbosity > 2:
+        state.print_output = state.print_fact_output = True
 
     if not quiet:
         click.echo('--> Loading config...', err=True)
@@ -490,13 +489,7 @@ def _main(
             click.echo(err=True)
             click.echo('--> Gathering facts...', err=True)
 
-        # Print facts as we get them
         state.print_fact_info = True
-
-        # Print fact output with -v
-        state.print_fact_output = print_operation_io
-        state.print_fact_input = print_operation_io
-
         fact_data = {}
 
         for i, command in enumerate(operations):
