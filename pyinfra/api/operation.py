@@ -72,6 +72,7 @@ def add_op(state, op_func, *args, **kwargs):
     '''
 
     allow_cli_mode = kwargs.pop('_allow_cli_mode', False)
+    after_host_callback = kwargs.pop('_after_host_callback', lambda host: None)
 
     if pyinfra.is_cli and not allow_cli_mode:
         raise PyinfraError((
@@ -94,6 +95,7 @@ def add_op(state, op_func, *args, **kwargs):
     for host in hosts:
         kwargs['host'] = host
         results[host] = op_func(*args, **kwargs)
+        after_host_callback(host)
 
     return results
 

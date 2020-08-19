@@ -327,6 +327,9 @@ def _main(
     # Load up any config.py from the filesystem
     config = load_config(deploy_dir)
 
+    # Make a copy before we overwrite
+    original_operations = operations
+
     # Debug (print) inventory + group data
     if operations[0] == 'debug-inventory':
         command = 'debug-inventory'
@@ -540,6 +543,15 @@ def _main(
         op, args = operations
         args, kwargs = args
         kwargs['_allow_cli_mode'] = True
+
+        def print_host_ready(host):
+            logger.info('{0}{1} {2}'.format(
+                host.print_prefix,
+                click.style('Ready:', 'green'),
+                click.style(original_operations[0], bold=True),
+            ))
+
+        kwargs['_after_host_callback'] = print_host_ready
 
         add_op(state, op, *args, **kwargs)
 
