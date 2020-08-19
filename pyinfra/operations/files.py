@@ -496,7 +496,8 @@ def _create_remote_dir(state, host, remote_filename, user, group):
         yield directory(
             path=remote_dirname,
             user=user, group=group,
-            no_check_owner_mode=True,
+            _no_check_owner_mode=True,  # don't check existing user/mode
+            _no_fail_on_link=True,  # don't fail if the path is a link
             state=state, host=host,
         )
 
@@ -1040,7 +1041,8 @@ def directory(
     path,
     present=True, assume_present=False,
     user=None, group=None, mode=None, recursive=False,
-    no_check_owner_mode=False,
+    _no_check_owner_mode=False,
+    _no_fail_on_link=False,
     state=None, host=None,
 ):
     '''
@@ -1088,6 +1090,8 @@ def directory(
 
     # Not a directory?!
     if info is False:
+        if _no_fail_on_link and host.fact.link(path):
+            return
         raise OperationError('{0} exists and is not a directory'.format(path))
 
     # Doesn't exist & we want it
@@ -1115,7 +1119,7 @@ def directory(
             info = {'mode': None, 'group': None, 'user': None}
             host.fact._create('directory', args=(path,), data=info)
 
-        if no_check_owner_mode:
+        if _no_check_owner_mode:
             return
 
         changed = False
