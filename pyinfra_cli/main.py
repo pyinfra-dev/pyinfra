@@ -93,15 +93,16 @@ def _print_support(ctx, param, value):
     count=True,
     help='Print meta (-v), input (-vv) and output (-vvv).',
 )
-@click.option('--user', help='SSH user to connect as.')
-@click.option('--shell-executable', help='shell to use (ex: "sh", "cmd", "ps")')
-@click.option('--port', type=int, help='SSH port to connect to.')
-@click.option('--key', type=click.Path(), help='Private key filename.')
-@click.option('--key-password', help='Privte key password.')
-@click.option('--password', help='SSH password.')
-@click.option('--winrm-username', help='WINRM user to connect as.')
-@click.option('--winrm-password', help='WINRM password.')
-@click.option('--winrm-port', help='WINRM port to connect to.')
+@click.option(
+    '--dry', is_flag=True, default=False,
+    help="Don't execute operations on the target hosts.",
+)
+@click.option(
+    '--limit',
+    help='Restrict the target hosts by name and group name.',
+)
+@click.option('--fail-percent', type=int, help='% of hosts allowed to fail.')
+# Auth args
 @click.option(
     '--sudo', is_flag=True, default=False,
     help='Whether to execute operations with sudo.',
@@ -112,28 +113,27 @@ def _print_support(ctx, param, value):
     help='Whether to use a password with sudo.',
 )
 @click.option('--su-user', help='Which user to su to.')
+@click.option('--shell-executable', help='Shell to use (ex: "sh", "cmd", "ps").')
+# Operation flow args
 @click.option('--parallel', type=int, help='Number of operations to run in parallel.')
-@click.option('--fail-percent', type=int, help='% of hosts allowed to fail.')
-@click.option(
-    '--dry', is_flag=True, default=False,
-    help="Don't execute operations on the target hosts.",
-)
-@click.option(
-    '--limit',
-    help='Restrict the target hosts by name and group name.',
-)
 @click.option(
     '--no-wait', is_flag=True, default=False,
-    help="Don't wait between operations for hosts to complete.",
+    help="Don't wait between operations for hosts.",
 )
 @click.option(
     '--serial', is_flag=True, default=False,
     help='Run operations in serial, host by host.',
 )
-@click.option(
-    '--quiet', is_flag=True, default=False,
-    help='Hide most pyinfra output',
-)
+# SSH args
+@click.option('--user', help='SSH user to connect as.')
+@click.option('--port', type=int, help='SSH port to connect to.')
+@click.option('--key', type=click.Path(), help='SSH Private key filename.')
+@click.option('--key-password', help='SSH Private key password.')
+@click.option('--password', help='SSH password.')
+# WinRM args
+@click.option('--winrm-username', help='WINRM user to connect as.')
+@click.option('--winrm-password', help='WINRM password.')
+@click.option('--winrm-port', help='WINRM port to connect to.')
 # Eager commands (pyinfra [--facts | --operations | --support | --version])
 @click.option(
     '--facts', is_flag=True, is_eager=True, callback=_print_facts,
@@ -149,6 +149,27 @@ def _print_support(ctx, param, value):
 @click.option(
     '--support', is_flag=True, is_eager=True, callback=_print_support,
     help='Print useful information for support and exit.',
+)
+# Debug args
+@click.option(
+    '--quiet', is_flag=True, default=False,
+    help='Hide most pyinfra output.',
+)
+@click.option(
+    '--debug', is_flag=True, default=False,
+    help='Print debug info.',
+)
+@click.option(
+    '--debug-data', is_flag=True, default=False,
+    help='Print host/group data before connecting and exit.',
+)
+@click.option(
+    '--debug-facts', is_flag=True, default=False,
+    help='Print facts after generating operations and exit.',
+)
+@click.option(
+    '--debug-operations', is_flag=True, default=False,
+    help='Print operations after generating and exit.',
 )
 @click.version_option(
     version=__version__,
@@ -191,32 +212,6 @@ def cli(*args, **kwargs):
     '''
 
     main(*args, **kwargs)
-
-
-# This is a hack around Click 7 not being released (like, forever) which has the
-# magical click.option(hidden=True) capability.
-if '--help' not in sys.argv:
-    extra_options = (
-        click.option(
-            '--debug', is_flag=True, default=False,
-            help='Print debug info.',
-        ),
-        click.option(
-            '--debug-data', is_flag=True, default=False,
-            help='Print host/group data before connecting and exit.',
-        ),
-        click.option(
-            '--debug-facts', is_flag=True, default=False,
-            help='Print facts after generating operations and exit.',
-        ),
-        click.option(
-            '--debug-operations', is_flag=True, default=False,
-            help='Print operations after generating and exit.',
-        ),
-    )
-
-    for decorator in extra_options:
-        cli = decorator(cli)
 
 
 def main(*args, **kwargs):
