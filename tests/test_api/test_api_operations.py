@@ -365,7 +365,7 @@ class TestOperationExceptions(TestCase):
 
         assert context.exception.args[0] == (
             '`add_op` should not be called when pyinfra is executing in CLI mode! '
-            '(line 361 in tests/test_api/test_api_operations.py)'
+            '(line 362 in tests/test_api/test_api_operations.py)'
         )
 
     def test_op_call_rejects_no_cli(self):
@@ -374,7 +374,7 @@ class TestOperationExceptions(TestCase):
 
         assert context.exception.args[0] == (
             'API operation called without state/host: '
-            'server.shell (line 372 in tests/test_api/test_api_operations.py)'
+            'server.shell (line 373 in tests/test_api/test_api_operations.py)'
         )
 
     def test_op_call_rejects_in_op(self):
@@ -391,7 +391,7 @@ class TestOperationExceptions(TestCase):
 
         assert context.exception.args[0] == (
             'Nested operation called without state/host: '
-            'server.shell (line 386 in tests/test_api/test_api_operations.py)'
+            'server.shell (line 387 in tests/test_api/test_api_operations.py)'
         )
 
     def test_op_call_rejects_in_deploy(self):
@@ -409,5 +409,5 @@ class TestOperationExceptions(TestCase):
 
         assert context.exception.args[0] == (
             'Nested deploy operation called without state/host: '
-            'server.shell (line 404 in tests/test_api/test_api_operations.py)'
+            'server.shell (line 405 in tests/test_api/test_api_operations.py)'
         )
