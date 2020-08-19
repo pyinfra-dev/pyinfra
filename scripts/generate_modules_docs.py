@@ -99,7 +99,7 @@ def build_facts():
                 '{0}={1}'.format(arg, defaults[arg])
                 if arg in defaults else arg
                 for arg in argspec.args
-                if arg not in ('state', 'host')
+                if arg not in ('state', 'host') and not arg.startswith('_')
             ]
 
             if len(', '.join(args)) <= MODULE_DEF_LINE_MAX:
