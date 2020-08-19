@@ -5,6 +5,7 @@
 </h1>
 
 [![PyPI version](https://img.shields.io/pypi/v/pyinfra?color=blue)](https://pypi.python.org/pypi/pyinfra)
+[![PyPi downloads](https://pepy.tech/badge/pyinfra)](https://pepy.tech/project/pyinfra)
 [![Docs status](https://img.shields.io/readthedocs/pyinfra)](https://docs.pyinfra.com)
 [![Travis.CI status](https://img.shields.io/travis/com/Fizzadar/pyinfra/master)](https://travis-ci.com/Fizzadar/pyinfra)
 [![Codecov Coverage](https://img.shields.io/codecov/c/gh/Fizzadar/pyinfra)](https://codecov.io/github/Fizzadar/pyinfra)
