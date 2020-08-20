@@ -5,16 +5,13 @@ Linux/BSD.
 
 from __future__ import division, unicode_literals
 
-try:
-    from itertools import filterfalse, tee
-except ImportError:
-    from itertools import ifilterfalse as filterfalse, tee
+from itertools import tee
 from os import path
 from time import sleep
 
 import six
 
-from six.moves import shlex_quote
+from six.moves import filterfalse, shlex_quote
 
 from pyinfra import logger
 from pyinfra.api import FunctionCommand, operation, StringCommand
