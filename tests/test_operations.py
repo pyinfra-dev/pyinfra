@@ -9,7 +9,6 @@ import six
 from jsontest import JsonTest
 from mock import patch
 
-from pyinfra import pseudo_host, pseudo_state
 from pyinfra.api import (
     FileDownloadCommand,
     FileUploadCommand,
@@ -40,18 +39,16 @@ def make_operation_tests(arg):
         def setUpClass(cls):
             # Create a global fake state that attach to pseudo state
             cls.state = FakeState()
-            pseudo_state.set(cls.state)
 
         def jsontest_function(self, test_name, test_data):
             # Create a host with this tests facts and attach to pseudo host
             host = create_host(facts=test_data.get('facts', {}))
-            pseudo_host.set(host)
 
             allowed_exception = test_data.get('exception')
 
             kwargs = test_data.get('kwargs', {})
-            kwargs['state'] = pseudo_state
-            kwargs['host'] = pseudo_host
+            kwargs['state'] = self.state
+            kwargs['host'] = host
 
             with patch_files(test_data.get('files', []), test_data.get('directories', [])):
                 try:
