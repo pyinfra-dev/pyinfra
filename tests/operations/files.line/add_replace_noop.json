@@ -1,0 +1,17 @@
+{
+    "args": ["somefile", "match_line"],
+    "kwargs": {
+        "replace": "replace_line",
+        "flags": "abc"
+    },
+    "facts": {
+        "find_in_file": {
+            "somefile": {
+                "^.*match_line.*$": [],
+                "^.*replace_line.*$": ["replace_line"]
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "line \"replace_line\" exists in somefile"
+}

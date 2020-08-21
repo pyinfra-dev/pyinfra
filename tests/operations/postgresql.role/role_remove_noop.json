@@ -1,0 +1,11 @@
+{
+    "args": ["testuser"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "postgresql_roles": {}
+    },
+    "commands": [],
+    "noop_description": "postgresql role testuser does not exist"
+}

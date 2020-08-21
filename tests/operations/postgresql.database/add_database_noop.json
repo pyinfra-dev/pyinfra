@@ -1,0 +1,10 @@
+{
+    "args": ["somedb"],
+    "facts" :{
+        "postgresql_databases": {
+            "somedb": {}
+        }
+    },
+    "commands": [],
+    "noop_description": "postgresql database somedb exists"
+}

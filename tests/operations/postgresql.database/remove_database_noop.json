@@ -1,0 +1,11 @@
+{
+    "args": ["somedb"],
+    "kwargs": {
+        "present": false
+    },
+    "facts" :{
+        "postgresql_databases": {}
+    },
+    "commands": [],
+    "noop_description": "postgresql database somedb does not exist"
+}

@@ -11,5 +11,6 @@
             }
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "crontab this_is_a_command exists"
 }

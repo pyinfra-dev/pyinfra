@@ -1,0 +1,10 @@
+{
+    "args": ["redis-server.service"],
+    "facts": {
+        "systemd_status": {
+            "redis-server.service": true
+        }
+    },
+    "commands": [],
+    "noop_description": "service redis-server.service is running"
+}

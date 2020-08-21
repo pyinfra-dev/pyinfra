@@ -1,0 +1,9 @@
+{
+    "args": ["my-hostname.net"],
+    "facts": {
+        "os": "not-Linux",
+        "hostname": "my-hostname.net"
+    },
+    "commands": [],
+    "noop_description": "hostname is set"
+}

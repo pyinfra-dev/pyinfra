@@ -1,0 +1,13 @@
+{
+    "args": ["MYCHAIN"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "iptables_chains": {
+            "filter": {}
+        }
+    },
+    "commands": [],
+    "noop_description": "iptables chain MYCHAIN does not exist"
+}

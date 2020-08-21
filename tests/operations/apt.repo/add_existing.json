@@ -5,16 +5,10 @@
             "type": "deb",
             "url": "http://archive.canonical.com/ubuntu",
             "distribution": "hardy",
-            "components": ["partner"],
+            "components": ["_set", "partner"],
             "options": {}
-        }],
-        "find_in_file": {
-            "/etc/apt/sources.list": {
-                "^.*deb http://archive.canonical.com/ubuntu hardy partner.*$": [
-                    "deb http://archive.canonical.com/ubuntu hardy partner"
-                ]
-            }
-        }
+        }]
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "apt repo \"deb http://archive.canonical.com/ubuntu hardy partner\" exists"
 }

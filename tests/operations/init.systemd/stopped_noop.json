@@ -1,0 +1,13 @@
+{
+    "args": ["redis-server.service"],
+    "kwargs": {
+        "running": false
+    },
+    "facts": {
+        "systemd_status": {
+            "redis-server.service": false
+        }
+    },
+    "commands": [],
+    "noop_description": "service redis-server.service is stopped"
+}

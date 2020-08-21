@@ -1,0 +1,10 @@
+{
+    "args": ["someuser"],
+    "facts": {
+        "mysql_users": {
+            "someuser@localhost": {}
+        }
+    },
+    "commands": [],
+    "noop_description": "mysql user someuser@localhost exists"
+}

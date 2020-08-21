@@ -1,0 +1,15 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "_no_fail_on_link": true
+    },
+    "facts": {
+        "directory": {
+            "testdir": false
+        },
+        "link": {
+            "testdir": true
+        }
+    },
+    "commands": []
+}

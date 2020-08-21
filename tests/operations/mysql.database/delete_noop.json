@@ -1,0 +1,11 @@
+{
+    "args": ["somedb"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "mysql_databases": {}
+    },
+    "commands": [],
+    "noop_description": "mysql database somedb does not exist"
+}

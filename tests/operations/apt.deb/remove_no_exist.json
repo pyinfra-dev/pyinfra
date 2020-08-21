@@ -1,5 +1,8 @@
 {
     "args": ["http://somewhere.com/something.deb"],
+    "kwargs": {
+        "present": false
+    },
     "facts": {
         "file": {
             "_tempfile_": ""
@@ -10,10 +13,8 @@
                 "version": 0
             }
         },
-        "deb_packages": {
-            "test": [0]
-        }
+        "deb_packages": {}
     },
     "commands": [],
-    "noop_description": "deb http://somewhere.com/something.deb is installed"
+    "noop_description": "deb http://somewhere.com/something.deb is not installed"
 }

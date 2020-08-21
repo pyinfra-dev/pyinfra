@@ -1,0 +1,11 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "mysql_users": {}
+    },
+    "commands": [],
+    "noop_description": "mysql user someuser@localhost does not exist"
+}

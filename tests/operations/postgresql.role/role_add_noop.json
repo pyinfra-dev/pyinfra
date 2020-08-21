@@ -1,0 +1,10 @@
+{
+    "args": ["testuser"],
+    "facts": {
+        "postgresql_roles": {
+            "testuser": {}
+        }
+    },
+    "commands": [],
+    "noop_description": "postgresql role testuser exists"
+}
