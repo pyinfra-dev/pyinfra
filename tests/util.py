@@ -109,6 +109,9 @@ class FakeFact(object):
     def __eq__(self, other_thing):
         return self.data == other_thing
 
+    def __ne__(self, other_thing):
+        return self.data != other_thing
+
     def get(self, key, default=None):
         if key in self.data:
             return self.data[key]
