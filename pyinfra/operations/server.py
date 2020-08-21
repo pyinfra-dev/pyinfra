@@ -13,7 +13,6 @@ import six
 
 from six.moves import filterfalse, shlex_quote
 
-from pyinfra import logger
 from pyinfra.api import FunctionCommand, operation, StringCommand
 
 from . import files
@@ -41,8 +40,6 @@ def reboot(delay=10, interval=1, reboot_timeout=300, state=None, host=None):
             timeout=30,
         )
     '''
-
-    logger.warning('The server.reboot operation is in beta!')
 
     yield StringCommand('reboot', success_exit_codes=[-1])  # -1 being error/disconnected
 
