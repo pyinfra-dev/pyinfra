@@ -15,6 +15,7 @@ from . import files
 
 
 def _handle_service_control(
+    host,
     name, statuses, formatter, running, restarted, reloaded, command,
     status_argument='status',
 ):
@@ -57,14 +58,20 @@ def _handle_service_control(
 
     else:
         # Need down but running
-        if running is False and status:
-            yield formatter.format(name, 'stop')
-            statuses[name] = False
+        if running is False:
+            if status:
+                yield formatter.format(name, 'stop')
+                statuses[name] = False
+            else:
+                host.noop('service {0} is stopped'.format(name))
 
         # Need running but down
-        if running is True and not status:
-            yield formatter.format(name, 'start')
-            statuses[name] = True
+        if running is True:
+            if not status:
+                yield formatter.format(name, 'start')
+                statuses[name] = True
+            else:
+                host.noop('service {0} is running'.format(name))
 
         # Only restart if the service is already running
         if restarted and status:
@@ -121,6 +128,7 @@ def d(
     '''
 
     yield _handle_service_control(
+        host,
         service, host.fact.initd_status,
         '/etc/init.d/{0} {1}',
         running, restarted, reloaded, command,
@@ -215,6 +223,7 @@ def rc(
     '''
 
     yield _handle_service_control(
+        host,
         service, host.fact.rcd_status,
         '/etc/rc.d/{0} {1}',
         running, restarted, reloaded, command,
@@ -257,6 +266,7 @@ def upstart(
     '''
 
     yield _handle_service_control(
+        host,
         service, host.fact.upstart_status,
         'initctl {1} {0}',
         running, restarted, reloaded, command,
@@ -322,6 +332,7 @@ def systemd(
         yield 'systemctl daemon-reload'
 
     yield _handle_service_control(
+        host,
         service, host.fact.systemd_status,
         'systemctl {1} {0}',
         running, restarted, reloaded, command,
@@ -359,6 +370,7 @@ def launchd(
     '''
 
     yield _handle_service_control(
+        host,
         service, host.fact.launchd_status,
         'launchctl {1} {0}',
         # No support for restart/reload/command

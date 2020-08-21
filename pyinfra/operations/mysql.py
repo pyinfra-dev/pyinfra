@@ -104,6 +104,8 @@ def user(
                 host=mysql_host,
                 port=mysql_port,
             )
+        else:
+            host.noop('mysql user {0}@{1} does not exist'.format(user, user_hostname))
         return
 
     # If we want the user and they don't exist
@@ -119,6 +121,8 @@ def user(
             host=mysql_host,
             port=mysql_port,
         )
+    else:
+        host.noop('mysql user {0}@{1} exists'.format(user, user_hostname))
 
     # If we're here either the user exists or we just created them; either way
     # now we can check any privileges are set.
@@ -189,6 +193,8 @@ def database(
                 host=mysql_host,
                 port=mysql_port,
             )
+        else:
+            host.noop('mysql database {0} does not exist'.format(database))
         return
 
     # We want the database but it doesn't exist
@@ -208,6 +214,8 @@ def database(
             host=mysql_host,
             port=mysql_port,
         )
+    else:
+        host.noop('mysql database {0} exists'.format(database))
 
     # Ensure any user privileges for this database
     if user and user_privileges:
@@ -288,14 +296,22 @@ def privileges(
     target = action = None
 
     # No privilege and we want it
-    if not has_privileges and present:
-        action = 'GRANT'
-        target = 'TO'
+    if present:
+        if not has_privileges:
+            action = 'GRANT'
+            target = 'TO'
+        else:
+            host.noop('mysql privileges exist')
+            return
 
     # Permission we don't want
-    elif has_privileges and not present:
-        action = 'REVOKE'
-        target = 'FROM'
+    if not present:
+        if has_privileges:
+            action = 'REVOKE'
+            target = 'FROM'
+        else:
+            host.noop('mysql privileges do not exist')
+            return
 
     if target and action:
         command = (

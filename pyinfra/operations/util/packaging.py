@@ -88,7 +88,7 @@ def ensure_packages(
                 upgrade_packages.append(package)
 
                 if not latest:
-                    host.noop('package {0} is already installed ({1})'.format(
+                    host.noop('package {0} is installed ({1})'.format(
                         package, ', '.join(current_packages[package]),
                     ))
 
@@ -139,6 +139,8 @@ def ensure_packages(
 
 
 def ensure_rpm(state, host, files, source, present, package_manager_command):
+    original_source = source
+
     # If source is a url
     if urlparse(source).scheme:
         # Generate a temp filename (with .rpm extension to please yum)
@@ -173,8 +175,14 @@ def ensure_rpm(state, host, files, source, present, package_manager_command):
             yield 'rpm -q `rpm -qp {0}` 2> /dev/null || rpm -i {0}'.format(source)
 
     # Package exists but we don't want?
-    if exists and not present:
+    elif exists and not present:
         yield '{0} remove -y {1}'.format(package_manager_command, info['name'])
+
+    else:
+        host.noop('rpm {0} is {1}'.format(
+            original_source,
+            'installed' if present else 'not installed',
+        ))
 
 
 def ensure_yum_repo(

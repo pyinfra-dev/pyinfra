@@ -115,7 +115,7 @@ def repo(src, present=True, filename=None, state=None, host=None):
         apt_sources.append(repo)
 
     # Exists and we don't want it
-    if is_present and not present:
+    elif is_present and not present:
         yield files.line(
             filename, src,
             present=False,
@@ -123,6 +123,12 @@ def repo(src, present=True, filename=None, state=None, host=None):
             state=state, host=host,
         )
         apt_sources.remove(repo)
+
+    else:
+        host.noop('apt repo "{0}" {1}'.format(
+            src,
+            'exists' if present else 'does not exist',
+        ))
 
 
 @operation
@@ -183,6 +189,8 @@ def deb(src, present=True, force=False, state=None, host=None):
         )
     '''
 
+    original_src = src
+
     # If source is a url
     if urlparse(src).scheme:
         # Generate a temp filename
@@ -210,21 +218,27 @@ def deb(src, present=True, force=False, state=None, host=None):
             exists = True
 
     # Package does not exist and we want?
-    if present and not exists:
-        # Install .deb file - ignoring failure (on unmet dependencies)
-        yield 'dpkg --force-confdef --force-confold -i {0} 2> /dev/null || true'.format(src)
-        # Attempt to install any missing dependencies
-        yield '{0} -f'.format(noninteractive_apt('install', force=force))
-        # Now reinstall, and critically configure, the package - if there are still
-        # missing deps, now we error
-        yield 'dpkg --force-confdef --force-confold -i {0}'.format(src)
+    if present:
+        if not exists:
+            # Install .deb file - ignoring failure (on unmet dependencies)
+            yield 'dpkg --force-confdef --force-confold -i {0} 2> /dev/null || true'.format(src)
+            # Attempt to install any missing dependencies
+            yield '{0} -f'.format(noninteractive_apt('install', force=force))
+            # Now reinstall, and critically configure, the package - if there are still
+            # missing deps, now we error
+            yield 'dpkg --force-confdef --force-confold -i {0}'.format(src)
+        else:
+            host.noop('deb {0} is installed'.format(original_src))
 
     # Package exists but we don't want?
-    if exists and not present:
-        yield '{0} {1}'.format(
-            noninteractive_apt('remove', force=force),
-            info['name'],
-        )
+    if not present:
+        if exists:
+            yield '{0} {1}'.format(
+                noninteractive_apt('remove', force=force),
+                info['name'],
+            )
+        else:
+            host.noop('deb {0} is not installed'.format(original_src))
 
 
 @operation
@@ -254,6 +268,7 @@ def update(cache_time=None, touch_periodic=False, state=None, host=None):
         # so we can safely remove the tzinfo from host.fact.date before comparison.
         host_cache_time = host.fact.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
         if cache_info and cache_info['mtime'] and cache_info['mtime'] > host_cache_time:
+            host.noop('apt is already up to date')
             return
 
     yield 'apt-get update'

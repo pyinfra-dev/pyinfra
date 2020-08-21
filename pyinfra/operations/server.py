@@ -235,6 +235,14 @@ def modprobe(module, present=True, force=False, state=None, host=None):
     elif present and missing_mods:
         yield 'modprobe{0} -a {1}'.format(args, ' '.join(missing_mods))
 
+    else:
+        host.noop('{0} {1} {2} {3}'.format(
+            'modules' if len(list_value) > 1 else 'module',
+            '/'.join(list_value),
+            'are' if len(list_value) > 1 else 'is',
+            'loaded' if present else 'not loaded',
+        ))
+
 
 @operation
 def mount(
@@ -284,6 +292,12 @@ def mount(
         if needed_options:
             yield 'mount -o remount,{0} {1}'.format(options_string, path)
 
+    else:
+        host.noop('filesystem {0} is {1}'.format(
+            path,
+            'mounted' if mounted else 'not mounted',
+        ))
+
 
 @operation
 def hostname(hostname, hostname_file=None, state=None, host=None):
@@ -321,6 +335,8 @@ def hostname(hostname, hostname_file=None, state=None, host=None):
 
     if current_hostname != hostname:
         yield 'hostname {0}'.format(hostname)
+    else:
+        host.noop('hostname is set')
 
     if hostname_file:
         # Create a whole new hostname file
@@ -369,6 +385,8 @@ def sysctl(
     existing_value = host.fact.sysctl.get(key)
     if not existing_value or existing_value != value:
         yield 'sysctl {0}={1}'.format(key, string_value)
+    else:
+        host.noop('sysctl {0} is set to {1}'.format(key, string_value))
 
     if persist:
         yield files.line(
@@ -523,6 +541,12 @@ def crontab(
 
         # Finally, use the tempfile to write a new crontab
         yield 'crontab {0} {1}'.format(' '.join(crontab_args), temp_filename)
+
+    else:
+        host.noop('crontab {0} {1}'.format(
+            command,
+            'exists' if present else 'does not exist',
+        ))
 
 
 @operation

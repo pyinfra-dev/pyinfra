@@ -38,20 +38,22 @@ def chain(
     command = 'iptables' if version == 4 else 'ip6tables'
     command = '{0} -t {1}'.format(command, table)
 
-    # Doesn't exist but we want it?
-    if present and chain not in chains:
-        yield '{0} -N {1}'.format(command, chain)
+    if not present:
+        if chain in chains:
+            yield '{0} -X {1}'.format(command, chain)
+        else:
+            host.noop('iptables chain {0} does not exist'.format(chain))
+        return
+
+    if present:
+        if chain not in chains:
+            yield '{0} -N {1}'.format(command, chain)
+        else:
+            host.noop('iptables chain {0} exists'.format(chain))
 
         if policy:
-            yield '{0} -P {1} {2}'.format(command, chain, policy)
-
-    # Exists and we don't want it?
-    if not present and chain in chains:
-        yield '{0} -X {1}'.format(command, chain)
-
-    # Exists, we want it, but the policies don't match?
-    if present and chain in chains and policy and chains[chain] != policy:
-        yield '{0} -P {1} {2}'.format(command, chain, policy)
+            if chain not in chains or chains[chain] != policy:
+                yield '{0} -P {1} {2}'.format(command, chain, policy)
 
 
 @operation
@@ -214,12 +216,20 @@ def rule(
     action = None
 
     # Definition doesn't exist and we want it
-    if present and definition not in rules:
-        action = '-A' if append else '-I'
+    if present:
+        if definition not in rules:
+            action = '-A' if append else '-I'
+        else:
+            host.noop('iptables {0} rule exists'.format(chain))
+            return
 
     # Definition exists and we don't want it
-    if not present and definition in rules:
-        action = '-D'
+    if not present:
+        if definition in rules:
+            action = '-D'
+        else:
+            host.noop('iptables {0} rule does not exists'.format(chain))
+            return
 
     # Are we adding/removing a rule? Lets build it
     if action:

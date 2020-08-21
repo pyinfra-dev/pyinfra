@@ -298,6 +298,8 @@ def line(
 
             if not present_lines:
                 yield echo_command
+            else:
+                host.noop('line "{0}" exists in {1}'.format(replace or line, path))
 
     # Line(s) exists and we want to remove them, replace with nothing
     elif present_lines and not present:
@@ -313,6 +315,8 @@ def line(
         # If any of lines are different, sed replace them
         if replace and any(line != replace for line in present_lines):
             yield sed_replace_command
+        else:
+            host.noop('line "{0}" exists in {1}'.format(replace or line, path))
 
 
 @operation
@@ -912,8 +916,11 @@ def link(
                     '/'.join((link_dirname, info['link_target'])),
                 )
 
+        changed = False
+
         # If the target is wrong, remove & recreate the link
         if not info or info['link_target'] != target:
+            changed = True
             yield remove_cmd
             yield add_cmd
             info['link_target'] = target
@@ -925,10 +932,14 @@ def link(
             or (group and info['group'] != group)
         ):
             yield chown(path, user, group, dereference=False)
+            changed = True
             if user:
                 info['user'] = user
             if group:
                 info['group'] = group
+
+        if not changed:
+            host.noop('link {0} already exists'.format(path))
 
 
 @operation(pipeline_facts={
@@ -1013,13 +1024,17 @@ def file(
             info = {'mode': None, 'group': None, 'user': None}
             host.fact._create('file', args=(path,), data=info)
 
+        changed = False
+
         if touch:
+            changed = True
             yield 'touch {0}'.format(path)
 
         # Check mode
         if mode and (not info or info['mode'] != mode):
             yield chmod(path, mode)
             info['mode'] = mode
+            changed = True
 
         # Check user/group
         if (
@@ -1028,10 +1043,14 @@ def file(
             or (group and info['group'] != group)
         ):
             yield chown(path, user, group)
+            changed = True
             if user:
                 info['user'] = user
             if group:
                 info['group'] = group
+
+        if not changed:
+            host.noop('file {0} already exists'.format(path))
 
 
 @operation(pipeline_facts={
@@ -1091,6 +1110,7 @@ def directory(
     # Not a directory?!
     if info is False:
         if _no_fail_on_link and host.fact.link(path):
+            host.noop('directory {0} already exists (as a link)'.format(path))
             return
         raise OperationError('{0} exists and is not a directory'.format(path))
 

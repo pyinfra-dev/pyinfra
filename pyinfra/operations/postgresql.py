@@ -107,6 +107,8 @@ def role(
                 host=postgresql_host,
                 port=postgresql_port,
             )
+        else:
+            host.noop('postgresql role {0} does not exist'.format(role))
         return
 
     # If we want the user and they don't exist
@@ -137,6 +139,8 @@ def role(
             host=postgresql_host,
             port=postgresql_port,
         )
+    else:
+        host.noop('postgresql role {0} exists'.format(role))
 
 
 @operation
@@ -200,6 +204,8 @@ def database(
                 host=postgresql_host,
                 port=postgresql_port,
             )
+        else:
+            host.noop('postgresql database {0} does not exist'.format(database))
         return
 
     # We want the database but it doesn't exist
@@ -225,6 +231,8 @@ def database(
             host=postgresql_host,
             port=postgresql_port,
         )
+    else:
+        host.noop('postgresql database {0} exists'.format(database))
 
 
 @operation

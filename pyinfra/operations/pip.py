@@ -40,30 +40,36 @@ def virtualenv(
     # as a valid virtualenv but ensure the activate script exists.
     activate_script_path = '{0}/bin/activate'.format(path)
 
-    if present is False and host.fact.file(activate_script_path):
-        yield files.directory(path, present=False, state=state, host=host)
+    if present is False:
+        if host.fact.file(activate_script_path):
+            yield files.directory(path, present=False, state=state, host=host)
+        else:
+            host.noop('virtualenv {0} does not exist'.format(path))
 
-    elif present and not host.fact.file(activate_script_path):
-        # Create missing virtualenv
-        command = ['virtualenv']
+    if present:
+        if not host.fact.file(activate_script_path):
+            # Create missing virtualenv
+            command = ['virtualenv']
 
-        if venv:
-            command = [python or 'python', '-m', 'venv']
+            if venv:
+                command = [python or 'python', '-m', 'venv']
 
-        if python and not venv:
-            command.append('-p {0}'.format(python))
+            if python and not venv:
+                command.append('-p {0}'.format(python))
 
-        if site_packages:
-            command.append('--system-site-packages')
+            if site_packages:
+                command.append('--system-site-packages')
 
-        if always_copy and not venv:
-            command.append('--always-copy')
-        elif always_copy and venv:
-            command.append('--copies')
+            if always_copy and not venv:
+                command.append('--always-copy')
+            elif always_copy and venv:
+                command.append('--copies')
 
-        command.append(path)
+            command.append(path)
 
-        yield ' '.join(command)
+            yield ' '.join(command)
+        else:
+            host.noop('virtualenv {0} exists'.format(path))
 
 _virtualenv = virtualenv  # noqa
 

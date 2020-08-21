@@ -162,6 +162,7 @@ def download(
 
     # If the local file exists and we're not forcing a re-download, no-op
     if local_file_info and not force:
+        host.noop('file {0} is already downloaded'.format(filename))
         return
 
     # Figure out where we're connecting (host or user@host)

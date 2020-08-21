@@ -50,6 +50,9 @@ def config(
 
         existing_config[key] = value
 
+    else:
+        host.noop('git config {0} is set to {1}'.format(key, value))
+
 
 @operation(pipeline_facts={
     'git_branch': 'target',
