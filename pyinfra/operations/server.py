@@ -54,7 +54,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300, state=None, host=None):
         retries = 0
 
         while True:
-            host.connect(state, show_errors=False)
+            host.connect(show_errors=False)
             if host.connection:
                 break
 
