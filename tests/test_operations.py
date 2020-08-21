@@ -127,6 +127,13 @@ def make_operation_tests(arg):
 
                 raise e
 
+            noop_description = test_data.get('noop_description')
+            if len(commands) == 0 or noop_description:
+                if noop_description is not None:
+                    assert host.noop_description == noop_description
+                else:
+                    assert host.noop_description is not None, 'no noop description was set'
+
     return TestTests
 
 

@@ -134,6 +134,8 @@ class FakeFacts(object):
 
 
 class FakeHost(object):
+    noop_description = None
+
     def __init__(self, name, facts, data):
         self.name = name
         self.fact = FakeFacts(facts)
@@ -144,7 +146,7 @@ class FakeHost(object):
         return ''
 
     def noop(self, description):
-        pass
+        self.noop_description = description
 
 
 class FakeFile(object):
