@@ -104,6 +104,7 @@ if __name__ == '__main__':
                 'ansible = pyinfra.api.connectors.ansible',
                 'chroot = pyinfra.api.connectors.chroot',
                 'docker = pyinfra.api.connectors.docker',
+                'kubernetes = pyinfra.api.connectors.kubernetes',
                 'local = pyinfra.api.connectors.local',
                 'mech = pyinfra.api.connectors.mech',
                 'ssh = pyinfra.api.connectors.ssh',
