@@ -1,4 +1,4 @@
-# v1.1.dev1
+# v1.1.dev2
 
 This is a big release with some major additions & improvements on `v1`, especially around API usage and packaing deploys using the `@deploy` decorator.
 
@@ -22,6 +22,7 @@ Smaller bits:
 + Fix using sudo password with a SSH user that doesn't have access to `/tmp`
 + Fix `python.call` docstring (@leahneukirchen)
 + Fix `--serial` and `--no-wait` executing operations twice
++ Fix `su` usage on BSD/MacOS systems
 + Improve autocomplete/intellisense handling of pseudo modules `pyinfra.[host|state|inventory]`
 
 
