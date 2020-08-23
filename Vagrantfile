@@ -27,6 +27,13 @@ Vagrant.configure('2') do |config|
         end
     end
 
+    config.vm.define :ubuntu20 do |ubuntu|
+        ubuntu.vm.box = 'bento/ubuntu-20.04'
+        ubuntu.vm.provider 'virtualbox' do |v|
+            v.memory = 384  # ubuntu20 is memory hungry
+        end
+    end
+
     config.vm.define :debian8 do |debian|
         debian.vm.box = 'bento/debian-8'
     end
