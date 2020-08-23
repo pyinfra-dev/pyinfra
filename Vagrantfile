@@ -86,11 +86,9 @@ Vagrant.configure('2') do |config|
 
     config.vm.define :opensuse_leap15 do |opensuse|
         opensuse.vm.box = 'bento/opensuse-leap-15'
-        opensuse.vm.box_version = "202006.17.0"
     end
 
     config.vm.define :opensuse_tumbleweed do |opensuse|
         opensuse.vm.box = "opensuse/Tumbleweed.x86_64"
-        opensuse.vm.box_version = "1.0.20200618"
     end
 end
