@@ -172,55 +172,6 @@ def make_unix_command(
     if shell_executable is None or not isinstance(shell_executable, six.string_types):
         shell_executable = 'sh'
 
-    command_bits = []
-
-    # Use sudo (w/user?)
-    if sudo:
-        if use_sudo_password:
-            askpass_filename, sudo_password = use_sudo_password
-            command_bits.extend([
-                'env',
-                'SUDO_ASKPASS={0}'.format(askpass_filename),
-                MaskString('{0}={1}'.format(SUDO_ASKPASS_ENV_VAR, sudo_password)),
-            ])
-
-        sudo_bits = ['sudo', '-H']
-
-        if use_sudo_password:
-            sudo_bits.extend(['-A', '-k'])  # use askpass, disable cache
-        else:
-            sudo_bits.append('-n')  # disable prompt/interactivity
-
-        if use_sudo_login:
-            sudo_bits.append('-i')
-
-        if preserve_sudo_env:
-            sudo_bits.append('-E')
-
-        if sudo_user:
-            sudo_bits.extend(('-u', sudo_user))
-
-        command_bits.extend(sudo_bits)
-
-    # Switch user with su
-    if su_user:
-        su_bits = ['su']
-
-        if use_su_login:
-            su_bits.append('-l')
-
-        # note `which <shell>` usage here - su requires an absolute path
-        command_bits.extend(su_bits)
-        command_bits.extend([su_user, '-s', '`which {0}`'.format(shell_executable), '-c'])
-
-    else:
-        # Otherwise just sh wrap the command
-        command_bits.extend([shell_executable, '-c'])
-
-    #
-    # OK, now parse the command!
-    #
-
     if isinstance(command, six.binary_type):
         command = command.decode('utf-8')
 
@@ -234,10 +185,51 @@ def make_unix_command(
 
     # Quote the command as a string
     command = QuoteString(command)
-    command_bits.append(command)
+
+    command_bits = []
+
+    # Use sudo (w/user?)
+    if sudo:
+        if use_sudo_password:
+            askpass_filename, sudo_password = use_sudo_password
+            command_bits.extend([
+                'env',
+                'SUDO_ASKPASS={0}'.format(askpass_filename),
+                MaskString('{0}={1}'.format(SUDO_ASKPASS_ENV_VAR, sudo_password)),
+            ])
+
+        command_bits.extend(['sudo', '-H'])
+
+        if use_sudo_password:
+            command_bits.extend(['-A', '-k'])  # use askpass, disable cache
+        else:
+            command_bits.append('-n')  # disable prompt/interactivity
+
+        if use_sudo_login:
+            command_bits.append('-i')
+
+        if preserve_sudo_env:
+            command_bits.append('-E')
+
+        if sudo_user:
+            command_bits.extend(('-u', sudo_user))
+
+    # Switch user with su
+    if su_user:
+        command_bits.append('su')
+
+        if use_su_login:
+            command_bits.append('-l')
+
+        command_bits.extend([su_user, '-c'])
+
+        # Quote the whole shell -c 'command' as BSD `su` does not have a shell option
+        command_bits.append(QuoteString(StringCommand(shell_executable, '-c', command)))
+    else:
+        # Otherwise simply use thee shell directly
+        command_bits.extend([shell_executable, '-c', command])
 
     return StringCommand(*command_bits)
-    # return command.get_raw_value(), command.get_masked_value()
 
 
 def make_win_command(

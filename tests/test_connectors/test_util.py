@@ -47,6 +47,10 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         command = make_unix_command('uptime', sudo=True)
         assert command.get_raw_value() == 'sudo -H -n sh -c uptime'
 
+    def test_sudo_multi_arg_command(self):
+        command = make_unix_command('echo hi', sudo=True, preserve_sudo_env=True)
+        assert command.get_raw_value() == "sudo -H -n -E sh -c 'echo hi'"
+
     def test_sudo_preserve_env_command(self):
         command = make_unix_command('uptime', sudo=True, preserve_sudo_env=True)
         assert command.get_raw_value() == 'sudo -H -n -E sh -c uptime'
@@ -61,11 +65,15 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_su_command(self):
         command = make_unix_command('uptime', su_user='pyinfra')
-        assert command.get_raw_value() == 'su pyinfra -s `which sh` -c uptime'
+        assert command.get_raw_value() == "su pyinfra -c 'sh -c uptime'"
+
+    def test_su_multi_arg_command(self):
+        command = make_unix_command('echo hi', su_user='pyinfra')
+        assert command.get_raw_value() == "su pyinfra -c 'sh -c '\"'\"'echo hi'\"'\"''"
 
     def test_use_su_login_command(self):
         command = make_unix_command('uptime', su_user='pyinfra', use_su_login=True)
-        assert command.get_raw_value() == 'su -l pyinfra -s `which sh` -c uptime'
+        assert command.get_raw_value() == "su -l pyinfra -c 'sh -c uptime'"
 
     def test_command_env(self):
         command = make_unix_command('uptime', env={
@@ -83,7 +91,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_mixed_command(self):
         command = make_unix_command(
-            'uptime',
+            'echo hi',
             env={'key': 'value'},
             sudo=True,
             sudo_user='root',
@@ -93,6 +101,6 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         )
         assert command.get_raw_value() == (
             'sudo -H -n -E -u root '  # sudo bit
-            'su pyinfra -s `which bash` -c '  # su bit
-            "'env key=value uptime'"  # command bit
+            'su pyinfra -c '  # su bit
+            "'bash -c '\"'\"'env key=value echo hi'\"'\"''"  # command bit
         )

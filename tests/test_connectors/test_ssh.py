@@ -481,9 +481,9 @@ class TestSSHConnector(TestCase):
         assert status is False
 
         fake_ssh_client().exec_command.assert_called_with((
-            "su centos -s `which sh` -c 'mv "
+            "su centos -c 'sh -c '\"'\"'mv "
             '/tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487 '
-            "not-another-file && chown centos not-another-file'"
+            "not-another-file && chown centos not-another-file'\"'\"''"
         ), get_pty=False)
 
         fake_sftp_client.from_transport().putfo.assert_called_with(
@@ -637,12 +637,13 @@ class TestSSHConnector(TestCase):
 
         fake_ssh_client().exec_command.assert_has_calls([
             call((
-                "su centos -s `which sh` -c 'cp not-a-file "
-                "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r not-a-file'"
+                "su centos -c 'sh -c '\"'\"'cp not-a-file "
+                '/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r '
+                "not-a-file'\"'\"''"
             ), get_pty=False),
             call((
-                "su centos -s `which sh` -c 'rm -f "
-                "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"
+                "su centos -c 'sh -c '\"'\"'rm -f "
+                "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'\"'\"''"
             ), get_pty=False),
         ])
 
