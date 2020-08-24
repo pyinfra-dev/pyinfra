@@ -14,6 +14,7 @@ import six
 from six.moves import filterfalse, shlex_quote
 
 from pyinfra.api import FunctionCommand, operation, StringCommand
+from pyinfra.api.util import try_int
 
 from . import files
 from .util.files import chmod, sed_replace
@@ -368,7 +369,7 @@ def sysctl(
         server.sysctl(
             name='Change the fs.file-max value',
             key='fs.file-max',
-            value='100000',
+            value=100000,
             persist=True,
         )
     '''
@@ -377,6 +378,12 @@ def sysctl(
         ' '.join(['{0}'.format(v) for v in value])
         if isinstance(value, list)
         else value
+    )
+
+    value = (
+        [try_int(v) for v in value]
+        if isinstance(value, list)
+        else try_int(value)
     )
 
     existing_value = host.fact.sysctl.get(key)
