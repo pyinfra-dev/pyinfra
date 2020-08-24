@@ -13,7 +13,7 @@
         }
     },
     "commands": [
-        "sysctl kern.max-files=2000",
+        "sysctl kern.max-files='2000'",
         "echo 'kern.max-files = 2000' >> /etc/sysctl.conf"
     ]
 }
