@@ -110,3 +110,36 @@ def test_int_local_line_no_changes(helpers):
         )
     finally:
         rmtree(temp_dir)
+
+
+@pytest.mark.int
+@pytest.mark.local
+def test_int_local_pre_post_conditions(helpers):
+    helpers.run(
+        (
+            'pyinfra -v @local server.shell uptime '
+            "precondition='exit 0' "
+            "postcondition='exit 0'"
+        ),
+        expected_lines=['@local] Success'],
+    )
+
+
+@pytest.mark.int
+@pytest.mark.local
+def test_int_local_failed_precondition(helpers):
+    helpers.run(
+        "pyinfra -v @local server.shell uptime precondition='exit 1'",
+        expected_lines=['@local] Error: precondition failed: exit 1'],
+        expected_exit_code=1,
+    )
+
+
+@pytest.mark.int
+@pytest.mark.local
+def test_int_local_failed_postcondition(helpers):
+    helpers.run(
+        "pyinfra -v @local server.shell uptime postcondition='exit 1'",
+        expected_lines=['@local] Error: postcondition failed: exit 1'],
+        expected_exit_code=1,
+    )

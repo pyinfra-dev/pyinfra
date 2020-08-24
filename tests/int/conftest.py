@@ -6,7 +6,7 @@ import pytest
 
 class Helpers:
     @staticmethod
-    def run(command, expected_lines=None, cwd='examples'):
+    def run(command, expected_lines=None, cwd='examples', expected_exit_code=0):
         if expected_lines is None:
             expected_lines = ['Connected', 'Starting operation', 'Errors: 0']
 
@@ -25,7 +25,7 @@ class Helpers:
         if type(stderr) is bytes:
             stderr = stderr.decode('utf-8')
 
-        assert results.returncode == 0, stderr
+        assert results.returncode == expected_exit_code, stderr
 
         for line in expected_lines:
             assert re.search(line, stderr, re.MULTILINE), \
