@@ -374,7 +374,7 @@ def sysctl(
     '''
 
     string_value = (
-        ' '.join(value)
+        ' '.join(['{0}'.format(v) for v in value])
         if isinstance(value, list)
         else value
     )
