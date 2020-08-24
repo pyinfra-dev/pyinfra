@@ -394,8 +394,8 @@ def sysctl(
 
     if persist:
         yield files.line(
-            persist_file,
-            '{0}[[:space:]]*=[[:space:]]*{1}'.format(key, string_value),
+            path=persist_file,
+            line='{0}[[:space:]]*=[[:space:]]*{1}'.format(key, string_value),
             replace='{0} = {1}'.format(key, string_value),
             state=state,
             host=host,
