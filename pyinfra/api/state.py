@@ -7,7 +7,7 @@ from uuid import uuid4
 import six
 
 from gevent.pool import Pool
-from pkg_resources import parse_version
+from pkg_resources import parse_version, Requirement
 
 from pyinfra import __version__, logger
 
@@ -124,18 +124,29 @@ class State(object):
 
         # Error if our min version is not met
         if config.MIN_PYINFRA_VERSION is not None:
+            if config.REQUIRE_PYINFRA_VERSION is None:
+                config.REQUIRE_PYINFRA_VERSION = '>={0}'.format(config.MIN_PYINFRA_VERSION)
+                logger.warning(
+                    '`MIN_PYINFRA_VERSION` is deprecated, please use `REQUIRE_PYINFRA_VERSION`.',
+                )
+            else:
+                logger.warning(
+                    'Ignoring legacy `MIN_PYINFRA_VERSION` because '
+                    '`REQUIRE_PYINFRA_VERSION` also exists.',
+                )
+
+        if config.REQUIRE_PYINFRA_VERSION is not None:
             running_version = parse_version(__version__)
-            needed_version = parse_version(
-                # Version must be a string
-                six.text_type(config.MIN_PYINFRA_VERSION),
+            required_versions = Requirement.parse(
+                'pyinfra{0}'.format(config.REQUIRE_PYINFRA_VERSION),
             )
 
-            if needed_version > running_version:
+            if running_version not in required_versions:
                 raise PyinfraError((
-                    'Minimum pyinfra version not met '
-                    '(minimum={0}, running={1})'
+                    'pyinfra version requirement not met '
+                    '(requires {0}, running {1})'
                 ).format(
-                    config.MIN_PYINFRA_VERSION,
+                    config.REQUIRE_PYINFRA_VERSION,
                     __version__,
                 ))
 

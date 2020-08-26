@@ -20,6 +20,11 @@ class Config(object):
     # Gevent pool size (defaults to #of target hosts)
     PARALLEL = None
 
+    # Specify the required pyinfra version (using PEP 440 setuptools specifier)
+    REQUIRE_PYINFRA_VERSION = None
+
+    # COMPAT w/<1.1
+    # TODO: remove this in favour of above at v2
     # Specify a minimum required pyinfra version for a deploy
     MIN_PYINFRA_VERSION = None
 
