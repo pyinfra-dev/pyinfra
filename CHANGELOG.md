@@ -1,29 +1,33 @@
-# v1.1.dev2
+# v1.1
 
-This is a big release with some major additions & improvements on `v1`, especially around API usage and packaing deploys using the `@deploy` decorator.
+This is a big release with some major additions & improvements on `v1`.
 
-What's new:
+Highlights:
 
++ Start **modifying facts during fact gathering phase**, resolving common issues with interdependent operations, expand documentation on this ([docs](https://docs.pyinfra.com/page/deploy_process.html#interdependent-operations))
++ Implement **state callback classes** dramatically improving the API experience (see `examples/api_deploy.py`)
 + Add `@dockerssh` connector that enables pyinfra to **build Docker containers on remote machines over SSH** (@charles-l)
 + Add global `precondition` and `postcondition` operation arguments
-+ Implement state callback classes dramatically improving the API experience (see `examples/api_deploy.py`)
-+ Start modifying facts during fact gathering phase, resolving common issues with interdependent operations, expand documentation on this (see: https://docs.pyinfra.com/en/latest/deploy_process.html#interdependent-operations)
++ Fix using `su_user` on BSD/MacOS systems
++ Rework verbosity flags and **add noop logging** (ie package X is already installed) ([docs](https://docs.pyinfra.com/page/cli.html#verbosity))
 
 Notable change:
 
-The `yum.packages` and `dnf.packages` operations have _changed_ their "version join" string value - both package managers use `-` to join name + version while allowing `-` in the name. This leads to ambiguous behaviour for packages containing dashes, as such the version join value has been changed to `=`. This means to specify a specific version of a yum/dnf package you should use `<name>=<version>` rather than `<name>-<version>`
+The `yum.packages` and `dnf.packages` operations have _changed_ their "version join" string value - both package managers use `-` to join name + version while allowing `-` in the name. This leads to ambiguous behaviour for packages containing dashes, as such the version join value has been changed to `=` - meaning it can now actually be used! This means to specify a specific version of a yum/dnf package you should use `<name>=<version>` rather than `<name>-<version>`.
 
 Smaller bits:
 
++ Add `REQUIRE_PYINFRA_VERSION` config option (& deprecate `MIN_PYINFRA_VERSION`)
 + Validate existing files in `file.download` with checksum arguments (@sysadmin75)
 + Stop stripping fact output (fixes `command` fact, @sysadmin75)
 + Add `extra_install_args` and `extra_uninstall_args` kwargs to `apt.packages` operation
 + Add `--use-sudo-password` CLI argument
++ Normalise `server.sysctl` handling of string/int values
++ Improve autocomplete/intellisense handling of pseudo modules `pyinfra.[host|state|inventory]`
 + Fix using sudo password with a SSH user that doesn't have access to `/tmp`
 + Fix `python.call` docstring (@leahneukirchen)
 + Fix `--serial` and `--no-wait` executing operations twice
-+ Fix `su` usage on BSD/MacOS systems
-+ Improve autocomplete/intellisense handling of pseudo modules `pyinfra.[host|state|inventory]`
++ Fix `server.sysctl` usage with multiple values
 
 
 # v1.0.4
