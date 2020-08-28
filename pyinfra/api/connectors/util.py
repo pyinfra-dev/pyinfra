@@ -146,6 +146,7 @@ def get_sudo_password(state, host, use_sudo_password, run_shell_command, put_fil
         if not sudo_password:
             sudo_password = getpass('{0}sudo password: '.format(host.print_prefix))
             host.connector_data['sudo_password'] = sudo_password
+        sudo_password = shlex_quote(sudo_password)
     else:
         sudo_password = use_sudo_password
 
