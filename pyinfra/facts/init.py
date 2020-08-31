@@ -41,7 +41,8 @@ class SystemdStatus(FactBase):
             line = line.strip()
             matches = re.match(self.regex, line)
             if matches:
-                services[matches.group(1)] = matches.group(2) == 'running'
+                services[matches.group(1)] = matches.group(2) == 'running' or\
+                                             matches.group(2) == 'waiting'
 
         return services
 
