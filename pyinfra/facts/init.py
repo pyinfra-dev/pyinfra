@@ -12,9 +12,11 @@ from pyinfra.api import FactBase
 # ".swap", ".target", ".path", ".timer", ".slice", or ".scope".
 # Units names can be parameterized by a single argument called the "instance name".
 # A template unit must have a single "@" at the end of the name (right before the type suffix).
-# The name of the full unit is formed by inserting the instance name between "@" and the unit type suffix.
+# The name of the full unit is formed by inserting the instance name 
+# between "@" and the unit type suffix.
 SYSTEMD_UNIT_NAME_REGEX = (
-    r'[a-zA-Z0-9\:\-\_\.\\\@]+\.(?:service|socket|device|mount|automount|swap|target|path|timer|slice|scope)'
+    r'[a-zA-Z0-9\:\-\_\.\\\@]+\.'
+    r'(?:service|socket|device|mount|automount|swap|target|path|timer|slice|scope)'
 )
 
 
@@ -46,8 +48,7 @@ class SystemdStatus(FactBase):
 
     command = 'systemctl -al list-units'
     regex = r'^({systemd_unit_name_regex})\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'.format(
-        systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX
-    )
+        systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX)
     default = dict
     use_default_on_error = True
 
