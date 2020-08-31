@@ -3,6 +3,21 @@ import re
 from pyinfra.api import FactBase
 
 
+# Valid unit names consist of a "name prefix" and a dot and a suffix specifying the unit type.
+# The "unit prefix" must consist of one or more valid characters
+# (ASCII letters, digits, ":", "-", "_", ".", and "\").
+# The total length of the unit name including the suffix must not exceed 256 characters.
+# The type suffix must be one of
+# ".service", ".socket", ".device", ".mount", ".automount",
+# ".swap", ".target", ".path", ".timer", ".slice", or ".scope".
+# Units names can be parameterized by a single argument called the "instance name".
+# A template unit must have a single "@" at the end of the name (right before the type suffix).
+# The name of the full unit is formed by inserting the instance name between "@" and the unit type suffix.
+SYSTEMD_UNIT_NAME_REGEX = (
+    r'[a-zA-Z0-9\:\-\_\.\\\@]+\.(?:service|socket|device|mount|automount|swap|target|path|timer|slice|scope)'
+)
+
+
 class UpstartStatus(FactBase):
     '''
     Returns a dict of name -> status for upstart managed services.
@@ -30,7 +45,9 @@ class SystemdStatus(FactBase):
     '''
 
     command = 'systemctl -al list-units'
-    regex = r'^([a-zA-Z\-0-9]+\.[a-z]+)\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'
+    regex = r'^({systemd_unit_name_regex})\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'.format(
+        systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX
+    )
     default = dict
     use_default_on_error = True
 
@@ -61,7 +78,9 @@ class SystemdEnabled(FactBase):
         done
     '''
 
-    regex = r'^([a-zA-Z0-9@\-]+\.[a-z]+)\s+([a-z]+)'
+    regex = r'^({systemd_unit_name_regex})\s+([a-z]+)'.format(
+        systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX
+    )
     default = dict
     use_default_on_error = True
 
