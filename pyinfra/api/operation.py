@@ -112,7 +112,7 @@ def show_set_name_warning(call_location):
 def show_state_host_arguments_warning(call_location):
     logger.warning((
         '{0}:\n\tPassing `state` and `host` as the first two arguments to operations is '
-        'deprecated, please us `state` and `host` keyword arguments.'
+        'deprecated, please use `state` and `host` keyword arguments.'
     ).format(call_location))
 
 
