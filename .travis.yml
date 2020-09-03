@@ -29,4 +29,4 @@ jobs:
 
     - stage: Docker integration test
       python: '3.8'
-      script: pytest -v -m docker
+      script: travis_wait pytest -v -m docker
