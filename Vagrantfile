@@ -68,18 +68,18 @@ Vagrant.configure('2') do |config|
 
     config.vm.define :windows2019 do |windows|
         windows.vm.box = 'StefanScherer/windows_2019'
-        windows.vm.provider "vmware_desktop" do |v|
-            v.vmx["memsize"] = "1024"
-            v.vmx["numvcpus"] = "2"
+        windows.vm.provider 'vmware_desktop' do |v|
+            v.vmx['memsize'] = '1024'
+            v.vmx['numvcpus'] = '2'
             v.gui = true
        end
     end
 
     config.vm.define :windows10 do |windows|
-        windows.vm.box = "StefanScherer/windows_10"
-        windows.vm.provider "vmware_desktop" do |v|
-            v.vmx["memsize"] = "1024"
-            v.vmx["numvcpus"] = "2"
+        windows.vm.box = 'StefanScherer/windows_10'
+        windows.vm.provider 'vmware_desktop' do |v|
+            v.vmx['memsize'] = '1024'
+            v.vmx['numvcpus'] = '2'
             v.gui = true
        end
     end
@@ -89,6 +89,6 @@ Vagrant.configure('2') do |config|
     end
 
     config.vm.define :opensuse_tumbleweed do |opensuse|
-        opensuse.vm.box = "opensuse/Tumbleweed.x86_64"
+        opensuse.vm.box = 'opensuse/Tumbleweed.x86_64'
     end
 end
