@@ -6,6 +6,8 @@ for a deploy.
 
 from __future__ import division, unicode_literals
 
+import re
+
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -34,6 +36,12 @@ from pyinfra.progress import progress_spinner
 # Index of snake_case facts -> CamelCase classes
 FACTS = {}
 FACT_LOCK = BoundedSemaphore()
+
+SUDO_REGEX = r'^sudo: unknown user:'
+SU_REGEXES = (
+    r'^su: user .+ does not exist',
+    r'^su: unknown login',
+)
 
 
 def is_fact(name):
@@ -239,18 +247,36 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
                     timeout=timeout,
                 )
 
-            stdout, _ = split_combined_output(combined_output_lines)
+            stdout, stderr = split_combined_output(combined_output_lines)
 
             data = fact.default()
 
             if status:
                 if stdout:
                     data = fact.process(stdout)
-            elif not fact.use_default_on_error:
+
+            elif fact.use_default_on_error:
+                status = True
+
+            elif stderr:
+                first_line = stderr[0]
+                if (
+                    sudo_user
+                    and state.will_add_user(sudo_user)
+                    and re.match(SUDO_REGEX, first_line)
+                ):
+                    status = True
+                if (
+                    su_user
+                    and state.will_add_user(su_user)
+                    and any(re.match(regex, first_line) for regex in SU_REGEXES)
+                ):
+                    status = True
+
+            if not status:
                 failed_hosts.add(host)
 
-                # If we failed and have no already printed the stderr, print it
-                if status is False and not state.print_fact_output:
+                if not state.print_fact_output:
                     print_host_combined_output(host, combined_output_lines)
 
                 log_error_or_warning(host, ignore_errors, description=(
