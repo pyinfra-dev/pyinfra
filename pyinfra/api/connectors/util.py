@@ -146,11 +146,11 @@ def get_sudo_password(state, host, use_sudo_password, run_shell_command, put_fil
         if not sudo_password:
             sudo_password = getpass('{0}sudo password: '.format(host.print_prefix))
             host.connector_data['sudo_password'] = sudo_password
-        sudo_password = shlex_quote(sudo_password)
+        sudo_password = sudo_password
     else:
         sudo_password = use_sudo_password
 
-    return (SUDO_ASKPASS_EXE_FILENAME, sudo_password)
+    return (SUDO_ASKPASS_EXE_FILENAME, shlex_quote(sudo_password))
 
 
 def make_unix_command(
