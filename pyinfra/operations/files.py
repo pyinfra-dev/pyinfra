@@ -128,13 +128,13 @@ def download(
 
         if sha1sum:
             yield (
-                '((sha1sum {0} 2> /dev/null || sha1 {0}) | grep {1}) '
+                '((sha1sum {0} 2> /dev/null || shasum {0} || sha1 {0}) | grep {1}) '
                 '|| (echo "SHA1 did not match!" && exit 1)'
             ).format(dest, sha1sum)
 
         if sha256sum:
             yield (
-                '((sha256sum {0} 2> /dev/null || sha256 {0}) | grep {1}) '
+                '((sha256sum {0} 2> /dev/null || shasum -a 256 {0} || sha256 {0}) | grep {1}) '
                 '|| (echo "SHA256 did not match!" && exit 1)'
             ).format(dest, sha256sum)
 
