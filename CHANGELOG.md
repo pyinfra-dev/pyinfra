@@ -1,3 +1,12 @@
+# v1.1.1
+
++ Don't fail for user error facts when the user will be added earlier in the deploy
++ Support `shasum` command in `files.download` operation
++ Consider waiting systemd units to be running (@i-do-cpp)
++ Improve regex for systemd units (support ones with `.`) (@i-do-cpp)
++ Fix sudo passwords with special characters (@sysadmin75)
++ Fix typo in host arg warning (@weakish)
+
 # v1.1
 
 This is a big release with some major additions & improvements on `v1`.
