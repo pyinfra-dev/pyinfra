@@ -18,22 +18,23 @@ To do something with pyinfra you need two things:
 **Operations**:
     Commands to execute or state to apply to the target hosts in the inventory. These can be simple shell commands (``uptime``) or state definitions such as "ensure the ``iftop`` apt package is installed".
 
+
 Ad-hoc commands with ``pyinfra``
 --------------------------------
 
-Let's start off executing a simple ad-hoc shell command. The first argument always specifies the inventory and the following arguments the operations to execute:
+Let's start off executing a simple ad-hoc shell command. The **first argument always specifies the inventory** and the **following arguments specify the operations**:
 
 .. code:: shell
 
     pyinfra INVENTORY OPERATIONS...
 
-    # Execute an arbitrary shell command
+    # Execute an arbitrary shell command over SSH
     pyinfra my-server.net exec -- echo "hello world"
 
     # Execute a shell command within a docker container
     pyinfra @docker/ubuntu:18.04 exec -- bash --version
 
-As you'll see, ``pyinfra`` runs the echo command and prints the output. See the :ref:`available command line options <cli:CLI arguments & options>` and :ref:`examples of ad-hoc commands <cli:Ad-hoc command execution>`.
+As you'll see, ``pyinfra`` runs the echo command and prints the output. The :doc:`CLI page <./cli>` contains more :ref:`examples of ad-hoc commands <cli:Ad-hoc command execution>`.
 
 State definitions
 ~~~~~~~~~~~~~~~~~
@@ -48,8 +49,10 @@ Now that we can execute ad-hoc shell commands, let's define some state to ensure
     # Ensure a package is installed on multiple instances
     pyinfra @docker/ubuntu:18.04,@docker/debian:9 apt.packages vim sudo=true
 
-    # Stop a service on a remote host
-    pyinfra some_remote_host init.systemd httpd sudo=True running=False
+    # Stop a service on a remote host over SSH
+    pyinfra my-server.net init.systemd httpd sudo=True running=False
+
+As you can see here, ``pyinfra`` can target different systems, using SSH as the default. You can read more about these in :doc:`connectors`.
 
 
 Create a Deploy
@@ -85,10 +88,10 @@ We can now execute this deploy like so:
 
 .. code:: shell
 
-    pyinfra -v inventory.py deploy.py  # the optional verbose flag '-v' will print the command output
+    pyinfra inventory.py deploy.py
 
 That's the basics of ``pyinfra``! Possible next steps:
 
-+ If you like to dive right into the code check out `the examples on GitHub <https://github.com/Fizzadar/pyinfra/tree/master/examples>`_
-+ You can also read the :doc:`building a deploy guide <./deploys>` which covers pyinfra's deploy features
++ If you like to dive right into the code check out `the examples on GitHub <https://github.com/Fizzadar/pyinfra/tree/master/examples>`_.
++ Read the :doc:`building a deploy guide <./deploys>` which covers pyinfra's deploy features.
 + Or :doc:`the CLI user guide <./cli>` which covers ad-hoc usage of ``pyinfra``.
