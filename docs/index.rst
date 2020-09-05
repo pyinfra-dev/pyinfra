@@ -25,8 +25,8 @@ Using pyinfra
         The ``pyinfra`` CLI is extremely powerful for ad hoc command execution and management.
 
 .. compound::
-    :doc:`connectors`
-        Connectors allow ``pyinfra`` to seamlessly integrate with other tools.
+    :doc:`api/deploys`
+        How to package, redistribute and share ``pyinfra`` deploys as Python packages.
 
 
 Deploy Reference
@@ -45,8 +45,28 @@ Deploy Reference
         A set of documented example deploys highlighting common patterns.
 
 .. compound::
-    :doc:`api/deploys`
-        How to package, redistribute and share ``pyinfra`` deploys with other people.
+    :doc:`connectors`
+        Connectors allow ``pyinfra`` to seamlessly integrate with other tools.
+
+
+How pyinfra Works
+-----------------
+
+.. compound::
+    :doc:`deploy_process`
+        Learn how ``pyinfra`` executes operations.
+
+.. compound::
+    :doc:`api/index`
+        Discover the ``pyinfra`` Python API.
+
+.. compound::
+    :doc:`api/operations`
+        Learn how to write your own operations for ``pyinfra``.
+
+.. compound::
+    :doc:`api/facts`
+        Learn how to write your own facts for ``pyinfra``.
 
 
 .. toctree::
@@ -56,7 +76,7 @@ Deploy Reference
     getting_started
     deploys
     cli
-    connectors
+    api/deploys
 
 .. toctree::
     :hidden:
@@ -66,15 +86,22 @@ Deploy Reference
     operations
     facts
     examples
-    api/deploys
+    connectors
 
 .. toctree::
     :hidden:
     :caption: How pyinfra Works
 
     deploy_process
+    api/index
     api/operations
     api/facts
+
+.. toctree::
+    :hidden:
+    :caption: Meta
+
+    api/reference
     performance
     compatibility
     contributing
