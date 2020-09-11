@@ -16,7 +16,7 @@ using a package manager (apt, yum, etc), normally named: python-setuptools
 
 
 INSTALL_REQUIRES = (
-    'gevent>1',
+    'gevent>=1.5',
     'paramiko>=2.2,<3',  # 2.2 (2017) adds Ed25519Key
     'click>2',
     'colorama<1',  # Windows color support for click
