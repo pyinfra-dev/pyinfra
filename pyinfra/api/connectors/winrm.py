@@ -141,7 +141,7 @@ def run_shell_command(
         TODO print_intput (boolean): print the input
         return_combined_output (boolean): combine the stdout and stderr lists
         shell_executable (string): shell to use - 'sh'=cmd, 'ps'=powershell(default)
-        env (dict): envrionment variables to set
+        env (dict): environment variables to set
 
     Returns:
         tuple: (exit_code, stdout, stderr)

@@ -243,7 +243,7 @@ def run_shell_command(
         sudo (boolean): whether to wrap the command with sudo
         sudo_user (string): user to sudo to
         get_pty (boolean): whether to get a PTY before executing the command
-        env (dict): envrionment variables to set
+        env (dict): environment variables to set
         timeout (int): timeout for this command to complete before erroring
 
     Returns:
