@@ -17,6 +17,6 @@
     },
     "commands": [
         "ssh-keygen -R remote-host.net",
-        "ssh-keyscan remote-host.net >> ~/.ssh/known_hosts"
+        "ssh-keyscan -p 22 remote-host.net >> ~/.ssh/known_hosts"
     ]
 }

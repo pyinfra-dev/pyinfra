@@ -10,7 +10,7 @@ from . import files
 
 
 @operation
-def keyscan(hostname, force=False, state=None, host=None):
+def keyscan(hostname, force=False, port=22, state=None, host=None):
     '''
     Check/add hosts to the ``~/.ssh/known_hosts`` file.
 
@@ -39,7 +39,9 @@ def keyscan(hostname, force=False, state=None, host=None):
         hostname,
     )
 
-    keyscan_command = 'ssh-keyscan {0} >> ~/.ssh/known_hosts'.format(hostname)
+    keyscan_command = 'ssh-keyscan -p {0} {1} >> ~/.ssh/known_hosts'.format(
+        port, hostname,
+    )
 
     if not hostname_present:
         yield keyscan_command
