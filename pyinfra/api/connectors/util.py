@@ -15,7 +15,7 @@ from six.moves import shlex_quote
 
 from pyinfra import logger
 from pyinfra.api import Config, MaskString, QuoteString, StringCommand
-from pyinfra.api.util import read_buffer
+from pyinfra.api.util import memoize, read_buffer
 
 SUDO_ASKPASS_ENV_VAR = 'PYINFRA_SUDO_PASSWORD'
 SUDO_ASKPASS_EXE_FILENAME = 'pyinfra-sudo-askpass'
@@ -153,6 +153,15 @@ def get_sudo_password(state, host, use_sudo_password, run_shell_command, put_fil
     return (SUDO_ASKPASS_EXE_FILENAME, shlex_quote(sudo_password))
 
 
+@memoize
+def show_use_su_login_warning():
+    logger.warning((
+        'Using `use_su_login` may not work: '
+        'some systems (MacOS, OpenBSD) ignore the flag when executing a command, '
+        'use `sudo` + `use_sudo_login` instead.'
+    ))
+
+
 def make_unix_command(
     command,
     env=None,
@@ -220,6 +229,7 @@ def make_unix_command(
         command_bits.append('su')
 
         if use_su_login:
+            show_use_su_login_warning()
             command_bits.append('-l')
 
         command_bits.extend([su_user, '-c'])
