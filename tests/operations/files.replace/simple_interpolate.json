@@ -4,6 +4,13 @@
         "flags": ["g", "i"],
         "interpolate_variables": true
     },
+    "facts": {
+        "find_in_file": {
+            "filename": {
+                "match": ["matching line"]
+            }
+        }
+    },
     "commands": [
         "sed -i.a-timestamp \"s/match/replace/gi\" filename && rm -f filename.a-timestamp"
     ]

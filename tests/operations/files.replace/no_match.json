@@ -1,0 +1,12 @@
+{
+    "args": ["filename", "match", "replace"],
+    "facts": {
+        "find_in_file": {
+            "filename": {
+                "match": []
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "string \"match\" does not exist in filename"
+}

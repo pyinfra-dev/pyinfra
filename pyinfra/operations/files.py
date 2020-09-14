@@ -327,7 +327,7 @@ def replace(
     state=None, host=None,
 ):
     '''
-    A simple shortcut for replacing text in files with sed.
+    Replace contents of a file using ``sed``.
 
     + path: target remote file to edit
     + match: text/regex to match for
@@ -354,12 +354,20 @@ def replace(
     '''
 
     path = escape_unix_path(path)
-    yield sed_replace(
-        path, match, replace,
-        flags=flags,
-        backup=backup,
-        interpolate_variables=interpolate_variables,
-    )
+
+    existing_lines = host.fact.find_in_file(path, match)
+
+    # Only do the replacement if the file does not exist (it may be created earlier)
+    # or we have matching lines.
+    if existing_lines is None or existing_lines:
+        yield sed_replace(
+            path, match, replace,
+            flags=flags,
+            backup=backup,
+            interpolate_variables=interpolate_variables,
+        )
+    else:
+        host.noop('string "{0}" does not exist in {1}'.format(match, path))
 
 
 @operation(pipeline_facts={
