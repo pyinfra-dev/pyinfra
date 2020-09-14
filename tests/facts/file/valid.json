@@ -2,10 +2,10 @@
     "arg": "/home/pyinfra/fil-@_e.txt",
     "command": "stat /home/pyinfra/fil-@_e.txt 1> /dev/null 2> /dev/null && (stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /home/pyinfra/fil-@_e.txt 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /home/pyinfra/fil-@_e.txt) || true",
     "output": [
-        "user=pyinfra group=pyinfra mode=-rwxrwx--- atime=1594804767 mtime=1594804767 ctime=0 size=8 '/home/pyinfra/fil-@_e.txt'"
+        "user=pyinfra group=domain users mode=-rwxrwx--- atime=1594804767 mtime=1594804767 ctime=0 size=8 '/home/pyinfra/fil-@_e.txt'"
     ],
     "fact": {
-        "group": "pyinfra",
+        "group": "domain users",
         "user": "pyinfra",
         "mode": 770,
         "atime": "2020-07-15T09:19:27",

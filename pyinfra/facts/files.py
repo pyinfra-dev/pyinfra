@@ -17,6 +17,12 @@ BSD_STAT_COMMAND = (
     "stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY'"
 )
 
+STAT_REGEX = (
+    r'user=(.*) group=(.*) mode=(.*) '
+    r'atime=([0-9]*) mtime=([0-9]*) ctime=([0-9]*) '
+    r'size=([0-9]*) (.*)'
+)
+
 FLAG_TO_TYPE = {
     'b': 'block',
     'c': 'character',
@@ -71,15 +77,22 @@ class File(FactBase):
         )
 
     def process(self, output):
-        stat_bits = output[0].split(None, 7)
-        stat_bits, filename = stat_bits[:-1], stat_bits[-1]
+        match = re.match(STAT_REGEX, output[0])
+        if not match:
+            return None
 
         data = {}
         path_type = None
 
-        for bit in stat_bits:
-            key, value = bit.split('=')
-
+        for key, value in (
+            ('user', match.group(1)),
+            ('group', match.group(2)),
+            ('mode', match.group(3)),
+            ('atime', match.group(4)),
+            ('mtime', match.group(5)),
+            ('ctime', match.group(6)),
+            ('size', match.group(7)),
+        ):
             if key == 'mode':
                 path_type = FLAG_TO_TYPE[value[0]]
                 value = _parse_mode(value[1:])
@@ -98,6 +111,7 @@ class File(FactBase):
             return False
 
         if path_type == 'link':
+            filename = match.group(8)
             filename, target = filename.split(' -> ')
             data['link_target'] = target.strip("'")
 
