@@ -51,7 +51,7 @@ def run_shell_command(
         command (string): actual command to execute
         sudo (boolean): whether to wrap the command with sudo
         sudo_user (string): user to sudo to
-        env (dict): envrionment variables to set
+        env (dict): environment variables to set
         timeout (int): timeout for this command to complete before erroring
 
     Returns:
