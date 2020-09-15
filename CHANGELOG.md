@@ -1,3 +1,13 @@
+# v1.1.2
+
++ Add `port=22` argument to the `ssh.keyscan` operation
++ Add `extra_install_args` argument to the `pip.packages` operation
++ Support uninstalling a requirements file in the `pip.packages` operation
++ Use state in `files.replace` operation, enabling noop support where appropriate
++ Add a warning when using `use_su_login`
++ Fix parsing stat output when groups contain spaces (`file`, `directory`, `link` facts)
++ Fix minimum gevent version (@alexandervdm)
+
 # v1.1.1
 
 + Don't fail for user error facts when the user will be added earlier in the deploy
