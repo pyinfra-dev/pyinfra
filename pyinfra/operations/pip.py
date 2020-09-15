@@ -78,6 +78,7 @@ _virtualenv = virtualenv  # noqa
 def packages(
     packages=None, present=True, latest=False,
     requirements=None, pip='pip', virtualenv=None, virtualenv_kwargs=None,
+    extra_install_args=None,
     state=None, host=None,
 ):
     '''
@@ -86,7 +87,7 @@ def packages(
     + packages: list of packages to ensure
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
-    + requirements: location of requirements file to install
+    + requirements: location of requirements file to install/uninstall
     + pip: name or path of the pip directory to use
     + virtualenv: root directory of virtualenv to work in
     + virtualenv_kwargs: dictionary of arguments to pass to ``pip.virtualenv``
@@ -130,7 +131,10 @@ def packages(
 
     # (un)Install requirements
     if requirements is not None:
-        yield '{0} install -r {1}'.format(pip, requirements)
+        if present:
+            yield '{0} -r {1}'.format(install_command, requirements)
+        else:
+            yield '{0} -r {1}'.format(uninstall_command, requirements)
 
     # Handle passed in packages
     if packages:
