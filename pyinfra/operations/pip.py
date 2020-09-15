@@ -90,6 +90,7 @@ def packages(
     + pip: name or path of the pip directory to use
     + virtualenv: root directory of virtualenv to work in
     + virtualenv_kwargs: dictionary of arguments to pass to ``pip.virtualenv``
+    + extra_install_args: additional arguments to the pip install command
 
     Virtualenv:
         This will be created if it does not exist already. ``virtualenv_kwargs``
@@ -120,7 +121,14 @@ def packages(
         virtualenv = virtualenv.rstrip('/')
         pip = '{0}/bin/{1}'.format(virtualenv, pip)
 
-    # Install requirements
+    install_command = [pip, 'install']
+    if extra_install_args:
+        install_command.append(extra_install_args)
+    install_command = ' '.join(install_command)
+
+    uninstall_command = ' '.join([pip, 'uninstall', '--yes'])
+
+    # (un)Install requirements
     if requirements is not None:
         yield '{0} install -r {1}'.format(pip, requirements)
 
@@ -130,9 +138,9 @@ def packages(
 
         yield ensure_packages(
             host, packages, current_packages, present,
-            install_command='{0} install'.format(pip),
-            uninstall_command='{0} uninstall --yes'.format(pip),
-            upgrade_command='{0} install --upgrade'.format(pip),
+            install_command=install_command,
+            uninstall_command=uninstall_command,
+            upgrade_command='{0} --upgrade'.format(install_command),
             version_join='==',
             latest=latest,
         )
