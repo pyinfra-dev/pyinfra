@@ -103,19 +103,6 @@ Data files are just Python, any core types will be included:
     app_user = 'myuser'
     app_dir = '/opt/myapp'
 
-Authenticating with Data
-************************
-
-Instead of passing ``--key``, ``--user``, etc to the CLI, or running a SSH agent, you can define these details within host and group data. The attributes available:
-
-.. code:: python
-
-    ssh_port = 22
-    ssh_user = 'ubuntu'
-    ssh_key = '~/.ssh/some_key'
-    ssh_key_password = 'password for key'
-    # ssh_password = 'Using password authorization is bad. Preferred option is ssh_key.'
-
 Data Hierarchy
 **************
 
@@ -128,6 +115,19 @@ The same keys can be defined for host and group data - this means we can set a d
 
 .. Note::
     pyinfra contains a ``debug-inventory`` command which can be used to explore the data output per-host for a given inventory/deploy, ie ``pyinfra inventory.py debug-inventory``.
+
+Connecting with Data
+~~~~~~~~~~~~~~~~~~~~
+
+Instead of passing ``--key``, ``--user``, etc to the CLI, or running a SSH agent, you can define these details within host and group data. Different variables are used depending on the connector - :doc:`see the connectors page <./connectors>` to see them all. For example the SSH variables available are as follows:
+
+.. code:: python
+
+    ssh_port = 22
+    ssh_user = 'ubuntu'
+    ssh_key = '~/.ssh/some_key'
+    ssh_key_password = 'password for key'
+    # ssh_password = 'Using password authorization is bad. Preferred option is ssh_key.'
 
 
 Operations
