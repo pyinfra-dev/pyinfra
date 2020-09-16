@@ -6,7 +6,7 @@ Connectors enable ``pyinfra`` to integrate with other tools out of the box. Conn
 + Modify how commands are executed (`@ssh`, `@local`)
 + Both of the above (`@docker`)
 
-Each connector is described below along with usage examples.
+Each connector is described below along with usage examples. Some connectors also accept certain data variables which are also listed.
 
 **Want a new connector?** If interested in building a connector, check out [the existing code](https://github.com/Fizzadar/pyinfra/tree/master/pyinfra/api/connectors). Be sure to add tests and documentation.
 
@@ -19,6 +19,17 @@ pyinfra my-host.net ...
 pyinfra @ssh/my-host.net ...
 ```
 
+**Available Data**:
+
+```py
+ssh_port = 22
+ssh_user = 'ubuntu'
+ssh_key = '~/.ssh/some_key'
+ssh_key_password = 'password for key'
+# ssh_password = 'Using password authorization is bad. Preferred option is ssh_key.'
+```
+
+
 ## `@local`
 
 The `@local` connector executes changes on the local machine using subprocesses.
@@ -26,6 +37,7 @@ The `@local` connector executes changes on the local machine using subprocesses.
 ```sh
 pyinfra @local ...
 ```
+
 
 ## `@docker`
 
@@ -41,6 +53,15 @@ pyinfra @docker/alpine:3.8 ...
 pyinfra @docker/alpine:3.8,@docker/ubuntu:bionic ...
 ```
 
+**Available Data**:
+
+```py
+# Provide a specific container ID - prevents pyinfra starting a new container and will instead use
+# whatever is provided in the name.
+docker_container_id = 'abc'
+```
+
+
 ## `@dockerssh`
 
 **Note**: this connector is in beta!
@@ -54,6 +75,15 @@ pyinfra @dockerssh/remotehost:alpine:3.8 ...
 # pyinfra can run on multiple Docker images in parallel
 pyinfra @dockerssh/remotehost:alpine:3.8,@dockerssh/remotehost:ubuntu:bionic ...
 ```
+
+**Available Data**:
+
+```py
+# Provide a specific container ID - prevents pyinfra starting a new container and will instead use
+# whatever is provided in the name.
+docker_container_id = 'abc'
+```
+
 
 ## `@vagrant`
 
@@ -70,6 +100,7 @@ pyinfra @vagrant/my-vm-name ...
 pyinfra @vagrant/my-vm-name,@vagrant/another-vm-name ...
 ```
 
+
 ## `@mech`
 
 The `@mech` connector reads the current mech status and generates an inventory for any running VMs.
@@ -85,6 +116,7 @@ pyinfra @mech/my-vm-name ...
 pyinfra @mech/my-vm-name,@mech/another-vm-name ...
 ```
 
+
 ## `@ansible`
 
 **Note**: this connector is a work in progress! While it parses the list of hosts OK, it doesn't handle nested groups properly yet.
@@ -98,6 +130,7 @@ pyinfra @ansible/path/to/inventory
 # Load using an absolute path
 pyinfra @ansible//absolute/path/to/inventory
 ```
+
 
 ## `@winrm`
 
@@ -116,4 +149,12 @@ pyinfra @winrm/192.168.3.232 --winrm-username vagrant --winrm-password vagrant -
 pyinfra @winrm/192.168.3.232 --winrm-username vagrant --winrm-password vagrant --winrm-port 5985 exec -- write-host hello
 # Run a command using the command prompt:
 pyinfra @winrm/192.168.3.232 --winrm-username vagrant --winrm-password vagrant --winrm-port 5985 --shell-executable cmd exec -- date /T
+```
+
+**Available Data**:
+
+```py
+winrm_port = 22
+winrm_user = 'ubuntu'
+winrm_password = 'password for user'
 ```
