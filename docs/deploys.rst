@@ -269,3 +269,12 @@ There are a number of configuration options for how deploys are managed. These c
 
 .. note::
     When added to ``config.py`` (vs the deploy file), these options will take effect for any CLI usage (ie ``pyinfra host exec -- 'tail -f /var/log/syslog'``).
+
+
+Examples
+--------
+
+A great way to learn more about writing ``pyinfra`` deploys is to see some in action. There's a number of resources for this:
+
+- `the pyinfra examples folder on GitHub <https://github.com/Fizzadar/pyinfra/tree/master/examples>`_ - a general collection of all kinds of example deploy
+- :doc:`the example deploys in this documentation <./examples>` - these highlight specific common patterns
