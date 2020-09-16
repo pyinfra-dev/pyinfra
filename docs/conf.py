@@ -12,14 +12,12 @@ copyright = 'Nick Barrett {0} — pyinfra v{1}'.format(
 )
 
 extensions = [
-    # Official
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.autosectionlabel',
+    'guzzle_sphinx_theme',
 ]
 autosectionlabel_prefix_document = True
-
-extensions.append('guzzle_sphinx_theme')
 
 source_suffix = ['.rst', '.md']
 source_parsers = {
