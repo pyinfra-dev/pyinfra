@@ -35,7 +35,7 @@ pyinfra INVENTORY all-facts
 pyinfra INVENTORY debug-inventory
 ```
 
-## Verbosity
+### Verbosity
 
 By default `pyinfra` only prints high level information (this host connected, this operation started), this can be increased as follows:
 
@@ -43,9 +43,22 @@ By default `pyinfra` only prints high level information (this host connected, th
 + `-vv`: as above plus print shell input to the remote host
 + `-vvv` as above plus print shell output from the remote host
 
+
+## Inventory
+
+When using ``pyinfra`` inventory can be provided direct via the command line or [defined in a file](./deploys.html#inventory). Both support the full range of [connectors](./connectors) and multiple hosts. Some CLI examples:
+
+```sh
+pyinfra my-server.net,my-other-server.net ...  # execute via SSH on the two servers listed
+pyinfra @local ...  # execute on the local machine via subprocess
+pyinfra my-server.net,@local ...  # execute via local subprocess and a server over SSH
+pyinfra @docker/centos:8 ...  # execute against a Docker container
+```
+
+
 ## Ad-hoc command execution
 
-pyinfra can execute shell commands on remote hosts by using `pyinfra exec`. For example:
+``pyinfra`` can execute shell commands on remote hosts by using `pyinfra exec`. For example:
 
 ```sh
 pyinfra inventory.py exec -- my_command_goes_here --some-argument
