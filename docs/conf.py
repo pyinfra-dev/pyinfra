@@ -44,6 +44,10 @@ html_sidebars = {
     '**': ['pyinfra_sidebar.html', 'searchbox.html'],
 }
 
+exclude_patterns = [
+    '_deploy_globals.rst',
+]
+
 
 def setup(app):
     this_dir = path.dirname(path.realpath(__file__))
