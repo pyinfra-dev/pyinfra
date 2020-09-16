@@ -13,10 +13,12 @@ Install ``pyinfra`` with pip or `pipx <https://pipxproject.github.io/pipx/>`_ (s
 To do something with pyinfra you need two things:
 
 **Inventory**:
-    Hosts, groups and data. Hosts are targets for pyinfra to execute commands or state changes. Hosts can belong to one or more groups, and both groups and hosts can have data associated with them. Examples: an SSH server, a Docker container, the local machine.
+    Hosts, groups and data. Hosts are targets for ``pyinfra`` to execute commands or state changes. Hosts can belong to one or more groups, and both groups and hosts can have data associated with them.
+
+    By default ``pyinfra`` assumes hosts can be reached over SSH. ``pyinfra`` can connect to other systems using :doc:`connectors <./connectors>`, for example: a Docker container or the local machine.
 
 **Operations**:
-    Commands to execute or state to apply to the target hosts in the inventory. These can be simple shell commands (``uptime``) or state definitions such as "ensure the ``iftop`` apt package is installed".
+    Commands to execute or state to apply to the target hosts in the inventory. These can be simple shell commands "execute the ``uptime`` command" or state definitions such as "ensure the ``iftop`` apt package is installed".
 
 
 Ad-hoc commands with ``pyinfra``
@@ -52,7 +54,7 @@ Now that we can execute ad-hoc shell commands, let's define some state to ensure
     # Stop a service on a remote host over SSH
     pyinfra my-server.net init.systemd httpd sudo=True running=False
 
-As you can see here, ``pyinfra`` can target different systems, using SSH as the default. You can read more about these in :doc:`connectors`.
+In this case you can re-run the above commands and in the second instance ``pyinfra`` will report no changes need to be made.
 
 
 Create a Deploy
