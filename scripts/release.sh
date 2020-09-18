@@ -3,8 +3,9 @@
 set -e
 
 VERSION=`python setup.py --version`
+MAJOR_BRANCH="`python setup.py --version | cut -d'.' -f1`.x"
 
-echo "# Releasing pyinfra v$VERSION..."
+echo "# Releasing pyinfra v${VERSION} (branch ${MAJOR_BRANCH})"
 
 echo "# Running tests..."
 pytest
@@ -16,6 +17,12 @@ echo "# Commit & push the docs..."
 git add docs/
 git commit -m "Documentation update for v$VERSION." || echo "No docs updated!"
 git push
+
+echo "Git update major branch..."
+git checkout $MAJOR_BRANCH
+git merge master
+git push
+git checkout master
 
 echo "# Git tag & push..."
 git tag -a "v$VERSION" -m "v$VERSION"
