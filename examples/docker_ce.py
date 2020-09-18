@@ -9,11 +9,13 @@ from pyinfra.operations import apt, init, python
 # for a more complete pyinfra docker installation.
 
 SUDO = True
+# If the remote system requires a password for sudo, un-comment the line below:
+# USE_SUDO_PASSWORD = True
 
 
 def check_docker_works(state, host):
     command = 'docker run hello-world'
-    status, stdout, stderr = host.run_shell_command(state, command=command, sudo=SUDO)
+    status, stdout, stderr = host.run_shell_command(command=command, sudo=SUDO)
     if not status or 'Hello from Docker!' not in stdout:
         raise Exception('`{}` did not work as expected'.format(command))
 
@@ -51,18 +53,18 @@ if host.fact.linux_name == 'Ubuntu':
     if not docker_key_exists:
         apt.key(
             name='Add the Docker apt gpg key if we need to',
-            key='https://download.docker.com/linux/ubuntu/gpg',
+            src='https://download.docker.com/linux/ubuntu/gpg',
         )
 
-    linux_id = host.fact.linux_distribution['release_meta'].get('ID')
-    code_name = host.fact.linux_distribution['release_meta'].get('DISTRIB_CODENAME')
-    print(linux_id, code_name)
+    lsb_info = host.fact.lsb_release
+    linux_id = lsb_info['id'].lower()
+    code_name = lsb_info['codename']
+
     apt.repo(
         name='Add the Docker CE apt repo',
         src=(
             'deb [arch=amd64] https://download.docker.com/linux/'
-            '{} '
-            '{} stable'.format(linux_id, code_name)
+            '{} {} stable'.format(linux_id, code_name)
         ),
         filename='docker-ce-stable',
     )
