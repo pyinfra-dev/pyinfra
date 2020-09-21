@@ -30,3 +30,4 @@ jobs:
     - stage: Docker integration test
       python: '3.8'
       script: travis_wait pytest -m docker
+      if: branch = master
