@@ -1,5 +1,5 @@
 {
-    "command": "brew cask list --versions",
+    "command": "which brew > /dev/null && brew cask list --versions || true",
     "output": [
         "1password-cli 0.10.0",
         "google-chrome 76.0.3809.132",

@@ -8,9 +8,8 @@ class LXDContainers(FactBase):
     Returns a list of running LXD containers
     '''
 
-    command = 'lxc list --format json --fast'
+    command = 'which lxc > /dev/null && lxc list --format json --fast || true'
     default = list
-    use_default_on_error = True
 
     def process(self, output):
         assert len(output) == 1

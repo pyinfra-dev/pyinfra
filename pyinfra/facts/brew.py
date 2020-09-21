@@ -15,9 +15,8 @@ class BrewPackages(FactBase):
         ...
     '''
 
-    command = 'brew list --versions'
+    command = 'which brew > /dev/null && brew list --versions || true'
     default = dict
-    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(BREW_REGEX, output)
@@ -33,7 +32,7 @@ class BrewCasks(BrewPackages):
         ...
     '''
 
-    command = 'brew cask list --versions'
+    command = 'which brew > /dev/null && brew cask list --versions || true'
 
 
 class BrewTaps(FactBase):
@@ -41,9 +40,8 @@ class BrewTaps(FactBase):
     Returns a list of brew taps.
     '''
 
-    command = 'brew tap'
+    command = 'which brew > /dev/null && brew tap || true'
     default = list
-    use_default_on_error = True
 
     def process(self, output):
         return output

@@ -19,15 +19,15 @@ class NpmPackages(FactBase):
         ...
     '''
 
-    command = 'npm list -g --depth=0'
     default = dict
-    use_default_on_error = True
 
     def command(self, directory=None):
         if directory:
-            return 'cd {0} && npm list -g --depth=0'.format(directory)
+            return (
+                'which npm > /dev/null && (cd {0} && npm list -g --depth=0) || true'
+            ).format(directory)
         else:
-            return 'npm list -g --depth=0'
+            return 'which npm > /dev/null && npm list -g --depth=0 || true'
 
     def process(self, output):
         return parse_packages(NPM_REGEX, output)

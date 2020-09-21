@@ -25,7 +25,6 @@ class DnfRepositories(FactBase):
     )
 
     default = list
-    use_default_on_error = True
 
     def process(self, output):
         return parse_yum_repositories(output)

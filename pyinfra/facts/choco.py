@@ -15,11 +15,10 @@ class ChocoPackages(FactBase):
         ...
     '''
 
-    command = 'choco list --local-only'
+    command = 'which choco > /dev/null && choco list --local-only || true'
     shell_executable = 'ps'
 
     default = dict
-    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(CHOCO_REGEX, output)
@@ -30,8 +29,7 @@ class ChocoVersion(FactBase):
     Returns the choco (Chocolatey) version.
     '''
 
-    command = 'choco --version'
-    use_default_on_error = True
+    command = 'which choco > /dev/null && choco --version || true'
 
     @staticmethod
     def process(output):

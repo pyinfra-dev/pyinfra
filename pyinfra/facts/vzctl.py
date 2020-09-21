@@ -19,9 +19,8 @@ class OpenvzContainers(FactBase):
         }
     '''
 
-    command = 'vzlist -a -j'
+    command = 'which vzlist > /dev/null && vzlist -a -j || true'
     default = dict
-    use_default_on_error = True
 
     @staticmethod
     def process(output):

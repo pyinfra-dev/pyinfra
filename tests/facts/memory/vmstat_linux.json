@@ -1,5 +1,5 @@
 {
-    "command": "vmstat -s",
+    "command": "which vmstat > /dev/null && vmstat -s || true",
     "output": [
         "131766608  total memory",
         "10646204  used memory",

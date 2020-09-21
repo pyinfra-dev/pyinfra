@@ -48,7 +48,6 @@ def make_execute_mysql_command(command, **mysql_kwargs):
 
 class MysqlFactBase(FactBase):
     abstract = True
-    use_default_on_error = True
 
     def command(
         self,
@@ -56,12 +55,17 @@ class MysqlFactBase(FactBase):
         mysql_user=None, mysql_password=None,
         mysql_host=None, mysql_port=None,
     ):
-        return make_execute_mysql_command(
+        mysql_command = make_execute_mysql_command(
             self.mysql_command,
             user=mysql_user,
             password=mysql_password,
             host=mysql_host,
             port=mysql_port,
+        )
+        return StringCommand(
+            'which', 'mysql', '>', '/dev/null',
+            '&&', StringCommand('(', mysql_command, ')', separator=''),
+            '||', 'true',
         )
 
 

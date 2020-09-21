@@ -44,19 +44,23 @@ def make_execute_psql_command(command, **postgresql_kwargs):
 
 class PostgresqlFactBase(FactBase):
     abstract = True
-    use_default_on_error = True
 
     def command(
         self,
         postgresql_user=None, postgresql_password=None,
         postgresql_host=None, postgresql_port=None,
     ):
-        return make_execute_psql_command(
+        psql_command = make_execute_psql_command(
             self.postgresql_command,
             user=postgresql_user,
             password=postgresql_password,
             host=postgresql_host,
             port=postgresql_port,
+        )
+        return StringCommand(
+            'which', 'psql', '>', '/dev/null', '&&',
+            StringCommand('(', psql_command, ')', separator=''),
+            '||', 'true',
         )
 
 

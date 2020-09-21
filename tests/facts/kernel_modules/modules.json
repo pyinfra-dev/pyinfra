@@ -1,5 +1,5 @@
 {
-    "command": "cat /proc/modules",
+    "command": "find /proc/modules > /dev/null && cat /proc/modules || true",
     "output": [
         "libahci 32768 1 ahci, Live 0x0000000000000000",
         "i2c_piix4 24576 0 - Live 0x0000000000000000",

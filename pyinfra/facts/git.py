@@ -4,23 +4,22 @@ from pyinfra.api.facts import FactBase
 
 
 class GitBranch(FactBase):
-    use_default_on_error = True
-
     @staticmethod
     def command(repo):
-        return 'cd {0} && git rev-parse --abbrev-ref HEAD'.format(repo)
+        return (
+            'which git > /dev/null && (cd {0} && git rev-parse --abbrev-ref HEAD) || true'
+        ).format(repo)
 
 
 class GitConfig(FactBase):
     default = dict
-    use_default_on_error = True
 
     @staticmethod
     def command(repo=None):
         if repo is None:
-            return 'git config --global -l'
+            return 'which git > /dev/null && git config --global -l || true'
 
-        return 'cd {0} && git config --local -l'.format(repo)
+        return 'which git > /dev/null && (cd {0} && git config --local -l) || true'.format(repo)
 
     @staticmethod
     def process(output):

@@ -15,9 +15,8 @@ class GemPackages(FactBase):
         ...
     '''
 
-    command = 'gem list --local'
+    command = 'which gem > /dev/null && gem list --local || true'
     default = dict
-    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(GEM_REGEX, output)

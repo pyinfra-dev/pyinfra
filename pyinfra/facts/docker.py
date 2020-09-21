@@ -5,7 +5,6 @@ from pyinfra.api import FactBase
 
 class DockerFactBase(FactBase):
     abstract = True
-    use_default_on_error = True
 
     def process(self, output):
         output = ''.join(output)
@@ -17,7 +16,7 @@ class DockerSystemInfo(DockerFactBase):
     Returns ``docker system info`` output in JSON format.
     '''
 
-    command = 'docker system info --format="{{json .}}"'
+    command = 'which docker > /dev/null && docker system info --format="{{json .}}" || true'
 
 
 # All Docker objects
@@ -28,7 +27,7 @@ class DockerContainers(DockerFactBase):
     Returns ``docker inspect`` output for all Docker containers.
     '''
 
-    command = 'docker container inspect `docker ps -qa`'
+    command = 'which docker > /dev/null && docker container inspect `docker ps -qa` || true'
 
 
 class DockerImages(DockerFactBase):
@@ -36,7 +35,7 @@ class DockerImages(DockerFactBase):
     Returns ``docker inspect`` output for all Docker images.
     '''
 
-    command = 'docker image inspect `docker images -q`'
+    command = 'which docker > /dev/null && docker image inspect `docker images -q` || true'
 
 
 class DockerNetworks(DockerFactBase):
@@ -44,7 +43,7 @@ class DockerNetworks(DockerFactBase):
     Returns ``docker inspect`` output for all Docker networks.
     '''
 
-    command = 'docker network inspect `docker network ls -q`'
+    command = 'which docker > /dev/null && docker network inspect `docker network ls -q` || true'
 
 
 # Single Docker objects
@@ -52,7 +51,9 @@ class DockerNetworks(DockerFactBase):
 
 class DockerSingleMixin(DockerFactBase):
     def command(self, object_id):
-        return 'docker {0} inspect {1}'.format(self.docker_type, object_id)
+        return 'which docker > /dev/null && docker {0} inspect {1} || true'.format(
+            self.docker_type, object_id,
+        )
 
 
 class DockerContainer(DockerSingleMixin):

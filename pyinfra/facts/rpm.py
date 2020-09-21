@@ -20,9 +20,8 @@ class RPMPackages(FactBase):
         ...
     '''
 
-    command = 'rpm --queryformat "{0}" -qa'.format(rpm_query_format)
+    command = 'which rpm > /dev/null && rpm --queryformat "{0}" -qa || true'.format(rpm_query_format)
     default = dict
-    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(
@@ -44,11 +43,13 @@ class RpmPackage(FactBase):
         }
     '''
 
-    use_default_on_error = True
-
     def command(self, name):
-        return ('rpm --queryformat "{0}" -qp {1} 2> /dev/null || '
-                'rpm --queryformat "{0}" -q {1}'.format(rpm_query_format, name))
+        return (
+            'which rpm > /dev/null && ('
+            'rpm --queryformat "{0}" -qp {1} 2> /dev/null || '
+            'rpm --queryformat "{0}" -q {1}'
+            ') || true'
+        ).format(rpm_query_format, name)
 
     def process(self, output):
         for line in output:

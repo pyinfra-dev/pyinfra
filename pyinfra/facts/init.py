@@ -25,10 +25,9 @@ class UpstartStatus(FactBase):
     Returns a dict of name -> status for upstart managed services.
     '''
 
-    command = 'initctl list'
+    command = 'which initctl > /dev/null && initctl list || true'
     regex = r'^([a-z\-]+) [a-z]+\/([a-z]+)'
     default = dict
-    use_default_on_error = True
 
     def process(self, output):
         services = {}
@@ -46,11 +45,10 @@ class SystemdStatus(FactBase):
     Returns a dict of name -> status for systemd managed services.
     '''
 
-    command = 'systemctl -al list-units'
+    command = 'which systemctl > /dev/null && systemctl -al list-units || true'
     regex = r'^({systemd_unit_name_regex})\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'.format(
         systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX)
     default = dict
-    use_default_on_error = True
 
     def process(self, output):
         services = {}
@@ -71,19 +69,19 @@ class SystemdEnabled(FactBase):
     '''
 
     command = '''
-        systemctl --no-legend -al list-unit-files | while read -r UNIT STATUS; do
+        which systemctl > /dev/null &&
+        (systemctl --no-legend -al list-unit-files | while read -r UNIT STATUS; do
             if [ "$STATUS" = generated ] &&
                 systemctl is-enabled $UNIT >/dev/null 2>&1; then
                 STATUS=enabled
             fi
             echo $UNIT $STATUS
-        done
+        done) || true
     '''
 
     regex = r'^({systemd_unit_name_regex})\s+([a-z]+)'.format(
         systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX)
     default = dict
-    use_default_on_error = True
 
     def process(self, output):
         units = {}
@@ -123,7 +121,6 @@ class InitdStatus(FactBase):
 
     regex = r'([a-zA-Z0-9\-]+)=([0-9]+)'
     default = dict
-    use_default_on_error = True
 
     def process(self, output):
         services = {}
@@ -168,7 +165,6 @@ class RcdStatus(InitdStatus):
     '''
 
     default = dict
-    use_default_on_error = True
 
 
 class LaunchdStatus(FactBase):
@@ -176,9 +172,8 @@ class LaunchdStatus(FactBase):
     Returns a dict of name -> status for launchd managed services.
     '''
 
-    command = 'launchctl list'
+    command = 'which launchctl > /dev/null && launchctl list || true'
     default = dict
-    use_default_on_error = True
 
     def process(self, output):
         services = {}

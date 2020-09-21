@@ -1,5 +1,5 @@
 {
-    "command": "launchctl list",
+    "command": "which launchctl > /dev/null && launchctl list || true",
     "output": [
         "PID Status Label",
         "411    0   com.google.android.mtpagent.21640",

@@ -1,6 +1,6 @@
 {
     "arg": "pip3",
-    "command": "pip3 freeze --all",
+    "command": "which pip3 > /dev/null && pip3 freeze --all || true",
     "output": [
         "pydash==3.48"
     ],

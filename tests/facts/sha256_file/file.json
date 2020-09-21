@@ -1,6 +1,6 @@
 {
     "arg": "myfile",
-    "command": "sha256sum myfile 2> /dev/null || shasum -a 256 myfile 2> /dev/null || sha256 myfile",
+    "command": "find myfile > /dev/null && (sha256sum myfile 2> /dev/null || shasum -a 256 myfile 2> /dev/null || sha256 myfile) || true",
     "output": [
         "3867882e8ccc16bd6a1e3e214a46608f9cf5d21687bbb8c25751da3c47b48033 myfile"
     ],

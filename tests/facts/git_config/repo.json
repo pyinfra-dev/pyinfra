@@ -1,6 +1,6 @@
 {
     "arg": "myrepo",
-    "command": "cd myrepo && git config --local -l",
+    "command": "which git > /dev/null && (cd myrepo && git config --local -l) || true",
     "output": [
         "user.email=nick@gmail.com"
     ],

@@ -1,5 +1,5 @@
 {
-    "command": "docker container inspect `docker ps -qa`",
+    "command": "which docker > /dev/null && docker container inspect `docker ps -qa` || true",
     "output": [
         "{\"hello\": \"world\"}"
     ],

@@ -135,9 +135,6 @@ class Sha1File(FactBase):
     Returns a SHA1 hash of a file. Works with both sha1sum and sha1.
     '''
 
-    # If the file doesn't exist, return `None` instead of failing
-    use_default_on_error = True
-
     _regexes = [
         r'^([a-zA-Z0-9]{40})\s+%s$',
         r'^SHA1\s+\(%s\)\s+=\s+([a-zA-Z0-9]{40})$',
@@ -146,7 +143,11 @@ class Sha1File(FactBase):
     def command(self, name):
         name = escape_unix_path(name)
         self.name = name
-        return 'sha1sum {0} 2> /dev/null || shasum {0} 2> /dev/null || sha1 {0}'.format(name)
+        return (
+            'find {0} > /dev/null && ('
+            'sha1sum {0} 2> /dev/null || shasum {0} 2> /dev/null || sha1 {0}'
+            ') || true'
+        ).format(name)
 
     def process(self, output):
         for regex in self._regexes:
@@ -161,8 +162,6 @@ class Sha256File(FactBase):
     Returns a SHA256 hash of a file.
     '''
 
-    use_default_on_error = True
-
     _regexes = [
         r'^([a-zA-Z0-9]{64})\s+%s$',
         r'^SHA256\s+\(%s\)\s+=\s+([a-zA-Z0-9]{64})$',
@@ -172,9 +171,11 @@ class Sha256File(FactBase):
         name = escape_unix_path(name)
         self.name = name
         return (
+            'find {0} > /dev/null && ('
             'sha256sum {0} 2> /dev/null '
             '|| shasum -a 256 {0} 2> /dev/null '
             '|| sha256 {0}'
+            ') || true'
         ).format(name)
 
     def process(self, output):
@@ -190,8 +191,6 @@ class Md5File(FactBase):
     Returns an MD5 hash of a file.
     '''
 
-    use_default_on_error = True
-
     _regexes = [
         r'^([a-zA-Z0-9]{32})\s+%s$',
         r'^SHA256\s+\(%s\)\s+=\s+([a-zA-Z0-9]{32})$',
@@ -200,7 +199,7 @@ class Md5File(FactBase):
     def command(self, name):
         name = escape_unix_path(name)
         self.name = name
-        return 'md5sum {0} 2> /dev/null || md5 {0}'.format(name)
+        return 'find {0} > /dev/null && (md5sum {0} 2> /dev/null || md5 {0}) || true'.format(name)
 
     def process(self, output):
         for regex in self._regexes:
@@ -216,8 +215,6 @@ class FindInFile(FactBase):
     lines if the file exists, and ``None`` if the file does not.
     '''
 
-    use_default_on_error = True
-
     def command(self, name, pattern):
         name = escape_unix_path(name)
         pattern = shlex_quote(pattern)
@@ -226,7 +223,7 @@ class FindInFile(FactBase):
 
         return (
             'grep -e {0} {1} 2> /dev/null || '
-            '(find {1} -type f > /dev/null && echo "__pyinfra_exists_{1}")'
+            '(find {1} -type f > /dev/null && echo "__pyinfra_exists_{1}" || true)'
         ).format(pattern, name).strip()
 
     def process(self, output):

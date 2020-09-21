@@ -15,9 +15,8 @@ class PacmanPackages(FactBase):
         ...
     '''
 
-    command = 'pacman -Q'
+    command = 'which pacman > /dev/null && pacman -Q || true'
     default = dict
-    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(PACMAN_REGEX, output)

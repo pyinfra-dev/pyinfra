@@ -18,10 +18,9 @@ class PipPackages(FactBase):
     '''
 
     default = dict
-    use_default_on_error = True
 
     def command(self, pip='pip'):
-        return '{0} freeze --all'.format(pip)
+        return 'which {0} > /dev/null && {0} freeze --all || true'.format(pip)
 
     def process(self, output):
         return parse_packages(PIP_REGEX, output)

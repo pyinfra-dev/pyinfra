@@ -69,11 +69,9 @@ class Which(FactBase):
     Returns the path of a given command, if available.
     '''
 
-    use_default_on_error = True
-
     @staticmethod
     def command(name):
-        return 'which {0}'.format(name)
+        return 'which {0} || true'.format(name)
 
 
 class Date(FactBase):
@@ -154,7 +152,7 @@ class KernelModules(FactBase):
         ...
     '''
 
-    command = 'cat /proc/modules'
+    command = 'find /proc/modules > /dev/null && cat /proc/modules || true'
     default = dict
 
     @staticmethod
@@ -198,8 +196,7 @@ class LsbRelease(FactBase):
         }
     '''
 
-    use_default_on_error = True
-    command = 'lsb_release -ca'
+    command = 'which lsb_release > /dev/null && lsb_release -ca || true'
 
     @staticmethod
     def process(output):
@@ -311,14 +308,13 @@ class Crontab(FactBase):
     '''
 
     default = dict
-    use_default_on_error = True
 
     @staticmethod
     def command(user=None):
         if user:
-            return 'crontab -l -u {0}'.format(user)
+            return 'which crontab > /dev/null && crontab -l -u {0} || true'.format(user)
 
-        return 'crontab -l'
+        return 'which crontab > /dev/null && crontab -l || true'
 
     @staticmethod
     def process(output):
@@ -457,8 +453,6 @@ class LinuxDistribution(FactBase):
         'ubuntu': 'Ubuntu',
     }
 
-    use_default_on_error = True
-
     @staticmethod
     def default():
         return {
@@ -528,9 +522,7 @@ class Selinux(FactBase):
             'mode': 'enabled',
         }
     '''
-    command = 'sestatus 2> /dev/null'
-
-    use_default_on_error = True
+    command = 'which sestatus > /dev/null && sestatus 2> /dev/null || true'
 
     @staticmethod
     def default():

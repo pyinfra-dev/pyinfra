@@ -1,6 +1,6 @@
 {
     "arg": "someuser",
-    "command": "mysql -Be 'SHOW GRANTS FOR \"someuser\"@\"localhost\"'",
+    "command": "which mysql > /dev/null && (mysql -Be 'SHOW GRANTS FOR \"someuser\"@\"localhost\"') || true",
     "output": [
         "GRANT USAGE ON *.* TO 'someuser'@'localhost' IDENTIFIED BY PASSWORD '*THISISSECRET'",
         "GRANT ALL PRIVILEGES ON `some_database`.* TO 'someuser'@'localhost' WITH GRANT OPTION"

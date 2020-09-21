@@ -1,6 +1,6 @@
 {
     "arg": ["/home/pyinfra/mylink", "test"],
-    "command": "grep -e test /home/pyinfra/mylink 2> /dev/null || (find /home/pyinfra/mylink -type f > /dev/null && echo \"__pyinfra_exists_/home/pyinfra/mylink\")",
+    "command": "grep -e test /home/pyinfra/mylink 2> /dev/null || (find /home/pyinfra/mylink -type f > /dev/null && echo \"__pyinfra_exists_/home/pyinfra/mylink\" || true)",
     "output": null,
     "fact": null
 }

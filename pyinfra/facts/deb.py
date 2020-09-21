@@ -19,10 +19,9 @@ class DebPackages(FactBase):
         ...
     '''
 
-    command = 'dpkg -l'
+    command = 'which dpkg > /dev/null && dpkg -l || true'
     regex = r'^ii\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
     default = dict
-    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(self.regex, output)
@@ -38,10 +37,10 @@ class DebPackage(FactBase):
         'version': r'^Version: ([0-9\:\.\-]+)$',
     }
 
-    use_default_on_error = True
-
     def command(self, name):
-        return 'dpkg -I {0} 2> /dev/null || dpkg -s {0}'.format(name)
+        return (
+            'which dpkg > /dev/null && (dpkg -I {0} 2> /dev/null || dpkg -s {0}) || true'
+        ).format(name)
 
     def process(self, output):
         data = {}

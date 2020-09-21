@@ -13,10 +13,13 @@ class PkgPackages(FactBase):
         ...
     '''
 
-    command = 'pkg info || pkg_info'
+    command = (
+        'which pkg > /dev/null && pkg info || '
+        'which pkg_info > /dev/null && pkg_info || '
+        'true'
+    )
     regex = r'^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.]+)'
     default = dict
-    use_default_on_error = True
 
     def process(self, output):
         return parse_packages(self.regex, output)

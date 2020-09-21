@@ -1,6 +1,6 @@
 {
     "arg": "someuser",
-    "command": "crontab -l -u someuser",
+    "command": "which crontab > /dev/null && crontab -l -u someuser || true",
     "output": [
         "* * * * * apt update",
         "0 0 * * * apt install -fy"
