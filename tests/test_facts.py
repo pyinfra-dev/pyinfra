@@ -72,11 +72,11 @@ def make_fact_tests(fact_name):
 
 
 # Find available fact tests
-fact_tests = [
+fact_tests = sorted([
     filename
     for filename in listdir(path.join('tests', 'facts'))
     if path.isdir(path.join('tests', 'facts', filename))
-]
+])
 
 # Generate the classes, attaching to local
 for fact_name in fact_tests:

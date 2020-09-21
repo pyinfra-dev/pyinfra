@@ -138,11 +138,11 @@ def make_operation_tests(arg):
 
 
 # Find available operation tests
-operations = [
+operations = sorted([
     filename
     for filename in listdir(path.join('tests', 'operations'))
     if path.isdir(path.join('tests', 'operations', filename))
-]
+])
 
 # Generate the classes, attaching to locals so nose picks them up
 for operation_name in operations:
