@@ -4,7 +4,7 @@
         "use_remote_sudo": true
     },
     "commands": [
-        "scp local_filename remote-host.net:_tempfile_",
-        "ssh remote-host.net \"sudo mv _tempfile_ local_filename\""
+        "scp -P 22 local_filename remote-host.net:_tempfile_",
+        "ssh -p 22 remote-host.net 'sudo mv _tempfile_ local_filename'"
     ]
 }

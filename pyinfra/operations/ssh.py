@@ -4,6 +4,9 @@ Execute commands and up/download files *from* the remote host.
 Eg: ``pyinfra -> inventory-host.net <-> another-host.net``
 '''
 
+from six.moves import shlex_quote
+
+from pyinfra import logger
 from pyinfra.api import operation, OperationError
 
 from . import files
@@ -51,14 +54,24 @@ def keyscan(hostname, force=False, port=22, state=None, host=None):
         yield keyscan_command
 
 
+def _user_or_ssh_user(user, ssh_user):
+    if ssh_user:
+        logger.warning((
+            'The `ssh_user` argument is deprecated in `ssh.*` operations, '
+            'please use the `user` argument.'
+        ))
+    return user or ssh_user
+
+
 @operation
-def command(hostname, command, ssh_user=None, state=None, host=None):
+def command(hostname, command, user=None, port=22, ssh_user=None, state=None, host=None):
     '''
     Execute commands on other servers over SSH.
 
     + hostname: the hostname to connect to
     + command: the command to execute
-    + ssh_user: connect with this user
+    + user: connect with this user
+    + port: connect to this port
 
     Example:
 
@@ -68,22 +81,31 @@ def command(hostname, command, ssh_user=None, state=None, host=None):
             name='Create file by running echo from host one to host two',
             hostname='two.example.com',
             command='echo "one was here" > /tmp/one.txt',
-            ssh_user='vagrant',
+            user='vagrant',
         )
     '''
 
-    connection_target = hostname
-    if ssh_user:
-        connection_target = '@'.join((ssh_user, hostname))
+    # TODO: remove this (ssh_user is a legacy arg)
+    user = _user_or_ssh_user(user, ssh_user)
 
-    yield 'ssh {0} "{1}"'.format(connection_target, command)
+    command = shlex_quote(command)
+
+    connection_target = hostname
+    if user:
+        connection_target = '@'.join((user, hostname))
+
+    yield 'ssh -p {0} {1} {2}'.format(port, connection_target, command)
 
 
 @operation
 def upload(
     hostname, filename,
-    remote_filename=None, use_remote_sudo=False,
-    ssh_keyscan=False, ssh_user=None,
+    remote_filename=None,
+    port=22,
+    user=None,
+    use_remote_sudo=False,
+    ssh_keyscan=False,
+    ssh_user=None,
     state=None, host=None,
 ):
     '''
@@ -92,32 +114,38 @@ def upload(
     + hostname: hostname to upload to
     + filename: file to upload
     + remote_filename: where to upload the file to (defaults to ``filename``)
+    + port: connect to this port
+    + user: connect with this user
     + use_remote_sudo: upload to a temporary location and move using sudo
     + ssh_keyscan: execute ``ssh.keyscan`` before uploading the file
-    + ssh_user: connect with this user
     '''
 
     remote_filename = remote_filename or filename
 
+    # TODO: remove this (ssh_user is a legacy arg)
+    user = _user_or_ssh_user(user, ssh_user)
+
     # Figure out where we're connecting (host or user@host)
     connection_target = hostname
-    if ssh_user:
-        connection_target = '@'.join((ssh_user, hostname))
+    if user:
+        connection_target = '@'.join((user, hostname))
 
     if ssh_keyscan:
         yield keyscan(hostname, state=state, host=host)
 
     # If we're not using sudo on the remote side, just scp the file over
     if not use_remote_sudo:
-        yield 'scp {0} {1}:{2}'.format(filename, connection_target, remote_filename)
+        yield 'scp -P {0} {1} {2}:{3}'.format(
+            port, filename, connection_target, remote_filename,
+        )
 
     else:
         # Otherwise - we need a temporary location for the file
         temp_remote_filename = state.get_temp_filename()
 
         # scp it to the temporary location
-        upload_cmd = 'scp {0} {1}:{2}'.format(
-            filename, connection_target, temp_remote_filename,
+        upload_cmd = 'scp -P {0} {1} {2}:{3}'.format(
+            port, filename, connection_target, temp_remote_filename,
         )
 
         yield upload_cmd
@@ -126,6 +154,8 @@ def upload(
         yield command(
             hostname=connection_target,
             command='sudo mv {0} {1}'.format(temp_remote_filename, remote_filename),
+            port=port,
+            user=user,
             state=state,
             host=host,
         )
@@ -134,8 +164,12 @@ def upload(
 @operation
 def download(
     hostname, filename,
-    local_filename=None, force=False,
-    ssh_keyscan=False, ssh_user=None,
+    local_filename=None,
+    force=False,
+    port=22,
+    user=None,
+    ssh_keyscan=False,
+    ssh_user=None,
     state=None, host=None,
 ):
     '''
@@ -145,11 +179,15 @@ def download(
     + filename: file to download
     + local_filename: where to download the file to (defaults to ``filename``)
     + force: always download the file, even if present locally
+    + port: connect to this port
+    + user: connect with this user
     + ssh_keyscan: execute ``ssh.keyscan`` before uploading the file
-    + ssh_user: connect with this user
     '''
 
     local_filename = local_filename or filename
+
+    # TODO: remove this (ssh_user is a legacy arg)
+    user = _user_or_ssh_user(user, ssh_user)
 
     # Get local file info
     local_file_info = host.fact.file(local_filename)
@@ -176,4 +214,6 @@ def download(
         yield keyscan(hostname, state=state, host=host)
 
     # Download the file with scp
-    yield 'scp {0}:{1} {2}'.format(connection_target, filename, local_filename)
+    yield 'scp -P {0} {1}:{2} {3}'.format(
+        port, connection_target, filename, local_filename,
+    )

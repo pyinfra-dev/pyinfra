@@ -17,6 +17,6 @@
         }
     },
     "commands": [
-        "scp local_filename nick@remote-host.net:local_filename"
+        "scp -P 22 local_filename nick@remote-host.net:local_filename"
     ]
 }
