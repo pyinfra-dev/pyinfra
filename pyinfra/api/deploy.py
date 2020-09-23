@@ -23,7 +23,7 @@ from .util import get_call_location, get_caller_frameinfo, memoize
 def show_state_host_arguments_warning(call_location):
     logger.warning((
         '{0}\n\tPassing `state` and `host` as the first two arguments to deploys is '
-        'deprecated, please use `state` and `host` keyword arguments.'
+        'deprecated, please use `state` and `host` arguments.'
     ).format(call_location))
 
 
