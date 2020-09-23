@@ -3,11 +3,6 @@ pyinfra Documentation
 
 Welcome to the ``pyinfra`` v1 documentation. If you're new to ``pyinfra`` you should start with the :doc:`getting started <./getting_started>` page.
 
-.. Important::
-    This is the documentation for ``pyinfra`` **v1**, it is highly recommended to use this version!
-
-    If you're upgrading from ``0.x`` see `the 0->1 upgrade notes <compatibility.html#upgrading-pyinfra-from-0-x-1-x>`_.
-
 
 Using pyinfra
 -------------
@@ -57,8 +52,8 @@ How pyinfra Works
         Learn how ``pyinfra`` executes operations.
 
 .. compound::
-    :doc:`api/index`
-        Discover the ``pyinfra`` Python API.
+    :doc:`api/connectors`
+        Build connectors to integrate ``pyinfra`` with other systems.
 
 .. compound::
     :doc:`api/operations`
@@ -67,6 +62,14 @@ How pyinfra Works
 .. compound::
     :doc:`api/facts`
         Learn how to write your own facts for ``pyinfra``.
+
+.. compound::
+    :doc:`api/index`
+        Discover the ``pyinfra`` Python API.
+
+.. compound::
+    :doc:`api/reference`
+        Explore the ``pyinfra`` Python API.
 
 
 .. toctree::
@@ -93,18 +96,20 @@ How pyinfra Works
     :caption: How pyinfra Works
 
     deploy_process
-    api/index
     api/operations
     api/facts
+    api/connectors
+    api/index
+    api/reference
 
 .. toctree::
     :hidden:
     :caption: Meta
 
-    api/reference
-    performance
-    compatibility
+    support
     contributing
+    compatibility
+    performance
 
 .. toctree::
     :hidden:

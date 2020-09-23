@@ -1,7 +1,7 @@
 Writing Operations
 ==================
 
-Operations are defined as Python functions. They are passed the current deploy state, the target host and any operation arguments. Operation functions read state from the host, comparing it to the arguments, and yield **commands**.
+:doc:`Operations <../operations>` are defined as Python functions. They are passed the current deploy state, the target host and any operation arguments. Operation functions read state from the host, comparing it to the arguments, and yield **commands**.
 
 Input: reserved arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~

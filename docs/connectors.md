@@ -8,7 +8,7 @@ Connectors enable ``pyinfra`` to integrate with other tools out of the box. Conn
 
 Each connector is described below along with usage examples. Some connectors also accept certain data variables which are also listed.
 
-**Want a new connector?** If interested in building a connector, check out [the existing code](https://github.com/Fizzadar/pyinfra/tree/master/pyinfra/api/connectors). Be sure to add tests and documentation.
+**Want a new connector?** Check out [the building connectors guide](./api/connectors).
 
 ## `@ssh`
 

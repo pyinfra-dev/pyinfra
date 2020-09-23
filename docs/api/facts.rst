@@ -1,7 +1,7 @@
 Writing Facts
 =============
 
-Facts are written as Python classes. They provide a ``command`` (as a string or method)
+:doc:`Facts <../facts>` are written as Python classes. They provide a ``command`` (as a string or method)
 and a ``process`` function. The command is executed on the target host and the output
 passed (as a ``list`` of lines) to the ``process`` handler to generate fact data.
 
