@@ -20,7 +20,9 @@ class RPMPackages(FactBase):
         ...
     '''
 
-    command = 'which rpm > /dev/null && rpm --queryformat "{0}" -qa || true'.format(rpm_query_format)
+    command = (
+        'which rpm > /dev/null && rpm --queryformat "{0}" -qa || true'
+    ).format(rpm_query_format)
     default = dict
 
     def process(self, output):
