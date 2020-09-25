@@ -1,4 +1,5 @@
 {
+    "command": "gem list --local || true",
     "output": [
         "pydash (3.48)"
     ],

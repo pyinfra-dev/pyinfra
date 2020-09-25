@@ -1,4 +1,5 @@
 {
+    "command": "crontab -l || true",
     "output": [
         "* * * * * apt update",
         "# this is a comment",

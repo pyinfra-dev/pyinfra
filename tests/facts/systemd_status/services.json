@@ -1,4 +1,5 @@
 {
+    "command": "systemctl -al list-units || true",
     "output": [
         "lvm2-activation.service      not-found inactive dead    lvm2-activation.service",
         "lvm2-lvmetad.service         loaded    active   running LVM2 metadata daemon",

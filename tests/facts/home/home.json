@@ -1,4 +1,5 @@
 {
+    "command": "echo $HOME",
     "output": ["/home/pyinfra"],
     "fact": "/home/pyinfra"
 }
