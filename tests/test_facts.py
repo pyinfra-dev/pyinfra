@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import json
+import warnings
 
 from os import listdir, path
 from unittest import TestCase
@@ -33,7 +34,7 @@ def make_fact_tests(fact_name):
                 short_fact = fact
                 fact = fact.fact()
 
-            command_to_check = None
+            command = fact.command
 
             if callable(fact.command):
                 args = test_data.get('arg', [])
@@ -42,14 +43,12 @@ def make_fact_tests(fact_name):
 
                 command = fact.command(*args)
 
-                if args or 'command' in test_data:
-                    command_to_check = command
-
-            elif 'command' in test_data:
-                command_to_check = fact.command
-
-            if command_to_check:
-                assert get_command_string(StringCommand(command_to_check)) == test_data['command']
+            if 'command' in test_data:
+                assert get_command_string(StringCommand(command)) == test_data['command']
+            else:
+                warnings.warn('No command set for test: {0} (got "{1}")'.format(
+                    test_name, command,
+                ))
 
             data = fact.process(test_data['output'])
             if short_fact:
