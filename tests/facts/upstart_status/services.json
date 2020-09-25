@@ -1,5 +1,5 @@
 {
-    "command": "which initctl > /dev/null && initctl list || true",
+    "command": "initctl list || true",
     "output": [
         "something start/running, process 1493",
         "plymouth-shutdown stop/waiting"

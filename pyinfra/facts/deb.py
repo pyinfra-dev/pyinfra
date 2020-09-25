@@ -19,7 +19,7 @@ class DebPackages(FactBase):
         ...
     '''
 
-    command = 'which dpkg > /dev/null && dpkg -l || true'
+    command = 'dpkg -l || true'
     regex = r'^ii\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
     default = dict
 
@@ -39,7 +39,7 @@ class DebPackage(FactBase):
 
     def command(self, name):
         return (
-            'which dpkg > /dev/null && (dpkg -I {0} 2> /dev/null || dpkg -s {0}) || true'
+            '(dpkg -I {0} 2> /dev/null || dpkg -s {0}) || true'
         ).format(name)
 
     def process(self, output):

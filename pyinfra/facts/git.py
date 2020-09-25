@@ -6,9 +6,7 @@ from pyinfra.api.facts import FactBase
 class GitBranch(FactBase):
     @staticmethod
     def command(repo):
-        return (
-            'which git > /dev/null && (cd {0} && git rev-parse --abbrev-ref HEAD) || true'
-        ).format(repo)
+        return '(cd {0} && git rev-parse --abbrev-ref HEAD) || true'.format(repo)
 
 
 class GitConfig(FactBase):
@@ -17,9 +15,9 @@ class GitConfig(FactBase):
     @staticmethod
     def command(repo=None):
         if repo is None:
-            return 'which git > /dev/null && git config --global -l || true'
+            return 'git config --global -l || true'
 
-        return 'which git > /dev/null && (cd {0} && git config --local -l) || true'.format(repo)
+        return '(cd {0} && git config --local -l) || true'.format(repo)
 
     @staticmethod
     def process(output):

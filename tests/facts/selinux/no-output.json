@@ -1,4 +1,5 @@
 {
+    "command": "sestatus 2> /dev/null || true",
     "output": [
         ""
     ],

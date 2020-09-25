@@ -19,7 +19,7 @@ class OpenvzContainers(FactBase):
         }
     '''
 
-    command = 'which vzlist > /dev/null && vzlist -a -j || true'
+    command = 'vzlist -a -j || true'
     default = dict
 
     @staticmethod

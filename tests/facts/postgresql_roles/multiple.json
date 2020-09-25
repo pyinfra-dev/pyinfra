@@ -1,5 +1,5 @@
 {
-    "command": "which psql > /dev/null && (psql -Ac 'SELECT * FROM pg_catalog.pg_roles') || true",
+    "command": "psql -Ac 'SELECT * FROM pg_catalog.pg_roles' || true",
     "output": [
         "rolname|rolsuper|rolinherit|rolcreaterole|rolcreatedb|rolcanlogin|rolreplication|rolconnlimit|rolpassword|rolvaliduntil|rolbypassrls|rolconfig|oid",
         "postgres|t|t|t|t|t|t|-1|********||t||10",

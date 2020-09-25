@@ -1,5 +1,5 @@
 {
-    "command": "which apk > /dev/null && apk list --installed || true",
+    "command": "apk list --installed || true",
     "output": [
         "WARNING: Ignoring APKINDEX.00740ba1.tar.gz: No such file or directory",
         "WARNING: Ignoring APKINDEX.d8b2a6f4.tar.gz: No such file or directory",

@@ -47,7 +47,7 @@ class RpmPackage(FactBase):
 
     def command(self, name):
         return (
-            'which rpm > /dev/null && ('
+            '('
             'rpm --queryformat "{0}" -qp {1} 2> /dev/null || '
             'rpm --queryformat "{0}" -q {1}'
             ') || true'

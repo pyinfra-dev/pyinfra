@@ -16,7 +16,7 @@ class DockerSystemInfo(DockerFactBase):
     Returns ``docker system info`` output in JSON format.
     '''
 
-    command = 'which docker > /dev/null && docker system info --format="{{json .}}" || true'
+    command = 'docker system info --format="{{json .}}" || true'
 
 
 # All Docker objects
@@ -27,7 +27,7 @@ class DockerContainers(DockerFactBase):
     Returns ``docker inspect`` output for all Docker containers.
     '''
 
-    command = 'which docker > /dev/null && docker container inspect `docker ps -qa` || true'
+    command = 'docker container inspect `docker ps -qa` || true'
 
 
 class DockerImages(DockerFactBase):
@@ -35,7 +35,7 @@ class DockerImages(DockerFactBase):
     Returns ``docker inspect`` output for all Docker images.
     '''
 
-    command = 'which docker > /dev/null && docker image inspect `docker images -q` || true'
+    command = 'docker image inspect `docker images -q` || true'
 
 
 class DockerNetworks(DockerFactBase):
@@ -43,7 +43,7 @@ class DockerNetworks(DockerFactBase):
     Returns ``docker inspect`` output for all Docker networks.
     '''
 
-    command = 'which docker > /dev/null && docker network inspect `docker network ls -q` || true'
+    command = 'docker network inspect `docker network ls -q` || true'
 
 
 # Single Docker objects
@@ -51,7 +51,7 @@ class DockerNetworks(DockerFactBase):
 
 class DockerSingleMixin(DockerFactBase):
     def command(self, object_id):
-        return 'which docker > /dev/null && docker {0} inspect {1} || true'.format(
+        return 'docker {0} inspect {1} || true'.format(
             self.docker_type, object_id,
         )
 

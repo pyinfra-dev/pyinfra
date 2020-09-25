@@ -62,11 +62,7 @@ class MysqlFactBase(FactBase):
             host=mysql_host,
             port=mysql_port,
         )
-        return StringCommand(
-            'which', 'mysql', '>', '/dev/null',
-            '&&', StringCommand('(', mysql_command, ')', separator=''),
-            '||', 'true',
-        )
+        return StringCommand(mysql_command, '||', 'true')
 
 
 class MysqlDatabases(MysqlFactBase):

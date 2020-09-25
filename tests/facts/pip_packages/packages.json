@@ -1,4 +1,5 @@
 {
+    "command": "pip freeze --all || true",
     "output": [
         "pydash==3.48"
     ],

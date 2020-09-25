@@ -15,7 +15,7 @@ class ApkPackages(FactBase):
         ...
     '''
 
-    command = 'which apk > /dev/null && apk list --installed || true'
+    command = 'apk list --installed || true'
     default = dict
 
     def process(self, output):

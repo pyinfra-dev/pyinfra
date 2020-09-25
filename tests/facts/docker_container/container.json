@@ -1,6 +1,6 @@
 {
     "arg": "myid",
-    "command": "which docker > /dev/null && docker container inspect myid || true",
+    "command": "docker container inspect myid || true",
     "output": [
         "{\"hello\": \"world\"}"
     ],

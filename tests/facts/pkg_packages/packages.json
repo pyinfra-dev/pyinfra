@@ -1,4 +1,5 @@
 {
+    "command": "pkg info || pkg_info || true",
     "output": [
         "nano-3.48"
     ],

@@ -1,5 +1,5 @@
 {
-    "command": "which vmstat > /dev/null && vmstat -s || true",
+    "command": "vmstat -s || true",
     "output": [
         "4096 bytes per page",
         "58543 pages managed",

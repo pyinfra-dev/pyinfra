@@ -1,6 +1,6 @@
 {
     "arg": "somedir",
-    "command": "which npm > /dev/null && (cd somedir && npm list -g --depth=0) || true",
+    "command": "(cd somedir && npm list -g --depth=0) || true",
     "output": [
         "├── pydash@3.48",
         "└── thing@1.9"

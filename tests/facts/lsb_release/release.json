@@ -1,5 +1,5 @@
 {
-    "command": "which lsb_release > /dev/null && lsb_release -ca || true",
+    "command": "lsb_release -ca || true",
     "output": [
         "No LSB modules are available.",
         "Distributor ID: Ubuntu",

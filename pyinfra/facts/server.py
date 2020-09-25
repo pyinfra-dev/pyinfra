@@ -152,7 +152,7 @@ class KernelModules(FactBase):
         ...
     '''
 
-    command = 'find /proc/modules > /dev/null && cat /proc/modules || true'
+    command = 'cat /proc/modules || true'
     default = dict
 
     @staticmethod
@@ -196,7 +196,7 @@ class LsbRelease(FactBase):
         }
     '''
 
-    command = 'which lsb_release > /dev/null && lsb_release -ca || true'
+    command = 'lsb_release -ca || true'
 
     @staticmethod
     def process(output):
@@ -312,9 +312,9 @@ class Crontab(FactBase):
     @staticmethod
     def command(user=None):
         if user:
-            return 'which crontab > /dev/null && crontab -l -u {0} || true'.format(user)
+            return 'crontab -l -u {0} || true'.format(user)
 
-        return 'which crontab > /dev/null && crontab -l || true'
+        return 'crontab -l || true'
 
     @staticmethod
     def process(output):
@@ -522,7 +522,7 @@ class Selinux(FactBase):
             'mode': 'enabled',
         }
     '''
-    command = 'which sestatus > /dev/null && sestatus 2> /dev/null || true'
+    command = 'sestatus 2> /dev/null || true'
 
     @staticmethod
     def default():

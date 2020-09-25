@@ -1,4 +1,5 @@
 {
+    "command": "crontab -l || true",
     "output": [
         "* * * * * apt update",
         "0 0 * * * apt install -fy"

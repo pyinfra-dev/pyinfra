@@ -57,11 +57,7 @@ class PostgresqlFactBase(FactBase):
             host=postgresql_host,
             port=postgresql_port,
         )
-        return StringCommand(
-            'which', 'psql', '>', '/dev/null', '&&',
-            StringCommand('(', psql_command, ')', separator=''),
-            '||', 'true',
-        )
+        return StringCommand(psql_command, '||', 'true')
 
 
 class PostgresqlRoles(PostgresqlFactBase):

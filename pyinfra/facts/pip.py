@@ -20,7 +20,7 @@ class PipPackages(FactBase):
     default = dict
 
     def command(self, pip='pip'):
-        return 'which {0} > /dev/null && {0} freeze --all || true'.format(pip)
+        return '{0} freeze --all || true'.format(pip)
 
     def process(self, output):
         return parse_packages(PIP_REGEX, output)

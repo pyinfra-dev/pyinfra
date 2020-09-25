@@ -15,7 +15,7 @@ class GemPackages(FactBase):
         ...
     '''
 
-    command = 'which gem > /dev/null && gem list --local || true'
+    command = 'gem list --local || true'
     default = dict
 
     def process(self, output):
