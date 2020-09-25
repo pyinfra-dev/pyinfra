@@ -533,9 +533,6 @@ class Selinux(FactBase):
     def process(self, output):
         selinux_info = self.default()
 
-        if not output:
-            return selinux_info
-
         match = re.match(r'^SELinux status:\s+(\S+)', '\n'.join(output))
 
         if not match:
