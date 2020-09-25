@@ -53,6 +53,9 @@ def keyscan(hostname, force=False, port=22, state=None, host=None):
         yield 'ssh-keygen -R {0}'.format(hostname)
         yield keyscan_command
 
+    else:
+        host.noop('host key for {0} already exists'.format(hostname))
+
 
 def _user_or_ssh_user(user, ssh_user):
     if ssh_user:
