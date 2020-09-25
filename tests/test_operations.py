@@ -1,6 +1,8 @@
 from __future__ import print_function
 
 import json
+import warnings
+
 from importlib import import_module
 from os import listdir, path
 from unittest import TestCase
@@ -133,6 +135,9 @@ def make_operation_tests(arg):
                     assert host.noop_description == noop_description
                 else:
                     assert host.noop_description is not None, 'no noop description was set'
+                    warnings.warn('No noop_description set for test: {0} (got "{1}")'.format(
+                        test_name, host.noop_description,
+                    ))
 
     return TestTests
 
