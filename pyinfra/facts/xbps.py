@@ -13,7 +13,7 @@ class XbpsPackages(FactBase):
         ...
     '''
 
-    command = 'which xbps-query > /dev/null && xbps-query -l || true'
+    command = 'xbps-query -l || true'
     regex = r'^.. ([a-zA-Z0-9_\-\+]+)\-([0-9a-z_\.]+)'
     default = dict
 
