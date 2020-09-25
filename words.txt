@@ -214,6 +214,7 @@ jsonify
 jsontest
 kerberos
 keyid
+keyring
 keyscan
 keyserver
 launchd
@@ -308,6 +309,7 @@ stdlib
 stringify
 su
 subclassing
+subkey
 submodules
 sudo
 sudo'd
