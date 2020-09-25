@@ -12,5 +12,6 @@
             }
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "host key for remote-host.net already exists"
 }

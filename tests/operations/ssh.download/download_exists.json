@@ -5,5 +5,6 @@
             "local_filename": true
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "file remote_filename is already downloaded"
 }

@@ -11,5 +11,6 @@
             }
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "rpm something.rpm is installed"
 }

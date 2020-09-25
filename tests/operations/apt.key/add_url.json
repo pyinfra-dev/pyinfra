@@ -1,6 +1,6 @@
 {
     "args": ["http://mykey"],
     "commands": [
-        "wget -O- http://mykey | apt-key add -"
+        "(wget -O - http://mykey || curl -sSLf http://mykey) | apt-key add -"
     ]
 }

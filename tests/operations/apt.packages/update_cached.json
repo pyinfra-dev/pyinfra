@@ -12,5 +12,6 @@
             }
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "apt is already up to date"
 }

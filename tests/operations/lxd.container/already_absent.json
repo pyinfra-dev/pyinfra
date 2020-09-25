@@ -12,6 +12,6 @@
             }
         ]
     },
-    "commands": [
-    ]
+    "commands": [],
+    "noop_description": "container container1 does not exist"
 }

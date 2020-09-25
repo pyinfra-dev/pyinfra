@@ -7,5 +7,6 @@
             "/some/virtualenv/bin/activate": true
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "virtualenv /some/virtualenv exists"
 }

@@ -11,5 +11,6 @@
             "/some/virtualenv": null
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "virtualenv /some/virtualenv does not exist"
 }

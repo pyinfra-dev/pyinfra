@@ -6,5 +6,6 @@
     "facts": {
         "brew_taps": []
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "tap homebrew/cask does not exist"
 }

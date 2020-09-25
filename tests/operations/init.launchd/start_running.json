@@ -5,5 +5,6 @@
             "com.fizzadar.thing": true
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "service com.fizzadar.thing is running"
 }
