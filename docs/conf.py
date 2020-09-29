@@ -40,10 +40,6 @@ templates_path = ['templates']
 
 html_favicon = 'static/logo_small.png'
 
-html_sidebars = {
-    '**': ['pyinfra_sidebar.html', 'searchbox.html'],
-}
-
 exclude_patterns = [
     '_deploy_globals.rst',
 ]
