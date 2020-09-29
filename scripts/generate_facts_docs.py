@@ -28,8 +28,9 @@ def build_facts():
         print('--> Doing fact module: {0}'.format(module_name))
         module = getattr(facts, module_name)
 
-        lines.append(module_name.title())
-        lines.append(_title_line('-', module_name))
+        full_title = '{0} Facts'.format(module_name.title())
+        lines.append(full_title)
+        lines.append(_title_line('-', full_title))
         lines.append('')
 
         fact_classes = [

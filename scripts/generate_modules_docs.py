@@ -37,8 +37,9 @@ def build_facts():
         print('--> Doing module: {0}'.format(module_name))
         module = import_module('pyinfra.operations.{0}'.format(module_name))
 
-        lines.append(module_name.title())
-        lines.append(_title_line('-', module_name))
+        full_title = '{0} Operations'.format(module_name.title())
+        lines.append(full_title)
+        lines.append(_title_line('-', full_title))
         lines.append('')
 
         if module.__doc__:
