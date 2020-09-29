@@ -110,10 +110,3 @@ How pyinfra Works
     contributing
     compatibility
     performance
-
-.. toctree::
-    :hidden:
-    :caption: Elsewhere
-
-    pyinfra.com <https://pyinfra.com>
-    pyinfra on GitHub <https://github.com/Fizzadar/pyinfra>
