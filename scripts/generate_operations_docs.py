@@ -145,7 +145,7 @@ def build_facts():
             lines.append('')
 
         # Write out the file
-        module_filename = path.join(docs_dir, 'modules', '{0}.rst'.format(module_name))
+        module_filename = path.join(docs_dir, 'operations', '{0}.rst'.format(module_name))
         print('--> Writing {0}'.format(module_filename))
 
         out = '\n'.join(lines)

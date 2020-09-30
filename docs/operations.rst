@@ -12,4 +12,4 @@ All operations accept a set of `global arguments <deploys.html#global-arguments>
    :maxdepth: 2
    :glob:
 
-   modules/*
+   operations/*
