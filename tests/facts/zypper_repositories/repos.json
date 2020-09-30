@@ -1,0 +1,16 @@
+{
+    "command": "cat /etc/zypp/repos.d/*.repo 2> /dev/null || true",
+    "output": [
+        "# comment line",
+        " # comment line with whitespaces",
+        "[somerepo]",
+        "baseurl=abc"
+
+    ],
+    "fact": [
+        {
+            "name": "somerepo",
+            "baseurl": "abc"
+        }
+    ]
+}
