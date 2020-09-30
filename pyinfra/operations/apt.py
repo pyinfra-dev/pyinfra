@@ -6,9 +6,11 @@ from __future__ import unicode_literals
 
 from datetime import timedelta
 
+import six
+
 from six.moves.urllib.parse import urlparse
 
-from pyinfra.api import operation
+from pyinfra.api import operation, OperationError
 from pyinfra.facts.apt import parse_apt_repo
 
 from . import files
@@ -39,10 +41,7 @@ def key(src=None, keyserver=None, keyid=None, state=None, host=None):
 
     + src: filename or URL
     + keyserver: URL of keyserver to fetch key from
-    + keyid: key identifier when using keyserver
-
-    Note:
-        Always returns an add command, not state checking.
+    + keyid: key ID or list of key IDs when using keyserver
 
     keyserver/id:
         These must be provided together.
@@ -63,16 +62,37 @@ def key(src=None, keyserver=None, keyid=None, state=None, host=None):
         )
     '''
 
-    if src:
-        # If URL, wget the key to stdout and pipe into apt-key, because the "adv"
-        # apt-key passes to gpg which doesn't always support https!
-        if urlparse(src).scheme:
-            yield '(wget -O - {0} || curl -sSLf {0}) | apt-key add -'.format(src)
-        else:
-            yield 'apt-key add {0}'.format(src)
+    existing_keys = host.fact.apt_keys
 
-    if keyserver and keyid:
-        yield 'apt-key adv --keyserver {0} --recv-keys {1}'.format(keyserver, keyid)
+    if src:
+        keyid = list(host.fact.gpg_key(src).keys())
+
+        if not all(kid in existing_keys for kid in keyid):
+            # If URL, wget the key to stdout and pipe into apt-key, because the "adv"
+            # apt-key passes to gpg which doesn't always support https!
+            if urlparse(src).scheme:
+                yield '(wget -O - {0} || curl -sSLf {0}) | apt-key add -'.format(src)
+            else:
+                yield 'apt-key add {0}'.format(src)
+        else:
+            host.noop('All keys from {0} are already available in the apt keychain'.format(src))
+
+    if keyserver:
+        if not keyid:
+            raise OperationError('`keyid` must be provided with `keyserver`')
+
+        if isinstance(keyid, six.string_types):
+            keyid = [keyid]
+
+        needed_keys = sorted(set(keyid) - set(existing_keys.keys()))
+        if needed_keys:
+            yield 'apt-key adv --keyserver {0} --recv-keys {1}'.format(
+                keyserver, ' '.join(needed_keys),
+            )
+        else:
+            host.noop('Keys {0} are already available in the apt keychain'.format(
+                ', '.join(keyid),
+            ))
 
 
 @operation

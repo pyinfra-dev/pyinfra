@@ -4,6 +4,8 @@ import re
 
 from pyinfra.api import FactBase
 
+from .gpg import GpgFactBase
+
 
 def parse_apt_repo(name):
     regex = r'^(deb(?:-src)?)(?:\s+\[([a-zA-Z0-9=,\s]+)\])?\s+([^\s]+)\s+([a-z-]+)\s+([a-z-\s]*)$'
@@ -60,3 +62,7 @@ class AptSources(FactBase):
                 repos.append(repo)
 
         return repos
+
+
+class AptKeys(GpgFactBase):
+    command = 'apt-key list --with-colons || true'

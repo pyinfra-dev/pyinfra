@@ -1,12 +1,12 @@
 {
     "kwargs": {
         "keyserver": "key-server.net",
-        "keyid": "abc"
+        "keyid": ["abc", "def"]
     },
     "facts": {
         "apt_keys": {}
     },
     "commands": [
-        "apt-key adv --keyserver key-server.net --recv-keys abc"
+        "apt-key adv --keyserver key-server.net --recv-keys abc def"
     ]
 }

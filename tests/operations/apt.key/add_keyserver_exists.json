@@ -1,0 +1,14 @@
+{
+    "kwargs": {
+        "keyserver": "key-server.net",
+        "keyid": ["abc", "def"]
+    },
+    "facts": {
+        "apt_keys": {
+            "abc": {},
+            "def": {}
+        }
+    },
+    "commands": [],
+    "noop_description": "Keys abc, def are already available in the apt keychain"
+}

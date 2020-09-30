@@ -1,0 +1,14 @@
+{
+    "kwargs": {
+        "keyserver": "key-server.net",
+        "keyid": ["abc", "def"]
+    },
+    "facts": {
+        "apt_keys": {
+            "abc": {}
+        }
+    },
+    "commands": [
+        "apt-key adv --keyserver key-server.net --recv-keys def"
+    ]
+}
