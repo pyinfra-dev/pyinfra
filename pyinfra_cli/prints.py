@@ -57,9 +57,15 @@ def print_state_facts(state):
 
 
 def print_state_operations(state):
+    state_ops = {
+        host: ops
+        for host, ops in state.ops.items()
+        if state.is_host_in_limit(host)
+    }
+
     click.echo(err=True)
     click.echo('--> Operations:', err=True)
-    click.echo(jsonify(state.ops, indent=4, default=json_encode), err=True)
+    click.echo(jsonify(state_ops, indent=4, default=json_encode), err=True)
     click.echo(err=True)
     click.echo('--> Operation meta:', err=True)
     click.echo(jsonify(state.op_meta, indent=4, default=json_encode), err=True)
