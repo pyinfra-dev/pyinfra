@@ -1,0 +1,23 @@
+{
+    "arg": ["https://download.docker.com/linux/debian/gpg"],
+    "command": "((wget -O - https://download.docker.com/linux/debian/gpg || curl -sSLf https://download.docker.com/linux/debian/gpg) | gpg --with-colons) || true",
+    "output": [
+        "pub:-:4096:1:8D81803C0EBFCD88:1487788586:::-:",
+        "uid:::::::::Docker Release (CE deb) <docker@docker.com>:",
+        "sub:-:4096:1:7EA0A9C3F273FCD8:1487788586::::"
+    ],
+    "fact": {
+        "8D81803C0EBFCD88": {
+            "validity": "-",
+            "length": 4096,
+            "subkeys": {
+                "7EA0A9C3F273FCD8": {
+                    "validity": "-",
+                    "length": 4096
+                }
+            },
+            "uid_hash": "",
+            "uid": "Docker Release (CE deb) <docker@docker.com>"
+        }
+    }
+}

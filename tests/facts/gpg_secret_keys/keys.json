@@ -1,0 +1,59 @@
+{
+    "command": "gpg --list-secret-keys --with-colons || true",
+    "output": [
+        "tru:t:1:1601454628:0:3:1:5",
+        "sec:-:4096:1:3B4FE6ACC0B21F32:1336770936:::-:::scSC::::::23::0:",
+        "fpr:::::::::790BC7277767219C42C86F933B4FE6ACC0B21F32:",
+        "uid:-::::1336770936::B7A02867A0C1D32B594B36C00E20C8C57E397748::Ubuntu Archive Automatic Signing Key (2012) <ftpmaster@ubuntu.com>::::::::::0:",
+        "tru:t:1:1601454628:0:3:1:5:",
+        "sec:-:4096:1:D94AA3F0EFE21092:1336774248:::-:::scSC::::::23::0:",
+        "fpr:::::::::843938DF228D22F7B3742BC0D94AA3F0EFE21092:",
+        "uid:-::::1336774248::77355A0B96082B2694009775B6490C605BD16B6F::Ubuntu CD Image Automatic Signing Key (2012) <cdimage@ubuntu.com>::::::::::0:",
+        "sec:-:4096:1:8D81803C0EBFCD88:1487788586:::-:",
+        "uid:::::::::Docker Release (CE deb) <docker@docker.com>:",
+        "ssb:-:4096:1:7EA0A9C3F273FCD8:1487788586::::",
+        "",
+        "tru:t:1:1601454628:0:3:1:5",
+        "sec:-:4096:1:871920D1991BC93C:1537196506:::-:::scSC::::::23::0:",
+        "fpr:::::::::F6ECB3762474EDA9D21B7022871920D1991BC93C:",
+        "uid:-::::1537196506::BE438F08F546424C0EA810FD722053597EB5127B::Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>::::::::::0:"
+    ],
+    "fact": {
+        "3B4FE6ACC0B21F32": {
+            "validity": "-",
+            "length": 4096,
+            "subkeys": {},
+            "fingerprint": "790BC7277767219C42C86F933B4FE6ACC0B21F32",
+            "uid_hash": "B7A02867A0C1D32B594B36C00E20C8C57E397748",
+            "uid": "Ubuntu Archive Automatic Signing Key (2012) <ftpmaster@ubuntu.com>"
+        },
+        "D94AA3F0EFE21092": {
+            "validity": "-",
+            "length": 4096,
+            "subkeys": {},
+            "fingerprint": "843938DF228D22F7B3742BC0D94AA3F0EFE21092",
+            "uid_hash": "77355A0B96082B2694009775B6490C605BD16B6F",
+            "uid": "Ubuntu CD Image Automatic Signing Key (2012) <cdimage@ubuntu.com>"
+        },
+        "8D81803C0EBFCD88": {
+            "validity": "-",
+            "length": 4096,
+            "subkeys": {
+                "7EA0A9C3F273FCD8": {
+                    "validity": "-",
+                    "length": 4096
+                }
+            },
+            "uid_hash": "",
+            "uid": "Docker Release (CE deb) <docker@docker.com>"
+        },
+        "871920D1991BC93C": {
+            "validity": "-",
+            "length": 4096,
+            "subkeys": {},
+            "fingerprint": "F6ECB3762474EDA9D21B7022871920D1991BC93C",
+            "uid_hash": "BE438F08F546424C0EA810FD722053597EB5127B",
+            "uid": "Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>"
+        }
+    }
+}
