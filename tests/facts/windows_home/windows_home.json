@@ -1,4 +1,5 @@
 {
+    "command": "echo %HOMEPATH%",
     "output": ["\\Users\\vagrant"],
     "fact": "\\Users\\vagrant"
 }

@@ -1,4 +1,5 @@
 {
+    "command": "Get-ComputerInfo | Format-List -Property *",
     "output": [
         "",
         "",
