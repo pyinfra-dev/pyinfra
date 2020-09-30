@@ -12,5 +12,6 @@
             "/home/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "file /home/somefile.txt is already uploaded"
 }

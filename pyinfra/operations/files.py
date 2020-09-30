@@ -145,7 +145,7 @@ def download(
             ).format(dest, md5sum)
 
     else:
-        host.noop('file: {0} has already been downloaded'.format(dest))
+        host.noop('file {0} has already been downloaded'.format(dest))
 
 
 @operation

@@ -13,5 +13,6 @@
             }
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "line \"replace_line\" exists in somefile"
 }

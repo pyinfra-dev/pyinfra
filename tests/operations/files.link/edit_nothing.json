@@ -14,5 +14,6 @@
             }
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "link /etc/rc.d/nginx already exists"
 }

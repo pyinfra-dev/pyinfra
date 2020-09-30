@@ -11,5 +11,6 @@
             "testdir": true
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "directory testdir already exists (as a link)"
 }
