@@ -65,9 +65,11 @@ def key(src=None, keyserver=None, keyid=None, state=None, host=None):
     existing_keys = host.fact.apt_keys
 
     if src:
-        keyid = list(host.fact.gpg_key(src).keys())
+        key_data = host.fact.gpg_key(src)
+        if key_data:
+            keyid = list(key_data.keys())
 
-        if not all(kid in existing_keys for kid in keyid):
+        if not keyid or not all(kid in existing_keys for kid in keyid):
             # If URL, wget the key to stdout and pipe into apt-key, because the "adv"
             # apt-key passes to gpg which doesn't always support https!
             if urlparse(src).scheme:
