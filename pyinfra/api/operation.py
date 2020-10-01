@@ -79,8 +79,6 @@ def add_op(state, op_func, *args, **kwargs):
             '`add_op` should not be called when pyinfra is executing in CLI mode! ({0})'
         ).format(get_call_location()))
 
-    kwargs['frameinfo'] = get_caller_frameinfo()
-
     # This ensures that every time an operation is added (API mode), it is simply
     # appended to the operation order.
     kwargs['_line_number'] = len(state.op_meta)
@@ -182,15 +180,16 @@ def operation(func=None, pipeline_facts=None):
                 'API operation called without state/host: {0} ({1})'
             ).format(op_name, get_call_location()))
 
-        # In API mode we have the kwarg - if a nested operation call we have
-        # current_frameinfo.
-        frameinfo = kwargs.pop('frameinfo', get_caller_frameinfo())
-
         # Configure operation
         #
 
         # Get the meta kwargs (globals that apply to all hosts)
         op_meta_kwargs = pop_global_op_kwargs(state, kwargs)
+
+        # If this op is being called inside another, just return here
+        # (any unwanted/op-related kwargs removed above).
+        if state.in_op:
+            return func(*args, **kwargs) or []
 
         # Name the operation
         name = op_meta_kwargs.get('name')
@@ -222,11 +221,6 @@ def operation(func=None, pipeline_facts=None):
                 for name in names
             }
 
-        # If this op is being called inside another, just return here
-        # (any unwanted/op-related kwargs removed above).
-        if state.in_op:
-            return func(*args, **kwargs) or []
-
         # Inject the current op file number (only incremented in CLI mode)
         op_lines = [state.current_op_file]
 
@@ -239,7 +233,13 @@ def operation(func=None, pipeline_facts=None):
             op_lines.extend([state.loop_line, state.loop_counter])
 
         # Add the line number that called this operation
-        line_number = kwargs.pop('_line_number', frameinfo.lineno)
+        line_number = kwargs.pop('_line_number', None)
+        filename = 'API'
+        if line_number is None:
+            frameinfo = get_caller_frameinfo()
+            line_number = frameinfo.lineno
+            filename = frameinfo.filename
+
         op_lines.append(line_number)
 
         # Make a hash from the call stack lines
@@ -264,7 +264,7 @@ def operation(func=None, pipeline_facts=None):
         op_lines = tuple(op_lines)
 
         logger.debug('Adding operation, {0}, called @ {1}:{2}, opLines={3}, opHash={4}'.format(
-            names, frameinfo.filename, line_number, op_lines, op_hash,
+            names, filename, line_number, op_lines, op_hash,
         ))
         state.op_line_numbers_to_hash[op_lines] = op_hash
 

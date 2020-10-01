@@ -43,8 +43,6 @@ def add_deploy(state, deploy_func, *args, **kwargs):
             '`add_deploy` should not be called when pyinfra is executing in CLI mode! ({0})'
         ).format(get_call_location()))
 
-    kwargs['frameinfo'] = get_caller_frameinfo()
-
     # This ensures that ever time a deploy is added (API mode), it is simply
     # appended to the operation order.
     kwargs['_line_number'] = len(state.op_meta)
@@ -108,11 +106,15 @@ def deploy(func_or_name, data_defaults=None):
                 'Deploy called without state/host: {0} ({1})'
             ).format(func, get_call_location()))
 
-        # In API mode we have the kwarg - if a nested deploy we actually
-        # want the frame of the caller (ie inside the deploy package).
-        frameinfo = kwargs.pop('frameinfo', get_caller_frameinfo())
+        line_number = kwargs.pop('_line_number', None)
+        filename = 'CLI'
+        if line_number is None:
+            frameinfo = get_caller_frameinfo()
+            line_number = frameinfo.lineno
+            filename = frameinfo.filename
+
         logger.debug('Adding deploy, called @ {0}:{1}'.format(
-            frameinfo.filename, frameinfo.lineno,
+            filename, line_number,
         ))
 
         deploy_kwargs = pop_global_op_kwargs(state, kwargs)
@@ -120,8 +122,6 @@ def deploy(func_or_name, data_defaults=None):
         # Name the deploy
         deploy_name = getattr(func, 'deploy_name', func.__name__)
         deploy_data = getattr(func, 'deploy_data', None)
-
-        line_number = kwargs.pop('_line_number', frameinfo.lineno)
 
         with state.deploy(deploy_name, deploy_kwargs, deploy_data, line_number):
             # Execute the deploy, passing state and host
