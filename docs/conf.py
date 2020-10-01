@@ -1,5 +1,5 @@
 from datetime import date
-from os import mkdir, path
+from os import environ, mkdir, path
 
 import guzzle_sphinx_theme
 
@@ -27,7 +27,10 @@ source_parsers = {
 master_doc = 'index'
 project = 'pyinfra'
 author = 'Fizzadar'
-version = 'develop'
+
+version = environ.get('READTHEDOCS_VERSION', '{0}.x'.format(__version__[0]))
+language = environ.get('READTHEDOCS_LANGUAGE', 'en')
+
 pygments_style = 'monokai'
 
 # Theme style override
