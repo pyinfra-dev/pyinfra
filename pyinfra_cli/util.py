@@ -160,11 +160,7 @@ def load_deploy_file(state, filename):
     hosts = list(state.inventory)
 
     for host in hosts:
-        # Don't load for anything within our (top level, --limit) limit
-        if (
-            isinstance(state.limit_hosts, list)
-            and host not in state.limit_hosts
-        ):
+        if not state.is_host_in_limit(host):
             continue
 
         pseudo_host.set(host)
