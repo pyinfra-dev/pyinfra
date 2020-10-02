@@ -211,10 +211,6 @@ def cli(*args, **kwargs):
     pyinfra INVENTORY all-facts
     '''
 
-    main(*args, **kwargs)
-
-
-def main(*args, **kwargs):
     try:
         _main(*args, **kwargs)
 
