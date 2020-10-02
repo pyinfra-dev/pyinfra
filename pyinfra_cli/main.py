@@ -305,6 +305,9 @@ def _main(
 
     # Create an empty/unitialised state object
     state = State()
+    # Set the deploy directory
+    state.deploy_dir = deploy_dir
+
     pseudo_state.set(state)
 
     if verbosity > 0:
@@ -465,9 +468,6 @@ def _main(
             ))
         print_inventory(state)
         _exit()
-
-    # Set the deploy directory
-    state.deploy_dir = deploy_dir
 
     # Connect to all the servers
     if not quiet:
