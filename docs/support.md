@@ -2,8 +2,8 @@
 
 Need a hand with using `pyinfra` or have some questions? You can find official `pyinfra` communities below:
 
++ Ask questions on [Stack Overflow](https://stackoverflow.com/questions/tagged/pyinfra) (be sure to use the `pyinfra` tag!)
 + Chat on [the `pyinfra` Discord](https://discord.gg/w3XxuKw)
-+ Ask questions on [the `/r/pyinfra` subreddit](https://reddit.com/r/pyinfra)
 
 ### I think I've got a bug!
 
