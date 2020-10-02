@@ -2,12 +2,13 @@ from __future__ import division, unicode_literals
 
 from contextlib import contextmanager
 from multiprocessing import cpu_count
+from os import path
 from uuid import uuid4
 
 import six
 
 from gevent.pool import Pool
-from pkg_resources import parse_version, Requirement
+from pkg_resources import parse_version, require, Requirement, ResolutionError
 
 from pyinfra import __version__, logger
 
@@ -124,6 +125,7 @@ class State(object):
 
         # Error if our min version is not met
         if config.MIN_PYINFRA_VERSION is not None:
+            # TODO: remove this
             if config.REQUIRE_PYINFRA_VERSION is None:
                 config.REQUIRE_PYINFRA_VERSION = '>={0}'.format(config.MIN_PYINFRA_VERSION)
                 logger.warning(
@@ -148,6 +150,23 @@ class State(object):
                 ).format(
                     config.REQUIRE_PYINFRA_VERSION,
                     __version__,
+                ))
+
+        if config.REQUIRE_PACKAGES is not None:
+            if isinstance(config.REQUIRE_PACKAGES, (list, tuple)):
+                requirements = config.REQUIRE_PACKAGES
+            else:
+                with open(path.join(self.deploy_dir, config.REQUIRE_PACKAGES)) as f:
+                    requirements = [
+                        line.split('#egg=')[-1]
+                        for line in f.read().splitlines()
+                    ]
+
+            try:
+                require(requirements)
+            except ResolutionError as e:
+                raise PyinfraError('Deploy requirements ({0}) not met: {1}'.format(
+                    config.REQUIRE_PACKAGES, e,
                 ))
 
         if not config.PARALLEL:

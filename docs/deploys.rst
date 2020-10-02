@@ -22,6 +22,7 @@ Although optional, it is recommended to use the following layout for other files
 + ``templates/*.j2`` - `jinja2 <https://jinja.palletsprojects.com>`_ template files
 + ``files/*`` - normal/non-template files
 + ``tasks/*.py`` - operations to perform a specific task
++ ``requirements.txt`` - Python package requirements for the deploy
 
 An example layout:
 
@@ -269,6 +270,19 @@ There are a number of configuration options for how deploys are managed. These c
 
 .. note::
     When added to ``config.py`` (vs the deploy file), these options will take effect for any CLI usage (ie ``pyinfra host exec -- 'tail -f /var/log/syslog'``).
+
+Requirements
+~~~~~~~~~~~~
+
+The config can be used to check Python package requirements before ``pyinfra`` executes, helping to prevent unexpected errors. This can either be defined as a requirements text file path or simply a list of requirements:
+
+.. code:: python
+
+    REQUIRE_PACKAGES = 'requirements.txt'  # path relative to the deploy
+    REQUIRE_PACKAGES = [
+        'pyinfra~=1.1',
+        'pyinfra-docker~=1.0',
+    ]
 
 
 Examples

@@ -22,6 +22,9 @@ class Config(object):
 
     # Specify the required pyinfra version (using PEP 440 setuptools specifier)
     REQUIRE_PYINFRA_VERSION = None
+    # Specify any required packages (either using PEP 440 or a requirements file)
+    # Note: this can also include pyinfra, potentially replacing REQUIRE_PYINFRA_VERSION
+    REQUIRE_PACKAGES = None
 
     # COMPAT w/<1.1
     # TODO: remove this in favour of above at v2
