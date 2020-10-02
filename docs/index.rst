@@ -1,3 +1,8 @@
+.. meta::
+    :description: pyinfra documentation
+    :keywords: pyinfra, documentation
+
+
 pyinfra Documentation
 =========================
 
