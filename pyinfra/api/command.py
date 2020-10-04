@@ -25,6 +25,9 @@ class PyinfraCommand(object):
             return True
         return False
 
+    def execute(self, state, host, executor_kwargs):
+        raise NotImplementedError
+
 
 class StringCommand(PyinfraCommand):
     def __init__(self, *bits, **kwargs):
@@ -68,6 +71,17 @@ class StringCommand(PyinfraCommand):
             for bit in self._get_all_bits(lambda bit: bit.get_masked_value())
         ])
 
+    def execute(self, state, host, executor_kwargs):
+        executor_kwargs.update(self.executor_kwargs)
+
+        return host.run_shell_command(
+            self,
+            print_output=state.print_output,
+            print_input=state.print_input,
+            return_combined_output=True,
+            **executor_kwargs
+        )
+
 
 class FileUploadCommand(PyinfraCommand):
     def __init__(self, src, dest, **kwargs):
@@ -78,6 +92,16 @@ class FileUploadCommand(PyinfraCommand):
     def __repr__(self):
         return 'FileUploadCommand({0}, {1})'.format(self.src, self.dest)
 
+    def execute(self, state, host, executor_kwargs):
+        executor_kwargs.update(self.executor_kwargs)
+
+        return host.put_file(
+            self.src, self.dest,
+            print_output=state.print_output,
+            print_input=state.print_input,
+            **executor_kwargs
+        )
+
 
 class FileDownloadCommand(PyinfraCommand):
     def __init__(self, src, dest, **kwargs):
@@ -87,6 +111,16 @@ class FileDownloadCommand(PyinfraCommand):
 
     def __repr__(self):
         return 'FileDownloadCommand({0}, {1})'.format(self.src, self.dest)
+
+    def execute(self, state, host, executor_kwargs):
+        executor_kwargs.update(self.executor_kwargs)
+
+        return host.get_file(
+            self.src, self.dest,
+            print_output=state.print_output,
+            print_input=state.print_input,
+            **executor_kwargs
+        )
 
 
 class FunctionCommand(PyinfraCommand):
@@ -102,3 +136,6 @@ class FunctionCommand(PyinfraCommand):
             self.args,
             self.kwargs,
         )
+
+    def execute(self, state, host, executor_kwargs):
+        return self.function(state, host, *self.args, **self.kwargs)

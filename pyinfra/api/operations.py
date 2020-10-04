@@ -46,13 +46,7 @@ def _run_shell_command(state, host, command, op_meta, executor_kwargs):
     combined_output_lines = []
 
     try:
-        status, combined_output_lines = host.run_shell_command(
-            command,
-            print_output=state.print_output,
-            print_input=state.print_input,
-            return_combined_output=True,
-            **executor_kwargs
-        )
+        status, combined_output_lines = command.execute(state, host, executor_kwargs)
     except (timeout_error, socket_error, SSHException) as e:
         log_host_command_error(
             host,
@@ -94,7 +88,7 @@ def _run_server_op(state, host, op_hash):
     if precondition:
         show_pre_or_post_condition_warning('precondition')
     if precondition and not _run_shell_command(
-        state, host, precondition, op_meta, base_executor_kwargs,
+        state, host, StringCommand(precondition), op_meta, base_executor_kwargs,
     ):
         log_error_or_warning(
             host, ignore_errors,
@@ -119,10 +113,7 @@ def _run_server_op(state, host, op_hash):
 
         if isinstance(command, FunctionCommand):
             try:
-                status = command.function(
-                    state, host,
-                    *command.args, **command.kwargs
-                )
+                status = command.execute(state, host, executor_kwargs)
             except Exception as e:  # Custom functions could do anything, so expect anything!
                 logger.warning(traceback.format_exc())
                 logger.error('{0}{1}'.format(
@@ -135,29 +126,9 @@ def _run_server_op(state, host, op_hash):
                     ),
                 ))
 
-        elif isinstance(command, FileUploadCommand):
+        elif isinstance(command, (FileUploadCommand, FileDownloadCommand)):
             try:
-                status = host.put_file(
-                    command.src, command.dest,
-                    print_output=state.print_output,
-                    print_input=state.print_input,
-                    **executor_kwargs
-                )
-            except (timeout_error, socket_error, SSHException, IOError) as e:
-                log_host_command_error(
-                    host,
-                    e,
-                    timeout=op_meta['timeout'],
-                )
-
-        elif isinstance(command, FileDownloadCommand):
-            try:
-                status = host.get_file(
-                    command.src, command.dest,
-                    print_output=state.print_output,
-                    print_input=state.print_input,
-                    **executor_kwargs
-                )
+                status = command.execute(state, host, executor_kwargs)
             except (timeout_error, socket_error, SSHException, IOError) as e:
                 log_host_command_error(
                     host,
@@ -183,7 +154,7 @@ def _run_server_op(state, host, op_hash):
         if postcondition:
             show_pre_or_post_condition_warning('postcondition')
         if postcondition and not _run_shell_command(
-            state, host, postcondition, op_meta, base_executor_kwargs,
+            state, host, StringCommand(postcondition), op_meta, base_executor_kwargs,
         ):
             log_error_or_warning(
                 host, ignore_errors,
