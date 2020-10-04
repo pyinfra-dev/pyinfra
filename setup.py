@@ -119,6 +119,7 @@ if __name__ == '__main__':
             'ansible': ANSIBLE_REQUIRES,
         },
         include_package_data=True,
+        package_data={'pyinfra': ['py.typed', 'api/*.pyi']},
         classifiers=[
             'Development Status :: 5 - Production/Stable',
             'Environment :: Console',
