@@ -100,6 +100,7 @@ def _print_support(ctx, param, value):
 @click.option(
     '--limit',
     help='Restrict the target hosts by name and group name.',
+    multiple=True,
 )
 @click.option('--fail-percent', type=int, help='% of hosts allowed to fail.')
 # Auth args
@@ -439,25 +440,36 @@ def _main(
         winrm_port=winrm_port,
     )
 
-    # Apply any --limit to the inventory
-    limit_hosts = None
-
-    if limit:
-        try:
-            limit_hosts = inventory.get_group(limit)
-        except NoGroupError:
-            limits = limit.split(',')
-
-            limit_hosts = [
-                host for host in inventory
-                if any(fnmatch(host.name, limit) for limit in limits)
-            ]
-
     # Attach to pseudo inventory
     pseudo_inventory.set(inventory)
 
-    # Initialise the state, passing any initial --limit
-    state.init(inventory, config, initial_limit=limit_hosts)
+    # Now that we have inventory, apply --limit config override
+    initial_limit = None
+    if limit:
+        all_limit_hosts = []
+
+        for limiter in limit:
+            try:
+                limit_hosts = inventory.get_group(limiter)
+            except NoGroupError:
+                limits = limiter.split(',')
+                if len(limits) > 1:
+                    logger.warning((
+                        'Specifying comma separated --limit values is deprecated, '
+                        'please use multiple --limit options.'
+                    ))
+
+                limit_hosts = [
+                    host for host in inventory
+                    if any(fnmatch(host.name, match) for match in limits)
+                ]
+
+            all_limit_hosts.extend(limit_hosts)
+
+        initial_limit = list(set(all_limit_hosts))
+
+    # Initialise the state
+    state.init(inventory, config, initial_limit=initial_limit)
 
     # If --debug-data dump & exit
     if command == 'debug-inventory' or debug_data:
