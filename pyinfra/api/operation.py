@@ -91,9 +91,10 @@ def add_op(state, op_func, *args, **kwargs):
 
     results = {}
     for host in hosts:
-        kwargs['host'] = host
-        results[host] = op_func(*args, **kwargs)
-        after_host_callback(host)
+        if state.is_host_in_limit(host):
+            kwargs['host'] = host
+            results[host] = op_func(*args, **kwargs)
+            after_host_callback(host)
 
     return results
 
