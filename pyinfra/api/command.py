@@ -149,7 +149,7 @@ class RsyncCommand(PyinfraCommand):
         self.flags = flags
 
     def __repr__(self):
-        return 'RsyncCommand({0}, {1})'.format(self.src, self.dest)
+        return 'RsyncCommand({0}, {1}, {2})'.format(self.src, self.dest, self.flags)
 
     def execute(self, state, host, executor_kwargs):
         return host.rsync(

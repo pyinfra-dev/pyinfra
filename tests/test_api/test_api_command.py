@@ -8,8 +8,17 @@ from pyinfra.api import (
     FunctionCommand,
     MaskString,
     QuoteString,
+    RsyncCommand,
     StringCommand,
 )
+from pyinfra.api.command import PyinfraCommand
+
+
+class TestBaseCommand(TestCase):
+    def test_base_command_no_execute(self):
+        cmd = PyinfraCommand()
+        with self.assertRaises(NotImplementedError):
+            cmd.execute(None, None, None)
 
 
 class TestStringCommand(TestCase):
@@ -55,6 +64,10 @@ class TestFileCommands(TestCase):
     def test_file_download_command_repr(self):
         cmd = FileDownloadCommand('src', 'dest')
         assert repr(cmd) == 'FileDownloadCommand(src, dest)'
+
+    def test_rsync_command_repr(self):
+        cmd = RsyncCommand('src', 'dest', ['-a'])
+        assert repr(cmd) == "RsyncCommand(src, dest, ['-a'])"
 
 
 class TestFunctionCommand(TestCase):
