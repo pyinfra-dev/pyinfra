@@ -259,6 +259,41 @@ class TestOperationsApi(PatchSSHTestCase):
             + state.results[anotherhost]['success_ops']
         ) == 1
 
+    def test_rsync_op(self):
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        connect_all(state)
+
+        with patch('pyinfra.api.connectors.ssh.check_can_rsync'):
+            add_op(state, files.rsync, 'src', 'dest', sudo=True, sudo_user='root')
+
+        assert len(state.get_op_order()) == 1
+
+        with patch('pyinfra.api.connectors.ssh.run_local_process') as fake_run_local_process:
+            fake_run_local_process.return_value = 0, []
+            run_ops(state)
+
+        fake_run_local_process.assert_called_with(
+            (
+                'rsync -ax --delete --rsh '
+                "'ssh -o BatchMode=yes -o StrictHostKeyChecking=no '"
+                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+            ),
+            print_output=False,
+            print_prefix=inventory.get_host('somehost').print_prefix,
+        )
+
+    def test_rsync_op_failure(self):
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        connect_all(state)
+
+        with patch('pyinfra.api.connectors.ssh.find_executable', lambda x: None):
+            with self.assertRaises(OperationError) as context:
+                add_op(state, files.rsync, 'src', 'dest')
+
+        assert context.exception.args[0] == 'The `rsync` binary is not available on this system.'
+
 
 class TestOperationFailures(PatchSSHTestCase):
     def test_full_op_fail(self):
