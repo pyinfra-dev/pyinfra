@@ -28,7 +28,7 @@ master_doc = 'index'
 project = 'pyinfra'
 author = 'Fizzadar'
 
-version = environ.get('READTHEDOCS_VERSION', '{0}.x'.format(__version__[0]))
+version = environ.get('READTHEDOCS_VERSION', 'latest')
 language = environ.get('READTHEDOCS_LANGUAGE', 'en')
 
 pygments_style = 'monokai'
