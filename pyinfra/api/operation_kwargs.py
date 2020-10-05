@@ -1,5 +1,3 @@
-from pyinfra import logger
-
 from .util import memoize
 
 
@@ -110,11 +108,6 @@ def get_executor_kwarg_keys():
     return list(keys)
 
 
-@memoize
-def show_stdin_global_warning():
-    logger.warning('The stdin global argument is in alpha!')
-
-
 def pop_global_op_kwargs(state, kwargs):
     '''
     Pop and return operation global keyword arguments.
@@ -126,9 +119,6 @@ def pop_global_op_kwargs(state, kwargs):
         return kwargs.pop(key, meta_kwargs.get(key, default))
 
     global_kwargs = {}
-
-    if 'stdin' in kwargs:
-        show_stdin_global_warning()
 
     for _, kwarg_configs in OPERATION_KWARGS.items():
         for key, config in kwarg_configs.items():
