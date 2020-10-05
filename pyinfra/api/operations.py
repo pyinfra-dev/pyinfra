@@ -20,9 +20,8 @@ from pyinfra import logger
 from pyinfra.progress import progress_spinner
 
 from .command import (
-    FileDownloadCommand,
-    FileUploadCommand,
     FunctionCommand,
+    PyinfraCommand,
     StringCommand,
 )
 from .exceptions import PyinfraError
@@ -111,6 +110,9 @@ def _run_server_op(state, host, op_hash):
         # Now we attempt to execute the command
         #
 
+        if not isinstance(command, PyinfraCommand):
+            raise TypeError('{0} is an invalid pyinfra command!'.format(command))
+
         if isinstance(command, FunctionCommand):
             try:
                 status = command.execute(state, host, executor_kwargs)
@@ -126,7 +128,10 @@ def _run_server_op(state, host, op_hash):
                     ),
                 ))
 
-        elif isinstance(command, (FileUploadCommand, FileDownloadCommand)):
+        elif isinstance(command, StringCommand):
+            status = _run_shell_command(state, host, command, op_meta, executor_kwargs)
+
+        else:
             try:
                 status = command.execute(state, host, executor_kwargs)
             except (timeout_error, socket_error, SSHException, IOError) as e:
@@ -135,12 +140,6 @@ def _run_server_op(state, host, op_hash):
                     e,
                     timeout=op_meta['timeout'],
                 )
-
-        elif isinstance(command, StringCommand):
-            status = _run_shell_command(state, host, command, op_meta, executor_kwargs)
-
-        else:
-            raise TypeError('{0} is an invalid pyinfra command!'.format(command))
 
         # Break the loop to trigger a failure
         if status is False:
