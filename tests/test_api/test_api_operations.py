@@ -6,7 +6,14 @@ from mock import mock_open, patch
 import pyinfra
 
 from pyinfra import pseudo_host, pseudo_state
-from pyinfra.api import Config, FileUploadCommand, State, StringCommand
+from pyinfra.api import (
+    Config,
+    FileDownloadCommand,
+    FileUploadCommand,
+    OperationError,
+    State,
+    StringCommand,
+)
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.operation import add_op
@@ -164,6 +171,45 @@ class TestOperationsApi(PatchSSHTestCase):
         assert state.results[anotherhost]['ops'] == 3
 
         # And w/o errors
+        assert state.results[somehost]['error_ops'] == 0
+        assert state.results[anotherhost]['error_ops'] == 0
+
+    def test_file_download_op(self):
+        inventory = make_inventory()
+
+        state = State(inventory, Config())
+        connect_all(state)
+
+        with patch('pyinfra.operations.files.os_path.isfile', lambda *args, **kwargs: True):
+            add_op(
+                state, files.get,
+                name='First op name',
+                src='/home/vagrant/file.txt',
+                dest='files/file.txt',
+            )
+
+        op_order = state.get_op_order()
+
+        assert len(op_order) == 1
+
+        first_op_hash = op_order[0]
+        assert state.op_meta[first_op_hash]['names'] == {'First op name'}
+
+        somehost = inventory.get_host('somehost')
+        anotherhost = inventory.get_host('anotherhost')
+
+        # Ensure first op has the right (upload) command
+        assert state.ops[somehost][first_op_hash]['commands'] == [
+            FileDownloadCommand('/home/vagrant/file.txt', 'files/file.txt'),
+        ]
+
+        with patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True):
+            run_ops(state)
+
+        assert state.results[somehost]['success_ops'] == 1
+        assert state.results[somehost]['ops'] == 1
+        assert state.results[anotherhost]['success_ops'] == 1
+        assert state.results[anotherhost]['ops'] == 1
         assert state.results[somehost]['error_ops'] == 0
         assert state.results[anotherhost]['error_ops'] == 0
 
