@@ -541,3 +541,17 @@ class Selinux(FactBase):
         selinux_info['mode'] = match.group(1)
 
         return selinux_info
+
+
+class HasGui(FactBase):
+    '''
+    Returns a boolean indicating the remote side has GUI capabilities. Linux only.
+    '''
+
+    command = 'ls /usr/share/xsessions/*.desktop || true'
+
+    def default(self):
+        return False
+
+    def process(self, output):
+        return len(output) > 0
