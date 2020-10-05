@@ -75,6 +75,14 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         command = make_unix_command('uptime', su_user='pyinfra', use_su_login=True)
         assert command.get_raw_value() == "su -l pyinfra -c 'sh -c uptime'"
 
+    def test_preserve_su_env_command(self):
+        command = make_unix_command('uptime', su_user='pyinfra', preserve_su_env=True)
+        assert command.get_raw_value() == "su -m pyinfra -c 'sh -c uptime'"
+
+    def test_su_shell_command(self):
+        command = make_unix_command('uptime', su_user='pyinfra', su_shell='bash')
+        assert command.get_raw_value() == "su -s `which bash` pyinfra -c 'sh -c uptime'"
+
     def test_command_env(self):
         command = make_unix_command('uptime', env={
             'key': 'value',

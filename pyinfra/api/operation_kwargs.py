@@ -32,6 +32,18 @@ auth_kwargs = {
         'description': 'Execute ``su`` with a login shell.',
         'default': lambda config: config.USE_SU_LOGIN,
     },
+    'preserve_su_env': {
+        'description': 'Preserve the shell environment when using su.',
+        'default': lambda config: config.PRESERVE_SU_ENV,
+    },
+    'su_shell': {
+        'description': (
+            'Use this shell (instead of user login shell) when using ``su`). '
+            'Only available under Linux, for use when using `su` with a user that '
+            'has nologin/similar as their login shell.'
+        ),
+        'default': lambda config: config.SU_SHELL,
+    },
 }
 
 

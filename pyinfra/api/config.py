@@ -36,6 +36,8 @@ class Config(object):
     # Switch to this user (from ssh_user) using su before executing operations
     SU_USER = None
     USE_SU_LOGIN = False
+    SU_SHELL = None
+    PRESERVE_SU_ENV = False
 
     # Use sudo and optional user
     SUDO = False

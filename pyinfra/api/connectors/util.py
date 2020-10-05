@@ -165,15 +165,18 @@ def show_use_su_login_warning():
 def make_unix_command(
     command,
     env=None,
+    shell_executable=Config.SHELL,
+    # Su config
     su_user=Config.SU_USER,
     use_su_login=Config.USE_SU_LOGIN,
+    su_shell=Config.SU_SHELL,
+    preserve_su_env=Config.PRESERVE_SU_ENV,
+    # Sudo config
     sudo=Config.SUDO,
     sudo_user=Config.SUDO_USER,
     use_sudo_login=Config.USE_SUDO_LOGIN,
     use_sudo_password=Config.USE_SUDO_PASSWORD,
     preserve_sudo_env=Config.PRESERVE_SUDO_ENV,
-    shell_executable=Config.SHELL,
-    raw=True,
 ):
     '''
     Builds a shell command with various kwargs.
@@ -231,6 +234,12 @@ def make_unix_command(
         if use_su_login:
             show_use_su_login_warning()
             command_bits.append('-l')
+
+        if preserve_su_env:
+            command_bits.append('-m')
+
+        if su_shell:
+            command_bits.extend(['-s', '`which {0}`'.format(su_shell)])
 
         command_bits.extend([su_user, '-c'])
 
