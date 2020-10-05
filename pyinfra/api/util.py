@@ -416,29 +416,3 @@ def get_file_sha1(filename_or_io):
         FILE_SHAS[cache_key] = digest
 
     return digest
-
-
-def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
-    '''
-    Reads a file-like buffer object into lines and optionally prints the output.
-    '''
-
-    def _print(line):
-        if print_func:
-            line = print_func(line)
-
-        if six.PY2:  # Python2 must print unicode as bytes (encoded)
-            line = line.encode('utf-8')
-
-        click.echo(line, err=True)
-
-    for line in io:
-        # Handle local Popen shells returning list of bytes, not strings
-        if not isinstance(line, six.text_type):
-            line = line.decode('utf-8')
-
-        line = line.rstrip('\n')
-        output_queue.put((type_, line))
-
-        if print_output:
-            _print(line)

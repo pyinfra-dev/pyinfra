@@ -15,7 +15,7 @@ from six.moves import shlex_quote
 
 from pyinfra import logger
 from pyinfra.api import Config, MaskString, QuoteString, StringCommand
-from pyinfra.api.util import memoize, read_buffer
+from pyinfra.api.util import memoize
 
 SUDO_ASKPASS_ENV_VAR = 'PYINFRA_SUDO_PASSWORD'
 SUDO_ASKPASS_EXE_FILENAME = 'pyinfra-sudo-askpass'
@@ -32,6 +32,32 @@ def escape_unix_path(path):
     '''
 
     return UNIX_PATH_SPACE_REGEX.sub(r'\1\\ ', path)
+
+
+def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
+    '''
+    Reads a file-like buffer object into lines and optionally prints the output.
+    '''
+
+    def _print(line):
+        if print_func:
+            line = print_func(line)
+
+        if six.PY2:  # Python2 must print unicode as bytes (encoded)
+            line = line.encode('utf-8')
+
+        click.echo(line, err=True)
+
+    for line in io:
+        # Handle local Popen shells returning list of bytes, not strings
+        if not isinstance(line, six.text_type):
+            line = line.decode('utf-8')
+
+        line = line.rstrip('\n')
+        output_queue.put((type_, line))
+
+        if print_output:
+            _print(line)
 
 
 def run_local_process(
