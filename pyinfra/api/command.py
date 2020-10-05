@@ -139,3 +139,22 @@ class FunctionCommand(PyinfraCommand):
 
     def execute(self, state, host, executor_kwargs):
         return self.function(state, host, *self.args, **self.kwargs)
+
+
+class RsyncCommand(PyinfraCommand):
+    def __init__(self, src, dest, flags, **kwargs):
+        super(RsyncCommand, self).__init__(**kwargs)
+        self.src = src
+        self.dest = dest
+        self.flags = flags
+
+    def __repr__(self):
+        return 'RsyncCommand({0}, {1})'.format(self.src, self.dest)
+
+    def execute(self, state, host, executor_kwargs):
+        return host.rsync(
+            self.src, self.dest, self.flags,
+            print_output=state.print_output,
+            print_input=state.print_input,
+            **executor_kwargs
+        )

@@ -1,5 +1,6 @@
 from __future__ import print_function, unicode_literals
 
+from distutils.spawn import find_executable
 from getpass import getpass
 from os import path
 from socket import (
@@ -32,9 +33,12 @@ from .util import (
     get_sudo_password,
     make_unix_command,
     read_buffers_into_queue,
+    run_local_process,
     split_combined_output,
     write_stdin,
 )
+
+EXECUTION_CONNECTOR = True
 
 
 def make_names_data(hostname):
@@ -122,7 +126,7 @@ def _get_private_key(state, key_filename, key_password):
         raise IOError('No such private key file: {0}'.format(key_filename))
 
     # Load any certificate, names from OpenSSH:
-    # https://github.com/openssh/openssh-portable/blob/049297de975b92adcc2db77e3fb7046c0e3c695d/ssh-keygen.c#L2453  # noqa
+    # https://github.com/openssh/openssh-portable/blob/049297de975b92adcc2db77e3fb7046c0e3c695d/ssh-keygen.c#L2453  # noqa: E501
     for certificate_filename in (
         '{0}-cert.pub'.format(key_filename),
         '{0}.pub'.format(key_filename),
@@ -138,6 +142,7 @@ def _make_paramiko_kwargs(state, host):
     kwargs = {
         'allow_agent': False,
         'look_for_keys': False,
+        'hostname': host.data.ssh_hostname or host.name,
     }
 
     for key, value in (
@@ -177,11 +182,7 @@ def connect(state, host):
     kwargs = _make_paramiko_kwargs(state, host)
     logger.debug('Connecting to: {0} ({1})'.format(host.name, kwargs))
 
-    # Hostname can be provided via SSH config (alias), data, or the hosts name
-    hostname = kwargs.pop(
-        'hostname',
-        host.data.ssh_hostname or host.name,
-    )
+    hostname = kwargs.pop('hostname')
 
     try:
         # Create new client & connect to the host
@@ -435,4 +436,71 @@ def put_file(
     return True
 
 
-EXECUTION_CONNECTOR = True
+def check_can_rsync(host):
+    if host.data.ssh_key_password:
+        raise NotImplementedError('Rsync does not currently work with SSH keys needing passwords.')
+
+    if host.data.ssh_password:
+        raise NotImplementedError('Rsync does not currently work with SSH passwords.')
+
+    if not find_executable('rsync'):
+        raise NotImplementedError('The `rsync` binary is not available on this system.')
+
+
+def rsync(
+    state, host, src, dest, flags,
+    print_output=False, print_input=False,
+    sudo=False,
+    sudo_user=None,
+    **ignored_kwargs
+):
+    hostname = host.data.ssh_hostname or host.name
+    user = ''
+    if host.data.ssh_user:
+        user = '{0}@'.format(host.data.ssh_user)
+
+    ssh_flags = []
+
+    port = host.data.ssh_port
+    if port:
+        ssh_flags.append('-p {0}'.format(port))
+
+    ssh_key = host.data.ssh_key
+    if ssh_key:
+        ssh_flags.append('-i {0}'.format(ssh_key))
+
+    remote_rsync_command = 'rsync'
+    if sudo:
+        remote_rsync_command = 'sudo rsync'
+        if sudo_user:
+            remote_rsync_command = 'sudo -u {0} rsync'.format(sudo_user)
+
+    rsync_command = (
+        'rsync {rsync_flags} '
+        "--rsh 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no {ssh_flags}' "
+        "--rsync-path '{remote_rsync_command}' "
+        '{src} {user}{hostname}:{dest}'
+    ).format(
+        rsync_flags=' '.join(flags),
+        ssh_flags=' '.join(ssh_flags),
+        remote_rsync_command=remote_rsync_command,
+        user=user, hostname=hostname,
+        src=src, dest=dest,
+    )
+
+    if print_input:
+        click.echo('{0}>>> {1}'.format(host.print_prefix, rsync_command), err=True)
+
+    return_code, combined_output = run_local_process(
+        rsync_command,
+        print_output=print_output,
+        print_prefix=host.print_prefix,
+    )
+
+    status = return_code == 0
+
+    if not status:
+        _, stderr = split_combined_output(combined_output)
+        raise IOError('\n'.join(stderr))
+
+    return True

@@ -148,6 +148,7 @@ class Host(object):
 
     def disconnect(self):
         self._check_state()
+
         # Disconnect is an optional function for executors if needed
         disconnect_func = getattr(self.executor, 'disconnect', None)
         if disconnect_func:
@@ -166,3 +167,18 @@ class Host(object):
     def get_file(self, *args, **kwargs):
         self._check_state()
         return self.executor.get_file(self.state, self, *args, **kwargs)
+
+    # Rsync - optional executor specific ability
+
+    def check_can_rsync(self):
+        check_can_rsync_func = getattr(self.executor, 'check_can_rsync', None)
+        if check_can_rsync_func:
+            return check_can_rsync_func(self)
+
+        raise NotImplementedError('The {0} connector does not support rsync!'.format(
+            self.executor.__name__,
+        ))
+
+    def rsync(self, *args, **kwargs):
+        self._check_state()
+        return self.executor.rsync(self.state, self, *args, **kwargs)

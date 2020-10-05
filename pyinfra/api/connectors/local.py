@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import os
 
+from distutils.spawn import find_executable
 from tempfile import mkstemp
 
 import click
@@ -17,6 +18,8 @@ from .util import (
     run_local_process,
     split_combined_output,
 )
+
+EXECUTION_CONNECTOR = True
 
 
 def make_names_data(hostname=None):
@@ -185,4 +188,25 @@ def get_file(
     return True
 
 
-EXECUTION_CONNECTOR = True
+def check_can_rsync():
+    if not find_executable('rsync'):
+        raise NotImplementedError('The `rsync` binary is not available on this system.')
+
+
+def rsync(
+    state, host, src, dest, flags,
+    print_output=False, print_input=False,
+    **command_kwargs
+):
+    status, _, stderr = run_shell_command(
+        state, host,
+        'rsync {0} {1} {2}'.format(' '.join(flags), src, dest),
+        print_output=print_output,
+        print_input=print_input,
+        **command_kwargs
+    )
+
+    if not status:
+        raise IOError('\n'.join(stderr))
+
+    return True

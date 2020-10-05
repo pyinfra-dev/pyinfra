@@ -15,15 +15,17 @@ import six
 
 from jinja2 import TemplateSyntaxError, UndefinedError
 
+from pyinfra import logger
 from pyinfra.api import (
     FileDownloadCommand,
     FileUploadCommand,
     operation,
     OperationError,
     OperationTypeError,
+    RsyncCommand,
 )
 from pyinfra.api.connectors.util import escape_unix_path
-from pyinfra.api.util import get_file_sha1, get_template
+from pyinfra.api.util import get_file_sha1, get_template, memoize
 
 from .util.compat import fspath
 from .util.files import (
@@ -499,6 +501,39 @@ def sync(
                 continue
 
             yield file(filename, present=False, state=state, host=host)
+
+
+@memoize
+def show_rsync_warning():
+    logger.warning('The `files.rsync` operation is in alpha!')
+
+
+@operation
+def rsync(
+    src, dest, flags=['-ax', '--delete'],
+    state=None, host=None,
+):
+    '''
+    Use ``rsync`` to sync a local directory to the remote system. This operation will actually call
+    the ``rsync`` binary on your system.
+
+    .. important::
+        The ``files.rsync`` operation is in alpha, and only supported using SSH
+        or ``@local`` connectors.
+
+    .. caution::
+        When using SSH, the ``files.rsync`` operation only supports the ``sudo`` and ``sudo_user``
+        global arguments.
+    '''
+
+    show_rsync_warning()
+
+    try:
+        host.check_can_rsync()
+    except NotImplementedError as e:
+        raise OperationError(*e.args)
+
+    yield RsyncCommand(src, dest, flags)
 
 
 def _create_remote_dir(state, host, remote_filename, user, group):
