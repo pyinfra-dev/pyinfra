@@ -45,6 +45,7 @@ def sed_replace(
     flags = ''.join(flags) if flags else ''
 
     line = line.replace('/', r'\/')
+    replace = str(replace)
     replace = replace.replace('/', r'\/')
     backup_extension = get_timestamp()
 
