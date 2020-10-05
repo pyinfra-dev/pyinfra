@@ -550,8 +550,11 @@ class HasGui(FactBase):
 
     command = 'ls /usr/share/xsessions/*.desktop || true'
 
-    def default(self):
+    @staticmethod
+    def default():
         return False
 
     def process(self, output):
-        return len(output) > 0
+        if output:
+            return True
+        return self.default()
