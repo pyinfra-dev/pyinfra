@@ -121,6 +121,8 @@ class Host(object):
     def connect(self, for_fact=None, show_errors=True):
         self._check_state()
         if not self.connection:
+            self.state.trigger_callbacks('host_before_connect', self)
+
             try:
                 self.connection = self.executor.connect(self.state, self)
             except ConnectError as e:
@@ -130,6 +132,8 @@ class Host(object):
                         click.style(e.args[0], 'red'),
                     )
                     logger.error(log_message)
+
+                self.state.trigger_callbacks('host_connect_error', self, e)
             else:
                 log_message = '{0}{1}'.format(
                     self.print_prefix,

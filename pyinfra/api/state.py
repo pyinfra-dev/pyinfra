@@ -35,7 +35,15 @@ class BaseStateCallback(object):
     #
 
     @staticmethod
+    def host_before_connect(state, host):
+        pass
+
+    @staticmethod
     def host_connect(state, host):
+        pass
+
+    @staticmethod
+    def host_connect_error(state, host, error):
         pass
 
     @staticmethod
