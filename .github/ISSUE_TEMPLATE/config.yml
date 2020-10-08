@@ -5,6 +5,6 @@ contact_links:
   url: https://docs.pyinfra.com
   about: View the pyinfra documentation.
 
-- name: 💬 Ask Questions on the pyinfra Reddit
-  url: https://reddit.com/r/pyinfra
+- name: 💬 Help & Support
+  url: https://docs.pyinfra.com/page/support.html
   about: Please ask and answer usage questions here.
