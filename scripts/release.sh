@@ -18,15 +18,15 @@ git add docs/
 git commit -m "Documentation update for v$VERSION." || echo "No docs updated!"
 git push
 
+echo "# Git tag & push..."
+git tag -a "v$VERSION" -m "v$VERSION"
+git push --tags
+
 echo "Git update major branch..."
 git checkout $MAJOR_BRANCH
 git merge master
 git push
 git checkout master
-
-echo "# Git tag & push..."
-git tag -a "v$VERSION" -m "v$VERSION"
-git push --tags
 
 echo "# Upload to pypi..."
 # Clear build & dist
