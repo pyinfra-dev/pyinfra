@@ -1,3 +1,28 @@
+# v1.2.dev0
+
+Lots of smaller bits in this release and massive improvement to the documentation.
+
+Operation & fact updates:
+
++ Add `files.rsync` operation
++ Add `port` and `user` arguments to all `ssh.*` operations
++ Add `apt_keys` fact and use in `apt.key` operation
++ Add GPG facts: `gkg_key`, `gpg_keys` and `gpg_secret_keys`
++ Add global `preserve_su_env` and `su_shell` arguments
++ Add `has_gui` fact
+
+Smaller bits:
+
++ Add `Config.REQUIRE_PACKAGES` to check requirements befor execution
++ Add `host_before_connect` and `host_connect_error` state callback methods
++ Support multiple `--limit` CLI arguments
++ Allow passing an integer in `files.replace` replacement lines (@vindarel)
++ Use `curl` if `wget` not present in `apt.key` operation
++ Completely remove use of `use_default_on_error` in facts
++ Many updates/tweaks to documentation + theme
++ Implement/use Angolia docsearch on documentation
+
+
 # v1.1.2
 
 + Add `port=22` argument to the `ssh.keyscan` operation
