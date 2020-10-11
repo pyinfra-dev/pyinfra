@@ -11,6 +11,16 @@ Where possible ``pyinfra`` follows  [semantic versioning](https://semver.org/) r
 + **Minor**: new operations, new APIs, new global arguments, deprecate & add warnings
 + **Patch**: new operation arguments for existing operations, bug fixes, documentation updates
 
+## Control Systems
+
+``pyinfra`` works on anywhere that runs Python - Mac, Linux & Windows are all supported.
+
+### Editor Integration
+
+#### PyCharm
+
+To debug ``pyinfra`` within PyCharm, you need to [explicitly enable support for Gevent](https://blog.jetbrains.com/pycharm/2012/08/gevent-debug-support/).
+
 
 ## Remote Systems
 

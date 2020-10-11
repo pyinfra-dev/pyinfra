@@ -7,6 +7,7 @@ Need a hand with using `pyinfra` or have some questions? You can find official `
 
 ### I think I've got a bug!
 
++ Please have a quick scan of the [the compatibility page](./compatibility) to see if the issue is referenced there
 + Check [the issue list](https://github.com/Fizzadar/pyinfra/issues) to see if anyone else has this issue
 + Submit [a new bug report](https://github.com/Fizzadar/pyinfra/issues/new/choose)
 
