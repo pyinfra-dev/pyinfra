@@ -23,11 +23,14 @@ def call(function, *args, **kwargs):
             command = 'echo hello'
             if hello:
                 command = command + ' ' + hello
-            status, stdout, stderr = host.run_shell_command(state, command=command, sudo=SUDO)
+
+            status, stdout, stderr = host.run_shell_command(command=command, sudo=SUDO)
             assert status is True  # ensure the command executed OK
-            if 'hello ' not in str(stdout):
-                raise Exception('`{}` problem with callback stdout:{} stderr:{}'.format(
-                    command, stdout, stderr))
+
+            if 'hello ' not in '\\n'.join(stdout):  # stdout/stderr is a *list* of lines
+                raise Exception(
+                    f'`{command}` problem with callback stdout:{stdout} stderr:{stderr}',
+                )
 
         python.call(
             name='Run my_callback function',
