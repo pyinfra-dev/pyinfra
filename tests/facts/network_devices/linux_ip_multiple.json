@@ -1,0 +1,31 @@
+{
+    "command": "ip addr show 2> /dev/null || ifconfig",
+    "output": [
+        "2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000",
+        "link/ether c6:c5:60:cd:73:f1 brd ff:ff:ff:ff:ff:ff",
+        "inet 166.22.203.666/20 brd 165.22.207.255 scope global eth0",
+        "valid_lft forever preferred_lft forever",
+        "inet 10.18.0.10/16 brd 10.18.255.255 scope global eth0",
+        "valid_lft forever preferred_lft forever",
+        "inet6 fe80::c4c5:60ff:fecd:73f1/64 scope link ",
+        "valid_lft forever preferred_lft forever"
+    ],
+    "fact": {
+        "eth0": {
+            "ipv4": {
+                "address": "166.22.203.666",
+                "broadcast": "165.22.207.255",
+                "mask_bits": 20,
+                "additional_ips": [{
+                    "address": "10.18.0.10",
+                    "broadcast": "10.18.255.255",
+                    "mask_bits": 16
+                }]
+            },
+            "ipv6": {
+                "address": "fe80::c4c5:60ff:fecd:73f1",
+                "mask_bits": 64
+            }
+        }
+    }
+}

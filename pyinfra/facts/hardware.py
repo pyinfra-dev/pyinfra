@@ -141,13 +141,19 @@ def _parse_regexes(regexes, lines):
         for regex, groups in regexes:
             matches = re.match(regex, line)
             if matches:
-                target_group = data[groups[0]]
+                ip_data = {}
 
                 for i, group in enumerate(groups[1:]):
-                    target_group[group] = matches.group(i + 1)
+                    ip_data[group] = matches.group(i + 1)
 
-                if 'mask_bits' in target_group:
-                    target_group['mask_bits'] = int(target_group['mask_bits'])
+                if 'mask_bits' in ip_data:
+                    ip_data['mask_bits'] = int(ip_data['mask_bits'])
+
+                target_group = data[groups[0]]
+                if target_group.get('address'):
+                    target_group.setdefault('additional_ips', []).append(ip_data)
+                else:
+                    target_group.update(ip_data)
 
                 break
 
@@ -161,20 +167,25 @@ class NetworkDevices(FactBase):
 
     .. code:: python
 
-        'eth0': {
-            'ipv4': {
-                'address': '127.0.0.1',
-                'broadcast': '127.0.0.13',
-                # Only one of these will exist:
-                'netmask': '255.255.255.255',
-                'mask_bits': '32'
+        {
+            'eth0': {
+                'ipv4': {
+                    'address': '127.0.0.1',
+                    'broadcast': '127.0.0.13',
+                    # Only one of these will exist:
+                    'netmask': '255.255.255.255',
+                    'mask_bits': 32,
+                },
+                'ipv6': {
+                    'address': 'fe80::a00:27ff:fec3:36f0',
+                    'mask_bits': 64,
+                    'additional_ips': [{
+                        'address': 'fe80::',
+                        'mask_bits': 128,
+                    }],
+                }
             },
-            'ipv6': {
-                'address': 'fe80::a00:27ff:fec3:36f0',
-                'mask_bits': '64'
-            }
-        },
-        ...
+        }
     '''
 
     command = 'ip addr show 2> /dev/null || ifconfig'
