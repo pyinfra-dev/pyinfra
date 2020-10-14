@@ -8,5 +8,6 @@
             "someuser@localwhat": {}
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "mysql user someuser@localwhat exists"
 }

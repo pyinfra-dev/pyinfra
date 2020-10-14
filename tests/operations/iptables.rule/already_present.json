@@ -13,5 +13,6 @@
             }]
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "iptables PREROUTING rule exists"
 }
