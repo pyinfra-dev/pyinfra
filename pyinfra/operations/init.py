@@ -27,6 +27,7 @@ def _make_legacy_operation(legacy_op, op_func):
             op_func.__name__,
         ))
         return op_func(*args, **kwargs)
+    wrapper._pyinfra_op = op_func
     return wrapper
 
 
