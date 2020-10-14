@@ -249,14 +249,77 @@ class NetworkDevices(FactBase):
         return devices
 
 
+class Ipv4Addrs(ShortFactBase):
+    '''
+    Gets & returns a dictionary of network interface -> list of IPv4 addresses.
+
+    .. code:: python
+
+        {
+            'eth0': ['127.0.0.1'],
+        }
+
+    .. note::
+        Network interfaces with no IPv4 will not be part of the dictionary.
+    '''
+
+    fact = NetworkDevices
+    ip_type = 'ipv4'
+
+    def process_data(self, data):
+        host_to_ips = {}
+
+        for interface, details in data.items():
+            ips = []
+
+            ip_details = details.get(self.ip_type)
+            if not ip_details:
+                continue
+
+            ips.append(ip_details['address'])
+            if 'additional_ips' in ip_details:
+                ips.extend([ip['address'] for ip in ip_details['additional_ips']])
+
+            host_to_ips[interface] = ips
+
+        return host_to_ips
+
+
+class Ipv6Addrs(Ipv4Addrs):
+    '''
+    Gets & returns a dictionary of network interface -> list of IPv6 addresses.
+
+    .. code:: python
+
+        {
+            'eth0': ['fe80::a00:27ff::2'],
+        }
+
+    .. note::
+        Network interfaces with no IPv6 will not be part of the dictionary.
+    '''
+
+    ip_type = 'ipv6'
+
+
+# Legacy versions of the above that only support one IP per interface
+#
+
 class Ipv4Addresses(ShortFactBase):
     '''
     Gets & returns a dictionary of network interface -> IPv4 address.
 
     .. code:: python
 
-        'eth0': '127.0.0.1',
-        ...
+        {
+            'eth0': '127.0.0.1',
+        }
+
+    .. warning::
+        This fact is deprecated, please use the ``ipv4_addrs`` fact.
+
+    .. note::
+        Network interfaces with no IPv4 will not be part of the dictionary.
     '''
 
     fact = NetworkDevices
@@ -281,8 +344,15 @@ class Ipv6Addresses(Ipv4Addresses):
 
     .. code:: python
 
-        'eth0': 'fe80::a00:27ff::2',
-        ...
+        {
+            'eth0': 'fe80::a00:27ff::2',
+        }
+
+    .. warning::
+        This fact is deprecated, please use the ``ipv6_addrs`` fact.
+
+    .. note::
+        Network interfaces with no IPv6 will not be part of the dictionary.
     '''
 
     ip_type = 'ipv6'

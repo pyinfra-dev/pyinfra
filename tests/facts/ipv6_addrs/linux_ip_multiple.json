@@ -1,0 +1,22 @@
+{
+    "command": "ip addr show 2> /dev/null || ifconfig",
+    "output": [
+        "2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000",
+        "link/ether c6:c5:60:cd:73:f1 brd ff:ff:ff:ff:ff:ff",
+        "inet 166.22.203.666/20 brd 165.22.207.255 scope global eth0",
+        "inet 10.18.0.10/16 brd 10.18.255.255 scope global eth0",
+        "inet6 fe80::c4c5:60ff:fecd:73f1/64 scope link ",
+        "3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000",
+        "link/ether c6:c5:60:cd:73:f1 brd ff:ff:ff:ff:ff:ff",
+        "inet6 fe80::c4c5:60ff:fecd:73f1/64 scope link ",
+        "inet6 fe80::c4c5:60ff:fecd:abc/64 scope link ",
+        "2: eth2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000",
+        "link/ether c6:c5:60:cd:73:f1 brd ff:ff:ff:ff:ff:ff",
+        "inet 166.22.203.666/20 brd 165.22.207.255 scope global eth0",
+        "inet 10.18.0.10/16 brd 10.18.255.255 scope global eth0"
+    ],
+    "fact": {
+        "eth0": ["fe80::c4c5:60ff:fecd:73f1"],
+        "eth1": ["fe80::c4c5:60ff:fecd:73f1", "fe80::c4c5:60ff:fecd:abc"]
+    }
+}

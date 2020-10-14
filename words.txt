@@ -6,6 +6,7 @@
 4
 64kb
 700
+addrs
 addsitedir
 adhoc
 agentrequesthandler
