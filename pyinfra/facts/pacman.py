@@ -11,8 +11,9 @@ class PacmanPackages(FactBase):
 
     .. code:: python
 
-        'package_name': ['version'],
-        ...
+        {
+            'package_name': ['version'],
+        }
     '''
 
     command = 'which pacman > /dev/null && pacman -Q || true'

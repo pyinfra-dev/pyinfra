@@ -9,14 +9,15 @@ class ZypperRepositories(FactBase):
 
     .. code:: python
 
-        {
-            'name': 'Main Repository',
-            'enabled': '1',
-            'autorefresh': '0',
-            'baseurl': 'http://download.opensuse.org/distribution/leap/$releasever/repo/oss/',
-            'type': 'rpm-md'
-        },
-        ...
+        [
+            {
+                'name': 'Main Repository',
+                'enabled': '1',
+                'autorefresh': '0',
+                'baseurl': 'http://download.opensuse.org/distribution/leap/$releasever/repo/oss/',
+                'type': 'rpm-md',
+            },
+        ]
     '''
 
     command = 'cat /etc/zypp/repos.d/*.repo 2> /dev/null || true'

@@ -15,8 +15,9 @@ class DebPackages(FactBase):
 
     .. code:: python
 
-        'package_name': ['version'],
-        ...
+        {
+            'package_name': ['version'],
+        }
     '''
 
     command = 'dpkg -l || true'

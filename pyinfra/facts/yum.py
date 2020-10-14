@@ -9,14 +9,15 @@ class YumRepositories(FactBase):
 
     .. code:: python
 
-        {
-            'name': 'CentOS-$releasever - AppStream',
-            'baseurl': 'http://mirror.centos.org/$contentdir/$releasever/AppStream/$basearch/os/',
-            'gpgcheck': '1',
-            'enabled': '1',
-            'gpgkey': 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial',
-        },
-        ...
+        [
+            {
+                'name': 'CentOS-$releasever - AppStream',
+                'baseurl': 'http://mirror.centos.org/$contentdir/$releasever/AppStream/$basearch/os/',
+                'gpgcheck': '1',
+                'enabled': '1',
+                'gpgkey': 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial',
+            },
+        ]
     '''
 
     command = 'cat /etc/yum.conf /etc/yum.repos.d/*.repo 2> /dev/null || true'

@@ -11,8 +11,9 @@ class BrewPackages(FactBase):
 
     .. code:: python
 
-        'package_name': ['version'],
-        ...
+        {
+            'package_name': ['version'],
+        }
     '''
 
     command = 'brew list --versions || true'
@@ -28,8 +29,9 @@ class BrewCasks(BrewPackages):
 
     .. code:: python
 
-        'package_name': ['version'],
-        ...
+        {
+            'package_name': ['version'],
+        }
     '''
 
     command = 'brew cask list --versions || true'

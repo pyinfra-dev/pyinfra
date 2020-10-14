@@ -16,8 +16,9 @@ class RPMPackages(FactBase):
 
     .. code:: python
 
-        'package_name': ['version'],
-        ...
+        {
+            'package_name': ['version'],
+        }
     '''
 
     command = (
@@ -41,7 +42,7 @@ class RpmPackage(FactBase):
 
         {
             'name': 'my_package',
-            'version': '1.0.0'
+            'version': '1.0.0',
         }
     '''
 

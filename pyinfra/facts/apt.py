@@ -41,13 +41,14 @@ class AptSources(FactBase):
 
     .. code:: python
 
-        {
-            'type': 'deb',
-            'url': 'http://archive.ubuntu.org',
-            'distribution': 'trusty',
-            'components', ['main', 'multiverse']
-        },
-        ...
+        [
+            {
+                'type': 'deb',
+                'url': 'http://archive.ubuntu.org',
+                'distribution': 'trusty',
+                'components', ['main', 'multiverse'],
+            },
+        ]
     '''
 
     command = 'cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2> /dev/null || true'

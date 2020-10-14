@@ -93,15 +93,16 @@ class Mounts(FactBase):
 
     .. code:: python
 
-        "/": {
-            "device": "/dev/mv2",
-            "type": "ext4",
-            "options": [
-                "rw",
-                "relatime"
-            ]
-        },
-        ...
+        {
+            "/": {
+                "device": "/dev/mv2",
+                "type": "ext4",
+                "options": [
+                    "rw",
+                    "relatime"
+                ]
+            },
+        }
     '''
 
     command = 'mount'
@@ -144,12 +145,13 @@ class KernelModules(FactBase):
 
     .. code:: python
 
-        'module_name': {
-            'size': 0,
-            'instances': 0,
-            'state': 'Live',
-        },
-        ...
+        {
+            'module_name': {
+                'size': 0,
+                'instances': 0,
+                'state': 'Live',
+            },
+        }
     '''
 
     command = 'cat /proc/modules || true'
@@ -233,7 +235,6 @@ class Sysctl(FactBase):
                 44565,
                 360,
             ],
-            ...
         }
     '''
 
@@ -297,14 +298,15 @@ class Crontab(FactBase):
 
     .. code:: python
 
-        '/path/to/command': {
-            'minute': '*',
-            'hour': '*',
-            'month': '*',
-            'day_of_month': '*',
-            'day_of_week': '*',
-        },
-        ...
+        {
+            '/path/to/command': {
+                'minute': '*',
+                'hour': '*',
+                'month': '*',
+                'day_of_month': '*',
+                'day_of_week': '*',
+            },
+        }
     '''
 
     default = dict
@@ -347,16 +349,17 @@ class Users(FactBase):
 
     .. code:: python
 
-        'user_name': {
-            'home': '/home/user_name',
-            'shell': '/bin/bash,
-            'group': 'main_user_group',
-            'groups': [
-                'other',
-                'groups'
-            ]
-        },
-        ...
+        {
+            'user_name': {
+                'home': '/home/user_name',
+                'shell': '/bin/bash,
+                'group': 'main_user_group',
+                'groups': [
+                    'other',
+                    'groups'
+                ]
+            },
+        }
     '''
 
     command = '''

@@ -15,7 +15,6 @@ class OpenvzContainers(FactBase):
                 'ostemplate': 'ubuntu...',
                 ...
             },
-            ...
         }
     '''
 

@@ -11,8 +11,9 @@ class ChocoPackages(FactBase):
 
     .. code:: python
 
-        'package_name': ['version'],
-        ...
+        {
+            'package_name': ['version'],
+        }
     '''
 
     command = 'choco list --local-only || true'

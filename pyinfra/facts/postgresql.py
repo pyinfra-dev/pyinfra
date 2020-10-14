@@ -66,13 +66,14 @@ class PostgresqlRoles(PostgresqlFactBase):
 
     .. code:: python
 
-        'pyinfra': {
-            'super': true,
-            'createrole': false,
-            'createdb': false,
-            ...
-        },
-        ...
+        {
+            'pyinfra': {
+                'super': true,
+                'createrole': false,
+                'createdb': false,
+                ...
+            },
+        }
     '''
 
     default = dict
@@ -111,13 +112,14 @@ class PostgresqlDatabases(PostgresqlFactBase):
 
     .. code:: python
 
-        "pyinfra_stuff": {
-            "encoding": "UTF8",
-            "collate": "en_US.UTF-8",
-            "ctype": "en_US.UTF-8",
-            ...
-        },
-        ...
+        {
+            "pyinfra_stuff": {
+                "encoding": "UTF8",
+                "collate": "en_US.UTF-8",
+                "ctype": "en_US.UTF-8",
+                ...
+            },
+        }
     '''
 
     default = dict

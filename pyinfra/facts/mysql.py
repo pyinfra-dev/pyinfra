@@ -71,11 +71,12 @@ class MysqlDatabases(MysqlFactBase):
 
     .. code:: python
 
-        'mysql': {
-            'character_set': 'latin1',
-            'collation_name': 'latin1_swedish_ci'
-        },
-        ...
+        {
+            'mysql': {
+                'character_set': 'latin1',
+                'collation_name': 'latin1_swedish_ci'
+            },
+        }
     '''
 
     default = dict
@@ -104,12 +105,13 @@ class MysqlUsers(MysqlFactBase):
 
     .. code:: python
 
-        'user@host': {
-            'privileges': ['Alter', 'Grant'],
-            'max_connections': 5,
-            ...
-        },
-        ...
+        {
+            'user@host': {
+                'privileges': ['Alter', 'Grant'],
+                'max_connections': 5,
+                ...
+            },
+        }
     '''
 
     default = dict
@@ -158,14 +160,15 @@ class MysqlUserGrants(MysqlFactBase):
 
     .. code:: python
 
-        '`pyinfra_stuff`.*': {
-            'privileges': [
-                'SELECT',
-                'INSERT'
-            ],
-            "with_grant_option": false
-        },
-        ...
+        {
+            '`pyinfra_stuff`.*': {
+                'privileges': [
+                    'SELECT',
+                    'INSERT'
+                ],
+                "with_grant_option": false
+            },
+        }
     '''
 
     default = dict

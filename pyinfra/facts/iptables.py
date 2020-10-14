@@ -86,11 +86,13 @@ class IptablesRules(FactBase):
 
     .. code:: python
 
-        {
-            'chain': 'PREROUTING',
-            'jump': 'DNAT'
-        },
-        ...
+        [
+            {
+                'chain': 'PREROUTING',
+                'jump': 'DNAT',
+                ...
+            },
+        ]
     '''
 
     default = list
@@ -114,11 +116,13 @@ class Ip6tablesRules(IptablesRules):
 
     .. code:: python
 
-        {
-            'chain': 'PREROUTING',
-            'jump': 'DNAT'
-        },
-        ...
+        [
+            {
+                'chain': 'PREROUTING',
+                'jump': 'DNAT',
+                ...
+            },
+        ]
     '''
 
     def command(self, table='filter'):
@@ -131,8 +135,9 @@ class IptablesChains(IptablesRules):
 
     .. code:: python
 
-        'NAME': 'POLICY',
-        ...
+        {
+            'NAME': 'POLICY',
+        }
     '''
 
     default = dict
@@ -156,8 +161,9 @@ class Ip6tablesChains(IptablesChains):
 
     .. code:: python
 
-        'NAME': 'POLICY',
-        ...
+        {
+            'NAME': 'POLICY',
+        }
     '''
 
     def command(self, table='filter'):

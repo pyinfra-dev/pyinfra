@@ -63,14 +63,15 @@ class BlockDevices(FactBase):
 
     .. code:: python
 
-        '/dev/sda1': {
-            'available': '39489508',
-            'used_percent': '3',
-            'mount': '/',
-            'used': '836392',
-            'blocks': '40325900'
-        },
-        ...
+        {
+            '/dev/sda1': {
+                'available': '39489508',
+                'used_percent': '3',
+                'mount': '/',
+                'used': '836392',
+                'blocks': '40325900'
+            },
+        }
     '''
 
     command = 'df'

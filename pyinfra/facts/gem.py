@@ -11,8 +11,9 @@ class GemPackages(FactBase):
 
     .. code:: python
 
-        'package_name': ['version'],
-        ...
+        {
+            'package_name': ['version'],
+        }
     '''
 
     command = 'gem list --local || true'
