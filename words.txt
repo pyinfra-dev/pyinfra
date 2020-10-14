@@ -25,12 +25,14 @@ asn
 Autodetect
 Autogenerate
 automagically
+automount
 autoname
 autosectionlabel
 baseurl
 basic
 benchmarking
 BLOCKSIZE
+bsdinit
 build
 bytecode
 ccommands
@@ -317,6 +319,7 @@ Systemd
 systemd
 systeminfo
 systeminfo
+sysvinit
 t1
 t2
 tablename

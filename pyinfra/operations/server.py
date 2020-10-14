@@ -13,10 +13,10 @@ import six
 
 from six.moves import filterfalse, shlex_quote
 
-from pyinfra.api import FunctionCommand, operation, StringCommand
+from pyinfra.api import FunctionCommand, operation, OperationError, StringCommand
 from pyinfra.api.util import try_int
 
-from . import files
+from . import bsdinit, files, systemd, sysvinit, upstart
 from .util.files import chmod, sed_replace
 
 
@@ -400,6 +400,61 @@ def sysctl(
             state=state,
             host=host,
         )
+
+
+@operation
+def service(
+    service,
+    running=True, restarted=False, reloaded=False,
+    command=None, enabled=None,
+    state=None, host=None,
+):
+    '''
+    Manage the state of services. This command checks for the presence of all the
+    Linux init systems ``pyinfra`` can handle and executes the relevant operation.
+
+    + service: name of the service to manage
+    + running: whether the service should be running
+    + restarted: whether the service should be restarted
+    + reloaded: whether the service should be reloaded
+    + command: custom command execute
+    + enabled: whether this service should be enabled/disabled on boot
+
+    Example:
+
+    .. code:: python
+
+        server.service(
+            name='Enable open-vm-tools service',
+            service='open-vm-tools',
+            enabled=True,
+        )
+    '''
+
+    if host.fact.which('systemctl'):
+        service_operation = systemd.service
+
+    elif host.fact.which('initctl'):
+        service_operation = upstart.service
+
+    elif host.fact.directory('/etc/init.d'):
+        service_operation = sysvinit.service
+
+    elif host.fact.directory('/etc/rc.d'):
+        service_operation = bsdinit.service
+
+    else:
+        raise OperationError((
+            'No init system found '
+            '(no systemctl, initctl, /etc/init.d or /etc/rc.d found)'
+        ))
+
+    yield service_operation(
+        service,
+        running=running, restarted=restarted, reloaded=reloaded,
+        command=command, enabled=enabled,
+        state=state, host=host,
+    )
 
 
 @operation

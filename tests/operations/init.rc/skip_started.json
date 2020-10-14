@@ -5,6 +5,6 @@
             "nginx": true
         }
     },
-    "commands": [
-    ]
+    "commands": [],
+    "noop_description": "service nginx is running"
 }
