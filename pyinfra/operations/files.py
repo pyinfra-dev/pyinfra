@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import posixpath
 import sys
+import traceback
 
 from datetime import timedelta
 from fnmatch import fnmatch
@@ -13,7 +14,7 @@ from os import makedirs, path as os_path, walk
 
 import six
 
-from jinja2 import TemplateSyntaxError, UndefinedError
+from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
 from pyinfra import logger
 from pyinfra.api import (
@@ -789,25 +790,22 @@ def template(
     if state.deploy_dir:
         src = os_path.join(state.deploy_dir, src)
 
-    # Ensure host is always available inside templates
-    data['host'] = host
-    data['inventory'] = state.inventory
+    # Ensure host/state/inventory are available inside templates (if not set)
+    data.setdefault('host', host)
+    data.setdefault('state', state)
+    data.setdefault('inventory', state.inventory)
 
     # Render and make file-like it's output
     try:
         output = get_template(src).render(data)
-    except (TemplateSyntaxError, UndefinedError) as e:
-        _, _, trace = sys.exc_info()
+    except (TemplateRuntimeError, TemplateSyntaxError, UndefinedError) as e:
+        trace_frames = traceback.extract_tb(sys.exc_info()[2])
+        trace_frames = [
+            frame for frame in trace_frames
+            if frame[2] in ('template', '<module>', 'top-level template code')
+        ]  # thank you https://github.com/saltstack/salt/blob/master/salt/utils/templates.py
 
-        # Jump through to the *second last* traceback, which contains the line number
-        # of the error within the in-memory Template object
-        while trace.tb_next:
-            if trace.tb_next.tb_next:
-                trace = trace.tb_next
-            else:  # pragma: no cover
-                break
-
-        line_number = trace.tb_frame.f_lineno
+        line_number = trace_frames[-1][1]
 
         # Quickly read the line in question and one above/below for nicer debugging
         with open(src, 'r') as f:
