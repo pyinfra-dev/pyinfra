@@ -160,21 +160,15 @@ def operation(func=None, pipeline_facts=None):
             state = kwargs['state'] = pseudo_state._module
             host = kwargs['host'] = pseudo_host._module
 
-            if not state or not host:
-                if not state:
-                    raise PyinfraError((
-                        'API operation called without state/host: {0} ({1})'
-                    ).format(op_name, get_call_location()))
+            if state.in_op:
+                raise PyinfraError((
+                    'Nested operation called without state/host: {0} ({1})'
+                ).format(op_name, get_call_location()))
 
-                if state.in_op:
-                    raise PyinfraError((
-                        'Nested operation called without state/host: {0} ({1})'
-                    ).format(op_name, get_call_location()))
-
-                if state.in_deploy:
-                    raise PyinfraError((
-                        'Nested deploy operation called without state/host: {0} ({1})'
-                    ).format(op_name, get_call_location()))
+            if state.in_deploy:
+                raise PyinfraError((
+                    'Nested deploy operation called without state/host: {0} ({1})'
+                ).format(op_name, get_call_location()))
 
         else:
             raise PyinfraError((
