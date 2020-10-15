@@ -94,14 +94,13 @@ def wait(port=None, state=None, host=None):
 
 
 @operation
-def shell(commands, chdir=None, state=None, host=None):
+def shell(commands, state=None, host=None):
     '''
     Run raw shell code on server during a deploy. If the command would
     modify data that would be in a fact, the fact would not be updated
     since facts are only run at the start of a deploy.
 
     + commands: command or list of commands to execute on the remote server
-    + chdir: directory to cd into before executing commands
 
     Example:
 
@@ -118,19 +117,15 @@ def shell(commands, chdir=None, state=None, host=None):
         commands = [commands]
 
     for command in commands:
-        if chdir:
-            yield 'cd {0} && ({1})'.format(chdir, command)
-        else:
-            yield command
+        yield command
 
 
 @operation
-def script(src, chdir=None, state=None, host=None):
+def script(src, state=None, host=None):
     '''
     Upload and execute a local script on the remote host.
 
     + src: local script filename to upload & execute
-    + chdir: directory to cd into before executing the script
 
     Example:
 
@@ -147,20 +142,15 @@ def script(src, chdir=None, state=None, host=None):
     yield files.put(src, temp_file, state=state, host=host)
 
     yield chmod(temp_file, '+x')
-
-    if chdir:
-        yield 'cd {0} && {1}'.format(chdir, temp_file)
-    else:
-        yield temp_file
+    yield temp_file
 
 
 @operation
-def script_template(src, chdir=None, state=None, host=None, **data):
+def script_template(src, state=None, host=None, **data):
     '''
     Generate, upload and execute a local script template on the remote host.
 
     + src: local script template filename
-    + chdir: directory to cd into before executing the script
 
     Example:
 
@@ -182,11 +172,7 @@ def script_template(src, chdir=None, state=None, host=None, **data):
     yield files.template(src, temp_file, state=state, host=host, **data)
 
     yield chmod(temp_file, '+x')
-
-    if chdir:
-        yield 'cd {0} && {1}'.format(chdir, temp_file)
-    else:
-        yield temp_file
+    yield temp_file
 
 
 @operation
