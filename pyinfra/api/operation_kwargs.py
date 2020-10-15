@@ -3,11 +3,11 @@ from .util import memoize
 
 auth_kwargs = {
     'sudo': {
-        'description': 'Execute/apply any changes with sudo.',
+        'description': 'Execute/apply any changes with ``sudo``.',
         'default': lambda config: config.SUDO,
     },
     'sudo_user': {
-        'description': 'Execute/apply any changes with sudo as a non-root user.',
+        'description': 'Execute/apply any changes with ``sudo`` as a non-root user.',
         'default': lambda config: config.SUDO_USER,
     },
     'use_sudo_login': {
@@ -15,15 +15,15 @@ auth_kwargs = {
         'default': lambda config: config.USE_SUDO_LOGIN,
     },
     'use_sudo_password': {
-        'description': 'Whether to use a password with sudo (will ask).',
+        'description': 'Whether to use a password with ``sudo`` (will ask).',
         'default': lambda config: config.USE_SUDO_PASSWORD,
     },
     'preserve_sudo_env': {
-        'description': 'Preserve the shell environment when using sudo.',
+        'description': 'Preserve the shell environment when using ``sudo``.',
         'default': lambda config: config.PRESERVE_SUDO_ENV,
     },
     'su_user': {
-        'description': 'Execute/apply any changes with su.',
+        'description': 'Execute/apply any changes with ``su``.',
         'default': lambda config: config.SU_USER,
     },
     'use_su_login': {
@@ -31,12 +31,12 @@ auth_kwargs = {
         'default': lambda config: config.USE_SU_LOGIN,
     },
     'preserve_su_env': {
-        'description': 'Preserve the shell environment when using su.',
+        'description': 'Preserve the shell environment when using ``su``.',
         'default': lambda config: config.PRESERVE_SU_ENV,
     },
     'su_shell': {
         'description': (
-            'Use this shell (instead of user login shell) when using ``su`). '
+            'Use this shell (instead of user login shell) when using ``su``). '
             'Only available under Linux, for use when using `su` with a user that '
             'has nologin/similar as their login shell.'
         ),
@@ -54,14 +54,14 @@ def generate_env(config, value):
 
 operation_kwargs = {
     'name': {
-        'description': 'Name of the operation',
+        'description': 'Name of the operation.',
     },
     'shell_executable': {
         'description': 'The shell to use. Defaults to ``sh`` (Unix) or ``cmd`` (Windows).',
         'default': lambda config: config.SHELL,
     },
     'chdir': {
-        'description': 'Directory to switch to before executing the command',
+        'description': 'Directory to switch to before executing the command.',
     },
     'env': {
         'description': 'Dictionary of environment variables to set.',
@@ -72,12 +72,12 @@ operation_kwargs = {
         'default': lambda config: config.IGNORE_ERRORS,
     },
     'success_exit_codes': {
-        'description': 'List of exit codes to consider a success',
+        'description': 'List of exit codes to consider a success.',
         'default': lambda config: [0],
     },
     'timeout': 'Timeout for *each* command executed during the operation.',
     'get_pty': 'Whether to get a pseudoTTY when executing any commands.',
-    'stdin': 'String or buffer to send to the stdin of any commands',
+    'stdin': 'String or buffer to send to the stdin of any commands.',
 }
 
 execution_kwargs = {
