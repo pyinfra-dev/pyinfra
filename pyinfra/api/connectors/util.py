@@ -191,6 +191,7 @@ def show_use_su_login_warning():
 def make_unix_command(
     command,
     env=None,
+    chdir=None,
     shell_executable=Config.SHELL,
     # Su config
     su_user=Config.SU_USER,
@@ -214,13 +215,15 @@ def make_unix_command(
     if isinstance(command, six.binary_type):
         command = command.decode('utf-8')
 
-    # Use env & build our actual command
     if env:
         env_string = ' '.join([
             '{0}={1}'.format(key, value)
             for key, value in six.iteritems(env)
         ])
         command = StringCommand('env', env_string, command)
+
+    if chdir:
+        command = StringCommand('cd', chdir, '&&', command)
 
     # Quote the command as a string
     command = QuoteString(command)

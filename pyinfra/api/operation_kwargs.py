@@ -60,6 +60,9 @@ operation_kwargs = {
         'description': 'The shell to use. Defaults to ``sh`` (Unix) or ``cmd`` (Windows).',
         'default': lambda config: config.SHELL,
     },
+    'chdir': {
+        'description': 'Directory to switch to before executing the command',
+    },
     'env': {
         'description': 'Dictionary of environment variables to set.',
         'handler': generate_env,

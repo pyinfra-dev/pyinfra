@@ -93,6 +93,10 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             "sh -c 'env anotherkey=anothervalue key=value uptime'",
         ]
 
+    def test_command_chdir(self):
+        command = make_unix_command('uptime', chdir='/opt/somedir')
+        assert command.get_raw_value() == "sh -c 'cd /opt/somedir && uptime'"
+
     def test_custom_shell_command(self):
         command = make_unix_command('uptime', shell_executable='bash')
         assert command.get_raw_value() == 'bash -c uptime'
@@ -100,6 +104,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
     def test_mixed_command(self):
         command = make_unix_command(
             'echo hi',
+            chdir='/opt/somedir',
             env={'key': 'value'},
             sudo=True,
             sudo_user='root',
@@ -110,5 +115,5 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         assert command.get_raw_value() == (
             'sudo -H -n -E -u root '  # sudo bit
             'su pyinfra -c '  # su bit
-            "'bash -c '\"'\"'env key=value echo hi'\"'\"''"  # command bit
+            "'bash -c '\"'\"'cd /opt/somedir && env key=value echo hi'\"'\"''"  # command bit
         )
