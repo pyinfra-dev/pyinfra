@@ -1,18 +1,22 @@
-# v1.2.dev0
+# v1.2.dev1
 
 Lots of smaller bits in this release and massive improvement to the documentation.
 
 Operation & fact updates:
 
++ **Deprecate** `init.*` operations, renamed to: `systemd.service`, `upstart.service`, `launchd.service`, `bsdinit.service`, `sysvinit.service`, `sysvinit.enable`, `server.service`
++ Add `systemd.daemon_reload` operation
 + Add `files.rsync` operation
 + Add `port` and `user` arguments to all `ssh.*` operations
 + Add `apt_keys` fact and use in `apt.key` operation
 + Add GPG facts: `gkg_key`, `gpg_keys` and `gpg_secret_keys`
-+ Add global `preserve_su_env` and `su_shell` arguments
++ Add `additional_ips` in `network_devices` fact
++ Add `ipv4_addrs` and `ipv6_addrs` facts to replace `ipv[46]_addresses`
 + Add `has_gui` fact
 
-Smaller bits:
+Other bits:
 
++ Add global `chdir`, `preserve_su_env` and `su_shell` arguments
 + Add `Config.REQUIRE_PACKAGES` to check requirements befor execution
 + Add `host_before_connect` and `host_connect_error` state callback methods
 + Support multiple `--limit` CLI arguments
