@@ -19,6 +19,7 @@ venv/
 docs/build/
 docs/facts/
 docs/operations/
+docs/apidoc/
 docs/_deploy_globals.rst
 
 .idea/

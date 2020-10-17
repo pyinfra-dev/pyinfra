@@ -10,14 +10,6 @@ echo "# Releasing pyinfra v${VERSION} (branch ${MAJOR_BRANCH})"
 echo "# Running tests..."
 pytest
 
-echo "# Build the docs..."
-scripts/build_docs.sh
-
-echo "# Commit & push the docs..."
-git add docs/
-git commit -m "Documentation update for v$VERSION." || echo "No docs updated!"
-git push
-
 echo "# Git tag & push..."
 git tag -a "v$VERSION" -m "v$VERSION"
 git push --tags

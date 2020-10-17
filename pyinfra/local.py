@@ -63,7 +63,7 @@ def include(filename):
         )
 
 
-def shell(commands, splitlines=False, ignore_errors=False):
+def shell(commands, splitlines=False, ignore_errors=False, print_output=False, print_input=False):
     '''
     Subprocess based implementation of pyinfra/api/ssh.py's ``run_shell_command``.
 
@@ -80,8 +80,9 @@ def shell(commands, splitlines=False, ignore_errors=False):
 
     # Checking for pseudo_state means this function works outside a deploy
     # e.g.: the vagrant connector.
-    print_output = pseudo_state.print_output if pseudo_state.isset() else False
-    print_input = pseudo_state.print_input if pseudo_state.isset() else False
+    if pseudo_state.isset():
+        print_output = pseudo_state.print_output
+        print_input = pseudo_state.print_input
 
     for command in commands:
         print_prefix = 'localhost: '

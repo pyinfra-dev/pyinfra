@@ -1,5 +1,6 @@
 from datetime import date
 from os import environ, mkdir, path
+from shutil import rmtree
 
 import guzzle_sphinx_theme
 
@@ -52,13 +53,15 @@ def setup(app):
     this_dir = path.dirname(path.realpath(__file__))
     scripts_dir = path.abspath(path.join(this_dir, '..', 'scripts'))
 
-    for auto_docs_name in ('operations', 'facts'):
+    for auto_docs_name in ('operations', 'facts', 'apidoc'):
         auto_docs_path = path.join(this_dir, auto_docs_name)
-        if not path.exists(auto_docs_path):
-            mkdir(auto_docs_path)
+        if path.exists(auto_docs_path):
+            rmtree(auto_docs_path)
+        mkdir(auto_docs_path)
 
     local.shell((
+        'python {0}/generate_api_docs.py'.format(scripts_dir),
         'python {0}/generate_global_kwargs_doc.py'.format(scripts_dir),
         'python {0}/generate_facts_docs.py'.format(scripts_dir),
         'python {0}/generate_operations_docs.py'.format(scripts_dir),
-    ))
+    ), print_input=True)
