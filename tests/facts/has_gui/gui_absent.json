@@ -1,5 +1,5 @@
 {
-    "command": "ls /usr/share/xsessions/*.desktop || true",
+    "command": "ls /usr/bin/*session || true",
     "output": [],
     "fact": false
 }

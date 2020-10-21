@@ -3,5 +3,5 @@
     "output": [
         "/usr/bin/gnome-session"
     ],
-    "fact": true
+    "fact": ["GNOME"]
 }

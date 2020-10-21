@@ -546,18 +546,40 @@ class Selinux(FactBase):
         return selinux_info
 
 
-class HasGui(FactBase):
+class LinuxGui(FactBase):
+    '''
+    Returns a list of available Linux GUIs.
+    '''
+
+    command = 'ls /usr/bin/*session || true'
+    default = list
+
+    known_gui_binaries = {
+        '/usr/bin/gnome-session': 'GNOME',
+        '/usr/bin/mate-session': 'MATE',
+        '/usr/bin/lxsession': 'LXDE',
+        '/usr/bin/plasma_session': 'KDE Plasma',
+        '/usr/bin/xfce4-session': 'XFCE 4',
+    }
+
+    def process(self, output):
+        gui_names = []
+
+        for line in output:
+            gui_name = self.known_gui_binaries.get(line)
+            if gui_name:
+                gui_names.append(gui_name)
+
+        return gui_names
+
+
+class HasGui(ShortFactBase):
     '''
     Returns a boolean indicating the remote side has GUI capabilities. Linux only.
     '''
 
-    command = 'ls /usr/share/xsessions/*.desktop || true'
+    fact = LinuxGui
 
     @staticmethod
-    def default():
-        return False
-
-    def process(self, output):
-        if output:
-            return True
-        return self.default()
+    def process_data(data):
+        return len(data) > 0
