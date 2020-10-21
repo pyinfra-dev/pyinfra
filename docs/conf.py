@@ -39,6 +39,12 @@ html_short_title = 'Home'
 html_theme = 'guzzle_sphinx_theme'
 html_theme_path = guzzle_sphinx_theme.html_theme_path()
 html_static_path = ['static']
+html_theme_options = {
+    'docsearch_api_key': 'e2522266be34dfb8a0044c09cbf4c8b3',
+    'docsearch_index_name': 'pyinfra',
+    'plausible_domain': 'docs.pyinfra.com',
+    'plausible_stats_domain': 'stats.oxygem.com',
+}
 
 templates_path = ['templates']
 
