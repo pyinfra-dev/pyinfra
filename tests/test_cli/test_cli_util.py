@@ -10,7 +10,7 @@ from pyinfra_cli.util import get_operation_and_args, json_encode
 
 class TestCliUtil(TestCase):
     def test_json_encode_function(self):
-        assert json_encode(get_operation_and_args) == 'get_operation_and_args'
+        assert json_encode(get_operation_and_args) == 'Function: get_operation_and_args'
 
     def test_json_encode_datetime(self):
         now = datetime.utcnow()

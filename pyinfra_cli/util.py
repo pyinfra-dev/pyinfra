@@ -64,7 +64,7 @@ def json_encode(obj):
 
     # Python types
     elif isinstance(obj, FunctionType):
-        return obj.__name__
+        return 'Function: {0}'.format(obj.__name__)
 
     elif isinstance(obj, datetime):
         return obj.isoformat()
