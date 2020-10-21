@@ -1,4 +1,4 @@
-# v1.2.dev1
+# v1.2
 
 Lots of smaller bits in this release and massive improvement to the documentation.
 
@@ -12,7 +12,7 @@ Operation & fact updates:
 + Add GPG facts: `gkg_key`, `gpg_keys` and `gpg_secret_keys`
 + Add `additional_ips` in `network_devices` fact
 + Add `ipv4_addrs` and `ipv6_addrs` facts to replace `ipv[46]_addresses`
-+ Add `has_gui` fact
++ Add `linux_gui` & `has_gui` facts
 
 Other bits:
 
@@ -24,6 +24,7 @@ Other bits:
 + Use `curl` if `wget` not present in `apt.key` operation
 + Completely remove use of `use_default_on_error` in facts
 + Many updates/tweaks to documentation + theme
++ Allow functions in/as group/host data (CLI)
 + Implement/use Angolia docsearch on documentation
 
 
