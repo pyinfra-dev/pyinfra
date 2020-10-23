@@ -82,6 +82,8 @@ class FactBase(object):
 
     shell_executable = None
 
+    requires_command = None
+
     @staticmethod
     def default():
         '''
@@ -192,6 +194,11 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
                 host_args = [get_arg_value(state, host, arg) for arg in args]
 
                 command = command(*host_args)
+
+            if fact.requires_command:
+                command = '! command -v {0} > /dev/null || ({1})'.format(
+                    fact.requires_command, command,
+                )
 
             greenlet = state.fact_pool.spawn(
                 host.run_shell_command,
