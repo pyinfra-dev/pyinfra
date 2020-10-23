@@ -6,6 +6,8 @@ from pyinfra.api import FactBase
 class GpgFactBase(FactBase):
     abstract = True
 
+    requires_command = 'gpg'
+
     key_record_type = 'pub'
     subkey_record_type = 'sub'
 
@@ -90,10 +92,10 @@ class GpgKey(GpgFactBase):
     def command(self, src):
         if urlparse(src).scheme:
             return (
-                '((wget -O - {0} || curl -sSLf {0}) | gpg --with-colons) || true'
+                '(wget -O - {0} || curl -sSLf {0}) | gpg --with-colons'
             ).format(src)
 
-        return 'gpg --with-colons {0} || true'.format(src)
+        return 'gpg --with-colons {0}'.format(src)
 
 
 class GpgKeys(GpgFactBase):
@@ -113,10 +115,10 @@ class GpgKeys(GpgFactBase):
 
     def command(self, keyring=None):
         if not keyring:
-            return 'gpg --list-keys --with-colons || true'
+            return 'gpg --list-keys --with-colons'
 
         return (
-            'gpg --list-keys --with-colons --keyring {0} --no-default-keyring || true'
+            'gpg --list-keys --with-colons --keyring {0} --no-default-keyring'
         ).format(keyring)
 
 
@@ -141,8 +143,8 @@ class GpgSecretKeys(GpgFactBase):
 
     def command(self, keyring=None):
         if not keyring:
-            return 'gpg --list-secret-keys --with-colons || true'
+            return 'gpg --list-secret-keys --with-colons'
 
         return (
-            'gpg --list-secret-keys --with-colons --keyring {0} --no-default-keyring || true'
+            'gpg --list-secret-keys --with-colons --keyring {0} --no-default-keyring'
         ).format(keyring)

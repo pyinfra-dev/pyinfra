@@ -1,6 +1,6 @@
 {
     "arg": ["https://download.docker.com/linux/debian/gpg"],
-    "command": "((wget -O - https://download.docker.com/linux/debian/gpg || curl -sSLf https://download.docker.com/linux/debian/gpg) | gpg --with-colons) || true",
+    "command": "(wget -O - https://download.docker.com/linux/debian/gpg || curl -sSLf https://download.docker.com/linux/debian/gpg) | gpg --with-colons",
     "output": [
         "pub:-:4096:1:8D81803C0EBFCD88:1487788586:::-:",
         "uid:::::::::Docker Release (CE deb) <docker@docker.com>:",

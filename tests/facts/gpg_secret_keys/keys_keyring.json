@@ -1,5 +1,5 @@
 {
-    "command": "gpg --list-secret-keys --with-colons --keyring /some/keyring --no-default-keyring || true",
+    "command": "gpg --list-secret-keys --with-colons --keyring /some/keyring --no-default-keyring",
     "arg": ["/some/keyring"],
     "output": [
         "tru:t:1:1601454628:0:3:1:5",
