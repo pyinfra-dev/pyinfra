@@ -18,7 +18,9 @@ class OpenvzContainers(FactBase):
         }
     '''
 
-    command = 'vzlist -a -j || true'
+    command = 'vzlist -a -j'
+    requires_command = 'vzlist'
+
     default = dict
 
     @staticmethod

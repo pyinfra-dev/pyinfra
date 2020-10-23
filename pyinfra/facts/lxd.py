@@ -8,7 +8,9 @@ class LXDContainers(FactBase):
     Returns a list of running LXD containers
     '''
 
-    command = 'lxc list --format json --fast || true'
+    command = 'lxc list --format json --fast'
+    requires_command = 'lxc'
+
     default = list
 
     def process(self, output):
