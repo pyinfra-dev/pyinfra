@@ -29,16 +29,14 @@ def reboot(delay=10, interval=1, reboot_timeout=300, state=None, host=None):
     + interval: interval (s) between reconnect attempts
     + reboot_timeout: total time before giving up reconnecting
 
-    Note: Probably want sudo enabled.
-
     Example:
 
     .. code:: python
 
         server.reboot(
             name='Reboot the server and wait to reconnect',
-            delay=5,
-            timeout=30,
+            delay=60,
+            reboot_timeout=600,
         )
     '''
 
