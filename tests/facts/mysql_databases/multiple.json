@@ -1,5 +1,5 @@
 {
-    "command": "mysql -Be 'SELECT * FROM information_schema.SCHEMATA' || true",
+    "command": "mysql -Be 'SELECT * FROM information_schema.SCHEMATA'",
     "output": [
         "CATALOG_NAME\tSCHEMA_NAME\tDEFAULT_CHARACTER_SET_NAME\tDEFAULT_COLLATION_NAME\tSQL_PATH",
         "def\tinformation_schema\tutf8\tutf8_general_ci\tNULL",

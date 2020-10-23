@@ -49,20 +49,21 @@ def make_execute_mysql_command(command, **mysql_kwargs):
 class MysqlFactBase(FactBase):
     abstract = True
 
+    requires_command = 'mysql'
+
     def command(
         self,
         # Details for speaking to MySQL via `mysql` CLI via `mysql` CLI
         mysql_user=None, mysql_password=None,
         mysql_host=None, mysql_port=None,
     ):
-        mysql_command = make_execute_mysql_command(
+        return make_execute_mysql_command(
             self.mysql_command,
             user=mysql_user,
             password=mysql_password,
             host=mysql_host,
             port=mysql_port,
         )
-        return StringCommand(mysql_command, '||', 'true')
 
 
 class MysqlDatabases(MysqlFactBase):

@@ -1,5 +1,5 @@
 {
-    "command": "mysql -Be 'SELECT * FROM mysql.user' || true",
+    "command": "mysql -Be 'SELECT * FROM mysql.user'",
     "output": [
         "Host\tUser\tPassword\tSelect_priv\tInsert_priv\tUpdate_priv\tDelete_priv\tCreate_priv\tDrop_priv\tReload_priv\tShutdown_priv\tProcess_priv\tFile_priv\tGrant_priv\tReferences_priv\tIndex_priv\tAlter_priv\tShow_db_priv\tSuper_priv\tCreate_tmp_table_priv\tLock_tables_priv\tExecute_priv\tRepl_slave_priv\tRepl_client_priv\tCreate_view_priv\tShow_view_priv\tCreate_routine_priv\tAlter_routine_priv\tCreate_user_priv\tEvent_priv\tTrigger_priv\tCreate_tablespace_priv\tssl_type\tssl_cipher\tx509_issuer\tx509_subject\tmax_questions\tmax_updates\tmax_connections\tmax_user_connections\tplugin\tauthentication_string\tpassword_expired\tis_role\tdefault_role\tmax_statement_time",
         "localhost\troot\t\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\tY\t\t\t\t\t0\t0\t0\t0\tunix_socket\t\tN\tN\t\t0.000000",

@@ -1,8 +1,8 @@
 {
     "arg": ["myuser", "mypassword", "myhost", "myport"],
     "command": [
-        "mysql -u\"myuser\" -p\"mypassword\" -hmyhost -Pmyport -Be 'SELECT * FROM information_schema.SCHEMATA' || true",
-        "mysql -u\"myuser\" *** -hmyhost -Pmyport -Be 'SELECT * FROM information_schema.SCHEMATA' || true"
+        "mysql -u\"myuser\" -p\"mypassword\" -hmyhost -Pmyport -Be 'SELECT * FROM information_schema.SCHEMATA'",
+        "mysql -u\"myuser\" *** -hmyhost -Pmyport -Be 'SELECT * FROM information_schema.SCHEMATA'"
     ],
     "output": [
         "CATALOG_NAME\tSCHEMA_NAME\tDEFAULT_CHARACTER_SET_NAME\tDEFAULT_COLLATION_NAME\tSQL_PATH",
