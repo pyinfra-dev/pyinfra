@@ -226,6 +226,7 @@ Paramiko
 paramiko
 pathlib
 pathname
+pip3
 pipelining
 pkey
 plaintext

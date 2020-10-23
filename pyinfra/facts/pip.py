@@ -20,8 +20,15 @@ class PipPackages(FactBase):
 
     default = dict
 
-    def command(self, pip='pip'):
+    pip_command = 'pip'
+
+    def command(self, pip=None):
+        pip = pip or self.pip_command
         return '{0} freeze --all || true'.format(pip)
 
     def process(self, output):
         return parse_packages(PIP_REGEX, output)
+
+
+class Pip3Packages(PipPackages):
+    pip_command = 'pip3'
