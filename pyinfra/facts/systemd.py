@@ -25,10 +25,13 @@ class SystemdStatus(FactBase):
     Returns a dict of name -> status for systemd managed services.
     '''
 
-    command = 'systemctl -al list-units || true'
+    command = 'systemctl -al list-units'
+    requires_command = 'systemctl'
+
+    default = dict
+
     regex = r'^({systemd_unit_name_regex})\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'.format(
         systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX)
-    default = dict
 
     def process(self, output):
         services = {}
@@ -49,18 +52,20 @@ class SystemdEnabled(FactBase):
     '''
 
     command = '''
-        (systemctl --no-legend -al list-unit-files | while read -r UNIT STATUS; do
+        systemctl --no-legend -al list-unit-files | while read -r UNIT STATUS; do
             if [ "$STATUS" = generated ] &&
                 systemctl is-enabled $UNIT >/dev/null 2>&1; then
                 STATUS=enabled
             fi
             echo $UNIT $STATUS
-        done) || true
+        done
     '''
+    requires_command = 'systemctl'
+
+    default = dict
 
     regex = r'^({systemd_unit_name_regex})\s+([a-z]+)'.format(
         systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX)
-    default = dict
 
     def process(self, output):
         units = {}

@@ -8,7 +8,9 @@ class UpstartStatus(FactBase):
     Returns a dict of name -> status for upstart managed services.
     '''
 
-    command = 'initctl list || true'
+    command = 'initctl list'
+    requires_command = 'initctl'
+
     regex = r'^([a-z\-]+) [a-z]+\/([a-z]+)'
     default = dict
 

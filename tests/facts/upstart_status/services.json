@@ -1,5 +1,5 @@
 {
-    "command": "initctl list || true",
+    "command": "initctl list",
     "output": [
         "something start/running, process 1493",
         "plymouth-shutdown stop/waiting"
