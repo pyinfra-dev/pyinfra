@@ -1,5 +1,5 @@
 {
-    "command": "lsb_release -ca || true",
+    "command": "lsb_release -ca",
     "output": [
         "No LSB modules are available.",
         "Distributor ID: Ubuntu",

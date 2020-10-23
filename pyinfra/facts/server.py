@@ -198,7 +198,8 @@ class LsbRelease(FactBase):
         }
     '''
 
-    command = 'lsb_release -ca || true'
+    command = 'lsb_release -ca'
+    requires_command = 'lsb_release'
 
     @staticmethod
     def process(output):
@@ -311,12 +312,14 @@ class Crontab(FactBase):
 
     default = dict
 
+    requires_command = 'crontab'
+
     @staticmethod
     def command(user=None):
         if user:
-            return 'crontab -l -u {0} || true'.format(user)
+            return 'crontab -l -u {0}'.format(user)
 
-        return 'crontab -l || true'
+        return 'crontab -l'
 
     @staticmethod
     def process(output):
@@ -525,7 +528,9 @@ class Selinux(FactBase):
             'mode': 'enabled',
         }
     '''
-    command = 'sestatus 2> /dev/null || true'
+
+    command = 'sestatus 2> /dev/null'
+    requires_command = 'sestatus'
 
     @staticmethod
     def default():

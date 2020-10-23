@@ -25,7 +25,8 @@ class Memory(FactBase):
     Returns the memory installed in this server, in MB.
     '''
 
-    command = 'vmstat -s || true'
+    command = 'vmstat -s'
+    requires_command = 'vmstat'
 
     @staticmethod
     def process(output):

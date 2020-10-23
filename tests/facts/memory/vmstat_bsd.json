@@ -1,5 +1,5 @@
 {
-    "command": "vmstat -s || true",
+    "command": "vmstat -s",
     "output": [
         "4096 bytes per page",
         "58543 pages managed",
