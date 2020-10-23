@@ -16,7 +16,7 @@ class ChocoPackages(FactBase):
         }
     '''
 
-    command = 'choco list --local-only || true'
+    command = 'choco list --local-only'
     shell_executable = 'ps'
 
     default = dict
@@ -30,7 +30,7 @@ class ChocoVersion(FactBase):
     Returns the choco (Chocolatey) version.
     '''
 
-    command = 'choco --version || true'
+    command = 'choco --version'
 
     @staticmethod
     def process(output):
