@@ -1,5 +1,5 @@
 {
-    "command": "git config --global -l || true",
+    "command": "git config --global -l",
     "output": [
         "user.email=nick@gmail.com"
     ],
