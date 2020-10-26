@@ -14,7 +14,7 @@ def connect_all(state):
 
     hosts = [
         host for host in state.inventory
-        if state.is_host_in_limit(host)
+        if state.is_host_in_limit(host)  # these are the hosts to activate ("initially connect to")
     ]
 
     greenlet_to_host = {

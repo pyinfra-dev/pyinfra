@@ -2,6 +2,8 @@ from collections import defaultdict
 
 import six
 
+from pyinfra import logger
+
 from .connectors import ALL_CONNECTORS, EXECUTION_CONNECTORS
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
 from .host import Host
@@ -184,37 +186,53 @@ class Inventory(object):
 
     def __len__(self):
         '''
-        Returns the number of active inventory hosts.
-        '''
-
-        if not self.state or not self.state.active_hosts:
-            return len(self.hosts)
-
-        return len(self.state.active_hosts)
-
-    def __iter__(self):
-        '''
-        Iterates over active inventory hosts.
-        '''
-
-        if not self.state or not self.state.active_hosts:
-            return six.itervalues(self.hosts)
-
-        return iter(self.state.active_hosts)
-
-    def len_all_hosts(self):
-        '''
-        Returns the number of hosts in the inventory, active or not.
+        Returns the number of inventory hosts.
         '''
 
         return len(self.hosts)
 
-    def iter_all_hosts(self):
+    def __iter__(self):
         '''
-        Iterates over all inventory hosts, active or not.
+        Iterates over all inventory hosts.
         '''
 
         return six.itervalues(self.hosts)
+
+    def len_all_hosts(self):
+        logger.warning('`Inventory.len_all_hosts` is deprecated, please use `len(Inventory)`.')
+        return len(self)
+
+    def iter_all_hosts(self):
+        logger.warning('`Inventory.iter_all_hosts` is deprecated, please use `iter(Inventory)`.')
+        return iter(self)
+
+    def iter_active_hosts(self):
+        '''
+        Iterates over active inventory hosts.
+        '''
+
+        return iter(self.state.active_hosts)
+
+    def len_active_hosts(self):
+        '''
+        Returns the number of active inventory hosts.
+        '''
+
+        return len(self.state.active_hosts)
+
+    def iter_activated_hosts(self):
+        '''
+        Iterates over activated inventory hosts.
+        '''
+
+        return iter(self.state.activated_hosts)
+
+    def len_activated_hosts(self):
+        '''
+        Returns the number of activated inventory hosts.
+        '''
+
+        return len(self.state.activated_hosts)
 
     def get_host(self, name, default=NoHostError):
         '''
