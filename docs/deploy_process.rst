@@ -95,3 +95,15 @@ In CLI mode ``pyinfra`` uses *line numbers* to determine the order in which oper
         for item in loop_items():
             server.shell({'item: {0}'.format(item)}, 'hi')
             server.shell({'end item: {0}'.format(item)}, 'hi')
+
+
+Deploy State
+------------
+
+At the center of a ``pyinfra`` deployment is a state object. This object holds the inventory of hosts and data, operations to execute and status of the execution.
+
++ All hosts (or those matching the ``-limit``) are connected to and flagged as both **activated** and **active**.
++ Deploy files and/or operations are loaded for every activated host, any additional hosts are connected to as required (to collect facts, for example).
++ Proposed operations, along with the number of commands for each hosts, are shown to the user for every **activated** host. At this point if the ``--dry`` flag is passed, ``pyinfra`` stops.
++ Operations begin to execute, when hosts fail they are flagged as no longer **active**, ``pyinfra`` checks **active** vs **activated** counts to determine if we break the ``FAIL_PERCENT``, and bail the whole deploy if so.
++ Finally the resulting state is printing to the user for every **activated** host.
