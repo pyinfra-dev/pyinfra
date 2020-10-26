@@ -184,9 +184,6 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
             if host in current_facts:
                 continue
 
-            # if host in state.ready_hosts:
-            #     continue
-
             # Work out the command
             command = fact.command
 

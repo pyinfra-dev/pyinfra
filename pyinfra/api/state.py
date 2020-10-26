@@ -225,8 +225,6 @@ class State(object):
         self.activated_hosts = set()
         # Active hosts that *haven't* failed yet
         self.active_hosts = set()
-        # Hosts that are ready to be deployed to
-        self.ready_hosts = set()
         # Hosts that have failed
         self.failed_hosts = set()
 
@@ -414,14 +412,6 @@ class State(object):
         # but connected will not, enabling us to track failed %.
         self.activated_hosts.add(host)
         self.active_hosts.add(host)
-
-    # def ready_host(self, host):
-    #     '''
-    #     Flag a host as ready, after which facts will not be gathered for it.
-    #     '''
-
-    #     logger.debug('Readying host: {0}'.format(host))
-    #     self.ready_hosts.add(host)
 
     def fail_hosts(self, hosts_to_fail, activated_count=None):
         '''
