@@ -1,0 +1,14 @@
+{
+    "args": ["/home/mybarerepo.git"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "directory": {
+            "/home/mybarerepo.git": {"mode": 0}
+        }
+    },
+    "commands": [
+        "rm -rf /home/mybarerepo.git"
+    ]
+}

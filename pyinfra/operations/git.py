@@ -144,3 +144,37 @@ def repo(
     # Apply any user or group
     if user or group:
         yield chown(dest, user, group, recursive=True)
+
+
+@operation
+def bare_repo(
+    path,
+    user=None,
+    group=None,
+    present=True,
+    state=None,
+    host=None,
+):
+    '''
+    Create bare git repositories.
+    + path: path to the folder
+    + present: whether the bare repository should exist
+    + user: chown files to this user after
+    + group: chown files to this group after
+    Example:
+    .. code:: python
+        git.bare_repo(
+            name='Create bare repo',
+            path='/home/git/test.git',
+        )
+    '''
+
+    yield files.directory(path, state=state, host=host, present=present)
+
+    # Ensure our target directory exists
+    if present:
+        yield 'git init --bare {0}'.format(path)
+
+    # Apply any user or group
+    if user or group:
+        yield chown(path, user, group, recursive=True)
