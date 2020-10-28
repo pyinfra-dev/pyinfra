@@ -1,3 +1,10 @@
+# v1.2.1
+
++ Add `pip3_packages` fact
++ Improve/fix handling of `reboot` exit code in `server.reboot` operation
++ Restore `__eq__` functionality of pseudo modules
++ Add tests for the pseudo modules
+
 # v1.2
 
 Lots of smaller bits in this release and massive improvement to the documentation.
