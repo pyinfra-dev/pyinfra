@@ -22,8 +22,9 @@ class DnfRepositories(FactBase):
 
     command = (
         'cat /etc/dnf.conf /etc/dnf.repos.d/*.repo '
-        '/etc/yum.repos.d/*.repo 2> /dev/null || true'
+        '/etc/yum.repos.d/*.repo 2> /dev/null'
     )
+    requires_command = 'dnf'  # if dnf is installed, some of above will exist
 
     default = list
 

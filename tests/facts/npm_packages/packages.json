@@ -1,5 +1,5 @@
 {
-    "command": "npm list -g --depth=0 || true",
+    "command": "npm list -g --depth=0",
     "output": [
         "├── pydash@3.48",
         "└── thing@1.9"

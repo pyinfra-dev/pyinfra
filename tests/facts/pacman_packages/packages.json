@@ -1,5 +1,5 @@
 {
-    "command": "which pacman > /dev/null && pacman -Q || true",
+    "command": "pacman -Q",
     "output": [
         "lz4 1:1.9.2-1",
         "ncurses 6.1-6",

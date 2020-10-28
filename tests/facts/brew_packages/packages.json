@@ -1,5 +1,5 @@
 {
-    "command": "brew list --versions || true",
+    "command": "brew list --versions",
     "output": [
         "tokyo-cabinet 1.4.48",
         "unbound 1.9.5",

@@ -21,9 +21,9 @@ class RPMPackages(FactBase):
         }
     '''
 
-    command = (
-        'rpm --queryformat "{0}" -qa || true'
-    ).format(rpm_query_format)
+    command = 'rpm --queryformat "{0}" -qa'.format(rpm_query_format)
+    requires_command = 'rpm'
+
     default = dict
 
     def process(self, output):
@@ -46,12 +46,12 @@ class RpmPackage(FactBase):
         }
     '''
 
+    requires_command = 'rpm'
+
     def command(self, name):
         return (
-            '('
             'rpm --queryformat "{0}" -qp {1} 2> /dev/null || '
             'rpm --queryformat "{0}" -q {1}'
-            ') || true'
         ).format(rpm_query_format, name)
 
     def process(self, output):

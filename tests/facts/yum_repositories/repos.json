@@ -1,5 +1,5 @@
 {
-    "command": "cat /etc/yum.conf /etc/yum.repos.d/*.repo 2> /dev/null || true",
+    "command": "cat /etc/yum.conf /etc/yum.repos.d/*.repo 2> /dev/null",
     "output": [
         "# comment line",
         " # comment line with whitespaces",

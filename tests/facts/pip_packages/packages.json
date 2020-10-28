@@ -1,5 +1,5 @@
 {
-    "command": "pip freeze --all || true",
+    "command": "! command -v pip > /dev/null || pip freeze --all",
     "output": [
         "pydash==3.48"
     ],

@@ -4,7 +4,7 @@
         "deb-src [arch=amd64,i386] http://archive.ubuntu.com/ubuntu trusty main",
         "nope"
     ],
-    "command": "cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2> /dev/null || true",
+    "command": "cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2> /dev/null",
     "fact": [
         {
             "url": "http://archive.ubuntu.com/ubuntu",

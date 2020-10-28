@@ -20,7 +20,9 @@ class YumRepositories(FactBase):
         ]
     '''
 
-    command = 'cat /etc/yum.conf /etc/yum.repos.d/*.repo 2> /dev/null || true'
+    command = 'cat /etc/yum.conf /etc/yum.repos.d/*.repo 2> /dev/null'
+    requires_command = 'yum'
+
     default = list
 
     def process(self, output):

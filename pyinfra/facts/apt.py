@@ -51,7 +51,9 @@ class AptSources(FactBase):
         ]
     '''
 
-    command = 'cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2> /dev/null || true'
+    command = 'cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2> /dev/null'
+    requires_command = 'apt'  # if apt installed, above should exist
+
     default = list
 
     def process(self, output):
@@ -66,4 +68,5 @@ class AptSources(FactBase):
 
 
 class AptKeys(GpgFactBase):
-    command = 'apt-key list --with-colons || true'
+    command = 'apt-key list --with-colons'
+    requires_command = 'apt-key'

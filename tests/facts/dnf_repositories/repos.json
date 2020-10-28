@@ -1,5 +1,5 @@
 {
-    "command": "cat /etc/dnf.conf /etc/dnf.repos.d/*.repo /etc/yum.repos.d/*.repo 2> /dev/null || true",
+    "command": "cat /etc/dnf.conf /etc/dnf.repos.d/*.repo /etc/yum.repos.d/*.repo 2> /dev/null",
     "output": [
         "",
         "[somerepo]",

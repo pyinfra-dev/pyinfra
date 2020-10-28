@@ -16,7 +16,9 @@ class PacmanPackages(FactBase):
         }
     '''
 
-    command = 'which pacman > /dev/null && pacman -Q || true'
+    command = 'pacman -Q'
+    requires_command = 'pacman'
+
     default = dict
 
     def process(self, output):

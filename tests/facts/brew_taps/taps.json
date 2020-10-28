@@ -1,5 +1,5 @@
 {
-    "command": "brew tap || true",
+    "command": "brew tap",
     "output": [
         "homebrew/cask",
         "homebrew/apache"

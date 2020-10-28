@@ -1,5 +1,5 @@
 {
-    "command": "xbps-query -l || true",
+    "command": "xbps-query -l",
     "output": [
         "ii vim-8.2.0891_1                             Vim editor (vi clone)"
     ],

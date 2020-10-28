@@ -16,7 +16,9 @@ class GemPackages(FactBase):
         }
     '''
 
-    command = 'gem list --local || true'
+    command = 'gem list --local'
+    requires_command = 'gem'
+
     default = dict
 
     def process(self, output):

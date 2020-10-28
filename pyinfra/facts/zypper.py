@@ -20,7 +20,9 @@ class ZypperRepositories(FactBase):
         ]
     '''
 
-    command = 'cat /etc/zypp/repos.d/*.repo 2> /dev/null || true'
+    command = 'cat /etc/zypp/repos.d/*.repo 2> /dev/null'
+    requires_command = 'zypper'
+
     default = list
 
     def process(self, output):

@@ -19,7 +19,6 @@ class PipPackages(FactBase):
     '''
 
     default = dict
-
     pip_command = 'pip'
 
     def command(self, pip=None):

@@ -16,7 +16,9 @@ class ApkPackages(FactBase):
         }
     '''
 
-    command = 'apk list --installed || true'
+    command = 'apk list --installed'
+    requires_command = 'apk'
+
     default = dict
 
     def process(self, output):
