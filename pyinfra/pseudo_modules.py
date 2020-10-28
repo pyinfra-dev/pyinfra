@@ -18,6 +18,15 @@ class PseudoModule(object):
     _module = None
     _base_module = None
 
+    def __repr__(self):
+        return 'PseudoModule({0}):{1}'.format(
+            self._base_module.__name__,
+            repr(self._module),
+        )
+
+    def __str__(self):
+        return str(self._module)
+
     def __dir__(self):
         return dir(self._base_module)
 
