@@ -33,7 +33,7 @@ class HostFacts(object):
             raise AttributeError('No such fact: {0}'.format(key))
 
         # Ensure this host is connected
-        connection = self.host.connect(for_fact=key)
+        connection = self.host.connect(reason='for {0} fact'.format(key))
 
         # If we can't connect - fail immediately as we specifically need this
         # fact for this host and without it we cannot satisfy the deploy.
@@ -121,7 +121,7 @@ class Host(object):
         if not self.state:
             raise TypeError('Cannot call this function with no state!')
 
-    def connect(self, for_fact=None, show_errors=True):
+    def connect(self, reason=None, show_errors=True):
         self._check_state()
         if not self.connection:
             self.state.trigger_callbacks('host_before_connect', self)
@@ -142,10 +142,10 @@ class Host(object):
                     self.print_prefix,
                     click.style('Connected', 'green'),
                 )
-                if for_fact:
+                if reason:
                     log_message = '{0}{1}'.format(
                         log_message,
-                        ' (for {0} fact)'.format(for_fact),
+                        ' ({0})'.format(reason),
                     )
 
                 logger.info(log_message)

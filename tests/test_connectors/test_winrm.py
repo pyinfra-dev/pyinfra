@@ -20,7 +20,7 @@ class TestWinrmConnector(TestCase):
         inventory = make_inventory()
         state = State(inventory, Config())
         host = inventory.get_host('somehost')
-        host.connect(for_fact=True)
+        host.connect(reason=True)
         assert len(state.active_hosts) == 0
 
     def test_connect_all_password(self):

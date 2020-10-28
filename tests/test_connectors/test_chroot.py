@@ -44,7 +44,7 @@ class TestChrootConnector(TestCase):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
         state = State(inventory, Config())
         host = inventory.get_host('@chroot/not-a-chroot')
-        host.connect(for_fact=True)
+        host.connect(reason=True)
         assert len(state.active_hosts) == 0
 
     def test_connect_all_error(self):
