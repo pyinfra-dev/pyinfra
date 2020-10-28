@@ -144,3 +144,101 @@ def repo(
     # Apply any user or group
     if user or group:
         yield chown(dest, user, group, recursive=True)
+
+
+@operation()
+def worktree(
+    worktree,
+    repo=None, branch=None, create_branch=False, detached=False, present=True, force=False,
+    user=None, group=None, state=None, host=None,
+):
+    '''
+    Manage git worktrees.
+
+    + repo: git main repository directory
+    + worktree: git working tree directory
+    + branch: branch to use for the working tree
+    + create_branch: the branch already exist or should be created
+    + detached: create a working tree with a detached HEAD
+    + present: whether the working tree should exist
+    + force: remove unclean working tree if should not exist
+    + user: chown files to this user after
+    + group: chown files to this group after
+
+    Example:
+
+    .. code:: python
+
+        git.worktree(
+            name='Create a worktree (a branch `hotfix` is automatically created)',
+            repo='/usr/local/src/pyinfra/master',
+            worktree='/usr/local/src/pyinfra/hotfix',
+        )
+
+        git.worktree(
+            name='Create a worktree with a new branch `v1.0`',
+            repo='/usr/local/src/pyinfra/master',
+            worktree='/usr/local/src/pyinfra/hotfix',
+            branch="v1.0",
+            create_branch=True
+        )
+
+        git.worktree(
+            name='Create a worktree with a detached `HEAD`',
+            repo='/usr/local/src/pyinfra/master',
+            worktree='/usr/local/src/pyinfra/hotfix',
+            detached=True,
+        )
+
+        git.worktree(
+            name='Create a worktree from the existing branch `v1.0`',
+            repo='/usr/local/src/pyinfra/master',
+            worktree='/usr/local/src/pyinfra/hotfix',
+            branch='v1.0'
+        )
+
+        git.worktree(
+            name='Remove a worktree',
+            worktree='/usr/local/src/pyinfra/hotfix',
+            present=False,
+        )
+
+        git.worktree(
+            name='Remove an unclean worktree',
+            worktree='/usr/local/src/pyinfra/hotfix',
+            present=False,
+            force=True,
+        )
+    '''
+
+    # Doesn't exist & we want it
+    if not host.fact.directory(worktree) and present:
+
+        # be sure that `repo` is a GIT repository
+        if not host.fact.directory('/'.join((repo, '.git'))):
+            raise OperationError(
+                'The following folder is not a valid GIT repository : {0}'.format(repo),
+            )
+
+        command = 'cd {0} && git worktree add {1}'.format(repo, worktree)
+
+        if branch:
+            command += ' {0}{1}'.format('-b ' if create_branch else '', branch)
+        elif detached:
+            command += ' --detach'
+
+        yield command
+
+        # Apply any user or group
+        if user or group:
+            yield chown(worktree, user, group, recursive=True)
+
+    # It exists and we don't want it
+    elif host.fact.directory(worktree) and not present:
+
+        command = 'cd {0} && git worktree remove .'.format(worktree)
+
+        if force:
+            command += ' --force'
+
+        yield command
