@@ -41,6 +41,9 @@ class PseudoModule(object):
     def __len__(self):
         return len(self._module)
 
+    def __eq__(self, other):
+        return self._module == other
+
     def set(self, module):
         self._module = module
 
