@@ -79,8 +79,11 @@ class Host(object):
         # Arbitrary dict for connector use
         self.connector_data = {}
 
+    def __str__(self):
+        return '{0}'.format(self.name)
+
     def __repr__(self):
-        return self.name
+        return 'Host({0})'.format(self.name)
 
     @property
     def host_data(self):
