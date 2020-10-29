@@ -69,4 +69,4 @@ class AptSources(FactBase):
 
 class AptKeys(GpgFactBase):
     command = 'apt-key list --with-colons'
-    requires_command = 'apt-key'
+    requires_command = 'gpg'
