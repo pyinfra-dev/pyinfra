@@ -115,6 +115,12 @@ def get_short_facts(state, short_fact, **kwargs):
     }
 
 
+def _make_command(command_attribute, host_args):
+    if callable(command_attribute):
+        return command_attribute(*host_args)
+    return command_attribute
+
+
 def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True):
     '''
     Get a single fact for all hosts in the state.
@@ -186,18 +192,14 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
             if host in current_facts:
                 continue
 
-            # Work out the command
-            command = fact.command
+            # Generate actual arguments by passing strings as jinja2 templates
+            host_args = [get_arg_value(state, host, arg) for arg in args]
 
-            if callable(command):
-                # Generate actual arguments by passing strings as jinja2 templates
-                host_args = [get_arg_value(state, host, arg) for arg in args]
-
-                command = command(*host_args)
-
-            if fact.requires_command:
+            command = _make_command(fact.command, host_args)
+            requires_command = _make_command(fact.requires_command, host_args)
+            if requires_command:
                 command = '! command -v {0} > /dev/null || ({1})'.format(
-                    fact.requires_command, command,
+                    requires_command, command,
                 )
 
             greenlet = state.fact_pool.spawn(
