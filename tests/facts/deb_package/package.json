@@ -1,6 +1,6 @@
 {
     "arg": "package-name",
-    "command": "dpkg -I package-name 2> /dev/null || dpkg -s package-name",
+    "command": "! stat package-name 2> /dev/null || (dpkg -I package-name 2> /dev/null || dpkg -s package-name)",
     "output": [
         "Package: package-name",
         "Version: 1"
