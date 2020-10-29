@@ -19,6 +19,15 @@ from .util import get_command_string
 TestCase.maxDiff = None
 
 
+def _make_command(command_attribute, args):
+    if callable(command_attribute):
+        if not isinstance(args, list):
+            args = [args]
+
+        return command_attribute(*args)
+    return command_attribute
+
+
 def make_fact_tests(fact_name):
     fact = FACTS[fact_name]()
 
@@ -34,14 +43,8 @@ def make_fact_tests(fact_name):
                 short_fact = fact
                 fact = fact.fact()
 
-            command = fact.command
-
-            if callable(fact.command):
-                args = test_data.get('arg', [])
-                if not isinstance(args, list):
-                    args = [args]
-
-                command = fact.command(*args)
+            test_args = test_data.get('arg', [])
+            command = _make_command(fact.command, test_args)
 
             if 'command' in test_data:
                 assert get_command_string(StringCommand(command)) == test_data['command']
@@ -49,6 +52,16 @@ def make_fact_tests(fact_name):
                 warnings.warn('No command set for test: {0} (got "{1}")'.format(
                     test_name, command,
                 ))
+
+            requires_command = _make_command(fact.requires_command, test_args)
+
+            if requires_command:
+                if 'requires_command' in test_data:
+                    assert requires_command == test_data['requires_command']
+                else:
+                    warnings.warn('No requires command set for test: {0} (got "{1}")'.format(
+                        test_name, requires_command,
+                    ))
 
             data = fact.process(test_data['output'])
             if short_fact:
