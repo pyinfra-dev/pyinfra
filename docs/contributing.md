@@ -14,14 +14,15 @@ Third party pull requests help expand pyinfra's functionality and are essential 
 ## Dev Setup
 
 ```sh
-# Create a virtualenv
-virtualenv /path/to/venv
+# Create a virtualenv with your tool of choice
+# python -m venv / pyenv virtualenv / virtualenv
 
 # Clone the repo
 git clone git@github.com:Fizzadar/pyinfra.git
 
 # Install the package in editable mode with development requirements
-pip install -e .[dev]
+cd pyinfra
+pip install -e '.[dev]'
 ```
 
 ## Tests
@@ -33,14 +34,13 @@ Use `pytest` to run tests, or `pytest --cov` to run with coverage. Pull requests
 To generate:
 
 ```sh
-scripts/build_docs.sh
+sphinx-build -a docs/ docs/build/
 ```
 
 To view ([localhost:8000](http://localhost:8000)):
 
 ```sh
-cd docs/build/
-python -m http.server
+python -m http.server -d docs/build/
 ```
 
 ## Code Style
