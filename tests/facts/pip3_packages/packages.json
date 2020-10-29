@@ -1,5 +1,6 @@
 {
-    "command": "pip3 freeze --all || true",
+    "command": "pip3 freeze --all",
+    "requires_command": "pip3",
     "output": [
         "pydash==3.48"
     ],

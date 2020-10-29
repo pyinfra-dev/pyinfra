@@ -21,9 +21,12 @@ class PipPackages(FactBase):
     default = dict
     pip_command = 'pip'
 
+    def requires_command(self, pip=None):
+        return pip or self.pip_command
+
     def command(self, pip=None):
         pip = pip or self.pip_command
-        return '{0} freeze --all || true'.format(pip)
+        return '{0} freeze --all'.format(pip)
 
     def process(self, output):
         return parse_packages(PIP_REGEX, output)
