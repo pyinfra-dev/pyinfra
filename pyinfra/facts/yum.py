@@ -1,5 +1,6 @@
 from pyinfra.api import FactBase
 
+from .util import make_stat_cat_command
 from .util.packaging import parse_yum_repositories
 
 
@@ -20,7 +21,10 @@ class YumRepositories(FactBase):
         ]
     '''
 
-    command = 'cat /etc/yum.conf /etc/yum.repos.d/*.repo 2> /dev/null'
+    command = make_stat_cat_command(
+        '/etc/yum.conf',
+        '/etc/yum.repos.d/*.repo',
+    )
     requires_command = 'yum'
 
     default = list

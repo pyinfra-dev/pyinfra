@@ -1,5 +1,6 @@
 from pyinfra.api import FactBase
 
+from .util import make_stat_cat_command
 from .util.packaging import parse_yum_repositories
 
 
@@ -20,11 +21,12 @@ class DnfRepositories(FactBase):
         ]
     '''
 
-    command = (
-        'cat /etc/dnf.conf /etc/dnf.repos.d/*.repo '
-        '/etc/yum.repos.d/*.repo 2> /dev/null'
+    command = make_stat_cat_command(
+        '/etc/dnf.conf',
+        '/etc/dnf.repos.d/*.repo',
+        '/etc/yum.repos.d/*.repo',
     )
-    requires_command = 'dnf'  # if dnf is installed, some of above will exist
+    requires_command = 'dnf'
 
     default = list
 
