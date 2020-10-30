@@ -529,7 +529,7 @@ class Selinux(FactBase):
         }
     '''
 
-    command = 'sestatus 2> /dev/null'
+    command = 'sestatus'
     requires_command = 'sestatus'
 
     @staticmethod

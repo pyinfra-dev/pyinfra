@@ -1,5 +1,5 @@
 {
-    "command": "sestatus 2> /dev/null",
+    "command": "sestatus",
     "output": [
         "SELinux status: enabled",
         "SELinuxfs mount: /selinux"
