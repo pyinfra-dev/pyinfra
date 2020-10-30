@@ -70,15 +70,6 @@ def test_int_docker_yum_on_centos(helpers):
 
 @pytest.mark.int
 @pytest.mark.docker
-def test_int_docker_adhoc_apt_packages(helpers):
-    helpers.run(
-        'pyinfra @docker/ubuntu:18.04 apt.packages iftop sudo=true update=true',
-        expected_lines=['is in beta', 'docker build complete'],
-    )
-
-
-@pytest.mark.int
-@pytest.mark.docker
 def test_int_docker_adhoc_fact_os(helpers):
     helpers.run(
         'pyinfra @docker/ubuntu:18.04,@docker/centos:8 fact os',
