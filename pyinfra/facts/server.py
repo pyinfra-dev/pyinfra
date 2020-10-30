@@ -154,7 +154,7 @@ class KernelModules(FactBase):
         }
     '''
 
-    command = 'cat /proc/modules || true'
+    command = '! stat /proc/modules || cat /proc/modules'
     default = dict
 
     @staticmethod
