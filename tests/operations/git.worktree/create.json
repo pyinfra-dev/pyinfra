@@ -1,0 +1,18 @@
+{
+    "args": ["/home/myworktree"],
+    "kwargs": {
+        "repo": "/home/mainrepo"
+    },
+    "facts": {
+        "directory": {
+            "/home/mainrepo": {},
+            "/home/mainrepo/.git": {
+                "mode": 0
+            },
+            "/home/myworktree": null
+        }
+    },
+    "commands": [
+        "cd /home/mainrepo && git worktree add /home/myworktree"
+    ]
+}
