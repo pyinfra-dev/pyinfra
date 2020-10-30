@@ -63,15 +63,16 @@ def _parse_mode(mode):
 class File(FactBase):
     # Types must match FLAG_TO_TYPE in .util.files.py
     type = 'file'
+    test_flag = '-e'
 
     def command(self, path):
         path = escape_unix_path(path)
         return (
-            'stat {path} 1> /dev/null 2> /dev/null && '  # check file exists
-            '({linux_stat_command} {path} 2> /dev/null || {bsd_stat_command} {path}) '
-            '|| true'  # don't error if the file does not exist (return None)
+            '! test {test_flag} {path} || '  # only stat if the file exists
+            '({linux_stat_command} {path} 2> /dev/null || {bsd_stat_command} {path})'
         ).format(
             path=path,
+            test_flag=self.test_flag,
             linux_stat_command=LINUX_STAT_COMMAND,
             bsd_stat_command=BSD_STAT_COMMAND,
         )
@@ -120,6 +121,7 @@ class File(FactBase):
 
 class Link(File):
     type = 'link'
+    test_flag = '-L'
 
 
 class Directory(File):
@@ -144,7 +146,7 @@ class Sha1File(FactBase):
         name = escape_unix_path(name)
         self.name = name
         return (
-            'find {0} > /dev/null && ('
+            'test -e {0} && ('
             'sha1sum {0} 2> /dev/null || shasum {0} 2> /dev/null || sha1 {0}'
             ') || true'
         ).format(name)
@@ -171,7 +173,7 @@ class Sha256File(FactBase):
         name = escape_unix_path(name)
         self.name = name
         return (
-            'find {0} > /dev/null && ('
+            'test -e {0} && ('
             'sha256sum {0} 2> /dev/null '
             '|| shasum -a 256 {0} 2> /dev/null '
             '|| sha256 {0}'
@@ -199,7 +201,7 @@ class Md5File(FactBase):
     def command(self, name):
         name = escape_unix_path(name)
         self.name = name
-        return 'find {0} > /dev/null && (md5sum {0} 2> /dev/null || md5 {0}) || true'.format(name)
+        return 'test -e {0} && (md5sum {0} 2> /dev/null || md5 {0}) || true'.format(name)
 
     def process(self, output):
         for regex in self._regexes:
@@ -243,7 +245,7 @@ class FindFiles(FactBase):
 
     @staticmethod
     def command(name):
-        return 'find {0} -type f'.format(escape_unix_path(name))
+        return 'find {0} -type f || true'.format(escape_unix_path(name))
 
     @staticmethod
     def process(output):
@@ -257,7 +259,7 @@ class FindLinks(FindFiles):
 
     @staticmethod
     def command(name):
-        return 'find {0} -type l'.format(escape_unix_path(name))
+        return 'find {0} -type l || true'.format(escape_unix_path(name))
 
 
 class FindDirectories(FindFiles):
@@ -267,4 +269,4 @@ class FindDirectories(FindFiles):
 
     @staticmethod
     def command(name):
-        return 'find {0} -type d'.format(escape_unix_path(name))
+        return 'find {0} -type d || true'.format(escape_unix_path(name))
