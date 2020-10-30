@@ -44,7 +44,7 @@ class DebPackage(FactBase):
     requires_command = 'dpkg'
 
     def command(self, name):
-        return '! stat {0} 2> /dev/null || (dpkg -I {0} 2> /dev/null || dpkg -s {0})'.format(name)
+        return '! test -e {0} || (dpkg -I {0} 2> /dev/null || dpkg -s {0})'.format(name)
 
     def process(self, output):
         data = {}
