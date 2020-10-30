@@ -28,6 +28,7 @@ class Hostname(FactBase):
     '''
 
     command = 'hostname'
+    requires_command = 'hostname'
 
 
 class Os(FactBase):
