@@ -1,5 +1,5 @@
 {
-    "command": "(! stat /etc/zypp/repos.d/*.repo 2> /dev/null || cat /etc/zypp/repos.d/*.repo)",
+    "command": "cat /etc/zypp/repos.d/*.repo || true",
     "output": [
         "# comment line",
         " # comment line with whitespaces",

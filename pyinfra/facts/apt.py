@@ -5,7 +5,7 @@ import re
 from pyinfra.api import FactBase
 
 from .gpg import GpgFactBase
-from .util import make_stat_cat_command
+from .util import make_cat_files_command
 
 
 def parse_apt_repo(name):
@@ -52,7 +52,10 @@ class AptSources(FactBase):
         ]
     '''
 
-    command = make_stat_cat_command('/etc/apt/sources.list', '/etc/apt/sources.list.d/*.list')
+    command = make_cat_files_command(
+        '/etc/apt/sources.list',
+        '/etc/apt/sources.list.d/*.list',
+    )
     requires_command = 'apt'  # if apt installed, above should exist
 
     default = list

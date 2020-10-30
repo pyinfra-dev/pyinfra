@@ -1,6 +1,6 @@
 from pyinfra.api import FactBase
 
-from .util import make_stat_cat_command
+from .util import make_cat_files_command
 from .util.packaging import parse_zypper_repositories
 
 
@@ -21,7 +21,7 @@ class ZypperRepositories(FactBase):
         ]
     '''
 
-    command = make_stat_cat_command(
+    command = make_cat_files_command(
         '/etc/zypp/repos.d/*.repo',
     )
     requires_command = 'zypper'

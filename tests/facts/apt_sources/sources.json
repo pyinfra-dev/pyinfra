@@ -4,7 +4,7 @@
         "deb-src [arch=amd64,i386] http://archive.ubuntu.com/ubuntu trusty main",
         "nope"
     ],
-    "command": "(! stat /etc/apt/sources.list 2> /dev/null || cat /etc/apt/sources.list) && (! stat /etc/apt/sources.list.d/*.list 2> /dev/null || cat /etc/apt/sources.list.d/*.list)",
+    "command": "(! test -f /etc/apt/sources.list || cat /etc/apt/sources.list) && (cat /etc/apt/sources.list.d/*.list || true)",
     "fact": [
         {
             "url": "http://archive.ubuntu.com/ubuntu",

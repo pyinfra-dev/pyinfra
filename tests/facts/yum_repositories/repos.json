@@ -1,5 +1,5 @@
 {
-    "command": "(! stat /etc/yum.conf 2> /dev/null || cat /etc/yum.conf) && (! stat /etc/yum.repos.d/*.repo 2> /dev/null || cat /etc/yum.repos.d/*.repo)",
+    "command": "(! test -f /etc/yum.conf || cat /etc/yum.conf) && (cat /etc/yum.repos.d/*.repo || true)",
     "output": [
         "# comment line",
         " # comment line with whitespaces",
