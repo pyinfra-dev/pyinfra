@@ -154,7 +154,7 @@ class KernelModules(FactBase):
         }
     '''
 
-    command = '! stat /proc/modules || cat /proc/modules'
+    command = '! test -f /proc/modules || cat /proc/modules'
     default = dict
 
     @staticmethod
