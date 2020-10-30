@@ -25,7 +25,7 @@ def _strip_ansi(value):
 def _get_group_combinations(inventory):
     group_combinations = {}
 
-    for host in inventory.iter_all_hosts():
+    for host in inventory:
         # Tuple for hashability, set to normalise order
         host_groups = tuple(set(host.groups))
 
@@ -129,10 +129,7 @@ def print_fact(fact_data):
 
 
 def print_inventory(state):
-    for host in state.inventory:
-        if not state.is_host_in_limit(host):
-            continue
-
+    for host in state.inventory.iter_activated_hosts():
         click.echo(err=True)
         click.echo(host.print_prefix, err=True)
         click.echo('--> Groups: {0}'.format(', '.join(host.groups)), err=True)
@@ -213,17 +210,12 @@ def print_rows(rows):
 
 
 def print_meta(state):
-    group_combinations = _get_group_combinations(state.inventory)
+    group_combinations = _get_group_combinations(state.inventory.iter_activated_hosts())
     rows = []
 
     for i, (groups, hosts) in enumerate(six.iteritems(group_combinations), 1):
-        hosts = [
-            host for host in hosts
-            if state.is_host_in_limit(host)
-        ]
-
         if not hosts:
-            continue  # pragma: no cover
+            continue
 
         if groups:
             rows.append((logger.info, 'Groups: {0}'.format(
@@ -256,15 +248,10 @@ def print_meta(state):
 
 
 def print_results(state):
-    group_combinations = _get_group_combinations(state.inventory)
+    group_combinations = _get_group_combinations(state.inventory.iter_activated_hosts())
     rows = []
 
     for i, (groups, hosts) in enumerate(six.iteritems(group_combinations), 1):
-        hosts = [
-            host for host in hosts
-            if state.is_host_in_limit(host)
-        ]
-
         if not hosts:
             continue
 

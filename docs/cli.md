@@ -49,10 +49,21 @@ By default `pyinfra` only prints high level information (this host connected, th
 When using ``pyinfra`` inventory can be provided direct via the command line or [defined in a file](./deploys.html#inventory). Both support the full range of [connectors](./connectors) and multiple hosts. Some CLI examples:
 
 ```sh
+pyinfra inventory.py ...  # load the inventory targets from this file
 pyinfra my-server.net,my-other-server.net ...  # execute via SSH on the two servers listed
 pyinfra @local ...  # execute on the local machine via subprocess
 pyinfra my-server.net,@local ...  # execute via local subprocess and a server over SSH
 pyinfra @docker/centos:8 ...  # execute against a Docker container
+```
+
+### Limit
+
+It is possible to limit the inventory at execution time using the `--limit` argument. Multiple `--limit`s can be provided. The value must either match a specific host by name or via glob style pattern, eg:
+
+```sh
+pyinfra @local,my-server.net --limit @local ...  # only execute against @local
+pyinfra @local,my-server.net --limit *.net ...  # only execute against my-server.net
+pyinfra inventory.py --limit one-host.net --limit another-host.net ...  # multiple limit inventory file
 ```
 
 

@@ -34,7 +34,7 @@ class TestLocalConnector(TestCase):
         inventory = make_inventory(hosts=('@local',))
         state = State(inventory, Config())
         host = inventory.get_host('@local')
-        host.connect(for_fact=True)
+        host.connect(reason=True)
         assert len(state.active_hosts) == 0
 
     def test_run_shell_command(self):

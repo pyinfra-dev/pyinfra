@@ -157,12 +157,9 @@ def get_operation_and_args(commands):
 
 def load_deploy_file(state, filename):
     # Copy the inventory hosts (some might be removed during deploy)
-    hosts = list(state.inventory)
+    hosts = list(state.inventory.iter_active_hosts())
 
     for host in hosts:
-        if not state.is_host_in_limit(host):
-            continue
-
         pseudo_host.set(host)
 
         exec_file(filename)

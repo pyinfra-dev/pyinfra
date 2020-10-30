@@ -247,7 +247,7 @@ def _run_serial_ops(state):
     Run all ops for all servers, one server at a time.
     '''
 
-    for host in list(state.inventory):
+    for host in list(state.inventory.iter_active_hosts()):
         host_operations = product([host], state.get_op_order())
         with progress_spinner(host_operations) as progress:
             try:
@@ -264,7 +264,7 @@ def _run_no_wait_ops(state):
     Run all ops for all servers at once.
     '''
 
-    hosts_operations = product(state.inventory, state.get_op_order())
+    hosts_operations = product(state.inventory.iter_active_hosts(), state.get_op_order())
     with progress_spinner(hosts_operations) as progress:
         # Spawn greenlet for each host to run *all* ops
         greenlets = [
@@ -272,7 +272,7 @@ def _run_no_wait_ops(state):
                 _run_server_ops, state, host,
                 progress=progress,
             )
-            for host in state.inventory
+            for host in state.inventory.iter_active_hosts()
         ]
         gevent.joinall(greenlets)
 
@@ -290,9 +290,9 @@ def _run_single_op(state, op_hash):
     failed_hosts = set()
 
     if op_meta['serial']:
-        with progress_spinner(state.inventory) as progress:
+        with progress_spinner(state.inventory.iter_active_hosts()) as progress:
             # For each host, run the op
-            for host in state.inventory:
+            for host in state.inventory.iter_active_hosts():
                 result = _run_server_op(state, host, op_hash)
                 progress(host)
 
@@ -301,12 +301,12 @@ def _run_single_op(state, op_hash):
 
     else:
         # Start with the whole inventory in one batch
-        batches = [state.inventory]
+        batches = [list(state.inventory.iter_active_hosts())]
 
         # If parallel set break up the inventory into a series of batches
         if op_meta['parallel']:
             parallel = op_meta['parallel']
-            hosts = list(state.inventory)
+            hosts = list(state.inventory.iter_active_hosts())
 
             batches = [
                 hosts[i:i + parallel]

@@ -130,6 +130,11 @@ Instead of passing ``--key``, ``--user``, etc to the CLI, or running a SSH agent
     ssh_key_password = 'password for key'
     # ssh_password = 'Using password authorization is bad. Preferred option is ssh_key.'
 
+Limit
+~~~~~
+
+It is possible to limit the inventory at execution time using the ``--limit`` argument (`using the CLI <cli.html#limit>`_). This makes ``pyinfra`` only execute operations against targets matching the limit. Facts may still be collected from these hosts if specifically requested. Hosts outside of the limit will not be considered as failed when caclculating whether a deploy should stop executing (via the ``FAIL_PERCENT`` config variable).
+
 
 Operations
 ----------

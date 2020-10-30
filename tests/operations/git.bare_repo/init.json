@@ -1,0 +1,14 @@
+{
+    "args": ["/home/mybarerepo.git"],
+    "kwargs": {
+        "present": "True"
+    },
+    "facts": {
+        "directory": {
+            "/home/mybarerepo.git": {}
+        }
+    },
+    "commands": [
+        "git init --bare /home/mybarerepo.git"
+    ]
+}

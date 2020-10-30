@@ -31,7 +31,7 @@ def make_names_data(directory=None):
     }, ['@chroot']
 
 
-def connect(state, host, for_fact=None):
+def connect(state, host):
     chroot_directory = host.data.chroot_directory
 
     try:

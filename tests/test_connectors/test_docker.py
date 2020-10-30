@@ -68,7 +68,7 @@ class TestDockerConnector(TestCase):
         inventory = make_inventory(hosts=('@docker/not-an-image',))
         state = State(inventory, Config())
         host = inventory.get_host('@docker/not-an-image')
-        host.connect(for_fact=True)
+        host.connect(reason=True)
         assert len(state.active_hosts) == 0
         host.disconnect()
 

@@ -1,0 +1,17 @@
+{
+    "args": ["/home/mybarerepo.git"],
+    "kwargs": {
+        "present": "True",
+        "user": "fake",
+        "group": "fake"
+    },
+    "facts": {
+        "directory": {
+            "/home/mybarerepo.git": {}
+        }
+    },
+    "commands": [
+        "git init --bare /home/mybarerepo.git",
+        "chown -R fake:fake /home/mybarerepo.git"
+    ]
+}

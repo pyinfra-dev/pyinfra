@@ -30,7 +30,7 @@ def make_names_data(image=None):
     yield '@docker/{0}'.format(image), {'docker_image': image}, ['@docker']
 
 
-def connect(state, host, for_fact=None):
+def connect(state, host):
     if 'docker_container_id' in host.host_data:  # user can provide a docker_container_id
         return True
 

@@ -72,7 +72,7 @@ class TestDockerSSHConnector(TestCase):
         inventory = make_inventory(('somehost', 'anotherhost'))
         state = State(inventory, Config())
         host = inventory.get_host('somehost')
-        host.connect(for_fact=True)
+        host.connect(reason=True)
         assert len(state.active_hosts) == 0
 
     def test_missing_image_and_host(self):
@@ -112,7 +112,7 @@ class TestDockerSSHConnector(TestCase):
         inventory = make_inventory(hosts=('@dockerssh/somehost:not-an-image',))
         state = State(inventory, Config())
         host = inventory.get_host('@dockerssh/somehost:not-an-image')
-        host.connect(for_fact=True)
+        host.connect(reason=True)
         assert len(state.active_hosts) == 0
         host.disconnect()
 

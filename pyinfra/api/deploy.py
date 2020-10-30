@@ -48,7 +48,12 @@ def add_deploy(state, deploy_func, *args, **kwargs):
     kwargs['_line_number'] = len(state.op_meta)
 
     kwargs['state'] = state
-    for host in state.inventory:
+
+    hosts = kwargs.pop('host', state.inventory.iter_active_hosts())
+    if isinstance(hosts, Host):
+        hosts = [hosts]
+
+    for host in hosts:
         kwargs['host'] = host
         deploy_func(*args, **kwargs)
 

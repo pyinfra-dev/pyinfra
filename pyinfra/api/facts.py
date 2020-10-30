@@ -173,7 +173,7 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
     with FACT_LOCK:
         # Add any hosts we must have, whether considered in the inventory or not
         # (these hosts might be outside the --limit or current op limit_hosts).
-        hosts = set(state.inventory)
+        hosts = set(state.inventory.iter_active_hosts())
         if ensure_hosts:
             hosts.update(ensure_hosts)
 
@@ -183,9 +183,6 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
         for host in hosts:
             if host in current_facts:
                 continue
-
-            # if host in state.ready_hosts:
-            #     continue
 
             # Work out the command
             command = fact.command

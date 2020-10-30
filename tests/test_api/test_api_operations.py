@@ -419,6 +419,7 @@ class TestOperationOrdering(PatchSSHTestCase):
     def test_api_op_line_numbers(self):
         inventory = make_inventory()
         state = State(inventory, Config())
+        connect_all(state)
 
         another_host = inventory.get_host('anotherhost')
 

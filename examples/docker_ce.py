@@ -45,16 +45,10 @@ if host.fact.linux_name == 'Ubuntu':
         update=True,
     )
 
-    docker_key_exists = False
-    stdout = host.fact.command('apt-key list')
-    if 'Docker' in stdout:
-        docker_key_exists = True
-
-    if not docker_key_exists:
-        apt.key(
-            name='Add the Docker apt gpg key if we need to',
-            src='https://download.docker.com/linux/ubuntu/gpg',
-        )
+    apt.key(
+        name='Add the Docker apt gpg key if we need to',
+        src='https://download.docker.com/linux/ubuntu/gpg',
+    )
 
     lsb_info = host.fact.lsb_release
     linux_id = lsb_info['id'].lower()
