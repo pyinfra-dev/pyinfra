@@ -129,7 +129,7 @@ def print_fact(fact_data):
 
 
 def print_inventory(state):
-    for host in state.inventory.iter_activated_hosts():
+    for host in state.inventory:
         click.echo(err=True)
         click.echo(host.print_prefix, err=True)
         click.echo('--> Groups: {0}'.format(', '.join(host.groups)), err=True)
