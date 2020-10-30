@@ -72,5 +72,6 @@ class AptSources(FactBase):
 
 
 class AptKeys(GpgFactBase):
-    command = 'apt-key list --with-colons'
-    requires_command = 'gpg'
+    # This requires both apt-key *and* apt-key itself requires gpg
+    command = '! command -v gpg || apt-key list --with-colons'
+    requires_command = 'apt-key'
