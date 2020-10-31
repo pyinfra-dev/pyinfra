@@ -19,7 +19,7 @@ from pyinfra import logger, pseudo_host, pseudo_state
 from .command import StringCommand
 from .exceptions import PyinfraError
 from .host import Host
-from .operation_kwargs import pop_global_op_kwargs
+from .operation_kwargs import get_execution_kwarg_keys, pop_global_op_kwargs
 from .state import State
 from .util import (
     get_arg_value,
@@ -177,7 +177,7 @@ def operation(func=None, pipeline_facts=None):
         #
 
         # Get the meta kwargs (globals that apply to all hosts)
-        op_meta_kwargs = pop_global_op_kwargs(state, kwargs)
+        global_kwargs = pop_global_op_kwargs(state, kwargs)
 
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).
@@ -185,7 +185,7 @@ def operation(func=None, pipeline_facts=None):
             return func(*args, **kwargs) or []
 
         # Name the operation
-        name = op_meta_kwargs.get('name')
+        name = global_kwargs.get('name')
         add_args = False
 
         if name:
@@ -267,13 +267,22 @@ def operation(func=None, pipeline_facts=None):
             'args': [],
         })
 
+        for key in get_execution_kwarg_keys():
+            global_value = global_kwargs.pop(key)
+            op_meta_value = op_meta.get(key)
+
+            if op_meta_value and global_value != op_meta_value:
+                raise TypeError('Cannot have differend values for {0}'.format(key))
+
+            op_meta[key] = global_value
+
         # Add any meta kwargs (sudo, etc) to the meta - first parse any strings
         # as jinja templates.
-        actual_op_meta_kwargs = {
+        actual_global_kwargs = {
             key: get_arg_value(state, host, a)
-            for key, a in six.iteritems(op_meta_kwargs)
+            for key, a in six.iteritems(global_kwargs)
         }
-        op_meta.update(actual_op_meta_kwargs)
+        op_meta.update(actual_global_kwargs)
 
         # Add any new names to the set
         op_meta['names'].update(names)
@@ -300,7 +309,7 @@ def operation(func=None, pipeline_facts=None):
         #
 
         # Run once and we've already added meta for this op? Stop here.
-        if op_meta_kwargs['run_once']:
+        if op_meta['run_once']:
             has_run = False
             for ops in six.itervalues(state.ops):
                 if op_hash in ops:
@@ -352,6 +361,7 @@ def operation(func=None, pipeline_facts=None):
         # Add the server-relevant commands
         state.ops[host][op_hash] = {
             'commands': commands,
+            'global_kwargs': actual_global_kwargs,
         }
 
         # Return result meta for use in deploy scripts

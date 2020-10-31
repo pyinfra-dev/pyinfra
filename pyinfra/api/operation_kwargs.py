@@ -78,12 +78,6 @@ operation_kwargs = {
     'timeout': 'Timeout for *each* command executed during the operation.',
     'get_pty': 'Whether to get a pseudoTTY when executing any commands.',
     'stdin': 'String or buffer to send to the stdin of any commands.',
-}
-
-execution_kwargs = {
-    'parallel': 'Run this operation in batches of hosts.',
-    'run_once': 'Only execute this operation once, on the first host to see it.',
-    'serial': 'Run this operation host by host, rather than in parallel.',
     'precondition': 'Command to execute & check before the operation commands begin.',
     'postcondition': 'Command to execute & check after the operation commands complete.',
 }
@@ -93,21 +87,39 @@ callback_kwargs = {
     'on_error': 'Callback function to execute on error.',
 }
 
+# Execution kwargs are global - ie must be identical for every host
+execution_kwargs = {
+    'parallel': {
+        'description': 'Run this operation in batches of hosts.',
+        'default': lambda config: config.PARALLEL,
+    },
+    'run_once': {
+        'description': 'Only execute this operation once, on the first host to see it.',
+        'default': lambda config: False,
+    },
+    'serial': {
+        'description': 'Run this operation host by host, rather than in parallel.',
+        'default': lambda config: False,
+    },
+}
+
 OPERATION_KWARGS = {
     'Privilege & user escalation': auth_kwargs,
     'Operation control': operation_kwargs,
-    'Operation execution': execution_kwargs,
     'Callbacks': callback_kwargs,
+    'Execution strategy (must be the same for all hosts)': execution_kwargs,
 }
+
+
+def get_execution_kwarg_keys():
+    return list(execution_kwargs.keys())
 
 
 @memoize
 def get_executor_kwarg_keys():
     keys = set()
-    keys.update(auth_kwargs.keys())
-    keys.update(operation_kwargs.keys())
-    keys.remove('ignore_errors')
-    keys.remove('name')
+    keys.update(auth_kwargs.keys(), operation_kwargs.keys())
+    keys.difference_update({'name', 'ignore_errors', 'precondition', 'postcondition'})
     return list(keys)
 
 

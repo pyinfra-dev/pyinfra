@@ -40,7 +40,7 @@ def show_pre_or_post_condition_warning(condition_name):
     logger.warning('The `{0}` argument is in beta!'.format(condition_name))
 
 
-def _run_shell_command(state, host, command, op_meta, executor_kwargs):
+def _run_shell_command(state, host, command, global_kwargs, executor_kwargs):
     status = False
     combined_output_lines = []
 
@@ -50,7 +50,7 @@ def _run_shell_command(state, host, command, op_meta, executor_kwargs):
         log_host_command_error(
             host,
             e,
-            timeout=op_meta['timeout'],
+            timeout=global_kwargs['timeout'],
         )
 
     # If we failed and have no already printed the stderr, print it
@@ -68,9 +68,11 @@ def _run_server_op(state, host, op_hash):
         return True
 
     op_data = state.get_op_data(host, op_hash)
+    global_kwargs = op_data['global_kwargs']
+
     op_meta = state.get_op_meta(op_hash)
 
-    ignore_errors = op_meta['ignore_errors']
+    ignore_errors = global_kwargs['ignore_errors']
 
     logger.debug('Starting operation {0} on {1}'.format(
         ', '.join(op_meta['names']), host,
@@ -78,16 +80,16 @@ def _run_server_op(state, host, op_hash):
 
     executor_kwarg_keys = get_executor_kwarg_keys()
     base_executor_kwargs = {
-        key: op_meta[key]
+        key: global_kwargs[key]
         for key in executor_kwarg_keys
-        if key in op_meta
+        if key in global_kwargs
     }
 
-    precondition = op_meta['precondition']
+    precondition = global_kwargs['precondition']
     if precondition:
         show_pre_or_post_condition_warning('precondition')
     if precondition and not _run_shell_command(
-        state, host, StringCommand(precondition), op_meta, base_executor_kwargs,
+        state, host, StringCommand(precondition), global_kwargs, base_executor_kwargs,
     ):
         log_error_or_warning(
             host, ignore_errors,
@@ -129,7 +131,7 @@ def _run_server_op(state, host, op_hash):
                 ))
 
         elif isinstance(command, StringCommand):
-            status = _run_shell_command(state, host, command, op_meta, executor_kwargs)
+            status = _run_shell_command(state, host, command, global_kwargs, executor_kwargs)
 
         else:
             try:
@@ -138,7 +140,7 @@ def _run_server_op(state, host, op_hash):
                 log_host_command_error(
                     host,
                     e,
-                    timeout=op_meta['timeout'],
+                    timeout=global_kwargs['timeout'],
                 )
 
         # Break the loop to trigger a failure
@@ -149,11 +151,11 @@ def _run_server_op(state, host, op_hash):
 
     # Commands didn't break, so count our successes & return True!
     else:
-        postcondition = op_meta['postcondition']
+        postcondition = global_kwargs['postcondition']
         if postcondition:
             show_pre_or_post_condition_warning('postcondition')
         if postcondition and not _run_shell_command(
-            state, host, StringCommand(postcondition), op_meta, base_executor_kwargs,
+            state, host, StringCommand(postcondition), global_kwargs, base_executor_kwargs,
         ):
             log_error_or_warning(
                 host, ignore_errors,
@@ -176,8 +178,8 @@ def _run_server_op(state, host, op_hash):
         ))
 
         # Trigger any success handler
-        if op_meta['on_success']:
-            op_meta['on_success'](state, host, op_hash)
+        if global_kwargs['on_success']:
+            global_kwargs['on_success'](state, host, op_hash)
 
         state.trigger_callbacks('operation_host_success', host, op_hash)
         return True
@@ -188,8 +190,8 @@ def _run_server_op(state, host, op_hash):
     log_error_or_warning(host, ignore_errors)
 
     # Always trigger any error handler
-    if op_meta['on_error']:
-        op_meta['on_error'](state, host, op_hash)
+    if global_kwargs['on_error']:
+        global_kwargs['on_error'](state, host, op_hash)
 
     # Ignored, op "completes" w/ ignored error
     if ignore_errors:
@@ -197,6 +199,8 @@ def _run_server_op(state, host, op_hash):
 
     # Unignored error -> False
     state.trigger_callbacks('operation_host_error', host, op_hash)
+    if ignore_errors:
+        return True
     return False
 
 
@@ -332,8 +336,7 @@ def _run_single_op(state, op_hash):
                         failed_hosts.add(host)
 
     # Now all the batches/hosts are complete, fail any failures
-    if not op_meta['ignore_errors']:
-        state.fail_hosts(failed_hosts)
+    state.fail_hosts(failed_hosts)
 
     if pyinfra.is_cli:
         click.echo(err=True)
