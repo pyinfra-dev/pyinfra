@@ -27,7 +27,7 @@ def build_global_kwargs_doc():
                 default = config.get('default')
                 if callable(default):
                     default = default(pyinfra_config)
-                if default:
+                if default is not None:
                     key = '{0}={1}'.format(key, default)
 
             lines.append('    + ``{0}``: {1}'.format(key, description))
