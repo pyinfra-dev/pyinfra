@@ -41,6 +41,9 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
     'mock==3.0.5',
     'codecov==2.1.8',
 
+    # Type checking
+    'mypy==0.790',
+
     # Linting
     'flake8==3.8.3',
     'flake8-commas==2.0.0',
