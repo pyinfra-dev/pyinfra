@@ -42,7 +42,7 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
     'codecov==2.1.8',
 
     # Type checking
-    'mypy==0.790',
+    'mypy==0.790 ; python_version >= "3"',
 
     # Linting
     'flake8==3.8.3',
