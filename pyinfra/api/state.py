@@ -102,6 +102,7 @@ class State(object):
 
     loop_counter = None
     loop_line = None
+    loop_filename = None
 
     # Name of the current deploy
     in_deploy = False
@@ -359,6 +360,7 @@ class State(object):
     def preserve_loop_order(self, items):
         frameinfo = get_caller_frameinfo(frame_offset=1)  # escape contextlib
         self.loop_line = frameinfo.lineno
+        self.loop_filename = frameinfo.filename
 
         def item_generator():
             for i, item in enumerate(items, 1):
@@ -369,6 +371,7 @@ class State(object):
 
         self.loop_counter = None
         self.loop_line = None
+        self.loop_filename = None
 
     def get_op_order(self):
         line_numbers_to_hash = self.op_line_numbers_to_hash
