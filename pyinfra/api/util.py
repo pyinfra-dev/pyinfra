@@ -29,6 +29,8 @@ BLOCKSIZE = 65536
 TEMPLATES = {}
 FILE_SHAS = {}
 
+PYINFRA_API_DIR = path.dirname(__file__)
+
 
 def try_int(value):
     try:
@@ -74,6 +76,36 @@ def get_caller_frameinfo(frame_offset=0):
     del stack_items
 
     return info
+
+
+def get_operation_order_from_stack(state):
+    stack_items = list(reversed(stack()))
+
+    # Find the *first* occurrence of our deploy file in the reversed stack
+    if state.current_deploy_filename:
+        for i, stack_item in enumerate(stack_items):
+            frame = getframeinfo(stack_item[0])
+            if frame.filename == state.current_deploy_filename:
+                break
+    else:
+        i = 0
+
+    # Now generate a list of line numbers *following that file*
+    line_numbers = []
+    for stack_item in stack_items[i:]:
+        frame = getframeinfo(stack_item[0])
+
+        if frame.filename.startswith(PYINFRA_API_DIR):
+            continue
+
+        if state.loop_filename and frame.filename == state.loop_filename:
+            line_numbers.extend([state.loop_line, state.loop_counter])
+
+        line_numbers.append(frame.lineno)
+
+    del stack_items
+
+    return line_numbers
 
 
 def extract_callable_datas(datas):

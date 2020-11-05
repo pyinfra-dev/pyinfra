@@ -24,7 +24,7 @@ from .state import State
 from .util import (
     get_arg_value,
     get_call_location,
-    get_caller_frameinfo,
+    get_operation_order_from_stack,
     make_hash,
     memoize,
     unroll_generators,
@@ -214,29 +214,15 @@ def operation(func=None, pipeline_facts=None):
                 for name in names
             }
 
-        # Inject the current op file number (only incremented in CLI mode)
-        op_lines = [state.current_op_file]
-
-        # Add any current @deploy line numbers
-        if state.deploy_line_numbers:
-            op_lines.extend(state.deploy_line_numbers)
-
-        # Add any current loop count
-        if state.loop_line:
-            op_lines.extend([state.loop_line, state.loop_counter])
-
-        # Add the line number that called this operation
+        filename = None
         line_number = kwargs.pop('_line_number', None)
-        filename = 'API'
-        if line_number is None:
-            frameinfo = get_caller_frameinfo()
-            line_number = frameinfo.lineno
-            filename = frameinfo.filename
-
-        op_lines.append(line_number)
+        if line_number is not None:
+            op_order = [line_number]
+        else:
+            op_order = get_operation_order_from_stack(state)
 
         # Make a hash from the call stack lines
-        op_hash = make_hash(op_lines)
+        op_hash = make_hash(op_order)
 
         # Avoid adding duplicates! This happens if an operation is called within
         # a loop - such that the filename/lineno/code _are_ the same, but the
@@ -252,14 +238,14 @@ def operation(func=None, pipeline_facts=None):
         host_op_hashes.add(op_hash)
 
         if duplicate_op_count:
-            op_lines.append(duplicate_op_count)
+            op_order.append(duplicate_op_count)
 
-        op_lines = tuple(op_lines)
+        op_order = tuple(op_order)
 
         logger.debug('Adding operation, {0}, called @ {1}:{2}, opLines={3}, opHash={4}'.format(
-            names, filename, line_number, op_lines, op_hash,
+            names, filename, line_number, op_order, op_hash,
         ))
-        state.op_line_numbers_to_hash[op_lines] = op_hash
+        state.op_line_numbers_to_hash[op_order] = op_hash
 
         # Ensure shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(op_hash, {
