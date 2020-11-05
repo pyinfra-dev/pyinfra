@@ -412,6 +412,8 @@ class TestOperationOrdering(PatchSSHTestCase):
         state = State(inventory, Config())
         connect_all(state)
 
+        state.current_deploy_filename = __file__
+
         pyinfra.is_cli = True
         pseudo_state.set(state)
 
@@ -446,8 +448,8 @@ class TestOperationOrdering(PatchSSHTestCase):
         assert op_order[2] == second_pseudo_hash
 
         # And that they have the expected line numbers
-        assert state.op_line_numbers_to_hash.get((0, first_pseudo_call_line)) == first_pseudo_hash
-        assert state.op_line_numbers_to_hash.get((0, second_pseudo_call_line)) == second_pseudo_hash
+        assert state.op_line_numbers_to_hash.get((first_pseudo_call_line,)) == first_pseudo_hash
+        assert state.op_line_numbers_to_hash.get((second_pseudo_call_line,)) == second_pseudo_hash
 
         # Ensure somehost has two ops and anotherhost only has the one
         assert len(state.ops[inventory.get_host('somehost')]) == 2
