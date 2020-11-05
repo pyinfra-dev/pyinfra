@@ -156,6 +156,8 @@ def get_operation_and_args(commands):
 
 
 def load_deploy_file(state, filename):
+    state.current_deploy_filename = filename
+
     # Copy the inventory hosts (some might be removed during deploy)
     hosts = list(state.inventory.iter_active_hosts())
 
