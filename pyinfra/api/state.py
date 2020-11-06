@@ -213,10 +213,6 @@ class State(object):
         # Private keys
         self.private_keys = {}
 
-        # Facts storage
-        self.facts = {}
-        self.fact_locks = {}
-
         # Assign inventory/config
         self.inventory = inventory
         self.config = config
