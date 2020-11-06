@@ -310,7 +310,7 @@ class State(object):
             func(self, *args, **kwargs)
 
     @contextmanager
-    def deploy(self, name, kwargs, data, line_number, in_deploy=True):
+    def deploy(self, name, kwargs, data, in_deploy=True):
         '''
         Wraps a group of operations as a deploy, this should not be used
         directly, instead use ``pyinfra.api.deploy.deploy``.
@@ -325,20 +325,12 @@ class State(object):
         old_deploy_name = self.deploy_name
         old_deploy_kwargs = self.deploy_kwargs
         old_deploy_data = self.deploy_data
-        old_deploy_line_numbers = self.deploy_line_numbers
         self.in_deploy = in_deploy
-
-        # Make new line numbers - note convert from and back to tuple to avoid
-        # keeping deploy_line_numbers mutable.
-        new_line_numbers = list(self.deploy_line_numbers or [])
-        new_line_numbers.append(line_number)
-        new_line_numbers = tuple(new_line_numbers)
 
         # Set the new values
         self.deploy_name = name
         self.deploy_kwargs = kwargs
         self.deploy_data = data
-        self.deploy_line_numbers = new_line_numbers
         logger.debug('Starting deploy {0} (args={1}, data={2})'.format(
             name, kwargs, data,
         ))
@@ -350,7 +342,6 @@ class State(object):
         self.deploy_name = old_deploy_name
         self.deploy_kwargs = old_deploy_kwargs
         self.deploy_data = old_deploy_data
-        self.deploy_line_numbers = old_deploy_line_numbers
 
         logger.debug('Reset deploy to {0} (args={1}, data={2})'.format(
             old_deploy_name, old_deploy_kwargs, old_deploy_data,

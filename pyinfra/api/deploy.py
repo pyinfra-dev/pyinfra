@@ -16,7 +16,7 @@ from .exceptions import PyinfraError
 from .host import Host
 from .operation_kwargs import pop_global_op_kwargs
 from .state import State
-from .util import get_call_location, get_caller_frameinfo, memoize
+from .util import get_call_location, memoize
 
 
 @memoize
@@ -42,10 +42,6 @@ def add_deploy(state, deploy_func, *args, **kwargs):
         raise PyinfraError((
             '`add_deploy` should not be called when pyinfra is executing in CLI mode! ({0})'
         ).format(get_call_location()))
-
-    # This ensures that ever time a deploy is added (API mode), it is simply
-    # appended to the operation order.
-    kwargs['_line_number'] = len(state.op_meta)
 
     kwargs['state'] = state
 
@@ -111,24 +107,13 @@ def deploy(func_or_name, data_defaults=None):
                 'Deploy called without state/host: {0} ({1})'
             ).format(func, get_call_location()))
 
-        line_number = kwargs.pop('_line_number', None)
-        filename = 'CLI'
-        if line_number is None:
-            frameinfo = get_caller_frameinfo()
-            line_number = frameinfo.lineno
-            filename = frameinfo.filename
-
-        logger.debug('Adding deploy, called @ {0}:{1}'.format(
-            filename, line_number,
-        ))
-
         deploy_kwargs = pop_global_op_kwargs(state, kwargs)
 
         # Name the deploy
         deploy_name = getattr(func, 'deploy_name', func.__name__)
         deploy_data = getattr(func, 'deploy_data', None)
 
-        with state.deploy(deploy_name, deploy_kwargs, deploy_data, line_number):
+        with state.deploy(deploy_name, deploy_kwargs, deploy_data):
             # Execute the deploy, passing state and host
             func(*args, **kwargs)
 

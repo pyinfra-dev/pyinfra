@@ -10,7 +10,6 @@ import pyinfra
 from . import logger, pseudo_state
 from .api.connectors.util import run_local_process, split_combined_output
 from .api.exceptions import PyinfraError
-from .api.util import get_caller_frameinfo
 
 
 def include(filename):
@@ -24,8 +23,6 @@ def include(filename):
 
     if pseudo_state.deploy_dir:
         filename = path.join(pseudo_state.deploy_dir, filename)
-
-    frameinfo = get_caller_frameinfo()
 
     logger.debug('Including local file: {0}'.format(filename))
 
@@ -48,10 +45,7 @@ def include(filename):
                 'PRESERVE_SUDO_ENV', 'IGNORE_ERRORS',
             ]
         }
-        with pseudo_state.deploy(
-            filename, kwargs, None, frameinfo.lineno,
-            in_deploy=False,
-        ):
+        with pseudo_state.deploy(filename, kwargs, None, in_deploy=False):
             exec_file(filename)
 
         # One potential solution to the above is to add local as an actual
