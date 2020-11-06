@@ -1,3 +1,5 @@
+from utils import call_file_op
+
 from pyinfra import host, local, state
 from pyinfra.api import deploy
 from pyinfra.operations import files, server
@@ -56,11 +58,7 @@ for i in range(2):
         commands='echo loop_{0}_main_operation'.format(i),
     )
 
-files.put(
-    name='Third main operation',
-    src='files/a_file',
-    dest='/a_file',
-)
+call_file_op()
 
 with state.preserve_loop_order([1, 2]) as loop_items:
     for item in loop_items():

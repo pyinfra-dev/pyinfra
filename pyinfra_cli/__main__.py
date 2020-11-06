@@ -16,9 +16,6 @@ pyinfra.is_cli = True
 # Don't write out deploy.pyc/config.pyc etc
 sys.dont_write_bytecode = True
 
-# Make sure imported files (deploy.py/etc) behave as if imported from the cwd
-sys.path.append('.')
-
 # Shut it click
 click.disable_unicode_literals_warning = True  # noqa
 

@@ -304,6 +304,9 @@ def _main(
             deploy_dir = potential_deploy_dir
             break
 
+    # Make sure imported files (deploy.py/etc) behave as if imported from the cwd
+    sys.path.append(deploy_dir)
+
     # Create an empty/unitialised state object
     state = State()
     # Set the deploy directory
