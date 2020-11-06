@@ -77,12 +77,18 @@ class TestOperationsApi(PatchSSHTestCase):
             StringCommand('chown pyinfra:pyinfra /var/log/pyinfra.log'),
         ]
 
-        # Ensure the meta
-        meta = state.op_meta[first_op_hash]
-        assert meta['sudo'] is True
-        assert meta['sudo_user'] == 'test_sudo'
-        assert meta['su_user'] == 'test_su'
-        assert meta['ignore_errors'] is True
+        # Ensure the global kwargs (same for both hosts)
+        somehost_global_kwargs = state.ops[somehost][first_op_hash]['global_kwargs']
+        assert somehost_global_kwargs['sudo'] is True
+        assert somehost_global_kwargs['sudo_user'] == 'test_sudo'
+        assert somehost_global_kwargs['su_user'] == 'test_su'
+        assert somehost_global_kwargs['ignore_errors'] is True
+
+        anotherhost_global_kwargs = state.ops[anotherhost][first_op_hash]['global_kwargs']
+        assert anotherhost_global_kwargs['sudo'] is True
+        assert anotherhost_global_kwargs['sudo_user'] == 'test_sudo'
+        assert anotherhost_global_kwargs['su_user'] == 'test_su'
+        assert anotherhost_global_kwargs['ignore_errors'] is True
 
         # Ensure run ops works
         run_ops(state)
@@ -140,6 +146,7 @@ class TestOperationsApi(PatchSSHTestCase):
         assert len(op_order) == 3
 
         first_op_hash = op_order[0]
+        second_op_hash = op_order[1]
 
         # Ensure first op is the right one
         assert state.op_meta[first_op_hash]['names'] == {'First op name'}
@@ -154,11 +161,11 @@ class TestOperationsApi(PatchSSHTestCase):
         ]
 
         # Ensure second op has sudo/sudo_user
-        assert state.op_meta[op_order[1]]['sudo'] is True
-        assert state.op_meta[op_order[1]]['sudo_user'] == 'pyinfra'
+        assert state.ops[somehost][second_op_hash]['global_kwargs']['sudo'] is True
+        assert state.ops[somehost][second_op_hash]['global_kwargs']['sudo_user'] == 'pyinfra'
 
         # Ensure third has su_user
-        assert state.op_meta[op_order[2]]['su_user'] == 'pyinfra'
+        assert state.ops[somehost][op_order[2]]['global_kwargs']['su_user'] == 'pyinfra'
 
         # Check run ops works
         with patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True):

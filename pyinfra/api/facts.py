@@ -153,18 +153,15 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
     # Timeout for operations !== timeout for connect (config.CONNECT_TIMEOUT)
     timeout = None
 
-    # Get the current op meta
-    current_op_hash = state.current_op_hash
-    current_op_meta = state.op_meta.get(current_op_hash)
-
-    # If inside an operation, fetch config meta
-    if current_op_meta:
-        sudo = current_op_meta['sudo']
-        sudo_user = current_op_meta['sudo_user']
-        use_sudo_password = current_op_meta['use_sudo_password']
-        su_user = current_op_meta['su_user']
-        ignore_errors = current_op_meta['ignore_errors']
-        timeout = current_op_meta['timeout']
+    # If inside an operation, fetch global arguments
+    current_global_kwargs = state.current_op_global_kwargs
+    if current_global_kwargs:
+        sudo = current_global_kwargs['sudo']
+        sudo_user = current_global_kwargs['sudo_user']
+        use_sudo_password = current_global_kwargs['use_sudo_password']
+        su_user = current_global_kwargs['su_user']
+        ignore_errors = current_global_kwargs['ignore_errors']
+        timeout = current_global_kwargs['timeout']
 
     # Make a hash which keeps facts unique - but usable cross-deploy/threads.
     # Locks are used to maintain order.
