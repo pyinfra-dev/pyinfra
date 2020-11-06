@@ -51,7 +51,7 @@ class UnexpectedError(click.ClickException):
             'red',
             bold=True,
         )))
-        click.echo()
+        click.echo(err=True)
 
         traceback = getattr(self.e, '_traceback')
         traceback_lines = format_tb(traceback)
@@ -72,7 +72,7 @@ class UnexpectedError(click.ClickException):
         logger.debug(traceback)
         logger.debug(exception)
 
-        click.echo()
+        click.echo(err=True)
         click.echo('--> The full traceback has been written to {0}'.format(
             click.style('pyinfra-debug.log', bold=True),
-        ))
+        ), err=True)
