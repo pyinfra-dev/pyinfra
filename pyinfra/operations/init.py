@@ -12,16 +12,12 @@
 '''
 
 from pyinfra import logger
-from pyinfra.api.util import get_caller_frameinfo
 
 from . import bsdinit, launchd, server, systemd, sysvinit, upstart
 
 
 def _make_legacy_operation(legacy_op, op_func):
     def wrapper(*args, **kwargs):
-        frameinfo = get_caller_frameinfo()
-        kwargs['_line_number'] = frameinfo.lineno
-
         logger.warning((
             'The `init.{0}` operation is deprecated, '
             'please us the `{1}.{2}` operation.'
