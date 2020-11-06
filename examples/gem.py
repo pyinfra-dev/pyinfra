@@ -8,6 +8,7 @@ if host.fact.linux_name in ['Debian', 'Ubuntu']:
     apt.packages(
         name='Install rubygems',
         packages=['rubygems'],
+        update=True,
     )
 
     gem.packages(
