@@ -282,7 +282,6 @@ def operation(func=None, pipeline_facts=None):
             key: get_arg_value(state, host, a)
             for key, a in six.iteritems(global_kwargs)
         }
-        op_meta.update(actual_global_kwargs)
 
         # Add any new names to the set
         op_meta['names'].update(names)
