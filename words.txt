@@ -364,6 +364,7 @@ wget
 whocares
 Win32
 winrm
+worktree
 writeable
 Xbps
 xbps
