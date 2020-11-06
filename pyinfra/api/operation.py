@@ -283,6 +283,9 @@ def operation(func=None, pipeline_facts=None):
 
             # Attach keyword args
             for key, value in six.iteritems(kwargs):
+                if isinstance(value, FunctionType):
+                    value = value.__name__
+
                 if key in ('state', 'host'):
                     continue
 
