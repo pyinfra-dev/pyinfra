@@ -80,7 +80,7 @@ def add_op(state, op_func, *args, **kwargs):
 
     # This ensures that every time an operation is added (API mode), it is simply
     # appended to the operation order.
-    kwargs['_line_number'] = len(state.op_meta)
+    kwargs['_op_order_number'] = len(state.op_meta)
 
     kwargs['state'] = state
 
@@ -214,12 +214,17 @@ def operation(func=None, pipeline_facts=None):
                 for name in names
             }
 
-        filename = None
-        line_number = kwargs.pop('_line_number', None)
-        if line_number is not None:
-            op_order = [line_number]
-        else:
-            op_order = get_operation_order_from_stack(state)
+        op_order = get_operation_order_from_stack(state)
+
+        op_order_number = kwargs.pop('_op_order_number', None)
+        if op_order_number is not None:
+            op_order = [op_order_number]
+        # If we're in API mode, op order number must be provided by calling `add_op`
+        elif not pyinfra.is_cli:
+            raise PyinfraError((
+                'Operation order number not provided in API mode - '
+                'you must use `add_op` to add operations.'
+            ))
 
         # Make a hash from the call stack lines
         op_hash = make_hash(op_order)
@@ -242,8 +247,8 @@ def operation(func=None, pipeline_facts=None):
 
         op_order = tuple(op_order)
 
-        logger.debug('Adding operation, {0}, called @ {1}:{2}, opLines={3}, opHash={4}'.format(
-            names, filename, line_number, op_order, op_hash,
+        logger.debug('Adding operation, {0}, opOrder={1}, opHash={2}'.format(
+            names, op_order, op_hash,
         ))
         state.op_line_numbers_to_hash[op_order] = op_hash
 

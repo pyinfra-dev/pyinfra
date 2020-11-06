@@ -122,6 +122,27 @@ class TestOperationsApi(PatchSSHTestCase):
 
         disconnect_all(state)
 
+    def test_op_call_direct_falls(self):
+        inventory = make_inventory()
+        somehost = inventory.get_host('somehost')
+        state = State(inventory, Config())
+
+        # Enable printing on this test to catch any exceptions in the formatting
+        state.print_output = True
+        state.print_input = True
+        state.print_fact_info = True
+        state.print_noop_info = True
+
+        connect_all(state)
+
+        with self.assertRaises(PyinfraError) as context:
+            server.shell(state=state, host=somehost, commands='echo hi')
+
+        assert context.exception.args[0] == (
+            'Operation order number not provided in API mode - '
+            'you must use `add_op` to add operations.'
+        )
+
     def test_file_upload_op(self):
         inventory = make_inventory()
 
