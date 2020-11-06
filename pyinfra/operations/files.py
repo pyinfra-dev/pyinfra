@@ -184,6 +184,10 @@ def line(
         date (taken from the machine running ``pyinfra``) appended as the extension. If
         you pass a string value this will be used as the extension of the backed up file.
 
+    Append:
+        If ``line`` is not in the file but we want it (``present`` set to ``True``), then
+        it will be append to the end of the file.
+
     Examples:
 
     .. code:: python
