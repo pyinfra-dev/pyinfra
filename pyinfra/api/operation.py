@@ -17,7 +17,7 @@ import pyinfra
 from pyinfra import logger, pseudo_host, pseudo_state
 
 from .command import StringCommand
-from .exceptions import PyinfraError
+from .exceptions import OperationValueError, PyinfraError
 from .host import Host
 from .operation_kwargs import get_execution_kwarg_keys, pop_global_op_kwargs
 from .state import State
@@ -272,7 +272,7 @@ def operation(func=None, pipeline_facts=None):
             op_meta_value = op_meta.get(key)
 
             if op_meta_value and global_value != op_meta_value:
-                raise TypeError('Cannot have differend values for {0}'.format(key))
+                raise OperationValueError('Cannot have different values for `{0}`.'.format(key))
 
             op_meta[key] = global_value
 
