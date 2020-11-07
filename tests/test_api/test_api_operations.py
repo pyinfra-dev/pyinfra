@@ -1,3 +1,4 @@
+from collections import defaultdict
 from inspect import currentframe, getframeinfo
 from unittest import TestCase
 
@@ -11,6 +12,7 @@ from pyinfra.api import (
     FileDownloadCommand,
     FileUploadCommand,
     OperationError,
+    OperationValueError,
     State,
     StringCommand,
 )
@@ -300,6 +302,24 @@ class TestOperationsApi(PatchSSHTestCase):
                 add_op(state, files.rsync, 'src', 'dest')
 
         assert context.exception.args[0] == 'The `rsync` binary is not available on this system.'
+
+    def test_op_cannot_change_execution_kwargs(self):
+        inventory = make_inventory()
+
+        state = State(inventory, Config())
+
+        class NoSetDefaultDict(defaultdict):
+            def setdefault(self, key, _):
+                return self[key]
+
+        state.op_meta = NoSetDefaultDict(lambda: {'serial': True})
+
+        connect_all(state)
+
+        with self.assertRaises(OperationValueError) as context:
+            add_op(state, files.file, '/var/log/pyinfra.log', serial=False)
+
+        assert context.exception.args[0] == 'Cannot have different values for `serial`.'
 
 
 class TestOperationFailures(PatchSSHTestCase):
