@@ -14,6 +14,7 @@ from .exceptions import (  # noqa: F401 # pragma: no cover
     InventoryError,
     OperationError,
     OperationTypeError,
+    OperationValueError,
 )
 from .facts import FactBase, ShortFactBase  # noqa: F401 # pragma: no cover
 from .host import Host  # noqa: F401 # pragma: no cover

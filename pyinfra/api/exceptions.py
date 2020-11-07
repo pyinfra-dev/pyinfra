@@ -23,6 +23,12 @@ class OperationTypeError(OperationError, TypeError):
     '''
 
 
+class OperationValueError(OperationError, ValueError):
+    '''
+    Exception raised when an operation is passed invalid argument values.
+    '''
+
+
 class DeployError(PyinfraError):
     '''
     User exception for raising in deploys or sub deploys.
