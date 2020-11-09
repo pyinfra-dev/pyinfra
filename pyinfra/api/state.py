@@ -95,6 +95,8 @@ class State(object):
     # Whether we are deploying (ie hosts are all ready)
     deploying = False
 
+    # Current op hash
+    current_op_hash = None
     # Current op global args for use w/facts
     current_op_global_kwargs = None
 

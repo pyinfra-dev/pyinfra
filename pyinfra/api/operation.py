@@ -323,6 +323,7 @@ def operation(func=None, pipeline_facts=None):
 
         # Otherwise, flag as in-op and run it to get the commands
         state.in_op = True
+        state.current_op_hash = op_hash
         state.current_op_global_kwargs = actual_global_kwargs
 
         # Generate actual arguments by parsing strings as jinja2 templates. This
@@ -348,6 +349,7 @@ def operation(func=None, pipeline_facts=None):
         ]
 
         state.in_op = False
+        current_op_hash = None
         state.current_op_global_kwargs = None
 
         # Add host-specific operation data to state
