@@ -57,9 +57,9 @@ def include(filename):
         # One potential solution to the above is to add local as an actual
         # module, ie `pyinfra.operations.local`.
 
-    except IOError as e:
+    except Exception as e:
         raise PyinfraError(
-            'Could not include local file: {0}\n{1}'.format(filename, e),
+            'Could not include local file: {0}:\n{1}'.format(filename, e),
         )
 
 
