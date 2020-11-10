@@ -149,7 +149,8 @@ def repo(
 @operation()
 def worktree(
     worktree,
-    repo=None, branch=None, create_branch=False, detached=False, present=True, force=False,
+    repo=None, branch=None, create_branch=False, detached=False,
+    present=True, assume_repo_exists=False, force=False,
     user=None, group=None, state=None, host=None,
 ):
     '''
@@ -161,6 +162,7 @@ def worktree(
     + create_branch: the branch already exist or should be created
     + detached: create a working tree with a detached HEAD
     + present: whether the working tree should exist
+    + assume_repo_exists: whether to assume the main repo exists
     + force: remove unclean working tree if should not exist
     + user: chown files to this user after
     + group: chown files to this group after
@@ -215,7 +217,7 @@ def worktree(
     if not host.fact.directory(worktree) and present:
 
         # be sure that `repo` is a GIT repository
-        if not host.fact.directory('/'.join((repo, '.git'))):
+        if not assume_repo_exists and not host.fact.directory('/'.join((repo, '.git'))):
             raise OperationError(
                 'The following folder is not a valid GIT repository : {0}'.format(repo),
             )
