@@ -150,6 +150,7 @@ class TestDockerSSHConnector(TestCase):
         assert fake_ssh_docker_shell.ran_custom_command
 
     @patch('pyinfra.api.connectors.dockerssh.mkstemp', lambda: (None, 'local_tempfile'))
+    @patch('pyinfra.api.connectors.docker.os.close', lambda f: None)
     @patch('pyinfra.api.connectors.dockerssh.ssh.put_file')
     def test_put_file(self, fake_put_file):
         fake_ssh_docker_shell.custom_command = [

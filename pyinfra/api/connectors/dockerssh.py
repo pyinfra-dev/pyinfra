@@ -1,4 +1,5 @@
-from os import unlink
+import os
+
 from tempfile import mkstemp
 
 import click
@@ -145,7 +146,7 @@ def put_file(
     temporary location and then uploading it into the container using ``docker cp``.
     '''
 
-    _, temp_filename = mkstemp()
+    fd, temp_filename = mkstemp()
     remote_temp_filename = state.get_temp_filename(temp_filename)
 
     # Load our file or IO object and write it to the temporary file
@@ -178,7 +179,8 @@ def put_file(
             print_input=print_input,
         )
     finally:
-        unlink(temp_filename)
+        os.close(fd)
+        os.remove(temp_filename)
         remote_remove(
             state, host, temp_filename,
             print_output=print_output,

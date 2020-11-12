@@ -28,6 +28,7 @@ def fake_docker_shell(command, splitlines=None):
 @patch('pyinfra.api.connectors.docker.local.shell', fake_docker_shell)
 @patch('pyinfra.api.connectors.docker.mkstemp', lambda: (None, '__tempfile__'))
 @patch('pyinfra.api.connectors.docker.os.remove', lambda f: None)
+@patch('pyinfra.api.connectors.docker.os.close', lambda f: None)
 @patch('pyinfra.api.connectors.docker.open', mock_open(read_data='test!'), create=True)
 @patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True)
 class TestDockerConnector(TestCase):

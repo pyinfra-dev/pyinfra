@@ -115,7 +115,7 @@ def put_file(
     temporary location and then uploading it into the container using ``docker cp``.
     '''
 
-    _, temp_filename = mkstemp()
+    fd, temp_filename = mkstemp()
 
     try:
         # Load our file or IO object and write it to the temporary file
@@ -141,6 +141,7 @@ def put_file(
             print_input=print_input,
         )
     finally:
+        os.close(fd)
         os.remove(temp_filename)
 
     if not status:
@@ -164,7 +165,7 @@ def get_file(
     location and then reading that into our final file/IO object.
     '''
 
-    _, temp_filename = mkstemp()
+    fd, temp_filename = mkstemp()
 
     try:
         docker_id = host.host_data['docker_container_id']
@@ -190,6 +191,7 @@ def get_file(
 
                 file_io.write(data)
     finally:
+        os.close(fd)
         os.remove(temp_filename)
 
     if not status:
