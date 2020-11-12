@@ -1,0 +1,16 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["/i-do-not-exist", "/home/somedir"],
+    "facts": {
+        "directory": {
+            "/home/somedir": null
+        },
+        "find_files": {
+            "/home/somedir": null
+        }
+    },
+    "exception": {
+        "names": ["OSError", "IOError"],
+        "message": "No such directory: /i-do-not-exist/"
+    }
+}

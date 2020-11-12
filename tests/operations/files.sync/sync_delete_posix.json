@@ -1,4 +1,5 @@
 {
+    "require_platform": ["Darwin", "Linux"],
     "args": ["/somedir/", "/home/somedir"],
     "kwargs": {
         "delete": true,

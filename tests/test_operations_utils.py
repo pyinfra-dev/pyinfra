@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+from os import path
 from unittest import TestCase
 
 try:
@@ -68,4 +69,4 @@ class TestCompatFSPath(TestCase):
         reason='requires Python 3.6+ (pathlib module + __fspath__)',
     )
     def test_fspath_with_pathlib_object(self):
-        assert '/path/to/file' == fspath(Path('/path/to/file'))
+        assert path.join('path', 'to', 'file') == fspath(Path('path/to/file'))

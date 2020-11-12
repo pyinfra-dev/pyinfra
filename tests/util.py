@@ -1,4 +1,5 @@
 import json
+import os
 
 from datetime import datetime
 from io import open
@@ -214,7 +215,7 @@ class patch_files(object):
                 filename = filename_data
                 data = None
 
-            if not filename.startswith('/'):
+            if not filename.startswith(os.sep):
                 filename = '{0}{1}'.format(FakeState.deploy_dir, filename)
 
             files.append(filename)
