@@ -349,7 +349,7 @@ def operation(func=None, pipeline_facts=None):
         ]
 
         state.in_op = False
-        current_op_hash = None
+        state.current_op_hash = None
         state.current_op_global_kwargs = None
 
         # Add host-specific operation data to state
