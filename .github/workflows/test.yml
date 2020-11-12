@@ -1,3 +1,9 @@
+name: "Execute tests"
+
+on:
+  push:
+  pull_request:
+
 jobs:
   Test:
     strategy:
