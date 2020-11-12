@@ -182,21 +182,22 @@ class TestCliDeployState(PatchSSHTestCase):
                     self.assertNotIn(op_hash, op_hashes)
 
     def test_deploy(self):
+        task_file_path = path.join('tests', 'deploy', 'tasks', 'a_task.py')
         correct_op_name_and_host_names = [
             ('First main operation', True),  # true for all hosts
             ('Second main operation', ('somehost',)),
-            ('tests/deploy/tasks/a_task.py | First task operation', ('anotherhost',)),
-            ('tests/deploy/tasks/a_task.py | Task order loop 1', ('anotherhost',)),
-            ('tests/deploy/tasks/a_task.py | 2nd Task order loop 1', ('anotherhost',)),
-            ('tests/deploy/tasks/a_task.py | Task order loop 2', ('anotherhost',)),
-            ('tests/deploy/tasks/a_task.py | 2nd Task order loop 2', ('anotherhost',)),
-            ('tests/deploy/tasks/a_task.py | Second task operation', ('anotherhost',)),
-            ('tests/deploy/tasks/a_task.py | First task operation', True),
-            ('tests/deploy/tasks/a_task.py | Task order loop 1', True),
-            ('tests/deploy/tasks/a_task.py | 2nd Task order loop 1', True),
-            ('tests/deploy/tasks/a_task.py | Task order loop 2', True),
-            ('tests/deploy/tasks/a_task.py | 2nd Task order loop 2', True),
-            ('tests/deploy/tasks/a_task.py | Second task operation', True),
+            ('{0} | First task operation'.format(task_file_path), ('anotherhost',)),
+            ('{0} | Task order loop 1'.format(task_file_path), ('anotherhost',)),
+            ('{0} | 2nd Task order loop 1'.format(task_file_path), ('anotherhost',)),
+            ('{0} | Task order loop 2'.format(task_file_path), ('anotherhost',)),
+            ('{0} | 2nd Task order loop 2'.format(task_file_path), ('anotherhost',)),
+            ('{0} | Second task operation'.format(task_file_path), ('anotherhost',)),
+            ('{0} | First task operation'.format(task_file_path), True),
+            ('{0} | Task order loop 1'.format(task_file_path), True),
+            ('{0} | 2nd Task order loop 1'.format(task_file_path), True),
+            ('{0} | Task order loop 2'.format(task_file_path), True),
+            ('{0} | 2nd Task order loop 2'.format(task_file_path), True),
+            ('{0} | Second task operation'.format(task_file_path), True),
             ('My deploy | First deploy operation', True),
             ('My deploy | My nested deploy | First nested deploy operation', True),
             ('My deploy | Second deploy operation', True),

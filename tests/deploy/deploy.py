@@ -1,3 +1,5 @@
+from os import path
+
 from utils import call_file_op
 
 from pyinfra import host, local, state
@@ -43,10 +45,10 @@ if host.name == 'somehost':
         commands='echo second_main_op',
     )
 elif host.name == 'anotherhost':
-    local.include('tasks/a_task.py')
+    local.include(path.join('tasks', 'a_task.py'))
 
 # Include the whole file again, but for all hosts
-local.include('tasks/a_task.py')
+local.include(path.join('tasks', 'a_task.py'))
 
 # Execute the @deploy function
 my_deploy()

@@ -1,5 +1,6 @@
 from collections import defaultdict
 from inspect import currentframe, getframeinfo
+from os import path
 from unittest import TestCase
 
 from mock import mock_open, patch
@@ -499,6 +500,9 @@ class TestOperationOrdering(PatchSSHTestCase):
         assert op_order[1] == second_op_hash
 
 
+this_filename = path.join('tests', 'test_api', 'test_api_operations.py')
+
+
 class TestOperationExceptions(TestCase):
     def test_add_op_rejects_cli(self):
         pyinfra.is_cli = True
@@ -511,7 +515,7 @@ class TestOperationExceptions(TestCase):
 
         assert context.exception.args[0] == (
             '`add_op` should not be called when pyinfra is executing in CLI mode! '
-            '(line {0} in tests/test_api/test_api_operations.py)'.format(call_line)
+            '(line {0} in {1})'.format(call_line, this_filename)
         )
 
     def test_op_call_rejects_no_cli(self):
@@ -521,7 +525,7 @@ class TestOperationExceptions(TestCase):
 
         assert context.exception.args[0] == (
             'API operation called without state/host: '
-            'server.shell (line {0} in tests/test_api/test_api_operations.py)'.format(call_line)
+            'server.shell (line {0} in {1})'.format(call_line, this_filename)
         )
 
     def test_op_call_rejects_in_op(self):
@@ -539,7 +543,7 @@ class TestOperationExceptions(TestCase):
 
         assert context.exception.args[0] == (
             'Nested operation called without state/host: '
-            'server.shell (line {0} in tests/test_api/test_api_operations.py)'.format(call_line)
+            'server.shell (line {0} in {1})'.format(call_line, this_filename)
         )
 
     def test_op_call_rejects_in_deploy(self):
@@ -558,5 +562,5 @@ class TestOperationExceptions(TestCase):
 
         assert context.exception.args[0] == (
             'Nested deploy operation called without state/host: '
-            'server.shell (line {0} in tests/test_api/test_api_operations.py)'.format(call_line)
+            'server.shell (line {0} in {1})'.format(call_line, this_filename)
         )
