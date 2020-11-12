@@ -45,4 +45,4 @@ jobs:
 
       - name: Docker ingration tests
         run: pytest -m docker
-        if: ${{ matrix.os == 'ubuntu-latest' && github.ref == 'refs/heads/master' }}
+        if: ${{ matrix.os == 'ubuntu-18.04' && (github.ref == 'refs/heads/master' || github.base_ref == 'refs/heads/master') }}
