@@ -28,7 +28,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install
-        run: pip install -e '.[test]'
+        run: pip install '.[test]'
 
       - name: Lint
         run: flake8
