@@ -8,6 +8,7 @@ import pyinfra
 
 from pyinfra import pseudo_host, pseudo_state
 from pyinfra.api import (
+    BaseStateCallback,
     Config,
     FileDownloadCommand,
     FileUploadCommand,
@@ -16,9 +17,9 @@ from pyinfra.api import (
     State,
     StringCommand,
 )
-from pyinfra.api.connect import connect_all
+from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.api.operation import add_op
+from pyinfra.api.operation import add_op, get_operation_names, OperationMeta
 from pyinfra.api.operations import run_ops
 from pyinfra.operations import files, python, server
 
@@ -30,6 +31,15 @@ from ..paramiko_util import (
 from ..util import FakeState, make_inventory
 
 
+class TestOperationMeta():
+    def test_get_operation_names(self):
+        assert len(get_operation_names()) > 0
+
+    def test_operation_meta_repr(self):
+        op_meta = OperationMeta('hash', [])
+        assert repr(op_meta) == 'commands:[] changed:False hash:hash'
+
+
 class TestOperationsApi(PatchSSHTestCase):
     def test_op(self):
         inventory = make_inventory()
@@ -37,6 +47,7 @@ class TestOperationsApi(PatchSSHTestCase):
         anotherhost = inventory.get_host('anotherhost')
 
         state = State(inventory, Config())
+        state.add_callback_handler(BaseStateCallback())
 
         # Enable printing on this test to catch any exceptions in the formatting
         state.print_output = True
@@ -108,6 +119,8 @@ class TestOperationsApi(PatchSSHTestCase):
         # And with the different modes
         run_ops(state, serial=True)
         run_ops(state, no_wait=True)
+
+        disconnect_all(state)
 
     def test_file_upload_op(self):
         inventory = make_inventory()
