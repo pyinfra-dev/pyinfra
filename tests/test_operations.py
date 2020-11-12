@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import json
+import platform
 import warnings
 
 from importlib import import_module
@@ -20,6 +21,8 @@ from pyinfra.api.util import unroll_generators
 from pyinfra_cli.util import json_encode
 
 from .util import create_host, FakeState, get_command_string, JsonTest, patch_files
+
+PLATFORM_NAME = platform.system()
 
 
 def make_operation_tests(arg):
@@ -42,6 +45,12 @@ def make_operation_tests(arg):
             cls.state = FakeState()
 
         def jsontest_function(self, test_name, test_data):
+            if (
+                'require_platform' in test_data
+                and PLATFORM_NAME not in test_data['require_platform']
+            ):
+                return
+
             # Create a host with this tests facts and attach to pseudo host
             host = create_host(facts=test_data.get('facts', {}))
 
