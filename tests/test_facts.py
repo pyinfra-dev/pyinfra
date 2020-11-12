@@ -7,13 +7,12 @@ from os import listdir, path
 from unittest import TestCase
 
 import six
-from jsontest import JsonTest
 
 from pyinfra.api import StringCommand
 from pyinfra.api.facts import FACTS, ShortFactBase
 from pyinfra_cli.util import json_encode
 
-from .util import get_command_string
+from .util import get_command_string, JsonTest
 
 # show full diff on json
 TestCase.maxDiff = None

@@ -37,7 +37,6 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
     # Unit testing
     'pytest==4.6.6',
     'pytest-cov==2.8.1',
-    'jsontest==1.4',
     'coverage==4.5.4',
     'mock==3.0.5',
     'codecov==2.1.8',

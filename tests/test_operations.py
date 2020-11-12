@@ -8,7 +8,6 @@ from os import listdir, path
 from unittest import TestCase
 
 import six
-from jsontest import JsonTest
 from mock import patch
 
 from pyinfra.api import (
@@ -20,7 +19,7 @@ from pyinfra.api import (
 from pyinfra.api.util import unroll_generators
 from pyinfra_cli.util import json_encode
 
-from .util import create_host, FakeState, get_command_string, patch_files
+from .util import create_host, FakeState, get_command_string, JsonTest, patch_files
 
 
 def make_operation_tests(arg):
