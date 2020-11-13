@@ -17,6 +17,7 @@ venv/
 
 .docstmp
 docs/build/
+docs/public/
 docs/facts/
 docs/operations/
 docs/apidoc/

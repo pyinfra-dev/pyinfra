@@ -1,0 +1,45 @@
+name: Generate & Deploy
+
+on:
+  push:
+    branches:
+      - master
+      - 1.x
+      - 0.x
+
+jobs:
+  deploy:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Clone Source Repository
+        uses: actions/checkout@v2
+
+      - name: Clone Generated Repository
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.ACCESS_TOKEN }}
+          repository: fizzadar/docs.pyinfra.com
+          path: docs/public/
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install
+        run: pip install '.[docs]'
+
+      - name: Generate documentation
+        run: scripts/build_public_docs.sh
+
+      - name: Push & Update
+        run: |
+          cd docs/public/
+
+          if [[ `git status --porcelain` ]]; then
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            git add .
+            git commit -m "Docs build $(date -I)"
+            git push origin HEAD:main
+          fi
