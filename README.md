@@ -6,8 +6,8 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/pyinfra?color=blue)](https://pypi.python.org/pypi/pyinfra)
 [![PyPi downloads](https://pepy.tech/badge/pyinfra)](https://pepy.tech/project/pyinfra)
-[![Docs status](https://img.shields.io/readthedocs/pyinfra)](https://docs.pyinfra.com)
-[![Travis.CI status](https://img.shields.io/travis/com/Fizzadar/pyinfra/master)](https://travis-ci.com/Fizzadar/pyinfra)
+[![Docs status](https://img.shields.io/github/workflow/status/Fizzadar/pyinfra/Generate%20&%20Deploy%20Docs/master?label=docs)](https://docs.pyinfra.com)
+[![Execute tests status](https://img.shields.io/github/workflow/status/Fizzadar/pyinfra/Execute%20tests/master?label=tests)](https://github.com/Fizzadar/pyinfra/actions?query=workflow%3A%22Execute+tests%22)
 [![Codecov Coverage](https://img.shields.io/codecov/c/gh/Fizzadar/pyinfra)](https://codecov.io/github/Fizzadar/pyinfra)
 [![MIT Licensed](https://img.shields.io/pypi/l/pyinfra)](https://github.com/Fizzadar/pyinfra/blob/develop/LICENSE.md)
 
