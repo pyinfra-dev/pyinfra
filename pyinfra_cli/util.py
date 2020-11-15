@@ -24,7 +24,7 @@ from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.util import FallbackDict
 
-from .exceptions import CliError
+from .exceptions import CliError, UnexpectedExternalError
 
 # Cache for compiled Python deploy code
 PYTHON_CODES = {}
@@ -49,7 +49,10 @@ def exec_file(filename, return_locals=False, is_deploy_code=False):
     }
 
     # Execute the code with locals/globals going into the dict above
-    exec(PYTHON_CODES[filename], data)
+    try:
+        exec(PYTHON_CODES[filename], data)
+    except Exception as e:
+        raise UnexpectedExternalError(e, filename)
 
     return data
 

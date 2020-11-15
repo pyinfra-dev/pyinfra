@@ -41,28 +41,60 @@ class CliError(PyinfraError, click.ClickException):
         logger.warning(self)
 
 
-class UnexpectedError(click.ClickException):
-    def __init__(self, e):
+class UnexpectedMixin(object):
+    def get_traceback_lines(self):
+        traceback = getattr(self.e, '_traceback')
+        return format_tb(traceback)
+
+    def get_traceback(self):
+        return ''.join(self.get_traceback_lines())
+
+    def get_exception(self):
+        return ''.join(format_exception(self.e.__class__, self.e, None))
+
+
+class UnexpectedExternalError(click.ClickException, UnexpectedMixin):
+    def __init__(self, e, filename):
+        _, _, traceback = sys.exc_info()
+        e._traceback = traceback
         self.e = e
+        self.filename = filename
 
     def show(self):
         sys.stderr.write('--> {0}:\n'.format(click.style(
-            'An unexpected exception occurred',
+            'An unexpected exception occurred in: {0}'.format(self.filename),
             'red',
             bold=True,
         )))
         click.echo(err=True)
 
-        traceback = getattr(self.e, '_traceback')
-        traceback_lines = format_tb(traceback)
-        traceback = ''.join(traceback_lines)
+        sys.stderr.write(self.get_traceback())
+        sys.stderr.write(self.get_exception())
+
+
+class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
+    def __init__(self, e):
+        _, _, traceback = sys.exc_info()
+        e._traceback = traceback
+        self.e = e
+
+    def show(self):
+        sys.stderr.write('--> {0}:\n'.format(click.style(
+            'An unexpected internal exception occurred',
+            'red',
+            bold=True,
+        )))
+        click.echo(err=True)
+
+        traceback_lines = self.get_traceback_lines()
+        traceback = self.get_traceback()
 
         # Syntax errors contain the filename/line/etc, but other exceptions
         # don't, so print the *last* call to stderr.
         if not isinstance(self.e, SyntaxError):
             sys.stderr.write(traceback_lines[-1])
 
-        exception = ''.join(format_exception(self.e.__class__, self.e, None))
+        exception = self.get_exception()
         sys.stderr.write(exception)
 
         with open('pyinfra-debug.log', 'w') as f:

@@ -30,7 +30,11 @@ from pyinfra.api.operations import run_ops
 from pyinfra.operations import server
 
 from .config import load_config, load_deploy_config
-from .exceptions import CliError, UnexpectedError
+from .exceptions import (
+    CliError,
+    UnexpectedExternalError,
+    UnexpectedInternalError,
+)
 from .inventory import make_inventory
 from .log import setup_logging
 from .prints import (
@@ -224,14 +228,13 @@ def cli(*args, **kwargs):
 
         raise
 
-    except Exception as e:
-        # Attach the traceback to the exception before returning as state (Py2
-        # does not have `Exception.__traceback__`).
-        _, _, traceback = sys.exc_info()
-        e._traceback = traceback
+    except UnexpectedExternalError:
+        # Pass unexpected external exceptions through as-is
+        raise
 
-        # Re-raise any unexpected exceptions as UnexpectedError
-        raise UnexpectedError(e)
+    except Exception as e:
+        # Re-raise any unexpected internal exceptions as UnexpectedInternalError
+        raise UnexpectedInternalError(e)
 
     finally:
         if pseudo_state.isset() and pseudo_state.initialised:
