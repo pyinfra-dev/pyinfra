@@ -131,9 +131,12 @@ def pop_global_op_kwargs(state, kwargs):
     meta_kwargs = state.deploy_kwargs or {}
 
     def get_kwarg(key, default=None):
-        return kwargs.pop(key, meta_kwargs.get(key, default))
+        has_key = key in kwargs or key in meta_kwargs
+        value = kwargs.pop(key, meta_kwargs.get(key, default))
+        return value, has_key
 
     global_kwargs = {}
+    global_kwarg_keys = []
 
     for _, kwarg_configs in OPERATION_KWARGS.items():
         for key, config in kwarg_configs.items():
@@ -146,10 +149,13 @@ def pop_global_op_kwargs(state, kwargs):
                 if default:
                     default = default(state.config)
 
-            value = get_kwarg(key, default=default)
+            value, has_key = get_kwarg(key, default=default)
             if handler:
                 value = handler(state.config, value)
 
+            if has_key:
+                global_kwarg_keys.append(key)
+
             global_kwargs[key] = value
 
-    return global_kwargs
+    return global_kwargs, global_kwarg_keys

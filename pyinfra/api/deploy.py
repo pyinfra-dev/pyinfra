@@ -107,7 +107,7 @@ def deploy(func_or_name, data_defaults=None):
                 'Deploy called without state/host: {0} ({1})'
             ).format(func, get_call_location()))
 
-        deploy_kwargs = pop_global_op_kwargs(state, kwargs)
+        deploy_kwargs, _ = pop_global_op_kwargs(state, kwargs)
 
         # Name the deploy
         deploy_name = getattr(func, 'deploy_name', func.__name__)

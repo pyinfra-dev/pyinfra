@@ -178,11 +178,15 @@ def operation(func=None, pipeline_facts=None):
         #
 
         # Get the meta kwargs (globals that apply to all hosts)
-        global_kwargs = pop_global_op_kwargs(state, kwargs)
+        global_kwargs, global_kwarg_keys = pop_global_op_kwargs(state, kwargs)
 
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).
         if state.in_op:
+            if global_kwarg_keys:
+                raise PyinfraError((
+                    'Nested operation called with global arguments: {0} ({1})'
+                ).format(global_kwarg_keys, get_call_location()))
             return func(*args, **kwargs) or []
 
         # Name the operation
