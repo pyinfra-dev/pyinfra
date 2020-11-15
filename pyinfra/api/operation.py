@@ -129,10 +129,11 @@ def operation(func=None, pipeline_facts=None):
         return decorator
 
     # Index the operation!
-    module_bits = func.__module__.split('.')
-    module_name = module_bits[-1]
-    op_name = '.'.join((module_name, func.__name__))
-    OPERATIONS.append(op_name)
+    if func.__module__:
+        module_bits = func.__module__.split('.')
+        module_name = module_bits[-1]
+        op_name = '.'.join((module_name, func.__name__))
+        OPERATIONS.append(op_name)
 
     # Actually decorate!
     @wraps(func)
@@ -202,11 +203,15 @@ def operation(func=None, pipeline_facts=None):
         # Generate an operation name if needed (Module/Operation format)
         else:
             add_args = True
-            module_bits = func.__module__.split('.')
-            module_name = module_bits[-1]
-            names = {
-                '{0}/{1}'.format(module_name.title(), func.__name__.title()),
-            }
+
+            if func.__module__:
+                module_bits = func.__module__.split('.')
+                module_name = module_bits[-1]
+                name = '{0}/{1}'.format(module_name.title(), func.__name__.title())
+            else:
+                name = func.__name__
+
+            names = {name}
 
         if state.deploy_name:
             names = {
