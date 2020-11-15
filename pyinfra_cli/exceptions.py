@@ -76,3 +76,7 @@ class UnexpectedError(click.ClickException):
         click.echo('--> The full traceback has been written to {0}'.format(
             click.style('pyinfra-debug.log', bold=True),
         ), err=True)
+        click.echo((
+            '--> If this is unexpected please consider submitting a bug report '
+            'on GitHub, for more information run `pyinfra --support`.'
+        ), err=True)
