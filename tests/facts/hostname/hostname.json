@@ -1,5 +1,5 @@
 {
-    "command": "hostname",
+    "command": "uname -n",
     "output": ["my-host.net"],
     "fact": "my-host.net"
 }

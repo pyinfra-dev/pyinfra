@@ -27,8 +27,7 @@ class Hostname(FactBase):
     Returns the current hostname of the server.
     '''
 
-    command = 'hostname'
-    requires_command = 'hostname'
+    command = 'uname -n'
 
 
 class Os(FactBase):
