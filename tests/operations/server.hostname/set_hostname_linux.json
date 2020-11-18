@@ -8,6 +8,9 @@
         },
         "directory": {
             "/etc": true
+        },
+        "which": {
+            "hostnamectl": null
         }
     },
     "commands": [

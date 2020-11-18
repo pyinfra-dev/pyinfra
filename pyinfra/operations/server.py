@@ -284,12 +284,15 @@ def mount(
 @operation
 def hostname(hostname, hostname_file=None, state=None, host=None):
     '''
-    Set the system hostname.
+    Set the system hostname using ``hostnamectl`` or ``hostname`` on older systems.
 
     + hostname: the hostname that should be set
     + hostname_file: the file that permanently sets the hostname
 
     Hostname file:
+        The hostname file only matters no systems that do not have ``hostnamectl``,
+        which is part of ``systemd``.
+
         By default pyinfra will auto detect this by targetting ``/etc/hostname``
         on Linux and ``/etc/myname`` on OpenBSD.
 
@@ -305,6 +308,15 @@ def hostname(hostname, hostname_file=None, state=None, host=None):
         )
     '''
 
+    current_hostname = host.fact.hostname
+
+    if host.fact.which('hostnamectl'):
+        if current_hostname != hostname:
+            yield 'hostnamectl set-hostname {0}'.format(hostname)
+        else:
+            host.noop('hostname is set')
+        return
+
     if hostname_file is None:
         os = host.fact.os
 
@@ -312,8 +324,6 @@ def hostname(hostname, hostname_file=None, state=None, host=None):
             hostname_file = '/etc/hostname'
         elif os == 'OpenBSD':
             hostname_file = '/etc/myname'
-
-    current_hostname = host.fact.hostname
 
     if current_hostname != hostname:
         yield 'hostname {0}'.format(hostname)

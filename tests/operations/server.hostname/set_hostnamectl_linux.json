@@ -1,20 +1,18 @@
 {
     "args": ["my-hostname.net"],
     "facts": {
-        "os": "OpenBSD",
         "hostname": "nope",
         "file": {
-            "/etc/myname": {}
+            "/etc/hostname": {}
         },
         "directory": {
             "/etc": true
         },
         "which": {
-            "hostnamectl": null
+            "hostnamectl": "hostnamectl"
         }
     },
     "commands": [
-        "hostname my-hostname.net",
-        ["upload", "my-hostname.net\n", "/etc/myname"]
+        "hostnamectl set-hostname my-hostname.net"
     ]
 }
