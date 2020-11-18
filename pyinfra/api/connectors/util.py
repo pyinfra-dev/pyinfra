@@ -231,15 +231,15 @@ def make_unix_command(
     command_bits = []
 
     # Use sudo (w/user?)
-    if sudo:
-        if use_sudo_password:
-            askpass_filename, sudo_password = use_sudo_password
-            command_bits.extend([
-                'env',
-                'SUDO_ASKPASS={0}'.format(askpass_filename),
-                MaskString('{0}={1}'.format(SUDO_ASKPASS_ENV_VAR, sudo_password)),
-            ])
+    if use_sudo_password:
+        askpass_filename, sudo_password = use_sudo_password
+        command_bits.extend([
+            'env',
+            'SUDO_ASKPASS={0}'.format(askpass_filename),
+            MaskString('{0}={1}'.format(SUDO_ASKPASS_ENV_VAR, sudo_password)),
+        ])
 
+    if sudo:
         command_bits.extend(['sudo', '-H'])
 
         if use_sudo_password:

@@ -414,8 +414,8 @@ def _main(
         if sudo_user:
             config.SUDO_USER = sudo_user
 
-        if use_sudo_password:
-            config.USE_SUDO_PASSWORD = use_sudo_password
+    if use_sudo_password:
+        config.USE_SUDO_PASSWORD = use_sudo_password
 
     if su_user:
         config.SU_USER = su_user
