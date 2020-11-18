@@ -1,3 +1,18 @@
+# v1.3.dev0 WIP
+
++ Add `git.worktree` operation (@remybar)
++ Add `git.bare_repo` operation (@stchris)
++ Add `requires_command` fact class attribute
++ Rework line number ordering to support any nested function calls and/or imports
++ Improve error handling for unexpected internal (pyinfra) and external (user code) errors
++ Detect and error when an operation calls another using global arguments
++ Move testing & documentation processes to GitHub actions
++ Run tests on Windows & MacOS
++ Use `hostnamectl` where available for `server.hostname` operation
++ Use `uname -a` for `hostname` fact
++ Support using `use_sudo_password` without `sudo` enabled
+
+
 # v1.2.1
 
 + Add `pip3_packages` fact
