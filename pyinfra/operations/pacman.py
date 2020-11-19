@@ -67,4 +67,5 @@ def packages(
         host, packages, host.fact.pacman_packages, present,
         install_command='pacman --noconfirm -S',
         uninstall_command='pacman --noconfirm -R',
+        lower=False,
     )
