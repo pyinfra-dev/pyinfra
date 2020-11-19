@@ -25,7 +25,7 @@ def service(
     service,
     running=True, restarted=False, reloaded=False,
     command=None, enabled=None, daemon_reload=False,
-    state=None, host=None,
+    user_mode=False, state=None, host=None,
 ):
     '''
     Manage the state of systemd managed units.
@@ -37,6 +37,7 @@ def service(
     + command: custom command to pass like: ``/etc/rc.d/<name> <command>``
     + enabled: whether this unit should be enabled/disabled on boot
     + daemon_reload: reload the systemd daemon to read updated unit files
+    + user_mode: whether to use per-user systemd (systemctl --user) or not
 
     Example:
 
@@ -59,6 +60,8 @@ def service(
 
     '''
 
+    systemctl_cmd = 'systemctl --user' if user_mode else 'systemctl'
+
     if '.' not in service:
         service = '{0}.service'.format(service)
 
@@ -68,7 +71,7 @@ def service(
     yield handle_service_control(
         host,
         service, host.fact.systemd_status,
-        'systemctl {1} {0}',
+        ' '.join([systemctl_cmd, '{1}', '{0}']),
         running, restarted, reloaded, command,
     )
 
@@ -77,10 +80,11 @@ def service(
 
         # Isn't enabled and want enabled?
         if not is_enabled and enabled is True:
-            yield 'systemctl enable {0}'.format(service)
+
+            yield ' '.join([systemctl_cmd, 'enable', '{0}']).format(service)
             host.fact.systemd_enabled[service] = True
 
         # Is enabled and want disabled?
         elif is_enabled and enabled is False:
-            yield 'systemctl disable {0}'.format(service)
+            yield ' '.join([systemctl_cmd, 'disable', '{0}']).format(service)
             host.fact.systemd_enabled[service] = False
