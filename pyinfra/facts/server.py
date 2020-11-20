@@ -14,6 +14,14 @@ from pyinfra.api.util import try_int
 from .util.distro import get_distro_info
 
 
+class User(FactBase):
+    '''
+    Returns the name of the current user.
+    '''
+
+    command = 'echo $USER'
+
+
 class Home(FactBase):
     '''
     Returns the home directory of the current user.
