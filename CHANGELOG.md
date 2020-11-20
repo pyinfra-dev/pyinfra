@@ -1,16 +1,26 @@
-# v1.3.dev0 WIP
+# v1.3.dev1 WIP
 
-+ Add `git.worktree` operation (@remybar)
-+ Add `git.bare_repo` operation (@stchris)
-+ Add `requires_command` fact class attribute
+Theme of this release is improving error handling and end user experience. Highlights:
+
++ Make most global arguments dynamic - support different `chdir`, `sudo`, etc for different hosts within the same operation call
 + Rework line number ordering to support any nested function calls and/or imports
 + Improve error handling for unexpected internal (pyinfra) and external (user code) errors
 + Detect and error when an operation calls another using global arguments
-+ Move testing & documentation processes to GitHub actions
-+ Run tests on Windows & MacOS
++ Properly fail when fact commands don't execute correctly, using `requires_command` fact attribute
+
+Operation & fact updates:
+
++ Add `git.worktree` operation (@remybar)
++ Add `git.bare_repo` operation (@stchris)
 + Use `hostnamectl` where available for `server.hostname` operation
 + Use `uname -a` for `hostname` fact
-+ Support using `use_sudo_password` without `sudo` enabled
++ Add `user` fact
+
+Other bits:
+
++ Enable using `use_sudo_password` without `sudo=True`
++ Move testing & documentation processes to GitHub actions
++ Run tests on Windows & MacOS
 
 
 # v1.2.1
