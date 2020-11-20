@@ -257,12 +257,16 @@ def bare_repo(
 ):
     '''
     Create bare git repositories.
+
     + path: path to the folder
     + present: whether the bare repository should exist
     + user: chown files to this user after
     + group: chown files to this group after
+
     Example:
+
     .. code:: python
+
         git.bare_repo(
             name='Create bare repo',
             path='/home/git/test.git',
