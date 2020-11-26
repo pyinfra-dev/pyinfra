@@ -18,5 +18,5 @@ if [ -z "${DOCS_VERSION}" ]; then
     echo "No docs version for this branch, noop!"
 else
     echo "Building docs branch=${BRANCH_NAME}, version=${DOCS_VERSION}"
-    sphinx-build -a docs/ docs/public/en/$DOCS_VERSION/
+    env DOCS_VERSION=$DOCS_VERSION sphinx-build -a docs/ docs/public/en/$DOCS_VERSION/
 fi
