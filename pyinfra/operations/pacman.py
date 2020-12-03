@@ -41,7 +41,7 @@ def packages(
     + packages: list of packages to ensure
     + present: whether the packages should be installed
     + update: run pacman -Sy before installing packages
-    + upgrade: run pacman -Syu before installing packages
+    + upgrade: run pacman -Su before installing packages
 
     Versions:
         Package versions can be pinned like pacman: ``<pkg>=<version>``.
