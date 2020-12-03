@@ -3,9 +3,12 @@ Writing Facts
 
 :doc:`Facts <../facts>` are written as Python classes. They provide a ``command`` (as either a string or method)
 and a ``process`` function. The command is executed on the target host and the output
-passed (as a ``list`` of lines) to the ``process`` handler to generate fact data.
+passed (as a ``list`` of lines) to the ``process`` handler to generate fact data. Facts can output anything, normally a ``list`` or ``dict``.
 
-Facts can output any data structure, normally a ``list`` or ``dict``.
+Importing & Using Facts
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Facts are available in a global namespace as attributes on host objects: ``host.fact.X``. Custom fact classes will automatically be added to the namespace when the module containing them is imported. Note that the class name is converted to snake case, so ``MyFact`` becomes ``my_fact``, available as ``host.fact.my_fact``.
 
 
 Example: getting swap status
