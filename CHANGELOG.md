@@ -1,4 +1,4 @@
-# v1.3.dev1 WIP
+# v1.3.dev2 WIP
 
 Theme of this release is improving error handling and end user experience. Highlights:
 
@@ -6,12 +6,13 @@ Theme of this release is improving error handling and end user experience. Highl
 + Rework line number ordering to support any nested function calls and/or imports
 + Improve error handling for unexpected internal (pyinfra) and external (user code) errors
 + Detect and error when an operation calls another using global arguments
-+ Properly fail when fact commands don't execute correctly, using `requires_command` fact attribute
++ Properly fail when fact commands don't execute correctly vs. a given command not being present on the host, using `requires_command` fact attribute
 
 Operation & fact updates:
 
 + Add `git.worktree` operation (@remybar)
 + Add `git.bare_repo` operation (@stchris)
++ Add `user_mode` argument to `systemd.service` operation (@jprltsnz)
 + Use `hostnamectl` where available for `server.hostname` operation
 + Use `uname -a` for `hostname` fact
 + Add `user` fact
