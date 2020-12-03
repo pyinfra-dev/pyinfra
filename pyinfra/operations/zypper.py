@@ -131,8 +131,8 @@ def packages(
     + packages: list of packages to ensure
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
-    + update: run zypper update
-    + clean: run zypper clean
+    + update: run ``zypper update`` before installing packages
+    + clean: run ``zypper clean --all`` before installing packages
     + extra_global_install_args: additional global arguments to the zypper install command
     + extra_install_args: additional arguments to the zypper install command
     + extra_global_uninstall_args: additional global arguments to the zypper uninstall command

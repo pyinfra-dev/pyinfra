@@ -41,8 +41,8 @@ def packages(
     + packages: list of packages to ensure
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
-    + update: run brew update before installing packages
-    + upgrade: run brew upgrade before installing packages
+    + update: run ``brew update`` before installing packages
+    + upgrade: run ``brew upgrade`` before installing packages
 
     Versions:
         Package versions can be pinned like brew: ``<pkg>@<version>``.

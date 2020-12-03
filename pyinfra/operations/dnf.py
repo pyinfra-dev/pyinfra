@@ -135,8 +135,8 @@ def packages(
     + packages: list of packages to ensure
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
-    + update: run dnf update
-    + clean: run dnf clean
+    + update: run ``dnf update`` before installing packages
+    + clean: run ``dnf clean`` before installing packages
     + nobest: add the no best option to install
     + extra_install_args: additional arguments to the dnf install command
     + extra_uninstall_args: additional arguments to the dnf uninstall command

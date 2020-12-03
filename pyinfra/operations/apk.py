@@ -41,8 +41,8 @@ def packages(
     + packages: list of packages to ensure
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
-    + update: run apk update before installing packages
-    + upgrade: run apk upgrade before installing packages
+    + update: run ``apk update`` before installing packages
+    + upgrade: run ``apk upgrade`` before installing packages
 
     Versions:
         Package versions can be pinned like apk: ``<pkg>=<version>``.

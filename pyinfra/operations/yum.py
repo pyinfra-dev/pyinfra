@@ -135,8 +135,8 @@ def packages(
     + packages: list of packages to ensure
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
-    + update: run yum update
-    + clean: run yum clean
+    + update: run ``yum update`` before installing packages
+    + clean: run ``yum clean all`` before installing packages
     + nobest: add the no best option to install
     + extra_install_args: additional arguments to the yum install command
     + extra_uninstall_args: additional arguments to the yum uninstall command

@@ -40,6 +40,8 @@ def packages(
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed
+    + update: run ``xbps-install -S`` before installing packages
+    + upgrade: run ``xbps-install -y -u`` before installing packages
 
     Example:
 

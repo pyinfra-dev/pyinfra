@@ -337,9 +337,9 @@ def packages(
     + packages: list of packages to ensure
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
-    + update: run apt update before installing packages
-    + cache_time: when used with update, cache for this many seconds
-    + upgrade: run apt upgrade before installing packages
+    + update: run ``apt update`` before installing packages
+    + cache_time: when used with ``update``, cache for this many seconds
+    + upgrade: run ``apt upgrade`` before installing packages
     + force: whether to force package installs by passing `--force-yes` to apt
     + no_recommends: don't install recommended packages
     + allow_downgrades: allow downgrading packages with version (--allow-downgrades)
