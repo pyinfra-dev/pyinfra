@@ -8,23 +8,16 @@ import six
 from pyinfra import local, logger
 from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
-from pyinfra.api.util import get_file_io, memoize
+from pyinfra.api.util import get_file_io
 from pyinfra.progress import progress_spinner
 
 from .local import run_shell_command as run_local_shell_command
 from .util import make_unix_command
 
 
-@memoize
-def show_warning():
-    logger.warning('The @docker connector is in beta!')
-
-
 def make_names_data(image=None):
     if not image:
         raise InventoryError('No docker base image provided!')
-
-    show_warning()
 
     # Save the image as the hostname, the image as data, @docker group
     yield '@docker/{0}'.format(image), {'docker_image': image}, ['@docker']

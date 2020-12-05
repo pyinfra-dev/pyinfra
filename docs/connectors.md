@@ -41,7 +41,6 @@ pyinfra @local ...
 
 ## `@docker`
 
-**Note**: this connector is in beta!
 
 The `@docker` connector allows you to build Docker containers using pyinfra.
 
