@@ -1,3 +1,4 @@
+import json
 import os
 
 from tempfile import mkstemp
@@ -23,25 +24,51 @@ def make_names_data(image=None):
     yield '@docker/{0}'.format(image), {'docker_image': image}, ['@docker']
 
 
-def connect(state, host):
-    if 'docker_container_id' in host.host_data:  # user can provide a docker_container_id
-        return True
+def _find_start_docker_container(container_id):
+    docker_info = local.shell('docker container inspect {0}'.format(container_id))
+    docker_info = json.loads(docker_info)[0]
+    if docker_info['State']['Running'] is False:
+        logger.info('Starting stopped container: {0}'.format(container_id))
+        local.shell('docker container start {0}'.format(container_id))
 
+
+def _start_docker_image(image_name):
     try:
-        with progress_spinner({'docker run'}):
-            container_id = local.shell(
-                'docker run -d {0} tail -f /dev/null'.format(host.data.docker_image),
-                splitlines=True,
-            )[-1]  # last line is the container ID
+        return local.shell(
+            'docker run -d {0} tail -f /dev/null'.format(image_name),
+            splitlines=True,
+        )[-1]  # last line is the container ID
     except PyinfraError as e:
         raise ConnectError(e.args[0])
+
+
+def connect(state, host):
+    if 'docker_container_id' in host.host_data:  # user can provide a docker_container_id
+        host.host_data['docker_container_no_disconnect'] = True
+        return True
+
+    with progress_spinner({'prepare docker container'}):
+        try:
+            # Check if the provided @docker/X is an existing container ID
+            _find_start_docker_container(host.data.docker_image)
+        except PyinfraError:
+            container_id = _start_docker_image(host.data.docker_image)
+        else:
+            container_id = host.data.docker_image
+            host.host_data['docker_container_no_disconnect'] = True
 
     host.host_data['docker_container_id'] = container_id
     return True
 
 
 def disconnect(state, host):
-    container_id = host.host_data['docker_container_id'][:12]
+    container_id = host.host_data['docker_container_id']
+
+    if host.host_data.get('docker_container_no_disconnect'):
+        logger.info('{0}docker build complete, container left running: {1}'.format(
+            host.print_prefix, click.style(container_id, bold=True),
+        ))
+        return
 
     with progress_spinner({'docker commit'}):
         image_id = local.shell(

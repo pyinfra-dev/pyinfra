@@ -41,8 +41,10 @@ pyinfra @local ...
 
 ## `@docker`
 
+The `@docker` connector allows you to build Docker images, or modify running Docker containers, using ``pyinfra``. You can pass either an image name or existing container ID:
 
-The `@docker` connector allows you to build Docker containers using pyinfra.
++ Image - will create a container from the image, execute operations and save into a new image
++ Existing container ID - will simply execute operations against the container, leaving it up afterwards
 
 ```sh
 # A Docker base image must be provided
@@ -50,13 +52,16 @@ pyinfra @docker/alpine:3.8 ...
 
 # pyinfra can run on multiple Docker images in parallel
 pyinfra @docker/alpine:3.8,@docker/ubuntu:bionic ...
+
+# Execute against a running container
+pyinfra @docker/2beb8c15a1b1 ...
 ```
 
 **Available Data**:
 
 ```py
 # Provide a specific container ID - prevents pyinfra starting a new container and will instead use
-# whatever is provided in the name.
+# whatever is provided in the name. This is the same as passing container ID via the CLI above.
 docker_container_id = 'abc'
 ```
 
