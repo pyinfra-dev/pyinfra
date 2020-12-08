@@ -1,4 +1,4 @@
-# v1.3.dev2 WIP
+# v1.3
 
 Theme of this release is improving error handling and end user experience. Highlights:
 
