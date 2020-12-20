@@ -362,6 +362,7 @@ class Users(FactBase):
 
         {
             'user_name': {
+                'comment': 'Full Name',
                 'home': '/home/user_name',
                 'shell': '/bin/bash,
                 'group': 'main_user_group',
@@ -376,7 +377,7 @@ class Users(FactBase):
     command = '''
         for i in `cat /etc/passwd | cut -d: -f1`; do
             ID=`id $i`;
-            META=`cat /etc/passwd | grep ^$i: | cut -d: -f6-7`;
+            META=`cat /etc/passwd | grep ^$i: | cut -d: -f5-7`;
             echo "$ID $META";
         done
     '''.strip()
@@ -392,21 +393,11 @@ class Users(FactBase):
             matches = re.match(self.regex, line)
 
             if matches:
-                # Parse out the home/shell
-                home_shell = matches.group(4)
-                home = shell = None
-
-                # /blah: is just a home
-                if home_shell.endswith(':'):
-                    home = home_shell[:-1]
-
-                # :/blah is just a shell
-                elif home_shell.startswith(':'):
-                    shell = home_shell[1:]
-
-                # Both home & shell
-                elif ':' in home_shell:
-                    home, shell = home_shell.split(':')
+                # Parse out the comment/home/shell
+                comment_home_shell = matches.group(4).split(':')
+                comment = comment_home_shell[0] or None
+                home = comment_home_shell[1] or None
+                shell = comment_home_shell[2] or None
 
                 # Main user group
                 group = matches.group(2)
@@ -427,6 +418,7 @@ class Users(FactBase):
                 users[matches.group(1)] = {
                     'group': group,
                     'groups': groups,
+                    'comment': comment,
                     'home': home,
                     'shell': shell,
                 }

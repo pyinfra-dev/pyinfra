@@ -666,7 +666,7 @@ def user(
     user,
     present=True, home=None, shell=None, group=None, groups=None,
     public_keys=None, delete_keys=False, ensure_home=True,
-    system=False, uid=None, add_deploy_dir=True,
+    system=False, uid=None, comment=None, add_deploy_dir=True,
     state=None, host=None,
 ):
     '''
@@ -682,6 +682,7 @@ def user(
     + delete_keys: whether to remove any keys not specified in ``public_keys``
     + ensure_home: whether to ensure the ``home`` directory exists
     + system: whether to create a system account
+    + comment: the user GECOS comment
     + add_deploy_dir: any public_key filenames are relative to the deploy directory
 
     Home directory:
@@ -756,6 +757,9 @@ def user(
         if uid:
             args.append('--uid {0}'.format(uid))
 
+        if comment:
+            args.append("-c '{0}'".format(comment))
+
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
         yield "grep '{1}:' /etc/passwd || useradd {0} {1}".format(
@@ -763,6 +767,7 @@ def user(
             user,
         )
         users[user] = {
+            'comment': comment,
             'home': home,
             'shell': shell,
             'group': group,
@@ -791,9 +796,14 @@ def user(
         if groups and set(existing_user['groups']) != set(groups):
             args.append('-G {0}'.format(','.join(groups)))
 
+        if comment and existing_user['comment'] != comment:
+            args.append("-c '{0}'".format(comment))
+
         # Need to mod the user?
         if args:
             yield 'usermod {0} {1}'.format(' '.join(args), user)
+            if comment:
+                existing_user['comment'] = comment
             if home:
                 existing_user['home'] = home
             if shell:

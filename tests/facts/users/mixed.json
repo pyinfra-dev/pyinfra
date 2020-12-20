@@ -1,15 +1,16 @@
 {
     "output": [
-        "uid=0(root) gid=0(wheel) groups=0(wheel), 2(kmem), 3(sys), 4(tty), 5(operator), 20(staff), 31(guest) /root:/bin/ks",
-        "uid=1003(test.testy) gid=1003(test.testy) groups=1003(test.testy) /home/test.testy:/bin/ksh",
-        "uid=1004(_tesTy.test) gid=1004(_tesTy.test) groups=1004(_tesTy.test),1001(pyinfra) /home/_tesTy.test:/bin/ksh",
-        "uid=1002(noshell) gid=1002(noshell) groups=1002(noshell) /home/noshell:",
-        "uid=1002(nohome) gid=1002(nohome) groups=1002(nohome) :/bin/bash"
+        "uid=0(root) gid=0(wheel) groups=0(wheel), 2(kmem), 3(sys), 4(tty), 5(operator), 20(staff), 31(guest) root:/root:/bin/ks",
+        "uid=1003(test.testy) gid=1003(test.testy) groups=1003(test.testy) Testy,,,:/home/test.testy:/bin/ksh",
+        "uid=1004(_tesTy.test) gid=1004(_tesTy.test) groups=1004(_tesTy.test),1001(pyinfra) :/home/_tesTy.test:/bin/ksh",
+        "uid=1002(noshell) gid=1002(noshell) groups=1002(noshell) noshell:/home/noshell:",
+        "uid=1002(nohome) gid=1002(nohome) groups=1002(nohome) nohome::/bin/bash"
     ],
-    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ID=`id $i`;\n            META=`cat /etc/passwd | grep ^$i: | cut -d: -f6-7`;\n            echo \"$ID $META\";\n        done",
+    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ID=`id $i`;\n            META=`cat /etc/passwd | grep ^$i: | cut -d: -f5-7`;\n            echo \"$ID $META\";\n        done",
     "fact": {
         "root": {
             "home": "/root",
+            "comment": "root",
             "shell": "/bin/ks",
             "group": "wheel",
             "groups": [
@@ -23,6 +24,7 @@
         },
         "_tesTy.test": {
             "home": "/home/_tesTy.test",
+            "comment": null,
             "shell": "/bin/ksh",
             "group": "_tesTy.test",
             "groups": [
@@ -31,18 +33,21 @@
         },
         "test.testy": {
             "home": "/home/test.testy",
+            "comment": "Testy,,,",
             "shell": "/bin/ksh",
             "group": "test.testy",
             "groups": []
         },
         "noshell": {
             "home": "/home/noshell",
+            "comment": "noshell",
             "shell": null,
             "group": "noshell",
             "groups": []
         },
         "nohome": {
             "home": null,
+            "comment": "nohome",
             "shell": "/bin/bash",
             "group": "nohome",
             "groups": []
