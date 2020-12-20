@@ -4,11 +4,13 @@
         "shell": "/bin/false",
         "group": "somegroup",
         "groups": ["group1", "group2", "group3"],
-        "home": "/home/someotheruser"
+        "home": "/home/someotheruser",
+        "comment": "New Full Name"
     },
     "facts": {
         "users": {
             "someuser": {
+                "comment": "Full Name",
                 "home": "/home/someuser",
                 "shell": "/bin/bash",
                 "group": "nowt",
@@ -29,6 +31,6 @@
         }
     },
     "commands": [
-        "usermod -d /home/someotheruser -s /bin/false -g somegroup -G group1,group2,group3 someuser"
+        "usermod -d /home/someotheruser -s /bin/false -g somegroup -G group1,group2,group3 -c 'New Full Name' someuser"
     ]
 }
