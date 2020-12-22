@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import re
 
+from pyinfra import logger
 from pyinfra.api import operation, OperationError
 
 from . import files, ssh
@@ -150,17 +151,24 @@ def repo(
 def worktree(
     worktree,
     repo=None, branch=None, create_branch=False, detached=False,
+    new_branch=None, commitish=None,
+    pull=True, rebase=False, from_remote_branch=None,
     present=True, assume_repo_exists=False, force=False,
     user=None, group=None, state=None, host=None,
 ):
     '''
     Manage git worktrees.
 
-    + repo: git main repository directory
     + worktree: git working tree directory
-    + branch: branch to use for the working tree
-    + create_branch: the branch already exist or should be created
+    + repo: git main repository directory
     + detached: create a working tree with a detached HEAD
+    + branch: (deprecated)
+    + create_branch: (deprecated)
+    + new_branch: local branch name created at the same time than the worktree
+    + commitish: from which git commit, branch, ... the worktree is created
+    + pull: pull any changes from a remote branch if set
+    + rebase: when pulling, use ``--rebase``
+    + from_remote_branch: a 2-tuple ``(remote, branch)`` that identifies a remote branch
     + present: whether the working tree should exist
     + assume_repo_exists: whether to assume the main repo exists
     + force: remove unclean working tree if should not exist
@@ -172,17 +180,31 @@ def worktree(
     .. code:: python
 
         git.worktree(
-            name='Create a worktree (a branch `hotfix` is automatically created)',
+            name='Create a worktree from the current repo `HEAD`',
             repo='/usr/local/src/pyinfra/master',
-            worktree='/usr/local/src/pyinfra/hotfix',
+            worktree='/usr/local/src/pyinfra/hotfix'
         )
 
         git.worktree(
-            name='Create a worktree with a new branch `v1.0`',
+            name='Create a worktree from the commit `4e091aa0`',
             repo='/usr/local/src/pyinfra/master',
             worktree='/usr/local/src/pyinfra/hotfix',
-            branch="v1.0",
-            create_branch=True
+            commitish='4e091aa0'
+        )
+
+        git.worktree(
+            name='Create a worktree with a new local branch `v1.0`',
+            repo='/usr/local/src/pyinfra/master',
+            worktree='/usr/local/src/pyinfra/hotfix',
+            new_branch='v1.0',
+        )
+
+        git.worktree(
+            name='Create a worktree from the commit 4e091aa0 with the new local branch `v1.0`',
+            repo='/usr/local/src/pyinfra/master',
+            worktree='/usr/local/src/pyinfra/hotfix',
+            new_branch='v1.0',
+            commitish='4e091aa0'
         )
 
         git.worktree(
@@ -193,10 +215,39 @@ def worktree(
         )
 
         git.worktree(
-            name='Create a worktree from the existing branch `v1.0`',
+            name='Create a worktree with a detached `HEAD` from commit `4e091aa0`',
             repo='/usr/local/src/pyinfra/master',
             worktree='/usr/local/src/pyinfra/hotfix',
-            branch='v1.0'
+            commitish='4e091aa0',
+            detached=True,
+        )
+
+        git.worktree(
+            name='Create a worktree from the existing local branch `v1.0`',
+            repo='/usr/local/src/pyinfra/master',
+            worktree='/usr/local/src/pyinfra/hotfix',
+            commitish='v1.0'
+        )
+
+        git.worktree(
+            name='Create a worktree with a new branch `v1.0` that tracks `origin/v1.0`',
+            repo='/usr/local/src/pyinfra/master',
+            worktree='/usr/local/src/pyinfra/hotfix',
+            new_branch='v1.0',
+            commitish='v1.0'
+        )
+
+        git.worktree(
+            name='Pull an existing worktree already linked to a tracking branch',
+            repo='/usr/local/src/pyinfra/master',
+            worktree='/usr/local/src/pyinfra/hotfix'
+        )
+
+        git.worktree(
+            name='Pull an existing worktree from a specific remote branch',
+            repo='/usr/local/src/pyinfra/master',
+            worktree='/usr/local/src/pyinfra/hotfix',
+            from_remote_branch=('origin', 'master')
         )
 
         git.worktree(
@@ -213,6 +264,35 @@ def worktree(
         )
     '''
 
+    # handle deprecated arguments.
+    #  1) old api: branch=xxx, create_branch=True => git worktree add -b xxx <worktree_path>
+    #     new api: new_branch=xxx
+    #
+    #  2) old api: branch=xxx, create_branch=False => git worktree add <worktree_path> xxx
+    #     new api: commitish=xxx
+    if branch:
+        logger.warning(
+            'The `branch` and `create_branch` arguments are deprecated. '
+            'Please use `branch` and `commitish`.',
+        )
+
+        if create_branch:
+            if new_branch:
+                raise OperationError(
+                    'The deprecated arguments `branch` and `create_branch` are not compatible with'
+                    ' the new `branch` argument. Please use the new `branch` argument only.',
+                )
+            else:
+                new_branch = branch
+        else:
+            if commitish:
+                raise OperationError(
+                    'The deprecated arguments `branch` and `create_branch` are not compatible with'
+                    ' the new `commitish` argument. Please use the new `commitish` argument only.',
+                )
+            else:
+                commitish = branch
+
     # Doesn't exist & we want it
     if not host.fact.directory(worktree) and present:
 
@@ -222,14 +302,19 @@ def worktree(
                 'The following folder is not a valid GIT repository : {0}'.format(repo),
             )
 
-        command = 'cd {0} && git worktree add {1}'.format(repo, worktree)
+        command_parts = ['cd {0} && git worktree add'.format(repo)]
 
-        if branch:
-            command += ' {0}{1}'.format('-b ' if create_branch else '', branch)
+        if new_branch:
+            command_parts.append('-b {0}'.format(new_branch))
         elif detached:
-            command += ' --detach'
+            command_parts.append('--detach')
 
-        yield command
+        command_parts.append(worktree)
+
+        if commitish:
+            command_parts.append(commitish)
+
+        yield ' '.join(command_parts)
 
         # Apply any user or group
         if user or group:
@@ -244,6 +329,27 @@ def worktree(
             command += ' --force'
 
         yield command
+
+    # It exists and we still want it => pull/rebase it
+    elif host.fact.directory(worktree) and present:
+
+        # pull the worktree only if it's already linked to a tracking branch or
+        # if a remote branch is set
+        if host.fact.git_tracking_branch(worktree) or from_remote_branch:
+            command = 'cd {0} && git pull'.format(worktree)
+
+            if rebase:
+                command += ' --rebase'
+
+            if from_remote_branch:
+                if len(from_remote_branch) != 2 or type(from_remote_branch) not in (tuple, list):
+                    raise OperationError(
+                        'The remote branch must be a 2-tuple (remote, branch) such as '
+                        '("origin", "master")',
+                    )
+                command += ' {0} {1}'.format(*from_remote_branch)
+
+            yield command
 
 
 @operation

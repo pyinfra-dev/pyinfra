@@ -41,14 +41,14 @@ class GitTrackingBranch(FactBase):
 
     @staticmethod
     def command(repo):
-        return r'cd {0} && git status -sb'.format(repo)
+        return r'cd {0} && git status --branch --porcelain'.format(repo)
 
     @staticmethod
     def process(output):
         if not output:
             return None
 
-        m = re.search('\\.{3}(\\S+)\\b', output[0])
+        m = re.search(r'\.{3}(\S+)\b', output[0])
         if m:
             return m.group(1)
         return None

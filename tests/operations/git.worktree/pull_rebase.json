@@ -1,0 +1,19 @@
+{
+    "args": ["/home/myworktree"],
+    "kwargs": {
+        "rebase": true
+    },
+    "facts": {
+        "directory": {
+            "/home/myworktree": {
+                "mode": 0
+            }
+        },
+        "git_tracking_branch" : {
+            "/home/myworktree": "origin/master"
+        }
+    },
+    "commands": [
+        "cd /home/myworktree && git pull --rebase"
+    ]
+}

@@ -1,6 +1,6 @@
 {
     "arg": "myrepo",
-    "command": "cd myrepo && git status -sb",
+    "command": "cd myrepo && git status --branch --porcelain",
     "output": [
         "## branch1"
     ],

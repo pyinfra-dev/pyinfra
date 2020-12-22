@@ -1,0 +1,22 @@
+{
+    "args": ["/home/myworktree"],
+    "kwargs": {
+        "repo": "/home/mainrepo",
+        "new_branch": "mybranch",
+        "create_branch": true,
+        "branch": "anewbranch"
+    },
+    "facts": {
+        "directory": {
+            "/home/mainrepo": {},
+            "/home/mainrepo/.git": {
+                "mode": 0
+            },
+            "/home/myworktree": null
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "The deprecated arguments `branch` and `create_branch` are not compatible with the new `branch` argument. Please use the new `branch` argument only."
+    }
+}

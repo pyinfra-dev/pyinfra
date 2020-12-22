@@ -1,0 +1,20 @@
+{
+    "args": ["/home/myworktree"],
+    "kwargs": {
+        "from_remote_branch": ["origin"]
+    },
+    "facts": {
+        "directory": {
+            "/home/myworktree": {
+                "mode": 0
+            }
+        },
+        "git_tracking_branch" : {
+            "/home/myworktree": null
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "The remote branch must be a 2-tuple (remote, branch) such as (\"origin\", \"master\")"
+    }
+}
