@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import re
+
 from pyinfra.api.facts import FactBase
 
 
@@ -32,3 +34,21 @@ class GitConfig(FactBase):
             items[key] = value
 
         return items
+
+
+class GitTrackingBranch(FactBase):
+    requires_command = 'git'
+
+    @staticmethod
+    def command(repo):
+        return r'cd {0} && git status -sb'.format(repo)
+
+    @staticmethod
+    def process(output):
+        if not output:
+            return None
+
+        m = re.search('\\.{3}(\\S+)\\b', output[0])
+        if m:
+            return m.group(1)
+        return None
