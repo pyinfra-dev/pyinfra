@@ -72,4 +72,4 @@ pyinfra @docker/ubuntu deploy.py
 + [Getting started](https://docs.pyinfra.com/page/getting_started.html)
 + [Writing deploys](https://docs.pyinfra.com/page/deploys.html)
 + [Using the CLI](https://docs.pyinfra.com/page/cli.html)
-+ [Connectors](https://pyinfra.readthedocs.io/page/connectors.html)
++ [Connectors](https://docs.pyinfra.com/page/connectors.html)
