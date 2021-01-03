@@ -10,12 +10,15 @@ from .util.service import handle_service_control
 
 
 @operation
-def daemon_reload(state=None, host=None):
+def daemon_reload(state=None, host=None, user_mode=False):
     '''
     Reload the systemd daemon to read unit file changes.
+
+    + user_mode: whether to use per-user systemd (systemctl --user) or not
     '''
 
-    yield 'systemctl daemon-reload'
+    systemctl_cmd = 'systemctl --user' if user_mode else 'systemctl'
+    yield '{0} daemon-reload'.format(systemctl_cmd)
 
 _daemon_reload = daemon_reload  # noqa: E305
 
