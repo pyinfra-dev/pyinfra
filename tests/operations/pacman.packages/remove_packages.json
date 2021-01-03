@@ -4,6 +4,10 @@
         "present": false
     },
     "facts": {
+        "pacman_unpack_groups": {
+            "curl": "curl",
+            "i-dont-exist": ""
+        },
         "pacman_packages": {
             "curl": "1"
         }
