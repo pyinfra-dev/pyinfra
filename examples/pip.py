@@ -21,7 +21,7 @@ if host.fact.linux_name in ['Alpine']:
 if host.fact.linux_name in ['CentOS']:
     yum.packages(
         name='Install pip3 so you can install virtualenv',
-        packages='python3-pip',
+        packages=['python3-pip', 'python3-devel', 'gcc-c++', 'make'],
     )
 
 if host.fact.linux_name in ['Ubuntu']:
