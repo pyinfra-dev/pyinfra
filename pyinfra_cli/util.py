@@ -20,7 +20,7 @@ except ImportError:  # pragma: no cover
 import click
 import six
 
-from pyinfra import logger, pseudo_host, pseudo_state
+from pyinfra import logger, pseudo_host
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.util import FallbackDict
 
@@ -45,7 +45,6 @@ def exec_file(filename, return_locals=False, is_deploy_code=False):
     # Create some base attributes for our "module"
     data = {
         '__file__': filename,
-        'state': pseudo_state,
     }
 
     # Execute the code with locals/globals going into the dict above
