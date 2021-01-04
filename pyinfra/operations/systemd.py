@@ -10,7 +10,7 @@ from .util.service import handle_service_control
 
 
 @operation
-def daemon_reload(state=None, host=None, user_mode=False):
+def daemon_reload(user_mode=False, state=None, host=None):
     '''
     Reload the systemd daemon to read unit file changes.
 
@@ -69,7 +69,7 @@ def service(
         service = '{0}.service'.format(service)
 
     if daemon_reload:
-        yield _daemon_reload(state=state, host=host)
+        yield _daemon_reload(user_mode=user_mode, state=state, host=host)
 
     yield handle_service_control(
         host,
