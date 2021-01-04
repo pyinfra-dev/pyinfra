@@ -40,7 +40,7 @@ def test_int_docker_git_gem_and_pip_on_mult(helpers):
     helpers.run(
         (
             'pyinfra '
-            '@docker/ubuntu:18.04,@docker/centos:8,@docker/alpine:3.11 '
+            '@docker/ubuntu:18.04,@docker/centos:8.3.2011,@docker/alpine:3.11 '
             'git.py gem.py pip.py'
         ),
         expected_lines=['docker build complete'],
@@ -60,7 +60,7 @@ def test_int_docker_pacman_on_arch(helpers):
 @pytest.mark.docker
 def test_int_docker_files_dnf_server_on_centos(helpers):
     helpers.run(
-        'pyinfra @docker/centos:8 files.py dnf.py server.py',
+        'pyinfra @docker/centos:8.3.2011 files.py dnf.py server.py',
         expected_lines=['docker build complete'],
     )
 
@@ -69,7 +69,7 @@ def test_int_docker_files_dnf_server_on_centos(helpers):
 @pytest.mark.docker
 def test_int_docker_yum_on_centos(helpers):
     helpers.run(
-        'pyinfra @docker/centos:8 yum.py',
+        'pyinfra @docker/centos:8.3.2011 yum.py',
         expected_lines=['docker build complete'],
     )
 
@@ -78,7 +78,7 @@ def test_int_docker_yum_on_centos(helpers):
 @pytest.mark.docker
 def test_int_docker_adhoc_fact_os(helpers):
     helpers.run(
-        'pyinfra @docker/ubuntu:18.04,@docker/centos:8 fact os',
+        'pyinfra @docker/ubuntu:18.04,@docker/centos:8.3.2011 fact os',
         expected_lines=['Gathering facts', 'Fact data'],
     )
 
@@ -87,6 +87,6 @@ def test_int_docker_adhoc_fact_os(helpers):
 @pytest.mark.docker
 def test_int_docker_adhoc_all_facts(helpers):
     helpers.run(
-        'pyinfra @docker/ubuntu:18.04,@docker/centos:8 all-facts',
+        'pyinfra @docker/ubuntu:18.04,@docker/centos:8.3.2011 all-facts',
         expected_lines=['Gathering facts', 'Loaded fact'],
     )
