@@ -15,7 +15,12 @@ from types import GeneratorType
 import click
 import six
 
-from jinja2 import Template, TemplateSyntaxError, UndefinedError
+from jinja2 import (
+    Environment,
+    StrictUndefined,
+    TemplateSyntaxError,
+    UndefinedError,
+)
 from paramiko import SSHException
 
 from pyinfra import logger
@@ -202,7 +207,11 @@ def get_template(filename_or_string, is_string=False):
         with open(filename_or_string, 'r') as file_io:
             template_string = file_io.read()
 
-    TEMPLATES[cache_key] = Template(template_string, keep_trailing_newline=True)
+    TEMPLATES[cache_key] = Environment(
+        undefined=StrictUndefined,
+        keep_trailing_newline=True,
+    ).from_string(template_string)
+
     return TEMPLATES[cache_key]
 
 
