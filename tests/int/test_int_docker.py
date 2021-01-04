@@ -1,3 +1,9 @@
+'''
+Docker based integration tests - these tests ensure the examples work as expected with the given
+Docker images. Note that these sometimes break due to Docker image changes (ideally we use the
+most-specific tag available for each image to reduce/avoid this problem).
+'''
+
 import pytest
 
 

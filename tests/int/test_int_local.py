@@ -1,3 +1,7 @@
+'''
+Local integration tests - mostly checking for idempotency on file operations.
+'''
+
 from shutil import rmtree
 from tempfile import mkdtemp
 

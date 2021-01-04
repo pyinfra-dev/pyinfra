@@ -44,7 +44,3 @@ jobs:
       - name: Local integration tests
         run: pytest -m local
         if: ${{ matrix.os != 'windows-2019' }}
-
-      - name: Docker ingration tests
-        run: pytest -m docker
-        if: ${{ matrix.os == 'ubuntu-18.04' && matrix.python-version == '3.8' }}
