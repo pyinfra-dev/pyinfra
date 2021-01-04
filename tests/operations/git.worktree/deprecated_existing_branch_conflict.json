@@ -2,7 +2,8 @@
     "args": ["/home/myworktree"],
     "kwargs": {
         "repo": "/home/mainrepo",
-        "new_branch": "mybranch"
+        "branch": "mybranch",
+        "commitish": "0123456789"
     },
     "facts": {
         "directory": {
@@ -13,7 +14,8 @@
             "/home/myworktree": null
         }
     },
-    "commands": [
-        "cd /home/mainrepo && git worktree add -b mybranch /home/myworktree"
-    ]
+    "exception": {
+        "name": "OperationError",
+        "message": "The deprecated arguments `branch` and `create_branch` are not compatible with the new `commitish` argument. Please use the new `commitish` argument only."
+    }
 }

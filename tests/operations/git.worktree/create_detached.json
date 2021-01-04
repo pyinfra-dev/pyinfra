@@ -14,6 +14,6 @@
         }
     },
     "commands": [
-        "cd /home/mainrepo && git worktree add /home/myworktree --detach"
+        "cd /home/mainrepo && git worktree add --detach /home/myworktree"
     ]
 }

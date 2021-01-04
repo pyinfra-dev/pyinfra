@@ -1,0 +1,8 @@
+{
+    "arg": "myrepo",
+    "command": "cd myrepo && git status --branch --porcelain",
+    "output": [
+        "## branch1...origin/master [behind 692]"
+    ],
+    "fact": "origin/master"
+}

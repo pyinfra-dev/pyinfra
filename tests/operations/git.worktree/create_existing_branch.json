@@ -2,7 +2,7 @@
     "args": ["/home/myworktree"],
     "kwargs": {
         "repo": "/home/mainrepo",
-        "branch": "mybranch"
+        "commitish": "mybranch"
     },
     "facts": {
         "directory": {

@@ -2,7 +2,8 @@
     "args": ["/home/myworktree"],
     "kwargs": {
         "repo": "/home/mainrepo",
-        "new_branch": "mybranch"
+        "new_branch": "mybranch",
+        "commitish": "origin/mybranch"
     },
     "facts": {
         "directory": {
@@ -14,6 +15,6 @@
         }
     },
     "commands": [
-        "cd /home/mainrepo && git worktree add -b mybranch /home/myworktree"
+        "cd /home/mainrepo && git worktree add -b mybranch /home/myworktree origin/mybranch"
     ]
 }
