@@ -6,6 +6,11 @@ from getpass import getpass
 from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
 
+try:
+    from pathlib import PurePath
+except ImportError:
+    PurePath = None
+
 import click
 import gevent
 import six
@@ -30,6 +35,9 @@ def escape_unix_path(path):
     '''
     Escape unescaped spaces in a (unix) path.
     '''
+
+    if PurePath and isinstance(path, PurePath):
+        path = str(path)
 
     return UNIX_PATH_SPACE_REGEX.sub(r'\1\\ ', path)
 
