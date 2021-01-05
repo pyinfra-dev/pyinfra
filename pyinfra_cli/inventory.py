@@ -1,10 +1,5 @@
 from os import listdir, path
-from types import FunctionType, GeneratorType
-
-try:
-    from types import SimpleNamespace
-except ImportError:
-    SimpleNamespace = dict
+from types import GeneratorType
 
 import six
 
@@ -15,13 +10,6 @@ from pyinfra_cli.util import exec_file
 # Hosts in an inventory can be just the hostname or a tuple (hostname, data)
 ALLOWED_HOST_TYPES = tuple(
     six.string_types + (tuple,),
-)
-
-# Group data can be any "core" Python type
-ALLOWED_DATA_TYPES = tuple(
-    six.integer_types
-    + (six.text_type, six.binary_type)
-    + (bool, dict, list, set, tuple, float, complex, SimpleNamespace, FunctionType),
 )
 
 
@@ -50,17 +38,6 @@ def _is_inventory_group(key, value):
     )
 
 
-def _is_group_data(key, value):
-    '''
-    Verify that a module-level variable (key = value) is a valid bit of group data.
-    '''
-
-    return (
-        isinstance(value, ALLOWED_DATA_TYPES)
-        and not key.startswith('_')
-    )
-
-
 def _get_group_data(deploy_dir):
     group_data = {}
     group_data_directory = path.join(deploy_dir, 'group_data')
@@ -83,7 +60,7 @@ def _get_group_data(deploy_dir):
             group_data[group_name] = {
                 key: value
                 for key, value in six.iteritems(attrs)
-                if _is_group_data(key, value)
+                if not key.startswith('_')
             }
 
     return group_data
