@@ -9,6 +9,7 @@ from socket import (
 )
 
 import click
+import six
 
 from paramiko import (
     AuthenticationException,
@@ -306,7 +307,14 @@ def run_shell_command(
 @memoize
 def _get_sftp_connection(host):
     transport = host.connection.get_transport()
-    return SFTPClient.from_transport(transport)
+
+    try:
+        return SFTPClient.from_transport(transport)
+    except SSHException as e:
+        six.raise_from(ConnectError((
+            'Unable to establish SFTP connection. Check that the SFTP subsystem '
+            'for the SSH service at {0} is enabled.'
+        ).format(host)), e)
 
 
 def _get_file(host, remote_filename, filename_or_io):

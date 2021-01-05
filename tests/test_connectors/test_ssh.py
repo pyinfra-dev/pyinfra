@@ -20,7 +20,7 @@ import pyinfra
 from pyinfra.api import Config, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.connectors.ssh import _get_sftp_connection
-from pyinfra.api.exceptions import PyinfraError
+from pyinfra.api.exceptions import ConnectError, PyinfraError
 
 from ..util import make_inventory
 
@@ -650,3 +650,24 @@ class TestSSHConnector(TestCase):
         fake_sftp_client.from_transport().getfo.assert_called_with(
             '/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508', fake_open(),
         )
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    def test_get_sftp_fail(self, fake_sftp_client, fake_ssh_client):
+        inventory = make_inventory(hosts=('anotherhost',))
+        State(inventory, Config())
+        host = inventory.get_host('anotherhost')
+        host.connect()
+
+        def raise_exception(*args, **kwargs):
+            raise SSHException()
+
+        fake_sftp_client.from_transport.side_effect = raise_exception
+
+        fake_open = mock_open(read_data='test!')
+        with patch('pyinfra.api.util.open', fake_open, create=True):
+            with self.assertRaises(ConnectError):
+                host.put_file(
+                    'not-a-file', 'not-another-file',
+                    print_output=True,
+                )
