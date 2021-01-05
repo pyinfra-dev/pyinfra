@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from unittest import TestCase
 
 try:
-    from pathlib import Path
+    from pathlib import PurePosixPath
     HAS_PATHLIB = True
 except ImportError:
     HAS_PATHLIB = False
@@ -47,7 +47,7 @@ class TestEscapeUnixPathUtil(TestCase):
         if not HAS_PATHLIB:
             return
 
-        path = Path('/', 'path', 'to', 'directory with space', ' starts')
+        path = PurePosixPath('/', 'path', 'to', 'directory with space', ' starts')
         escaped_path = escape_unix_path(path)
         assert escaped_path == '/path/to/directory\\ with\\ space/\\ starts'
 
