@@ -161,7 +161,7 @@ For example, this deploy will ensure that user "pyinfra" exists with home direct
         path='/var/log/pyinfra.log',
         user='pyinfra',
         group='pyinfra',
-        permissions='644',
+        mode='644',
         sudo=True,
     )
 
