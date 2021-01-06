@@ -1,3 +1,16 @@
+# v1.3.1
+
++ Add `git_tracking_branch` fact and rework `git.worktree` operation (@remybar)
++ Add `user_mode` arg to `systemd.daemon_reload` operation (@smdnv)
++ Add `comment` arg/support to `server.user` operation (@sprat)
++ Use `StrictUndefined` when rendering templates (@relaxdiego)
++ Allow numbers in `pacman_packages` fact
++ Remove restriction on group data types
++ Improve support for `Path` objects as operation arguments (@relaxdiego)
++ Improve error output when failing to start SFTP sessions (@relaxdiego)
++ Fix readme doc link (@mrshu)
++ Fix Docker tests and separate from main tests, don't run on PRs
+
 # v1.3
 
 Theme of this release is improving error handling and end user experience. Highlights:
