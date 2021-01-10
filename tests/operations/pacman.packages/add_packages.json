@@ -2,8 +2,8 @@
     "args": [["curl", "xorg-fonts"]],
     "facts": {
         "pacman_unpack_groups": {
-            "curl": "curl",
-            "xorg-fonts": [
+            "['curl', 'xorg-fonts']": [
+                "curl",
                 "xorg-font-util",
                 "xorg-fonts-encodings"
             ]
