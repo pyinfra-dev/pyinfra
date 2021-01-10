@@ -104,9 +104,9 @@ class FakeFact(object):
             if arg is None:
                 continue
 
-            # Support for non-JSON-able fact arguments
+            # Support for non-JSON-able fact arguments by  turning them into JSON!
             if isinstance(arg, list):
-                arg = repr(arg)
+                arg = json.dumps(arg)
 
             item = item[arg]
 

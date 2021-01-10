@@ -5,7 +5,7 @@
     },
     "facts": {
         "pacman_unpack_groups": {
-            "['curl', 'i-dont-exist']": ["curl"]
+            "[\"curl\", \"i-dont-exist\"]": ["curl"]
         },
         "pacman_packages": {
             "curl": "1"
