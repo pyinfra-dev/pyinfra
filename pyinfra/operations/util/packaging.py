@@ -6,6 +6,12 @@ from six import StringIO
 from six.moves.urllib.parse import urlparse
 
 
+def _has_package(package, packages):
+    if isinstance(package, list):
+        return package[0] in packages and package[1] in packages[package[0]]
+    return package in packages
+
+
 def ensure_packages(
     host, packages, current_packages, present,
     install_command, uninstall_command,
@@ -72,15 +78,8 @@ def ensure_packages(
     # Installing?
     if present is True:
         for package in packages:
-            # Tuple/version, check not in existing OR incorrect version
-            if isinstance(package, list) and (
-                package[0] not in current_packages
-                or package[1] not in current_packages[package[0]]
-            ):
-                diff_packages.append(package)
-
             # String version, just check if not existing
-            elif isinstance(package, six.string_types) and package not in current_packages:
+            if not _has_package(package, current_packages):
                 diff_packages.append(package)
 
             # Present packages w/o version specified - for upgrade if latest
@@ -95,15 +94,8 @@ def ensure_packages(
     # Uninstalling?
     else:
         for package in packages:
-            # Tuple/version, heck existing AND correct version
-            if isinstance(package, list) and (
-                package[0] in current_packages
-                and package[1] in current_packages[package[0]]
-            ):
-                diff_packages.append(package)
-
             # String version, just check if existing
-            elif isinstance(package, six.string_types) and package in current_packages:
+            if _has_package(package, current_packages):
                 diff_packages.append(package)
 
             else:
