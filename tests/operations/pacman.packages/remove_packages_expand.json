@@ -1,0 +1,20 @@
+{
+    "args": [["curl", "i-dont-exist", "xorg-fonts"]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "pacman_unpack_group": {
+            "curl": ["curl"],
+            "i-dont-exist": [],
+            "xorg-fonts": ["xorg-font-util", "xorg-font-encodings"]
+        },
+        "pacman_packages": {
+            "curl": ["1"],
+            "xorg-font-util": ["1"]
+        }
+    },
+    "commands": [
+        "pacman --noconfirm -R curl xorg-fonts"
+    ]
+}

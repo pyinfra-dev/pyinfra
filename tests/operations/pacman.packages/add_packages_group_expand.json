@@ -1,0 +1,14 @@
+{
+    "args": [["xorg-fonts"]],
+    "facts": {
+        "pacman_unpack_group": {
+            "xorg-fonts": ["xorg-font-util", "xorg-font-encodings"]
+        },
+        "pacman_packages": {
+            "xorg-fonts": []
+        }
+    },
+    "commands": [
+        "pacman --noconfirm -S xorg-fonts"
+    ]
+}

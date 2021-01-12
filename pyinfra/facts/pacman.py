@@ -5,10 +5,10 @@ from .util.packaging import parse_packages
 PACMAN_REGEX = r'^([0-9a-zA-Z\-]+)\s([0-9\._+a-z\-]+)'
 
 
-class PacmanUnpackGroups(FactBase):
+class PacmanUnpackGroup(FactBase):
     '''
-    Gets a list of packages/groups and returns the
-    packages and the groups unpacked into packages:
+    Returns a list of actual packages belonging to the provided package name,
+    expanding groups or virtual packages.
 
     .. code:: python
 
@@ -21,9 +21,9 @@ class PacmanUnpackGroups(FactBase):
 
     default = list
 
-    def command(self, pkg_list):
-        pkg_str = ' '.join(pkg_list)
-        return 'pacman -S --print-format "%n" {0}'.format(pkg_str)
+    def command(self, name):
+        # Accept failure here (|| true) for invalid/unknown packages
+        return 'pacman -S --print-format "%n" {0} || true'.format(name)
 
     def process(self, output):
         return output
