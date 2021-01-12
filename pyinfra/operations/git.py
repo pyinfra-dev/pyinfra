@@ -41,9 +41,16 @@ def config(
 
     '''
 
-    existing_config = host.fact.git_config(repo)
+    existing_config = {}
 
-    if not existing_config or existing_config.get(key) != value:
+    if not repo:
+        existing_config = host.fact.git_config()
+
+    # Only get the config if the repo exists at this stage
+    elif host.fact.directory('/'.join((repo, '.git'))):
+        existing_config = host.fact.git_config(repo)
+
+    if existing_config.get(key) != value:
         if repo is None:
             yield 'git config --global {0} "{1}"'.format(key, value)
         else:

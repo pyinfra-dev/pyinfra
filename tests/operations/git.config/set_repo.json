@@ -8,6 +8,9 @@
             "/my/repo": {
                 "another_key": "value"
             }
+        },
+        "directory": {
+            "/my/repo/.git": true
         }
     },
     "commands": [
