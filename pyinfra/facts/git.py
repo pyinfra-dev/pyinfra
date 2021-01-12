@@ -21,7 +21,7 @@ class GitConfig(FactBase):
     @staticmethod
     def command(repo=None):
         if repo is None:
-            return 'git config --global -l'
+            return 'git config --global -l || true'
 
         return 'cd {0} && git config --local -l'.format(repo)
 
