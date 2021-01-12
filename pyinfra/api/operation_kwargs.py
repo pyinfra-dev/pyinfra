@@ -131,7 +131,7 @@ def pop_global_op_kwargs(state, kwargs):
     meta_kwargs = state.deploy_kwargs or {}
 
     def get_kwarg(key, default=None):
-        has_key = key in kwargs or key in meta_kwargs
+        has_key = key in kwargs
         value = kwargs.pop(key, meta_kwargs.get(key, default))
         return value, has_key
 
