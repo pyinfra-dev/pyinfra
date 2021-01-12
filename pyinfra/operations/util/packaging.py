@@ -6,10 +6,20 @@ from six import StringIO
 from six.moves.urllib.parse import urlparse
 
 
-def _has_package(package, packages):
-    if isinstance(package, list):
-        return package[0] in packages and package[1] in packages[package[0]]
-    return package in packages
+def _has_package(package, packages, expand_package_fact=None, match_any=False):
+    def in_packages(pkg):
+        if isinstance(pkg, list):
+            return pkg[0] in packages and pkg[1] in packages[pkg[0]]
+        return pkg in packages
+
+    packages_to_check = [package]
+    if expand_package_fact:
+        packages_to_check = expand_package_fact(package) or packages_to_check
+
+    checks = (in_packages(pkg) for pkg in packages_to_check)
+    if any:
+        return any(checks)
+    return all(checks)
 
 
 def ensure_packages(
@@ -17,6 +27,7 @@ def ensure_packages(
     install_command, uninstall_command,
     latest=False, upgrade_command=None,
     version_join=None, lower=True,
+    expand_package_fact=None,
 ):
     '''
     Handles this common scenario:
@@ -79,7 +90,7 @@ def ensure_packages(
     if present is True:
         for package in packages:
             # String version, just check if not existing
-            if not _has_package(package, current_packages):
+            if not _has_package(package, current_packages, expand_package_fact):
                 diff_packages.append(package)
 
             # Present packages w/o version specified - for upgrade if latest
@@ -95,7 +106,7 @@ def ensure_packages(
     else:
         for package in packages:
             # String version, just check if existing
-            if _has_package(package, current_packages):
+            if _has_package(package, current_packages, expand_package_fact, match_any=True):
                 diff_packages.append(package)
 
             else:
