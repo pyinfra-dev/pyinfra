@@ -1,3 +1,13 @@
+# v1.3.2
+
++ Add `pacman_unpack_group` fact (@unai-ndz)
++ Support Pacman package groups properly in `packman.packages` operation (@unai-ndz)
++ Fix only load git config if the repo directory exists in `git.config` operation
++ Fix global git config loading when files don't exist in `git_config` fact
++ Fix deploys doc example operation (@makom)
++ Fix (add quoting) download URLs containing shell characters in `files.download` operation
++ Fix checking for rsync in `@local` connector
+
 # v1.3.1
 
 + Add `git_tracking_branch` fact and rework `git.worktree` operation (@remybar)
