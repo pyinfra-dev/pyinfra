@@ -188,7 +188,7 @@ def get_file(
     return True
 
 
-def check_can_rsync():
+def check_can_rsync(host):
     if not find_executable('rsync'):
         raise NotImplementedError('The `rsync` binary is not available on this system.')
 
