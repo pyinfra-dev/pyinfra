@@ -8,6 +8,7 @@ if host.fact.linux_name in ['Alpine']:
         name='Install packages for python virtual environments',
         packages=[
             'gcc',
+            'g++',
             'libffi-dev',
             'make',
             'musl-dev',
