@@ -10,12 +10,16 @@ from .exceptions import ConnectError, PyinfraError
 from .facts import (
     create_host_fact,
     delete_host_fact,
+    get_fact_class,
     get_fact_names,
     get_host_fact,
     is_fact,
 )
 
 
+# TODO: remove this! COMPAT w/<2
+# This is the old-style `host.fact.<snake_case_name>` "magic" fact attributes
+# which have been replaced by the much cleaner `host.get_fact(fact_cls, *args, **kwargs)`.
 class HostFacts(object):
     def __init__(self, host=None):
         self.host = host
@@ -43,7 +47,15 @@ class HostFacts(object):
                 self.host, key,
             ))
 
-        return get_host_fact(self.host.state, self.host, key)
+        # Expecting a function to return
+        if callable(getattr(get_fact_class(key), 'command', None)):
+            def wrapper(*args, **kwargs):
+                return get_host_fact(self.host.state, self.host, key, args=args, kwargs=kwargs)
+            return wrapper
+
+        # Expecting the fact as a return value
+        else:
+            return get_host_fact(self.host.state, self.host, key)
 
     def _create(self, key, data=None, args=None):
         self._check_host()
@@ -118,6 +130,18 @@ class Host(object):
 
         handler = logger.info if self.state.print_noop_info else logger.debug
         handler('{0}noop: {1}'.format(self.print_prefix, description))
+
+    # Host facts
+    #
+
+    def get_fact(self, name_or_cls, *args, **kwargs):
+        return get_host_fact(self.state, self, name_or_cls, args, kwargs)
+
+    def create_fact(self, name_or_cls, data=None, args=None):
+        return create_host_fact(self.state, self, name_or_cls, data, args)
+
+    def delete_fact(self, name_or_cls, args=None):
+        return delete_host_fact(self.state, self, name_or_cls, args)
 
     # Connector proxy
     #
