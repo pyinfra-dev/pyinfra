@@ -8,7 +8,7 @@ from __future__ import division, unicode_literals
 
 import re
 
-from inspect import getcallargs
+from inspect import getcallargs, isclass
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -127,7 +127,7 @@ def _make_command(command_attribute, host_args):
 
 def get_facts(
     state,
-    name,
+    name_or_cls,
     args=None,
     kwargs=None,
     ensure_hosts=None,
@@ -137,10 +137,12 @@ def get_facts(
     Get a single fact for all hosts in the state.
     '''
 
-    fact = get_fact_class(name)()
-
-    if isinstance(fact, ShortFactBase):
-        return get_short_facts(state, fact, args=args, ensure_hosts=ensure_hosts)
+    if isclass(name_or_cls) and issubclass(name_or_cls, (FactBase, ShortFactBase)):
+        fact = name_or_cls()
+        name = fact.name
+    else:
+        fact = get_fact_class(name_or_cls)()
+        name = name_or_cls
 
     args = args or ()
     kwargs = kwargs or {}
