@@ -8,6 +8,7 @@ from __future__ import division, unicode_literals
 
 import re
 
+from inspect import getcallargs
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -24,6 +25,7 @@ from pyinfra import logger
 from pyinfra.api.connectors.util import split_combined_output
 from pyinfra.api.util import (
     get_arg_value,
+    get_kwargs_str,
     log_error_or_warning,
     log_host_command_error,
     make_hash,
@@ -117,26 +119,37 @@ def get_short_facts(state, short_fact, **kwargs):
 
 def _make_command(command_attribute, host_args):
     if callable(command_attribute):
-        return command_attribute(*host_args)
+        host_args.pop('self', None)
+        return command_attribute(**host_args)
     return command_attribute
 
 
-def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True):
+def get_facts(
+    state,
+    name,
+    args=None,
+    kwargs=None,
+    ensure_hosts=None,
+    apply_failed_hosts=True,
+):
     '''
     Get a single fact for all hosts in the state.
     '''
 
-    # Create an instance of the fact
     fact = get_fact_class(name)()
 
     if isinstance(fact, ShortFactBase):
         return get_short_facts(state, fact, args=args, ensure_hosts=ensure_hosts)
 
-    logger.debug('Getting fact: {0} (ensure_hosts: {1})'.format(
-        name, ensure_hosts,
-    ))
+    args = args or ()
+    kwargs = kwargs or {}
+    if args or kwargs:
+        # Merges args & kwargs into a single kwargs dictionary
+        kwargs = getcallargs(fact.command, *args, **kwargs)
 
-    args = args or []
+    logger.debug('Getting fact: {0} {1} (ensure_hosts: {2})'.format(
+        name, get_kwargs_str(kwargs), ensure_hosts,
+    ))
 
     # Apply args or defaults
     sudo = state.config.SUDO
@@ -165,7 +178,7 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
 
     # Make a hash which keeps facts unique - but usable cross-deploy/threads.
     # Locks are used to maintain order.
-    fact_hash = make_hash((name, args, sudo, sudo_user, su_user, ignore_errors))
+    fact_hash = make_hash((name, kwargs, sudo, sudo_user, su_user, ignore_errors))
 
     # Already got this fact? Unlock and return them
     current_facts = state.facts.get(fact_hash, {})
@@ -190,10 +203,13 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
                 continue
 
             # Generate actual arguments by passing strings as jinja2 templates
-            host_args = [get_arg_value(state, host, arg) for arg in args]
+            host_kwargs = {
+                key: get_arg_value(state, host, arg)
+                for key, arg in kwargs.items()
+            }
 
-            command = _make_command(fact.command, host_args)
-            requires_command = _make_command(fact.requires_command, host_args)
+            command = _make_command(fact.command, host_kwargs)
+            requires_command = _make_command(fact.requires_command, host_kwargs)
             if requires_command:
                 command = '! command -v {0} > /dev/null || ({1})'.format(
                     requires_command, command,
@@ -215,9 +231,7 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
             greenlet_to_host[greenlet] = host
 
         # Wait for all the commands to execute
-        progress_prefix = 'fact: {0}'.format(name)
-        if args:
-            progress_prefix = '{0}{1}'.format(progress_prefix, args[0])
+        progress_prefix = 'fact: {0} {1}'.format(name, get_kwargs_str(kwargs))
 
         with progress_spinner(
             greenlet_to_host.values(),
@@ -237,7 +251,6 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
 
             try:
                 status, combined_output_lines = greenlet.get()
-
             except (timeout_error, socket_error, SSHException) as e:
                 failed_hosts.add(host)
                 log_host_command_error(
@@ -275,19 +288,12 @@ def get_facts(state, name, args=None, ensure_hosts=None, apply_failed_hosts=True
                     print_host_combined_output(host, combined_output_lines)
 
                 log_error_or_warning(host, ignore_errors, description=(
-                    'could not load fact: {0}{1}'
-                ).format(name, args or ''))
+                    'could not load fact: {0} {1}'
+                ).format(name, get_kwargs_str(kwargs)))
 
             hostname_facts[host] = data
 
-        log_name = click.style(name, bold=True)
-
-        filtered_args = list(filter(None, args))
-        if filtered_args:
-            log = 'Loaded fact {0}: {1}'.format(log_name, tuple(filtered_args))
-        else:
-            log = 'Loaded fact {0}'.format(log_name)
-
+        log = 'Loaded fact {0} {1}'.format(click.style(name, bold=True), get_kwargs_str(kwargs))
         if state.print_fact_info:
             logger.info(log)
         else:
@@ -311,8 +317,8 @@ def get_host_fact(state, host, name):
 
     # Expecting a function to return
     if callable(getattr(FACTS[name], 'command', None)):
-        def wrapper(*args):
-            fact_data = get_facts(state, name, args=args, ensure_hosts=(host,))
+        def wrapper(*args, **kwargs):
+            fact_data = get_facts(state, name, args=args, kwargs=kwargs, ensure_hosts=(host,))
             return fact_data.get(host)
         return wrapper
 

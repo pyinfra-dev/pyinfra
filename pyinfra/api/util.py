@@ -37,6 +37,18 @@ FILE_SHAS = {}
 PYINFRA_API_DIR = path.dirname(__file__)
 
 
+def get_kwargs_str(kwargs):
+    if not kwargs:
+        return ''
+
+    items = [
+        '{0}={1}'.format(key, value)
+        for key, value in kwargs.items()
+        if key not in ('self', 'state', 'host')
+    ]
+    return '({0})'.format(', '.join(items))
+
+
 def try_int(value):
     try:
         return int(value)
