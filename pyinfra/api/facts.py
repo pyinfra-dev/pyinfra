@@ -316,24 +316,9 @@ def get_facts(
     return state.facts[fact_hash]
 
 
-def get_host_fact(state, host, name):
-    '''
-    Wrapper around ``get_facts`` returning facts for one host or a function
-    that does.
-    '''
-
-    # Expecting a function to return
-    if callable(getattr(FACTS[name], 'command', None)):
-        def wrapper(*args, **kwargs):
-            fact_data = get_facts(state, name, args=args, kwargs=kwargs, ensure_hosts=(host,))
-            return fact_data.get(host)
-        return wrapper
-
-    # Expecting the fact as a return value
-    else:
-        # Get the fact
-        fact_data = get_facts(state, name, ensure_hosts=(host,))
-        return fact_data.get(host)
+def get_host_fact(state, host, name, args=None, kwargs=None):
+    fact_data = get_facts(state, name, args=args, kwargs=kwargs, ensure_hosts=(host,))
+    return fact_data.get(host)
 
 
 def create_host_fact(state, host, name, data, args=None):
