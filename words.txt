@@ -116,6 +116,7 @@ fstab
 gaierror
 generic
 getargspec
+getcallargs
 getfo
 getframeinfo
 getitem
