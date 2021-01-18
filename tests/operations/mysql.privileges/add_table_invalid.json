@@ -15,7 +15,7 @@
         }
     },
     "commands": [
-        "mysql -Be \"GRANT SELECT, INSERT ON *.\\`mytable\\` TO \\\"someuser\\\"@\\\"localhost\\\"\"",
+        "mysql -Be \"GRANT SELECT, INSERT ON *.`mytable` TO \\\"someuser\\\"@\\\"localhost\\\"\"",
         "mysql -Be \"FLUSH PRIVILEGES\""
     ],
     "exception": {

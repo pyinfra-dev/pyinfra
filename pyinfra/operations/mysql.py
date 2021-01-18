@@ -323,7 +323,7 @@ def privileges(
             action=action, target=target,
             database=database, table=table,
             user=user, user_hostname=user_hostname,
-        ).replace('`', r'\`')
+        )
 
         yield make_execute_mysql_command(
             command,
