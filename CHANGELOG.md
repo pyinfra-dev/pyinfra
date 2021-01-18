@@ -1,3 +1,11 @@
+# v1.3.3
+
++ Fix support for package names in `deb_package` fact (@s-vx)
++ Fix check for match any vs. all in ensure packages util (fixes Pacman package groups)
++ Fix/support passing keyword functions into facts
++ Fix parsing of `mysql_user_grants` fact output
++ Fix idempotency of `mysql.privileges` operation
+
 # v1.3.2
 
 + Add `pacman_unpack_group` fact (@unai-ndz)
