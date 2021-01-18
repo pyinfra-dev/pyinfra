@@ -17,7 +17,7 @@ def _has_package(package, packages, expand_package_fact=None, match_any=False):
         packages_to_check = expand_package_fact(package) or packages_to_check
 
     checks = (in_packages(pkg) for pkg in packages_to_check)
-    if any:
+    if match_any:
         return any(checks)
     return all(checks)
 
