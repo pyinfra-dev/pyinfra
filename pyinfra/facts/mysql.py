@@ -38,18 +38,24 @@ def make_mysql_command(
     return StringCommand(*target_bits)
 
 
-def make_execute_mysql_command(command, **mysql_kwargs):
-    return StringCommand(
+def make_execute_mysql_command(command, ignore_errors=False, **mysql_kwargs):
+    commands_bits = [
         make_mysql_command(**mysql_kwargs),
         '-Be',
         QuoteString(command),  # quote this whole item as a single shell argument
-    )
+    ]
+
+    if ignore_errors:
+        commands_bits.extend(['||', 'true'])
+
+    return StringCommand(*commands_bits)
 
 
 class MysqlFactBase(FactBase):
     abstract = True
 
     requires_command = 'mysql'
+    ignore_errors = False
 
     def command(
         self,
@@ -59,6 +65,7 @@ class MysqlFactBase(FactBase):
     ):
         return make_execute_mysql_command(
             self.mysql_command,
+            ignore_errors=self.ignore_errors,
             user=mysql_user,
             password=mysql_password,
             host=mysql_host,
@@ -173,6 +180,8 @@ class MysqlUserGrants(MysqlFactBase):
     '''
 
     default = dict
+    # Ignore errors as SHOW GRANTS will error if the user does not exist
+    ignore_errors = True
 
     def command(
         self, user,
