@@ -157,8 +157,9 @@ class MysqlUsers(MysqlFactBase):
         return users
 
 
-MYSQL_GRANT_REGEX = re.compile(
-    r"^GRANT ([A-Z,\s]+) ON (\*|`[a-z_\\]+`\.\*|'[a-z_]+') TO `[a-z_\-]+`@`[a-z_\.\-]+`(.*)",
+MYSQL_GRANT_REGEX = (
+    r"^GRANT ([A-Z,\s]+) ON (\*|`[a-z_\\]+`\.\*|'[a-z_]+') "
+    r'TO `[A-Z0-9a-z_\-]+`@`[A-Z0-9a-z_\.\-]+`(.*)'
 )
 
 
