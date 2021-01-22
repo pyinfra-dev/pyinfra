@@ -1,3 +1,7 @@
+# v1.3.4
+
++ Improve matching of user hostname in `mysql_user_grants` fact
+
 # v1.3.3
 
 + Fix support for package names in `deb_package` fact (@s-vx)
