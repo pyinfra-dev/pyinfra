@@ -44,3 +44,7 @@ jobs:
       - name: Local integration tests
         run: pytest -m local
         if: ${{ matrix.os != 'windows-2019' }}
+
+      - name: Mypy typing checks
+        run: mypy pyinfra/ pyinfra_cli/
+        if: ${{ matrix.os == 'ubuntu-18.04' && matrix.python-version == '3.8' }}
