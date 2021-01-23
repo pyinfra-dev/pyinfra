@@ -9,10 +9,6 @@ as they are utilised throughout (to determine the current state/host when
 executing in CLI mode).
 '''
 
-import sys
-
-import pyinfra
-
 
 class PseudoModule(object):
     _module = None
@@ -57,23 +53,9 @@ class PseudoModule(object):
         return self._module is not None
 
 
-# The current deploy state
-pseudo_state = \
-    sys.modules['pyinfra.pseudo_state'] = sys.modules['pyinfra.state'] = \
-    pyinfra.pseudo_state = pyinfra.state = \
-    PseudoModule()
-
-# The current deploy inventory
-pseudo_inventory = \
-    sys.modules['pyinfra.pseudo_inventory'] = sys.modules['pyinfra.inventory'] = \
-    pyinfra.pseudo_inventory = pyinfra.inventory = \
-    PseudoModule()
-
-# The current target host
-pseudo_host = \
-    sys.modules['pyinfra.pseudo_host'] = sys.modules['pyinfra.host'] = \
-    pyinfra.pseudo_host = pyinfra.host = \
-    PseudoModule()
+pseudo_state = PseudoModule()
+pseudo_inventory = PseudoModule()
+pseudo_host = PseudoModule()
 
 
 def init_base_classes():
