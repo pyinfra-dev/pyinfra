@@ -14,7 +14,7 @@ from os import makedirs, path as os_path, walk
 
 import six
 
-from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
+from jinja2 import TemplateError, UndefinedError
 
 from pyinfra import logger
 from pyinfra.api import (
@@ -802,7 +802,7 @@ def template(
     # Render and make file-like it's output
     try:
         output = get_template(src).render(data)
-    except (TemplateRuntimeError, TemplateSyntaxError, UndefinedError) as e:
+    except (TemplateError, UndefinedError) as e:
         trace_frames = traceback.extract_tb(sys.exc_info()[2])
         trace_frames = [
             frame for frame in trace_frames
