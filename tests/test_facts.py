@@ -3,6 +3,7 @@ from __future__ import print_function
 import json
 import warnings
 
+from importlib import import_module
 from os import listdir, path
 from unittest import TestCase
 
@@ -27,13 +28,18 @@ def _make_command(command_attribute, args):
     return command_attribute
 
 
-def make_fact_tests(fact_name):
-    fact = FACTS[fact_name]()
+def make_fact_tests(folder_name):
+    if '.' in folder_name:
+        module_name, fact_name = folder_name.split('.')
+        module = import_module('pyinfra.facts.{0}'.format(module_name))
+        fact = getattr(module, fact_name)()
+    else:
+        fact = FACTS[folder_name]()
 
     @six.add_metaclass(JsonTest)
     class TestTests(TestCase):
-        jsontest_files = path.join('tests', 'facts', fact_name)
-        jsontest_prefix = 'test_{0}_'.format(fact_name)
+        jsontest_files = path.join('tests', 'facts', folder_name)
+        jsontest_prefix = 'test_{0}_'.format(fact.name)
 
         def jsontest_function(self, test_name, test_data, fact=fact):
             short_fact = None
@@ -78,7 +84,7 @@ def make_fact_tests(fact_name):
                 ))
                 raise e
 
-    TestTests.__name__ = 'Fact{0}'.format(fact_name)
+    TestTests.__name__ = 'Fact{0}'.format(fact.name)
     return TestTests
 
 
