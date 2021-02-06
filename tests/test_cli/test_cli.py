@@ -183,6 +183,7 @@ class TestCliDeployState(PatchSSHTestCase):
 
     def test_deploy(self):
         task_file_path = path.join('tests', 'deploy', 'tasks', 'a_task.py')
+        nested_task_path = path.join('tests', 'deploy', 'tasks', '.', 'another_task.py')
         correct_op_name_and_host_names = [
             ('First main operation', True),  # true for all hosts
             ('Second main operation', ('somehost',)),
@@ -191,13 +192,16 @@ class TestCliDeployState(PatchSSHTestCase):
             ('{0} | 2nd Task order loop 1'.format(task_file_path), ('anotherhost',)),
             ('{0} | Task order loop 2'.format(task_file_path), ('anotherhost',)),
             ('{0} | 2nd Task order loop 2'.format(task_file_path), ('anotherhost',)),
-            ('{0} | Second task operation'.format(task_file_path), ('anotherhost',)),
+            (
+                '{0} | {1} | Second task operation'.format(task_file_path, nested_task_path),
+                ('anotherhost',),
+            ),
             ('{0} | First task operation'.format(task_file_path), True),
             ('{0} | Task order loop 1'.format(task_file_path), True),
             ('{0} | 2nd Task order loop 1'.format(task_file_path), True),
             ('{0} | Task order loop 2'.format(task_file_path), True),
             ('{0} | 2nd Task order loop 2'.format(task_file_path), True),
-            ('{0} | Second task operation'.format(task_file_path), True),
+            ('{0} | {1} | Second task operation'.format(task_file_path, nested_task_path), True),
             ('My deploy | First deploy operation', True),
             ('My deploy | My nested deploy | First nested deploy operation', True),
             ('My deploy | Second deploy operation', True),

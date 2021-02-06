@@ -1,4 +1,6 @@
-from pyinfra import state
+from os import path
+
+from pyinfra import local, state
 from pyinfra.operations import server
 
 
@@ -18,7 +20,5 @@ with state.preserve_loop_order([1, 2]) as loop_items:
             commands='echo loop_{0}'.format(item),
         )
 
-server.shell(
-    name='Second task operation',
-    commands='echo second_task_operation',
-)
+# Import a file *relative* to this one (./another_task.py)
+local.include(path.join('.', 'another_task.py'))
