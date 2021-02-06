@@ -545,7 +545,6 @@ def _main(
         # Number of "steps" to make = number of files * number of hosts
         for i, filename in enumerate(operations):
             logger.info('Loading: {0}'.format(click.style(filename, bold=True)))
-            state.current_op_file = i
             load_deploy_file(state, filename)
 
     # Operation w/optional args

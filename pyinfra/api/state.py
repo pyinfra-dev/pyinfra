@@ -120,7 +120,6 @@ class State(object):
 
     # Used in CLI
     deploy_dir = None  # base directory for locating files/templates/etc
-    current_op_file = 0  # increments for each file excuted to maintain order
     current_deploy_filename = None
 
     def __init__(self, inventory=None, config=None, **kwargs):
