@@ -4,7 +4,7 @@ import json
 
 from datetime import datetime
 from importlib import import_module
-from types import FunctionType
+from types import FunctionType, ModuleType
 
 # py2/3 switcheroo
 try:  # pragma: no cover
@@ -65,6 +65,9 @@ def json_encode(obj):
         return repr(obj)
 
     # Python types
+    elif isinstance(obj, ModuleType):
+        return 'Module: {0}'.format(obj.__name__)
+
     elif isinstance(obj, FunctionType):
         return 'Function: {0}'.format(obj.__name__)
 
