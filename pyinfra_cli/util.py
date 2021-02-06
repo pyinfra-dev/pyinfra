@@ -20,7 +20,7 @@ except ImportError:  # pragma: no cover
 import click
 import six
 
-from pyinfra import logger, pseudo_host
+from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.util import FallbackDict
 
@@ -34,6 +34,8 @@ def exec_file(filename, return_locals=False, is_deploy_code=False):
     '''
     Execute a Python file and optionally return it's attributes as a dict.
     '''
+
+    pseudo_state.current_exec_filename = filename
 
     if filename not in PYTHON_CODES:
         with open(filename, 'r') as f:
