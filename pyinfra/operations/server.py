@@ -568,11 +568,12 @@ def crontab(
     # We have the cron and it exists, do it's details? If not, replace the line
     elif present and exists:
         if any((
-            minute != existing_crontab['minute'],
-            hour != existing_crontab['hour'],
-            month != existing_crontab['month'],
-            day_of_week != existing_crontab['day_of_week'],
-            day_of_month != existing_crontab['day_of_month'],
+            special_time != existing_crontab.get('special_time'),
+            minute != existing_crontab.get('minute'),
+            hour != existing_crontab.get('hour'),
+            month != existing_crontab.get('month'),
+            day_of_week != existing_crontab.get('day_of_week'),
+            day_of_month != existing_crontab.get('day_of_month'),
         )):
             edit_commands.append(sed_replace(
                 temp_filename, existing_crontab_match, new_crontab_line,
