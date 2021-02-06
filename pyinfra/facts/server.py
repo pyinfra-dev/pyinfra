@@ -315,6 +315,9 @@ class Crontab(FactBase):
                 'day_of_month': '*',
                 'day_of_week': '*',
             },
+            'echo another command': {
+                'special_time': '@daily',
+            },
         }
     '''
 
@@ -340,17 +343,24 @@ class Crontab(FactBase):
                 current_comments.append(line)
                 continue
 
-            minute, hour, day_of_month, month, day_of_week, command = line.split(' ', 5)
-            crons[command] = {
-                'minute': try_int(minute),
-                'hour': try_int(hour),
-                'month': try_int(month),
-                'day_of_month': try_int(day_of_month),
-                'day_of_week': try_int(day_of_week),
-                'comments': current_comments,
-            }
-            current_comments = []
+            if line.startswith('@'):
+                special_time, command = line.split(' ', 1)
+                crons[command] = {
+                    'special_time': special_time,
+                    'comments': current_comments,
+                }
+            else:
+                minute, hour, day_of_month, month, day_of_week, command = line.split(' ', 5)
+                crons[command] = {
+                    'minute': try_int(minute),
+                    'hour': try_int(hour),
+                    'month': try_int(month),
+                    'day_of_month': try_int(day_of_month),
+                    'day_of_week': try_int(day_of_week),
+                    'comments': current_comments,
+                }
 
+            current_comments = []
         return crons
 
 

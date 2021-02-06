@@ -2,7 +2,8 @@
     "command": "crontab -l",
     "output": [
         "* * * * * apt update",
-        "0 0 * * * apt install -fy"
+        "0 0 * * * apt install -fy",
+        "@daily echo daily"
     ],
     "fact":  {
         "apt update": {
@@ -19,6 +20,10 @@
             "month": "*",
             "day_of_month": "*",
             "day_of_week": "*",
+            "comments": []
+        },
+        "echo daily": {
+            "special_time": "@daily",
             "comments": []
         }
     }
