@@ -56,11 +56,12 @@ def _get_group_data(deploy_dir):
 
             # Read the files locals into a dict
             attrs = exec_file(group_data_file, return_locals=True)
+            keys = attrs.get('__all__', attrs.keys())
 
             group_data[group_name] = {
                 key: value
                 for key, value in six.iteritems(attrs)
-                if not key.startswith('_')
+                if key in keys and not key.startswith('_')
             }
 
     return group_data
