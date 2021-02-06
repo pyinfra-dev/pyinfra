@@ -21,7 +21,9 @@ def include(filename):
     if not pyinfra.is_cli:
         raise PyinfraError('local.include is only available in CLI mode.')
 
-    if pseudo_state.deploy_dir:
+    if filename.startswith('.'):
+        filename = path.join(path.dirname(pseudo_state.current_exec_filename), filename)
+    elif pseudo_state.deploy_dir:
         filename = path.join(pseudo_state.deploy_dir, filename)
 
     logger.debug('Including local file: {0}'.format(filename))
