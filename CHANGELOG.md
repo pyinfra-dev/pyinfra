@@ -1,3 +1,11 @@
+# v1.3.5
+
++ Add support for relative includes: `local.include('./relative_file.py')`
++ Fix parsing of special times in `server.Crontab` fact
++ Fix editing `special_time` in `server.crontab` operation
++ Fix printing of imported modules in group data files when using `debug-inventory`
++ Use/respect `__all__` if defined in group data files
+
 # v1.3.4
 
 + Improve matching of user hostname in `mysql_user_grants` fact
