@@ -328,9 +328,8 @@ class Crontab(FactBase):
     @staticmethod
     def command(user=None):
         if user:
-            return 'crontab -l -u {0}'.format(user)
-
-        return 'crontab -l'
+            return 'crontab -l -u {0} || true'.format(user)
+        return 'crontab -l || true'
 
     @staticmethod
     def process(output):
