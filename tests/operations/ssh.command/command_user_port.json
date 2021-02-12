@@ -6,5 +6,6 @@
     },
     "commands": [
         "ssh -p 33 nick@remote-host.net 'echo hi'"
-    ]
+    ],
+    "idempotent": false
 }

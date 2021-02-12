@@ -8,5 +8,6 @@
     },
     "commands": [
         "apk add curl"
-    ]
+    ],
+    "idempotent": false
 }

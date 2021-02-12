@@ -6,5 +6,6 @@
             "success_exit_codes": [0, -1]
         },
         ["wait_and_reconnect", [], {}]
-    ]
+    ],
+    "idempotent": false
 }

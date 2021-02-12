@@ -2,5 +2,6 @@
     "args": ["some shell"],
     "commands": [
         "some shell"
-    ]
+    ],
+    "idempotent": false
 }
