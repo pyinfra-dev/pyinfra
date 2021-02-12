@@ -597,6 +597,19 @@ def crontab(
         # Finally, use the tempfile to write a new crontab
         yield 'crontab {0} {1}'.format(' '.join(crontab_args), temp_filename)
 
+        # Update the crontab fact
+        if present:
+            crontab[command] = {
+                'special_time': special_time,
+                'minute': minute,
+                'hour': hour,
+                'month': month,
+                'day_of_week': day_of_week,
+                'day_of_month': day_of_month,
+                'comments': [cron_name] if cron_name else [],
+            }
+        else:
+            crontab.pop(command)
     else:
         host.noop('crontab {0} {1}'.format(
             command,
