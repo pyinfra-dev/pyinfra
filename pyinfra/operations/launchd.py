@@ -25,6 +25,8 @@ def service(
     + enabled: whether this service should be enabled/disabled on boot
     '''
 
+    was_running = host.fact.launchd_status.get(service, None)
+
     yield handle_service_control(
         host,
         service, host.fact.launchd_status,
@@ -34,7 +36,6 @@ def service(
     )
 
     # No restart command, so just stop/start
-    is_running = host.fact.launchd_status.get(service, None)
-    if restarted and is_running:
+    if restarted and was_running:
         yield 'launchctl stop {0}'.format(service)
         yield 'launchctl start {0}'.format(service)
