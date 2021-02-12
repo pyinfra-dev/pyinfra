@@ -65,7 +65,7 @@ def make_operation_tests(arg):
                     output_commands = unroll_generators(op._pyinfra_op(
                         *test_data.get('args', []),
                         **kwargs
-                    )) or []
+                    ))
                 except Exception as e:
                     if allowed_exception:
                         allowed_exception_names = allowed_exception.get('names')
@@ -80,6 +80,16 @@ def make_operation_tests(arg):
                         return
 
                     raise
+
+                if test_data.get('idempotent', True):
+                    second_output_commands = unroll_generators(op._pyinfra_op(
+                        *test_data.get('args', []),
+                        **kwargs
+                    ))
+                    if second_output_commands:
+                        raise Exception((
+                            'Operation not idempotent, second output commands: {0}'
+                        ).format(second_output_commands))
 
             commands = []
 
