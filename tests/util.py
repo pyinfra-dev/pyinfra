@@ -113,7 +113,7 @@ class FakeFact(object):
         return item
 
     def __str__(self):
-        return self.data
+        return str(self.data)
 
     def __unicode__(self):
         return self.data
@@ -133,19 +133,19 @@ class FakeFact(object):
 
 class FakeFacts(object):
     def __init__(self, facts):
-        self.facts = facts
+        self.facts = {
+            key: FakeFact(value)
+            for key, value in facts.items()
+        }
 
     def __getattr__(self, key):
-        if self.facts[key] is None:
-            return None
-        else:
-            return FakeFact(self.facts[key])
+        return self.facts.get(key)
 
     def _create(self, key, data=None, args=None):
-        pass
+        self.facts[key][args[0]] = data
 
     def _delete(self, key, args=None):
-        pass
+        self.facts[key].pop(args[0])
 
 
 class FakeHost(object):
