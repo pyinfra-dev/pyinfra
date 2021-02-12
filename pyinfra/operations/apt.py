@@ -249,6 +249,9 @@ def deb(src, present=True, force=False, state=None, host=None):
             # Now reinstall, and critically configure, the package - if there are still
             # missing deps, now we error
             yield 'dpkg --force-confdef --force-confold -i {0}'.format(src)
+
+            if info:
+                host.fact.deb_packages[info['name']] = [info.get('version')]
         else:
             host.noop('deb {0} is installed'.format(original_src))
 
@@ -259,6 +262,7 @@ def deb(src, present=True, force=False, state=None, host=None):
                 noninteractive_apt('remove', force=force),
                 info['name'],
             )
+            host.fact.deb_packages.pop(info['name'])
         else:
             host.noop('deb {0} is not installed'.format(original_src))
 
