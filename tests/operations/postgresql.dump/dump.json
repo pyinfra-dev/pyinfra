@@ -12,5 +12,6 @@
             "PGPASSWORD=\"somepass\" pg_dump -d somedb -U root -h localhost -p 3306 > somefile",
             "*** pg_dump -d somedb -U root -h localhost -p 3306 > somefile"
         ]
-    ]
+    ],
+    "idempotent": false
 }

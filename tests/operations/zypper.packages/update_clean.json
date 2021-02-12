@@ -9,5 +9,6 @@
     "commands": [
         "zypper clean --all",
         "zypper update -y"
-    ]
+    ],
+    "idempotent": false
 }

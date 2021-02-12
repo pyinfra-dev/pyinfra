@@ -12,5 +12,6 @@
     "commands": [
         "apk update",
         "apk upgrade"
-    ]
+    ],
+    "idempotent": false
 }

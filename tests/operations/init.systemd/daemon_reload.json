@@ -10,5 +10,6 @@
     },
     "commands": [
         "systemctl daemon-reload"
-    ]
+    ],
+    "idempotent": false
 }

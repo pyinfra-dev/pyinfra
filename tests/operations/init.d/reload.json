@@ -10,5 +10,6 @@
     },
     "commands": [
         "/etc/init.d/nginx reload"
-    ]
+    ],
+    "idempotent": false
 }
