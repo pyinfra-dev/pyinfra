@@ -52,7 +52,7 @@ pip.virtualenv(
 # use that virtualenv to install pyinfra
 pip.packages(
     name='Install pyinfra into a virtualenv',
-    packages='pyinfra',
+    packages=['pyinfra', 'cryptography==3.3.2'],
     virtualenv='/usr/local/bin/venv',
 )
 
