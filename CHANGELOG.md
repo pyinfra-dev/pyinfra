@@ -1,3 +1,9 @@
+# v1.3.6
+
++ Ignore errors when `crontab` fails (ie, when there's no crontab)
++ Update `crontab` fact in `server.crontab` operation
++ Update `sysctl` fact in `server.sysctl` operation
+
 # v1.3.5
 
 + Add support for relative includes: `local.include('./relative_file.py')`
