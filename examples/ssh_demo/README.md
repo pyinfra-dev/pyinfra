@@ -9,18 +9,20 @@ Be sure to be in this directory when running these commands.
 To try out:
 
 1. Spin up VMs:
-
+```shell
     vagrant up
+```
 
 2. To see facts from all "@vagrant" instances, run:
 
     pyinfra @vagrant fact ipv4_addresses
 
 3. Run the ssh demo deploys:
-
+```shell
     pyinfra @vagrant ssh_demo1.py
     pyinfra @vagrant/two ssh_demo2.py
     pyinfra @vagrant/one ssh_demo3.py
+```
 
 4. Clean up tmp file
 
