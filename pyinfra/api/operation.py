@@ -24,6 +24,7 @@ from .state import State
 from .util import (
     get_arg_value,
     get_call_location,
+    get_caller_frameinfo,
     get_operation_order_from_stack,
     make_hash,
     memoize,
@@ -223,17 +224,33 @@ def operation(func=None, pipeline_facts=None):
                 for name in names
             }
 
-        op_order = get_operation_order_from_stack(state)
-
+        # API mode: `add_op` provides the order number
         op_order_number = kwargs.pop('_op_order_number', None)
         if op_order_number is not None:
             op_order = [op_order_number]
-        # If we're in API mode, op order number must be provided by calling `add_op`
-        elif not pyinfra.is_cli:
-            raise PyinfraError((
-                'Operation order number not provided in API mode - '
-                'you must use `add_op` to add operations.'
-            ))
+
+        # CLI mode: we simply use the line order to place the operation - ie starting
+        # with the current operation call we traverse up the stack to the first occurrence
+        # of the current deploy file. This means operations are ordered as you would expect
+        # reading the deployment code, even though the code is technically executed once
+        # for each host sequentially.
+        elif pyinfra.is_cli:
+            op_order = get_operation_order_from_stack(state)
+
+        # API mode: no op order number, deploy provided or fail
+        else:
+            # API mode deployments are a special case - the order is based on where the
+            # deploy function is called first, and then the operation position *within*
+            # that function. Because functions have to exist in one file, we can simply
+            # use the line number to get correct ordering.
+            if state.in_deploy:
+                frameinfo = get_caller_frameinfo()
+                op_order = state.deploy_op_order + [frameinfo.lineno]
+            else:
+                raise PyinfraError((
+                    'Operation order number not provided in API mode - '
+                    'you must use `add_op` to add operations.'
+                ))
 
         # Make a hash from the call stack lines
         op_hash = make_hash(op_order)

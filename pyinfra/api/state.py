@@ -109,7 +109,7 @@ class State(object):
     deploy_name = None
     deploy_kwargs = None
     deploy_data = None
-    deploy_line_numbers = None
+    deploy_op_order = None
 
     print_noop_info = False  # print "[host] noop: reason for noop"
     print_fact_info = False  # print "loaded fact X"
@@ -310,7 +310,7 @@ class State(object):
             func(self, *args, **kwargs)
 
     @contextmanager
-    def deploy(self, name, kwargs, data, in_deploy=True):
+    def deploy(self, name, kwargs, data, in_deploy=True, deploy_op_order=None):
         '''
         Wraps a group of operations as a deploy, this should not be used
         directly, instead use ``pyinfra.api.deploy.deploy``.
@@ -325,12 +325,14 @@ class State(object):
         old_deploy_name = self.deploy_name
         old_deploy_kwargs = self.deploy_kwargs
         old_deploy_data = self.deploy_data
+        old_deploy_op_order = self.deploy_op_order
         self.in_deploy = in_deploy
 
         # Set the new values
         self.deploy_name = name
         self.deploy_kwargs = kwargs
         self.deploy_data = data
+        self.deploy_op_order = deploy_op_order
         logger.debug('Starting deploy {0} (args={1}, data={2})'.format(
             name, kwargs, data,
         ))
@@ -342,6 +344,7 @@ class State(object):
         self.deploy_name = old_deploy_name
         self.deploy_kwargs = old_deploy_kwargs
         self.deploy_data = old_deploy_data
+        self.deploy_op_order = old_deploy_op_order
 
         logger.debug('Reset deploy to {0} (args={1}, data={2})'.format(
             old_deploy_name, old_deploy_kwargs, old_deploy_data,

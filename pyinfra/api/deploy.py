@@ -16,7 +16,7 @@ from .exceptions import PyinfraError
 from .host import Host
 from .operation_kwargs import pop_global_op_kwargs
 from .state import State
-from .util import get_call_location, memoize
+from .util import get_call_location, get_caller_frameinfo, memoize
 
 
 @memoize
@@ -48,6 +48,9 @@ def add_deploy(state, deploy_func, *args, **kwargs):
     hosts = kwargs.pop('host', state.inventory.iter_active_hosts())
     if isinstance(hosts, Host):
         hosts = [hosts]
+
+    # Append operations called in this deploy to the current order
+    kwargs['_op_order_number'] = len(state.op_meta)
 
     for host in hosts:
         kwargs['host'] = host
@@ -113,8 +116,29 @@ def deploy(func_or_name, data_defaults=None):
         deploy_name = getattr(func, 'deploy_name', func.__name__)
         deploy_data = getattr(func, 'deploy_data', None)
 
-        with state.deploy(deploy_name, deploy_kwargs, deploy_data):
-            # Execute the deploy, passing state and host
+        deploy_op_order = None
+
+        if not pyinfra.is_cli:
+            # API mode: `add_deploy` provides the order number
+            op_order_number = kwargs.pop('_op_order_number', None)
+            if op_order_number is not None:
+                deploy_op_order = [op_order_number]
+            # API mode: nested deploy wrapped function call
+            elif state.deploy_op_order:
+                frameinfo = get_caller_frameinfo()
+                deploy_op_order = state.deploy_op_order + [frameinfo.lineno]
+            else:
+                raise PyinfraError((
+                    'Operation order number not provided in API mode - '
+                    'you must use `add_deploy` to add operations.'
+                ))
+
+        with state.deploy(
+            name=deploy_name,
+            kwargs=deploy_kwargs,
+            data=deploy_data,
+            deploy_op_order=deploy_op_order,
+        ):
             func(*args, **kwargs)
 
     return decorated_func
