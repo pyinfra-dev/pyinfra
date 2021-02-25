@@ -1,6 +1,9 @@
+import os
+import sys
 from datetime import datetime
 from unittest import TestCase
 
+import pytest
 from six.moves import cStringIO as StringIO
 
 from pyinfra.operations import server
@@ -49,3 +52,25 @@ class TestCliUtil(TestCase):
             server.user,
             (['one', 'two'], {'hello': 'world'}),
         )
+
+
+@pytest.fixture(scope='function')
+def user_sys_path():
+    user_pkg = os.path.dirname(__file__) + '/user'
+    sys.path.append(user_pkg)
+    yield None
+    sys.path.pop()
+
+
+def test_no_user_op():
+    commands = ('test_ops.dummy_op', 'arg1', 'arg2')
+    with pytest.raises(CliError, match='^No such module: test_ops$'):
+        get_operation_and_args(commands)
+
+
+def test_user_op(user_sys_path):
+    commands = ('test_ops.dummy_op', 'arg1', 'arg2')
+    res = get_operation_and_args(commands)
+
+    import user_ops
+    assert res == (user_ops.test_ops.dummy_op, (['arg1', 'arg2'], {}))
