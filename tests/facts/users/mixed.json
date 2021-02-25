@@ -20,7 +20,9 @@
                 "operator",
                 "staff",
                 "guest"
-            ]
+            ],
+            "uid": 0,
+            "gid": 0
         },
         "_tesTy.test": {
             "home": "/home/_tesTy.test",
@@ -29,28 +31,36 @@
             "group": "_tesTy.test",
             "groups": [
                 "pyinfra"
-            ]
+            ],
+            "uid": 1004,
+            "gid": 1004
         },
         "test.testy": {
             "home": "/home/test.testy",
             "comment": "Testy,,,",
             "shell": "/bin/ksh",
             "group": "test.testy",
-            "groups": []
+            "groups": [],
+            "uid": 1003,
+            "gid": 1003
         },
         "noshell": {
             "home": "/home/noshell",
             "comment": "noshell",
             "shell": null,
             "group": "noshell",
-            "groups": []
+            "groups": [],
+            "uid": 1002,
+            "gid": 1002
         },
         "nohome": {
             "home": null,
             "comment": "nohome",
             "shell": "/bin/bash",
             "group": "nohome",
-            "groups": []
+            "groups": [],
+            "uid": 1002,
+            "gid": 1002
         }
     }
 }

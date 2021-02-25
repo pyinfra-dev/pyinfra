@@ -378,7 +378,9 @@ class Users(FactBase):
                 'groups': [
                     'other',
                     'groups'
-                ]
+                ],
+                'uid': user_id,
+                'gid': main_user_group_id,
             },
         }
     '''
@@ -393,7 +395,7 @@ class Users(FactBase):
 
     default = dict
 
-    regex = r'^uid=[0-9]+\(([a-zA-Z0-9_\.\-]+)\) gid=[0-9]+\(([a-zA-Z0-9_\.\-]+)\) groups=([a-zA-Z0-9_\.\-,\(\)\s]+) (.*)$'  # noqa
+    regex = r'^uid=([0-9]+)\(([a-zA-Z0-9_\.\-]+)\) gid=([0-9]+)\(([a-zA-Z0-9_\.\-]+)\) groups=([a-zA-Z0-9_\.\-,\(\)\s]+) (.*)$'  # noqa
     group_regex = r'^[0-9]+\(([a-zA-Z0-9_\.\-]+)\)$'
 
     def process(self, output):
@@ -403,17 +405,19 @@ class Users(FactBase):
 
             if matches:
                 # Parse out the comment/home/shell
-                comment_home_shell = matches.group(4).split(':')
+                comment_home_shell = matches.group(6).split(':')
                 comment = comment_home_shell[0] or None
                 home = comment_home_shell[1] or None
                 shell = comment_home_shell[2] or None
 
-                # Main user group
-                group = matches.group(2)
+                # Main user group, uid & gid
+                uid = int(matches.group(1))
+                gid = int(matches.group(3))
+                group = matches.group(4)
 
                 # Parse the groups
                 groups = []
-                for group_matches in matches.group(3).split(','):
+                for group_matches in matches.group(5).split(','):
                     name = re.match(self.group_regex, group_matches.strip())
                     if name:
                         name = name.group(1)
@@ -424,12 +428,14 @@ class Users(FactBase):
                     if name != group:
                         groups.append(name)
 
-                users[matches.group(1)] = {
+                users[matches.group(2)] = {
                     'group': group,
                     'groups': groups,
                     'comment': comment,
                     'home': home,
                     'shell': shell,
+                    'uid': uid,
+                    'gid': gid,
                 }
 
         return users
