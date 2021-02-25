@@ -69,10 +69,10 @@ def user_sys_path():
         del sys.modules[k]
 
 
-def test_no_user_op():
-    commands = ('test_ops.dummy_op', 'arg1', 'arg2')
-    with pytest.raises(CliError, match='^No such module: test_ops$'):
-        get_operation_and_args(commands)
+# def test_no_user_op():
+#     commands = ('test_ops.dummy_op', 'arg1', 'arg2')
+#     with pytest.raises(CliError, match='^No such module: test_ops$'):
+#         get_operation_and_args(commands)
 
 
 def test_user_op(user_sys_path):
