@@ -9,6 +9,6 @@
         }
     },
     "commands": [
-        "apk remove curl"
+        "apk del curl"
     ]
 }

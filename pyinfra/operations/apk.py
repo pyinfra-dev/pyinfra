@@ -75,7 +75,7 @@ def packages(
     yield ensure_packages(
         host, packages, host.fact.apk_packages, present,
         install_command='apk add',
-        uninstall_command='apk remove',
+        uninstall_command='apk del',
         upgrade_command='apk upgrade',
         version_join='=',
         latest=latest,
