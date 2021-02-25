@@ -131,7 +131,7 @@ def get_operation_and_args(commands):
         op_module = import_module('pyinfra.operations.{0}'.format(op_module))
     except ImportError:
         try:
-            op_module = import_module('user_ops.{0}'.format(op_module))
+            op_module = import_module(str(op_module))
         except ImportError:
             raise CliError('No such module: {0}'.format(op_module))
 

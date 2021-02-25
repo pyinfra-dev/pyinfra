@@ -79,5 +79,5 @@ def test_user_op(user_sys_path):
     commands = ('test_ops.dummy_op', 'arg1', 'arg2')
     res = get_operation_and_args(commands)
 
-    import user_ops
-    assert res == (user_ops.test_ops.dummy_op, (['arg1', 'arg2'], {}))
+    import test_ops
+    assert res == (test_ops.dummy_op, (['arg1', 'arg2'], {}))
