@@ -60,12 +60,13 @@ def user_sys_path():
     sys.path.append(user_pkg)
     yield None
     sys.path.pop()
-
-
-def test_no_user_op():
-    commands = ('test_ops.dummy_op', 'arg1', 'arg2')
-    with pytest.raises(CliError, match='^No such module: test_ops$'):
-        get_operation_and_args(commands)
+    to_rm = []
+    for k, v in sys.modules.items():
+        v = getattr(v, '__file__', '')
+        if isinstance(v, str) and v.startswith(user_pkg):
+            to_rm.append(k)
+    for k in to_rm:
+        del sys.modules[k]
 
 
 def test_user_op(user_sys_path):
@@ -74,3 +75,9 @@ def test_user_op(user_sys_path):
 
     import user_ops
     assert res == (user_ops.test_ops.dummy_op, (['arg1', 'arg2'], {}))
+
+
+def test_no_user_op():
+    commands = ('test_ops.dummy_op', 'arg1', 'arg2')
+    with pytest.raises(CliError, match='^No such module: test_ops$'):
+        get_operation_and_args(commands)
