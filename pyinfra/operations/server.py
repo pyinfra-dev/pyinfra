@@ -682,6 +682,7 @@ def user(
     present=True, home=None, shell=None, group=None, groups=None,
     public_keys=None, delete_keys=False, ensure_home=True,
     system=False, uid=None, comment=None, add_deploy_dir=True,
+    unique=True,
     state=None, host=None,
 ):
     '''
@@ -699,6 +700,7 @@ def user(
     + system: whether to create a system account
     + comment: the user GECOS comment
     + add_deploy_dir: any public_key filenames are relative to the deploy directory
+    + unique: prevent creating users with duplicate UID
 
     Home directory:
         When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
@@ -774,6 +776,9 @@ def user(
 
         if comment:
             args.append("-c '{0}'".format(comment))
+
+        if not unique:
+            args.append('-o')
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
