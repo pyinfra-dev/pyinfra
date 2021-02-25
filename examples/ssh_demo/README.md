@@ -9,23 +9,27 @@ Be sure to be in this directory when running these commands.
 To try out:
 
 1. Spin up VMs:
-
-    vagrant up
+```shell
+vagrant up
+```
 
 2. To see facts from all "@vagrant" instances, run:
 
     pyinfra @vagrant fact ipv4_addresses
 
 3. Run the ssh demo deploys:
-
-    pyinfra @vagrant ssh_demo1.py
-    pyinfra @vagrant/two ssh_demo2.py
-    pyinfra @vagrant/one ssh_demo3.py
+```shell
+pyinfra @vagrant ssh_demo1.py
+pyinfra @vagrant/two ssh_demo2.py
+pyinfra @vagrant/one ssh_demo3.py
+```
 
 4. Clean up tmp file
-
-    rm /tmp/one_vagrant_id_rsa.pub
+```shell
+rm /tmp/one_vagrant_id_rsa.pub
+```
 
 5. Destroy VMs
-
-    vagrant destroy
+```shell
+vagrant destroy
+```
