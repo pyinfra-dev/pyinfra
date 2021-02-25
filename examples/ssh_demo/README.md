@@ -10,7 +10,7 @@ To try out:
 
 1. Spin up VMs:
 ```shell
-    vagrant up
+vagrant up
 ```
 
 2. To see facts from all "@vagrant" instances, run:
@@ -19,15 +19,17 @@ To try out:
 
 3. Run the ssh demo deploys:
 ```shell
-    pyinfra @vagrant ssh_demo1.py
-    pyinfra @vagrant/two ssh_demo2.py
-    pyinfra @vagrant/one ssh_demo3.py
+pyinfra @vagrant ssh_demo1.py
+pyinfra @vagrant/two ssh_demo2.py
+pyinfra @vagrant/one ssh_demo3.py
 ```
 
 4. Clean up tmp file
-
-    rm /tmp/one_vagrant_id_rsa.pub
+```shell
+rm /tmp/one_vagrant_id_rsa.pub
+```
 
 5. Destroy VMs
-
-    vagrant destroy
+```shell
+vagrant destroy
+```
