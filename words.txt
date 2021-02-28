@@ -190,6 +190,7 @@ LogicalDisk
 LogonSession
 Lsb
 lxd
+macos
 md5sum
 mech
 memoize
