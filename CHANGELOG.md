@@ -1,3 +1,16 @@
+# v1.3.7
+
++ Support reading custom user operations in CLI mode (@tsnoam)
++ Allow adding users with duplicate UIDs in `server.user` operation (@tsnoam)
++ Add user UID/GID to `users` fact output (@tsnoam)
++ Fix uninstall command in `apk.packages` operation (@Gaming4LifeDE)
++ Fix support for `add_deploy` in API mode
++ Rename (deprecate) facts `server.Os` -> `server.Kernel` & `server.OsVersion` -> `server.KernelVersion`
++ Add `server.MacosVersion` fact
++ Add an empty line before writing in named crontab entries
++ Fix check for command change with named crontab entries
++ Properly quote package names (fix Python version specifiers with shell characters in `pip.packages` operation)
+
 # v1.3.6
 
 + Ignore errors when `crontab` fails (ie, when there's no crontab)
