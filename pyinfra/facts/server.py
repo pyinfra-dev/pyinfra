@@ -38,17 +38,41 @@ class Hostname(FactBase):
     command = 'uname -n'
 
 
-class Os(FactBase):
+class Kernel(FactBase):
     '''
-    Returns the OS name according to ``uname``.
+    Returns the kernel name according to ``uname``.
     '''
 
     command = 'uname -s'
 
 
+class KernelVersion(FactBase):
+    '''
+    Returns the kernel version according to ``uname``.
+    '''
+
+    command = 'uname -r'
+
+
+# Deprecated/renamed -> kernel
+class Os(FactBase):
+    '''
+    Returns the OS name according to ``uname``.
+
+    .. warning::
+        This fact is deprecated/renamed, please use the ``kernel`` fact.
+    '''
+
+    command = 'uname -s'
+
+
+# Deprecated/renamed -> kernel_version
 class OsVersion(FactBase):
     '''
     Returns the OS version according to ``uname``.
+
+    .. warning::
+        This fact is deprecated/renamed, please use the ``kernel_version`` fact.
     '''
 
     command = 'uname -r'
