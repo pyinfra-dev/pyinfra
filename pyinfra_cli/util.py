@@ -125,10 +125,15 @@ def get_operation_and_args(commands):
     # Get the module & operation name
     op_module, op_name = operation_name.split('.')
 
+    # Try to load the requested operation from the main operations package.
+    # If that fails, try to load from the user's operations package.
     try:
         op_module = import_module('pyinfra.operations.{0}'.format(op_module))
     except ImportError:
-        raise CliError('No such module: {0}'.format(op_module))
+        try:
+            op_module = import_module(str(op_module))
+        except ImportError:
+            raise CliError('No such module: {0}'.format(op_module))
 
     op = getattr(op_module, op_name, None)
     if not op:
