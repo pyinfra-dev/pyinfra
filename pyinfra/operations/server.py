@@ -521,6 +521,7 @@ def crontab(
     name_comment = '# pyinfra-name={0}'.format(cron_name)
 
     existing_crontab = crontab.get(command)
+    existing_crontab_command = command
     existing_crontab_match = command
 
     if not existing_crontab and cron_name:  # find the crontab by name if provided
@@ -528,6 +529,7 @@ def crontab(
             if name_comment in details['comments']:
                 existing_crontab = details
                 existing_crontab_match = cmd
+                existing_crontab_command = cmd
 
     exists = existing_crontab is not None
 
@@ -576,6 +578,7 @@ def crontab(
             month != existing_crontab.get('month'),
             day_of_week != existing_crontab.get('day_of_week'),
             day_of_month != existing_crontab.get('day_of_month'),
+            existing_crontab_command != command,
         )):
             edit_commands.append(sed_replace(
                 temp_filename, existing_crontab_match, new_crontab_line,
