@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import six
 
 from six import StringIO
+from six.moves import shlex_quote
 from six.moves.urllib.parse import urlparse
 
 
@@ -125,7 +126,7 @@ def ensure_packages(
 
         yield '{0} {1}'.format(
             command,
-            ' '.join(diff_packages),
+            ' '.join([shlex_quote(pkg) for pkg in diff_packages]),
         )
 
         for package in diff_packages:  # add/remove from current packages
@@ -137,7 +138,7 @@ def ensure_packages(
     if latest and upgrade_command and upgrade_packages:
         yield '{0} {1}'.format(
             upgrade_command,
-            ' '.join(upgrade_packages),
+            ' '.join([shlex_quote(pkg) for pkg in upgrade_packages]),
         )
 
 

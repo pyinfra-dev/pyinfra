@@ -1,5 +1,5 @@
 {
-    "args": [["pyinfra==1.1", "pytask", "test==1.1"]],
+    "args": [["pyinfra==1.1", "pytask", "test==1.1", "another>1"]],
     "facts": {
         "pip_packages": {
             "pip": {
@@ -9,6 +9,6 @@
         }
     },
     "commands": [
-        "pip install pyinfra==1.1 pytask"
+        "pip install pyinfra==1.1 pytask 'another>1'"
     ]
 }
