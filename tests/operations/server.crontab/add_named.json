@@ -7,6 +7,7 @@
         "crontab": {}
     },
     "commands": [
+        "echo '' >> _tempfile_",
         "echo '# pyinfra-name=a-name' >> _tempfile_",
         "echo '* * * * * this_is_a_command' >> _tempfile_",
         "crontab  _tempfile_"
