@@ -119,6 +119,15 @@ class Date(FactBase):
         return parse_date(output[0])
 
 
+class MacosVersion(FactBase):
+    '''
+    Returns the installed MacOS version.
+    '''
+
+    command = 'sw_vers -productVersion'
+    requires_command = 'sw_vers'
+
+
 class Mounts(FactBase):
     '''
     Returns a dictionary of mounted filesystems and information.
