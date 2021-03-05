@@ -505,6 +505,7 @@ class LinuxDistribution(FactBase):
         'opensuse': 'openSUSE',
         'rhel': 'RedHat',
         'ubuntu': 'Ubuntu',
+        'debian': 'Debian',
     }
 
     @staticmethod
