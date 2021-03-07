@@ -5,6 +5,7 @@ import click
 from pyinfra import logger
 
 from .connectors import EXECUTION_CONNECTORS
+from .connectors.util import remove_any_sudo_askpass_file
 from .exceptions import ConnectError, PyinfraError
 from .facts import (
     create_host_fact,
@@ -164,6 +165,9 @@ class Host(object):
         disconnect_func = getattr(self.executor, 'disconnect', None)
         if disconnect_func:
             return disconnect_func(self.state, self)
+
+        # TODO: consider whether this should be here!
+        remove_any_sudo_askpass_file(self)
 
         self.state.trigger_callbacks('host_disconnect', self)
 

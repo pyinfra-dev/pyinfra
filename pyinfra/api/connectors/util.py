@@ -187,6 +187,13 @@ def get_sudo_password(state, host, use_sudo_password, run_shell_command, put_fil
     return (SUDO_ASKPASS_EXE_FILENAME, shlex_quote(sudo_password))
 
 
+def remove_any_sudo_askpass_file(host):
+    sudo_askpass_uploaded = host.connector_data.get('sudo_askpass_uploaded', False)
+    if sudo_askpass_uploaded:
+        host.run_shell_command('rm -f {0}'.format(SUDO_ASKPASS_EXE_FILENAME))
+        host.connector_data['sudo_askpass_uploaded'] = False
+
+
 @memoize
 def show_use_su_login_warning():
     logger.warning((
