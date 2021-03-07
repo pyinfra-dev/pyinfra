@@ -4,9 +4,19 @@
         "cron_name": "a-name"
     },
     "facts": {
-        "crontab": {}
+        "crontab": {
+            "apt update": {
+                "minute": "*",
+                "hour": "*",
+                "month": "*",
+                "day_of_month": "*",
+                "day_of_week": "*",
+                "comments": []
+            }
+        }
     },
     "commands": [
+        "crontab -l  > _tempfile_",
         "echo '' >> _tempfile_",
         "echo '# pyinfra-name=a-name' >> _tempfile_",
         "echo '* * * * * this_is_a_command' >> _tempfile_",

@@ -560,7 +560,8 @@ def crontab(
     # Want the cron but it doesn't exist? Append the line
     elif present and not exists:
         if cron_name:
-            edit_commands.append("echo '' >> {0}".format(temp_filename))
+            if crontab:  # append a blank line if cron entries already exist
+                edit_commands.append("echo '' >> {0}".format(temp_filename))
             edit_commands.append('echo {0} >> {1}'.format(
                 shlex_quote(name_comment), temp_filename,
             ))
