@@ -158,6 +158,7 @@ def get_facts(
     ignore_errors = state.config.IGNORE_ERRORS
     shell_executable = state.config.SHELL
     use_sudo_password = state.config.USE_SUDO_PASSWORD
+    env = state.config.ENV
 
     # Facts can override the shell (winrm powershell vs cmd support)
     if fact.shell_executable:
@@ -175,10 +176,11 @@ def get_facts(
         su_user = current_global_kwargs['su_user']
         ignore_errors = current_global_kwargs['ignore_errors']
         timeout = current_global_kwargs['timeout']
+        env = current_global_kwargs['env']
 
     # Make a hash which keeps facts unique - but usable cross-deploy/threads.
     # Locks are used to maintain order.
-    fact_hash = make_hash((name, kwargs, sudo, sudo_user, su_user, ignore_errors))
+    fact_hash = make_hash((name, kwargs, sudo, sudo_user, su_user, ignore_errors, env))
 
     # Already got this fact? Unlock and return them
     current_facts = state.facts.get(fact_hash, {})
@@ -223,6 +225,7 @@ def get_facts(
                 use_sudo_password=use_sudo_password,
                 su_user=su_user,
                 timeout=timeout,
+                env=env,
                 shell_executable=shell_executable,
                 print_output=state.print_fact_output,
                 print_input=state.print_fact_input,
