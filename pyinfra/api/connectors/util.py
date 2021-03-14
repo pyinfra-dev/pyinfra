@@ -235,7 +235,7 @@ def make_unix_command(
             '{0}={1}'.format(key, value)
             for key, value in six.iteritems(env)
         ])
-        command = StringCommand('env', env_string, command)
+        command = StringCommand('export', env_string, '&&', command)
 
     if chdir:
         command = StringCommand('cd', chdir, '&&', command)
