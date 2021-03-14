@@ -108,7 +108,7 @@ def make_inventory(
         groups = _get_groups_from_filename(inventory_filename)
         # Used to set all the hosts to an additional group - that of the filename
         # ie inventories/dev.py means all the hosts are in the dev group, if not present
-        file_groupname = path.basename(inventory_filename).rsplit('.')[0]
+        file_groupname = path.basename(inventory_filename).rsplit('.', 1)[0]
 
     all_data = {}
 
