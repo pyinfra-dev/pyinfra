@@ -1,3 +1,15 @@
+# v1.3.8
+
++ Add Debian to prettified names in `LinuxDistribution` fact (@blarghmatey)
++ Fix logging non-string args (@morrison12)
++ Tidy up new issue templates (@Gaming4LifeDE)
++ Use `export` instead of `env` so variables pass into sub-commands as expected
++ pass any `env` into fact execution within operations
++ Fix splitting of inventory filename into group name
++ Improve package name parsing in `BrewPackages` fact
++ Only append blank line before new cron entries if some already exist
++ Remove any leftover askpass files when using `use_sudo_password`
+
 # v1.3.7
 
 + Support reading custom user operations in CLI mode (@tsnoam)
