@@ -778,15 +778,37 @@ def template(
             group='root',
         )
 
-        # Example showing how to pass python variable to template file.
+        # Example showing how to pass python variable to template file. You can also use dicts and lists
         # The .j2 file can use `{{ foo_variable }}` to be interpolated.
         foo_variable = 'This is some foo variable contents'
+        foo_dict = {
+            "str1": "This is string 1",
+            "str2": "This is string 2"
+        }
+        foo_list = [
+            "entry 1",
+            "entry 2"
+        ]
         files.template(
             name='Create a templated file',
-            src='templates/foo.j2',
-            dest='/tmp/foo',
+            src='templates/foo.yml.j2',
+            dest='/tmp/foo.yml',
             foo_variable=foo_variable,
+            foo_dict=foo_dict,
+            foo_list=foo_list
         )
+
+    .. code:: yml
+
+        # templates/foo.j2
+        name: "{{ foo_variable }}"
+        dict_contents:
+            str1: "{{ foo_dict.str1 }}"
+            str2: "{{ foo_dict.str2 }}"
+        list_contents:
+        {% for entry in foo_list %}
+            - "{{ entry }}"
+        {% endfor %}
     '''
 
     dest = escape_unix_path(dest)
