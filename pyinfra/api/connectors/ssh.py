@@ -262,14 +262,13 @@ def run_shell_command(
 
     command = make_unix_command(command, **command_kwargs)
     actual_command = command.get_raw_value()
-    printable_command = command.get_masked_value()
 
     logger.debug('Running command on {0}: (pty={1}) {2}'.format(
-        host.name, get_pty, printable_command,
+        host.name, get_pty, command,
     ))
 
     if print_input:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, printable_command), err=True)
+        click.echo('{0}>>> {1}'.format(host.print_prefix, command), err=True)
 
     # Run it! Get stdout, stderr & the underlying channel
     stdin_buffer, stdout_buffer, stderr_buffer = host.connection.exec_command(
