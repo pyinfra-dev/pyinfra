@@ -778,8 +778,8 @@ def template(
             group='root',
         )
 
-        # Example showing how to pass python variable to template file. You can also use dicts and lists
-        # The .j2 file can use `{{ foo_variable }}` to be interpolated.
+        # Example showing how to pass python variable to template file. You can also
+        # use dicts and lists. The .j2 file can use `{{ foo_variable }}` to be interpolated.
         foo_variable = 'This is some foo variable contents'
         foo_dict = {
             "str1": "This is string 1",
