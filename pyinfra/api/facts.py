@@ -22,6 +22,7 @@ from gevent.lock import BoundedSemaphore
 from paramiko import SSHException
 
 from pyinfra import logger
+from pyinfra.api import StringCommand
 from pyinfra.api.connectors.util import split_combined_output
 from pyinfra.api.util import (
     get_arg_value,
@@ -213,8 +214,9 @@ def get_facts(
             command = _make_command(fact.command, host_kwargs)
             requires_command = _make_command(fact.requires_command, host_kwargs)
             if requires_command:
-                command = '! command -v {0} > /dev/null || ({1})'.format(
-                    requires_command, command,
+                command = StringCommand(
+                    # Command doesn't exist, return 0 *or* run & return fact command
+                    '!', 'command', '-v', requires_command, '>/dev/null', '||', command,
                 )
 
             greenlet = state.fact_pool.spawn(
