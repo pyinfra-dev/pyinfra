@@ -152,6 +152,9 @@ def run_shell_command(
 
     logger.debug('Running command on {0}: {1}'.format(host.name, command))
 
+    if print_input:
+        click.echo('{0}>>> {1}'.format(host.print_prefix, command), err=True)
+
     # get rid of leading/trailing quote
     tmp_command = command.strip("'")
 
