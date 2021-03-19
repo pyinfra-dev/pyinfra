@@ -104,21 +104,13 @@ def connect(state, host):
 
 def run_shell_command(
     state, host, command,
-    get_pty=False,
-    sudo=None,
-    sudo_user=None,
-    su_user=None,
-    use_sudo_login=False,
-    use_su_login=False,
-    preserve_sudo_env=False,
-    timeout=None,
-    stdin=None,
+    env=None,
     success_exit_codes=None,
     print_output=False,
     print_input=False,
     return_combined_output=False,
     shell_executable=Config.SHELL,
-    **command_kwargs
+    **ignored_command_kwargs
 ):
     '''
     Execute a command on the specified host.
@@ -127,18 +119,9 @@ def run_shell_command(
         state (``pyinfra.api.State`` obj): state object for this command
         hostname (string): hostname of the target
         command (string): actual command to execute
-        get_pty (boolean): Not used for WINRM
-        sudo (boolean): Not used for WINRM
-        sudo_user (string): Not used for WINRM
-        use_sudo_login(boolean): Not used for WINRM
-        use_su_login(boolean): Not used for WINRM
-        preserve_sudo_env(boolean): Not used for WINRM
-    TODO: check if winrm has a timeout and use timeout param
-        timeout (int): timeout for this command to complete before erroring
-        stdin (string): Not used for WINRM
         success_exit_codes (list): all values in the list that will return success
         print_output (boolean): print the output
-        TODO print_intput (boolean): print the input
+        print_intput (boolean): print the input
         return_combined_output (boolean): combine the stdout and stderr lists
         shell_executable (string): shell to use - 'sh'=cmd, 'ps'=powershell(default)
         env (dict): environment variables to set
@@ -148,7 +131,7 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
-    command = make_win_command(command, **command_kwargs)
+    command = make_win_command(command, env=env)
 
     logger.debug('Running command on {0}: {1}'.format(host.name, command))
 
