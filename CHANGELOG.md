@@ -1,3 +1,11 @@
+# v1.3.9
+
++ Use `StringCommand` to implement fact requires commands, fixes `mysql_*` facts with passwords
++ Improve error for invalid private key files, including message for old paramiko versions
++ Fix `files.line`/`files.replace`/`server.crontab` replacements containing quotes
++ Fix `@winrm` connector command execution
++ Improve `files.template` docstring (@Gaming4LifeDE)
+
 # v1.3.8
 
 + Add Debian to prettified names in `LinuxDistribution` fact (@blarghmatey)
