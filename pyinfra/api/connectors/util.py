@@ -296,28 +296,10 @@ def make_unix_command(
     return StringCommand(*command_bits)
 
 
-def make_win_command(
-    command,
-    env=None,
-    shell_executable=Config.SHELL,
-):
+def make_win_command(command, env=None):
     '''
     Builds a windows command with various kwargs.
     '''
-
-    debug_meta = {}
-
-    for key, value in (
-        ('shell_executable', shell_executable),
-        ('env', env),
-    ):
-        if value:
-            debug_meta[key] = value
-
-    logger.debug('Building command ({0}): {1}'.format(' '.join(
-        '{0}: {1}'.format(key, value)
-        for key, value in six.iteritems(debug_meta)
-    ), command))
 
     # Use env & build our actual command
     if env:
