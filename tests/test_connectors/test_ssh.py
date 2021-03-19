@@ -292,10 +292,9 @@ class TestSSHConnector(TestCase):
             ('somehost', {'ssh_key': 'testkey'}),
         )), Config())
 
-        with self.assertRaises(IOError) as e:
+        with self.assertRaises(PyinfraError) as e:
             connect_all(state)
 
-        # Ensure pyinfra style IOError
         self.assertTrue(e.exception.args[0].startswith('No such private key file:'))
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')
