@@ -184,6 +184,8 @@ def run_shell_command(
     logger.debug('Command exit status: {0}'.format(status))
 
     if return_combined_output:
+        std_out = [('stdout', line) for line in std_out]
+        std_err = [('stderr', line) for line in std_err]
         return status, std_out + std_err
 
     return status, std_out, std_err
