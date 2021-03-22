@@ -94,7 +94,7 @@ def connect(state, host):
             '{0}={1}'.format(key, value)
             for key, value in auth_kwargs.items()
         )
-        logger.debug("%s", e)
+        logger.debug('%s', e)
         _raise_connect_error(host, 'Authentication error', auth_args)
 
 
