@@ -36,6 +36,7 @@ class Inventory(object):
         winrm_username: override WINRM username
         winrm_password: override WINRM pasword
         winrm_port: override WINRM port
+        winrm_transport: override WINRM transport
         **groups: map of group names -> ``(names, data)``
     '''
 
@@ -46,7 +47,7 @@ class Inventory(object):
         ssh_user=None, ssh_port=None, ssh_key=None,
         ssh_key_password=None, ssh_password=None,
         winrm_username=None, winrm_password=None,
-        winrm_port=None,
+        winrm_port=None, winrm_transport=None,
         **groups
     ):
         # Setup basics
@@ -64,6 +65,7 @@ class Inventory(object):
             'winrm_username': winrm_username,
             'winrm_password': winrm_password,
             'winrm_port': winrm_port,
+            'winrm_transport': winrm_transport,
         }
         # Strip None values
         override_data = {

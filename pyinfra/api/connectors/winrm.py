@@ -29,14 +29,12 @@ def _make_winrm_kwargs(state, host):
         ('username', host.data.winrm_user),
         ('password', host.data.winrm_password),
         ('winrm_port', int(host.data.winrm_port or 0)),
-        ('timeout', state.config.CONNECT_TIMEOUT),
+        ('winrm_transport', host.data.winrm_transport or 'plaintext'),
+        ('winrm_read_timeout_sec', host.data.winrm_read_timeout_sec or 30),
+        ('winrm_operation_timeout_sec', host.data.winrm_operation_timeout_sec or 20),
     ):
         if value:
             kwargs[key] = value
-
-    # Password auth (boo!)
-    if host.data.winrm_password:
-        kwargs['password'] = host.data.winrm_password
 
     # FUTURE: add more auth
     # pywinrm supports: basic, certificate, ntlm, kerberos, plaintext, ssl, credssp
@@ -58,7 +56,7 @@ def connect(state, host):
     '''
 
     kwargs = _make_winrm_kwargs(state, host)
-    logger.debug('Connecting to: {0} ({1})'.format(host.name, kwargs))
+    logger.debug('Connecting to: %s (%s)', host.name, kwargs)
 
     # Hostname can be provided via winrm config (alias), data, or the hosts name
     hostname = kwargs.pop(
@@ -66,21 +64,20 @@ def connect(state, host):
         host.data.winrm_hostname or host.name,
     )
 
-    logger.debug('winrm_username:{} winrm_password:{} '
-                 'winrm_port:{}'.format(host.data.winrm_username, host.data.winrm_password,
-                                        host.data.winrm_port))
-
     try:
         # Create new session
         host_and_port = '{}:{}'.format(hostname, host.data.winrm_port)
-        logger.debug('host_and_port: {}'.format(host_and_port))
+        logger.debug('host_and_port: %s', host_and_port)
 
         session = winrm.Session(
             host_and_port,
             auth=(
-                host.data.winrm_username,
-                host.data.winrm_password,
+                kwargs['username'],
+                kwargs['password'],
             ),
+            transport=kwargs['winrm_transport'],
+            read_timeout_sec=kwargs['winrm_read_timeout_sec'],
+            operation_timeout_sec=kwargs['winrm_operation_timeout_sec'],
         )
 
         return session
@@ -92,13 +89,12 @@ def connect(state, host):
         for key, value in kwargs.items():
             if key in ('username', 'password'):
                 auth_kwargs[key] = value
-                continue
 
         auth_args = ', '.join(
             '{0}={1}'.format(key, value)
             for key, value in auth_kwargs.items()
         )
-        logger.debug(str(e))
+        logger.debug('%s', e)
         _raise_connect_error(host, 'Authentication error', auth_args)
 
 
@@ -133,7 +129,7 @@ def run_shell_command(
 
     command = make_win_command(command, env=env)
 
-    logger.debug('Running command on {0}: {1}'.format(host.name, command))
+    logger.debug('Running command on %s: %s', host.name, command)
 
     if print_input:
         click.echo('{0}>>> {1}'.format(host.print_prefix, command), err=True)
@@ -149,7 +145,7 @@ def run_shell_command(
 
     if not shell_executable:
         shell_executable = 'ps'
-    logger.debug('shell_executable:{0}'.format(shell_executable))
+    logger.debug('shell_executable:%s', shell_executable)
 
     # default windows to use ps, but allow it to be overridden
     if shell_executable in ['cmd']:
@@ -158,7 +154,7 @@ def run_shell_command(
         response = host.connection.run_ps(tmp_command)
 
     return_code = response.status_code
-    logger.debug('response:{}'.format(response))
+    logger.debug('response:%s', response)
 
     std_out_str = response.std_out.decode('utf-8')
     std_err_str = response.std_err.decode('utf-8')
@@ -167,8 +163,8 @@ def run_shell_command(
     std_out = std_out_str.split('\r\n')
     std_err = std_err_str.split('\r\n')
 
-    logger.debug('std_out:{}'.format(std_out))
-    logger.debug('std_err:{}'.format(std_err))
+    logger.debug('std_out:%s', std_out)
+    logger.debug('std_err:%s', std_err)
 
     if print_output:
         click.echo(
@@ -181,7 +177,7 @@ def run_shell_command(
     else:
         status = return_code == 0
 
-    logger.debug('Command exit status: {0}'.format(status))
+    logger.debug('Command exit status: %s', status)
 
     if return_combined_output:
         std_out = [('stdout', line) for line in std_out]

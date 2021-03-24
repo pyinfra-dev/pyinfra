@@ -154,6 +154,8 @@ pyinfra @winrm/192.168.3.232 --winrm-username vagrant --winrm-password vagrant -
 pyinfra @winrm/192.168.3.232 --winrm-username vagrant --winrm-password vagrant --winrm-port 5985 exec -- write-host hello
 # Run a command using the command prompt:
 pyinfra @winrm/192.168.3.232 --winrm-username vagrant --winrm-password vagrant --winrm-port 5985 --shell-executable cmd exec -- date /T
+# Run a command using the winrm ntlm transport
+pyinfra @winrm/192.168.3.232 --winrm-username vagrant --winrm-password vagrant --winrm-port 5985 --winrm-transport ntlm exec -- hostname
 ```
 
 **Available Data**:
@@ -162,4 +164,5 @@ pyinfra @winrm/192.168.3.232 --winrm-username vagrant --winrm-password vagrant -
 winrm_port = 22
 winrm_user = 'ubuntu'
 winrm_password = 'password for user'
+winrm_transport = 'ntlm'
 ```

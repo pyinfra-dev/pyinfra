@@ -139,6 +139,7 @@ def _print_support(ctx, param, value):
 @click.option('--winrm-username', help='WINRM user to connect as.')
 @click.option('--winrm-password', help='WINRM password.')
 @click.option('--winrm-port', help='WINRM port to connect to.')
+@click.option('--winrm-transport', help='WINRM transport for use.')
 # Eager commands (pyinfra [--facts | --operations | --support | --version])
 @click.option(
     '--facts', is_flag=True, is_eager=True, callback=_print_facts,
@@ -246,7 +247,7 @@ def _main(
     inventory, operations, verbosity,
     user, port, key, key_password, password,
     winrm_username, winrm_password, winrm_port,
-    shell_executable,
+    winrm_transport, shell_executable,
     sudo, sudo_user, use_sudo_password, su_user,
     parallel, fail_percent,
     dry, limit, no_wait, serial, quiet,
@@ -444,6 +445,7 @@ def _main(
         winrm_username=winrm_username,
         winrm_password=winrm_password,
         winrm_port=winrm_port,
+        winrm_transport=winrm_transport,
     )
 
     # Attach to pseudo inventory
