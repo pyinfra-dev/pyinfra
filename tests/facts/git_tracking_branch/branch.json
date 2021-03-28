@@ -1,6 +1,6 @@
 {
     "arg": "myrepo",
-    "command": "cd myrepo && git status --branch --porcelain",
+    "command": "! test -d myrepo || (cd myrepo && git status --branch --porcelain)",
     "output": [
         "## branch1...origin/master"
     ],
