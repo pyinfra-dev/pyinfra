@@ -8,6 +8,6 @@
         }
     },
     "commands": [
-        "psql -Ac 'CREATE ROLE testuser LOGIN SUPERUSER'"
+        "psql -Ac 'CREATE ROLE \"testuser\" LOGIN SUPERUSER'"
     ]
 }
