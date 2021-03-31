@@ -1,0 +1,17 @@
+{
+    "args": [
+        "http://myfile"
+    ],
+    "kwargs": {
+        "dest": "c:\\"
+    },
+    "facts": {
+        "windows_file": {
+            "c:\\": false
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "Destination c:\\ already exists and is not a file"
+    }
+}

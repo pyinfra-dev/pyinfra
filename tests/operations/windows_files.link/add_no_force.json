@@ -1,0 +1,17 @@
+{
+    "args": [
+        "testlink"
+    ],
+    "kwargs": {
+        "target": "c:\\Users\\foo\\testlink",
+        "force": false
+    },
+    "facts": {
+        "windows_link": {
+            "testlink": null
+        }
+    },
+    "commands": [
+        "New-Item -ItemType SymbolicLink -Path testlink -Target c:\\Users\\foo\\testlink"
+    ]
+}
