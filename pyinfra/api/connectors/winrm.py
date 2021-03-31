@@ -232,7 +232,7 @@ def put_file(
     # Always use temp file here in case of failure
     temp_file = ntpath.join(
         host.fact.windows_temp_dir(),
-        f'pyinfra-{sha1_hash(remote_filename)}',
+        'pyinfra-{0}'.format(sha1_hash(remote_filename)),
     )
 
     if not _put_file(state, host, filename_or_io, temp_file):
