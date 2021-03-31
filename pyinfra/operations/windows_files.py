@@ -4,32 +4,23 @@ The windows_files module handles windows filesystem state, file uploads and temp
 
 from __future__ import unicode_literals
 
-import os
 import ntpath
-import six
+import os
 
+import six
+from datetime import timedelta
 from pyinfra import logger
 from pyinfra.api import (
-    operation, 
-    OperationError, 
+    operation,
+    OperationError,
     OperationTypeError,
     FileUploadCommand,
 )
 from pyinfra.api.util import get_file_sha1
+
 from .util.files import ensure_mode_int
 from .util.compat import fspath
 
-def _create_remote_dir(state, host, remote_filename, user, group):
-    # Always use windows style pathing
-    remote_dirname = ntpath.dirname(remote_filename)
-    if remote_dirname:
-        yield directory(
-            path=remote_dirname,
-            user=user, group=group,
-            _no_check_owner_mode=True,  # don't check existing user/mode
-            _no_fail_on_link=True,  # don't fail if the path is a link
-            state=state, host=host,
-        )
 
 @operation(pipeline_facts={
     'file': 'dest',
@@ -61,7 +52,7 @@ def download(
         winows_files.download(
             name='Download the Docker repo file',
             src='https://download.docker.com/linux/centos/docker-ce.repo',
-            dest='C:\docker',
+            dest='C:\\docker',
         )
     '''
 
@@ -108,10 +99,10 @@ def download(
             'Invoke-WebRequest -Uri {0} -OutFile {1}'
         ).format(src, dest)
 
-        #if user or group:
+        # if user or group:
         #    yield chown(dest, user, group)
 
-        #if mode:
+        # if mode:
         #    yield chmod(dest, mode)
 
         if sha1sum:
@@ -137,6 +128,7 @@ def download(
 
     else:
         host.noop('file {0} has already been downloaded'.format(dest))
+
 
 @operation(pipeline_facts={
     'file': 'dest',
@@ -178,7 +170,7 @@ def put(
         files.put(
             name='Update the message of the day file',
             src='data/content.json',
-            dest=r'C:\data\content.json'
+            dest='C:\\data\\content.json'
         )
     '''
 
@@ -207,10 +199,10 @@ def put(
     if not remote_file or force:
         yield FileUploadCommand(local_file, dest)
 
-        #if user or group:
+        # if user or group:
         #    yield chown(dest, user, group)
 
-        #if mode:
+        # if mode:
         #    yield chmod(dest, mode)
 
     # File exists, check sum and check user/group/mode if supplied
@@ -222,30 +214,31 @@ def put(
         if local_sum != remote_sum:
             yield FileUploadCommand(local_file, dest)
 
-            #if user or group:
+            # if user or group:
             #    yield chown(dest, user, group)
 
-            #if mode:
+            # if mode:
             #    yield chmod(dest, mode)
 
         else:
             changed = False
 
             # Check mode
-            #if mode and remote_file['mode'] != mode:
+            # if mode and remote_file['mode'] != mode:
             #    yield chmod(dest, mode)
             #    changed = True
 
             # Check user/group
-            #if (
+            # if (
             #    (user and remote_file['user'] != user)
             #    or (group and remote_file['group'] != group)
-            #):
+            # ):
             #    yield chown(dest, user, group)
             #    changed = True
 
             if not changed:
                 host.noop('file {0} is already uploaded'.format(dest))
+
 
 @operation(pipeline_facts={
     'windows_file': 'name',
@@ -345,9 +338,9 @@ def _create_remote_dir(state, host, remote_filename, user, group):
     if remote_dirname:
         yield directory(
             remote_dirname,
-            state=state, 
-            host=host, 
-            user=user, 
+            state=state,
+            host=host,
+            user=user,
             group=group,
         )
 
@@ -447,11 +440,13 @@ def windows_directory(*args, **kwargs):
     ))
     return directory(*args, **kwargs)
 
+
 def _validate_path(path):
     try:
         path = fspath(path)
     except TypeError:
         raise OperationTypeError('`path` must be a string or `os.PathLike` object')
+
 
 @operation(pipeline_facts={
     'link': 'path',
@@ -490,9 +485,9 @@ def link(
 
         # simple example showing how to link to a file
         files.link(
-            name=r'Create link C:\issue2 that points to C:\issue',
-            path=r'C:\issue2',
-            target='C:\issue',
+            name=r'Create link C:\\issue2 that points to C:\\issue',
+            path=r'C:\\issue2',
+            target=r'C\\issue',
         )
     '''
 
@@ -501,10 +496,10 @@ def link(
     if present and not target:
         raise OperationError('If present is True target must be provided')
 
-    info = host.fact.windows_file(path)
+    info = host.fact.windows_link(path)
 
     # Not a link?
-    if info is not None and not info.mode.link:
+    if info is not None and not info:
         raise OperationError('{0} exists and is not a link'.format(path))
 
     add_cmd = 'New-Item -ItemType {0} -Path {1} -Target {2} {3}'.format(
@@ -525,19 +520,19 @@ def link(
 
         yield add_cmd
 
-        #if user or group:
+        # if user or group:
         #    yield chown(path, user, group, dereference=False)
 
-        #host.fact._create(
+        # host.fact._create(
         #    'windows_link',
         #    args=(path,),
         #    data={'link_target': target, 'group': group, 'user': user},
-        #)
+        # )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield remove_cmd
-        #host.fact._delete('windows_link', args=(path,))
+        # host.fact._delete('windows_link', args=(path,))
 
     else:
         host.noop('link {0} already exists and force=False'.format(path))

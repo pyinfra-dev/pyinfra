@@ -203,7 +203,7 @@ def _put_file(state, host, filename_or_io, remote_location, chunk_size=2048):
     with get_file_io(filename_or_io) as file_io:
         data = file_io.read()
         for i in range(0, len(data), chunk_size):
-            chunk = data[i:i+chunk_size]
+            chunk = data[i:i + chunk_size]
             ps = (
                 '$data = [System.Convert]::FromBase64String("{0}"); '
                 '{1} -Value $data -Encoding byte -Path "{2}"'
@@ -215,7 +215,7 @@ def _put_file(state, host, filename_or_io, remote_location, chunk_size=2048):
             if status is False:
                 logger.error('File upload error: {0}'.format('\n'.join(stderr)))
                 return False
-    
+
     return True
 
 
@@ -230,7 +230,7 @@ def put_file(
 
     # Always use temp file here in case of failure
     temp_file = ntpath.join(
-        host.fact.windows_temp_dir(), 
+        host.fact.windows_temp_dir(),
         f"pyinfra-{sha1_hash(remote_filename)}"
     )
 

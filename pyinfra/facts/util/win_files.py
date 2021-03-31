@@ -38,11 +38,15 @@ def _parse_time(time):
     except ValueError:
         pass
 
+
 def parse_win_ls_output(output, wanted_type):
     if output:
         matches = re.match(WIN_LS_REGEX, output)
         if matches:
-            type = WIN_FLAG_TO_TYPE[output[0]]
+            if output[5] == 'l':
+                type = 'link'
+            else:
+                type = WIN_FLAG_TO_TYPE[output[0]]
 
             if type != wanted_type:
                 return False
@@ -89,7 +93,7 @@ def parse_win_ls_output(output, wanted_type):
                 'mtime': _parse_time(date_and_time),
                 'size': size,
                 'name': matches.group(5),
-                # TODO: You will need to run another powershell command to 
+                # TODO: You will need to run another powershell command to
                 #       get the link target, so bailing on that for now.
             }
 
