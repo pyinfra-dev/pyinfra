@@ -409,6 +409,13 @@ def directory(
 #        if user or group:
 #            yield chown(name, user, group, recursive=recursive)
 #
+        # Somewhat bare fact, should flesh out more
+        host.fact._create(
+            'windows_directory',
+            args=(name,),
+            data={'type': 'directory'},
+        )
+
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         # TODO: how to ensure we use 'ps'?
