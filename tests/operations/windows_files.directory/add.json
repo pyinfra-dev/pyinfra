@@ -1,5 +1,7 @@
 {
-    "args": ["testdir"],
+    "args": [
+        "testdir"
+    ],
     "kwargs": {
         "recursive": true
     },
@@ -9,6 +11,6 @@
         }
     },
     "commands": [
-        "mkdir -p testdir"
+        "New-Item -Path testdir -ItemType Directory"
     ]
 }
