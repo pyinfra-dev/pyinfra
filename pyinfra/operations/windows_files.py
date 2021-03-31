@@ -6,20 +6,21 @@ from __future__ import unicode_literals
 
 import ntpath
 import os
+from datetime import timedelta
 
 import six
-from datetime import timedelta
+
 from pyinfra import logger
 from pyinfra.api import (
+    FileUploadCommand,
     operation,
     OperationError,
     OperationTypeError,
-    FileUploadCommand,
 )
 from pyinfra.api.util import get_file_sha1
 
-from .util.files import ensure_mode_int
 from .util.compat import fspath
+from .util.files import ensure_mode_int
 
 
 @operation(pipeline_facts={

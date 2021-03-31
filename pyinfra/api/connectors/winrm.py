@@ -1,9 +1,10 @@
 from __future__ import print_function, unicode_literals
 
+import base64
+import ntpath
+
 import click
 import winrm
-import ntpath
-import base64
 
 from pyinfra import logger
 from pyinfra.api import Config
@@ -209,7 +210,7 @@ def _put_file(state, host, filename_or_io, remote_location, chunk_size=2048):
                 '{1} -Value $data -Encoding byte -Path "{2}"'
             ).format(
                 base64.b64encode(chunk).decode('utf-8'),
-                "Set-Content" if i == 0 else "Add-Content",
+                'Set-Content' if i == 0 else 'Add-Content',
                 remote_location)
             status, _stdout, stderr = run_shell_command(state, host, ps)
             if status is False:
@@ -231,7 +232,7 @@ def put_file(
     # Always use temp file here in case of failure
     temp_file = ntpath.join(
         host.fact.windows_temp_dir(),
-        f"pyinfra-{sha1_hash(remote_filename)}"
+        f'pyinfra-{sha1_hash(remote_filename)}',
     )
 
     if not _put_file(state, host, filename_or_io, temp_file):
