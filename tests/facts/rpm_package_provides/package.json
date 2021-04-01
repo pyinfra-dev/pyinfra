@@ -1,0 +1,10 @@
+{
+    "arg": "vim",
+    "command": "repoquery --queryformat \"%{NAME} %{VERSION}-%{RELEASE}\\n\" --whatprovides vim || true",
+    "output": [
+        "vim-enhanced 8.0.1763-15.el8"
+    ],
+    "fact": [
+       ["vim-enhanced", "8.0.1763-15.el8"]
+    ]
+}
