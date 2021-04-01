@@ -13,6 +13,11 @@
         },
         "rpm_packages": {
             "something": [""]
+        },
+        "rpm_package_provides": {
+            "git": null,
+            "python-devel": null,
+            "something": null
         }
     },
     "commands": [
