@@ -1,0 +1,24 @@
+{
+    "args": [[
+        "git",
+        "python-devel",
+        "something"
+    ]],
+    "facts": {
+        "which": {
+            "apk": null,
+            "apt": null,
+            "brew": null,
+            "dnf": null,
+            "pacman": null,
+            "xbps": null,
+            "yum": "/sbin/yum"
+        },
+        "rpm_packages": {
+            "something": [""]
+        }
+    },
+    "commands": [
+        "yum install -y git python-devel"
+    ]
+}

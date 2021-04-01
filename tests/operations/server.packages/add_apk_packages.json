@@ -1,0 +1,18 @@
+{
+    "args": [[
+        "git",
+        "python-devel",
+        "something"
+    ]],
+    "facts": {
+        "which": {
+            "apk": "/sbin/apk"
+        },
+        "apk_packages": {
+            "something": [""]
+        }
+    },
+    "commands": [
+        "apk add git python-devel"
+    ]
+}
