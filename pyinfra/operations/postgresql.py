@@ -101,7 +101,7 @@ def role(
     if not present:
         if is_present:
             yield make_execute_psql_command(
-                'DROP ROLE {0}'.format(role),
+                'DROP ROLE "{0}"'.format(role),
                 user=postgresql_user,
                 password=postgresql_password,
                 host=postgresql_host,
@@ -113,7 +113,7 @@ def role(
 
     # If we want the user and they don't exist
     if not is_present:
-        sql_bits = ['CREATE ROLE {0}'.format(role)]
+        sql_bits = ['CREATE ROLE "{0}"'.format(role)]
 
         for key, value in (
             ('LOGIN', login),
@@ -198,7 +198,7 @@ def database(
     if not present:
         if is_present:
             yield make_execute_psql_command(
-                'DROP DATABASE {0}'.format(database),
+                'DROP DATABASE "{0}"'.format(database),
                 user=postgresql_user,
                 password=postgresql_password,
                 host=postgresql_host,
@@ -210,10 +210,10 @@ def database(
 
     # We want the database but it doesn't exist
     if present and not is_present:
-        sql_bits = ['CREATE DATABASE {0}'.format(database)]
+        sql_bits = ['CREATE DATABASE "{0}"'.format(database)]
 
         for key, value in (
-            ('OWNER', owner),
+            ('OWNER', '"{0}"'.format(owner) if owner else owner),
             ('TEMPLATE', template),
             ('ENCODING', encoding),
             ('LC_COLLATE', lc_collate),
