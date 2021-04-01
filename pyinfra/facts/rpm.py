@@ -62,3 +62,32 @@ class RpmPackage(FactBase):
                     'name': matches.group(1),
                     'version': matches.group(2),
                 }
+
+
+class RpmPackageProvides(FactBase):
+    '''
+    Returns a list of packages that provide the specified capability (command, file, etc).
+    '''
+
+    default = list
+
+    requires_command = 'repoquery'
+
+    @staticmethod
+    def command(name):
+        # Accept failure here (|| true) for invalid/unknown packages
+        return 'repoquery --queryformat "{0}" --whatprovides {1} || true'.format(
+            rpm_query_format,
+            name,
+        )
+
+    @staticmethod
+    def process(output):
+        packages = []
+
+        for line in output:
+            matches = re.match(rpm_regex, line)
+            if matches:
+                packages.append(list(matches.groups()))
+
+        return packages
