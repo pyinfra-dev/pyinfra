@@ -1,0 +1,14 @@
+{
+    "kwargs": {
+        "path": "/some/virtualenv",
+        "always_copy": true
+    },
+    "facts": {
+        "file": {
+            "/some/virtualenv/bin/activate": null
+        }
+    },
+    "commands": [
+        "python -m venv --copies /some/virtualenv"
+    ]
+}
