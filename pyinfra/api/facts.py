@@ -35,6 +35,8 @@ from pyinfra.api.util import (
 )
 from pyinfra.progress import progress_spinner
 
+from .operation_kwargs import get_executor_kwarg_keys
+
 
 # Index of snake_case facts -> CamelCase classes
 FACTS = {}
@@ -137,6 +139,15 @@ def get_facts(
     Get a single fact for all hosts in the state.
     '''
 
+    # TODO: tidy up the whole executor argument handling here!
+    global_kwarg_overrides = {}
+    if kwargs:
+        global_kwarg_overrides.update({
+            key: kwargs.pop(key)
+            for key in get_executor_kwarg_keys()
+            if key in kwargs
+        })
+
     if isclass(name_or_cls) and issubclass(name_or_cls, (FactBase, ShortFactBase)):
         fact = name_or_cls()
         name = fact.name
@@ -171,15 +182,17 @@ def get_facts(
     timeout = None
 
     # If inside an operation, fetch global arguments
-    current_global_kwargs = state.current_op_global_kwargs
+    current_global_kwargs = state.current_op_global_kwargs or {}
+    # Allow `Host.get_fact` calls to explicitly override these
+    current_global_kwargs.update(global_kwarg_overrides)
     if current_global_kwargs:
-        sudo = current_global_kwargs['sudo']
-        sudo_user = current_global_kwargs['sudo_user']
-        use_sudo_password = current_global_kwargs['use_sudo_password']
-        su_user = current_global_kwargs['su_user']
-        ignore_errors = current_global_kwargs['ignore_errors']
-        timeout = current_global_kwargs['timeout']
-        env = current_global_kwargs['env']
+        sudo = current_global_kwargs.get('sudo', sudo)
+        sudo_user = current_global_kwargs.get('sudo_user', sudo_user)
+        use_sudo_password = current_global_kwargs.get('use_sudo_password', use_sudo_password)
+        su_user = current_global_kwargs.get('su_user', su_user)
+        ignore_errors = current_global_kwargs.get('ignore_errors', ignore_errors)
+        timeout = current_global_kwargs.get('timeout', timeout)
+        env = current_global_kwargs.get('env', env)
 
     # Make a hash which keeps facts unique - but usable cross-deploy/threads.
     # Locks are used to maintain order.
