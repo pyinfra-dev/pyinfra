@@ -14,7 +14,7 @@ class PacmanUnpackGroup(FactBase):
 
         [
             'package_name',
-        [
+        ]
     '''
 
     requires_command = 'pacman'
