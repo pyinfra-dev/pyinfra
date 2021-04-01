@@ -12,6 +12,11 @@
             "git": ["2.26.2-1.fc32"],
             "vim-enhanced": ["8.2.1081-1.fc32"],
             "vim-common": ["8.2.1081-1.fc32"]
+        },
+        "rpm_package_provides": {
+            "git": null,
+            "vim-enhanced": null,
+            "vim-common": null
         }
     },
     "commands": [
