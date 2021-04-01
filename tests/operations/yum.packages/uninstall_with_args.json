@@ -9,6 +9,9 @@
 	"facts": {
         "rpm_packages": {
             "git": [""]
+        },
+        "rpm_package_provides": {
+            "git": null
         }
     },
     "commands": [

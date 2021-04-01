@@ -189,4 +189,5 @@ def packages(
         upgrade_command='dnf update -y',
         version_join='=',
         latest=latest,
+        expand_package_fact=host.fact.rpm_package_provides,
     )
