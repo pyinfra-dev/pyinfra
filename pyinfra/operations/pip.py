@@ -75,6 +75,42 @@ _virtualenv = virtualenv  # noqa
 
 
 @operation
+def venv(
+    path,
+    python=None, site_packages=False, always_copy=False, present=True,
+    state=None, host=None,
+):
+    '''
+    Add/remove Python virtualenvs.
+
+    + python: python interpreter to use
+    + site_packages: give access to the global site-packages
+    + always_copy: always copy files rather than symlinking
+    + present: whether the virtualenv should exist
+
+    Example:
+
+    .. code:: python
+
+        pip.venv(
+            name='Create a virtualenv',
+            path='/usr/local/bin/venv',
+        )
+    '''
+
+    yield virtualenv(
+        venv=True,
+        path=path,
+        python=python,
+        site_packages=site_packages,
+        always_copy=always_copy,
+        present=present,
+        state=state,
+        host=host,
+    )
+
+
+@operation
 def packages(
     packages=None, present=True, latest=False,
     requirements=None, pip='pip', virtualenv=None, virtualenv_kwargs=None,
