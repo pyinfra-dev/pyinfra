@@ -30,6 +30,14 @@ class Home(FactBase):
     command = 'echo $HOME'
 
 
+class Path(FactBase):
+    '''
+    Returns the path environment variable of the current user.
+    '''
+
+    command = 'echo $PATH'
+
+
 class Hostname(FactBase):
     '''
     Returns the current hostname of the server.
