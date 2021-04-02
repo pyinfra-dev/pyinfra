@@ -1,0 +1,16 @@
+{
+    "args": [
+        "http://myfile"
+    ],
+    "kwargs": {
+        "dest": "c:\\myfile"
+    },
+    "facts": {
+        "windows_file": {
+            "c:\\myfile": null
+        }
+    },
+    "commands": [
+        "$ProgressPreference = \"SilentlyContinue\"; Invoke-WebRequest -Uri http://myfile -OutFile c:\\myfile"
+    ]
+}

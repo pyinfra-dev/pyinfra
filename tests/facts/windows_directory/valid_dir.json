@@ -1,6 +1,6 @@
 {
     "arg": "c:\\Windows",
-    "command": "Get-ItemProperty -Path c:\\Windows",
+    "command": "if (Test-Path \"c:\\Windows\") { Get-ItemProperty -Path \"c:\\Windows\" }",
     "output": [
         "",
         "",
@@ -10,9 +10,9 @@
         "Mode                LastWriteTime         Length Name                                                                  ",
         "----                -------------         ------ ----                                                                  ",
         "d-----        9/15/2018   8:16 AM                Windows                                                               ",
-         "",
-         "",
-         ""
+        "",
+        "",
+        ""
     ],
     "fact": {
         "type": "directory",
@@ -20,7 +20,8 @@
             "archive": false,
             "hidden": false,
             "readonly": false,
-            "system": false
+            "system": false,
+            "link": false
         },
         "mtime": "2018-09-15T08:16:00",
         "size": "0",

@@ -1,12 +1,15 @@
 from __future__ import print_function, unicode_literals
 
+import base64
+import ntpath
+
 import click
 import winrm
 
 from pyinfra import logger
 from pyinfra.api import Config
 from pyinfra.api.exceptions import ConnectError, PyinfraError
-from pyinfra.api.util import memoize
+from pyinfra.api.util import get_file_io, memoize, sha1_hash
 
 from .util import make_win_command
 
@@ -194,11 +197,67 @@ def get_file(
     raise PyinfraError('Not implemented')
 
 
+def _put_file(state, host, filename_or_io, remote_location, chunk_size=2048):
+    # this should work fine on smallish files, but there will be perf issues
+    # on larger files both due to the full read, the base64 encoding, and
+    # the latency when sending chunks
+    with get_file_io(filename_or_io) as file_io:
+        data = file_io.read()
+        for i in range(0, len(data), chunk_size):
+            chunk = data[i:i + chunk_size]
+            ps = (
+                '$data = [System.Convert]::FromBase64String("{0}"); '
+                '{1} -Value $data -Encoding byte -Path "{2}"'
+            ).format(
+                base64.b64encode(chunk).decode('utf-8'),
+                'Set-Content' if i == 0 else 'Add-Content',
+                remote_location)
+            status, _stdout, stderr = run_shell_command(state, host, ps)
+            if status is False:
+                logger.error('File upload error: {0}'.format('\n'.join(stderr)))
+                return False
+
+    return True
+
+
 def put_file(
     state, host, filename_or_io, remote_filename,
+    print_output=False, print_input=False,
     **command_kwargs
 ):
-    raise PyinfraError('Not implemented')
+    '''
+    Upload file by chunking and sending base64 encoded via winrm
+    '''
+
+    # Always use temp file here in case of failure
+    temp_file = ntpath.join(
+        host.fact.windows_temp_dir(),
+        'pyinfra-{0}'.format(sha1_hash(remote_filename)),
+    )
+
+    if not _put_file(state, host, filename_or_io, temp_file):
+        return False
+
+    # Execute run_shell_command w/sudo and/or su_user
+    command = 'Move-Item -Path {0} -Destination {1} -Force'.format(temp_file, remote_filename)
+    status, _, stderr = run_shell_command(
+        state, host, command,
+        print_output=print_output,
+        print_input=print_input,
+        **command_kwargs
+    )
+
+    if status is False:
+        logger.error('File upload error: {0}'.format('\n'.join(stderr)))
+        return False
+
+    if print_output:
+        click.echo(
+            '{0}file uploaded: {1}'.format(host.print_prefix, remote_filename),
+            err=True,
+        )
+
+    return True
 
 
 EXECUTION_CONNECTOR = True

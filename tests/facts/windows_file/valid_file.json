@@ -1,18 +1,18 @@
 {
     "arg": "c:\\Windows\\System32\\drivers\\etc\\hosts",
-    "command": "Get-ItemProperty -Path c:\\Windows\\System32\\drivers\\etc\\hosts",
+    "command": "if (Test-Path \"c:\\Windows\\System32\\drivers\\etc\\hosts\") { Get-ItemProperty -Path \"c:\\Windows\\System32\\drivers\\etc\\hosts\" }",
     "output": [
         "",
         "",
-        "    Directory: C:\\Windows\\System32\\drivers\\etc", 
+        "    Directory: C:\\Windows\\System32\\drivers\\etc",
         "",
         "",
         "Mode                LastWriteTime         Length Name                                                                  ",
         "----                -------------         ------ ----                                                                  ",
         "-a----        9/15/2018  12:16 AM            824 hosts                                                                 ",
-         "",
-         "",
-         ""
+        "",
+        "",
+        ""
     ],
     "fact": {
         "type": "file",
@@ -20,7 +20,8 @@
             "archive": true,
             "hidden": false,
             "readonly": false,
-            "system": false
+            "system": false,
+            "link": false
         },
         "mtime": "2018-09-15T12:16:00",
         "size": "824",

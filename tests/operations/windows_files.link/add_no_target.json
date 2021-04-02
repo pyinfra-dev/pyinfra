@@ -1,0 +1,15 @@
+{
+    "args": [
+        "testlink"
+    ],
+    "kwargs": {},
+    "facts": {
+        "windows_link": {
+            "testlink": null
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "If present is True target must be provided"
+    }
+}

@@ -301,7 +301,7 @@ def make_win_command(command, env=None):
     Builds a windows command with various kwargs.
     '''
 
-    # Use env & build our actual command
+    # TODO: This is not correct, needs to be fixed.
     if env:
         env_string = ' '.join([
             '{0}={1}'.format(key, value)
@@ -310,8 +310,7 @@ def make_win_command(command, env=None):
         command = 'export {0}; {1}'.format(env_string, command)
 
     # Quote the command as a string
-    command = shlex_quote(command)
-
+    command = shlex_quote(str(command))
     command = '{0}'.format(command)
 
     return command
