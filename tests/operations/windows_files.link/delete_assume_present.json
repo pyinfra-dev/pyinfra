@@ -1,0 +1,17 @@
+{
+    "args": [
+        "testlink"
+    ],
+    "kwargs": {
+        "present": false,
+        "assume_present": true
+    },
+    "facts": {
+        "windows_link": {
+            "testlink": null
+        }
+    },
+    "commands": [
+        "(Get-Item testlink).Delete()"
+    ]
+}

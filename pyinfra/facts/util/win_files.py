@@ -6,7 +6,7 @@ from datetime import datetime
 
 WIN_LS_REGEX = re.compile((
     # filetype and mode
-    r'^([darhs\-]{6})\s+'
+    r'^([darhsl\-]{6})\s+'
     # Windows date
     r'([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})\s+([0-9]{1,2}:[0-9]{1,2}\s[AP][M])\s+'
     # Size (Note: no size on directories)
@@ -25,6 +25,7 @@ WIN_FLAG_TO_ATTR = {
     'r': 'readonly',
     'h': 'hidden',
     's': 'system',
+    'l': 'link',
     '-': 'none',
 }
 
@@ -42,8 +43,10 @@ def parse_win_ls_output(output, wanted_type):
     if output:
         matches = re.match(WIN_LS_REGEX, output)
         if matches:
-
-            type = WIN_FLAG_TO_TYPE[output[0]]
+            if output[5] == 'l':
+                type = 'link'
+            else:
+                type = WIN_FLAG_TO_TYPE[output[0]]
 
             if type != wanted_type:
                 return False
@@ -52,6 +55,7 @@ def parse_win_ls_output(output, wanted_type):
             system = False
             readonly = False
             archive = False
+            link = False
 
             mode_without_first = matches.group(1)[1:]
 
@@ -66,12 +70,15 @@ def parse_win_ls_output(output, wanted_type):
                         archive = True
                     if tmp == 'system':
                         system = True
+                    if tmp == 'link':
+                        link = True
 
             mode = {
                 'archive': archive,
                 'hidden': hidden,
                 'readonly': readonly,
                 'system': system,
+                'link': link,
             }
 
             date_and_time = '{} {}'.format(matches.group(2), matches.group(3))
@@ -86,7 +93,8 @@ def parse_win_ls_output(output, wanted_type):
                 'mtime': _parse_time(date_and_time),
                 'size': size,
                 'name': matches.group(5),
-                # TODO: link
+                # TODO: You will need to run another powershell command to
+                #       get the link target, so bailing on that for now.
             }
 
             return out

@@ -1,0 +1,31 @@
+{
+    "args": [
+        "http://myfile"
+    ],
+    "kwargs": {
+        "dest": "c:\\myfile",
+        "sha1sum": "sha1-sum",
+        "sha256sum": "sha256-sum",
+        "md5sum": "md5-sum"
+    },
+    "facts": {
+        "windows_file": {
+            "c:\\myfile": {}
+        },
+        "windows_sha1_file": {
+            "c:\\myfile": "not-a-match"
+        },
+        "windows_sha256_file": {
+            "c:\\myfile": "not-a-match"
+        },
+        "windows_md5_file": {
+            "c:\\myfile": "not-a-match"
+        }
+    },
+    "commands": [
+        "$ProgressPreference = \"SilentlyContinue\"; Invoke-WebRequest -Uri http://myfile -OutFile c:\\myfile",
+        "if ((Get-FileHash -Algorithm SHA1 \"c:\\myfile\").hash -ne sha1-sum) { Write-Error \"SHA1 did not match!\" }",
+        "if ((Get-FileHash -Algorithm SHA256 \"c:\\myfile\").hash -ne sha256-sum) { Write-Error \"SHA256 did not match!\" }",
+        "if ((Get-FileHash -Algorithm MD5 \"c:\\myfile\").hash -ne md5-sum) { Write-Error \"MD5 did not match!\" }"
+    ]
+}

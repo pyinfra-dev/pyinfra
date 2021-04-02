@@ -1,0 +1,15 @@
+{
+    "args": [
+        "http://myfile"
+    ],
+    "kwargs": {
+        "dest": "c:\\myfile"
+    },
+    "facts": {
+        "windows_file": {
+            "c:\\myfile": {}
+        }
+    },
+    "commands": [],
+    "noop_description": "file c:\\myfile has already been downloaded"
+}
