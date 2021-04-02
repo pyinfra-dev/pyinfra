@@ -138,13 +138,14 @@ def _print_support(ctx, param, value):
     '--serial', is_flag=True, default=False,
     help='Run operations in serial, host by host.',
 )
-# SSH args
-@click.option('--user', help='SSH user to connect as.')
-@click.option('--port', type=int, help='SSH port to connect to.')
-@click.option('--key', type=click.Path(), help='SSH Private key filename.')
-@click.option('--key-password', help='SSH Private key password.')
-@click.option('--password', help='SSH password.')
-# WinRM args
+# SSH connector args
+# TODO: remove the non-ssh-prefixed variants
+@click.option('--ssh-user', '--user', help='SSH user to connect as.')
+@click.option('--ssh-port', '--port', type=int, help='SSH port to connect to.')
+@click.option('--ssh-key', '--key', type=click.Path(), help='SSH Private key filename.')
+@click.option('--ssh-key-password', '--key-password', help='SSH Private key password.')
+@click.option('--ssh-password', '--password', help='SSH password.')
+# WinRM connector args
 @click.option('--winrm-username', help='WINRM user to connect as.')
 @click.option('--winrm-password', help='WINRM password.')
 @click.option('--winrm-port', help='WINRM port to connect to.')
@@ -257,7 +258,7 @@ if '--help' not in sys.argv:
 
 def _main(
     inventory, operations, verbosity,
-    user, port, key, key_password, password,
+    ssh_user, ssh_port, ssh_key, ssh_key_password, ssh_password,
     winrm_username, winrm_password, winrm_port,
     winrm_transport, shell_executable,
     sudo, sudo_user, use_sudo_password, su_user,
@@ -449,11 +450,11 @@ def _main(
     inventory, inventory_group = make_inventory(
         inventory,
         deploy_dir=deploy_dir,
-        ssh_port=port,
-        ssh_user=user,
-        ssh_key=key,
-        ssh_key_password=key_password,
-        ssh_password=password,
+        ssh_port=ssh_port,
+        ssh_user=ssh_user,
+        ssh_key=ssh_key,
+        ssh_key_password=ssh_key_password,
+        ssh_password=ssh_password,
         winrm_username=winrm_username,
         winrm_password=winrm_password,
         winrm_port=winrm_port,

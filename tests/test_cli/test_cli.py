@@ -275,8 +275,8 @@ class TestDirectMainExecution(PatchSSHTestCase):
             _main(
                 inventory=path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
                 operations=['server.shell', 'echo hi'],
-                verbosity=0, user=None, port=None, key=None, key_password=None,
-                password=None, sudo=False, sudo_user=None, use_sudo_password=False, su_user=None,
+                verbosity=0, ssh_user=None, ssh_port=None, ssh_key=None, ssh_key_password=None,
+                ssh_password=None, sudo=False, sudo_user=None, use_sudo_password=False, su_user=None,
                 parallel=None, fail_percent=0, dry=False, limit=None, no_wait=False, serial=False,
                 winrm_username=None, winrm_password=None, winrm_port=None, winrm_transport=None,
                 shell_executable=None, quiet=False,
