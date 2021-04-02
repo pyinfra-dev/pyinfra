@@ -3,7 +3,8 @@ name: "Execute tests"
 on:
   push:
     branches:
-      - master
+      - current
+      - next
   pull_request:
 
 jobs:

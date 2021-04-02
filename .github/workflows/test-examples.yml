@@ -3,7 +3,8 @@ name: "Execute Docker example tests"
 on:
   push:
     branches:
-      - master
+      - current
+      - next
 
 jobs:
   Test-Examples:
