@@ -66,6 +66,11 @@ def _print_facts(ctx, param, value):
     if not value:
         return
 
+    click.echo(click.style(
+        '--facts is deprecated and will be removed in the future.',
+        'yellow',
+    ), err=True)
+
     click.echo('--> Available facts:', err=True)
     print_facts_list()
     ctx.exit()
@@ -75,6 +80,10 @@ def _print_operations(ctx, param, value):
     if not value:
         return
 
+    click.echo(click.style(
+        '--operations is deprecated and will be removed in the future.',
+        'yellow',
+    ), err=True)
     click.echo('--> Available operations:', err=True)
     print_operations_list()
     ctx.exit()
