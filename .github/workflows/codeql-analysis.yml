@@ -3,7 +3,8 @@ name: "Code scanning"
 on:
   push:
     branches:
-      - master
+      - current
+      - next
   pull_request:
 
 jobs:
