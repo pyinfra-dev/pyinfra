@@ -149,18 +149,7 @@ def _print_support(ctx, param, value):
 @click.option('--winrm-password', help='WINRM password.')
 @click.option('--winrm-port', help='WINRM port to connect to.')
 @click.option('--winrm-transport', help='WINRM transport for use.')
-# Eager commands (pyinfra [--facts | --operations | --support | --version])
-@click.option(
-    '--facts', is_flag=True, is_eager=True, callback=_print_facts,
-    help='Print available facts list and exit.',
-)
-@click.option(
-    'print_operations', '--operations',
-    is_flag=True,
-    is_eager=True,
-    callback=_print_operations,
-    help='Print available operations list and exit.',
-)
+# Eager commands (pyinfra --support)
 @click.option(
     '--support', is_flag=True, is_eager=True, callback=_print_support,
     help='Print useful information for support and exit.',
@@ -173,10 +162,6 @@ def _print_support(ctx, param, value):
 @click.option(
     '--debug', is_flag=True, default=False,
     help='Print debug info.',
-)
-@click.option(
-    '--debug-data', is_flag=True, default=False,
-    help='Print host/group data before connecting and exit.',
 )
 @click.option(
     '--debug-facts', is_flag=True, default=False,
@@ -250,6 +235,24 @@ def cli(*args, **kwargs):
         if pseudo_state.isset() and pseudo_state.initialised:
             # Triggers any executor disconnect requirements
             disconnect_all(pseudo_state)
+
+
+if '--help' not in sys.argv:
+    click.option(
+        '--facts', is_flag=True, is_eager=True, callback=_print_facts,
+        help='Print available facts list and exit.',
+    )(cli)
+    click.option(
+        'print_operations', '--operations',
+        is_flag=True,
+        is_eager=True,
+        callback=_print_operations,
+        help='Print available operations list and exit.',
+    )(cli)
+    click.option(
+        '--debug-data', is_flag=True, default=False,
+        help='Print host/group data before connecting and exit.',
+    )(cli)
 
 
 def _main(
