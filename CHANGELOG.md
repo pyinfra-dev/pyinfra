@@ -1,3 +1,11 @@
+# v1.3.10
+
++ Properly escape postgresql role/database/owner operation commands (@RobWouters)
++ Add support for additional winrm transport types & options (@mfrg)
++ Fix for `Git*` facts where the target repo doesn't exist
++ Git branches update: `master` renamed to `current` and new `next` branch tracking next minor release
++ Contributing documentation page updated to include branch description
+
 # v1.3.9
 
 + Use `StringCommand` to implement fact requires commands, fixes `mysql_*` facts with passwords
