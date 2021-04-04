@@ -22,9 +22,9 @@ git push --tags
 if [[ "${IS_DEV}" == "false" ]]; then
     echo "Git update major branch..."
     git checkout $MAJOR_BRANCH
-    git merge master
+    git merge current
     git push
-    git checkout master
+    git checkout current
 else
     echo "Skipping major branch due to dev release"
 fi
