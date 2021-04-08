@@ -1,4 +1,6 @@
+import re
 import sys
+
 from io import open
 
 try:
@@ -69,21 +71,29 @@ DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
 )
 
 
-# Extract version info without importing entire pyinfra package
-version_data = {}
-with open('pyinfra/version.py') as f:
-    exec(f.read(), version_data)
+def get_version_from_changelog():
+    # Regex matching pattern followed by 3 numerical values separated by '.'
+    pattern = re.compile(r'# v(?P<version>[0-9]+\.[0-9]+(\.[0-9]+(\.[a-z0-9]+)?)?)')
 
-with open('README.md', 'r', encoding='utf-8') as f:
-    readme = f.read()
+    with open('CHANGELOG.md', 'r') as fn:
+        for line in fn.readlines():
+            match = pattern.fullmatch(line.strip())
+            if match:
+                return ''.join(match.group('version'))
+    raise RuntimeError('No version found in CHANGELOG.md')
+
+
+def get_readme_contents():
+    with open('README.md', 'r', encoding='utf-8') as f:
+        return f.read()
 
 
 if __name__ == '__main__':
     setup(
-        version=version_data['__version__'],
+        version=get_version_from_changelog(),
         name='pyinfra',
         description='pyinfra automates/provisions/manages/deploys infrastructure.',
-        long_description=readme,
+        long_description=get_readme_contents(),
         long_description_content_type='text/markdown',
         author='Nick / Fizzadar',
         author_email='pointlessrambler@gmail.com',
