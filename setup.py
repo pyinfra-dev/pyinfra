@@ -73,11 +73,11 @@ DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
 
 def get_version_from_changelog():
     # Regex matching pattern followed by 3 numerical values separated by '.'
-    pattern = re.compile(r'# v(?P<version>[0-9]+\.[0-9]+(\.[0-9]+(\.[a-z0-9]+)?)?)')
+    pattern = re.compile(r'^# v(?P<version>[0-9]+\.[0-9]+(\.[0-9]+(\.[a-z0-9]+)?)?)$')
 
     with open('CHANGELOG.md', 'r') as fn:
         for line in fn.readlines():
-            match = pattern.fullmatch(line.strip())
+            match = pattern.match(line.strip())
             if match:
                 return ''.join(match.group('version'))
     raise RuntimeError('No version found in CHANGELOG.md')
