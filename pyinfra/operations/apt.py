@@ -76,6 +76,10 @@ def key(src=None, keyserver=None, keyid=None, state=None, host=None):
                 yield '(wget -O - {0} || curl -sSLf {0}) | apt-key add -'.format(src)
             else:
                 yield 'apt-key add {0}'.format(src)
+
+            if keyid:
+                for kid in keyid:
+                    existing_keys[kid] = {}
         else:
             host.noop('All keys from {0} are already available in the apt keychain'.format(src))
 
@@ -91,6 +95,8 @@ def key(src=None, keyserver=None, keyid=None, state=None, host=None):
             yield 'apt-key adv --keyserver {0} --recv-keys {1}'.format(
                 keyserver, ' '.join(needed_keys),
             )
+            for kid in keyid:
+                existing_keys[kid] = {}
         else:
             host.noop('Keys {0} are already available in the apt keychain'.format(
                 ', '.join(keyid),
