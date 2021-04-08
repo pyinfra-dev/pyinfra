@@ -2,5 +2,6 @@
     "args": ["spooler"],
     "commands": [
         "Start-Service -Name spooler"
-    ]
+    ],
+    "idempotent": false
 }

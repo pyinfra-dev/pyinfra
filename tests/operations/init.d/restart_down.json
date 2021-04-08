@@ -10,5 +10,6 @@
     },
     "commands": [
         "/etc/init.d/nginx start"
-    ]
+    ],
+    "idempotent": false
 }

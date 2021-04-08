@@ -4,5 +4,6 @@
     },
     "commands": [
         "while ! (netstat -an | grep LISTEN | grep -e \"\\.22\" -e \":22\"); do\n            echo \"waiting for port 22...\"\n            sleep 1\n        done"
-    ]
+    ],
+    "idempotent": false
 }

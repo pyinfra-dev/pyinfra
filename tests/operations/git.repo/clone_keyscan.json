@@ -21,5 +21,6 @@
     "commands": [
         "ssh-keyscan -p 22 github.com >> ~/.ssh/known_hosts",
         "cd /home/myrepo && git clone git@github.com:Fizzadar/pyinfra --branch mybranch ."
-    ]
+    ],
+    "idempotent": false
 }

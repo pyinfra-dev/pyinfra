@@ -12,5 +12,6 @@
     },
     "commands": [
         "New-Item -Path testdir -ItemType Directory"
-    ]
+    ],
+    "idempotent": false
 }
