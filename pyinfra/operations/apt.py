@@ -4,7 +4,7 @@ Manage apt packages and repositories.
 
 from __future__ import unicode_literals
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import six
 
@@ -304,6 +304,7 @@ def update(cache_time=None, touch_periodic=False, state=None, host=None):
     # cache_time to work.
     if cache_time:
         yield 'touch {0}'.format(APT_UPDATE_FILENAME)
+        cache_info['mtime'] = datetime.utcnow()
 
 _update = update  # noqa: E305
 
