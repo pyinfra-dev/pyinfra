@@ -155,6 +155,9 @@ def get_facts(
         fact = get_fact_class(name_or_cls)()
         name = name_or_cls
 
+    if isinstance(fact, ShortFactBase):
+        return get_short_facts(state, fact, args=args, ensure_hosts=ensure_hosts)
+
     args = args or ()
     kwargs = kwargs or {}
     if args or kwargs:
