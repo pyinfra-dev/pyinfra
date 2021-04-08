@@ -16,5 +16,6 @@
     },
     "commands": [
         "$ProgressPreference = \"SilentlyContinue\"; Invoke-WebRequest -Uri http://myfile -OutFile c:\\myfile"
-    ]
+    ],
+    "idempotent": false
 }

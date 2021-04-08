@@ -18,5 +18,6 @@
     "commands": [
         "cd /home/myrepo && git pull",
         "cd /home/myrepo && git submodule update --init --recursive"
-    ]
+    ],
+    "idempotent": false
 }

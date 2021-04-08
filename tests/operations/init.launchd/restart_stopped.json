@@ -10,5 +10,6 @@
     },
     "commands": [
         "launchctl start com.fizzadar.thing"
-    ]
+    ],
+    "idempotent": false
 }

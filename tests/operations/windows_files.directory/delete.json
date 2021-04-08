@@ -13,5 +13,6 @@
     "commands": [
         "Get-ChildItem testdir -Recurse | Remove-Item",
         "Remove-Item testdir"
-    ]
+    ],
+    "idempotent": false
 }

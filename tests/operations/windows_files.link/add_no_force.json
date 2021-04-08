@@ -13,5 +13,6 @@
     },
     "commands": [
         "New-Item -ItemType SymbolicLink -Path testlink -Target c:\\Users\\foo\\testlink"
-    ]
+    ],
+    "idempotent": false
 }

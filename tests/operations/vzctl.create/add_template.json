@@ -8,5 +8,6 @@
     },
     "commands": [
         "vzctl create 123 --ostemplate ubuntu-1604"
-    ]
+    ],
+    "idempotent": false
 }

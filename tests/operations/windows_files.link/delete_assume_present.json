@@ -13,5 +13,6 @@
     },
     "commands": [
         "(Get-Item testlink).Delete()"
-    ]
+    ],
+    "idempotent": false
 }

@@ -2,5 +2,6 @@
     "args": ["SELECT 1"],
     "commands": [
         "psql -Ac 'SELECT 1'"
-    ]
+    ],
+    "idempotent": false
 }

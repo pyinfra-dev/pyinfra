@@ -5,5 +5,6 @@
     },
     "commands": [
         "puppet agent -t --server=my-server.net --masterport=3006"
-    ]
+    ],
+    "idempotent": false
 }

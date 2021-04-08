@@ -2,5 +2,6 @@
     "args": [123],
     "commands": [
         "vzctl stop 123"
-    ]
+    ],
+    "idempotent": false
 }
