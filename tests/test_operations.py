@@ -90,6 +90,10 @@ def make_operation_tests(arg):
                         raise Exception((
                             'Operation not idempotent, second output commands: {0}'
                         ).format(second_output_commands))
+                else:
+                    warnings.warn('Operation is not expected to be idempotent: {0}'.format(
+                        test_name,
+                    ))
 
             commands = []
 
