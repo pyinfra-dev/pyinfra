@@ -136,7 +136,13 @@ def ensure_packages(
 
         for package in diff_packages:  # add/remove from current packages
             if present:
-                current_packages[package] = ['unknown']
+                version = 'unknown'
+                if version_join:
+                    bits = package.rsplit(version_join, 1)
+                    package = bits[0]
+                    if len(bits) == 2:
+                        version = bits[1]
+                current_packages[package] = [version]
             else:
                 current_packages.pop(package, None)
 
