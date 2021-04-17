@@ -20,5 +20,6 @@
     "commands": [
         "virtualenv --system-site-packages testdir",
         "testdir/bin/pip install elasticquery==1.1 flask"
-    ]
+    ],
+    "idempotent": false
 }

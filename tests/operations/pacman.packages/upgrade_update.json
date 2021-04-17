@@ -15,5 +15,6 @@
     "commands": [
         "pacman -Sy",
         "pacman --noconfirm -Su"
-    ]
+    ],
+    "idempotent": false
 }

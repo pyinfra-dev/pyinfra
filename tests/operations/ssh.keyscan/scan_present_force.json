@@ -18,5 +18,6 @@
     "commands": [
         "ssh-keygen -R remote-host.net",
         "ssh-keyscan -p 22 remote-host.net >> ~/.ssh/known_hosts"
-    ]
+    ],
+    "idempotent": false
 }

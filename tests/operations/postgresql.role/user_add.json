@@ -12,5 +12,6 @@
             "psql -Ac 'CREATE ROLE \"testuser\" LOGIN CONNECTION LIMIT 15 PASSWORD '\"'\"'abc'\"'\"''",
             "psql -Ac 'CREATE ROLE \"testuser\" LOGIN CONNECTION LIMIT 15 ***'"
         ]
-    ]
+    ],
+    "idempotent": false
 }

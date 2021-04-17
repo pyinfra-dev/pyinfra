@@ -52,5 +52,6 @@
             "/somedir/underthat/yet-another-file.txt",
             "/home/somedir/underthat/yet-another-file.txt"
         ]
-    ]
+    ],
+    "idempotent": false
 }

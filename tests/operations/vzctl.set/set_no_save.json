@@ -6,5 +6,6 @@
     },
     "commands": [
         "vzctl set 123 --hostname my-host.name"
-    ]
+    ],
+    "idempotent": false
 }

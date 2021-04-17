@@ -10,5 +10,6 @@
     },
     "commands": [
         "rm -rf /home/mybarerepo.git"
-    ]
+    ],
+    "idempotent": false
 }

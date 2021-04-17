@@ -11,5 +11,6 @@
     },
     "commands": [
         "mysql -Be 'DROP USER \"someuser\"@\"localwhat\"'"
-    ]
+    ],
+    "idempotent": false
 }

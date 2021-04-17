@@ -10,5 +10,6 @@
     },
     "commands": [
         "psql -Ac 'DROP DATABASE \"somedb\"'"
-    ]
+    ],
+    "idempotent": false
 }

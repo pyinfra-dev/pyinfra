@@ -12,5 +12,6 @@
     "commands": [
         "brew update",
         "brew upgrade"
-    ]
+    ],
+    "idempotent": false
 }

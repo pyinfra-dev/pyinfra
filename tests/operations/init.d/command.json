@@ -11,5 +11,6 @@
     "commands": [
         "/etc/init.d/nginx start",
         "/etc/init.d/nginx something-else"
-    ]
+    ],
+    "idempotent": false
 }

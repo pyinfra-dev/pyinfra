@@ -13,5 +13,6 @@
     },
     "commands": [
         "sed -i.a-timestamp \"s/match/replace/gi\" filename && rm -f filename.a-timestamp"
-    ]
+    ],
+    "idempotent": false
 }

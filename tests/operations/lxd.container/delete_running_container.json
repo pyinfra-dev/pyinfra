@@ -15,5 +15,6 @@
     "commands": [
         "lxc stop container1",
         "lxc delete container1"
-    ]
+    ],
+    "idempotent": false
 }

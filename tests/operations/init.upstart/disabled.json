@@ -10,5 +10,6 @@
     },
     "commands": [
         "echo \"manual\" > /etc/init/redis-server.override"
-    ]
+    ],
+    "idempotent": false
 }

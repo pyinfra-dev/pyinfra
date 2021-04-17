@@ -14,5 +14,6 @@
     },
     "commands": [
         "pip uninstall --yes pyinfra test==1.1"
-    ]
+    ],
+    "idempotent": false
 }
