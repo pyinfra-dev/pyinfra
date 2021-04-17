@@ -15,5 +15,6 @@
     },
     "commands": [
         "rm -f somelink"
-    ]
+    ],
+    "idempotent": false
 }

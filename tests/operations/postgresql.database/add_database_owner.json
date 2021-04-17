@@ -8,5 +8,6 @@
     },
     "commands": [
         "psql -Ac 'CREATE DATABASE \"somedb\" OWNER \"someowner\"'"
-    ]
+    ],
+    "idempotent": false
 }

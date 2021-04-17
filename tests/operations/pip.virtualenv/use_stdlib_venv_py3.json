@@ -11,5 +11,6 @@
     },
     "commands": [
         "python3 -m venv /some/virtualenv"
-    ]
+    ],
+    "idempotent": false
 }

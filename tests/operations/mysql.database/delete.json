@@ -10,5 +10,6 @@
     },
     "commands": [
         "mysql -Be 'DROP DATABASE somedb'"
-    ]
+    ],
+    "idempotent": false
 }

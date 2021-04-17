@@ -9,5 +9,6 @@
     },
     "commands": [
         "psql -Ac 'CREATE ROLE \"testuser\" LOGIN SUPERUSER'"
-    ]
+    ],
+    "idempotent": false
 }

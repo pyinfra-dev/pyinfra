@@ -17,5 +17,6 @@
     "commands": [
         "chkconfig nginx --add",
         "chkconfig nginx on"
-    ]
+    ],
+    "idempotent": false
 }

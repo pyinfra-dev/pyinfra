@@ -8,5 +8,6 @@
     },
     "commands": [
         "brew install php"
-    ]
+    ],
+    "idempotent": false
 }

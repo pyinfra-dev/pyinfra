@@ -16,5 +16,6 @@
     },
     "commands": [
         "cd /home/mainrepo && git worktree add -b mybranch /home/myworktree"
-    ]
+    ],
+    "idempotent": false
 }

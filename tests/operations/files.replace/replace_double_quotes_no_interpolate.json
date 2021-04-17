@@ -12,5 +12,6 @@
     },
     "commands": [
         "sed -i.a-timestamp 's/\"single quote match\"/\"single quote replace\"/' filename && rm -f filename.a-timestamp"
-    ]
+    ],
+    "idempotent": false
 }

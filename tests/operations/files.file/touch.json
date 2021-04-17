@@ -12,5 +12,6 @@
     },
     "commands": [
         "touch testfile"
-    ]
+    ],
+    "idempotent": false
 }

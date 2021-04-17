@@ -7,5 +7,6 @@
     },
     "commands": [
         "modprobe -a mod1 mod3"
-    ]
+    ],
+    "idempotent": false
 }

@@ -9,5 +9,6 @@
     },
     "commands": [
         "virtualenv /some/virtualenv"
-    ]
+    ],
+    "idempotent": false
 }

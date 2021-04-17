@@ -18,5 +18,6 @@
     "commands": [
         "mysql -Be 'GRANT SELECT, INSERT ON `mydb`.`mytable` TO \"someuser\"@\"localhost\"'",
         "mysql -Be 'FLUSH PRIVILEGES'"
-    ]
+    ],
+    "idempotent": false
 }

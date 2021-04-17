@@ -10,5 +10,6 @@
     },
     "commands": [
         "testdir/bin/pip install -r requirements.pip"
-    ]
+    ],
+    "idempotent": false
 }

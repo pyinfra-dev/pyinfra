@@ -13,5 +13,6 @@
     "commands": [
         "git init --bare /home/mybarerepo.git",
         "chown -R fake:fake /home/mybarerepo.git"
-    ]
+    ],
+    "idempotent": false
 }

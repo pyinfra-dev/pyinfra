@@ -8,5 +8,6 @@
     },
     "commands": [
         "mount -o rw /data"
-    ]
+    ],
+    "idempotent": false
 }
