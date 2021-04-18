@@ -108,7 +108,7 @@ class FakeFact(object):
             if isinstance(arg, list):
                 arg = json.dumps(arg)
 
-            item = item[arg]
+            item = item.get(arg)
 
         return item
 
@@ -145,7 +145,7 @@ class FakeFacts(object):
         self.facts[key][args[0]] = data
 
     def _delete(self, key, args=None):
-        self.facts[key].pop(args[0])
+        self.facts[key].pop(args[0], None)
 
 
 class FakeHost(object):
