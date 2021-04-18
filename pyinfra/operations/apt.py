@@ -159,7 +159,7 @@ def repo(src, present=True, filename=None, state=None, host=None):
         ))
 
 
-@operation
+@operation(is_idempotent=False)
 def ppa(src, present=True, state=None, host=None):
     '''
     Add/remove Ubuntu ppa repositories.

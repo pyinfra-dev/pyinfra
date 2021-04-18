@@ -10,7 +10,7 @@ from . import files
 from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 
 
-@operation
+@operation(is_idempotent=False)
 def key(src, state=None, host=None):
     '''
     Add yum gpg keys with ``rpm``.

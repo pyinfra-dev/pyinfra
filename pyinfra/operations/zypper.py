@@ -99,7 +99,7 @@ def rpm(src, present=True, state=None, host=None):
     yield ensure_rpm(state, host, files, src, present, 'zypper --non-interactive')
 
 
-@operation
+@operation(is_idempotent=False)
 def update(state=None, host=None):
     '''
     Updates all zypper packages.
