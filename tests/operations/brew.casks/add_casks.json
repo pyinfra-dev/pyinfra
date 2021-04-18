@@ -1,13 +1,9 @@
 {
     "args": ["keepassxc"],
-    "kwargs": {
-        "upgrade": true
-    },
     "facts": {
         "brew_casks": {}
     },
     "commands": [
-        "brew cask upgrade",
         "brew cask install keepassxc"
     ]
 }
