@@ -1,3 +1,8 @@
+# v1.4.0.dev0
+
++ Explicit fact imports
++ ... WIP
+
 # v1.3.12
 
 + Fix & test loading non-RSA SSH keys with passwords (@Yakulu)
