@@ -7,7 +7,7 @@ from pyinfra.api import operation
 from .util.packaging import ensure_packages
 
 
-@operation
+@operation(is_idempotent=False)
 def upgrade(state=None, host=None):
     '''
     Upgrades all XBPS packages.
@@ -18,7 +18,7 @@ def upgrade(state=None, host=None):
 _upgrade = upgrade  # noqa: E305
 
 
-@operation
+@operation(is_idempotent=False)
 def update(state=None, host=None):
     '''
     Update XBPS repositories.
