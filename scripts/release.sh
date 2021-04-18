@@ -15,11 +15,11 @@ echo "# Releasing pyinfra v${VERSION} (branch ${MAJOR_BRANCH}, dev=${IS_DEV})"
 echo "# Running tests..."
 pytest
 
-echo "# Git tag & push..."
-git tag -a "v$VERSION" -m "v$VERSION"
-git push --tags
-
 if [[ "${IS_DEV}" == "false" ]]; then
+    echo "# Git tag & push..."
+    git tag -a "v$VERSION" -m "v$VERSION"
+    git push --tags
+
     echo "Git update major branch..."
     git checkout $MAJOR_BRANCH
     git merge current
