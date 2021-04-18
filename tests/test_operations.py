@@ -142,24 +142,34 @@ def make_operation_tests(arg):
 
                     raise
 
-                if getattr(op._pyinfra_op, 'is_idempotent', True):
-                    if test_data.get('idempotent', True):
-                        second_output_commands = unroll_generators(op._pyinfra_op(
-                            *test_data.get('args', []),
-                            **kwargs
-                        ))
-                        if second_output_commands:
-                            raise Exception((
-                                'Operation not idempotent, second output commands: {0}'
-                            ).format(second_output_commands))
-                    else:
-                        warnings.warn('Operation is not expected to be idempotent: {0}'.format(
-                            test_name,
-                        ))
+                op_is_idempotent = getattr(op._pyinfra_op, 'is_idempotent', True)
+                test_second_output_commands = 'second_output_commands' in test_data
+
+                if op_is_idempotent or test_second_output_commands:
+                    second_output_commands = unroll_generators(op._pyinfra_op(
+                        *test_data.get('args', []),
+                        **kwargs
+                    ))
+
+                    if op_is_idempotent:
+                        if test_data.get('idempotent', True):
+                            if second_output_commands:
+                                raise Exception((
+                                    'Operation not idempotent, second output commands: {0}'
+                                ).format(second_output_commands))
+                        else:
+                            warnings.warn('Operation is not expected to be idempotent: {0}'.format(
+                                test_name,
+                            ))
 
             commands = parse_commands(output_commands)
-
             assert_commands(commands, test_data['commands'])
+
+            if test_second_output_commands:
+                assert_commands(
+                    parse_commands(second_output_commands),
+                    test_data['second_output_commands'],
+                )
 
             noop_description = test_data.get('noop_description')
             if len(commands) == 0 or noop_description:
