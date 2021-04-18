@@ -25,6 +25,67 @@ from .util import create_host, FakeState, get_command_string, JsonTest, patch_fi
 PLATFORM_NAME = platform.system()
 
 
+def parse_commands(commands):
+    json_commands = []
+
+    for command in commands:
+        if isinstance(command, six.string_types):  # matches pyinfra/api/operation.py
+            command = StringCommand(command.strip())
+
+        if isinstance(command, StringCommand):
+            json_command = get_command_string(command)
+
+        elif isinstance(command, dict):
+            command['command'] = get_command_string(command['command']).strip()
+            json_command = command
+
+        elif isinstance(command, FunctionCommand):
+            func_name = (
+                command.function if command.function == '__func__'
+                else command.function.__name__
+            )
+            json_command = [
+                func_name, list(command.args), command.kwargs,
+            ]
+
+        elif isinstance(command, FileUploadCommand):
+            if hasattr(command.src, 'read'):
+                command.src.seek(0)
+                data = command.src.read()
+            else:
+                data = command.src
+            json_command = ['upload', data, command.dest]
+
+        elif isinstance(command, FileDownloadCommand):
+            json_command = ['download', command.src, command.dest]
+
+        else:
+            raise Exception('{0} is not a valid command!'.format(command))
+
+        if command.executor_kwargs:
+            command.executor_kwargs['command'] = json_command
+            json_command = command.executor_kwargs
+
+        json_commands.append(json_command)
+    return json_commands
+
+
+def assert_commands(commands, wanted_commands):
+    try:
+        assert commands == wanted_commands
+    except AssertionError as e:
+        print()
+        print('--> COMMANDS OUTPUT:')
+        print(json.dumps(commands, indent=4, default=json_encode))
+
+        print('--> TEST WANTS:')
+        print(json.dumps(
+            wanted_commands, indent=4, default=json_encode,
+        ))
+
+        raise e
+
+
 def make_operation_tests(arg):
     # Get the operation we're testing against
     module_name, op_name = arg.split('.')
@@ -81,75 +142,24 @@ def make_operation_tests(arg):
 
                     raise
 
-                if test_data.get('idempotent', True):
-                    second_output_commands = unroll_generators(op._pyinfra_op(
-                        *test_data.get('args', []),
-                        **kwargs
-                    ))
-                    if second_output_commands:
-                        raise Exception((
-                            'Operation not idempotent, second output commands: {0}'
-                        ).format(second_output_commands))
-                else:
-                    warnings.warn('Operation is not expected to be idempotent: {0}'.format(
-                        test_name,
-                    ))
-
-            commands = []
-
-            for command in output_commands:
-                if isinstance(command, six.string_types):  # matches pyinfra/api/operation.py
-                    command = StringCommand(command.strip())
-
-                if isinstance(command, StringCommand):
-                    json_command = get_command_string(command)
-
-                elif isinstance(command, dict):
-                    command['command'] = get_command_string(command['command']).strip()
-                    json_command = command
-
-                elif isinstance(command, FunctionCommand):
-                    func_name = (
-                        command.function if command.function == '__func__'
-                        else command.function.__name__
-                    )
-                    json_command = [
-                        func_name, list(command.args), command.kwargs,
-                    ]
-
-                elif isinstance(command, FileUploadCommand):
-                    if hasattr(command.src, 'read'):
-                        command.src.seek(0)
-                        data = command.src.read()
+                if getattr(op._pyinfra_op, 'is_idempotent', True):
+                    if test_data.get('idempotent', True):
+                        second_output_commands = unroll_generators(op._pyinfra_op(
+                            *test_data.get('args', []),
+                            **kwargs
+                        ))
+                        if second_output_commands:
+                            raise Exception((
+                                'Operation not idempotent, second output commands: {0}'
+                            ).format(second_output_commands))
                     else:
-                        data = command.src
-                    json_command = ['upload', data, command.dest]
+                        warnings.warn('Operation is not expected to be idempotent: {0}'.format(
+                            test_name,
+                        ))
 
-                elif isinstance(command, FileDownloadCommand):
-                    json_command = ['download', command.src, command.dest]
+            commands = parse_commands(output_commands)
 
-                else:
-                    raise Exception('{0} is not a valid command!'.format(command))
-
-                if command.executor_kwargs:
-                    command.executor_kwargs['command'] = json_command
-                    json_command = command.executor_kwargs
-
-                commands.append(json_command)
-
-            try:
-                assert commands == test_data['commands']
-            except AssertionError as e:
-                print()
-                print('--> COMMANDS OUTPUT:')
-                print(json.dumps(commands, indent=4, default=json_encode))
-
-                print('--> TEST WANTS:')
-                print(json.dumps(
-                    test_data['commands'], indent=4, default=json_encode,
-                ))
-
-                raise e
+            assert_commands(commands, test_data['commands'])
 
             noop_description = test_data.get('noop_description')
             if len(commands) == 0 or noop_description:
