@@ -53,11 +53,11 @@ class TestSSHUserConfig(TestCase):
         lambda path: ['other_file'],
     )
     @patch(
-        'pyinfra.api.connectors.sshuserclient.config.os.path.isfile',
+        'pyinfra.api.connectors.sshuserclient.config.path.isfile',
         lambda path: True,
     )
     @patch(
-        'pyinfra.api.connectors.sshuserclient.config.os.path.isabs',
+        'pyinfra.api.connectors.sshuserclient.config.path.isabs',
         lambda path: True,
     )
     def test_load_ssh_config(self):
@@ -104,11 +104,11 @@ class TestSSHUserConfig(TestCase):
         lambda path: ['other_file'],
     )
     @patch(
-        'pyinfra.api.connectors.sshuserclient.config.os.path.isfile',
+        'pyinfra.api.connectors.sshuserclient.config.path.isfile',
         lambda path: True,
     )
     @patch(
-        'pyinfra.api.connectors.sshuserclient.config.os.path.expanduser',
+        'pyinfra.api.connectors.sshuserclient.config.path.expanduser',
         lambda path: path,
     )
     def test_include_loop_ssh_config(self):
