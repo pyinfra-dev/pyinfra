@@ -114,7 +114,7 @@ def show_state_host_arguments_warning(call_location):
     ).format(call_location))
 
 
-def operation(func=None, pipeline_facts=None):
+def operation(func=None, pipeline_facts=None, is_idempotent=True):
     '''
     Decorator that takes a simple module function and turn it into the internal
     operation representation that consists of a list of commands + options
@@ -125,11 +125,12 @@ def operation(func=None, pipeline_facts=None):
     if func is None:
         def decorator(f):
             setattr(f, 'pipeline_facts', pipeline_facts)
+            setattr(f, 'is_idempotent', is_idempotent)
             return operation(f)
-
         return decorator
 
     # Index the operation!
+    # TODO: remove this in v2
     if func.__module__:
         module_bits = func.__module__.split('.')
         module_name = module_bits[-1]
