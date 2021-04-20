@@ -1,3 +1,8 @@
+# v1.3.11
+
++ Fix custom SSH config parsing to support latest Paramiko features (`Match` directives)
++ Fix error loading SSH keys with passwords (try all key formats before failing)
+
 # v1.3.10
 
 + Properly escape postgresql role/database/owner operation commands (@RobWouters)
