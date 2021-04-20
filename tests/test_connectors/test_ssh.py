@@ -243,7 +243,7 @@ class TestSSHConnector(TestCase):
             with self.assertRaises(PyinfraError) as e:
                 connect_all(state)
 
-            assert e.exception.args[0] == 'Incorrect password for private key: testkey'
+            assert e.exception.args[0] == 'Invalid private key file: testkey'
 
     def test_connect_with_dss_ssh_key(self):
         state = State(make_inventory(hosts=(

@@ -79,19 +79,10 @@ def _load_private_key_file(filename, key_filename, key_password):
                         'use this key'.format(key_filename),
                     )
 
-            # Now, try opening the key with the password
-            try:
-                return key_cls.from_private_key_file(
-                    filename=filename,
-                    password=key_password,
-                )
-            except SSHException:
-                raise PyinfraError(
-                    'Incorrect password for private key: {0}'.format(
-                        key_filename,
-                    ),
-                )
-
+            return key_cls.from_private_key_file(
+                filename=filename,
+                password=key_password,
+            )
         except SSHException as e:  # key does not match key_cls type
             exception = e
     raise exception
