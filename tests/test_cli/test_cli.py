@@ -37,7 +37,7 @@ class TestCliEagerFlags(TestCase):
         assert result.exit_code == 0, result.stderr
 
 
-class TestCliDeployRuns(PatchSSHTestCase):
+class TestDeployCli(PatchSSHTestCase):
     def setUp(self):
         pseudo_state.reset()
 
@@ -49,6 +49,24 @@ class TestCliDeployRuns(PatchSSHTestCase):
         assert result.exit_code == 1, result.stderr
         assert 'No deploy file: not-a-file.py' in result.stderr
 
+
+class TestOperationCli(PatchSSHTestCase):
+    def test_invalid_operation_module(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'not_a_module.shell',
+        )
+        assert result.exit_code == 1, result.stderr
+        assert 'No such module: not_a_module'
+
+    def test_invalid_operation_function(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'server.not_an_operation',
+        )
+        assert result.exit_code == 1, result.stderr
+        assert 'No such operation: server.not_an_operation'
+
     def test_deploy_inventory(self):
         result = run_cli(
             path.join('tests', 'deploy', 'inventories', 'inventory.py'),
@@ -56,15 +74,6 @@ class TestCliDeployRuns(PatchSSHTestCase):
             '--debug-data',
         )
         assert result.exit_code == 0, result.stderr
-
-    def test_get_facts(self):
-        result = run_cli(
-            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
-            'fact',
-            'os',
-        )
-        assert result.exit_code == 0, result.stderr
-        assert '"somehost": null' in result.stderr
 
     def test_deploy_operation(self):
         result = run_cli(
@@ -81,6 +90,15 @@ class TestCliDeployRuns(PatchSSHTestCase):
             'echo hi',
         )
         assert result.exit_code == 0, result.stderr
+
+    def test_deploy_operation_json_args(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventory_all.py'),
+            'server.shell',
+            '[["echo hi"], {}]',
+        )
+        assert result.exit_code == 0, result.stderr
+
 
 class TestFactCli(PatchSSHTestCase):
     def test_get_fact(self):
@@ -130,6 +148,7 @@ class TestFactCli(PatchSSHTestCase):
         assert '"somehost": null' in result.stderr
 
 
+class TestExecCli(PatchSSHTestCase):
     def test_exec_command(self):
         result = run_cli(
             path.join('tests', 'deploy', 'inventories', 'inventory.py'),
