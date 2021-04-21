@@ -124,7 +124,7 @@ def get_operation_and_args(commands):
     operation_name = commands[0]
 
     # Get the module & operation name
-    op_module, op_name = operation_name.split('.', 1)
+    op_module, op_name = operation_name.rsplit('.', 1)
 
     # Try to load the requested operation from the main operations package.
     # If that fails, try to load from the user's operations package.
@@ -187,7 +187,6 @@ def get_facts_and_args(commands):
             current_fact = None
 
         if '.' not in command:
-            # WARNING
             args = None
             if ':' in command:
                 command, args = command.split(':', 1)
@@ -196,10 +195,14 @@ def get_facts_and_args(commands):
             if not is_fact(command):
                 raise CliError('No fact: {0}'.format(command))
 
-            current_fact = (get_fact_class(command), args, {})
+            fact_cls = get_fact_class(command)
+            logger.warning((
+                'Named facts are deprecated, please use the explicit import: {0}.{1}'
+            ).format(fact_cls.__module__.replace('pyinfra.facts.', ''), fact_cls.__name__))
+            current_fact = (fact_cls, args, {})
 
         else:
-            fact_module, fact_name = command.split('.', 1)
+            fact_module, fact_name = command.rsplit('.', 1)
             try:
                 fact_module = import_module('pyinfra.facts.{0}'.format(fact_module))
             except ImportError:
