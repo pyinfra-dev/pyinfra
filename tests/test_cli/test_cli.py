@@ -82,6 +82,54 @@ class TestCliDeployRuns(PatchSSHTestCase):
         )
         assert result.exit_code == 0, result.stderr
 
+class TestFactCli(PatchSSHTestCase):
+    def test_get_fact(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'fact',
+            'server.Os',
+        )
+        assert result.exit_code == 0, result.stderr
+        assert '"somehost": null' in result.stderr
+
+    def test_get_fact_with_kwargs(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'fact',
+            'files.File',
+            'path=.',
+        )
+        assert result.exit_code == 0, result.stderr
+        assert '"somehost": null' in result.stderr
+
+    def test_invalid_fact_module(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'fact',
+            'not_a_module.NotAFact',
+        )
+        assert result.exit_code == 1, result.stderr
+        assert 'No such module: not_a_module' in result.stderr
+
+    def test_invalid_fact_class(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'fact',
+            'server.NotAFact',
+        )
+        assert result.exit_code == 1, result.stderr
+        assert 'No such fact: server.NotAFact' in result.stderr
+
+    def test_get_facts_legacy(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'fact',
+            'os',
+        )
+        assert result.exit_code == 0, result.stderr
+        assert '"somehost": null' in result.stderr
+
+
     def test_exec_command(self):
         result = run_cli(
             path.join('tests', 'deploy', 'inventories', 'inventory.py'),
