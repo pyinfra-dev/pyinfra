@@ -356,6 +356,11 @@ def _main(
 
     # Get all non-arg facts
     elif operations[0] == 'all-facts':
+        click.echo(click.style(
+            'all-facts is deprecated and will be removed in the future.',
+            'yellow',
+        ), err=True)
+
         command = 'fact'
         fact_names = []
 
