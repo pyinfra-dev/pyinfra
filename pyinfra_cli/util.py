@@ -124,7 +124,7 @@ def get_operation_and_args(commands):
     operation_name = commands[0]
 
     # Get the module & operation name
-    op_module, op_name = operation_name.split('.')
+    op_module, op_name = operation_name.split('.', 1)
 
     # Try to load the requested operation from the main operations package.
     # If that fails, try to load from the user's operations package.
@@ -148,7 +148,7 @@ def get_operation_and_args(commands):
         # a list of args and a dict of kwargs).
         try:
             args, kwargs = json.loads(operation_args[0])
-            return op, (args, kwargs)
+            return op, (args or (), kwargs or {})
         except ValueError:
             pass
 
