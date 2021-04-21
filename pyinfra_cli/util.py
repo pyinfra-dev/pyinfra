@@ -22,6 +22,7 @@ import six
 
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.command import PyinfraCommand
+from pyinfra.api.facts import get_fact_class, is_fact
 from pyinfra.api.util import FallbackDict
 
 from .exceptions import CliError, UnexpectedExternalError
@@ -165,6 +166,58 @@ def get_operation_and_args(commands):
     }
 
     return op, (args, kwargs)
+
+
+def get_facts_and_args(commands):
+    facts = []
+
+    current_fact = None
+
+    for command in commands:
+        if '=' in command:
+            if not current_fact:
+                raise CliError('Invalid fact commands: {0}'.format(commands))
+
+            key, value = command.split('=', 1)
+            current_fact[2][key] = value
+            continue
+
+        if current_fact:
+            facts.append(current_fact)
+            current_fact = None
+
+        if '.' not in command:
+            # WARNING
+            args = None
+            if ':' in command:
+                command, args = command.split(':', 1)
+                args = args.split(',')
+
+            if not is_fact(command):
+                raise CliError('No fact: {0}'.format(command))
+
+            current_fact = (get_fact_class(command), args, {})
+
+        else:
+            fact_module, fact_name = command.split('.', 1)
+            try:
+                fact_module = import_module('pyinfra.facts.{0}'.format(fact_module))
+            except ImportError:
+                try:
+                    fact_module = import_module(str(fact_module))
+                except ImportError:
+                    raise CliError('No such module: {0}'.format(fact_module))
+
+            fact_cls = getattr(fact_module, fact_name, None)
+            if not fact_cls:
+                raise CliError('No such fact: {0}'.format(command))
+
+            current_fact = (fact_cls, (), {})
+
+    if current_fact:
+        facts.append(current_fact)
+
+    return facts
 
 
 def load_deploy_file(state, filename):

@@ -22,11 +22,11 @@ from pyinfra.api.facts import (
     get_fact_class,
     get_fact_names,
     get_facts,
-    is_fact,
     ShortFactBase,
 )
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
+from pyinfra.api.util import get_kwargs_str
 from pyinfra.operations import server
 
 from .config import load_config, load_deploy_config
@@ -49,6 +49,7 @@ from .prints import (
     print_support_info,
 )
 from .util import (
+    get_facts_and_args,
     get_operation_and_args,
     load_deploy_file,
 )
@@ -377,23 +378,7 @@ def _main(
     # Get one or more facts
     elif operations[0] == 'fact':
         command = 'fact'
-
-        fact_names = operations[1:]
-        facts = []
-
-        for name in fact_names:
-            args = None
-
-            if ':' in name:
-                name, args = name.split(':', 1)
-                args = args.split(',')
-
-            if not is_fact(name):
-                raise CliError('No fact: {0}'.format(name))
-
-            facts.append((name, args))
-
-        operations = facts
+        operations = get_facts_and_args(operations[1:])
 
     # Execute a raw command with server.shell
     elif operations[0] == 'exec':
@@ -525,14 +510,22 @@ def _main(
         fact_data = {}
 
         for i, command in enumerate(operations):
-            name, args = command
-            fact_key = name
-            if args:
-                fact_key = '{0}{1}'.format(name, tuple(args))
+            fact_cls, args, kwargs = command
+            fact_key = fact_cls.name
+
+            if args or kwargs:
+                fact_key = '{0}{1} {2}'.format(
+                    fact_cls.name,
+                    args or '',
+                    get_kwargs_str(kwargs) if kwargs else '',
+                )
+
             try:
                 fact_data[fact_key] = get_facts(
-                    state, name,
+                    state,
+                    fact_cls,
                     args=args,
+                    kwargs=kwargs,
                     apply_failed_hosts=False,
                 )
             except PyinfraError:
