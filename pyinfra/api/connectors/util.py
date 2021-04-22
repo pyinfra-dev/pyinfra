@@ -195,7 +195,7 @@ def remove_any_sudo_askpass_file(host):
 
 
 @memoize
-def show_use_su_login_warning():
+def _show_use_su_login_warning():
     logger.warning((
         'Using `use_su_login` may not work: '
         'some systems (MacOS, OpenBSD) ignore the flag when executing a command, '
@@ -276,7 +276,7 @@ def make_unix_command(
         command_bits.append('su')
 
         if use_su_login:
-            show_use_su_login_warning()
+            _show_use_su_login_warning()
             command_bits.append('-l')
 
         if preserve_su_env:
