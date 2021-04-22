@@ -363,7 +363,7 @@ def _main(
         ), err=True)
 
         command = 'fact'
-        fact_names = []
+        fact_ops = []
 
         for fact_name in get_fact_names():
             fact_class = get_fact_class(fact_name)
@@ -371,9 +371,9 @@ def _main(
                 not issubclass(fact_class, ShortFactBase)
                 and not callable(fact_class.command)
             ):
-                fact_names.append(fact_name)
+                fact_ops.append((fact_class, None, None))
 
-        operations = [(name, None) for name in fact_names]
+        operations = fact_ops
 
     # Get one or more facts
     elif operations[0] == 'fact':
