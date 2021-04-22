@@ -10,6 +10,5 @@
     },
     "commands": [
         "python -m venv --copies /some/virtualenv"
-    ],
-    "idempotent": false
+    ]
 }

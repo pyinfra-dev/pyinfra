@@ -12,6 +12,5 @@
     },
     "commands": [
         "virtualenv -p python2 --system-site-packages --always-copy /some/virtualenv"
-    ],
-    "idempotent": false
+    ]
 }

@@ -10,6 +10,5 @@
     },
     "commands": [
         "virtualenv -p python3 /some/virtualenv"
-    ],
-    "idempotent": false
+    ]
 }

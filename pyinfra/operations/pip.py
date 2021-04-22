@@ -43,6 +43,7 @@ def virtualenv(
     if present is False:
         if host.fact.file(activate_script_path):
             yield files.directory(path, present=False, state=state, host=host)
+            host.fact._delete('file', args=(activate_script_path,))
         else:
             host.noop('virtualenv {0} does not exist'.format(path))
 
@@ -68,6 +69,12 @@ def virtualenv(
             command.append(path)
 
             yield ' '.join(command)
+
+            host.fact._create(
+                'file',
+                args=(activate_script_path,),
+                data={'user': None, 'group': None},
+            )
         else:
             host.noop('virtualenv {0} exists'.format(path))
 
