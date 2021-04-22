@@ -203,6 +203,16 @@ def _show_use_su_login_warning():
     ))
 
 
+# TODO (v2): possibly raise an error for invalid arguments
+def _warn_invalid_auth_args(args, requires_key, invalid_keys):
+    for key in invalid_keys:
+        value = args.get(key)
+        if value:
+            logger.warning((
+                'Invalid auth argument: cannot use `{0}={1}` without `{2}`'
+            ).format(key, value, requires_key))
+
+
 def make_unix_command(
     command,
     env=None,
@@ -240,12 +250,11 @@ def make_unix_command(
     if chdir:
         command = StringCommand('cd', chdir, '&&', command)
 
-    # Quote the command as a string
+    # Quote the command as a string before we prepend auth args
     command = QuoteString(command)
 
     command_bits = []
 
-    # Use sudo (w/user?)
     if use_sudo_password:
         askpass_filename, sudo_password = use_sudo_password
         command_bits.extend([
@@ -270,8 +279,13 @@ def make_unix_command(
 
         if sudo_user:
             command_bits.extend(('-u', sudo_user))
+    else:
+        _warn_invalid_auth_args(
+            locals(),
+            'sudo',
+            ('use_sudo_password', 'use_sudo_login', 'preserve_sudo_env', 'sudo_user'),
+        )
 
-    # Switch user with su
     if su_user:
         command_bits.append('su')
 
@@ -290,6 +304,12 @@ def make_unix_command(
         # Quote the whole shell -c 'command' as BSD `su` does not have a shell option
         command_bits.append(QuoteString(StringCommand(shell_executable, '-c', command)))
     else:
+        _warn_invalid_auth_args(
+            locals(),
+            'su_user',
+            ('use_su_login', 'preserve_su_env', 'su_shell'),
+        )
+
         # Otherwise simply use thee shell directly
         command_bits.extend([shell_executable, '-c', command])
 
