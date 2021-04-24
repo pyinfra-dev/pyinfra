@@ -287,6 +287,56 @@ class TestSSHConnector(TestCase):
 
         connect_all(second_state)
 
+    def test_connect_with_dss_ssh_key_password(self):
+        state = State(make_inventory(hosts=(
+            ('somehost', {'ssh_key': 'testkey', 'ssh_key_password': 'testpass'}),
+        )), Config())
+
+        with patch('pyinfra.api.connectors.ssh.path.isfile', lambda *args, **kwargs: True), \
+                patch('pyinfra.api.connectors.ssh.RSAKey.from_private_key_file') as fake_rsa_key_open, \
+                patch('pyinfra.api.connectors.ssh.DSSKey.from_private_key_file') as fake_dss_key_open:  # noqa
+
+            def fake_rsa_key_open_fail(*args, **kwargs):
+                if 'password' not in kwargs:
+                    raise PasswordRequiredException
+                raise SSHException
+
+            fake_rsa_key_open.side_effect = fake_rsa_key_open_fail
+
+            fake_dss_key = MagicMock()
+
+            def fake_dss_key_func(*args, **kwargs):
+                if 'password' not in kwargs:
+                    raise PasswordRequiredException
+                return fake_dss_key
+
+            fake_dss_key_open.side_effect = fake_dss_key_func
+
+            state.deploy_dir = '/'
+
+            connect_all(state)
+
+            # Check the key was created properly
+            fake_dss_key_open.assert_called_with(filename='testkey', password='testpass')
+
+            # And check the Paramiko SSH call was correct
+            self.fake_connect_mock.assert_called_with(
+                'somehost',
+                allow_agent=False,
+                look_for_keys=False,
+                pkey=fake_dss_key,
+                timeout=10,
+                username='vagrant',
+            )
+
+        # Check that loading the same key again is cached in the state
+        second_state = State(make_inventory(hosts=(
+            ('somehost', {'ssh_key': 'testkey'}),
+        )), Config())
+        second_state.private_keys = state.private_keys
+
+        connect_all(second_state)
+
     def test_connect_with_missing_ssh_key(self):
         state = State(make_inventory(hosts=(
             ('somehost', {'ssh_key': 'testkey'}),
