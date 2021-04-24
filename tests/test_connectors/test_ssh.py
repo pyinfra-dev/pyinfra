@@ -25,6 +25,12 @@ from pyinfra.api.exceptions import ConnectError, PyinfraError
 from ..util import make_inventory
 
 
+def make_raise_exception_function(cls, *args, **kwargs):
+    def handler(*a, **kw):
+        raise cls(*args, **kwargs)
+    return handler
+
+
 @patch('pyinfra.api.connectors.ssh.SSHClient.get_transport', MagicMock())
 @patch('pyinfra.api.connectors.ssh.open', mock_open(read_data='test!'), create=True)
 class TestSSHConnector(TestCase):
@@ -224,6 +230,15 @@ class TestSSHConnector(TestCase):
         with patch(
             'pyinfra.api.connectors.ssh.path.isfile',
             lambda *args, **kwargs: True,
+        ), patch(
+            'pyinfra.api.connectors.ssh.DSSKey.from_private_key_file',
+            make_raise_exception_function(SSHException),
+        ), patch(
+            'pyinfra.api.connectors.ssh.ECDSAKey.from_private_key_file',
+            make_raise_exception_function(SSHException),
+        ), patch(
+            'pyinfra.api.connectors.ssh.Ed25519Key.from_private_key_file',
+            make_raise_exception_function(SSHException),
         ), patch(
             'pyinfra.api.connectors.ssh.RSAKey.from_private_key_file',
         ) as fake_key_open:
