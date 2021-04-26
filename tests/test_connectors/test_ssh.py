@@ -227,18 +227,21 @@ class TestSSHConnector(TestCase):
             ('somehost', {'ssh_key': 'testkey', 'ssh_key_password': 'testpass'}),
         )), Config())
 
+        fake_fail_from_private_key_file = MagicMock()
+        fake_fail_from_private_key_file.side_effect = make_raise_exception_function(SSHException)
+
         with patch(
             'pyinfra.api.connectors.ssh.path.isfile',
             lambda *args, **kwargs: True,
         ), patch(
             'pyinfra.api.connectors.ssh.DSSKey.from_private_key_file',
-            make_raise_exception_function(SSHException),
+            fake_fail_from_private_key_file,
         ), patch(
             'pyinfra.api.connectors.ssh.ECDSAKey.from_private_key_file',
-            make_raise_exception_function(SSHException),
+            fake_fail_from_private_key_file,
         ), patch(
             'pyinfra.api.connectors.ssh.Ed25519Key.from_private_key_file',
-            make_raise_exception_function(SSHException),
+            fake_fail_from_private_key_file,
         ), patch(
             'pyinfra.api.connectors.ssh.RSAKey.from_private_key_file',
         ) as fake_key_open:
@@ -253,12 +256,12 @@ class TestSSHConnector(TestCase):
             fake_key = MagicMock()
             fake_key_open.return_value = fake_key
 
-            state.deploy_dir = '/'
-
             with self.assertRaises(PyinfraError) as e:
                 connect_all(state)
 
             assert e.exception.args[0] == 'Invalid private key file: testkey'
+
+        assert fake_fail_from_private_key_file.call_count == 3
 
     def test_connect_with_dss_ssh_key(self):
         state = State(make_inventory(hosts=(
