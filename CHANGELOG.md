@@ -1,7 +1,60 @@
-# v1.4.0.dev0
+# v1.4.0.dev1
 
-+ Explicit fact imports
-+ ... WIP
+Three major themes to this release:
+
+**Explicit fact imports** - this replaces the magic `host.fact.X` variables with explicitly imported facts, for example:
+
+```py
+# previously: host.fact.apt_sources
+from pyinfra.facts.apt import AptSources
+host.get_fact(AptSources)
+
+# previously: host.fact.file('/path/to/file')
+from pyinfra.facts.files import File
+host.get_fact(File, path='/path/to/file')
+
+# also now possible (previously impossible):
+host.get_fact(File, path='/path/to/file', sudo=True)
+```
+
+And the CLI changes accordingly:
+
+```sh
+# previously: pyinfra INVENTORY fact apt_sources
+pyinfra INVENTORY fact apt.AptSources
+
+# previously: pyinfra INVENTORY fact file:/path/to/file directory:/path/to/directory
+pyinfra INVENTORY fact files.File path=/path/to/file files.Directory path=/path/to/directory
+```
+
+This is not yet standard across the project and will be updated in subsequent releases. This also finally enables using third party facts in a sensible and explict manner. Overall, this is a dramatic improvement to the `pyinfra` fact mechanism.
+
+**Windows operations expansion** - massive thank you to @mfrg for implementing these, huge expansion of Windows facts & operations, making it possible to really use `pyinfra` with Windows targets (additions listed below).
+
+**Idempotency testing** - verification of operation idempotency (calling the same op twice outputs no commands/changes the second time) through testing and a large expansion in verified idempotency. Operations can now specify themselves as non-idempotent when expected (for example, `server.shell`).
+
+Operation & fact updates:
+
++ Add `server.packages` operation - generic package management using the default OS package manager
++ Add `pip.venv` operation - shortcut for `pip.virtualenv(venv=True, ...)`
++ Add `server.Path` fact
++ Add `rpm.RpmPackageProvides` fact & support package aliases for `yum.packages` & `dnf.packages` operations
++ Add `windows_files.download`, `windows_files.put` & `windows_files.link` operations (@mfrg)
++ Add `windows_files.WindowsLink`, `windows_files.WindowsSha1File`, `windows_files.WindowsSha256File` & `windows_files.WindowsMd5File` facts (@mfrg)
+
+CLI updates:
+
++ New style fact gathering CLI arguments
++ Prefix SSH auth flags (`--user` becomes `--ssh-user`), deprecate old versions
++ Deprecate `--facts` & `--operations` CLI flags
++ Deprecate `all-facts` command
++ Hide deprecated options from `--help`
+
+Other bits:
+
++ Show warnings when using invalid auth argument combinations (`sudo_user` without `sudo`, etc)
++ Bump minimum Paramiko version to `2.7`
+
 
 # v1.3.12
 
