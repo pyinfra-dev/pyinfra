@@ -81,10 +81,7 @@ class TestSSHConnector(TestCase):
                 ('somehost', {'ssh_key': 'testkey'}),
             )), Config())
 
-            def raise_exception(*args, **kwargs):
-                raise exception_class
-
-            self.fake_connect_mock.side_effect = raise_exception
+            self.fake_connect_mock.side_effect = make_raise_exception_function(exception_class)
 
             with self.assertRaises(PyinfraError):
                 connect_all(state)
@@ -204,10 +201,7 @@ class TestSSHConnector(TestCase):
             'pyinfra.api.connectors.ssh.RSAKey.from_private_key_file',
         ) as fake_key_open:
 
-            def fake_key_open_fail(*args, **kwargs):
-                raise PasswordRequiredException
-
-            fake_key_open.side_effect = fake_key_open_fail
+            fake_key_open.side_effect = make_raise_exception_function(PasswordRequiredException)
 
             fake_key = MagicMock()
             fake_key_open.return_value = fake_key
@@ -272,10 +266,7 @@ class TestSSHConnector(TestCase):
                 patch('pyinfra.api.connectors.ssh.RSAKey.from_private_key_file') as fake_rsa_key_open, \
                 patch('pyinfra.api.connectors.ssh.DSSKey.from_private_key_file') as fake_key_open:  # noqa
 
-            def fake_rsa_key_open_fail(*args, **kwargs):
-                raise SSHException
-
-            fake_rsa_key_open.side_effect = fake_rsa_key_open_fail
+            fake_rsa_key_open.side_effect = make_raise_exception_function(SSHException)
 
             fake_key = MagicMock()
             fake_key_open.return_value = fake_key
@@ -726,10 +717,7 @@ class TestSSHConnector(TestCase):
         host = inventory.get_host('anotherhost')
         host.connect()
 
-        def raise_exception(*args, **kwargs):
-            raise SSHException()
-
-        fake_sftp_client.from_transport.side_effect = raise_exception
+        fake_sftp_client.from_transport.side_effect = make_raise_exception_function(SSHException)
 
         fake_open = mock_open(read_data='test!')
         with patch('pyinfra.api.util.open', fake_open, create=True):
