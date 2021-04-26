@@ -1,3 +1,7 @@
+# v1.3.12
+
++ Fix & test loading non-RSA SSH keys with passwords (@Yakulu)
+
 # v1.3.11
 
 + Fix custom SSH config parsing to support latest Paramiko features (`Match` directives)
