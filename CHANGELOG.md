@@ -1,4 +1,4 @@
-# v1.4.0.dev1
+# v1.4
 
 Three major themes to this release:
 
