@@ -17,7 +17,7 @@ class PyinfraWinrmSession(winrm.Session):
     ''' This is out subclassed Session so that allows for env setting '''
 
     def run_cmd(self, command, args=(), env=None):
-        shell_id = self.protocol.open_shell(env=env)
+        shell_id = self.protocol.open_shell(env_vars=env)
         command_id = self.protocol.run_command(shell_id, command, args)
         rs = winrm.Response(self.protocol.get_command_output(shell_id, command_id))
         self.protocol.cleanup_command(shell_id, command_id)
