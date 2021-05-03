@@ -13,6 +13,7 @@ from pyinfra.api.util import get_file_io, memoize, sha1_hash
 
 from .util import make_win_command
 
+
 class PyinfraWinrmSession(winrm.Session):
     ''' This is our subclassed Session that allows for env setting '''
 
@@ -36,6 +37,7 @@ class PyinfraWinrmSession(winrm.Session):
             # readable
             rs.std_err = self._clean_error_msg(rs.std_err)
         return rs
+
 
 def _raise_connect_error(host, message, data):
     message = '{0} ({1})'.format(message, data)
@@ -173,11 +175,7 @@ def run_shell_command(
         shell_executable = 'ps'
     logger.debug('shell_executable:%s', shell_executable)
 
-    # default windows to use ps, but allow it to be overridden
-
-    # we implement our own run_ps and run_cmd that allows for env setting 
-    # form open_shell.  just like in pywinrm's impls we do not re-use the shell
-    # for now.
+    # we use our own subclassed session that allows for env setting from open_shell.
     if shell_executable in ['cmd']:
         response = host.connection.run_cmd(tmp_command, env=env)
     else:
