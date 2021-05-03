@@ -14,7 +14,7 @@ from pyinfra.api.util import get_file_io, memoize, sha1_hash
 from .util import make_win_command
 
 class PyinfraWinrmSession(winrm.Session):
-    ''' This is out subclassed Session so that allows for env setting '''
+    ''' This is our subclassed Session that allows for env setting '''
 
     def run_cmd(self, command, args=(), env=None):
         shell_id = self.protocol.open_shell(env_vars=env)
