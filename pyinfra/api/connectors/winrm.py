@@ -19,7 +19,7 @@ class PyinfraWinrmSession(winrm.Session):
     def run_cmd(self, command, args=(), env=None):
         shell_id = self.protocol.open_shell(env=env)
         command_id = self.protocol.run_command(shell_id, command, args)
-        rs = Response(self.protocol.get_command_output(shell_id, command_id))
+        rs = winrm.Response(self.protocol.get_command_output(shell_id, command_id))
         self.protocol.cleanup_command(shell_id, command_id)
         self.protocol.close_shell(shell_id)
         return rs
@@ -29,7 +29,7 @@ class PyinfraWinrmSession(winrm.Session):
         encoded script command
         '''
         # must use utf16 little endian on windows
-        encoded_ps = b64encode(script.encode('utf_16_le')).decode('ascii')
+        encoded_ps = base64.b64encode(script.encode('utf_16_le')).decode('ascii')
         rs = self.run_cmd('powershell -encodedcommand {0}'.format(encoded_ps), env=env)
         if len(rs.std_err):
             # if there was an error message, clean it it up and make it human
@@ -145,7 +145,7 @@ def run_shell_command(
         print_output (boolean): print the output
         print_intput (boolean): print the input
         return_combined_output (boolean): combine the stdout and stderr lists
-        shell_executable (string): shell to use - 'sh'=cmd, 'ps'=powershell(default)
+        shell_executable (string): shell to use - 'cmd'=cmd, 'ps'=powershell(default)
         env (dict): environment variables to set
 
     Returns:
