@@ -13,6 +13,29 @@ from pyinfra.api.util import get_file_io, memoize, sha1_hash
 
 from .util import make_win_command
 
+class PyinfraWinrmSession(winrm.Session):
+    ''' This is out subclassed Session so that allows for env setting '''
+
+    def run_cmd(self, command, args=(), env=None):
+        shell_id = self.protocol.open_shell(env=env)
+        command_id = self.protocol.run_command(shell_id, command, args)
+        rs = Response(self.protocol.get_command_output(shell_id, command_id))
+        self.protocol.cleanup_command(shell_id, command_id)
+        self.protocol.close_shell(shell_id)
+        return rs
+
+    def run_ps(self, script, env=None):
+        '''base64 encodes a Powershell script and executes the powershell
+        encoded script command
+        '''
+        # must use utf16 little endian on windows
+        encoded_ps = b64encode(script.encode('utf_16_le')).decode('ascii')
+        rs = self.run_cmd('powershell -encodedcommand {0}'.format(encoded_ps), env=env)
+        if len(rs.std_err):
+            # if there was an error message, clean it it up and make it human
+            # readable
+            rs.std_err = self._clean_error_msg(rs.std_err)
+        return rs
 
 def _raise_connect_error(host, message, data):
     message = '{0} ({1})'.format(message, data)
@@ -72,7 +95,7 @@ def connect(state, host):
         host_and_port = '{}:{}'.format(hostname, host.data.winrm_port)
         logger.debug('host_and_port: %s', host_and_port)
 
-        session = winrm.Session(
+        session = PyinfraWinrmSession(
             host_and_port,
             auth=(
                 kwargs['username'],
@@ -130,7 +153,7 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
-    command = make_win_command(command, env=env)
+    command = make_win_command(command)
 
     logger.debug('Running command on %s: %s', host.name, command)
 
@@ -151,10 +174,14 @@ def run_shell_command(
     logger.debug('shell_executable:%s', shell_executable)
 
     # default windows to use ps, but allow it to be overridden
+
+    # we implement our own run_ps and run_cmd that allows for env setting 
+    # form open_shell.  just like in pywinrm's impls we do not re-use the shell
+    # for now.
     if shell_executable in ['cmd']:
-        response = host.connection.run_cmd(tmp_command)
+        response = host.connection.run_cmd(tmp_command, env=env)
     else:
-        response = host.connection.run_ps(tmp_command)
+        response = host.connection.run_ps(tmp_command, env=env)
 
     return_code = response.status_code
     logger.debug('response:%s', response)
