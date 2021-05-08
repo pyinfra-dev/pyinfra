@@ -139,6 +139,6 @@ def deploy(func_or_name, data_defaults=None):
             data=deploy_data,
             deploy_op_order=deploy_op_order,
         ):
-            func(*args, **kwargs)
+            return func(*args, **kwargs)
 
     return decorated_func
