@@ -245,7 +245,7 @@ def put(
     'windows_file': 'name',
 })
 def file(
-    name,
+    path,
     present=True, assume_present=False,
     user=None, group=None, mode=None, touch=False,
     create_remote_dir=True,
@@ -254,7 +254,7 @@ def file(
     '''
     Add/remove/update files.
 
-    + name: name/path of the remote file
+    + path: path of the remote file
     + present: whether the file should exist
     + assume_present: whether to assume the file exists
     + TODO: user: user to own the files
@@ -279,40 +279,40 @@ def file(
         )
     '''
 
-    if not isinstance(name, six.string_types):
+    if not isinstance(path, six.string_types):
         raise OperationTypeError('Name must be a string')
 
     # mode = ensure_mode_int(mode)
-    info = host.fact.windows_file(name)
+    info = host.fact.windows_file(path)
 
     # Not a file?!
     if info is False:
-        raise OperationError('{0} exists and is not a file'.format(name))
+        raise OperationError('{0} exists and is not a file'.format(path))
 
     # Doesn't exist & we want it
     if not assume_present and info is None and present:
         if create_remote_dir:
-            yield _create_remote_dir(state, host, name, user, group)
+            yield _create_remote_dir(state, host, path, user, group)
 
-        yield 'New-Item -ItemType file {0}'.format(name)
+        yield 'New-Item -ItemType file {0}'.format(path)
 
 #        if mode:
-#            yield chmod(name, mode)
+#            yield chmod(path, mode)
 #        if user or group:
-#            yield chown(name, user, group)
+#            yield chown(path, user, group)
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
-        yield 'Remove-Item {0}'.format(name)
+        yield 'Remove-Item {0}'.format(path)
 
 #    # It exists & we want to ensure its state
 #    elif (assume_present or info) and present:
 #        if touch:
-#            yield 'New-Item -ItemType file {0}'.format(name)
+#            yield 'New-Item -ItemType file {0}'.format(path)
 #
 #        # Check mode
 #        if mode and (not info or info['mode'] != mode):
-#            yield chmod(name, mode)
+#            yield chmod(path, mode)
 #
 #        # Check user/group
 #        if (
@@ -320,7 +320,7 @@ def file(
 #            or (user and info['user'] != user)
 #            or (group and info['group'] != group)
 #        ):
-#            yield chown(name, user, group)
+#            yield chown(path, user, group)
 
 
 def windows_file(*args, **kwargs):
@@ -350,7 +350,7 @@ def _create_remote_dir(state, host, remote_filename, user, group):
     'windows_directory': 'name',
 })
 def directory(
-    name,
+    path,
     present=True, assume_present=False,
     user=None, group=None, mode=None, recursive=False,
     state=None, host=None,
@@ -358,7 +358,7 @@ def directory(
     '''
     Add/remove/update directories.
 
-    + name: name/path of the remote folder
+    + path: path of the remote folder
     + present: whether the folder should exist
     + assume_present: whether to assume the directory exists
     + TODO: user: user to own the folder
@@ -392,27 +392,27 @@ def directory(
 
     '''
 
-    if not isinstance(name, six.string_types):
+    if not isinstance(path, six.string_types):
         raise OperationTypeError('Name must be a string')
 
-    info = host.fact.windows_directory(name)
+    info = host.fact.windows_directory(path)
 
     # Not a directory?!
     if info is False:
-        raise OperationError('{0} exists and is not a directory'.format(name))
+        raise OperationError('{0} exists and is not a directory'.format(path))
 
     # Doesn't exist & we want it
     if not assume_present and info is None and present:
-        yield 'New-Item -Path {0} -ItemType Directory'.format(name)
+        yield 'New-Item -Path {0} -ItemType Directory'.format(path)
 #        if mode:
-#            yield chmod(name, mode, recursive=recursive)
+#            yield chmod(path, mode, recursive=recursive)
 #        if user or group:
-#            yield chown(name, user, group, recursive=recursive)
+#            yield chown(path, user, group, recursive=recursive)
 #
         # Somewhat bare fact, should flesh out more
         host.fact._create(
             'windows_directory',
-            args=(name,),
+            args=(path,),
             data={'type': 'directory'},
         )
 
@@ -420,15 +420,15 @@ def directory(
     elif (assume_present or info) and not present:
         # TODO: how to ensure we use 'ps'?
         # remove anything in the directory
-        yield 'Get-ChildItem {0} -Recurse | Remove-Item'.format(name)
+        yield 'Get-ChildItem {0} -Recurse | Remove-Item'.format(path)
         # remove directory
-        yield 'Remove-Item {0}'.format(name)
+        yield 'Remove-Item {0}'.format(path)
 
     # It exists & we want to ensure its state
 #    elif (assume_present or info) and present:
 #        # Check mode
 #        if mode and (not info or info['mode'] != mode):
-#            yield chmod(name, mode, recursive=recursive)
+#            yield chmod(path, mode, recursive=recursive)
 #
 #        # Check user/group
 #        if (
@@ -436,7 +436,7 @@ def directory(
 #            or (user and info['user'] != user)
 #            or (group and info['group'] != group)
 #        ):
-#            yield chown(name, user, group, recursive=recursive)
+#            yield chown(path, user, group, recursive=recursive)
 
 
 def windows_directory(*args, **kwargs):

@@ -20,11 +20,11 @@ from pyinfra.api import operation
 
 
 @operation
-def service(name, running=True, restart=False, suspend=False, state=None, host=None):
+def service(service, running=True, restart=False, suspend=False, state=None, host=None):
     '''
     Stop/Start a Windows service.
 
-    + name: name of the service to manage
+    + service: name of the service to manage
     + running: whether the the service should be running or stopped
     + restart: whether the the service should be restarted
     + suspend: whether the the service should be suspended
@@ -42,15 +42,15 @@ def service(name, running=True, restart=False, suspend=False, state=None, host=N
 
     if suspend or not running:
         if suspend:
-            yield 'Suspend-Service -Name {0}'.format(name)
+            yield 'Suspend-Service -Name {0}'.format(service)
         else:
-            yield 'Stop-Service -Name {0}'.format(name)
+            yield 'Stop-Service -Name {0}'.format(service)
     else:
         if restart:
-            yield 'Restart-Service -Name {0}'.format(name)
+            yield 'Restart-Service -Name {0}'.format(service)
         else:
             if running:
-                yield 'Start-Service -Name {0}'.format(name)
+                yield 'Start-Service -Name {0}'.format(service)
 
 
 @operation
