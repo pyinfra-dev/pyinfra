@@ -72,7 +72,7 @@ def run_shell_command(
 
     chroot_directory = host.host_data['chroot_directory']
 
-    command = make_unix_command(command, **command_kwargs)
+    command = make_unix_command(command, state=state, **command_kwargs)
     command = QuoteString(command)
 
     logger.debug(

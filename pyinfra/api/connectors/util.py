@@ -206,11 +206,10 @@ def _show_use_su_login_warning():
 # TODO (v2): possibly raise an error for invalid arguments
 def _warn_invalid_auth_args(args, requires_key, invalid_keys):
     for key in invalid_keys:
-        value = args.get(key)
-        if value:
+        if args.get(key):
             logger.warning((
-                'Invalid auth argument: cannot use `{0}={1}` without `{2}`'
-            ).format(key, value, requires_key))
+                'Invalid auth argument: cannot use `{0}` without `{1}`.'
+            ).format(key, requires_key))
 
 
 def make_unix_command(
@@ -229,6 +228,8 @@ def make_unix_command(
     use_sudo_login=Config.USE_SUDO_LOGIN,
     use_sudo_password=Config.USE_SUDO_PASSWORD,
     preserve_sudo_env=Config.PRESERVE_SUDO_ENV,
+    # Optional state object, used to decide if we print invalid auth arg warnings
+    state=None,
 ):
     '''
     Builds a shell command with various kwargs.
@@ -279,7 +280,10 @@ def make_unix_command(
 
         if sudo_user:
             command_bits.extend(('-u', sudo_user))
-    else:
+
+    # If both sudo arg and config sudo are false, warn if any of the other sudo
+    # arguments are present as they will be ignored.
+    elif state is None or not state.config.SUDO:
         _warn_invalid_auth_args(
             locals(),
             'sudo',
@@ -303,7 +307,10 @@ def make_unix_command(
 
         # Quote the whole shell -c 'command' as BSD `su` does not have a shell option
         command_bits.append(QuoteString(StringCommand(shell_executable, '-c', command)))
-    else:
+
+    # If both su_user arg and config su_user are false, warn if any of the other su
+    # arguments are present as they will be ignored.
+    elif state is None or not state.config.SU_USER:
         _warn_invalid_auth_args(
             locals(),
             'su_user',

@@ -69,7 +69,7 @@ def run_shell_command(
             put_file=put_file,
         )
 
-    command = make_unix_command(command, **command_kwargs)
+    command = make_unix_command(command, state=state, **command_kwargs)
     actual_command = command.get_raw_value()
 
     logger.debug('--> Running command on localhost: {0}'.format(command))

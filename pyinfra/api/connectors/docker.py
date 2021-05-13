@@ -105,7 +105,7 @@ def run_shell_command(
     for key in ('sudo', 'su_user'):
         command_kwargs.pop(key, None)
 
-    command = make_unix_command(command, **command_kwargs)
+    command = make_unix_command(command, state=state, **command_kwargs)
     command = QuoteString(command)
 
     docker_flags = '-it' if get_pty else '-i'
