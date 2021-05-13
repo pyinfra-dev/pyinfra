@@ -7,9 +7,7 @@
         "deb_packages": {},
         "date": "datetime:2015-01-01T00:00:00",
         "file": {
-            "/var/lib/apt/periodic/update-success-stamp": {
-                "mtime": "datetime:2014-01-01T00:00:00"
-            }
+            "/var/lib/apt/periodic/update-success-stamp": null
         }
     },
     "commands": [

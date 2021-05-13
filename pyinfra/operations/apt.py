@@ -310,7 +310,14 @@ def update(cache_time=None, touch_periodic=False, state=None, host=None):
     # cache_time to work.
     if cache_time:
         yield 'touch {0}'.format(APT_UPDATE_FILENAME)
-        cache_info['mtime'] = datetime.utcnow()
+        if cache_info is None:
+            host.fact._create(
+                'file',
+                args=(APT_UPDATE_FILENAME,),
+                data={'mtime': datetime.utcnow()},
+            )
+        else:
+            cache_info['mtime'] = datetime.utcnow()
 
 _update = update  # noqa: E305
 
