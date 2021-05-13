@@ -69,21 +69,35 @@ def run_shell_command(
             put_file=put_file,
         )
 
-    command = make_unix_command(command, state=state, **command_kwargs)
-    actual_command = command.get_raw_value()
+    def execute_command():
+        unix_command = make_unix_command(command, state=state, **command_kwargs)
+        actual_command = unix_command.get_raw_value()
 
-    logger.debug('--> Running command on localhost: {0}'.format(command))
+        logger.debug('--> Running command on localhost: {0}'.format(command))
 
-    if print_input:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, command), err=True)
+        if print_input:
+            click.echo('{0}>>> {1}'.format(host.print_prefix, unix_command), err=True)
 
-    return_code, combined_output = run_local_process(
-        actual_command,
-        stdin=stdin,
-        timeout=timeout,
-        print_output=print_output,
-        print_prefix=host.print_prefix,
-    )
+        return run_local_process(
+            actual_command,
+            stdin=stdin,
+            timeout=timeout,
+            print_output=print_output,
+            print_prefix=host.print_prefix,
+        )
+
+    return_code, combined_output = execute_command()
+
+    if return_code != 0:
+        last_line = combined_output[-1][1]
+        if last_line == 'sudo: a password is required':
+            command_kwargs['use_sudo_password'] = get_sudo_password(
+                state, host,
+                use_sudo_password=True,  # ask for the password
+                run_shell_command=run_shell_command,
+                put_file=put_file,
+            )
+            return_code, combined_output = execute_command()
 
     if success_exit_codes:
         status = return_code in success_exit_codes
