@@ -243,6 +243,7 @@ class patch_files(object):
             patch('pyinfra.operations.files.os_path.isdir', self.isdir),
             patch('pyinfra.operations.files.walk', self.walk),
             patch('pyinfra.operations.files.makedirs', lambda path: True),
+            patch('pyinfra.api.util.stat', self.stat),
             # Builtin patches
             patch('pyinfra.operations.files.open', self.get_file, create=True),
             patch('pyinfra.operations.server.open', self.get_file, create=True),
@@ -270,6 +271,16 @@ class patch_files(object):
 
     def isdir(self, dirname, *args):
         return dirname in self.directories
+
+    def stat(self, pathname):
+        if pathname in self.files:
+            mode_int = 33188  # 644 file
+        elif pathname in self.directories:
+            mode_int = 16877  # 755 directory
+        else:
+            raise IOError('No such file or directory: {0}'.format(pathname))
+
+        return os.stat_result((mode_int, 0, 0, 0, 0, 0, 0, 0, 0, 0))
 
     def walk(self, dirname):
         if dirname not in self.directories:
