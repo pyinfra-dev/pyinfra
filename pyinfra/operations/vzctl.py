@@ -7,7 +7,7 @@ import six
 from pyinfra.api import operation, OperationError
 
 
-@operation
+@operation(is_idempotent=False)
 def start(ctid, force=False, state=None, host=None):
     '''
     Start OpenVZ containers.
@@ -24,7 +24,7 @@ def start(ctid, force=False, state=None, host=None):
     yield 'vzctl start {0}'.format(' '.join(args))
 
 
-@operation
+@operation(is_idempotent=False)
 def stop(ctid, state=None, host=None):
     '''
     Stop OpenVZ containers.
@@ -37,7 +37,7 @@ def stop(ctid, state=None, host=None):
     yield 'vzctl stop {0}'.format(' '.join(args))
 
 
-@operation
+@operation(is_idempotent=False)
 def restart(ctid, force=False, state=None, host=None):
     '''
     Restart OpenVZ containers.
@@ -50,7 +50,7 @@ def restart(ctid, force=False, state=None, host=None):
     yield start(ctid, force=force, state=state, host=host)
 
 
-@operation
+@operation(is_idempotent=False)
 def mount(ctid, state=None, host=None):
     '''
     Mount OpenVZ container filesystems.
@@ -61,7 +61,7 @@ def mount(ctid, state=None, host=None):
     yield 'vzctl mount {0}'.format(ctid)
 
 
-@operation
+@operation(is_idempotent=False)
 def unmount(ctid, state=None, host=None):
     '''
     Unmount OpenVZ container filesystems.
@@ -72,7 +72,7 @@ def unmount(ctid, state=None, host=None):
     yield 'vzctl umount {0}'.format(ctid)
 
 
-@operation
+@operation(is_idempotent=False)
 def delete(ctid, state=None, host=None):
     '''
     Delete OpenVZ containers.
@@ -83,7 +83,7 @@ def delete(ctid, state=None, host=None):
     yield 'vzctl delete {0}'.format(ctid)
 
 
-@operation
+@operation(is_idempotent=False)
 def create(ctid, template=None, state=None, host=None):
     '''
     Create OpenVZ containers.
@@ -106,7 +106,7 @@ def create(ctid, template=None, state=None, host=None):
     yield 'vzctl create {0}'.format(' '.join(args))
 
 
-@operation
+@operation(is_idempotent=False)
 def set(ctid, save=True, state=None, host=None, **settings):
     '''
     Set OpenVZ container details.
