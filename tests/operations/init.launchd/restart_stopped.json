@@ -4,7 +4,7 @@
         "restarted": true
     },
     "facts": {
-        "launchd_status": {
+        "launchd.LaunchdStatus": {
             "com.fizzadar.thing": false
         }
     },

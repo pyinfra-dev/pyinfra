@@ -4,7 +4,7 @@
         "running": false
     },
     "facts": {
-        "rcd_status": {
+        "bsdinit.RcdStatus": {
             "nginx": true
         }
     },

@@ -1,7 +1,7 @@
 {
     "args": ["nginx"],
     "facts": {
-        "upstart_status": {
+        "upstart.UpstartStatus": {
             "nginx": false
         },
         "which": {

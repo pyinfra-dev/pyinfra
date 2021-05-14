@@ -1,7 +1,7 @@
 {
     "args": ["com.fizzadar.thing"],
     "facts": {
-        "launchd_status": {
+        "launchd.LaunchdStatus": {
             "com.fizzadar.thing": false
         }
     },

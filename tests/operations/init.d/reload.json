@@ -4,7 +4,7 @@
         "reloaded": true
     },
     "facts": {
-        "initd_status": {
+        "sysvinit.InitdStatus": {
             "nginx": true
         }
     },

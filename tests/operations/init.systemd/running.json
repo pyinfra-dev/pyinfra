@@ -1,7 +1,7 @@
 {
     "args": ["redis-server.service"],
     "facts": {
-        "systemd_status": {
+        "systemd.SystemdStatus": {
             "redis-server.service": false
         }
     },

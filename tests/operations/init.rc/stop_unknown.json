@@ -4,7 +4,7 @@
         "running": false
     },
     "facts": {
-        "rcd_status": {}
+        "bsdinit.RcdStatus": {}
     },
     "commands": [
         "# If the service is running\n            if /etc/rc.d/nginx check; then\n                /etc/rc.d/nginx stop\n                true\n                true\n\n            # If the service is not running, we just start it (no re[start|load])\n            else\n                true\n            fi"

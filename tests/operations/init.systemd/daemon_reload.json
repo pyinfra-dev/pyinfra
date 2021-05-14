@@ -4,7 +4,7 @@
         "daemon_reload": true
     },
     "facts": {
-        "systemd_status": {
+        "systemd.SystemdStatus": {
             "redis-server.service": true
         }
     },

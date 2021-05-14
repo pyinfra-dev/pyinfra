@@ -4,7 +4,7 @@
         "command": "something-else"
     },
     "facts": {
-        "initd_status": {
+        "sysvinit.InitdStatus": {
             "nginx": false
         }
     },

@@ -4,7 +4,7 @@
         "reloaded": true
     },
     "facts": {
-        "rcd_status": {
+        "bsdinit.RcdStatus": {
             "nginx": true
         }
     },

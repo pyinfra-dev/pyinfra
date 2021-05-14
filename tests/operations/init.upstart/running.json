@@ -1,7 +1,7 @@
 {
     "args": ["redis-server"],
     "facts": {
-        "upstart_status": {
+        "upstart.UpstartStatus": {
             "redis-server": false
         }
     },

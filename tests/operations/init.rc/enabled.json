@@ -4,7 +4,7 @@
         "enabled": true
     },
     "facts": {
-        "rcd_status": {
+        "bsdinit.RcdStatus": {
             "nginx": true
         },
         "find_in_file": {

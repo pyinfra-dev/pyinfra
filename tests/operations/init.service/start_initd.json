@@ -1,7 +1,7 @@
 {
     "args": ["nginx"],
     "facts": {
-        "initd_status": {
+        "sysvinit.InitdStatus": {
             "nginx": false
         },
         "which": {
