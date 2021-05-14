@@ -1,0 +1,58 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["/somedir/", "/home/somedir"],
+    "files": [
+        "/somedir/somefile.txt",
+        "/somedir/anotherfile.txt",
+        "/somedir/underthat/yet-another-file.txt"
+    ],
+    "directories": {
+        "/somedir/": {
+            "/somedir/": ["somefile.txt", "anotherfile.txt"],
+            "/somedir/underthat": ["yet-another-file.txt"]
+        },
+        "/somedir/underthat": {}
+    },
+    "facts": {
+        "file": {
+            "/home/somedir/somefile.txt": {
+                "mode": 644
+            },
+            "/home/somedir/anotherfile.txt": null,
+            "/home/somedir/deleteme.txt": true,
+            "/home/somedir/underthat/yet-another-file.txt": null
+        },
+        "directory": {
+            "/home/somedir": {
+                "mode": 755
+            },
+            "/home/somedir/underthat": {
+                "mode": 777
+            }
+        },
+        "find_files": {
+            "/home/somedir": [
+                "/home/somedir/somefile.txt"
+            ],
+            "/home/somedir/underthat": []
+        },
+        "link": {
+            "/home/somedir": false
+        },
+        "sha1_file": {
+            "/home/somedir/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
+        }
+    },
+    "commands": [
+        "chmod 755 /home/somedir/underthat",
+        ["upload", "/somedir/anotherfile.txt", "/home/somedir/anotherfile.txt"],
+        "chmod 644 /home/somedir/anotherfile.txt",
+        [
+            "upload",
+            "/somedir/underthat/yet-another-file.txt",
+            "/home/somedir/underthat/yet-another-file.txt"
+        ],
+        "chmod 644 /home/somedir/underthat/yet-another-file.txt"
+    ],
+    "idempotent": false
+}
