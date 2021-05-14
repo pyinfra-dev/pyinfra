@@ -51,6 +51,7 @@ from .prints import (
 from .util import (
     get_facts_and_args,
     get_operation_and_args,
+    list_dirs_above_file,
     load_deploy_file,
 )
 from .virtualenv import init_virtualenv
@@ -283,31 +284,23 @@ def _main(
     # Bootstrap any virtualenv
     init_virtualenv()
 
-    deploy_dir = getcwd()
+    cwd = getcwd()
+    deploy_dir = cwd
     potential_deploy_dirs = []
 
     # This is the most common case: we have a deploy file so use it's
     # pathname - we only look at the first file as we can't have multiple
     # deploy directories.
-    if operations[0].endswith('.py'):
-        deploy_file_dir, _ = path.split(operations[0])
-        above_deploy_file_dir, _ = path.split(deploy_file_dir)
-
-        deploy_dir = deploy_file_dir
-
-        potential_deploy_dirs.extend((
-            deploy_file_dir, above_deploy_file_dir,
-        ))
+    if operations[0].endswith('.py') and path.isfile(operations[0]):
+        potential_deploy_dirs.extend(list_dirs_above_file(operations[0], cwd))
 
     # If we have a valid inventory, look in it's path and it's parent for
     # group_data or config.py to indicate deploy_dir (--fact, --run).
     if inventory.endswith('.py') and path.isfile(inventory):
-        inventory_dir, _ = path.split(inventory)
-        above_inventory_dir, _ = path.split(inventory_dir)
-
-        potential_deploy_dirs.extend((
-            inventory_dir, above_inventory_dir,
-        ))
+        potential_deploy_dirs.extend([
+            dirname for dirname in list_dirs_above_file(inventory, cwd)
+            if dirname not in potential_deploy_dirs
+        ])
 
     for potential_deploy_dir in potential_deploy_dirs:
         logger.debug('Checking potential directory: {0}'.format(
@@ -321,6 +314,8 @@ def _main(
             logger.debug('Setting directory to: {0}'.format(potential_deploy_dir))
             deploy_dir = potential_deploy_dir
             break
+    else:
+        logger.debug('Deploy directory remains as cwd')
 
     # Make sure imported files (deploy.py/etc) behave as if imported from the cwd
     sys.path.append(deploy_dir)

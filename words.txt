@@ -228,6 +228,7 @@ Pacman
 pacman
 Paramiko
 paramiko
+pardir
 pathlib
 pathname
 pip3
