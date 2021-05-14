@@ -5,6 +5,7 @@ Manage launchd services.
 from __future__ import unicode_literals
 
 from pyinfra.api import operation
+from pyinfra.facts.launchd import LaunchdStatus
 
 from .util.service import handle_service_control
 
@@ -25,11 +26,11 @@ def service(
     + enabled: whether this service should be enabled/disabled on boot
     '''
 
-    was_running = host.fact.launchd_status.get(service, None)
+    was_running = host.get_fact(LaunchdStatus).get(service, None)
 
     yield handle_service_control(
         host,
-        service, host.fact.launchd_status,
+        service, LaunchdStatus,
         'launchctl {1} {0}',
         # No support for restart/reload/command
         running, None, None, None,
