@@ -163,6 +163,10 @@ class FakeHost(object):
     def noop(self, description):
         self.noop_description = description
 
+    def get_fact(self, fact_cls):
+        fact_key = '{0}.{1}'.format(fact_cls.__module__.split('.')[-1], fact_cls.__name__)
+        return getattr(self.fact, fact_key)
+
 
 class FakeFile(object):
     _read = False
