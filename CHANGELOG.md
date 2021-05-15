@@ -1,3 +1,13 @@
+# v1.4.1
+
++ Improve deploy directory detection to handle nested directories
++ Copy existing file/directory permissions in `files.sync` operation
++ Treat `exited` systemd services as running in `systemd.SystemdStatus` fact
++ Fix handling of `cache_time` in `apt.update` operation
++ Fix invalid `name` arguments in `windows.service`, `windows.file` & `windows.directory` operations
++ Only show invalid auth argument warnings when not the defaults
++ Test operation global argument clashes
+
 # v1.4
 
 Three major themes to this release:
