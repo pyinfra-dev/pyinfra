@@ -23,4 +23,4 @@ jobs:
         run: pip install '.[test]'
 
       - name: Docker ingration tests
-        run: pytest -m docker
+        run: pytest -m docker --disable-warnings
