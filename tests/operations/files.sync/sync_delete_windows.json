@@ -16,7 +16,8 @@
             "\\somedir\\": ["somefile.txt", "anotherfile.txt", "thing.pyc"],
             "\\somedir\\underthat": ["yet-another-file.txt"],
             "\\somedir\\__pycache__": ["nope"]
-        }
+        },
+        "\\somedir\\underthat": {}
     },
     "facts": {
         "file": {
