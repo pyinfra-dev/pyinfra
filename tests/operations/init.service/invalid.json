@@ -1,9 +1,6 @@
 {
     "args": ["nginx"],
     "facts": {
-        "rcd_status": {
-            "nginx": false
-        },
         "which": {
             "systemctl": false,
             "initctl": false

@@ -10,5 +10,6 @@
     },
     "commands": [
         "git init --bare /home/mybarerepo.git"
-    ]
+    ],
+    "idempotent": false
 }

@@ -11,5 +11,6 @@
     },
     "commands": [
         "iptables -t nat -A PREROUTING -j REDIRECT --to-ports 8000"
-    ]
+    ],
+    "idempotent": false
 }

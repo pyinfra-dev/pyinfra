@@ -9,6 +9,7 @@
         }
     },
     "commands": [
-        "psql -Ac 'CREATE ROLE testuser REPLICATION'"
-    ]
+        "psql -Ac 'CREATE ROLE \"testuser\" REPLICATION'"
+    ],
+    "idempotent": false
 }

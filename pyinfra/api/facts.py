@@ -8,7 +8,7 @@ from __future__ import division, unicode_literals
 
 import re
 
-from inspect import getcallargs
+from inspect import getcallargs, isclass
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -22,6 +22,7 @@ from gevent.lock import BoundedSemaphore
 from paramiko import SSHException
 
 from pyinfra import logger
+from pyinfra.api import StringCommand
 from pyinfra.api.connectors.util import split_combined_output
 from pyinfra.api.util import (
     get_arg_value,
@@ -33,6 +34,8 @@ from pyinfra.api.util import (
     underscore,
 )
 from pyinfra.progress import progress_spinner
+
+from .operation_kwargs import get_executor_kwarg_keys
 
 
 # Index of snake_case facts -> CamelCase classes
@@ -126,7 +129,7 @@ def _make_command(command_attribute, host_args):
 
 def get_facts(
     state,
-    name,
+    name_or_cls,
     args=None,
     kwargs=None,
     ensure_hosts=None,
@@ -136,7 +139,21 @@ def get_facts(
     Get a single fact for all hosts in the state.
     '''
 
-    fact = get_fact_class(name)()
+    # TODO: tidy up the whole executor argument handling here!
+    global_kwarg_overrides = {}
+    if kwargs:
+        global_kwarg_overrides.update({
+            key: kwargs.pop(key)
+            for key in get_executor_kwarg_keys()
+            if key in kwargs
+        })
+
+    if isclass(name_or_cls) and issubclass(name_or_cls, (FactBase, ShortFactBase)):
+        fact = name_or_cls()
+        name = fact.name
+    else:
+        fact = get_fact_class(name_or_cls)()
+        name = name_or_cls
 
     if isinstance(fact, ShortFactBase):
         return get_short_facts(state, fact, args=args, ensure_hosts=ensure_hosts)
@@ -158,6 +175,7 @@ def get_facts(
     ignore_errors = state.config.IGNORE_ERRORS
     shell_executable = state.config.SHELL
     use_sudo_password = state.config.USE_SUDO_PASSWORD
+    env = state.config.ENV
 
     # Facts can override the shell (winrm powershell vs cmd support)
     if fact.shell_executable:
@@ -167,18 +185,21 @@ def get_facts(
     timeout = None
 
     # If inside an operation, fetch global arguments
-    current_global_kwargs = state.current_op_global_kwargs
+    current_global_kwargs = state.current_op_global_kwargs or {}
+    # Allow `Host.get_fact` calls to explicitly override these
+    current_global_kwargs.update(global_kwarg_overrides)
     if current_global_kwargs:
-        sudo = current_global_kwargs['sudo']
-        sudo_user = current_global_kwargs['sudo_user']
-        use_sudo_password = current_global_kwargs['use_sudo_password']
-        su_user = current_global_kwargs['su_user']
-        ignore_errors = current_global_kwargs['ignore_errors']
-        timeout = current_global_kwargs['timeout']
+        sudo = current_global_kwargs.get('sudo', sudo)
+        sudo_user = current_global_kwargs.get('sudo_user', sudo_user)
+        use_sudo_password = current_global_kwargs.get('use_sudo_password', use_sudo_password)
+        su_user = current_global_kwargs.get('su_user', su_user)
+        ignore_errors = current_global_kwargs.get('ignore_errors', ignore_errors)
+        timeout = current_global_kwargs.get('timeout', timeout)
+        env = current_global_kwargs.get('env', env)
 
     # Make a hash which keeps facts unique - but usable cross-deploy/threads.
     # Locks are used to maintain order.
-    fact_hash = make_hash((name, kwargs, sudo, sudo_user, su_user, ignore_errors))
+    fact_hash = make_hash((name, kwargs, sudo, sudo_user, su_user, ignore_errors, env))
 
     # Already got this fact? Unlock and return them
     current_facts = state.facts.get(fact_hash, {})
@@ -211,8 +232,9 @@ def get_facts(
             command = _make_command(fact.command, host_kwargs)
             requires_command = _make_command(fact.requires_command, host_kwargs)
             if requires_command:
-                command = '! command -v {0} > /dev/null || ({1})'.format(
-                    requires_command, command,
+                command = StringCommand(
+                    # Command doesn't exist, return 0 *or* run & return fact command
+                    '!', 'command', '-v', requires_command, '>/dev/null', '||', command,
                 )
 
             greenlet = state.fact_pool.spawn(
@@ -223,6 +245,7 @@ def get_facts(
                 use_sudo_password=use_sudo_password,
                 su_user=su_user,
                 timeout=timeout,
+                env=env,
                 shell_executable=shell_executable,
                 print_output=state.print_fact_output,
                 print_input=state.print_fact_input,
@@ -309,24 +332,9 @@ def get_facts(
     return state.facts[fact_hash]
 
 
-def get_host_fact(state, host, name):
-    '''
-    Wrapper around ``get_facts`` returning facts for one host or a function
-    that does.
-    '''
-
-    # Expecting a function to return
-    if callable(getattr(FACTS[name], 'command', None)):
-        def wrapper(*args, **kwargs):
-            fact_data = get_facts(state, name, args=args, kwargs=kwargs, ensure_hosts=(host,))
-            return fact_data.get(host)
-        return wrapper
-
-    # Expecting the fact as a return value
-    else:
-        # Get the fact
-        fact_data = get_facts(state, name, ensure_hosts=(host,))
-        return fact_data.get(host)
+def get_host_fact(state, host, name, args=None, kwargs=None):
+    fact_data = get_facts(state, name, args=args, kwargs=kwargs, ensure_hosts=(host,))
+    return fact_data.get(host)
 
 
 def create_host_fact(state, host, name, data, args=None):

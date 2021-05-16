@@ -5,5 +5,6 @@
     },
     "commands": [
         ["__func__", ["arg1", "arg2"], {"hello": "world"}]
-    ]
+    ],
+    "idempotent": false
 }

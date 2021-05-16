@@ -12,5 +12,6 @@
     },
     "commands": [
         "cd /home/myworktree && git worktree remove ."
-    ]
+    ],
+    "idempotent": false
 }

@@ -88,6 +88,7 @@ def make_inventory(
     winrm_username=None,
     winrm_password=None,
     winrm_port=None,
+    winrm_transport=None,
 ):
     '''
     Builds a ``pyinfra.api.Inventory`` from the filesystem. If the file does not exist
@@ -108,7 +109,7 @@ def make_inventory(
         groups = _get_groups_from_filename(inventory_filename)
         # Used to set all the hosts to an additional group - that of the filename
         # ie inventories/dev.py means all the hosts are in the dev group, if not present
-        file_groupname = path.basename(inventory_filename).rsplit('.')[0]
+        file_groupname = path.basename(inventory_filename).rsplit('.', 1)[0]
 
     all_data = {}
 
@@ -188,5 +189,6 @@ def make_inventory(
         winrm_username=winrm_username,
         winrm_password=winrm_password,
         winrm_port=winrm_port,
+        winrm_transport=winrm_transport,
         **groups
     ), file_groupname and file_groupname.lower()

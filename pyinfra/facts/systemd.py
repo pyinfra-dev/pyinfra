@@ -40,7 +40,7 @@ class SystemdStatus(FactBase):
             line = line.strip()
             matches = re.match(self.regex, line)
             if matches:
-                is_active = matches.group(2) == 'running' or matches.group(2) == 'waiting'
+                is_active = matches.group(2) in ('running', 'waiting', 'exited')
                 services[matches.group(1)] = is_active
 
         return services

@@ -1,7 +1,7 @@
 {
     "args": ["logrotate.timer"],
     "facts": {
-        "systemd_status": {
+        "systemd.SystemdStatus": {
             "logrotate.timer": false
         }
     },

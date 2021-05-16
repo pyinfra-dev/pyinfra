@@ -4,7 +4,10 @@
         "extra_install_args": "--foo"
     },
     "facts": {
-        "rpm_packages": {}
+        "rpm_packages": {},
+        "rpm_package_provides": {
+            "docker-ce": null
+        }
     },
     "commands": [
         "dnf install -y --foo docker-ce"

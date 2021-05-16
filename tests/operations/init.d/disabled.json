@@ -4,7 +4,7 @@
         "enabled": false
     },
     "facts": {
-        "initd_status": {
+        "sysvinit.InitdStatus": {
             "nginx": true
         },
         "find_links": {
@@ -15,5 +15,6 @@
     },
     "commands": [
         "rm -f somelink"
-    ]
+    ],
+    "idempotent": false
 }

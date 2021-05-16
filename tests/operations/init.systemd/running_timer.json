@@ -1,7 +1,7 @@
 {
     "args": ["some-timer.timer"],
     "facts": {
-        "systemd_status": {
+        "systemd.SystemdStatus": {
             "some-timer.timer": false
         }
     },

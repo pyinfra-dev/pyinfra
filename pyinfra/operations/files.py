@@ -26,7 +26,12 @@ from pyinfra.api import (
     RsyncCommand,
 )
 from pyinfra.api.connectors.util import escape_unix_path
-from pyinfra.api.util import get_file_sha1, get_template, memoize
+from pyinfra.api.util import (
+    get_file_sha1,
+    get_path_permissions_mode,
+    get_template,
+    memoize,
+)
 
 from .util.compat import fspath
 from .util.files import (
@@ -444,7 +449,7 @@ def sync(
             continue
 
         if remote_dirname:
-            ensure_dirnames.append(remote_dirname)
+            ensure_dirnames.append((remote_dirname, get_path_permissions_mode(dirname)))
 
         for filename in filenames:
             full_filename = os_path.join(dirname, filename)
@@ -474,14 +479,15 @@ def sync(
     yield directory(
         dest_to_ensure,
         user=user, group=group,
+        mode=get_path_permissions_mode(src),
         state=state, host=host,
     )
 
     # Ensure any remote dirnames
-    for dirname in ensure_dirnames:
+    for dirname, dir_mode in ensure_dirnames:
         yield directory(
             '/'.join((dest, dirname)),
-            user=user, group=group,
+            user=user, group=group, mode=dir_mode,
             state=state, host=host,
         )
 
@@ -489,7 +495,8 @@ def sync(
     for local_filename, remote_filename in put_files:
         yield put(
             local_filename, remote_filename,
-            user=user, group=group, mode=mode,
+            user=user, group=group,
+            mode=mode or get_path_permissions_mode(local_filename),
             add_deploy_dir=False,
             create_remote_dir=False,  # handled above
             state=state, host=host,
@@ -778,15 +785,37 @@ def template(
             group='root',
         )
 
-        # Example showing how to pass python variable to template file.
-        # The .j2 file can use `{{ foo_variable }}` to be interpolated.
+        # Example showing how to pass python variable to template file. You can also
+        # use dicts and lists. The .j2 file can use `{{ foo_variable }}` to be interpolated.
         foo_variable = 'This is some foo variable contents'
+        foo_dict = {
+            "str1": "This is string 1",
+            "str2": "This is string 2"
+        }
+        foo_list = [
+            "entry 1",
+            "entry 2"
+        ]
         files.template(
             name='Create a templated file',
-            src='templates/foo.j2',
-            dest='/tmp/foo',
+            src='templates/foo.yml.j2',
+            dest='/tmp/foo.yml',
             foo_variable=foo_variable,
+            foo_dict=foo_dict,
+            foo_list=foo_list
         )
+
+    .. code:: yml
+
+        # templates/foo.j2
+        name: "{{ foo_variable }}"
+        dict_contents:
+            str1: "{{ foo_dict.str1 }}"
+            str2: "{{ foo_dict.str2 }}"
+        list_contents:
+        {% for entry in foo_list %}
+            - "{{ entry }}"
+        {% endfor %}
     '''
 
     dest = escape_unix_path(dest)

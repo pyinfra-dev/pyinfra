@@ -94,14 +94,19 @@ def ensure_packages(
             if not _has_package(package, current_packages, expand_package_fact):
                 diff_packages.append(package)
 
-            # Present packages w/o version specified - for upgrade if latest
-            elif isinstance(package, six.string_types) and package in current_packages:
-                upgrade_packages.append(package)
+            else:
+                # Present packages w/o version specified - for upgrade if latest
+                if isinstance(package, six.string_types):
+                    upgrade_packages.append(package)
 
                 if not latest:
-                    host.noop('package {0} is installed ({1})'.format(
-                        package, ', '.join(current_packages[package]),
-                    ))
+                    pkg_key = package[0] if isinstance(package, list) else package
+                    if pkg_key in current_packages:
+                        host.noop('package {0} is installed ({1})'.format(
+                            package, ', '.join(current_packages[pkg_key]),
+                        ))
+                    else:
+                        host.noop('package {0} is installed'.format(package))
 
     # Uninstalling?
     else:
@@ -131,7 +136,13 @@ def ensure_packages(
 
         for package in diff_packages:  # add/remove from current packages
             if present:
-                current_packages[package] = ['unknown']
+                version = 'unknown'
+                if version_join:
+                    bits = package.rsplit(version_join, 1)
+                    package = bits[0]
+                    if len(bits) == 2:
+                        version = bits[1]
+                current_packages[package] = [version]
             else:
                 current_packages.pop(package, None)
 

@@ -1,0 +1,17 @@
+{
+    "args": [
+        "testlink"
+    ],
+    "kwargs": {
+        "target": "c:\\testlink"
+    },
+    "facts": {
+        "windows_link": {
+            "testlink": false
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "testlink exists and is not a link"
+    }
+}

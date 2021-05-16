@@ -10,7 +10,7 @@ from . import files
 from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 
 
-@operation
+@operation(is_idempotent=False)
 def key(src, state=None, host=None):
     '''
     Add yum gpg keys with ``rpm``.
@@ -189,4 +189,5 @@ def packages(
         upgrade_command='yum update -y',
         version_join='=',
         latest=latest,
+        expand_package_fact=host.fact.rpm_package_provides,
     )

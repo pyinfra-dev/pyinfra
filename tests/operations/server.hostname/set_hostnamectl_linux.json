@@ -14,5 +14,6 @@
     },
     "commands": [
         "hostnamectl set-hostname my-hostname.net"
-    ]
+    ],
+    "idempotent": false
 }

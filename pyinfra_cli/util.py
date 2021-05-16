@@ -1,9 +1,11 @@
 from __future__ import division, print_function
 
 import json
+import os
 
 from datetime import datetime
 from importlib import import_module
+from os import path
 from types import FunctionType, ModuleType
 
 # py2/3 switcheroo
@@ -22,12 +24,35 @@ import six
 
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.command import PyinfraCommand
+from pyinfra.api.facts import get_fact_class, is_fact
 from pyinfra.api.util import FallbackDict
 
 from .exceptions import CliError, UnexpectedExternalError
 
 # Cache for compiled Python deploy code
 PYTHON_CODES = {}
+
+
+def is_subdir(child, parent):
+    child = path.realpath(child)
+    parent = path.realpath(parent)
+    relative = path.relpath(child, start=parent)
+    return not relative.startswith(os.pardir)
+
+
+def list_dirs_above_file(filename, parent):
+    dirs = []
+
+    current_dir = path.dirname(filename)
+    dirs.append(current_dir)
+
+    while True:
+        current_dir, _ = path.split(current_dir)
+        if not current_dir or not is_subdir(current_dir, parent):
+            break
+
+        dirs.append(current_dir)
+    return dirs
 
 
 def exec_file(filename, return_locals=False, is_deploy_code=False):
@@ -123,7 +148,7 @@ def get_operation_and_args(commands):
     operation_name = commands[0]
 
     # Get the module & operation name
-    op_module, op_name = operation_name.split('.')
+    op_module, op_name = operation_name.rsplit('.', 1)
 
     # Try to load the requested operation from the main operations package.
     # If that fails, try to load from the user's operations package.
@@ -147,7 +172,7 @@ def get_operation_and_args(commands):
         # a list of args and a dict of kwargs).
         try:
             args, kwargs = json.loads(operation_args[0])
-            return op, (args, kwargs)
+            return op, (args or (), kwargs or {})
         except ValueError:
             pass
 
@@ -165,6 +190,61 @@ def get_operation_and_args(commands):
     }
 
     return op, (args, kwargs)
+
+
+def get_facts_and_args(commands):
+    facts = []
+
+    current_fact = None
+
+    for command in commands:
+        if '=' in command:
+            if not current_fact:
+                raise CliError('Invalid fact commands: {0}'.format(commands))
+
+            key, value = command.split('=', 1)
+            current_fact[2][key] = value
+            continue
+
+        if current_fact:
+            facts.append(current_fact)
+            current_fact = None
+
+        if '.' not in command:
+            args = None
+            if ':' in command:
+                command, args = command.split(':', 1)
+                args = args.split(',')
+
+            if not is_fact(command):
+                raise CliError('No fact: {0}'.format(command))
+
+            fact_cls = get_fact_class(command)
+            logger.warning((
+                'Named facts are deprecated, please use the explicit import: {0}.{1}'
+            ).format(fact_cls.__module__.replace('pyinfra.facts.', ''), fact_cls.__name__))
+            current_fact = (fact_cls, args, {})
+
+        else:
+            fact_module, fact_name = command.rsplit('.', 1)
+            try:
+                fact_module = import_module('pyinfra.facts.{0}'.format(fact_module))
+            except ImportError:
+                try:
+                    fact_module = import_module(str(fact_module))
+                except ImportError:
+                    raise CliError('No such module: {0}'.format(fact_module))
+
+            fact_cls = getattr(fact_module, fact_name, None)
+            if not fact_cls:
+                raise CliError('No such fact: {0}'.format(command))
+
+            current_fact = (fact_cls, (), {})
+
+    if current_fact:
+        facts.append(current_fact)
+
+    return facts
 
 
 def load_deploy_file(state, filename):

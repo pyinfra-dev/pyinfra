@@ -16,7 +16,8 @@
             "\\somedir\\": ["somefile.txt", "anotherfile.txt", "thing.pyc"],
             "\\somedir\\underthat": ["yet-another-file.txt"],
             "\\somedir\\__pycache__": ["nope"]
-        }
+        },
+        "\\somedir\\underthat": {}
     },
     "facts": {
         "file": {
@@ -43,14 +44,20 @@
     },
     "commands": [
         "mkdir -p /home/somedir",
+        "chmod 755 /home/somedir",
         "mkdir -p /home/somedir/underthat",
+        "chmod 755 /home/somedir/underthat",
         ["upload", "\\somedir\\somefile.txt", "/home/somedir/somefile.txt"],
+        "chmod 644 /home/somedir/somefile.txt",
         ["upload", "\\somedir\\anotherfile.txt", "/home/somedir/anotherfile.txt"],
+        "chmod 644 /home/somedir/anotherfile.txt",
         [
             "upload",
             "\\somedir\\underthat\\yet-another-file.txt",
             "/home/somedir/underthat/yet-another-file.txt"
         ],
+        "chmod 644 /home/somedir/underthat/yet-another-file.txt",
         "rm -f /home/somedir/deleteme.txt"
-    ]
+    ],
+    "idempotent": false
 }

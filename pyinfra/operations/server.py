@@ -16,7 +16,22 @@ from six.moves import filterfalse, shlex_quote
 from pyinfra.api import FunctionCommand, operation, OperationError, StringCommand
 from pyinfra.api.util import try_int
 
-from . import bsdinit, files, systemd, sysvinit, upstart
+from . import (
+    apk,
+    apt,
+    brew,
+    bsdinit,
+    dnf,
+    files,
+    pacman,
+    pkg,
+    systemd,
+    sysvinit,
+    upstart,
+    xbps,
+    yum,
+    zypper,
+)
 from .util.files import chmod, sed_replace
 
 
@@ -450,6 +465,64 @@ def service(
         command=command, enabled=enabled,
         state=state, host=host,
     )
+
+
+@operation
+def packages(
+    packages, present=True,
+    state=None, host=None,
+):
+    '''
+    Add or remove system packages. This command checks for the presence of all the
+    system package managers ``pyinfra`` can handle and executes the relevant operation.
+
+    + packages: list of packages to ensure
+    + present: whether the packages should be installed
+
+    Example:
+
+    .. code:: python
+
+        server.packages(
+            name='Install Vim and vimpager',
+            packages=['vimpager', 'vim'],
+        )
+    '''
+
+    if host.fact.which('apk'):
+        package_operation = apk.packages
+
+    elif host.fact.which('apt'):
+        package_operation = apt.packages
+
+    elif host.fact.which('brew'):
+        package_operation = brew.packages
+
+    elif host.fact.which('dnf'):
+        package_operation = dnf.packages
+
+    elif host.fact.which('pacman'):
+        package_operation = pacman.packages
+
+    elif host.fact.which('xbps'):
+        package_operation = xbps.packages
+
+    elif host.fact.which('yum'):
+        package_operation = yum.packages
+
+    elif host.fact.which('zypper'):
+        package_operation = zypper.packages
+
+    elif host.fact.which('pkg') or host.fact.which('pkg_add'):
+        package_operation = pkg.packages
+
+    else:
+        raise OperationError((
+            'No system package manager found '
+            '(no apk, apt, brew, dnf, pacman, pkg, xbps, yum or zypper found)'
+        ))
+
+    yield package_operation(packages=packages, present=present, state=state, host=host)
 
 
 @operation

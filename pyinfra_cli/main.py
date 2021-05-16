@@ -22,11 +22,11 @@ from pyinfra.api.facts import (
     get_fact_class,
     get_fact_names,
     get_facts,
-    is_fact,
     ShortFactBase,
 )
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
+from pyinfra.api.util import get_kwargs_str
 from pyinfra.operations import server
 
 from .config import load_config, load_deploy_config
@@ -49,7 +49,9 @@ from .prints import (
     print_support_info,
 )
 from .util import (
+    get_facts_and_args,
     get_operation_and_args,
+    list_dirs_above_file,
     load_deploy_file,
 )
 from .virtualenv import init_virtualenv
@@ -66,6 +68,11 @@ def _print_facts(ctx, param, value):
     if not value:
         return
 
+    click.echo(click.style(
+        '--facts is deprecated and will be removed in the future.',
+        'yellow',
+    ), err=True)
+
     click.echo('--> Available facts:', err=True)
     print_facts_list()
     ctx.exit()
@@ -75,6 +82,10 @@ def _print_operations(ctx, param, value):
     if not value:
         return
 
+    click.echo(click.style(
+        '--operations is deprecated and will be removed in the future.',
+        'yellow',
+    ), err=True)
     click.echo('--> Available operations:', err=True)
     print_operations_list()
     ctx.exit()
@@ -129,28 +140,19 @@ def _print_support(ctx, param, value):
     '--serial', is_flag=True, default=False,
     help='Run operations in serial, host by host.',
 )
-# SSH args
-@click.option('--user', help='SSH user to connect as.')
-@click.option('--port', type=int, help='SSH port to connect to.')
-@click.option('--key', type=click.Path(), help='SSH Private key filename.')
-@click.option('--key-password', help='SSH Private key password.')
-@click.option('--password', help='SSH password.')
-# WinRM args
+# SSH connector args
+# TODO: remove the non-ssh-prefixed variants
+@click.option('--ssh-user', '--user', help='SSH user to connect as.')
+@click.option('--ssh-port', '--port', type=int, help='SSH port to connect to.')
+@click.option('--ssh-key', '--key', type=click.Path(), help='SSH Private key filename.')
+@click.option('--ssh-key-password', '--key-password', help='SSH Private key password.')
+@click.option('--ssh-password', '--password', help='SSH password.')
+# WinRM connector args
 @click.option('--winrm-username', help='WINRM user to connect as.')
 @click.option('--winrm-password', help='WINRM password.')
 @click.option('--winrm-port', help='WINRM port to connect to.')
-# Eager commands (pyinfra [--facts | --operations | --support | --version])
-@click.option(
-    '--facts', is_flag=True, is_eager=True, callback=_print_facts,
-    help='Print available facts list and exit.',
-)
-@click.option(
-    'print_operations', '--operations',
-    is_flag=True,
-    is_eager=True,
-    callback=_print_operations,
-    help='Print available operations list and exit.',
-)
+@click.option('--winrm-transport', help='WINRM transport for use.')
+# Eager commands (pyinfra --support)
 @click.option(
     '--support', is_flag=True, is_eager=True, callback=_print_support,
     help='Print useful information for support and exit.',
@@ -163,10 +165,6 @@ def _print_support(ctx, param, value):
 @click.option(
     '--debug', is_flag=True, default=False,
     help='Print debug info.',
-)
-@click.option(
-    '--debug-data', is_flag=True, default=False,
-    help='Print host/group data before connecting and exit.',
 )
 @click.option(
     '--debug-facts', is_flag=True, default=False,
@@ -242,11 +240,29 @@ def cli(*args, **kwargs):
             disconnect_all(pseudo_state)
 
 
+if '--help' not in sys.argv:
+    click.option(
+        '--facts', is_flag=True, is_eager=True, callback=_print_facts,
+        help='Print available facts list and exit.',
+    )(cli)
+    click.option(
+        'print_operations', '--operations',
+        is_flag=True,
+        is_eager=True,
+        callback=_print_operations,
+        help='Print available operations list and exit.',
+    )(cli)
+    click.option(
+        '--debug-data', is_flag=True, default=False,
+        help='Print host/group data before connecting and exit.',
+    )(cli)
+
+
 def _main(
     inventory, operations, verbosity,
-    user, port, key, key_password, password,
+    ssh_user, ssh_port, ssh_key, ssh_key_password, ssh_password,
     winrm_username, winrm_password, winrm_port,
-    shell_executable,
+    winrm_transport, shell_executable,
     sudo, sudo_user, use_sudo_password, su_user,
     parallel, fail_percent,
     dry, limit, no_wait, serial, quiet,
@@ -268,31 +284,23 @@ def _main(
     # Bootstrap any virtualenv
     init_virtualenv()
 
-    deploy_dir = getcwd()
+    cwd = getcwd()
+    deploy_dir = cwd
     potential_deploy_dirs = []
 
     # This is the most common case: we have a deploy file so use it's
     # pathname - we only look at the first file as we can't have multiple
     # deploy directories.
-    if operations[0].endswith('.py'):
-        deploy_file_dir, _ = path.split(operations[0])
-        above_deploy_file_dir, _ = path.split(deploy_file_dir)
-
-        deploy_dir = deploy_file_dir
-
-        potential_deploy_dirs.extend((
-            deploy_file_dir, above_deploy_file_dir,
-        ))
+    if operations[0].endswith('.py') and path.isfile(operations[0]):
+        potential_deploy_dirs.extend(list_dirs_above_file(operations[0], cwd))
 
     # If we have a valid inventory, look in it's path and it's parent for
     # group_data or config.py to indicate deploy_dir (--fact, --run).
     if inventory.endswith('.py') and path.isfile(inventory):
-        inventory_dir, _ = path.split(inventory)
-        above_inventory_dir, _ = path.split(inventory_dir)
-
-        potential_deploy_dirs.extend((
-            inventory_dir, above_inventory_dir,
-        ))
+        potential_deploy_dirs.extend([
+            dirname for dirname in list_dirs_above_file(inventory, cwd)
+            if dirname not in potential_deploy_dirs
+        ])
 
     for potential_deploy_dir in potential_deploy_dirs:
         logger.debug('Checking potential directory: {0}'.format(
@@ -306,6 +314,8 @@ def _main(
             logger.debug('Setting directory to: {0}'.format(potential_deploy_dir))
             deploy_dir = potential_deploy_dir
             break
+    else:
+        logger.debug('Deploy directory remains as cwd')
 
     # Make sure imported files (deploy.py/etc) behave as if imported from the cwd
     sys.path.append(deploy_dir)
@@ -342,8 +352,13 @@ def _main(
 
     # Get all non-arg facts
     elif operations[0] == 'all-facts':
+        click.echo(click.style(
+            'all-facts is deprecated and will be removed in the future.',
+            'yellow',
+        ), err=True)
+
         command = 'fact'
-        fact_names = []
+        fact_ops = []
 
         for fact_name in get_fact_names():
             fact_class = get_fact_class(fact_name)
@@ -351,30 +366,14 @@ def _main(
                 not issubclass(fact_class, ShortFactBase)
                 and not callable(fact_class.command)
             ):
-                fact_names.append(fact_name)
+                fact_ops.append((fact_class, None, None))
 
-        operations = [(name, None) for name in fact_names]
+        operations = fact_ops
 
     # Get one or more facts
     elif operations[0] == 'fact':
         command = 'fact'
-
-        fact_names = operations[1:]
-        facts = []
-
-        for name in fact_names:
-            args = None
-
-            if ':' in name:
-                name, args = name.split(':', 1)
-                args = args.split(',')
-
-            if not is_fact(name):
-                raise CliError('No fact: {0}'.format(name))
-
-            facts.append((name, args))
-
-        operations = facts
+        operations = get_facts_and_args(operations[1:])
 
     # Execute a raw command with server.shell
     elif operations[0] == 'exec':
@@ -436,14 +435,15 @@ def _main(
     inventory, inventory_group = make_inventory(
         inventory,
         deploy_dir=deploy_dir,
-        ssh_port=port,
-        ssh_user=user,
-        ssh_key=key,
-        ssh_key_password=key_password,
-        ssh_password=password,
+        ssh_port=ssh_port,
+        ssh_user=ssh_user,
+        ssh_key=ssh_key,
+        ssh_key_password=ssh_key_password,
+        ssh_password=ssh_password,
         winrm_username=winrm_username,
         winrm_password=winrm_password,
         winrm_port=winrm_port,
+        winrm_transport=winrm_transport,
     )
 
     # Attach to pseudo inventory
@@ -505,14 +505,22 @@ def _main(
         fact_data = {}
 
         for i, command in enumerate(operations):
-            name, args = command
-            fact_key = name
-            if args:
-                fact_key = '{0}{1}'.format(name, tuple(args))
+            fact_cls, args, kwargs = command
+            fact_key = fact_cls.name
+
+            if args or kwargs:
+                fact_key = '{0}{1} {2}'.format(
+                    fact_cls.name,
+                    args or '',
+                    get_kwargs_str(kwargs) if kwargs else '',
+                )
+
             try:
                 fact_data[fact_key] = get_facts(
-                    state, name,
+                    state,
+                    fact_cls,
                     args=args,
+                    kwargs=kwargs,
                     apply_failed_hosts=False,
                 )
             except PyinfraError:

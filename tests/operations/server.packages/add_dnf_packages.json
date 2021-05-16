@@ -1,0 +1,26 @@
+{
+    "args": [[
+        "git",
+        "python-devel",
+        "something"
+    ]],
+    "facts": {
+        "which": {
+            "apk": null,
+            "apt": null,
+            "brew": null,
+            "dnf": "/sbin/dnf"
+        },
+        "rpm_packages": {
+            "something": [""]
+        },
+        "rpm_package_provides": {
+            "git": null,
+            "python-devel": null,
+            "something": null
+        }
+    },
+    "commands": [
+        "dnf install -y git python-devel"
+    ]
+}

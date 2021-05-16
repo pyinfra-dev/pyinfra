@@ -12,5 +12,6 @@
     },
     "commands": [
         "cp somefile somefile.a-timestamp && echo 'match_line' >> somefile"
-    ]
+    ],
+    "idempotent": false
 }

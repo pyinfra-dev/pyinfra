@@ -3,7 +3,8 @@ name: "Execute tests"
 on:
   push:
     branches:
-      - master
+      - current
+      - next
   pull_request:
 
 jobs:
@@ -36,7 +37,7 @@ jobs:
         run: flake8
 
       - name: Unit tests
-        run: pytest --cov
+        run: pytest --cov --disable-warnings
 
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1

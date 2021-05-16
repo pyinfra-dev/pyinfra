@@ -4,7 +4,7 @@
         "enabled": false
     },
     "facts": {
-        "rcd_status": {
+        "bsdinit.RcdStatus": {
             "nginx": true
         },
         "find_in_file": {
@@ -17,5 +17,6 @@
     },
     "commands": [
         "sed -i.a-timestamp 's/^nginx_enable=.*$//' /etc/rc.conf.local && rm -f /etc/rc.conf.local.a-timestamp"
-    ]
+    ],
+    "idempotent": false
 }

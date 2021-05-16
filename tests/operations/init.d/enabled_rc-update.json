@@ -4,7 +4,7 @@
         "enabled": true
     },
     "facts": {
-        "initd_status": {
+        "sysvinit.InitdStatus": {
             "nginx": true
         },
         "find_links": {
@@ -16,5 +16,6 @@
     },
     "commands": [
         "rc-update add nginx default"
-    ]
+    ],
+    "idempotent": false
 }

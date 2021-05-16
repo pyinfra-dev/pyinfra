@@ -4,7 +4,7 @@
         "enabled": true
     },
     "facts": {
-        "rcd_status": {
+        "bsdinit.RcdStatus": {
             "nginx": true
         },
         "find_in_file": {
@@ -16,5 +16,6 @@
     },
     "commands": [
         "echo 'nginx_enable=\"YES\"' >> /etc/rc.conf.local"
-    ]
+    ],
+    "idempotent": false
 }

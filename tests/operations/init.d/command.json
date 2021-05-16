@@ -4,12 +4,13 @@
         "command": "something-else"
     },
     "facts": {
-        "initd_status": {
+        "sysvinit.InitdStatus": {
             "nginx": false
         }
     },
     "commands": [
         "/etc/init.d/nginx start",
         "/etc/init.d/nginx something-else"
-    ]
+    ],
+    "idempotent": false
 }

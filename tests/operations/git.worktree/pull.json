@@ -12,5 +12,6 @@
     },
     "commands": [
         "cd /home/myworktree && git pull"
-    ]
+    ],
+    "idempotent": false
 }

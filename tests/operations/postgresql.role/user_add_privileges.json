@@ -11,6 +11,7 @@
         }
     },
     "commands": [
-        "psql -Ac 'CREATE ROLE testuser LOGIN SUPERUSER CREATEDB CREATEROLE REPLICATION'"
-    ]
+        "psql -Ac 'CREATE ROLE \"testuser\" LOGIN SUPERUSER CREATEDB CREATEROLE REPLICATION'"
+    ],
+    "idempotent": false
 }

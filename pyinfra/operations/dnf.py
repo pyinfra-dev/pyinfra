@@ -10,7 +10,7 @@ from . import files
 from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 
 
-@operation
+@operation(is_idempotent=False)
 def key(src, state=None, host=None):
     '''
     Add dnf gpg keys with ``rpm``.
@@ -18,7 +18,7 @@ def key(src, state=None, host=None):
     + key: filename or URL
 
     Note:
-        always returns one command, not state checking
+        always returns one command, not idempotent
 
     Example:
 
@@ -189,4 +189,5 @@ def packages(
         upgrade_command='dnf update -y',
         version_join='=',
         latest=latest,
+        expand_package_fact=host.fact.rpm_package_provides,
     )

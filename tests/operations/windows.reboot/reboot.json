@@ -1,5 +1,6 @@
 {
     "commands": [
         "Restart-Computer -Force"
-    ]
+    ],
+    "idempotent": false
 }

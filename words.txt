@@ -41,6 +41,7 @@ cd
 centos
 certificate
 cfg
+changelog
 chdir
 CHOCO
 Choco
@@ -113,6 +114,7 @@ frameinfo
 fs
 fspath
 fstab
+fullmatch
 gaierror
 generic
 getargspec
@@ -226,6 +228,7 @@ Pacman
 pacman
 Paramiko
 paramiko
+pardir
 pathlib
 pathname
 pip3

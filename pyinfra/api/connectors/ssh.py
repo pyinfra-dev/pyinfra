@@ -79,19 +79,13 @@ def _load_private_key_file(filename, key_filename, key_password):
                         'use this key'.format(key_filename),
                     )
 
-            # Now, try opening the key with the password
             try:
                 return key_cls.from_private_key_file(
                     filename=filename,
                     password=key_password,
                 )
-            except SSHException:
-                raise PyinfraError(
-                    'Incorrect password for private key: {0}'.format(
-                        key_filename,
-                    ),
-                )
-
+            except SSHException as e:  # key does not match key_cls type
+                exception = e
         except SSHException as e:  # key does not match key_cls type
             exception = e
     raise exception
@@ -112,9 +106,14 @@ def _get_private_key(state, key_filename, key_password):
             path.join(state.deploy_dir, key_filename),
         )
 
+    key = False
+    key_file_exists = False
+
     for filename in ssh_key_filenames:
         if not path.isfile(filename):
             continue
+
+        key_file_exists = True
 
         try:
             key = _load_private_key_file(filename, key_filename, key_password)
@@ -123,8 +122,21 @@ def _get_private_key(state, key_filename, key_password):
             pass
 
     # No break, so no key found
-    else:
-        raise IOError('No such private key file: {0}'.format(key_filename))
+    if not key:
+        if not key_file_exists:
+            raise PyinfraError('No such private key file: {0}'.format(key_filename))
+
+        # TODO: upgrade min paramiko version to 2.7 and remove this (pyinfra v2)
+        extra_info = ''
+        from pkg_resources import get_distribution, parse_version
+        if get_distribution('paramiko').parsed_version < parse_version('2.7'):
+            extra_info = (
+                '\n    Paramiko versions under 2.7 do not support the latest OpenSSH key formats,'
+                ' upgrading may fix this error.'
+                '\n    For more information, see this issue: '
+                'https://github.com/Fizzadar/pyinfra/issues/548'
+            )
+        raise PyinfraError('Invalid private key file: {0}{1}'.format(key_filename, extra_info))
 
     # Load any certificate, names from OpenSSH:
     # https://github.com/openssh/openssh-portable/blob/049297de975b92adcc2db77e3fb7046c0e3c695d/ssh-keygen.c#L2453  # noqa: E501
@@ -260,16 +272,15 @@ def run_shell_command(
             put_file=put_file,
         )
 
-    command = make_unix_command(command, **command_kwargs)
+    command = make_unix_command(command, state=state, **command_kwargs)
     actual_command = command.get_raw_value()
-    printable_command = command.get_masked_value()
 
     logger.debug('Running command on {0}: (pty={1}) {2}'.format(
-        host.name, get_pty, printable_command,
+        host.name, get_pty, command,
     ))
 
     if print_input:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, printable_command), err=True)
+        click.echo('{0}>>> {1}'.format(host.print_prefix, command), err=True)
 
     # Run it! Get stdout, stderr & the underlying channel
     stdin_buffer, stdout_buffer, stderr_buffer = host.connection.exec_command(

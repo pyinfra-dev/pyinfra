@@ -4,11 +4,12 @@
         "enabled": false
     },
     "facts": {
-        "upstart_status": {
+        "upstart.UpstartStatus": {
             "redis-server": true
         }
     },
     "commands": [
         "echo \"manual\" > /etc/init/redis-server.override"
-    ]
+    ],
+    "idempotent": false
 }

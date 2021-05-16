@@ -3,5 +3,6 @@
     "commands": [
         "vzctl stop 123",
         "vzctl start 123"
-    ]
+    ],
+    "idempotent": false
 }

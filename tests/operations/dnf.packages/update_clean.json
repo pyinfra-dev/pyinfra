@@ -4,10 +4,12 @@
         "clean": true
     },
     "facts": {
-        "rpm_packages": {}
+        "rpm_packages": {},
+        "rpm_package_provides": {}
     },
     "commands": [
         "dnf clean all",
         "dnf update -y"
-    ]
+    ],
+    "idempotent": false
 }

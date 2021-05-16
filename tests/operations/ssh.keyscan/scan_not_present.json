@@ -14,5 +14,6 @@
     },
     "commands": [
         "ssh-keyscan -p 22 remote-host.net >> ~/.ssh/known_hosts"
-    ]
+    ],
+    "idempotent": false
 }

@@ -37,7 +37,7 @@ class TestCliEagerFlags(TestCase):
         assert result.exit_code == 0, result.stderr
 
 
-class TestCliDeployRuns(PatchSSHTestCase):
+class TestDeployCli(PatchSSHTestCase):
     def setUp(self):
         pseudo_state.reset()
 
@@ -49,6 +49,24 @@ class TestCliDeployRuns(PatchSSHTestCase):
         assert result.exit_code == 1, result.stderr
         assert 'No deploy file: not-a-file.py' in result.stderr
 
+
+class TestOperationCli(PatchSSHTestCase):
+    def test_invalid_operation_module(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'not_a_module.shell',
+        )
+        assert result.exit_code == 1, result.stderr
+        assert 'No such module: not_a_module'
+
+    def test_invalid_operation_function(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'server.not_an_operation',
+        )
+        assert result.exit_code == 1, result.stderr
+        assert 'No such operation: server.not_an_operation'
+
     def test_deploy_inventory(self):
         result = run_cli(
             path.join('tests', 'deploy', 'inventories', 'inventory.py'),
@@ -56,15 +74,6 @@ class TestCliDeployRuns(PatchSSHTestCase):
             '--debug-data',
         )
         assert result.exit_code == 0, result.stderr
-
-    def test_get_facts(self):
-        result = run_cli(
-            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
-            'fact',
-            'os',
-        )
-        assert result.exit_code == 0, result.stderr
-        assert '"somehost": null' in result.stderr
 
     def test_deploy_operation(self):
         result = run_cli(
@@ -82,6 +91,64 @@ class TestCliDeployRuns(PatchSSHTestCase):
         )
         assert result.exit_code == 0, result.stderr
 
+    def test_deploy_operation_json_args(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventory_all.py'),
+            'server.shell',
+            '[["echo hi"], {}]',
+        )
+        assert result.exit_code == 0, result.stderr
+
+
+class TestFactCli(PatchSSHTestCase):
+    def test_get_fact(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'fact',
+            'server.Os',
+        )
+        assert result.exit_code == 0, result.stderr
+        assert '"somehost": null' in result.stderr
+
+    def test_get_fact_with_kwargs(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'fact',
+            'files.File',
+            'path=.',
+        )
+        assert result.exit_code == 0, result.stderr
+        assert '"somehost": null' in result.stderr
+
+    def test_invalid_fact_module(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'fact',
+            'not_a_module.NotAFact',
+        )
+        assert result.exit_code == 1, result.stderr
+        assert 'No such module: not_a_module' in result.stderr
+
+    def test_invalid_fact_class(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'fact',
+            'server.NotAFact',
+        )
+        assert result.exit_code == 1, result.stderr
+        assert 'No such fact: server.NotAFact' in result.stderr
+
+    def test_get_facts_legacy(self):
+        result = run_cli(
+            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
+            'fact',
+            'os',
+        )
+        assert result.exit_code == 0, result.stderr
+        assert '"somehost": null' in result.stderr
+
+
+class TestExecCli(PatchSSHTestCase):
     def test_exec_command(self):
         result = run_cli(
             path.join('tests', 'deploy', 'inventories', 'inventory.py'),
@@ -275,10 +342,11 @@ class TestDirectMainExecution(PatchSSHTestCase):
             _main(
                 inventory=path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
                 operations=['server.shell', 'echo hi'],
-                verbosity=0, user=None, port=None, key=None, key_password=None,
-                password=None, sudo=False, sudo_user=None, use_sudo_password=False, su_user=None,
+                verbosity=0, ssh_user=None, ssh_port=None, ssh_key=None, ssh_key_password=None,
+                ssh_password=None,
+                sudo=False, sudo_user=None, use_sudo_password=False, su_user=None,
                 parallel=None, fail_percent=0, dry=False, limit=None, no_wait=False, serial=False,
-                winrm_username=None, winrm_password=None, winrm_port=None,
+                winrm_username=None, winrm_password=None, winrm_port=None, winrm_transport=None,
                 shell_executable=None, quiet=False,
                 debug=False, debug_data=False, debug_facts=False, debug_operations=False,
             )

@@ -5,6 +5,7 @@ Manage systemd services.
 from __future__ import unicode_literals
 
 from pyinfra.api import operation
+from pyinfra.facts.systemd import SystemdEnabled, SystemdStatus
 
 from .util.service import handle_service_control
 
@@ -73,21 +74,22 @@ def service(
 
     yield handle_service_control(
         host,
-        service, host.fact.systemd_status,
+        service, SystemdStatus,
         ' '.join([systemctl_cmd, '{1}', '{0}']),
         running, restarted, reloaded, command,
     )
 
     if isinstance(enabled, bool):
-        is_enabled = host.fact.systemd_enabled.get(service, False)
+        systemd_enabled = host.get_fact(SystemdEnabled)
+        is_enabled = systemd_enabled.get(service, False)
 
         # Isn't enabled and want enabled?
         if not is_enabled and enabled is True:
 
             yield ' '.join([systemctl_cmd, 'enable', '{0}']).format(service)
-            host.fact.systemd_enabled[service] = True
+            systemd_enabled[service] = True
 
         # Is enabled and want disabled?
         elif is_enabled and enabled is False:
             yield ' '.join([systemctl_cmd, 'disable', '{0}']).format(service)
-            host.fact.systemd_enabled[service] = False
+            systemd_enabled[service] = False

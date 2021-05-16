@@ -4,6 +4,7 @@
         "postgresql_databases": {}
     },
     "commands": [
-        "psql -Ac 'CREATE DATABASE somedb'"
-    ]
+        "psql -Ac 'CREATE DATABASE \"somedb\"'"
+    ],
+    "idempotent": false
 }

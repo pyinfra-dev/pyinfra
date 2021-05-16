@@ -4,7 +4,7 @@
         "enabled": true
     },
     "facts": {
-        "upstart_status": {
+        "upstart.UpstartStatus": {
             "redis-server": true
         },
         "file": {

@@ -12,5 +12,6 @@
         ["upload", "/somescript.sh", "_tempfile_"],
         "chmod +x _tempfile_",
         "_tempfile_"
-    ]
+    ],
+    "idempotent": false
 }

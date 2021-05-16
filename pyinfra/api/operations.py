@@ -213,7 +213,7 @@ def _log_operation_start(op_meta):
 
     args = ''
     if op_meta['args']:
-        args = '({0})'.format(', '.join(arg for arg in op_meta['args']))
+        args = '({0})'.format(', '.join(str(arg) for arg in op_meta['args']))
 
     logger.info('{0} {1} {2}'.format(
         click.style('--> Starting{0}operation:'.format(

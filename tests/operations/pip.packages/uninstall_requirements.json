@@ -1,10 +1,11 @@
 {
     "kwargs": {
-        "requirements": "requirements.pip",
+        "requirements": "requirements.txt",
         "present": false
     },
     "facts": {},
     "commands": [
-        "pip uninstall --yes -r requirements.pip"
-    ]
+        "pip uninstall --yes -r requirements.txt"
+    ],
+    "idempotent": false
 }

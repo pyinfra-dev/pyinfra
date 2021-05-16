@@ -7,6 +7,7 @@
         "postgresql_databases": {}
     },
     "commands": [
-        "psql -Ac 'CREATE DATABASE somedb OWNER someowner'"
-    ]
+        "psql -Ac 'CREATE DATABASE \"somedb\" OWNER \"someowner\"'"
+    ],
+    "idempotent": false
 }

@@ -4,10 +4,12 @@
         "clean": true
     },
     "facts": {
-        "rpm_packages": {}
+        "rpm_packages": {},
+        "rpm_package_provides": {}
     },
     "commands": [
         "yum clean all",
         "yum update -y"
-    ]
+    ],
+    "idempotent": false
 }

@@ -15,5 +15,6 @@
     "commands": [
         "mkdir -p /home",
         "touch /home/testfile"
-    ]
+    ],
+    "idempotent": false
 }

@@ -1,3 +1,108 @@
+# v1.4.1
+
++ Improve deploy directory detection to handle nested directories
++ Copy existing file/directory permissions in `files.sync` operation
++ Treat `exited` systemd services as running in `systemd.SystemdStatus` fact
++ Fix handling of `cache_time` in `apt.update` operation
++ Fix invalid `name` arguments in `windows.service`, `windows.file` & `windows.directory` operations
++ Only show invalid auth argument warnings when not the defaults
++ Test operation global argument clashes
+
+# v1.4
+
+Three major themes to this release:
+
+**Explicit fact imports** - this replaces the magic `host.fact.X` variables with explicitly imported facts, for example:
+
+```py
+# previously: host.fact.apt_sources
+from pyinfra.facts.apt import AptSources
+host.get_fact(AptSources)
+
+# previously: host.fact.file('/path/to/file')
+from pyinfra.facts.files import File
+host.get_fact(File, path='/path/to/file')
+
+# also now possible (previously impossible):
+host.get_fact(File, path='/path/to/file', sudo=True)
+```
+
+And the CLI changes accordingly:
+
+```sh
+# previously: pyinfra INVENTORY fact apt_sources
+pyinfra INVENTORY fact apt.AptSources
+
+# previously: pyinfra INVENTORY fact file:/path/to/file directory:/path/to/directory
+pyinfra INVENTORY fact files.File path=/path/to/file files.Directory path=/path/to/directory
+```
+
+This is not yet standard across the project and will be updated in subsequent releases. This also finally enables using third party facts in a sensible and explict manner. Overall, this is a dramatic improvement to the `pyinfra` fact mechanism.
+
+**Windows operations expansion** - massive thank you to @mfrg for implementing these, huge expansion of Windows facts & operations, making it possible to really use `pyinfra` with Windows targets (additions listed below).
+
+**Idempotency testing** - verification of operation idempotency (calling the same op twice outputs no commands/changes the second time) through testing and a large expansion in verified idempotency. Operations can now specify themselves as non-idempotent when expected (for example, `server.shell`).
+
+Operation & fact updates:
+
++ Add `server.packages` operation - generic package management using the default OS package manager
++ Add `pip.venv` operation - shortcut for `pip.virtualenv(venv=True, ...)`
++ Add `server.Path` fact
++ Add `rpm.RpmPackageProvides` fact & support package aliases for `yum.packages` & `dnf.packages` operations
++ Add `windows_files.download`, `windows_files.put` & `windows_files.link` operations (@mfrg)
++ Add `windows_files.WindowsLink`, `windows_files.WindowsSha1File`, `windows_files.WindowsSha256File` & `windows_files.WindowsMd5File` facts (@mfrg)
+
+CLI updates:
+
++ New style fact gathering CLI arguments
++ Prefix SSH auth flags (`--user` becomes `--ssh-user`), deprecate old versions
++ Deprecate `--facts` & `--operations` CLI flags
++ Deprecate `all-facts` command
++ Hide deprecated options from `--help`
+
+Other bits:
+
++ Show warnings when using invalid auth argument combinations (`sudo_user` without `sudo`, etc)
++ Bump minimum Paramiko version to `2.7`
+
+
+# v1.3.12
+
++ Fix & test loading non-RSA SSH keys with passwords (@Yakulu)
+
+# v1.3.11
+
++ Fix custom SSH config parsing to support latest Paramiko features (`Match` directives)
++ Fix error loading SSH keys with passwords (try all key formats before failing)
+
+# v1.3.10
+
++ Properly escape postgresql role/database/owner operation commands (@RobWouters)
++ Add support for additional winrm transport types & options (@mfrg)
++ Fix for `Git*` facts where the target repo doesn't exist
++ Git branches update: `master` renamed to `current` and new `next` branch tracking next minor release
++ Contributing documentation page updated to include branch description
+
+# v1.3.9
+
++ Use `StringCommand` to implement fact requires commands, fixes `mysql_*` facts with passwords
++ Improve error for invalid private key files, including message for old paramiko versions
++ Fix `files.line`/`files.replace`/`server.crontab` replacements containing quotes
++ Fix `@winrm` connector command execution
++ Improve `files.template` docstring (@Gaming4LifeDE)
+
+# v1.3.8
+
++ Add Debian to prettified names in `LinuxDistribution` fact (@blarghmatey)
++ Fix logging non-string args (@morrison12)
++ Tidy up new issue templates (@Gaming4LifeDE)
++ Use `export` instead of `env` so variables pass into sub-commands as expected
++ pass any `env` into fact execution within operations
++ Fix splitting of inventory filename into group name
++ Improve package name parsing in `BrewPackages` fact
++ Only append blank line before new cron entries if some already exist
++ Remove any leftover askpass files when using `use_sudo_password`
+
 # v1.3.7
 
 + Support reading custom user operations in CLI mode (@tsnoam)

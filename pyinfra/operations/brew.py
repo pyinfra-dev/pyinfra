@@ -8,7 +8,7 @@ from pyinfra.facts.brew import new_cask_cli
 from .util.packaging import ensure_packages
 
 
-@operation
+@operation(is_idempotent=False)
 def update(state=None, host=None):
     '''
     Updates brew repositories.
@@ -19,7 +19,7 @@ def update(state=None, host=None):
 _update = update  # noqa: E305
 
 
-@operation
+@operation(is_idempotent=False)
 def upgrade(state=None, host=None):
     '''
     Upgrades all brew packages.
@@ -87,7 +87,9 @@ def cask_args(host):
     return ('', ' --cask') if new_cask_cli(host.fact.brew_version) else ('cask ', '')
 
 
-@operation(pipeline_facts={
+@operation(
+is_idempotent=False,
+pipeline_facts={
     'brew_version': '',
 })
 def cask_upgrade(state=None, host=None):

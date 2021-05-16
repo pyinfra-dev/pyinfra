@@ -5,7 +5,7 @@ import re
 from functools import wraps
 from hashlib import sha1
 from inspect import getframeinfo, stack
-from os import path
+from os import path, stat
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -469,3 +469,12 @@ def get_file_sha1(filename_or_io):
         FILE_SHAS[cache_key] = digest
 
     return digest
+
+
+def get_path_permissions_mode(pathname):
+    '''
+    Get the permissions (bits) of a path as an integer.
+    '''
+
+    mode_octal = oct(stat(pathname).st_mode)
+    return mode_octal[-3:]

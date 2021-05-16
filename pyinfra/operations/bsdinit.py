@@ -5,6 +5,7 @@ Manage BSD init services (``/etc/rc.d``).
 from __future__ import unicode_literals
 
 from pyinfra.api import operation
+from pyinfra.facts.bsdinit import RcdStatus
 
 from . import files
 from .util.service import handle_service_control
@@ -30,7 +31,7 @@ def service(
 
     yield handle_service_control(
         host,
-        service, host.fact.rcd_status,
+        service, RcdStatus,
         '/etc/rc.d/{0} {1}',
         running, restarted, reloaded, command,
         status_argument='check',

@@ -4,11 +4,12 @@
         "restarted": true
     },
     "facts": {
-        "initd_status": {
+        "sysvinit.InitdStatus": {
             "nginx": false
         }
     },
     "commands": [
         "/etc/init.d/nginx start"
-    ]
+    ],
+    "idempotent": false
 }

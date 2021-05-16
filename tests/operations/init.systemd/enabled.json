@@ -4,10 +4,10 @@
         "enabled": true
     },
     "facts": {
-        "systemd_status": {
+        "systemd.SystemdStatus": {
             "redis-server.service": true
         },
-        "systemd_enabled": {
+        "systemd.SystemdEnabled": {
             "redis-server.service": false
         }
     },

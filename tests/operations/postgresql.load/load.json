@@ -10,5 +10,6 @@
             "PGPASSWORD=\"somepass\" psql -d somedb -U root < somefile",
             "*** psql -d somedb -U root < somefile"
         ]
-    ]
+    ],
+    "idempotent": false
 }

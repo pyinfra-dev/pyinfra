@@ -10,5 +10,6 @@
     },
     "commands": [
         "modprobe -r -a mod1"
-    ]
+    ],
+    "idempotent": false
 }

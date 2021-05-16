@@ -4,11 +4,12 @@
         "reloaded": true
     },
     "facts": {
-        "rcd_status": {
+        "bsdinit.RcdStatus": {
             "nginx": true
         }
     },
     "commands": [
         "/etc/rc.d/nginx reload"
-    ]
+    ],
+    "idempotent": false
 }

@@ -15,19 +15,24 @@
             "/somedir/": ["somefile.txt", "anotherfile.txt", "thing.pyc"],
             "/somedir/underthat": ["yet-another-file.txt"],
             "/somedir/__pycache__": ["nope"]
-        }
+        },
+        "/somedir/underthat": {}
     },
     "facts": {
         "file": {
             "/home/somedir/somefile.txt": null,
             "/home/somedir/anotherfile.txt": null,
             "/home/somedir/deleteme.txt": true,
-            "/home/somedir/nodelete.pyc": true,
+            "/home/somedir/nodelete.pyc": {
+                "mode": 644
+            },
             "/home/somedir/underthat/yet-another-file.txt": null
         },
         "directory": {
             "/home/somedir": false,
-            "/home/some-actual-dir": true,
+            "/home/some-actual-dir": {
+                "mode": 755
+            },
             "/home/somedir/underthat": null
         },
         "find_files": {
@@ -45,12 +50,17 @@
     },
     "commands": [
         "mkdir -p /home/somedir/underthat",
+        "chmod 755 /home/somedir/underthat",
         ["upload", "/somedir/somefile.txt", "/home/somedir/somefile.txt"],
+        "chmod 644 /home/somedir/somefile.txt",
         ["upload", "/somedir/anotherfile.txt", "/home/somedir/anotherfile.txt"],
+        "chmod 644 /home/somedir/anotherfile.txt",
         [
             "upload",
             "/somedir/underthat/yet-another-file.txt",
             "/home/somedir/underthat/yet-another-file.txt"
-        ]
-    ]
+        ],
+        "chmod 644 /home/somedir/underthat/yet-another-file.txt"
+    ],
+    "idempotent": false
 }

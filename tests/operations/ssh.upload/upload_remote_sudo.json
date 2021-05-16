@@ -6,5 +6,6 @@
     "commands": [
         "scp -P 22 local_filename remote-host.net:_tempfile_",
         "ssh -p 22 remote-host.net 'sudo mv _tempfile_ local_filename'"
-    ]
+    ],
+    "idempotent": false
 }

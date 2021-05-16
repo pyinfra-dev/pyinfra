@@ -1,7 +1,7 @@
 {
     "args": ["nginx"],
     "facts": {
-        "rcd_status": {
+        "bsdinit.RcdStatus": {
             "nginx": false
         },
         "which": {

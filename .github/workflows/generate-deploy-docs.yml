@@ -3,7 +3,7 @@ name: Generate & Deploy Docs
 on:
   push:
     branches:
-      - master
+      - next
       - 1.x
       - 0.x
 

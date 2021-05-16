@@ -36,6 +36,7 @@ git.repo(
     name='Clone repo',
     src='https://github.com/Fizzadar/pyinfra.git',
     dest=dest,
+    branch=None,  # use the default branch
 )
 
 git.config(

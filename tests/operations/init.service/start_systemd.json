@@ -1,7 +1,7 @@
 {
     "args": ["nginx.service"],
     "facts": {
-        "systemd_status": {
+        "systemd.SystemdStatus": {
             "nginx.service": false
         },
         "which": {

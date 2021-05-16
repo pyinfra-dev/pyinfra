@@ -4,7 +4,7 @@
         "running": false
     },
     "facts": {
-        "initd_status": {
+        "sysvinit.InitdStatus": {
             "nginx": true
         }
     },

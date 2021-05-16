@@ -14,5 +14,6 @@
     "commands": [
         "curl -sSLf 'https://something.rpm' -o _tempfile_.rpm",
         "rpm -q `rpm -qp _tempfile_.rpm` 2> /dev/null || rpm -i _tempfile_.rpm"
-    ]
+    ],
+    "idempotent": false
 }

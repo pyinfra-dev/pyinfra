@@ -10,5 +10,6 @@
     },
     "commands": [
         "umount /data"
-    ]
+    ],
+    "idempotent": false
 }

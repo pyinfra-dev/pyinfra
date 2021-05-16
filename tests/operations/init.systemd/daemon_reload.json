@@ -4,11 +4,12 @@
         "daemon_reload": true
     },
     "facts": {
-        "systemd_status": {
+        "systemd.SystemdStatus": {
             "redis-server.service": true
         }
     },
     "commands": [
         "systemctl daemon-reload"
-    ]
+    ],
+    "idempotent": false
 }

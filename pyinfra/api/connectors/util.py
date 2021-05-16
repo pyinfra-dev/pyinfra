@@ -195,12 +195,21 @@ def remove_any_sudo_askpass_file(host):
 
 
 @memoize
-def show_use_su_login_warning():
+def _show_use_su_login_warning():
     logger.warning((
         'Using `use_su_login` may not work: '
         'some systems (MacOS, OpenBSD) ignore the flag when executing a command, '
         'use `sudo` + `use_sudo_login` instead.'
     ))
+
+
+# TODO (v2): possibly raise an error for invalid arguments
+def _warn_invalid_auth_args(args, requires_key, invalid_keys):
+    for key in invalid_keys:
+        if args.get(key):
+            logger.warning((
+                'Invalid auth argument: cannot use `{0}` without `{1}`.'
+            ).format(key, requires_key))
 
 
 def make_unix_command(
@@ -219,6 +228,8 @@ def make_unix_command(
     use_sudo_login=Config.USE_SUDO_LOGIN,
     use_sudo_password=Config.USE_SUDO_PASSWORD,
     preserve_sudo_env=Config.PRESERVE_SUDO_ENV,
+    # Optional state object, used to decide if we print invalid auth arg warnings
+    state=None,
 ):
     '''
     Builds a shell command with various kwargs.
@@ -235,17 +246,16 @@ def make_unix_command(
             '{0}={1}'.format(key, value)
             for key, value in six.iteritems(env)
         ])
-        command = StringCommand('env', env_string, command)
+        command = StringCommand('export', env_string, '&&', command)
 
     if chdir:
         command = StringCommand('cd', chdir, '&&', command)
 
-    # Quote the command as a string
+    # Quote the command as a string before we prepend auth args
     command = QuoteString(command)
 
     command_bits = []
 
-    # Use sudo (w/user?)
     if use_sudo_password:
         askpass_filename, sudo_password = use_sudo_password
         command_bits.extend([
@@ -271,12 +281,20 @@ def make_unix_command(
         if sudo_user:
             command_bits.extend(('-u', sudo_user))
 
-    # Switch user with su
+    # If both sudo arg and config sudo are false, warn if any of the other sudo
+    # arguments are present as they will be ignored.
+    elif state is None or not state.config.SUDO:
+        _warn_invalid_auth_args(
+            locals(),
+            'sudo',
+            ('use_sudo_password', 'use_sudo_login', 'preserve_sudo_env', 'sudo_user'),
+        )
+
     if su_user:
         command_bits.append('su')
 
         if use_su_login:
-            show_use_su_login_warning()
+            _show_use_su_login_warning()
             command_bits.append('-l')
 
         if preserve_su_env:
@@ -289,37 +307,28 @@ def make_unix_command(
 
         # Quote the whole shell -c 'command' as BSD `su` does not have a shell option
         command_bits.append(QuoteString(StringCommand(shell_executable, '-c', command)))
-    else:
+
+    # If both su_user arg and config su_user are false, warn if any of the other su
+    # arguments are present as they will be ignored.
+    elif state is None or not state.config.SU_USER:
+        _warn_invalid_auth_args(
+            locals(),
+            'su_user',
+            ('use_su_login', 'preserve_su_env', 'su_shell'),
+        )
+
         # Otherwise simply use thee shell directly
         command_bits.extend([shell_executable, '-c', command])
 
     return StringCommand(*command_bits)
 
 
-def make_win_command(
-    command,
-    env=None,
-    shell_executable=Config.SHELL,
-):
+def make_win_command(command, env=None):
     '''
     Builds a windows command with various kwargs.
     '''
 
-    debug_meta = {}
-
-    for key, value in (
-        ('shell_executable', shell_executable),
-        ('env', env),
-    ):
-        if value:
-            debug_meta[key] = value
-
-    logger.debug('Building command ({0}): {1}'.format(' '.join(
-        '{0}: {1}'.format(key, value)
-        for key, value in six.iteritems(debug_meta)
-    ), command))
-
-    # Use env & build our actual command
+    # TODO: This is not correct, needs to be fixed.
     if env:
         env_string = ' '.join([
             '{0}={1}'.format(key, value)
@@ -328,8 +337,7 @@ def make_win_command(
         command = 'export {0}; {1}'.format(env_string, command)
 
     # Quote the command as a string
-    command = shlex_quote(command)
-
+    command = shlex_quote(str(command))
     command = '{0}'.format(command)
 
     return command

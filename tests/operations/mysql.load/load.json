@@ -6,5 +6,6 @@
     },
     "commands": [
         "mysql somedb -u\"root\" < somefile"
-    ]
+    ],
+    "idempotent": false
 }

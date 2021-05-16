@@ -10,5 +10,6 @@
         ["upload", "_test_data_", "_tempfile_"],
         "chmod +x _tempfile_",
         "_tempfile_"
-    ]
+    ],
+    "idempotent": false
 }

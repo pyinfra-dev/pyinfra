@@ -10,7 +10,7 @@ class GitBranch(FactBase):
 
     @staticmethod
     def command(repo):
-        return 'cd {0} && git rev-parse --abbrev-ref HEAD'.format(repo)
+        return '! test -d {0} || (cd {0} && git rev-parse --abbrev-ref HEAD)'.format(repo)
 
 
 class GitConfig(FactBase):
@@ -23,7 +23,7 @@ class GitConfig(FactBase):
         if repo is None:
             return 'git config --global -l || true'
 
-        return 'cd {0} && git config --local -l'.format(repo)
+        return '! test -d {0} || (cd {0} && git config --local -l)'.format(repo)
 
     @staticmethod
     def process(output):
@@ -41,7 +41,7 @@ class GitTrackingBranch(FactBase):
 
     @staticmethod
     def command(repo):
-        return r'cd {0} && git status --branch --porcelain'.format(repo)
+        return r'! test -d {0} || (cd {0} && git status --branch --porcelain)'.format(repo)
 
     @staticmethod
     def process(output):

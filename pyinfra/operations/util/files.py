@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 
+from pyinfra.api import StringCommand
+
 
 def ensure_mode_int(mode):
     # Already an int (/None)?
@@ -49,19 +51,24 @@ def sed_replace(
     replace = replace.replace('/', r'\/')
     backup_extension = get_timestamp()
 
-    string_to_format = (
-        'sed -i.{backup_extension} "s/{0}/{1}/{2}" {3}'
-        if interpolate_variables else
-        "sed -i.{backup_extension} 's/{0}/{1}/{2}' {3}"
-    )
+    if interpolate_variables:
+        line = line.replace('"', '\\"')
+        replace = replace.replace('"', '\\"')
+        sed_script_formatter = '"s/{0}/{1}/{2}"'
+    else:
+        # Single quotes cannot contain other single quotes, even when escaped , so turn
+        # each ' into '"'"' (end string, double quote the single quote, (re)start string)
+        line = line.replace("'", "'\"'\"'")
+        replace = replace.replace("'", "'\"'\"'")
+        sed_script_formatter = "'s/{0}/{1}/{2}'"
 
-    sed_command = string_to_format.format(
-        line, replace, flags, filename,
-        backup_extension=backup_extension,
-    )
+    sed_script = sed_script_formatter.format(line, replace, flags)
+
+    sed_command = StringCommand('sed', '-i.{0}'.format(backup_extension), sed_script, filename)
 
     if not backup:  # if we're not backing up, remove the file *if* sed succeeds
-        sed_command = '{0} && rm -f {1}.{2}'.format(sed_command, filename, backup_extension)
+        backup_filename = '{0}.{1}'.format(filename, backup_extension)
+        sed_command = StringCommand(sed_command, '&&', 'rm', '-f', backup_filename)
 
     return sed_command
 

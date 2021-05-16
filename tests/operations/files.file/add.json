@@ -15,5 +15,6 @@
         "touch testfile",
         "chmod 777 testfile",
         "chown testuser:testgroup testfile"
-    ]
+    ],
+    "idempotent": false
 }

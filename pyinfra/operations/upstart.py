@@ -5,6 +5,7 @@ Manage upstart services.
 from __future__ import unicode_literals
 
 from pyinfra.api import operation
+from pyinfra.facts.upstart import UpstartStatus
 
 from . import files
 from .util.service import handle_service_control
@@ -36,7 +37,7 @@ def service(
 
     yield handle_service_control(
         host,
-        service, host.fact.upstart_status,
+        service, UpstartStatus,
         'initctl {1} {0}',
         running, restarted, reloaded, command,
     )

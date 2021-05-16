@@ -67,7 +67,8 @@ def config(
 })
 def repo(
     src, dest,
-    branch='master', pull=True, rebase=False,
+    branch='master',  # TODO: change the default to None
+    pull=True, rebase=False,
     user=None, group=None, ssh_keyscan=False,
     update_submodules=False, recursive_submodules=False,
     state=None, host=None,
@@ -118,7 +119,10 @@ def repo(
 
     # Cloning new repo?
     if not is_repo:
-        git_commands.append('clone {0} --branch {1} .'.format(src, branch))
+        if branch:
+            git_commands.append('clone {0} --branch {1} .'.format(src, branch))
+        else:
+            git_commands.append('clone {0} .'.format(src))
 
     # Ensuring existing repo
     else:

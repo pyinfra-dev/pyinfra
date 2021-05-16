@@ -37,6 +37,7 @@ class TestOperationsApi(PatchSSHTestCase):
             sudo=False,
             sudo_user=None,
             timeout=None,
+            env={},
             use_sudo_password=False,
             return_combined_output=True,
         )
@@ -55,6 +56,7 @@ class TestOperationsApi(PatchSSHTestCase):
             'su_user': 'someuser',
             'ignore_errors': False,
             'timeout': 10,
+            'env': {'HELLO': 'WORLD'},
         }
 
         with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
@@ -74,6 +76,7 @@ class TestOperationsApi(PatchSSHTestCase):
             sudo=True,
             sudo_user='someuser',
             timeout=10,
+            env={'HELLO': 'WORLD'},
             use_sudo_password=True,
             return_combined_output=True,
         )
@@ -105,6 +108,7 @@ class TestOperationsApi(PatchSSHTestCase):
             sudo=False,
             sudo_user=None,
             timeout=None,
+            env={},
             use_sudo_password=False,
             return_combined_output=True,
         )
@@ -123,6 +127,7 @@ class TestOperationsApi(PatchSSHTestCase):
             'su_user': None,
             'ignore_errors': True,
             'timeout': None,
+            'env': {},
         }
 
         with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
@@ -142,6 +147,7 @@ class TestOperationsApi(PatchSSHTestCase):
             sudo=False,
             sudo_user=None,
             timeout=None,
+            env={},
             use_sudo_password=False,
             return_combined_output=True,
         )

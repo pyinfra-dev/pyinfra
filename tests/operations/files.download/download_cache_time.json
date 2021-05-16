@@ -17,5 +17,6 @@
     },
     "commands": [
         "curl -sSLf 'http://myfile' -o /home/myfile"
-    ]
+    ],
+    "idempotent": false
 }

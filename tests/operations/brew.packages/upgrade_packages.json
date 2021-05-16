@@ -8,5 +8,9 @@
     },
     "commands": [
         "brew install php"
-    ]
+    ],
+    "second_output_commands": [
+        "brew upgrade php"
+    ],
+    "idempotent": false
 }

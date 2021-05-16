@@ -4,7 +4,7 @@
         "enabled": true
     },
     "facts": {
-        "initd_status": {
+        "sysvinit.InitdStatus": {
             "nginx": true
         },
         "find_links": {
@@ -17,5 +17,6 @@
     "commands": [
         "chkconfig nginx --add",
         "chkconfig nginx on"
-    ]
+    ],
+    "idempotent": false
 }

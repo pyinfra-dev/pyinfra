@@ -108,12 +108,12 @@ class FakeFact(object):
             if isinstance(arg, list):
                 arg = json.dumps(arg)
 
-            item = item[arg]
+            item = item.get(arg)
 
         return item
 
     def __str__(self):
-        return self.data
+        return str(self.data)
 
     def __unicode__(self):
         return self.data
@@ -133,19 +133,19 @@ class FakeFact(object):
 
 class FakeFacts(object):
     def __init__(self, facts):
-        self.facts = facts
+        self.facts = {
+            key: FakeFact(value)
+            for key, value in facts.items()
+        }
 
     def __getattr__(self, key):
-        if self.facts[key] is None:
-            return None
-        else:
-            return FakeFact(self.facts[key])
+        return self.facts.get(key)
 
     def _create(self, key, data=None, args=None):
-        pass
+        self.facts[key][args[0]] = data
 
     def _delete(self, key, args=None):
-        pass
+        self.facts[key].pop(args[0], None)
 
 
 class FakeHost(object):
@@ -162,6 +162,10 @@ class FakeHost(object):
 
     def noop(self, description):
         self.noop_description = description
+
+    def get_fact(self, fact_cls):
+        fact_key = '{0}.{1}'.format(fact_cls.__module__.split('.')[-1], fact_cls.__name__)
+        return getattr(self.fact, fact_key)
 
 
 class FakeFile(object):
@@ -239,6 +243,7 @@ class patch_files(object):
             patch('pyinfra.operations.files.os_path.isdir', self.isdir),
             patch('pyinfra.operations.files.walk', self.walk),
             patch('pyinfra.operations.files.makedirs', lambda path: True),
+            patch('pyinfra.api.util.stat', self.stat),
             # Builtin patches
             patch('pyinfra.operations.files.open', self.get_file, create=True),
             patch('pyinfra.operations.server.open', self.get_file, create=True),
@@ -266,6 +271,16 @@ class patch_files(object):
 
     def isdir(self, dirname, *args):
         return dirname in self.directories
+
+    def stat(self, pathname):
+        if pathname in self.files:
+            mode_int = 33188  # 644 file
+        elif pathname in self.directories:
+            mode_int = 16877  # 755 directory
+        else:
+            raise IOError('No such file or directory: {0}'.format(pathname))
+
+        return os.stat_result((mode_int, 0, 0, 0, 0, 0, 0, 0, 0, 0))
 
     def walk(self, dirname):
         if dirname not in self.directories:

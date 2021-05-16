@@ -6,5 +6,6 @@
     "commands": [
         "some shell",
         "some more shell"
-    ]
+    ],
+    "idempotent": false
 }
