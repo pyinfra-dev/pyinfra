@@ -88,10 +88,10 @@ def cask_args(host):
 
 
 @operation(
-is_idempotent=False,
-pipeline_facts={
-    'brew_version': '',
-})
+    is_idempotent=False,
+    pipeline_facts={
+        'brew_version': '',
+    })
 def cask_upgrade(state=None, host=None):
     '''
     Upgrades all brew casks.
