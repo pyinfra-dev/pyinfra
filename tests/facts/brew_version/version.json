@@ -1,0 +1,9 @@
+{
+    "command": "brew --version",
+    "output": [
+        "Homebrew 3.1.7-62-g9f5afcb",
+        "Homebrew/homebrew-core (git revision ccfbdb1968; last commit 2021-05-16)",
+        "Homebrew/homebrew-cask (git revision c91eea78ff; last commit 2021-05-16)"
+    ],
+    "fact":  [3,1,7]
+}

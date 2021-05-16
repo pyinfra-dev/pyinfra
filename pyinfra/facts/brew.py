@@ -1,8 +1,48 @@
+import re
+from collections import namedtuple
+
+from pyinfra import logger
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
 
 BREW_REGEX = r'^([^\s]+)\s([0-9\._+a-z\-]+)'
+
+
+def new_cask_cli(version):
+    """
+        Returns true if brew is version 2.6.0 or later and thus has the new CLI for casks.
+        i.e. we need to use brew list --cask instead of brew cask list
+        See https://brew.sh/2020/12/01/homebrew-2.6.0/
+        The version string returned by BrewVersion is a list of major, minor, patch version numbers
+    """
+    return (version[0] >= 3) or ((version[0] >= 2) and version[1] >= 6)
+
+
+VERSION_MATCHER = re.compile(r'^Homebrew\s+(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$')
+
+
+class BrewVersion(FactBase):
+    '''
+    Returns the version of brew installed as a semantic versioning tuple:
+
+    .. code:: python
+
+        [major, minor, patch]
+
+    '''
+    command = 'brew --version'
+    requires_command = 'brew'
+
+    default = lambda x: [0,0,0]
+
+    def process(self, output):
+        m = VERSION_MATCHER.match(output[0])
+        if m is not None:
+            return [int(m.group(key)) for key in ['major', 'minor', 'patch']]
+        else:
+            logger.warning('could not parse version string from brew: %s', output[0])
+            return self.default()
 
 
 class BrewPackages(FactBase):
@@ -36,7 +76,8 @@ class BrewCasks(BrewPackages):
         }
     '''
 
-    command = 'brew cask list --versions'
+    command = (r'if [[ "$(brew --version)" =~ Homebrew\ +(1\.|2\.[0-5]).* ]];'
+               r'then brew cask list --versions; else brew list --cask --versions; fi' )
     requires_command = 'brew'
 
 

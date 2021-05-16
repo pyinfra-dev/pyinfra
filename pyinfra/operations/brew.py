@@ -3,6 +3,7 @@ Manage brew packages on mac/OSX. See https://brew.sh/
 '''
 
 from pyinfra.api import operation
+from pyinfra.facts.brew import new_cask_cli
 
 from .util.packaging import ensure_packages
 
@@ -82,16 +83,24 @@ def packages(
     )
 
 
-@operation
+def cask_args(host):
+    return ('', ' --cask') if new_cask_cli(host.fact.brew_version) else ('cask ', '')
+
+
+@operation(pipeline_facts={
+    'brew_version': '',
+})
 def cask_upgrade(state=None, host=None):
     '''
     Upgrades all brew casks.
     '''
 
-    yield 'brew cask upgrade'
+    yield 'brew %supgrade%s' % cask_args(host)
 
 
-@operation
+@operation(pipeline_facts={
+    'brew_version': '',
+})
 def casks(
     casks=None, present=True, latest=False, upgrade=False,
     state=None, host=None,
@@ -123,11 +132,13 @@ def casks(
     if upgrade:
         yield cask_upgrade(state=state, host=host)
 
+    args = cask_args(host)
+
     yield ensure_packages(
         host, casks, host.fact.brew_casks, present,
-        install_command='brew cask install',
-        uninstall_command='brew cask uninstall',
-        upgrade_command='brew cask upgrade',
+        install_command='brew %sinstall%s' % args,
+        uninstall_command='brew %suninstall%s' % args,
+        upgrade_command='brew %supgrade%s' % args,
         version_join='@',
         latest=latest,
     )
