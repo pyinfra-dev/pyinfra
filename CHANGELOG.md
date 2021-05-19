@@ -1,3 +1,9 @@
+# v1.4.2
+
++ Fix/implement WinRM env support (@mfrg)
++ Fix/handle Brew 2.6+ new cask CLI (@morrison12)
++ Fix parsing of tab delimited crontab files (@hazayan)
+
 # v1.4.1
 
 + Improve deploy directory detection to handle nested directories
