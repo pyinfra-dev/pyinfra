@@ -1,7 +1,7 @@
 {
     "command": "crontab -l || true",
     "output": [
-        "* * * * * apt  update",
+        "*\t*\t*\t*\t*\tapt update",
         "0 0 * * * apt install -fy",
         "@daily echo daily"
     ],
