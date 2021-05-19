@@ -323,18 +323,10 @@ def make_unix_command(
     return StringCommand(*command_bits)
 
 
-def make_win_command(command, env=None):
+def make_win_command(command):
     '''
     Builds a windows command with various kwargs.
     '''
-
-    # TODO: This is not correct, needs to be fixed.
-    if env:
-        env_string = ' '.join([
-            '{0}={1}'.format(key, value)
-            for key, value in six.iteritems(env)
-        ])
-        command = 'export {0}; {1}'.format(env_string, command)
 
     # Quote the command as a string
     command = shlex_quote(str(command))

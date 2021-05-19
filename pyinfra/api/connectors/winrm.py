@@ -4,13 +4,13 @@ import base64
 import ntpath
 
 import click
-import winrm
 
 from pyinfra import logger
 from pyinfra.api import Config
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize, sha1_hash
 
+from .pyinfrawinrmsession import PyinfraWinrmSession
 from .util import make_win_command
 
 
@@ -72,7 +72,7 @@ def connect(state, host):
         host_and_port = '{}:{}'.format(hostname, host.data.winrm_port)
         logger.debug('host_and_port: %s', host_and_port)
 
-        session = winrm.Session(
+        session = PyinfraWinrmSession(
             host_and_port,
             auth=(
                 kwargs['username'],
@@ -122,7 +122,7 @@ def run_shell_command(
         print_output (boolean): print the output
         print_intput (boolean): print the input
         return_combined_output (boolean): combine the stdout and stderr lists
-        shell_executable (string): shell to use - 'sh'=cmd, 'ps'=powershell(default)
+        shell_executable (string): shell to use - 'cmd'=cmd, 'ps'=powershell(default)
         env (dict): environment variables to set
 
     Returns:
@@ -130,7 +130,7 @@ def run_shell_command(
         stdout and stderr are both lists of strings from each buffer.
     '''
 
-    command = make_win_command(command, env=env)
+    command = make_win_command(command)
 
     logger.debug('Running command on %s: %s', host.name, command)
 
@@ -150,11 +150,11 @@ def run_shell_command(
         shell_executable = 'ps'
     logger.debug('shell_executable:%s', shell_executable)
 
-    # default windows to use ps, but allow it to be overridden
+    # we use our own subclassed session that allows for env setting from open_shell.
     if shell_executable in ['cmd']:
-        response = host.connection.run_cmd(tmp_command)
+        response = host.connection.run_cmd(tmp_command, env=env)
     else:
-        response = host.connection.run_ps(tmp_command)
+        response = host.connection.run_ps(tmp_command, env=env)
 
     return_code = response.status_code
     logger.debug('response:%s', response)
