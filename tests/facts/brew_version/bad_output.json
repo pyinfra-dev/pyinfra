@@ -1,0 +1,7 @@
+{
+    "command": "brew --version",
+    "output": [
+        "some random text"
+    ],
+    "fact":  [0, 0, 0]
+}

@@ -1,0 +1,8 @@
+{
+    "args": [],
+    "facts": {"brew_version":  [2, 6, 0]},
+    "commands": [
+        "brew upgrade --cask"
+    ],
+    "idempotent": false
+}

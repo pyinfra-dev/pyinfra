@@ -1,7 +1,8 @@
 {
     "args": ["keepassxc"],
     "facts": {
-        "brew_casks": {}
+        "brew_casks": {},
+        "brew_version":  [2, 5, 3]
     },
     "commands": [
         "brew cask install keepassxc"
