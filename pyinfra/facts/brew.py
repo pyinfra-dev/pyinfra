@@ -37,7 +37,9 @@ class BrewVersion(FactBase):
     command = 'brew --version'
     requires_command = 'brew'
 
-    default = unknown_version
+    @staticmethod
+    def default():
+        return [0, 0, 0]
 
     def process(self, output):
         m = VERSION_MATCHER.match(output[0])
@@ -45,7 +47,7 @@ class BrewVersion(FactBase):
             return [int(m.group(key)) for key in ['major', 'minor', 'patch']]
         else:
             logger.warning('could not parse version string from brew: %s', output[0])
-            return unknown_version()
+            return self.default()
 
 
 class BrewPackages(FactBase):
