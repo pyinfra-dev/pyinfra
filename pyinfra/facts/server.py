@@ -390,7 +390,7 @@ class Crontab(FactBase):
                     'comments': current_comments,
                 }
             else:
-                minute, hour, day_of_month, month, day_of_week, command = line.split(maxsplit=5)
+                minute, hour, day_of_month, month, day_of_week, command = line.split(None, 5)
                 crons[command] = {
                     'minute': try_int(minute),
                     'hour': try_int(hour),
