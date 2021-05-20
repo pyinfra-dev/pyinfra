@@ -384,7 +384,7 @@ class Crontab(FactBase):
                 continue
 
             if line.startswith('@'):
-                special_time, command = line.split(' ', 1)
+                special_time, command = line.split(None, 1)
                 crons[command] = {
                     'special_time': special_time,
                     'comments': current_comments,
