@@ -120,6 +120,9 @@ def rule(
         )
     '''
 
+    if isinstance(to_ports, int):
+        to_ports = '{0}'.format(to_ports)
+
     # These are only shortcuts for extras
     if destination_port:
         extras = '{0} --dport {1}'.format(extras, destination_port)
@@ -198,8 +201,8 @@ def rule(
         key: (
             '{0}/32'.format(value)
             if (
-                '/' not in value
-                and key in ('source', 'not_source', 'destination', 'not_destination')
+                key in ('source', 'not_source', 'destination', 'not_destination')
+                and '/' not in value
             )
             else value
         )

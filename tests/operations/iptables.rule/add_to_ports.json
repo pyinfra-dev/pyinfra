@@ -2,7 +2,7 @@
     "args": ["PREROUTING", "REDIRECT"],
     "kwargs": {
         "table": "nat",
-        "to_ports": "8000"
+        "to_ports": 8000
     },
     "facts": {
         "iptables_rules": {
