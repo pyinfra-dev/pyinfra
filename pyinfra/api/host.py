@@ -134,8 +134,8 @@ class Host(object):
     # Host facts
     #
 
-    def get_fact(self, name_or_cls, *args, **kwargs):
-        return get_host_fact(self.state, self, name_or_cls, args, kwargs)
+    def get_fact(self, name_or_cls, **kwargs):
+        return get_host_fact(self.state, self, name_or_cls, kwargs=kwargs)
 
     def create_fact(self, name_or_cls, data=None, args=None):
         return create_host_fact(self.state, self, name_or_cls, data, args)
