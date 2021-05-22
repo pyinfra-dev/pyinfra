@@ -16,6 +16,5 @@
     },
     "commands": [
         "iptables -t nat -D PREROUTING -j DNAT --to-destination 10.10.10.10"
-    ],
-    "idempotent": false
+    ]
 }

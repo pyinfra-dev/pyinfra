@@ -10,6 +10,5 @@
     },
     "commands": [
         "iptables -t filter -A INPUT -j LOG --log-prefix log-prefix"
-    ],
-    "idempotent": false
+    ]
 }

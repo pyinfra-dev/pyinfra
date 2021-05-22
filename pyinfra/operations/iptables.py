@@ -289,3 +289,8 @@ def rule(
 
         # Build the final iptables command
         yield ' '.join(args)
+
+        if action == '-D':
+            rules.remove(definition)
+        else:
+            rules.append(definition)

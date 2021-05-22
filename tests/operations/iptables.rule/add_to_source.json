@@ -11,6 +11,5 @@
     },
     "commands": [
         "iptables -t nat -A PREROUTING -j SNAT --to-source 10.0.0.0:8000"
-    ],
-    "idempotent": false
+    ]
 }
