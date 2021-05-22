@@ -444,14 +444,14 @@ class Users(FactBase):
             if entry:
                 # Parse out the comment/home/shell
                 entries = entry.split(':')
-                
+
                 # Parse groups
                 groups = []
                 for group_name in user_groups.split(' '):
                     # We only want secondary groups here
                     if group_name and group_name != group:
                         groups.append(group_name)
- 
+
                 users[entries[0]] = {
                     'home': entries[5] or None,
                     'comment': entries[4] or None,
