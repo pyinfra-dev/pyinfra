@@ -509,10 +509,10 @@ def _main(
             fact_key = fact_cls.name
 
             if args or kwargs:
-                fact_key = '{0}{1} {2}'.format(
+                fact_key = '{0}{1}{2}'.format(
                     fact_cls.name,
                     args or '',
-                    get_kwargs_str(kwargs) if kwargs else '',
+                    ' ({0})'.format(get_kwargs_str(kwargs)) if kwargs else '',
                 )
 
             try:

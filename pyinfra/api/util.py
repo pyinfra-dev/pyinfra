@@ -46,7 +46,7 @@ def get_kwargs_str(kwargs):
         for key, value in kwargs.items()
         if key not in ('self', 'state', 'host')
     ]
-    return '({0})'.format(', '.join(items))
+    return ', '.join(items)
 
 
 def try_int(value):

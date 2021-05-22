@@ -164,7 +164,7 @@ def get_facts(
         # Merges args & kwargs into a single kwargs dictionary
         kwargs = getcallargs(fact.command, *args, **kwargs)
 
-    logger.debug('Getting fact: {0} {1} (ensure_hosts: {2})'.format(
+    logger.debug('Getting fact: {0} ({1}) (ensure_hosts: {2})'.format(
         name, get_kwargs_str(kwargs), ensure_hosts,
     ))
 
@@ -254,7 +254,7 @@ def get_facts(
             greenlet_to_host[greenlet] = host
 
         # Wait for all the commands to execute
-        progress_prefix = 'fact: {0} {1}'.format(name, get_kwargs_str(kwargs))
+        progress_prefix = 'fact: {0} ({1})'.format(name, get_kwargs_str(kwargs))
 
         with progress_spinner(
             greenlet_to_host.values(),
@@ -316,7 +316,7 @@ def get_facts(
 
             hostname_facts[host] = data
 
-        log = 'Loaded fact {0} {1}'.format(click.style(name, bold=True), get_kwargs_str(kwargs))
+        log = 'Loaded fact {0} ({1})'.format(click.style(name, bold=True), get_kwargs_str(kwargs))
         if state.print_fact_info:
             logger.info(log)
         else:
