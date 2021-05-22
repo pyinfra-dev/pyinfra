@@ -5,8 +5,8 @@
         "to_source": "10.0.0.0:8000"
     },
     "facts": {
-        "iptables_rules": {
-            "nat": []
+        "iptables.IptablesRules": {
+            "table=nat": []
         }
     },
     "commands": [

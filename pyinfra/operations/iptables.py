@@ -8,6 +8,7 @@ import six
 
 from pyinfra.api import operation
 from pyinfra.api.exceptions import OperationError
+from pyinfra.facts.iptables import Ip6tablesRules, IptablesRules
 
 
 @operation
@@ -211,9 +212,9 @@ def rule(
     }
 
     rules = (
-        host.fact.iptables_rules(table)
+        host.get_fact(IptablesRules, table=table)
         if version == 4
-        else host.fact.ip6tables_rules(table)
+        else host.get_fact(Ip6tablesRules, table=table)
     )
 
     action = None

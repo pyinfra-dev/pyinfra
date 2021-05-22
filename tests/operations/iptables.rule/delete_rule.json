@@ -6,8 +6,8 @@
         "present": false
     },
     "facts": {
-        "iptables_rules": {
-            "nat": [{
+        "iptables.IptablesRules": {
+            "table=nat": [{
                 "to_destination": "10.10.10.10",
                 "chain": "PREROUTING",
                 "jump": "DNAT"

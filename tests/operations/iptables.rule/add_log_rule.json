@@ -4,8 +4,8 @@
         "log_prefix": "log-prefix"
     },
     "facts": {
-        "iptables_rules": {
-            "filter": []
+        "iptables.IptablesRules": {
+            "table=filter": []
         }
     },
     "commands": [

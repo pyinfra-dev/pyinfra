@@ -6,8 +6,8 @@
         "table": "nat"
     },
     "facts": {
-        "iptables_rules": {
-            "nat": []
+        "iptables.IptablesRules": {
+            "table=nat": []
         }
     },
     "commands": [],
