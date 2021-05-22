@@ -1,0 +1,17 @@
+{
+    "args": ["PREROUTING", "OUTPUT"],
+    "kwargs": {
+        "version": 6,
+        "table": "nat",
+        "protocol": "tcp",
+        "source": "0.0.0.0"
+    },
+    "facts": {
+        "iptables.Ip6tablesRules": {
+            "table=nat": []
+        }
+    },
+    "commands": [
+        "ip6tables -t nat -A PREROUTING -p tcp -s 0.0.0.0 -j OUTPUT"
+    ]
+}
