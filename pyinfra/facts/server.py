@@ -428,55 +428,38 @@ class Users(FactBase):
 
     command = '''
         for i in `cat /etc/passwd | cut -d: -f1`; do
-            ID=`id $i`;
-            META=`cat /etc/passwd | grep ^$i: | cut -d: -f5-7`;
-            echo "$ID $META";
+            ENTRY=`grep ^$i: /etc/passwd`;
+            echo "$ENTRY|`id -gn $i`|`id -Gn $i`";
         done
     '''.strip()
 
     default = dict
 
-    regex = r'^uid=([0-9]+)\(([a-zA-Z0-9_\.\-]+)\) gid=([0-9]+)\(([a-zA-Z0-9_\.\-]+)\) groups=([a-zA-Z0-9_\.\-,\(\)\s]+) (.*)$'  # noqa
-    group_regex = r'^[0-9]+\(([a-zA-Z0-9_\.\-]+)\)$'
-
     def process(self, output):
         users = {}
+
         for line in output:
-            matches = re.match(self.regex, line)
+            entry, group, user_groups = line.split('|')
 
-            if matches:
+            if entry:
                 # Parse out the comment/home/shell
-                comment_home_shell = matches.group(6).split(':')
-                comment = comment_home_shell[0] or None
-                home = comment_home_shell[1] or None
-                shell = comment_home_shell[2] or None
-
-                # Main user group, uid & gid
-                uid = int(matches.group(1))
-                gid = int(matches.group(3))
-                group = matches.group(4)
-
-                # Parse the groups
+                entries = entry.split(':')
+                
+                # Parse groups
                 groups = []
-                for group_matches in matches.group(5).split(','):
-                    name = re.match(self.group_regex, group_matches.strip())
-                    if name:
-                        name = name.group(1)
-                    else:
-                        continue  # pragma: no cover
-
+                for group_name in user_groups.split(' '):
                     # We only want secondary groups here
-                    if name != group:
-                        groups.append(name)
-
-                users[matches.group(2)] = {
+                    if group_name and group_name != group:
+                        groups.append(group_name)
+ 
+                users[entries[0]] = {
+                    'home': entries[5] or None,
+                    'comment': entries[4] or None,
+                    'shell': entries[6] or None,
                     'group': group,
                     'groups': groups,
-                    'comment': comment,
-                    'home': home,
-                    'shell': shell,
-                    'uid': uid,
-                    'gid': gid,
+                    'uid': int(entries[2]),
+                    'gid': int(entries[3]),
                 }
 
         return users

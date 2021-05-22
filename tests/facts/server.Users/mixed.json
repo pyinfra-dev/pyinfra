@@ -1,12 +1,12 @@
 {
     "output": [
-        "uid=0(root) gid=0(wheel) groups=0(wheel), 2(kmem), 3(sys), 4(tty), 5(operator), 20(staff), 31(guest) root:/root:/bin/ks",
-        "uid=1003(test.testy) gid=1003(test.testy) groups=1003(test.testy) Testy,,,:/home/test.testy:/bin/ksh",
-        "uid=1004(_tesTy.test) gid=1004(_tesTy.test) groups=1004(_tesTy.test),1001(pyinfra) :/home/_tesTy.test:/bin/ksh",
-        "uid=1002(noshell) gid=1002(noshell) groups=1002(noshell) noshell:/home/noshell:",
-        "uid=1002(nohome) gid=1002(nohome) groups=1002(nohome) nohome::/bin/bash"
+        "root:x:0:0:root:/root:/bin/ks|wheel|wheel kmem sys tty operator staff guest",
+        "_tesTy.test:x:1004:1004::/home/_tesTy.test:/bin/ksh|_tesTy.test|_tesTy.test pyinfra",
+        "test.testy:x:1003:1003:Testy,,,:/home/test.testy:/bin/ksh|test.testy|",
+        "noshell:x:1002:1002:noshell comment with spaces:/home/noshell:|noshell|",
+        "nohome:x:1002:1002:nohome comment::/bin/bash|nohome|"
     ],
-    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ID=`id $i`;\n            META=`cat /etc/passwd | grep ^$i: | cut -d: -f5-7`;\n            echo \"$ID $META\";\n        done",
+    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ENTRY=`grep ^$i: /etc/passwd`;\n            echo \"$ENTRY|`id -gn $i`|`id -Gn $i`\";\n        done",
     "fact": {
         "root": {
             "home": "/root",
@@ -46,7 +46,7 @@
         },
         "noshell": {
             "home": "/home/noshell",
-            "comment": "noshell",
+            "comment": "noshell comment with spaces",
             "shell": null,
             "group": "noshell",
             "groups": [],
@@ -55,7 +55,7 @@
         },
         "nohome": {
             "home": null,
-            "comment": "nohome",
+            "comment": "nohome comment",
             "shell": "/bin/bash",
             "group": "nohome",
             "groups": [],
