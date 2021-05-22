@@ -9,6 +9,7 @@ import six
 from mock import patch
 
 from pyinfra.api import Config, Inventory
+from pyinfra.api.util import get_kwargs_str
 
 
 def get_command_string(command):
@@ -163,9 +164,12 @@ class FakeHost(object):
     def noop(self, description):
         self.noop_description = description
 
-    def get_fact(self, fact_cls):
+    def get_fact(self, fact_cls, **kwargs):
         fact_key = '{0}.{1}'.format(fact_cls.__module__.split('.')[-1], fact_cls.__name__)
-        return getattr(self.fact, fact_key)
+        fact = getattr(self.fact, fact_key)
+        if kwargs:
+            return fact[get_kwargs_str(kwargs)]
+        return fact
 
 
 class FakeFile(object):
