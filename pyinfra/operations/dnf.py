@@ -188,6 +188,7 @@ def packages(
         uninstall_command=' '.join(uninstall_command),
         upgrade_command='dnf update -y',
         version_join='=',
+        lower=False,  # dnf packages are case sensitive
         latest=latest,
         expand_package_fact=host.fact.rpm_package_provides,
     )
