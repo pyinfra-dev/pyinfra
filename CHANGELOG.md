@@ -1,3 +1,12 @@
+# v1.4.3
+
++ Fix user fact comments with spaces by refactoring the fact (@sysadmin75)
++ Fix parsing of tab delimited crontab files with special times (@hazayan)
++ Fix incorrect lowercasing of yum & dnf package names
++ Fix/enable passing `to_ports` as an integer in `iptables.rule` operation
++ Migrate iptables facts & operations to use explicit fact imports
++ Fix/implement idempotency in iptables operations
+
 # v1.4.2
 
 + Fix/implement WinRM env support (@mfrg)
