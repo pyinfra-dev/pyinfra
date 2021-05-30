@@ -24,7 +24,9 @@ from pyinfra.api import (
     OperationError,
     OperationTypeError,
     RsyncCommand,
+    StringCommand,
 )
+from pyinfra.api.command import make_formatted_string_command
 from pyinfra.api.connectors.util import escape_unix_path
 from pyinfra.api.util import (
     get_file_sha1,
@@ -78,8 +80,6 @@ def download(
         )
     '''
 
-    dest = escape_unix_path(dest)
-
     info = host.fact.file(dest)
     # Destination is a directory?
     if info is False:
@@ -118,8 +118,10 @@ def download(
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
-        curl_command = "curl -sSLf '{0}' -o {1}".format(src, dest)
-        wget_command = "wget -q '{0}' -O {1} || (rm -f {1}; exit 1)".format(src, dest)
+        curl_command = make_formatted_string_command('curl -sSLf {0} -o {1}', src, dest)
+        wget_command = make_formatted_string_command(
+            'wget -q {0} -O {1} || (rm -f {1}; exit 1)', src, dest,
+        )
 
         if host.fact.which('curl'):
             yield curl_command
@@ -135,22 +137,22 @@ def download(
             yield chmod(dest, mode)
 
         if sha1sum:
-            yield (
+            yield make_formatted_string_command((
                 '((sha1sum {0} 2> /dev/null || shasum {0} || sha1 {0}) | grep {1}) '
                 '|| (echo "SHA1 did not match!" && exit 1)'
-            ).format(dest, sha1sum)
+            ), dest, sha1sum)
 
         if sha256sum:
-            yield (
+            yield make_formatted_string_command((
                 '((sha256sum {0} 2> /dev/null || shasum -a 256 {0} || sha256 {0}) | grep {1}) '
                 '|| (echo "SHA256 did not match!" && exit 1)'
-            ).format(dest, sha256sum)
+            ), dest, sha256sum)
 
         if md5sum:
-            yield (
+            yield make_formatted_string_command((
                 '((md5sum {0} 2> /dev/null || md5 {0}) | grep {1}) '
                 '|| (echo "MD5 did not match!" && exit 1)'
-            ).format(dest, md5sum)
+            ), dest, md5sum)
 
     else:
         host.noop('file {0} has already been downloaded'.format(dest))
@@ -241,8 +243,6 @@ def line(
         )
     '''
 
-    path = escape_unix_path(path)
-
     match_line = ensure_whole_line_match(line)
 
     # Is there a matching line in this file?
@@ -259,15 +259,16 @@ def line(
         replace = ''
 
     # Save commands for re-use in dynamic script when file not present at fact stage
-    make_backup_command = ''
-    if backup:
-        make_backup_command = 'cp {0} {0}.{1} && '.format(path, get_timestamp())
-
-    echo_command = (
-        '{0}echo "{1}" >> {2}'.format(make_backup_command, line, path)
-        if interpolate_variables else
-        "{0}echo '{1}' >> {2}".format(make_backup_command, line, path)
+    echo_command_formatter = 'echo "{1}" >> {2}' if interpolate_variables else "echo '{1}' >> {2}"
+    echo_command = make_formatted_string_command(
+        echo_command_formatter, line, path,
     )
+
+    if backup:
+        echo_command = StringCommand(make_formatted_string_command(
+            'cp {0} {0}.{1} && ', path, get_timestamp(),
+        ), echo_command)
+
     sed_replace_command = sed_replace(
         path, match_line, replace,
         flags=flags,
@@ -286,14 +287,16 @@ def line(
         # If the file does not exist - it *might* be created, so we handle it
         # dynamically with a little script.
         if present_lines is None:
-            yield '''
-                if [ -f '{target}' ]; then
-                    (grep {quoted_match_line} '{target}' && {sed_replace_command}) 2> /dev/null || \
-                    {echo_command};
-                else
-                    {echo_command};
-                fi
-            '''.format(
+            yield make_formatted_string_command(
+                '''
+                    if [ -f '{target}' ]; then
+                        (grep {quoted_match_line} '{target}' && \
+                        {sed_replace_command}) 2> /dev/null || \
+                        {echo_command};
+                    else
+                        {echo_command};
+                    fi
+                ''',
                 target=path,
                 quoted_match_line=quoted_match_line,
                 echo_command=echo_command,
