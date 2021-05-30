@@ -1,6 +1,33 @@
+import shlex
+
 from six.moves import shlex_quote
 
 from .operation_kwargs import get_executor_kwarg_keys
+
+
+def make_formatted_string_command(string, *args, **kwargs):
+    '''
+    Helper function that takes a shell command or script as a string, splits
+    it, applies formatting to each bit - quoting any formatted values - before
+    returning them as a `StringCommand` object.
+
+    Useful to enable string formatted commands/scripts, for example:
+
+    .. code:: python
+
+            curl_command = make_formatted_string_command('curl -sSLf {0} -o {1}', src, dest)
+    '''
+
+    formatted_bits = []
+
+    for bit in shlex.split(string):
+        formatted = bit.format(*args, **kwargs)
+        if bit.startswith('{') and bit.endswith('}'):
+            formatted_bits.append(QuoteString(formatted))
+        else:
+            formatted_bits.append(formatted)
+
+    return StringCommand(*formatted_bits)
 
 
 class MaskString(str):
