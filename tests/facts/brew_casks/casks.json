@@ -1,5 +1,5 @@
 {
-    "command": "if [[ \"$(brew --version)\" =~ Homebrew\\ +(1\\.|2\\.[0-5]).* ]];then brew cask list --versions; else brew list --cask --versions; fi",
+    "command": "if brew --version | grep -q -e \"Homebrew\\ +(1\\.|2\\.[0-5]).*\" 1>/dev/null;then brew cask list --versions; else brew list --cask --versions; fi",
     "output": [
         "1password-cli 0.10.0",
         "google-chrome 76.0.3809.132",

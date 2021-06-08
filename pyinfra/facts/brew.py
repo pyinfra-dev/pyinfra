@@ -81,7 +81,7 @@ class BrewCasks(BrewPackages):
         }
     '''
 
-    command = (r'if [[ "$(brew --version)" =~ Homebrew\ +(1\.|2\.[0-5]).* ]];'
+    command = (r'if brew --version | grep -q -e "Homebrew\ +(1\.|2\.[0-5]).*" 1>/dev/null;'
                r'then brew cask list --versions; else brew list --cask --versions; fi')
     requires_command = 'brew'
 
