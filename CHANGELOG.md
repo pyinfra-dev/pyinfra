@@ -1,3 +1,7 @@
+# v1.4.4
+
++ Fix brew casks fact for non-mac platforms
+
 # v1.4.3
 
 + Fix user fact comments with spaces by refactoring the fact (@sysadmin75)
