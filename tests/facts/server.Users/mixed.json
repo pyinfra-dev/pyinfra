@@ -1,12 +1,12 @@
 {
     "output": [
-        "root:x:0:0:root:/root:/bin/ks|wheel|wheel kmem sys tty operator staff guest",
-        "_tesTy.test:x:1004:1004::/home/_tesTy.test:/bin/ksh|_tesTy.test|_tesTy.test pyinfra",
-        "test.testy:x:1003:1003:Testy,,,:/home/test.testy:/bin/ksh|test.testy|",
-        "noshell:x:1002:1002:noshell comment with spaces:/home/noshell:|noshell|",
-        "nohome:x:1002:1002:nohome comment::/bin/bash|nohome|"
+        "root:x:0:0:root:/root:/bin/ks|wheel|wheel kmem sys tty operator staff guest|root pts/0 Sat Jun 5 12:03:23 -0600 2021",
+        "_tesTy.test:x:1004:1004::/home/_tesTy.test:/bin/ksh|_tesTy.test|_tesTy.test pyinfra|_tesTy.test pts/0 host-ip Sat Jun 12 13:43:42 -0600 2021",
+        "test.testy:x:1003:1003:Testy,,,:/home/test.testy:/bin/ksh|test.testy||test.testy Fri Jun 11 22:26:04 -0600 2021",
+        "noshell:x:1002:1002:noshell comment with spaces:/home/noshell:|noshell||noshell **Never logged in**",
+        "nohome:x:1002:1002:nohome comment::/bin/bash|nohome||**Never logged in**"
     ],
-    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ENTRY=`grep ^$i: /etc/passwd`;\n            echo \"$ENTRY|`id -gn $i`|`id -Gn $i`\";\n        done",
+    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ENTRY=`grep ^$i: /etc/passwd`;\n            LASTLOG=`lastlog -u $i | grep ^$i` | tr -s ' ';\n            echo \"$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG\";\n        done",
     "fact": {
         "root": {
             "home": "/root",
@@ -22,7 +22,8 @@
                 "guest"
             ],
             "uid": 0,
-            "gid": 0
+            "gid": 0,
+            "lastlog": "Sat Jun 5 12:03:23 -0600 2021"
         },
         "_tesTy.test": {
             "home": "/home/_tesTy.test",
@@ -33,7 +34,8 @@
                 "pyinfra"
             ],
             "uid": 1004,
-            "gid": 1004
+            "gid": 1004,
+            "lastlog": "Sat Jun 12 13:43:42 -0600 2021"
         },
         "test.testy": {
             "home": "/home/test.testy",
@@ -42,7 +44,8 @@
             "group": "test.testy",
             "groups": [],
             "uid": 1003,
-            "gid": 1003
+            "gid": 1003,
+            "lastlog": "Fri Jun 11 22:26:04 -0600 2021"
         },
         "noshell": {
             "home": "/home/noshell",
@@ -51,7 +54,8 @@
             "group": "noshell",
             "groups": [],
             "uid": 1002,
-            "gid": 1002
+            "gid": 1002,
+            "lastlog": "**Never logged in**"
         },
         "nohome": {
             "home": null,
@@ -60,7 +64,8 @@
             "group": "nohome",
             "groups": [],
             "uid": 1002,
-            "gid": 1002
+            "gid": 1002,
+            "lastlog": "**Never logged in**"
         }
     }
 }
