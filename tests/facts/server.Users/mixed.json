@@ -55,7 +55,7 @@
             "groups": [],
             "uid": 1002,
             "gid": 1002,
-            "lastlog": "**Never logged in**"
+            "lastlog": null
         },
         "nohome": {
             "home": null,
@@ -65,7 +65,7 @@
             "groups": [],
             "uid": 1002,
             "gid": 1002,
-            "lastlog": "**Never logged in**"
+            "lastlog": null
         }
     }
 }
