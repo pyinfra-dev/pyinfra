@@ -458,7 +458,7 @@ class Users(FactBase):
                 # Parse lastlog info
                 # lastlog output varies, which is why I use regex to match login time
                 login = re.search(rex, lastlog)
-                login_time = login.group() if login else '**Never logged in**'
+                login_time = login.group() if login else None
 
                 users[entries[0]] = {
                     'home': entries[5] or None,
