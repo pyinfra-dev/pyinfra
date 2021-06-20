@@ -1,0 +1,29 @@
+{
+    "args": ["some file.txt", "/home/some file.txt"],
+    "kwargs": {
+        "user": "another-testuser",
+        "group": "another-testgroup",
+        "mode": 644
+    },
+    "files": ["some file.txt"],
+    "facts": {
+        "file": {
+            "/home/some file.txt": {
+                "mode": 500,
+                "user": "testuser",
+                "group": "testgroup"
+            }
+        },
+        "directory": {
+            "/home": true
+        },
+        "sha1_file": {
+            "/home/some file.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
+        }
+    },
+    "commands": [
+        "chmod 644 '/home/some file.txt'",
+        "chown another-testuser:another-testgroup '/home/some file.txt'"
+    ],
+    "idempotent": false
+}

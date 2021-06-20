@@ -1,0 +1,20 @@
+{
+    "args": ["test file"],
+    "kwargs": {
+        "user": "testuser",
+        "group": "testgroup",
+        "mode": "777",
+        "touch": true
+    },
+    "facts": {
+        "file": {
+            "test file": null
+        }
+    },
+    "commands": [
+        "touch 'test file'",
+        "chmod 777 'test file'",
+        "chown testuser:testgroup 'test file'"
+    ],
+    "idempotent": false
+}

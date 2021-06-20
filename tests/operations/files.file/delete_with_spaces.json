@@ -1,0 +1,18 @@
+{
+    "args": ["test file"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "file": {
+            "test file": {
+                "mode": 0,
+                "user": "testuser",
+                "group": "testgroup"
+            }
+        }
+    },
+    "commands": [
+        "rm -f 'test file'"
+    ]
+}

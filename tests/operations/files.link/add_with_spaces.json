@@ -1,0 +1,17 @@
+{
+    "args": ["test link"],
+    "kwargs": {
+        "target": "/etc/init.d/path with spaces",
+        "user": "testuser",
+        "group": "testgroup"
+    },
+    "facts": {
+        "link": {
+            "test link": null
+        }
+    },
+    "commands": [
+        "ln -s '/etc/init.d/path with spaces' 'test link'",
+        "chown -h testuser:testgroup 'test link'"
+    ]
+}
