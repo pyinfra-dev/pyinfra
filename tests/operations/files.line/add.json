@@ -8,7 +8,7 @@
         }
     },
     "commands": [
-        "echo 'match_line' >> somefile"
+        "echo match_line >> somefile"
     ],
     "idempotent": false
 }

@@ -13,7 +13,7 @@
         }
     },
     "commands": [
-        "echo 'replace_line' >> somefile"
+        "echo replace_line >> somefile"
     ],
     "idempotent": false
 }
