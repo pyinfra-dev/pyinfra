@@ -12,7 +12,7 @@
         }
     },
     "commands": [
-        "curl -sSLf 'http://somewhere.com/something.deb' -o _tempfile_",
+        "curl -sSLf http://somewhere.com/something.deb -o _tempfile_",
         "dpkg --force-confdef --force-confold -i _tempfile_ 2> /dev/null || true",
         "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" install -f",
         "dpkg --force-confdef --force-confold -i _tempfile_"

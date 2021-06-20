@@ -9,7 +9,7 @@
         }
     },
     "commands": [
-        "curl -sSLf 'http://somesite/somerepo.repo' -o /etc/zypp/repos.d/somerepo.repo"
+        "curl -sSLf http://somesite/somerepo.repo -o /etc/zypp/repos.d/somerepo.repo"
     ],
     "idempotent": false
 }
