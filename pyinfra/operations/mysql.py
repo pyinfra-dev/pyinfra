@@ -226,6 +226,10 @@ def database(
             database=database,
             state=state,
             host=host,
+            mysql_user=mysql_user,
+            mysql_password=mysql_password,
+            mysql_host=mysql_host,
+            mysql_port=mysql_port,
         )
 
 
