@@ -139,20 +139,20 @@ def download(
         if sha1sum:
             yield make_formatted_string_command((
                 '((sha1sum {0} 2> /dev/null || shasum {0} || sha1 {0}) | grep {1}) '
-                '|| (echo "SHA1 did not match!" && exit 1)'
-            ), dest, sha1sum)
+                '|| (echo {2} && exit 1)'
+            ), dest, sha1sum, 'SHA1 did not match!')
 
         if sha256sum:
             yield make_formatted_string_command((
                 '((sha256sum {0} 2> /dev/null || shasum -a 256 {0} || sha256 {0}) | grep {1}) '
-                '|| (echo "SHA256 did not match!" && exit 1)'
-            ), dest, sha256sum)
+                '|| (echo {2} && exit 1)'
+            ), dest, sha256sum, 'SHA256 did not match!')
 
         if md5sum:
             yield make_formatted_string_command((
                 '((md5sum {0} 2> /dev/null || md5 {0}) | grep {1}) '
-                '|| (echo "MD5 did not match!" && exit 1)'
-            ), dest, md5sum)
+                '|| (echo {2} && exit 1)'
+            ), dest, md5sum, 'MD5 did not match!')
 
     else:
         host.noop('file {0} has already been downloaded'.format(dest))
@@ -259,7 +259,7 @@ def line(
         replace = ''
 
     # Save commands for re-use in dynamic script when file not present at fact stage
-    echo_command_formatter = 'echo "{1}" >> {2}' if interpolate_variables else "echo '{1}' >> {2}"
+    echo_command_formatter = 'echo "{0}" >> {1}' if interpolate_variables else "echo '{0}' >> {1}"
     echo_command = make_formatted_string_command(
         echo_command_formatter, line, path,
     )
@@ -278,19 +278,13 @@ def line(
 
     # No line and we want it, append it
     if not present_lines and present:
-        quoted_match_line = (
-            '"{0}"'.format(match_line)
-            if interpolate_variables else
-            "'{0}'".format(match_line)
-        )
-
         # If the file does not exist - it *might* be created, so we handle it
         # dynamically with a little script.
         if present_lines is None:
             yield make_formatted_string_command(
                 '''
                     if [ -f '{target}' ]; then
-                        (grep {quoted_match_line} '{target}' && \
+                        (grep {match_line} '{target}' && \
                         {sed_replace_command}) 2> /dev/null || \
                         {echo_command};
                     else
@@ -298,7 +292,7 @@ def line(
                     fi
                 ''',
                 target=path,
-                quoted_match_line=quoted_match_line,
+                match_line=match_line,
                 echo_command=echo_command,
                 sed_replace_command=sed_replace_command,
             )
