@@ -26,6 +26,7 @@ from paramiko import (
 import pyinfra
 
 from pyinfra import logger
+from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 
@@ -420,15 +421,15 @@ def put_file(
         _put_file(host, filename_or_io, temp_file)
 
         # Execute run_shell_command w/sudo and/or su_user
-        command = 'mv {0} {1}'.format(temp_file, remote_filename)
+        command = StringCommand('mv', temp_file, QuoteString(remote_filename))
 
         # Move it to the su_user if present
         if su_user:
-            command = '{0} && chown {1} {2}'.format(command, su_user, remote_filename)
+            command = StringCommand(command, '&&', 'chown', su_user, QuoteString(remote_filename))
 
         # Otherwise any sudo_user
         elif sudo_user:
-            command = '{0} && chown {1} {2}'.format(command, sudo_user, remote_filename)
+            command = StringCommand(command, '&&', 'chown', sudo_user, QuoteString(remote_filename))
 
         status, _, stderr = run_shell_command(
             state, host, command,

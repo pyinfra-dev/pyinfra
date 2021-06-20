@@ -498,7 +498,7 @@ class TestSSHConnector(TestCase):
         fake_open = mock_open(read_data='test!')
         with patch('pyinfra.api.util.open', fake_open, create=True):
             status = host.put_file(
-                'not-a-file', 'not-another-file',
+                'not-a-file', 'not another file',
                 print_output=True,
                 sudo=True,
                 sudo_user='ubuntu',
@@ -508,12 +508,13 @@ class TestSSHConnector(TestCase):
 
         fake_ssh_client().exec_command.assert_called_with((
             "sudo -H -n -u ubuntu sh -c 'mv "
-            '/tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487 '
-            "not-another-file && chown ubuntu not-another-file'"
+            '/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24 '
+            "\'\"\'\"\'not another file\'\"\'\"\' && chown ubuntu "
+            "\'\"\'\"\'not another file\'\"\'\"\'\'"
         ), get_pty=False)
 
         fake_sftp_client.from_transport().putfo.assert_called_with(
-            fake_open(), '/tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487',
+            fake_open(), '/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24',
         )
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')
