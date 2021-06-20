@@ -23,11 +23,11 @@ from pyinfra.api import (
     operation,
     OperationError,
     OperationTypeError,
+    QuoteString,
     RsyncCommand,
     StringCommand,
 )
 from pyinfra.api.command import make_formatted_string_command
-from pyinfra.api.connectors.util import escape_unix_path
 from pyinfra.api.util import (
     get_file_sha1,
     get_path_permissions_mode,
@@ -363,8 +363,6 @@ def replace(
         )
     '''
 
-    path = escape_unix_path(path)
-
     existing_lines = host.fact.find_in_file(path, match)
 
     # Only do the replacement if the file does not exist (it may be created earlier)
@@ -592,8 +590,6 @@ def get(
         )
     '''
 
-    src = escape_unix_path(src)
-
     if add_deploy_dir and state.deploy_dir:
         dest = os_path.join(state.deploy_dir, dest)
 
@@ -666,8 +662,6 @@ def put(
             mode='644',
         )
     '''
-
-    dest = escape_unix_path(dest)
 
     # Upload IO objects as-is
     if hasattr(src, 'read'):
@@ -816,8 +810,6 @@ def template(
         {% endfor %}
     '''
 
-    dest = escape_unix_path(dest)
-
     if state.deploy_dir:
         src = os_path.join(state.deploy_dir, src)
 
@@ -934,19 +926,18 @@ def link(
     if present and not target:
         raise OperationError('If present is True target must be provided')
 
-    path = escape_unix_path(path)
     info = host.fact.link(path)
 
     # Not a link?
     if info is False:
         raise OperationError('{0} exists and is not a link'.format(path))
 
-    add_cmd = 'ln{0} {1} {2}'.format(
-        ' -s' if symbolic else '',
-        target, path,
-    )
+    add_args = ['ln']
+    if symbolic:
+        add_args.append('-s')
 
-    remove_cmd = 'rm -f {0}'.format(path)
+    add_cmd = StringCommand(' '.join(add_args), QuoteString(target), QuoteString(path))
+    remove_cmd = StringCommand('rm', '-f', QuoteString(path))
 
     # No link and we want it
     if not assume_present and info is None and present:
@@ -1060,7 +1051,6 @@ def file(
     _validate_path(path)
 
     mode = ensure_mode_int(mode)
-    path = escape_unix_path(path)
     info = host.fact.file(path)
 
     # Not a file?!
@@ -1072,7 +1062,7 @@ def file(
         if create_remote_dir:
             yield _create_remote_dir(state, host, path, user, group)
 
-        yield 'touch {0}'.format(path)
+        yield StringCommand('touch', QuoteString(path))
 
         if mode:
             yield chmod(path, mode)
@@ -1087,7 +1077,7 @@ def file(
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
-        yield 'rm -f {0}'.format(path)
+        yield StringCommand('rm', '-f', QuoteString(path))
         host.fact._delete('file', args=(path,))
 
     # It exists & we want to ensure its state
@@ -1100,7 +1090,7 @@ def file(
 
         if touch:
             changed = True
-            yield 'touch {0}'.format(path)
+            yield StringCommand('touch', QuoteString(path))
 
         # Check mode
         if mode and (not info or info['mode'] != mode):
@@ -1176,7 +1166,6 @@ def directory(
     _validate_path(path)
 
     mode = ensure_mode_int(mode)
-    path = escape_unix_path(path)
     info = host.fact.directory(path)
 
     # Not a directory?!
@@ -1188,7 +1177,7 @@ def directory(
 
     # Doesn't exist & we want it
     if not assume_present and info is None and present:
-        yield 'mkdir -p {0}'.format(path)
+        yield StringCommand('mkdir', '-p', QuoteString(path))
         if mode:
             yield chmod(path, mode, recursive=recursive)
         if user or group:
@@ -1202,7 +1191,7 @@ def directory(
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
-        yield 'rm -rf {0}'.format(path)
+        yield StringCommand('rm', '-rf', QuoteString(path))
         host.fact._delete('directory', args=(path,))
 
     # It exists & we want to ensure its state

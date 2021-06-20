@@ -76,7 +76,13 @@ def sed_replace(
 
 
 def chmod(target, mode, recursive=False):
-    return 'chmod {0}{1} {2}'.format(('-R ' if recursive else ''), mode, target)
+    args = ['chmod']
+    if recursive:
+        args.append('-R')
+
+    args.append('{0}'.format(mode))
+
+    return StringCommand(' '.join(args), QuoteString(target))
 
 
 def chown(target, user, group=None, recursive=False, dereference=True):
@@ -93,10 +99,11 @@ def chown(target, user, group=None, recursive=False, dereference=True):
         command = 'chgrp'
         user_group = group
 
-    return '{0}{1}{2} {3} {4}'.format(
-        command,
-        ' -R' if recursive else '',
-        ' -h' if not dereference else '',
-        user_group,
-        target,
-    )
+    args = [command]
+    if recursive:
+        args.append('-R')
+
+    if not dereference:
+        args.append('-h')
+
+    return StringCommand(' '.join(args), user_group, QuoteString(target))

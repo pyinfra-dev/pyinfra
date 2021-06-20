@@ -10,7 +10,7 @@
         }
     },
     "commands": [
-        ["upload", "/somefile.txt", "/home/some\\ file.txt"]
+        ["upload", "/somefile.txt", "/home/some file.txt"]
     ],
     "idempotent": false
 }

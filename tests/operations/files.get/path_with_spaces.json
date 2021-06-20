@@ -2,11 +2,11 @@
     "args": ["/home/some file.txt", "somefile.txt"],
     "facts": {
         "file": {
-            "/home/some\\ file.txt": null
+            "/home/some file.txt": null
         }
     },
     "commands": [
-        ["download", "/home/some\\ file.txt", "/somefile.txt"]
+        ["download", "/home/some file.txt", "/somefile.txt"]
     ],
     "idempotent": false
 }
