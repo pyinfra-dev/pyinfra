@@ -22,13 +22,16 @@ from pyinfra import logger
 from pyinfra.api import Config, MaskString, QuoteString, StringCommand
 from pyinfra.api.util import memoize
 
+UNIX_PATH_SPACE_REGEX = re.compile(r'([^\\]) ')
+
 SUDO_ASKPASS_ENV_VAR = 'PYINFRA_SUDO_PASSWORD'
 SUDO_ASKPASS_EXE_FILENAME = 'pyinfra-sudo-askpass'
-SUDO_ASKPASS_EXE = six.StringIO('''#!/bin/sh
+
+
+def get_sudo_askpass_exe():
+    return six.StringIO('''#!/bin/sh
 echo ${0}
 '''.format(SUDO_ASKPASS_ENV_VAR))
-
-UNIX_PATH_SPACE_REGEX = re.compile(r'([^\\]) ')
 
 
 def escape_unix_path(path):
@@ -171,7 +174,7 @@ def write_stdin(stdin, buffer):
 def get_sudo_password(state, host, use_sudo_password, run_shell_command, put_file):
     sudo_askpass_uploaded = host.connector_data.get('sudo_askpass_uploaded', False)
     if not sudo_askpass_uploaded:
-        put_file(state, host, SUDO_ASKPASS_EXE, SUDO_ASKPASS_EXE_FILENAME)
+        put_file(state, host, get_sudo_askpass_exe(), SUDO_ASKPASS_EXE_FILENAME)
         run_shell_command(state, host, 'chmod +x {0}'.format(SUDO_ASKPASS_EXE_FILENAME))
         host.connector_data['sudo_askpass_uploaded'] = True
 
