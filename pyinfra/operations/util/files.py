@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 
-from pyinfra.api import StringCommand
+from pyinfra.api import QuoteString, StringCommand
 
 
 def ensure_mode_int(mode):
@@ -64,11 +64,13 @@ def sed_replace(
 
     sed_script = sed_script_formatter.format(line, replace, flags)
 
-    sed_command = StringCommand('sed', '-i.{0}'.format(backup_extension), sed_script, filename)
+    sed_command = StringCommand(
+        'sed', '-i.{0}'.format(backup_extension), sed_script, QuoteString(filename),
+    )
 
     if not backup:  # if we're not backing up, remove the file *if* sed succeeds
         backup_filename = '{0}.{1}'.format(filename, backup_extension)
-        sed_command = StringCommand(sed_command, '&&', 'rm', '-f', backup_filename)
+        sed_command = StringCommand(sed_command, '&&', 'rm', '-f', QuoteString(backup_filename))
 
     return sed_command
 
