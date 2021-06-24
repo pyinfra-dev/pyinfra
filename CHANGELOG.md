@@ -1,3 +1,9 @@
+# v1.4.5
+
++ Fix missing mysql connection arguments updating privileges `mysql.database` operation (@sfermigier)
++ Fix parallel upload of askpass files
++ Properly handle shell quoting of filenames, fixes filenames with shell characters/etc for all `files.*` operations
+
 # v1.4.4
 
 + Fix brew casks fact for non-mac platforms
