@@ -9,9 +9,9 @@ from .operation_kwargs import get_executor_kwarg_keys
 
 def make_formatted_string_command(string, *args, **kwargs):
     '''
-    Helper function that takes a shell command or script as a string, splits
-    it, applies formatting to each bit - quoting any arg (NOT kwarg) values,
-    before returning them as a `StringCommand` object.
+    Helper function that takes a shell command or script as a string, splits it
+    using ``shlex.split`` and then formats each bit, returning a ``StringCommand``
+    instance with each bit.
 
     Useful to enable string formatted commands/scripts, for example:
 
