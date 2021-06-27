@@ -1,3 +1,9 @@
+# v1.4.6
+
++ Properly handle shell quoting of filenames in all `files.*` facts
++ Update `files.*` operations to use explicit fact imports
++ Update the docs to show explicit fact import style
+
 # v1.4.5
 
 + Fix missing mysql connection arguments updating privileges `mysql.database` operation (@sfermigier)
