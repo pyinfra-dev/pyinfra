@@ -4,9 +4,7 @@ import re
 
 from datetime import datetime
 
-from six.moves import shlex_quote
-
-from pyinfra.api.connectors.util import escape_unix_path
+from pyinfra.api.command import make_formatted_string_command, QuoteString
 from pyinfra.api.facts import FactBase
 from pyinfra.api.util import try_int
 
@@ -66,12 +64,11 @@ class File(FactBase):
     test_flag = '-e'
 
     def command(self, path):
-        path = escape_unix_path(path)
-        return (
-            '! test {test_flag} {path} || '  # only stat if the file exists
-            '({linux_stat_command} {path} 2> /dev/null || {bsd_stat_command} {path})'
-        ).format(
-            path=path,
+        return make_formatted_string_command((
+            '! test {test_flag} {0} || '  # only stat if the file exists
+            '( {linux_stat_command} {0} 2> /dev/null || {bsd_stat_command} {0} )'
+        ),
+            QuoteString(path),
             test_flag=self.test_flag,
             linux_stat_command=LINUX_STAT_COMMAND,
             bsd_stat_command=BSD_STAT_COMMAND,
@@ -143,13 +140,12 @@ class Sha1File(FactBase):
     ]
 
     def command(self, name):
-        name = escape_unix_path(name)
         self.name = name
-        return (
-            'test -e {0} && ('
-            'sha1sum {0} 2> /dev/null || shasum {0} 2> /dev/null || sha1 {0}'
+        return make_formatted_string_command((
+            'test -e {0} && ( '
+            'sha1sum {0} 2> /dev/null || shasum {0} 2> /dev/null || sha1 {0} '
             ') || true'
-        ).format(name)
+        ), QuoteString(name))
 
     def process(self, output):
         for regex in self._regexes:
@@ -170,15 +166,14 @@ class Sha256File(FactBase):
     ]
 
     def command(self, name):
-        name = escape_unix_path(name)
         self.name = name
-        return (
-            'test -e {0} && ('
+        return make_formatted_string_command((
+            'test -e {0} && ( '
             'sha256sum {0} 2> /dev/null '
             '|| shasum -a 256 {0} 2> /dev/null '
-            '|| sha256 {0}'
+            '|| sha256 {0} '
             ') || true'
-        ).format(name)
+        ), QuoteString(name))
 
     def process(self, output):
         for regex in self._regexes:
@@ -199,9 +194,11 @@ class Md5File(FactBase):
     ]
 
     def command(self, name):
-        name = escape_unix_path(name)
         self.name = name
-        return 'test -e {0} && (md5sum {0} 2> /dev/null || md5 {0}) || true'.format(name)
+        return make_formatted_string_command(
+            'test -e {0} && ( md5sum {0} 2> /dev/null || md5 {0} ) || true',
+            QuoteString(name),
+        )
 
     def process(self, output):
         for regex in self._regexes:
@@ -218,21 +215,20 @@ class FindInFile(FactBase):
     '''
 
     def command(self, name, pattern):
-        name = escape_unix_path(name)
-        pattern = shlex_quote(pattern)
+        self.exists_name = '__pyinfra_exists_{0}'.format(name)
 
-        self.name = name
+        # TODO: remove special charts from __pyinfra_exists thing
 
-        return (
+        return make_formatted_string_command((
             'grep -e {0} {1} 2> /dev/null || '
-            '(find {1} -type f > /dev/null && echo "__pyinfra_exists_{1}" || true)'
-        ).format(pattern, name).strip()
+            '( find {1} -type f > /dev/null && echo {2} || true )'
+        ), QuoteString(pattern), QuoteString(name), QuoteString(self.exists_name))
 
     def process(self, output):
         # If output is the special string: no matches, so return an empty list;
         # this allows us to differentiate between no matches in an existing file
         # or a file not existing.
-        if output and output[0] == '__pyinfra_exists_{0}'.format(self.name):
+        if output and output[0] == self.exists_name:
             return []
 
         return output
@@ -245,7 +241,10 @@ class FindFiles(FactBase):
 
     @staticmethod
     def command(name):
-        return 'find {0} -type f || true'.format(escape_unix_path(name))
+        return make_formatted_string_command(
+            'find {0} -type f || true',
+            QuoteString(name),
+        )
 
     @staticmethod
     def process(output):
@@ -259,7 +258,10 @@ class FindLinks(FindFiles):
 
     @staticmethod
     def command(name):
-        return 'find {0} -type l || true'.format(escape_unix_path(name))
+        return make_formatted_string_command(
+            'find {0} -type l || true',
+            QuoteString(name),
+        )
 
 
 class FindDirectories(FindFiles):
@@ -269,4 +271,7 @@ class FindDirectories(FindFiles):
 
     @staticmethod
     def command(name):
-        return 'find {0} -type d || true'.format(escape_unix_path(name))
+        return make_formatted_string_command(
+            'find {0} -type d || true',
+            QuoteString(name),
+        )
