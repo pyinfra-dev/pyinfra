@@ -8,7 +8,14 @@ passed (as a ``list`` of lines) to the ``process`` handler to generate fact data
 Importing & Using Facts
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Facts are available in a global namespace as attributes on host objects: ``host.fact.X``. Custom fact classes will automatically be added to the namespace when the module containing them is imported. Note that the class name is converted to snake case, so ``MyFact`` becomes ``my_fact``, available as ``host.fact.my_fact``.
+Like operations, facts are imported from Python modules and executed by calling `Host.get_fact`. For example:
+
+.. code:: python
+
+    from pyinfra import host
+    from pyinfra.facts.server import Which
+
+    host.get_fact(Which, command='htop')
 
 
 Example: getting swap status
@@ -34,7 +41,7 @@ This fact could then be used like so:
 
 .. code:: python
 
-    is_swap_enabled = host.fact.swap_enabled
+    is_swap_enabled = host.get_fact(SwapEnabled)
 
 
 Example: getting the list of files in a directory
@@ -51,9 +58,9 @@ This fact returns a list of files found in a given directory. For this fact the 
         Returns a list of files from a start point, recursively using find.
         '''
 
-        def command(self, name):
+        def command(self, path):
             # Find files in the given location
-            return 'find {0} -type f'.format(name)
+            return 'find {0} -type f'.format(path)
 
         def process(self, output):
             return output  # return the list of lines (files) as-is
@@ -62,7 +69,7 @@ This fact could then be used like so:
 
 .. code:: python
 
-    list_of_files = host.fact.find_files('/some/path')
+    list_of_files = host.get_fact(FindFiles, path='/somewhere')
 
 
 Example: getting any output from a command
@@ -89,4 +96,4 @@ This fact could then be used like so:
 
 .. code:: python
 
-    command_output = host.fact.raw_command_output('execute my command')
+    command_output = host.get_fact(RawCommandOutput, command='execute this command')

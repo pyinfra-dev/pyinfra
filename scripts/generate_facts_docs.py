@@ -10,7 +10,6 @@ from six.moves import range
 
 from pyinfra import facts
 from pyinfra.api.facts import FactBase, ShortFactBase
-from pyinfra.api.util import underscore
 
 
 def _title_line(char, string):
@@ -47,7 +46,7 @@ def build_facts():
 
         for fact, cls in fact_classes:
             # FactClass -> fact_accessor on host object
-            name = underscore(fact)
+            name = fact
             args_string_and_brackets = ''
 
             # Does this fact take args?
@@ -70,9 +69,9 @@ def build_facts():
                 )) if arg_defaults else {}
 
                 if len(argspec.args):
-                    args_string_and_brackets = '({0})'.format(', '.join(
+                    args_string_and_brackets = ', {0}'.format(', '.join(
                         (
-                            '{0}={1}'.format(arg, defaults[arg])
+                            '{0}={1}'.format(arg, defaults.get(arg))
                             if arg in defaults
                             else arg
                         )
@@ -91,7 +90,7 @@ def build_facts():
             lines.append('''
 .. code:: python
 
-    host.fact.{1}{2}
+    host.get_fact({1}{2})
 
 '''.strip().format(module_name, name, args_string_and_brackets))
 
