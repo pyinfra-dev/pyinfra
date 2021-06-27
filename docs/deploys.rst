@@ -205,14 +205,15 @@ Adding data to inventories was :ref:`described above <data-ref-label>` - you can
 Facts
 *****
 
-Facts allow you to use information about the target host to change the operations you use. A good example is switching between `apt` & `yum` depending on the Linux distribution. Like data, facts are accessed using ``host.fact``:
+Facts allow you to use information about the target host to change the operations you use. A good example is switching between `apt` & `yum` depending on the Linux distribution. Facts are imported from ``pyinfra.facts.*`` modules:
 
 .. code:: python
 
     from pyinfra import host
+    from pyinfra.facts.server import LinuxName
     from pyinfra.operations import yum
 
-    if host.fact.linux_name == 'CentOS':
+    if host.get_fact(LinuxName) == 'CentOS':
         yum.packages(
             name='Install nano via yum',
             packages=['nano'],

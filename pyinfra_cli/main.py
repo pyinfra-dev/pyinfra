@@ -210,8 +210,8 @@ def cli(*args, **kwargs):
 
     \b
     # Run one or more facts on the inventory
-    pyinfra INVENTORY fact linux_distribution [users]...
-    pyinfra INVENTORY all-facts
+    pyinfra INVENTORY fact server.LinuxName [server.Users]...
+    pyinfra INVENTORY fact files.File path=/path/to/file...
     '''
 
     try:

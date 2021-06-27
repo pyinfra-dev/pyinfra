@@ -28,8 +28,8 @@ pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
 pyinfra INVENTORY exec -- echo "hello world"
 
 # Run one or more facts on the inventory
-pyinfra INVENTORY fact linux_distribution [users]...
-pyinfra INVENTORY all-facts
+pyinfra INVENTORY fact server.LinuxName [server.Users]...
+pyinfra INVENTORY fact files.File path=/path/to/file...
 
 # Debug (print) inventory hosts, groups and data
 pyinfra INVENTORY debug-inventory
