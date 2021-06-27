@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - next
+      - current
       - 1.x
       - 0.x
 
