@@ -2,8 +2,8 @@
     "args": ["somefile.txt.j2"],
     "files": ["somefile.txt.j2"],
     "facts": {
-        "file": {
-            "_tempfile_": null
+        "files.File": {
+            "path=_tempfile_": null
         }
     },
     "commands": [

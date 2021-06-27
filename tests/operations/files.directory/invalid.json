@@ -6,8 +6,8 @@
         "group": "otheruser"
     },
     "facts": {
-        "directory": {
-            "testdir": false
+        "files.Directory": {
+            "path=testdir": false
         }
     },
     "exception": {

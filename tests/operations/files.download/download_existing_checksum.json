@@ -7,20 +7,20 @@
         "md5sum": "md5-sum"
     },
     "facts": {
-        "file": {
-            "/home/myfile": {}
+        "files.File": {
+            "path=/home/myfile": {}
         },
-        "sha1_file": {
-            "/home/myfile": "not-a-match"
+        "files.Sha1File": {
+            "path=/home/myfile": "not-a-match"
         },
-        "sha256_file": {
-            "/home/myfile": "not-a-match"
+        "files.Sha256File": {
+            "path=/home/myfile": "not-a-match"
         },
-        "md5_file": {
-            "/home/myfile": "not-a-match"
+        "files.Md5File": {
+            "path=/home/myfile": "not-a-match"
         },
-        "which": {
-            "curl": "yes"
+        "server.Which": {
+            "command=curl": "yes"
         }
     },
     "commands": [

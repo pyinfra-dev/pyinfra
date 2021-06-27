@@ -6,8 +6,8 @@
         "group": "otheruser"
     },
     "facts": {
-        "directory": {
-            "test dir": {
+        "files.Directory": {
+            "path=test dir": {
                 "mode": 0,
                 "user": "testuser",
                 "group": "testgroup"

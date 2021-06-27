@@ -4,11 +4,11 @@
         "present": false
     },
     "facts": {
-        "file": {
-            "/some/virtualenv/bin/activate": true
+        "files.File": {
+            "path=/some/virtualenv/bin/activate": true
         },
-        "directory": {
-            "/some/virtualenv": true
+        "files.Directory": {
+            "path=/some/virtualenv": true
         }
     },
     "commands": [

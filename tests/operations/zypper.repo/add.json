@@ -6,11 +6,11 @@
         "gpgkey": "test"
     },
     "facts": {
-        "file": {
-            "/etc/zypp/repos.d/somerepo.repo": {}
+        "files.File": {
+            "path=/etc/zypp/repos.d/somerepo.repo": {}
         },
-        "directory": {
-            "/etc/zypp/repos.d": true
+        "files.Directory": {
+            "path=/etc/zypp/repos.d": true
         }
     },
     "commands": [[

@@ -5,8 +5,8 @@
         "assume_present": true
     },
     "facts": {
-        "file": {
-            "testfile": null
+        "files.File": {
+            "path=testfile": null
         }
     },
     "commands": [

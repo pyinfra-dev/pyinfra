@@ -5,10 +5,8 @@
         "flags": "abc"
     },
     "facts": {
-        "find_in_file": {
-            "somefile": {
-                "^.*match_line.*$": null
-            }
+        "files.FindInFile": {
+            "path=somefile, pattern=^.*match_line.*$": null
         }
     },
     "commands": [

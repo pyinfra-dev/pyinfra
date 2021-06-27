@@ -3,8 +3,8 @@
         "path": "/some/virtualenv"
     },
     "facts": {
-        "file": {
-            "/some/virtualenv/bin/activate": true
+        "files.File": {
+            "path=/some/virtualenv/bin/activate": true
         }
     },
     "commands": [],

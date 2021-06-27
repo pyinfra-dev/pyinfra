@@ -4,8 +4,8 @@
         "present": false
     },
     "facts": {
-        "file": {
-            "testfile": {
+        "files.File": {
+            "path=testfile": {
                 "mode": 0,
                 "user": "testuser",
                 "group": "testgroup"

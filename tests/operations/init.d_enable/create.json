@@ -2,27 +2,27 @@
     "require_platform": ["Darwin", "Linux"],
     "args": ["nginx"],
     "facts": {
-        "link": {
-            "/etc/rc2.d/S20nginx": null,
-            "/etc/rc3.d/S20nginx": null,
-            "/etc/rc4.d/S20nginx": null,
-            "/etc/rc5.d/S20nginx": null,
-            "/etc/rc0.d/K80nginx": null,
-            "/etc/rc1.d/K80nginx": {
+        "files.Link": {
+            "path=/etc/rc2.d/S20nginx": null,
+            "path=/etc/rc3.d/S20nginx": null,
+            "path=/etc/rc4.d/S20nginx": null,
+            "path=/etc/rc5.d/S20nginx": null,
+            "path=/etc/rc0.d/K80nginx": null,
+            "path=/etc/rc1.d/K80nginx": {
                 "link_target": "/etc/init.d/nginx"
             },
-            "/etc/rc6.d/K80nginx": {
+            "path=/etc/rc6.d/K80nginx": {
                 "link_target": "../init.d/nginx"
             }
         },
-        "directory": {
-            "/etc/rc0.d": true,
-            "/etc/rc1.d": true,
-            "/etc/rc2.d": true,
-            "/etc/rc3.d": true,
-            "/etc/rc4.d": true,
-            "/etc/rc5.d": true,
-            "/etc/rc6.d": true
+        "files.Directory": {
+            "path=/etc/rc0.d": true,
+            "path=/etc/rc1.d": true,
+            "path=/etc/rc2.d": true,
+            "path=/etc/rc3.d": true,
+            "path=/etc/rc4.d": true,
+            "path=/etc/rc5.d": true,
+            "path=/etc/rc6.d": true
         }
     },
     "commands": [

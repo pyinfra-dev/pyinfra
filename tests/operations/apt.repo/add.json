@@ -2,10 +2,8 @@
     "args": ["deb http://archive.canonical.com/ubuntu hardy partner"],
     "facts": {
         "apt_sources": [],
-        "find_in_file": {
-            "/etc/apt/sources.list": {
-                "^.*deb http://archive.canonical.com/ubuntu hardy partner.*$": []
-            }
+        "files.FindInFile": {
+            "path=/etc/apt/sources.list, pattern=^.*deb http://archive.canonical.com/ubuntu hardy partner.*$": []
         }
     },
     "commands": [

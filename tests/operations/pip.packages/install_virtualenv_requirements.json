@@ -4,8 +4,8 @@
         "virtualenv": "testdir"
     },
     "facts": {
-        "file": {
-            "testdir/bin/activate": true
+        "files.File": {
+            "path=testdir/bin/activate": true
         }
     },
     "commands": [

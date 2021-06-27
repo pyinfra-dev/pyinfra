@@ -4,8 +4,8 @@
         "present": false
     },
     "facts": {
-        "file": {
-            "/etc/zypp/repos.d/somerepo.repo": {
+        "files.File": {
+            "path=/etc/zypp/repos.d/somerepo.repo": {
                 "mode": 0
             }
         }

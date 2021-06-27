@@ -19,12 +19,12 @@
                 ]
             }
         },
-        "directory": {
-            "/home/someuser": {
+        "files.Directory": {
+            "path=/home/someuser": {
                 "user": "someuser",
                 "group": "someuser"
             },
-            "/home/someotheruser": {
+            "path=/home/someotheruser": {
                 "user": "someuser",
                 "group": "someuser"
             }

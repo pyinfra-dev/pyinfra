@@ -6,8 +6,8 @@
         "group": "testgroup"
     },
     "facts": {
-        "link": {
-            "testlink": false
+        "files.Link": {
+            "path=testlink": false
         }
     },
     "exception": {

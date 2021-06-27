@@ -5,10 +5,8 @@
         "interpolate_variables": true
     },
     "facts": {
-        "find_in_file": {
-            "filename": {
-                "match": ["matching line"]
-            }
+        "files.FindInFile": {
+            "path=filename, pattern=match": ["matching line"]
         }
     },
     "commands": [

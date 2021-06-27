@@ -4,8 +4,8 @@
         "present": "True"
     },
     "facts": {
-        "directory": {
-            "/home/mybarerepo.git": {}
+        "files.Directory": {
+            "path=/home/mybarerepo.git": {}
         }
     },
     "commands": [

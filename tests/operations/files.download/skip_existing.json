@@ -4,8 +4,8 @@
         "dest": "/home/myfile"
     },
     "facts": {
-        "file": {
-            "/home/myfile": {}
+        "files.File": {
+            "path=/home/myfile": {}
         }
     },
     "commands": [],

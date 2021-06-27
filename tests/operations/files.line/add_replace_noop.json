@@ -5,11 +5,9 @@
         "flags": "abc"
     },
     "facts": {
-        "find_in_file": {
-            "somefile": {
-                "^.*match_line.*$": [],
-                "^.*replace_line.*$": ["replace_line"]
-            }
+        "files.FindInFile": {
+            "path=somefile, pattern=^.*match_line.*$": [],
+            "path=somefile, pattern=^.*replace_line.*$": ["replace_line"]
         }
     },
     "commands": [],

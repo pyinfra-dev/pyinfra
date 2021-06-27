@@ -6,8 +6,8 @@
         "group": "testgroup"
     },
     "facts": {
-        "link": {
-            "/etc/rc.d/nginx": {
+        "files.Link": {
+            "path=/etc/rc.d/nginx": {
                 "link_target": "../init.d/nginx",
                 "user": "testuser",
                 "group": "testgroup"

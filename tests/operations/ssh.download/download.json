@@ -5,18 +5,16 @@
         "ssh_keyscan": true
     },
     "facts": {
-        "directory": {
-            "~/.ssh": {
+        "files.Directory": {
+            "path=~/.ssh": {
                 "mode": 700
             }
         },
-        "file": {
-            "local_filename": null
+        "files.File": {
+            "path=local_filename": null
         },
-        "find_in_file": {
-            "~/.ssh/known_hosts": {
-                "remote-host.net": [true]
-            }
+        "files.FindInFile": {
+            "path=~/.ssh/known_hosts, pattern=remote-host.net": [true]
         }
     },
     "commands": [

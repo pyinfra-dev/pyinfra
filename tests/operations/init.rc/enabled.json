@@ -7,11 +7,9 @@
         "bsdinit.RcdStatus": {
             "nginx": true
         },
-        "find_in_file": {
-            "/etc/rc.conf.local": {
-                "^nginx_enable=.*$": [],
-                "^.*nginx_enable=\"YES\".*$": []
-            }
+        "files.FindInFile": {
+            "path=/etc/rc.conf.local, pattern=^nginx_enable=.*$": [],
+            "path=/etc/rc.conf.local, pattern=^.*nginx_enable=\"YES\".*$": []
         }
     },
     "commands": [

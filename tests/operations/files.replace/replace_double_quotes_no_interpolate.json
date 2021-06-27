@@ -4,10 +4,8 @@
         "interpolate_variables": false
     },
     "facts": {
-        "find_in_file": {
-            "filename": {
-                "\"single quote match\"": ["\"single quote match\" rest of line"]
-            }
+        "files.FindInFile": {
+            "path=filename, pattern=\"single quote match\"": ["\"single quote match\" rest of line"]
         }
     },
     "commands": [

@@ -2,11 +2,11 @@
     "require_platform": ["Darwin", "Linux"],
     "args": ["/i-do-not-exist", "/home/somedir"],
     "facts": {
-        "directory": {
-            "/home/somedir": null
+        "files.Directory": {
+            "path=/home/somedir": null
         },
-        "find_files": {
-            "/home/somedir": null
+        "files.FindFiles": {
+            "path=/home/somedir": null
         }
     },
     "exception": {

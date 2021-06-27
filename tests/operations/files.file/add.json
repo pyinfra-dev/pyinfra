@@ -6,8 +6,8 @@
         "mode": "777"
     },
     "facts": {
-        "file": {
-            "testfile": null
+        "files.File": {
+            "path=testfile": null
         }
     },
     "commands": [

@@ -4,8 +4,8 @@
         "touch": true
     },
     "facts": {
-        "file": {
-            "testfile": {
+        "files.File": {
+            "path=testfile": {
                 "mode": 600
             }
         }

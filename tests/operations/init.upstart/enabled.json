@@ -7,8 +7,8 @@
         "upstart.UpstartStatus": {
             "redis-server": true
         },
-        "file": {
-            "/etc/init/redis-server.override": {
+        "files.File": {
+            "path=/etc/init/redis-server.override": {
                 "mode": 1
             }
         }

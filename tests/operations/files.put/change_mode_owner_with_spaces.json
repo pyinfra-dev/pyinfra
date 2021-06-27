@@ -7,18 +7,18 @@
     },
     "files": ["some file.txt"],
     "facts": {
-        "file": {
-            "/home/some file.txt": {
+        "files.File": {
+            "path=/home/some file.txt": {
                 "mode": 500,
                 "user": "testuser",
                 "group": "testgroup"
             }
         },
-        "directory": {
-            "/home": true
+        "files.Directory": {
+            "path=/home": true
         },
-        "sha1_file": {
-            "/home/some file.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
+        "files.Sha1File": {
+            "path=/home/some file.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
         }
     },
     "commands": [
