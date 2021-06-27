@@ -1,0 +1,8 @@
+{
+    "arg": "my () file && special_chars.txt",
+    "command": "test -e 'my () file && special_chars.txt' && ( sha1sum 'my () file && special_chars.txt' 2> /dev/null || shasum 'my () file && special_chars.txt' 2> /dev/null || sha1 'my () file && special_chars.txt' ) || true",
+    "output": [
+        "85746ef87ddabd9fdf4836c5835e34a030d2a141 my () file && special_chars.txt"
+    ],
+    "fact": "85746ef87ddabd9fdf4836c5835e34a030d2a141"
+}

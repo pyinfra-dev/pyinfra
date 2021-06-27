@@ -1,5 +1,7 @@
 import shlex
 
+from string import Formatter
+
 from six.moves import shlex_quote
 
 from .operation_kwargs import get_executor_kwarg_keys
@@ -7,27 +9,33 @@ from .operation_kwargs import get_executor_kwarg_keys
 
 def make_formatted_string_command(string, *args, **kwargs):
     '''
-    Helper function that takes a shell command or script as a string, splits
-    it, applies formatting to each bit - quoting any formatted values - before
-    returning them as a `StringCommand` object.
+    Helper function that takes a shell command or script as a string, splits it
+    using ``shlex.split`` and then formats each bit, returning a ``StringCommand``
+    instance with each bit.
 
     Useful to enable string formatted commands/scripts, for example:
 
     .. code:: python
 
-            curl_command = make_formatted_string_command('curl -sSLf {0} -o {1}', src, dest)
+        curl_command = make_formatted_string_command(
+            'curl -sSLf {0} -o {1}',
+            QuoteString(src),
+            QuoteString(dest),
+        )
     '''
 
-    formatted_bits = []
+    formatter = Formatter()
+    string_bits = []
 
     for bit in shlex.split(string):
-        formatted = bit.format(*args, **kwargs)
-        if bit.startswith('{') and bit.endswith('}'):
-            formatted_bits.append(QuoteString(formatted))
-        else:
-            formatted_bits.append(formatted)
+        for item in formatter.parse(bit):
+            if item[0]:
+                string_bits.append(item[0])
+            if item[1]:
+                value, _ = formatter.get_field(item[1], args, kwargs)
+                string_bits.append(value)
 
-    return StringCommand(*formatted_bits)
+    return StringCommand(*string_bits)
 
 
 class MaskString(str):
@@ -37,6 +45,9 @@ class MaskString(str):
 class QuoteString(object):
     def __init__(self, obj):
         self.object = obj
+
+    def __repr__(self):
+        return 'QuoteString({0})'.format(self.object)
 
 
 class PyinfraCommand(object):

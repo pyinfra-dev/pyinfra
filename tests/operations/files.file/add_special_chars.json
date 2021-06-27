@@ -1,0 +1,21 @@
+{
+    "args": ["test () $-+__file/A-cZ*#*%*#__nonsense.tar.gz"],
+    "kwargs": {
+        "user": "testuser",
+        "group": "testgroup",
+        "mode": "777"
+    },
+    "facts": {
+        "directory": {
+            "test () $-+__file": {"mode": 777}
+        },
+        "file": {
+            "test () $-+__file/A-cZ*#*%*#__nonsense.tar.gz": null
+        }
+    },
+    "commands": [
+        "touch 'test () $-+__file/A-cZ*#*%*#__nonsense.tar.gz'",
+        "chmod 777 'test () $-+__file/A-cZ*#*%*#__nonsense.tar.gz'",
+        "chown testuser:testgroup 'test () $-+__file/A-cZ*#*%*#__nonsense.tar.gz'"
+    ]
+}

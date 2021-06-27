@@ -3,8 +3,7 @@
     "kwargs": {
         "user": "testuser",
         "group": "testgroup",
-        "mode": "777",
-        "touch": true
+        "mode": "777"
     },
     "facts": {
         "file": {
@@ -15,6 +14,5 @@
         "touch testfile",
         "chmod 777 testfile",
         "chown testuser:testgroup testfile"
-    ],
-    "idempotent": false
+    ]
 }

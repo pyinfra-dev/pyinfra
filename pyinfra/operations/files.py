@@ -118,9 +118,15 @@ def download(
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
-        curl_command = make_formatted_string_command('curl -sSLf {0} -o {1}', src, dest)
+        curl_command = make_formatted_string_command(
+            'curl -sSLf {0} -o {1}',
+            QuoteString(src),
+            QuoteString(dest),
+        )
         wget_command = make_formatted_string_command(
-            'wget -q {0} -O {1} || (rm -f {1}; exit 1)', src, dest,
+            'wget -q {0} -O {1} || ( rm -f {1} ; exit 1 )',
+            QuoteString(src),
+            QuoteString(dest),
         )
 
         if host.fact.which('curl'):
@@ -128,7 +134,7 @@ def download(
         elif host.fact.which('wget'):
             yield wget_command
         else:
-            yield '({0}) || ({1})'.format(curl_command, wget_command)
+            yield '( {0} ) || ( {1} )'.format(curl_command, wget_command)
 
         if user or group:
             yield chown(dest, user, group)
@@ -138,21 +144,21 @@ def download(
 
         if sha1sum:
             yield make_formatted_string_command((
-                '((sha1sum {0} 2> /dev/null || shasum {0} || sha1 {0}) | grep {1}) '
-                '|| (echo {2} && exit 1)'
-            ), dest, sha1sum, 'SHA1 did not match!')
+                '(( sha1sum {0} 2> /dev/null || shasum {0} || sha1 {0} ) | grep {1} ) '
+                '|| ( echo {2} && exit 1 )'
+            ), QuoteString(dest), sha1sum, QuoteString('SHA1 did not match!'))
 
         if sha256sum:
             yield make_formatted_string_command((
-                '((sha256sum {0} 2> /dev/null || shasum -a 256 {0} || sha256 {0}) | grep {1}) '
-                '|| (echo {2} && exit 1)'
-            ), dest, sha256sum, 'SHA256 did not match!')
+                '(( sha256sum {0} 2> /dev/null || shasum -a 256 {0} || sha256 {0} ) | grep {1}) '
+                '|| ( echo {2} && exit 1 )'
+            ), QuoteString(dest), sha256sum, QuoteString('SHA256 did not match!'))
 
         if md5sum:
             yield make_formatted_string_command((
-                '((md5sum {0} 2> /dev/null || md5 {0}) | grep {1}) '
-                '|| (echo {2} && exit 1)'
-            ), dest, md5sum, 'MD5 did not match!')
+                '(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1}) '
+                '|| ( echo {2} && exit 1 )'
+            ), QuoteString(dest), md5sum, QuoteString('MD5 did not match!'))
 
     else:
         host.noop('file {0} has already been downloaded'.format(dest))
@@ -259,14 +265,16 @@ def line(
         replace = ''
 
     # Save commands for re-use in dynamic script when file not present at fact stage
-    echo_command_formatter = 'echo "{0}" >> {1}' if interpolate_variables else "echo '{0}' >> {1}"
     echo_command = make_formatted_string_command(
-        echo_command_formatter, line, path,
+        'echo {0} >> {1}',
+        '"{0}"'.format(line) if interpolate_variables else QuoteString(line),
+        QuoteString(path),
     )
 
     if backup:
+        backup_filename = '{0}.{1}'.format(path, get_timestamp())
         echo_command = StringCommand(make_formatted_string_command(
-            'cp {0} {0}.{1} && ', path, get_timestamp(),
+            'cp {0} {1} && ', QuoteString(path), QuoteString(backup_filename),
         ), echo_command)
 
     sed_replace_command = sed_replace(
@@ -284,15 +292,15 @@ def line(
             yield make_formatted_string_command(
                 '''
                     if [ -f '{target}' ]; then
-                        (grep {match_line} '{target}' && \
+                        ( grep {match_line} '{target}' && \
                         {sed_replace_command}) 2> /dev/null || \
-                        {echo_command};
+                        {echo_command} ;
                     else
-                        {echo_command};
+                        {echo_command} ;
                     fi
                 ''',
-                target=path,
-                match_line=match_line,
+                target=QuoteString(path),
+                match_line=QuoteString(match_line),
                 echo_command=echo_command,
                 sed_replace_command=sed_replace_command,
             )
