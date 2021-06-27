@@ -46,6 +46,9 @@ class QuoteString(object):
     def __init__(self, obj):
         self.object = obj
 
+    def __repr__(self):
+        return 'QuoteString({0})'.format(self.object)
+
 
 class PyinfraCommand(object):
     def __init__(self, *args, **kwargs):
