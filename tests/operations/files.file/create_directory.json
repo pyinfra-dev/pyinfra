@@ -1,7 +1,6 @@
 {
     "args": ["/home/testfile"],
     "kwargs": {
-        "touch": true,
         "create_remote_dir": true
     },
     "facts": {
@@ -15,6 +14,5 @@
     "commands": [
         "mkdir -p /home",
         "touch /home/testfile"
-    ],
-    "idempotent": false
+    ]
 }
