@@ -8,6 +8,7 @@ import re
 
 from pyinfra import logger
 from pyinfra.api import operation, OperationError
+from pyinfra.facts.files import Directory
 
 from . import files, ssh
 from .util.files import chown
@@ -115,7 +116,7 @@ def repo(
 
     # Store git commands for directory prefix
     git_commands = []
-    is_repo = host.fact.directory('/'.join((dest, '.git')))
+    is_repo = host.get_fact(Directory, path='/'.join((dest, '.git')))
 
     # Cloning new repo?
     if not is_repo:

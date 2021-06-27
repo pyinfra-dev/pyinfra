@@ -8,6 +8,7 @@ from six.moves import shlex_quote
 
 from pyinfra import logger
 from pyinfra.api import operation, OperationError
+from pyinfra.facts.files import File, FindInFile
 
 from . import files
 
@@ -37,9 +38,10 @@ def keyscan(hostname, force=False, port=22, state=None, host=None):
         host=host,
     )
 
-    hostname_present = host.fact.find_in_file(
-        '~/.ssh/known_hosts',
-        hostname,
+    hostname_present = host.get_fact(
+        FindInFile,
+        path='~/.ssh/known_hosts',
+        pattern=hostname,
     )
 
     keyscan_command = 'ssh-keyscan -p {0} {1} >> ~/.ssh/known_hosts'.format(
@@ -193,7 +195,7 @@ def download(
     user = _user_or_ssh_user(user, ssh_user)
 
     # Get local file info
-    local_file_info = host.fact.file(local_filename)
+    local_file_info = host.get_fact(File, path=local_filename)
 
     # Local file exists but isn't a file?
     if local_file_info is False:

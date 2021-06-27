@@ -6,6 +6,7 @@ a virtualenv (virtual environment).
 from __future__ import unicode_literals
 
 from pyinfra.api import operation
+from pyinfra.facts.files import File
 
 from . import files
 from .util.packaging import ensure_packages
@@ -41,14 +42,14 @@ def virtualenv(
     activate_script_path = '{0}/bin/activate'.format(path)
 
     if present is False:
-        if host.fact.file(activate_script_path):
+        if host.get_fact(File, path=activate_script_path):
             yield files.directory(path, present=False, state=state, host=host)
-            host.fact._delete('file', args=(activate_script_path,))
+            # host.fact._delete('file', args=(activate_script_path,))
         else:
             host.noop('virtualenv {0} does not exist'.format(path))
 
     if present:
-        if not host.fact.file(activate_script_path):
+        if not host.get_fact(File, path=activate_script_path):
             # Create missing virtualenv
             command = ['virtualenv']
 
@@ -70,9 +71,9 @@ def virtualenv(
 
             yield ' '.join(command)
 
-            host.fact._create(
-                'file',
-                args=(activate_script_path,),
+            host.create_fact(
+                File,
+                kwargs={'path': activate_script_path},
                 data={'user': None, 'group': None},
             )
         else:

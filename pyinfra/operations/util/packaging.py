@@ -6,6 +6,8 @@ from six import StringIO
 from six.moves import shlex_quote
 from six.moves.urllib.parse import urlparse
 
+from pyinfra.facts.files import File
+
 
 def _has_package(package, packages, expand_package_fact=None, match_any=False):
     def in_packages(pkg):
@@ -223,7 +225,7 @@ def ensure_yum_repo(
 
     # If we're a URL, download the repo if it doesn't exist
     if url:
-        if not host.fact.file(filename):
+        if not host.get_fact(File, path=filename):
             yield files.download(url, filename, state=state, host=host)
         return
 

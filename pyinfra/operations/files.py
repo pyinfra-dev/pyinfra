@@ -34,6 +34,17 @@ from pyinfra.api.util import (
     get_template,
     memoize,
 )
+from pyinfra.facts.files import (
+    Directory,
+    File,
+    FindFiles,
+    FindInFile,
+    Link,
+    Md5File,
+    Sha1File,
+    Sha256File,
+)
+from pyinfra.facts.server import Date, Which
 
 from .util.compat import fspath
 from .util.files import (
@@ -80,7 +91,7 @@ def download(
         )
     '''
 
-    info = host.fact.file(dest)
+    info = host.get_fact(File, path=dest)
     # Destination is a directory?
     if info is False:
         raise OperationError(
@@ -99,21 +110,21 @@ def download(
     else:
         if cache_time:
             # Time on files is not tz-aware, and will be the same tz as the server's time,
-            # so we can safely remove the tzinfo from host.fact.date before comparison.
-            cache_time = host.fact.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
+            # so we can safely remove the tzinfo from the Date fact before comparison.
+            cache_time = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
             if info['mtime'] and info['mtime'] > cache_time:
                 download = True
 
         if sha1sum:
-            if sha1sum != host.fact.sha1_file(dest):
+            if sha1sum != host.get_fact(Sha1File, path=dest):
                 download = True
 
         if sha256sum:
-            if sha256sum != host.fact.sha256_file(dest):
+            if sha256sum != host.get_fact(Sha256File, path=dest):
                 download = True
 
         if md5sum:
-            if md5sum != host.fact.md5_file(dest):
+            if md5sum != host.get_fact(Md5File, path=dest):
                 download = True
 
     # If we download, always do user/group/mode as SSH user may be different
@@ -129,9 +140,9 @@ def download(
             QuoteString(dest),
         )
 
-        if host.fact.which('curl'):
+        if host.get_fact(Which, command='curl'):
             yield curl_command
-        elif host.fact.which('wget'):
+        elif host.get_fact(Which, command='wget'):
             yield wget_command
         else:
             yield '( {0} ) || ( {1} )'.format(curl_command, wget_command)
@@ -255,7 +266,7 @@ def line(
     if assume_present:
         present_lines = [line]
     else:
-        present_lines = host.fact.find_in_file(path, match_line)
+        present_lines = host.get_fact(FindInFile, path=path, pattern=match_line)
 
     # If replace present, use that over the matching line
     if replace:
@@ -310,8 +321,10 @@ def line(
             # If we're doing replacement, only append if the *replacement* line
             # does not exist (as we are appending the replacement).
             if replace:
-                present_lines = host.fact.find_in_file(
-                    path, ensure_whole_line_match(replace),
+                present_lines = host.get_fact(
+                    FindInFile,
+                    path=path,
+                    pattern=ensure_whole_line_match(replace),
                 )
 
             if not present_lines:
@@ -371,7 +384,7 @@ def replace(
         )
     '''
 
-    existing_lines = host.fact.find_in_file(path, match)
+    existing_lines = host.get_fact(FindInFile, path=path, pattern=match)
 
     # Only do the replacement if the file does not exist (it may be created earlier)
     # or we have matching lines.
@@ -476,7 +489,7 @@ def sync(
     # Ensure the destination directory - if the destination is a link, ensure
     # the link target is a directory.
     dest_to_ensure = dest
-    dest_link_info = host.fact.link(dest)
+    dest_link_info = host.get_fact(Link, path=dest)
     if dest_link_info:
         dest_to_ensure = dest_link_info['link_target']
 
@@ -508,7 +521,7 @@ def sync(
 
     # Delete any extra files
     if delete:
-        remote_filenames = set(host.fact.find_files(dest) or [])
+        remote_filenames = set(host.get_fact(FindFiles, path=dest) or [])
         wanted_filenames = set([remote_filename for _, remote_filename in put_files])
         files_to_delete = remote_filenames - wanted_filenames
         for filename in files_to_delete:
@@ -606,7 +619,7 @@ def get(
         if not os_path.exists(local_pathname):
             makedirs(local_pathname)
 
-    remote_file = host.fact.file(src)
+    remote_file = host.get_fact(File, path=src)
 
     # No remote file, so assume exists and download it "blind"
     if not remote_file or force:
@@ -619,7 +632,7 @@ def get(
     # Remote file exists - check if it matches our local
     else:
         local_sum = get_file_sha1(dest)
-        remote_sum = host.fact.sha1_file(src)
+        remote_sum = host.get_fact(Sha1File, path=src)
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
@@ -687,7 +700,7 @@ def put(
             raise IOError('No such file: {0}'.format(local_file))
 
     mode = ensure_mode_int(mode)
-    remote_file = host.fact.file(dest)
+    remote_file = host.get_fact(File, path=dest)
 
     if create_remote_dir:
         yield _create_remote_dir(state, host, dest, user, group)
@@ -705,7 +718,7 @@ def put(
     # File exists, check sum and check user/group/mode if supplied
     else:
         local_sum = get_file_sha1(src)
-        remote_sum = host.fact.sha1_file(dest)
+        remote_sum = host.get_fact(Sha1File, path=dest)
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
@@ -934,7 +947,7 @@ def link(
     if present and not target:
         raise OperationError('If present is True target must be provided')
 
-    info = host.fact.link(path)
+    info = host.get_fact(Link, path=path)
 
     # Not a link?
     if info is False:
@@ -957,22 +970,22 @@ def link(
         if user or group:
             yield chown(path, user, group, dereference=False)
 
-        host.fact._create(
-            'link',
-            args=(path,),
+        host.create_fact(
+            Link,
+            kwargs={'path': path},
             data={'link_target': target, 'group': group, 'user': user},
         )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield remove_cmd
-        host.fact._delete('link', args=(path,))
+        host.delete_fact(Link, kwargs={'path': path})
 
     # Exists and want to ensure it's state
     elif (assume_present or info) and present:
         if assume_present and not info:
             info = {'link_target': None, 'group': None, 'user': None}
-            host.fact._create('link', args=(path,), data=info)
+            host.create_fact(Link, kwargs={'path': path}, data=info)
 
         # If we have an absolute path - prepend to any non-absolute values from the fact
         # and/or the source.
@@ -1059,7 +1072,7 @@ def file(
     _validate_path(path)
 
     mode = ensure_mode_int(mode)
-    info = host.fact.file(path)
+    info = host.get_fact(File, path=path)
 
     # Not a file?!
     if info is False:
@@ -1077,22 +1090,22 @@ def file(
         if user or group:
             yield chown(path, user, group)
 
-        host.fact._create(
-            'file',
-            args=(path,),
+        host.create_fact(
+            File,
+            kwargs={'path': path},
             data={'mode': mode, 'group': group, 'user': user},
         )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield StringCommand('rm', '-f', QuoteString(path))
-        host.fact._delete('file', args=(path,))
+        host.delete_fact(File, kwargs={'path': path})
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
         if assume_present and not info:
             info = {'mode': None, 'group': None, 'user': None}
-            host.fact._create('file', args=(path,), data=info)
+            host.create_fact(File, kwargs={'path': path}, data=info)
 
         changed = False
 
@@ -1174,11 +1187,11 @@ def directory(
     _validate_path(path)
 
     mode = ensure_mode_int(mode)
-    info = host.fact.directory(path)
+    info = host.get_fact(Directory, path=path)
 
     # Not a directory?!
     if info is False:
-        if _no_fail_on_link and host.fact.link(path):
+        if _no_fail_on_link and host.get_fact(Link, path=path):
             host.noop('directory {0} already exists (as a link)'.format(path))
             return
         raise OperationError('{0} exists and is not a directory'.format(path))
@@ -1191,22 +1204,22 @@ def directory(
         if user or group:
             yield chown(path, user, group, recursive=recursive)
 
-        host.fact._create(
-            'directory',
-            args=(path,),
+        host.create_fact(
+            Directory,
+            kwargs={'path': path},
             data={'mode': mode, 'group': group, 'user': user},
         )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield StringCommand('rm', '-rf', QuoteString(path))
-        host.fact._delete('directory', args=(path,))
+        host.delete_fact(Directory, kwargs={'path': path})
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
         if assume_present and not info:
             info = {'mode': None, 'group': None, 'user': None}
-            host.fact._create('directory', args=(path,), data=info)
+            host.create_fact(Directory, kwargs={'path': path}, data=info)
 
         if _no_check_owner_mode:
             return
