@@ -4,8 +4,8 @@
         "python": "python3"
     },
     "facts": {
-        "file": {
-            "/some/virtualenv/bin/activate": null
+        "files.File": {
+            "path=/some/virtualenv/bin/activate": null
         }
     },
     "commands": [

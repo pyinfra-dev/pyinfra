@@ -10,17 +10,17 @@
         }
     },
     "facts": {
-        "file": {
-            "/home/somedir/yet () another {} file $$ __.txt": null
+        "files.File": {
+            "path=/home/somedir/yet () another {} file $$ __.txt": null
         },
-        "directory": {
-            "/home/somedir": null
+        "files.Directory": {
+            "path=/home/somedir": null
         },
-        "find_files": {
-            "/home/somedir": []
+        "files.FindFiles": {
+            "path=/home/somedir": []
         },
-        "link": {
-            "/home/somedir": false
+        "files.Link": {
+            "path=/home/somedir": false
         }
     },
     "commands": [

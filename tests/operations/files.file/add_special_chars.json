@@ -6,11 +6,11 @@
         "mode": "777"
     },
     "facts": {
-        "directory": {
-            "test () $-+__file": {"mode": 777}
+        "files.Directory": {
+            "path=test () $-+__file": {"mode": 777}
         },
-        "file": {
-            "test () $-+__file/A-cZ*#*%*#__nonsense.tar.gz": null
+        "files.File": {
+            "path=test () $-+__file/A-cZ*#*%*#__nonsense.tar.gz": null
         }
     },
     "commands": [

@@ -14,33 +14,33 @@
         "/somedir/underthat": {}
     },
     "facts": {
-        "file": {
-            "/home/somedir/somefile.txt": {
+        "files.File": {
+            "path=/home/somedir/somefile.txt": {
                 "mode": 644
             },
-            "/home/somedir/anotherfile.txt": null,
-            "/home/somedir/deleteme.txt": true,
-            "/home/somedir/underthat/yet-another-file.txt": null
+            "path=/home/somedir/anotherfile.txt": null,
+            "path=/home/somedir/deleteme.txt": true,
+            "path=/home/somedir/underthat/yet-another-file.txt": null
         },
-        "directory": {
-            "/home/somedir": {
+        "files.Directory": {
+            "path=/home/somedir": {
                 "mode": 755
             },
-            "/home/somedir/underthat": {
+            "path=/home/somedir/underthat": {
                 "mode": 777
             }
         },
-        "find_files": {
-            "/home/somedir": [
+        "files.FindFiles": {
+            "path=/home/somedir": [
                 "/home/somedir/somefile.txt"
             ],
-            "/home/somedir/underthat": []
+            "path=/home/somedir/underthat": []
         },
-        "link": {
-            "/home/somedir": false
+        "files.Link": {
+            "path=/home/somedir": false
         },
-        "sha1_file": {
-            "/home/somedir/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
+        "files.Sha1File": {
+            "path=/home/somedir/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
         }
     },
     "commands": [

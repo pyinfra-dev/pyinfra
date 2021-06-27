@@ -7,8 +7,8 @@
         "assume_present": true
     },
     "facts": {
-        "directory": {
-            "testdir": null
+        "files.Directory": {
+            "path=testdir": null
         }
     },
     "commands": [

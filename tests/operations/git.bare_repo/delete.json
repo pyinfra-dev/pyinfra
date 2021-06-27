@@ -4,8 +4,8 @@
         "present": false
     },
     "facts": {
-        "directory": {
-            "/home/mybarerepo.git": {"mode": 0}
+        "files.Directory": {
+            "path=/home/mybarerepo.git": {"mode": 0}
         }
     },
     "commands": [

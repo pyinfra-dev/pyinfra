@@ -4,8 +4,8 @@
         "present": false
     },
     "facts": {
-        "link": {
-            "testlink": {
+        "files.Link": {
+            "path=testlink": {
                 "link_target": "/etc/init.d/not-nginx",
                 "user": "wronguser",
                 "group": "wronggroup"

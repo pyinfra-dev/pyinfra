@@ -4,8 +4,8 @@
         "present": false
     },
     "facts": {
-        "directory": {
-            "testdir": {
+        "files.Directory": {
+            "path=testdir": {
                 "mode": 0,
                 "user": "testuser",
                 "group": "testgroup"

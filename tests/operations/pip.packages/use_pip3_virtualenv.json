@@ -8,8 +8,8 @@
         "pip_packages": {
             "testdir/bin/pip3": {}
         },
-        "file": {
-            "testdir/bin/activate": true
+        "files.File": {
+            "path=testdir/bin/activate": true
         }
     },
     "commands": [

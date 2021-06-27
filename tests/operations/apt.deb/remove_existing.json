@@ -4,8 +4,8 @@
         "present": false
     },
     "facts": {
-        "file": {
-            "_tempfile_": ""
+        "files.File": {
+            "path=_tempfile_": ""
         },
         "deb_package": {
             "_tempfile_": {

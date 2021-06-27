@@ -4,10 +4,10 @@
         "ssh_keyscan": true
     },
     "facts": {
-        "directory": {
-            "/home/myrepo": {},
-            "/home/myrepo/.git": null,
-            "~/.ssh": {
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": null,
+            "path=~/.ssh": {
                 "mode": 700
             }
         }

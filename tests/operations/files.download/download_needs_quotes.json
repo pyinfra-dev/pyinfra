@@ -6,11 +6,11 @@
         "mode": 777
     },
     "facts": {
-        "file": {
-            "/home/my file - with $specialChars": null
+        "files.File": {
+            "path=/home/my file - with $specialChars": null
         },
-        "which": {
-            "curl": "yes"
+        "server.Which": {
+            "command=curl": "yes"
         }
     },
     "commands": [

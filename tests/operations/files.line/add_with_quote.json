@@ -1,10 +1,8 @@
 {
     "args": ["somefile", "match line"],
     "facts": {
-        "find_in_file": {
-            "somefile": {
-                "^.*match line.*$": []
-            }
+        "files.FindInFile": {
+            "path=somefile, pattern=^.*match line.*$": []
         }
     },
     "commands": [

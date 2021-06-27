@@ -2,11 +2,11 @@
     "args": ["somefile.txt", "/home/some\\ file.txt"],
     "files": ["somefile.txt"],
     "facts": {
-        "file": {
-            "/home/some\\ file.txt": null
+        "files.File": {
+            "path=/home/some\\ file.txt": null
         },
-        "directory": {
-            "/home": true
+        "files.Directory": {
+            "path=/home": true
         }
     },
     "commands": [

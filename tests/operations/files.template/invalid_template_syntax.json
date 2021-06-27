@@ -8,11 +8,6 @@
     "files": [
         ["brokenfile.txt.j2", "{% forr something in something %}{% endfor %}"]
     ],
-    "facts": {
-        "file": {
-            "/home/brokenfile.txt.j2": null
-        }
-    },
     "exception": {
         "name": "OperationError",
         "message": "Error in template: /brokenfile.txt.j2 (L1): Encountered unknown tag 'forr'.\n...\n{%\nforr\n..."

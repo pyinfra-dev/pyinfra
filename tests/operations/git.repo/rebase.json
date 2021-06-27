@@ -4,9 +4,9 @@
         "rebase": true
     },
     "facts": {
-        "directory": {
-            "/home/myrepo": {},
-            "/home/myrepo/.git": {
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": {
                 "mode": 0
             }
         },

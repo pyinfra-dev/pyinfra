@@ -11,8 +11,8 @@
     },
     "facts": {
         "users": {},
-        "directory": {
-            "homedir": null
+        "files.Directory": {
+            "path=homedir": null
         },
         "os": "Linux"
     },

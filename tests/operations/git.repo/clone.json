@@ -5,9 +5,9 @@
         "user": "myuser"
     },
     "facts": {
-        "directory": {
-            "/home/myrepo": {},
-            "/home/myrepo/.git": null
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": null
         }
     },
     "commands": [

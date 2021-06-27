@@ -19,31 +19,31 @@
         "/somedir/underthat": {}
     },
     "facts": {
-        "file": {
-            "/home/somedir/somefile.txt": null,
-            "/home/somedir/anotherfile.txt": null,
-            "/home/somedir/deleteme.txt": true,
-            "/home/somedir/nodelete.pyc": {
+        "files.File": {
+            "path=/home/somedir/somefile.txt": null,
+            "path=/home/somedir/anotherfile.txt": null,
+            "path=/home/somedir/deleteme.txt": true,
+            "path=/home/somedir/nodelete.pyc": {
                 "mode": 644
             },
-            "/home/somedir/underthat/yet-another-file.txt": null
+            "path=/home/somedir/underthat/yet-another-file.txt": null
         },
-        "directory": {
-            "/home/somedir": false,
-            "/home/some-actual-dir": {
+        "files.Directory": {
+            "path=/home/somedir": false,
+            "path=/home/some-actual-dir": {
                 "mode": 755
             },
-            "/home/somedir/underthat": null
+            "path=/home/somedir/underthat": null
         },
-        "find_files": {
-            "/home/somedir": [
+        "files.FindFiles": {
+            "path=/home/somedir": [
                 "/home/somedir/deleteme.txt",
                 "/home/somedir/nodelete.pyc"
             ],
-            "/home/somedir/underthat": []
+            "path=/home/somedir/underthat": []
         },
-        "link": {
-            "/home/somedir": {
+        "files.Link": {
+            "path=/home/somedir": {
                 "link_target": "/home/some-actual-dir"
             }
         }
