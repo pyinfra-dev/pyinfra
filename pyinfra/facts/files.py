@@ -139,17 +139,17 @@ class Sha1File(FactBase):
         r'^SHA1\s+\(%s\)\s+=\s+([a-zA-Z0-9]{40})$',
     ]
 
-    def command(self, name):
-        self.name = name
+    def command(self, path):
+        self.path = path
         return make_formatted_string_command((
             'test -e {0} && ( '
             'sha1sum {0} 2> /dev/null || shasum {0} 2> /dev/null || sha1 {0} '
             ') || true'
-        ), QuoteString(name))
+        ), QuoteString(path))
 
     def process(self, output):
         for regex in self._regexes:
-            regex = regex % re.escape(self.name)
+            regex = regex % re.escape(self.path)
             matches = re.match(regex, output[0])
             if matches:
                 return matches.group(1)
@@ -165,19 +165,19 @@ class Sha256File(FactBase):
         r'^SHA256\s+\(%s\)\s+=\s+([a-zA-Z0-9]{64})$',
     ]
 
-    def command(self, name):
-        self.name = name
+    def command(self, path):
+        self.path = path
         return make_formatted_string_command((
             'test -e {0} && ( '
             'sha256sum {0} 2> /dev/null '
             '|| shasum -a 256 {0} 2> /dev/null '
             '|| sha256 {0} '
             ') || true'
-        ), QuoteString(name))
+        ), QuoteString(path))
 
     def process(self, output):
         for regex in self._regexes:
-            regex = regex % re.escape(self.name)
+            regex = regex % re.escape(self.path)
             matches = re.match(regex, output[0])
             if matches:
                 return matches.group(1)
@@ -193,16 +193,16 @@ class Md5File(FactBase):
         r'^SHA256\s+\(%s\)\s+=\s+([a-zA-Z0-9]{32})$',
     ]
 
-    def command(self, name):
-        self.name = name
+    def command(self, path):
+        self.path = path
         return make_formatted_string_command(
             'test -e {0} && ( md5sum {0} 2> /dev/null || md5 {0} ) || true',
-            QuoteString(name),
+            QuoteString(path),
         )
 
     def process(self, output):
         for regex in self._regexes:
-            regex = regex % re.escape(self.name)
+            regex = regex % re.escape(self.path)
             matches = re.match(regex, output[0])
             if matches:
                 return matches.group(1)
@@ -214,21 +214,19 @@ class FindInFile(FactBase):
     lines if the file exists, and ``None`` if the file does not.
     '''
 
-    def command(self, name, pattern):
-        self.exists_name = '__pyinfra_exists_{0}'.format(name)
-
-        # TODO: remove special charts from __pyinfra_exists thing
+    def command(self, path, pattern):
+        self.exists_flag = '__pyinfra_exists_{0}'.format(path)
 
         return make_formatted_string_command((
             'grep -e {0} {1} 2> /dev/null || '
             '( find {1} -type f > /dev/null && echo {2} || true )'
-        ), QuoteString(pattern), QuoteString(name), QuoteString(self.exists_name))
+        ), QuoteString(pattern), QuoteString(path), QuoteString(self.exists_flag))
 
     def process(self, output):
         # If output is the special string: no matches, so return an empty list;
         # this allows us to differentiate between no matches in an existing file
         # or a file not existing.
-        if output and output[0] == self.exists_name:
+        if output and output[0] == self.exists_flag:
             return []
 
         return output
@@ -240,10 +238,10 @@ class FindFiles(FactBase):
     '''
 
     @staticmethod
-    def command(name):
+    def command(path):
         return make_formatted_string_command(
             'find {0} -type f || true',
-            QuoteString(name),
+            QuoteString(path),
         )
 
     @staticmethod
@@ -257,10 +255,10 @@ class FindLinks(FindFiles):
     '''
 
     @staticmethod
-    def command(name):
+    def command(path):
         return make_formatted_string_command(
             'find {0} -type l || true',
-            QuoteString(name),
+            QuoteString(path),
         )
 
 
@@ -270,8 +268,8 @@ class FindDirectories(FindFiles):
     '''
 
     @staticmethod
-    def command(name):
+    def command(path):
         return make_formatted_string_command(
             'find {0} -type d || true',
-            QuoteString(name),
+            QuoteString(path),
         )
