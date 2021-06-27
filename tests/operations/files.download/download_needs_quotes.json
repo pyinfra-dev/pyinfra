@@ -1,0 +1,22 @@
+{
+    "args": ["http://myfile"],
+    "kwargs": {
+        "dest": "/home/my file - with $specialChars",
+        "group": "mygroup",
+        "mode": 777
+    },
+    "facts": {
+        "file": {
+            "/home/my file - with $specialChars": null
+        },
+        "which": {
+            "curl": "yes"
+        }
+    },
+    "commands": [
+        "curl -sSLf http://myfile -o '/home/my file - with $specialChars'",
+        "chgrp mygroup '/home/my file - with $specialChars'",
+        "chmod 777 '/home/my file - with $specialChars'"
+    ],
+    "idempotent": false
+}
