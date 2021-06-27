@@ -337,11 +337,11 @@ def get_host_fact(state, host, name, args=None, kwargs=None):
     return fact_data.get(host)
 
 
-def create_host_fact(state, host, name, data, args=None):
-    fact_data = get_facts(state, name, args=args, ensure_hosts=(host,))
+def create_host_fact(state, host, name, data, args=None, kwargs=None):
+    fact_data = get_facts(state, name, args=args, kwargs=kwargs, ensure_hosts=(host,))
     fact_data[host] = data
 
 
-def delete_host_fact(state, host, name, args=None):
-    fact_data = get_facts(state, name, args=args, ensure_hosts=(host,))
+def delete_host_fact(state, host, name, args=None, kwargs=None):
+    fact_data = get_facts(state, name, args=args, kwargs=kwargs, ensure_hosts=(host,))
     fact_data.pop(host, None)

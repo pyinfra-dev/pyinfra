@@ -134,14 +134,14 @@ class Host(object):
     # Host facts
     #
 
-    def get_fact(self, name_or_cls, **kwargs):
-        return get_host_fact(self.state, self, name_or_cls, kwargs=kwargs)
+    def get_fact(self, name_or_cls, *args, **kwargs):
+        return get_host_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
 
-    def create_fact(self, name_or_cls, data=None, args=None):
-        return create_host_fact(self.state, self, name_or_cls, data, args)
+    def create_fact(self, name_or_cls, data=None, kwargs=None):
+        return create_host_fact(self.state, self, name_or_cls, data, kwargs=kwargs)
 
-    def delete_fact(self, name_or_cls, args=None):
-        return delete_host_fact(self.state, self, name_or_cls, args)
+    def delete_fact(self, name_or_cls, kwargs=None):
+        return delete_host_fact(self.state, self, name_or_cls, kwargs=kwargs)
 
     # Connector proxy
     #

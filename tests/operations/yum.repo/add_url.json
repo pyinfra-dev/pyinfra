@@ -1,11 +1,11 @@
 {
     "args": ["http://somesite/somerepo.repo"],
     "facts": {
-        "file": {
-            "/etc/yum.repos.d/somerepo.repo": null
+        "files.File": {
+            "path=/etc/yum.repos.d/somerepo.repo": null
         },
-        "which": {
-            "curl": "yes"
+        "server.Which": {
+            "command=curl": "yes"
         }
     },
     "commands": [

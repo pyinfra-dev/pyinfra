@@ -110,8 +110,8 @@ class Which(FactBase):
     '''
 
     @staticmethod
-    def command(name):
-        return 'which {0} || true'.format(name)
+    def command(command):
+        return 'which {0} || true'.format(command)
 
 
 class Date(FactBase):

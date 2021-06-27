@@ -1,10 +1,8 @@
 {
     "args": ["filename", "match", "replace"],
     "facts": {
-        "find_in_file": {
-            "filename": {
-                "match": []
-            }
+        "files.FindInFile": {
+            "path=filename, pattern=match": []
         }
     },
     "commands": [],

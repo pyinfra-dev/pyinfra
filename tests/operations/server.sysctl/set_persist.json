@@ -5,11 +5,9 @@
     },
     "facts": {
         "sysctl": {},
-        "find_in_file": {
-            "/etc/sysctl.conf": {
-                "^.*kern.max-files[[:space:]]*=[[:space:]]*2000.*$": [],
-                "^.*kern.max-files = 2000.*$": []
-            }
+        "files.FindInFile": {
+            "path=/etc/sysctl.conf, pattern=^.*kern.max-files[[:space:]]*=[[:space:]]*2000.*$": [],
+            "path=/etc/sysctl.conf, pattern=^.*kern.max-files = 2000.*$": []
         }
     },
     "commands": [

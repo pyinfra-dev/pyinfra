@@ -4,8 +4,8 @@
         "create_local_dir": true
     },
     "facts": {
-        "file": {
-            "/home/somefile.txt": null
+        "files.File": {
+            "path=/home/somefile.txt": null
         }
     },
     "directories": {

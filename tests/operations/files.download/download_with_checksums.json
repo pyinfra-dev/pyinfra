@@ -7,11 +7,11 @@
         "md5sum": "md5-sum"
     },
     "facts": {
-        "file": {
-            "/home/myfile": null
+        "files.File": {
+            "path=/home/myfile": null
         },
-        "which": {
-            "curl": "yes"
+        "server.Which": {
+            "command=curl": "yes"
         }
     },
     "commands": [

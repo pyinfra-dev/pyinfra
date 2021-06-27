@@ -6,8 +6,8 @@
         "mode": "+x"
     },
     "facts": {
-        "file": {
-            "testfile": {
+        "files.File": {
+            "path=testfile": {
                 "mode": 600,
                 "user": "wronguser",
                 "group": "wronggroup"

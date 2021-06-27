@@ -6,12 +6,12 @@
         "mode": 777
     },
     "facts": {
-        "file": {
-            "/home/myfile": null
+        "files.File": {
+            "path=/home/myfile": null
         },
-        "which": {
-            "curl": null,
-            "wget": null
+        "server.Which": {
+            "command=curl": null,
+            "command=wget": null
         }
     },
     "commands": [

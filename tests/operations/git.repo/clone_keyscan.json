@@ -5,15 +5,15 @@
         "ssh_keyscan": true
     },
     "facts": {
-        "directory": {
-            "/home/myrepo": {},
-            "/home/myrepo/.git": null,
-            "~/.ssh": {
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": null,
+            "path=~/.ssh": {
                 "mode": 700
             }
         },
-        "find_in_file": {
-            "~/.ssh/known_hosts": {
+        "files.FindInFile": {
+            "path=~/.ssh/known_hosts": {
                 "github.com": []
             }
         }

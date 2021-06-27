@@ -6,8 +6,8 @@
         "mode": 777
     },
     "facts": {
-        "file": {
-            "/home": false
+        "files.File": {
+            "path=/home": false
         }
     },
     "exception": {

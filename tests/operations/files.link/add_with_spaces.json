@@ -6,8 +6,8 @@
         "group": "testgroup"
     },
     "facts": {
-        "link": {
-            "test link": null
+        "files.Link": {
+            "path=test link": null
         }
     },
     "commands": [

@@ -7,11 +7,11 @@
     },
     "files": ["somefile.txt"],
     "facts": {
-        "file": {
-            "/home/somefile.txt": null
+        "files.File": {
+            "path=/home/somefile.txt": null
         },
-        "directory": {
-            "/home": null
+        "files.Directory": {
+            "path=/home": null
         }
     },
     "commands": [

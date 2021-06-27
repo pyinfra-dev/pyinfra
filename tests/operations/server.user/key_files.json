@@ -16,30 +16,28 @@
                 "groups": []
             }
         },
-        "directory": {
-            "homedir": {
+        "files.Directory": {
+            "path=homedir": {
                 "user": "someuser",
                 "group": "someuser"
             },
-            "homedir/.ssh": {
+            "path=homedir/.ssh": {
                 "user": "someuser",
                 "group": "someuser",
                 "mode": 700
             }
         },
-        "file": {
-            "homedir/.ssh/authorized_keys": {
+        "files.File": {
+            "path=homedir/.ssh/authorized_keys": {
                 "user": "someuser",
                 "group": "someuser",
                 "mode": 601
             }
         },
-        "find_in_file": {
-            "homedir/.ssh/authorized_keys": {
-                "^.*abc.*$": [],
-                "^.*somekeydata.*$": ["somekeydata"],
-                "^.*someotherkeydata.*$": []
-            }
+        "files.FindInFile": {
+            "path=homedir/.ssh/authorized_keys, pattern=^.*abc.*$": [],
+            "path=homedir/.ssh/authorized_keys, pattern=^.*somekeydata.*$": ["somekeydata"],
+            "path=homedir/.ssh/authorized_keys, pattern=^.*someotherkeydata.*$": []
         }
     },
     "commands": [

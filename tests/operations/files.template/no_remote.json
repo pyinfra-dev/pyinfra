@@ -7,11 +7,11 @@
     },
     "files": ["somefile.txt.j2"],
     "facts": {
-        "file": {
-            "/home/somefile.txt.j2": null
+        "files.File": {
+            "path=/home/somefile.txt.j2": null
         },
-        "directory": {
-            "/home": true
+        "files.Directory": {
+            "path=/home": true
         }
     },
     "commands": [

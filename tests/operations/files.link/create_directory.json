@@ -5,11 +5,11 @@
         "create_remote_dir": true
     },
     "facts": {
-        "link": {
-            "/home/testlink": null
+        "files.Link": {
+            "path=/home/testlink": null
         },
-        "directory": {
-            "/home": null
+        "files.Directory": {
+            "path=/home": null
         }
     },
     "commands": [

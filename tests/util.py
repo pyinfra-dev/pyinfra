@@ -166,10 +166,20 @@ class FakeHost(object):
 
     def get_fact(self, fact_cls, **kwargs):
         fact_key = '{0}.{1}'.format(fact_cls.__module__.split('.')[-1], fact_cls.__name__)
-        fact = getattr(self.fact, fact_key)
+        fact = getattr(self.fact, fact_key, None)
+        if fact is None:
+            raise KeyError('Missing test fact data: {0}'.format(fact_key))
         if kwargs:
-            return fact[get_kwargs_str(kwargs)]
+            return fact.get(get_kwargs_str(kwargs))
         return fact
+
+    def create_fact(self, fact_cls, data, kwargs):
+        fact = self.get_fact(fact_cls)
+        fact[get_kwargs_str(kwargs)] = data
+
+    def delete_fact(self, fact_cls, kwargs):
+        fact = self.get_fact(fact_cls)
+        fact.pop(get_kwargs_str(kwargs), None)
 
 
 class FakeFile(object):

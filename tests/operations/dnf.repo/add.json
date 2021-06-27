@@ -7,11 +7,11 @@
         "gpgkey": "test"
     },
     "facts": {
-        "file": {
-            "/etc/yum.repos.d/somerepo.repo": {}
+        "files.File": {
+            "path=/etc/yum.repos.d/somerepo.repo": {}
         },
-        "directory": {
-            "/etc/yum.repos.d": true
+        "files.Directory": {
+            "path=/etc/yum.repos.d": true
         }
     },
     "commands": [[

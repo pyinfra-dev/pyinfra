@@ -3,11 +3,11 @@
     "facts": {
         "os": "OpenBSD",
         "hostname": "nope",
-        "file": {
-            "/etc/myname": {}
+        "files.File": {
+            "path=/etc/myname": {}
         },
-        "directory": {
-            "/etc": true
+        "files.Directory": {
+            "path=/etc": true
         },
         "which": {
             "hostnamectl": null

@@ -5,14 +5,14 @@
         "cache_time": 3600
     },
     "facts": {
-        "date": "datetime:2015-01-01T00:00:00",
-        "file": {
-            "/home/myfile": {
+        "server.Date": "datetime:2015-01-01T00:00:00",
+        "files.File": {
+            "path=/home/myfile": {
                 "mtime": "datetime:2015-01-01T00:00:00"
             }
         },
-        "which": {
-            "curl": "yes"
+        "server.Which": {
+            "command=curl": "yes"
         }
     },
     "commands": [

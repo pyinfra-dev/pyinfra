@@ -4,10 +4,8 @@
         "backup": true
     },
     "facts": {
-        "find_in_file": {
-            "somefile": {
-                "^.*match_line.*$": []
-            }
+        "files.FindInFile": {
+            "path=somefile, pattern=^.*match_line.*$": []
         }
     },
     "commands": [

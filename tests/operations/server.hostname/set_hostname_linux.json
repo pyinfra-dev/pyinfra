@@ -3,11 +3,11 @@
     "facts": {
         "os": "Linux",
         "hostname": "nope",
-        "file": {
-            "/etc/hostname": {}
+        "files.File": {
+            "path=/etc/hostname": {}
         },
-        "directory": {
-            "/etc": true
+        "files.Directory": {
+            "path=/etc": true
         },
         "which": {
             "hostnamectl": null

@@ -8,28 +8,29 @@ Facts can be executed/tested via the command line:
 .. code:: sh
 
     # Example how to get multiple facts from a server myhost.com
-    pyinfra myhost.com fact date another_fact ...
+    pyinfra myhost.com fact server.Date server.Hostname ...
 
-If you want to see all facts:
-
-.. code:: sh
-
-    # Show all of the facts from myhost.com
-    pyinfra myhost.com all-facts
-
-If you want to pass an argument to a fact, use `:` then the argument. For example:
+If you want to pass an argument to a fact, pass it with ``key=value``. For example:
 
 .. code:: sh
 
     # See if the package 'openssh-server' is installed servers myhost.com and myhost2.com
-    pyinfra myhost.com,myhost2.com fact deb_package:openssh-server
+    pyinfra myhost.com,myhost2.com fact deb.DebPackage name=openssh-server
+
+Multiple facts with arguments may be called like so:
+
+.. code:: sh
+
+    pyinfra @local fact files.File path=setup.py files.File path=anotherfile.txt
 
 You can leverage facts as part of :doc:`a deploy <deploys>` like this:
 
 .. code:: py
 
-    # If this is an Ubuntu server
-    if host.fact.linux_name == 'Ubuntu':
+    from pyinfra import host
+    from pyinfra.facts.server import LinuxName
+
+    if host.get_fact(LinuxName) == 'Ubuntu':
         apt.packages(...)
 
 **Want a new fact?** Check out :doc:`the writing facts guide <./api/facts>`.

@@ -4,8 +4,8 @@
         "force": true
     },
     "facts": {
-        "file": {
-            "local_filename": true
+        "files.File": {
+            "path=local_filename": true
         }
     },
     "commands": [
