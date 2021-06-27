@@ -149,7 +149,7 @@ class Sha1File(FactBase):
 
     def process(self, output):
         for regex in self._regexes:
-            regex = regex % self.name
+            regex = regex % re.escape(self.name)
             matches = re.match(regex, output[0])
             if matches:
                 return matches.group(1)
@@ -177,7 +177,7 @@ class Sha256File(FactBase):
 
     def process(self, output):
         for regex in self._regexes:
-            regex = regex % self.name
+            regex = regex % re.escape(self.name)
             matches = re.match(regex, output[0])
             if matches:
                 return matches.group(1)
@@ -202,7 +202,7 @@ class Md5File(FactBase):
 
     def process(self, output):
         for regex in self._regexes:
-            regex = regex % self.name
+            regex = regex % re.escape(self.name)
             matches = re.match(regex, output[0])
             if matches:
                 return matches.group(1)
