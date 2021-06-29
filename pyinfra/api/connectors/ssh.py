@@ -420,8 +420,25 @@ def put_file(
         temp_file = state.get_temp_filename(remote_filename)
         _put_file(host, filename_or_io, temp_file)
 
+        # Make sure our sudo/su user can access the file
+        if su_user:
+            command = StringCommand(f'setfacl -m u:{su_user}:r', temp_file)
+        elif sudo_user:
+            command = StringCommand(f'setfacl -m u:{sudo_user}:r', temp_file)
+        status, _, stderr = run_shell_command(
+            state, host, command,
+            sudo=False,
+            print_output=print_output,
+            print_input=print_input,
+            **command_kwargs
+        )
+
+        if status is False:
+            logger.error('Error on handover to sudo/su user: {0}'.format('\n'.join(stderr)))
+            return False
+
         # Execute run_shell_command w/sudo and/or su_user
-        command = StringCommand('mv', temp_file, QuoteString(remote_filename))
+        command = StringCommand('cp', temp_file, QuoteString(remote_filename))
 
         # Move it to the su_user if present
         if su_user:
