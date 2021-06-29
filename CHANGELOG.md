@@ -1,3 +1,8 @@
+# v1.4.7
+
++ Fix for passing `Path` objects as arguments to `files.*` operations & facts
++ Futher improvements to the updated facts docs
+
 # v1.4.6
 
 + Properly handle shell quoting of filenames in all `files.*` facts
