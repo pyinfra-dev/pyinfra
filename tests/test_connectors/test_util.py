@@ -4,14 +4,7 @@ from __future__ import unicode_literals
 
 from unittest import TestCase
 
-try:
-    from pathlib import PurePosixPath
-    HAS_PATHLIB = True
-except ImportError:
-    HAS_PATHLIB = False
-
 from pyinfra.api.connectors.util import (
-    escape_unix_path,
     make_unix_command,
     split_combined_output,
 )
@@ -31,25 +24,6 @@ class TestConnectorUtil(TestCase):
     def test_split_combined_output_raises(self):
         with self.assertRaises(ValueError):
             split_combined_output(['nope', ''])
-
-
-class TestEscapeUnixPathUtil(TestCase):
-    def test_path(self):
-        escaped_path = escape_unix_path('/path/to/directory with space/ starts')
-        assert escaped_path == '/path/to/directory\\ with\\ space/\\ starts'
-
-    def test_escaped_path(self):
-        escaped_path = '/path/to/directory\\ with\\ space/\\ starts'
-        double_escaped_path = escape_unix_path(escaped_path)
-        assert double_escaped_path == escaped_path
-
-    def test_pathlib_path(self):
-        if not HAS_PATHLIB:
-            return
-
-        path = PurePosixPath('/', 'path', 'to', 'directory with space', ' starts')
-        escaped_path = escape_unix_path(path)
-        assert escaped_path == '/path/to/directory\\ with\\ space/\\ starts'
 
 
 class TestMakeUnixCommandConnectorUtil(TestCase):
