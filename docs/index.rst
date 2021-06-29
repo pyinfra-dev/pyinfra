@@ -38,7 +38,7 @@ Deploy Reference
 
 .. compound::
     :doc:`facts`
-        A list of all facts ``pyinfra`` can gather from hosts, e.g. ``host.fact.os``.
+        A list of all facts ``pyinfra`` can gather from hosts, e.g. ``server.Hostname``.
 
 .. compound::
     :doc:`examples`

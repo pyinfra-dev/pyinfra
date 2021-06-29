@@ -79,7 +79,7 @@ def build_facts():
                         if arg != 'self'
                     ))
 
-            title = ':code:`{0}`'.format(name)
+            title = ':code:`{0}.{1}`'.format(module_name, name)
             lines.append(title)
 
             # Underline name with -'s for title
