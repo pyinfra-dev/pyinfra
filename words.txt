@@ -299,6 +299,7 @@ shlex
 SIGINT
 signum
 simplefilter
+skipif
 socketserver
 somehost
 sshkeys
