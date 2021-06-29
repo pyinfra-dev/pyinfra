@@ -3,7 +3,7 @@ from __future__ import print_function
 from unittest import TestCase
 
 try:
-    from pathlib import Path
+    from pathlib import PosixPath
     HAS_PATHLIB = True
 except ImportError:
     HAS_PATHLIB = False
@@ -76,7 +76,7 @@ class TestStringCommand(TestCase):
         reason='Requires Python 3.4+ (pathlib module)',
     )
     def test_path(self):
-        cmd = StringCommand('hello', 'world', Path('/path/to/somewhere'))
+        cmd = StringCommand('hello', 'world', PosixPath('/path/to/somewhere'))
         assert str(cmd) == 'hello world /path/to/somewhere'
 
 
