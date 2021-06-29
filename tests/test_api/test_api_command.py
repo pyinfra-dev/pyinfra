@@ -2,6 +2,14 @@ from __future__ import print_function
 
 from unittest import TestCase
 
+try:
+    from pathlib import Path
+    HAS_PATHLIB = True
+except ImportError:
+    HAS_PATHLIB = False
+
+import pytest
+
 from pyinfra.api import (
     FileDownloadCommand,
     FileUploadCommand,
@@ -52,8 +60,24 @@ class TestStringCommand(TestCase):
             assert StringCommand('a') == StringCommand('b')
 
     def test_separator(self):
-        cmd = StringCommand('hello world', 'yes', separator='')
+        cmd = StringCommand('hello world', 'yes', _separator='')
         assert str(cmd) == 'hello worldyes'
+
+    def test_int(self):
+        cmd = StringCommand('hello', 'world', 4420)
+        assert str(cmd) == 'hello world 4420'
+
+    def test_list(self):
+        cmd = StringCommand('hello', 'world', ['a', 'b', 'c'])
+        assert str(cmd) == "hello world ['a', 'b', 'c']"
+
+    @pytest.mark.skipif(
+        not HAS_PATHLIB,
+        reason='Requires Python 3.4+ (pathlib module)',
+    )
+    def test_path(self):
+        cmd = StringCommand('hello', 'world', Path('/path/to/somewhere'))
+        assert str(cmd) == 'hello world /path/to/somewhere'
 
 
 class TestFileCommands(TestCase):
