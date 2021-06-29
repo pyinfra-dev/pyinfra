@@ -1,15 +1,8 @@
 from __future__ import unicode_literals
 
-import re
-
 from getpass import getpass
 from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
-
-try:
-    from pathlib import PurePath
-except ImportError:
-    PurePath = None
 
 import click
 import gevent
@@ -22,8 +15,6 @@ from pyinfra import logger
 from pyinfra.api import Config, MaskString, QuoteString, StringCommand
 from pyinfra.api.util import memoize
 
-UNIX_PATH_SPACE_REGEX = re.compile(r'([^\\]) ')
-
 SUDO_ASKPASS_ENV_VAR = 'PYINFRA_SUDO_PASSWORD'
 SUDO_ASKPASS_EXE_FILENAME = 'pyinfra-sudo-askpass'
 
@@ -32,17 +23,6 @@ def get_sudo_askpass_exe():
     return six.StringIO('''#!/bin/sh
 echo ${0}
 '''.format(SUDO_ASKPASS_ENV_VAR))
-
-
-def escape_unix_path(path):
-    '''
-    Escape unescaped spaces in a (unix) path.
-    '''
-
-    if PurePath and isinstance(path, PurePath):
-        path = str(path)
-
-    return UNIX_PATH_SPACE_REGEX.sub(r'\1\\ ', path)
 
 
 def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
