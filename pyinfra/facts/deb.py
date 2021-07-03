@@ -25,7 +25,7 @@ class DebPackages(FactBase):
 
     default = dict
 
-    regex = r'^ii\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
+    regex = r'^[i|h]i\s+([a-zA-Z0-9\+\-\.]+):?[a-zA-Z0-9]*\s+([a-zA-Z0-9:~\.\-\+]+).+$'
 
     def process(self, output):
         return parse_packages(self.regex, output)
