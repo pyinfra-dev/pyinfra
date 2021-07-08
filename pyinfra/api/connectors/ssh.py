@@ -422,7 +422,7 @@ def put_file(
 
         # Make sure our sudo/su user can access the file
         if su_user:
-            command = StringCommand('setfacl -m u:{0}:r'.format(su_user), temp_file)
+            command = StringCommand('setfacl', '-m', 'u:{0}:r'.format(su_user), temp_file)
         elif sudo_user:
             command = StringCommand('setfacl -m u:{0}:r'.format(sudo_user), temp_file)
         if su_user or sudo_user:
