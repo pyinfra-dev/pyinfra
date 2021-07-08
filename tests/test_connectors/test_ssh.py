@@ -507,10 +507,8 @@ class TestSSHConnector(TestCase):
         assert status is True
 
         fake_ssh_client().exec_command.assert_called_with((
-            "sudo -H -n -u ubuntu sh -c 'cp "
-            '/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24 '
-            "\'\"\'\"\'not another file\'\"\'\"\' && chown ubuntu "
-            "\'\"\'\"\'not another file\'\"\'\"\'\'"
+            "sh -c 'rm -f "
+            "/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24'"
         ), get_pty=False)
 
         fake_sftp_client.from_transport().putfo.assert_called_with(
@@ -540,9 +538,9 @@ class TestSSHConnector(TestCase):
         assert status is False
 
         fake_ssh_client().exec_command.assert_called_with((
-            "su centos -c 'sh -c '\"'\"'cp "
-            '/tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487 '
-            "not-another-file && chown centos not-another-file'\"'\"''"
+            "sh -c "
+            "'setfacl -m u:centos:r "
+            "/tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487'"
         ), get_pty=False)
 
         fake_sftp_client.from_transport().putfo.assert_called_with(
