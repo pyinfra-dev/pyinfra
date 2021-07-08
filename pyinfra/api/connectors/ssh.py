@@ -452,6 +452,21 @@ def put_file(
         if status is False:
             logger.error('File upload error: {0}'.format('\n'.join(stderr)))
             return False
+    
+        # Delete the temporary file now that we've successfully copied it
+        command = StringCommand('rm', '-f', temp_file) 
+
+        status, _, stderr = run_shell_command(
+            state, host, command,
+            sudo=False,
+            print_output=print_output,
+            print_input=print_input,
+            **command_kwargs
+        )
+
+        if status is False:
+            logger.error('Unable to remove temporary file: {0}'.format('\n'.join(stderr)))
+            return False
 
     # No sudo and no su_user, so just upload it!
     else:
