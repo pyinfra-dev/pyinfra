@@ -441,14 +441,6 @@ def put_file(
         # Execute run_shell_command w/sudo and/or su_user
         command = StringCommand('cp', temp_file, QuoteString(remote_filename))
 
-        # Move it to the su_user if present
-        if su_user:
-            command = StringCommand(command, '&&', 'chown', su_user, QuoteString(remote_filename))
-
-        # Otherwise any sudo_user
-        elif sudo_user:
-            command = StringCommand(command, '&&', 'chown', sudo_user, QuoteString(remote_filename))
-
         status, _, stderr = run_shell_command(
             state, host, command,
             sudo=sudo, sudo_user=sudo_user, su_user=su_user,
