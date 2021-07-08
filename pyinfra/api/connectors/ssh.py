@@ -424,7 +424,7 @@ def put_file(
         if su_user:
             command = StringCommand('setfacl', '-m', 'u:{0}:r'.format(su_user), temp_file)
         elif sudo_user:
-            command = StringCommand('setfacl -m u:{0}:r'.format(sudo_user), temp_file)
+            command = StringCommand('setfacl', '-m', 'u:{0}:r'.format(sudo_user), temp_file)
         status, _, stderr = run_shell_command(
             state, host, command,
             sudo=False,
