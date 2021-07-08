@@ -422,6 +422,7 @@ class Users(FactBase):
                 ],
                 'uid': user_id,
                 'gid': main_user_group_id,
+                'lastlog': last_login_time,
             },
         }
     '''
@@ -429,7 +430,8 @@ class Users(FactBase):
     command = '''
         for i in `cat /etc/passwd | cut -d: -f1`; do
             ENTRY=`grep ^$i: /etc/passwd`;
-            echo "$ENTRY|`id -gn $i`|`id -Gn $i`";
+            LASTLOG=`lastlog -u $i | grep ^$i` | tr -s ' ';
+            echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG";
         done
     '''.strip()
 
@@ -437,9 +439,10 @@ class Users(FactBase):
 
     def process(self, output):
         users = {}
+        rex = r'[A-Z][a-z]{2} [A-Z][a-z]{2} {1,2}\d+ .+$'
 
         for line in output:
-            entry, group, user_groups = line.split('|')
+            entry, group, user_groups, lastlog = line.split('|')
 
             if entry:
                 # Parse out the comment/home/shell
@@ -452,6 +455,11 @@ class Users(FactBase):
                     if group_name and group_name != group:
                         groups.append(group_name)
 
+                # Parse lastlog info
+                # lastlog output varies, which is why I use regex to match login time
+                login = re.search(rex, lastlog)
+                login_time = login.group() if login else None
+
                 users[entries[0]] = {
                     'home': entries[5] or None,
                     'comment': entries[4] or None,
@@ -460,6 +468,7 @@ class Users(FactBase):
                     'groups': groups,
                     'uid': int(entries[2]),
                     'gid': int(entries[3]),
+                    'lastlog': login_time,
                 }
 
         return users
