@@ -29,7 +29,7 @@ class DebPackages(FactBase):
 
     default = dict
 
-    regex = r'^ii\s+({0}):?[a-zA-Z0-9]*\s+({1}).+$'.format(
+    regex = r'^[i|h]i\s+({0}):?[a-zA-Z0-9]*\s+({1}).+$'.format(
         DEB_PACKAGE_NAME_REGEX,
         DEB_PACKAGE_VERSION_REGEX,
     )

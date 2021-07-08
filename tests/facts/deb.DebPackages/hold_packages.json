@@ -1,0 +1,13 @@
+{
+    "command": "dpkg -l",
+    "output": [
+        "hi  matrix-synapse-py3 1.37.1+bionic1 amd64 Open federated Instant Messaging and VoIP server",
+        "hi  miniflux 2.0.31 amd64 Minimalist Feed Reader",
+        "hi  wireguard 1.0.20200513-1~18.04.2 all fast, modern, secure kernel VPN tunnel (metapackage)"
+    ],
+    "fact": {
+        "matrix-synapse-py3": ["1.37.1+bionic1"],
+        "miniflux": ["2.0.31"],
+        "wireguard": ["1.0.20200513-1~18.04.2"]
+    }
+}
