@@ -425,17 +425,18 @@ def put_file(
             command = StringCommand('setfacl -m u:{0}:r'.format(su_user), temp_file)
         elif sudo_user:
             command = StringCommand('setfacl -m u:{0}:r'.format(sudo_user), temp_file)
-        status, _, stderr = run_shell_command(
-            state, host, command,
-            sudo=False,
-            print_output=print_output,
-            print_input=print_input,
-            **command_kwargs
-        )
+        if su_user or sudo_user:
+            status, _, stderr = run_shell_command(
+                state, host, command,
+                sudo=False,
+                print_output=print_output,
+                print_input=print_input,
+                **command_kwargs
+            )
 
-        if status is False:
-            logger.error('Error on handover to sudo/su user: {0}'.format('\n'.join(stderr)))
-            return False
+            if status is False:
+                logger.error('Error on handover to sudo/su user: {0}'.format('\n'.join(stderr)))
+                return False
 
         # Execute run_shell_command w/sudo and/or su_user
         command = StringCommand('cp', temp_file, QuoteString(remote_filename))
