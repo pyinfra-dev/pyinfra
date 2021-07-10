@@ -276,18 +276,6 @@ class State(object):
 
         self.initialised = True
 
-        # Flag to track added users (via `server.user` operation calls). This is
-        # specifically to address users not existing during fact gathering phase
-        # causing failures with su_user/sudo_user. If we expect to add the user
-        # those facts should not fail but default.
-        self.will_add_users = []
-
-    def will_add_user(self, username):
-        return username in self.will_add_users
-
-    def add_will_add_user(self, username):
-        self.will_add_users.append(username)
-
     def to_dict(self):
         return {
             'op_order': self.get_op_order(),

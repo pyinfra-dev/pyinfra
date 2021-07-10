@@ -871,8 +871,6 @@ def user(
             'group': group,
             'groups': groups,
         }
-        # Flag this username as "to be added" in the state
-        state.add_will_add_user(user)
 
     # User exists and we want them, check home/shell/keys
     else:

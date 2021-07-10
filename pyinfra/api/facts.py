@@ -293,13 +293,11 @@ def get_facts(
                 first_line = stderr[0]
                 if (
                     sudo_user
-                    and state.will_add_user(sudo_user)
                     and re.match(SUDO_REGEX, first_line)
                 ):
                     status = True
                 if (
                     su_user
-                    and state.will_add_user(su_user)
                     and any(re.match(regex, first_line) for regex in SU_REGEXES)
                 ):
                     status = True

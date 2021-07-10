@@ -50,9 +50,6 @@ class FakeState(object):
     def get_temp_filename(*args):
         return '_tempfile_'
 
-    def add_will_add_user(self, username):
-        pass
-
 
 def parse_fact(fact):
     '''
