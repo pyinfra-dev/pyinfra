@@ -93,11 +93,11 @@ class StringCommand(PyinfraCommand):
             if isinstance(bit, StringCommand):
                 bit = bit_accessor(bit)
 
-            if quote:
-                bit = shlex_quote(bit)
-
             if not isinstance(bit, six.string_types):
                 bit = '{0}'.format(bit)
+
+            if quote:
+                bit = shlex_quote(bit)
 
             all_bits.append(bit)
 
