@@ -10,7 +10,7 @@ rpm_regex = r'^(\S+)\ (\S+)$'
 rpm_query_format = '%{NAME} %{VERSION}-%{RELEASE}\\n'
 
 
-class RPMPackages(FactBase):
+class RpmPackages(FactBase):
     '''
     Returns a dict of installed rpm packages:
 
