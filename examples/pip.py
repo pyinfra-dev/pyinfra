@@ -1,9 +1,11 @@
 from pyinfra import host
+from pyinfra.facts.files import File
+from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apk, apt, files, pip, python, yum
 
 SUDO = True
 
-if host.fact.linux_name in ['Alpine']:
+if host.get_fact(LinuxName) in ['Alpine']:
     apk.packages(
         name='Install packages for python virtual environments',
         packages=[
@@ -19,20 +21,20 @@ if host.fact.linux_name in ['Alpine']:
         ],
     )
 
-if host.fact.linux_name in ['CentOS']:
+if host.get_fact(LinuxName) in ['CentOS']:
     yum.packages(
         name='Install pip3 so you can install virtualenv',
         packages=['python3-pip', 'python3-devel', 'gcc-c++', 'make'],
     )
 
-if host.fact.linux_name in ['Ubuntu']:
+if host.get_fact(LinuxName) in ['Ubuntu']:
     apt.packages(
         name='Install pip3 so you can install virtualenv',
         packages='python3-pip',
         update=True,
     )
 
-if not host.fact.file('/usr/bin/pip'):
+if not host.get_fact(File, path='/usr/bin/pip'):
     files.link(
         name='Create link /usr/bin/pip that points to /usr/bin/pip3',
         path='/usr/bin/pip',

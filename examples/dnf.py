@@ -1,4 +1,6 @@
 from pyinfra import host
+from pyinfra.facts.rpm import RpmPackages
+from pyinfra.facts.server import LinuxDistribution, LinuxName
 from pyinfra.operations import dnf
 
 SUDO = True
@@ -7,7 +9,7 @@ SUDO = True
 # For instance, if you run this deploy on an
 # Ubuntu instance (which does not use dnf)
 # the dnf.packages() will simply be skipped
-if host.fact.linux_name in ['CentOS', 'RedHat']:
+if host.get_fact(LinuxName) in ['CentOS', 'RedHat']:
 
     dnf.packages(
         name='Install some packages',
@@ -15,10 +17,9 @@ if host.fact.linux_name in ['CentOS', 'RedHat']:
         update=True,
     )
 
-linux_id = host.fact.linux_distribution['release_meta'].get('ID')
-print(linux_id)
+linux_id = host.get_fact(LinuxDistribution)['release_meta'].get('ID')
 
-if host.fact.linux_name == 'CentOS':
+if host.get_fact(LinuxName) == 'CentOS':
     dnf.key(
         name='Add the Docker CentOS gpg key',
         src='https://download.docker.com/linux/{}/gpg'.format(linux_id),
@@ -30,9 +31,9 @@ dnf.rpm(
     present=False,
 )
 
-if host.fact.linux_name in ['CentOS', 'RedHat']:
+if host.get_fact(LinuxName) in ['CentOS', 'RedHat']:
 
-    packages = host.fact.rpm_packages
+    packages = host.get_fact(RpmPackages)
     epel_installed = False
     for p in packages.keys():
         if p.startswith('epel-release'):

@@ -1,4 +1,6 @@
 from pyinfra import host
+from pyinfra.facts.files import File
+from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apt, files, init, server
 
 SUDO = True
@@ -11,7 +13,7 @@ dhcp_end = '192.168.0.230'
 
 # setup pxe infra
 
-if host.fact.linux_name == 'Ubuntu':
+if host.get_fact(LinuxName) == 'Ubuntu':
 
     apt.packages(
         name='Install packages',
@@ -66,7 +68,7 @@ if host.fact.linux_name == 'Ubuntu':
         commands='exportfs -a',
     )
 
-    if not host.fact.file('/netboot/tftp/pxelinux.0'):
+    if not host.get_fact(File, path='/netboot/tftp/pxelinux.0'):
         server.shell(
             name='Copy pxelinux.0 ',
             commands='cp -v /usr/lib/PXELINUX/pxelinux.0 /netboot/tftp/',
@@ -74,7 +76,7 @@ if host.fact.linux_name == 'Ubuntu':
 
     files_to_create = ['ldlinux.c32', 'libcom32.c32', 'libutil.c32', 'vesamenu.c32']
     for file in files_to_create:
-        if not host.fact.file('/netboot/tftp/{}'.format(file)):
+        if not host.get_fact(File, path='/netboot/tftp/{}'.format(file)):
             server.shell(
                 name='Copy `{}` to /net/tftp directory'.format(file),
                 commands='cp -v /usr/lib/syslinux/modules/bios/{} /netboot/tftp/'.format(file),
@@ -111,7 +113,7 @@ if host.fact.linux_name == 'Ubuntu':
     # copy vmlinuz and initrd files
     init_files = ['vmlinuz', 'initrd']
     for file in init_files:
-        if not host.fact.file('/netboot/tftp/ubuntu1804/{}'.format(file)):
+        if not host.get_fact(File, path='/netboot/tftp/ubuntu1804/{}'.format(file)):
             server.shell(
                 name='Copy `{}` file'.format(file),
                 commands=(

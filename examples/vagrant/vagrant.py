@@ -1,4 +1,5 @@
 from pyinfra import host
+from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apt, files, python, server
 
 SUDO = True
@@ -13,7 +14,7 @@ def verify_vagrant(state, host):
             command, stdout, stderr))
 
 
-if host.fact.linux_name == 'Ubuntu':
+if host.get_fact(LinuxName) == 'Ubuntu':
 
     apt.packages(
         name='Install required packages',

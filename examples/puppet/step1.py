@@ -1,4 +1,6 @@
 from pyinfra import host, inventory
+from pyinfra.facts.hardware import Ipv4Addresses
+from pyinfra.facts.server import LinuxDistribution, LinuxName
 from pyinfra.operations import files, init, server, yum
 
 SUDO = True
@@ -16,11 +18,12 @@ def update_hosts_file(name, ip):
 
 # ensure all hosts are added to each /etc/hosts file
 masters = inventory.get_group('master_servers')
-for item in masters:
-    update_hosts_file('master', item.fact.ipv4_addresses['eth0'])
+for group_host in masters:
+    update_hosts_file('master', group_host.get_fact(Ipv4Addresses)['eth0'])
+
 agents = inventory.get_group('agent_servers')
-for item in agents:
-    update_hosts_file('agent', item.fact.ipv4_addresses['eth0'])
+for group_host in agents:
+    update_hosts_file('agent', group_host.get_fact(Ipv4Addresses)['eth0'])
 
 
 if host in masters:
@@ -35,14 +38,14 @@ if host in agents:
         hostname='agent.example.com',
     )
 
-if host.fact.linux_name in ['CentOS', 'RedHat']:
+if host.get_fact(LinuxName) in ['CentOS', 'RedHat']:
 
     yum.packages(
         name='Install chrony for Network Time Protocol (NTP)',
         packages=['chrony'],
     )
 
-    major = host.fact.linux_distribution['major']
+    major = host.get_fact(LinuxDistribution)['major']
     yum.rpm(
         name='Install Puppet Repo',
         src='https://yum.puppet.com/puppet6-release-el-{}.noarch.rpm'

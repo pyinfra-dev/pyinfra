@@ -1,11 +1,13 @@
 from pyinfra import host
+from pyinfra.facts.files import File
+from pyinfra.facts.server import LinuxName
 from pyinfra.operations import files
 
 # Note: This requires files in the files/ directory.
 
 SUDO = True
 
-if host.fact.linux_name in ['CentOS', 'RedHat']:
+if host.get_fact(LinuxName) in ['CentOS', 'RedHat']:
     files.download(
         name='Download the Docker repo file',
         src='https://download.docker.com/linux/centos/docker-ce.repo',
@@ -51,7 +53,7 @@ files.sync(
     dest='/tmp/tempdir',
 )
 
-if host.fact.file('/etc/os-release'):
+if host.get_fact(File, path='/etc/os-release'):
     files.get(
         name='Download a file from a remote',
         src='/etc/os-release',

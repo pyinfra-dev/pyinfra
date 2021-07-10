@@ -1,4 +1,5 @@
 from pyinfra import host
+from pyinfra.facts.server import LinuxDistribution, LinuxName, OsVersion
 from pyinfra.operations import apt, python, server
 
 SUDO = True
@@ -15,9 +16,8 @@ def verify_virtualbox_version(state, host, version):
             command, stdout, stderr))
 
 
-if host.fact.linux_name == 'Ubuntu':
-    code_name = host.fact.linux_distribution['release_meta'].get('DISTRIB_CODENAME')
-    print(host.fact.linux_name, code_name)
+if host.get_fact(LinuxName) == 'Ubuntu':
+    code_name = host.get_fact(LinuxDistribution)['release_meta'].get('DISTRIB_CODENAME')
 
     apt.packages(
         name='Install packages',
@@ -40,11 +40,11 @@ if host.fact.linux_name == 'Ubuntu':
     apt.packages(
         {
             'Install VirtualBox version {} and '
-            'kernel headers for {}'.format(virtualbox_version, host.fact.os_version),
+            'kernel headers for {}'.format(virtualbox_version, host.get_fact(OsVersion)),
         },
         [
             'virtualbox-{}'.format(virtualbox_version),
-            'linux-headers-{}'.format(host.fact.os_version),
+            'linux-headers-{}'.format(host.get_fact(OsVersion)),
         ],
         update=True,
     )

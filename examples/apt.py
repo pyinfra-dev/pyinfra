@@ -1,12 +1,12 @@
 from pyinfra import host
+from pyinfra.facts.server import LinuxDistribution, LinuxName
 from pyinfra.operations import apt
 
 SUDO = True
 
-code_name = host.fact.linux_distribution['release_meta'].get('CODENAME')
-print(host.fact.linux_name, code_name)
+code_name = host.get_fact(LinuxDistribution)['release_meta'].get('CODENAME')
 
-if host.fact.linux_name in ['Debian', 'Ubuntu']:
+if host.get_fact(LinuxName) in ['Debian', 'Ubuntu']:
 
     apt.packages(
         name='Install some packages',

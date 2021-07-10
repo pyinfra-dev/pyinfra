@@ -1,4 +1,5 @@
 from pyinfra import host
+from pyinfra.facts.server import LinuxDistribution, LinuxName
 from pyinfra.operations import yum
 
 SUDO = True
@@ -7,7 +8,7 @@ SUDO = True
 # For instance, if you run this deploy on an
 # Ubuntu instance (which does not use yum)
 # the yum.packages() will simply be skipped
-if host.fact.linux_name in ['CentOS', 'RedHat']:
+if host.get_fact(LinuxName) in ['CentOS', 'RedHat']:
 
     yum.packages(
         name='Install some packages',
@@ -15,10 +16,9 @@ if host.fact.linux_name in ['CentOS', 'RedHat']:
         update=True,
     )
 
-linux_id = host.fact.linux_distribution['release_meta'].get('ID')
-print(linux_id)
+linux_id = host.get_fact(LinuxDistribution)['release_meta'].get('ID')
 
-if host.fact.linux_name == 'CentOS':
+if host.get_fact(LinuxName) == 'CentOS':
     yum.key(
         name='Add the Docker CentOS gpg key',
         src='https://download.docker.com/linux/{}/gpg'.format(linux_id),
@@ -30,7 +30,7 @@ yum.rpm(
     present=False,
 )
 
-if host.fact.linux_name in ['CentOS', 'RedHat']:
+if host.get_fact(LinuxName) in ['CentOS', 'RedHat']:
     yum.rpm(
         name='Install EPEL rpm to enable EPEL repo',
         src='https://dl.fedoraproject.org/pub/epel/epel-release-latest-'

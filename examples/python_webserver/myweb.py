@@ -1,9 +1,10 @@
 from pyinfra import host
+from pyinfra.facts.server import LinuxName
 from pyinfra.operations import files, init, server
 
 SUDO = True
 
-if host.fact.linux_name in ['Ubuntu']:
+if host.get_fact(LinuxName) in ['Ubuntu']:
 
     server.user(
         name='Ensure myweb user exists',

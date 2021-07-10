@@ -1,22 +1,23 @@
 from pyinfra import host
+from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apk, apt, files, git, yum
 
 SUDO = True
 
-if host.fact.linux_name in ['Alpine']:
+if host.get_fact(LinuxName) in ['Alpine']:
     apk.packages(
         name='Install git',
         packages=['git'],
     )
 
-if host.fact.linux_name in ['CentOS']:
+if host.get_fact(LinuxName) in ['CentOS']:
     yum.packages(
         name='Install git',
         packages=['git'],
         update=True,
     )
 
-if host.fact.linux_name in ['Ubuntu']:
+if host.get_fact(LinuxName) in ['Ubuntu']:
     apt.packages(
         name='Install git',
         packages=['git'],

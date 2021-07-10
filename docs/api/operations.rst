@@ -52,6 +52,7 @@ remote file based on the ``present`` kwargs:
 .. code:: python
 
     from pyinfra.api import operation
+    from pyinfra.facts.files import File
 
     @operation
     def file(name, present=True, state=None, host=None):
@@ -62,7 +63,7 @@ remote file based on the ``present`` kwargs:
         + present: whether the file should exist
         '''
 
-        info = host.fact.file(name)
+        info = host.get_fact(File, path=name)
 
         # Not a file?!
         if info is False:

@@ -1,10 +1,11 @@
 from pyinfra import host, state
+from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apt, files, postgresql, python
 
 SUDO = True
 
 
-if host.fact.linux_name != 'Ubuntu':
+if host.get_fact(LinuxName) != 'Ubuntu':
     # Raises an exception mid-deploy
     python.raise_exception(
         name='Ensure we are Ubuntu',

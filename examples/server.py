@@ -1,16 +1,18 @@
 from pyinfra import host
+from pyinfra.facts.files import File
+from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apt, server, yum
 
 SUDO = True
 
-if host.fact.linux_name in ['CentOS', 'RedHat']:
+if host.get_fact(LinuxName) in ['CentOS', 'RedHat']:
     yum.packages(
         name='Install some packages',
         packages=['cronie'],
         update=True,
     )
 
-if host.fact.linux_name in ['Ubuntu']:
+if host.get_fact(LinuxName) in ['Ubuntu']:
     apt.packages(
         name='Install some packages',
         packages=['cron'],
@@ -33,7 +35,7 @@ server.group(
 )
 
 # if we are not running inside a docker container
-if not host.fact.file('/.dockerenv'):
+if not host.get_fact(File, path='/.dockerenv'):
 
     # Cannot change hostname if running in a docker container
     server.hostname(
@@ -50,7 +52,7 @@ if not host.fact.file('/.dockerenv'):
         persist=True,
     )
 
-    if host.fact.linux_name in ['CentOS', 'RedHat']:
+    if host.get_fact(LinuxName) in ['CentOS', 'RedHat']:
         server.modprobe(
             name='Silly example for modprobe',
             module='floppy',

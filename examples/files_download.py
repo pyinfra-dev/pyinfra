@@ -1,9 +1,10 @@
 from pyinfra import host
+from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apt, files
 
 SUDO = True
 
-if host.fact.linux_name == 'Ubuntu':
+if host.get_fact(LinuxName) == 'Ubuntu':
 
     apt.packages(
         name='Install wget',

@@ -1,4 +1,5 @@
 from pyinfra import host
+from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apt, files, init, server
 
 SUDO = True
@@ -12,7 +13,7 @@ dhcp_end = '192.168.0.230'
 
 # setup pxe infra
 
-if host.fact.linux_name == 'Ubuntu':
+if host.get_fact(LinuxName) == 'Ubuntu':
 
     apt.packages(
         name='Install packages',

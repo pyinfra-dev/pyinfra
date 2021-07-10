@@ -1,4 +1,5 @@
 from pyinfra import host
+from pyinfra.facts.server import LinuxName, LsbRelease
 from pyinfra.operations import apt, init, python
 
 # Standalone example to show how to install Docker CE using
@@ -20,7 +21,7 @@ def check_docker_works(state, host):
         raise Exception('`{}` did not work as expected'.format(command))
 
 
-if host.fact.linux_name == 'Ubuntu':
+if host.get_fact(LinuxName) == 'Ubuntu':
 
     apt.packages(
         name='Ensure old docker packages are not present',
@@ -50,7 +51,7 @@ if host.fact.linux_name == 'Ubuntu':
         src='https://download.docker.com/linux/ubuntu/gpg',
     )
 
-    lsb_info = host.fact.lsb_release
+    lsb_info = host.get_fact(LsbRelease)
     linux_id = lsb_info['id'].lower()
     code_name = lsb_info['codename']
 

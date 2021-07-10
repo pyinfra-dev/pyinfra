@@ -1,7 +1,9 @@
 from pyinfra import host
+from pyinfra.facts.windows import WindowsComputerInfo
 from pyinfra.operations import choco
 
-computer_info = host.fact.windows_computer_info
+
+computer_info = host.get_fact(WindowsComputerInfo)
 if computer_info:
     product_name = computer_info['WindowsProductName']
     if product_name:
