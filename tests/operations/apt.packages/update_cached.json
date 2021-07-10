@@ -4,10 +4,10 @@
         "cache_time": 3600
     },
     "facts": {
-        "deb_packages": {},
-        "date": "datetime:2015-01-01T00:00:00",
-        "file": {
-            "/var/lib/apt/periodic/update-success-stamp": {
+        "deb.DebPackages": {},
+        "server.Date": "datetime:2015-01-01T00:00:00",
+        "files.File": {
+            "path=/var/lib/apt/periodic/update-success-stamp": {
                 "mtime": "datetime:2015-01-01T00:00:00"
             }
         }

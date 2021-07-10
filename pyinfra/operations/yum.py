@@ -5,6 +5,7 @@ Manage yum packages and repositories. Note that yum package names are case-sensi
 from __future__ import unicode_literals
 
 from pyinfra.api import operation
+from pyinfra.facts.rpm import RpmPackageProvides, RpmPackages
 
 from . import files
 from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
@@ -24,7 +25,7 @@ def key(src, state=None, host=None):
 
     .. code:: python
 
-        linux_id = host.fact.linux_distribution['release_meta'].get('ID')
+        linux_id = host.get_fact(LinuxDistribution)['release_meta'].get('ID')
         yum.key(
             name='Add the Docker CentOS gpg key',
             src='https://download.docker.com/linux/{}/gpg'.format(linux_id),
@@ -101,10 +102,10 @@ def rpm(src, present=True, state=None, host=None):
 
     .. code:: python
 
-        yum.rpm(
+        major_centos_version = host.get_fact(LinuxDistribution)['major']
+        dnf.rpm(
            name='Install EPEL rpm to enable EPEL repo',
-           src='https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
-           '{{  host.fact.linux_distribution.major }}.noarch.rpm',
+           src='https://dl.fedoraproject.org/pub/epel/epel-release-latest-{}.noarch.rpm'.format(major_centos_version),
         )
     '''
 
@@ -183,12 +184,15 @@ def packages(
         uninstall_command.append(extra_uninstall_args)
 
     yield ensure_packages(
-        host, packages, host.fact.rpm_packages, present,
+        host, packages, host.get_fact(RpmPackages), present,
         install_command=' '.join(install_command),
         uninstall_command=' '.join(uninstall_command),
         upgrade_command='yum update -y',
         version_join='=',
         lower=False,  # yum packages are case sensitive
         latest=latest,
-        expand_package_fact=host.fact.rpm_package_provides,
+        expand_package_fact=lambda package: host.get_fact(
+            RpmPackageProvides,
+            name=package,
+        ),
     )

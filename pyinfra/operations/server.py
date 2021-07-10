@@ -15,6 +15,7 @@ from six.moves import filterfalse, shlex_quote
 
 from pyinfra.api import FunctionCommand, operation, OperationError, StringCommand
 from pyinfra.api.util import try_int
+from pyinfra.facts.server import Which
 
 from . import (
     apk,
@@ -489,31 +490,31 @@ def packages(
         )
     '''
 
-    if host.fact.which('apk'):
+    if host.get_fact(Which, command='apk'):
         package_operation = apk.packages
 
-    elif host.fact.which('apt'):
+    elif host.get_fact(Which, command='apt'):
         package_operation = apt.packages
 
-    elif host.fact.which('brew'):
+    elif host.get_fact(Which, command='brew'):
         package_operation = brew.packages
 
-    elif host.fact.which('dnf'):
+    elif host.get_fact(Which, command='dnf'):
         package_operation = dnf.packages
 
-    elif host.fact.which('pacman'):
+    elif host.get_fact(Which, command='pacman'):
         package_operation = pacman.packages
 
-    elif host.fact.which('xbps'):
+    elif host.get_fact(Which, command='xbps'):
         package_operation = xbps.packages
 
-    elif host.fact.which('yum'):
+    elif host.get_fact(Which, command='yum'):
         package_operation = yum.packages
 
-    elif host.fact.which('zypper'):
+    elif host.get_fact(Which, command='zypper'):
         package_operation = zypper.packages
 
-    elif host.fact.which('pkg') or host.fact.which('pkg_add'):
+    elif host.get_fact(Which, command='pkg') or host.get_fact(Which, command='pkg_add'):
         package_operation = pkg.packages
 
     else:

@@ -1,6 +1,6 @@
 {
     "args": [],
-    "facts": {"brew_version":  [2,5,3]},
+    "facts": {"brew.BrewVersion":  [2,5,3]},
     "commands": [
         "brew cask upgrade"
     ],

@@ -4,7 +4,7 @@
         "keyid": ["abc", "def"]
     },
     "facts": {
-        "apt_keys": {
+        "apt.AptKeys": {
             "abc": {}
         }
     },

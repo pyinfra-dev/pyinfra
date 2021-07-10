@@ -8,15 +8,15 @@
         "present": false
     },
     "facts": {
-        "rpm_packages": {
+        "rpm.RpmPackages": {
             "git": ["2.26.2-1.fc32"],
             "vim-enhanced": ["8.2.1081-1.fc32"],
             "vim-common": ["8.2.1081-1.fc32"]
         },
-        "rpm_package_provides": {
-            "git": null,
-            "vim-enhanced": null,
-            "vim-common": null
+        "rpm.RpmPackageProvides": {
+            "name=git": null,
+            "name=vim-enhanced": null,
+            "name=vim-common": null
         }
     },
     "commands": [

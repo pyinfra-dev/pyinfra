@@ -3,7 +3,13 @@ Manage brew packages on mac/OSX. See https://brew.sh/
 '''
 
 from pyinfra.api import operation
-from pyinfra.facts.brew import new_cask_cli
+from pyinfra.facts.brew import (
+    BrewCasks,
+    BrewPackages,
+    BrewTaps,
+    BrewVersion,
+    new_cask_cli,
+)
 
 from .util.packaging import ensure_packages
 
@@ -74,7 +80,7 @@ def packages(
         yield _upgrade(state=state, host=host)
 
     yield ensure_packages(
-        host, packages, host.fact.brew_packages, present,
+        host, packages, host.get_fact(BrewPackages), present,
         install_command='brew install',
         uninstall_command='brew uninstall',
         upgrade_command='brew upgrade',
@@ -84,7 +90,7 @@ def packages(
 
 
 def cask_args(host):
-    return ('', ' --cask') if new_cask_cli(host.fact.brew_version) else ('cask ', '')
+    return ('', ' --cask') if new_cask_cli(host.get_fact(BrewVersion)) else ('cask ', '')
 
 
 @operation(
@@ -137,7 +143,7 @@ def casks(
     args = cask_args(host)
 
     yield ensure_packages(
-        host, casks, host.fact.brew_casks, present,
+        host, casks, host.get_fact(BrewCasks), present,
         install_command='brew %sinstall%s' % args,
         uninstall_command='brew %suninstall%s' % args,
         upgrade_command='brew %supgrade%s' % args,
@@ -173,7 +179,7 @@ def tap(src, present=True, state=None, host=None):
 
     '''
 
-    taps = host.fact.brew_taps
+    taps = host.get_fact(BrewTaps)
     is_tapped = src in taps
 
     if present:

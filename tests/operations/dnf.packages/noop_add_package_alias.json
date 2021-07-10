@@ -1,11 +1,11 @@
 {
     "args": [["vim"]],
     "facts": {
-        "rpm_packages": {
+        "rpm.RpmPackages": {
             "vim-enhanced": ["abc"]
         },
-        "rpm_package_provides": {
-            "vim": [["vim-enhanced", "abc"]]
+        "rpm.RpmPackageProvides": {
+            "name=vim": [["vim-enhanced", "abc"]]
         }
     },
     "commands": [],

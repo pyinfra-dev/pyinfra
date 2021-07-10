@@ -4,7 +4,7 @@
         "present": false
     },
     "facts": {
-        "xbps_packages": {
+        "xbps.XbpsPackages": {
             "curl": "1"
         }
     },

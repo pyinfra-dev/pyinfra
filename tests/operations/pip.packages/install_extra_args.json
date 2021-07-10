@@ -4,8 +4,8 @@
         "extra_install_args": "--user"
     },
     "facts": {
-        "pip_packages": {
-            "pip": {
+        "pip.PipPackages": {
+            "pip=pip": {
                 "pyinfra": ["1.0"],
                 "test": ["1.1"]
             }

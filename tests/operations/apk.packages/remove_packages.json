@@ -4,7 +4,7 @@
         "present": false
     },
     "facts": {
-        "apk_packages": {
+        "apk.ApkPackages": {
             "curl": "1"
         }
     },

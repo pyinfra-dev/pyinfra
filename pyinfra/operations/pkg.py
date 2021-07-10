@@ -5,6 +5,9 @@ Manage BSD packages and repositories. Note that BSD package names are case-sensi
 from __future__ import unicode_literals
 
 from pyinfra.api import operation
+from pyinfra.facts.files import File
+from pyinfra.facts.pkg import PkgPackages
+from pyinfra.facts.server import Arch, Os, OsVersion, Which
 
 from .util.packaging import ensure_packages
 
@@ -39,17 +42,17 @@ def packages(packages=None, present=True, pkg_path=None, state=None, host=None):
     '''
 
     if present is True:
-        if not pkg_path and not host.fact.file('/etc/installurl'):
-            host_os = host.fact.os or ''
+        if not pkg_path and not host.get_fact(File, path='/etc/installurl'):
+            host_os = host.get_fact(Os) or ''
             pkg_path = 'http://ftp.{http}.org/pub/{os}/{version}/packages/{arch}/'.format(
                 http=host_os.lower(),
                 os=host_os,
-                version=host.fact.os_version,
-                arch=host.fact.arch,
+                version=host.get_fact(OsVersion),
+                arch=host.get_fact(Arch),
             )
 
     # FreeBSD used "pkg ..." and OpenBSD uses "pkg_[add|delete]"
-    is_pkg = host.fact.which('pkg')
+    is_pkg = host.get_fact(Which, command='pkg')
     install_command = 'pkg install -y' if is_pkg else 'pkg_add'
     uninstall_command = 'pkg delete -y' if is_pkg else 'pkg_delete'
 
@@ -57,7 +60,7 @@ def packages(packages=None, present=True, pkg_path=None, state=None, host=None):
         install_command = 'PKG_PATH={0} {1}'.format(pkg_path, install_command)
 
     yield ensure_packages(
-        host, packages, host.fact.pkg_packages, present,
+        host, packages, host.get_fact(PkgPackages), present,
         install_command=install_command,
         uninstall_command=uninstall_command,
     )

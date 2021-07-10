@@ -3,7 +3,7 @@
         "keyserver": "key-server.net"
     },
     "facts": {
-        "apt_keys": {}
+        "apt.AptKeys": {}
     },
     "exception": {
         "name": "OperationError",

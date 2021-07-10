@@ -1,6 +1,6 @@
 {
     "args": [],
-    "facts": {"brew_version":  [2, 6, 0]},
+    "facts": {"brew.BrewVersion":  [2, 6, 0]},
     "commands": [
         "brew upgrade --cask"
     ],

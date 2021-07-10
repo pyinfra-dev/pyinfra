@@ -4,8 +4,8 @@
         "clean": true
     },
     "facts": {
-        "rpm_packages": {},
-        "rpm_package_provides": {}
+        "rpm.RpmPackages": {},
+        "rpm.RpmPackageProvides": {}
     },
     "commands": [
         "dnf clean all",

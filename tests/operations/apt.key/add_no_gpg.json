@@ -1,9 +1,9 @@
 {
     "args": ["mykey"],
     "facts": {
-        "apt_keys": {},
-        "gpg_key": {
-            "mykey": null
+        "apt.AptKeys": {},
+        "gpg.GpgKey": {
+            "src=mykey": null
         }
     },
     "commands": [

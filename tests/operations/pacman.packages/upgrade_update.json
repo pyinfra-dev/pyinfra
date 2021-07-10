@@ -5,10 +5,10 @@
         "upgrade": true
     },
     "facts": {
-        "pacman_unpack_group": {
-            "curl": ["curl"]
+        "pacman.PacmanUnpackGroup": {
+            "name=curl": ["curl"]
         },
-        "pacman_packages": {
+        "pacman.PacmanPackages": {
             "curl": ["1"]
         }
     },

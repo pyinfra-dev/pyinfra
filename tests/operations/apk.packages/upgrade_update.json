@@ -5,7 +5,7 @@
         "upgrade": true
     },
     "facts": {
-        "apk_packages": {
+        "apk.ApkPackages": {
             "curl": ["1"]
         }
     },

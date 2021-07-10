@@ -4,12 +4,12 @@
         "present": false
     },
     "facts": {
-        "pacman_unpack_group": {
-            "curl": ["curl"],
-            "i-dont-exist": [],
-            "xorg-fonts": ["xorg-font-util", "xorg-font-encodings"]
+        "pacman.PacmanUnpackGroup": {
+            "name=curl": ["curl"],
+            "name=i-dont-exist": [],
+            "name=xorg-fonts": ["xorg-font-util", "xorg-font-encodings"]
         },
-        "pacman_packages": {
+        "pacman.PacmanPackages": {
             "curl": ["1"],
             "xorg-font-util": ["1"]
         }

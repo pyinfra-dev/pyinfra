@@ -5,7 +5,7 @@
         "upgrade": true
     },
     "facts": {
-        "xbps_packages": {
+        "xbps.XbpsPackages": {
             "curl": ["1"]
         }
     },

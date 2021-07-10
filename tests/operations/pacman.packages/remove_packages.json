@@ -4,11 +4,11 @@
         "present": false
     },
     "facts": {
-        "pacman_unpack_group": {
-            "curl": ["curl"],
-            "i-dont-exist": []
+        "pacman.PacmanUnpackGroup": {
+            "name=curl": ["curl"],
+            "name=i-dont-exist": []
         },
-        "pacman_packages": {
+        "pacman.PacmanPackages": {
             "curl": "1"
         }
     },

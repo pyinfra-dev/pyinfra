@@ -5,7 +5,7 @@
         "upgrade": true
     },
     "facts": {
-        "brew_packages": {
+        "brew.BrewPackages": {
             "php": ["1"]
         }
     },

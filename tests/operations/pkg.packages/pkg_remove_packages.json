@@ -4,14 +4,14 @@
         "present": false
     },
     "facts": {
-        "os": "os",
-        "os_version": "os_version",
-        "arch": "arch",
-        "pkg_packages": {
+        "server.Os": "os",
+        "server.OsVersion": "os_version",
+        "server.Arch": "arch",
+        "pkg.PkgPackages": {
             "py-pip": []
         },
-        "which": {
-            "pkg": "/bin/pkg"
+        "server.Which": {
+            "command=pkg": "/bin/pkg"
         }
     },
     "commands": [

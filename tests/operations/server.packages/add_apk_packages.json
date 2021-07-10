@@ -5,10 +5,10 @@
         "something"
     ]],
     "facts": {
-        "which": {
-            "apk": "/sbin/apk"
+        "server.Which": {
+            "command=apk": "/sbin/apk"
         },
-        "apk_packages": {
+        "apk.ApkPackages": {
             "something": [""]
         }
     },

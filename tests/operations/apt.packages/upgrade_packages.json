@@ -4,7 +4,7 @@
         "latest": true
     },
     "facts": {
-        "deb_packages": {
+        "deb.DebPackages": {
             "git": ["1.0"]
         }
     },

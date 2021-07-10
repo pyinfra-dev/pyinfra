@@ -1,7 +1,7 @@
 {
     "args": ["deb http://archive.canonical.com/ubuntu hardy partner"],
     "facts": {
-        "apt_sources": [{
+        "apt.AptSources": [{
             "type": "deb",
             "url": "http://archive.canonical.com/ubuntu",
             "distribution": "hardy",

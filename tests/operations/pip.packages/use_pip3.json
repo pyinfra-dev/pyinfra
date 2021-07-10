@@ -4,8 +4,8 @@
         "pip": "pip3"
     },
     "facts": {
-        "pip_packages": {
-            "pip3": {}
+        "pip.PipPackages": {
+            "pip=pip3": {}
         }
     },
     "commands": [

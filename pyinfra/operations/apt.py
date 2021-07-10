@@ -11,7 +11,11 @@ import six
 from six.moves.urllib.parse import urlparse
 
 from pyinfra.api import operation, OperationError
-from pyinfra.facts.apt import parse_apt_repo
+from pyinfra.facts.apt import AptKeys, AptSources, parse_apt_repo
+from pyinfra.facts.deb import DebPackage, DebPackages
+from pyinfra.facts.files import File
+from pyinfra.facts.gpg import GpgKey
+from pyinfra.facts.server import Date
 
 from . import files
 from .util.packaging import ensure_packages
@@ -62,10 +66,10 @@ def key(src=None, keyserver=None, keyid=None, state=None, host=None):
         )
     '''
 
-    existing_keys = host.fact.apt_keys
+    existing_keys = host.get_fact(AptKeys)
 
     if src:
-        key_data = host.fact.gpg_key(src)
+        key_data = host.get_fact(GpgKey, src=src)
         if key_data:
             keyid = list(key_data.keys())
 
@@ -130,7 +134,7 @@ def repo(src, present=True, filename=None, state=None, host=None):
         filename = '/etc/apt/sources.list'
 
     # Work out if the repo exists already
-    apt_sources = host.fact.apt_sources
+    apt_sources = host.get_fact(AptSources)
 
     is_present = False
     repo = parse_apt_repo(src)
@@ -231,14 +235,13 @@ def deb(src, present=True, force=False, state=None, host=None):
         src = temp_filename
 
     # Check for file .deb information (if file is present)
-    info = host.fact.deb_package(src)
+    info = host.get_fact(DebPackage, name=src)
+    current_packages = host.get_fact(DebPackages)
 
     exists = False
 
     # We have deb info! Check against installed packages
     if info:
-        current_packages = host.fact.deb_packages
-
         if (
             info['name'] in current_packages
             and info.get('version') in current_packages[info['name']]
@@ -257,7 +260,7 @@ def deb(src, present=True, force=False, state=None, host=None):
             yield 'dpkg --force-confdef --force-confold -i {0}'.format(src)
 
             if info:
-                host.fact.deb_packages[info['name']] = [info.get('version')]
+                current_packages[info['name']] = [info.get('version')]
         else:
             host.noop('deb {0} is installed'.format(original_src))
 
@@ -268,7 +271,7 @@ def deb(src, present=True, force=False, state=None, host=None):
                 noninteractive_apt('remove', force=force),
                 info['name'],
             )
-            host.fact.deb_packages.pop(info['name'])
+            current_packages.pop(info['name'])
         else:
             host.noop('deb {0} is not installed'.format(original_src))
 
@@ -294,11 +297,11 @@ def update(cache_time=None, touch_periodic=False, state=None, host=None):
     # If cache_time check when apt was last updated, prevent updates if within time
     if cache_time:
         # Ubuntu provides this handy file
-        cache_info = host.fact.file(APT_UPDATE_FILENAME)
+        cache_info = host.get_fact(File, path=APT_UPDATE_FILENAME)
 
         # Time on files is not tz-aware, and will be the same tz as the server's time,
-        # so we can safely remove the tzinfo from host.fact.date before comparison.
-        host_cache_time = host.fact.date.replace(tzinfo=None) - timedelta(seconds=cache_time)
+        # so we can safely remove the tzinfo from the Date fact before comparison.
+        host_cache_time = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
         if cache_info and cache_info['mtime'] and cache_info['mtime'] > host_cache_time:
             host.noop('apt is already up to date')
             return
@@ -311,9 +314,9 @@ def update(cache_time=None, touch_periodic=False, state=None, host=None):
     if cache_time:
         yield 'touch {0}'.format(APT_UPDATE_FILENAME)
         if cache_info is None:
-            host.fact._create(
-                'file',
-                args=(APT_UPDATE_FILENAME,),
+            host.create_fact(
+                File,
+                kwargs={'path': APT_UPDATE_FILENAME},
                 data={'mtime': datetime.utcnow()},
             )
         else:
@@ -390,10 +393,10 @@ def packages(
             latest=True,
         )
 
-        # Note: host.fact.os_version is the same as `uname -r` (ex: '4.15.0-72-generic')
+        # Note: host.get_fact(OsVersion) is the same as `uname -r` (ex: '4.15.0-72-generic')
         apt.packages(
             name='Install kernel headers',
-            packages=['linux-headers-{}'.format(host.fact.os_version)],
+            packages=['linux-headers-{}'.format(host.get_fact(OsVersion))],
             update=True,
         )
     '''
@@ -425,7 +428,7 @@ def packages(
 
     # Compare/ensure packages are present/not
     yield ensure_packages(
-        host, packages, host.fact.deb_packages, present,
+        host, packages, host.get_fact(DebPackages), present,
         install_command=noninteractive_apt(install_command, force=force),
         uninstall_command=noninteractive_apt(uninstall_command, force=force),
         upgrade_command=noninteractive_apt(upgrade_command, force=force),

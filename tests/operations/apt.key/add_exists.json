@@ -1,11 +1,11 @@
 {
     "args": ["mykey"],
     "facts": {
-        "apt_keys": {
+        "apt.AptKeys": {
             "abc": {}
         },
-        "gpg_key": {
-            "mykey": {
+        "gpg.GpgKey": {
+            "src=mykey": {
                 "abc": {}
             }
         }

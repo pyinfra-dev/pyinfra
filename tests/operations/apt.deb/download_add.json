@@ -4,9 +4,10 @@
         "files.File": {
             "path=_tempfile_": null
         },
-        "deb_package": {
-            "_tempfile_": null
+        "deb.DebPackage": {
+            "name=_tempfile_": null
         },
+        "deb.DebPackages": {},
         "server.Which": {
             "command=curl": "yes"
         }

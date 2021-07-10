@@ -6,7 +6,7 @@
         "another=1.1"
     ]],
     "facts": {
-        "deb_packages": {
+        "deb.DebPackages": {
             "something": ["0.9"],
             "another": ["1.1"]
         }

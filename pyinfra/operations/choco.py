@@ -3,6 +3,7 @@ Manage ``choco`` (Chocolatey) packages (https://chocolatey.org).
 '''
 
 from pyinfra.api import operation
+from pyinfra.facts.choco import ChocoPackages
 
 from .util.packaging import ensure_packages
 
@@ -32,7 +33,7 @@ def packages(packages=None, present=True, latest=False, state=None, host=None):
     '''
 
     yield ensure_packages(
-        host, packages, host.fact.choco_packages, present,
+        host, packages, host.get_fact(ChocoPackages), present,
         install_command='choco install -y',
         uninstall_command='choco uninstall -y -x',
         upgrade_command='choco update -y',

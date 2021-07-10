@@ -4,7 +4,7 @@
         "upgrade": true
     },
     "facts": {
-        "deb_packages": {}
+        "deb.DebPackages": {}
     },
     "commands": [
         "apt-get update",

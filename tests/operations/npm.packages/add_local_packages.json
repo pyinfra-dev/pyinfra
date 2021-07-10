@@ -4,8 +4,8 @@
         "directory": "testdir"
     },
     "facts": {
-        "npm_packages": {
-            "testdir": {
+        "npm.NpmPackages": {
+            "directory=testdir": {
                 "git": ["1.0"],
                 "test": ["1.1"]
             }

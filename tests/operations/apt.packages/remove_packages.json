@@ -8,7 +8,7 @@
         "present": false
     },
     "facts": {
-        "deb_packages": {
+        "deb.DebPackages": {
             "git": [""],
             "python-pip": [""]
         }

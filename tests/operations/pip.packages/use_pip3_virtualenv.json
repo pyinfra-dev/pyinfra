@@ -5,8 +5,8 @@
         "virtualenv": "testdir"
     },
     "facts": {
-        "pip_packages": {
-            "testdir/bin/pip3": {}
+        "pip.PipPackages": {
+            "pip=testdir/bin/pip3": {}
         },
         "files.File": {
             "path=testdir/bin/activate": true

@@ -4,7 +4,7 @@
         "filename": "somefile"
     },
     "facts": {
-        "apt_sources": [],
+        "apt.AptSources": [],
         "files.FindInFile": {
             "path=/etc/apt/sources.list.d/somefile.list, pattern=^.*deb http://archive.canonical.com/ubuntu hardy partner.*$": []
         }

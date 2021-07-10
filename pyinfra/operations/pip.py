@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 from pyinfra.api import operation
 from pyinfra.facts.files import File
+from pyinfra.facts.pip import PipPackages
 
 from . import files
 from .util.packaging import ensure_packages
@@ -44,7 +45,6 @@ def virtualenv(
     if present is False:
         if host.get_fact(File, path=activate_script_path):
             yield files.directory(path, present=False, state=state, host=host)
-            # host.fact._delete('file', args=(activate_script_path,))
         else:
             host.noop('virtualenv {0} does not exist'.format(path))
 
@@ -182,7 +182,7 @@ def packages(
 
     # Handle passed in packages
     if packages:
-        current_packages = host.fact.pip_packages(pip)
+        current_packages = host.get_fact(PipPackages, pip=pip)
 
         yield ensure_packages(
             host, packages, current_packages, present,

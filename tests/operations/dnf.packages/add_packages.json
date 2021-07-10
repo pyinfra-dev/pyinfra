@@ -5,13 +5,13 @@
         "something"
     ]],
     "facts": {
-        "rpm_packages": {
+        "rpm.RpmPackages": {
             "something": [""]
         },
-        "rpm_package_provides": {
-            "git": null,
-            "python-devel": null,
-            "something": null
+        "rpm.RpmPackageProvides": {
+            "name=git": null,
+            "name=python-devel": null,
+            "name=something": null
         }
     },
     "commands": [

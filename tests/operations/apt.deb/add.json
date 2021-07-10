@@ -4,13 +4,13 @@
         "files.File": {
             "path=_tempfile_": ""
         },
-        "deb_package": {
-            "_tempfile_": {
+        "deb.DebPackage": {
+            "name=_tempfile_": {
                 "name": "test",
                 "version": 0
             }
         },
-        "deb_packages": {
+        "deb.DebPackages": {
             "test": [1]
         }
     },

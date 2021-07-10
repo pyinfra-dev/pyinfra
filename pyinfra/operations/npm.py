@@ -5,6 +5,7 @@ Manage npm (aka node aka Node.js) packages.
 from __future__ import unicode_literals
 
 from pyinfra.api import operation
+from pyinfra.facts.npm import NpmPackages
 
 from .util.packaging import ensure_packages
 
@@ -23,7 +24,7 @@ def packages(packages=None, present=True, latest=False, directory=None, state=No
         Package versions can be pinned like npm: ``<pkg>@<version>``.
     '''
 
-    current_packages = host.fact.npm_packages(directory)
+    current_packages = host.get_fact(NpmPackages, directory=directory)
 
     install_command = (
         'npm install -g'

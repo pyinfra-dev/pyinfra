@@ -3,6 +3,7 @@ Manage Ruby gem packages. (see https://rubygems.org/ )
 '''
 
 from pyinfra.api import operation
+from pyinfra.facts.gem import GemPackages
 
 from .util.packaging import ensure_packages
 
@@ -31,7 +32,7 @@ def packages(packages=None, present=True, latest=False, state=None, host=None):
     '''
 
     yield ensure_packages(
-        host, packages, host.fact.gem_packages, present,
+        host, packages, host.get_fact(GemPackages), present,
         install_command='gem install',
         uninstall_command='gem uninstall',
         upgrade_command='gem update',

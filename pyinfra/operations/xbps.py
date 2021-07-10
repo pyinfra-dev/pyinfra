@@ -3,6 +3,7 @@ Manage XBPS packages and repositories. Note that XBPS package names are case-sen
 '''
 
 from pyinfra.api import operation
+from pyinfra.facts.xbps import XbpsPackages
 
 from .util.packaging import ensure_packages
 
@@ -61,7 +62,7 @@ def packages(
         yield _upgrade(state=state, host=host)
 
     yield ensure_packages(
-        host, packages, host.fact.xbps_packages, present,
+        host, packages, host.get_fact(XbpsPackages), present,
         install_command='xbps-install -y -u',
         uninstall_command='xbps-remove -y',
     )

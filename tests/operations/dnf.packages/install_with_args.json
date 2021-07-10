@@ -4,9 +4,9 @@
         "extra_install_args": "--foo"
     },
     "facts": {
-        "rpm_packages": {},
-        "rpm_package_provides": {
-            "docker-ce": null
+        "rpm.RpmPackages": {},
+        "rpm.RpmPackageProvides": {
+            "name=docker-ce": null
         }
     },
     "commands": [

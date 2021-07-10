@@ -1,15 +1,15 @@
 {
     "args": ["py-pip"],
     "facts": {
-        "os": "os",
-        "os_version": "os_version",
-        "arch": "arch",
-        "pkg_packages": {},
-        "which": {
+        "server.Os": "os",
+        "server.OsVersion": "os_version",
+        "server.Arch": "arch",
+        "pkg.PkgPackages": {},
+        "server.Which": {
             "pkg": null
         },
-        "file": {
-            "/etc/installurl": false
+        "files.File": {
+            "path=/etc/installurl": false
         }
     },
     "commands": [

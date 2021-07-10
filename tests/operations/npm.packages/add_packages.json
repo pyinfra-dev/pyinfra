@@ -1,9 +1,11 @@
 {
     "args": [["git@1.1", "react", "test@1.1"]],
     "facts": {
-        "npm_packages": {
-            "git": ["1.0"],
-            "test": ["1.1"]
+        "npm.NpmPackages": {
+            "directory=None": {
+                "git": ["1.0"],
+                "test": ["1.1"]
+            }
         }
     },
     "commands": [

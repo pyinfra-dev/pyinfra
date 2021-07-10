@@ -4,10 +4,12 @@
         "present": false
     },
     "facts": {
-        "npm_packages": {
-            "git": ["1.0"],
-            "react": [""],
-            "test": ["1.1"]
+        "npm.NpmPackages": {
+            "directory=None": {
+                "git": ["1.0"],
+                "react": [""],
+                "test": ["1.1"]
+            }
         }
     },
     "commands": [

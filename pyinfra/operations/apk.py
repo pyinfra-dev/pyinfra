@@ -3,6 +3,7 @@ Manage apk packages.
 '''
 
 from pyinfra.api import operation
+from pyinfra.facts.apk import ApkPackages
 
 from .util.packaging import ensure_packages
 
@@ -73,7 +74,7 @@ def packages(
         yield _upgrade(state=state, host=host)
 
     yield ensure_packages(
-        host, packages, host.fact.apk_packages, present,
+        host, packages, host.get_fact(ApkPackages), present,
         install_command='apk add',
         uninstall_command='apk del',
         upgrade_command='apk upgrade',

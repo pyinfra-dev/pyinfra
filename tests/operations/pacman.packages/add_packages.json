@@ -1,11 +1,11 @@
 {
     "args": [["curl", "xorg-fonts"]],
     "facts": {
-        "pacman_unpack_group": {
-            "curl": ["curl"],
-            "xorg-fonts": ["xorg-font-util", "xorg-fonts-encodings"]
+        "pacman.PacmanUnpackGroup": {
+            "name=curl": ["curl"],
+            "name=xorg-fonts": ["xorg-font-util", "xorg-fonts-encodings"]
         },
-        "pacman_packages": {}
+        "pacman.PacmanPackages": {}
     },
     "commands": [
         "pacman --noconfirm -S curl xorg-fonts"

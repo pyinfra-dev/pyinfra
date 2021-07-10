@@ -4,7 +4,7 @@
         "present": false
     },
     "facts": {
-        "gem_packages": {
+        "gem.GemPackages": {
             "rubyenv": true
         }
     },

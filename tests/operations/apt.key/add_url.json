@@ -1,9 +1,9 @@
 {
     "args": ["http://mykey"],
     "facts": {
-        "apt_keys": {},
-        "gpg_key": {
-            "http://mykey": {
+        "apt.AptKeys": {},
+        "gpg.GpgKey": {
+            "src=http://mykey": {
                 "abc": {}
             }
         }

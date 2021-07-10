@@ -4,8 +4,8 @@
         "present": false
     },
     "facts": {
-        "pip_packages": {
-            "pip": {
+        "pip.PipPackages": {
+            "pip=pip": {
                 "elasticquery": ["1.0"],
                 "pyinfra": [""],
                 "test": ["1.1"]

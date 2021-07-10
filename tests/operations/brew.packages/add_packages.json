@@ -1,7 +1,7 @@
 {
     "args": ["php"],
     "facts": {
-        "brew_packages": {}
+        "brew.BrewPackages": {}
     },
     "commands": [
         "brew install php"

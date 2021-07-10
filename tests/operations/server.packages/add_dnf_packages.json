@@ -5,19 +5,19 @@
         "something"
     ]],
     "facts": {
-        "which": {
-            "apk": null,
-            "apt": null,
-            "brew": null,
-            "dnf": "/sbin/dnf"
+        "server.Which": {
+            "command=apk": null,
+            "command=apt": null,
+            "command=brew": null,
+            "command=dnf": "/sbin/dnf"
         },
-        "rpm_packages": {
+        "rpm.RpmPackages": {
             "something": [""]
         },
-        "rpm_package_provides": {
-            "git": null,
-            "python-devel": null,
-            "something": null
+        "rpm.RpmPackageProvides": {
+            "name=git": null,
+            "name=python-devel": null,
+            "name=something": null
         }
     },
     "commands": [
