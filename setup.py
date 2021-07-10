@@ -22,7 +22,7 @@ INSTALL_REQUIRES = (
     'paramiko>=2.7,<3',  # 2.7 (2019) adds OpenSSH key format + Match SSH config
     'click>2',
     'colorama<1',  # Windows color support for click
-    'jinja2>2,<3',
+    'jinja2>2,<4',
     'python-dateutil>2,<3',
     'six>1,<2',
     'setuptools',
