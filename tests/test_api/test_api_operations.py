@@ -32,7 +32,7 @@ from ..paramiko_util import (
 from ..util import FakeState, make_inventory
 
 
-class TestOperationMeta():
+class TestOperationMeta(TestCase):
     def test_get_operation_names(self):
         assert len(get_operation_names()) > 0
 
