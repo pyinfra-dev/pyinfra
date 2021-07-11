@@ -154,7 +154,7 @@ def pop_global_op_kwargs(state, host, kwargs):
                 if default:
                     default = default(state.config)
 
-                host_default = getattr(host.data, key)
+                host_default = getattr(host.data, key, None)
                 if host_default is not None:
                     default = host_default
 
