@@ -1,3 +1,10 @@
+# v1.4.8
+
++ Remove broken "will add user" detection in facts, just pass if user is missing
++ Quite non-string elements in `StringCommand` before passing to `shlex.quote`
++ Ignore `use_sudo_password` in the `@docker` connector
++ Loosen `jinja2` requirement to allow v3 (compatible)
+
 # v1.4.7
 
 + Fix for passing `Path` objects as arguments to `files.*` operations & facts
