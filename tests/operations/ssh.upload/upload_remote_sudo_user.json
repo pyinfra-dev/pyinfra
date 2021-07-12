@@ -1,0 +1,12 @@
+{
+    "args": ["remote-host.net", "local_filename"],
+    "kwargs": {
+        "user": "test",
+        "use_remote_sudo": true
+    },
+    "commands": [
+        "scp -P 22 local_filename test@remote-host.net:_tempfile_",
+        "ssh -p 22 test@remote-host.net 'sudo mv _tempfile_ local_filename'"
+    ],
+    "idempotent": false
+}

@@ -157,7 +157,7 @@ def upload(
 
         # And sudo sudo to move it
         yield command(
-            hostname=connection_target,
+            hostname=hostname,
             command='sudo mv {0} {1}'.format(temp_remote_filename, remote_filename),
             port=port,
             user=user,
