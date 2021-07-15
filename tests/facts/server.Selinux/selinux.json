@@ -1,5 +1,6 @@
 {
     "command": "sestatus",
+    "requires_command": "sestatus",
     "output": [
         "SELinux status: enabled",
         "SELinuxfs mount: /selinux"

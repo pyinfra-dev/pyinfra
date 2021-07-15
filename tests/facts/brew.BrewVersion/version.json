@@ -1,5 +1,6 @@
 {
     "command": "brew --version",
+    "requires_command": "brew",
     "output": [
         "Homebrew 3.1.7-62-g9f5afcb",
         "Homebrew/homebrew-core (git revision ccfbdb1968; last commit 2021-05-16)",

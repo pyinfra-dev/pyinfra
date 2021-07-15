@@ -1,5 +1,6 @@
 {
     "command": "dpkg -l",
+    "requires_command": "dpkg",
     "output": [
         "ii  w3m 0.5.3-15 amd64 WWW browsable pager with excellent tables/frames support",
         "ii  wget 1.15-1ubuntu1.14.04. amd64 retrieves files from the web",

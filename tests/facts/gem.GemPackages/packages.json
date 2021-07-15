@@ -1,5 +1,6 @@
 {
     "command": "gem list --local",
+    "requires_command": "gem",
     "output": [
         "pydash (3.48)"
     ],

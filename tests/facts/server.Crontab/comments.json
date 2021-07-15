@@ -1,5 +1,6 @@
 {
     "command": "crontab -l || true",
+    "requires_command": "crontab",
     "output": [
         "* * * * * apt update",
         "# this is a comment",

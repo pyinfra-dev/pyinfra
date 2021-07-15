@@ -1,6 +1,7 @@
 {
     "arg": "somepackage",
     "command": "! test -e somepackage || (rpm --queryformat \"%{NAME} %{VERSION}-%{RELEASE}\\n\" -qp somepackage 2> /dev/null || rpm --queryformat \"%{NAME} %{VERSION}-%{RELEASE}\\n\" -q somepackage)",
+    "requires_command": "rpm",
     "output": [
         "pydash 3.48.0"
     ],

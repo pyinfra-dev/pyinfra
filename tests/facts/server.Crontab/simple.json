@@ -1,5 +1,6 @@
 {
     "command": "crontab -l || true",
+    "requires_command": "crontab",
     "output": [
         "*\t*\t*\t*\t*\tapt update",
         "0 0 * * * apt install -fy",

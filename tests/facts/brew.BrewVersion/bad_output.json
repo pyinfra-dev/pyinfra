@@ -1,5 +1,6 @@
 {
     "command": "brew --version",
+    "requires_command": "brew",
     "output": [
         "some random text"
     ],

@@ -1,4 +1,5 @@
 {
+    "requires_command": "systemctl",
     "output": [
         "vboxadd.service enabled",
         "vgauth.timer enabled",

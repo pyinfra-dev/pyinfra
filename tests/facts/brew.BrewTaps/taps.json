@@ -1,5 +1,6 @@
 {
     "command": "brew tap",
+    "requires_command": "brew",
     "output": [
         "homebrew/cask",
         "homebrew/apache"

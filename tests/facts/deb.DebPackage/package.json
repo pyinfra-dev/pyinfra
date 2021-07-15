@@ -1,6 +1,7 @@
 {
     "arg": "package-name",
     "command": "! test -e package-name && (dpkg -s package-name 2>/dev/null || true) || dpkg -I package-name",
+    "requires_command": "dpkg",
     "output": [
         "Package: package-name",
         "Version: 1"

@@ -5,6 +5,7 @@
         "nope"
     ],
     "command": "(! test -f /etc/apt/sources.list || cat /etc/apt/sources.list) && (cat /etc/apt/sources.list.d/*.list || true)",
+    "requires_command": "apt",
     "fact": [
         {
             "url": "http://archive.ubuntu.com/ubuntu",

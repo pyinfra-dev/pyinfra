@@ -1,5 +1,6 @@
 {
     "command": "pacman -Q",
+    "requires_command": "pacman",
     "output": [
         "lz4 1:1.9.2-1",
         "ncurses 6.1-6",

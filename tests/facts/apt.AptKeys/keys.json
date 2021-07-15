@@ -1,5 +1,6 @@
 {
     "command": "! command -v gpg || apt-key list --with-colons",
+    "requires_command": "apt-key",
     "output": [
         "tru:t:1:1601454628:0:3:1:5",
         "pub:-:4096:1:3B4FE6ACC0B21F32:1336770936:::-:::scSC::::::23::0:",

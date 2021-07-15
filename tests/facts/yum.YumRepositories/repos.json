@@ -1,5 +1,6 @@
 {
     "command": "(! test -f /etc/yum.conf || cat /etc/yum.conf) && (cat /etc/yum.repos.d/*.repo || true)",
+    "requires_command": "yum",
     "output": [
         "# comment line",
         " # comment line with whitespaces",

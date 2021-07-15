@@ -1,5 +1,6 @@
 {
     "command": "rpm --queryformat \"%{NAME} %{VERSION}-%{RELEASE}\\n\" -qa",
+    "requires_command": "rpm",
     "output": [
         "pydash 3.48.0"
     ],

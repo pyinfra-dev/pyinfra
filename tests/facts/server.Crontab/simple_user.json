@@ -1,6 +1,7 @@
 {
     "arg": "someuser",
     "command": "crontab -l -u someuser || true",
+    "requires_command": "crontab",
     "output": [
         "* * * * * apt update",
         "0 0 * * * apt install -fy"
