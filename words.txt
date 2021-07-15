@@ -185,6 +185,7 @@ keyid
 keyring
 keyscan
 keyserver
+lastlog
 Launchd
 launchd
 levelno
