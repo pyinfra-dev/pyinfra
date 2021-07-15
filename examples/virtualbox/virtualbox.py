@@ -36,7 +36,7 @@ if host.get_fact(LinuxName) == 'Ubuntu':
     )
 
     # install kernel headers
-    # Note: host.fact.os_version is the same as `uname -r` (ex: '4.15.0-72-generic')
+    # Note: host.get_fact(OsVersion) is the same as `uname -r` (ex: '4.15.0-72-generic')
     apt.packages(
         {
             'Install VirtualBox version {} and '

@@ -17,7 +17,8 @@ if host.get_fact(LinuxName) in ['CentOS', 'RedHat']:
         update=True,
     )
 
-linux_id = host.get_fact(LinuxDistribution)['release_meta'].get('ID')
+linux_distribution = host.get_fact(LinuxDistribution)
+linux_id = linux_distribution['release_meta'].get('ID')
 
 if host.get_fact(LinuxName) == 'CentOS':
     dnf.key(
@@ -43,7 +44,7 @@ if host.get_fact(LinuxName) in ['CentOS', 'RedHat']:
         dnf.rpm(
             name='Install EPEL rpm to enable EPEL repo',
             src='https://dl.fedoraproject.org/pub/epel/epel-release-latest-'
-            '{{  host.fact.linux_distribution.major }}.noarch.rpm',
+            '{0}.noarch.rpm'.format(linux_distribution['major']),
         )
 
     dnf.packages(
