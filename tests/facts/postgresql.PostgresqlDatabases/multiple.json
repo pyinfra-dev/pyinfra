@@ -1,4 +1,5 @@
 {
+    "command": "psql -Ac 'SELECT pg_catalog.pg_encoding_to_char(encoding), * FROM pg_catalog.pg_database'",
     "requires_command": "psql",
     "output": [
         "pg_encoding_to_char|datname|datdba|encoding|datcollate|datctype|datistemplate|datallowconn|datconnlimit|datlastsysoid|datfrozenxid|datminmxid|dattablespace|datacl",
