@@ -153,6 +153,7 @@ class FakeHost(object):
         self.name = name
         self.fact = FakeFacts(facts)
         self.data = data
+        self.connector_data = {}
 
     @property
     def print_prefix(self):
