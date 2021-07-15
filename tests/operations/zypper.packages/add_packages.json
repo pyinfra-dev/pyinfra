@@ -5,7 +5,7 @@
         "something"
     ]],
     "facts": {
-        "rpm_packages": {
+        "rpm.RpmPackages": {
             "something": [""]
         }
     },

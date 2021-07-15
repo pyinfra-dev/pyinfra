@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from pyinfra.api import operation
+from pyinfra.facts.rpm import RpmPackages
 
 from . import files
 from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
@@ -187,7 +188,7 @@ def packages(
     yield ensure_packages(
         host,
         packages,
-        host.fact.rpm_packages,
+        host.get_fact(RpmPackages),
         present,
         install_command=' '.join(install_command),
         uninstall_command=' '.join(uninstall_command),

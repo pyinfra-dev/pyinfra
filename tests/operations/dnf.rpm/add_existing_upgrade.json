@@ -1,12 +1,12 @@
 {
     "args": ["something.rpm"],
     "facts": {
-        "rpm_package": {
-            "something.rpm": {
+        "rpm.RpmPackage": {
+            "name=something.rpm": {
                 "name": "something",
                 "version": "1.1"
             },
-            "something": {
+            "name=something": {
                 "version": "1.0"
             }
         }

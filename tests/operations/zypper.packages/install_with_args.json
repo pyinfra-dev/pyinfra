@@ -4,7 +4,7 @@
         "extra_install_args": "--foo"
     },
     "facts": {
-        "rpm_packages": {}
+        "rpm.RpmPackages": {}
     },
     "commands": [
         "zypper --non-interactive install -y --foo docker-ce"

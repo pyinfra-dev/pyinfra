@@ -7,7 +7,7 @@
         "extra_uninstall_args": "--force"
     },
 	"facts": {
-        "rpm_packages": {
+        "rpm.RpmPackages": {
             "git": [""]
         }
     },

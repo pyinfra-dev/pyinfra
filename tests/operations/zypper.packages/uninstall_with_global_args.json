@@ -7,7 +7,7 @@
         "extra_global_uninstall_args": "--quiet"
     },
 	"facts": {
-        "rpm_packages": {
+        "rpm.RpmPackages": {
             "git": [""]
         }
     },

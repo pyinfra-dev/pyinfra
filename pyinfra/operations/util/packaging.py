@@ -7,6 +7,7 @@ from six.moves import shlex_quote
 from six.moves.urllib.parse import urlparse
 
 from pyinfra.facts.files import File
+from pyinfra.facts.rpm import RpmPackage
 
 
 def _has_package(package, packages, expand_package_fact=None, match_any=False):
@@ -170,12 +171,12 @@ def ensure_rpm(state, host, files, source, present, package_manager_command):
         source = temp_filename
 
     # Check for file .rpm information
-    info = host.fact.rpm_package(source)
+    info = host.get_fact(RpmPackage, name=source)
     exists = False
 
     # We have info!
     if info:
-        current_package = host.fact.rpm_package(info['name'])
+        current_package = host.get_fact(RpmPackage, name=info['name'])
         if current_package and current_package['version'] == info['version']:
             exists = True
 
