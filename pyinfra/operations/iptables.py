@@ -8,7 +8,12 @@ import six
 
 from pyinfra.api import operation
 from pyinfra.api.exceptions import OperationError
-from pyinfra.facts.iptables import Ip6tablesRules, IptablesRules
+from pyinfra.facts.iptables import (
+    Ip6tablesChains,
+    Ip6tablesRules,
+    IptablesChains,
+    IptablesRules,
+)
 
 
 @operation
@@ -31,9 +36,9 @@ def chain(
     '''
 
     chains = (
-        host.fact.iptables_chains(table)
+        host.get_fact(IptablesChains, table=table)
         if version == 4
-        else host.fact.ip6tables_chains(table)
+        else host.get_fact(Ip6tablesChains, table=table)
     )
 
     command = 'iptables' if version == 4 else 'ip6tables'

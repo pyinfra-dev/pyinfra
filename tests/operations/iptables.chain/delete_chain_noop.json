@@ -4,8 +4,8 @@
         "present": false
     },
     "facts": {
-        "iptables_chains": {
-            "filter": {}
+        "iptables.IptablesChains": {
+            "table=filter": {}
         }
     },
     "commands": [],

@@ -4,8 +4,8 @@
         "policy": "DROP"
     },
     "facts": {
-        "iptables_chains": {
-            "filter": {
+        "iptables.IptablesChains": {
+            "table=filter": {
                 "MYCHAIN": "ACCEPT"
             }
         }
