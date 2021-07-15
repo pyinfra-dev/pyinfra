@@ -10,7 +10,7 @@ from unittest import TestCase
 import six
 
 from pyinfra.api import StringCommand
-from pyinfra.api.facts import FACTS, ShortFactBase
+from pyinfra.api.facts import ShortFactBase
 from pyinfra_cli.util import json_encode
 
 from .util import get_command_string, JsonTest
@@ -29,12 +29,9 @@ def _make_command(command_attribute, args):
 
 
 def make_fact_tests(folder_name):
-    if '.' in folder_name:
-        module_name, fact_name = folder_name.split('.')
-        module = import_module('pyinfra.facts.{0}'.format(module_name))
-        fact = getattr(module, fact_name)()
-    else:
-        fact = FACTS[folder_name]()
+    module_name, fact_name = folder_name.split('.')
+    module = import_module('pyinfra.facts.{0}'.format(module_name))
+    fact = getattr(module, fact_name)()
 
     @six.add_metaclass(JsonTest)
     class TestTests(TestCase):

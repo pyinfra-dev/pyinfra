@@ -3,7 +3,7 @@ import json
 from pyinfra.api import FactBase
 
 
-class LXDContainers(FactBase):
+class LxdContainers(FactBase):
     '''
     Returns a list of running LXD containers
     '''
