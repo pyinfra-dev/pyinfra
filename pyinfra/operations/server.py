@@ -14,6 +14,7 @@ import six
 from six.moves import filterfalse, shlex_quote
 
 from pyinfra.api import FunctionCommand, operation, OperationError, StringCommand
+from pyinfra.api.connectors.util import remove_any_sudo_askpass_file
 from pyinfra.api.util import try_int
 from pyinfra.facts.server import Which
 
@@ -55,6 +56,10 @@ def reboot(delay=10, interval=1, reboot_timeout=300, state=None, host=None):
             reboot_timeout=600,
         )
     '''
+
+    # Remove this now, before we reboot the server - if the reboot fails (expected or not)
+    # we'll error if we don't clean this up now. Will simply be re-uploaded if needed later.
+    remove_any_sudo_askpass_file(host)
 
     yield StringCommand('reboot', success_exit_codes=[0, -1])  # -1 being error/disconnected
 
