@@ -6,12 +6,12 @@
         "commitish": "0123456789"
     },
     "facts": {
-        "directory": {
-            "/home/mainrepo": {},
-            "/home/mainrepo/.git": {
+        "files.Directory": {
+            "path=/home/mainrepo": {},
+            "path=/home/mainrepo/.git": {
                 "mode": 0
             },
-            "/home/myworktree": null
+            "path=/home/myworktree": null
         }
     },
     "exception": {

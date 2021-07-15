@@ -9,6 +9,7 @@ import re
 from pyinfra import logger
 from pyinfra.api import operation, OperationError
 from pyinfra.facts.files import Directory
+from pyinfra.facts.git import GitBranch, GitConfig, GitTrackingBranch
 
 from . import files, ssh
 from .util.files import chown
@@ -45,11 +46,11 @@ def config(
     existing_config = {}
 
     if not repo:
-        existing_config = host.fact.git_config()
+        existing_config = host.get_fact(GitConfig)
 
     # Only get the config if the repo exists at this stage
-    elif host.fact.directory('/'.join((repo, '.git'))):
-        existing_config = host.fact.git_config(repo)
+    elif host.get_fact(Directory, path='/'.join((repo, '.git'))):
+        existing_config = host.get_fact(GitConfig, repo=repo)
 
     if existing_config.get(key) != value:
         if repo is None:
@@ -127,7 +128,7 @@ def repo(
 
     # Ensuring existing repo
     else:
-        current_branch = host.fact.git_branch(dest)
+        current_branch = host.get_fact(GitBranch, repo=dest)
         if current_branch != branch:
             git_commands.append('fetch')  # fetch to ensure we have the branch locally
             git_commands.append('checkout {0}'.format(branch))
@@ -306,10 +307,10 @@ def worktree(
                 commitish = branch
 
     # Doesn't exist & we want it
-    if not host.fact.directory(worktree) and present:
+    if not host.get_fact(Directory, path=worktree) and present:
 
         # be sure that `repo` is a GIT repository
-        if not assume_repo_exists and not host.fact.directory('/'.join((repo, '.git'))):
+        if not assume_repo_exists and not host.get_fact(Directory, path='/'.join((repo, '.git'))):
             raise OperationError(
                 'The following folder is not a valid GIT repository : {0}'.format(repo),
             )
@@ -333,7 +334,7 @@ def worktree(
             yield chown(worktree, user, group, recursive=True)
 
     # It exists and we don't want it
-    elif host.fact.directory(worktree) and not present:
+    elif host.get_fact(Directory, path=worktree) and not present:
 
         command = 'cd {0} && git worktree remove .'.format(worktree)
 
@@ -343,11 +344,11 @@ def worktree(
         yield command
 
     # It exists and we still want it => pull/rebase it
-    elif host.fact.directory(worktree) and present:
+    elif host.get_fact(Directory, path=worktree) and present:
 
         # pull the worktree only if it's already linked to a tracking branch or
         # if a remote branch is set
-        if host.fact.git_tracking_branch(worktree) or from_remote_branch:
+        if host.get_fact(GitTrackingBranch, repo=worktree) or from_remote_branch:
             command = 'cd {0} && git pull'.format(worktree)
 
             if rebase:

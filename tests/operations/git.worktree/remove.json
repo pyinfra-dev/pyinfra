@@ -4,8 +4,8 @@
         "present": false
     },
     "facts": {
-        "directory": {
-            "/home/myworktree": {
+        "files.Directory": {
+            "path=/home/myworktree": {
                 "mode": 0
             }
         }

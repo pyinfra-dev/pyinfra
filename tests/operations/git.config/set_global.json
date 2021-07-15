@@ -1,7 +1,7 @@
 {
     "args": ["key", "value"],
     "facts": {
-        "git_config": {}
+        "git.GitConfig": {}
     },
     "commands": [
         "git config --global key \"value\""

@@ -29,6 +29,7 @@ automagically
 automount
 autoname
 autosectionlabel
+base64
 baseurl
 basic
 benchmarking
@@ -50,6 +51,7 @@ Chocolately
 chown
 chroot
 Cim
+commitish
 comparator
 COMPAT
 compat
@@ -223,6 +225,7 @@ ntpath
 openstack
 Openvz
 openvz
+OsVersion
 PACMAN
 Pacman
 pacman

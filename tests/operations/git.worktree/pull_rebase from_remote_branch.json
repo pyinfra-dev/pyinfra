@@ -5,13 +5,13 @@
         "from_remote_branch": ["origin", "master"]
     },
     "facts": {
-        "directory": {
-            "/home/myworktree": {
+        "files.Directory": {
+            "path=/home/myworktree": {
                 "mode": 0
             }
         },
-        "git_tracking_branch" : {
-            "/home/myworktree": null
+        "git.GitTrackingBranch" : {
+            "repo=/home/myworktree": null
         }
     },
     "commands": [

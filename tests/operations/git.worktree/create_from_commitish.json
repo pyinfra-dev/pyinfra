@@ -5,12 +5,12 @@
         "commitish": "70e8906a14"
     },
     "facts": {
-        "directory": {
-            "/home/mainrepo": {},
-            "/home/mainrepo/.git": {
+        "files.Directory": {
+            "path=/home/mainrepo": {},
+            "path=/home/mainrepo/.git": {
                 "mode": 0
             },
-            "/home/myworktree": null
+            "path=/home/myworktree": null
         }
     },
     "commands": [

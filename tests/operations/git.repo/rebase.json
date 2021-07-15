@@ -10,8 +10,8 @@
                 "mode": 0
             }
         },
-        "git_branch": {
-            "/home/myrepo": "master"
+        "git.GitBranch": {
+            "repo=/home/myrepo": "master"
         }
     },
     "commands": [

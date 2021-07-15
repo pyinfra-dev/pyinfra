@@ -4,13 +4,13 @@
         "repo": "/my/repo"
     },
     "facts": {
-        "git_config": {
-            "/my/repo": {
+        "git.GitConfig": {
+            "repo=/my/repo": {
                 "another_key": "value"
             }
         },
-        "directory": {
-            "/my/repo/.git": true
+        "files.Directory": {
+            "path=/my/repo/.git": true
         }
     },
     "commands": [

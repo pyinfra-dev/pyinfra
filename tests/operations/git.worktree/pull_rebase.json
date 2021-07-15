@@ -4,13 +4,13 @@
         "rebase": true
     },
     "facts": {
-        "directory": {
-            "/home/myworktree": {
+        "files.Directory": {
+            "path=/home/myworktree": {
                 "mode": 0
             }
         },
-        "git_tracking_branch" : {
-            "/home/myworktree": "origin/master"
+        "git.GitTrackingBranch" : {
+            "repo=/home/myworktree": "origin/master"
         }
     },
     "commands": [
