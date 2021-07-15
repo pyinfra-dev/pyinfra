@@ -455,10 +455,15 @@ class Users(FactBase):
                     if group_name and group_name != group:
                         groups.append(group_name)
 
+                raw_login_time = None
+                login_time = None
+
                 # Parse lastlog info
                 # lastlog output varies, which is why I use regex to match login time
                 login = re.search(rex, lastlog)
-                login_time = login.group() if login else None
+                if login:
+                    raw_login_time = login.group()
+                    login_time = parse_date(raw_login_time)
 
                 users[entries[0]] = {
                     'home': entries[5] or None,
@@ -468,7 +473,8 @@ class Users(FactBase):
                     'groups': groups,
                     'uid': int(entries[2]),
                     'gid': int(entries[3]),
-                    'lastlog': login_time,
+                    'lastlog': raw_login_time,
+                    'login_time': login_time,
                 }
 
         return users
