@@ -5,7 +5,7 @@
         "present": false
     },
     "facts": {
-        "lxd_containers": [
+        "lxd.LxdContainers": [
             {
                 "name": "container1",
                 "status": "Stopped"

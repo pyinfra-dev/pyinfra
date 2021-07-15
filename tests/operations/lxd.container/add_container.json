@@ -4,7 +4,7 @@
         "image": "ubuntu:16.04"
     },
     "facts": {
-        "lxd_containers": []
+        "lxd.LxdContainers": []
     },
     "commands": [
         "lxc launch ubuntu:16.04 container1"

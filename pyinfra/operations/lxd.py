@@ -5,6 +5,7 @@ The LXD modules manage LXD containers
 from __future__ import unicode_literals
 
 from pyinfra.api import operation
+from pyinfra.facts.lxd import LxdContainers
 
 
 def get_container_named(name, containers):
@@ -42,7 +43,7 @@ def container(
         )
     '''
 
-    container = get_container_named(id, host.fact.lxd_containers)
+    container = get_container_named(id, host.get_fact(LxdContainers))
 
     # Container exists and we don't want it
     if not present:
