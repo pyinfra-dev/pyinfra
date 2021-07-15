@@ -452,9 +452,9 @@ def put_file(
         if status is False:
             logger.error('File upload error: {0}'.format('\n'.join(stderr)))
             return False
-    
+
         # Delete the temporary file now that we've successfully copied it
-        command = StringCommand('rm', '-f', temp_file) 
+        command = StringCommand('rm', '-f', temp_file)
 
         status, _, stderr = run_shell_command(
             state, host, command,
