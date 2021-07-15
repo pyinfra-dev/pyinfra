@@ -1,5 +1,6 @@
 {
     "command": "psql -Ac 'SELECT * FROM pg_catalog.pg_roles'",
+    "requires_command": "psql",
     "output": [
         "rolname|rolsuper|rolinherit|rolcreaterole|rolcreatedb|rolcanlogin|rolreplication|rolconnlimit|rolpassword|rolvaliduntil|rolbypassrls|rolconfig|oid",
         "postgres|t|t|t|t|t|t|-1|********||t||10",

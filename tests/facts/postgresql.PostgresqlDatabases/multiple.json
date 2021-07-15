@@ -1,4 +1,5 @@
 {
+    "requires_command": "psql",
     "output": [
         "pg_encoding_to_char|datname|datdba|encoding|datcollate|datctype|datistemplate|datallowconn|datconnlimit|datlastsysoid|datfrozenxid|datminmxid|dattablespace|datacl",
 "UTF8|postgres|10|6|en_US.UTF-8|en_US.UTF-8|f|t|-1|13052|548|1|1663|",

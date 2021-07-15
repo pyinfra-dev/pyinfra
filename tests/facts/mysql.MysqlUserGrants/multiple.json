@@ -1,6 +1,7 @@
 {
     "arg": "someuser",
     "command": "mysql -Be 'SHOW GRANTS FOR \"someuser\"@\"localhost\"' || true",
+    "requires_command": "mysql",
     "output": [
         "GRANT USAGE ON *.* TO `someuser`@`localhost` IDENTIFIED BY PASSWORD '*THISISSECRET'",
         "GRANT ALL PRIVILEGES ON `some_database`.* TO `someuser`@`localhost` WITH GRANT OPTION"

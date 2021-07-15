@@ -1,5 +1,6 @@
 {
     "command": "vzlist -a -j",
+    "requires_command": "vzlist",
     "output": [
         "[{\"ctid\": 100},",
         "{\"ctid\": 101, \"somekey\": 10}]"

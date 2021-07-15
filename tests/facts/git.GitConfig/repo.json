@@ -1,6 +1,7 @@
 {
     "arg": "myrepo",
     "command": "! test -d myrepo || (cd myrepo && git config --local -l)",
+    "requires_command": "git",
     "output": [
         "user.email=nick@gmail.com"
     ],

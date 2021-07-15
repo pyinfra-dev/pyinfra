@@ -1,5 +1,6 @@
 {
     "command": "gpg --list-keys --with-colons --keyring /some/keyring --no-default-keyring",
+    "requires_command": "gpg",
     "arg": ["/some/keyring"],
     "output": [
         "tru:t:1:1601454628:0:3:1:5",

@@ -1,5 +1,6 @@
 {
     "command": "docker container inspect `docker ps -qa`",
+    "requires_command": "docker",
     "output": [
         "{\"hello\": \"world\"}"
     ],

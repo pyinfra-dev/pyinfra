@@ -1,5 +1,6 @@
 {
     "command": "vmstat -s",
+    "requires_command": "vmstat",
     "output": [
         "131766608  total memory",
         "10646204  used memory",

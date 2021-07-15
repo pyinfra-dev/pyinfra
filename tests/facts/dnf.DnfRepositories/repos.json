@@ -1,5 +1,6 @@
 {
     "command": "(! test -f /etc/dnf.conf || cat /etc/dnf.conf) && (cat /etc/dnf.repos.d/*.repo || true) && (cat /etc/yum.repos.d/*.repo || true)",
+    "requires_command": "dnf",
     "output": [
         "",
         "[somerepo]",

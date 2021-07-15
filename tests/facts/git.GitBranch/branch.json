@@ -1,6 +1,7 @@
 {
     "arg": "myrepo",
     "command": "! test -d myrepo || (cd myrepo && git rev-parse --abbrev-ref HEAD)",
+    "requires_command": "git",
     "output": [
         "develop"
     ],

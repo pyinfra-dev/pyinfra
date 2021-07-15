@@ -1,5 +1,6 @@
 {
     "command": "lxc list --format json --fast",
+    "requires_command": "lxc",
     "output": [
         "[{\"name\": \"container1\", \"status\": \"Running\"},{\"name\": \"container2\"}]"
     ],

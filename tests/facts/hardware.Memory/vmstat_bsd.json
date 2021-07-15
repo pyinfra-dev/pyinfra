@@ -1,5 +1,6 @@
 {
     "command": "vmstat -s",
+    "requires_command": "vmstat",
     "output": [
         "4096 bytes per page",
         "58543 pages managed",

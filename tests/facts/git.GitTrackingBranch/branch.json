@@ -1,6 +1,7 @@
 {
     "arg": "myrepo",
     "command": "! test -d myrepo || (cd myrepo && git status --branch --porcelain)",
+    "requires_command": "git",
     "output": [
         "## branch1...origin/master"
     ],
