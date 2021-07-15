@@ -23,7 +23,8 @@
             ],
             "uid": 0,
             "gid": 0,
-            "lastlog": "Sat Jun 5 12:03:23 -0600 2021"
+            "lastlog": "Sat Jun 5 12:03:23 -0600 2021",
+            "login_time": "2021-06-05T12:03:23-06:00"
         },
         "_tesTy.test": {
             "home": "/home/_tesTy.test",
@@ -35,7 +36,8 @@
             ],
             "uid": 1004,
             "gid": 1004,
-            "lastlog": "Sat Jun 12 13:43:42 -0600 2021"
+            "lastlog": "Sat Jun 12 13:43:42 -0600 2021",
+            "login_time": "2021-06-12T13:43:42-06:00"
         },
         "test.testy": {
             "home": "/home/test.testy",
@@ -45,7 +47,8 @@
             "groups": [],
             "uid": 1003,
             "gid": 1003,
-            "lastlog": "Fri Jun 11 22:26:04 -0600 2021"
+            "lastlog": "Fri Jun 11 22:26:04 -0600 2021",
+            "login_time": "2021-06-11T22:26:04-06:00"
         },
         "noshell": {
             "home": "/home/noshell",
@@ -55,7 +58,8 @@
             "groups": [],
             "uid": 1002,
             "gid": 1002,
-            "lastlog": null
+            "lastlog": null,
+            "login_time": null
         },
         "nohome": {
             "home": null,
@@ -65,7 +69,8 @@
             "groups": [],
             "uid": 1002,
             "gid": 1002,
-            "lastlog": null
+            "lastlog": null,
+            "login_time": null
         }
     }
 }
