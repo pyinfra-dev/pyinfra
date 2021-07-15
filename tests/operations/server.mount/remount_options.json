@@ -4,7 +4,7 @@
         "options": ["rw", "noatime"]
     },
     "facts": {
-        "mounts": {
+        "server.Mounts": {
             "/data": {
                 "options": ["rw"]
             }

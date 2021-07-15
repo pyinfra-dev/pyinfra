@@ -1,16 +1,16 @@
 {
     "args": ["my-hostname.net"],
     "facts": {
-        "os": "Linux",
-        "hostname": "nope",
+        "server.Os": "Linux",
+        "server.Hostname": "nope",
         "files.File": {
             "path=/etc/hostname": {}
         },
         "files.Directory": {
             "path=/etc": true
         },
-        "which": {
-            "hostnamectl": null
+        "server.Which": {
+            "command=hostnamectl": null
         }
     },
     "commands": [

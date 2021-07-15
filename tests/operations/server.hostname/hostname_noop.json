@@ -1,10 +1,10 @@
 {
     "args": ["my-hostname.net"],
     "facts": {
-        "os": "not-Linux",
-        "hostname": "my-hostname.net",
-        "which": {
-            "hostnamectl": null
+        "server.Os": "not-Linux",
+        "server.Hostname": "my-hostname.net",
+        "server.Which": {
+            "command=hostnamectl": null
         }
     },
     "commands": [],

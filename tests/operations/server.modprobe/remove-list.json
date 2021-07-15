@@ -4,7 +4,7 @@
         "present": false
     },
     "facts": {
-        "kernel_modules": {
+        "server.KernelModules": {
             "mod1": {}
         }
     },

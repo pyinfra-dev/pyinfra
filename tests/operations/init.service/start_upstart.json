@@ -4,13 +4,13 @@
         "upstart.UpstartStatus": {
             "nginx": false
         },
-        "which": {
-            "systemctl": false,
-            "initctl": true
+        "server.Which": {
+            "command=systemctl": false,
+            "command=initctl": true
         },
-        "directory": {
-            "/etc/init.d": false,
-            "/etc/rc.d": false
+        "files.Directory": {
+            "path=/etc/init.d": false,
+            "path=/etc/rc.d": false
         }
     },
     "commands": [

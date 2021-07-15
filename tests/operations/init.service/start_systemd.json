@@ -4,13 +4,13 @@
         "systemd.SystemdStatus": {
             "nginx.service": false
         },
-        "which": {
-            "systemctl": true,
-            "initctl": false
+        "server.Which": {
+            "command=systemctl": true,
+            "command=initctl": false
         },
-        "directory": {
-            "/etc/init.d": false,
-            "/etc/rc.d": false
+        "files.Directory": {
+            "path=/etc/init.d": false,
+            "path=/etc/rc.d": false
         }
     },
     "commands": [

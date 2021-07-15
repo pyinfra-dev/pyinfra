@@ -4,7 +4,9 @@
         "special_time": "@reboot"
     },
     "facts": {
-        "crontab": {}
+        "server.Crontab": {
+            "user=None": {}
+        }
     },
     "commands": [
         "echo '@reboot this_is_a_command' >> _tempfile_",

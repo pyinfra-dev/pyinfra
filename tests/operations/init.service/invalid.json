@@ -1,13 +1,13 @@
 {
     "args": ["nginx"],
     "facts": {
-        "which": {
-            "systemctl": false,
-            "initctl": false
+        "server.Which": {
+            "command=systemctl": false,
+            "command=initctl": false
         },
-        "directory": {
-            "/etc/init.d": false,
-            "/etc/rc.d": false
+        "files.Directory": {
+            "path=/etc/init.d": false,
+            "path=/etc/rc.d": false
         }
     },
     "exception": {

@@ -548,7 +548,7 @@ class LinuxDistribution(FactBase):
 class LinuxName(ShortFactBase):
     '''
     Returns the name of the Linux distribution. Shortcut for
-    ``host.fact.linux_distribution['name']``.
+    ``host.get_fact(LinuxDistribution)['name']``.
     '''
 
     fact = LinuxDistribution

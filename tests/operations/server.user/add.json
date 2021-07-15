@@ -10,11 +10,11 @@
         "comment": "Full Name"
     },
     "facts": {
-        "users": {},
+        "server.Users": {},
         "files.Directory": {
             "path=homedir": null
         },
-        "os": "Linux"
+        "server.Os": "Linux"
     },
     "commands": [
         "grep 'someuser:' /etc/passwd || useradd -d homedir -s shellbin -g mygroup -G secondary_group,another -r --uid 1000 -c 'Full Name' someuser",

@@ -4,8 +4,8 @@
         "user": "pyinfra"
     },
     "facts": {
-        "crontab": {
-            "pyinfra": {}
+        "server.Crontab": {
+            "user=pyinfra": {}
         }
     },
     "commands": [

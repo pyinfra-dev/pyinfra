@@ -4,7 +4,7 @@
         "options": ["rw"]
     },
     "facts": {
-        "mounts": {}
+        "server.Mounts": {}
     },
     "commands": [
         "mount -o rw /data"

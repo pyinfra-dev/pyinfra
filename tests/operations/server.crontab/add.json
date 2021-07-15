@@ -1,7 +1,9 @@
 {
     "args": ["this_is_a_command"],
     "facts": {
-        "crontab": {}
+        "server.Crontab": {
+            "user=None": {}
+        }
     },
     "commands": [
         "echo '* * * * * this_is_a_command' >> _tempfile_",

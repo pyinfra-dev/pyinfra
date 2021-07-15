@@ -5,7 +5,7 @@
         "ensure_home": false
     },
     "facts": {
-        "users": {}
+        "server.Users": {}
     },
     "commands": [
         "grep 'someuser:' /etc/passwd || useradd -d /home/someuser -o someuser"

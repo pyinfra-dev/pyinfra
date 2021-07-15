@@ -4,14 +4,16 @@
         "cron_name": "a-name"
     },
     "facts": {
-        "crontab": {
-            "apt update": {
-                "minute": "*",
-                "hour": "*",
-                "month": "*",
-                "day_of_month": "*",
-                "day_of_week": "*",
-                "comments": []
+        "server.Crontab": {
+            "user=None": {
+                "apt update": {
+                    "minute": "*",
+                    "hour": "*",
+                    "month": "*",
+                    "day_of_month": "*",
+                    "day_of_week": "*",
+                    "comments": []
+                }
             }
         }
     },

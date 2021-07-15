@@ -1,8 +1,10 @@
 {
     "args": ["this_is_a_command"],
     "facts": {
-        "crontab": {
-            "this_is_another_command": {}
+        "server.Crontab": {
+            "user=None": {
+                "this_is_another_command": {}
+            }
         }
     },
     "commands": [

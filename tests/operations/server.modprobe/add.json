@@ -1,7 +1,7 @@
 {
     "args": ["somemodule"],
     "facts": {
-        "kernel_modules": {}
+        "server.KernelModules": {}
     },
     "commands": [
         "modprobe -a somemodule"

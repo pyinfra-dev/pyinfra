@@ -4,13 +4,13 @@
         "bsdinit.RcdStatus": {
             "nginx": false
         },
-        "which": {
-            "systemctl": false,
-            "initctl": false
+        "server.Which": {
+            "command=systemctl": false,
+            "command=initctl": false
         },
-        "directory": {
-            "/etc/init.d": false,
-            "/etc/rc.d": true
+        "files.Directory": {
+            "path=/etc/init.d": false,
+            "path=/etc/rc.d": true
         }
     },
     "commands": [

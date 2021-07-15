@@ -4,13 +4,13 @@
         "sysvinit.InitdStatus": {
             "nginx": false
         },
-        "which": {
-            "systemctl": false,
-            "initctl": false
+        "server.Which": {
+            "command=systemctl": false,
+            "command=initctl": false
         },
-        "directory": {
-            "/etc/init.d": true,
-            "/etc/rc.d": false
+        "files.Directory": {
+            "path=/etc/init.d": true,
+            "path=/etc/rc.d": false
         }
     },
     "commands": [

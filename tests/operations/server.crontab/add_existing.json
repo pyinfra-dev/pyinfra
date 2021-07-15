@@ -1,13 +1,15 @@
 {
     "args": ["this_is_a_command"],
     "facts": {
-        "crontab": {
-            "this_is_a_command": {
-                "minute": "*",
-                "hour": "*",
-                "month": "*",
-                "day_of_week": "*",
-                "day_of_month": "*"
+        "server.Crontab": {
+            "user=None": {
+                "this_is_a_command": {
+                    "minute": "*",
+                    "hour": "*",
+                    "month": "*",
+                    "day_of_week": "*",
+                    "day_of_month": "*"
+                }
             }
         }
     },

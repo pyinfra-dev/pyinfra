@@ -1,16 +1,16 @@
 {
     "args": ["my-hostname.net"],
     "facts": {
-        "os": "OpenBSD",
-        "hostname": "nope",
+        "server.Os": "OpenBSD",
+        "server.Hostname": "nope",
         "files.File": {
             "path=/etc/myname": {}
         },
         "files.Directory": {
             "path=/etc": true
         },
-        "which": {
-            "hostnamectl": null
+        "server.Which": {
+            "command=hostnamectl": null
         }
     },
     "commands": [

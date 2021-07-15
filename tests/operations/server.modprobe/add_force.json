@@ -4,7 +4,7 @@
         "force": true
     },
     "facts": {
-        "kernel_modules": {}
+        "server.KernelModules": {}
     },
     "commands": [
         "modprobe -f -a somemodule"

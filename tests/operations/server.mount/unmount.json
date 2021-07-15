@@ -4,7 +4,7 @@
         "mounted": false
     },
     "facts": {
-        "mounts": {
+        "server.Mounts": {
             "/data": {}
         }
     },

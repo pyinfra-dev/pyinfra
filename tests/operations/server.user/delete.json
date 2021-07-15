@@ -4,7 +4,7 @@
         "present": false
     },
     "facts": {
-        "users": {
+        "server.Users": {
             "someuser": {
                 "home": "/home",
                 "shell": "/bin/bash"

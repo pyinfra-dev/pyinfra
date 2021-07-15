@@ -4,10 +4,12 @@
         "special_time": "@reboot"
     },
     "facts": {
-        "crontab": {
-            "this_is_a_command": {
-                "special_time": "@daily",
-                "comments": []
+        "server.Crontab": {
+            "user=None": {
+                "this_is_a_command": {
+                    "special_time": "@daily",
+                    "comments": []
+                }
             }
         }
     },

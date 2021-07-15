@@ -8,7 +8,7 @@
         "comment": "New Full Name"
     },
     "facts": {
-        "users": {
+        "server.Users": {
             "someuser": {
                 "comment": "Full Name",
                 "home": "/home/someuser",

@@ -1,9 +1,9 @@
 {
     "args": ["my-hostname.net"],
     "facts": {
-        "hostname": "my-hostname.net",
-        "which": {
-            "hostnamectl": "hostnamectl"
+        "server.Hostname": "my-hostname.net",
+        "server.Which": {
+            "command=hostnamectl": "hostnamectl"
         }
     },
     "commands": [],

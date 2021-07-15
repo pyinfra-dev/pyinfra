@@ -9,7 +9,7 @@
         ["anotherfile.pub", "someotherkeydata"]
     ],
     "facts": {
-        "users": {
+        "server.Users": {
             "someuser": {
                 "home": "homedir",
                 "group": null,

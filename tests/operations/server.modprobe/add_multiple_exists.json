@@ -1,7 +1,7 @@
 {
     "args": [["somemodule", "someothermodule"]],
     "facts": {
-        "kernel_modules": {
+        "server.KernelModules": {
             "somemodule": {},
             "someothermodule": {}
         }

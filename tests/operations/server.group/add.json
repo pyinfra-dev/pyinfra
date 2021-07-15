@@ -5,8 +5,8 @@
         "system": true
     },
     "facts": {
-        "groups": [],
-        "os": "Linux"
+        "server.Groups": [],
+        "server.Os": "Linux"
     },
     "commands": [
         "grep 'somegroup:' /etc/group || groupadd -r somegroup --gid 1000"

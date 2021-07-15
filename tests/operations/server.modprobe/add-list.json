@@ -1,7 +1,7 @@
 {
     "args": [["mod1", "mod2", "mod3"]],
     "facts": {
-        "kernel_modules": {
+        "server.KernelModules": {
             "mod2": {}
         }
     },

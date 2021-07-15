@@ -5,16 +5,18 @@
         "cron_name": "name of cron"
     },
     "facts": {
-        "crontab": {
-            "command_to_change": {
-                "minute": "*",
-                "hour": "*",
-                "month": "*",
-                "day_of_week": "*",
-                "day_of_month": "*",
-                "comments": [
-                    "# pyinfra-name=name of cron"
-                ]
+        "server.Crontab": {
+            "user=None": {
+                "command_to_change": {
+                    "minute": "*",
+                    "hour": "*",
+                    "month": "*",
+                    "day_of_week": "*",
+                    "day_of_month": "*",
+                    "comments": [
+                        "# pyinfra-name=name of cron"
+                    ]
+                }
             }
         }
     },

@@ -4,7 +4,7 @@
         "present": false
     },
     "facts": {
-        "groups": [
+        "server.Groups": [
             "somegroup"
         ]
     },

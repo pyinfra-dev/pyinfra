@@ -6,7 +6,7 @@
         "delete_keys": true
     },
     "facts": {
-        "users": {
+        "server.Users": {
             "someuser": {
                 "home": "homedir",
                 "group": null,
