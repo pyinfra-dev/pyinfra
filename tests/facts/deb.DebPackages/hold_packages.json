@@ -1,5 +1,6 @@
 {
     "command": "dpkg -l",
+    "requires_command": "dpkg",
     "output": [
         "hi  matrix-synapse-py3 1.37.1+bionic1 amd64 Open federated Instant Messaging and VoIP server",
         "hi  miniflux 2.0.31 amd64 Minimalist Feed Reader",
