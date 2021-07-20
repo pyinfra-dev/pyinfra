@@ -1,9 +1,8 @@
 def handle_service_control(
     host,
-    name, fact_cls, formatter, running, restarted, reloaded, command,
+    name, statuses, formatter, running, restarted, reloaded, command,
     status_argument='status',
 ):
-    statuses = host.get_fact(fact_cls)
     status = statuses.get(name, None)
 
     # If we don't know the status, we need to check if it's up before starting
