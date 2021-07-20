@@ -77,26 +77,11 @@ def _get_groups_from_filename(inventory_filename):
     }
 
 
-def make_inventory(
-    inventory_filename,
-    deploy_dir=None,
-    ssh_port=None,
-    ssh_user=None,
-    ssh_key=None,
-    ssh_key_password=None,
-    ssh_password=None,
-    winrm_username=None,
-    winrm_password=None,
-    winrm_port=None,
-    winrm_transport=None,
-):
+def make_inventory(inventory_filename, override_data=None, deploy_dir=None):
     '''
     Builds a ``pyinfra.api.Inventory`` from the filesystem. If the file does not exist
     and doesn't contain a / attempts to use that as the only hostname.
     '''
-
-    if ssh_port is not None:
-        ssh_port = int(ssh_port)
 
     file_groupname = None
 
@@ -181,14 +166,6 @@ def make_inventory(
 
     return Inventory(
         groups.pop('all'),
-        ssh_user=ssh_user,
-        ssh_key=ssh_key,
-        ssh_key_password=ssh_key_password,
-        ssh_port=ssh_port,
-        ssh_password=ssh_password,
-        winrm_username=winrm_username,
-        winrm_password=winrm_password,
-        winrm_port=winrm_port,
-        winrm_transport=winrm_transport,
+        override_data=override_data,
         **groups
     ), file_groupname and file_groupname.lower()
