@@ -4,12 +4,13 @@
         "reloaded": true
     },
     "facts": {
+        "server.Os": "FreeBSD",
         "bsdinit.RcdStatus": {
             "nginx": true
         }
     },
     "commands": [
-        "/etc/rc.d/nginx reload"
+        "test -e /etc/rc.d/nginx && /etc/rc.d/nginx reload || /usr/local/etc/rc.d/nginx reload"
     ],
     "idempotent": false
 }

@@ -4,6 +4,7 @@
         "enabled": false
     },
     "facts": {
+        "server.Os": "FreeBSD",
         "bsdinit.RcdStatus": {
             "nginx": true
         },
