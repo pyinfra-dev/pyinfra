@@ -121,9 +121,9 @@ def json_encode(obj):
         raise TypeError('Cannot serialize: {0} ({1})'.format(type(obj), obj))
 
 
-def _parse_arg(arg):
+def parse_cli_arg(arg):
     if isinstance(arg, list):
-        return [_parse_arg(a) for a in arg]
+        return [parse_cli_arg(a) for a in arg]
 
     if arg.lower() == 'false':
         return False
@@ -177,12 +177,12 @@ def get_operation_and_args(commands):
             pass
 
     args = [
-        _parse_arg(arg)
+        parse_cli_arg(arg)
         for arg in operation_args if '=' not in arg
     ]
 
     kwargs = {
-        key: _parse_arg(value)
+        key: parse_cli_arg(value)
         for key, value in [
             arg.split('=', 1)
             for arg in operation_args if '=' in arg
