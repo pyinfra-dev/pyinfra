@@ -1,0 +1,12 @@
+{
+    "args": ["nginx"],
+    "facts": {
+        "openrc.OpenrcStatus": {
+            "runlevel=default": {
+                "nginx": true
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "service nginx is running"
+}
