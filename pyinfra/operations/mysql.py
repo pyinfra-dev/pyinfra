@@ -243,6 +243,7 @@ def privileges(
     database='*', table='*',
     present=True,
     flush=True,
+    with_grant_option=None,
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
@@ -258,6 +259,7 @@ def privileges(
     + table: name of the table to grant privileges to (defaults to all)
     + present: whether these privileges should exist (False to ``REVOKE``)
     + flush: whether to flush (and update) the privileges table after any changes
+    + with_grant_option: whether to add the with grant option privilege
     + mysql_*: global module arguments, see above
 
     Note:
@@ -269,6 +271,12 @@ def privileges(
     # Ensure we have a list
     if isinstance(privileges, six.string_types):
         privileges = [privileges]
+
+    if (
+        (present and with_grant_option)
+        or (present is False and with_grant_option is False)
+    ):
+        privileges.append('GRANT OPTION')
 
     if database != '*':
         database = '`{0}`'.format(database)
