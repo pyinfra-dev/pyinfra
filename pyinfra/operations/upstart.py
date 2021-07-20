@@ -39,7 +39,7 @@ def service(
 
     yield handle_service_control(
         host,
-        service, UpstartStatus,
+        service, host.get_fact(UpstartStatus),
         'initctl {1} {0}',
         running, restarted, reloaded, command,
     )
