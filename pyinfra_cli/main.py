@@ -53,6 +53,7 @@ from .util import (
     get_operation_and_args,
     list_dirs_above_file,
     load_deploy_file,
+    parse_cli_arg,
 )
 from .virtualenv import init_virtualenv
 
@@ -118,6 +119,11 @@ def _print_support(ctx, param, value):
     multiple=True,
 )
 @click.option('--fail-percent', type=int, help='% of hosts allowed to fail.')
+@click.option(
+    '--data',
+    multiple=True,
+    help='Override data values, format key=value',
+)
 # Auth args
 @click.option(
     '--sudo', is_flag=True, default=False,
@@ -264,7 +270,7 @@ def _main(
     winrm_username, winrm_password, winrm_port,
     winrm_transport, shell_executable,
     sudo, sudo_user, use_sudo_password, su_user,
-    parallel, fail_percent,
+    parallel, fail_percent, data,
     dry, limit, no_wait, serial, quiet,
     debug, debug_data, debug_facts, debug_operations,
     facts=None, print_operations=None, support=None,
@@ -431,19 +437,36 @@ def _main(
     if not quiet:
         click.echo('--> Loading inventory...', err=True)
 
+    override_data = {}
+
+    for arg in data:
+        key, value = arg.split('=', 1)
+        override_data[key] = value
+
+    override_data = {
+        key: parse_cli_arg(value)
+        for key, value in override_data.items()
+    }
+
+    for key, value in (
+        ('ssh_user', ssh_user),
+        ('ssh_key', ssh_key),
+        ('ssh_key_password', ssh_key_password),
+        ('ssh_port', ssh_port),
+        ('ssh_password', ssh_password),
+        ('winrm_username', winrm_username),
+        ('winrm_password', winrm_password),
+        ('winrm_port', winrm_port),
+        ('winrm_transport', winrm_transport),
+    ):
+        if value:
+            override_data[key] = value
+
     # Load up the inventory from the filesystem
     inventory, inventory_group = make_inventory(
         inventory,
         deploy_dir=deploy_dir,
-        ssh_port=ssh_port,
-        ssh_user=ssh_user,
-        ssh_key=ssh_key,
-        ssh_key_password=ssh_key_password,
-        ssh_password=ssh_password,
-        winrm_username=winrm_username,
-        winrm_password=winrm_password,
-        winrm_port=winrm_port,
-        winrm_transport=winrm_transport,
+        override_data=override_data,
     )
 
     # Attach to pseudo inventory

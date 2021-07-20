@@ -28,22 +28,19 @@ class Inventory(object):
 
     Args:
         names_data: tuple of ``(names, data)``
-        ssh_user: override SSH user
-        ssh_port: override SSH port
-        ssh_key: override SSH key filename
-        ssh_key_password: override password for the SSH key
-        ssh_password: override SSH password
-        winrm_username: override WINRM username
-        winrm_password: override WINRM pasword
-        winrm_port: override WINRM port
-        winrm_transport: override WINRM transport
-        **groups: map of group names -> ``(names, data)``
+        override_data: dictionary of data overrides
+        ssh_*: deprecated, use ``override_data.ssh_*``
+        winrm_*: deprecated, use ``override_data.winrm_*``
+        **groups: map of group name -> ``(names, data)``
     '''
 
     state = None
 
     def __init__(
         self, names_data,
+        override_data=None,
+        # The below are deprecated, override_data.X is now preferred
+        # TODO: remove these in v2
         ssh_user=None, ssh_port=None, ssh_key=None,
         ssh_key_password=None, ssh_password=None,
         winrm_username=None, winrm_password=None,
@@ -55,24 +52,27 @@ class Inventory(object):
         self.host_data = defaultdict(dict)  # dict of name -> data
         self.group_data = defaultdict(dict)  # dict of name -> data
 
-        # In CLI mode these are --user, --key, etc
-        override_data = {
-            'ssh_user': ssh_user,
-            'ssh_key': ssh_key,
-            'ssh_key_password': ssh_key_password,
-            'ssh_port': ssh_port,
-            'ssh_password': ssh_password,
-            'winrm_username': winrm_username,
-            'winrm_password': winrm_password,
-            'winrm_port': winrm_port,
-            'winrm_transport': winrm_transport,
-        }
-        # Strip None values
-        override_data = {
-            key: value
-            for key, value in six.iteritems(override_data)
-            if value is not None
-        }
+        override_data = override_data or {}
+
+        # TODO: remove these in v2
+        for key, value in (
+            ('ssh_user', ssh_user),
+            ('ssh_key', ssh_key),
+            ('ssh_key_password', ssh_key_password),
+            ('ssh_port', ssh_port),
+            ('ssh_password', ssh_password),
+            ('winrm_username', winrm_username),
+            ('winrm_password', winrm_password),
+            ('winrm_port', winrm_port),
+            ('winrm_transport', winrm_transport),
+        ):
+            if value is not None:
+                logger.warning((
+                    'Use of `{0}` is deprecated when creating `Inventory` classes, '
+                    'please use `override_data.{0}`'
+                ).format(key))
+                override_data[key] = value
+
         self.override_data = override_data
 
         names, data = names_data
