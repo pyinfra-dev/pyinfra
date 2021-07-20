@@ -24,14 +24,20 @@ To debug `pyinfra` within PyCharm, you need to [explicitly enable support for Ge
 
 ## Remote Systems
 
-`pyinfra` aims to be compatible with all Unix-like operating systems and is currently tested against:
+`pyinfra` aims to be compatible with all Unix-like operating systems and is currently developed against:
 
-+ Ubuntu 16/18/20
-+ Debian 8/9
-+ CentOS 6/7/8
-+ Fedora 24
-+ OpenBSD 6
-+ FreeBSD 12
++ Linux distros:
+    * Ubuntu 18/20
+    * Debian 9/10
+    * CentOS 7/8
+    * Fedora 33
+    * Alpine 3.8
++ BSD flavours:
+    * OpenBSD 6
+    * FreeBSD 12
+    * NetBSD 9
+    * HardenedBSD 11
+    * DragonflyBSD 5
 + OpenSUSE (leap15 + tumbleweed)
 + macOS 10.15 (with [`@local` connector](connectors.html#local))
 + Docker (with [`@docker` connector](connectors.html#docker))
