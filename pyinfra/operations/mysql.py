@@ -233,6 +233,9 @@ def database(
         )
 
 
+# TODO: make this behave like a proper state op in v2, by setting present=None as the default
+# and having that mode add/remove privileges to match the provided list. Retain True/False support
+# to ensure certain matches exist or not.
 @operation
 def privileges(
     user, privileges,
@@ -253,9 +256,14 @@ def privileges(
     + user_hostname: the hostname of the user
     + database: name of the database to grant privileges to (defaults to all)
     + table: name of the table to grant privileges to (defaults to all)
-    + present: whether these privileges should exist (False to ``REVOKE)
+    + present: whether these privileges should exist (False to ``REVOKE``)
     + flush: whether to flush (and update) the privileges table after any changes
     + mysql_*: global module arguments, see above
+
+    Note:
+        This operation will either ensure permissions exist or are removed for a given database
+        & table combination. This means when ``present=True`` it won't add/remove any permissions
+        that already exist but aren't passed in as ``privileges``.
     '''
 
     # Ensure we have a list
@@ -281,7 +289,8 @@ def privileges(
         mysql_host, mysql_port,
     )
 
-    has_privileges = False
+    has_all_privileges = False
+    has_any_privileges = False
 
     if database_table in user_grants:
         existing_privileges = [
@@ -289,9 +298,17 @@ def privileges(
             for privilege in user_grants[database_table]['privileges']
         ]
 
-        has_privileges = (
+        has_all_privileges = (
             database_table in user_grants
             and all(
+                privilege in existing_privileges
+                for privilege in privileges
+            )
+        )
+
+        has_any_privileges = (
+            database_table in user_grants
+            and any(
                 privilege in existing_privileges
                 for privilege in privileges
             )
@@ -301,7 +318,7 @@ def privileges(
 
     # No privilege and we want it
     if present:
-        if not has_privileges:
+        if not has_all_privileges:
             action = 'GRANT'
             target = 'TO'
         else:
@@ -310,7 +327,7 @@ def privileges(
 
     # Permission we don't want
     if not present:
-        if has_privileges:
+        if has_any_privileges:
             action = 'REVOKE'
             target = 'FROM'
         else:
@@ -324,9 +341,12 @@ def privileges(
             '{target} "{user}"@"{user_hostname}"'
         ).format(
             privileges=', '.join(privileges),
-            action=action, target=target,
-            database=database, table=table,
-            user=user, user_hostname=user_hostname,
+            action=action,
+            target=target,
+            database=database,
+            table=table,
+            user=user,
+            user_hostname=user_hostname,
         )
 
         yield make_execute_mysql_command(

@@ -1,5 +1,5 @@
 {
-    "args": ["someuser", ["SELECT", "INSERT"]],
+    "args": ["someuser", ["SELECT", "INSERT", "DELETE"]],
     "kwargs": {
         "present": false
     },
@@ -15,7 +15,7 @@
         }
     },
     "commands": [
-        "mysql -Be 'REVOKE SELECT, INSERT ON *.* FROM \"someuser\"@\"localhost\"'",
+        "mysql -Be 'REVOKE SELECT, INSERT, DELETE ON *.* FROM \"someuser\"@\"localhost\"'",
         "mysql -Be 'FLUSH PRIVILEGES'"
     ],
     "idempotent": false
