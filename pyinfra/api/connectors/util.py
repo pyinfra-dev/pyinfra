@@ -51,6 +51,21 @@ def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
             _print(line)
 
 
+def execute_command_with_sudo_retry(host, command_kwargs, execute_command):
+    return_code, combined_output = execute_command()
+
+    if return_code != 0 and combined_output:
+        last_line = combined_output[-1][1]
+        if last_line == 'sudo: a password is required':
+            command_kwargs['use_sudo_password'] = get_sudo_password(
+                host,
+                use_sudo_password=True,  # ask for the password
+            )
+            return_code, combined_output = execute_command()
+
+    return return_code, combined_output
+
+
 def run_local_process(
     command,
     stdin=None,
@@ -151,11 +166,11 @@ def write_stdin(stdin, buffer):
     buffer.close()
 
 
-def get_sudo_password(state, host, use_sudo_password, run_shell_command, put_file):
+def get_sudo_password(host, use_sudo_password):
     sudo_askpass_uploaded = host.connector_data.get('sudo_askpass_uploaded', False)
     if not sudo_askpass_uploaded:
-        put_file(state, host, get_sudo_askpass_exe(), SUDO_ASKPASS_EXE_FILENAME)
-        run_shell_command(state, host, 'chmod +x {0}'.format(SUDO_ASKPASS_EXE_FILENAME))
+        host.put_file(get_sudo_askpass_exe(), SUDO_ASKPASS_EXE_FILENAME)
+        host.run_shell_command('chmod +x {0}'.format(SUDO_ASKPASS_EXE_FILENAME))
         host.connector_data['sudo_askpass_uploaded'] = True
 
     if use_sudo_password is True:

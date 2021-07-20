@@ -515,6 +515,41 @@ class TestSSHConnector(TestCase):
     #
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.api.connectors.util.get_sudo_password')
+    def test_run_shell_command_retry_for_sudo_password(
+        self,
+        fake_get_sudo_password,
+        fake_ssh_client,
+    ):
+        fake_get_sudo_password.return_value = ['FILENAME', 'PASSWORD']
+
+        fake_ssh = MagicMock()
+        fake_stdin = MagicMock()
+        fake_stdout = MagicMock()
+        fake_stderr = ['sudo: a password is required']
+        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, fake_stderr
+
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=('somehost',))
+        state = State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect(state)
+
+        command = 'echo hi'
+        return_values = [1, 0]  # return 0 on the second call
+        fake_stdout.channel.recv_exit_status.side_effect = lambda: return_values.pop(0)
+
+        out = host.run_shell_command(command)
+        assert len(out) == 3
+        assert out[0] is True
+        assert fake_get_sudo_password.called
+        fake_ssh.exec_command.assert_called_with(
+            "env SUDO_ASKPASS=FILENAME PYINFRA_SUDO_PASSWORD=PASSWORD sh -c 'echo hi'",
+            get_pty=False,
+        )
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
     @patch('pyinfra.api.connectors.ssh.SFTPClient')
     def test_put_file(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('anotherhost',))

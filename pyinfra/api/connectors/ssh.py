@@ -32,6 +32,7 @@ from pyinfra.api.util import get_file_io, memoize
 
 from .sshuserclient import SSHClient
 from .util import (
+    execute_command_with_sudo_retry,
     get_sudo_password,
     make_unix_command,
     read_buffers_into_queue,
@@ -286,41 +287,48 @@ def run_shell_command(
             put_file=put_file,
         )
 
-    command = make_unix_command(command, state=state, **command_kwargs)
-    actual_command = command.get_raw_value()
+    def execute_command():
+        unix_command = make_unix_command(command, state=state, **command_kwargs)
+        actual_command = unix_command.get_raw_value()
 
-    logger.debug('Running command on {0}: (pty={1}) {2}'.format(
-        host.name, get_pty, command,
-    ))
+        logger.debug('Running command on {0}: (pty={1}) {2}'.format(
+            host.name, get_pty, unix_command,
+        ))
 
-    if print_input:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, command), err=True)
+        if print_input:
+            click.echo('{0}>>> {1}'.format(host.print_prefix, unix_command), err=True)
 
-    # Run it! Get stdout, stderr & the underlying channel
-    stdin_buffer, stdout_buffer, stderr_buffer = host.connection.exec_command(
-        actual_command,
-        get_pty=get_pty,
+        # Run it! Get stdout, stderr & the underlying channel
+        stdin_buffer, stdout_buffer, stderr_buffer = host.connection.exec_command(
+            actual_command,
+            get_pty=get_pty,
+        )
+
+        if stdin:
+            write_stdin(stdin, stdin_buffer)
+
+        combined_output = read_buffers_into_queue(
+            stdout_buffer,
+            stderr_buffer,
+            timeout=timeout,
+            print_output=print_output,
+            print_prefix=host.print_prefix,
+        )
+
+        logger.debug('Waiting for exit status...')
+        exit_status = stdout_buffer.channel.recv_exit_status()
+        logger.debug('Command exit status: {0}'.format(exit_status))
+
+        return exit_status, combined_output
+
+    return_code, combined_output = execute_command_with_sudo_retry(
+        host, command_kwargs, execute_command,
     )
-
-    if stdin:
-        write_stdin(stdin, stdin_buffer)
-
-    combined_output = read_buffers_into_queue(
-        stdout_buffer,
-        stderr_buffer,
-        timeout=timeout,
-        print_output=print_output,
-        print_prefix=host.print_prefix,
-    )
-
-    logger.debug('Waiting for exit status...')
-    exit_status = stdout_buffer.channel.recv_exit_status()
-    logger.debug('Command exit status: {0}'.format(exit_status))
 
     if success_exit_codes:
-        status = exit_status in success_exit_codes
+        status = return_code in success_exit_codes
     else:
-        status = exit_status == 0
+        status = return_code == 0
 
     if return_combined_output:
         return status, combined_output
