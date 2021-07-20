@@ -163,6 +163,7 @@ MYSQL_GRANT_REGEX = (
 )
 
 
+# TODO: remove the dictionary and just have GRANT OPTION as a listed privilege
 class MysqlUserGrants(MysqlFactBase):
     '''
     Returns a dict of ``<database>`.<table>`` with granted privileges for each:
@@ -221,5 +222,6 @@ class MysqlUserGrants(MysqlFactBase):
 
             if 'WITH GRANT OPTION' in extras:
                 database_table_privileges[database_table]['with_grant_option'] = True
+                database_table_privileges[database_table]['privileges'].add('GRANT OPTION')
 
         return database_table_privileges

@@ -15,7 +15,8 @@
         },
         "`some_database`.*": {
             "privileges": [
-                "ALL PRIVILEGES"
+                "ALL PRIVILEGES",
+                "GRANT OPTION"
             ],
             "with_grant_option": true
         }
