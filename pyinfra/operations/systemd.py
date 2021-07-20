@@ -74,7 +74,7 @@ def service(
 
     yield handle_service_control(
         host,
-        service, SystemdStatus,
+        service, host.get_fact(SystemdStatus),
         ' '.join([systemctl_cmd, '{1}', '{0}']),
         running, restarted, reloaded, command,
     )
