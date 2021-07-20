@@ -13,6 +13,7 @@ from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import get_file_io
 
 from .util import (
+    execute_command_with_sudo_retry,
     get_sudo_password,
     make_unix_command,
     run_local_process,
@@ -69,20 +70,25 @@ def run_shell_command(
             put_file=put_file,
         )
 
-    command = make_unix_command(command, state=state, **command_kwargs)
-    actual_command = command.get_raw_value()
+    def execute_command():
+        unix_command = make_unix_command(command, state=state, **command_kwargs)
+        actual_command = unix_command.get_raw_value()
 
-    logger.debug('--> Running command on localhost: {0}'.format(command))
+        logger.debug('--> Running command on localhost: {0}'.format(unix_command))
 
-    if print_input:
-        click.echo('{0}>>> {1}'.format(host.print_prefix, command), err=True)
+        if print_input:
+            click.echo('{0}>>> {1}'.format(host.print_prefix, unix_command), err=True)
 
-    return_code, combined_output = run_local_process(
-        actual_command,
-        stdin=stdin,
-        timeout=timeout,
-        print_output=print_output,
-        print_prefix=host.print_prefix,
+        return run_local_process(
+            actual_command,
+            stdin=stdin,
+            timeout=timeout,
+            print_output=print_output,
+            print_prefix=host.print_prefix,
+        )
+
+    return_code, combined_output = execute_command_with_sudo_retry(
+        host, command_kwargs, execute_command,
     )
 
     if success_exit_codes:
