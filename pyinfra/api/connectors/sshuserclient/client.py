@@ -33,10 +33,13 @@ class SSHClient(ParamikoClient):
     original idea at http://bitprophet.org/blog/2012/11/05/gateway-solutions/.
     '''
 
-    def connect(self, hostname, **kwargs):
-        self.hostname, self.config, forward_agent = self.parse_config(hostname)
-        self.config.update(kwargs)
-        super(SSHClient, self).connect(self.hostname, **self.config)
+    def connect(self, hostname, _pyinfra_force_forward_agent=None, **kwargs):
+        hostname, config, forward_agent = self.parse_config(hostname)
+        config.update(kwargs)
+        super(SSHClient, self).connect(hostname, **config)
+
+        if _pyinfra_force_forward_agent is not None:
+            forward_agent = _pyinfra_force_forward_agent
 
         if forward_agent:
             # Enable SSH forwarding
