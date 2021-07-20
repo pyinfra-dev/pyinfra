@@ -123,9 +123,14 @@ def get_executor_kwarg_keys():
     return list(keys)
 
 
-def pop_global_op_kwargs(state, kwargs):
+def pop_global_op_kwargs(state, host, kwargs):
     '''
-    Pop and return operation global keyword arguments.
+    Pop and return operation global keyword arguments, in preferred order:
+
+    + From the current context (operation kwargs)
+    + From any current @deploy context (deploy kwargs)
+    + From the host data variables
+    + From the config variables
     '''
 
     meta_kwargs = state.deploy_kwargs or {}
@@ -148,6 +153,10 @@ def pop_global_op_kwargs(state, kwargs):
                 default = config.get('default')
                 if default:
                     default = default(state.config)
+
+                host_default = getattr(host.data, key, None)
+                if host_default is not None:
+                    default = host_default
 
             value, has_key = get_kwarg(key, default=default)
             if handler:
