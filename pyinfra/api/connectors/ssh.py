@@ -433,16 +433,26 @@ def put_file(
         temp_file = state.get_temp_filename(remote_filename)
         _put_file(host, filename_or_io, temp_file)
 
-        # Execute run_shell_command w/sudo and/or su_user
-        command = StringCommand('mv', temp_file, QuoteString(remote_filename))
-
-        # Move it to the su_user if present
+        # Make sure our sudo/su user can access the file
         if su_user:
-            command = StringCommand(command, '&&', 'chown', su_user, QuoteString(remote_filename))
-
-        # Otherwise any sudo_user
+            command = StringCommand('setfacl', '-m', 'u:{0}:r'.format(su_user), temp_file)
         elif sudo_user:
-            command = StringCommand(command, '&&', 'chown', sudo_user, QuoteString(remote_filename))
+            command = StringCommand('setfacl -m u:{0}:r'.format(sudo_user), temp_file)
+        if su_user or sudo_user:
+            status, _, stderr = run_shell_command(
+                state, host, command,
+                sudo=False,
+                print_output=print_output,
+                print_input=print_input,
+                **command_kwargs
+            )
+
+            if status is False:
+                logger.error('Error on handover to sudo/su user: {0}'.format('\n'.join(stderr)))
+                return False
+
+        # Execute run_shell_command w/sudo and/or su_user
+        command = StringCommand('cp', temp_file, QuoteString(remote_filename))
 
         status, _, stderr = run_shell_command(
             state, host, command,
@@ -454,6 +464,21 @@ def put_file(
 
         if status is False:
             logger.error('File upload error: {0}'.format('\n'.join(stderr)))
+            return False
+
+        # Delete the temporary file now that we've successfully copied it
+        command = StringCommand('rm', '-f', temp_file)
+
+        status, _, stderr = run_shell_command(
+            state, host, command,
+            sudo=False,
+            print_output=print_output,
+            print_input=print_input,
+            **command_kwargs
+        )
+
+        if status is False:
+            logger.error('Unable to remove temporary file: {0}'.format('\n'.join(stderr)))
             return False
 
     # No sudo and no su_user, so just upload it!
