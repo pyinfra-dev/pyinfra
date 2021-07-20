@@ -36,6 +36,7 @@ from . import (
     bsdinit,
     dnf,
     files,
+    openrc,
     pacman,
     pkg,
     systemd,
@@ -466,6 +467,9 @@ def service(
 
     if host.get_fact(Which, command='systemctl'):
         service_operation = systemd.service
+
+    elif host.get_fact(Which, command='rc-service'):
+        service_operation = openrc.service
 
     elif host.get_fact(Which, command='initctl'):
         service_operation = upstart.service
