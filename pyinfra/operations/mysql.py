@@ -297,36 +297,20 @@ def privileges(
         mysql_host, mysql_port,
     )
 
-    has_all_privileges = False
-    has_any_privileges = False
-
+    existing_privileges = []
     if database_table in user_grants:
         existing_privileges = [
             'ALL' if privilege == 'ALL PRIVILEGES' else privilege
             for privilege in user_grants[database_table]['privileges']
         ]
 
-        has_all_privileges = (
-            database_table in user_grants
-            and all(
-                privilege in existing_privileges
-                for privilege in privileges
-            )
-        )
-
-        has_any_privileges = (
-            database_table in user_grants
-            and any(
-                privilege in existing_privileges
-                for privilege in privileges
-            )
-        )
-
     target = action = None
 
     # No privilege and we want it
     if present:
-        if not has_all_privileges:
+        missing_privileges = [p for p in privileges if p not in existing_privileges]
+        if missing_privileges:
+            privileges_to_apply = missing_privileges
             action = 'GRANT'
             target = 'TO'
         else:
@@ -335,7 +319,9 @@ def privileges(
 
     # Permission we don't want
     if not present:
-        if has_any_privileges:
+        unwanted_privileges = [p for p in privileges if p in existing_privileges]
+        if unwanted_privileges:
+            privileges_to_apply = unwanted_privileges
             action = 'REVOKE'
             target = 'FROM'
         else:
@@ -348,7 +334,7 @@ def privileges(
             'ON {database}.{table} '
             '{target} "{user}"@"{user_hostname}"'
         ).format(
-            privileges=', '.join(privileges),
+            privileges=', '.join(privileges_to_apply),
             action=action,
             target=target,
             database=database,
