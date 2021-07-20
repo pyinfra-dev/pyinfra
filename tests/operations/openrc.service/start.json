@@ -1,0 +1,13 @@
+{
+    "args": ["nginx"],
+    "facts": {
+        "openrc.OpenrcStatus": {
+            "runlevel=default": {
+                "nginx": false
+            }
+        }
+    },
+    "commands": [
+        "rc-service nginx start"
+    ]
+}
