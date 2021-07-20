@@ -65,6 +65,18 @@ Vagrant.configure('2') do |config|
         freebsd.vm.box = 'generic/freebsd12'
     end
 
+    config.vm.define :netbsd9 do |netbsd|
+        netbsd.vm.box = 'generic/netbsd9'
+    end
+
+    config.vm.define :hardenedbsd11 do |hardenedbsd|
+        hardenedbsd.vm.box = 'generic/hardenedbsd11'
+    end
+
+    config.vm.define :dragonflybsd5 do |dragonflybsd|
+        dragonflybsd.vm.box = 'generic/dragonflybsd5'
+    end
+
     # Windows test VMs
     #
 
