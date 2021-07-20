@@ -1,0 +1,21 @@
+{
+    "args": ["nginx"],
+    "facts": {
+        "openrc.OpenrcStatus": {
+            "runlevel=default": {
+                "nginx": false
+            }
+        },
+        "server.Which": {
+            "command=systemctl": false,
+            "command=rc-service": true
+        },
+        "files.Directory": {
+            "path=/etc/init.d": false,
+            "path=/etc/rc.d": false
+        }
+    },
+    "commands": [
+        "rc-service nginx start"
+    ]
+}
