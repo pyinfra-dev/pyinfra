@@ -180,7 +180,7 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True):
         #
 
         # Get the meta kwargs (globals that apply to all hosts)
-        global_kwargs, global_kwarg_keys = pop_global_op_kwargs(state, kwargs)
+        global_kwargs, global_kwarg_keys = pop_global_op_kwargs(state, host, kwargs)
 
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).
