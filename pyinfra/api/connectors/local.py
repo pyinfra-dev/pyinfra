@@ -13,6 +13,7 @@ from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import get_file_io
 
 from .util import (
+    execute_command_with_sudo_retry,
     get_sudo_password,
     make_unix_command,
     run_local_process,
@@ -86,18 +87,9 @@ def run_shell_command(
             print_prefix=host.print_prefix,
         )
 
-    return_code, combined_output = execute_command()
-
-    if return_code != 0:
-        last_line = combined_output[-1][1]
-        if last_line == 'sudo: a password is required':
-            command_kwargs['use_sudo_password'] = get_sudo_password(
-                state, host,
-                use_sudo_password=True,  # ask for the password
-                run_shell_command=run_shell_command,
-                put_file=put_file,
-            )
-            return_code, combined_output = execute_command()
+    return_code, combined_output = execute_command_with_sudo_retry(
+        host, command_kwargs, execute_command,
+    )
 
     if success_exit_codes:
         status = return_code in success_exit_codes
