@@ -30,7 +30,7 @@ def service(
 
     yield handle_service_control(
         host,
-        service, LaunchdStatus,
+        service, host.get_fact(LaunchdStatus),
         'launchctl {1} {0}',
         # No support for restart/reload/command
         running, None, None, None,

@@ -55,7 +55,7 @@ def service(
 
     yield handle_service_control(
         host,
-        service, InitdStatus,
+        service, host.get_fact(InitdStatus),
         '/etc/init.d/{0} {1}',
         running, restarted, reloaded, command,
     )
