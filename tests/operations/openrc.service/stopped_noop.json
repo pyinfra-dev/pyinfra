@@ -1,0 +1,15 @@
+{
+    "args": ["nginx"],
+    "kwargs": {
+        "running": false
+    },
+    "facts": {
+        "openrc.OpenrcStatus": {
+            "runlevel=default": {
+                "nginx": false
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "service nginx is stopped"
+}
