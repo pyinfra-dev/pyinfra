@@ -1,5 +1,5 @@
 '''
-Manage BSD init services (``/etc/rc.d``).
+Manage BSD init services (``/etc/rc.d``, ``/usr/local/etc/rc.d``).
 '''
 
 from __future__ import unicode_literals
@@ -19,7 +19,7 @@ def service(
     state=None, host=None,
 ):
     '''
-    Manage the state of BSD init (/etc/rc.d) services.
+    Manage the state of BSD init services.
 
     + service: name of the service to manage
     + running: whether the service should be running
@@ -32,7 +32,7 @@ def service(
     yield handle_service_control(
         host,
         service, RcdStatus,
-        '/etc/rc.d/{0} {1}',
+        'test -e /etc/rc.d/{0} && /etc/rc.d/{0} {1} || /usr/local/etc/rc.d/{0} {1}',
         running, restarted, reloaded, command,
         status_argument='check',
     )
