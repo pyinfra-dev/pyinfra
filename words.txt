@@ -226,7 +226,7 @@ npm
 ntlm
 ntpath
 openstack
-Openvz
+openrc
 openvz
 OsVersion
 PACMAN
@@ -282,6 +282,7 @@ rol
 rsa
 rst
 rsync
+runlevel
 runlevels
 S01
 s1

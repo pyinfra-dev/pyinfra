@@ -1,0 +1,21 @@
+{
+    "args": ["nginx"],
+    "kwargs": {
+        "enabled": true
+    },
+    "facts": {
+        "openrc.OpenrcStatus": {
+            "runlevel=default": {
+                "nginx": true
+            }
+        },
+        "openrc.OpenrcEnabled": {
+            "runlevel=default": {
+                "nginx": false
+            }
+        }
+    },
+    "commands": [
+        "rc-update add nginx"
+    ]
+}

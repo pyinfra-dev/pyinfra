@@ -1,0 +1,16 @@
+{
+    "args": ["nginx"],
+    "kwargs": {
+        "running": false
+    },
+    "facts": {
+        "openrc.OpenrcStatus": {
+            "runlevel=default": {
+                "nginx": true
+            }
+        }
+    },
+    "commands": [
+        "rc-service nginx stop"
+    ]
+}

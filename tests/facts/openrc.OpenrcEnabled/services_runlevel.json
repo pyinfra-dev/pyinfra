@@ -1,0 +1,19 @@
+{
+    "requires_command": "rc-update",
+    "command": "rc-update show -v",
+    "arg": ["boot"],
+    "output": [
+        "             bootmisc | boot",
+        "              cgroups |",
+        "                crond |      default",
+        "            hwdrivers |                                 sysinit",
+        " virtualbox-guest-additions |      default"
+    ],
+    "fact":  {
+        "bootmisc": true,
+        "cgroups": false,
+        "crond": false,
+        "hwdrivers": false,
+        "virtualbox-guest-additions": false
+    }
+}
