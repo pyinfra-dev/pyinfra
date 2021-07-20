@@ -1,3 +1,9 @@
+# v1.4.9
+
++ Fix connection w/`use_remote_sudo` in `ssh.upload` operation (@GerardoGR)
++ Fix `mysql.MysqlUserGrants` fact regex for `*.*` grant lines
++ Remove any askpass file before issuing reboots in `server.reboot` operation
+
 # v1.4.8
 
 + Remove broken "will add user" detection in facts, just pass if user is missing
