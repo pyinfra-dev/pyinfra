@@ -36,7 +36,7 @@ def service(
 
     yield handle_service_control(
         host,
-        service, RcdStatus,
+        service, host.get_fact(RcdStatus),
         'test -e /etc/rc.d/{0} && /etc/rc.d/{0} {1} || /usr/local/etc/rc.d/{0} {1}',
         running, restarted, reloaded, command,
         status_argument=status_argument,
