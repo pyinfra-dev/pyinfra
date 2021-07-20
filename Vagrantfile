@@ -50,6 +50,10 @@ Vagrant.configure('2') do |config|
         fedora.vm.box = 'generic/fedora33'
     end
 
+    config.vm.define :alpine38 do |fedora|
+        fedora.vm.box = 'generic/alpine38'
+    end
+
     # BSD test VMs
     #
 
