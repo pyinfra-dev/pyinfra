@@ -279,7 +279,7 @@ def run_shell_command(
         actual_command = unix_command.get_raw_value()
 
         logger.debug('Running command on {0}: (pty={1}) {2}'.format(
-            host.name, get_pty, command,
+            host.name, get_pty, unix_command,
         ))
 
         if print_input:

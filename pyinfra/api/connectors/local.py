@@ -74,7 +74,7 @@ def run_shell_command(
         unix_command = make_unix_command(command, state=state, **command_kwargs)
         actual_command = unix_command.get_raw_value()
 
-        logger.debug('--> Running command on localhost: {0}'.format(command))
+        logger.debug('--> Running command on localhost: {0}'.format(unix_command))
 
         if print_input:
             click.echo('{0}>>> {1}'.format(host.print_prefix, unix_command), err=True)
