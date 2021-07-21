@@ -158,9 +158,11 @@ def make_operation_tests(arg):
                                     'Operation not idempotent, second output commands: {0}'
                                 ).format(second_output_commands))
                         else:
-                            warnings.warn('Operation is not expected to be idempotent: {0}'.format(
-                                test_name,
-                            ))
+                            if not test_data.get('disable_itempotent_warning_reason'):
+                                warnings.warn((
+                                    'This operation should be idempotent, but the test has disabled'
+                                    ' this check without reason: {0}'
+                                ).format(test_name))
 
             commands = parse_commands(output_commands)
             assert_commands(commands, test_data['commands'])
