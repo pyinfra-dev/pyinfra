@@ -80,6 +80,7 @@ distros
 dnf
 dns
 dnsmasq
+doas
 docbits
 docopt
 dport

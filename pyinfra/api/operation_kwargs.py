@@ -42,6 +42,14 @@ auth_kwargs = {
         ),
         'default': lambda config: config.SU_SHELL,
     },
+    'doas': {
+        'description': 'Execute/apply any changes with ``doas``.',
+        'defailt': lambda config: config.DOAS,
+    },
+    'doas_user': {
+        'description': 'Execute/apply any changes with ``doas`` as a non-root user.',
+        'default': lambda config: config.DOAS_USER,
+    },
 }
 
 

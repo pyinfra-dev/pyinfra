@@ -46,6 +46,10 @@ class Config(object):
     USE_SUDO_LOGIN = False
     USE_SUDO_PASSWORD = False
 
+    # Use doas and optional user
+    DOAS = False
+    DOAS_USER = None
+
     # Only show errors, but don't count as failure
     IGNORE_ERRORS = False
 
