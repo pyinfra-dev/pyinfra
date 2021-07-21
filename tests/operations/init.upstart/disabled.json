@@ -6,10 +6,16 @@
     "facts": {
         "upstart.UpstartStatus": {
             "redis-server": true
+        },
+        "files.File": {
+            "path=/etc/init/redis-server.override": null
+        },
+        "files.Directory": {
+            "path=/etc/init": {"mode": 777}
         }
     },
     "commands": [
-        "echo \"manual\" > /etc/init/redis-server.override"
+        ["upload", "manual\n", "/etc/init/redis-server.override"]
     ],
     "idempotent": false
 }
