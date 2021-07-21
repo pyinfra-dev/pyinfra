@@ -17,11 +17,12 @@ class TestWinrmConnector(TestCase):
         self.fake_connect_patch.stop()
 
     def test_connect_host(self):
-        inventory = make_inventory()
+        inventory = make_inventory(hosts=[('@winrm/somehost', {})])
         state = State(inventory, Config())
-        host = inventory.get_host('somehost')
+        host = inventory.get_host('@winrm/somehost')
         host.connect(reason=True)
         assert len(state.active_hosts) == 0
+        assert host.data.winrm_hostname == 'somehost'
 
     def test_connect_all_password(self):
         inventory = make_inventory(hosts=(
