@@ -1,0 +1,14 @@
+{
+    "args": ["redis-server.service"],
+    "kwargs": {
+        "reloaded": true
+    },
+    "facts": {
+        "systemd.SystemdStatus": {}
+    },
+    "commands": [
+        "if (systemctl status redis-server.service); then (true); (true); (systemctl reload redis-server.service); else (systemctl start redis-server.service); fi"
+    ],
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "service reloads are always executed"
+}

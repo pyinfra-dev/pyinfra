@@ -12,5 +12,9 @@
         "/etc/init.d/nginx start",
         "/etc/init.d/nginx something-else"
     ],
-    "idempotent": false
+    "second_output_commands": [
+        "/etc/init.d/nginx something-else"
+    ],
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "service commands are always executed"
 }

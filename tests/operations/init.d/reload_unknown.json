@@ -9,5 +9,6 @@
     "commands": [
         "if (/etc/init.d/nginx status); then (true); (true); (/etc/init.d/nginx reload); else (/etc/init.d/nginx start); fi"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "service reloads are always executed"
 }

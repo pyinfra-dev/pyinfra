@@ -11,5 +11,10 @@
     "commands": [
         "launchctl start com.fizzadar.thing"
     ],
-    "idempotent": false
+    "second_output_commands": [
+        "launchctl stop com.fizzadar.thing",
+        "launchctl start com.fizzadar.thing"
+    ],
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "service restarts are always executed"
 }

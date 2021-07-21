@@ -11,5 +11,6 @@
     "commands": [
         "/etc/init.d/nginx restart"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "service restarts are always executed"
 }

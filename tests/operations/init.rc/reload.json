@@ -12,5 +12,6 @@
     "commands": [
         "test -e /etc/rc.d/nginx && /etc/rc.d/nginx reload || /usr/local/etc/rc.d/nginx reload"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "service reloads are always executed"
 }
