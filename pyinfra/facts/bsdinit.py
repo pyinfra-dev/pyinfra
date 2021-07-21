@@ -9,7 +9,7 @@ class RcdStatus(InitdStatus):
 
     command = '''
         for SERVICE in `find /etc/rc.d /usr/local/etc/rc.d -type f`; do
-            STATUS=`$SERVICE status 2> /dev/null || $SERVICE check`
+            $SERVICE status 2> /dev/null || $SERVICE check 2> /dev/null
             echo "`basename $SERVICE`=$?"
         done
     '''
