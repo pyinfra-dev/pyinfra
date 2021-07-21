@@ -89,6 +89,7 @@ distros
 dnf
 dns
 dnsmasq
+doas
 docbits
 DOCOPT
 docopt
