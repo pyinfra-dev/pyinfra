@@ -226,6 +226,9 @@ def make_unix_command(
     use_sudo_login=Config.USE_SUDO_LOGIN,
     use_sudo_password=Config.USE_SUDO_PASSWORD,
     preserve_sudo_env=Config.PRESERVE_SUDO_ENV,
+    # Doas config
+    doas=Config.DOAS,
+    doas_user=Config.DOAS_USER,
     # Optional state object, used to decide if we print invalid auth arg warnings
     state=None,
 ):
@@ -253,6 +256,18 @@ def make_unix_command(
     command = QuoteString(command)
 
     command_bits = []
+
+    if doas:
+        command_bits.extend(['doas', '-n'])
+
+        if doas_user:
+            command_bits.extend(['-u', doas_user])
+    elif state is None or not state.config.DOAS:
+        _warn_invalid_auth_args(
+            locals(),
+            'doas',
+            ('doas_user'),
+        )
 
     if use_sudo_password:
         askpass_filename, sudo_password = use_sudo_password

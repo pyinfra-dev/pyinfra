@@ -31,6 +31,14 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         command = make_unix_command('echo Šablony')
         assert command.get_raw_value() == "sh -c 'echo Šablony'"
 
+    def test_doas_command(self):
+        command = make_unix_command('uptime', doas=True)
+        assert command.get_raw_value() == 'doas -n sh -c uptime'
+
+    def test_doas_user_command(self):
+        command = make_unix_command('uptime', doas=True, doas_user='pyinfra')
+        assert command.get_raw_value() == 'doas -n -u pyinfra sh -c uptime'
+
     def test_sudo_command(self):
         command = make_unix_command('uptime', sudo=True)
         assert command.get_raw_value() == 'sudo -H -n sh -c uptime'
