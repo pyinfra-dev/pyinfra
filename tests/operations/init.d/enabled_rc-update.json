@@ -16,6 +16,5 @@
     },
     "commands": [
         "rc-update add nginx default"
-    ],
-    "idempotent": false
+    ]
 }

@@ -16,6 +16,5 @@
     },
     "commands": [
         "update-rc.d nginx defaults"
-    ],
-    "idempotent": false
+    ]
 }

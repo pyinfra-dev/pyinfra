@@ -59,27 +59,36 @@ def service(
     )
 
     if isinstance(enabled, bool):
-        start_links = host.fact.find_links('/etc/rc*.d/S*{0}'.format(service)) or []
+        start_links = host.fact.find_links('/etc/rc*.d/S*{0}'.format(service))
 
         # If no links exist, attempt to enable the service using distro-specific commands
         if enabled is True and not start_links:
             distro = host.fact.linux_distribution.get('name')
+            did_add = False
 
             if distro in ('Ubuntu', 'Debian'):
                 yield 'update-rc.d {0} defaults'.format(service)
+                did_add = True
 
             elif distro in ('CentOS', 'Fedora', 'Red Hat Enterprise Linux'):
                 yield 'chkconfig {0} --add'.format(service)
                 yield 'chkconfig {0} on'.format(service)
+                did_add = True
 
             elif distro == 'Gentoo':
                 yield 'rc-update add {0} default'.format(service)
+                did_add = True
+
+            # Add a single start link to the fact if we executed a command
+            if did_add:
+                start_links.append('/etc/rc0.d/S20{0}'.format(service))
 
         # Remove any /etc/rcX.d/<service> start links
         elif enabled is False:
             # No state checking, just blindly remove any that exist
             for link in start_links:
                 yield 'rm -f {0}'.format(link)
+                start_links.remove(link)
 
 
 @operation
