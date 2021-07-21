@@ -4,9 +4,10 @@
         "running": false
     },
     "facts": {
+        "server.Os": "FreeBSD",
         "bsdinit.RcdStatus": {}
     },
     "commands": [
-        "# If the service is running\n            if /etc/rc.d/nginx check; then\n                /etc/rc.d/nginx stop\n                true\n                true\n\n            # If the service is not running, we just start it (no re[start|load])\n            else\n                true\n            fi"
+        "if (test -e /etc/rc.d/nginx && /etc/rc.d/nginx status || /usr/local/etc/rc.d/nginx status); then (test -e /etc/rc.d/nginx && /etc/rc.d/nginx stop || /usr/local/etc/rc.d/nginx stop); (true); (true); else (true); fi"
     ]
 }

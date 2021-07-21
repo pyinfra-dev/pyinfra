@@ -1,6 +1,7 @@
 {
     "args": ["nginx"],
     "facts": {
+        "server.Os": "FreeBSD",
         "bsdinit.RcdStatus": {
             "nginx": true
         }

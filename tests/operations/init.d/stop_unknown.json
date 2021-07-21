@@ -7,7 +7,7 @@
         "sysvinit.InitdStatus": {}
     },
     "commands": [
-        "# If the service is running\n            if /etc/init.d/nginx status; then\n                /etc/init.d/nginx stop\n                true\n                true\n\n            # If the service is not running, we just start it (no re[start|load])\n            else\n                true\n            fi"
+        "if (/etc/init.d/nginx status); then (/etc/init.d/nginx stop); (true); (true); else (true); fi"
     ],
     "idempotent": false
 }

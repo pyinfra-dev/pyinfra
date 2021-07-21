@@ -8,13 +8,9 @@ class RcdStatus(InitdStatus):
     '''
 
     command = '''
-        for SERVICE in `ls /etc/rc.d/`; do
-            _=`cat /etc/rc.d/$SERVICE | grep "daemon="`
-
-            if [ "$?" = "0" ]; then
-                STATUS=`/etc/rc.d/$SERVICE check`
-                echo "$SERVICE=$?"
-            fi
+        for SERVICE in `find /etc/rc.d /usr/local/etc/rc.d -type f`; do
+            $SERVICE status 2> /dev/null || $SERVICE check 2> /dev/null
+            echo "`basename $SERVICE`=$?"
         done
     '''
 
