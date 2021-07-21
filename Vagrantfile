@@ -73,10 +73,6 @@ Vagrant.configure('2') do |config|
         hardenedbsd.vm.box = 'generic/hardenedbsd11'
     end
 
-    config.vm.define :dragonflybsd5 do |dragonflybsd|
-        dragonflybsd.vm.box = 'generic/dragonflybsd5'
-    end
-
     # Windows test VMs
     #
 
