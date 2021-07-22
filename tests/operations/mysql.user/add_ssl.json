@@ -1,12 +1,12 @@
 {
     "args": ["someuser"],
     "kwargs": {
-        "user_hostname": "localwhat"
+        "require": "SSL"
     },
     "facts": {
         "mysql_users": {}
     },
     "commands": [
-        "mysql -Be 'CREATE USER \"someuser\"@\"localwhat\"'"
+        "mysql -Be 'CREATE USER \"someuser\"@\"localhost\" REQUIRE SSL'"
     ]
 }

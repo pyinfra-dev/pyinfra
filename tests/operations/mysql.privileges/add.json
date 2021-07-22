@@ -1,11 +1,11 @@
 {
-    "args": ["someuser", ["SELECT", "INSERT"]],
+    "args": ["someuser", ["SELECT", "INSERT", "DELETE"]],
     "facts": {
         "mysql_user_grants": {
             "someuser": {
                 "localhost": {
                     "*.*": {
-                        "privileges": []
+                        "privileges": ["DELETE"]
                     }
                 }
             }

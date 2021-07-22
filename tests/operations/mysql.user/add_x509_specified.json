@@ -1,0 +1,16 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "user_hostname": "localwhat",
+        "require": "X509",
+        "require_cipher": "a-cipher",
+        "require_issuer": "a-issuer",
+        "require_subject": "a-subject"
+    },
+    "facts": {
+        "mysql_users": {}
+    },
+    "commands": [
+        "mysql -Be 'CREATE USER \"someuser\"@\"localwhat\" REQUIRE CIPHER \"a-cipher\" ISSUER \"a-issuer\" SUBJECT \"a-subject\"'"
+    ]
+}

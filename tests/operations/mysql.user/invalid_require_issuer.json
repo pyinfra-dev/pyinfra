@@ -1,0 +1,11 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "require": "SSL",
+        "require_issuer": "a-issuer"
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "Cannot set `require_issuer` if `require` is not \"X509\""
+    }
+}

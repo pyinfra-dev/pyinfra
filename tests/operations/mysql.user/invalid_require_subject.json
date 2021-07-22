@@ -1,0 +1,11 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "require": "SSL",
+        "require_subject": "a-subject"
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "Cannot set `require_subject` if `require` is not \"X509\""
+    }
+}

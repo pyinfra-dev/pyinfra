@@ -1,0 +1,10 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "require": "invalid"
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "Invalid `require` value, must be: \"SSL\" or \"X509\""
+    }
+}

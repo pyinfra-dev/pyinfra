@@ -1,0 +1,21 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "require": "X509",
+        "require_cipher": "a-cipher",
+        "require_issuer": "a-issuer",
+        "require_subject": "a-subject"
+    },
+    "facts": {
+        "mysql_users": {
+            "someuser@localhost": {
+                "ssl_cipher": null,
+                "x509_issuer": null,
+                "x509_subject": null
+            }
+        }
+    },
+    "commands": [
+        "mysql -Be 'ALTER USER \"someuser\"@\"localhost\" REQUIRE CIPHER \"a-cipher\" ISSUER \"a-issuer\" SUBJECT \"a-subject\"'"
+    ]
+}
