@@ -1,0 +1,16 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "require": "X509"
+    },
+    "facts": {
+        "mysql_users": {
+            "someuser@localhost": {
+                "ssl_type": null
+            }
+        }
+    },
+    "commands": [
+        "mysql -Be 'ALTER USER \"someuser\"@\"localhost\" REQUIRE X509'"
+    ]
+}

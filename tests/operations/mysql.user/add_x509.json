@@ -1,0 +1,13 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "user_hostname": "localwhat",
+        "require": "X509"
+    },
+    "facts": {
+        "mysql_users": {}
+    },
+    "commands": [
+        "mysql -Be 'CREATE USER \"someuser\"@\"localwhat\" REQUIRE X509'"
+    ]
+}

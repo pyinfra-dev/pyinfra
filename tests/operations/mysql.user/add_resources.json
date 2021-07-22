@@ -1,0 +1,16 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "user_hostname": "localwhat",
+        "max_connections": 500,
+        "max_queries_per_hour": 50,
+        "max_updates_per_hour": 10,
+        "max_connections_per_hour": 1
+    },
+    "facts": {
+        "mysql_users": {}
+    },
+    "commands": [
+        "mysql -Be 'CREATE USER \"someuser\"@\"localwhat\" WITH MAX_USER_CONNECTIONS 500 MAX_QUERIES_PER_HOUR 50 MAX_UPDATES_PER_HOUR 10 MAX_CONNECTIONS_PER_HOUR 1'"
+    ]
+}
