@@ -67,7 +67,7 @@ def download(
     state=None, host=None,
 ):
     '''
-    Download files from remote locations using curl or wget.
+    Download files from remote locations using ``curl`` or ``wget``.
 
     + src: source URL of the file
     + dest: where to save the file
@@ -92,6 +92,8 @@ def download(
     '''
 
     info = host.get_fact(File, path=dest)
+    host_datetime = host.get_fact(Date).replace(tzinfo=None)
+
     # Destination is a directory?
     if info is False:
         raise OperationError(
@@ -111,8 +113,8 @@ def download(
         if cache_time:
             # Time on files is not tz-aware, and will be the same tz as the server's time,
             # so we can safely remove the tzinfo from the Date fact before comparison.
-            cache_time = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
-            if info['mtime'] and info['mtime'] > cache_time:
+            cache_time = host_datetime - timedelta(seconds=cache_time)
+            if info['mtime'] and info['mtime'] < cache_time:
                 download = True
 
         if sha1sum:
@@ -170,6 +172,24 @@ def download(
                 '(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1}) '
                 '|| ( echo {2} && exit 1 )'
             ), QuoteString(dest), md5sum, QuoteString('MD5 did not match!'))
+
+        host.create_fact(
+            File,
+            kwargs={'path': dest},
+            data={'mode': mode, 'group': group, 'user': user, 'mtime': host_datetime},
+        )
+
+        # Remove any checksum facts as we don't know the correct values
+        for value, fact_cls in (
+            (sha1sum, Sha1File),
+            (sha256sum, Sha256File),
+            (md5sum, Md5File),
+        ):
+            fact_kwargs = {'path': dest}
+            if value:
+                host.create_fact(fact_cls, kwargs=fact_kwargs, data=value)
+            else:
+                host.delete_fact(fact_cls, kwargs=fact_kwargs)
 
     else:
         host.noop('file {0} has already been downloaded'.format(dest))
