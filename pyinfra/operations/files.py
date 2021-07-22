@@ -352,6 +352,12 @@ def line(
             else:
                 host.noop('line "{0}" exists in {1}'.format(replace or line, path))
 
+        host.create_fact(
+            FindInFile,
+            kwargs={'path': path, 'pattern': match_line},
+            data=[replace or line],
+        )
+
     # Line(s) exists and we want to remove them, replace with nothing
     elif present_lines and not present:
         yield sed_replace(
@@ -361,11 +367,18 @@ def line(
             interpolate_variables=interpolate_variables,
         )
 
+        host.delete_fact(
+            FindInFile,
+            kwargs={'path': path, 'pattern': match_line},
+        )
+
     # Line(s) exists and we have want to ensure they're correct
     elif present_lines and present:
         # If any of lines are different, sed replace them
         if replace and any(line != replace for line in present_lines):
             yield sed_replace_command
+            present_lines.clear()
+            present_lines.append(replace)
         else:
             host.noop('line "{0}" exists in {1}'.format(replace or line, path))
 
@@ -414,6 +427,11 @@ def replace(
             flags=flags,
             backup=backup,
             interpolate_variables=interpolate_variables,
+        )
+        host.create_fact(
+            FindInFile,
+            kwargs={'path': path, 'pattern': match},
+            data=[],
         )
     else:
         host.noop('string "{0}" does not exist in {1}'.format(match, path))
@@ -598,10 +616,15 @@ def _create_remote_dir(state, host, remote_filename, user, group):
         )
 
 
-@operation(pipeline_facts={
-    'file': 'src',
-    'sha1_file': 'src',
-})
+@operation(
+    # We don't (currently) cache the local state, so there's nothing we can
+    # update to flag the local file as present.
+    is_idempotent=False,
+    pipeline_facts={
+        'file': 'src',
+        'sha1_file': 'src',
+    },
+)
 def get(
     src, dest,
     add_deploy_dir=True, create_local_dir=False, force=False,
