@@ -725,6 +725,8 @@ def put(
     if create_remote_dir:
         yield _create_remote_dir(state, host, dest, user, group)
 
+    local_sum = get_file_sha1(src)
+
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
         yield FileUploadCommand(local_file, dest)
@@ -737,7 +739,6 @@ def put(
 
     # File exists, check sum and check user/group/mode if supplied
     else:
-        local_sum = get_file_sha1(src)
         remote_sum = host.get_fact(Sha1File, path=dest)
 
         # Check sha1sum, upload if needed
@@ -768,6 +769,14 @@ def put(
 
             if not changed:
                 host.noop('file {0} is already uploaded'.format(dest))
+
+    # Now we've uploaded the file and ensured user/group/mode, update the relevant fact data
+    host.create_fact(Sha1File, kwargs={'path': dest}, data=local_sum)
+    host.create_fact(
+        File,
+        kwargs={'path': dest},
+        data={'user': user, 'group': group, 'mode': mode},
+    )
 
 
 @operation

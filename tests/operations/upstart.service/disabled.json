@@ -16,6 +16,5 @@
     },
     "commands": [
         ["upload", "manual\n", "/etc/init/redis-server.override"]
-    ],
-    "idempotent": false
+    ]
 }
