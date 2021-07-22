@@ -1,3 +1,10 @@
+# v1.4.10
+
++ Ensure services in `/usr/local/etc/rc.d` are handled in `bsdinit.service` operation
++ Check status of services in `/usr/local/etc/rd.d` in `bsdinit.RcdStatus` fact
++ Fix status checking in `bsdinit.RcdStatus` fact (for non-OpenBSD)
++ Expand BSD test boxes to include NetBsd & HardenedBSD
+
 # v1.4.9
 
 + Fix connection w/`use_remote_sudo` in `ssh.upload` operation (@GerardoGR)
