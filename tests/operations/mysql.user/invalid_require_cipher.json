@@ -1,0 +1,11 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "require": "SSL",
+        "require_cipher": "a-cipher"
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "Cannot set `require_cipher` if `require` is not \"X509\""
+    }
+}
