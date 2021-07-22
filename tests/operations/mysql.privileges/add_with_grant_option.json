@@ -1,21 +1,22 @@
 {
-    "args": ["someuser", ["SELECT", "INSERT", "DELETE"]],
+    "args": ["someuser", []],
     "kwargs": {
-        "present": false
+        "with_grant_option": true
     },
     "facts": {
         "mysql_user_grants": {
             "someuser": {
                 "localhost": {
                     "*.*": {
-                        "privileges": ["SELECT", "INSERT"]
+                        "privileges": [],
+                        "with_grant_option": false
                     }
                 }
             }
         }
     },
     "commands": [
-        "mysql -Be 'REVOKE SELECT, INSERT ON *.* FROM \"someuser\"@\"localhost\"'",
+        "mysql -Be 'GRANT GRANT OPTION ON *.* TO \"someuser\"@\"localhost\"'",
         "mysql -Be 'FLUSH PRIVILEGES'"
     ],
     "idempotent": false

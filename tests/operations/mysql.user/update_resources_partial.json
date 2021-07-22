@@ -1,0 +1,22 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "max_connections": 500,
+        "max_queries_per_hour": 50,
+        "max_updates_per_hour": 10,
+        "max_connections_per_hour": 5
+    },
+    "facts": {
+        "mysql_users": {
+            "someuser@localhost": {
+                "max_user_connections": 500,
+                "max_questions": 0,
+                "max_updates": 10,
+                "max_connections": 0
+            }
+        }
+    },
+    "commands": [
+        "mysql -Be 'ALTER USER \"someuser\"@\"localhost\" WITH MAX_QUERIES_PER_HOUR 50 MAX_CONNECTIONS_PER_HOUR 5'"
+    ]
+}
