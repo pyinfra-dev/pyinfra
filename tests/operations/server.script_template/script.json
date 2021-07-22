@@ -11,5 +11,10 @@
         "chmod +x _tempfile_",
         "_tempfile_"
     ],
-    "idempotent": false
+    "section_output_commands": [
+        "chmod +x _tempfile_",
+        "_tempfile_"
+    ],
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "script operations are always executed"
 }
