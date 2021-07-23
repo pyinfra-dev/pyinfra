@@ -235,6 +235,7 @@ class FindInFile(FactBase):
 
 class FindFilesBase(FactBase):
     abstract = True
+    default = list
 
     @staticmethod
     def process(output):
