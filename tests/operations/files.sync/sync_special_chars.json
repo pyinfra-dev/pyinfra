@@ -32,6 +32,5 @@
             "/home/somedir/yet () another {} file $$ __.txt"
         ],
         "chmod 644 '/home/somedir/yet () another {} file $$ __.txt'"
-    ],
-    "idempotent": false
+    ]
 }

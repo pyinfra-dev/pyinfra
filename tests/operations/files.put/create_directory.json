@@ -19,6 +19,5 @@
         "chown testuser:testgroup /home",
         ["upload", "/somefile.txt", "/home/somefile.txt"],
         "chown testuser:testgroup /home/somefile.txt"
-    ],
-    "idempotent": false
+    ]
 }

@@ -67,7 +67,7 @@ def download(
     state=None, host=None,
 ):
     '''
-    Download files from remote locations using curl or wget.
+    Download files from remote locations using ``curl`` or ``wget``.
 
     + src: source URL of the file
     + dest: where to save the file
@@ -92,6 +92,8 @@ def download(
     '''
 
     info = host.get_fact(File, path=dest)
+    host_datetime = host.get_fact(Date).replace(tzinfo=None)
+
     # Destination is a directory?
     if info is False:
         raise OperationError(
@@ -111,8 +113,8 @@ def download(
         if cache_time:
             # Time on files is not tz-aware, and will be the same tz as the server's time,
             # so we can safely remove the tzinfo from the Date fact before comparison.
-            cache_time = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
-            if info['mtime'] and info['mtime'] > cache_time:
+            cache_time = host_datetime - timedelta(seconds=cache_time)
+            if info['mtime'] and info['mtime'] < cache_time:
                 download = True
 
         if sha1sum:
@@ -170,6 +172,24 @@ def download(
                 '(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1}) '
                 '|| ( echo {2} && exit 1 )'
             ), QuoteString(dest), md5sum, QuoteString('MD5 did not match!'))
+
+        host.create_fact(
+            File,
+            kwargs={'path': dest},
+            data={'mode': mode, 'group': group, 'user': user, 'mtime': host_datetime},
+        )
+
+        # Remove any checksum facts as we don't know the correct values
+        for value, fact_cls in (
+            (sha1sum, Sha1File),
+            (sha256sum, Sha256File),
+            (md5sum, Md5File),
+        ):
+            fact_kwargs = {'path': dest}
+            if value:
+                host.create_fact(fact_cls, kwargs=fact_kwargs, data=value)
+            else:
+                host.delete_fact(fact_cls, kwargs=fact_kwargs)
 
     else:
         host.noop('file {0} has already been downloaded'.format(dest))
@@ -332,6 +352,12 @@ def line(
             else:
                 host.noop('line "{0}" exists in {1}'.format(replace or line, path))
 
+        host.create_fact(
+            FindInFile,
+            kwargs={'path': path, 'pattern': match_line},
+            data=[replace or line],
+        )
+
     # Line(s) exists and we want to remove them, replace with nothing
     elif present_lines and not present:
         yield sed_replace(
@@ -341,11 +367,18 @@ def line(
             interpolate_variables=interpolate_variables,
         )
 
+        host.delete_fact(
+            FindInFile,
+            kwargs={'path': path, 'pattern': match_line},
+        )
+
     # Line(s) exists and we have want to ensure they're correct
     elif present_lines and present:
         # If any of lines are different, sed replace them
         if replace and any(line != replace for line in present_lines):
             yield sed_replace_command
+            del present_lines[:]  # TODO: use .clear() when py3+
+            present_lines.append(replace)
         else:
             host.noop('line "{0}" exists in {1}'.format(replace or line, path))
 
@@ -394,6 +427,11 @@ def replace(
             flags=flags,
             backup=backup,
             interpolate_variables=interpolate_variables,
+        )
+        host.create_fact(
+            FindInFile,
+            kwargs={'path': path, 'pattern': match},
+            data=[],
         )
     else:
         host.noop('string "{0}" does not exist in {1}'.format(match, path))
@@ -578,10 +616,15 @@ def _create_remote_dir(state, host, remote_filename, user, group):
         )
 
 
-@operation(pipeline_facts={
-    'file': 'src',
-    'sha1_file': 'src',
-})
+@operation(
+    # We don't (currently) cache the local state, so there's nothing we can
+    # update to flag the local file as present.
+    is_idempotent=False,
+    pipeline_facts={
+        'file': 'src',
+        'sha1_file': 'src',
+    },
+)
 def get(
     src, dest,
     add_deploy_dir=True, create_local_dir=False, force=False,
@@ -705,6 +748,8 @@ def put(
     if create_remote_dir:
         yield _create_remote_dir(state, host, dest, user, group)
 
+    local_sum = get_file_sha1(src)
+
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
         yield FileUploadCommand(local_file, dest)
@@ -717,7 +762,6 @@ def put(
 
     # File exists, check sum and check user/group/mode if supplied
     else:
-        local_sum = get_file_sha1(src)
         remote_sum = host.get_fact(Sha1File, path=dest)
 
         # Check sha1sum, upload if needed
@@ -748,6 +792,14 @@ def put(
 
             if not changed:
                 host.noop('file {0} is already uploaded'.format(dest))
+
+    # Now we've uploaded the file and ensured user/group/mode, update the relevant fact data
+    host.create_fact(Sha1File, kwargs={'path': dest}, data=local_sum)
+    host.create_fact(
+        File,
+        kwargs={'path': dest},
+        data={'user': user, 'group': group, 'mode': mode},
+    )
 
 
 @operation

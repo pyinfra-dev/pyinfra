@@ -58,6 +58,5 @@
         ],
         "chmod 644 /home/somedir/underthat/yet-another-file.txt",
         "rm -f /home/somedir/deleteme.txt"
-    ],
-    "idempotent": false
+    ]
 }

@@ -6,6 +6,7 @@
         "mode": 777
     },
     "facts": {
+        "server.Date": "datetime:2015-01-01T00:00:00",
         "files.File": {
             "path=/home/my file - with $specialChars": null
         },
@@ -17,6 +18,5 @@
         "curl -sSLf http://myfile -o '/home/my file - with $specialChars'",
         "chgrp mygroup '/home/my file - with $specialChars'",
         "chmod 777 '/home/my file - with $specialChars'"
-    ],
-    "idempotent": false
+    ]
 }

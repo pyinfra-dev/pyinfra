@@ -1,6 +1,7 @@
 {
     "args": ["http://somesite/somerepo.repo"],
     "facts": {
+        "server.Date": "datetime:2015-01-01T00:00:00",
         "files.File": {
             "path=/etc/yum.repos.d/somerepo.repo": null
         },
@@ -10,6 +11,5 @@
     },
     "commands": [
         "curl -sSLf http://somesite/somerepo.repo -o /etc/yum.repos.d/somerepo.repo"
-    ],
-    "idempotent": false
+    ]
 }

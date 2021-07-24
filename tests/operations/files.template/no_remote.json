@@ -18,6 +18,5 @@
         ["upload", "_test_data_", "/home/somefile.txt.j2"],
         "chown testuser:testgroup /home/somefile.txt.j2",
         "chmod 644 /home/somefile.txt.j2"
-    ],
-    "idempotent": false
+    ]
 }

@@ -18,6 +18,5 @@
         ["upload", "/somefile.txt", "/home/somefile.txt"],
         "chown testuser:testgroup /home/somefile.txt",
         "chmod 644 /home/somefile.txt"
-    ],
-    "idempotent": false
+    ]
 }

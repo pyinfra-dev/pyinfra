@@ -12,6 +12,5 @@
     "commands": [
         "rm -f testlink",
         "ln -s /etc/init.d/nginx testlink"
-    ],
-    "idempotent": false
+    ]
 }

@@ -11,6 +11,5 @@
     },
     "commands": [
         ["upload", "/somefile.txt", "/home/some file.txt"]
-    ],
-    "idempotent": false
+    ]
 }

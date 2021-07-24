@@ -60,6 +60,10 @@ class TestSSHUserConfig(TestCase):
         'pyinfra.api.connectors.sshuserclient.config.path.isabs',
         lambda path: True,
     )
+    @patch(
+        'paramiko.config.LazyFqdn.__str__',
+        lambda self: '',
+    )
     def test_load_ssh_config(self):
         client = SSHClient()
 
