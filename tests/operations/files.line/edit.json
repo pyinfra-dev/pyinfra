@@ -13,6 +13,5 @@
     },
     "commands": [
         "sed -i.a-timestamp 's/^.*match_line.*$/replace_line/abc' somefile && rm -f somefile.a-timestamp"
-    ],
-    "idempotent": false
+    ]
 }

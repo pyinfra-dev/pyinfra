@@ -1,6 +1,7 @@
 {
     "args": ["http://somesite/somerepo.repo"],
     "facts": {
+        "server.Date": "datetime:2015-01-01T00:00:00",
         "files.File": {
             "path=/etc/zypp/repos.d/somerepo.repo": null
         },

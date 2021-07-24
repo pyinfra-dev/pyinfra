@@ -15,6 +15,5 @@
             "command=curl": "yes"
         }
     },
-    "commands": [],
-    "idempotent": false
+    "commands": []
 }

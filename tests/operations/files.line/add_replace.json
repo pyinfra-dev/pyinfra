@@ -12,6 +12,5 @@
     },
     "commands": [
         "echo replace_line >> somefile"
-    ],
-    "idempotent": false
+    ]
 }

@@ -7,6 +7,7 @@
         "md5sum": "md5-sum"
     },
     "facts": {
+        "server.Date": "datetime:2015-01-01T00:00:00",
         "files.File": {
             "path=/home/myfile": {}
         },
@@ -28,6 +29,5 @@
         "(( sha1sum /home/myfile 2> /dev/null || shasum /home/myfile || sha1 /home/myfile ) | grep sha1-sum ) || ( echo 'SHA1 did not match!' && exit 1 )",
         "(( sha256sum /home/myfile 2> /dev/null || shasum -a 256 /home/myfile || sha256 /home/myfile ) | grep sha256-sum ) || ( echo 'SHA256 did not match!' && exit 1 )",
         "(( md5sum /home/myfile 2> /dev/null || md5 /home/myfile ) | grep md5-sum ) || ( echo 'MD5 did not match!' && exit 1 )"
-    ],
-    "idempotent": false
+    ]
 }

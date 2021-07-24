@@ -15,6 +15,5 @@
     },
     "commands": [
         "echo 'nginx_enable=\"YES\"' >> /etc/rc.conf.local"
-    ],
-    "idempotent": false
+    ]
 }

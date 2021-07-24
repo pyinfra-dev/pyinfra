@@ -18,6 +18,5 @@
     },
     "commands": [
         ["download", "/home/somefile.txt", "/somefile.txt"]
-    ],
-    "idempotent": false
+    ]
 }

@@ -11,6 +11,5 @@
     },
     "commands": [
         "if [ -f somefile ]; then ( grep '^.*match_line.*$' somefile && sed -i.a-timestamp 's/^.*match_line.*$/replace_line/abc' somefile && rm -f somefile.a-timestamp ) 2> /dev/null || echo replace_line >> somefile ; else echo replace_line >> somefile ; fi"
-    ],
-    "idempotent": false
+    ]
 }
