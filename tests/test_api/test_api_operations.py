@@ -144,38 +144,39 @@ class TestOperationsApi(PatchSSHTestCase):
             'you must use `add_op` to add operations.'
         )
 
+    @patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True)
+    @patch('pyinfra.operations.files.os_path.isfile', lambda *args, **kwargs: True)
     def test_file_upload_op(self):
         inventory = make_inventory()
 
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch('pyinfra.operations.files.os_path.isfile', lambda *args, **kwargs: True):
-            # Test normal
-            add_op(
-                state, files.put,
-                name='First op name',
-                src='files/file.txt',
-                dest='/home/vagrant/file.txt',
-            )
+        # Test normal
+        add_op(
+            state, files.put,
+            name='First op name',
+            src='files/file.txt',
+            dest='/home/vagrant/file.txt',
+        )
 
-            # And with sudo
-            add_op(
-                state, files.put,
-                src='files/file.txt',
-                dest='/home/vagrant/file.txt',
-                sudo=True,
-                sudo_user='pyinfra',
-            )
+        # And with sudo
+        add_op(
+            state, files.put,
+            src='files/file.txt',
+            dest='/home/vagrant/file.txt',
+            sudo=True,
+            sudo_user='pyinfra',
+        )
 
-            # And with su
-            add_op(
-                state, files.put,
-                src='files/file.txt',
-                dest='/home/vagrant/file.txt',
-                sudo=True,
-                su_user='pyinfra',
-            )
+        # And with su
+        add_op(
+            state, files.put,
+            src='files/file.txt',
+            dest='/home/vagrant/file.txt',
+            sudo=True,
+            su_user='pyinfra',
+        )
 
         op_order = state.get_op_order()
 
@@ -205,8 +206,7 @@ class TestOperationsApi(PatchSSHTestCase):
         assert state.ops[somehost][op_order[2]]['global_kwargs']['su_user'] == 'pyinfra'
 
         # Check run ops works
-        with patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True):
-            run_ops(state)
+        run_ops(state)
 
         # Ensure ops completed OK
         assert state.results[somehost]['success_ops'] == 3

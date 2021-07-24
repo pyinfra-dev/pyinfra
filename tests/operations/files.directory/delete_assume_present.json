@@ -12,5 +12,6 @@
     "commands": [
         "rm -rf testdir"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "remove is always executed when assume_present"
 }

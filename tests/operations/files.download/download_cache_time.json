@@ -5,7 +5,7 @@
         "cache_time": 3600
     },
     "facts": {
-        "server.Date": "datetime:2015-01-01T00:00:00",
+        "server.Date": "datetime:2015-01-01T05:00:00",
         "files.File": {
             "path=/home/myfile": {
                 "mtime": "datetime:2015-01-01T00:00:00"
@@ -17,6 +17,5 @@
     },
     "commands": [
         "curl -sSLf http://myfile -o /home/myfile"
-    ],
-    "idempotent": false
+    ]
 }

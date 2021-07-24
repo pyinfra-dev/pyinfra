@@ -24,6 +24,5 @@
     "commands": [
         "chmod 644 /home/somefile.txt",
         "chown another-testuser:another-testgroup /home/somefile.txt"
-    ],
-    "idempotent": false
+    ]
 }

@@ -131,7 +131,8 @@ class Socket(File):
 
 class Sha1File(FactBase):
     '''
-    Returns a SHA1 hash of a file. Works with both sha1sum and sha1.
+    Returns a SHA1 hash of a file. Works with both sha1sum and sha1. Returns
+    ``None`` if the file doest not exist.
     '''
 
     _regexes = [
@@ -157,7 +158,7 @@ class Sha1File(FactBase):
 
 class Sha256File(FactBase):
     '''
-    Returns a SHA256 hash of a file.
+    Returns a SHA256 hash of a file, or ``None`` if the file does not exist.
     '''
 
     _regexes = [
@@ -185,7 +186,7 @@ class Sha256File(FactBase):
 
 class Md5File(FactBase):
     '''
-    Returns an MD5 hash of a file.
+    Returns an MD5 hash of a file, or ``None`` if the file does not exist.
     '''
 
     _regexes = [
@@ -232,9 +233,18 @@ class FindInFile(FactBase):
         return output
 
 
-class FindFiles(FactBase):
+class FindFilesBase(FactBase):
+    abstract = True
+    default = list
+
+    @staticmethod
+    def process(output):
+        return output
+
+
+class FindFiles(FindFilesBase):
     '''
-    Returns a list of files from a start point, recursively using find.
+    Returns a list of files from a start path, recursively using find.
     '''
 
     @staticmethod
@@ -244,14 +254,10 @@ class FindFiles(FactBase):
             QuoteString(path),
         )
 
-    @staticmethod
-    def process(output):
-        return output
 
-
-class FindLinks(FindFiles):
+class FindLinks(FindFilesBase):
     '''
-    Returns a list of links from a start point, recursively using find.
+    Returns a list of links from a start path, recursively using find.
     '''
 
     @staticmethod
@@ -262,9 +268,9 @@ class FindLinks(FindFiles):
         )
 
 
-class FindDirectories(FindFiles):
+class FindDirectories(FindFilesBase):
     '''
-    Returns a list of directories from a start point, recursively using find.
+    Returns a list of directories from a start path, recursively using find.
     '''
 
     @staticmethod

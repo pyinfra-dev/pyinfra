@@ -12,5 +12,6 @@
     "commands": [
         "rm -f testlink"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "delete operation always executed when assume_present"
 }

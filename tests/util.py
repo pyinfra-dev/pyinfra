@@ -139,6 +139,9 @@ class FakeFacts(object):
     def __getattr__(self, key):
         return self.facts.get(key)
 
+    def __setitem__(self, key, value):
+        self.facts[key] = value
+
     def _create(self, key, data=None, args=None):
         self.facts[key][args[0]] = data
 
@@ -162,8 +165,12 @@ class FakeHost(object):
     def noop(self, description):
         self.noop_description = description
 
+    @staticmethod
+    def _get_fact_key(fact_cls):
+        return '{0}.{1}'.format(fact_cls.__module__.split('.')[-1], fact_cls.__name__)
+
     def get_fact(self, fact_cls, **kwargs):
-        fact_key = '{0}.{1}'.format(fact_cls.__module__.split('.')[-1], fact_cls.__name__)
+        fact_key = self._get_fact_key(fact_cls)
         fact = getattr(self.fact, fact_key, None)
         if fact is None:
             raise KeyError('Missing test fact data: {0}'.format(fact_key))
@@ -172,11 +179,18 @@ class FakeHost(object):
         return fact
 
     def create_fact(self, fact_cls, data, kwargs):
-        fact = self.get_fact(fact_cls)
+        try:
+            fact = self.get_fact(fact_cls)
+        except KeyError:
+            fact_key = self._get_fact_key(fact_cls)
+            fact = self.fact[fact_key] = {}
         fact[get_kwargs_str(kwargs)] = data
 
     def delete_fact(self, fact_cls, kwargs):
-        fact = self.get_fact(fact_cls)
+        try:
+            fact = self.get_fact(fact_cls)
+        except KeyError:
+            return
         fact.pop(get_kwargs_str(kwargs), None)
 
 
