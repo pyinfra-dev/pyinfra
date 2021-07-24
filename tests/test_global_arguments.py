@@ -1,9 +1,14 @@
 from glob import glob
 from importlib import import_module
-from inspect import getargspec, getmembers
+from inspect import getmembers
 from os import path
 from types import FunctionType
 from unittest import TestCase
+
+try:
+    from inspect import getfullargspec
+except ImportError:
+    from inspect import getargspec as getfullargspec
 
 from pyinfra import operations
 from pyinfra.api.operation_kwargs import OPERATION_KWARGS
@@ -39,7 +44,7 @@ class TestOperationGlobalArguments(TestCase):
             global_arg_keys.update(kwargs.keys())
 
         for op_module, op_func in iter_operations():
-            argspec = getargspec(op_func._pyinfra_op)
+            argspec = getfullargspec(op_func._pyinfra_op)
             for arg in argspec.args:
                 assert arg not in global_arg_keys, \
                     '`{0}` argument found in {1}.{2} operation function'.format(
