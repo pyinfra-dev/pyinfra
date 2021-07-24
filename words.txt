@@ -116,6 +116,7 @@ fullmatch
 gaierror
 generic
 getargspec
+getfullargspec
 getcallargs
 getfo
 getframeinfo
