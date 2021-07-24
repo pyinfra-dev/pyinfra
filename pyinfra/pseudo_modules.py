@@ -63,6 +63,12 @@ pseudo_state = \
     pyinfra.pseudo_state = pyinfra.state = \
     PseudoModule()
 
+# The current deploy config
+pseudo_config = \
+    sys.modules['pyinfra.pseudo_config'] = sys.modules['pyinfra.config'] = \
+    pyinfra.pseudo_config = pyinfra.config = \
+    PseudoModule()
+
 # The current deploy inventory
 pseudo_inventory = \
     sys.modules['pyinfra.pseudo_inventory'] = sys.modules['pyinfra.inventory'] = \
@@ -77,8 +83,9 @@ pseudo_host = \
 
 
 def init_base_classes():
-    from pyinfra.api import Host, Inventory, State
+    from pyinfra.api import Config, Host, Inventory, State
 
+    pseudo_config.set_base(Config)
     pseudo_host.set_base(Host)
     pseudo_inventory.set_base(Inventory)
     pseudo_state.set_base(State)
