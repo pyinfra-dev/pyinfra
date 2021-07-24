@@ -35,6 +35,15 @@ class PseudoModule(object):
             return getattr(self._base_module, key)
         return getattr(self._module, key)
 
+    def __setattr__(self, key, value):
+        if key in ('_module', '_base_module'):
+            return super(PseudoModule, self).__setattr__(key, value)
+
+        if self._module is None:
+            raise TypeError('Cannot assign to pseudo base module')
+
+        return setattr(self._module, key, value)
+
     def __iter__(self):
         return iter(self._module)
 
