@@ -377,7 +377,7 @@ def line(
         # If any of lines are different, sed replace them
         if replace and any(line != replace for line in present_lines):
             yield sed_replace_command
-            present_lines.clear()
+            del present_lines[:]  # TODO: use .clear() when py3+
             present_lines.append(replace)
         else:
             host.noop('line "{0}" exists in {1}'.format(replace or line, path))
