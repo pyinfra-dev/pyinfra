@@ -1,0 +1,15 @@
+{
+    "args": ["testfile"],
+    "kwargs": {
+        "force": true
+    },
+    "facts": {
+        "files.File": {
+            "path=testfile": false
+        }
+    },
+    "commands": [
+        "mv testfile testfile.a-timestamp",
+        "touch testfile"
+    ]
+}
