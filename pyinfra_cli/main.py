@@ -357,6 +357,8 @@ def _main(
         extract_file_config(config_filename, config)  # TODO: remove this
         exec_file(config_filename)
 
+    # TODO: lock the config here, moving up from below when possible (v2)
+
     # Make a copy before we overwrite
     original_operations = operations
 
@@ -417,9 +419,14 @@ def _main(
     pyinfra INVENTORY exec -- echo "hello world"
     pyinfra INVENTORY fact os [users]...'''.format(operations))
 
-    # Load any hooks/config from the deploy file
+    # TODO: remove this - legacy load of any config variables from the top of
+    # the first deploy file.
     if command == 'deploy':
         extract_file_config(operations[0], config)
+
+    # Lock the current config, this allows us to restore this version after
+    # executing deploy files that may alter them.
+    config.lock_current_sate()
 
     # Arg based config overrides
     if sudo:
@@ -585,6 +592,8 @@ def _main(
         for i, filename in enumerate(operations):
             logger.info('Loading: {0}'.format(click.style(filename, bold=True)))
             load_deploy_file(state, filename)
+            # Remove any config changes introduced by the deploy file & any includes
+            config.reset_locked_state()
 
     # Operation w/optional args
     elif command == 'op':

@@ -69,3 +69,19 @@ class Config(object):
 
         for key, value in six.iteritems(config):
             setattr(self, key, value)
+
+    def get_current_state(self):
+        return [
+            (key, getattr(self, key))
+            for key in config_defaults.keys()
+        ]
+
+    def set_current_state(self, config_state):
+        for key, value in config_state:
+            setattr(self, key, value)
+
+    def lock_current_sate(self):
+        self._locked_config = self.get_current_state()
+
+    def reset_locked_state(self):
+        self.set_current_state(self._locked_config)
