@@ -19,7 +19,7 @@ from pyinfra.api import MaskString, operation, OperationError, StringCommand
 from pyinfra.facts.mysql import make_execute_mysql_command, make_mysql_command
 
 
-@operation
+@operation(is_idempotent=False)
 def sql(
     sql,
     database=None,
@@ -511,7 +511,7 @@ def privileges(
 _privileges = privileges  # noqa: E305 (for use where kwarg is the same)
 
 
-@operation
+@operation(is_idempotent=False)
 def dump(
     dest, database=None,
     # Details for speaking to MySQL via `mysql` CLI
@@ -547,7 +547,7 @@ def dump(
     ), dest)
 
 
-@operation
+@operation(is_idempotent=False)
 def load(
     src, database=None,
     # Details for speaking to MySQL via `mysql` CLI

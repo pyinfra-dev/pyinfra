@@ -49,7 +49,7 @@ from . import (
 from .util.files import chmod, sed_replace
 
 
-@operation
+@operation(is_idempotent=False)
 def reboot(delay=10, interval=1, reboot_timeout=300, state=None, host=None):
     '''
     Reboot the server and wait for reconnection.
@@ -102,7 +102,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300, state=None, host=None):
     yield FunctionCommand(wait_and_reconnect, (), {})
 
 
-@operation
+@operation(is_idempotent=False)
 def wait(port=None, state=None, host=None):
     '''
     Waits for a port to come active on the target machine. Requires netstat, checks every
@@ -128,7 +128,7 @@ def wait(port=None, state=None, host=None):
     '''.format(port)
 
 
-@operation
+@operation(is_idempotent=False)
 def shell(commands, state=None, host=None):
     '''
     Run raw shell code on server during a deploy. If the command would
@@ -155,7 +155,7 @@ def shell(commands, state=None, host=None):
         yield command
 
 
-@operation
+@operation(is_idempotent=False)
 def script(src, state=None, host=None):
     '''
     Upload and execute a local script on the remote host.
@@ -180,7 +180,7 @@ def script(src, state=None, host=None):
     yield temp_file
 
 
-@operation
+@operation(is_idempotent=False)
 def script_template(src, state=None, host=None, **data):
     '''
     Generate, upload and execute a local script template on the remote host.
