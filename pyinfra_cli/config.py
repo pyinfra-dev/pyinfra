@@ -2,6 +2,7 @@ import ast
 
 import six
 
+from pyinfra import logger
 from pyinfra.api.config import config_defaults
 
 
@@ -47,6 +48,10 @@ def extract_file_config(filename, config=None):
             if not isinstance(target, ast.Name):
                 continue
             if target.id.isupper() and target.id in config_defaults:
+                logger.warning((
+                    'file: {0}\n\tDefining config variables directly is deprecated, '
+                    'please use `config.{1} = {2}`.'
+                ).format(filename, target.id, repr(value)))
                 config_data[target.id] = value
 
     # If we have a config, update and exit
