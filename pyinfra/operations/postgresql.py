@@ -17,7 +17,7 @@ from pyinfra.api import MaskString, operation, StringCommand
 from pyinfra.facts.postgresql import make_execute_psql_command, make_psql_command
 
 
-@operation
+@operation(is_idempotent=False)
 def sql(
     sql,
     database=None,
@@ -235,7 +235,7 @@ def database(
         host.noop('postgresql database {0} exists'.format(database))
 
 
-@operation
+@operation(is_idempotent=False)
 def dump(
     dest, database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
@@ -273,7 +273,7 @@ def dump(
     ), '>', dest)
 
 
-@operation
+@operation(is_idempotent=False)
 def load(
     src, database=None,
     # Details for speaking to PostgreSQL via `psql` CLI

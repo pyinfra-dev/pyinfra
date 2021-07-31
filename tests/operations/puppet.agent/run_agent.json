@@ -6,5 +6,6 @@
     "commands": [
         "puppet agent -t --server=my-server.net --masterport=3006"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "puppet agent is always executed"
 }

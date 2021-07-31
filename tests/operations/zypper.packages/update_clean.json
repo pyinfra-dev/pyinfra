@@ -10,5 +10,6 @@
         "zypper clean --all",
         "zypper update -y"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "package upgrades are always executed"
 }

@@ -112,7 +112,7 @@ def rpm(src, present=True, state=None, host=None):
     yield ensure_rpm(state, host, files, src, present, 'yum')
 
 
-@operation
+@operation(is_idempotent=False)
 def update(state=None, host=None):
     '''
     Updates all yum packages.

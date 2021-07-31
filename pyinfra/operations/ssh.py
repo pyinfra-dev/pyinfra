@@ -68,7 +68,7 @@ def _user_or_ssh_user(user, ssh_user):
     return user or ssh_user
 
 
-@operation
+@operation(is_idempotent=False)
 def command(hostname, command, user=None, port=22, ssh_user=None, state=None, host=None):
     '''
     Execute commands on other servers over SSH.
@@ -102,7 +102,7 @@ def command(hostname, command, user=None, port=22, ssh_user=None, state=None, ho
     yield 'ssh -p {0} {1} {2}'.format(port, connection_target, command)
 
 
-@operation
+@operation(is_idempotent=False)
 def upload(
     hostname, filename,
     remote_filename=None,
