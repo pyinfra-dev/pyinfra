@@ -11,5 +11,6 @@
         "brew cask upgrade",
         "brew cask install keepassxc"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "package upgrades are always executed"
 }

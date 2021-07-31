@@ -325,7 +325,7 @@ def update(cache_time=None, touch_periodic=False, state=None, host=None):
 _update = update  # noqa: E305
 
 
-@operation
+@operation(is_idempotent=False)
 def upgrade(state, host):
     '''
     Upgrades all apt packages.
