@@ -1,3 +1,7 @@
+# v1.4.11
+
++ Fix removal of askpass file in `server.reboot` operation
+
 # v1.4.10
 
 + Ensure services in `/usr/local/etc/rc.d` are handled in `bsdinit.service` operation
