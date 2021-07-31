@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 def cleanup_words():
     with open('words.txt', 'r') as f:
         data = f.read()
