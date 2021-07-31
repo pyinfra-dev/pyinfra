@@ -12,6 +12,5 @@
     },
     "commands": [
         "mount -o remount,rw,noatime /data"
-    ],
-    "idempotent": false
+    ]
 }

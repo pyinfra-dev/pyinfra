@@ -8,6 +8,5 @@
     },
     "commands": [
         "modprobe -f -a somemodule"
-    ],
-    "idempotent": false
+    ]
 }

@@ -249,10 +249,14 @@ def modprobe(module, present=True, force=False, state=None, host=None):
     # Module is loaded and we don't want it?
     if not present and present_mods:
         yield 'modprobe{0} -r -a {1}'.format(args, ' '.join(present_mods))
+        for mod in present_mods:
+            modules.pop(mod)
 
     # Module isn't loaded and we want it?
     elif present and missing_mods:
         yield 'modprobe{0} -a {1}'.format(args, ' '.join(missing_mods))
+        for mod in missing_mods:
+            modules[mod] = {}
 
     else:
         host.noop('{0} {1} {2} {3}'.format(
@@ -299,10 +303,12 @@ def mount(
             ' -o {0}'.format(options_string) if options_string else '',
             path,
         )
+        mounts[path] = {'options': options}
 
     # Want no mount but mounted?
     elif mounted is False and is_mounted:
         yield 'umount {0}'.format(path)
+        mounts.pop(path)
 
     # Want mount and is mounted! Check the options
     elif is_mounted and mounted and options:
@@ -310,6 +316,7 @@ def mount(
         needed_options = set(options) - set(mounted_options)
         if needed_options:
             yield 'mount -o remount,{0} {1}'.format(options_string, path)
+            mounts[path]['options'] = options
 
     else:
         host.noop('filesystem {0} is {1}'.format(
