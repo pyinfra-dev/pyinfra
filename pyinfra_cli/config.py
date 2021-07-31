@@ -1,12 +1,8 @@
 import ast
 
-from os import path
-
 import six
 
-from pyinfra.api import Config
-
-from .util import exec_file
+from pyinfra.api.config import config_defaults
 
 
 def extract_file_config(filename, config=None):
@@ -48,7 +44,9 @@ def extract_file_config(filename, config=None):
         # If one of the assignments matches a config variable (e.g. SUDO = True)
         # then assign it to the config object!
         for target in node.targets:
-            if target.id.isupper() and hasattr(Config, target.id):
+            if not isinstance(target, ast.Name):
+                continue
+            if target.id.isupper() and target.id in config_defaults:
                 config_data[target.id] = value
 
     # If we have a config, update and exit
@@ -58,37 +56,3 @@ def extract_file_config(filename, config=None):
         return
 
     return config_data
-
-
-def load_config(deploy_dir):
-    '''
-    Loads any local config.py file.
-    '''
-
-    config = Config()
-    config_filename = path.join(deploy_dir, 'config.py')
-
-    if path.exists(config_filename):
-        extract_file_config(config_filename, config)
-
-        # Now execute the file to trigger loading of any hooks
-        exec_file(config_filename)
-
-    return config
-
-
-def load_deploy_config(deploy_filename, config=None):
-    '''
-    Loads any local config overrides in the deploy file.
-    '''
-
-    if not config:
-        config = Config()
-
-    if not deploy_filename:
-        return
-
-    if path.exists(deploy_filename):
-        extract_file_config(deploy_filename, config)
-
-    return config
