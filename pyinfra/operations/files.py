@@ -935,10 +935,12 @@ def _validate_path(path):
         raise OperationTypeError('`path` must be a string or `os.PathLike` object')
 
 
-def _raise_or_remove_invalid_path(fs_type, path, force, force_backup):
+def _raise_or_remove_invalid_path(fs_type, path, force, force_backup, force_backup_dir):
     if force:
         if force_backup:
             backup_path = '{0}.{1}'.format(path, get_timestamp())
+            if force_backup_dir:
+                backup_path = '{0}/{1}'.format(force_backup_dir, backup_path)
             yield 'mv {0} {1}'.format(path, backup_path)
         else:
             yield 'rm -rf {0}'.format(path)
@@ -954,7 +956,7 @@ def link(
     target=None, present=True, assume_present=False,
     user=None, group=None, symbolic=True,
     create_remote_dir=True,
-    force=False, force_backup=True,
+    force=False, force_backup=True, force_backup_dir=None,
     state=None, host=None,
 ):
     '''
@@ -968,6 +970,9 @@ def link(
     + group: group to own the link
     + symbolic: whether to make a symbolic link (vs hard link)
     + create_remote_dir: create the remote directory if it doesn't exist
+    + force: if the target exists and is not a file, move or remove it and continue
+    + force_backup: set to ``False`` to remove any existing non-file when ``force=True``
+    + force_backup_dir: directory to move any backup to when ``force=True``
 
     ``create_remote_dir``:
         If the remote directory does not exist it will be created using the same
@@ -1015,7 +1020,9 @@ def link(
 
     # Not a link?
     if info is False:
-        yield _raise_or_remove_invalid_path('link', path, force, force_backup)
+        yield _raise_or_remove_invalid_path(
+            'link', path, force, force_backup, force_backup_dir,
+        )
         info = None
 
     add_args = ['ln']
@@ -1099,7 +1106,7 @@ def file(
     present=True, assume_present=False,
     user=None, group=None, mode=None, touch=False,
     create_remote_dir=True,
-    force=False, force_backup=True,
+    force=False, force_backup=True, force_backup_dir=None,
     state=None, host=None,
 ):
     '''
@@ -1115,6 +1122,7 @@ def file(
     + create_remote_dir: create the remote directory if it doesn't exist
     + force: if the target exists and is not a file, move or remove it and continue
     + force_backup: set to ``False`` to remove any existing non-file when ``force=True``
+    + force_backup_dir: directory to move any backup to when ``force=True``
 
     ``create_remote_dir``:
         If the remote directory does not exist it will be created using the same
@@ -1144,7 +1152,9 @@ def file(
 
     # Not a file?!
     if info is False:
-        yield _raise_or_remove_invalid_path('file', path, force, force_backup)
+        yield _raise_or_remove_invalid_path(
+            'file', path, force, force_backup, force_backup_dir,
+        )
         info = None
 
     # Doesn't exist & we want it
@@ -1212,7 +1222,7 @@ def directory(
     path,
     present=True, assume_present=False,
     user=None, group=None, mode=None, recursive=False,
-    force=False, force_backup=True,
+    force=False, force_backup=True, force_backup_dir=None,
     _no_check_owner_mode=False,
     _no_fail_on_link=False,
     state=None, host=None,
@@ -1227,6 +1237,9 @@ def directory(
     + group: group to own the folder
     + mode: permissions of the folder
     + recursive: recursively apply user/group/mode
+    + force: if the target exists and is not a file, move or remove it and continue
+    + force_backup: set to ``False`` to remove any existing non-file when ``force=True``
+    + force_backup_dir: directory to move any backup to when ``force=True``
 
     Examples:
 
@@ -1264,7 +1277,9 @@ def directory(
         if _no_fail_on_link and host.get_fact(Link, path=path):
             host.noop('directory {0} already exists (as a link)'.format(path))
             return
-        yield _raise_or_remove_invalid_path('directory', path, force, force_backup)
+        yield _raise_or_remove_invalid_path(
+            'directory', path, force, force_backup, force_backup_dir,
+        )
         info = None
 
     # Doesn't exist & we want it

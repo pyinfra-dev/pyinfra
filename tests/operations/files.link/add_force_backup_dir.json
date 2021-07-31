@@ -1,0 +1,17 @@
+{
+    "args": ["testlink"],
+    "kwargs": {
+        "target": "/etc/init.d/nginx",
+        "force": true,
+        "force_backup_dir": "/tmp/somewhere"
+    },
+    "facts": {
+        "files.Link": {
+            "path=testlink": false
+        }
+    },
+    "commands": [
+        "mv testlink /tmp/somewhere/testlink.a-timestamp",
+        "ln -s /etc/init.d/nginx testlink"
+    ]
+}
