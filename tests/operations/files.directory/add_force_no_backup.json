@@ -1,0 +1,16 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "force": true,
+        "force_backup": false
+    },
+    "facts": {
+        "files.Directory": {
+            "path=testdir": false
+        }
+    },
+    "commands": [
+        "rm -rf testdir",
+        "mkdir -p testdir"
+    ]
+}

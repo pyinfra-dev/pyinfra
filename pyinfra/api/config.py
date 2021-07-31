@@ -44,6 +44,10 @@ config_defaults = {
     'DOAS': False,
     'DOAS_USER': None,
 
+    # Use doas and optional user
+    'DOAS': False,
+    'DOAS_USER': None,
+
     # Only show errors, but don't count as failure
     'IGNORE_ERRORS': False,
 
