@@ -1,0 +1,17 @@
+{
+    "args": ["testlink"],
+    "kwargs": {
+        "target": "/etc/init.d/nginx",
+        "force": true,
+        "force_backup": false
+    },
+    "facts": {
+        "files.Link": {
+            "path=testlink": false
+        }
+    },
+    "commands": [
+        "rm -rf testlink",
+        "ln -s /etc/init.d/nginx testlink"
+    ]
+}

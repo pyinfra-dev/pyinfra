@@ -1,0 +1,15 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "force": true
+    },
+    "facts": {
+        "files.Directory": {
+            "path=testdir": false
+        }
+    },
+    "commands": [
+        "mv testdir testdir.a-timestamp",
+        "mkdir -p testdir"
+    ]
+}
