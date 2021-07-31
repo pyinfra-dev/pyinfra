@@ -7,7 +7,7 @@ import six
 
 import pyinfra
 
-from . import logger, pseudo_state
+from . import logger, pseudo_config, pseudo_state
 from .api.connectors.util import run_local_process, split_combined_output
 from .api.exceptions import PyinfraError
 
@@ -28,6 +28,8 @@ def include(filename):
 
     logger.debug('Including local file: {0}'.format(filename))
 
+    config_state = pseudo_config.get_current_state()
+
     try:
         # Fixes a circular import because `pyinfra.local` is really a CLI
         # only thing (so should be `pyinfra_cli.local`). It is kept here
@@ -38,6 +40,7 @@ def include(filename):
         from pyinfra_cli.util import exec_file
 
         # Load any config defined in the file and setup like a @deploy
+        # TODO: remove this in v2
         config_data = extract_file_config(filename)
         kwargs = {
             key.lower(): value
@@ -57,6 +60,9 @@ def include(filename):
         raise PyinfraError(
             'Could not include local file: {0}:\n{1}'.format(filename, e),
         )
+
+    finally:
+        pseudo_config.set_current_state(config_state)
 
 
 def shell(commands, splitlines=False, ignore_errors=False, print_output=False, print_input=False):

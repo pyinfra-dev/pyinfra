@@ -6,7 +6,6 @@ import ntpath
 import click
 
 from pyinfra import logger
-from pyinfra.api import Config
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize, sha1_hash
 
@@ -108,7 +107,7 @@ def run_shell_command(
     print_output=False,
     print_input=False,
     return_combined_output=False,
-    shell_executable=Config.SHELL,
+    shell_executable=None,
     **ignored_command_kwargs
 ):
     '''

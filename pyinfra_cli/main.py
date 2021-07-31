@@ -12,10 +12,11 @@ import click
 from pyinfra import (
     __version__,
     logger,
+    pseudo_config,
     pseudo_inventory,
     pseudo_state,
 )
-from pyinfra.api import State
+from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import NoGroupError, PyinfraError
 from pyinfra.api.facts import (
@@ -29,7 +30,7 @@ from pyinfra.api.operations import run_ops
 from pyinfra.api.util import get_kwargs_str
 from pyinfra.operations import server
 
-from .config import load_config, load_deploy_config
+from .config import extract_file_config
 from .exceptions import (
     CliError,
     UnexpectedExternalError,
@@ -49,6 +50,7 @@ from .prints import (
     print_support_info,
 )
 from .util import (
+    exec_file,
     get_facts_and_args,
     get_operation_and_args,
     list_dirs_above_file,
@@ -354,8 +356,16 @@ def _main(
     if not quiet:
         click.echo('--> Loading config...', err=True)
 
+    config = Config()
+    pseudo_config.set(config)
+
     # Load up any config.py from the filesystem
-    config = load_config(deploy_dir)
+    config_filename = path.join(deploy_dir, 'config.py')
+    if path.exists(config_filename):
+        extract_file_config(config_filename, config)  # TODO: remove this
+        exec_file(config_filename)
+
+    # TODO: lock the config here, moving up from below when possible (v2)
 
     # Make a copy before we overwrite
     original_operations = operations
@@ -417,9 +427,14 @@ def _main(
     pyinfra INVENTORY exec -- echo "hello world"
     pyinfra INVENTORY fact os [users]...'''.format(operations))
 
-    # Load any hooks/config from the deploy file
+    # TODO: remove this - legacy load of any config variables from the top of
+    # the first deploy file.
     if command == 'deploy':
-        load_deploy_config(operations[0], config)
+        extract_file_config(operations[0], config)
+
+    # Lock the current config, this allows us to restore this version after
+    # executing deploy files that may alter them.
+    config.lock_current_sate()
 
     # Arg based config overrides
     if sudo:
@@ -587,6 +602,8 @@ def _main(
         for i, filename in enumerate(operations):
             logger.info('Loading: {0}'.format(click.style(filename, bold=True)))
             load_deploy_file(state, filename)
+            # Remove any config changes introduced by the deploy file & any includes
+            config.reset_locked_state()
 
     # Operation w/optional args
     elif command == 'op':

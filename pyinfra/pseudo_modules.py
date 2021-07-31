@@ -35,6 +35,15 @@ class PseudoModule(object):
             return getattr(self._base_module, key)
         return getattr(self._module, key)
 
+    def __setattr__(self, key, value):
+        if key in ('_module', '_base_module'):
+            return super(PseudoModule, self).__setattr__(key, value)
+
+        if self._module is None:
+            raise TypeError('Cannot assign to pseudo base module')
+
+        return setattr(self._module, key, value)
+
     def __iter__(self):
         return iter(self._module)
 
@@ -63,6 +72,12 @@ pseudo_state = \
     pyinfra.pseudo_state = pyinfra.state = \
     PseudoModule()
 
+# The current deploy config
+pseudo_config = \
+    sys.modules['pyinfra.pseudo_config'] = sys.modules['pyinfra.config'] = \
+    pyinfra.pseudo_config = pyinfra.config = \
+    PseudoModule()
+
 # The current deploy inventory
 pseudo_inventory = \
     sys.modules['pyinfra.pseudo_inventory'] = sys.modules['pyinfra.inventory'] = \
@@ -77,8 +92,9 @@ pseudo_host = \
 
 
 def init_base_classes():
-    from pyinfra.api import Host, Inventory, State
+    from pyinfra.api import Config, Host, Inventory, State
 
+    pseudo_config.set_base(Config)
     pseudo_host.set_base(Host)
     pseudo_inventory.set_base(Inventory)
     pseudo_state.set_base(State)
