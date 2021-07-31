@@ -6,7 +6,6 @@ import ntpath
 import click
 
 from pyinfra import logger
-from pyinfra.api import Config
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize, sha1_hash
 

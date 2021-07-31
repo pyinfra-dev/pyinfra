@@ -12,7 +12,7 @@ from gevent.queue import Queue
 from six.moves import shlex_quote
 
 from pyinfra import logger
-from pyinfra.api import Config, MaskString, QuoteString, StringCommand
+from pyinfra.api import MaskString, QuoteString, StringCommand
 from pyinfra.api.util import memoize
 
 SUDO_ASKPASS_ENV_VAR = 'PYINFRA_SUDO_PASSWORD'
