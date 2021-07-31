@@ -214,21 +214,21 @@ def make_unix_command(
     command,
     env=None,
     chdir=None,
-    shell_executable=Config.SHELL,
+    shell_executable=None,
     # Su config
-    su_user=Config.SU_USER,
-    use_su_login=Config.USE_SU_LOGIN,
-    su_shell=Config.SU_SHELL,
-    preserve_su_env=Config.PRESERVE_SU_ENV,
+    su_user=None,
+    use_su_login=False,
+    su_shell=None,
+    preserve_su_env=False,
     # Sudo config
-    sudo=Config.SUDO,
-    sudo_user=Config.SUDO_USER,
-    use_sudo_login=Config.USE_SUDO_LOGIN,
-    use_sudo_password=Config.USE_SUDO_PASSWORD,
-    preserve_sudo_env=Config.PRESERVE_SUDO_ENV,
+    sudo=False,
+    sudo_user=None,
+    use_sudo_login=False,
+    use_sudo_password=False,
+    preserve_sudo_env=False,
     # Doas config
-    doas=Config.DOAS,
-    doas_user=Config.DOAS_USER,
+    doas=False,
+    doas_user=None,
     # Optional state object, used to decide if we print invalid auth arg warnings
     state=None,
 ):

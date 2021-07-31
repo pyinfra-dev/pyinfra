@@ -108,7 +108,7 @@ def run_shell_command(
     print_output=False,
     print_input=False,
     return_combined_output=False,
-    shell_executable=Config.SHELL,
+    shell_executable=None,
     **ignored_command_kwargs
 ):
     '''
