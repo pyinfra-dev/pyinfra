@@ -10,7 +10,11 @@ class GitBranch(FactBase):
 
     @staticmethod
     def command(repo):
-        return '! test -d {0} || (cd {0} && git rev-parse --abbrev-ref HEAD)'.format(repo)
+        return '! test -d {0} || (cd {0} && git describe --all)'.format(repo)
+
+    @staticmethod
+    def process(output):
+        return re.sub(r'(heads|tags)/', r'', '\n'.join(output))
 
 
 class GitConfig(FactBase):
