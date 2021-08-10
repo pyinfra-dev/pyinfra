@@ -59,7 +59,7 @@ def packages(
             host, packages, current_packages, present,
             install_command=install_command,
             uninstall_command=uninstall_command,
-            upgrade_command='{0} upgrade'.format(install_command),
+            upgrade_command='{0} upgrade'.format(pipx),
             version_join='==',
             latest=latest,
         )

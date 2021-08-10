@@ -27,7 +27,7 @@ class PipxPackages(FactBase):
         return '{0} list --json'.format(pipx)
 
     def process(self, output):
-        pipx_list= json.loads(output)
+        pipx_list= json.loads('\n'.join(output))
         versions={}
         for venv in pipx_list['venvs'].values():
             package=venv['metadata']['main_package']['package']
