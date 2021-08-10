@@ -513,8 +513,14 @@ class LinuxDistribution(FactBase):
         for part in '\n'.join(output).strip().split('---'):
             if not part.strip():
                 continue
-            filename, content = part.strip().split('\n', 1)
-            parts[filename] = content
+            try:
+                filename, content = part.strip().split('\n', 1)
+                parts[filename] = content
+            except(ValueError):
+                # skip empty files
+                # for instance arch linux as an empty file at /etc/arch-release
+                continue
+
 
         release_info = self.default()
         if not parts:
