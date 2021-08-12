@@ -516,11 +516,10 @@ class LinuxDistribution(FactBase):
             try:
                 filename, content = part.strip().split('\n', 1)
                 parts[filename] = content
-            except(ValueError):
+            except ValueError:
                 # skip empty files
                 # for instance arch linux as an empty file at /etc/arch-release
                 continue
-
 
         release_info = self.default()
         if not parts:
