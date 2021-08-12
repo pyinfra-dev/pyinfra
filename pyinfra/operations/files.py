@@ -112,7 +112,7 @@ def download(
             # Time on files is not tz-aware, and will be the same tz as the server's time,
             # so we can safely remove the tzinfo from the Date fact before comparison.
             cache_time = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
-            if info['mtime'] and info['mtime'] > cache_time:
+            if info['mtime'] and info['mtime'] < cache_time:
                 download = True
 
         if sha1sum:
