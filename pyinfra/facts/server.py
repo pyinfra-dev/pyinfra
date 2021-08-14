@@ -539,7 +539,7 @@ class LinuxDistribution(FactBase):
             release_meta = {key.upper(): value for key, value in parsed.os_release_info().items()}
             release_info.update({
                 'name': self.name_to_pretty_name.get(parsed.id(), parsed.name()),
-                'major': try_int(parsed.major_version()),
+                'major': try_int(parsed.major_version()) or None,
                 'minor': try_int(parsed.minor_version()) or None,
                 'release_meta': release_meta,
             })
