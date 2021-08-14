@@ -3,7 +3,7 @@
     "command": "! test -d myrepo || (cd myrepo && git describe --all)",
     "requires_command": "git",
     "output": [
-        "develop"
+        "heads/develop"
     ],
     "fact": "develop"
 }
