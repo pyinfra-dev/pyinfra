@@ -1,3 +1,10 @@
+# v1.4.12
+
++ Support tag names in `git.GitBranch` fact (@stevenkaras)
++ Fix `cache_time` test in `files.download` operation (@stevenkaras)
++ Fix parsing of `server.LinuxDistribution` fact for Archlinux (@TypicalFence)
++ Correctly return `None` when no major version in `server.LinuxDistribution` fact
+
 # v1.4.11
 
 + Fix removal of askpass file in `server.reboot` operation
