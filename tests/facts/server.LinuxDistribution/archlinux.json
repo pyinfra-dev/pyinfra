@@ -18,8 +18,8 @@
     ],
     "fact":  {
         "name": "Arch Linux",
-        "major": 20,
-        "minor": 6,
+        "major": null,
+        "minor": null,
         "release_meta": {
             "NAME": "Arch Linux",
             "PRETTY_NAME": "Arch Linux",
