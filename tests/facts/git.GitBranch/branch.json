@@ -1,9 +1,9 @@
 {
     "arg": "myrepo",
-    "command": "! test -d myrepo || (cd myrepo && git rev-parse --abbrev-ref HEAD)",
+    "command": "! test -d myrepo || (cd myrepo && git describe --all)",
     "requires_command": "git",
     "output": [
-        "develop"
+        "heads/develop"
     ],
     "fact": "develop"
 }
