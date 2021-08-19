@@ -32,6 +32,8 @@ class SEBoolean(FactBase):
     .. code:: python
         host.get_fact(SEBoolean, "httpd_can_network_connect") -> "off"
     '''
+    requires_command = 'getsebool'
+
     def command(self, boolean):
         return 'getsebool {0}'.format(boolean)
     
