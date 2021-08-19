@@ -420,6 +420,7 @@ def sync(
     + delete: delete remote files not present locally
     + exclude: string or list/tuple of strings to match & exclude files (eg *.pyc)
     + exclude_dir: string or list/tuple of strings to match & exclude directories (eg node_modules)
+    + add_deploy_dir: interpret src as relative to deploy directory instead of current directory
 
     Example:
 
