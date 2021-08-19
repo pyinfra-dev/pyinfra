@@ -28,9 +28,9 @@ class FileContext(FactBase):
 class SEBoolean(FactBase):
     '''
     Returns the on/off status of a SELinux Boolean.
-    
+
     .. code:: python
-        SEBoolean("httpd_can_network_connect") -> "off"
+        host.get_fact(SEBoolean, "httpd_can_network_connect") -> "off"
     '''
     def command(self, boolean):
         return 'getsebool {0}'.format(boolean)
