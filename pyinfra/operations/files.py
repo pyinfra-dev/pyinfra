@@ -459,7 +459,7 @@ def sync(
 
     put_files = []
     ensure_dirnames = []
-    for dirpath, dirnames, filenames in walk(src):
+    for dirpath, dirnames, filenames in walk(src, topdown=True):
         remote_dirpath = dirpath.replace(src, '')
 
         # Filter excluded dirs
