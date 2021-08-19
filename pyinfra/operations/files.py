@@ -459,12 +459,14 @@ def sync(
 
     put_files = []
     ensure_dirnames = []
-    for dirpath, _, filenames in walk(src):
+    for dirpath, dirnames, filenames in walk(src):
         remote_dirpath = dirpath.replace(src, '')
 
-        # Should we exclude this dir?
-        if exclude_dir and any(fnmatch(remote_dirpath, match) for match in exclude_dir):
-            continue
+        # Filter excluded dirs
+        for child_dir in dirnames:
+            child_path = os_path.join(remote_dirpath, child_dir)
+            if exclude_dir and any(fnmatch(child_path, match) for match in exclude_dir):
+                dirnames.remove(child_dir)
 
         if remote_dirpath:
             ensure_dirnames.append((remote_dirpath, get_path_permissions_mode(dirpath)))
