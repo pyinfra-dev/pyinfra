@@ -12,11 +12,15 @@
     ],
     "directories": {
         "/somedir/": {
-            "/somedir/": ["somefile.txt", "anotherfile.txt", "thing.pyc"],
-            "/somedir/underthat": ["yet-another-file.txt"],
-            "/somedir/__pycache__": ["nope"]
+            "files": ["somefile.txt", "anotherfile.txt", "thing.pyc"],
+            "dirs": ["underthat", "__pycache__"]
         },
-        "/somedir/underthat": {}
+        "/somedir/underthat": {
+            "files": ["yet-another-file.txt"]
+        },
+        "/somedir/__pycache__": {
+            "files": ["nope"]
+        }
     },
     "facts": {
         "files.File": {

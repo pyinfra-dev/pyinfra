@@ -6,7 +6,7 @@
     ],
     "directories": {
         "/somedir/": {
-            "/somedir/": ["yet () another {} file $$ __.txt"]
+            "files": ["yet () another {} file $$ __.txt"]
         }
     },
     "facts": {

@@ -294,12 +294,19 @@ class patch_files(object):
 
         return os.stat_result((mode_int, 0, 0, 0, 0, 0, 0, 0, 0, 0))
 
-    def walk(self, dirname):
+    def walk(self, dirname, topdown=True, onerror=None, followlinks=False):
         if dirname not in self.directories:
             return
+        dir_definition = self.directories[dirname]
+        child_dirs = dir_definition.get('dirs', [])
+        child_files = dir_definition.get('files', [])
 
-        for dirname, filenames in sorted(self.directories[dirname].items()):
-            yield dirname, None, filenames
+        yield dirname, child_dirs, child_files
+
+        for child in child_dirs:
+            full_child = path.join(dirname, child)
+            for recursive_return in self.walk(full_child):
+                yield recursive_return
 
 
 def create_host(name=None, facts=None, data=None):
