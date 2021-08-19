@@ -434,7 +434,7 @@ def sync(
         )
     '''
 
-    # If we don't enforce the source ending with /, remote_dirname below might start with
+    # If we don't enforce the source ending with /, remote_dirpath below might start with
     # a /, which makes the os_path.join cut off the destination bit.
     if not src.endswith(os_path.sep):
         src = '{0}{1}'.format(src, os_path.sep)
@@ -459,18 +459,18 @@ def sync(
 
     put_files = []
     ensure_dirnames = []
-    for dirname, _, filenames in walk(src):
-        remote_dirname = dirname.replace(src, '')
+    for dirpath, _, filenames in walk(src):
+        remote_dirpath = dirpath.replace(src, '')
 
         # Should we exclude this dir?
-        if exclude_dir and any(fnmatch(remote_dirname, match) for match in exclude_dir):
+        if exclude_dir and any(fnmatch(remote_dirpath, match) for match in exclude_dir):
             continue
 
-        if remote_dirname:
-            ensure_dirnames.append((remote_dirname, get_path_permissions_mode(dirname)))
+        if remote_dirpath:
+            ensure_dirnames.append((remote_dirpath, get_path_permissions_mode(dirpath)))
 
         for filename in filenames:
-            full_filename = os_path.join(dirname, filename)
+            full_filename = os_path.join(dirpath, filename)
 
             # Should we exclude this file?
             if exclude and any(fnmatch(full_filename, match) for match in exclude):
@@ -482,7 +482,7 @@ def sync(
                 # Join remote as unix like
                 '/'.join(
                     item for item in
-                    (dest, remote_dirname, filename)
+                    (dest, remote_dirpath, filename)
                     if item
                 ),
             ))
@@ -502,9 +502,9 @@ def sync(
     )
 
     # Ensure any remote dirnames
-    for dirname, dir_mode in ensure_dirnames:
+    for dirpath, dir_mode in ensure_dirnames:
         yield directory(
-            '/'.join((dest, dirname)),
+            '/'.join((dest, dirpath)),
             user=user, group=group, mode=dir_mode,
             state=state, host=host,
         )
