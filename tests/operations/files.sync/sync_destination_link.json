@@ -8,7 +8,9 @@
     "files": [
         "/somedir/somefile.txt",
         "/somedir/anotherfile.txt",
-        "/somedir/underthat/yet-another-file.txt"
+        "/somedir/underthat/yet-another-file.txt",
+        "/somedir/__pycache__/nope",
+        "/somedir/__pycache__/ignore_this/nope_again"
     ],
     "directories": {
         "/somedir/": {
@@ -19,7 +21,11 @@
             "files": ["yet-another-file.txt"]
         },
         "/somedir/__pycache__": {
-            "files": ["nope"]
+            "files": ["nope"],
+            "dirs": ["ignore_this"]
+        },
+        "/somedir/__pycache__/ignore_this": {
+            "files": ["nope_again"]
         }
     },
     "facts": {
