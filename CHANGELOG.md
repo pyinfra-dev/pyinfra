@@ -1,3 +1,9 @@
+# v1.4.13
+
++ Fix `exclude_dir` in `files.sync` operation (@gchazot)
++ Fix multiple nested imports by properly resetting current exec filename
++ Improve error when there are no Vagrant instances and a name is provided
+
 # v1.4.12
 
 + Support tag names in `git.GitBranch` fact (@stevenkaras)
