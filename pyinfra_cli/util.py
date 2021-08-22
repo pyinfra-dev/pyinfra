@@ -60,6 +60,7 @@ def exec_file(filename, return_locals=False, is_deploy_code=False):
     Execute a Python file and optionally return it's attributes as a dict.
     '''
 
+    old_current_exec_filename = pseudo_state.current_exec_filename
     pseudo_state.current_exec_filename = filename
 
     if filename not in PYTHON_CODES:
@@ -80,6 +81,7 @@ def exec_file(filename, return_locals=False, is_deploy_code=False):
     except Exception as e:
         raise UnexpectedExternalError(e, filename)
 
+    pseudo_state.current_exec_filename = old_current_exec_filename
     return data
 
 
