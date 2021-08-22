@@ -8,10 +8,12 @@
     ],
     "directories": {
         "/somedir/": {
-            "/somedir/": ["somefile.txt", "anotherfile.txt"],
-            "/somedir/underthat": ["yet-another-file.txt"]
+            "files": ["somefile.txt", "anotherfile.txt"],
+            "dirs": ["underthat"]
         },
-        "/somedir/underthat": {}
+        "/somedir/underthat": {
+            "files": ["yet-another-file.txt"]
+        }
     },
     "facts": {
         "files.File": {

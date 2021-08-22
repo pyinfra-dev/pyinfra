@@ -8,15 +8,25 @@
     "files": [
         "/somedir/somefile.txt",
         "/somedir/anotherfile.txt",
-        "/somedir/underthat/yet-another-file.txt"
+        "/somedir/underthat/yet-another-file.txt",
+        "/somedir/__pycache__/nope",
+        "/somedir/__pycache__/ignore_this/nope_again"
     ],
     "directories": {
         "/somedir/": {
-            "/somedir/": ["somefile.txt", "anotherfile.txt", "thing.pyc"],
-            "/somedir/underthat": ["yet-another-file.txt"],
-            "/somedir/__pycache__": ["nope"]
+            "files": ["somefile.txt", "anotherfile.txt", "thing.pyc"],
+            "dirs": ["underthat", "__pycache__"]
         },
-        "/somedir/underthat": {}
+        "/somedir/underthat": {
+            "files": ["yet-another-file.txt"]
+        },
+        "/somedir/__pycache__": {
+            "files": ["nope"],
+            "dirs": ["ignore_this"]
+        },
+        "/somedir/__pycache__/ignore_this": {
+            "files": ["nope_again"]
+        }
     },
     "facts": {
         "files.File": {
