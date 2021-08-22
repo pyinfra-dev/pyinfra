@@ -152,6 +152,8 @@ def make_names_data(limit=None):
         hosts.append(_make_name_data(current_host))
 
     if not hosts:
+        if limit:
+            raise InventoryError('No running Vagrant instances matching `{0}` found!'.format(limit))
         raise InventoryError('No running Vagrant instances found!')
 
     return hosts
