@@ -6,9 +6,13 @@ from __future__ import unicode_literals
 
 import ntpath
 import os
+import sys
+import traceback
 from datetime import timedelta
 
 import six
+
+from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
 from pyinfra import logger
 from pyinfra.api import (
@@ -17,7 +21,7 @@ from pyinfra.api import (
     OperationError,
     OperationTypeError,
 )
-from pyinfra.api.util import get_file_sha1
+from pyinfra.api.util import get_file_sha1, get_template
 from pyinfra.facts.windows import WindowsDate
 from pyinfra.facts.windows_files import (
     WindowsDirectory,
@@ -332,6 +336,133 @@ def file(
 #            or (group and info['group'] != group)
 #        ):
 #            yield chown(path, user, group)
+
+
+@operation
+def template(
+    src, dest,
+    user=None, group=None, mode=None, create_remote_dir=True,
+    state=None, host=None,
+    **data
+):
+    '''
+    Generate a template using jinja2 and write it to the remote system.
+
+    + src: local template filename
+    + dest: remote filename
+    + user: user to own the files
+    + group: group to own the files
+    + mode: permissions of the files
+    + create_remote_dir: create the remote directory if it doesn't exist
+
+    ``create_remote_dir``:
+        If the remote directory does not exist it will be created using the same
+        user & group as passed to ``files.put``. The mode will *not* be copied over,
+        if this is required call ``files.directory`` separately.
+
+    Notes:
+       Common convention is to store templates in a "templates" directory and
+       have a filename suffix with '.j2' (for jinja2).
+
+       For information on the template syntax, see
+       `the jinja2 docs <https://jinja.palletsprojects.com>`_.
+
+    Examples:
+
+    .. code:: python
+
+        files.template(
+            name='Create a templated file',
+            src='templates/somefile.conf.j2',
+            dest='/etc/somefile.conf',
+        )
+
+        files.template(
+            name='Create service file',
+            src='templates/myweb.service.j2',
+            dest='/etc/systemd/system/myweb.service',
+            mode='755',
+            user='root',
+            group='root',
+        )
+
+        # Example showing how to pass python variable to template file. You can also
+        # use dicts and lists. The .j2 file can use `{{ foo_variable }}` to be interpolated.
+        foo_variable = 'This is some foo variable contents'
+        foo_dict = {
+            "str1": "This is string 1",
+            "str2": "This is string 2"
+        }
+        foo_list = [
+            "entry 1",
+            "entry 2"
+        ]
+        files.template(
+            name='Create a templated file',
+            src='templates/foo.yml.j2',
+            dest='/tmp/foo.yml',
+            foo_variable=foo_variable,
+            foo_dict=foo_dict,
+            foo_list=foo_list
+        )
+
+    .. code:: yml
+
+        # templates/foo.j2
+        name: "{{ foo_variable }}"
+        dict_contents:
+            str1: "{{ foo_dict.str1 }}"
+            str2: "{{ foo_dict.str2 }}"
+        list_contents:
+        {% for entry in foo_list %}
+            - "{{ entry }}"
+        {% endfor %}
+    '''
+
+    if state.deploy_dir:
+        src = os.path.join(state.deploy_dir, src)
+
+    # Ensure host/state/inventory are available inside templates (if not set)
+    data.setdefault('host', host)
+    data.setdefault('state', state)
+    data.setdefault('inventory', state.inventory)
+
+    # Render and make file-like it's output
+    try:
+        output = get_template(src).render(data)
+    except (TemplateRuntimeError, TemplateSyntaxError, UndefinedError) as e:
+        trace_frames = traceback.extract_tb(sys.exc_info()[2])
+        trace_frames = [
+            frame for frame in trace_frames
+            if frame[2] in ('template', '<module>', 'top-level template code')
+        ]  # thank you https://github.com/saltstack/salt/blob/master/salt/utils/templates.py
+
+        line_number = trace_frames[-1][1]
+
+        # Quickly read the line in question and one above/below for nicer debugging
+        with open(src, 'r') as f:
+            template_lines = f.readlines()
+
+        template_lines = [line.strip() for line in template_lines]
+        relevant_lines = template_lines[max(line_number - 2, 0):line_number + 1]
+
+        raise OperationError('Error in template: {0} (L{1}): {2}\n...\n{3}\n...'.format(
+            src, line_number, e, '\n'.join(relevant_lines),
+        ))
+
+    # api/connectors/winrm._put_file expects binary
+    output_file = six.BytesIO(six.ensure_binary(output))
+    # Set the template attribute for nicer debugging
+    output_file.template = src
+
+    # Pass to the put function
+    yield put(
+        output_file, dest,
+        user=user, group=group, mode=mode,
+        add_deploy_dir=False,
+        create_remote_dir=create_remote_dir,
+        state=state, host=host,
+    )
 
 
 def windows_file(*args, **kwargs):
