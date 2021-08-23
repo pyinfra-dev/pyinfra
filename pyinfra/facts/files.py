@@ -234,13 +234,13 @@ class FindInFile(FactBase):
 
 class FindFiles(FactBase):
     '''
-    Returns a list of files from a start point, recursively using find.
+    Returns a list of files matching a pattern, recursively from root using find.
     '''
 
     @staticmethod
     def command(path):
         return make_formatted_string_command(
-            'find {0} -type f || true',
+            'find / -path {0} -type f || true',
             QuoteString(path),
         )
 
@@ -251,25 +251,25 @@ class FindFiles(FactBase):
 
 class FindLinks(FindFiles):
     '''
-    Returns a list of links from a start point, recursively using find.
+    Returns a list of links matching a pattern, recursively from root using find.
     '''
 
     @staticmethod
     def command(path):
         return make_formatted_string_command(
-            'find {0} -type l || true',
+            'find / -path {0} -type l || true',
             QuoteString(path),
         )
 
 
 class FindDirectories(FindFiles):
     '''
-    Returns a list of directories from a start point, recursively using find.
+    Returns a list of directories matching a pattern, recursively from root using find.
     '''
 
     @staticmethod
     def command(path):
         return make_formatted_string_command(
-            'find {0} -type d || true',
+            'find / -path {0} -type d || true',
             QuoteString(path),
         )
