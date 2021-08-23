@@ -416,7 +416,6 @@ class Crontab(FactBase):
         
         chunks = []
         current_chunk = _empty_chunk()
-        #  breakpoint()
         for line in output:
             # Get line type
             line_type = _line_type(line)

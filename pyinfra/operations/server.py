@@ -5,6 +5,7 @@ Linux/BSD.
 
 from __future__ import division, unicode_literals
 
+from functools import reduce
 from itertools import tee
 from os import path
 from time import sleep
@@ -561,7 +562,8 @@ def crontab(
     day_of_month='*',
     special_time=None,
     interpolate_variables=False,
-    state=None, host=None,
+    state=None,
+    host=None,
 ):
     '''
     Add/remove/update crontab entries.
@@ -602,120 +604,129 @@ def crontab(
         )
     '''
 
-    def comma_sep(value):
+    def _comma_sep(value):
+
         if isinstance(value, (list, tuple)):
             return ','.join('{0}'.format(v) for v in value)
         return value
 
-    minute = comma_sep(minute)
-    hour = comma_sep(hour)
-    month = comma_sep(month)
-    day_of_week = comma_sep(day_of_week)
-    day_of_month = comma_sep(day_of_month)
+    # ==Ensure all time params are in proper format==
+    minute = _comma_sep(minute)
+    hour = _comma_sep(hour)
+    month = _comma_sep(month)
+    day_of_week = _comma_sep(day_of_week)
+    day_of_month = _comma_sep(day_of_month)
 
-    crontab = host.get_fact(Crontab, user=user)
-    name_comment = '# pyinfra-name={0}'.format(cron_name)
+    if special_time is not None:
+        if special_time not in (
+            "@reboot",
+            "@yearly",
+            "@annually",
+            "@monthly",
+            "@weekly",
+            "@daily",
+            "@midnight",
+            "@hourly",
+        ):
+            # TODO: Raise error
+            pass
 
-    existing_crontab = crontab.get(command)
-    existing_crontab_command = command
-    existing_crontab_match = command
+    # ==Build new crontab entry
+    # Get current crontab
+    crontab_fact = host.get_fact(Crontab, user=user)
 
-    if not existing_crontab and cron_name:  # find the crontab by name if provided
-        for cmd, details in crontab.items():
-            if name_comment in details['comments']:
-                existing_crontab = details
-                existing_crontab_match = cmd
-                existing_crontab_command = cmd
+    new_entry = {
+        "data": [],
+        "type": "command",
+    }
+    # Add comment line
+    cron_name_line = "# pyinfra-name={0}".format(cron_name)
+    if cron_name:
+        new_entry["data"].append(cron_name_line)
 
-    exists = existing_crontab is not None
-
-    edit_commands = []
-    temp_filename = state.get_temp_filename()
-
-    if special_time:
-        new_crontab_line = '{0} {1}'.format(special_time, command)
+    # Add command line
+    if special_time is not None:
+        time_section = special_timez
     else:
-        new_crontab_line = '{minute} {hour} {day_of_month} {month} {day_of_week} {command}'.format(
-            minute=minute,
-            hour=hour,
-            day_of_month=day_of_month,
-            month=month,
-            day_of_week=day_of_week,
-            command=command,
+        time_section = " ".join([minute, hour, month, day_of_week, day_of_month])
+    new_entry["data"].append(" ".join([time_section, command]))
+
+    # ==Modify crontab fact==
+    if cron_name:
+        # Get chunks based on pyinfra name comment
+        existing_entries = {
+            index: entry for index,entry in enumerate(crontab_fact)
+            if entry["type"] == "command" and cron_name_line in entry["data"]
+        }
+    else:
+        # Get chunks based on command
+        existing_entries = {
+            index: entry for index,entry in enumerate(crontab_fact)
+            if entry["type"] == "command" and entry["data"][-1] == new_entry["data"] [-1]
+        }
+
+    change_flag = False
+    if present:
+        if existing_entries:
+            # Modify existing entries
+            for index, entry in enumerate(crontab_fact):
+                if index in existing_entries:
+                    # Modify command (leave comments alone)
+                    if entry["data"][-1] != new_entry["data"][-1]:
+                        entry["data"][-1] = new_entry["data"][-1]
+                        change_flag =True
+        else:
+            # Add
+            if crontab_fact and crontab_fact[-1]["type"] != "whitespace":
+                # Add whitespace chunk for better spacing
+                crontab_fact.append({"data": [""], "type": "whitespace"})
+
+            crontab_fact.append(new_entry)
+            change_flag = True
+    else:
+        if existing_entries:
+            # Remove
+            change_flag = True
+            index_offset = 0
+            for index, entry in existing_entries.items():
+                crontab_fact.pop(index - index_offset)
+                index_offset += 1
+
+    # ==Return early if no-op
+    if not change_flag:
+        host.noop(
+            "crontab {0} {1}".format(
+                command,
+                'exists' if present else 'does not exist',
+            )
         )
 
-    existing_crontab_match = '.*{0}.*'.format(existing_crontab_match)
+        return
 
-    # Don't want the cron and it does exist? Remove the line
-    if not present and exists:
-        edit_commands.append(sed_replace(
-            temp_filename, existing_crontab_match, '',
-            interpolate_variables=interpolate_variables,
-        ))
+    # ==Yield commands to update crontab on remote host==
+    temp_file_path = state.get_temp_filename()
 
-    # Want the cron but it doesn't exist? Append the line
-    elif present and not exists:
-        if cron_name:
-            if crontab:  # append a blank line if cron entries already exist
-                edit_commands.append("echo '' >> {0}".format(temp_filename))
-            edit_commands.append('echo {0} >> {1}'.format(
-                shlex_quote(name_comment), temp_filename,
-            ))
+    # Output new crontab to temp file
+    yield "echo {0} > {1}".format(
+        shlex_quote(
+            "\n".join(
+                reduce(
+                    lambda a, b: a + b, [x["data"] for x in crontab_fact], []
+                )
+            )
+        ),
+        temp_file_path,
+    )
 
-        edit_commands.append('echo {0} >> {1}'.format(
-            shlex_quote(new_crontab_line), temp_filename,
-        ))
-
-    # We have the cron and it exists, do it's details? If not, replace the line
-    elif present and exists:
-        if any((
-            special_time != existing_crontab.get('special_time'),
-            minute != existing_crontab.get('minute'),
-            hour != existing_crontab.get('hour'),
-            month != existing_crontab.get('month'),
-            day_of_week != existing_crontab.get('day_of_week'),
-            day_of_month != existing_crontab.get('day_of_month'),
-            existing_crontab_command != command,
-        )):
-            edit_commands.append(sed_replace(
-                temp_filename, existing_crontab_match, new_crontab_line,
-                interpolate_variables=interpolate_variables,
-            ))
-
-    if edit_commands:
-        crontab_args = []
-        if user:
-            crontab_args.append('-u {0}'.format(user))
-
-        # List the crontab into a temporary file if it exists
-        if crontab:
-            yield 'crontab -l {0} > {1}'.format(' '.join(crontab_args), temp_filename)
-
-        # Now yield any edits
-        for edit_command in edit_commands:
-            yield edit_command
-
-        # Finally, use the tempfile to write a new crontab
-        yield 'crontab {0} {1}'.format(' '.join(crontab_args), temp_filename)
-
-        # Update the crontab fact
-        if present:
-            crontab[command] = {
-                'special_time': special_time,
-                'minute': minute,
-                'hour': hour,
-                'month': month,
-                'day_of_week': day_of_week,
-                'day_of_month': day_of_month,
-                'comments': [cron_name] if cron_name else [],
-            }
-        else:
-            crontab.pop(command)
-    else:
-        host.noop('crontab {0} {1}'.format(
-            command,
-            'exists' if present else 'does not exist',
-        ))
+    # Update crontab
+    crontab_args = []
+    if user:
+        crontab_args.append("-u {0}".format(user))
+    yield "crontab {0} {1}".format(" ".join(crontab_args), temp_file_path)
+    
+    # ==Yield cleanup commands==
+    # Remove temp file
+    yield "rm {0}".format(temp_file_path)
 
 
 @operation
