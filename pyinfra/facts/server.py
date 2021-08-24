@@ -344,22 +344,41 @@ class Groups(FactBase):
 
 class Crontab(FactBase):
     '''
-    Returns a list of dictionaries where each entry corresponds to a single cron command.
+    Returns a list of dictionaries where each entry corresponds to a single crontab "chunk".
+
+    Each chunk can have one of the following types:
+        - command 
+            - Also includes all comment lines directly above the command line.
+        - env
+            - Also includes all comment lines directly above the command line.
+        - comment 
+        - whitespace
 
     .. code:: python
 
-        {
-            '/path/to/command': {
-                'minute': '*',
-                'hour': '*',
-                'month': '*',
-                'day_of_month': '*',
-                'day_of_week': '*',
+        [
+            {
+                "data": [
+                    "# My special comment.",
+                    "# Multiple comment lines are fine.",
+                    "# pyinfra-name=Task A",
+                    '*/5 * * * * echo "hello"',
+                ],
+                "type": "command",
             },
-            'echo another command': {
-                'special_time': '@daily',
+            {
+                "data": [
+                    "",
+                ],
+                "type": "whitespace",
             },
-        }
+            {
+                "data": [
+                    '@daily echo "My daily task."',
+                ],
+                "type": "command",
+            },
+        ]
     '''
 
     default = list
