@@ -20,6 +20,8 @@ argspec
 argstring
 askpass
 asn
+onerror
+followlinks
 autodetect
 autogenerate
 automagically
@@ -74,6 +76,7 @@ dereference
 dhcp
 digitalocean
 dirnames
+dirpath
 distro
 distros
 dnf
@@ -311,6 +314,7 @@ testuser
 tftp
 tls
 todo
+topdown
 tty
 ubuntu
 ubuntu18
