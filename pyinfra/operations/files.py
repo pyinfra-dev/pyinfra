@@ -881,7 +881,7 @@ def template(
 
 def _validate_path(path):
     try:
-        path = fspath(path)
+        return fspath(path)
     except TypeError:
         raise OperationTypeError('`path` must be a string or `os.PathLike` object')
 
@@ -945,7 +945,7 @@ def link(
         )
     '''
 
-    _validate_path(path)
+    path = _validate_path(path)
 
     if present and not target:
         raise OperationError('If present is True target must be provided')
@@ -1072,7 +1072,7 @@ def file(
         )
     '''
 
-    _validate_path(path)
+    path = _validate_path(path)
 
     mode = ensure_mode_int(mode)
     info = host.get_fact(File, path=path)
@@ -1187,7 +1187,7 @@ def directory(
             )
     '''
 
-    _validate_path(path)
+    path = _validate_path(path)
 
     mode = ensure_mode_int(mode)
     info = host.get_fact(Directory, path=path)
