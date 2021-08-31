@@ -64,6 +64,7 @@ def service(
         start_links = host.get_fact(
             FindLinks,
             path='/etc/rc*.d/S*{0}'.format(service),
+            quote_path=False,  # enable path glob matching
         )
 
         # If no links exist, attempt to enable the service using distro-specific commands
