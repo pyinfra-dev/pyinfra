@@ -11,6 +11,8 @@ from mock import patch
 from pyinfra.api import Config, Inventory
 from pyinfra.api.util import get_kwargs_str
 
+from . import logger
+
 
 def get_command_string(command):
     value = command.get_raw_value()
@@ -168,7 +170,10 @@ class FakeHost(object):
         if fact is None:
             raise KeyError('Missing test fact data: {0}'.format(fact_key))
         if kwargs:
-            return fact.get(get_kwargs_str(kwargs))
+            kwargs_str = get_kwargs_str(kwargs)
+            if kwargs_str not in fact:
+                logger.info('Possible missing fact key: {0}'.format(kwargs_str))
+            return fact.get(kwargs_str)
         return fact
 
     def create_fact(self, fact_cls, data, kwargs):
