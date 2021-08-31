@@ -484,7 +484,8 @@ def sync(
                 # Join remote as unix like
                 '/'.join(
                     item for item in
-                    (dest, remote_dirpath, filename)
+                    # Remove any existing / where we're going to join
+                    (dest.rstrip('/'), remote_dirpath.strip('/'), filename.lstrip('/'))
                     if item
                 ),
             ))
