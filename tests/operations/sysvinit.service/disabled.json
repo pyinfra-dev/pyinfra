@@ -7,8 +7,8 @@
         "sysvinit.InitdStatus": {
             "nginx": true
         },
-        "find_links": {
-            "/etc/rc*.d/S*nginx": [
+        "files.FindLinks": {
+            "path=/etc/rc*.d/S*nginx, quote_path=False": [
                 "somelink"
             ]
         }

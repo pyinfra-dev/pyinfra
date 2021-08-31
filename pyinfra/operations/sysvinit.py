@@ -5,6 +5,8 @@ Manage sysvinit services (``/etc/init.d``).
 from __future__ import unicode_literals
 
 from pyinfra.api import operation
+from pyinfra.facts.files import FindLinks
+from pyinfra.facts.server import LinuxDistribution
 from pyinfra.facts.sysvinit import InitdStatus
 
 from . import files
@@ -59,11 +61,14 @@ def service(
     )
 
     if isinstance(enabled, bool):
-        start_links = host.fact.find_links('/etc/rc*.d/S*{0}'.format(service))
+        start_links = host.get_fact(
+            FindLinks,
+            path='/etc/rc*.d/S*{0}'.format(service),
+        )
 
         # If no links exist, attempt to enable the service using distro-specific commands
         if enabled is True and not start_links:
-            distro = host.fact.linux_distribution.get('name')
+            distro = host.get_fact(LinuxDistribution).get('name')
             did_add = False
 
             if distro in ('Ubuntu', 'Debian'):
