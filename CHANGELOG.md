@@ -1,9 +1,11 @@
-# v1.14.14
+# v1.4.14
 
 + Add `quote_path=True` argument to `files.[FindFiles|FindLinks|FindDirectories]` facts
 + Fix enable/disable service in `sysvinit.service` operation using un-quoted path
 + Fix path join handling in certain cases in `files.sync` operation
 + Always normalise paths in `files.[file|link|directory]` operations
+
+# NOTE: there was an accidental release of a v1.14.14 here, which is identical to v1.4.14.
 
 # v1.4.13
 
