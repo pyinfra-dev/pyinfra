@@ -230,9 +230,20 @@ class FakeFile(object):
 
 class patch_files(object):
     def __init__(self, patch_files, patch_directories):
+        directories, files, files_data = self._parse_files_and_directories(
+            patch_files,
+            patch_directories,
+        )
+
+        self._files = files
+        self._files_data = files_data
+        self._directories = directories
+
+    @staticmethod
+    def _parse_files_and_directories(patch_files, patch_directories):
         files = []
         files_data = {}
-
+        directories = patch_directories
         for filename_data in patch_files:
             if isinstance(filename_data, list):
                 filename, data = filename_data
@@ -247,11 +258,7 @@ class patch_files(object):
 
             if data:
                 files_data[filename] = data
-
-        self._files = files
-        self._files_data = files_data
-
-        self._directories = patch_directories
+        return directories, files, files_data
 
     def __enter__(self):
         self.patches = [
