@@ -248,10 +248,10 @@ class patch_files(object):
             if data:
                 files_data[filename] = data
 
-        self.files = files
-        self.files_data = files_data
+        self._files = files
+        self._files_data = files_data
 
-        self.directories = patch_directories
+        self._directories = patch_directories
 
     def __enter__(self):
         self.patches = [
@@ -275,24 +275,24 @@ class patch_files(object):
             patched.stop()
 
     def get_file(self, filename, *args):
-        if filename in self.files:
-            return FakeFile(filename, self.files_data.get(filename))
+        if filename in self._files:
+            return FakeFile(filename, self._files_data.get(filename))
 
         raise IOError('Missing FakeFile: {0}'.format(filename))
 
     def exists(self, filename, *args):
-        return filename in self.files or filename in self.directories
+        return filename in self._files or filename in self._directories
 
     def isfile(self, filename, *args):
-        return filename in self.files
+        return filename in self._files
 
     def isdir(self, dirname, *args):
-        return dirname in self.directories
+        return dirname in self._directories
 
     def stat(self, pathname):
-        if pathname in self.files:
+        if pathname in self._files:
             mode_int = 33188  # 644 file
-        elif pathname in self.directories:
+        elif pathname in self._directories:
             mode_int = 16877  # 755 directory
         else:
             raise IOError('No such file or directory: {0}'.format(pathname))
@@ -300,9 +300,9 @@ class patch_files(object):
         return os.stat_result((mode_int, 0, 0, 0, 0, 0, 0, 0, 0, 0))
 
     def walk(self, dirname, topdown=True, onerror=None, followlinks=False):
-        if dirname not in self.directories:
+        if dirname not in self._directories:
             return
-        dir_definition = self.directories[dirname]
+        dir_definition = self._directories[dirname]
         child_dirs = dir_definition.get('dirs', [])
         child_files = dir_definition.get('files', [])
 
