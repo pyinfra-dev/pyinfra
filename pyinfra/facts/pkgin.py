@@ -7,7 +7,7 @@ PKGIN_REGEX = r'^([a-zA-Z\-0-9]+)-([0-9\.]+\-?[a-z0-9]*)\s'
 
 class PkginPackages(FactBase):
     '''
-    Returns a dict of installed apk packages:
+    Returns a dict of installed pkgin packages:
 
     .. code:: python
 
