@@ -1,0 +1,18 @@
+{
+    "args": ["curl"],
+    "kwargs": {
+        "update": true,
+        "upgrade": true
+    },
+    "facts": {
+        "pkgin.PkginPackages": {
+            "curl": ["1"]
+        }
+    },
+    "commands": [
+        "pkgin update",
+        "pkgin upgrade"
+    ],
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "package upgrades are always executed"
+}

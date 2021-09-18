@@ -1,0 +1,9 @@
+{
+    "args": ["curl"],
+    "facts": {
+        "pkgin.PkginPackages": {}
+    },
+    "commands": [
+        "pkgin install curl"
+    ]
+}

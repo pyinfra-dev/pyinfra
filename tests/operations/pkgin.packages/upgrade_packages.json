@@ -1,0 +1,14 @@
+{
+    "args": ["curl"],
+    "kwargs": {
+        "latest": true
+    },
+    "facts": {
+        "pkgin.PkginPackages": {}
+    },
+    "commands": [
+        "pkgin install curl"
+    ],
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "package upgrades are always executed"
+}
