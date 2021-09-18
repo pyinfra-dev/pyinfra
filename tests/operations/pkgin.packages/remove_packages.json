@@ -9,6 +9,6 @@
         }
     },
     "commands": [
-        "pkgin remove curl"
+        "pkgin -y remove curl"
     ]
 }

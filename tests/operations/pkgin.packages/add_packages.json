@@ -4,6 +4,6 @@
         "pkgin.PkginPackages": {}
     },
     "commands": [
-        "pkgin install curl"
+        "pkgin -y install curl"
     ]
 }

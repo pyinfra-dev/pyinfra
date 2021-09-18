@@ -7,7 +7,7 @@
         "pkgin.PkginPackages": {}
     },
     "commands": [
-        "pkgin install curl"
+        "pkgin -y install curl"
     ],
     "idempotent": false,
     "disable_itempotent_warning_reason": "package upgrades are always executed"

@@ -10,8 +10,8 @@
         }
     },
     "commands": [
-        "pkgin update",
-        "pkgin upgrade"
+        "pkgin -y update",
+        "pkgin -y upgrade"
     ],
     "idempotent": false,
     "disable_itempotent_warning_reason": "package upgrades are always executed"

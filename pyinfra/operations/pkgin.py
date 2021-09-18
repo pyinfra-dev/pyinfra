@@ -14,7 +14,7 @@ def upgrade(state=None, host=None):
     Upgrades all pkgin packages.
     '''
 
-    yield 'pkgin upgrade'
+    yield 'pkgin -y upgrade'
 
 _upgrade = upgrade  # noqa: E305
 
@@ -25,7 +25,7 @@ def update(state=None, host=None):
     Updates pkgin repositories.
     '''
 
-    yield 'pkgin update'
+    yield 'pkgin -y update'
 
 _update = update  # noqa: E305
 
@@ -74,8 +74,8 @@ def packages(
     # as apt's, as pkgin supports something like 'mysql-server>=5.6<5.7')
     yield ensure_packages(
         host, packages, host.get_fact(PkginPackages), present,
-        install_command='pkgin install',
-        uninstall_command='pkgin remove',
-        upgrade_command='pkgin upgrade',
+        install_command='pkgin -y install',
+        uninstall_command='pkgin -y remove',
+        upgrade_command='pkgin -y upgrade',
         latest=latest,
     )
