@@ -12,6 +12,8 @@ from .util.packaging import ensure_packages
 def upgrade(available=False, state=None, host=None):
     '''
     Upgrades all apk packages.
+
+    + available: force all packages to be upgraded (recommended on whole Alpine version upgrades)
     '''
 
     if available:
