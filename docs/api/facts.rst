@@ -7,7 +7,7 @@ passed (as a ``list`` of lines) to the ``process`` handler to generate fact data
 
 Fact classes may provide a ``default`` function that takes no arguments (except ``self``). The return value of this function is used if an error
 occurs during fact collection. Additionally, a ``requires_command`` variable can be set on the fact that specifies a command that must be available
-on the host to collect the fact. If this command is not present on the hos the fact will be set to the default, or empty if no ``default`` function
+on the host to collect the fact. If this command is not present on the host the fact will be set to the default, or empty if no ``default`` function
 is available.
 
 Importing & Using Facts
