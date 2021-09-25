@@ -6,8 +6,8 @@
         "target": "c:\\testlink"
     },
     "facts": {
-        "windows_link": {
-            "testlink": false
+        "windows_files.WindowsLink": {
+            "name=testlink": false
         }
     },
     "exception": {

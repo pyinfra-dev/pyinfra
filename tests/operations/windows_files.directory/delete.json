@@ -4,8 +4,8 @@
         "present": false
     },
     "facts": {
-        "windows_directory": {
-            "testdir": {
+        "windows_files.WindowsDirectory": {
+            "name=testdir": {
                 "type": "directory"
             }
         }

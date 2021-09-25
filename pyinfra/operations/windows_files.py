@@ -18,6 +18,15 @@ from pyinfra.api import (
     OperationTypeError,
 )
 from pyinfra.api.util import get_file_sha1
+from pyinfra.facts.windows import WindowsDate
+from pyinfra.facts.windows_files import (
+    WindowsDirectory,
+    WindowsFile,
+    WindowsLink,
+    WindowsMd5File,
+    WindowsSha1File,
+    WindowsSha256File,
+)
 
 from .util.compat import fspath
 from .util.files import ensure_mode_int
@@ -57,7 +66,7 @@ def download(
         )
     '''
 
-    info = host.fact.windows_file(dest)
+    info = host.get_fact(WindowsFile, name=dest)
     # Destination is a directory?
     if info is False:
         raise OperationError(
@@ -76,21 +85,23 @@ def download(
     else:
         if cache_time:
             # Time on files is not tz-aware, and will be the same tz as the server's time,
-            # so we can safely remove the tzinfo from host.fact.date before comparison.
-            cache_time = host.fact.windows_date.replace(tzinfo=None) - timedelta(seconds=cache_time)
+            # so we can safely remove the tzinfo from WindowsDate before comparison.
+            cache_time = (
+                host.get_fact(WindowsDate).replace(tzinfo=None) - timedelta(seconds=cache_time)
+            )
             if info['mtime'] and info['mtime'] > cache_time:
                 download = True
 
         if sha1sum:
-            if sha1sum != host.fact.windows_sha1_file(dest):
+            if sha1sum != host.get_fact(WindowsSha1File, name=dest):
                 download = True
 
         if sha256sum:
-            if sha256sum != host.fact.windows_sha256_file(dest):
+            if sha256sum != host.get_fact(WindowsSha256File, name=dest):
                 download = True
 
         if md5sum:
-            if md5sum != host.fact.windows_md5_file(dest):
+            if md5sum != host.get_fact(WindowsMd5File, name=dest):
                 download = True
 
     # If we download, always do user/group/mode as SSH user may be different
@@ -191,7 +202,7 @@ def put(
             raise IOError('No such file: {0}'.format(local_file))
 
     mode = ensure_mode_int(mode)
-    remote_file = host.fact.windows_file(dest)
+    remote_file = host.get_fact(WindowsFile, name=dest)
 
     if create_remote_dir:
         yield _create_remote_dir(state, host, dest, user, group)
@@ -209,7 +220,7 @@ def put(
     # File exists, check sum and check user/group/mode if supplied
     else:
         local_sum = get_file_sha1(src)
-        remote_sum = host.fact.windows_sha1_file(dest)
+        remote_sum = host.get_fact(WindowsSha1File, name=dest)
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
@@ -283,7 +294,7 @@ def file(
         raise OperationTypeError('Name must be a string')
 
     # mode = ensure_mode_int(mode)
-    info = host.fact.windows_file(path)
+    info = host.get_fact(WindowsFile, name=path)
 
     # Not a file?!
     if info is False:
@@ -395,7 +406,7 @@ def directory(
     if not isinstance(path, six.string_types):
         raise OperationTypeError('Name must be a string')
 
-    info = host.fact.windows_directory(path)
+    info = host.get_fact(WindowsDirectory, name=path)
 
     # Not a directory?!
     if info is False:
@@ -410,9 +421,9 @@ def directory(
 #            yield chown(path, user, group, recursive=recursive)
 #
         # Somewhat bare fact, should flesh out more
-        host.fact._create(
-            'windows_directory',
-            args=(path,),
+        host.create_fact(
+            WindowsDate,
+            kwargs={'name': path},
             data={'type': 'directory'},
         )
 
@@ -504,7 +515,7 @@ def link(
     if present and not target:
         raise OperationError('If present is True target must be provided')
 
-    info = host.fact.windows_link(path)
+    info = host.get_fact(WindowsLink, name=path)
 
     # Not a link?
     if info is not None and not info:
@@ -531,16 +542,16 @@ def link(
         # if user or group:
         #    yield chown(path, user, group, dereference=False)
 
-        # host.fact._create(
-        #    'windows_link',
-        #    args=(path,),
+        # host.create_fact(
+        #    WindowsLink,
+        #    kwargs={'name': path},
         #    data={'link_target': target, 'group': group, 'user': user},
         # )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield remove_cmd
-        # host.fact._delete('windows_link', args=(path,))
+        # host.delete_fact(WindowsLink, kwargs={'name': path})
 
     else:
         host.noop('link {0} already exists and force=False'.format(path))

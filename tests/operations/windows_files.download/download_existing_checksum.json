@@ -9,17 +9,17 @@
         "md5sum": "md5-sum"
     },
     "facts": {
-        "windows_file": {
-            "c:\\myfile": {}
+        "windows_files.WindowsFile": {
+            "name=c:\\myfile": {}
         },
-        "windows_sha1_file": {
-            "c:\\myfile": "not-a-match"
+        "windows_files.WindowsSha1File": {
+            "name=c:\\myfile": "not-a-match"
         },
-        "windows_sha256_file": {
-            "c:\\myfile": "not-a-match"
+        "windows_files.WindowsSha256File": {
+            "name=c:\\myfile": "not-a-match"
         },
-        "windows_md5_file": {
-            "c:\\myfile": "not-a-match"
+        "windows_files.WindowsMd5File": {
+            "name=c:\\myfile": "not-a-match"
         }
     },
     "commands": [

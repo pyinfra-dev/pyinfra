@@ -228,9 +228,12 @@ def put_file(
     Upload file by chunking and sending base64 encoded via winrm
     '''
 
+    # TODO: fix this? Workaround for circular import
+    from pyinfra.facts.windows_files import WindowsTempDir
+
     # Always use temp file here in case of failure
     temp_file = ntpath.join(
-        host.fact.windows_temp_dir(),
+        host.get_fact(WindowsTempDir),
         'pyinfra-{0}'.format(sha1_hash(remote_filename)),
     )
 

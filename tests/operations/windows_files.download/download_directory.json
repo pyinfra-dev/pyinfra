@@ -6,8 +6,8 @@
         "dest": "c:\\"
     },
     "facts": {
-        "windows_file": {
-            "c:\\": false
+        "windows_files.WindowsFile": {
+            "name=c:\\": false
         }
     },
     "exception": {

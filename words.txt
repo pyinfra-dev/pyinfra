@@ -116,10 +116,10 @@ fullmatch
 gaierror
 generic
 getargspec
-getfullargspec
 getcallargs
 getfo
 getframeinfo
+getfullargspec
 getitem
 getpeername
 getrlimit
@@ -213,7 +213,6 @@ ntpath
 onerror
 openrc
 openstack
-openrc
 openvz
 osversion
 pacman
@@ -221,6 +220,7 @@ paramiko
 pardir
 pathlib
 pathname
+perf
 pip3
 pipelining
 pkey
@@ -245,6 +245,7 @@ py
 pyc
 pygments
 pyinfra
+pyinfrawinrmsession
 pywinrm
 quickfixengineering
 rcd
@@ -295,6 +296,7 @@ status
 stdlib
 stringify
 su
+subclassed
 subclassing
 subkey
 submodules
@@ -346,11 +348,13 @@ vm
 vmlinuz
 vv
 vz
+vzctl
 w605
 warnoptions
 wget
 whocares
 win32
+windowslink
 winrm
 worktree
 writeable

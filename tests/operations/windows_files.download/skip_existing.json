@@ -6,8 +6,8 @@
         "dest": "c:\\myfile"
     },
     "facts": {
-        "windows_file": {
-            "c:\\myfile": {}
+        "windows_files.WindowsFile": {
+            "name=c:\\myfile": {}
         }
     },
     "commands": [],

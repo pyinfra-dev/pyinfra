@@ -7,8 +7,8 @@
         "force": false
     },
     "facts": {
-        "windows_link": {
-            "testlink": null
+        "windows_files.WindowsLink": {
+            "name=testlink": null
         }
     },
     "commands": [

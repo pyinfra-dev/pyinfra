@@ -7,9 +7,9 @@
         "cache_time": 3600
     },
     "facts": {
-        "windows_date": "datetime:2015-01-01T00:00:00",
-        "windows_file": {
-            "c:\\myfile": {
+        "windows.WindowsDate": "datetime:2015-01-01T00:00:00",
+        "windows_files.WindowsFile": {
+            "name=c:\\myfile": {
                 "mtime": "datetime:2015-01-01T00:00:00"
             }
         }

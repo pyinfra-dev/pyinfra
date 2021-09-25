@@ -5,8 +5,8 @@
         "assume_present": true
     },
     "facts": {
-        "windows_directory": {
-            "testdir": null
+        "windows_files.WindowsDirectory": {
+            "name=testdir": null
         }
     },
     "commands": [
