@@ -1,0 +1,11 @@
+{
+    "args": [],
+    "kwargs": {
+        "available": true
+    },
+    "commands": [
+        "apk upgrade --available"
+    ],
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "package upgrades are always executed"
+}
