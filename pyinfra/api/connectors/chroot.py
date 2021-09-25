@@ -63,11 +63,8 @@ def run_shell_command(
 
     if use_sudo_password:
         command_kwargs['use_sudo_password'] = get_sudo_password(
-            state,
             host,
             use_sudo_password,
-            run_shell_command=run_shell_command,
-            put_file=put_file,
         )
 
     chroot_directory = host.host_data['chroot_directory']
