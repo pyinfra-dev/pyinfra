@@ -6,7 +6,8 @@
     "facts": {
         "files.File": {
             "path=_tempfile_": null
-        }
+        },
+        "files.Directory": {}
     },
     "commands": [
         ["upload", "/somescript.sh", "_tempfile_"],

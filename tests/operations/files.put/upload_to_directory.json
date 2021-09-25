@@ -1,0 +1,23 @@
+{
+    "args": ["somefile.txt", "/home"],
+    "kwargs": {
+        "user": "testuser",
+        "group": "testgroup",
+        "mode": 644
+    },
+    "files": ["somefile.txt"],
+    "facts": {
+        "files.File": {
+            "path=/home/somefile.txt": null
+        },
+        "files.Directory": {
+            "path=/home": true
+        }
+    },
+    "commands": [
+        ["upload", "/somefile.txt", "/home/somefile.txt"],
+        "chown testuser:testgroup /home/somefile.txt",
+        "chmod 644 /home/somefile.txt"
+    ],
+    "idempotent": false
+}
