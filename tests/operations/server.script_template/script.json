@@ -4,7 +4,8 @@
     "facts": {
         "files.File": {
             "path=_tempfile_": null
-        }
+        },
+        "files.Directory": {}
     },
     "commands": [
         ["upload", "_test_data_", "_tempfile_"],
