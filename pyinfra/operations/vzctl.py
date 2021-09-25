@@ -5,6 +5,7 @@ Manage OpenVZ containers with ``vzctl``.
 import six
 
 from pyinfra.api import operation, OperationError
+from pyinfra.facts.vzctl import OpenvzContainers
 
 
 @operation(is_idempotent=False)
@@ -92,7 +93,7 @@ def create(ctid, template=None, state=None, host=None):
     '''
 
     # Check we don't already have a container with this CTID
-    current_containers = host.fact.openvz_containers
+    current_containers = host.get_fact(OpenvzContainers)
     if ctid in current_containers:
         raise OperationError(
             'An OpenVZ container with CTID {0} already exists'.format(ctid),

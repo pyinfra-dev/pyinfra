@@ -4,7 +4,7 @@
         "template": "ubuntu-1604"
     },
     "facts": {
-        "openvz_containers": {}
+        "vzctl.OpenvzContainers": {}
     },
     "commands": [
         "vzctl create 123 --ostemplate ubuntu-1604"
