@@ -1,6 +1,6 @@
 # v1.4.15
 
-+ Don't fail if `dest` in `files.put` is a directory
++ Don't fail if `dest` in `files.put` is a directory (@oz123)
 + Improve internal unix path joining
 
 # v1.4.14
