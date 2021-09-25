@@ -8,15 +8,14 @@ import posixpath
 import re
 import sys
 import traceback
-
 from datetime import timedelta
 from fnmatch import fnmatch
 from os import makedirs, path as os_path, walk
 
 import six
-
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
+import pyinfra
 from pyinfra import logger
 from pyinfra.api import (
     FileDownloadCommand,
@@ -922,6 +921,7 @@ def template(
     data.setdefault('host', host)
     data.setdefault('state', state)
     data.setdefault('inventory', state.inventory)
+    data.setdefault('facts', pyinfra.facts)
 
     # Render and make file-like it's output
     try:
