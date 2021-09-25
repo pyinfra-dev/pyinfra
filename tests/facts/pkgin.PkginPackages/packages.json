@@ -1,0 +1,28 @@
+{
+    "command": "pkgin list",
+    "requires_command": "pkgin",
+    "output": [
+        "SDL2-2.0.14nb2       Simple DirectMedia Layer - cross-platform multimedia library",
+        "bash-5.1.4           The GNU Bourne Again Shell",
+        "ca-certificates-20200601nb1 Root CA certificates from the Mozilla Project",
+        "clang-10.0.1nb3      C language family frontend for LLVM",
+        "cmake-3.19.7         Cross platform make"
+    ],
+    "fact": {
+        "SDL2": [
+            "2.0.14nb2"
+        ],
+        "bash": [
+            "5.1.4"
+        ],
+        "ca-certificates": [
+            "20200601nb1"
+        ],
+        "clang": [
+            "10.0.1nb3"
+        ],
+        "cmake": [
+            "3.19.7"
+        ]
+    }
+}
