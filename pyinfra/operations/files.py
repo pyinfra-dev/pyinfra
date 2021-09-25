@@ -54,6 +54,7 @@ from .util.files import (
     ensure_whole_line_match,
     get_timestamp,
     sed_replace,
+    unix_path_join,
 )
 
 
@@ -482,12 +483,11 @@ def sync(
                 # Join local as normal (unix, win)
                 full_filename,
                 # Join remote as unix like
-                '/'.join(
+                unix_path_join(*[
                     item for item in
-                    # Remove any existing / where we're going to join
-                    (dest.rstrip('/'), remote_dirpath.strip('/'), filename.lstrip('/'))
+                    (dest, remote_dirpath, filename)
                     if item
-                ),
+                ]),
             ))
 
     # Ensure the destination directory - if the destination is a link, ensure
@@ -507,7 +507,7 @@ def sync(
     # Ensure any remote dirnames
     for dirpath, dir_mode in ensure_dirnames:
         yield directory(
-            '/'.join((dest, dirpath)),
+            unix_path_join(dest, dirpath),
             user=user, group=group, mode=dir_mode,
             state=state, host=host,
         )
@@ -711,7 +711,7 @@ def put(
     remote_file = host.get_fact(File, path=dest)
 
     if not remote_file and host.get_fact(Directory, path=dest):
-        dest = '/'.join((dest.rstrip('/'), os_path.basename(src)))
+        dest = unix_path_join(dest, os_path.basename(src))
 
     if create_remote_dir:
         yield _create_remote_dir(state, host, dest, user, group)
@@ -1004,11 +1004,11 @@ def link(
             link_dirname = os_path.dirname(path)
 
             if not os_path.isabs(target):
-                target = os_path.normpath('/'.join((link_dirname, target)))
+                target = os_path.normpath(unix_path_join(link_dirname, target))
 
             if info and not os_path.isabs(info['link_target']):
                 info['link_target'] = os_path.normpath(
-                    '/'.join((link_dirname, info['link_target'])),
+                    unix_path_join(link_dirname, info['link_target']),
                 )
 
         changed = False

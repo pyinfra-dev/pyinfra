@@ -12,7 +12,7 @@ from pyinfra.facts.files import Directory
 from pyinfra.facts.git import GitBranch, GitConfig, GitTrackingBranch
 
 from . import files, ssh
-from .util.files import chown
+from .util.files import chown, unix_path_join
 
 
 @operation(pipeline_facts={
@@ -49,7 +49,7 @@ def config(
         existing_config = host.get_fact(GitConfig)
 
     # Only get the config if the repo exists at this stage
-    elif host.get_fact(Directory, path='/'.join((repo, '.git'))):
+    elif host.get_fact(Directory, path=unix_path_join(repo, '.git')):
         existing_config = host.get_fact(GitConfig, repo=repo)
 
     if existing_config.get(key) != value:
@@ -117,7 +117,7 @@ def repo(
 
     # Store git commands for directory prefix
     git_commands = []
-    is_repo = host.get_fact(Directory, path='/'.join((dest, '.git')))
+    is_repo = host.get_fact(Directory, path=unix_path_join(dest, '.git'))
 
     # Cloning new repo?
     if not is_repo:
@@ -310,7 +310,10 @@ def worktree(
     if not host.get_fact(Directory, path=worktree) and present:
 
         # be sure that `repo` is a GIT repository
-        if not assume_repo_exists and not host.get_fact(Directory, path='/'.join((repo, '.git'))):
+        if (
+            not assume_repo_exists
+            and not host.get_fact(Directory, path=unix_path_join(repo, '.git'))
+        ):
             raise OperationError(
                 'The following folder is not a valid GIT repository : {0}'.format(repo),
             )

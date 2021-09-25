@@ -5,6 +5,12 @@ from datetime import datetime
 from pyinfra.api import QuoteString, StringCommand
 
 
+def unix_path_join(*parts):
+    parts = list(parts)
+    parts[0:-1] = [part.rstrip('/') for part in parts[0:-1]]
+    return '/'.join(parts)
+
+
 def ensure_mode_int(mode):
     # Already an int (/None)?
     if isinstance(mode, int) or mode is None:
