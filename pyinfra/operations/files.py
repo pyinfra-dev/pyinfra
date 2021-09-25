@@ -666,6 +666,10 @@ def put(
     + force: always upload the file, even if the remote copy matches
     + assume_exists: whether to assume the local file exists
 
+    ``dest``:
+        If this is a directory that already exists on the remote side, the local
+        file will be uploaded to that directory with the same filename.
+
     ``create_remote_dir``:
         If the remote directory does not exist it will be created using the same
         user & group as passed to ``files.put``. The mode will *not* be copied over,
