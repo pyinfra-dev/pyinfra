@@ -9,12 +9,17 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def upgrade(state=None, host=None):
+def upgrade(available=False, state=None, host=None):
     '''
     Upgrades all apk packages.
+
+    + available: force all packages to be upgraded (recommended on whole Alpine version upgrades)
     '''
 
-    yield 'apk upgrade'
+    if available:
+        yield 'apk upgrade --available'
+    else:
+        yield 'apk upgrade'
 
 _upgrade = upgrade  # noqa: E305
 
