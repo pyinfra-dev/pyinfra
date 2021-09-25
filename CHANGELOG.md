@@ -1,4 +1,4 @@
-# v1.5.0.dev0
+# v1.5.0.dev1
 
 This release includes a huge number of improvements, major highlights:
 
@@ -15,6 +15,9 @@ This replaces the old style of setting `SUDO = True` at the top of files which w
 
 Operation & fact updates:
 
++ Add `pkgin.packages` & `pkgin.upgrade` operations (@lun-4)
++ Add `pkgin.PkginPackages` fact (@lun-4)
++ Add `selinux.FileContext` & `selinux.SEBoolean` facts (@benridley)
 + Add `openrc.service` operation
 + Add `openrc.OpenrcStatus` & `openrc.OpenrcEnabled` facts
 + Add last login time to `server.Users` fact (@sysadmin75)
@@ -22,6 +25,7 @@ Operation & fact updates:
 + Add `force`, `force_backup` and `force_backup_dir` arguments to `files.files`, `files.directory` & `files.link` operations
 + Add resource and SSL arguments to `mysql.user` operation
 + Add `with_grant_option` argument to `mysql.privileges` operation
++ Add `available` argument to `apk.packages` operation (@lun-4)
 
 Connector updates:
 
