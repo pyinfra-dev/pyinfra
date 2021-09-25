@@ -1,8 +1,10 @@
 {
     "args": ["testuser"],
     "facts": {
-        "postgresql_roles": {
-            "testuser": {}
+        "postgresql.PostgresqlRoles": {
+            "postgresql_user=None, postgresql_password=None, postgresql_host=None, postgresql_port=None": {
+                "testuser": {}
+            }
         }
     },
     "commands": [],

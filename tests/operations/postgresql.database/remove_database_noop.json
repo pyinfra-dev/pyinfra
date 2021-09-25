@@ -4,7 +4,9 @@
         "present": false
     },
     "facts" :{
-        "postgresql_databases": {}
+        "postgresql.PostgresqlDatabases": {
+            "postgresql_user=None, postgresql_password=None, postgresql_host=None, postgresql_port=None": {}
+        }
     },
     "commands": [],
     "noop_description": "postgresql database somedb does not exist"

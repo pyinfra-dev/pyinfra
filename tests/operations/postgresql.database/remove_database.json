@@ -4,8 +4,10 @@
         "present": false
     },
     "facts" :{
-        "postgresql_databases": {
-            "somedb": {}
+        "postgresql.PostgresqlDatabases": {
+            "postgresql_user=None, postgresql_password=None, postgresql_host=None, postgresql_port=None": {
+                "somedb": {}
+            }
         }
     },
     "commands": [
