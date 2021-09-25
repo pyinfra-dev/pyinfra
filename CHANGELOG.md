@@ -1,3 +1,8 @@
+# v1.4.15
+
++ Don't fail if `dest` in `files.put` is a directory
++ Improve internal unix path joining
+
 # v1.4.14
 
 + Add `quote_path=True` argument to `files.[FindFiles|FindLinks|FindDirectories]` facts
