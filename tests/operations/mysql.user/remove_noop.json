@@ -4,7 +4,9 @@
         "present": false
     },
     "facts": {
-        "mysql_users": {}
+        "mysql.MysqlUsers": {
+            "mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None": {}
+        }
     },
     "commands": [],
     "noop_description": "mysql user someuser@localhost does not exist"

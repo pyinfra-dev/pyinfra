@@ -1,12 +1,10 @@
 {
     "args": ["someuser", ["SELECT", "INSERT", "DELETE"]],
     "facts": {
-        "mysql_user_grants": {
-            "someuser": {
-                "localhost": {
-                    "*.*": {
-                        "privileges": ["DELETE"]
-                    }
+        "mysql.MysqlUserGrants": {
+            "user=someuser, user_hostname=localhost, mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None": {
+                "*.*": {
+                    "privileges": ["DELETE"]
                 }
             }
         }

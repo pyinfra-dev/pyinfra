@@ -16,7 +16,13 @@ See the example/mysql.py
 import six
 
 from pyinfra.api import MaskString, operation, OperationError, StringCommand
-from pyinfra.facts.mysql import make_execute_mysql_command, make_mysql_command
+from pyinfra.facts.mysql import (
+    make_execute_mysql_command,
+    make_mysql_command,
+    MysqlDatabases,
+    MysqlUserGrants,
+    MysqlUsers,
+)
 
 
 @operation(is_idempotent=False)
@@ -137,8 +143,12 @@ def user(
         if require_subject:
             raise OperationError('Cannot set `require_subject` if `require` is not "X509"')
 
-    current_users = host.fact.mysql_users(
-        mysql_user, mysql_password, mysql_host, mysql_port,
+    current_users = host.get_fact(
+        MysqlUsers,
+        mysql_user=mysql_user,
+        mysql_password=mysql_password,
+        mysql_host=mysql_host,
+        mysql_port=mysql_port,
     )
 
     user_host = '{0}@{1}'.format(user, user_hostname)
@@ -325,9 +335,12 @@ def database(
         )
     '''
 
-    current_databases = host.fact.mysql_databases(
-        mysql_user, mysql_password,
-        mysql_host, mysql_port,
+    current_databases = host.get_fact(
+        MysqlDatabases,
+        mysql_user=mysql_user,
+        mysql_password=mysql_password,
+        mysql_host=mysql_host,
+        mysql_port=mysql_port,
     )
 
     is_present = database in current_databases
@@ -439,10 +452,14 @@ def privileges(
             ).format(database, table))
 
     database_table = '{0}.{1}'.format(database, table)
-    user_grants = host.fact.mysql_user_grants(
-        user, user_hostname,
-        mysql_user, mysql_password,
-        mysql_host, mysql_port,
+    user_grants = host.get_fact(
+        MysqlUserGrants,
+        user=user,
+        user_hostname=user_hostname,
+        mysql_user=mysql_user,
+        mysql_password=mysql_password,
+        mysql_host=mysql_host,
+        mysql_port=mysql_port,
     )
 
     existing_privileges = []

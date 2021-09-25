@@ -4,13 +4,10 @@
         "with_grant_option": true
     },
     "facts": {
-        "mysql_user_grants": {
-            "someuser": {
-                "localhost": {
-                    "*.*": {
-                        "privileges": [],
-                        "with_grant_option": false
-                    }
+        "mysql.MysqlUserGrants": {
+            "user=someuser, user_hostname=localhost, mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None": {
+                "*.*": {
+                    "privileges": []
                 }
             }
         }

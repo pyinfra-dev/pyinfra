@@ -5,11 +5,11 @@
         "privileges": ["SELECT"]
     },
     "facts": {
-        "mysql_users": {},
-        "mysql_user_grants": {
-            "someuser": {
-                "localwhat": {}
-            }
+        "mysql.MysqlUsers": {
+            "mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None": {}
+        },
+        "mysql.MysqlUserGrants": {
+            "user=someuser, user_hostname=localwhat, mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None": {}
         }
     },
     "commands": [

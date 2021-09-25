@@ -8,7 +8,9 @@
         "max_connections_per_hour": 1
     },
     "facts": {
-        "mysql_users": {}
+        "mysql.MysqlUsers": {
+            "mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None": {}
+        }
     },
     "commands": [
         "mysql -Be 'CREATE USER \"someuser\"@\"localwhat\" WITH MAX_USER_CONNECTIONS 500 MAX_QUERIES_PER_HOUR 50 MAX_UPDATES_PER_HOUR 10 MAX_CONNECTIONS_PER_HOUR 1'"

@@ -7,12 +7,14 @@
         "max_connections_per_hour": 5
     },
     "facts": {
-        "mysql_users": {
-            "someuser@localhost": {
-                "max_user_connections": 0,
-                "max_questions": 0,
-                "max_updates": 0,
-                "max_connections": 0
+        "mysql.MysqlUsers": {
+            "mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None": {
+                "someuser@localhost": {
+                    "max_user_connections": 0,
+                    "max_questions": 0,
+                    "max_updates": 0,
+                    "max_connections": 0
+                }
             }
         }
     },

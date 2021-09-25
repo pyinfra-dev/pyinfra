@@ -5,8 +5,10 @@
         "user_hostname": "localwhat"
     },
     "facts": {
-        "mysql_users": {
-            "someuser@localwhat": {}
+        "mysql.MysqlUsers": {
+            "mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None": {
+                "someuser@localwhat": {}
+            }
         }
     },
     "commands": [

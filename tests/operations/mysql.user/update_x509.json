@@ -4,9 +4,11 @@
         "require": "X509"
     },
     "facts": {
-        "mysql_users": {
-            "someuser@localhost": {
-                "ssl_type": null
+        "mysql.MysqlUsers": {
+            "mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None": {
+                "someuser@localhost": {
+                    "ssl_type": null
+                }
             }
         }
     },
