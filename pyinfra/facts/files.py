@@ -246,6 +246,13 @@ class FindFilesBase(FactBase):
     def process(output):
         return output
 
+    def command(self, path, quote_path=True):
+        return make_formatted_string_command(
+            'find {0} -type {type_flag} || true',
+            QuoteString(path) if quote_path else path,
+            type_flag=self.type_flag,
+        )
+
 
 class FindFiles(FindFilesBase):
     '''
@@ -253,13 +260,6 @@ class FindFiles(FindFilesBase):
     '''
 
     type_flag = 'f'
-
-    def command(self, path, quote_path=True):
-        return make_formatted_string_command(
-            'find {0} -type {type_flag} || true',
-            QuoteString(path) if quote_path else path,
-            type_flag=self.type_flag,
-        )
 
 
 class FindLinks(FindFilesBase):
