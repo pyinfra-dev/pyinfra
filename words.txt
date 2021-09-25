@@ -3,6 +3,7 @@
 4
 64kb
 700
+FakePathLike
 Launchd
 Openvz
 addrs
@@ -20,8 +21,6 @@ argspec
 argstring
 askpass
 asn
-onerror
-followlinks
 autodetect
 autogenerate
 automagically
@@ -105,6 +104,7 @@ filetype
 filterfalse
 findstr
 fixme
+followlinks
 frameinfo
 fs
 fspath
@@ -206,6 +206,7 @@ nottest
 npm
 ntlm
 ntpath
+onerror
 openrc
 openstack
 openvz
