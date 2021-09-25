@@ -711,7 +711,7 @@ def put(
     remote_file = host.get_fact(File, path=dest)
 
     if not remote_file and host.get_fact(Directory, path=dest):
-        dest = os_path.join(dest, os_path.basename(src))
+        dest = '/'.join((dest.rstrip('/'), os_path.basename(src)))
 
     if create_remote_dir:
         yield _create_remote_dir(state, host, dest, user, group)
