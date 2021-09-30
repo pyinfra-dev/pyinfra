@@ -464,8 +464,8 @@ def sync(
         remote_dirpath = dirpath.replace(src, '')
 
         # Filter excluded dirs
-        for child_dir in dirnames:
-            child_path = os_path.join(remote_dirpath, child_dir)
+        for child_dir in dirnames[:]:
+            child_path = os_path.normpath(os_path.join(remote_dirpath, child_dir))
             if exclude_dir and any(fnmatch(child_path, match) for match in exclude_dir):
                 dirnames.remove(child_dir)
 
