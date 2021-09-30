@@ -1,0 +1,97 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["/somedir", "/home/somedir"],
+    "kwargs": {
+        "exclude": ["*.pyc", "*.log"],
+        "exclude_dir": ["__pycache__", ".git"]
+    },
+    "local_files": {
+        "files": {},
+        "dirs": {
+            "somedir": {
+                "files": {
+                    "somefile.txt": null,
+                    "build.log": null,
+                    "local_ignore.pyc": null
+                },
+                "dirs": {
+                    "__pycache__": {
+                        "files": {
+                            "nope": null
+                        },
+                        "dirs": {
+                            "ignore_this": {
+                                "files": {
+                                    "nope_again": null
+                                },
+                                "dirs": {}
+                            }
+                        }
+                    },
+                    ".git": {
+                        "files": {
+                            "ignore_too": null
+                        },
+                        "dirs": {}
+                    },
+                    "underthat": {
+                        "files": {
+                            "another_file.txt": null,
+                            "script_output.log": null,
+                            "script.pyc": null
+                        },
+                        "dirs": {
+                            "__pycache__": {
+                                "files": {},
+                                "dirs": {
+                                    "dont_want_this": {
+                                        "files": {
+                                            "still_no": null
+                                        },
+                                        "dirs": {}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/somedir/somefile.txt": null,
+            "path=/home/somedir/build.log": null,
+            "path=/home/somedir/local_ignore.pyc": null,
+            "path=/home/somedir/deleteme.txt": true,
+            "path=/home/somedir/nodelete.pyc": {"mode": 644},
+            "path=/home/somedir/underthat/another_file.txt": null
+        },
+        "files.Directory": {
+            "path=/home/somedir": {
+                "mode": 755
+            },
+            "path=/home/somedir/underthat": null
+        },
+        "files.FindFiles": {
+            "path=/home/somedir": [
+                "/home/somedir/deleteme.txt",
+                "/home/somedir/nodelete.pyc"
+            ],
+            "path=/home/somedir/underthat": []
+        },
+        "files.Link": {}
+    },
+    "commands": [
+        "mkdir -p /home/somedir/underthat",
+        "chmod 755 /home/somedir/underthat",
+        ["upload", "/somedir/somefile.txt", "/home/somedir/somefile.txt"],
+        "chmod 644 /home/somedir/somefile.txt",
+        [
+            "upload", "/somedir/underthat/another_file.txt",
+            "/home/somedir/underthat/another_file.txt"
+        ],
+        "chmod 644 /home/somedir/underthat/another_file.txt"
+    ],
+    "idempotent": false
+}
