@@ -1,3 +1,8 @@
+# v1.4.16
+
++ Fix loading of system SSH host keys
++ Fix/show warning when no SSH host key present on connect
+
 # v1.4.15
 
 + Don't fail if `dest` in `files.put` is a directory (@oz123)
