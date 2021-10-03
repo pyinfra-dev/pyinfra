@@ -1,3 +1,42 @@
+# v1.5.0.dev0
+
+This release includes a huge number of improvements, major highlights:
+
+**Automatic sudo password prompting** - at last! pyinfra can now detect when a sudo password is required and will prompt the user.
+
+**Global config object** - there is now a `pyinfra.config` object that should be used to set config variables:
+
+```py
+from pyinfra import config
+config.SUDO = True
+```
+
+This replaces the old style of setting `SUDO = True` at the top of files which was extracted via the AST. This new object means config variables can be set to anything (including the results of functions) and work across multiple deploy files.
+
+Operation & fact updates:
+
++ Add `openrc.service` operation
++ Add `openrc.OpenrcStatus` & `openrc.OpenrcEnabled` facts
++ Add last login time to `server.Users` fact (@sysadmin75)
++ Fetch held deb package versions in `deb.DebPackages` fact (@GerardoGR)
++ Add `force`, `force_backup` and `force_backup_dir` arguments to `files.files`, `files.directory` & `files.link` operations
++ Add resource and SSL arguments to `mysql.user` operation
++ Add `with_grant_option` argument to `mysql.privileges` operation
+
+Connector updates:
+
++ Transfer ownership of files uploaded with su/sudo (@benridley)
++ Add `ssh_forward_agent` group data variable overriding SSH config
+
+Other bits:
+
++ Add `doas` & `doas_user` global arugments
++ Use host data for global arguments (`host.data.sudo`, etc)
++ Add `--data key=value` CLI flag
++ Propagate return value from `@deploy` decorator (@karlicoss)
++ Large expansion of tested idempotent operations
+
+
 # v1.4.19
 
 + Use `uname -m` in `server.Arch` fact (@weakish)
@@ -15,7 +54,7 @@
 + Show a warning when a `--limit` option doesn't match any hosts
 + Warn only if SSH keys fail to load
 + Include actual error when we encounter authentication errors
-
++ 
 # v1.4.17
 
 + Fix excluding multiple directories in `files.sync` operation (@gchazot)
