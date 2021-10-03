@@ -64,6 +64,9 @@ class FakeBuffer(object):
 
 
 class FakeSSHClient(object):
+    def load_system_host_keys(self):
+        pass
+
     def set_missing_host_key_policy(self, _):
         pass
 

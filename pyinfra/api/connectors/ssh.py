@@ -202,6 +202,7 @@ def connect(state, host):
         # Create new client & connect to the host
         client = SSHClient()
         client.set_missing_host_key_policy(MissingHostKeyPolicy())
+        client.load_system_host_keys()
         client.connect(hostname, **kwargs)
         return client
 
