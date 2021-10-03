@@ -7,9 +7,6 @@ import six
 
 from pyinfra import logger
 
-STDOUT_LOG_LEVELS = (logging.DEBUG, logging.INFO)
-STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
-
 
 class LogHandler(logging.Handler):
     def emit(self, record):
