@@ -88,6 +88,9 @@ class TestSSHConnector(TestCase):
 
             assert len(state.active_hosts) == 0
 
+    # SSH key tests
+    #
+
     def test_connect_with_rsa_ssh_key(self):
         state = State(make_inventory(hosts=(
             ('somehost', {'ssh_key': 'testkey'}),
@@ -356,6 +359,9 @@ class TestSSHConnector(TestCase):
 
         self.assertTrue(e.exception.args[0].startswith('No such private key file:'))
 
+    # SSH command tests
+    #
+
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     def test_run_shell_command(self, fake_ssh_client):
         fake_ssh = MagicMock()
@@ -462,6 +468,51 @@ class TestSSHConnector(TestCase):
         out = host.run_shell_command(command)
         assert len(out) == 3
         assert out[0] is False
+
+    @patch('pyinfra.api.connectors.util.getpass')
+    @patch('pyinfra.api.connectors.util.get_sudo_askpass_exe')
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    def test_run_shell_command_sudo_password_prompt(
+        self,
+        fake_sftp_client,
+        fake_ssh_client,
+        fake_get_sudo_askpass_exe,
+        fake_getpass,
+    ):
+        fake_ssh = MagicMock()
+        fake_stdin = MagicMock()
+        fake_stdout = MagicMock()
+        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, MagicMock()
+
+        fake_ssh_client.return_value = fake_ssh
+        fake_getpass.return_value = 'password'
+
+        inventory = make_inventory(hosts=('somehost',))
+        State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect()
+
+        command = 'echo Šablony'
+        fake_stdout.channel.recv_exit_status.return_value = 0
+
+        out = host.run_shell_command(command, use_sudo_password=True, print_output=True)
+        assert len(out) == 3
+
+        status, stdout, stderr = out
+        assert status is True
+
+        fake_sftp_client.from_transport().putfo.assert_called_with(
+            fake_get_sudo_askpass_exe.return_value, 'pyinfra-sudo-askpass',
+        )
+
+        fake_ssh.exec_command.assert_called_with((
+            'env SUDO_ASKPASS=pyinfra-sudo-askpass PYINFRA_SUDO_PASSWORD=password '
+            "sh -c 'echo Šablony'"
+        ), get_pty=False)
+
+    # SSH file put/get tests
+    #
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     @patch('pyinfra.api.connectors.ssh.SFTPClient')
