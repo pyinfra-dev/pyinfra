@@ -511,6 +511,60 @@ class TestSSHConnector(TestCase):
             "sudo -H -A -k sh -c 'echo Šablony'"
         ), get_pty=False)
 
+    @patch('pyinfra.api.connectors.util.getpass')
+    @patch('pyinfra.api.connectors.util.get_sudo_askpass_exe')
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    def test_run_shell_command_sudo_password_automatic_prompt(
+        self,
+        fake_sftp_client,
+        fake_ssh_client,
+        fake_get_sudo_askpass_exe,
+        fake_getpass,
+    ):
+        fake_ssh = MagicMock()
+        first_fake_stdout = MagicMock()
+        second_fake_stdout = MagicMock()
+
+        first_fake_stdout.__iter__.return_value = ['sudo: a password is required']
+
+        fake_ssh.exec_command.side_effect = [
+            (MagicMock(), first_fake_stdout, MagicMock()),  # command w/o sudo password
+            (MagicMock(), MagicMock(), MagicMock()),  # command to chmod askpass file
+            (MagicMock(), second_fake_stdout, MagicMock()),  # command with sudo pw
+        ]
+
+        fake_ssh_client.return_value = fake_ssh
+        fake_getpass.return_value = 'password'
+
+        inventory = make_inventory(hosts=('somehost',))
+        State(inventory, Config())
+        host = inventory.get_host('somehost')
+        host.connect()
+
+        command = 'echo Šablony'
+        first_fake_stdout.channel.recv_exit_status.return_value = 1
+        second_fake_stdout.channel.recv_exit_status.return_value = 0
+
+        out = host.run_shell_command(command, sudo=True, print_output=True)
+        assert len(out) == 3
+
+        status, stdout, stderr = out
+        assert status is True
+
+        fake_sftp_client.from_transport().putfo.assert_called_with(
+            fake_get_sudo_askpass_exe.return_value, 'pyinfra-sudo-askpass',
+        )
+
+        fake_ssh.exec_command.assert_any_call((
+            "sudo -H -n sh -c 'echo Šablony'"
+        ), get_pty=False)
+
+        fake_ssh.exec_command.assert_called_with((
+            'env SUDO_ASKPASS=pyinfra-sudo-askpass PYINFRA_SUDO_PASSWORD=password '
+            "sudo -H -A -k sh -c 'echo Šablony'"
+        ), get_pty=False)
+
     # SSH file put/get tests
     #
 
