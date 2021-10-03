@@ -43,6 +43,11 @@ from .util import (
 EXECUTION_CONNECTOR = True
 
 
+class WarningPolicy(MissingHostKeyPolicy):
+    def missing_host_key(self, client, hostname, key):
+        logger.warning('No host key for {0} found in known_hosts'.format(hostname))
+
+
 def make_names_data(hostname):
     yield '@ssh/{0}'.format(hostname), {'ssh_hostname': hostname}, []
 
@@ -201,7 +206,7 @@ def connect(state, host):
     try:
         # Create new client & connect to the host
         client = SSHClient()
-        client.set_missing_host_key_policy(MissingHostKeyPolicy())
+        client.set_missing_host_key_policy(WarningPolicy())
         client.load_system_host_keys()
         client.connect(hostname, **kwargs)
         return client
