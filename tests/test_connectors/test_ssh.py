@@ -433,9 +433,8 @@ class TestSSHConnector(TestCase):
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     def test_run_shell_command_success_exit_code(self, fake_ssh_client):
         fake_ssh = MagicMock()
-        fake_stdin = MagicMock()
         fake_stdout = MagicMock()
-        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, MagicMock()
+        fake_ssh.exec_command.return_value = MagicMock(), fake_stdout, MagicMock()
 
         fake_ssh_client.return_value = fake_ssh
 
@@ -454,9 +453,8 @@ class TestSSHConnector(TestCase):
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     def test_run_shell_command_error(self, fake_ssh_client):
         fake_ssh = MagicMock()
-        fake_stdin = MagicMock()
         fake_stdout = MagicMock()
-        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, MagicMock()
+        fake_ssh.exec_command.return_value = MagicMock(), fake_stdout, MagicMock()
 
         fake_ssh_client.return_value = fake_ssh
 
@@ -484,9 +482,8 @@ class TestSSHConnector(TestCase):
         fake_getpass,
     ):
         fake_ssh = MagicMock()
-        fake_stdin = MagicMock()
         fake_stdout = MagicMock()
-        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, MagicMock()
+        fake_ssh.exec_command.return_value = MagicMock(), fake_stdout, MagicMock()
 
         fake_ssh_client.return_value = fake_ssh
         fake_getpass.return_value = 'password'
@@ -499,7 +496,7 @@ class TestSSHConnector(TestCase):
         command = 'echo Šablony'
         fake_stdout.channel.recv_exit_status.return_value = 0
 
-        out = host.run_shell_command(command, use_sudo_password=True, print_output=True)
+        out = host.run_shell_command(command, sudo=True, use_sudo_password=True, print_output=True)
         assert len(out) == 3
 
         status, stdout, stderr = out
@@ -511,7 +508,7 @@ class TestSSHConnector(TestCase):
 
         fake_ssh.exec_command.assert_called_with((
             'env SUDO_ASKPASS=pyinfra-sudo-askpass PYINFRA_SUDO_PASSWORD=password '
-            "sh -c 'echo Šablony'"
+            "sudo -H -A -k sh -c 'echo Šablony'"
         ), get_pty=False)
 
     # SSH file put/get tests
