@@ -434,11 +434,8 @@ def sync(
             dest='/tmp/tempdir',
         )
     '''
-
-    # If we don't enforce the source ending with /, remote_dirpath below might start with
-    # a /, which makes the os_path.join cut off the destination bit.
-    if not src.endswith(os_path.sep):
-        src = '{0}{1}'.format(src, os_path.sep)
+    original_src = src  # Keep a copy to reference in errors
+    src = os_path.normpath(src)
 
     # Add deploy directory?
     if add_deploy_dir and state.deploy_dir:
@@ -446,7 +443,7 @@ def sync(
 
     # Ensure the source directory exists
     if not os_path.isdir(src):
-        raise IOError('No such directory: {0}'.format(src))
+        raise IOError('No such directory: {0}'.format(original_src))
 
     # Ensure exclude is a list/tuple
     if exclude is not None:
@@ -461,7 +458,7 @@ def sync(
     put_files = []
     ensure_dirnames = []
     for dirpath, dirnames, filenames in walk(src, topdown=True):
-        remote_dirpath = dirpath.replace(src, '')
+        remote_dirpath = os_path.normpath(os_path.relpath(dirpath, src))
 
         # Filter excluded dirs
         for child_dir in dirnames[:]:
@@ -469,7 +466,7 @@ def sync(
             if exclude_dir and any(fnmatch(child_path, match) for match in exclude_dir):
                 dirnames.remove(child_dir)
 
-        if remote_dirpath:
+        if remote_dirpath and remote_dirpath != os_path.curdir:
             ensure_dirnames.append((remote_dirpath, get_path_permissions_mode(dirpath)))
 
         for filename in filenames:
@@ -482,7 +479,7 @@ def sync(
             remote_full_filename = unix_path_join(*[
                 item for item in
                 (dest, remote_dirpath, filename)
-                if item
+                if item and item != os_path.curdir
             ])
             put_files.append((full_filename, remote_full_filename))
 
