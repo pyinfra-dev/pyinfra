@@ -1,0 +1,55 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["/somedir", "/home/somedir"],
+    "local_files": {
+        "files": {},
+        "dirs": {
+            "somedir": {
+                "files": {
+                    "somefile.txt": null
+                },
+                "dirs": {
+                    "underthat": {
+                        "files": {
+                            "another-file.txt": null
+                        },
+                        "dirs": {}
+                    }
+                }
+            }
+        }
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/somedir/somefile.txt": null,
+            "path=/home/somedir/underthat/another-file.txt": null
+        },
+        "files.Directory": {
+            "path=/home/somedir": null,
+            "path=/home/somedir/underthat": null
+        },
+        "files.FindFiles": {
+            "path=/home/somedir": [],
+            "path=/home/somedir/underthat": []
+        },
+        "files.Link": {},
+        "files.Sha1File": {
+            "path=/home/somedir/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
+        }
+    },
+    "commands": [
+        "mkdir -p /home/somedir",
+        "chmod 755 /home/somedir",
+        "mkdir -p /home/somedir/underthat",
+        "chmod 755 /home/somedir/underthat",
+        ["upload", "/somedir/somefile.txt", "/home/somedir/somefile.txt"],
+        "chmod 644 /home/somedir/somefile.txt",
+        [
+            "upload",
+            "/somedir/underthat/another-file.txt",
+            "/home/somedir/underthat/another-file.txt"
+        ],
+        "chmod 644 /home/somedir/underthat/another-file.txt"
+    ],
+    "idempotent": false
+}
