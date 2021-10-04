@@ -3,7 +3,7 @@
     "args": ["/somedir", "/home/somedir"],
     "kwargs": {
         "exclude": ["*.pyc", "*.log"],
-        "exclude_dir": ["__pycache__", ".git"]
+        "exclude_dir": ["__pycache__", "*/__pycache__", ".git"]
     },
     "local_files": {
         "files": {},
