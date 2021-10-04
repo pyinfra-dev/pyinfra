@@ -479,16 +479,12 @@ def sync(
             if exclude and any(fnmatch(full_filename, match) for match in exclude):
                 continue
 
-            put_files.append((
-                # Join local as normal (unix, win)
-                full_filename,
-                # Join remote as unix like
-                unix_path_join(*[
-                    item for item in
-                    (dest, remote_dirpath, filename)
-                    if item
-                ]),
-            ))
+            remote_full_filename = unix_path_join(*[
+                item for item in
+                (dest, remote_dirpath, filename)
+                if item
+            ])
+            put_files.append((full_filename, remote_full_filename))
 
     # Ensure the destination directory - if the destination is a link, ensure
     # the link target is a directory.
