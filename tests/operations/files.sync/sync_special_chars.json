@@ -5,7 +5,7 @@
         "/somedir/yet () another {} file $$ __.txt"
     ],
     "directories": {
-        "/somedir/": {
+        "/somedir": {
             "files": ["yet () another {} file $$ __.txt"]
         }
     },

@@ -12,7 +12,7 @@
         "/somedir/underthat/yet-another-file.txt"
     ],
     "directories": {
-        "/somedir/": {
+        "/somedir": {
             "files": ["somefile.txt", "anotherfile.txt", "thing.pyc"],
             "dirs": ["underthat", "__pycache__"]
         },

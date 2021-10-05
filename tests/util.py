@@ -229,11 +229,19 @@ class FakeFile(object):
 
 
 class patch_files(object):
-    def __init__(self, patch_files, patch_directories):
-        directories, files, files_data = self._parse_files_and_directories(
-            patch_files,
-            patch_directories,
-        )
+    def __init__(self, patch_files, patch_directories, local_files):
+        if local_files is None:
+            directories, files, files_data = self._parse_files_and_directories(
+                patch_files,
+                patch_directories,
+            )
+        else:
+            print(self._parse_files_and_directories(
+                patch_files,
+                patch_directories,
+            ))
+            print(self._parse_local_files(local_files))
+            directories, files, files_data = self._parse_local_files(local_files)
 
         self._files = files
         self._files_data = files_data
@@ -251,13 +259,39 @@ class patch_files(object):
                 filename = filename_data
                 data = None
 
-            if not filename.startswith(os.sep):
-                filename = '{0}{1}'.format(FakeState.deploy_dir, filename)
+            if not path.isabs(filename):
+                filename = path.join(FakeState.deploy_dir, filename)
 
             files.append(filename)
 
             if data:
                 files_data[filename] = data
+        return directories, files, files_data
+
+    @staticmethod
+    def _parse_local_files(local_files, prefix=FakeState.deploy_dir):
+        files = []
+        files_data = {}
+        directories = {}
+
+        for filename, file_data in local_files["files"].items():
+            filepath = path.join(prefix, filename)
+            files.append(filepath)
+            files_data[filepath] = file_data
+
+        for dirname, dir_files in local_files["dirs"].items():
+            sub_dirname = path.join(prefix, dirname)
+            sub_directories, sub_files, sub_files_data = patch_files._parse_local_files(dir_files, sub_dirname)
+
+            files.extend(sub_files)
+            files_data.update(sub_files_data)
+
+            directories[sub_dirname] = {
+                "files": list(dir_files["files"].keys()),
+                "dirs": list(dir_files["dirs"].keys())
+            }
+            directories.update(sub_directories)
+
         return directories, files, files_data
 
     def __enter__(self):
@@ -282,24 +316,27 @@ class patch_files(object):
             patched.stop()
 
     def get_file(self, filename, *args):
-        if filename in self._files:
-            return FakeFile(filename, self._files_data.get(filename))
+        if self.isfile(filename):
+            normalized_path = path.normpath(filename)
+            return FakeFile(normalized_path, self._files_data.get(normalized_path))
 
         raise IOError('Missing FakeFile: {0}'.format(filename))
 
     def exists(self, filename, *args):
-        return filename in self._files or filename in self._directories
+        return self.isfile(filename) or self.isdir(filename)
 
     def isfile(self, filename, *args):
-        return filename in self._files
+        normalized_path = path.normpath(filename)
+        return normalized_path in self._files
 
     def isdir(self, dirname, *args):
-        return dirname in self._directories
+        normalized_path = path.normpath(dirname)
+        return normalized_path in self._directories
 
     def stat(self, pathname):
-        if pathname in self._files:
+        if self.isfile(pathname):
             mode_int = 33188  # 644 file
-        elif pathname in self._directories:
+        elif self.isdir(pathname):
             mode_int = 16877  # 755 directory
         else:
             raise IOError('No such file or directory: {0}'.format(pathname))
@@ -307,9 +344,11 @@ class patch_files(object):
         return os.stat_result((mode_int, 0, 0, 0, 0, 0, 0, 0, 0, 0))
 
     def walk(self, dirname, topdown=True, onerror=None, followlinks=False):
-        if dirname not in self._directories:
+        if not self.isdir(dirname):
             return
-        dir_definition = self._directories[dirname]
+
+        normalized_path = path.normpath(dirname)
+        dir_definition = self._directories[normalized_path]
         child_dirs = dir_definition.get('dirs', [])
         child_files = dir_definition.get('files', [])
 
@@ -317,7 +356,7 @@ class patch_files(object):
 
         for child in child_dirs:
             full_child = path.join(dirname, child)
-            for recursive_return in self.walk(full_child):
+            for recursive_return in self.walk(full_child, topdown, onerror, followlinks):
                 yield recursive_return
 
 
