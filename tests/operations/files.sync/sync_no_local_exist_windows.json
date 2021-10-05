@@ -11,6 +11,6 @@
     },
     "exception": {
         "names": ["OSError", "IOError"],
-        "message": "No such directory: \\i-do-not-exist\\"
+        "message": "No such directory: \\i-do-not-exist"
     }
 }
