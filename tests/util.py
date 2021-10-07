@@ -236,11 +236,6 @@ class patch_files(object):
                 patch_directories,
             )
         else:
-            print(self._parse_files_and_directories(
-                patch_files,
-                patch_directories,
-            ))
-            print(self._parse_local_files(local_files))
             directories, files, files_data = self._parse_local_files(local_files)
 
         self._files = files
