@@ -229,39 +229,12 @@ class FakeFile(object):
 
 
 class patch_files(object):
-    def __init__(self, patch_files, patch_directories, local_files):
-        if local_files is None:
-            directories, files, files_data = self._parse_files_and_directories(
-                patch_files,
-                patch_directories,
-            )
-        else:
-            directories, files, files_data = self._parse_local_files(local_files)
+    def __init__(self, local_files):
+        directories, files, files_data = self._parse_local_files(local_files)
 
         self._files = files
         self._files_data = files_data
         self._directories = directories
-
-    @staticmethod
-    def _parse_files_and_directories(patch_files, patch_directories):
-        files = []
-        files_data = {}
-        directories = patch_directories
-        for filename_data in patch_files:
-            if isinstance(filename_data, list):
-                filename, data = filename_data
-            else:
-                filename = filename_data
-                data = None
-
-            if not path.isabs(filename):
-                filename = path.join(FakeState.deploy_dir, filename)
-
-            files.append(filename)
-
-            if data:
-                files_data[filename] = data
-        return directories, files, files_data
 
     @staticmethod
     def _parse_local_files(local_files, prefix=FakeState.deploy_dir):
@@ -269,21 +242,24 @@ class patch_files(object):
         files_data = {}
         directories = {}
 
-        for filename, file_data in local_files["files"].items():
+        for filename, file_data in local_files.get('files', {}).items():
             filepath = path.join(prefix, filename)
             files.append(filepath)
             files_data[filepath] = file_data
 
-        for dirname, dir_files in local_files["dirs"].items():
+        for dirname, dir_files in local_files.get('dirs', {}).items():
             sub_dirname = path.join(prefix, dirname)
-            sub_directories, sub_files, sub_files_data = patch_files._parse_local_files(dir_files, sub_dirname)
+            sub_directories, sub_files, sub_files_data = patch_files._parse_local_files(
+                dir_files,
+                sub_dirname,
+            )
 
             files.extend(sub_files)
             files_data.update(sub_files_data)
 
             directories[sub_dirname] = {
-                "files": list(dir_files["files"].keys()),
-                "dirs": list(dir_files["dirs"].keys())
+                'files': list(dir_files['files'].keys()),
+                'dirs': list(dir_files['dirs'].keys()),
             }
             directories.update(sub_directories)
 
