@@ -1,6 +1,11 @@
 {
     "args": ["somefile.txt.j2"],
-    "files": ["somefile.txt.j2"],
+    "local_files": {
+        "files": {
+            "somefile.txt.j2": null
+        },
+        "dirs": {}
+    },
     "facts": {
         "files.File": {
             "path=_tempfile_": null

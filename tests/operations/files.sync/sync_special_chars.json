@@ -1,12 +1,15 @@
 {
     "require_platform": ["Darwin", "Linux"],
     "args": ["/somedir/", "/home/somedir"],
-    "files": [
-        "/somedir/yet () another {} file $$ __.txt"
-    ],
-    "directories": {
-        "/somedir": {
-            "files": ["yet () another {} file $$ __.txt"]
+    "local_files": {
+        "files": {},
+        "dirs": {
+            "somedir": {
+                "files": {
+                    "yet () another {} file $$ __.txt": null
+                },
+                "dirs": {}
+            }
         }
     },
     "facts": {

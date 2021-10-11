@@ -4,10 +4,13 @@
         "home": "homedir",
         "public_keys": ["abc", "somefile.pub", "anotherfile.pub"]
     },
-    "files": [
-        ["somefile.pub", "somekeydata"],
-        ["anotherfile.pub", "someotherkeydata"]
-    ],
+    "local_files": {
+        "files": {
+            "somefile.pub": "somekeydata",
+            "anotherfile.pub": "someotherkeydata"
+        },
+        "dirs": {}
+    },
     "facts": {
         "server.Users": {
             "someuser": {
