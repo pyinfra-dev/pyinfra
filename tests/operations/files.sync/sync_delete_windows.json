@@ -6,21 +6,30 @@
         "exclude": "*.pyc",
         "exclude_dir": "__pycache__"
     },
-    "files": [
-        "\\somedir\\somefile.txt",
-        "\\somedir\\anotherfile.txt",
-        "\\somedir\\underthat\\yet-another-file.txt"
-    ],
-    "directories": {
-        "\\somedir\\": {
-            "files": ["somefile.txt", "anotherfile.txt", "thing.pyc"],
-            "dirs": ["underthat", "__pycache__"]
-        },
-        "\\somedir\\underthat": {
-            "files": ["yet-another-file.txt"]
-        },
-        "\\somedir\\__pycache__": {
-            "files": ["nope"]
+    "local_files": {
+        "files": {},
+        "dirs": {
+            "somedir": {
+                "files": {
+                    "somefile.txt": null,
+                    "anotherfile.txt": null,
+                    "thing.pyc": null
+                },
+                "dirs": {
+                    "underthat": {
+                        "files": {
+                            "yet-another-file.txt": null
+                        },
+                        "dirs": {}
+                    },
+                    "__pycache__": {
+                        "files": {
+                            "nope": null
+                        },
+                        "dirs": {}
+                    }
+                }
+            }
         }
     },
     "facts": {
