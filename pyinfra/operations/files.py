@@ -433,6 +433,15 @@ def sync(
             src='files/tempdir',
             dest='/tmp/tempdir',
         )
+
+    Note: ``exclude`` and ``exclude_dir`` use ``fnmatch`` behind the scenes to do the filtering.
+
+    + ``exclude`` matches against the filename.
+    + ``exclude_dir`` matches against the path of the directory, relative to ``src``.
+      Since fnmatch does not treat path separators (``/`` or ``\\``) as special characters,
+      excluding all directories matching a given name, however deep under ``src`` they are,
+      can be done for example with ``exclude_dir=["__pycache__", "*/__pycache__"]``
+
     '''
     original_src = src  # Keep a copy to reference in errors
     src = os_path.normpath(src)
