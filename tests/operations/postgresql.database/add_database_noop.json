@@ -2,7 +2,7 @@
     "args": ["somedb"],
     "facts" :{
         "postgresql.PostgresqlDatabases": {
-            "postgresql_user=None, postgresql_password=None, postgresql_host=None, postgresql_port=None": {
+            "postgresql_host=None, postgresql_password=None, postgresql_port=None, postgresql_user=None": {
                 "somedb": {}
             }
         }

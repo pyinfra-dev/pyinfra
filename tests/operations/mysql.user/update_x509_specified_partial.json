@@ -8,7 +8,7 @@
     },
     "facts": {
         "mysql.MysqlUsers": {
-            "mysql_user=None, mysql_password=None, mysql_host=None, mysql_port=None": {
+            "mysql_host=None, mysql_password=None, mysql_port=None, mysql_user=None": {
                 "someuser@localhost": {
                     "ssl_cipher": "a-cipher",
                     "x509_issuer": null,

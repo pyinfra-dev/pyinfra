@@ -43,7 +43,7 @@ def get_kwargs_str(kwargs):
 
     items = [
         '{0}={1}'.format(key, value)
-        for key, value in kwargs.items()
+        for key, value in sorted(kwargs.items())
         if key not in ('self', 'state', 'host')
     ]
     return ', '.join(items)
