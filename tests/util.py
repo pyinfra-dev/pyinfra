@@ -242,6 +242,8 @@ class patch_files(object):
         files_data = {}
         directories = {}
 
+        prefix = path.normpath(prefix)
+
         for filename, file_data in local_files.get('files', {}).items():
             filepath = path.join(prefix, filename)
             files.append(filepath)
