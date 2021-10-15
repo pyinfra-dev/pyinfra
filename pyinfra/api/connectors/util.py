@@ -290,18 +290,18 @@ def make_unix_command(
 
         # Quote the whole shell -c 'command' as BSD `su` does not have a shell option
         command_bits.append(QuoteString(StringCommand(shell_executable, '-c', command)))
-
-    # If both su_user arg and config su_user are false, warn if any of the other su
-    # arguments are present as they will be ignored.
-    elif state is None or not state.config.SU_USER:
-        _warn_invalid_auth_args(
-            locals(),
-            'su_user',
-            ('use_su_login', 'preserve_su_env', 'su_shell'),
-        )
-
+    else:
         # Otherwise simply use thee shell directly
         command_bits.extend([shell_executable, '-c', command])
+
+        # If both su_user arg and config su_user are false, warn if any of the other su
+        # arguments are present as they will be ignored.
+        if state is None or not state.config.SU_USER:
+            _warn_invalid_auth_args(
+                locals(),
+                'su_user',
+                ('use_su_login', 'preserve_su_env', 'su_shell'),
+            )
 
     return StringCommand(*command_bits)
 

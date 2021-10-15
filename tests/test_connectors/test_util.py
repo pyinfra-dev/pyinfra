@@ -111,6 +111,17 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             "'bash -c '\"'\"'cd /opt/somedir && export key=value && echo hi'\"'\"''"  # command bit
         )
 
+    def test_command_exists_su_config_only(self):
+        '''
+        This tests covers a bug that appeared when `make_unix_command` is called
+        with `su_user=False` (default) but `SU_USER` set on the config object,
+        resulting in an empty command output.
+        '''
+        state = State(make_inventory(), Config(SU_USER=True))
+        command = make_unix_command('echo Šablony', state=state)
+        assert command.get_raw_value() == "sh -c 'echo Šablony'"
+
+
 class TestMakeUnixCommandConnectorUtilWarnings(TestCase):
     def test_doas_warnings(self):
         state = State(make_inventory(), Config(SU_USER=True, SUDO=True))
