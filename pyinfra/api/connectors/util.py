@@ -266,7 +266,7 @@ def make_unix_command(
         _warn_invalid_auth_args(
             locals(),
             'doas',
-            ('doas_user'),
+            ('doas_user',),
         )
 
     if use_sudo_password:
