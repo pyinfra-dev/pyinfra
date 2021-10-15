@@ -5,8 +5,6 @@ from pyinfra.operations import files
 
 # Note: This requires files in the files/ directory.
 
-SUDO = True
-
 if host.get_fact(LinuxName) in ['CentOS', 'RedHat']:
     files.download(
         name='Download the Docker repo file',

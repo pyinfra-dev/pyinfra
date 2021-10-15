@@ -1,6 +1,5 @@
 from pyinfra.operations import init
 
-SUDO = True
 
 init.d(
     name='Restart and enable rsyslog',

@@ -1,6 +1,5 @@
 from pyinfra.operations import lxd, server
 
-SUDO = True
 
 # Note: This is an example of running a command on remote
 server.shell(

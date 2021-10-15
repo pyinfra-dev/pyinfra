@@ -3,7 +3,6 @@ from pyinfra.facts.files import File
 from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apt, server, yum
 
-SUDO = True
 
 if host.get_fact(LinuxName) in ['CentOS', 'RedHat']:
     yum.packages(

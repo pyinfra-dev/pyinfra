@@ -6,7 +6,6 @@ an example of looping while preserving the order.
 from pyinfra import state
 from pyinfra.operations import server
 
-SUDO = True
 
 items = ['a', 'b', 'c']
 

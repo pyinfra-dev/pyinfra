@@ -11,7 +11,7 @@ import pytest
 @pytest.mark.docker
 def test_int_docker_install_package_ubuntu(helpers):
     helpers.run(
-        'pyinfra @docker/ubuntu:18.04 apt.packages iftop sudo=true update=true',
+        'pyinfra @docker/ubuntu:18.04 apt.packages iftop update=true',
         expected_lines=['docker build complete'],
     )
 

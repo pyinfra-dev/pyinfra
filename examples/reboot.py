@@ -1,7 +1,5 @@
 from pyinfra.operations import init, server
 
-SUDO = True
-
 
 init.systemd(
     name='Disable ufw',

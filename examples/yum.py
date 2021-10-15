@@ -2,7 +2,6 @@ from pyinfra import host
 from pyinfra.facts.server import LinuxDistribution, LinuxName
 from pyinfra.operations import yum
 
-SUDO = True
 
 # Note: This "if" below is not really required.
 # For instance, if you run this deploy on an

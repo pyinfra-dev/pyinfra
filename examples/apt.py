@@ -2,7 +2,6 @@ from pyinfra import host
 from pyinfra.facts.server import LinuxDistribution, LinuxName
 from pyinfra.operations import apt
 
-SUDO = True
 
 code_name = host.get_fact(LinuxDistribution)['release_meta'].get('CODENAME')
 

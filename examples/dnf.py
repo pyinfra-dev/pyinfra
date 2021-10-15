@@ -3,8 +3,6 @@ from pyinfra.facts.rpm import RpmPackages
 from pyinfra.facts.server import LinuxDistribution, LinuxName
 from pyinfra.operations import dnf
 
-SUDO = True
-
 # Note: This "if" below is not really required.
 # For instance, if you run this deploy on an
 # Ubuntu instance (which does not use dnf)

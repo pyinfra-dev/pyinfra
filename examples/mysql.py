@@ -2,8 +2,6 @@ from pyinfra import host, state
 from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apt, files, mysql, python
 
-SUDO = True
-
 
 if host.get_fact(LinuxName) != 'Debian':
     # Raises an exception mid-deploy

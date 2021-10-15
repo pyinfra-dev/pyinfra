@@ -1,6 +1,5 @@
 from pyinfra.operations import apt, npm
 
-SUDO = True
 
 apt.packages(
     name='Install node',

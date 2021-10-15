@@ -2,6 +2,8 @@
 
 This directory contains examples demonstrating how pyinfra could be used.
 
+Note: many of these require running as a privileged user or by passing `--sudo`.
+
 Be sure to check out:
 
 [DigitalOcean](digitalocean/README.md)

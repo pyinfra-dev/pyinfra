@@ -2,7 +2,6 @@ from pyinfra import host
 from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apk
 
-SUDO = True
 
 if host.get_fact(LinuxName) == 'Alpine':
 
