@@ -1,3 +1,10 @@
+# v1.4.17
+
++ Fix excluding multiple directories in `files.sync` operation (@gchazot)
++ Cleanup filesystem mocking in operation tests (@gchazot)
++ Fix bug in command generation when config sudo user is set
++ Stop removing sudo/su arguments in the Docker connector
+
 # v1.4.16
 
 + Fix loading of system SSH host keys
