@@ -99,12 +99,6 @@ def run_shell_command(
 ):
     container_id = host.host_data['docker_container_id']
 
-    # Don't sudo/su in Docker - is this the right thing to do? Makes deploys that
-    # target SSH systems work w/Docker out of the box (ie most docker commands
-    # are run as root).
-    for key in ('sudo', 'su_user', 'use_sudo_password'):
-        command_kwargs.pop(key, None)
-
     command = make_unix_command(command, state=state, **command_kwargs)
     command = QuoteString(command)
 
