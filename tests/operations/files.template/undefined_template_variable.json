@@ -5,9 +5,12 @@
         "group": "testgroup",
         "mode": 644
     },
-    "files": [
-        ["brokenfile.txt.j2", "{{ something_does_not_exist }}"]
-    ],
+    "local_files": {
+        "files": {
+            "brokenfile.txt.j2": "{{ something_does_not_exist }}"
+        },
+        "dirs": {}
+    },
     "exception": {
         "name": "OperationError",
         "message": "Error in template: /brokenfile.txt.j2 (L1): 'something_does_not_exist' is undefined\n...\n{{\nsomething_does_not_exist\n..."

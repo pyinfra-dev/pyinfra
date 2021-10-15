@@ -1,6 +1,11 @@
 {
     "args": ["somefile.txt", "/home/some file.txt"],
-    "files": ["somefile.txt"],
+    "local_files": {
+        "files": {
+            "somefile.txt": null
+        },
+        "dirs": {}
+    },
     "facts": {
         "files.File": {
             "path=/home/some\\ file.txt": null

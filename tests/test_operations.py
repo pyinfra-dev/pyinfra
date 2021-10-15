@@ -121,7 +121,7 @@ def make_operation_tests(arg):
             kwargs['state'] = self.state
             kwargs['host'] = host
 
-            with patch_files(test_data.get('files', []), test_data.get('directories', [])):
+            with patch_files(test_data.get('local_files', {})):
                 try:
                     output_commands = unroll_generators(op._pyinfra_op(
                         *test_data.get('args', []),

@@ -5,7 +5,12 @@
         "group": "another-testgroup",
         "mode": 644
     },
-    "files": ["some file.txt"],
+    "local_files": {
+        "files": {
+            "some file.txt": null
+        },
+        "dirs": {}
+    },
     "facts": {
         "files.File": {
             "path=/home/some file.txt": {

@@ -1,8 +1,11 @@
 {
     "args": ["somescript.sh"],
-    "files": [
-        "somescript.sh"
-    ],
+    "local_files": {
+        "files": {
+            "somescript.sh": null
+        },
+        "dirs": {}
+    },
     "facts": {
         "files.File": {
             "path=_tempfile_": null

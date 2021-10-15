@@ -5,9 +5,12 @@
         "group": "testgroup",
         "mode": 644
     },
-    "files": [
-        ["brokenfile.txt.j2", "{% forr something in something %}{% endfor %}"]
-    ],
+    "local_files": {
+        "files": {
+            "brokenfile.txt.j2": "{% forr something in something %}{% endfor %}"
+        },
+        "dirs": {}
+    },
     "exception": {
         "name": "OperationError",
         "message": "Error in template: /brokenfile.txt.j2 (L1): Encountered unknown tag 'forr'.\n...\n{%\nforr\n..."

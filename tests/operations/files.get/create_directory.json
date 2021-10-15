@@ -9,7 +9,7 @@
         }
     },
     "directories": {
-        "/somedir/": {}
+        "/somedir": {}
     },
     "commands": [
         ["download", "/home/somefile.txt", "/somedir/somefile.txt"]

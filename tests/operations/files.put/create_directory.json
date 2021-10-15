@@ -5,7 +5,12 @@
         "group": "testgroup",
         "create_remote_dir": true
     },
-    "files": ["somefile.txt"],
+    "local_files": {
+        "files": {
+            "somefile.txt": null
+        },
+        "dirs": {}
+    },
     "facts": {
         "files.File": {
             "path=/home/somefile.txt": null
