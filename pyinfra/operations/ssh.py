@@ -47,19 +47,29 @@ def keyscan(hostname, force=False, port=22, state=None, host=None):
         pattern=hostname,
     )
 
+    did_keyscan = False
     keyscan_command = 'ssh-keyscan -p {0} {1} >> {2}/.ssh/known_hosts'.format(
         port, hostname, homedir,
     )
 
     if not hostname_present:
         yield keyscan_command
+        did_keyscan = True
 
     elif force:
         yield 'ssh-keygen -R {0}'.format(hostname)
         yield keyscan_command
+        did_keyscan = True
 
     else:
         host.noop('host key for {0} already exists'.format(hostname))
+
+    if did_keyscan:
+        host.create_fact(
+            FindInFile,
+            kwargs={'path': '{0}/.ssh/known_hosts'.format(homedir), 'pattern': hostname},
+            data=['{0} unknown unknown'.format(hostname)],
+        )
 
 
 def _user_or_ssh_user(user, ssh_user):
