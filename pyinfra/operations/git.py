@@ -117,7 +117,8 @@ def repo(
 
     # Store git commands for directory prefix
     git_commands = []
-    is_repo = host.get_fact(Directory, path=unix_path_join(dest, '.git'))
+    git_dir = unix_path_join(dest, '.git')
+    is_repo = host.get_fact(Directory, path=git_dir)
 
     # Cloning new repo?
     if not is_repo:
@@ -126,12 +127,20 @@ def repo(
         else:
             git_commands.append('clone {0} .'.format(src))
 
+        host.create_fact(GitBranch, kwargs={'repo': dest}, data=branch)
+        host.create_fact(
+            Directory,
+            kwargs={'path': git_dir},
+            data={'user': user, 'group': group},
+        )
+
     # Ensuring existing repo
     else:
         current_branch = host.get_fact(GitBranch, repo=dest)
         if current_branch != branch:
             git_commands.append('fetch')  # fetch to ensure we have the branch locally
             git_commands.append('checkout {0}'.format(branch))
+            host.create_fact(GitBranch, kwargs={'repo': dest}, data=branch)
 
         if pull:
             if rebase:
@@ -155,8 +164,8 @@ def repo(
     for cmd in git_commands:
         yield cmd
 
-    # Apply any user or group
-    if user or group:
+    # Apply any user or group if we did anything
+    if git_commands and (user or group):
         yield chown(dest, user, group, recursive=True)
 
 
