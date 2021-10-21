@@ -12,7 +12,7 @@ from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
 from . import ssh
-from .util import make_unix_command
+from .util import make_unix_command_for_host
 
 
 def remote_remove(state, host, filename, print_output=False, print_input=False):
@@ -115,7 +115,7 @@ def run_shell_command(
     for key in ('sudo', 'su_user'):
         command_kwargs.pop(key, None)
 
-    command = make_unix_command(command, state=state, **command_kwargs)
+    command = make_unix_command_for_host(state, host, command, **command_kwargs)
     command = QuoteString(command)
 
     docker_flags = '-it' if get_pty else '-i'

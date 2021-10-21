@@ -210,6 +210,29 @@ def _warn_invalid_auth_args(args, requires_key, invalid_keys):
             ).format(key, requires_key))
 
 
+def make_unix_command_for_host(state, host, *command_args, **command_kwargs):
+    if not command_kwargs.get('doas') and not state.config.DOAS:
+        _warn_invalid_auth_args(command_kwargs, 'doas', ('doas_user',))
+
+    # If both sudo arg and config sudo are false, warn if any of the other sudo
+    # arguments are present as they will be ignored.
+    if not command_kwargs.get('sudo') and not state.config.SUDO:
+        _warn_invalid_auth_args(
+            command_kwargs,
+            'sudo',
+            ('use_sudo_password', 'use_sudo_login', 'preserve_sudo_env', 'sudo_user'),
+        )
+
+    if not command_kwargs.get('su_user') and not state.config.SU_USER:
+        _warn_invalid_auth_args(
+            command_kwargs,
+            'su_user',
+            ('use_su_login', 'preserve_su_env', 'su_shell'),
+        )
+
+    return make_unix_command(*command_args, **command_kwargs)
+
+
 def make_unix_command(
     command,
     env=None,
@@ -229,8 +252,6 @@ def make_unix_command(
     # Doas config
     doas=False,
     doas_user=None,
-    # Optional state object, used to decide if we print invalid auth arg warnings
-    state=None,
 ):
     '''
     Builds a shell command with various kwargs.
@@ -262,12 +283,6 @@ def make_unix_command(
 
         if doas_user:
             command_bits.extend(['-u', doas_user])
-    elif state is None or not state.config.DOAS:
-        _warn_invalid_auth_args(
-            locals(),
-            'doas',
-            ('doas_user',),
-        )
 
     if use_sudo_password:
         askpass_filename, sudo_password = use_sudo_password
@@ -294,15 +309,6 @@ def make_unix_command(
         if sudo_user:
             command_bits.extend(('-u', sudo_user))
 
-    # If both sudo arg and config sudo are false, warn if any of the other sudo
-    # arguments are present as they will be ignored.
-    elif state is None or not state.config.SUDO:
-        _warn_invalid_auth_args(
-            locals(),
-            'sudo',
-            ('use_sudo_password', 'use_sudo_login', 'preserve_sudo_env', 'sudo_user'),
-        )
-
     if su_user:
         command_bits.append('su')
 
@@ -323,15 +329,6 @@ def make_unix_command(
     else:
         # Otherwise simply use thee shell directly
         command_bits.extend([shell_executable, '-c', command])
-
-        # If both su_user arg and config su_user are false, warn if any of the other su
-        # arguments are present as they will be ignored.
-        if state is None or not state.config.SU_USER:
-            _warn_invalid_auth_args(
-                locals(),
-                'su_user',
-                ('use_su_login', 'preserve_su_env', 'su_shell'),
-            )
 
     return StringCommand(*command_bits)
 

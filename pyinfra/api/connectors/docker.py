@@ -13,7 +13,7 @@ from pyinfra.api.util import get_file_io
 from pyinfra.progress import progress_spinner
 
 from .local import run_shell_command as run_local_shell_command
-from .util import make_unix_command
+from .util import make_unix_command_for_host
 
 
 def make_names_data(image=None):
@@ -99,7 +99,7 @@ def run_shell_command(
 ):
     container_id = host.host_data['docker_container_id']
 
-    command = make_unix_command(command, state=state, **command_kwargs)
+    command = make_unix_command_for_host(state, host, command, **command_kwargs)
     command = QuoteString(command)
 
     docker_flags = '-it' if get_pty else '-i'

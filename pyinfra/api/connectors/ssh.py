@@ -34,7 +34,7 @@ from .sshuserclient import SSHClient
 from .util import (
     execute_command_with_sudo_retry,
     get_sudo_password,
-    make_unix_command,
+    make_unix_command_for_host,
     read_buffers_into_queue,
     run_local_process,
     split_combined_output,
@@ -288,7 +288,7 @@ def run_shell_command(
         )
 
     def execute_command():
-        unix_command = make_unix_command(command, state=state, **command_kwargs)
+        unix_command = make_unix_command_for_host(state, host, command, **command_kwargs)
         actual_command = unix_command.get_raw_value()
 
         logger.debug('Running command on {0}: (pty={1}) {2}'.format(
