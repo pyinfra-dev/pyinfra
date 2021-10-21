@@ -28,7 +28,7 @@ INSTALL_REQUIRES = (
     'setuptools',
     'configparser',
     'pywinrm',
-    'distro==1.5.0',
+    'distro>1.5,<2',
 )
 
 ANSIBLE_REQUIRES = (  # extras for parsing Ansible inventory
