@@ -160,7 +160,12 @@ def make_operation_tests(arg):
                                     'Operation not idempotent, second output commands: {0}'
                                 ).format(second_output_commands))
                         else:
-                            if not test_data.get('disable_itempotent_warning_reason'):
+                            if not second_output_commands:
+                                raise Exception((
+                                    'Operation tests as idempotent but test '
+                                    'says it is not: {0}'
+                                ).format(op_test_name))
+                            if not test_data.get('disable_idempotent_warning_reason'):
                                 warnings.warn((
                                     'This operation should be idempotent, but the test has disabled'
                                     ' this check without reason: {0}'
