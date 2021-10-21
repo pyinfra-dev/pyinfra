@@ -176,6 +176,8 @@ def _get_sudo_password(host, use_sudo_password):
             sudo_password = getpass('{0}sudo password: '.format(host.print_prefix))
             host.connector_data['sudo_password'] = sudo_password
         sudo_password = sudo_password
+    elif callable(use_sudo_password):
+        sudo_password = use_sudo_password()
     else:
         sudo_password = use_sudo_password
 
