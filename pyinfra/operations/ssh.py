@@ -9,6 +9,7 @@ from six.moves import shlex_quote
 from pyinfra import logger
 from pyinfra.api import operation, OperationError
 from pyinfra.facts.files import File, FindInFile
+from pyinfra.facts.server import Home
 
 from . import files
 
@@ -31,8 +32,10 @@ def keyscan(hostname, force=False, port=22, state=None, host=None):
         )
     '''
 
+    homedir = host.get_fact(Home)
+
     yield files.directory(
-        '~/.ssh',
+        '{0}/.ssh'.format(homedir),
         mode=700,
         state=state,
         host=host,
@@ -40,12 +43,12 @@ def keyscan(hostname, force=False, port=22, state=None, host=None):
 
     hostname_present = host.get_fact(
         FindInFile,
-        path='~/.ssh/known_hosts',
+        path='{0}/.ssh/known_hosts'.format(homedir),
         pattern=hostname,
     )
 
-    keyscan_command = 'ssh-keyscan -p {0} {1} >> ~/.ssh/known_hosts'.format(
-        port, hostname,
+    keyscan_command = 'ssh-keyscan -p {0} {1} >> {2}/.ssh/known_hosts'.format(
+        port, hostname, homedir,
     )
 
     if not hostname_present:
