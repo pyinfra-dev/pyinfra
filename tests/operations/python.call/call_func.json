@@ -7,5 +7,5 @@
         ["__func__", ["arg1", "arg2"], {"hello": "world"}]
     ],
     "idempotent": false,
-    "disable_itempotent_warning_reason": "python callbacks are always executed"
+    "disable_idempotent_warning_reason": "python callbacks are always executed"
 }

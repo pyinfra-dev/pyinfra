@@ -10,5 +10,5 @@
         "pkgin -y install curl"
     ],
     "idempotent": false,
-    "disable_itempotent_warning_reason": "package upgrades are always executed"
+    "disable_idempotent_warning_reason": "package upgrades are always executed"
 }

@@ -7,5 +7,5 @@
         "pip install -r requirements.txt"
     ],
     "idempotent": false,
-    "disable_itempotent_warning_reason": "pip package requirements are always executed"
+    "disable_idempotent_warning_reason": "pip package requirements are always executed"
 }

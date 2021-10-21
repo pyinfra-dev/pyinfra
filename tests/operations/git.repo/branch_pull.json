@@ -23,5 +23,5 @@
         "cd /home/myrepo && git pull"
     ],
     "idempotent": false,
-    "disable_itempotent_warning_reason": "git branch pull always executed"
+    "disable_idempotent_warning_reason": "git branch pull always executed"
 }

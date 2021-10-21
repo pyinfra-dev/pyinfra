@@ -12,5 +12,5 @@
         "scp -P 22 remote-host.net:remote_filename local_filename"
     ],
     "idempotent": false,
-    "disable_itempotent_warning_reason": "forced downloads are always executed"
+    "disable_idempotent_warning_reason": "forced downloads are always executed"
 }

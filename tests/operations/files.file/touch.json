@@ -14,5 +14,5 @@
         "touch testfile"
     ],
     "idempotent": false,
-    "disable_itempotent_warning_reason": "touch operations are always executed"
+    "disable_idempotent_warning_reason": "touch operations are always executed"
 }

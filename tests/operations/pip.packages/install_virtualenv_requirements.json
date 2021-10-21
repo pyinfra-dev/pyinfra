@@ -12,5 +12,5 @@
         "testdir/bin/pip install -r requirements.pip"
     ],
     "idempotent": false,
-    "disable_itempotent_warning_reason": "pip package requirements are always executed"
+    "disable_idempotent_warning_reason": "pip package requirements are always executed"
 }
