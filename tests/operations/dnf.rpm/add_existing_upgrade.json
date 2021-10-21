@@ -11,6 +11,5 @@
             }
         }
     },
-    "commands": ["rpm -i something.rpm"],
-    "idempotent": false
+    "commands": ["rpm -i something.rpm"]
 }

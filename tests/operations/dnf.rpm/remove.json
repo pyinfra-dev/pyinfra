@@ -16,6 +16,5 @@
     },
     "commands": [
         "dnf remove -y something"
-    ],
-    "idempotent": false
+    ]
 }

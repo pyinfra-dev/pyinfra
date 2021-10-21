@@ -16,5 +16,9 @@
         "curl -sSLf https://something.rpm -o _tempfile_.rpm",
         "rpm -q `rpm -qp _tempfile_.rpm` 2> /dev/null || rpm -i _tempfile_.rpm"
     ],
-    "idempotent": false
+    "second_output_commands": [
+        "rpm -q `rpm -qp _tempfile_.rpm` 2> /dev/null || rpm -i _tempfile_.rpm"
+    ],
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "packages that require downloads cannot be checked for presence during fact gathering"
 }

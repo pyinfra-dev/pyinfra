@@ -5,13 +5,14 @@
         "ssh_keyscan": true
     },
     "facts": {
+        "server.Home": "/home/pyinfra",
         "files.Directory": {
-            "path=~/.ssh": {
+            "path=/home/pyinfra/.ssh": {
                 "mode": 700
             }
         },
         "files.FindInFile": {
-            "path=~/.ssh/known_hosts, pattern=remote-host.net": [true]
+            "path=/home/pyinfra/.ssh/known_hosts, pattern=remote-host.net": [true]
         }
     },
     "commands": [

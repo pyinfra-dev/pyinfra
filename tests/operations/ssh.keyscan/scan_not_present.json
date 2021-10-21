@@ -1,17 +1,17 @@
 {
     "args": ["remote-host.net"],
     "facts": {
+        "server.Home": "/home/pyinfra",
         "files.Directory": {
-            "path=~/.ssh": {
+            "path=/home/pyinfra/.ssh": {
                 "mode": 700
             }
         },
         "files.FindInFile": {
-            "path=~/.ssh/known_hosts, pattern=remote-host.net": []
+            "path=/home/pyinfra/.ssh/known_hosts, pattern=remote-host.net": []
         }
     },
     "commands": [
-        "ssh-keyscan -p 22 remote-host.net >> ~/.ssh/known_hosts"
-    ],
-    "idempotent": false
+        "ssh-keyscan -p 22 remote-host.net >> /home/pyinfra/.ssh/known_hosts"
+    ]
 }

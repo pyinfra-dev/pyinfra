@@ -10,6 +10,5 @@
             }
         }
     },
-    "commands": ["rm -f /etc/yum.repos.d/somerepo.repo"],
-    "idempotent": false
+    "commands": ["rm -f /etc/yum.repos.d/somerepo.repo"]
 }

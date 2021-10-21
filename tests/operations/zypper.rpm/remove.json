@@ -16,6 +16,5 @@
     },
     "commands": [
         "zypper --non-interactive remove -y something"
-    ],
-    "idempotent": false
+    ]
 }

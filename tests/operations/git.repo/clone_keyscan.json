@@ -2,13 +2,15 @@
     "args": ["git@github.com:Fizzadar/pyinfra", "/home/myrepo"],
     "kwargs": {
         "branch": "mybranch",
-        "ssh_keyscan": true
+        "ssh_keyscan": true,
+        "pull": false
     },
     "facts": {
+        "server.Home": "/home/pyinfra",
         "files.Directory": {
             "path=/home/myrepo": {},
             "path=/home/myrepo/.git": null,
-            "path=~/.ssh": {
+            "path=/home/pyinfra/.ssh": {
                 "mode": 700
             }
         },
@@ -19,8 +21,7 @@
         }
     },
     "commands": [
-        "ssh-keyscan -p 22 github.com >> ~/.ssh/known_hosts",
+        "ssh-keyscan -p 22 github.com >> /home/pyinfra/.ssh/known_hosts",
         "cd /home/myrepo && git clone git@github.com:Fizzadar/pyinfra --branch mybranch ."
-    ],
-    "idempotent": false
+    ]
 }

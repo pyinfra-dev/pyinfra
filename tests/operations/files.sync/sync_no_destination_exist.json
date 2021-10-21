@@ -50,6 +50,5 @@
             "/home/somedir/underthat/another-file.txt"
         ],
         "chmod 644 /home/somedir/underthat/another-file.txt"
-    ],
-    "idempotent": false
+    ]
 }

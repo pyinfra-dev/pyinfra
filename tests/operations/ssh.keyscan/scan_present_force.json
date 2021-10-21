@@ -4,18 +4,20 @@
         "force": true
     },
     "facts": {
+        "server.Home": "/home/pyinfra",
         "files.Directory": {
-            "path=~/.ssh": {
+            "path=/home/pyinfra/.ssh": {
                 "mode": 700
             }
         },
         "files.FindInFile": {
-            "path=~/.ssh/known_hosts, pattern=remote-host.net": [true]
+            "path=/home/pyinfra/.ssh/known_hosts, pattern=remote-host.net": [true]
         }
     },
     "commands": [
         "ssh-keygen -R remote-host.net",
-        "ssh-keyscan -p 22 remote-host.net >> ~/.ssh/known_hosts"
+        "ssh-keyscan -p 22 remote-host.net >> /home/pyinfra/.ssh/known_hosts"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "forced keyscans are always executed"
 }

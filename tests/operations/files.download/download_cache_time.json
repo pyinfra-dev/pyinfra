@@ -15,5 +15,6 @@
             "command=curl": "yes"
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "file /home/myfile has already been downloaded"
 }

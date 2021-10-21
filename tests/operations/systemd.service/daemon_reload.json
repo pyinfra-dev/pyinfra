@@ -11,5 +11,6 @@
     "commands": [
         "systemctl daemon-reload"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_itempotent_warning_reason": "daemon reloads are always triggered"
 }

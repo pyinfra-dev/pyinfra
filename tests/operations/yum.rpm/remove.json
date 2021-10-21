@@ -16,6 +16,5 @@
     },
     "commands": [
         "yum remove -y something"
-    ],
-    "idempotent": false
+    ]
 }
