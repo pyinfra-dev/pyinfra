@@ -57,10 +57,7 @@ def execute_command_with_sudo_retry(host, command_kwargs, execute_command):
     if return_code != 0 and combined_output:
         last_line = combined_output[-1][1]
         if last_line == 'sudo: a password is required':
-            command_kwargs['use_sudo_password'] = get_sudo_password(
-                host,
-                use_sudo_password=True,  # ask for the password
-            )
+            command_kwargs['use_sudo_password'] = True  # ask for the password
             return_code, combined_output = execute_command()
 
     return return_code, combined_output
@@ -166,7 +163,7 @@ def write_stdin(stdin, buffer):
     buffer.close()
 
 
-def get_sudo_password(host, use_sudo_password):
+def _get_sudo_password(host, use_sudo_password):
     sudo_askpass_uploaded = host.connector_data.get('sudo_askpass_uploaded', False)
     if not sudo_askpass_uploaded:
         host.put_file(get_sudo_askpass_exe(), SUDO_ASKPASS_EXE_FILENAME)
@@ -182,7 +179,7 @@ def get_sudo_password(host, use_sudo_password):
     else:
         sudo_password = use_sudo_password
 
-    return (SUDO_ASKPASS_EXE_FILENAME, shlex_quote(sudo_password))
+    return shlex_quote(sudo_password)
 
 
 def remove_any_sudo_askpass_file(host):
@@ -230,6 +227,10 @@ def make_unix_command_for_host(state, host, *command_args, **command_kwargs):
             ('use_su_login', 'preserve_su_env', 'su_shell'),
         )
 
+    use_sudo_password = command_kwargs.pop('use_sudo_password', None)
+    if use_sudo_password:
+        command_kwargs['sudo_password'] = _get_sudo_password(host, use_sudo_password)
+
     return make_unix_command(*command_args, **command_kwargs)
 
 
@@ -247,7 +248,7 @@ def make_unix_command(
     sudo=False,
     sudo_user=None,
     use_sudo_login=False,
-    use_sudo_password=False,
+    sudo_password=False,
     preserve_sudo_env=False,
     # Doas config
     doas=False,
@@ -284,18 +285,17 @@ def make_unix_command(
         if doas_user:
             command_bits.extend(['-u', doas_user])
 
-    if use_sudo_password:
-        askpass_filename, sudo_password = use_sudo_password
+    if sudo_password:
         command_bits.extend([
             'env',
-            'SUDO_ASKPASS={0}'.format(askpass_filename),
+            'SUDO_ASKPASS={0}'.format(SUDO_ASKPASS_EXE_FILENAME),
             MaskString('{0}={1}'.format(SUDO_ASKPASS_ENV_VAR, sudo_password)),
         ])
 
     if sudo:
         command_bits.extend(['sudo', '-H'])
 
-        if use_sudo_password:
+        if sudo_password:
             command_bits.extend(['-A', '-k'])  # use askpass, disable cache
         else:
             command_bits.append('-n')  # disable prompt/interactivity

@@ -12,7 +12,7 @@ from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
 from .local import run_shell_command as run_local_shell_command
-from .util import get_sudo_password, make_unix_command_for_host
+from .util import make_unix_command_for_host
 
 
 @memoize
@@ -57,16 +57,8 @@ def run_shell_command(
     print_output=False,
     print_input=False,
     return_combined_output=False,
-    use_sudo_password=False,
     **command_kwargs
 ):
-
-    if use_sudo_password:
-        command_kwargs['use_sudo_password'] = get_sudo_password(
-            host,
-            use_sudo_password,
-        )
-
     chroot_directory = host.host_data['chroot_directory']
 
     command = make_unix_command_for_host(state, host, command, **command_kwargs)

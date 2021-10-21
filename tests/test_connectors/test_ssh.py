@@ -569,13 +569,13 @@ class TestSSHConnector(TestCase):
     #
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.util.get_sudo_password')
+    @patch('pyinfra.api.connectors.util._get_sudo_password')
     def test_run_shell_command_retry_for_sudo_password(
         self,
         fake_get_sudo_password,
         fake_ssh_client,
     ):
-        fake_get_sudo_password.return_value = ['FILENAME', 'PASSWORD']
+        fake_get_sudo_password.return_value = 'PASSWORD'
 
         fake_ssh = MagicMock()
         fake_stdin = MagicMock()
@@ -599,7 +599,7 @@ class TestSSHConnector(TestCase):
         assert out[0] is True
         assert fake_get_sudo_password.called
         fake_ssh.exec_command.assert_called_with(
-            "env SUDO_ASKPASS=FILENAME PYINFRA_SUDO_PASSWORD=PASSWORD sh -c 'echo hi'",
+            "env SUDO_ASKPASS=pyinfra-sudo-askpass PYINFRA_SUDO_PASSWORD=PASSWORD sh -c 'echo hi'",
             get_pty=False,
         )
 

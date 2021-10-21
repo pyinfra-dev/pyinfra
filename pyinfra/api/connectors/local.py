@@ -14,7 +14,6 @@ from pyinfra.api.util import get_file_io
 
 from .util import (
     execute_command_with_sudo_retry,
-    get_sudo_password,
     make_unix_command_for_host,
     run_local_process,
     split_combined_output,
@@ -43,7 +42,6 @@ def run_shell_command(
     print_output=False,
     print_input=False,
     return_combined_output=False,
-    use_sudo_password=False,
     **command_kwargs
 ):
     '''
@@ -62,11 +60,6 @@ def run_shell_command(
         tuple: (exit_code, stdout, stderr)
         stdout and stderr are both lists of strings from each buffer.
     '''
-
-    if use_sudo_password:
-        command_kwargs['use_sudo_password'] = get_sudo_password(
-            host, use_sudo_password,
-        )
 
     def execute_command():
         unix_command = make_unix_command_for_host(state, host, command, **command_kwargs)
