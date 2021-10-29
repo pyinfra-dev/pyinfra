@@ -53,7 +53,7 @@ class DockerNetworks(DockerFactBase):
 
 class DockerSingleMixin(DockerFactBase):
     def command(self, object_id):
-        return 'docker {0} inspect {1}'.format(
+        return 'docker {0} inspect {1} 2>&- || true'.format(
             self.docker_type, object_id,
         )
 
