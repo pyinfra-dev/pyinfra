@@ -1,6 +1,6 @@
 {
     "arg": "myid",
-    "command": "docker container inspect myid",
+    "command": "docker container inspect myid 2>&- || true",
     "requires_command": "docker",
     "output": [
         "{\"hello\": \"world\"}"
