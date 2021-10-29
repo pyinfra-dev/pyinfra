@@ -2,7 +2,7 @@
     "args": ["somefile", "match_line"],
     "facts": {
         "files.FindInFile": {
-            "path=somefile, pattern=^.*match_line.*$": []
+            "path=somefile, pattern=^.*match_line.*$, interpolate_variables=False": []
         }
     },
     "commands": [

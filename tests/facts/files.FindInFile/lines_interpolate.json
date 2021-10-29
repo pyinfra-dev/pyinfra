@@ -1,0 +1,12 @@
+{
+    "arg": ["/home/pyinfra/mylink", "$USER", true],
+    "command": "grep -e \"$USER\" /home/pyinfra/mylink 2> /dev/null || ( find /home/pyinfra/mylink -type f > /dev/null && echo __pyinfra_exists_/home/pyinfra/mylink || true )",
+    "output": [
+        "thing test thing",
+        "another test"
+    ],
+    "fact": [
+        "thing test thing",
+        "another test"
+    ]
+}

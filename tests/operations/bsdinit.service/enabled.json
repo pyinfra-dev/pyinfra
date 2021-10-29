@@ -9,8 +9,8 @@
             "nginx": true
         },
         "files.FindInFile": {
-            "path=/etc/rc.conf.local, pattern=^nginx_enable=.*$": [],
-            "path=/etc/rc.conf.local, pattern=^.*nginx_enable=\"YES\".*$": []
+            "path=/etc/rc.conf.local, pattern=^nginx_enable=.*$, interpolate_variables=False": [],
+            "path=/etc/rc.conf.local, pattern=^.*nginx_enable=\"YES\".*$, interpolate_variables=False": []
         }
     },
     "commands": [

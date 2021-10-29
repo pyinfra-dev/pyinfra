@@ -267,7 +267,12 @@ def line(
     if assume_present:
         present_lines = [line]
     else:
-        present_lines = host.get_fact(FindInFile, path=path, pattern=match_line)
+        present_lines = host.get_fact(
+            FindInFile,
+            path=path,
+            pattern=match_line,
+            interpolate_variables=interpolate_variables,
+        )
 
     # If replace present, use that over the matching line
     if replace:
@@ -326,6 +331,7 @@ def line(
                     FindInFile,
                     path=path,
                     pattern=ensure_whole_line_match(replace),
+                    interpolate_variables=interpolate_variables,
                 )
 
             if not present_lines:
@@ -385,7 +391,12 @@ def replace(
         )
     '''
 
-    existing_lines = host.get_fact(FindInFile, path=path, pattern=match)
+    existing_lines = host.get_fact(
+        FindInFile,
+        path=path,
+        pattern=match,
+        interpolate_variables=interpolate_variables,
+    )
 
     # Only do the replacement if the file does not exist (it may be created earlier)
     # or we have matching lines.

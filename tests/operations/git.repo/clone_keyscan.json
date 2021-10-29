@@ -13,7 +13,7 @@
             }
         },
         "files.FindInFile": {
-            "path=~/.ssh/known_hosts": {
+            "path=~/.ssh/known_hosts, interpolate_variables=False": {
                 "github.com": []
             }
         }

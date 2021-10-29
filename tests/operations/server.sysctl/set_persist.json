@@ -6,8 +6,8 @@
     "facts": {
         "server.Sysctl": {},
         "files.FindInFile": {
-            "path=/etc/sysctl.conf, pattern=^.*kern.max-files[[:space:]]*=[[:space:]]*2000.*$": [],
-            "path=/etc/sysctl.conf, pattern=^.*kern.max-files = 2000.*$": []
+            "path=/etc/sysctl.conf, pattern=^.*kern.max-files[[:space:]]*=[[:space:]]*2000.*$, interpolate_variables=False": [],
+            "path=/etc/sysctl.conf, pattern=^.*kern.max-files = 2000.*$, interpolate_variables=False": []
         }
     },
     "commands": [
