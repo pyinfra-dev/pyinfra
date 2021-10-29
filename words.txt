@@ -64,6 +64,7 @@ ctid
 ctrl
 ctx
 ctype
+curdir
 currentframe
 cygdrive
 cygwin
