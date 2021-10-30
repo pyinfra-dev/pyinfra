@@ -1,3 +1,12 @@
+# v1.4.18
+
++ Fix exception collecting `Docker.*` facts on objects that don't exist
++ Support variable interpolation in `files.FindInFile` fact
++ Add `debug-inventory` example to the help doc
++ Show a warning when a `--limit` option doesn't match any hosts
++ Warn only if SSH keys fail to load
++ Include actual error when we encounter authentication errors
+
 # v1.4.17
 
 + Fix excluding multiple directories in `files.sync` operation (@gchazot)
