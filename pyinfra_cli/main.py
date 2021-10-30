@@ -474,8 +474,10 @@ def _main(
                     if any(fnmatch(host.name, match) for match in limits)
                 ]
 
-            all_limit_hosts.extend(limit_hosts)
+            if not limit_hosts:
+                logger.warning('No host matches found for --limit pattern: {0}'.format(limiter))
 
+            all_limit_hosts.extend(limit_hosts)
         initial_limit = list(set(all_limit_hosts))
 
     # Initialise the state
