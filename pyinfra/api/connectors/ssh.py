@@ -218,7 +218,7 @@ def connect(state, host):
         client.connect(hostname, **kwargs)
         return client
 
-    except AuthenticationException:
+    except AuthenticationException as e:
         auth_kwargs = {}
 
         for key, value in kwargs.items():
@@ -234,7 +234,7 @@ def connect(state, host):
             for key, value in auth_kwargs.items()
         )
 
-        _raise_connect_error(host, 'Authentication error', auth_args)
+        _raise_connect_error(host, 'Authentication error ({0})'.format(auth_args), e)
 
     except SSHException as e:
         _raise_connect_error(host, 'SSH error', e)
