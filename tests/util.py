@@ -148,6 +148,11 @@ class FakeFacts(object):
         self.facts[key].pop(args[0], None)
 
 
+# TODO: remove after python2 removal, as only required because of different default ordering in 2/3
+def _sort_kwargs_str(string):
+    return ', '.join(sorted(string.split(', ')))
+
+
 class FakeHost(object):
     noop_description = None
 
@@ -170,10 +175,14 @@ class FakeHost(object):
         if fact is None:
             raise KeyError('Missing test fact data: {0}'.format(fact_key))
         if kwargs:
-            kwargs_str = get_kwargs_str(kwargs)
+            fact_ordered_keys = {
+                _sort_kwargs_str(key): value
+                for key, value in fact.items()
+            }
+            kwargs_str = _sort_kwargs_str(get_kwargs_str(kwargs))
             if kwargs_str not in fact:
                 logger.info('Possible missing fact key: {0}'.format(kwargs_str))
-            return fact.get(kwargs_str)
+            return fact_ordered_keys.get(kwargs_str)
         return fact
 
     def create_fact(self, fact_cls, data, kwargs):
