@@ -207,7 +207,14 @@ def connect(state, host):
         # Create new client & connect to the host
         client = SSHClient()
         client.set_missing_host_key_policy(WarningPolicy())
-        client.load_system_host_keys()
+
+        try:
+            client.load_system_host_keys()
+        # Unfortunately paramiko bails for any dodge line in known hosts
+        # See: https://github.com/Fizzadar/pyinfra/issues/683
+        except Exception as e:
+            logger.warning('Failed to load system host keys: {0}'.format(e))
+
         client.connect(hostname, **kwargs)
         return client
 
