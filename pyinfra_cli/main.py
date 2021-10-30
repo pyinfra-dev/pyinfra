@@ -205,13 +205,17 @@ def cli(*args, **kwargs):
     pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
 
     \b
-    # Execute an arbitrary command on the inventory
+    # Execute an arbitrary command against the inventory
     pyinfra INVENTORY exec -- echo "hello world"
 
     \b
-    # Run one or more facts on the inventory
+    # Run one or more facts against the inventory
     pyinfra INVENTORY fact server.LinuxName [server.Users]...
     pyinfra INVENTORY fact files.File path=/path/to/file...
+
+    \b
+    # Debug the inventory hosts and data
+    pyinfra INVENTORY debug-inventory
     '''
 
     try:
