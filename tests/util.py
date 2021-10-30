@@ -198,14 +198,20 @@ class FakeHost(object):
         except KeyError:
             fact_key = self._get_fact_key(fact_cls)
             fact = self.fact[fact_key] = {}
-        fact[get_kwargs_str(kwargs)] = data
+        fact[_sort_kwargs_str(get_kwargs_str(kwargs))] = data
 
     def delete_fact(self, fact_cls, kwargs):
         try:
             fact = self.get_fact(fact_cls)
         except KeyError:
             return
-        fact.pop(get_kwargs_str(kwargs), None)
+
+        ordered_kwargs = _sort_kwargs_str(get_kwargs_str(kwargs))
+        for key in fact.keys():
+            ordered_key = _sort_kwargs_str(key)
+            if ordered_key == ordered_kwargs:
+                fact.pop(key)
+                break
 
 
 class FakeFile(object):
