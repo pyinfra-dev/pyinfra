@@ -1,13 +1,13 @@
-from pyinfra import host
+from pyinfra import config, host
 from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apt, files, python, server
 
-SUDO = True
+config.SUDO = True
 
 
 def verify_vagrant(state, host):
     command = 'vagrant --version'
-    status, stdout, stderr = host.run_shell_command(state, command=command, sudo=SUDO)
+    status, stdout, stderr = host.run_shell_command(state, command=command, sudo=config.SUDO)
     assert status is True  # ensure the command executed OK
     if 'Vagrant ' not in str(stdout):
         raise Exception('`{}` did not work as expected.stdout:{} stderr:{}'.format(

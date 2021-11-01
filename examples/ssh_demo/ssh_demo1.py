@@ -1,7 +1,7 @@
-from pyinfra import host, inventory
+from pyinfra import config, host, inventory
 from pyinfra.operations import files, server
 
-SUDO = True
+config.SUDO = True
 
 
 # update the /etc/hosts file

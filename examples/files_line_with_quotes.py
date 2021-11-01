@@ -1,6 +1,7 @@
+from pyinfra import config
 from pyinfra.operations import files
 
-SUDO = True
+config.SUDO = True
 
 # Run: pyinfra @docker/ubuntu files_line_with_quotes.py
 

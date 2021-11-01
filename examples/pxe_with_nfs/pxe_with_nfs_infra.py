@@ -1,9 +1,9 @@
-from pyinfra import host
+from pyinfra import config, host
 from pyinfra.facts.files import File
 from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apt, files, init, server
 
-SUDO = True
+config.SUDO = True
 
 # If you change pxe_server value below then check/change Vagrantfile
 pxe_server = '192.168.0.240'

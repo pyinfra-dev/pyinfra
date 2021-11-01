@@ -1,8 +1,8 @@
-from pyinfra import host
+from pyinfra import config, host
 from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apt, files
 
-SUDO = True
+config.SUDO = True
 
 if host.get_fact(LinuxName) == 'Ubuntu':
 

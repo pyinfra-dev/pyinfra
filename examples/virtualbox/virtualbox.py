@@ -1,15 +1,15 @@
-from pyinfra import host
+from pyinfra import config, host
 from pyinfra.facts.server import LinuxDistribution, LinuxName, OsVersion
 from pyinfra.operations import apt, python, server
 
-SUDO = True
+config.SUDO = True
 
 virtualbox_version = '6.1'
 
 
 def verify_virtualbox_version(state, host, version):
     command = '/usr/bin/virtualbox --help'
-    status, stdout, stderr = host.run_shell_command(state, command=command, sudo=SUDO)
+    status, stdout, stderr = host.run_shell_command(state, command=command, sudo=config.SUDO)
     assert status is True  # ensure the command executed OK
     if version not in str(stdout):
         raise Exception('`{}` did not work as expected.stdout:{} stderr:{}'.format(

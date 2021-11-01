@@ -1,9 +1,9 @@
-from pyinfra import host, inventory
+from pyinfra import config, host, inventory
 from pyinfra.facts.hardware import Ipv4Addresses
 from pyinfra.facts.server import LinuxDistribution, LinuxName
 from pyinfra.operations import files, init, server, yum
 
-SUDO = True
+config.SUDO = True
 
 
 # update the /etc/hosts file

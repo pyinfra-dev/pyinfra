@@ -1,7 +1,7 @@
-from pyinfra import host
+from pyinfra import config, host
 from pyinfra.operations import server
 
-SUDO = True
+config.SUDO = True
 
 if host.name == '@vagrant/two':
 

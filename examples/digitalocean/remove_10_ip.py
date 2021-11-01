@@ -1,8 +1,8 @@
-from pyinfra import host
+from pyinfra import config, host
 from pyinfra.facts.hardware import Ipv4Addresses
 from pyinfra.operations import server
 
-SUDO = True
+config.SUDO = True
 
 ip = host.get_fact(Ipv4Addresses)['eth0']
 

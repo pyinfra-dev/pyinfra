@@ -1,6 +1,7 @@
+from pyinfra import config
 from pyinfra.operations import server
 
-SUDO = True
+config.SUDO = True
 
 # Various different outputs
 

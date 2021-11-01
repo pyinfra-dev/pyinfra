@@ -1,8 +1,8 @@
-from pyinfra import host, inventory
+from pyinfra import config, host, inventory
 from pyinfra.operations import files, puppet
 
-SUDO = True
-USE_SUDO_LOGIN = True
+config.SUDO = True
+config.USE_SUDO_LOGIN = True
 
 if host in inventory.get_group('master_servers'):
     files.template(

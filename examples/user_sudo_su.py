@@ -1,7 +1,8 @@
+from pyinfra import config
 from pyinfra.operations import files, server
 
-SUDO = True
-FAIL_PERCENT = 0
+config.SUDO = True
+config.FAIL_PERCENT = 0
 
 
 server.user(

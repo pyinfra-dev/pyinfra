@@ -1,4 +1,4 @@
-from pyinfra import host
+from pyinfra import config, host
 from pyinfra.facts.server import LinuxName, LsbRelease
 from pyinfra.operations import apt, init, python
 
@@ -9,14 +9,17 @@ from pyinfra.operations import apt, init, python
 # Please see https://github.com/Fizzadar/pyinfra-docker
 # for a more complete pyinfra docker installation.
 
-SUDO = True
+config.SUDO = True
 # If the remote system requires a password for sudo, un-comment the line below:
 # USE_SUDO_PASSWORD = True
 
 
 def check_docker_works(state, host):
     command = 'docker run hello-world'
-    status, stdout, stderr = host.run_shell_command(command=command, sudo=SUDO)
+    status, stdout, stderr = host.run_shell_command(
+        command=command,
+        sudo=config.SUDO,
+    )
     if not status or 'Hello from Docker!' not in stdout:
         raise Exception('`{}` did not work as expected'.format(command))
 
