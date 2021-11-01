@@ -124,7 +124,13 @@ def _print_support(ctx, param, value):
 @click.option(
     '--data',
     multiple=True,
-    help='Override data values, format key=value',
+    help='Override data values, format key=value.',
+)
+@click.option(
+    '--config',
+    'config_filename',
+    help='Specify config file to use (default: config.py).',
+    default='config.py',
 )
 # Auth args
 @click.option(
@@ -276,7 +282,7 @@ def _main(
     winrm_username, winrm_password, winrm_port,
     winrm_transport, shell_executable,
     sudo, sudo_user, use_sudo_password, su_user,
-    parallel, fail_percent, data,
+    parallel, fail_percent, data, config_filename,
     dry, limit, no_wait, serial, quiet,
     debug, debug_data, debug_facts, debug_operations,
     facts=None, print_operations=None, support=None,
@@ -324,7 +330,7 @@ def _main(
 
         if any((
             path.isdir(path.join(potential_deploy_dir, 'group_data')),
-            path.isfile(path.join(potential_deploy_dir, 'config.py')),
+            path.isfile(path.join(potential_deploy_dir, config_filename)),
         )):
             logger.debug('Setting directory to: {0}'.format(potential_deploy_dir))
             deploy_dir = potential_deploy_dir
@@ -360,7 +366,7 @@ def _main(
     pseudo_config.set(config)
 
     # Load up any config.py from the filesystem
-    config_filename = path.join(deploy_dir, 'config.py')
+    config_filename = path.join(deploy_dir, config_filename)
     if path.exists(config_filename):
         extract_file_config(config_filename, config)  # TODO: remove this
         exec_file(config_filename)
