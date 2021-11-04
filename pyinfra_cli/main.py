@@ -289,6 +289,9 @@ def _main(
     init_virtualenv()
 
     cwd = getcwd()
+    # Unconditionally adding cwd into sys.path
+    sys.path.append(cwd)
+
     deploy_dir = cwd
     potential_deploy_dirs = []
 
@@ -322,7 +325,8 @@ def _main(
         logger.debug('Deploy directory remains as cwd')
 
     # Make sure imported files (deploy.py/etc) behave as if imported from the cwd
-    sys.path.append(deploy_dir)
+    if not deploy_dir in sys.path:
+        sys.path.append(deploy_dir)
 
     # Create an empty/unitialised state object
     state = State()
