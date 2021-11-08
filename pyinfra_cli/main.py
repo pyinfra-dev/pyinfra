@@ -325,7 +325,7 @@ def _main(
         logger.debug('Deploy directory remains as cwd')
 
     # Make sure imported files (deploy.py/etc) behave as if imported from the cwd
-    if not deploy_dir in sys.path:
+    if deploy_dir not in sys.path:
         sys.path.append(deploy_dir)
 
     # Create an empty/unitialised state object
