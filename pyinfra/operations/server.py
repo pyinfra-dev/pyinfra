@@ -770,7 +770,7 @@ def group(group, present=True, system=False, gid=None, state=None, host=None):
 
         # Groups are often added by other operations (package installs), so check
         # for the group at runtime before adding.
-        yield "grep '{0}:' /etc/group || groupadd {1}".format(
+        yield "grep '^{0}:' /etc/group || groupadd {1}".format(
             group,
             ' '.join(args),
         )
@@ -883,7 +883,7 @@ def user(
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
-        yield "grep '{1}:' /etc/passwd || useradd {0} {1}".format(
+        yield "grep '^{1}:' /etc/passwd || useradd {0} {1}".format(
             ' '.join(args),
             user,
         )
