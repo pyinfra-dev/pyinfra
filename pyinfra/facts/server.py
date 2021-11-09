@@ -91,7 +91,9 @@ class Arch(FactBase):
     Returns the system architecture according to ``uname``.
     '''
 
-    command = 'uname -p'
+    # ``uname -p`` is not portable and returns ``unknown`` on Debian.
+    # ``uname -m`` works on most Linux and BSD systems.
+    command = 'uname -m'
 
 
 class Command(FactBase):
