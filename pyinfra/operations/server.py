@@ -936,7 +936,7 @@ def user(
     if ensure_home:
         yield files.directory(
             home,
-            user=user, group=user,
+            user=user, group=group or user,
             state=state, host=host,
         )
 
@@ -964,7 +964,7 @@ def user(
         yield files.directory(
             '{0}/.ssh'.format(home),
             user=user,
-            group=user,
+            group=group or user,
             mode=700,
             state=state,
             host=host,
@@ -983,7 +983,7 @@ def user(
                 src=keys_file,
                 dest=filename,
                 user=user,
-                group=user,
+                group=group or user,
                 mode=600,
                 state=state,
                 host=host,
@@ -994,7 +994,7 @@ def user(
             yield files.file(
                 path=filename,
                 user=user,
-                group=user,
+                group=group or user,
                 mode=600,
                 state=state,
                 host=host,

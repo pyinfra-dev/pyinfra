@@ -22,11 +22,11 @@
         "files.Directory": {
             "path=/home/someuser": {
                 "user": "someuser",
-                "group": "someuser"
+                "group": "somegroup"
             },
             "path=/home/someotheruser": {
                 "user": "someuser",
-                "group": "someuser"
+                "group": "somegroup"
             }
         }
     },
