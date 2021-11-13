@@ -1,3 +1,12 @@
+# v1.4.19
+
++ Use `uname -m` in `server.Arch` fact (@weakish)
++ Fix user check in `server.user` operation (@glassbeads)
++ Fix setting user primary group in `server.user` operation (@glassbeads)
++ Always add CWD to `sys.path` (@glassbeads)
++ Fix issues with regex parsing for `deb.DebPackage` & `deb.DebPackages` facts
++ Fix parsing apt repository lines with `[]` characters
+
 # v1.4.18
 
 + Fix exception collecting `Docker.*` facts on objects that don't exist
