@@ -13,6 +13,6 @@
         }]
     },
     "commands": [
-        "sed -i.a-timestamp 's/^.*deb http:\\/\\/archive.canonical.com\\/ubuntu hardy partner.*$//' /etc/apt/sources.list && rm -f /etc/apt/sources.list.a-timestamp"
+        "sed -i.a-timestamp 's/^.*deb http:\\/\\/archive\\.canonical\\.com\\/ubuntu hardy partner.*$//' /etc/apt/sources.list && rm -f /etc/apt/sources.list.a-timestamp"
     ]
 }
