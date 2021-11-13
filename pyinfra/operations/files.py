@@ -5,6 +5,7 @@ The files module handles filesystem state, file uploads and template generation.
 from __future__ import unicode_literals
 
 import posixpath
+import re
 import sys
 import traceback
 
@@ -181,6 +182,7 @@ def line(
     path, line,
     present=True, replace=None, flags=None, backup=False,
     interpolate_variables=False,
+    escape_regex_characters=False,
     state=None, host=None,
     assume_present=False,
 ):
@@ -195,6 +197,7 @@ def line(
     + backup: whether to backup the file (see below)
     + interpolate_variables: whether to interpolate variables in ``replace``
     + assume_present: whether to assume a matching line already exists in the file
+    + escape_regex_characters: whether to escape regex characters from the matching line
 
     Regex line matching:
         Unless line matches a line (starts with ^, ends $), pyinfra will wrap it such that
@@ -261,7 +264,12 @@ def line(
         )
     '''
 
-    match_line = ensure_whole_line_match(line)
+    match_line = line
+
+    if escape_regex_characters:
+        match_line = re.sub(r'([\.\\\+\*\?\[\^\]\$\(\)\{\}\-])', r'\\\1', match_line)
+
+    match_line = ensure_whole_line_match(match_line)
 
     # Is there a matching line in this file?
     if assume_present:
