@@ -349,5 +349,6 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 winrm_username=None, winrm_password=None, winrm_port=None, winrm_transport=None,
                 shell_executable=None, quiet=False, data=tuple(),
                 debug=False, debug_data=False, debug_facts=False, debug_operations=False,
+                config_filename='config.py',
             )
             assert e.args == (0,)
