@@ -4,10 +4,10 @@ Manage apt packages and repositories.
 
 from __future__ import unicode_literals
 
+import re
 from datetime import datetime, timedelta
 
 import six
-
 from six.moves.urllib.parse import urlparse
 
 from pyinfra.api import operation, OperationError
@@ -143,13 +143,19 @@ def repo(src, present=True, filename=None, state=None, host=None):
 
     # Doesn't exist and we want it
     if not is_present and present:
-        yield files.line(filename, src, state=state, host=host)
+        yield files.line(
+            path=filename,
+            line=re.escape(src),
+            state=state,
+            host=host,
+        )
         apt_sources.append(repo)
 
     # Exists and we don't want it
     elif is_present and not present:
         yield files.line(
-            filename, src,
+            path=filename,
+            line=re.escape(src),
             present=False,
             assume_present=True,
             state=state, host=host,
