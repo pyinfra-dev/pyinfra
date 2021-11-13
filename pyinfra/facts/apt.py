@@ -9,7 +9,7 @@ from .util import make_cat_files_command
 
 
 def parse_apt_repo(name):
-    regex = r'^(deb(?:-src)?)(?:\s+\[([a-zA-Z0-9=,\s]+)\])?\s+([^\s]+)\s+([a-z-]+)\s+([a-z-\s]*)$'
+    regex = r'^(deb(?:-src)?)(?:\s+\[([^\]]+)\])?\s+([^\s]+)\s+([a-z-]+)\s+([a-z-\s]*)$'
 
     matches = re.match(regex, name)
 
