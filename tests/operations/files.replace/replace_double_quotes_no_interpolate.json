@@ -5,7 +5,7 @@
     },
     "facts": {
         "files.FindInFile": {
-            "path=filename, pattern=\"single quote match\", interpolate_variables=False": ["\"single quote match\" rest of line"]
+            "interpolate_variables=False, path=filename, pattern=\"single quote match\"": ["\"single quote match\" rest of line"]
         }
     },
     "commands": [
