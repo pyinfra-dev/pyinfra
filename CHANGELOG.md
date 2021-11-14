@@ -1,4 +1,4 @@
-# v1.5.0.dev4
+# v1.5
 
 This release includes a huge number of improvements, major highlights:
 
@@ -39,6 +39,7 @@ Other bits:
 + Add `--data key=value` CLI flag
 + Propagate return value from `@deploy` decorator (@karlicoss)
 + Large expansion of tested idempotent operations
++ Loosen distro requirement
 
 
 # v1.4.19
