@@ -10,12 +10,11 @@ import six
 
 import pyinfra
 
-from pyinfra import logger, pseudo_host, pseudo_state
+from pyinfra import host, logger, pseudo_host, pseudo_state, state
 
 from .exceptions import PyinfraError
 from .host import Host
 from .operation_kwargs import pop_global_op_kwargs
-from .state import State
 from .util import get_call_location, get_caller_frameinfo, memoize
 
 
@@ -43,8 +42,6 @@ def add_deploy(state, deploy_func, *args, **kwargs):
             '`add_deploy` should not be called when pyinfra is executing in CLI mode! ({0})'
         ).format(get_call_location()))
 
-    kwargs['state'] = state
-
     hosts = kwargs.pop('host', state.inventory.iter_active_hosts())
     if isinstance(hosts, Host):
         hosts = [hosts]
@@ -52,9 +49,10 @@ def add_deploy(state, deploy_func, *args, **kwargs):
     # Append operations called in this deploy to the current order
     kwargs['_op_order_number'] = len(state.op_meta)
 
-    for host in hosts:
-        kwargs['host'] = host
-        deploy_func(*args, **kwargs)
+    with pseudo_state._use(state):
+        for deploy_host in hosts:
+            with pseudo_host._use(deploy_host):
+                deploy_func(*args, **kwargs)
 
 
 def deploy(func_or_name, data_defaults=None):
@@ -82,34 +80,6 @@ def deploy(func_or_name, data_defaults=None):
 
     @wraps(func)
     def decorated_func(*args, **kwargs):
-        # State & host passed in as kwargs (API, nested op, @deploy op)
-        if 'state' in kwargs and 'host' in kwargs:
-            state = kwargs['state']
-            host = kwargs['host']
-
-        # State & host passed in as first two arguments (LEGACY)
-        elif len(args) >= 2 and isinstance(args[0], State) and isinstance(args[1], Host):
-            show_state_host_arguments_warning(get_call_location())
-            state = kwargs['state'] = args[0]
-            host = kwargs['host'] = args[1]
-            args_copy = list(args)
-            args = args_copy[2:]
-
-        # Finally, still no state+host? Use pseudo if we're CLI mode, or fail
-        elif pyinfra.is_cli:
-            state = kwargs['state'] = pseudo_state._module
-            host = kwargs['host'] = pseudo_host._module
-
-            if not state or not host or state.in_deploy:
-                raise PyinfraError((
-                    'Nested deploy called without state/host: {0} ({1})'
-                ).format(func, get_call_location()))
-
-        else:
-            raise PyinfraError((
-                'Deploy called without state/host: {0} ({1})'
-            ).format(func, get_call_location()))
-
         deploy_kwargs, _ = pop_global_op_kwargs(state, host, kwargs)
 
         # Name the deploy
