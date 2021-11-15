@@ -2,6 +2,7 @@
 Manage XBPS packages and repositories. Note that XBPS package names are case-sensitive.
 '''
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.xbps import XbpsPackages
 
@@ -9,7 +10,7 @@ from .util.packaging import ensure_packages
 
 
 @operation(is_idempotent=False)
-def upgrade(state=None, host=None):
+def upgrade():
     '''
     Upgrades all XBPS packages.
     '''
@@ -20,7 +21,7 @@ _upgrade = upgrade  # noqa: E305
 
 
 @operation(is_idempotent=False)
-def update(state=None, host=None):
+def update():
     '''
     Update XBPS repositories.
     '''
@@ -34,7 +35,6 @@ _update = update  # noqa: E305
 def packages(
     packages=None, present=True,
     update=False, upgrade=False,
-    state=None, host=None,
 ):
     '''
     Install/remove/update XBPS packages.
@@ -56,10 +56,10 @@ def packages(
     '''
 
     if update:
-        yield _update(state=state, host=host)
+        yield _update()
 
     if upgrade:
-        yield _upgrade(state=state, host=host)
+        yield _upgrade()
 
     yield ensure_packages(
         host, packages, host.get_fact(XbpsPackages), present,

@@ -2,6 +2,7 @@
 Manage apk packages.
 '''
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.apk import ApkPackages
 
@@ -9,7 +10,7 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def upgrade(available=False, state=None, host=None):
+def upgrade(available=False):
     '''
     Upgrades all apk packages.
 
@@ -25,7 +26,7 @@ _upgrade = upgrade  # noqa: E305
 
 
 @operation
-def update(state=None, host=None):
+def update():
     '''
     Updates apk repositories.
     '''
@@ -39,7 +40,6 @@ _update = update  # noqa: E305
 def packages(
     packages=None, present=True, latest=False,
     update=False, upgrade=False,
-    state=None, host=None,
 ):
     '''
     Add/remove/update apk packages.
@@ -73,10 +73,10 @@ def packages(
     '''
 
     if update:
-        yield _update(state=state, host=host)
+        yield _update()
 
     if upgrade:
-        yield _upgrade(state=state, host=host)
+        yield _upgrade()
 
     yield ensure_packages(
         host, packages, host.get_fact(ApkPackages), present,
