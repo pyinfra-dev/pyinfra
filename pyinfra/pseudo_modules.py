@@ -53,6 +53,9 @@ class PseudoModule(object):
     def __eq__(self, other):
         return self._module == other
 
+    def __hash__(self):
+        return hash(self._module)
+
     def set(self, module):
         self._module = module
 
