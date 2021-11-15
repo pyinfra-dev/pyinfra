@@ -13,6 +13,7 @@ See example/postgresql.py for detailed example
 
 '''
 
+from pyinfra import host
 from pyinfra.api import MaskString, operation, StringCommand
 from pyinfra.facts.postgresql import (
     make_execute_psql_command,
@@ -29,7 +30,6 @@ def sql(
     # Details for speaking to PostgreSQL via `psql` CLI
     postgresql_user=None, postgresql_password=None,
     postgresql_host=None, postgresql_port=None,
-    state=None, host=None,
 ):
     '''
     Execute arbitrary SQL against PostgreSQL.
@@ -58,7 +58,6 @@ def role(
     # Details for speaking to PostgreSQL via `psql` CLI
     postgresql_user=None, postgresql_password=None,
     postgresql_host=None, postgresql_port=None,
-    state=None, host=None,
 ):
     '''
     Add/remove PostgreSQL roles.
@@ -161,7 +160,6 @@ def database(
     # Details for speaking to PostgreSQL via `psql` CLI
     postgresql_user=None, postgresql_password=None,
     postgresql_host=None, postgresql_port=None,
-    state=None, host=None,
 ):
     '''
     Add/remove PostgreSQL databases.
@@ -252,7 +250,6 @@ def dump(
     # Details for speaking to PostgreSQL via `psql` CLI
     postgresql_user=None, postgresql_password=None,
     postgresql_host=None, postgresql_port=None,
-    state=None, host=None,
 ):
     '''
     Dump a PostgreSQL database into a ``.sql`` file. Requires ``pg_dump``.
@@ -290,7 +287,6 @@ def load(
     # Details for speaking to PostgreSQL via `psql` CLI
     postgresql_user=None, postgresql_password=None,
     postgresql_host=None, postgresql_port=None,
-    state=None, host=None,
 ):
     '''
     Load ``.sql`` file into a database.

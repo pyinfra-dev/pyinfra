@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import re
 
-from pyinfra import logger
+from pyinfra import host, logger
 from pyinfra.api import operation, OperationError
 from pyinfra.facts.files import Directory
 from pyinfra.facts.git import GitBranch, GitConfig, GitTrackingBranch
@@ -18,11 +18,7 @@ from .util.files import chown, unix_path_join
 @operation(pipeline_facts={
     'git_config': 'repo',
 })
-def config(
-    key, value,
-    repo=None,
-    state=None, host=None,
-):
+def config(key, value, repo=None):
     '''
     Manage git config for a repository or globally.
 
@@ -73,7 +69,6 @@ def repo(
     pull=True, rebase=False,
     user=None, group=None, ssh_keyscan=False,
     update_submodules=False, recursive_submodules=False,
-    state=None, host=None,
 ):
     '''
     Clone/pull git repositories.
@@ -101,7 +96,7 @@ def repo(
     '''
 
     # Ensure our target directory exists
-    yield files.directory(dest, state=state, host=host)
+    yield files.directory(dest)
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
@@ -109,7 +104,7 @@ def repo(
         domain = re.match(r'^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)', src)
 
         if domain:
-            yield ssh.keyscan(domain.group(1), state=state, host=host)
+            yield ssh.keyscan(domain.group(1))
         else:
             raise OperationError(
                 'Could not parse domain (to SSH keyscan) from: {0}'.format(src),
@@ -176,7 +171,7 @@ def worktree(
     new_branch=None, commitish=None,
     pull=True, rebase=False, from_remote_branch=None,
     present=True, assume_repo_exists=False, force=False,
-    user=None, group=None, state=None, host=None,
+    user=None, group=None,
 ):
     '''
     Manage git worktrees.
@@ -383,8 +378,6 @@ def bare_repo(
     user=None,
     group=None,
     present=True,
-    state=None,
-    host=None,
 ):
     '''
     Create bare git repositories.
@@ -404,7 +397,7 @@ def bare_repo(
         )
     '''
 
-    yield files.directory(path, state=state, host=host, present=present)
+    yield files.directory(path, present=present)
 
     # Ensure our target directory exists
     if present:

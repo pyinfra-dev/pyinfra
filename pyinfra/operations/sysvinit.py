@@ -4,6 +4,7 @@ Manage sysvinit services (``/etc/init.d``).
 
 from __future__ import unicode_literals
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.files import FindLinks
 from pyinfra.facts.server import LinuxDistribution
@@ -18,7 +19,6 @@ def service(
     service,
     running=True, restarted=False, reloaded=False,
     enabled=None, command=None,
-    state=None, host=None,
 ):
     '''
     Manage the state of SysV Init (/etc/init.d) services.
@@ -102,7 +102,6 @@ def enable(
     service,
     start_priority=20, stop_priority=80,
     start_levels=(2, 3, 4, 5), stop_levels=(0, 1, 6),
-    state=None, host=None,
 ):
     '''
     Manually enable /etc/init.d scripts by creating /etc/rcX.d/Y links.
@@ -139,5 +138,4 @@ def enable(
         yield files.link(
             path=link,
             target='/etc/init.d/{0}'.format(service),
-            state=state, host=host,
         )

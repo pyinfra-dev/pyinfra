@@ -4,6 +4,7 @@ Manage BSD packages and repositories. Note that BSD package names are case-sensi
 
 from __future__ import unicode_literals
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.files import File
 from pyinfra.facts.pkg import PkgPackages
@@ -13,7 +14,7 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def packages(packages=None, present=True, pkg_path=None, state=None, host=None):
+def packages(packages=None, present=True, pkg_path=None):
     '''
     Install/remove/update pkg packages. This will use ``pkg ...`` where available
     (FreeBSD) and the ``pkg_*`` variants elsewhere.

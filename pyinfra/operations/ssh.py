@@ -6,7 +6,7 @@ Eg: ``pyinfra -> inventory-host.net <-> another-host.net``
 
 from six.moves import shlex_quote
 
-from pyinfra import logger
+from pyinfra import host, logger, state
 from pyinfra.api import operation, OperationError
 from pyinfra.facts.files import File, FindInFile
 from pyinfra.facts.server import Home
@@ -15,7 +15,7 @@ from . import files
 
 
 @operation
-def keyscan(hostname, force=False, port=22, state=None, host=None):
+def keyscan(hostname, force=False, port=22):
     '''
     Check/add hosts to the ``~/.ssh/known_hosts`` file.
 
@@ -37,8 +37,6 @@ def keyscan(hostname, force=False, port=22, state=None, host=None):
     yield files.directory(
         '{0}/.ssh'.format(homedir),
         mode=700,
-        state=state,
-        host=host,
     )
 
     hostname_present = host.get_fact(
@@ -82,7 +80,7 @@ def _user_or_ssh_user(user, ssh_user):
 
 
 @operation(is_idempotent=False)
-def command(hostname, command, user=None, port=22, ssh_user=None, state=None, host=None):
+def command(hostname, command, user=None, port=22, ssh_user=None):
     '''
     Execute commands on other servers over SSH.
 
@@ -124,7 +122,6 @@ def upload(
     use_remote_sudo=False,
     ssh_keyscan=False,
     ssh_user=None,
-    state=None, host=None,
 ):
     '''
     Upload files to other servers using ``scp``.
@@ -149,7 +146,7 @@ def upload(
         connection_target = '@'.join((user, hostname))
 
     if ssh_keyscan:
-        yield keyscan(hostname, state=state, host=host)
+        yield keyscan(hostname)
 
     # If we're not using sudo on the remote side, just scp the file over
     if not use_remote_sudo:
@@ -174,8 +171,6 @@ def upload(
             command='sudo mv {0} {1}'.format(temp_remote_filename, remote_filename),
             port=port,
             user=user,
-            state=state,
-            host=host,
         )
 
 
@@ -188,7 +183,6 @@ def download(
     user=None,
     ssh_keyscan=False,
     ssh_user=None,
-    state=None, host=None,
 ):
     '''
     Download files from other servers using ``scp``.
@@ -229,7 +223,7 @@ def download(
         connection_target = '@'.join((ssh_user, hostname))
 
     if ssh_keyscan:
-        yield keyscan(hostname, state=state, host=host)
+        yield keyscan(hostname)
 
     # Download the file with scp
     yield 'scp -P {0} {1}:{2} {3}'.format(
