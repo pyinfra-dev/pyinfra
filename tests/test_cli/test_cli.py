@@ -298,22 +298,22 @@ class TestCliDeployState(PatchSSHTestCase):
 
             self._assert_op_data(correct_op_name_and_host_names)
 
-    def test_legacy_deploy(self):
-        pseudo_state.reset()
+    # def test_legacy_deploy(self):
+    #     pseudo_state.reset()
 
-        result = run_cli(
-            'somehost',
-            path.join('tests', 'deploy', 'deploy_legacy.py'),
-        )
-        assert result.exit_code == 0, result.stderr
+    #     result = run_cli(
+    #         'somehost',
+    #         path.join('tests', 'deploy', 'deploy_legacy.py'),
+    #     )
+    #     assert result.exit_code == 0, result.stderr
 
-        correct_op_name_and_host_names = [
-            ('First main operation', True),
-            ('My deploy | My nested deploy | First nested deploy operation', True),
-            ('My deploy | Second deploy operation', True),
-        ]
+    #     correct_op_name_and_host_names = [
+    #         ('First main operation', True),
+    #         ('My deploy | My nested deploy | First nested deploy operation', True),
+    #         ('My deploy | Second deploy operation', True),
+    #     ]
 
-        self._assert_op_data(correct_op_name_and_host_names)
+    #     self._assert_op_data(correct_op_name_and_host_names)
 
     def test_interdependent_deploy(self):
         pseudo_state.reset()
