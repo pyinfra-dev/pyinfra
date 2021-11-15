@@ -5,6 +5,7 @@ a virtualenv (virtual environment).
 
 from __future__ import unicode_literals
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.files import File
 from pyinfra.facts.pip import PipPackages
@@ -17,7 +18,6 @@ from .util.packaging import ensure_packages
 def virtualenv(
     path,
     python=None, venv=False, site_packages=False, always_copy=False, present=True,
-    state=None, host=None,
 ):
     '''
     Add/remove Python virtualenvs.
@@ -44,7 +44,7 @@ def virtualenv(
 
     if present is False:
         if host.get_fact(File, path=activate_script_path):
-            yield files.directory(path, present=False, state=state, host=host)
+            yield files.directory(path, present=False)
         else:
             host.noop('virtualenv {0} does not exist'.format(path))
 
@@ -86,7 +86,6 @@ _virtualenv = virtualenv  # noqa
 def venv(
     path,
     python=None, site_packages=False, always_copy=False, present=True,
-    state=None, host=None,
 ):
     '''
     Add/remove Python virtualenvs.
@@ -113,8 +112,6 @@ def venv(
         site_packages=site_packages,
         always_copy=always_copy,
         present=present,
-        state=state,
-        host=host,
     )
 
 
@@ -123,7 +120,6 @@ def packages(
     packages=None, present=True, latest=False,
     requirements=None, pip='pip', virtualenv=None, virtualenv_kwargs=None,
     extra_install_args=None,
-    state=None, host=None,
 ):
     '''
     Install/remove/update pip packages.
@@ -160,7 +156,7 @@ def packages(
 
     # Ensure any virtualenv
     if virtualenv:
-        yield _virtualenv(virtualenv, state=state, host=host, **virtualenv_kwargs)
+        yield _virtualenv(virtualenv, **virtualenv_kwargs)
 
         # And update pip path
         virtualenv = virtualenv.rstrip('/')

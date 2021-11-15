@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import six
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.api.exceptions import OperationError
 from pyinfra.facts.iptables import (
@@ -20,7 +21,6 @@ from pyinfra.facts.iptables import (
 def chain(
     chain, present=True,
     table='filter', policy=None, version=4,
-    state=None, host=None,
 ):
     '''
     Add/remove/update iptables chains.
@@ -76,7 +76,6 @@ def rule(
     to_destination=None, to_source=None, to_ports=None, log_prefix=None,
     # Extras and extra shortcuts
     destination_port=None, source_port=None, extras='',
-    state=None, host=None,
 ):
     '''
     Add/remove iptables rules.

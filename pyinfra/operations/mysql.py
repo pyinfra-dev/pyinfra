@@ -15,6 +15,7 @@ See the example/mysql.py
 
 import six
 
+from pyinfra import host
 from pyinfra.api import MaskString, operation, OperationError, StringCommand
 from pyinfra.facts.mysql import (
     make_execute_mysql_command,
@@ -32,7 +33,6 @@ def sql(
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
-    state=None, host=None,
 ):
     '''
     Execute arbitrary SQL against MySQL.
@@ -74,7 +74,6 @@ def user(
     mysql_password=None,
     mysql_host=None,
     mysql_port=None,
-    state=None, host=None,
 ):
     '''
     Add/remove/update MySQL users.
@@ -290,7 +289,6 @@ def user(
             user_hostname=user_hostname,
             mysql_user=mysql_user, mysql_password=mysql_password,
             mysql_host=mysql_host, mysql_port=mysql_port,
-            state=state, host=host,
         )
 
 
@@ -304,7 +302,6 @@ def database(
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
-    state=None, host=None,
 ):
     '''
     Add/remove MySQL databases.
@@ -385,8 +382,6 @@ def database(
             user_hostname=user_hostname,
             privileges=user_privileges,
             database=database,
-            state=state,
-            host=host,
             mysql_user=mysql_user,
             mysql_password=mysql_password,
             mysql_host=mysql_host,
@@ -408,7 +403,6 @@ def privileges(
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
-    state=None, host=None,
 ):
     '''
     Add/remove MySQL privileges for a user, either global, database or table specific.
@@ -534,7 +528,6 @@ def dump(
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
-    state=None, host=None,
 ):
     '''
     Dump a MySQL database into a ``.sql`` file. Requires ``mysqldump``.
@@ -570,7 +563,6 @@ def load(
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
-    state=None, host=None,
 ):
     '''
     Load ``.sql`` file into a database.

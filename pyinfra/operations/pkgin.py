@@ -2,6 +2,7 @@
 Manage pkgin packages.
 '''
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.pkgin import PkginPackages
 
@@ -9,7 +10,7 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def upgrade(state=None, host=None):
+def upgrade():
     '''
     Upgrades all pkgin packages.
     '''
@@ -20,7 +21,7 @@ _upgrade = upgrade  # noqa: E305
 
 
 @operation
-def update(state=None, host=None):
+def update():
     '''
     Updates pkgin repositories.
     '''
@@ -34,7 +35,6 @@ _update = update  # noqa: E305
 def packages(
     packages=None, present=True, latest=False,
     update=False, upgrade=False,
-    state=None, host=None,
 ):
     '''
     Add/remove/update pkgin packages.
@@ -65,10 +65,10 @@ def packages(
     '''
 
     if update:
-        yield _update(state=state, host=host)
+        yield _update()
 
     if upgrade:
-        yield _upgrade(state=state, host=host)
+        yield _upgrade()
 
     # TODO support glob for specific versions (it isn't as simple
     # as apt's, as pkgin supports something like 'mysql-server>=5.6<5.7')

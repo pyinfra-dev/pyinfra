@@ -20,7 +20,7 @@ from pyinfra.api import operation
 
 
 @operation
-def service(service, running=True, restart=False, suspend=False, state=None, host=None):
+def service(service, running=True, restart=False, suspend=False):
     '''
     Stop/Start a Windows service.
 
