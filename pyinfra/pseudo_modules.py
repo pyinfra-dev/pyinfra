@@ -10,6 +10,7 @@ executing in CLI mode).
 '''
 
 import sys
+from contextlib import contextmanager
 
 import pyinfra
 
@@ -67,6 +68,15 @@ class PseudoModule(object):
 
     def isset(self):
         return self._module is not None
+
+    @contextmanager
+    def _use(self, module):
+        old_module = self._module
+        self._module = module
+
+        yield
+
+        self._module = old_module
 
 
 # The current deploy state
