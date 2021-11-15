@@ -4,7 +4,7 @@ Manage OpenVZ containers with ``vzctl``.
 
 import six
 
-from pyinfra import host, state
+from pyinfra import host
 from pyinfra.api import operation, OperationError
 from pyinfra.facts.vzctl import OpenvzContainers
 
