@@ -4,12 +4,13 @@ Manage OpenVZ containers with ``vzctl``.
 
 import six
 
+from pyinfra import host, state
 from pyinfra.api import operation, OperationError
 from pyinfra.facts.vzctl import OpenvzContainers
 
 
 @operation(is_idempotent=False)
-def start(ctid, force=False, state=None, host=None):
+def start(ctid, force=False):
     '''
     Start OpenVZ containers.
 
@@ -26,7 +27,7 @@ def start(ctid, force=False, state=None, host=None):
 
 
 @operation(is_idempotent=False)
-def stop(ctid, state=None, host=None):
+def stop(ctid):
     '''
     Stop OpenVZ containers.
 
@@ -39,7 +40,7 @@ def stop(ctid, state=None, host=None):
 
 
 @operation(is_idempotent=False)
-def restart(ctid, force=False, state=None, host=None):
+def restart(ctid, force=False):
     '''
     Restart OpenVZ containers.
 
@@ -47,12 +48,12 @@ def restart(ctid, force=False, state=None, host=None):
     + force: whether to force container start
     '''
 
-    yield stop(ctid, state=state, host=host)
-    yield start(ctid, force=force, state=state, host=host)
+    yield stop(ctid)
+    yield start(ctid, force=force)
 
 
 @operation(is_idempotent=False)
-def mount(ctid, state=None, host=None):
+def mount(ctid):
     '''
     Mount OpenVZ container filesystems.
 
@@ -63,7 +64,7 @@ def mount(ctid, state=None, host=None):
 
 
 @operation(is_idempotent=False)
-def unmount(ctid, state=None, host=None):
+def unmount(ctid):
     '''
     Unmount OpenVZ container filesystems.
 
@@ -74,7 +75,7 @@ def unmount(ctid, state=None, host=None):
 
 
 @operation(is_idempotent=False)
-def delete(ctid, state=None, host=None):
+def delete(ctid):
     '''
     Delete OpenVZ containers.
 
@@ -85,7 +86,7 @@ def delete(ctid, state=None, host=None):
 
 
 @operation(is_idempotent=False)
-def create(ctid, template=None, state=None, host=None):
+def create(ctid, template=None):
     '''
     Create OpenVZ containers.
 
@@ -108,7 +109,7 @@ def create(ctid, template=None, state=None, host=None):
 
 
 @operation(is_idempotent=False)
-def set(ctid, save=True, state=None, host=None, **settings):
+def set(ctid, save=True, **settings):
     '''
     Set OpenVZ container details.
 

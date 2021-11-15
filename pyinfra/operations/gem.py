@@ -2,6 +2,7 @@
 Manage Ruby gem packages. (see https://rubygems.org/ )
 '''
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.gem import GemPackages
 
@@ -9,7 +10,7 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def packages(packages=None, present=True, latest=False, state=None, host=None):
+def packages(packages=None, present=True, latest=False):
     '''
     Add/remove/update gem packages.
 

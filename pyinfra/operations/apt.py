@@ -10,6 +10,7 @@ import six
 
 from six.moves.urllib.parse import urlparse
 
+from pyinfra import host, state
 from pyinfra.api import operation, OperationError
 from pyinfra.facts.apt import AptKeys, AptSources, parse_apt_repo
 from pyinfra.facts.deb import DebPackage, DebPackages
@@ -39,7 +40,7 @@ def noninteractive_apt(command, force=False):
 
 
 @operation
-def key(src=None, keyserver=None, keyid=None, state=None, host=None):
+def key(src=None, keyserver=None, keyid=None):
     '''
     Add apt gpg keys with ``apt-key``.
 
@@ -108,7 +109,7 @@ def key(src=None, keyserver=None, keyid=None, state=None, host=None):
 
 
 @operation
-def repo(src, present=True, filename=None, state=None, host=None):
+def repo(src, present=True, filename=None):
     '''
     Add/remove apt repositories.
 
@@ -147,8 +148,6 @@ def repo(src, present=True, filename=None, state=None, host=None):
             filename,
             src,
             escape_regex_characters=True,
-            state=state,
-            host=host,
         )
         apt_sources.append(repo)
 
@@ -160,8 +159,6 @@ def repo(src, present=True, filename=None, state=None, host=None):
             present=False,
             assume_present=True,
             escape_regex_characters=True,
-            state=state,
-            host=host,
         )
         apt_sources.remove(repo)
 
@@ -173,7 +170,7 @@ def repo(src, present=True, filename=None, state=None, host=None):
 
 
 @operation(is_idempotent=False)
-def ppa(src, present=True, state=None, host=None):
+def ppa(src, present=True):
     '''
     Add/remove Ubuntu ppa repositories.
 
@@ -203,7 +200,7 @@ def ppa(src, present=True, state=None, host=None):
 
 
 @operation
-def deb(src, present=True, force=False, state=None, host=None):
+def deb(src, present=True, force=False):
     '''
     Add/remove ``.deb`` file packages.
 
@@ -238,7 +235,7 @@ def deb(src, present=True, force=False, state=None, host=None):
         temp_filename = state.get_temp_filename(src)
 
         # Ensure it's downloaded
-        yield files.download(src, temp_filename, state=state, host=host)
+        yield files.download(src, temp_filename)
 
         # Override the source with the downloaded file
         src = temp_filename
@@ -286,7 +283,7 @@ def deb(src, present=True, force=False, state=None, host=None):
 
 
 @operation
-def update(cache_time=None, touch_periodic=False, state=None, host=None):
+def update(cache_time=None, touch_periodic=False):
     '''
     Updates apt repositories.
 
@@ -335,7 +332,7 @@ _update = update  # noqa: E305
 
 
 @operation(is_idempotent=False)
-def upgrade(state, host):
+def upgrade():
     '''
     Upgrades all apt packages.
 
@@ -376,7 +373,6 @@ def packages(
     update=False, cache_time=None, upgrade=False,
     force=False, no_recommends=False, allow_downgrades=False,
     extra_install_args=None, extra_uninstall_args=None,
-    state=None, host=None,
 ):
     '''
     Install/remove/update packages & update apt.
@@ -428,10 +424,10 @@ def packages(
     '''
 
     if update:
-        yield _update(cache_time=cache_time, state=state, host=host)
+        yield _update(cache_time=cache_time)
 
     if upgrade:
-        yield _upgrade(state=state, host=host)
+        yield _upgrade()
 
     install_command = ['install']
     if no_recommends is True:

@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import six
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.upstart import UpstartStatus
 
@@ -18,7 +19,6 @@ def service(
     service,
     running=True, restarted=False, reloaded=False,
     command=None, enabled=None,
-    state=None, host=None,
 ):
     '''
     Manage the state of upstart managed services.
@@ -50,7 +50,6 @@ def service(
         yield files.file(
             '/etc/init/{0}.override'.format(service),
             present=False,
-            state=state, host=host,
         )
 
     # Set the override file to "manual" to disable automatic start
@@ -59,6 +58,4 @@ def service(
         yield files.put(
             src=file,
             dest='/etc/init/{0}.override'.format(service),
-            state=state,
-            host=host,
         )

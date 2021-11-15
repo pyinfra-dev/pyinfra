@@ -2,6 +2,7 @@
 Manage pacman packages. (Arch Linux package manager)
 '''
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.pacman import PacmanPackages, PacmanUnpackGroup
 
@@ -9,7 +10,7 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def upgrade(state=None, host=None):
+def upgrade():
     '''
     Upgrades all pacman packages.
     '''
@@ -20,7 +21,7 @@ _upgrade = upgrade  # noqa: E305
 
 
 @operation
-def update(state=None, host=None):
+def update():
     '''
     Updates pacman repositories.
     '''
@@ -34,7 +35,6 @@ _update = update  # noqa: E305
 def packages(
     packages=None, present=True,
     update=False, upgrade=False,
-    state=None, host=None,
 ):
     '''
     Add/remove pacman packages.
@@ -59,10 +59,10 @@ def packages(
     '''
 
     if update:
-        yield _update(state=state, host=host)
+        yield _update()
 
     if upgrade:
-        yield _upgrade(state=state, host=host)
+        yield _upgrade()
 
     yield ensure_packages(
         host, packages, host.get_fact(PacmanPackages), present,

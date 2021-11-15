@@ -4,6 +4,7 @@ The LXD modules manage LXD containers
 
 from __future__ import unicode_literals
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.lxd import LxdContainers
 
@@ -20,7 +21,6 @@ def get_container_named(name, containers):
 def container(
     id,
     present=True, image='ubuntu:16.04',
-    state=None, host=None,
 ):
     '''
     Add/remove LXD containers.
