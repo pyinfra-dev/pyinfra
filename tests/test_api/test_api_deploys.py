@@ -1,4 +1,3 @@
-from pyinfra import pseudo_state
 from pyinfra.api import (
     Config,
     State,

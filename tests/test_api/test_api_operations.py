@@ -29,7 +29,7 @@ from ..paramiko_util import (
     FakeChannel,
     PatchSSHTestCase,
 )
-from ..util import FakeState, make_inventory
+from ..util import make_inventory
 
 
 class TestOperationMeta(TestCase):
