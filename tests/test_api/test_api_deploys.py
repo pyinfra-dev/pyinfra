@@ -1,3 +1,4 @@
+from pyinfra import pseudo_state
 from pyinfra.api import (
     Config,
     State,
@@ -30,16 +31,8 @@ class TestDeploysApi(PatchSSHTestCase):
 
         @deploy
         def test_deploy(state=None, host=None):
-            server.shell(
-                commands=['echo first command'],
-                state=state,
-                host=host,
-            )
-            server.shell(
-                commands=['echo second command'],
-                state=state,
-                host=host,
-            )
+            server.shell(commands=['echo first command'])
+            server.shell(commands=['echo second command'])
 
         add_deploy(state, test_deploy)
 
@@ -100,29 +93,14 @@ class TestDeploysApi(PatchSSHTestCase):
         connect_all(state)
 
         @deploy
-        def test_nested_deploy(state=None, host=None):
-            server.shell(
-                commands=['echo nested command'],
-                state=state,
-                host=host,
-            )
+        def test_nested_deploy():
+            server.shell(commands=['echo nested command'])
 
         @deploy
-        def test_deploy(state=None, host=None):
-            server.shell(
-                commands=['echo first command'],
-                state=state,
-                host=host,
-            )
-            test_nested_deploy(
-                state=state,
-                host=host,
-            )
-            server.shell(
-                commands=['echo second command'],
-                state=state,
-                host=host,
-            )
+        def test_deploy():
+            server.shell(commands=['echo first command'])
+            test_nested_deploy()
+            server.shell(commands=['echo second command'])
 
         add_deploy(state, test_deploy)
 
