@@ -4,6 +4,7 @@ Manage dnf packages and repositories. Note that dnf package names are case-sensi
 
 from __future__ import unicode_literals
 
+from pyinfra import host, state
 from pyinfra.api import operation
 from pyinfra.facts.rpm import RpmPackageProvides, RpmPackages
 
@@ -12,7 +13,7 @@ from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 
 
 @operation(is_idempotent=False)
-def key(src, state=None, host=None):
+def key(src):
     '''
     Add dnf gpg keys with ``rpm``.
 
@@ -42,7 +43,6 @@ def repo(
     present=True,
     baseurl=None, description=None,
     enabled=True, gpgcheck=True, gpgkey=None,
-    state=None, host=None,
 ):
     # NOTE: if updating this docstring also update `yum.repo`
     '''
@@ -86,7 +86,7 @@ def repo(
 
 
 @operation
-def rpm(src, present=True, state=None, host=None):
+def rpm(src, present=True):
     # NOTE: if updating this docstring also update `yum.rpm`
     '''
     Add/remove ``.rpm`` file packages.
@@ -128,7 +128,6 @@ def packages(
     packages=None,
     present=True, latest=False, update=False, clean=False, nobest=False,
     extra_install_args=None, extra_uninstall_args=None,
-    state=None, host=None,
 ):
     '''
     Install/remove/update dnf packages & updates.
@@ -168,7 +167,7 @@ def packages(
         yield 'dnf clean all'
 
     if update:
-        yield _update(state=state, host=host)
+        yield _update()
 
     install_command = ['dnf', 'install', '-y']
 

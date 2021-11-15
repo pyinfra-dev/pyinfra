@@ -4,6 +4,7 @@ Manage npm (aka node aka Node.js) packages.
 
 from __future__ import unicode_literals
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.npm import NpmPackages
 
@@ -11,7 +12,7 @@ from .util.packaging import ensure_packages
 
 
 @operation
-def packages(packages=None, present=True, latest=False, directory=None, state=None, host=None):
+def packages(packages=None, present=True, latest=False, directory=None):
     '''
     Install/remove/update npm packages.
 

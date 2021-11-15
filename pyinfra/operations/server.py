@@ -13,6 +13,7 @@ import six
 
 from six.moves import filterfalse, shlex_quote
 
+from pyinfra import host, state
 from pyinfra.api import FunctionCommand, operation, OperationError, StringCommand
 from pyinfra.api.connectors.util import remove_any_sudo_askpass_file
 from pyinfra.api.util import try_int
@@ -50,7 +51,7 @@ from .util.files import chmod, sed_replace
 
 
 @operation(is_idempotent=False)
-def reboot(delay=10, interval=1, reboot_timeout=300, state=None, host=None):
+def reboot(delay=10, interval=1, reboot_timeout=300):
     '''
     Reboot the server and wait for reconnection.
 
@@ -103,7 +104,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300, state=None, host=None):
 
 
 @operation(is_idempotent=False)
-def wait(port=None, state=None, host=None):
+def wait(port=None):
     '''
     Waits for a port to come active on the target machine. Requires netstat, checks every
     second.
@@ -129,7 +130,7 @@ def wait(port=None, state=None, host=None):
 
 
 @operation(is_idempotent=False)
-def shell(commands, state=None, host=None):
+def shell(commands):
     '''
     Run raw shell code on server during a deploy. If the command would
     modify data that would be in a fact, the fact would not be updated
@@ -156,7 +157,7 @@ def shell(commands, state=None, host=None):
 
 
 @operation(is_idempotent=False)
-def script(src, state=None, host=None):
+def script(src):
     '''
     Upload and execute a local script on the remote host.
 
@@ -174,14 +175,14 @@ def script(src, state=None, host=None):
     '''
 
     temp_file = state.get_temp_filename(src)
-    yield files.put(src, temp_file, state=state, host=host)
+    yield files.put(src, temp_file)
 
     yield chmod(temp_file, '+x')
     yield temp_file
 
 
 @operation(is_idempotent=False)
-def script_template(src, state=None, host=None, **data):
+def script_template(src, **data):
     '''
     Generate, upload and execute a local script template on the remote host.
 
@@ -204,14 +205,14 @@ def script_template(src, state=None, host=None, **data):
     '''
 
     temp_file = state.get_temp_filename('{0}{1}'.format(src, data))
-    yield files.template(src, temp_file, state=state, host=host, **data)
+    yield files.template(src, temp_file, **data)
 
     yield chmod(temp_file, '+x')
     yield temp_file
 
 
 @operation
-def modprobe(module, present=True, force=False, state=None, host=None):
+def modprobe(module, present=True, force=False):
     '''
     Load/unload kernel modules.
 
@@ -273,7 +274,6 @@ def mount(
     mounted=True, options=None,
     # TODO: do we want to manage fstab here?
     # update_fstab=False, device=None, fs_type=None,
-    state=None, host=None,
 ):
     '''
     Manage mounted filesystems.
@@ -326,7 +326,7 @@ def mount(
 
 
 @operation
-def hostname(hostname, hostname_file=None, state=None, host=None):
+def hostname(hostname, hostname_file=None):
     '''
     Set the system hostname using ``hostnamectl`` or ``hostname`` on older systems.
 
@@ -379,18 +379,13 @@ def hostname(hostname, hostname_file=None, state=None, host=None):
         file = six.StringIO('{0}\n'.format(hostname))
 
         # And ensure it exists
-        yield files.put(
-            file, hostname_file,
-            state=state,
-            host=host,
-        )
+        yield files.put(file, hostname_file)
 
 
 @operation
 def sysctl(
     key, value,
     persist=False, persist_file='/etc/sysctl.conf',
-    state=None, host=None,
 ):
     '''
     Edit sysctl configuration.
@@ -438,8 +433,6 @@ def sysctl(
             path=persist_file,
             line='{0}[[:space:]]*=[[:space:]]*{1}'.format(key, string_value),
             replace='{0} = {1}'.format(key, string_value),
-            state=state,
-            host=host,
         )
 
 
@@ -448,7 +441,6 @@ def service(
     service,
     running=True, restarted=False, reloaded=False,
     command=None, enabled=None,
-    state=None, host=None,
 ):
     '''
     Manage the state of services. This command checks for the presence of all the
@@ -497,14 +489,12 @@ def service(
         service,
         running=running, restarted=restarted, reloaded=reloaded,
         command=command, enabled=enabled,
-        state=state, host=host,
     )
 
 
 @operation
 def packages(
     packages, present=True,
-    state=None, host=None,
 ):
     '''
     Add or remove system packages. This command checks for the presence of all the
@@ -556,7 +546,7 @@ def packages(
             '(no apk, apt, brew, dnf, pacman, pkg, xbps, yum or zypper found)'
         ))
 
-    yield package_operation(packages=packages, present=present, state=state, host=host)
+    yield package_operation(packages=packages, present=present)
 
 
 @operation
@@ -572,7 +562,6 @@ def crontab(
     day_of_month='*',
     special_time=None,
     interpolate_variables=False,
-    state=None, host=None,
 ):
     '''
     Add/remove/update crontab entries.
@@ -730,7 +719,7 @@ def crontab(
 
 
 @operation
-def group(group, present=True, system=False, gid=None, state=None, host=None):
+def group(group, present=True, system=False, gid=None):
     '''
     Add/remove system groups.
 
@@ -795,7 +784,6 @@ def user(
     public_keys=None, delete_keys=False, ensure_home=True,
     system=False, uid=None, comment=None, add_deploy_dir=True,
     unique=True,
-    state=None, host=None,
 ):
     '''
     Add/remove/update system users & their ssh `authorized_keys`.
@@ -948,7 +936,6 @@ def user(
         yield files.directory(
             home,
             user=user, group=group or user,
-            state=state, host=host,
         )
 
     # Add SSH keys
@@ -977,8 +964,6 @@ def user(
             user=user,
             group=group or user,
             mode=700,
-            state=state,
-            host=host,
         )
 
         filename = '{0}/.ssh/authorized_keys'.format(home)
@@ -996,8 +981,6 @@ def user(
                 user=user,
                 group=group or user,
                 mode=600,
-                state=state,
-                host=host,
             )
 
         else:
@@ -1007,10 +990,8 @@ def user(
                 user=user,
                 group=group or user,
                 mode=600,
-                state=state,
-                host=host,
             )
 
             # And every public key is present
             for key in public_keys:
-                yield files.line(path=filename, line=key, state=state, host=host)
+                yield files.line(path=filename, line=key)

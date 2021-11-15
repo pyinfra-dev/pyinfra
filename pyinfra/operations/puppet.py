@@ -2,7 +2,7 @@ from pyinfra.api import operation
 
 
 @operation
-def agent(server=None, port=None, state=None, host=None):
+def agent(server=None, port=None):
     '''
     Run puppet agent
 

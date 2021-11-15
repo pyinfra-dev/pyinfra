@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from pyinfra import host, state
 from pyinfra.api import operation
 from pyinfra.facts.rpm import RpmPackages
 
@@ -20,8 +21,6 @@ def repo(
     gpgcheck=True,
     gpgkey=None,
     type='rpm-md',
-    state=None,
-    host=None,
 ):
     '''
     Add/remove/update zypper repositories.
@@ -75,7 +74,7 @@ def repo(
 
 
 @operation
-def rpm(src, present=True, state=None, host=None):
+def rpm(src, present=True):
     # NOTE: if updating this docstring also update `dnf.rpm`
     '''
     Add/remove ``.rpm`` file packages.
@@ -101,7 +100,7 @@ def rpm(src, present=True, state=None, host=None):
 
 
 @operation(is_idempotent=False)
-def update(state=None, host=None):
+def update():
     '''
     Updates all zypper packages.
     '''
@@ -123,8 +122,6 @@ def packages(
     extra_install_args=None,
     extra_global_uninstall_args=None,
     extra_uninstall_args=None,
-    state=None,
-    host=None,
 ):
     '''
     Install/remove/update zypper packages & updates.
@@ -165,7 +162,7 @@ def packages(
         yield 'zypper clean --all'
 
     if update:
-        yield _update(state=state, host=host)
+        yield _update()
 
     install_command = ['zypper', '--non-interactive', 'install', '-y']
 

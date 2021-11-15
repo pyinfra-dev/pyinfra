@@ -10,7 +10,7 @@ from datetime import timedelta
 
 import six
 
-from pyinfra import logger
+from pyinfra import host, logger, state
 from pyinfra.api import (
     FileUploadCommand,
     operation,
@@ -39,7 +39,6 @@ def download(
     src, dest,
     user=None, group=None, mode=None, cache_time=None, force=False,
     sha256sum=None, sha1sum=None, md5sum=None,
-    state=None, host=None,
 ):
     '''
     Download files from remote locations using curl or wget.
@@ -150,7 +149,6 @@ def put(
     src, dest,
     user=None, group=None, mode=None, add_deploy_dir=True,
     create_remote_dir=True, force=False, assume_exists=False,
-    state=None, host=None,
 ):
     '''
     Upload a local file to the remote system.
@@ -268,7 +266,6 @@ def file(
     present=True, assume_present=False,
     user=None, group=None, mode=None, touch=False,
     create_remote_dir=True,
-    state=None, host=None,
 ):
     '''
     Add/remove/update files.
@@ -372,7 +369,6 @@ def directory(
     path,
     present=True, assume_present=False,
     user=None, group=None, mode=None, recursive=False,
-    state=None, host=None,
 ):
     '''
     Add/remove/update directories.
@@ -483,7 +479,6 @@ def link(
     target=None, present=True, assume_present=False,
     user=None, group=None, symbolic=True, force=True,
     create_remote_dir=True,
-    state=None, host=None,
 ):
     '''
     Add/remove/update links.

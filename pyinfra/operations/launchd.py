@@ -4,6 +4,7 @@ Manage launchd services.
 
 from __future__ import unicode_literals
 
+from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.launchd import LaunchdStatus
 
@@ -14,7 +15,6 @@ from .util.service import handle_service_control
 def service(
     service,
     running=True, restarted=False, command=None,
-    state=None, host=None,
 ):
     '''
     Manage the state of systemd managed services.

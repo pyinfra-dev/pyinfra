@@ -16,7 +16,7 @@ import six
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
 import pyinfra
-from pyinfra import logger
+from pyinfra import host, logger, state
 from pyinfra.api import (
     FileDownloadCommand,
     FileUploadCommand,
@@ -65,7 +65,6 @@ def download(
     src, dest,
     user=None, group=None, mode=None, cache_time=None, force=False,
     sha256sum=None, sha1sum=None, md5sum=None,
-    state=None, host=None,
 ):
     '''
     Download files from remote locations using ``curl`` or ``wget``.
@@ -206,7 +205,6 @@ def line(
     present=True, replace=None, flags=None, backup=False,
     interpolate_variables=False,
     escape_regex_characters=False,
-    state=None, host=None,
     assume_present=False,
 ):
     '''
@@ -414,7 +412,6 @@ def replace(
     path, match, replace,
     flags=None, backup=False,
     interpolate_variables=False,
-    state=None, host=None,
 ):
     '''
     Replace contents of a file using ``sed``.
@@ -479,7 +476,6 @@ def sync(
     src, dest,
     user=None, group=None, mode=None, delete=False,
     exclude=None, exclude_dir=None, add_deploy_dir=True,
-    state=None, host=None,
 ):
     '''
     Syncs a local directory with a remote one, with delete support. Note that delete will
@@ -575,7 +571,6 @@ def sync(
         dest_to_ensure,
         user=user, group=group,
         mode=get_path_permissions_mode(src),
-        state=state, host=host,
     )
 
     # Ensure any remote dirnames
@@ -583,7 +578,6 @@ def sync(
         yield directory(
             unix_path_join(dest, dirpath),
             user=user, group=group, mode=dir_mode,
-            state=state, host=host,
         )
 
     # Put each file combination
@@ -594,7 +588,6 @@ def sync(
             mode=mode or get_path_permissions_mode(local_filename),
             add_deploy_dir=False,
             create_remote_dir=False,  # handled above
-            state=state, host=host,
         )
 
     # Delete any extra files
@@ -607,7 +600,7 @@ def sync(
             if exclude and any(fnmatch(filename, match) for match in exclude):
                 continue
 
-            yield file(filename, present=False, state=state, host=host)
+            yield file(filename, present=False)
 
 
 @memoize
@@ -616,10 +609,7 @@ def show_rsync_warning():
 
 
 @operation
-def rsync(
-    src, dest, flags=['-ax', '--delete'],
-    state=None, host=None,
-):
+def rsync(src, dest, flags=['-ax', '--delete']):
     '''
     Use ``rsync`` to sync a local directory to the remote system. This operation will actually call
     the ``rsync`` binary on your system.
@@ -652,7 +642,6 @@ def _create_remote_dir(state, host, remote_filename, user, group):
             user=user, group=group,
             _no_check_owner_mode=True,  # don't check existing user/mode
             _no_fail_on_link=True,  # don't fail if the path is a link
-            state=state, host=host,
         )
 
 
@@ -668,7 +657,6 @@ def _create_remote_dir(state, host, remote_filename, user, group):
 def get(
     src, dest,
     add_deploy_dir=True, create_local_dir=False, force=False,
-    state=None, host=None,
 ):
     '''
     Download a file from the remote system.
@@ -730,7 +718,6 @@ def put(
     src, dest,
     user=None, group=None, mode=None, add_deploy_dir=True,
     create_remote_dir=True, force=False, assume_exists=False,
-    state=None, host=None,
 ):
     '''
     Upload a local file to the remote system.
@@ -861,7 +848,6 @@ def put(
 def template(
     src, dest,
     user=None, group=None, mode=None, create_remote_dir=True,
-    state=None, host=None,
     **data
 ):
     '''
@@ -980,7 +966,6 @@ def template(
         user=user, group=group, mode=mode,
         add_deploy_dir=False,
         create_remote_dir=create_remote_dir,
-        state=state, host=host,
     )
 
 
@@ -1013,7 +998,6 @@ def link(
     user=None, group=None, symbolic=True,
     create_remote_dir=True,
     force=False, force_backup=True, force_backup_dir=None,
-    state=None, host=None,
 ):
     '''
     Add/remove/update links.
@@ -1163,7 +1147,6 @@ def file(
     user=None, group=None, mode=None, touch=False,
     create_remote_dir=True,
     force=False, force_backup=True, force_backup_dir=None,
-    state=None, host=None,
 ):
     '''
     Add/remove/update files.
@@ -1281,7 +1264,6 @@ def directory(
     force=False, force_backup=True, force_backup_dir=None,
     _no_check_owner_mode=False,
     _no_fail_on_link=False,
-    state=None, host=None,
 ):
     '''
     Add/remove/update directories.
