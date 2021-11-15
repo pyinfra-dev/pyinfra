@@ -120,8 +120,12 @@ def make_operation_tests(arg):
             allowed_exception = test_data.get('exception')
 
             kwargs = test_data.get('kwargs', {})
-            kwargs['state'] = self.state
-            kwargs['host'] = host
+
+            from pyinfra import pseudo_state, pseudo_host
+            pseudo_state.set(self.state)
+            pseudo_host.set(host)
+            # kwargs['state'] = self.state
+            # kwargs['host'] = host
 
             with patch_files(test_data.get('local_files', {})):
                 try:
