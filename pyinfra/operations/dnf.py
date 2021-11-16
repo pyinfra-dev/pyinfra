@@ -113,7 +113,7 @@ def rpm(src, present=True):
 
 
 @operation
-def update(state=None, host=None):
+def update():
     '''
     Updates all dnf packages.
     '''
