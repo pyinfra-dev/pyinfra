@@ -54,7 +54,7 @@ def service(service, running=True, restart=False, suspend=False):
 
 
 @operation
-def reboot(state=None, host=None):
+def reboot():
     '''
     Restart the server.
     '''
