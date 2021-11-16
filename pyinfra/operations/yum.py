@@ -167,7 +167,7 @@ def packages(
         yield 'yum clean all'
 
     if update:
-        yield _update(state=state, host=host)
+        yield _update()
 
     install_command = ['yum', 'install', '-y']
 
