@@ -4,7 +4,7 @@ import re
 
 from functools import wraps
 from hashlib import sha1
-from inspect import getframeinfo, stack
+from inspect import getargspec, getframeinfo, stack
 from os import path, stat
 from socket import (
     error as socket_error,
@@ -35,6 +35,26 @@ TEMPLATES = {}
 FILE_SHAS = {}
 
 PYINFRA_API_DIR = path.dirname(__file__)
+
+
+def get_args_kwargs_spec(func):
+    args = []
+    kwargs = {}
+
+    argspec = getargspec(func)
+    if not argspec.args:
+        return args, kwargs
+
+    if argspec.defaults:
+        kwargs = dict(zip(
+            argspec.args[-len(argspec.defaults):],
+            argspec.defaults,
+        ))
+        args = argspec.args[:-len(argspec.defaults)]
+    else:
+        args = argspec.args
+
+    return args, kwargs
 
 
 def get_kwargs_str(kwargs):
