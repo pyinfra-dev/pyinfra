@@ -113,7 +113,7 @@ def rpm(src, present=True):
 
 
 @operation(is_idempotent=False)
-def update(state=None, host=None):
+def update():
     '''
     Updates all yum packages.
     '''
