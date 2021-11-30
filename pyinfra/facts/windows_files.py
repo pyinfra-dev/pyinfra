@@ -60,7 +60,7 @@ class WindowsSha1File(FactBase):
         ).format(name)
 
     def process(self, output):
-        return output[0] if len(output[0]) > 0 else None
+        return output[0] if not output else None
 
 
 class WindowsSha256File(FactBase):
