@@ -354,6 +354,23 @@ _upgrade = upgrade  # noqa: E305 (for use below where update is a kwarg)
 
 
 @operation
+def dist_upgrade(state, host):
+    '''
+    Updates all apt packages, employing dist-upgrade.
+
+    Example:
+
+    .. code:: python
+
+        apt.dist_upgrade(
+            name='Upgrade apt packages using dist-upgrade',
+        )
+    '''
+
+    yield noninteractive_apt('dist-upgrade')
+
+
+@operation
 def packages(
     packages=None, present=True, latest=False,
     update=False, cache_time=None, upgrade=False,
