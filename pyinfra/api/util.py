@@ -5,7 +5,7 @@ import re
 from functools import wraps
 from hashlib import sha1
 from inspect import getframeinfo, stack
-from os import path, stat
+from os import getcwd, path, stat
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -17,6 +17,7 @@ import six
 
 from jinja2 import (
     Environment,
+    FileSystemLoader,
     StrictUndefined,
     TemplateSyntaxError,
     UndefinedError,
@@ -222,6 +223,7 @@ def get_template(filename_or_string, is_string=False):
     TEMPLATES[cache_key] = Environment(
         undefined=StrictUndefined,
         keep_trailing_newline=True,
+        loader=FileSystemLoader(getcwd()),
     ).from_string(template_string)
 
     return TEMPLATES[cache_key]
