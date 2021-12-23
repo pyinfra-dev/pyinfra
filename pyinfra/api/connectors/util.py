@@ -240,7 +240,7 @@ def make_unix_command(
     command,
     env=None,
     chdir=None,
-    shell_executable=None,
+    shell_executable='sh',
     # Su config
     su_user=None,
     use_su_login=False,
@@ -260,7 +260,7 @@ def make_unix_command(
     Builds a shell command with various kwargs.
     '''
 
-    if shell_executable is None or not isinstance(shell_executable, six.string_types):
+    if shell_executable is not None and not isinstance(shell_executable, six.string_types):
         shell_executable = 'sh'
 
     if isinstance(command, six.binary_type):
@@ -326,11 +326,16 @@ def make_unix_command(
 
         command_bits.extend([su_user, '-c'])
 
-        # Quote the whole shell -c 'command' as BSD `su` does not have a shell option
-        command_bits.append(QuoteString(StringCommand(shell_executable, '-c', command)))
+        if shell_executable is not None:
+            # Quote the whole shell -c 'command' as BSD `su` does not have a shell option
+            command_bits.append(QuoteString(StringCommand(shell_executable, '-c', command)))
+        else:
+            command_bits.append(StringCommand(command))
     else:
-        # Otherwise simply use thee shell directly
-        command_bits.extend([shell_executable, '-c', command])
+        if shell_executable is not None:
+            command_bits.extend([shell_executable, '-c', command])
+        else:
+            command_bits.extend([command])
 
     return StringCommand(*command_bits)
 
