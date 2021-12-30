@@ -17,10 +17,10 @@ import pyinfra
 from pyinfra import host, state
 from pyinfra import logger, pseudo_host, pseudo_state
 
+from .arguments import get_execution_kwarg_keys, pop_global_op_kwargs
 from .command import StringCommand
 from .exceptions import OperationValueError, PyinfraError
 from .host import Host
-from .operation_kwargs import get_execution_kwarg_keys, pop_global_op_kwargs
 from .util import (
     get_arg_value,
     get_args_kwargs_spec,
