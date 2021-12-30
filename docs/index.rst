@@ -38,15 +38,19 @@ Deploy Reference
 
 .. compound::
     :doc:`facts`
-        A list of all facts ``pyinfra`` can gather from hosts, e.g. ``server.Hostname``.
+        A list of all facts (data) ``pyinfra`` can gather from hosts, e.g. ``server.Hostname``.
 
 .. compound::
-    :doc:`examples`
-        A set of documented example deploys highlighting common patterns.
+    :doc:`arguments`
+        Arguments available in all operations & facts such as ``_sudo``, ``_serial`` and ``_env``.
 
 .. compound::
     :doc:`connectors`
-        Connectors allow ``pyinfra`` to seamlessly integrate with other tools.
+        Connectors deploy to different target hosts such as ``SSH``, ``Docker`` and local.
+
+.. compound::
+    :doc:`examples`
+        A set of documented example deploys that focus on common patterns and use-cases.
 
 
 How pyinfra Works
@@ -54,11 +58,11 @@ How pyinfra Works
 
 .. compound::
     :doc:`deploy_process`
-        Learn how ``pyinfra`` executes operations.
+        Learn how ``pyinfra`` executes operations against target hosts.
 
 .. compound::
     :doc:`api/connectors`
-        Build connectors to integrate ``pyinfra`` with other systems.
+        Build connectors to integrate ``pyinfra`` with other systems/tools/targets.
 
 .. compound::
     :doc:`api/operations`
@@ -93,8 +97,9 @@ How pyinfra Works
 
     operations
     facts
-    examples
+    arguments
     connectors
+    examples
 
 .. toctree::
     :hidden:
