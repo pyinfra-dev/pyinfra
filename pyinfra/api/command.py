@@ -6,7 +6,7 @@ import six
 
 from six.moves import shlex_quote
 
-from .operation_kwargs import get_executor_kwarg_keys
+from .arguments import get_executor_kwarg_keys
 
 
 def make_formatted_string_command(string, *args, **kwargs):
