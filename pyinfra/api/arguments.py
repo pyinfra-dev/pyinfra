@@ -1,4 +1,6 @@
-from .util import memoize
+from pyinfra import logger
+
+from .util import get_call_location, memoize
 
 
 auth_kwargs = {
@@ -60,10 +62,7 @@ def generate_env(config, value):
     return env
 
 
-operation_kwargs = {
-    'name': {
-        'description': 'Name of the operation.',
-    },
+shell_kwargs = {
     'shell_executable': {
         'description': 'The shell to use. Defaults to ``sh`` (Unix) or ``cmd`` (Windows).',
         'default': lambda config: config.SHELL,
@@ -75,10 +74,6 @@ operation_kwargs = {
         'description': 'Dictionary of environment variables to set.',
         'handler': generate_env,
     },
-    'ignore_errors': {
-        'description': 'Ignore errors when executing the operation.',
-        'default': lambda config: config.IGNORE_ERRORS,
-    },
     'success_exit_codes': {
         'description': 'List of exit codes to consider a success.',
         'default': lambda config: [0],
@@ -86,11 +81,18 @@ operation_kwargs = {
     'timeout': 'Timeout for *each* command executed during the operation.',
     'get_pty': 'Whether to get a pseudoTTY when executing any commands.',
     'stdin': 'String or buffer to send to the stdin of any commands.',
-    'precondition': 'Command to execute & check before the operation commands begin.',
-    'postcondition': 'Command to execute & check after the operation commands complete.',
 }
 
-callback_kwargs = {
+meta_kwargs = {
+    'name': {
+        'description': 'Name of the operation.',
+    },
+    'ignore_errors': {
+        'description': 'Ignore errors when executing the operation.',
+        'default': lambda config: config.IGNORE_ERRORS,
+    },
+    'precondition': 'Command to execute & check before the operation commands begin.',
+    'postcondition': 'Command to execute & check after the operation commands complete.',
     'on_success': 'Callback function to execute on success.',
     'on_error': 'Callback function to execute on error.',
 }
@@ -113,8 +115,8 @@ execution_kwargs = {
 
 OPERATION_KWARGS = {
     'Privilege & user escalation': auth_kwargs,
-    'Operation control': operation_kwargs,
-    'Callbacks': callback_kwargs,
+    'Shell control & features': shell_kwargs,
+    'Operation meta & callbacks': meta_kwargs,
     'Execution strategy (must be the same for all hosts)': execution_kwargs,
 }
 
@@ -126,30 +128,35 @@ def get_execution_kwarg_keys():
 @memoize
 def get_executor_kwarg_keys():
     keys = set()
-    keys.update(auth_kwargs.keys(), operation_kwargs.keys())
-    keys.difference_update({'name', 'ignore_errors', 'precondition', 'postcondition'})
+    keys.update(auth_kwargs.keys(), shell_kwargs.keys())
     return list(keys)
+
+
+@memoize
+def show_legacy_global_argument_warning(key, call_location):
+    logger.warning((
+        '{0}:\n\tGlobal arguments should be prefixed "_", '
+        'please us the `{1}` keyword argument in place of `{2}`.'
+    ).format(call_location, '_{0}'.format(key), key))
 
 
 def pop_global_op_kwargs(state, host, kwargs):
     '''
     Pop and return operation global keyword arguments, in preferred order:
 
-    + From the current context (operation kwargs)
+    + From the current context (a direct @operator or @deploy function being called)
     + From any current @deploy context (deploy kwargs)
     + From the host data variables
     + From the config variables
+
+    Note this function is only called directly in the @operation & @deploy decorator
+    wrappers which the user should pass global arguments prefixed "_".
     '''
 
     meta_kwargs = state.deploy_kwargs or {}
 
-    def get_kwarg(key, default=None):
-        has_key = key in kwargs
-        value = kwargs.pop(key, meta_kwargs.get(key, default))
-        return value, has_key
-
     global_kwargs = {}
-    global_kwarg_keys = []
+    found_keys = []
 
     for _, kwarg_configs in OPERATION_KWARGS.items():
         for key, config in kwarg_configs.items():
@@ -162,17 +169,30 @@ def pop_global_op_kwargs(state, host, kwargs):
                 if default:
                     default = default(state.config)
 
-                host_default = getattr(host.data, key, None)
-                if host_default is not None:
-                    default = host_default
+            # TODO: why is 'name' hard-coded as the only non-_-prefixed key
+            direct_key = '_{0}'.format(key) if key != 'name' else key
 
-            value, has_key = get_kwarg(key, default=default)
+            # TODO: do we support global arguments in host data w/ or w/o the _ prefix? Or both?
+            host_default = getattr(host.data, direct_key, None) or getattr(host.data, key, None)
+            if host_default is not None:
+                default = host_default
+
+            if direct_key in kwargs:
+                found_keys.append(key)
+                value = kwargs.pop(direct_key)
+
+            # COMPAT w/<v3
+            # TODO: remove this additional check
+            elif key in kwargs:
+                show_legacy_global_argument_warning(key, get_call_location(frame_offset=2))
+                found_keys.append(key)
+                value = kwargs.pop(key)
+
+            else:
+                value = meta_kwargs.get(key, default)
+
             if handler:
                 value = handler(state.config, value)
 
-            if has_key:
-                global_kwarg_keys.append(key)
-
             global_kwargs[key] = value
-
-    return global_kwargs, global_kwarg_keys
+    return global_kwargs, found_keys

@@ -92,8 +92,8 @@ def memoize(func):
     return wrapper
 
 
-def get_call_location():
-    frame = get_caller_frameinfo(frame_offset=1)  # escape *this* function
+def get_call_location(frame_offset=1):
+    frame = get_caller_frameinfo(frame_offset=frame_offset)  # escape *this* function
     return 'line {0} in {1}'.format(
         frame.lineno,
         path.relpath(frame.filename),

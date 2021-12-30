@@ -35,7 +35,7 @@ from pyinfra.api.util import (
 )
 from pyinfra.progress import progress_spinner
 
-from .operation_kwargs import get_executor_kwarg_keys
+from .arguments import get_executor_kwarg_keys
 
 
 # Index of snake_case facts -> CamelCase classes

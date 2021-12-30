@@ -19,13 +19,13 @@ import pyinfra
 from pyinfra import logger
 from pyinfra.progress import progress_spinner
 
+from .arguments import get_executor_kwarg_keys
 from .command import (
     FunctionCommand,
     PyinfraCommand,
     StringCommand,
 )
 from .exceptions import PyinfraError
-from .operation_kwargs import get_executor_kwarg_keys
 from .util import (
     format_exception,
     log_error_or_warning,

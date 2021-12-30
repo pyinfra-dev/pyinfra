@@ -12,9 +12,9 @@ import pyinfra
 
 from pyinfra import host, logger, pseudo_host, pseudo_state, state
 
+from .arguments import pop_global_op_kwargs
 from .exceptions import PyinfraError
 from .host import Host
-from .operation_kwargs import pop_global_op_kwargs
 from .util import get_args_kwargs_spec, get_call_location, get_caller_frameinfo, memoize
 
 
