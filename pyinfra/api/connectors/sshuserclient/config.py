@@ -9,7 +9,6 @@ import re
 from os import path
 
 from paramiko import SSHConfig as ParamikoSSHConfig
-from six import StringIO
 
 SETTINGS_REGEX = re.compile(r'(\w+)(?:\s*=\s*|\s+)(.+)')
 
@@ -55,9 +54,6 @@ def _expand_include_statements(file_obj, parsed_files=None):
                     parsed_lines.extend(_expand_include_statements(fd, parsed_files))
 
     return parsed_lines
-    output = StringIO('\n'.join(parsed_lines))
-    output.name = file_obj.name
-    return output
 
 
 class SSHConfig(ParamikoSSHConfig):
