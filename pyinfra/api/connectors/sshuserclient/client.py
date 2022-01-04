@@ -12,6 +12,7 @@ from paramiko import (
 )
 from paramiko.agent import AgentRequestHandler
 
+from pyinfra import logger
 from pyinfra.api.util import memoize
 
 from .config import SSHConfig
@@ -34,7 +35,7 @@ class SSHClient(ParamikoClient):
     '''
 
     def connect(self, hostname, _pyinfra_force_forward_agent=None, **kwargs):
-        hostname, config, forward_agent = self.parse_config(hostname)
+        hostname, config, forward_agent = self.parse_config(hostname, kwargs)
         config.update(kwargs)
         super(SSHClient, self).connect(hostname, **config)
 
@@ -46,15 +47,18 @@ class SSHClient(ParamikoClient):
             session = self.get_transport().open_session()
             AgentRequestHandler(session)
 
-    def gateway(self, target, target_port):
+    def gateway(self, hostname, host_port, target, target_port):
         transport = self.get_transport()
         return transport.open_channel(
             'direct-tcpip',
             (target, target_port),
-            (self.hostname, self.config['port']))
+            (hostname, host_port),
+        )
 
-    def parse_config(self, hostname):
+    def parse_config(self, hostname, initial_cfg=None):
         cfg = {'port': 22}
+        cfg.update(initial_cfg or {})
+
         forward_agent = False
 
         ssh_config = get_ssh_config()
@@ -78,46 +82,57 @@ class SSHClient(ParamikoClient):
 
         if 'proxycommand' in host_config:
             cfg['sock'] = ProxyCommand(host_config['proxycommand'])
+
         elif 'proxyjump' in host_config:
             hops = host_config['proxyjump'].split(',')
             sock = None
+
             for i, hop in enumerate(hops):
                 hop_hostname, hop_config = self.derive_shorthand(hop)
+                logger.debug('SSH ProxyJump through %s:%s', hop_hostname, hop_config['port'])
+
                 c = SSHClient()
                 c.set_missing_host_key_policy(AutoAddPolicy())
                 c.connect(hop_hostname, sock=sock, **hop_config)
+
                 if i == len(hops) - 1:
                     target = hostname
                     target_config = {'port': cfg['port']}
                 else:
-                    target, target_config = self.derive_shorthand(
-                        hops[i + 1])
-                sock = c.gateway(target, target_config['port'])
+                    target, target_config = self.derive_shorthand(hops[i + 1])
+
+                sock = c.gateway(hostname, cfg['port'], target, target_config['port'])
             cfg['sock'] = sock
 
         return hostname, cfg, forward_agent
 
-    def derive_shorthand(self, host_string):
-        config = {}
+    @staticmethod
+    def derive_shorthand(host_string):
+        shorthand_config = {}
         user_hostport = host_string.rsplit('@', 1)
         hostport = user_hostport.pop()
         user = user_hostport[0] if user_hostport and user_hostport[0] else None
         if user:
-            config['username'] = user
+            shorthand_config['username'] = user
 
         # IPv6: can't reliably tell where addr ends and port begins, so don't
         # try (and don't bother adding special syntax either, user should avoid
         # this situation by using port=).
         if hostport.count(':') > 1:
-            host = hostport
-            config['port'] = 22
+            hostname = hostport
         # IPv4: can split on ':' reliably.
         else:
             host_port = hostport.rsplit(':', 1)
-            host = host_port.pop(0) or None
+            hostname = host_port.pop(0) or None
             if host_port and host_port[0]:
-                config['port'] = int(host_port[0])
-            else:
-                config['port'] = 22
+                shorthand_config['port'] = int(host_port[0])
 
-        return host, config
+        base_config = get_ssh_config().lookup(hostname)
+
+        config = {
+            'port': base_config.get('port', 22),
+            'username': base_config.get('username'),
+        }
+        config.update(shorthand_config)
+
+        return hostname, config
