@@ -4,6 +4,7 @@ from mock import mock_open, patch
 from paramiko import ProxyCommand
 
 from pyinfra.api.connectors.sshuserclient import SSHClient
+from pyinfra.api.connectors.sshuserclient.client import get_ssh_config
 
 SSH_CONFIG_DATA = '''
 # Comment
@@ -24,6 +25,13 @@ Host 192.168.1.1
     ForwardAgent yes
 '''
 
+SSH_CONFIG_OTHER_FILE_PROXYJUMP = '''
+Host 192.168.1.2
+    User "otheruser"
+    ProxyJump nottestuser@127.0.0.1
+    ForwardAgent yes
+'''
+
 BAD_SSH_CONFIG_DATA = '''
 &
 '''
@@ -37,7 +45,30 @@ Include other_file
     'pyinfra.api.connectors.sshuserclient.client.path.exists',
     lambda path: True,
 )
+@patch(
+    'pyinfra.api.connectors.sshuserclient.config.glob.iglob',
+    lambda path: ['other_file'],
+)
+@patch(
+    'pyinfra.api.connectors.sshuserclient.config.path.isfile',
+    lambda path: True,
+)
+@patch(
+    'pyinfra.api.connectors.sshuserclient.config.path.expanduser',
+    lambda path: path,
+)
+@patch(
+    'pyinfra.api.connectors.sshuserclient.config.path.isabs',
+    lambda path: True,
+)
+@patch(
+    'paramiko.config.LazyFqdn.__str__',
+    lambda self: '',
+)
 class TestSSHUserConfig(TestCase):
+    def setUp(self):
+        get_ssh_config.cache = {}
+
     @patch(
         'pyinfra.api.connectors.sshuserclient.client.open',
         mock_open(read_data=SSH_CONFIG_DATA),
@@ -47,22 +78,6 @@ class TestSSHUserConfig(TestCase):
         'pyinfra.api.connectors.sshuserclient.config.open',
         mock_open(read_data=SSH_CONFIG_OTHER_FILE),
         create=True,
-    )
-    @patch(
-        'pyinfra.api.connectors.sshuserclient.config.glob.iglob',
-        lambda path: ['other_file'],
-    )
-    @patch(
-        'pyinfra.api.connectors.sshuserclient.config.path.isfile',
-        lambda path: True,
-    )
-    @patch(
-        'pyinfra.api.connectors.sshuserclient.config.path.isabs',
-        lambda path: True,
-    )
-    @patch(
-        'paramiko.config.LazyFqdn.__str__',
-        lambda self: '',
     )
     def test_load_ssh_config(self):
         client = SSHClient()
@@ -103,18 +118,6 @@ class TestSSHUserConfig(TestCase):
         mock_open(read_data=LOOPING_SSH_CONFIG_DATA),
         create=True,
     )
-    @patch(
-        'pyinfra.api.connectors.sshuserclient.config.glob.iglob',
-        lambda path: ['other_file'],
-    )
-    @patch(
-        'pyinfra.api.connectors.sshuserclient.config.path.isfile',
-        lambda path: True,
-    )
-    @patch(
-        'pyinfra.api.connectors.sshuserclient.config.path.expanduser',
-        lambda path: path,
-    )
     def test_include_loop_ssh_config(self):
         client = SSHClient()
 
@@ -122,3 +125,29 @@ class TestSSHUserConfig(TestCase):
             client.parse_config('127.0.0.1')
 
         assert context.exception.args[0] == 'Include loop detected in ssh config file: other_file'
+
+    @patch(
+        'pyinfra.api.connectors.sshuserclient.client.open',
+        mock_open(read_data=SSH_CONFIG_DATA),
+        create=True,
+    )
+    @patch(
+        'pyinfra.api.connectors.sshuserclient.config.open',
+        mock_open(read_data=SSH_CONFIG_OTHER_FILE_PROXYJUMP),
+        create=True,
+    )
+    @patch('pyinfra.api.connectors.sshuserclient.SSHClient.connect')
+    @patch('pyinfra.api.connectors.sshuserclient.SSHClient.gateway')
+    def test_load_ssh_config_proxyjump(self, fake_gateway, fake_ssh_connect):
+        client = SSHClient()
+
+        # Load the SSH config with ProxyJump configured
+        _, config, forward_agent = client.parse_config('192.168.1.2', {'port': 1022})
+
+        fake_ssh_connect.assert_called_once_with(
+            '127.0.0.1',
+            port='33',
+            sock=None,
+            username='nottestuser',
+        )
+        fake_gateway.assert_called_once_with('192.168.1.2', 1022, '192.168.1.2', 1022)
