@@ -11,7 +11,7 @@ except ImportError:
     from inspect import getargspec as getfullargspec
 
 from pyinfra import operations
-from pyinfra.api.operation_kwargs import OPERATION_KWARGS
+from pyinfra.api.arguments import OPERATION_KWARGS
 
 
 def _is_pyinfra_operation(module, key, value):

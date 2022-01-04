@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from pyinfra.api import Config, Inventory, State
-from pyinfra.api.operation_kwargs import pop_global_op_kwargs
+from pyinfra.api.arguments import pop_global_op_kwargs
 
 
 class TestOperationKwargs(TestCase):
