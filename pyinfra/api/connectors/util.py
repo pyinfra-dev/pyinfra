@@ -326,7 +326,7 @@ def make_unix_command(
         if shell_executable is not None:
             # Quote the whole shell -c 'command' as BSD `su` does not have a shell option
             command_bits.append(
-                QuoteString(StringCommand(shell_executable, '-c', QuoteString(command)))
+                QuoteString(StringCommand(shell_executable, '-c', QuoteString(command))),
             )
         else:
             command_bits.append(StringCommand(command))
