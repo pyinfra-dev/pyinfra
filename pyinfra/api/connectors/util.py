@@ -240,7 +240,7 @@ def make_unix_command(
     command,
     env=None,
     chdir=None,
-    shell_executable='sh',
+    shell_executable=None,
     # Su config
     su_user=None,
     use_su_login=False,
@@ -329,7 +329,7 @@ def make_unix_command(
                 QuoteString(StringCommand(shell_executable, '-c', QuoteString(command))),
             )
         else:
-            command_bits.append(StringCommand(command))
+            command_bits.append(QuoteString(StringCommand(command)))
     else:
         if shell_executable is not None:
             command_bits.extend([shell_executable, '-c', QuoteString(command)])

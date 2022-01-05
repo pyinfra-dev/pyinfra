@@ -52,7 +52,7 @@ config_defaults = {
     'IGNORE_ERRORS': False,
 
     # Shell to use to execute commands
-    'SHELL': None,
+    'SHELL': 'sh',
 }
 
 

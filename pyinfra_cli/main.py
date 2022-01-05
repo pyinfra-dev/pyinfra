@@ -458,7 +458,7 @@ def _main(
         config.PARALLEL = parallel
 
     if shell_executable:
-        config.SHELL = shell_executable
+        config.SHELL = None if shell_executable in ('None', 'null') else shell_executable
 
     if fail_percent is not None:
         config.FAIL_PERCENT = fail_percent
