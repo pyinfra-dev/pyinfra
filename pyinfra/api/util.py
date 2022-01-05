@@ -94,10 +94,16 @@ def memoize(func):
 
 def get_call_location(frame_offset=1):
     frame = get_caller_frameinfo(frame_offset=frame_offset)  # escape *this* function
-    return 'line {0} in {1}'.format(
-        frame.lineno,
-        path.relpath(frame.filename),
-    )
+    relpath = frame.filename
+
+    try:
+        # On Windows if pyinfra is on a different drive to the filename here, this will
+        # error as there's no way to do relative paths between drives.
+        relpath = path.relpath(frame.filename)
+    except ValueError:
+        pass
+
+    return 'line {0} in {1}'.format(frame.lineno, relpath)
 
 
 def get_caller_frameinfo(frame_offset=0):
