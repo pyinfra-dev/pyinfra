@@ -166,6 +166,8 @@ def _make_paramiko_kwargs(state, host):
         'hostname': host.data.ssh_hostname or host.name,
         # Special pyinfra specific kwarg for our custom SSHClient
         '_pyinfra_force_forward_agent': host.data.ssh_forward_agent,
+        # Special pyinfra specific kwarg to select an alternative SSH config
+        '_pyinfra_ssh_config_file': host.data.ssh_config_file,
     }
 
     for key, value in (

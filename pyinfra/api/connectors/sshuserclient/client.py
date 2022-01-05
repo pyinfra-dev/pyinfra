@@ -19,8 +19,9 @@ from .config import SSHConfig
 
 
 @memoize
-def get_ssh_config():
-    user_config_file = path.expanduser('~/.ssh/config')
+def get_ssh_config(user_config_file=None):
+    if user_config_file is None:
+        user_config_file = path.expanduser('~/.ssh/config')
     if path.exists(user_config_file):
         with open(user_config_file) as f:
             ssh_config = SSHConfig()
@@ -34,8 +35,18 @@ class SSHClient(ParamikoClient):
     original idea at http://bitprophet.org/blog/2012/11/05/gateway-solutions/.
     '''
 
-    def connect(self, hostname, _pyinfra_force_forward_agent=None, **kwargs):
-        hostname, config, forward_agent = self.parse_config(hostname, kwargs)
+    def connect(
+        self,
+        hostname,
+        _pyinfra_force_forward_agent=None,
+        _pyinfra_ssh_config_file=None,
+        **kwargs,
+    ):
+        hostname, config, forward_agent = self.parse_config(
+            hostname,
+            kwargs,
+            ssh_config_file=-_pyinfra_ssh_config_file,
+        )
         config.update(kwargs)
         super(SSHClient, self).connect(hostname, **config)
 
@@ -55,13 +66,13 @@ class SSHClient(ParamikoClient):
             (hostname, host_port),
         )
 
-    def parse_config(self, hostname, initial_cfg=None):
+    def parse_config(self, hostname, initial_cfg=None, ssh_config_file=None):
         cfg = {'port': 22}
         cfg.update(initial_cfg or {})
 
         forward_agent = False
 
-        ssh_config = get_ssh_config()
+        ssh_config = get_ssh_config(ssh_config_file)
         if not ssh_config:
             return hostname, cfg, forward_agent
 

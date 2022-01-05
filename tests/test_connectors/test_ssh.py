@@ -120,6 +120,7 @@ class TestSSHConnector(TestCase):
                 timeout=10,
                 username='vagrant',
                 _pyinfra_force_forward_agent=None,
+                _pyinfra_ssh_config_file=None,
             )
 
         # Check that loading the same key again is cached in the state
@@ -291,6 +292,7 @@ class TestSSHConnector(TestCase):
                 timeout=10,
                 username='vagrant',
                 _pyinfra_force_forward_agent=None,
+                _pyinfra_ssh_config_file=None,
             )
 
         # Check that loading the same key again is cached in the state
@@ -342,6 +344,7 @@ class TestSSHConnector(TestCase):
                 timeout=10,
                 username='vagrant',
                 _pyinfra_force_forward_agent=None,
+                _pyinfra_ssh_config_file=None,
             )
 
         # Check that loading the same key again is cached in the state
