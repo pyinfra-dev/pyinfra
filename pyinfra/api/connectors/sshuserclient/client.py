@@ -40,7 +40,7 @@ class SSHClient(ParamikoClient):
         hostname,
         _pyinfra_force_forward_agent=None,
         _pyinfra_ssh_config_file=None,
-        **kwargs,
+        **kwargs
     ):
         hostname, config, forward_agent = self.parse_config(
             hostname,
