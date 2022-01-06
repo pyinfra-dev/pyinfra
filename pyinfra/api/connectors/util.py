@@ -240,7 +240,7 @@ def make_unix_command(
     command,
     env=None,
     chdir=None,
-    shell_executable=None,
+    shell_executable='sh',
     # Su config
     su_user=None,
     use_su_login=False,
