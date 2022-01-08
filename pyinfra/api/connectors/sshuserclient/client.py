@@ -45,7 +45,7 @@ class SSHClient(ParamikoClient):
         hostname, config, forward_agent = self.parse_config(
             hostname,
             kwargs,
-            ssh_config_file=-_pyinfra_ssh_config_file,
+            ssh_config_file=_pyinfra_ssh_config_file,
         )
         config.update(kwargs)
         super(SSHClient, self).connect(hostname, **config)
