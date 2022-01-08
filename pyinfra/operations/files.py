@@ -985,9 +985,9 @@ def _raise_or_remove_invalid_path(fs_type, path, force, force_backup, force_back
             backup_path = '{0}.{1}'.format(path, get_timestamp())
             if force_backup_dir:
                 backup_path = '{0}/{1}'.format(force_backup_dir, backup_path)
-            yield 'mv {0} {1}'.format(path, backup_path)
+            yield StringCommand('mv', QuoteString(path), QuoteString(backup_path))
         else:
-            yield 'rm -rf {0}'.format(path)
+            yield StringCommand('rm', '-rf', QuoteString(path))
     else:
         raise OperationError('{0} exists and is not a {1}'.format(path, fs_type))
 
