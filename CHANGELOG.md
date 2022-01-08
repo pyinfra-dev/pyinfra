@@ -1,3 +1,23 @@
+# v1.6
+
+A small release with a few features and fixes. Future development will utilise smaller, more regular releases to avoid long gaps waiting on feature X to be complete.
+
+This release also changes the git branching model to use `current` for anything non-breaking, and the `next` branch now targets the next _major_ version. This should avoid unncessary confusion for the wonderful contributors to `pyinfra`.
+
+Operations:
+
++ Make it possible to load relative (to CWD) templates (includes/bases/etc) (@themanifold)
++ Add `apt.dist_update` operation (@bauen1)
++ Fix `files.Link` fact & `files.link` operation where path pre-exists and is not a link
+
+Connectors:
+
++ Support setting `shell_executable=None` to pass raw commands to the target (@KuxaBeast)
++ Fix handling of SSH proxy jump config
++ Only load SSH host keys once
++ Make it possible to specify a SSH config file via `host.data.ssh_config_file`
+
+
 # v1.5
 
 This release includes a huge number of improvements, major highlights:
