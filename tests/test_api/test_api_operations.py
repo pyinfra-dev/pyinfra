@@ -320,7 +320,7 @@ class TestOperationsApi(PatchSSHTestCase):
         fake_run_local_process.assert_called_with(
             (
                 'rsync -ax --delete --rsh '
-                "'ssh -o BatchMode=yes -o StrictHostKeyChecking=no '"
+                "'ssh -o BatchMode=yes '"
                 " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,

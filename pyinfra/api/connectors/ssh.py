@@ -548,9 +548,10 @@ def rsync(
         if sudo_user:
             remote_rsync_command = 'sudo -u {0} rsync'.format(sudo_user)
 
+    # To avoid asking for interactive input, specify BatchMode=yes
     rsync_command = (
         'rsync {rsync_flags} '
-        "--rsh 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no {ssh_flags}' "
+        "--rsh 'ssh -o BatchMode=yes {ssh_flags}' "
         "--rsync-path '{remote_rsync_command}' "
         '{src} {user}{hostname}:{dest}'
     ).format(
