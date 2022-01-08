@@ -59,17 +59,14 @@ def _parse_mode(mode):
 
 
 class File(FactBase):
-    # Types must match FLAG_TO_TYPE in .util.files.py
     type = 'file'
-    test_flag = '-e'
 
     def command(self, path):
         return make_formatted_string_command((
-            '! test {test_flag} {0} || '  # only stat if the file exists
+            '! (test -e {0} || test -L {0} ) || '  # only stat if the path exists (file or symlink)
             '( {linux_stat_command} {0} 2> /dev/null || {bsd_stat_command} {0} )'
         ),
             QuoteString(path),
-            test_flag=self.test_flag,
             linux_stat_command=LINUX_STAT_COMMAND,
             bsd_stat_command=BSD_STAT_COMMAND,
         )
@@ -118,7 +115,6 @@ class File(FactBase):
 
 class Link(File):
     type = 'link'
-    test_flag = '-L'
 
 
 class Directory(File):
