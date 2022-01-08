@@ -1,3 +1,7 @@
+# v1.6.1
+
++ Fix typo bug in the SSH client preventing connection
+
 # v1.6
 
 A small release with a few features and fixes. Future development will utilise smaller, more regular releases to avoid long gaps waiting on feature X to be complete.
