@@ -51,7 +51,7 @@ def test_int_docker_git_gem_and_pip_on_mult(helpers):
 @pytest.mark.docker
 def test_int_docker_pacman_on_arch(helpers):
     helpers.run(
-        'pyinfra @docker/archlinux:base-20210131.0.14634 pacman.py',
+        'pyinfra @docker/archlinux:base-20220102.0.42924 pacman.py',
         expected_lines=['docker build complete'],
     )
 
