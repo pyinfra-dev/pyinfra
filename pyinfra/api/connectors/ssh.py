@@ -17,7 +17,6 @@ from paramiko import (
     ECDSAKey,
     Ed25519Key,
     HostKeys,
-    MissingHostKeyPolicy,
     PasswordRequiredException,
     RSAKey,
     SFTPClient,
@@ -43,11 +42,6 @@ from .util import (
 
 EXECUTION_CONNECTOR = True
 SYSTEM_HOST_KEYS = HostKeys()
-
-
-class WarningPolicy(MissingHostKeyPolicy):
-    def missing_host_key(self, client, hostname, key):
-        logger.warning('No host key for {0} found in known_hosts'.format(hostname))
 
 
 def make_names_data(hostname):
@@ -228,7 +222,6 @@ def connect(state, host):
     try:
         # Create new client & connect to the host
         client = SSHClient()
-        client.set_missing_host_key_policy(WarningPolicy())
         client._system_host_keys = SYSTEM_HOST_KEYS
 
         client.connect(hostname, **kwargs)
