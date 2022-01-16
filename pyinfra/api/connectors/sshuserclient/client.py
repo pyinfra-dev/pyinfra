@@ -71,13 +71,22 @@ class SSHClient(ParamikoClient):
         _pyinfra_ssh_config_file=None,
         **kwargs
     ):
-        hostname, config, forward_agent, missing_host_key_policy = self.parse_config(
-            hostname,
-            kwargs,
-            ssh_config_file=_pyinfra_ssh_config_file,
-        )
+        hostname, config, forward_agent, missing_host_key_policy, host_keys_file = \
+            self.parse_config(
+                hostname,
+                kwargs,
+                ssh_config_file=_pyinfra_ssh_config_file,
+            )
         self.set_missing_host_key_policy(missing_host_key_policy)
         config.update(kwargs)
+
+        try:
+            self.load_system_host_keys(filename=host_keys_file)
+        # Unfortunately paramiko bails for any dodge line in known hosts
+        # See: https://github.com/Fizzadar/pyinfra/issues/683
+        except Exception as e:
+            logger.warning('Failed to load known host keys: {0}'.format(e))
+
         super(SSHClient, self).connect(hostname, **config)
 
         if _pyinfra_force_forward_agent is not None:
@@ -124,6 +133,10 @@ class SSHClient(ParamikoClient):
                     'Invalid value StrictHostKeyChecking={}'.format(
                         host_config['stricthostkeychecking']))
 
+        host_keys_file = None
+        if 'userknownhostsfile' in host_config:
+            host_keys_file = path.expanduser(host_config['userknownhostsfile'])
+
         if 'hostname' in host_config:
             hostname = host_config['hostname']
 
@@ -159,7 +172,7 @@ class SSHClient(ParamikoClient):
                 sock = c.gateway(hostname, cfg['port'], target, target_config['port'])
             cfg['sock'] = sock
 
-        return hostname, cfg, forward_agent, missing_host_key_policy
+        return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_file
 
     @staticmethod
     def derive_shorthand(host_string):
