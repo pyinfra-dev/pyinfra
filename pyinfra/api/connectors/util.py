@@ -1,15 +1,16 @@
 from __future__ import unicode_literals
 
+import shlex
+
 from getpass import getpass
+from io import StringIO
 from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
 
 import click
 import gevent
-import six
 
 from gevent.queue import Queue
-from six.moves import shlex_quote
 
 from pyinfra import logger
 from pyinfra.api import MaskString, QuoteString, StringCommand
@@ -20,7 +21,7 @@ SUDO_ASKPASS_EXE_FILENAME = 'pyinfra-sudo-askpass'
 
 
 def get_sudo_askpass_exe():
-    return six.StringIO('''#!/bin/sh
+    return StringIO('''#!/bin/sh
 echo ${0}
 '''.format(SUDO_ASKPASS_ENV_VAR))
 
@@ -34,14 +35,11 @@ def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
         if print_func:
             line = print_func(line)
 
-        if six.PY2:  # Python2 must print unicode as bytes (encoded)
-            line = line.encode('utf-8')
-
         click.echo(line, err=True)
 
     for line in io:
         # Handle local Popen shells returning list of bytes, not strings
-        if not isinstance(line, six.text_type):
+        if not isinstance(line, str):
             line = line.decode('utf-8')
 
         line = line.rstrip('\n')
@@ -188,7 +186,7 @@ def _get_sudo_password(host, use_sudo_password):
         if not isinstance(sudo_password, six.text_type):
             sudo_password = use_sudo_password
 
-    return shlex_quote(sudo_password)
+    return shlex.quote(sudo_password)
 
 
 def remove_any_sudo_askpass_file(host):
@@ -267,16 +265,16 @@ def make_unix_command(
     Builds a shell command with various kwargs.
     '''
 
-    if shell_executable is not None and not isinstance(shell_executable, six.string_types):
+    if shell_executable is not None and not isinstance(shell_executable, str):
         shell_executable = 'sh'
 
-    if isinstance(command, six.binary_type):
+    if isinstance(command, bytes):
         command = command.decode('utf-8')
 
     if env:
         env_string = ' '.join([
             '{0}={1}'.format(key, value)
-            for key, value in six.iteritems(env)
+            for key, value in env.items()
         ])
         command = StringCommand('export', env_string, '&&', command)
 
@@ -352,7 +350,7 @@ def make_win_command(command):
     '''
 
     # Quote the command as a string
-    command = shlex_quote(str(command))
+    command = shlex.quote(str(command))
     command = '{0}'.format(command)
 
     return command

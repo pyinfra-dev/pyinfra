@@ -10,9 +10,9 @@ import sys
 import traceback
 from datetime import timedelta
 from fnmatch import fnmatch
+from io import StringIO
 from os import makedirs, path as os_path, walk
 
-import six
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
 import pyinfra
@@ -948,7 +948,7 @@ def template(
             src, line_number, e, '\n'.join(relevant_lines),
         ))
 
-    output_file = six.StringIO(output)
+    output_file = StringIO(output)
     # Set the template attribute for nicer debugging
     output_file.template = src
 

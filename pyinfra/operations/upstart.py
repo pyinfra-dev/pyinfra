@@ -4,7 +4,7 @@ Manage upstart services.
 
 from __future__ import unicode_literals
 
-import six
+from io import StringIO
 
 from pyinfra import host
 from pyinfra.api import operation
@@ -54,7 +54,7 @@ def service(
 
     # Set the override file to "manual" to disable automatic start
     elif enabled is False:
-        file = six.StringIO('manual\n')
+        file = StringIO('manual\n')
         yield files.put(
             src=file,
             dest='/etc/init/{0}.override'.format(service),

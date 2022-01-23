@@ -10,7 +10,6 @@ from socket import (
 
 import click
 import gevent
-import six
 
 from paramiko import SSHException
 
@@ -335,7 +334,7 @@ def _run_single_op(state, op_hash):
                     progress(host)
 
                 # Get all the results
-                for greenlet, host in six.iteritems(greenlet_to_host):
+                for greenlet, host in greenlet_to_host.items():
                     if not greenlet.get():
                         failed_hosts.add(host)
 

@@ -8,8 +8,6 @@ import ntpath
 import os
 from datetime import timedelta
 
-import six
-
 from pyinfra import host, logger, state
 from pyinfra.api import (
     FileUploadCommand,
@@ -287,7 +285,7 @@ def file(
         )
     '''
 
-    if not isinstance(path, six.string_types):
+    if not isinstance(path, str):
         raise OperationTypeError('Name must be a string')
 
     # mode = ensure_mode_int(mode)
@@ -399,7 +397,7 @@ def directory(
 
     '''
 
-    if not isinstance(path, six.string_types):
+    if not isinstance(path, str):
         raise OperationTypeError('Name must be a string')
 
     info = host.get_fact(WindowsDirectory, name=path)

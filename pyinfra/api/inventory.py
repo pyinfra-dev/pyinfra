@@ -1,7 +1,5 @@
 from collections import defaultdict
 
-import six
-
 from pyinfra import logger
 
 from .connectors import ALL_CONNECTORS, EXECUTION_CONNECTORS
@@ -89,7 +87,7 @@ class Inventory(object):
         # Map name -> group names
         name_to_group_names = defaultdict(list)
 
-        for group_name, (group_names, group_data) in six.iteritems(groups):
+        for group_name, (group_names, group_data) in groups.items():
             # Assign group data
             self.group_data[group_name] = group_data
 
@@ -198,7 +196,7 @@ class Inventory(object):
         Iterates over all inventory hosts.
         '''
 
-        return six.itervalues(self.hosts)
+        return iter(self.hosts.values())
 
     def len_all_hosts(self):
         logger.warning('`Inventory.len_all_hosts` is deprecated, please use `len(Inventory)`.')

@@ -1,10 +1,10 @@
 # encoding: utf-8
 
+import shlex
 from subprocess import PIPE
 from unittest import TestCase
 
 from mock import MagicMock, mock_open, patch
-from six.moves import shlex_quote
 
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
@@ -72,7 +72,7 @@ class TestChrootConnector(TestCase):
         assert out[0] is True
 
         command = make_unix_command(command).get_raw_value()
-        command = shlex_quote(command)
+        command = shlex.quote(command)
         docker_command = 'chroot /not-a-chroot sh -c {0}'.format(command)
         shell_command = make_unix_command(docker_command).get_raw_value()
 

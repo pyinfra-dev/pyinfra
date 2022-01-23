@@ -4,7 +4,7 @@ Execute commands and up/download files *from* the remote host.
 Eg: ``pyinfra -> inventory-host.net <-> another-host.net``
 '''
 
-from six.moves import shlex_quote
+import shlex
 
 from pyinfra import host, logger, state
 from pyinfra.api import operation, OperationError
@@ -104,7 +104,7 @@ def command(hostname, command, user=None, port=22, ssh_user=None):
     # TODO: remove this (ssh_user is a legacy arg)
     user = _user_or_ssh_user(user, ssh_user)
 
-    command = shlex_quote(command)
+    command = shlex.quote(command)
 
     connection_target = hostname
     if user:
