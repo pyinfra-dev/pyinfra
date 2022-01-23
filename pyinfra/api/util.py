@@ -8,7 +8,6 @@ from socket import (
     error as socket_error,
     timeout as timeout_error,
 )
-from types import GeneratorType
 
 import click
 
@@ -202,28 +201,6 @@ class FallbackDict(object):
             out.update(data)
 
         return out
-
-
-def unroll_generators(generator):
-    '''
-    Take a generator and unroll any sub-generators recursively. This is
-    essentially a Python 2 way of doing `yield from` in Python 3 (given
-    iterating the entire thing).
-    '''
-
-    # Ensure we have a generator (prevents ccommands returning lists)
-    if not isinstance(generator, GeneratorType):
-        raise TypeError('{0} is not a generator'.format(generator))
-
-    items = []
-
-    for item in generator:
-        if isinstance(item, GeneratorType):
-            items.extend(unroll_generators(item))
-        else:
-            items.append(item)
-
-    return items
 
 
 def get_template(filename_or_string, is_string=False):

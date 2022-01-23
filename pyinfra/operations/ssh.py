@@ -34,7 +34,7 @@ def keyscan(hostname, force=False, port=22):
 
     homedir = host.get_fact(Home)
 
-    yield files.directory(
+    yield from files.directory(
         '{0}/.ssh'.format(homedir),
         mode=700,
     )
@@ -146,7 +146,7 @@ def upload(
         connection_target = '@'.join((user, hostname))
 
     if ssh_keyscan:
-        yield keyscan(hostname)
+        yield from keyscan(hostname)
 
     # If we're not using sudo on the remote side, just scp the file over
     if not use_remote_sudo:
@@ -166,7 +166,7 @@ def upload(
         yield upload_cmd
 
         # And sudo sudo to move it
-        yield command(
+        yield from command(
             hostname=hostname,
             command='sudo mv {0} {1}'.format(temp_remote_filename, remote_filename),
             port=port,
@@ -223,7 +223,7 @@ def download(
         connection_target = '@'.join((ssh_user, hostname))
 
     if ssh_keyscan:
-        yield keyscan(hostname)
+        yield from keyscan(hostname)
 
     # Download the file with scp
     yield 'scp -P {0} {1}:{2} {3}'.format(

@@ -56,12 +56,12 @@ def packages(
     '''
 
     if update:
-        yield _update()
+        yield from _update()
 
     if upgrade:
-        yield _upgrade()
+        yield from _upgrade()
 
-    yield ensure_packages(
+    yield from ensure_packages(
         host, packages, host.get_fact(XbpsPackages), present,
         install_command='xbps-install -y -u',
         uninstall_command='xbps-remove -y',

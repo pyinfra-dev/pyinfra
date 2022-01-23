@@ -26,7 +26,7 @@ def service(
 
     was_running = host.get_fact(LaunchdStatus).get(service, None)
 
-    yield handle_service_control(
+    yield from handle_service_control(
         host,
         service, host.get_fact(LaunchdStatus),
         'launchctl {1} {0}',

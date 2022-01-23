@@ -42,7 +42,7 @@ def virtualenv(
 
     if present is False:
         if host.get_fact(File, path=activate_script_path):
-            yield files.directory(path, present=False)
+            yield from files.directory(path, present=False)
         else:
             host.noop('virtualenv {0} does not exist'.format(path))
 
@@ -103,7 +103,7 @@ def venv(
         )
     '''
 
-    yield virtualenv(
+    yield from virtualenv(
         venv=True,
         path=path,
         python=python,
@@ -154,7 +154,7 @@ def packages(
 
     # Ensure any virtualenv
     if virtualenv:
-        yield _virtualenv(virtualenv, **virtualenv_kwargs)
+        yield from _virtualenv(virtualenv, **virtualenv_kwargs)
 
         # And update pip path
         virtualenv = virtualenv.rstrip('/')
@@ -178,7 +178,7 @@ def packages(
     if packages:
         current_packages = host.get_fact(PipPackages, pip=pip)
 
-        yield ensure_packages(
+        yield from ensure_packages(
             host, packages, current_packages, present,
             install_command=install_command,
             uninstall_command=uninstall_command,

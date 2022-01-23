@@ -25,7 +25,6 @@ from .util import (
     get_operation_order_from_stack,
     make_hash,
     memoize,
-    unroll_generators,
 )
 
 
@@ -339,7 +338,7 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
         }
 
         # Convert to list as the result may be a generator
-        commands = unroll_generators(func(*actual_args, **actual_kwargs))
+        commands = func(*actual_args, **actual_kwargs)
         commands = [  # convert any strings -> StringCommand's
             StringCommand(command.strip())
             if isinstance(command, str) else command
