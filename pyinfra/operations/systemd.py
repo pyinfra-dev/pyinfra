@@ -69,9 +69,9 @@ def service(
         service = '{0}.service'.format(service)
 
     if daemon_reload:
-        yield _daemon_reload(user_mode=user_mode)
+        yield from _daemon_reload(user_mode=user_mode)
 
-    yield handle_service_control(
+    yield from handle_service_control(
         host,
         service, host.get_fact(SystemdStatus),
         ' '.join([systemctl_cmd, '{1}', '{0}']),

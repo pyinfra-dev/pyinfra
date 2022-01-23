@@ -35,7 +35,7 @@ def service(
         "manual" to disable automatic start of services.
     '''
 
-    yield handle_service_control(
+    yield from handle_service_control(
         host,
         service, host.get_fact(UpstartStatus),
         'initctl {1} {0}',
@@ -45,7 +45,7 @@ def service(
     # Upstart jobs are setup w/runlevels etc in their config files, so here we just check
     # there's no override file.
     if enabled is True:
-        yield files.file(
+        yield from files.file(
             '/etc/init/{0}.override'.format(service),
             present=False,
         )
@@ -53,7 +53,7 @@ def service(
     # Set the override file to "manual" to disable automatic start
     elif enabled is False:
         file = StringIO('manual\n')
-        yield files.put(
+        yield from files.put(
             src=file,
             dest='/etc/init/{0}.override'.format(service),
         )

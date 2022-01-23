@@ -51,7 +51,7 @@ def service(
         )
     '''
 
-    yield handle_service_control(
+    yield from handle_service_control(
         host,
         service, host.get_fact(InitdStatus),
         '/etc/init.d/{0} {1}',
@@ -133,7 +133,7 @@ def enable(
 
     # Ensure all the new links exist
     for link in links:
-        yield files.link(
+        yield from files.link(
             path=link,
             target='/etc/init.d/{0}'.format(service),
         )

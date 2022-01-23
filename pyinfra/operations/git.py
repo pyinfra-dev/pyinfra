@@ -94,7 +94,7 @@ def repo(
     '''
 
     # Ensure our target directory exists
-    yield files.directory(dest)
+    yield from files.directory(dest)
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
@@ -102,7 +102,7 @@ def repo(
         domain = re.match(r'^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)', src)
 
         if domain:
-            yield ssh.keyscan(domain.group(1))
+            yield from ssh.keyscan(domain.group(1))
         else:
             raise OperationError(
                 'Could not parse domain (to SSH keyscan) from: {0}'.format(src),
@@ -395,7 +395,7 @@ def bare_repo(
         )
     '''
 
-    yield files.directory(path, present=present)
+    yield from files.directory(path, present=present)
 
     # Ensure our target directory exists
     if present:

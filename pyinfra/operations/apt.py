@@ -139,7 +139,7 @@ def repo(src, present=True, filename=None):
 
     # Doesn't exist and we want it
     if not is_present and present:
-        yield files.line(
+        yield from files.line(
             filename,
             src,
             escape_regex_characters=True,
@@ -148,7 +148,7 @@ def repo(src, present=True, filename=None):
 
     # Exists and we don't want it
     elif is_present and not present:
-        yield files.line(
+        yield from files.line(
             filename,
             src,
             present=False,
@@ -230,7 +230,7 @@ def deb(src, present=True, force=False):
         temp_filename = state.get_temp_filename(src)
 
         # Ensure it's downloaded
-        yield files.download(src, temp_filename)
+        yield from files.download(src, temp_filename)
 
         # Override the source with the downloaded file
         src = temp_filename
@@ -419,10 +419,10 @@ def packages(
     '''
 
     if update:
-        yield _update(cache_time=cache_time)
+        yield from _update(cache_time=cache_time)
 
     if upgrade:
-        yield _upgrade()
+        yield from _upgrade()
 
     install_command = ['install']
     if no_recommends is True:
@@ -444,7 +444,7 @@ def packages(
     uninstall_command = ' '.join(uninstall_command)
 
     # Compare/ensure packages are present/not
-    yield ensure_packages(
+    yield from ensure_packages(
         host, packages, host.get_fact(DebPackages), present,
         install_command=noninteractive_apt(install_command, force=force),
         uninstall_command=noninteractive_apt(uninstall_command, force=force),

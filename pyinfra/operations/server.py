@@ -171,7 +171,7 @@ def script(src):
     '''
 
     temp_file = state.get_temp_filename(src)
-    yield files.put(src, temp_file)
+    yield from files.put(src, temp_file)
 
     yield chmod(temp_file, '+x')
     yield temp_file
@@ -201,7 +201,7 @@ def script_template(src, **data):
     '''
 
     temp_file = state.get_temp_filename('{0}{1}'.format(src, data))
-    yield files.template(src, temp_file, **data)
+    yield from files.template(src, temp_file, **data)
 
     yield chmod(temp_file, '+x')
     yield temp_file
@@ -375,7 +375,7 @@ def hostname(hostname, hostname_file=None):
         file = StringIO('{0}\n'.format(hostname))
 
         # And ensure it exists
-        yield files.put(file, hostname_file)
+        yield from files.put(file, hostname_file)
 
 
 @operation
@@ -425,7 +425,7 @@ def sysctl(
         host.noop('sysctl {0} is set to {1}'.format(key, string_value))
 
     if persist:
-        yield files.line(
+        yield from files.line(
             path=persist_file,
             line='{0}[[:space:]]*=[[:space:]]*{1}'.format(key, string_value),
             replace='{0} = {1}'.format(key, string_value),
@@ -481,7 +481,7 @@ def service(
             '(no systemctl, initctl, /etc/init.d or /etc/rc.d found)'
         ))
 
-    yield service_operation(
+    yield from service_operation(
         service,
         running=running, restarted=restarted, reloaded=reloaded,
         command=command, enabled=enabled,
@@ -542,7 +542,7 @@ def packages(
             '(no apk, apt, brew, dnf, pacman, pkg, xbps, yum or zypper found)'
         ))
 
-    yield package_operation(packages=packages, present=present)
+    yield from package_operation(packages=packages, present=present)
 
 
 @operation
@@ -929,7 +929,7 @@ def user(
 
     # Ensure home directory ownership
     if ensure_home:
-        yield files.directory(
+        yield from files.directory(
             home,
             user=user, group=group or user,
         )
@@ -955,7 +955,7 @@ def user(
         # Ensure .ssh directory
         # note that this always outputs commands unless the SSH user has access to the
         # authorized_keys file, ie the SSH user is the user defined in this function
-        yield files.directory(
+        yield from files.directory(
             '{0}/.ssh'.format(home),
             user=user,
             group=group or user,
@@ -971,7 +971,7 @@ def user(
             ))
 
             # And ensure it exists
-            yield files.put(
+            yield from files.put(
                 src=keys_file,
                 dest=filename,
                 user=user,
@@ -981,7 +981,7 @@ def user(
 
         else:
             # Ensure authorized_keys exists
-            yield files.file(
+            yield from files.file(
                 path=filename,
                 user=user,
                 group=group or user,
@@ -990,4 +990,4 @@ def user(
 
             # And every public key is present
             for key in public_keys:
-                yield files.line(path=filename, line=key)
+                yield from files.line(path=filename, line=key)

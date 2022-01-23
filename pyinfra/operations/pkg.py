@@ -58,7 +58,7 @@ def packages(packages=None, present=True, pkg_path=None):
     if pkg_path:
         install_command = 'PKG_PATH={0} {1}'.format(pkg_path, install_command)
 
-    yield ensure_packages(
+    yield from ensure_packages(
         host, packages, host.get_fact(PkgPackages), present,
         install_command=install_command,
         uninstall_command=uninstall_command,

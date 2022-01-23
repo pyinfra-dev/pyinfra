@@ -282,7 +282,7 @@ def user(
     # If we're here either the user exists or we just created them; either way
     # now we can check any privileges are set.
     if privileges:
-        yield _privileges(
+        yield from _privileges(
             user, privileges,
             user_hostname=user_hostname,
             mysql_user=mysql_user, mysql_password=mysql_password,
@@ -375,7 +375,7 @@ def database(
 
     # Ensure any user privileges for this database
     if user and user_privileges:
-        yield privileges(
+        yield from privileges(
             user,
             user_hostname=user_hostname,
             privileges=user_privileges,

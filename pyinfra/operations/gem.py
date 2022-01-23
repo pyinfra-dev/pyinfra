@@ -32,7 +32,7 @@ def packages(packages=None, present=True, latest=False):
         )
     '''
 
-    yield ensure_packages(
+    yield from ensure_packages(
         host, packages, host.get_fact(GemPackages), present,
         install_command='gem install',
         uninstall_command='gem uninstall',

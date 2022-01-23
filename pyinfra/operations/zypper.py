@@ -55,7 +55,7 @@ def repo(
         )
     '''
 
-    yield ensure_yum_repo(
+    yield from ensure_yum_repo(
         state,
         host,
         files,
@@ -94,7 +94,7 @@ def rpm(src, present=True):
         )
     '''
 
-    yield ensure_rpm(state, host, files, src, present, 'zypper --non-interactive')
+    yield from ensure_rpm(state, host, files, src, present, 'zypper --non-interactive')
 
 
 @operation(is_idempotent=False)
@@ -160,7 +160,7 @@ def packages(
         yield 'zypper clean --all'
 
     if update:
-        yield _update()
+        yield from _update()
 
     install_command = ['zypper', '--non-interactive', 'install', '-y']
 
@@ -180,7 +180,7 @@ def packages(
 
     upgrade_command = 'zypper update -y'
 
-    yield ensure_packages(
+    yield from ensure_packages(
         host,
         packages,
         host.get_fact(RpmPackages),
