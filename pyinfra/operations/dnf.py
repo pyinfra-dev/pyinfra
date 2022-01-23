@@ -77,7 +77,7 @@ def repo(
         )
     '''
 
-    yield ensure_yum_repo(
+    yield from ensure_yum_repo(
         state, host, files,
         src, baseurl, present, description, enabled, gpgcheck, gpgkey,
     )
@@ -107,7 +107,7 @@ def rpm(src, present=True):
         )
     '''
 
-    yield ensure_rpm(state, host, files, src, present, 'dnf')
+    yield from ensure_rpm(state, host, files, src, present, 'dnf')
 
 
 @operation
@@ -165,7 +165,7 @@ def packages(
         yield 'dnf clean all'
 
     if update:
-        yield _update()
+        yield from _update()
 
     install_command = ['dnf', 'install', '-y']
 
@@ -180,7 +180,7 @@ def packages(
     if extra_uninstall_args:
         uninstall_command.append(extra_uninstall_args)
 
-    yield ensure_packages(
+    yield from ensure_packages(
         host, packages, host.get_fact(RpmPackages), present,
         install_command=' '.join(install_command),
         uninstall_command=' '.join(uninstall_command),

@@ -43,7 +43,7 @@ def packages(packages=None, present=True, latest=False, directory=None):
         else 'cd {0} && npm update'.format(directory)
     )
 
-    yield ensure_packages(
+    yield from ensure_packages(
         host, packages, current_packages, present,
         install_command=install_command,
         uninstall_command=uninstall_command,

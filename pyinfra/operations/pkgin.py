@@ -65,14 +65,14 @@ def packages(
     '''
 
     if update:
-        yield _update()
+        yield from _update()
 
     if upgrade:
-        yield _upgrade()
+        yield from _upgrade()
 
     # TODO support glob for specific versions (it isn't as simple
     # as apt's, as pkgin supports something like 'mysql-server>=5.6<5.7')
-    yield ensure_packages(
+    yield from ensure_packages(
         host, packages, host.get_fact(PkginPackages), present,
         install_command='pkgin -y install',
         uninstall_command='pkgin -y remove',

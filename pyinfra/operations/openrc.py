@@ -28,7 +28,7 @@ def service(
     + runlevel: runlevel to manage services for
     '''
 
-    yield handle_service_control(
+    yield from handle_service_control(
         host,
         service,
         host.get_fact(OpenrcStatus, runlevel=runlevel),

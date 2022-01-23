@@ -32,7 +32,7 @@ def service(
     if host.get_fact(Os) == 'OpenBSD':
         status_argument = 'check'
 
-    yield handle_service_control(
+    yield from handle_service_control(
         host,
         service, host.get_fact(RcdStatus),
         'test -e /etc/rc.d/{0} && /etc/rc.d/{0} {1} || /usr/local/etc/rc.d/{0} {1}',
@@ -42,7 +42,7 @@ def service(
 
     # BSD init is simple, just add/remove <service>_enabled="YES"
     if isinstance(enabled, bool):
-        yield files.line(
+        yield from files.line(
             '/etc/rc.conf.local',
             '^{0}_enable='.format(service),
             replace='{0}_enable="YES"'.format(service),

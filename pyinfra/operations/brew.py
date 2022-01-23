@@ -74,12 +74,12 @@ def packages(
     '''
 
     if update:
-        yield _update()
+        yield from _update()
 
     if upgrade:
-        yield _upgrade()
+        yield from _upgrade()
 
-    yield ensure_packages(
+    yield from ensure_packages(
         host, packages, host.get_fact(BrewPackages), present,
         install_command='brew install',
         uninstall_command='brew uninstall',
@@ -137,11 +137,11 @@ def casks(
     '''
 
     if upgrade:
-        yield cask_upgrade()
+        yield from cask_upgrade()
 
     args = cask_args(host)
 
-    yield ensure_packages(
+    yield from ensure_packages(
         host, casks, host.get_fact(BrewCasks), present,
         install_command='brew %sinstall%s' % args,
         uninstall_command='brew %suninstall%s' % args,

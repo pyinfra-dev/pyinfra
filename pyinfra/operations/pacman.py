@@ -59,12 +59,12 @@ def packages(
     '''
 
     if update:
-        yield _update()
+        yield from _update()
 
     if upgrade:
-        yield _upgrade()
+        yield from _upgrade()
 
-    yield ensure_packages(
+    yield from ensure_packages(
         host, packages, host.get_fact(PacmanPackages), present,
         install_command='pacman --noconfirm -S',
         uninstall_command='pacman --noconfirm -R',

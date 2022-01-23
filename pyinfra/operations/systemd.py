@@ -83,13 +83,13 @@ def service(
         service = '{0}.service'.format(service)
 
     if daemon_reload:
-        yield _daemon_reload(
+        yield from _daemon_reload(
             user_mode=user_mode,
             machine=machine,
             user_name=user_name,
         )
 
-    yield handle_service_control(
+    yield from handle_service_control(
         host,
         service, host.get_fact(
             SystemdStatus,

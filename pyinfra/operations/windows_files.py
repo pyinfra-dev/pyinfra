@@ -198,7 +198,7 @@ def put(
     remote_file = host.get_fact(WindowsFile, name=dest)
 
     if create_remote_dir:
-        yield _create_remote_dir(state, host, dest, user, group)
+        yield from _create_remote_dir(state, host, dest, user, group)
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
@@ -303,7 +303,7 @@ def file(
     # Doesn't exist & we want it
     if not assume_present and info is None and present:
         if create_remote_dir:
-            yield _create_remote_dir(state, host, path, user, group)
+            yield from _create_remote_dir(state, host, path, user, group)
 
         yield 'New-Item -ItemType file {0}'.format(path)
 
@@ -348,7 +348,7 @@ def _create_remote_dir(state, host, remote_filename, user, group):
     # Always use POSIX style path as local might be Windows, remote always *nix
     remote_dirname = ntpath.dirname(remote_filename)
     if remote_dirname:
-        yield directory(
+        yield from directory(
             remote_dirname,
             state=state,
             host=host,
@@ -533,7 +533,7 @@ def link(
     # or does not exist
     if (info is None or force) and present:
         if create_remote_dir:
-            yield _create_remote_dir(state, host, path, user, group)
+            yield from _create_remote_dir(state, host, path, user, group)
 
         yield add_cmd
 

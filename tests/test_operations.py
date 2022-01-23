@@ -14,7 +14,6 @@ from pyinfra.api import (
     FunctionCommand,
     StringCommand,
 )
-from pyinfra.api.util import unroll_generators
 from pyinfra_cli.util import json_encode
 
 from .util import create_host, FakeState, get_command_string, JsonTest, patch_files
@@ -125,7 +124,7 @@ def make_operation_tests(arg):
 
             with patch_files(test_data.get('local_files', {})):
                 try:
-                    output_commands = unroll_generators(op._pyinfra_op(
+                    output_commands = list(op._pyinfra_op(
                         *test_data.get('args', []),
                         **kwargs
                     ))
@@ -148,7 +147,7 @@ def make_operation_tests(arg):
                 test_second_output_commands = 'second_output_commands' in test_data
 
                 if op_is_idempotent or test_second_output_commands:
-                    second_output_commands = unroll_generators(op._pyinfra_op(
+                    second_output_commands = list(op._pyinfra_op(
                         *test_data.get('args', []),
                         **kwargs
                     ))
