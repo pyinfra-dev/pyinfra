@@ -1,5 +1,4 @@
 import gevent
-import six
 
 from pyinfra.progress import progress_spinner
 
@@ -30,7 +29,7 @@ def connect_all(state):
     # Get/set the results
     failed_hosts = set()
 
-    for greenlet, host in six.iteritems(greenlet_to_host):
+    for greenlet, host in greenlet_to_host.items():
         # Raise any unexpected exception
         greenlet.get()
 

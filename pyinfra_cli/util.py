@@ -20,7 +20,6 @@ except ImportError:  # pragma: no cover
     io_bases = IOBase
 
 import click
-import six
 
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.command import PyinfraCommand
@@ -119,7 +118,7 @@ def json_encode(obj):
     elif isinstance(obj, set):
         return sorted(list(obj))
 
-    elif isinstance(obj, six.binary_type):
+    elif isinstance(obj, bytes):
         return obj.decode()
 
     else:

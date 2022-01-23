@@ -2,8 +2,6 @@
 Manage OpenVZ containers with ``vzctl``.
 '''
 
-import six
-
 from pyinfra import host
 from pyinfra.api import operation, OperationError
 from pyinfra.facts.vzctl import OpenvzContainers
@@ -127,7 +125,7 @@ def set(ctid, save=True, **settings):
     if save:
         args.append('--save')
 
-    for key, value in six.iteritems(settings):
+    for key, value in settings.items():
         # Handle list values (e.g. --nameserver X --nameserver X)
         if isinstance(value, list):
             args.extend('--{0} {1}'.format(key, v) for v in value)

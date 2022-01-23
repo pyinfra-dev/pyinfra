@@ -10,8 +10,6 @@ from __future__ import unicode_literals
 from functools import wraps
 from types import FunctionType
 
-import six
-
 import pyinfra
 
 from pyinfra import host, state
@@ -282,7 +280,7 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
         # as jinja templates.
         actual_global_kwargs = {
             key: get_arg_value(state, host, a)
-            for key, a in six.iteritems(global_kwargs)
+            for key, a in global_kwargs.items()
         }
 
         # Add any new names to the set
@@ -298,7 +296,7 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
                     op_meta['args'].append(arg)
 
             # Attach keyword args
-            for key, value in six.iteritems(kwargs):
+            for key, value in kwargs.items():
                 if isinstance(value, FunctionType):
                     value = value.__name__
 
@@ -312,7 +310,7 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
         # Run once and we've already added meta for this op? Stop here.
         if op_meta['run_once']:
             has_run = False
-            for ops in six.itervalues(state.ops):
+            for ops in state.ops.values():
                 if op_hash in ops:
                     has_run = True
                     break
@@ -339,14 +337,14 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
 
         actual_kwargs = {
             key: get_arg_value(state, host, a)
-            for key, a in six.iteritems(kwargs)
+            for key, a in kwargs.items()
         }
 
         # Convert to list as the result may be a generator
         commands = unroll_generators(func(*actual_args, **actual_kwargs))
         commands = [  # convert any strings -> StringCommand's
             StringCommand(command.strip())
-            if isinstance(command, six.string_types) else command
+            if isinstance(command, str) else command
             for command in commands
         ]
 

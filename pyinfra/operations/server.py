@@ -5,13 +5,11 @@ Linux/BSD.
 
 from __future__ import division, unicode_literals
 
-from itertools import tee
+import shlex
+from io import StringIO
+from itertools import filterfalse, tee
 from os import path
 from time import sleep
-
-import six
-
-from six.moves import filterfalse, shlex_quote
 
 from pyinfra import host, state
 from pyinfra.api import FunctionCommand, operation, OperationError, StringCommand
@@ -149,7 +147,7 @@ def shell(commands):
     '''
 
     # Ensure we have a list
-    if isinstance(commands, six.string_types):
+    if isinstance(commands, str):
         commands = [commands]
 
     for command in commands:
@@ -231,7 +229,7 @@ def modprobe(module, present=True, force=False):
     '''
     list_value = (
         [module]
-        if isinstance(module, six.string_types)
+        if isinstance(module, str)
         else module
     )
 
@@ -376,7 +374,7 @@ def hostname(hostname, hostname_file=None):
 
     if hostname_file:
         # Create a whole new hostname file
-        file = six.StringIO('{0}\n'.format(hostname))
+        file = StringIO('{0}\n'.format(hostname))
 
         # And ensure it exists
         yield files.put(file, hostname_file)
@@ -659,11 +657,11 @@ def crontab(
             if crontab:  # append a blank line if cron entries already exist
                 edit_commands.append("echo '' >> {0}".format(temp_filename))
             edit_commands.append('echo {0} >> {1}'.format(
-                shlex_quote(name_comment), temp_filename,
+                shlex.quote(name_comment), temp_filename,
             ))
 
         edit_commands.append('echo {0} >> {1}'.format(
-            shlex_quote(new_crontab_line), temp_filename,
+            shlex.quote(new_crontab_line), temp_filename,
         ))
 
     # We have the cron and it exists, do it's details? If not, replace the line
@@ -940,7 +938,7 @@ def user(
 
     # Add SSH keys
     if public_keys is not None:
-        if isinstance(public_keys, six.string_types):
+        if isinstance(public_keys, str):
             public_keys = [public_keys]
 
         def read_any_pub_key_file(key):
@@ -970,7 +968,7 @@ def user(
 
         if delete_keys:
             # Create a whole new authorized_keys file
-            keys_file = six.StringIO('{0}\n'.format(
+            keys_file = StringIO('{0}\n'.format(
                 '\n'.join(public_keys),
             ))
 

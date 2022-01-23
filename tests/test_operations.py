@@ -8,7 +8,6 @@ from importlib import import_module
 from os import listdir, path
 from unittest import TestCase
 
-import six
 from mock import patch
 
 from pyinfra.api import (
@@ -29,7 +28,7 @@ def parse_commands(commands):
     json_commands = []
 
     for command in commands:
-        if isinstance(command, six.string_types):  # matches pyinfra/api/operation.py
+        if isinstance(command, str):  # matches pyinfra/api/operation.py
             command = StringCommand(command.strip())
 
         if isinstance(command, StringCommand):
@@ -95,8 +94,7 @@ def make_operation_tests(arg):
     # Generate a test class
     @patch('pyinfra.operations.files.get_timestamp', lambda: 'a-timestamp')
     @patch('pyinfra.operations.util.files.get_timestamp', lambda: 'a-timestamp')
-    @six.add_metaclass(JsonTest)
-    class TestTests(TestCase):
+    class TestTests(TestCase, metaclass=JsonTest):
         jsontest_files = path.join('tests', 'operations', arg)
         jsontest_prefix = 'test_{0}_{1}_'.format(module_name, op_name)
 

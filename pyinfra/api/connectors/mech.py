@@ -1,9 +1,8 @@
 import json
 
 from os import path
+from queue import Queue
 from threading import Thread
-
-from six.moves.queue import Queue
 
 from pyinfra import local, logger
 from pyinfra.api.exceptions import InventoryError

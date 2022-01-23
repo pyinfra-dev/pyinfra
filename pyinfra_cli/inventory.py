@@ -1,16 +1,12 @@
 from os import listdir, path
 from types import GeneratorType
 
-import six
-
 from pyinfra import logger, pseudo_inventory
 from pyinfra.api.inventory import Inventory
 from pyinfra_cli.util import exec_file
 
 # Hosts in an inventory can be just the hostname or a tuple (hostname, data)
-ALLOWED_HOST_TYPES = tuple(
-    six.string_types + (tuple,),
-)
+ALLOWED_HOST_TYPES = (str, tuple)
 
 
 def _is_inventory_group(key, value):
@@ -60,7 +56,7 @@ def _get_group_data(deploy_dir):
 
             group_data[group_name] = {
                 key: value
-                for key, value in six.iteritems(attrs)
+                for key, value in attrs.items()
                 if key in keys and not key.startswith('_')
             }
 
@@ -72,7 +68,7 @@ def _get_groups_from_filename(inventory_filename):
 
     return {
         key: value
-        for key, value in six.iteritems(attrs)
+        for key, value in attrs.items()
         if _is_inventory_group(key, value)
     }
 
@@ -134,7 +130,7 @@ def make_inventory(inventory_filename, override_data=None, deploy_dir=None):
     fake_groups = {
         # In API mode groups *must* be tuples of (hostnames, data)
         name: group if isinstance(group, tuple) else (group, {})
-        for name, group in six.iteritems(groups)
+        for name, group in groups.items()
     }
     fake_inventory = Inventory((all_hosts, all_data), **fake_groups)
     pseudo_inventory.set(fake_inventory)
@@ -146,7 +142,7 @@ def make_inventory(inventory_filename, override_data=None, deploy_dir=None):
     pseudo_inventory.reset()
 
     # For each group load up any data
-    for name, hosts in six.iteritems(groups):
+    for name, hosts in groups.items():
         data = {}
 
         if isinstance(hosts, tuple):
@@ -161,7 +157,7 @@ def make_inventory(inventory_filename, override_data=None, deploy_dir=None):
     # Loop back through any leftover group data and create an empty (for now)
     # group - this is because inventory @connectors can attach arbitrary groups
     # to hosts, so we need to support that.
-    for name, data in six.iteritems(group_data):
+    for name, data in group_data.items():
         groups[name] = ([], data)
 
     return Inventory(

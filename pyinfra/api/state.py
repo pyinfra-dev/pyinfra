@@ -5,8 +5,6 @@ from multiprocessing import cpu_count
 from os import path
 from uuid import uuid4
 
-import six
-
 from gevent.pool import Pool
 from pkg_resources import parse_version, require, Requirement, ResolutionError
 
@@ -435,7 +433,7 @@ class State(object):
         '''
 
         if not hash_key:
-            hash_key = six.text_type(uuid4())
+            hash_key = str(uuid4())
 
         if hash_filename:
             hash_key = sha1_hash(hash_key)

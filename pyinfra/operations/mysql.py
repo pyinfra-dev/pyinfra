@@ -13,8 +13,6 @@ See the example/mysql.py
 
 '''
 
-import six
-
 from pyinfra import host
 from pyinfra.api import MaskString, operation, OperationError, StringCommand
 from pyinfra.facts.mysql import (
@@ -424,7 +422,7 @@ def privileges(
     '''
 
     # Ensure we have a list
-    if isinstance(privileges, six.string_types):
+    if isinstance(privileges, str):
         privileges = [privileges]
 
     if (

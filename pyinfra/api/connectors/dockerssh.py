@@ -3,7 +3,6 @@ import os
 from tempfile import mkstemp
 
 import click
-import six
 
 from pyinfra import logger
 from pyinfra.api import QuoteString, StringCommand
@@ -154,7 +153,7 @@ def put_file(
         with open(temp_filename, 'wb') as temp_f:
             data = file_io.read()
 
-            if isinstance(data, six.text_type):
+            if isinstance(data, str):
                 data = data.encode()
 
             temp_f.write(data)

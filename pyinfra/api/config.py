@@ -1,6 +1,3 @@
-import six
-
-
 config_defaults = {
     # % of hosts which have to fail for all operations to stop
     'FAIL_PERCENT': None,
@@ -71,7 +68,7 @@ class Config(object):
         config = config_defaults.copy()
         config.update(kwargs)
 
-        for key, value in six.iteritems(config):
+        for key, value in config.items():
             setattr(self, key, value)
 
     def get_current_state(self):

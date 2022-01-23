@@ -2,8 +2,6 @@ from __future__ import unicode_literals
 
 import re
 
-import six
-
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
@@ -58,7 +56,7 @@ class DebPackage(FactBase):
 
         for line in output:
             line = line.strip()
-            for key, regex in six.iteritems(self._regexes):
+            for key, regex in self._regexes.items():
                 matches = re.match(regex, line)
                 if matches:
                     value = matches.group(1)

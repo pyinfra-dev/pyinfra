@@ -1,10 +1,8 @@
 from __future__ import unicode_literals
 
-import six
-
-from six import StringIO
-from six.moves import shlex_quote
-from six.moves.urllib.parse import urlparse
+import shlex
+from io import StringIO
+from urllib.parse import urlparse
 
 from pyinfra.facts.files import File
 from pyinfra.facts.rpm import RpmPackage
@@ -59,7 +57,7 @@ def ensure_packages(
         return
 
     # Accept a single package as string
-    if isinstance(packages, six.string_types):
+    if isinstance(packages, str):
         packages = [packages]
 
     # Lowercase packaging?
@@ -99,7 +97,7 @@ def ensure_packages(
 
             else:
                 # Present packages w/o version specified - for upgrade if latest
-                if isinstance(package, six.string_types):
+                if isinstance(package, str):
                     upgrade_packages.append(package)
 
                 if not latest:
@@ -134,7 +132,7 @@ def ensure_packages(
 
         yield '{0} {1}'.format(
             command,
-            ' '.join([shlex_quote(pkg) for pkg in diff_packages]),
+            ' '.join([shlex.quote(pkg) for pkg in diff_packages]),
         )
 
         for package in diff_packages:  # add/remove from current packages
@@ -153,7 +151,7 @@ def ensure_packages(
     if latest and upgrade_command and upgrade_packages:
         yield '{0} {1}'.format(
             upgrade_command,
-            ' '.join([shlex_quote(pkg) for pkg in upgrade_packages]),
+            ' '.join([shlex.quote(pkg) for pkg in upgrade_packages]),
         )
 
 

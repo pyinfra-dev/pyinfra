@@ -7,8 +7,6 @@ from importlib import import_module
 from os import listdir, path
 from unittest import TestCase
 
-import six
-
 from pyinfra.api import StringCommand
 from pyinfra.api.facts import ShortFactBase
 from pyinfra_cli.util import json_encode
@@ -33,8 +31,7 @@ def make_fact_tests(folder_name):
     module = import_module('pyinfra.facts.{0}'.format(module_name))
     fact = getattr(module, fact_name)()
 
-    @six.add_metaclass(JsonTest)
-    class TestTests(TestCase):
+    class TestTests(TestCase, metaclass=JsonTest):
         jsontest_files = path.join('tests', 'facts', folder_name)
         jsontest_prefix = 'test_{0}_'.format(fact.name)
 

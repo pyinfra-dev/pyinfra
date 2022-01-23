@@ -24,7 +24,6 @@ INSTALL_REQUIRES = (
     'colorama<1',  # Windows color support for click
     'jinja2>2,<4',
     'python-dateutil>2,<3',
-    'six>1,<2',
     'setuptools',
     'configparser',
     'pywinrm',
@@ -53,7 +52,7 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
 DOCS_REQUIRES = (
     'pyinfra-guzzle_sphinx_theme==0.10',
     'recommonmark==0.5.0',
-    'sphinx==2.2.1 ; python_version >= "3"',
+    'sphinx==2.2.1',
     # Pinned to fix: https://github.com/sphinx-doc/sphinx/issues/9727
     'docutils==0.17.1',
 )
@@ -69,7 +68,7 @@ DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
     'ipdbplugin==1.4.5',
 
     # Lint spellchecking, dev only (don't fail CI)
-    'flake8-spellcheck==0.12.1 ; python_version >= "3"',
+    'flake8-spellcheck==0.12.1',
 )
 
 
@@ -138,10 +137,7 @@ if __name__ == '__main__':
             'Intended Audience :: Information Technology',
             'License :: OSI Approved :: MIT License',
             'Operating System :: OS Independent',
-            'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',

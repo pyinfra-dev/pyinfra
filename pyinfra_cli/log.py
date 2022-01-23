@@ -3,7 +3,6 @@ from __future__ import division, print_function, unicode_literals
 import logging
 
 import click
-import six
 
 from pyinfra import logger
 
@@ -41,7 +40,7 @@ class LogFormatter(logging.Formatter):
                 message = '[{0}] {1}'.format(module_name, message)
 
         # We only handle strings here
-        if isinstance(message, six.string_types):
+        if isinstance(message, str):
             if '-->' not in message:
                 message = '    {0}'.format(message)
 
