@@ -1,5 +1,3 @@
-from __future__ import print_function, unicode_literals
-
 from distutils.spawn import find_executable
 from getpass import getpass
 from os import path

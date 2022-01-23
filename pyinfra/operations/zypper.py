@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from pyinfra import host, state
 from pyinfra.api import operation
 from pyinfra.facts.rpm import RpmPackages

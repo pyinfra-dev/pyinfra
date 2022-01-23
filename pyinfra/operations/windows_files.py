@@ -2,8 +2,6 @@
 The windows_files module handles windows filesystem state, file uploads and template generation.
 '''
 
-from __future__ import unicode_literals
-
 import ntpath
 import os
 from datetime import timedelta

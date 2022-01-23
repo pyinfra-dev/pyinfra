@@ -2,8 +2,6 @@
 The files module handles filesystem state, file uploads and template generation.
 '''
 
-from __future__ import unicode_literals
-
 import posixpath
 import re
 import sys

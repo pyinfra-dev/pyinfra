@@ -3,8 +3,6 @@ The server module takes care of os-level state. Targets POSIX compatibility, tes
 Linux/BSD.
 '''
 
-from __future__ import division, unicode_literals
-
 import shlex
 from io import StringIO
 from itertools import filterfalse, tee

@@ -2,8 +2,6 @@
 Manage apt packages and repositories.
 '''
 
-from __future__ import unicode_literals
-
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 

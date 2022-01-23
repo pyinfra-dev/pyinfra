@@ -5,8 +5,6 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 :doc:`./pyinfra.api.operations` module.
 '''
 
-from __future__ import unicode_literals
-
 from functools import wraps
 from types import FunctionType
 

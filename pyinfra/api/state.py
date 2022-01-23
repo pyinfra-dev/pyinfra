@@ -1,5 +1,3 @@
-from __future__ import division, unicode_literals
-
 from contextlib import contextmanager
 from multiprocessing import cpu_count
 from os import path
