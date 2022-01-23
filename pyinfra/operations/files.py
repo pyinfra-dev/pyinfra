@@ -11,7 +11,7 @@ import traceback
 from datetime import timedelta
 from fnmatch import fnmatch
 from io import StringIO
-from os import makedirs, path as os_path, walk
+from os import fspath, makedirs, path as os_path, walk
 
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
@@ -46,7 +46,6 @@ from pyinfra.facts.files import (
 )
 from pyinfra.facts.server import Date, Which
 
-from .util.compat import fspath
 from .util.files import (
     chmod,
     chown,
