@@ -3,7 +3,7 @@
 from os import path
 
 from pyinfra.api import Config
-from pyinfra.api.operation_kwargs import OPERATION_KWARGS
+from pyinfra.api.arguments import OPERATION_KWARGS
 
 
 def build_global_kwargs_doc():
