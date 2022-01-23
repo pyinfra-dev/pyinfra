@@ -2,8 +2,6 @@
 Manage upstart services.
 '''
 
-from __future__ import unicode_literals
-
 from io import StringIO
 
 from pyinfra import host

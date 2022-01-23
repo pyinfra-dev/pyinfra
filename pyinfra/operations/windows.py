@@ -2,8 +2,6 @@
 The windows module handles misc windows operations.
 '''
 
-from __future__ import unicode_literals
-
 from pyinfra.api import operation
 
 # Tip: Use 'Get-Command -Noun Service' to search for what commands are available or
