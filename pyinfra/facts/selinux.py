@@ -6,6 +6,7 @@ class FileContext(FactBase):
     Returns structured SELinux file context data for a specified file.
 
     .. code:: python
+
         {
             'user': 'system_u',
             'role': 'object_r',
@@ -30,9 +31,6 @@ class FileContext(FactBase):
 class SEBoolean(FactBase):
     '''
     Returns the on/off status of a SELinux Boolean.
-
-    .. code:: python
-        host.get_fact(SEBoolean, "httpd_can_network_connect") -> "off"
     '''
     requires_command = 'getsebool'
 
