@@ -26,7 +26,6 @@ from pyinfra.facts.windows_files import (
     WindowsSha256File,
 )
 
-from .util.compat import fspath
 from .util.files import ensure_mode_int
 
 
@@ -456,7 +455,7 @@ def windows_directory(*args, **kwargs):
 
 def _validate_path(path):
     try:
-        path = fspath(path)
+        path = os.fspath(path)
     except TypeError:
         raise OperationTypeError('`path` must be a string or `os.PathLike` object')
 
