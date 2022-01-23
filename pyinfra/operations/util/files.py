@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from datetime import datetime
 
 from pyinfra.api import QuoteString, StringCommand

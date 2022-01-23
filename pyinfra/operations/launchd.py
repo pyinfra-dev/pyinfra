@@ -2,8 +2,6 @@
 Manage launchd services.
 '''
 
-from __future__ import unicode_literals
-
 from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.launchd import LaunchdStatus

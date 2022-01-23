@@ -2,8 +2,6 @@
 Manage yum packages and repositories. Note that yum package names are case-sensitive.
 '''
 
-from __future__ import unicode_literals
-
 from pyinfra import host, state
 from pyinfra.api import operation
 from pyinfra.facts.rpm import RpmPackageProvides, RpmPackages

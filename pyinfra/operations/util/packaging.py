@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import shlex
 from io import StringIO
 from urllib.parse import urlparse

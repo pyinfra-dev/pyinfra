@@ -1,7 +1,5 @@
 # encoding: utf-8
 
-from __future__ import unicode_literals
-
 import shlex
 from unittest import TestCase
 

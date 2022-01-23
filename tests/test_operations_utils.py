@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from unittest import TestCase
 
 from pyinfra.operations.util.files import unix_path_join
