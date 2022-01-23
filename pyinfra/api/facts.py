@@ -16,7 +16,6 @@ from socket import (
 
 import click
 import gevent
-import six
 
 from gevent.lock import BoundedSemaphore
 from paramiko import SSHException
@@ -62,7 +61,7 @@ def get_fact_names():
     Returns a list of available facts in camel_case format.
     '''
 
-    return list(six.iterkeys(FACTS))
+    return list(FACTS.keys())
 
 
 class FactMeta(type):
@@ -81,8 +80,7 @@ class FactMeta(type):
         FACTS[fact_name] = cls
 
 
-@six.add_metaclass(FactMeta)
-class FactBase(object):
+class FactBase(object, metaclass=FactMeta):
     abstract = True
 
     shell_executable = None
@@ -106,8 +104,7 @@ class FactBase(object):
         }
 
 
-@six.add_metaclass(FactMeta)
-class ShortFactBase(object):
+class ShortFactBase(object, metaclass=FactMeta):
     fact = None
 
 
@@ -116,7 +113,7 @@ def get_short_facts(state, short_fact, **kwargs):
 
     return {
         host: short_fact.process_data(data)
-        for host, data in six.iteritems(facts)
+        for host, data in facts.items()
     }
 
 
@@ -271,7 +268,7 @@ def get_facts(
         failed_hosts = set()
 
         # Collect the facts and any failures
-        for greenlet, host in six.iteritems(greenlet_to_host):
+        for greenlet, host in greenlet_to_host.items():
             status = False
             stdout = []
 

@@ -13,7 +13,6 @@ from socket import (
 from types import GeneratorType
 
 import click
-import six
 
 from jinja2 import (
     Environment,
@@ -185,7 +184,7 @@ class FallbackDict(object):
         self.override_datas[key] = value
 
     def __str__(self):
-        return six.text_type(self.datas)
+        return str(self.datas)
 
     def get(self, key, default=None):
         for data in extract_callable_datas(self.datas):
@@ -357,7 +356,7 @@ def get_arg_value(state, host, arg):
     This functions is **deprecated**.
     '''
 
-    if isinstance(arg, six.string_types):
+    if isinstance(arg, str):
         data = {
             'host': host,
             'inventory': state.inventory,
@@ -381,7 +380,7 @@ def get_arg_value(state, host, arg):
     elif isinstance(arg, dict):
         return {
             key: get_arg_value(state, host, value)
-            for key, value in six.iteritems(arg)
+            for key, value in arg.items()
         }
 
     return arg
@@ -399,7 +398,7 @@ def make_hash(obj):
     elif isinstance(obj, dict):
         hash_string = ''.join(
             ''.join((key, make_hash(value)))
-            for key, value in six.iteritems(obj)
+            for key, value in obj.items()
         )
 
     else:
@@ -410,7 +409,7 @@ def make_hash(obj):
             # group them under the same operation hash.
             else '_PYINFRA_CONSTANT' if obj in (True, False, None)
             # Plain strings
-            else obj if isinstance(obj, six.string_types)
+            else obj if isinstance(obj, str)
             # Objects with __name__s
             else obj.__name__ if hasattr(obj, '__name__')
             # Objects with names
@@ -435,7 +434,7 @@ class get_file_io(object):
             # Check we can be read
             hasattr(filename_or_io, 'read')
             # Or we're a filename
-            or isinstance(filename_or_io, six.string_types)
+            or isinstance(filename_or_io, str)
         ):
             raise TypeError('Invalid filename or IO object: {0}'.format(
                 filename_or_io,
@@ -469,7 +468,7 @@ class get_file_io(object):
     def cache_key(self):
         # If we're a filename, cache against that - we don't cache in-memory
         # file objects.
-        if isinstance(self.filename_or_io, six.string_types):
+        if isinstance(self.filename_or_io, str):
             return self.filename_or_io
 
 
@@ -489,7 +488,7 @@ def get_file_sha1(filename_or_io):
         buff = file_io.read(BLOCKSIZE)
 
         while len(buff) > 0:
-            if isinstance(buff, six.text_type):
+            if isinstance(buff, str):
                 buff = buff.encode('utf-8')
 
             hasher.update(buff)

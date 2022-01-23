@@ -2,10 +2,10 @@
 
 from __future__ import unicode_literals
 
+import shlex
 from unittest import TestCase
 
 from mock import MagicMock, mock_open, patch
-from six.moves import shlex_quote
 
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
@@ -54,7 +54,7 @@ def fake_ssh_docker_shell(state, host, command,
 
 def get_docker_command(command):
     shell_command = make_unix_command(command).get_raw_value()
-    shell_command = shlex_quote(shell_command)
+    shell_command = shlex.quote(shell_command)
     docker_command = 'docker exec -it containerid sh -c {0}'.format(shell_command)
     return docker_command
 

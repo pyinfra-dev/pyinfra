@@ -1,11 +1,9 @@
 from __future__ import unicode_literals
 
-import six
-
 
 # NOTE https://github.com/python/cpython/blob/master/Lib/os.py#L1025
 def fspath(path):
-    path_types = six.string_types
+    path_types = (str,)
     path_type_names = [pt.__name__ for pt in path_types]
 
     if isinstance(path, path_types):

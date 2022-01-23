@@ -2,10 +2,6 @@ import shlex
 
 from string import Formatter
 
-import six
-
-from six.moves import shlex_quote
-
 from .arguments import get_executor_kwarg_keys
 
 
@@ -93,11 +89,11 @@ class StringCommand(PyinfraCommand):
             if isinstance(bit, StringCommand):
                 bit = bit_accessor(bit)
 
-            if not isinstance(bit, six.string_types):
+            if not isinstance(bit, str):
                 bit = '{0}'.format(bit)
 
             if quote:
-                bit = shlex_quote(bit)
+                bit = shlex.quote(bit)
 
             all_bits.append(bit)
 

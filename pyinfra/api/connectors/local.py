@@ -6,7 +6,6 @@ from distutils.spawn import find_executable
 from tempfile import mkstemp
 
 import click
-import six
 
 from pyinfra import logger
 from pyinfra.api.exceptions import InventoryError
@@ -113,7 +112,7 @@ def put_file(
             with open(temp_filename, 'wb') as temp_f:
                 data = file_io.read()
 
-                if isinstance(data, six.text_type):
+                if isinstance(data, str):
                     data = data.encode()
 
                 temp_f.write(data)
@@ -170,7 +169,7 @@ def get_file(
             with get_file_io(filename_or_io, 'wb') as file_io:
                 data = temp_f.read()
 
-                if isinstance(data, six.text_type):
+                if isinstance(data, str):
                     data = data.encode()
 
                 file_io.write(data)

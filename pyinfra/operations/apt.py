@@ -5,10 +5,7 @@ Manage apt packages and repositories.
 from __future__ import unicode_literals
 
 from datetime import datetime, timedelta
-
-import six
-
-from six.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 
 from pyinfra import host, state
 from pyinfra.api import operation, OperationError
@@ -92,7 +89,7 @@ def key(src=None, keyserver=None, keyid=None):
         if not keyid:
             raise OperationError('`keyid` must be provided with `keyserver`')
 
-        if isinstance(keyid, six.string_types):
+        if isinstance(keyid, str):
             keyid = [keyid]
 
         needed_keys = sorted(set(keyid) - set(existing_keys.keys()))
