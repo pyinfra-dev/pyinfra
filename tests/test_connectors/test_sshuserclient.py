@@ -142,10 +142,15 @@ class TestSSHUserConfig(TestCase):
         client = SSHClient()
 
         # Load the SSH config with ProxyJump configured
-        _, config, forward_agent = client.parse_config('192.168.1.2', {'port': 1022})
+        _, config, forward_agent = client.parse_config(
+            '192.168.1.2',
+            {'port': 1022},
+            ssh_config_file='other_file',
+        )
 
         fake_ssh_connect.assert_called_once_with(
             '127.0.0.1',
+            _pyinfra_ssh_config_file='other_file',
             port='33',
             sock=None,
             username='nottestuser',
