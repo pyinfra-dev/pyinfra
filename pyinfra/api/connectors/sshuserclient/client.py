@@ -142,7 +142,7 @@ class SSHClient(ParamikoClient):
 
         config = {
             'port': base_config.get('port', 22),
-            'username': base_config.get('username'),
+            'username': base_config.get('user'),
         }
         config.update(shorthand_config)
 
