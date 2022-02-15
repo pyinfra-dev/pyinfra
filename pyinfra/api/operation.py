@@ -152,7 +152,7 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
 
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).
-        if state.in_op:
+        if host.in_op:
             if global_kwarg_keys:
                 raise PyinfraError((
                     'Nested operation called with global arguments: {0} ({1})'
@@ -198,9 +198,9 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
 
             names = {name}
 
-        if state.deploy_name:
+        if host.current_deploy_name:
             names = {
-                '{0} | {1}'.format(state.deploy_name, name)
+                '{0} | {1}'.format(host.current_deploy_name, name)
                 for name in names
             }
 
@@ -223,9 +223,9 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
             # deploy function is called first, and then the operation position *within*
             # that function. Because functions have to exist in one file, we can simply
             # use the line number to get correct ordering.
-            if state.in_deploy:
+            if host.in_deploy:
                 frameinfo = get_caller_frameinfo()
-                op_order = state.deploy_op_order + [frameinfo.lineno]
+                op_order = host.current_deploy_op_order + [frameinfo.lineno]
             else:
                 raise PyinfraError((
                     'Operation order number not provided in API mode - '
@@ -319,9 +319,9 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
         #
 
         # Otherwise, flag as in-op and run it to get the commands
-        state.in_op = True
-        state.current_op_hash = op_hash
-        state.current_op_global_kwargs = actual_global_kwargs
+        host.in_op = True
+        host.current_op_hash = op_hash
+        host.current_op_global_kwargs = actual_global_kwargs
 
         # Generate actual arguments by parsing strings as jinja2 templates. This
         # means you can string format arguments w/o generating multiple
@@ -345,9 +345,9 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
             for command in commands
         ]
 
-        state.in_op = False
-        state.current_op_hash = None
-        state.current_op_global_kwargs = None
+        host.in_op = False
+        host.current_op_hash = None
+        host.current_op_global_kwargs = None
 
         # Add host-specific operation data to state
         #

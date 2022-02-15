@@ -26,24 +26,30 @@ class TestOperationKwargs(TestCase):
     def test_get_from_state_deploy_kwargs(self):
         config = Config(SUDO='config-value')
         inventory = Inventory(([('somehost', {'sudo': 'host-value'})], {}))
+        somehost = inventory.get_host('somehost')
 
         state = State(config=config, inventory=inventory)
-        state.deploy_kwargs = {'sudo': 'deploy-kwarg-value'}
+        somehost.current_deploy_kwargs = {'sudo': 'deploy-kwarg-value'}
 
-        kwargs, keys = pop_global_op_kwargs(state, inventory.get_host('somehost'), {})
+        kwargs, keys = pop_global_op_kwargs(state, somehost, {})
         assert kwargs['sudo'] == 'deploy-kwarg-value'
 
     def test_get_from_kwargs(self):
         config = Config(SUDO='config-value')
         inventory = Inventory(([('somehost', {'sudo': 'host-value'})], {}))
+        somehost = inventory.get_host('somehost')
 
         state = State(config=config, inventory=inventory)
-        state.deploy_kwargs = {'sudo': 'deploy-kwarg-value'}
+        somehost.current_deploy_kwargs = {
+            'sudo': 'deploy-kwarg-value',
+            'sudo_user': 'deploy-kwarg-user',
+        }
 
         kwargs, keys = pop_global_op_kwargs(
             state,
-            inventory.get_host('somehost'),
+            somehost,
             {'sudo': 'kwarg-value'},
         )
         assert kwargs['sudo'] == 'kwarg-value'
+        assert kwargs['sudo_user'] == 'deploy-kwarg-user'
         assert 'sudo' in keys

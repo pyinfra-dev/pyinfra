@@ -50,7 +50,7 @@ class TestOperationsApi(PatchSSHTestCase):
         anotherhost = inventory.get_host('anotherhost')
 
         connect_all(state)
-        state.current_op_global_kwargs = {
+        anotherhost.current_op_global_kwargs = {
             'sudo': True,
             'sudo_user': 'someuser',
             'use_sudo_password': True,
@@ -123,7 +123,7 @@ class TestOperationsApi(PatchSSHTestCase):
         anotherhost = inventory.get_host('anotherhost')
 
         connect_all(state)
-        state.current_op_global_kwargs = {
+        anotherhost.current_op_global_kwargs = {
             'sudo': False,
             'sudo_user': None,
             'use_sudo_password': False,

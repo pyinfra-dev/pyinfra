@@ -110,16 +110,16 @@ def deploy(func_or_name, data_defaults=None, _call_location=None):
             if op_order_number is not None:
                 deploy_op_order = [op_order_number]
             # API mode: nested deploy wrapped function call
-            elif state.deploy_op_order:
+            elif host.current_deploy_op_order:
                 frameinfo = get_caller_frameinfo()
-                deploy_op_order = state.deploy_op_order + [frameinfo.lineno]
+                deploy_op_order = host.current_deploy_op_order + [frameinfo.lineno]
             else:
                 raise PyinfraError((
                     'Operation order number not provided in API mode - '
                     'you must use `add_deploy` to add operations.'
                 ))
 
-        with state.deploy(
+        with host.deploy(
             name=deploy_name,
             kwargs=deploy_kwargs,
             data=deploy_data,

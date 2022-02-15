@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 import click
 
 from pyinfra import logger
@@ -74,6 +76,18 @@ class Host(object):
     state = None
     fact = HostFacts()  # this isn't usable, but provides support for dir()
 
+    # Current context inside an @operation function
+    in_op = False
+    current_op_hash = None
+    current_op_global_kwargs = None
+
+    # Current context inside a @deploy function
+    in_deploy = False
+    current_deploy_name = None
+    current_deploy_kwargs = None
+    current_deploy_data = None
+    current_deploy_op_order = None
+
     def __init__(
         self, name, inventory, groups, data,
         executor=EXECUTION_CONNECTORS['ssh'],
@@ -128,6 +142,47 @@ class Host(object):
 
         handler = logger.info if self.state.print_noop_info else logger.debug
         handler('{0}noop: {1}'.format(self.print_prefix, description))
+
+    @contextmanager
+    def deploy(self, name, kwargs, data, in_deploy=True, deploy_op_order=None):
+        '''
+        Wraps a group of operations as a deploy, this should not be used
+        directly, instead use ``pyinfra.api.deploy.deploy``.
+        '''
+
+        # Handle nested deploy names
+        if self.current_deploy_name:
+            name = '{0} | {1}'.format(self.current_deploy_name, name)
+
+        # Store the previous values
+        old_in_deploy = self.in_deploy
+        old_deploy_name = self.current_deploy_name
+        old_deploy_kwargs = self.current_deploy_kwargs
+        old_deploy_data = self.current_deploy_data
+        old_deploy_op_order = self.current_deploy_op_order
+        self.in_deploy = in_deploy
+
+        # Set the new values
+        self.current_deploy_name = name
+        self.current_deploy_kwargs = kwargs
+        self.current_deploy_data = data
+        self.current_deploy_op_order = deploy_op_order
+        logger.debug('Starting deploy {0} (args={1}, data={2})'.format(
+            name, kwargs, data,
+        ))
+
+        yield
+
+        # Restore the previous values
+        self.in_deploy = old_in_deploy
+        self.current_deploy_name = old_deploy_name
+        self.current_deploy_kwargs = old_deploy_kwargs
+        self.current_deploy_data = old_deploy_data
+        self.current_deploy_op_order = old_deploy_op_order
+
+        logger.debug('Reset deploy to {0} (args={1}, data={2})'.format(
+            old_deploy_name, old_deploy_kwargs, old_deploy_data,
+        ))
 
     # Host facts
     #
