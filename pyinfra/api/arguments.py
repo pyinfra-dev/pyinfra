@@ -182,7 +182,7 @@ def pop_global_op_kwargs(state, host, kwargs):
     TODO: is this wird-ness acceptable? Is it worth updating internal use to _prefix?
     '''
 
-    meta_kwargs = state.deploy_kwargs or {}
+    meta_kwargs = host.current_deploy_kwargs or {}
 
     global_kwargs = {}
     found_keys = []
