@@ -86,26 +86,12 @@ class State(object):
     # Main gevent pool
     pool = None
 
-    # Whether we are in an @operation (so inner ops aren't wrapped)
-    in_op = False
     # Whether we are deploying (ie hosts are all ready)
     deploying = False
-
-    # Current op hash
-    current_op_hash = None
-    # Current op global args for use w/facts
-    current_op_global_kwargs = None
 
     loop_counter = None
     loop_line = None
     loop_filename = None
-
-    # Name of the current deploy
-    in_deploy = False
-    deploy_name = None
-    deploy_kwargs = None
-    deploy_data = None
-    deploy_op_order = None
 
     print_noop_info = False  # print "[host] noop: reason for noop"
     print_fact_info = False  # print "loaded fact X"
@@ -292,47 +278,6 @@ class State(object):
         for handler in self.callback_handlers:
             func = getattr(handler, method_name)
             func(self, *args, **kwargs)
-
-    @contextmanager
-    def deploy(self, name, kwargs, data, in_deploy=True, deploy_op_order=None):
-        '''
-        Wraps a group of operations as a deploy, this should not be used
-        directly, instead use ``pyinfra.api.deploy.deploy``.
-        '''
-
-        # Handle nested deploy names
-        if self.deploy_name:
-            name = '{0} | {1}'.format(self.deploy_name, name)
-
-        # Store the previous values
-        old_in_deploy = self.in_deploy
-        old_deploy_name = self.deploy_name
-        old_deploy_kwargs = self.deploy_kwargs
-        old_deploy_data = self.deploy_data
-        old_deploy_op_order = self.deploy_op_order
-        self.in_deploy = in_deploy
-
-        # Set the new values
-        self.deploy_name = name
-        self.deploy_kwargs = kwargs
-        self.deploy_data = data
-        self.deploy_op_order = deploy_op_order
-        logger.debug('Starting deploy {0} (args={1}, data={2})'.format(
-            name, kwargs, data,
-        ))
-
-        yield
-
-        # Restore the previous values
-        self.in_deploy = old_in_deploy
-        self.deploy_name = old_deploy_name
-        self.deploy_kwargs = old_deploy_kwargs
-        self.deploy_data = old_deploy_data
-        self.deploy_op_order = old_deploy_op_order
-
-        logger.debug('Reset deploy to {0} (args={1}, data={2})'.format(
-            old_deploy_name, old_deploy_kwargs, old_deploy_data,
-        ))
 
     @contextmanager
     def preserve_loop_order(self, items):
