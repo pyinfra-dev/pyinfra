@@ -15,6 +15,7 @@ from .facts import (
     get_host_fact,
     is_fact,
 )
+from .util import FallbackDict
 
 
 # TODO: remove this! COMPAT w/<2
@@ -89,12 +90,11 @@ class Host(object):
     current_deploy_op_order = None
 
     def __init__(
-        self, name, inventory, groups, data,
+        self, name, inventory, groups,
         executor=EXECUTION_CONNECTORS['ssh'],
     ):
         self.inventory = inventory
         self.groups = groups
-        self.data = data
         self.executor = executor
         self.name = name
 
@@ -103,6 +103,16 @@ class Host(object):
 
         # Arbitrary dict for connector use
         self.connector_data = {}
+
+        # Create the (waterfall data: override, host, group, global)
+        self.data = FallbackDict(
+            lambda: inventory.get_override_data(),
+            lambda: inventory.get_host_data(name),
+            lambda: inventory.get_groups_data(groups),
+            lambda: inventory.get_data(),
+            # @deploy function data are default values, so come last
+            self.get_deploy_data,
+        )
 
     def __str__(self):
         return '{0}'.format(self.name)
@@ -134,6 +144,12 @@ class Host(object):
             click.style(''),  # reset
             click.style(self.name, *args, **kwargs),
         )
+
+    def get_deploy_data(self):
+        if self.current_deploy_data:
+            return self.current_deploy_data
+
+        return {}
 
     def noop(self, description):
         '''
