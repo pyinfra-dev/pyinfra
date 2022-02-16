@@ -106,8 +106,8 @@ class ShortFactBase(object, metaclass=FactMeta):
     fact = None
 
 
-def get_short_facts(state, short_fact, **kwargs):
-    facts = get_facts(state, short_fact.fact.name, **kwargs)
+def get_short_facts(state, host, short_fact, **kwargs):
+    facts = get_fact(state, host, short_fact.fact.name, **kwargs)
 
     return {
         host: short_fact.process_data(data)
@@ -122,13 +122,54 @@ def _make_command(command_attribute, host_args):
     return command_attribute
 
 
-def get_facts(
+def _get_executor_kwargs(state, host):
+    kwargs = {
+        'sudo': state.config.SUDO,
+        'sudo_user': state.config.SUDO_USER,
+        'su_user': state.config.SU_USER,
+        'shell_executable': state.config.SHELL,
+        'use_sudo_password': state.config.USE_SUDO_PASSWORD,
+        'env': state.config.ENV,
+        'timeout': None,
+    }
+
+    current_global_kwargs = host.current_op_global_kwargs or {}
+    executor_kwarg_keys = get_executor_kwarg_keys()
+    kwargs.update({
+        key: current_global_kwargs[key]
+        for key in executor_kwarg_keys
+        if key in current_global_kwargs
+    })
+
+    return kwargs
+
+
+def get_facts(state, *args, **kwargs):
+    greenlet_to_host = {
+        state.pool.spawn(get_fact, state, host, *args, **kwargs): host
+        for host in state.inventory.iter_active_hosts()
+    }
+
+    results = {}
+
+    with progress_spinner(greenlet_to_host.values()) as progress:
+        for greenlet in gevent.iwait(greenlet_to_host.keys()):
+            host = greenlet_to_host[greenlet]
+            results[host] = greenlet.get()
+            progress(host)
+
+    return results
+
+
+def get_fact(
     state,
+    host,
     name_or_cls,
     args=None,
     kwargs=None,
     ensure_hosts=None,
     apply_failed_hosts=True,
+    fact_hash=None,
 ):
     '''
     Get a single fact for all hosts in the state.
@@ -151,7 +192,10 @@ def get_facts(
         name = name_or_cls
 
     if isinstance(fact, ShortFactBase):
-        return get_short_facts(state, fact, args=args, ensure_hosts=ensure_hosts)
+        return get_short_facts(state, host, fact, args=args, ensure_hosts=ensure_hosts)
+
+    # Apply args or defaults
+    executor_kwargs = _get_executor_kwargs(state, host)
 
     args = args or ()
     kwargs = kwargs or {}
@@ -163,184 +207,103 @@ def get_facts(
         name, get_kwargs_str(kwargs), ensure_hosts,
     ))
 
-    # Apply args or defaults
-    sudo = state.config.SUDO
-    sudo_user = state.config.SUDO_USER
-    su_user = state.config.SU_USER
-    ignore_errors = state.config.IGNORE_ERRORS
-    shell_executable = state.config.SHELL
-    use_sudo_password = state.config.USE_SUDO_PASSWORD
-    env = state.config.ENV
-    success_exit_codes = [0]
+    ignore_errors = (host.current_op_global_kwargs or {}).get(
+        'ignore_errors',
+        state.config.IGNORE_ERRORS,
+    )
 
     # Facts can override the shell (winrm powershell vs cmd support)
     if fact.shell_executable:
-        shell_executable = fact.shell_executable
-
-    # Timeout for operations !== timeout for connect (config.CONNECT_TIMEOUT)
-    timeout = None
-
-    # If inside an operation, fetch global arguments
-    current_global_kwargs = state.current_op_global_kwargs or {}
-    # Allow `Host.get_fact` calls to explicitly override these
-    current_global_kwargs.update(global_kwarg_overrides)
-    if current_global_kwargs:
-        sudo = current_global_kwargs.get('sudo', sudo)
-        sudo_user = current_global_kwargs.get('sudo_user', sudo_user)
-        use_sudo_password = current_global_kwargs.get('use_sudo_password', use_sudo_password)
-        su_user = current_global_kwargs.get('su_user', su_user)
-        ignore_errors = current_global_kwargs.get('ignore_errors', ignore_errors)
-        timeout = current_global_kwargs.get('timeout', timeout)
-        env = current_global_kwargs.get('env', env)
-        success_exit_codes = current_global_kwargs.get('success_exit_codes', success_exit_codes)
-
-    # Make a hash which keeps facts unique - but usable cross-deploy/threads.
-    # Locks are used to maintain order.
-    fact_hash = make_hash((name, kwargs, sudo, sudo_user, su_user, ignore_errors, env))
+        executor_kwargs['shell_executable'] = fact.shell_executable
 
     # Already got this fact? Unlock and return them
-    current_facts = state.facts.get(fact_hash, {})
-    if current_facts:
-        if not ensure_hosts or all(
-            host in current_facts for host in ensure_hosts
-        ):
-            return current_facts
+    if fact_hash:
+        current_fact = host.facts.get(fact_hash)
+        if current_fact:
+            return current_fact
 
-    with FACT_LOCK:
-        # Add any hosts we must have, whether considered in the inventory or not
-        # (these hosts might be outside the --limit or current op limit_hosts).
-        hosts = set(state.inventory.iter_active_hosts())
-        if ensure_hosts:
-            hosts.update(ensure_hosts)
+    # Generate actual arguments by passing strings as jinja2 templates
+    host_kwargs = {
+        key: get_arg_value(state, host, arg)
+        for key, arg in kwargs.items()
+    }
 
-        # Execute the command for each state inventory in a greenlet
-        greenlet_to_host = {}
-
-        for host in hosts:
-            if host in current_facts:
-                continue
-
-            # Generate actual arguments by passing strings as jinja2 templates
-            host_kwargs = {
-                key: get_arg_value(state, host, arg)
-                for key, arg in kwargs.items()
-            }
-
-            command = _make_command(fact.command, host_kwargs)
-            requires_command = _make_command(fact.requires_command, host_kwargs)
-            if requires_command:
-                command = StringCommand(
-                    # Command doesn't exist, return 0 *or* run & return fact command
-                    '!', 'command', '-v', requires_command, '>/dev/null', '||', command,
-                )
-
-            greenlet = state.fact_pool.spawn(
-                host.run_shell_command,
-                command,
-                sudo=sudo,
-                sudo_user=sudo_user,
-                use_sudo_password=use_sudo_password,
-                success_exit_codes=success_exit_codes,
-                su_user=su_user,
-                timeout=timeout,
-                env=env,
-                shell_executable=shell_executable,
-                print_output=state.print_fact_output,
-                print_input=state.print_fact_input,
-                return_combined_output=True,
-            )
-            greenlet_to_host[greenlet] = host
-
-        # Wait for all the commands to execute
-        progress_prefix = 'fact: {0} ({1})'.format(name, get_kwargs_str(kwargs))
-
-        with progress_spinner(
-            greenlet_to_host.values(),
-            prefix_message=progress_prefix,
-        ) as progress:
-            for greenlet in gevent.iwait(greenlet_to_host.keys()):
-                host = greenlet_to_host[greenlet]
-                progress(host)
-
-        hostname_facts = {}
-        failed_hosts = set()
-
-        # Collect the facts and any failures
-        for greenlet, host in greenlet_to_host.items():
-            status = False
-            stdout = []
-
-            try:
-                status, combined_output_lines = greenlet.get()
-            except (timeout_error, socket_error, SSHException) as e:
-                failed_hosts.add(host)
-                log_host_command_error(
-                    host, e,
-                    timeout=timeout,
-                )
-
-            stdout, stderr = split_combined_output(combined_output_lines)
-
-            data = fact.default()
-
-            if status:
-                if stdout:
-                    data = fact.process(stdout)
-
-            elif stderr:
-                first_line = stderr[0]
-                if (
-                    sudo_user
-                    and re.match(SUDO_REGEX, first_line)
-                ):
-                    status = True
-                if (
-                    su_user
-                    and any(re.match(regex, first_line) for regex in SU_REGEXES)
-                ):
-                    status = True
-
-            if not status:
-                failed_hosts.add(host)
-
-                if not state.print_fact_output:
-                    print_host_combined_output(host, combined_output_lines)
-
-                log_error_or_warning(host, ignore_errors, description=(
-                    'could not load fact: {0} {1}'
-                ).format(name, get_kwargs_str(kwargs)))
-
-            hostname_facts[host] = data
-
-        log = 'Loaded fact {0}{1}'.format(
-            click.style(name, bold=True),
-            ' ({0})'.format(get_kwargs_str(kwargs)) if kwargs else '',
+    command = _make_command(fact.command, host_kwargs)
+    requires_command = _make_command(fact.requires_command, host_kwargs)
+    if requires_command:
+        command = StringCommand(
+            # Command doesn't exist, return 0 *or* run & return fact command
+            '!', 'command', '-v', requires_command, '>/dev/null', '||', command,
         )
-        if state.print_fact_info:
-            logger.info(log)
-        else:
-            logger.debug(log)
 
-        # Check we've not failed
-        if not ignore_errors and apply_failed_hosts:
-            state.fail_hosts(failed_hosts)
+    status = False
+    stdout = []
 
-        # Assign the facts
-        state.facts.setdefault(fact_hash, {}).update(hostname_facts)
+    try:
+        status, combined_output_lines = host.run_shell_command(
+            command,
+            print_output=state.print_fact_output,
+            print_input=state.print_fact_input,
+            return_combined_output=True,
+            **executor_kwargs,
+        )
+    except (timeout_error, socket_error, SSHException) as e:
+        log_host_command_error(
+            host, e,
+            timeout=executor_kwargs['timeout'],
+        )
 
-    return state.facts[fact_hash]
+    stdout, stderr = split_combined_output(combined_output_lines)
+
+    data = fact.default()
+
+    if status:
+        if stdout:
+            data = fact.process(stdout)
+
+    elif stderr:
+        first_line = stderr[0]
+
+        if (executor_kwargs['sudo_user'] and re.match(SUDO_REGEX, first_line)):
+            status = True
+        if (executor_kwargs['su_user'] and any(
+            re.match(regex, first_line) for regex in SU_REGEXES
+        )):
+            status = True
+
+        if not status:
+            if not state.print_fact_output:
+                print_host_combined_output(host, combined_output_lines)
+
+            log_error_or_warning(host, ignore_errors, description=(
+                'could not load fact: {0} {1}'
+            ).format(name, get_kwargs_str(kwargs)))
+
+    log = 'Loaded fact {0} ({1})'.format(click.style(name, bold=True), get_kwargs_str(kwargs))
+    if state.print_fact_info:
+        logger.info(log)
+    else:
+        logger.debug(log)
+
+    # Check we've not failed
+    if not status and not ignore_errors and apply_failed_hosts:
+        state.fail_hosts({host})
+
+    if fact_hash:
+        host.facts[fact_hash] = data
+    return data
 
 
 def get_host_fact(state, host, name, args=None, kwargs=None):
-    fact_data = get_facts(state, name, args=args, kwargs=kwargs, ensure_hosts=(host,))
-    return fact_data.get(host)
+    fact_hash = make_hash((name, kwargs, _get_executor_kwargs(state, host)))
+    return get_fact(state, host, name, args=args, kwargs=kwargs, fact_hash=fact_hash)
 
 
 def create_host_fact(state, host, name, data, args=None, kwargs=None):
-    fact_data = get_facts(state, name, args=args, kwargs=kwargs, ensure_hosts=(host,))
-    fact_data[host] = data
+    fact_hash = make_hash((name, kwargs, _get_executor_kwargs(state, host)))
+    host.facts[fact_hash] = data
 
 
 def delete_host_fact(state, host, name, args=None, kwargs=None):
-    fact_data = get_facts(state, name, args=args, kwargs=kwargs, ensure_hosts=(host,))
-    fact_data.pop(host, None)
+    fact_hash = make_hash((name, kwargs, _get_executor_kwargs(state, host)))
+    host.facts.pop(fact_hash, None)
