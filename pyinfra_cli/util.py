@@ -7,7 +7,7 @@ from os import path
 from types import FunctionType, ModuleType
 
 # py2/3 switcheroo
-try:  # pragma: no cover
+try:
     from StringIO import StringIO
     from cStringIO import OutputType, InputType
     from types import FileType
@@ -18,12 +18,14 @@ except ImportError:  # pragma: no cover
     io_bases = IOBase
 
 import click
+import gevent
 
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.facts import get_fact_class, is_fact
 from pyinfra.api.util import FallbackDict
+from pyinfra.progress import progress_spinner
 
 from .exceptions import CliError, UnexpectedExternalError
 
@@ -252,19 +254,23 @@ def get_facts_and_args(commands):
 def load_deploy_file(state, filename):
     state.current_deploy_filename = filename
 
-    # Copy the inventory hosts (some might be removed during deploy)
-    hosts = list(state.inventory.iter_active_hosts())
-
-    for host in hosts:
-        pseudo_host.set(host)
-
+    def load_file(local_host):
+        pseudo_host.set(local_host)
         exec_file(filename)
-
         logger.info('{0}{1} {2}'.format(
-            host.print_prefix,
+            local_host.print_prefix,
             click.style('Ready:', 'green'),
             click.style(filename, bold=True),
         ))
+        pseudo_host.reset()
 
-    # Remove any pseudo host
-    pseudo_host.reset()
+    greenlet_to_host = {
+        state.pool.spawn(load_file, host): host
+        for host in state.inventory.iter_active_hosts()
+    }
+
+    with progress_spinner(greenlet_to_host.values()) as progress:
+        for greenlet in gevent.iwait(greenlet_to_host.keys()):
+            host = greenlet_to_host[greenlet]
+            greenlet.get()
+            progress(host)
