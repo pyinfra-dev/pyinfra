@@ -12,71 +12,88 @@ executing in CLI mode).
 import sys
 from contextlib import contextmanager
 
+from gevent.local import local
+
 import pyinfra
 
 
+class container():
+    pass
+
+
 class PseudoModule(object):
-    _module = None
-    _base_module = None
+    _container_cls = container
+    _base_cls = None
+
+    def __init__(self):
+        self._container = self._container_cls()
+        self._container.module = None
+
+    def _get_module(self):
+        return self._container.module
 
     def __repr__(self):
         return 'PseudoModule({0}):{1}'.format(
-            self._base_module.__name__,
-            repr(self._module),
+            self._base_cls.__name__,
+            repr(self._get_module()),
         )
 
     def __str__(self):
-        return str(self._module)
+        return str(self._get_module())
 
     def __dir__(self):
-        return dir(self._base_module)
+        return dir(self._base_cls)
 
     def __getattr__(self, key):
-        if self._module is None:
-            return getattr(self._base_module, key)
-        return getattr(self._module, key)
+        if self._get_module() is None:
+            return getattr(self._base_cls, key)
+        return getattr(self._get_module(), key)
 
     def __setattr__(self, key, value):
-        if key in ('_module', '_base_module'):
+        if key in ('_container', '_base_cls'):
             return super(PseudoModule, self).__setattr__(key, value)
 
-        if self._module is None:
+        if self._get_module() is None:
             raise TypeError('Cannot assign to pseudo base module')
 
-        return setattr(self._module, key, value)
+        return setattr(self._get_module(), key, value)
 
     def __iter__(self):
-        return iter(self._module)
+        return iter(self._get_module())
 
     def __len__(self):
-        return len(self._module)
+        return len(self._get_module())
 
     def __eq__(self, other):
-        return self._module == other
+        return self._get_module() == other
 
     def __hash__(self):
-        return hash(self._module)
+        return hash(self._get_module())
 
     def set(self, module):
-        self._module = module
+        self._container.module = module
 
     def set_base(self, module):
-        self._base_module = module
+        self._base_cls = module
 
     def reset(self):
-        self._module = None
+        self._container.module = None
 
     def isset(self):
-        return self._module is not None
+        return self._container.module is not None
 
     @contextmanager
     def _use(self, module):
-        old_module = self._module
-        self._module = module
+        old_module = self._container.module
+        self._container.module = module
 
         yield
 
-        self._module = old_module
+        self._container.module = old_module
+
+
+class PseudoLocalModule(PseudoModule):
+    _container_cls = local
 
 
 # The current deploy state
@@ -101,7 +118,7 @@ pseudo_inventory = \
 pseudo_host = \
     sys.modules['pyinfra.pseudo_host'] = sys.modules['pyinfra.host'] = \
     pyinfra.pseudo_host = pyinfra.host = \
-    PseudoModule()
+    PseudoLocalModule()
 
 
 def init_base_classes():
