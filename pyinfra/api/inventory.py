@@ -5,7 +5,6 @@ from pyinfra import logger
 from .connectors import ALL_CONNECTORS, EXECUTION_CONNECTORS
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
 from .host import Host
-from .util import FallbackDict
 
 
 def extract_name_data(names):
@@ -156,25 +155,7 @@ class Inventory(object):
         for name, executor in names_executors:
             host_groups = name_to_group_names[name]
 
-            # Create the (waterfall data: override, host, group, global)
-            host_data = FallbackDict(
-                self.get_override_data(),
-                self.get_host_data(name),
-                self.get_groups_data(host_groups),
-                self.get_data(),
-                # Pass the method, rather than data, as this comes from the
-                # state and can change during deploy(s).
-                self.get_deploy_data,
-            )
-
-            # Create the Host object
-            host = Host(
-                name,
-                inventory=self,
-                groups=name_to_group_names.get(name),
-                data=host_data,
-                executor=executor,
-            )
+            host = Host(name, inventory=self, groups=host_groups, executor=executor)
             hosts[name] = host
 
             # And push into any groups
