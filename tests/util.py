@@ -158,6 +158,18 @@ def _sort_kwargs_str(string):
 class FakeHost(object):
     noop_description = None
 
+    # Current context inside an @operation function
+    in_op = True
+    current_op_hash = None
+    current_op_global_kwargs = None
+
+    # Current context inside a @deploy function
+    in_deploy = True
+    current_deploy_name = None
+    current_deploy_kwargs = None
+    current_deploy_data = None
+    current_deploy_op_order = None
+
     def __init__(self, name, facts, data):
         self.name = name
         self.fact = FakeFacts(facts)
