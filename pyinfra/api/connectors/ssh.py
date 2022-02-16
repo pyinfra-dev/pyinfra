@@ -16,7 +16,6 @@ from paramiko import (
     DSSKey,
     ECDSAKey,
     Ed25519Key,
-    HostKeys,
     PasswordRequiredException,
     RSAKey,
     SFTPClient,
@@ -41,7 +40,6 @@ from .util import (
 )
 
 EXECUTION_CONNECTOR = True
-SYSTEM_HOST_KEYS = HostKeys()
 
 
 def make_names_data(hostname):
@@ -192,27 +190,11 @@ def _make_paramiko_kwargs(state, host):
     return kwargs
 
 
-@memoize  # only load system host keys once
-def _load_system_host_keys():
-    logger.debug('Loading SSH host keys')
-
-    known_hosts_filename = path.expanduser('~/.ssh/known_hosts')
-    if path.exists(known_hosts_filename):
-        try:
-            SYSTEM_HOST_KEYS.load(known_hosts_filename)
-        # Unfortunately paramiko bails for any dodge line in known hosts
-        # See: https://github.com/Fizzadar/pyinfra/issues/683
-        except Exception as e:
-            logger.warning('Failed to load system host keys: {0}'.format(e))
-
-
 def connect(state, host):
     '''
     Connect to a single host. Returns the SSH client if succesful. Stateless by
     design so can be run in parallel.
     '''
-
-    _load_system_host_keys()
 
     kwargs = _make_paramiko_kwargs(state, host)
     logger.debug('Connecting to: {0} ({1})'.format(host.name, kwargs))
@@ -222,8 +204,6 @@ def connect(state, host):
     try:
         # Create new client & connect to the host
         client = SSHClient()
-        client._system_host_keys = SYSTEM_HOST_KEYS
-
         client.connect(hostname, **kwargs)
         return client
 
