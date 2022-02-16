@@ -5,7 +5,9 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 
 from os import path
 
+from gevent.lock import BoundedSemaphore
 from paramiko import (
+    HostKeys,
     MissingHostKeyPolicy,
     ProxyCommand,
     SSHClient as ParamikoClient,
@@ -18,6 +20,8 @@ from pyinfra.api.util import memoize
 
 from .config import SSHConfig
 
+HOST_KEYS_LOCK = BoundedSemaphore()
+
 
 class StrictPolicy(MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
@@ -29,15 +33,19 @@ class StrictPolicy(MissingHostKeyPolicy):
 class AskPolicy(MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
         should_continue = input(
-            'No host key for {0} found in known_hosts, do you want to continue [y/n]'.format(
+            'No host key for {0} found in known_hosts, do you want to continue [y/n] '.format(
                 hostname))
         if should_continue.lower() != 'y':
             raise SSHException(
                 'AskPolicy: No host key for {0} found in known_hosts'.format(hostname))
         else:
-            client.get_host_keys().add(hostname, key.get_name(), key)
-            if client._host_keys_filename is not None:
-                client.save_host_keys(client._host_keys_filename)
+            with HOST_KEYS_LOCK:
+                host_keys = client.get_host_keys()
+                host_keys.add(hostname, key.get_name(), key)
+                # The paramiko client saves host keys incorrectly whereas the host keys object does
+                # this correctly, so use that with the client filename variable.
+                # See: https://github.com/paramiko/paramiko/pull/1989
+                host_keys.save(client._host_keys_filename)
             logger.warning('Added host key for {0} to known_hosts'.format(hostname))
             return
 
@@ -56,6 +64,22 @@ def get_ssh_config(user_config_file=None):
             ssh_config = SSHConfig()
             ssh_config.parse(f)
             return ssh_config
+
+
+@memoize
+def get_host_keys(filename):
+    with HOST_KEYS_LOCK:
+        host_keys = HostKeys()
+
+        try:
+            host_keys.load(filename)
+        # When paramiko encounters a bad host keys line it sometimes bails the
+        # entire load incorrectly.
+        # See: https://github.com/paramiko/paramiko/pull/1990
+        except Exception as e:
+            logger.warning(f'Failed to load host keys from {filename}: {e}')
+
+        return host_keys
 
 
 class SSHClient(ParamikoClient):
@@ -80,12 +104,9 @@ class SSHClient(ParamikoClient):
         self.set_missing_host_key_policy(missing_host_key_policy)
         config.update(kwargs)
 
-        try:
-            self.load_system_host_keys(filename=host_keys_file)
-        # Unfortunately paramiko bails for any dodge line in known hosts
-        # See: https://github.com/Fizzadar/pyinfra/issues/683
-        except Exception as e:
-            logger.warning('Failed to load known host keys: {0}'.format(e))
+        # Overwrite paramiko empty defaults with @memoize-d host keys object
+        self._host_keys = get_host_keys(host_keys_file)
+        self._host_keys_filename = host_keys_file
 
         super(SSHClient, self).connect(hostname, **config)
 
@@ -133,7 +154,7 @@ class SSHClient(ParamikoClient):
                     'Invalid value StrictHostKeyChecking={}'.format(
                         host_config['stricthostkeychecking']))
 
-        host_keys_file = None
+        host_keys_file = path.expanduser('~/.ssh/known_hosts')  # OpenSSH default
         if 'userknownhostsfile' in host_config:
             host_keys_file = path.expanduser(host_config['userknownhostsfile'])
 
