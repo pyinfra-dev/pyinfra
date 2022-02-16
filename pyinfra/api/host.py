@@ -104,6 +104,9 @@ class Host(object):
         # Arbitrary dict for connector use
         self.connector_data = {}
 
+        # Fact data store
+        self.facts = {}
+
         # Create the (waterfall data: override, host, group, global)
         self.data = FallbackDict(
             lambda: inventory.get_override_data(),
