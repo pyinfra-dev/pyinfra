@@ -24,6 +24,7 @@ import six
 
 from pyinfra import logger, pseudo_host, pseudo_state
 from pyinfra.api.command import PyinfraCommand
+from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.facts import get_fact_class, is_fact
 from pyinfra.api.util import FallbackDict
 
@@ -79,6 +80,8 @@ def exec_file(filename, return_locals=False, is_deploy_code=False):
     try:
         exec(PYTHON_CODES[filename], data)
     except Exception as e:
+        if isinstance(e, PyinfraError):
+            raise
         raise UnexpectedExternalError(e, filename)
 
     pseudo_state.current_exec_filename = old_current_exec_filename
