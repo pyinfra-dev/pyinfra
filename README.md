@@ -1,17 +1,35 @@
-<h1>
+<p align="center">
     <a href="https://pyinfra.com">
-        <img src="https://raw.githubusercontent.com/Fizzadar/pyinfra/master/docs/static/logo_full.png" height="48px" />
+        <img src="https://pyinfra.com/static/logo_readme.png" alt="pyinfra" />
     </a>
-</h1>
+</p>
 
-[![PyPI version](https://img.shields.io/pypi/v/pyinfra?color=blue)](https://pypi.python.org/pypi/pyinfra)
-[![PyPi downloads](https://pepy.tech/badge/pyinfra)](https://pepy.tech/project/pyinfra)
-[![Docs status](https://img.shields.io/github/workflow/status/Fizzadar/pyinfra/Generate%20&%20Deploy%20Docs/master?label=docs)](https://docs.pyinfra.com)
-[![Execute tests status](https://img.shields.io/github/workflow/status/Fizzadar/pyinfra/Execute%20tests/master?label=tests)](https://github.com/Fizzadar/pyinfra/actions?query=workflow%3A%22Execute+tests%22)
-[![Codecov Coverage](https://img.shields.io/codecov/c/gh/Fizzadar/pyinfra)](https://codecov.io/github/Fizzadar/pyinfra)
-[![MIT Licensed](https://img.shields.io/pypi/l/pyinfra)](https://github.com/Fizzadar/pyinfra/blob/develop/LICENSE.md)
+<p align="center">
+    <em>pyinfra automates infrastructure super fast at massive scale</em>
+</p>
 
-pyinfra automates/provisions/manages/deploys infrastructure super fast at massive scale. It can be used for ad-hoc command execution, service deployment, configuration management and more. Core design features include:
+<p align="center">
+    <a href="https://pypi.python.org/pypi/pyinfra"><img alt="PyPI version" src="https://img.shields.io/pypi/v/pyinfra?color=blue"></a>
+    <a href="https://pepy.tech/project/pyinfra"><img alt="PyPi downloads" src="https://pepy.tech/badge/pyinfra"></a>
+    <a href="https://docs.pyinfra.com"><img alt="Docs status" src="https://img.shields.io/github/workflow/status/Fizzadar/pyinfra/Generate%20&amp;%20Deploy%20Docs/master?label=docs"></a>
+    <a href="https://github.com/Fizzadar/pyinfra/actions?query=workflow%3A%22Execute+tests%22"><img alt="Execute tests status" src="https://img.shields.io/github/workflow/status/Fizzadar/pyinfra/Execute%20tests/master?label=tests"></a>
+    <a href="https://codecov.io/github/Fizzadar/pyinfra"><img alt="Codecov Coverage" src="https://img.shields.io/codecov/c/gh/Fizzadar/pyinfra"></a>
+    <a href="https://github.com/Fizzadar/pyinfra/blob/develop/LICENSE.md"><img alt="MIT Licensed" src="https://img.shields.io/pypi/l/pyinfra"></a>
+</p>
+
+---
+
+<p align="center">
+    <a href="https://docs.pyinfra.com"><strong>Documentation</strong></a> &bull;
+    <a href="https://docs.pyinfra.com/page/getting_started.html"><strong>Getting Started</strong></a> &bull;
+    <a href="https://docs.pyinfra.com/en/1.x/examples.html"><strong>Examples</strong></a> &bull;
+    <a href="https://docs.pyinfra.com/page/support.html"><strong>Help & Support</strong></a> &bull;
+    <a href="https://docs.pyinfra.com/page/contributing.html"><strong>Contributing</strong></a>
+</p>
+
+---
+
+pyinfra automates/provisions/manages/deploys infrastructure. It can be used for ad-hoc command execution, service deployment, configuration management and more. Design features include:
 
 + 🚀 **Super fast** execution over thousands of hosts with predictable performance.
 + 🚨 **Instant debugging** with stdout & stderr output on error or as required (`-v`|`-vv`|`-vvv`).
@@ -20,9 +38,9 @@ pyinfra automates/provisions/manages/deploys infrastructure super fast at massiv
 + ❗️ **Two stage process** that enables `--dry` runs before executing any changes.
 + 🔌 **Integrated** with Docker, Vagrant/Mech & Ansible out of the box.
 
-When you run pyinfra you'll see something like ([non animated version](https://raw.githubusercontent.com/Fizzadar/pyinfra/master/docs/static/example_deploy.png)):
+When you run pyinfra you'll see something like ([non animated version](https://pyinfra.com/static/example_deploy.png)):
 
-<img width="100%" src="https://raw.githubusercontent.com/Fizzadar/pyinfra/master/docs/static/example_deploy.gif" />
+<img width="100%" src="https://pyinfra.com/static/example_deploy.gif" />
 
 ## Quickstart
 
