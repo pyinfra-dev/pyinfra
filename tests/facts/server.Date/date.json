@@ -1,5 +1,5 @@
 {
-    "command": "LANG=C date",
+    "command": "LANG=C LC_TIME=en_US.UTF-8 date",
     "output": ["2019-01-01"],
     "fact": "2019-01-01T00:00:00"
 }

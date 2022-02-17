@@ -121,7 +121,7 @@ class Date(FactBase):
     Returns the current datetime on the server.
     '''
 
-    command = 'LANG=C date'
+    command = 'LANG=C LC_TIME=en_US.UTF-8 date'
     default = datetime.now
 
     @staticmethod
