@@ -178,17 +178,22 @@ class SSHClient(ParamikoClient):
             sock = None
 
             for i, hop in enumerate(hops):
-                hop_hostname, hop_config = self.derive_shorthand(hop)
+                hop_hostname, hop_config = self.derive_shorthand(ssh_config, hop)
                 logger.debug('SSH ProxyJump through %s:%s', hop_hostname, hop_config['port'])
 
                 c = SSHClient()
-                c.connect(hop_hostname, sock=sock, **hop_config)
+                c.connect(
+                    hop_hostname,
+                    _pyinfra_ssh_config_file=ssh_config_file,
+                    sock=sock,
+                    **hop_config
+                )
 
                 if i == len(hops) - 1:
                     target = hostname
                     target_config = {'port': cfg['port']}
                 else:
-                    target, target_config = self.derive_shorthand(hops[i + 1])
+                    target, target_config = self.derive_shorthand(ssh_config, hops[i + 1])
 
                 sock = c.gateway(hostname, cfg['port'], target, target_config['port'])
             cfg['sock'] = sock
@@ -196,7 +201,7 @@ class SSHClient(ParamikoClient):
         return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_file
 
     @staticmethod
-    def derive_shorthand(host_string):
+    def derive_shorthand(ssh_config, host_string):
         shorthand_config = {}
         user_hostport = host_string.rsplit('@', 1)
         hostport = user_hostport.pop()
@@ -216,11 +221,11 @@ class SSHClient(ParamikoClient):
             if host_port and host_port[0]:
                 shorthand_config['port'] = int(host_port[0])
 
-        base_config = get_ssh_config().lookup(hostname)
+        base_config = ssh_config.lookup(hostname)
 
         config = {
             'port': base_config.get('port', 22),
-            'username': base_config.get('username'),
+            'username': base_config.get('user'),
         }
         config.update(shorthand_config)
 
