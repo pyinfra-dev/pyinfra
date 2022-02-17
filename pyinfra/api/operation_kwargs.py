@@ -55,7 +55,11 @@ auth_kwargs = {
 
 def generate_env(config, value):
     env = config.ENV.copy()
-    if value:
+    # TODO: this is to protect against host.data.env being a string or similar,
+    # the introduction of using host.data.X for operation kwargs combined with
+    # `env` being a commonly defined data variable causes issues.
+    # The real fix here is the prefixed `_env` argument.
+    if value and isinstance(value, dict):
         env.update(value)
     return env
 
