@@ -183,9 +183,10 @@ def _make_paramiko_kwargs(state, host):
         )
 
     # No key or password, so let's have paramiko look for SSH agents and user keys
+    # unless disabled by the user.
     else:
-        kwargs['allow_agent'] = True
-        kwargs['look_for_keys'] = True
+        kwargs['allow_agent'] = host.data.get('ssh_allow_agent', True)
+        kwargs['look_for_keys'] = host.data.get('ssh_look_for_keys', True)
 
     return kwargs
 
