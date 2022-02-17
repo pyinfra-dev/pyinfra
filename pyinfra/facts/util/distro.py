@@ -2,7 +2,10 @@ from __future__ import absolute_import, unicode_literals
 
 import os
 
-import distro
+try:
+    from distro import distro
+except ImportError:
+    import distro
 
 
 def get_distro_info(root_dir):

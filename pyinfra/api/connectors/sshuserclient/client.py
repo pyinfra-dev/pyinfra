@@ -5,10 +5,13 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 
 from os import path
 
+from gevent.lock import BoundedSemaphore
 from paramiko import (
-    AutoAddPolicy,
+    HostKeys,
+    MissingHostKeyPolicy,
     ProxyCommand,
     SSHClient as ParamikoClient,
+    SSHException,
 )
 from paramiko.agent import AgentRequestHandler
 
@@ -16,6 +19,40 @@ from pyinfra import logger
 from pyinfra.api.util import memoize
 
 from .config import SSHConfig
+
+HOST_KEYS_LOCK = BoundedSemaphore()
+
+
+class StrictPolicy(MissingHostKeyPolicy):
+    def missing_host_key(self, client, hostname, key):
+        logger.error('No host key for {0} found in known_hosts'.format(hostname))
+        raise SSHException(
+            'StrictPolicy: No host key for {0} found in known_hosts'.format(hostname))
+
+
+class AskPolicy(MissingHostKeyPolicy):
+    def missing_host_key(self, client, hostname, key):
+        should_continue = input(
+            'No host key for {0} found in known_hosts, do you want to continue [y/n] '.format(
+                hostname))
+        if should_continue.lower() != 'y':
+            raise SSHException(
+                'AskPolicy: No host key for {0} found in known_hosts'.format(hostname))
+        else:
+            with HOST_KEYS_LOCK:
+                host_keys = client.get_host_keys()
+                host_keys.add(hostname, key.get_name(), key)
+                # The paramiko client saves host keys incorrectly whereas the host keys object does
+                # this correctly, so use that with the client filename variable.
+                # See: https://github.com/paramiko/paramiko/pull/1989
+                host_keys.save(client._host_keys_filename)
+            logger.warning('Added host key for {0} to known_hosts'.format(hostname))
+            return
+
+
+class WarningPolicy(MissingHostKeyPolicy):
+    def missing_host_key(self, client, hostname, key):
+        logger.warning('No host key for {0} found in known_hosts'.format(hostname))
 
 
 @memoize
@@ -27,6 +64,22 @@ def get_ssh_config(user_config_file=None):
             ssh_config = SSHConfig()
             ssh_config.parse(f)
             return ssh_config
+
+
+@memoize
+def get_host_keys(filename):
+    with HOST_KEYS_LOCK:
+        host_keys = HostKeys()
+
+        try:
+            host_keys.load(filename)
+        # When paramiko encounters a bad host keys line it sometimes bails the
+        # entire load incorrectly.
+        # See: https://github.com/paramiko/paramiko/pull/1990
+        except Exception as e:
+            logger.warning('Failed to load host keys from {0}: {1}'.format(filename, e))
+
+        return host_keys
 
 
 class SSHClient(ParamikoClient):
@@ -42,12 +95,19 @@ class SSHClient(ParamikoClient):
         _pyinfra_ssh_config_file=None,
         **kwargs
     ):
-        hostname, config, forward_agent = self.parse_config(
-            hostname,
-            kwargs,
-            ssh_config_file=_pyinfra_ssh_config_file,
-        )
+        hostname, config, forward_agent, missing_host_key_policy, host_keys_file = \
+            self.parse_config(
+                hostname,
+                kwargs,
+                ssh_config_file=_pyinfra_ssh_config_file,
+            )
+        self.set_missing_host_key_policy(missing_host_key_policy)
         config.update(kwargs)
+
+        # Overwrite paramiko empty defaults with @memoize-d host keys object
+        self._host_keys = get_host_keys(host_keys_file)
+        self._host_keys_filename = host_keys_file
+
         super(SSHClient, self).connect(hostname, **config)
 
         if _pyinfra_force_forward_agent is not None:
@@ -79,6 +139,25 @@ class SSHClient(ParamikoClient):
         host_config = ssh_config.lookup(hostname)
         forward_agent = host_config.get('forwardagent') == 'yes'
 
+        missing_host_key_policy = AskPolicy()
+
+        if 'stricthostkeychecking' in host_config:
+            v = host_config['stricthostkeychecking']
+            if v == 'ask':
+                missing_host_key_policy = AskPolicy()
+            elif v == 'no' or v == 'off':
+                missing_host_key_policy = WarningPolicy()
+            elif v == 'yes':
+                missing_host_key_policy = StrictPolicy()
+            else:
+                raise SSHException(
+                    'Invalid value StrictHostKeyChecking={}'.format(
+                        host_config['stricthostkeychecking']))
+
+        host_keys_file = path.expanduser('~/.ssh/known_hosts')  # OpenSSH default
+        if 'userknownhostsfile' in host_config:
+            host_keys_file = path.expanduser(host_config['userknownhostsfile'])
+
         if 'hostname' in host_config:
             hostname = host_config['hostname']
 
@@ -103,7 +182,6 @@ class SSHClient(ParamikoClient):
                 logger.debug('SSH ProxyJump through %s:%s', hop_hostname, hop_config['port'])
 
                 c = SSHClient()
-                c.set_missing_host_key_policy(AutoAddPolicy())
                 c.connect(
                     hop_hostname,
                     _pyinfra_ssh_config_file=ssh_config_file,
@@ -120,7 +198,7 @@ class SSHClient(ParamikoClient):
                 sock = c.gateway(hostname, cfg['port'], target, target_config['port'])
             cfg['sock'] = sock
 
-        return hostname, cfg, forward_agent
+        return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_file
 
     @staticmethod
     def derive_shorthand(ssh_config, host_string):

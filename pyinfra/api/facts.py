@@ -314,7 +314,10 @@ def get_facts(
 
             hostname_facts[host] = data
 
-        log = 'Loaded fact {0} ({1})'.format(click.style(name, bold=True), get_kwargs_str(kwargs))
+        log = 'Loaded fact {0}{1}'.format(
+            click.style(name, bold=True),
+            ' ({0})'.format(get_kwargs_str(kwargs)) if kwargs else '',
+        )
         if state.print_fact_info:
             logger.info(log)
         else:

@@ -16,8 +16,6 @@ from paramiko import (
     DSSKey,
     ECDSAKey,
     Ed25519Key,
-    HostKeys,
-    MissingHostKeyPolicy,
     PasswordRequiredException,
     RSAKey,
     SFTPClient,
@@ -42,12 +40,6 @@ from .util import (
 )
 
 EXECUTION_CONNECTOR = True
-SYSTEM_HOST_KEYS = HostKeys()
-
-
-class WarningPolicy(MissingHostKeyPolicy):
-    def missing_host_key(self, client, hostname, key):
-        logger.warning('No host key for {0} found in known_hosts'.format(hostname))
 
 
 def make_names_data(hostname):
@@ -191,25 +183,12 @@ def _make_paramiko_kwargs(state, host):
         )
 
     # No key or password, so let's have paramiko look for SSH agents and user keys
+    # unless disabled by the user.
     else:
-        kwargs['allow_agent'] = True
-        kwargs['look_for_keys'] = True
+        kwargs['allow_agent'] = host.data.get('ssh_allow_agent', True)
+        kwargs['look_for_keys'] = host.data.get('ssh_look_for_keys', True)
 
     return kwargs
-
-
-@memoize  # only load system host keys once
-def _load_system_host_keys():
-    logger.debug('Loading SSH host keys')
-
-    known_hosts_filename = path.expanduser('~/.ssh/known_hosts')
-    if path.exists(known_hosts_filename):
-        try:
-            SYSTEM_HOST_KEYS.load(known_hosts_filename)
-        # Unfortunately paramiko bails for any dodge line in known hosts
-        # See: https://github.com/Fizzadar/pyinfra/issues/683
-        except Exception as e:
-            logger.warning('Failed to load system host keys: {0}'.format(e))
 
 
 def connect(state, host):
@@ -217,8 +196,6 @@ def connect(state, host):
     Connect to a single host. Returns the SSH client if succesful. Stateless by
     design so can be run in parallel.
     '''
-
-    _load_system_host_keys()
 
     kwargs = _make_paramiko_kwargs(state, host)
     logger.debug('Connecting to: {0} ({1})'.format(host.name, kwargs))
@@ -228,9 +205,6 @@ def connect(state, host):
     try:
         # Create new client & connect to the host
         client = SSHClient()
-        client.set_missing_host_key_policy(WarningPolicy())
-        client._system_host_keys = SYSTEM_HOST_KEYS
-
         client.connect(hostname, **kwargs)
         return client
 
@@ -548,9 +522,10 @@ def rsync(
         if sudo_user:
             remote_rsync_command = 'sudo -u {0} rsync'.format(sudo_user)
 
+    # To avoid asking for interactive input, specify BatchMode=yes
     rsync_command = (
         'rsync {rsync_flags} '
-        "--rsh 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no {ssh_flags}' "
+        "--rsh 'ssh -o BatchMode=yes {ssh_flags}' "
         "--rsync-path '{remote_rsync_command}' "
         '{src} {user}{hostname}:{dest}'
     ).format(

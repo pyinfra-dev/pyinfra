@@ -153,15 +153,19 @@ class FallbackDict(object):
         self.__dict__['datas'] = tuple(datas)
 
     def __getattr__(self, key):
-        for data in extract_callable_datas(self.datas):
-            if key in data:
-                return data[key]
+        return self.get(key)
 
     def __setattr__(self, key, value):
         self.override_datas[key] = value
 
     def __str__(self):
         return six.text_type(self.datas)
+
+    def get(self, key, default=None):
+        for data in extract_callable_datas(self.datas):
+            if key in data:
+                return data[key]
+        return default
 
     def dict(self):
         out = {}

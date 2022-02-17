@@ -4,7 +4,7 @@ from mock import mock_open, patch
 from paramiko import ProxyCommand
 
 from pyinfra.api.connectors.sshuserclient import SSHClient
-from pyinfra.api.connectors.sshuserclient.client import get_ssh_config
+from pyinfra.api.connectors.sshuserclient.client import AskPolicy, get_ssh_config
 
 SSH_CONFIG_DATA = '''
 # Comment
@@ -23,6 +23,7 @@ Host 192.168.1.1
     User "otheruser"
     ProxyCommand None
     ForwardAgent yes
+    UserKnownHostsFile ~/.ssh/test3
 '''
 
 SSH_CONFIG_OTHER_FILE_PROXYJUMP = '''
@@ -82,18 +83,24 @@ class TestSSHUserConfig(TestCase):
     def test_load_ssh_config(self):
         client = SSHClient()
 
-        _, config, forward_agent = client.parse_config('127.0.0.1')
+        _, config, forward_agent, missing_host_key_policy, host_keys_file \
+            = client.parse_config('127.0.0.1')
 
         assert config.get('key_filename') == ['/id_rsa', '/id_rsa2']
         assert config.get('username') == 'testuser'
         assert config.get('port') == 33
         assert isinstance(config.get('sock'), ProxyCommand)
         assert forward_agent is False
+        assert isinstance(missing_host_key_policy, AskPolicy)
+        assert host_keys_file == '~/.ssh/known_hosts'  # OpenSSH default
 
-        _, other_config, forward_agent = client.parse_config('192.168.1.1')
+        _, other_config, forward_agent, missing_host_key_policy, host_keys_file \
+            = client.parse_config('192.168.1.1')
 
         assert other_config.get('username') == 'otheruser'
         assert forward_agent is True
+        assert isinstance(missing_host_key_policy, AskPolicy)
+        assert host_keys_file == '~/.ssh/test3'
 
     @patch(
         'pyinfra.api.connectors.sshuserclient.client.open',
@@ -142,7 +149,7 @@ class TestSSHUserConfig(TestCase):
         client = SSHClient()
 
         # Load the SSH config with ProxyJump configured
-        _, config, forward_agent = client.parse_config(
+        _, config, forward_agent, _, _ = client.parse_config(
             '192.168.1.2',
             {'port': 1022},
             ssh_config_file='other_file',
