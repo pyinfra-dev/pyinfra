@@ -16,7 +16,8 @@
         }
     },
     "commands": [
-        "wget -q http://myfile -O /home/myfile || ( rm -f /home/myfile ; exit 1 )",
+        "wget -q http://myfile -O _tempfile_ || ( rm -f _tempfile_ ; exit 1 )",
+        "mv _tempfile_ /home/myfile",
         "chgrp mygroup /home/myfile",
         "chmod 777 /home/myfile"
     ]

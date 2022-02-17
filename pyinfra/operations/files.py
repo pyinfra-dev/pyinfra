@@ -132,15 +132,17 @@ def download(
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
+        temp_file = state.get_temp_filename(dest)
+
         curl_command = make_formatted_string_command(
             'curl -sSLf {0} -o {1}',
             QuoteString(src),
-            QuoteString(dest),
+            QuoteString(temp_file),
         )
         wget_command = make_formatted_string_command(
             'wget -q {0} -O {1} || ( rm -f {1} ; exit 1 )',
             QuoteString(src),
-            QuoteString(dest),
+            QuoteString(temp_file),
         )
 
         if host.get_fact(Which, command='curl'):
@@ -149,6 +151,8 @@ def download(
             yield wget_command
         else:
             yield '( {0} ) || ( {1} )'.format(curl_command, wget_command)
+
+        yield StringCommand('mv', QuoteString(temp_file), QuoteString(dest))
 
         if user or group:
             yield chown(dest, user, group)

@@ -15,7 +15,8 @@
         }
     },
     "commands": [
-        "curl -sSLf http://myfile -o /home/myfile",
+        "curl -sSLf http://myfile -o _tempfile_",
+        "mv _tempfile_ /home/myfile",
         "chgrp mygroup /home/myfile",
         "chmod 777 /home/myfile"
     ]

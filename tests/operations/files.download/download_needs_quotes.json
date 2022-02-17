@@ -15,7 +15,8 @@
         }
     },
     "commands": [
-        "curl -sSLf http://myfile -o '/home/my file - with $specialChars'",
+        "curl -sSLf http://myfile -o _tempfile_",
+        "mv _tempfile_ '/home/my file - with $specialChars'",
         "chgrp mygroup '/home/my file - with $specialChars'",
         "chmod 777 '/home/my file - with $specialChars'"
     ]

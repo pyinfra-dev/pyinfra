@@ -10,6 +10,7 @@
         }
     },
     "commands": [
-        "curl -sSLf http://somesite/somerepo.repo -o /etc/zypp/repos.d/somerepo.repo"
+        "curl -sSLf http://somesite/somerepo.repo -o _tempfile_",
+        "mv _tempfile_ /etc/zypp/repos.d/somerepo.repo"
     ]
 }
