@@ -77,7 +77,7 @@ def get_host_keys(filename):
         # entire load incorrectly.
         # See: https://github.com/paramiko/paramiko/pull/1990
         except Exception as e:
-            logger.warning(f'Failed to load host keys from {filename}: {e}')
+            logger.warning('Failed to load host keys from {0}: {1}'.format(filename, e))
 
         return host_keys
 
