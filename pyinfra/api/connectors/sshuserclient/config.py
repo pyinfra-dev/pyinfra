@@ -6,11 +6,43 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 import glob
 import re
 
-from os import path
+from os import environ, path
 
+import paramiko.config
+
+from gevent.subprocess import CalledProcessError, check_call
 from paramiko import SSHConfig as ParamikoSSHConfig
 
+from pyinfra import logger
+
 SETTINGS_REGEX = re.compile(r'(\w+)(?:\s*=\s*|\s+)(.+)')
+
+
+class FakeInvokeResult(object):
+    ok = False
+
+
+class FakeInvoke(object):
+    @staticmethod
+    def run(cmd, *args, **kwargs):
+        result = FakeInvokeResult()
+
+        try:
+            cmd = [environ['SHELL'], cmd]
+            try:
+                code = check_call(cmd)
+            except CalledProcessError as e:
+                code = e.returncode
+            result.ok = code == 0
+        except Exception as e:
+            logger.warning((
+                'pyinfra encountered an error loading SSH config match exec {0}: {1}'
+            ).format(cmd, e))
+
+        return result
+
+
+paramiko.config.invoke = FakeInvoke
 
 
 def _expand_include_statements(file_obj, parsed_files=None):
