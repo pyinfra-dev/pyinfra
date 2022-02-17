@@ -12,6 +12,50 @@ Executing Deploys
 This two phase deploy process enables ``pyinfra`` to do some really interesting things, however there are some limitations to consider.
 
 
+Detailed lifecycle of executing the ``pyinfra`` CLI
+---------------------------------------------------
+
+Setup & connect
+~~~~~~~~~~~~~~~
+
++ Parse & validate CLI arguments, inventory file, group data files, commands
++ Create ``Inventory``, ``Config`` and ``State`` objects
+
+  + Populate the inventory with ``Host`` objects for each host
+  + Load up any filesystem based config variables
+
++ Connect to each target host from the inventory using the relevant connector
+
+Fact gathering / operation preparation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++ Loop through each deploy file:
+
+  + Loop through each host and execute the file
+  + As operation functions are called, needed facts are fetched from hosts
+  + Commands output by operations are stored in the state
+
+Operation execution
+~~~~~~~~~~~~~~~~~~~
+
++ Generate order of operations
+
+  + Uses line numbers in CLI mode (ie - works like the user would expect)
+  + Uses `add_op` call order in API mode
+
++ Loop through each operation
+
+  + For each host, execute the commands specific for this (op, host) pair
+  + Collect results and trigger failure handling for any errors encountered
+  + Store the results in the state
+
+Completion
+~~~~~~~~~~
+
++ Disconnect from all the target hosts
++ Write out the results to the user
+
+
 Limitations
 -----------
 
