@@ -92,7 +92,7 @@ class TestSSHUserConfig(TestCase):
         assert isinstance(config.get('sock'), ProxyCommand)
         assert forward_agent is False
         assert isinstance(missing_host_key_policy, AskPolicy)
-        assert host_keys_file is None
+        assert host_keys_file == '~/.ssh/known_hosts'  # OpenSSH default
 
         _, other_config, forward_agent, missing_host_key_policy, host_keys_file \
             = client.parse_config('192.168.1.1')
