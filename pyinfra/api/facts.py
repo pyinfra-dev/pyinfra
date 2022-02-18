@@ -197,7 +197,7 @@ def get_facts(
         ignore_errors = current_global_kwargs.get('ignore_errors', ignore_errors)
         timeout = current_global_kwargs.get('timeout', timeout)
         env = current_global_kwargs.get('env', env)
-        success_exit_codes = current_global_kwargs.get('success_exit_codes', [0])
+        success_exit_codes = current_global_kwargs.get('success_exit_codes', success_exit_codes)
 
     # Make a hash which keeps facts unique - but usable cross-deploy/threads.
     # Locks are used to maintain order.
