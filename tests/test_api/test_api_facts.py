@@ -155,3 +155,35 @@ class TestOperationsApi(PatchSSHTestCase):
             use_sudo_password=False,
             return_combined_output=True,
         )
+
+    def test_get_fact_with_list_of_success_codes(self):
+        inventory = make_inventory(hosts=('anotherhost',))
+        state = State(inventory, Config())
+
+        anotherhost = inventory.get_host('anotherhost')
+
+        connect_all(state)
+
+        exit_codes = [1, 2, 3]
+        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
+            fake_run_command.return_value = MagicMock(), [('stdout', 'some-output')]
+            fact_data = get_facts(state, 'command', ('yes',), {'success_exit_codes': exit_codes})
+
+        assert fact_data == {anotherhost: 'some-output'}
+
+        fake_run_command.assert_called_with(
+            state,
+            anotherhost,
+            'yes',
+            print_input=False,
+            print_output=False,
+            shell_executable='sh',
+            success_exit_codes=exit_codes,
+            su_user=None,
+            sudo=False,
+            sudo_user=None,
+            timeout=None,
+            env={},
+            use_sudo_password=False,
+            return_combined_output=True,
+        )
