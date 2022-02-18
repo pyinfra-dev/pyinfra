@@ -1,3 +1,25 @@
+# v1.6.2
+
+SSH connector config fixes:
+
++ Implement & fix `StrictHostKeyChecking` matching how OpenSSH works (@bauen1)
++ Fix / use SSH config for `ProxyJump` hosts (@artizirk)
++ Add ways to disable SSH agent / looking for SSH keys (`host.data.ssh_allow_agent` & `host.data.ssh_look_for_keys`)
++ Fix `Match exec` SSH config
+
+Operation/fact fixes:
+
++ Set `LC_TIME` in `server.Date` fact
++ Use a temporary file + move in `files.download` operation
+
+Misc:
+
++ Workaround fix for `host.data.env` not being a dictionary
++ Workaround fix for `host.data.use_sudo_password` being different for each host
++ Fix bash autocomplete documentation (@oz123)
++ Fix incorrect handling of internal errors when hosts fail
++ Refreshed logo/readme/docs/website for upcoming v2
+
 # v1.6.1
 
 + Fix typo bug in the SSH client preventing connection
