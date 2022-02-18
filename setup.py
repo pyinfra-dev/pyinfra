@@ -51,7 +51,7 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
 )
 
 DOCS_REQUIRES = (
-    'pyinfra-guzzle_sphinx_theme==0.10',
+    'pyinfra-guzzle_sphinx_theme==0.11',
     'recommonmark==0.5.0',
     'sphinx==2.2.1 ; python_version >= "3"',
     # Pinned to fix: https://github.com/sphinx-doc/sphinx/issues/9727
