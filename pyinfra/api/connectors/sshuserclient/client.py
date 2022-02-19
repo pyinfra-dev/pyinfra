@@ -95,12 +95,13 @@ class SSHClient(ParamikoClient):
         _pyinfra_ssh_config_file=None,
         **kwargs
     ):
-        hostname, config, forward_agent, missing_host_key_policy, host_keys_file = \
+        hostname, config, forward_agent, missing_host_key_policy, host_keys_file = (
             self.parse_config(
                 hostname,
                 kwargs,
                 ssh_config_file=_pyinfra_ssh_config_file,
             )
+        )
         self.set_missing_host_key_policy(missing_host_key_policy)
         config.update(kwargs)
 
@@ -131,15 +132,15 @@ class SSHClient(ParamikoClient):
         cfg.update(initial_cfg or {})
 
         forward_agent = False
+        missing_host_key_policy = AskPolicy()
+        host_keys_file = path.expanduser('~/.ssh/known_hosts')  # OpenSSH default
 
         ssh_config = get_ssh_config(ssh_config_file)
         if not ssh_config:
-            return hostname, cfg, forward_agent
+            return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_file
 
         host_config = ssh_config.lookup(hostname)
         forward_agent = host_config.get('forwardagent') == 'yes'
-
-        missing_host_key_policy = AskPolicy()
 
         if 'stricthostkeychecking' in host_config:
             v = host_config['stricthostkeychecking']
@@ -154,7 +155,6 @@ class SSHClient(ParamikoClient):
                     'Invalid value StrictHostKeyChecking={}'.format(
                         host_config['stricthostkeychecking']))
 
-        host_keys_file = path.expanduser('~/.ssh/known_hosts')  # OpenSSH default
         if 'userknownhostsfile' in host_config:
             host_keys_file = path.expanduser(host_config['userknownhostsfile'])
 

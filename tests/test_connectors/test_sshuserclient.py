@@ -42,6 +42,23 @@ Include other_file
 '''
 
 
+class TestSSHUserConfigMissing(TestCase):
+    def setUp(self):
+        get_ssh_config.cache = {}
+
+    @patch(
+        'pyinfra.api.connectors.sshuserclient.client.path.exists',
+        lambda path: False,
+    )
+    def test_load_ssh_config_no_exist(self):
+        client = SSHClient()
+
+        _, config, forward_agent, missing_host_key_policy, host_keys_file \
+            = client.parse_config('127.0.0.1')
+
+        assert config.get('port') == 22
+
+
 @patch(
     'pyinfra.api.connectors.sshuserclient.client.path.exists',
     lambda path: True,
