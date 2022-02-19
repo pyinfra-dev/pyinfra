@@ -177,11 +177,32 @@ def get_fact(
     apply_failed_hosts=True,
     fact_hash=None,
 ):
-    if fact_hash:
-        current_fact = host.facts.get(fact_hash)
-        if current_fact:
-            return current_fact
+    with host.facts_lock:
+        if fact_hash and fact_hash in host.facts:
+            return host.facts[fact_hash]
 
+        return _get_fact(
+            state,
+            host,
+            name_or_cls,
+            args,
+            kwargs,
+            ensure_hosts,
+            apply_failed_hosts,
+            fact_hash,
+        )
+
+
+def _get_fact(
+    state,
+    host,
+    name_or_cls,
+    args=None,
+    kwargs=None,
+    ensure_hosts=None,
+    apply_failed_hosts=True,
+    fact_hash=None,
+):
     if isclass(name_or_cls) and issubclass(name_or_cls, (FactBase, ShortFactBase)):
         fact = name_or_cls()
         name = fact.name

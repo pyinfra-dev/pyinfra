@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 
 import click
+from gevent.lock import BoundedSemaphore
 
 from pyinfra import logger
 
@@ -106,6 +107,7 @@ class Host(object):
 
         # Fact data store
         self.facts = {}
+        self.facts_lock = BoundedSemaphore()
 
         # Create the (waterfall data: override, host, group, global)
         self.data = FallbackDict(
