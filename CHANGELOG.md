@@ -1,3 +1,8 @@
+# v1.6.3
+
++ Enable passing `success_exit_codes` into `host.get_fact` calls (@mohsinhijazee)
++ Fix bug triggered when no SSH config file exists
+
 # v1.6.2
 
 SSH connector config fixes:
