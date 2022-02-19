@@ -10,9 +10,7 @@ import click
 from pyinfra import (
     __version__,
     logger,
-    pseudo_config,
-    pseudo_inventory,
-    pseudo_state,
+    state,
 )
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all, disconnect_all
@@ -26,6 +24,7 @@ from pyinfra.api.facts import (
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.util import get_kwargs_str
+from pyinfra.context import ctx_config, ctx_inventory, ctx_state
 from pyinfra.operations import server
 
 from .config import extract_file_config
@@ -60,7 +59,7 @@ from .virtualenv import init_virtualenv
 
 # Exit handler
 def _exit():
-    if pseudo_state.isset() and pseudo_state.failed_hosts:
+    if ctx_state.isset() and state.failed_hosts:
         sys.exit(1)
     sys.exit(0)
 
@@ -254,9 +253,9 @@ def cli(*args, **kwargs):
         raise UnexpectedInternalError(e)
 
     finally:
-        if pseudo_state.isset() and pseudo_state.initialised:
+        if ctx_state.isset() and state.initialised:
             # Triggers any executor disconnect requirements
-            disconnect_all(pseudo_state)
+            disconnect_all(state)
 
 
 if '--help' not in sys.argv:
@@ -348,7 +347,7 @@ def _main(
     # Set the deploy directory
     state.deploy_dir = deploy_dir
 
-    pseudo_state.set(state)
+    ctx_state.set(state)
 
     if verbosity > 0:
         state.print_fact_info = True
@@ -364,7 +363,7 @@ def _main(
         click.echo('--> Loading config...', err=True)
 
     config = Config()
-    pseudo_config.set(config)
+    ctx_config.set(config)
 
     # Load up any config.py from the filesystem
     config_filename = path.join(deploy_dir, config_filename)
@@ -499,8 +498,8 @@ def _main(
         override_data=override_data,
     )
 
-    # Attach to pseudo inventory
-    pseudo_inventory.set(inventory)
+    # Set the inventory context
+    ctx_inventory.set(inventory)
 
     # Now that we have inventory, apply --limit config override
     initial_limit = None

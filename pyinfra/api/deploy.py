@@ -8,7 +8,8 @@ from functools import wraps
 
 import pyinfra
 
-from pyinfra import host, logger, pseudo_host, pseudo_state, state
+from pyinfra import host, logger, state
+from pyinfra.context import ctx_host, ctx_state
 
 from .arguments import pop_global_arguments
 from .exceptions import PyinfraError
@@ -47,9 +48,9 @@ def add_deploy(state, deploy_func, *args, **kwargs):
     # Append operations called in this deploy to the current order
     kwargs['_op_order_number'] = len(state.op_meta)
 
-    with pseudo_state._use(state):
+    with ctx_state._use(state):
         for deploy_host in hosts:
-            with pseudo_host._use(deploy_host):
+            with ctx_host._use(deploy_host):
                 deploy_func(*args, **kwargs)
 
 

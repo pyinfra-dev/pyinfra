@@ -14,14 +14,9 @@ logger = logging.getLogger('pyinfra')
 # Setup package level version
 from .version import __version__  # noqa
 
-# Trigger pseudo_* creation
-from . import pseudo_modules  # noqa
+# Trigger context module creation
+from .context import config, host, inventory, init_base_classes, state  # noqa
 
-# Initialise base classes - this sets the pseudo modules to point at the underlying
+# Initialise base classes - this sets the context modules to point at the underlying
 # class objects (Host, etc), which makes ipython/etc work as expected.
-pseudo_modules.init_base_classes()
-
-# TODO: remove these! They trigger an import and index of every operation/fact. This
-# is not ideal and explicit imports are much better.
-from . import facts  # noqa
-from . import operations  # noqa
+init_base_classes()

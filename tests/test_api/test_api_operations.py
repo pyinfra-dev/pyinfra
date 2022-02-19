@@ -7,7 +7,6 @@ from mock import mock_open, patch
 
 import pyinfra
 
-from pyinfra import pseudo_host, pseudo_state
 from pyinfra.api import (
     BaseStateCallback,
     Config,
@@ -22,6 +21,7 @@ from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.operation import add_op, get_operation_names, OperationMeta
 from pyinfra.api.operations import run_ops
+from pyinfra.context import ctx_host, ctx_state
 from pyinfra.operations import files, python, server
 
 from ..paramiko_util import (
@@ -413,7 +413,7 @@ class TestOperationFailures(PatchSSHTestCase):
     #     inventory = make_inventory()
     #     state = State(inventory, Config())
     #     connect_all(state)
-    #     pseudo_state.set(state)
+    #     ctx_state.set(state)
 
     #     state.in_op = True
     #     with self.assertRaises(PyinfraError):
@@ -437,27 +437,27 @@ class TestOperationOrdering(PatchSSHTestCase):
         state.current_deploy_filename = __file__
 
         pyinfra.is_cli = True
-        pseudo_state.set(state)
+        ctx_state.set(state)
 
         # Add op to both hosts
         for name in ('anotherhost', 'somehost'):
-            pseudo_host.set(inventory.get_host(name))
+            ctx_host.set(inventory.get_host(name))
             server.shell('echo hi')  # note this is called twice but on *the same line*
 
-        # Add op to just the second host - using the pseudo modules such that
+        # Add op to just the second host - using the context modules such that
         # it replicates a deploy file.
-        pseudo_host.set(inventory.get_host('anotherhost'))
-        first_pseudo_hash = server.user('anotherhost_user').hash
-        first_pseudo_call_line = getframeinfo(currentframe()).lineno - 1
+        ctx_host.set(inventory.get_host('anotherhost'))
+        first_context_hash = server.user('anotherhost_user').hash
+        first_context_call_line = getframeinfo(currentframe()).lineno - 1
 
-        # Add op to just the first host - using the pseudo modules such that
+        # Add op to just the first host - using the context modules such that
         # it replicates a deploy file.
-        pseudo_host.set(inventory.get_host('somehost'))
-        second_pseudo_hash = server.user('somehost_user').hash
-        second_pseudo_call_line = getframeinfo(currentframe()).lineno - 1
+        ctx_host.set(inventory.get_host('somehost'))
+        second_context_hash = server.user('somehost_user').hash
+        second_context_call_line = getframeinfo(currentframe()).lineno - 1
 
-        pseudo_state.reset()
-        pseudo_host.reset()
+        ctx_state.reset()
+        ctx_host.reset()
 
         pyinfra.is_cli = False
 
@@ -466,12 +466,12 @@ class TestOperationOrdering(PatchSSHTestCase):
         assert len(op_order) == 3
 
         # And that the two ops above were called in the expected order
-        assert op_order[1] == first_pseudo_hash
-        assert op_order[2] == second_pseudo_hash
+        assert op_order[1] == first_context_hash
+        assert op_order[2] == second_context_hash
 
         # And that they have the expected line numbers
-        assert state.op_line_numbers_to_hash.get((first_pseudo_call_line,)) == first_pseudo_hash
-        assert state.op_line_numbers_to_hash.get((second_pseudo_call_line,)) == second_pseudo_hash
+        assert state.op_line_numbers_to_hash.get((first_context_call_line,)) == first_context_hash
+        assert state.op_line_numbers_to_hash.get((second_context_call_line,)) == second_context_hash
 
         # Ensure somehost has two ops and anotherhost only has the one
         assert len(state.ops[inventory.get_host('somehost')]) == 2
@@ -532,14 +532,14 @@ this_filename = path.join('tests', 'test_api', 'test_api_operations.py')
 #         state = FakeState()
 
 #         pyinfra.is_cli = True
-#         pseudo_state.set(state)
+#         ctx_state.set(state)
 
 #         with self.assertRaises(PyinfraError) as context:
 #             server.shell()
 #         call_line = getframeinfo(currentframe()).lineno - 1
 
 #         pyinfra.is_cli = False
-#         pseudo_state.reset()
+#         ctx_state.reset()
 
 #         assert context.exception.args[0] == (
 #             'Nested operation called without state/host: '
@@ -551,14 +551,14 @@ this_filename = path.join('tests', 'test_api', 'test_api_operations.py')
 #         state.in_op = False
 
 #         pyinfra.is_cli = True
-#         pseudo_state.set(state)
+#         ctx_state.set(state)
 
 #         with self.assertRaises(PyinfraError) as context:
 #             server.shell()
 #         call_line = getframeinfo(currentframe()).lineno - 1
 
 #         pyinfra.is_cli = False
-#         pseudo_state.reset()
+#         ctx_state.reset()
 
 #         assert context.exception.args[0] == (
 #             'Nested deploy operation called without state/host: '

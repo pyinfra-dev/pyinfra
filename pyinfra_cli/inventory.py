@@ -1,8 +1,9 @@
 from os import listdir, path
 from types import GeneratorType
 
-from pyinfra import logger, pseudo_inventory
+from pyinfra import logger
 from pyinfra.api.inventory import Inventory
+from pyinfra.context import ctx_inventory
 from pyinfra_cli.util import exec_file
 
 # Hosts in an inventory can be just the hostname or a tuple (hostname, data)
@@ -124,7 +125,7 @@ def make_inventory(inventory_filename, override_data=None, deploy_dir=None):
     # mode we want to be define this in separate files (inventory / group data). The
     # issue is we want inventory access within the group data files - but at this point
     # we're not ready to make an Inventory. So here we just create a fake one, and
-    # attach it to pseudo_inventory while we import the data files.
+    # attach it to the inventory context while we import the data files.
     logger.debug('Creating fake inventory...')
 
     fake_groups = {
@@ -133,13 +134,13 @@ def make_inventory(inventory_filename, override_data=None, deploy_dir=None):
         for name, group in groups.items()
     }
     fake_inventory = Inventory((all_hosts, all_data), **fake_groups)
-    pseudo_inventory.set(fake_inventory)
+    ctx_inventory.set(fake_inventory)
 
     # Get all group data (group_data/*.py)
     group_data = _get_group_data(deploy_dir)
 
-    # Reset the pseudo inventory
-    pseudo_inventory.reset()
+    # Reset the inventory context
+    ctx_inventory.reset()
 
     # For each group load up any data
     for name, hosts in groups.items():

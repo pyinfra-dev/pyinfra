@@ -1,7 +1,7 @@
 from os import path
 from unittest import TestCase
 
-from pyinfra import pseudo_state
+from pyinfra.context import ctx_state
 from pyinfra_cli.main import _main
 
 from .util import run_cli
@@ -27,7 +27,7 @@ class TestCliEagerFlags(TestCase):
 
 class TestDeployCli(PatchSSHTestCase):
     def setUp(self):
-        pseudo_state.reset()
+        ctx_state.reset()
 
     def test_invalid_deploy(self):
         result = run_cli(

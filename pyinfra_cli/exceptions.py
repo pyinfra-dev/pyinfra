@@ -4,8 +4,9 @@ from traceback import format_exception, format_tb
 
 import click
 
-from pyinfra import logger, pseudo_host, pseudo_state
+from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
+from pyinfra.context import ctx_host, ctx_state
 
 
 class CliError(PyinfraError, click.ClickException):
@@ -18,16 +19,16 @@ class CliError(PyinfraError, click.ClickException):
         elif isinstance(self, IOError):
             name = 'local IO error'
 
-        if pseudo_host.isset():
+        if ctx_host.isset():
             # Get any operation meta + name
             op_name = None
-            current_op_hash = pseudo_host.current_op_hash
-            current_op_meta = pseudo_state.op_meta.get(current_op_hash)
+            current_op_hash = ctx_host.current_op_hash
+            current_op_meta = ctx_state.op_meta.get(current_op_hash)
             if current_op_meta:
                 op_name = ', '.join(current_op_meta['names'])
 
             sys.stderr.write('--> {0}{1}{2}: '.format(
-                pseudo_host.print_prefix,
+                ctx_host.print_prefix,
                 click.style(name, 'red', bold=True),
                 ' (operation={0})'.format(op_name) if op_name else '',
             ))

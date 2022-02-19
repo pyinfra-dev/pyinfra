@@ -97,7 +97,7 @@ def make_operation_tests(arg):
 
         @classmethod
         def setUpClass(cls):
-            # Create a global fake state that attach to pseudo state
+            # Create a global fake state that attach to context state
             cls.state = FakeState()
 
         def jsontest_function(self, test_name, test_data):
@@ -109,16 +109,16 @@ def make_operation_tests(arg):
 
             op_test_name = '{0}/{1}.json'.format(arg, test_name)
 
-            # Create a host with this tests facts and attach to pseudo host
+            # Create a host with this tests facts and attach to context host
             host = create_host(facts=test_data.get('facts', {}))
 
             allowed_exception = test_data.get('exception')
 
             kwargs = test_data.get('kwargs', {})
 
-            from pyinfra import pseudo_state, pseudo_host
-            pseudo_state.set(self.state)
-            pseudo_host.set(host)
+            from pyinfra.context import ctx_state, ctx_host
+            ctx_state.set(self.state)
+            ctx_host.set(host)
             # kwargs['state'] = self.state
             # kwargs['host'] = host
 
