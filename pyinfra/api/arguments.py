@@ -162,7 +162,7 @@ def show_legacy_argument_host_data_warning(key):
     ).format(key))
 
 
-def pop_global_op_kwargs(state, host, kwargs):
+def pop_global_arguments(state, host, kwargs):
     '''
     Pop and return operation global keyword arguments, in preferred order:
 

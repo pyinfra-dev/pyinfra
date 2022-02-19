@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from pyinfra.api import Config, Inventory, State
-from pyinfra.api.arguments import pop_global_op_kwargs
+from pyinfra.api.arguments import pop_global_arguments
 
 
 class TestOperationKwargs(TestCase):
@@ -11,7 +11,7 @@ class TestOperationKwargs(TestCase):
 
         state = State(config=config, inventory=inventory)
 
-        kwargs, keys = pop_global_op_kwargs(state, inventory.get_host('somehost'), {})
+        kwargs, keys = pop_global_arguments(state, inventory.get_host('somehost'), {})
         assert kwargs['sudo'] == 'config-value'
 
     def test_get_from_host(self):
@@ -20,7 +20,7 @@ class TestOperationKwargs(TestCase):
 
         state = State(config=config, inventory=inventory)
 
-        kwargs, keys = pop_global_op_kwargs(state, inventory.get_host('somehost'), {})
+        kwargs, keys = pop_global_arguments(state, inventory.get_host('somehost'), {})
         assert kwargs['sudo'] == 'host-value'
 
     def test_get_from_state_deploy_kwargs(self):
@@ -31,7 +31,7 @@ class TestOperationKwargs(TestCase):
         state = State(config=config, inventory=inventory)
         somehost.current_deploy_kwargs = {'sudo': 'deploy-kwarg-value'}
 
-        kwargs, keys = pop_global_op_kwargs(state, somehost, {})
+        kwargs, keys = pop_global_arguments(state, somehost, {})
         assert kwargs['sudo'] == 'deploy-kwarg-value'
 
     def test_get_from_kwargs(self):
@@ -45,7 +45,7 @@ class TestOperationKwargs(TestCase):
             'sudo_user': 'deploy-kwarg-user',
         }
 
-        kwargs, keys = pop_global_op_kwargs(
+        kwargs, keys = pop_global_arguments(
             state,
             somehost,
             {'sudo': 'kwarg-value'},
