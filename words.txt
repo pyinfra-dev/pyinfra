@@ -199,6 +199,7 @@ netboot
 netsh
 nettools
 networkadapterconfiguration
+nl
 nobest
 nofile
 none
