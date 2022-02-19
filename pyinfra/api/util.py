@@ -2,7 +2,7 @@ import re
 
 from functools import wraps
 from hashlib import sha1
-from inspect import getargspec, getframeinfo, stack
+from inspect import getframeinfo, getfullargspec, stack
 from os import getcwd, path, stat
 from socket import (
     error as socket_error,
@@ -38,7 +38,7 @@ def get_args_kwargs_spec(func):
     args = []
     kwargs = {}
 
-    argspec = getargspec(func)
+    argspec = getfullargspec(func)
     if not argspec.args:
         return args, kwargs
 
