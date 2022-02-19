@@ -175,14 +175,7 @@ def _get_sudo_password(host, use_sudo_password):
     elif callable(use_sudo_password):
         sudo_password = use_sudo_password()
     else:
-        # FIXME
-        # This is a workaround for an issue where use_sudo_password is defined as
-        # a string on host.data and differs between hosts. The use_sudo_password
-        # passed into this function may originate from a different host (at fact
-        # gathering stage from state.current_op_kwargs).
-        sudo_password = host.data.use_sudo_password
-        if not isinstance(sudo_password, six.text_type):
-            sudo_password = use_sudo_password
+        sudo_password = use_sudo_password
 
     return shlex.quote(sudo_password)
 
