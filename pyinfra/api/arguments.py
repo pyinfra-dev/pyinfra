@@ -123,8 +123,8 @@ execution_kwargs = {
 OPERATION_KWARGS = {
     'Privilege & user escalation': auth_kwargs,
     'Shell control & features': shell_kwargs,
-    'Operation meta & callbacks': meta_kwargs,
-    'Execution strategy (must be the same for all hosts)': execution_kwargs,
+    'Operation meta & callbacks (not available in facts)': meta_kwargs,
+    'Execution strategy (not available in facts, must be the same for all hosts)': execution_kwargs,
 }
 
 
