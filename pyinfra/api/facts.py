@@ -20,7 +20,9 @@ from paramiko import SSHException
 
 from pyinfra import logger
 from pyinfra.api import StringCommand
+from pyinfra.api.arguments import pop_global_arguments
 from pyinfra.api.connectors.util import split_combined_output
+from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import (
     get_arg_value,
     get_kwargs_str,
@@ -122,26 +124,30 @@ def _make_command(command_attribute, host_args):
     return command_attribute
 
 
-def _get_executor_kwargs(state, host):
-    kwargs = {
-        'sudo': state.config.SUDO,
-        'sudo_user': state.config.SUDO_USER,
-        'su_user': state.config.SU_USER,
-        'shell_executable': state.config.SHELL,
-        'use_sudo_password': state.config.USE_SUDO_PASSWORD,
-        'env': state.config.ENV,
-        'timeout': None,
-    }
+def _get_executor_kwargs(state, host, override_kwargs=None, override_kwarg_keys=None):
+    if override_kwargs is None:
+        override_kwargs = {}
+        override_kwarg_keys = []
 
-    current_global_kwargs = host.current_op_global_kwargs or {}
-    executor_kwarg_keys = get_executor_kwarg_keys()
-    kwargs.update({
-        key: current_global_kwargs[key]
-        for key in executor_kwarg_keys
-        if key in current_global_kwargs
+    # Apply any current op kwargs that *weren't* found in the overrides
+    override_kwargs.update({
+        key: value
+        for key, value in (host.current_op_global_kwargs or {}).items()
+        if key not in override_kwarg_keys
     })
 
-    return kwargs
+    # Raise an exception if we have non-executor override kwargs (invalid in fact context)
+    for key in override_kwarg_keys:
+        if key not in get_executor_kwarg_keys():
+            raise PyinfraError((
+                'Global argument `_{0}` is not supported in facts.'
+            ).format(key))
+
+    return {
+        key: value
+        for key, value in override_kwargs.items()
+        if key in get_executor_kwarg_keys()
+    }
 
 
 def get_facts(state, *args, **kwargs):
@@ -171,18 +177,10 @@ def get_fact(
     apply_failed_hosts=True,
     fact_hash=None,
 ):
-    '''
-    Get a single fact for all hosts in the state.
-    '''
-
-    # TODO: tidy up the whole executor argument handling here!
-    global_kwarg_overrides = {}
-    if kwargs:
-        global_kwarg_overrides.update({
-            key: kwargs.pop(key)
-            for key in get_executor_kwarg_keys()
-            if key in kwargs
-        })
+    if fact_hash:
+        current_fact = host.facts.get(fact_hash)
+        if current_fact:
+            return current_fact
 
     if isclass(name_or_cls) and issubclass(name_or_cls, (FactBase, ShortFactBase)):
         fact = name_or_cls()
@@ -194,11 +192,20 @@ def get_fact(
     if isinstance(fact, ShortFactBase):
         return get_short_facts(state, host, fact, args=args, ensure_hosts=ensure_hosts)
 
-    # Apply args or defaults
-    executor_kwargs = _get_executor_kwargs(state, host)
-
     args = args or ()
     kwargs = kwargs or {}
+
+    # Get the defaults *and* overrides by popping from kwargs, executor kwargs passed
+    # into get_fact override everything else (applied below).
+    override_kwargs, override_kwarg_keys = pop_global_arguments(state, host, kwargs)
+
+    executor_kwargs = _get_executor_kwargs(
+        state,
+        host,
+        override_kwargs=override_kwargs,
+        override_kwarg_keys=override_kwarg_keys,
+    )
+
     if args or kwargs:
         # Merges args & kwargs into a single kwargs dictionary
         kwargs = getcallargs(fact.command, *args, **kwargs)
@@ -215,12 +222,6 @@ def get_fact(
     # Facts can override the shell (winrm powershell vs cmd support)
     if fact.shell_executable:
         executor_kwargs['shell_executable'] = fact.shell_executable
-
-    # Already got this fact? Unlock and return them
-    if fact_hash:
-        current_fact = host.facts.get(fact_hash)
-        if current_fact:
-            return current_fact
 
     # Generate actual arguments by passing strings as jinja2 templates
     host_kwargs = {
@@ -260,10 +261,12 @@ def get_fact(
     if status:
         if stdout:
             data = fact.process(stdout)
-
     elif stderr:
+        # If we have error output and that error is sudo or su stating the user
+        # does not exist, do not fail but instead return the default fact value.
+        # This allows for users that don't currently but may be created during
+        # other operations.
         first_line = stderr[0]
-
         if (executor_kwargs['sudo_user'] and re.match(SUDO_REGEX, first_line)):
             status = True
         if (executor_kwargs['su_user'] and any(
@@ -271,19 +274,25 @@ def get_fact(
         )):
             status = True
 
-        if not status:
-            if not state.print_fact_output:
-                print_host_combined_output(host, combined_output_lines)
-
-            log_error_or_warning(host, ignore_errors, description=(
-                'could not load fact: {0} {1}'
-            ).format(name, get_kwargs_str(kwargs)))
-
-    log = 'Loaded fact {0} ({1})'.format(click.style(name, bold=True), get_kwargs_str(kwargs))
-    if state.print_fact_info:
-        logger.info(log)
+    if status:
+        log_message = '{0}{1}'.format(
+            host.print_prefix,
+            'Loaded fact {0} ({1})'.format(
+                click.style(name, bold=True),
+                get_kwargs_str(kwargs),
+            ),
+        )
+        if state.print_fact_info:
+            logger.info(log_message)
+        else:
+            logger.debug(log_message)
     else:
-        logger.debug(log)
+        if not state.print_fact_output:
+            print_host_combined_output(host, combined_output_lines)
+
+        log_error_or_warning(host, ignore_errors, description=(
+            'could not load fact: {0} {1}'
+        ).format(name, get_kwargs_str(kwargs)))
 
     # Check we've not failed
     if not status and not ignore_errors and apply_failed_hosts:
