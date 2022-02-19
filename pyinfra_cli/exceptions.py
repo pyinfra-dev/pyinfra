@@ -59,15 +59,14 @@ class UnexpectedExternalError(click.ClickException, UnexpectedMixin):
         self.filename = filename
 
     def show(self):
-        sys.stderr.write('--> {0}:\n'.format(click.style(
+        click.echo('--> {0}:\n'.format(click.style(
             'An unexpected exception occurred in: {0}'.format(self.filename),
             'red',
             bold=True,
-        )))
-        click.echo(err=True)
+        )), err=True)
 
-        sys.stderr.write(self.get_traceback())
-        sys.stderr.write(self.get_exception())
+        click.echo(self.get_traceback(), err=True, nl=False)
+        click.echo(self.get_exception(), err=True)
 
 
 class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
@@ -77,12 +76,11 @@ class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
         self.e = e
 
     def show(self):
-        sys.stderr.write('--> {0}:\n'.format(click.style(
+        click.echo('--> {0}:\n'.format(click.style(
             'An unexpected internal exception occurred',
             'red',
             bold=True,
-        )))
-        click.echo(err=True)
+        )), err=True)
 
         traceback_lines = self.get_traceback_lines()
         traceback = self.get_traceback()
@@ -93,7 +91,7 @@ class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
             sys.stderr.write(traceback_lines[-1])
 
         exception = self.get_exception()
-        sys.stderr.write(exception)
+        click.echo(exception, err=True)
 
         with open('pyinfra-debug.log', 'w') as f:
             f.write(traceback)
@@ -102,7 +100,6 @@ class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
         logger.debug(traceback)
         logger.debug(exception)
 
-        click.echo(err=True)
         click.echo('--> The full traceback has been written to {0}'.format(
             click.style('pyinfra-debug.log', bold=True),
         ), err=True)
