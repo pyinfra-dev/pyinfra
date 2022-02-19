@@ -13,7 +13,7 @@ import pyinfra
 from pyinfra import host, state
 from pyinfra import logger, pseudo_host, pseudo_state
 
-from .arguments import get_execution_kwarg_keys, pop_global_op_kwargs
+from .arguments import get_execution_kwarg_keys, pop_global_arguments
 from .command import StringCommand
 from .exceptions import OperationValueError, PyinfraError
 from .host import Host
@@ -148,7 +148,7 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
         #
 
         # Get the meta kwargs (globals that apply to all hosts)
-        global_kwargs, global_kwarg_keys = pop_global_op_kwargs(state, host, kwargs)
+        global_kwargs, global_kwarg_keys = pop_global_arguments(state, host, kwargs)
 
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).
