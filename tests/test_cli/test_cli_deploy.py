@@ -1,7 +1,8 @@
 from os import path
 from random import shuffle
 
-from pyinfra import pseudo_state
+from pyinfra import inventory, state
+from pyinfra.context import ctx_state
 
 from .util import run_cli
 from ..paramiko_util import PatchSSHTestCase
@@ -9,7 +10,7 @@ from ..paramiko_util import PatchSSHTestCase
 
 class TestCliDeploy(PatchSSHTestCase):
     def test_interdependent_deploy(self):
-        pseudo_state.reset()
+        ctx_state.reset()
 
         result = run_cli(
             'somehost',
@@ -19,14 +20,13 @@ class TestCliDeploy(PatchSSHTestCase):
 
         # Check every operation had commands/changes - this ensures that each
         # combo (add/remove/add) always had changes.
-        for host, ops in pseudo_state.ops.items():
+        for host, ops in state.ops.items():
             for _, op in ops.items():
                 assert len(op['commands']) > 0
 
 
 class TestCliDeployState(PatchSSHTestCase):
     def _assert_op_data(self, correct_op_name_and_host_names):
-        state = pseudo_state
         op_order = state.get_op_order()
 
         assert (
@@ -85,7 +85,7 @@ class TestCliDeployState(PatchSSHTestCase):
         # Run 3 iterations of the test - each time shuffling the order of the
         # hosts - ensuring that the ordering has no effect on the operation order.
         for _ in range(3):
-            pseudo_state.reset()
+            ctx_state.reset()
 
             hosts = ['somehost', 'anotherhost', 'someotherhost']
             shuffle(hosts)
@@ -109,7 +109,7 @@ class TestCliDeployState(PatchSSHTestCase):
         # Run 3 iterations of the test - each time shuffling the order of the
         # hosts - ensuring that the ordering has no effect on the operation order.
         for _ in range(3):
-            pseudo_state.reset()
+            ctx_state.reset()
 
             hosts = ['somehost', 'anotherhost', 'someotherhost']
             shuffle(hosts)
@@ -121,8 +121,6 @@ class TestCliDeployState(PatchSSHTestCase):
             assert result.exit_code == 0, result.stdout
 
             self._assert_op_data(correct_op_name_and_host_names)
-
-            inventory = pseudo_state.inventory
 
             for hostname, expected_fact_count in (
                 ('somehost', 2),
