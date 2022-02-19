@@ -11,7 +11,8 @@ from types import FunctionType
 import pyinfra
 
 from pyinfra import host, state
-from pyinfra import logger, pseudo_host, pseudo_state
+from pyinfra import logger
+from pyinfra.context import ctx_host, ctx_state
 
 from .arguments import get_execution_kwarg_keys, pop_global_arguments
 from .command import StringCommand
@@ -83,10 +84,10 @@ def add_op(state, op_func, *args, **kwargs):
     if isinstance(hosts, Host):
         hosts = [hosts]
 
-    with pseudo_state._use(state):
+    with ctx_state._use(state):
         results = {}
         for op_host in hosts:
-            with pseudo_host._use(op_host):
+            with ctx_host._use(op_host):
                 results[op_host] = op_func(*args, **kwargs)
             after_host_callback(op_host)
 

@@ -20,11 +20,12 @@ except ImportError:  # pragma: no cover
 import click
 import gevent
 
-from pyinfra import logger, pseudo_host, pseudo_state
+from pyinfra import logger, state
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.facts import get_fact_class, is_fact
 from pyinfra.api.util import FallbackDict
+from pyinfra.context import ctx_host
 from pyinfra.progress import progress_spinner
 
 from .exceptions import CliError, UnexpectedExternalError
@@ -60,8 +61,8 @@ def exec_file(filename, return_locals=False, is_deploy_code=False):
     Execute a Python file and optionally return it's attributes as a dict.
     '''
 
-    old_current_exec_filename = pseudo_state.current_exec_filename
-    pseudo_state.current_exec_filename = filename
+    old_current_exec_filename = state.current_exec_filename
+    state.current_exec_filename = filename
 
     if filename not in PYTHON_CODES:
         with open(filename, 'r') as f:
@@ -83,7 +84,7 @@ def exec_file(filename, return_locals=False, is_deploy_code=False):
             raise
         raise UnexpectedExternalError(e, filename)
 
-    pseudo_state.current_exec_filename = old_current_exec_filename
+    state.current_exec_filename = old_current_exec_filename
     return data
 
 
@@ -255,14 +256,14 @@ def load_deploy_file(state, filename):
     state.current_deploy_filename = filename
 
     def load_file(local_host):
-        pseudo_host.set(local_host)
+        ctx_host.set(local_host)
         exec_file(filename)
         logger.info('{0}{1} {2}'.format(
             local_host.print_prefix,
             click.style('Ready:', 'green'),
             click.style(filename, bold=True),
         ))
-        pseudo_host.reset()
+        ctx_host.reset()
 
     greenlet_to_host = {
         state.pool.spawn(load_file, host): host

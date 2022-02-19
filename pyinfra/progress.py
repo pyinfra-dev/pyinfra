@@ -68,7 +68,7 @@ def _print_spinner(stop_event, progress_queue):
 
 @contextmanager
 def progress_spinner(items, prefix_message=None):
-    # If there's no pseudo state we're not in CLI mode, so just return a noop
+    # If there's no current state context we're not in CLI mode, so just return a noop
     # handler and exit.
     if not pyinfra.is_cli:
         yield lambda complete_item: None
