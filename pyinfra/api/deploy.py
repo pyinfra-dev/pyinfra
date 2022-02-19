@@ -10,7 +10,7 @@ import pyinfra
 
 from pyinfra import host, logger, pseudo_host, pseudo_state, state
 
-from .arguments import pop_global_op_kwargs
+from .arguments import pop_global_arguments
 from .exceptions import PyinfraError
 from .host import Host
 from .util import get_args_kwargs_spec, get_call_location, get_caller_frameinfo, memoize
@@ -84,7 +84,7 @@ def deploy(func_or_name, data_defaults=None, _call_location=None):
 
     @wraps(func)
     def decorated_func(*args, **kwargs):
-        deploy_kwargs, _ = pop_global_op_kwargs(state, host, kwargs)
+        deploy_kwargs, _ = pop_global_arguments(state, host, kwargs)
 
         # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
         # and host are included as kwargs.
