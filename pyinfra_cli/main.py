@@ -24,10 +24,9 @@ from pyinfra.api.facts import (
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.util import get_kwargs_str
-from pyinfra.context import ctx_config, ctx_inventory, ctx_state
+from pyinfra.context import ctx_inventory, ctx_state
 from pyinfra.operations import server
 
-from .config import extract_file_config
 from .exceptions import (
     CliError,
     UnexpectedExternalError,
@@ -360,15 +359,18 @@ def _main(
         click.echo('--> Loading config...', err=True)
 
     config = Config()
-    ctx_config.set(config)
 
     # Load up any config.py from the filesystem
     config_filename = path.join(deploy_dir, config_filename)
     if path.exists(config_filename):
-        extract_file_config(config_filename, config)  # TODO: remove this
         exec_file(config_filename)
 
-    # TODO: lock the config here, moving up from below when possible (v2)
+    # Lock the current config, this allows us to restore this version after
+    # executing deploy files that may alter them.
+    config.lock_current_sate()
+
+    #  Check operations are valid and setup command
+    #
 
     # Make a copy before we overwrite
     original_operations = operations
@@ -430,14 +432,8 @@ def _main(
     pyinfra INVENTORY exec -- echo "hello world"
     pyinfra INVENTORY fact os [users]...'''.format(operations))
 
-    # TODO: remove this - legacy load of any config variables from the top of
-    # the first deploy file.
-    if command == 'deploy':
-        extract_file_config(operations[0], config)
-
-    # Lock the current config, this allows us to restore this version after
-    # executing deploy files that may alter them.
-    config.lock_current_sate()
+    # Setup state, config & inventory
+    #
 
     # Arg based config overrides
     if sudo:
@@ -495,9 +491,6 @@ def _main(
         override_data=override_data,
     )
 
-    # Set the inventory context
-    ctx_inventory.set(inventory)
-
     # Now that we have inventory, apply --limit config override
     initial_limit = None
     if limit:
@@ -528,7 +521,10 @@ def _main(
     # Initialise the state
     state.init(inventory, config, initial_limit=initial_limit)
 
-    # If --debug-data dump & exit
+    # Set state & inventory context
+    ctx_state.set(state)
+    ctx_inventory.set(inventory)
+
     if command == 'debug-inventory' or debug_data:
         if debug_data:
             logger.warning((
@@ -538,14 +534,14 @@ def _main(
         print_inventory(state)
         _exit()
 
-    # Connect to all the servers
+    # Connect to the hosts & start handling the user commands
+    #
+
     if not quiet:
         click.echo(err=True)
         click.echo('--> Connecting to hosts...', err=True)
-    connect_all(state)
 
-    # Just getting a fact?
-    #
+    connect_all(state)
 
     if command == 'fact':
         if not quiet:
@@ -580,14 +576,8 @@ def _main(
         print_facts(fact_data)
         _exit()
 
-    # Prepare the deploy!
-    #
-
-    # Execute a raw command with server.shell
     if command == 'exec':
-        # Print the output of the command
         state.print_output = True
-
         add_op(
             state,
             server.shell,
@@ -595,7 +585,6 @@ def _main(
             _allow_cli_mode=True,
         )
 
-    # Deploy files(s)
     elif command == 'deploy':
         if not quiet:
             click.echo(err=True)
@@ -608,7 +597,6 @@ def _main(
             # Remove any config changes introduced by the deploy file & any includes
             config.reset_locked_state()
 
-    # Operation w/optional args
     elif command == 'op':
         if not quiet:
             click.echo(err=True)
@@ -629,7 +617,9 @@ def _main(
 
         add_op(state, op, *args, **kwargs)
 
-    # Always show meta output
+    # Print proposed changes, execute unless --dry, and exit
+    #
+
     if not quiet:
         click.echo(err=True)
         click.echo('--> Proposed changes:', err=True)
@@ -645,7 +635,6 @@ def _main(
 
         _exit()
 
-    # Run the operations we generated with the deploy file
     if dry:
         _exit()
 

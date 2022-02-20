@@ -33,21 +33,9 @@ def include(filename):
         # to maintain backwards compatibility and the nicer public import
         # (ideally users never need to import from `pyinfra_cli`).
 
-        from pyinfra_cli.config import extract_file_config
         from pyinfra_cli.util import exec_file
 
-        # Load any config defined in the file and setup like a @deploy
-        # TODO: remove this in v2
-        config_data = extract_file_config(filename)
-        kwargs = {
-            key.lower(): value
-            for key, value in config_data.items()
-            if key in [
-                'SUDO', 'SUDO_USER', 'SU_USER',
-                'PRESERVE_SUDO_ENV', 'IGNORE_ERRORS',
-            ]
-        }
-        with host.deploy(path.normpath(filename), kwargs, None, in_deploy=False):
+        with host.deploy(path.normpath(filename), None, None, in_deploy=False):
             exec_file(filename)
 
         # One potential solution to the above is to add local as an actual

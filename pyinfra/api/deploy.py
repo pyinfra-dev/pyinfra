@@ -48,9 +48,9 @@ def add_deploy(state, deploy_func, *args, **kwargs):
     # Append operations called in this deploy to the current order
     kwargs['_op_order_number'] = len(state.op_meta)
 
-    with ctx_state._use(state):
+    with ctx_state.use(state):
         for deploy_host in hosts:
-            with ctx_host._use(deploy_host):
+            with ctx_host.use(deploy_host):
                 deploy_func(*args, **kwargs)
 
 
