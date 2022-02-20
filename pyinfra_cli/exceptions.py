@@ -4,9 +4,9 @@ from traceback import format_exception, format_tb
 
 import click
 
-from pyinfra import logger
+from pyinfra import host, logger, state
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.context import ctx_host, ctx_state
+from pyinfra.context import ctx_host
 
 
 class CliError(PyinfraError, click.ClickException):
@@ -22,13 +22,13 @@ class CliError(PyinfraError, click.ClickException):
         if ctx_host.isset():
             # Get any operation meta + name
             op_name = None
-            current_op_hash = ctx_host.current_op_hash
-            current_op_meta = ctx_state.op_meta.get(current_op_hash)
+            current_op_hash = host.current_op_hash
+            current_op_meta = state.op_meta.get(current_op_hash)
             if current_op_meta:
                 op_name = ', '.join(current_op_meta['names'])
 
             sys.stderr.write('--> {0}{1}{2}: '.format(
-                ctx_host.print_prefix,
+                host.print_prefix,
                 click.style(name, 'red', bold=True),
                 ' (operation={0})'.format(op_name) if op_name else '',
             ))
