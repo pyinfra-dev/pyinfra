@@ -84,10 +84,10 @@ def add_op(state, op_func, *args, **kwargs):
     if isinstance(hosts, Host):
         hosts = [hosts]
 
-    with ctx_state._use(state):
+    with ctx_state.use(state):
         results = {}
         for op_host in hosts:
-            with ctx_host._use(op_host):
+            with ctx_host.use(op_host):
                 results[op_host] = op_func(*args, **kwargs)
             after_host_callback(op_host)
 

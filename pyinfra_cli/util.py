@@ -25,7 +25,7 @@ from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.facts import get_fact_class, is_fact
 from pyinfra.api.util import FallbackDict
-from pyinfra.context import ctx_host
+from pyinfra.context import ctx_config, ctx_host
 from pyinfra.progress import progress_spinner
 
 from .exceptions import CliError, UnexpectedExternalError
@@ -256,14 +256,14 @@ def load_deploy_file(state, filename):
     state.current_deploy_filename = filename
 
     def load_file(local_host):
-        ctx_host.set(local_host)
-        exec_file(filename)
-        logger.info('{0}{1} {2}'.format(
-            local_host.print_prefix,
-            click.style('Ready:', 'green'),
-            click.style(filename, bold=True),
-        ))
-        ctx_host.reset()
+        with ctx_config.use(state.config.copy()):
+            with ctx_host.use(local_host):
+                exec_file(filename)
+                logger.info('{0}{1} {2}'.format(
+                    local_host.print_prefix,
+                    click.style('Ready:', 'green'),
+                    click.style(filename, bold=True),
+                ))
 
     greenlet_to_host = {
         state.pool.spawn(load_file, host): host

@@ -47,7 +47,7 @@ class ContextObject(object):
             return super(ContextObject, self).__setattr__(key, value)
 
         if self._get_module() is None:
-            raise TypeError('Cannot assign to pseudo base module')
+            raise TypeError('Cannot assign to context base module')
 
         return setattr(self._get_module(), key, value)
 
@@ -88,22 +88,25 @@ class ContextManager(object):
         return self.context._container.module is not None
 
     @contextmanager
-    def _use(self, module):
-        old_module = self.get()
+    def use(self, module):
         self.set(module)
         yield
-        self.set(old_module)
+        self.reset()
 
 
 ctx_state = ContextManager('state', ContextObject)
 state = ctx_state.context
 
-ctx_config = ContextManager('config', ContextObject)
-config = ctx_config.context
-
 ctx_inventory = ContextManager('inventory', ContextObject)
 inventory = ctx_inventory.context
 
+# Config can be modified mid-deploy, so we use a local object here which
+# is based on a copy of the state config.
+ctx_config = ContextManager('config', LocalContextObject)
+config = ctx_config.context
+
+# Hosts are prepared in parallel each in a greenlet, so we use a local to
+# point at different host objects in each greenlet.
 ctx_host = ContextManager('host', LocalContextObject)
 host = ctx_host.context
 
@@ -111,6 +114,6 @@ host = ctx_host.context
 def init_base_classes():
     from pyinfra.api import Config, Host, Inventory, State
     ctx_config.set_base(Config)
-    ctx_host.set_base(Host)
     ctx_inventory.set_base(Inventory)
+    ctx_host.set_base(Host)
     ctx_state.set_base(State)

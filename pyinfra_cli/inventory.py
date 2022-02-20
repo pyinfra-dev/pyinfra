@@ -134,13 +134,10 @@ def make_inventory(inventory_filename, override_data=None, deploy_dir=None):
         for name, group in groups.items()
     }
     fake_inventory = Inventory((all_hosts, all_data), **fake_groups)
-    ctx_inventory.set(fake_inventory)
 
-    # Get all group data (group_data/*.py)
-    group_data = _get_group_data(deploy_dir)
-
-    # Reset the inventory context
-    ctx_inventory.reset()
+    with ctx_inventory.use(fake_inventory):
+        # Get all group data (group_data/*.py)
+        group_data = _get_group_data(deploy_dir)
 
     # For each group load up any data
     for name, hosts in groups.items():
