@@ -86,3 +86,6 @@ class Config(object):
 
     def reset_locked_state(self):
         self.set_current_state(self._locked_config)
+
+    def copy(self):
+        return Config(**dict(self.get_current_state()))
