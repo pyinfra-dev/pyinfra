@@ -11,8 +11,8 @@ from time import sleep
 
 from pyinfra import host, state
 from pyinfra.api import FunctionCommand, operation, OperationError, StringCommand
-from pyinfra.api.connectors.util import remove_any_sudo_askpass_file
 from pyinfra.api.util import try_int
+from pyinfra.connectors.util import remove_any_sudo_askpass_file
 from pyinfra.facts.files import Directory
 from pyinfra.facts.server import (
     Crontab,

@@ -31,7 +31,7 @@ class TestOperationsApi(PatchSSHTestCase):
 
         connect_all(state)
 
-        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
             fake_run_command.return_value = MagicMock(), [('stdout', 'some-output')]
             fact_data = get_facts(state, Command, ('yes',))
 
@@ -63,7 +63,7 @@ class TestOperationsApi(PatchSSHTestCase):
             'env': {'HELLO': 'WORLD'},
         }
 
-        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
             fake_run_command.return_value = MagicMock(), [('stdout', 'some-output')]
             fact_data = get_facts(state, Command, ('yes',))
 
@@ -90,7 +90,7 @@ class TestOperationsApi(PatchSSHTestCase):
 
         connect_all(state)
 
-        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
             fake_run_command.return_value = False, MagicMock()
 
             with self.assertRaises(PyinfraError) as context:
@@ -119,7 +119,7 @@ class TestOperationsApi(PatchSSHTestCase):
             'ignore_errors': True,
         }
 
-        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
             fake_run_command.return_value = False, MagicMock()
             fact_data = get_facts(state, Command, ('fail command',))
 
@@ -143,7 +143,7 @@ class TestOperationsApi(PatchSSHTestCase):
 
         connect_all(state)
 
-        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
             fake_run_command.return_value = MagicMock(), [('stdout', 'some-output')]
             fact_data = get_facts(state, Command, ('yes',), {'_sudo': True})
 
@@ -171,7 +171,7 @@ class TestOperationsApi(PatchSSHTestCase):
 
         connect_all(state)
 
-        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
             fake_run_command.return_value = MagicMock(), [('stdout', 'some-output')]
             fact_data = get_facts(state, Command, ('yes',))
 
@@ -205,7 +205,7 @@ class TestOperationsApi(PatchSSHTestCase):
 
         connect_all(state)
 
-        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
             fake_run_command.return_value = MagicMock(), [('stdout', 'some-output')]
             fact_data = get_facts(
                 state,
@@ -242,7 +242,7 @@ class TestOperationsApi(PatchSSHTestCase):
 
         connect_all(state)
 
-        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
             fake_run_command.return_value = MagicMock(), [('stdout', 'some-output')]
             fact_data = get_facts(
                 state,
@@ -261,7 +261,7 @@ class TestOperationsApi(PatchSSHTestCase):
 
         connect_all(state)
 
-        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
             fake_run_command.return_value = MagicMock(), [('stdout', 'some-output')]
 
             with self.assertRaises(PyinfraError) as context:

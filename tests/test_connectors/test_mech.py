@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from mock import mock_open, patch
 
-from pyinfra.api.connectors.mech import get_mech_options, make_names_data
+from pyinfra.connectors.mech import get_mech_options, make_names_data
 from pyinfra.api.exceptions import InventoryError
 
 FAKE_MECH_OPTIONS = {
@@ -69,17 +69,17 @@ def fake_mech_shell(command, splitlines=None):
     return []
 
 
-@patch('pyinfra.api.connectors.mech.local.shell', fake_mech_shell)
+@patch('pyinfra.connectors.mech.local.shell', fake_mech_shell)
 class TestMechConnector(TestCase):
     def tearDown(self):
         get_mech_options.cache = {}
 
     @patch(
-        'pyinfra.api.connectors.mech.open',
+        'pyinfra.connectors.mech.open',
         mock_open(read_data=FAKE_MECH_OPTIONS_DATA),
         create=True,
     )
-    @patch('pyinfra.api.connectors.mech.path.exists', lambda path: True)
+    @patch('pyinfra.connectors.mech.path.exists', lambda path: True)
     def test_make_names_data_with_options(self):
         data = make_names_data()
 

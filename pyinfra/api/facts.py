@@ -21,7 +21,6 @@ from paramiko import SSHException
 from pyinfra import logger
 from pyinfra.api import StringCommand
 from pyinfra.api.arguments import pop_global_arguments
-from pyinfra.api.connectors.util import split_combined_output
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import (
     get_arg_value,
@@ -32,6 +31,7 @@ from pyinfra.api.util import (
     print_host_combined_output,
     underscore,
 )
+from pyinfra.connectors.util import split_combined_output
 from pyinfra.progress import progress_spinner
 
 from .arguments import get_executor_kwarg_keys

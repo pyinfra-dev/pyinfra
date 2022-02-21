@@ -1,8 +1,8 @@
 from os import path
 from unittest import TestCase
 
-from pyinfra.api.connectors.ansible import make_names_data
 from pyinfra.api.exceptions import InventoryError
+from pyinfra.connectors.ansible import make_names_data
 
 TEST_DATA = [
     ('mail.example.com', {}, ['all']),

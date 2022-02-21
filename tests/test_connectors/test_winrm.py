@@ -10,7 +10,7 @@ from ..util import make_inventory
 
 class TestWinrmConnector(TestCase):
     def setUp(self):
-        self.fake_connect_patch = patch('pyinfra.api.connectors.winrm.connect')
+        self.fake_connect_patch = patch('pyinfra.connectors.winrm.connect')
         self.fake_connect_mock = self.fake_connect_patch.start()
 
     def tearDown(self):

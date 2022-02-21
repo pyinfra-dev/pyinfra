@@ -5,7 +5,7 @@ from unittest import TestCase
 from mock import patch
 
 from pyinfra.api import Config, State
-from pyinfra.api.connectors.util import (
+from pyinfra.connectors.util import (
     make_unix_command,
     make_unix_command_for_host,
     split_combined_output,
@@ -135,7 +135,7 @@ class TestMakeUnixCommandConnectorUtilWarnings(TestCase):
         state = State(make_inventory(), Config(SU_USER=True, SUDO=True))
         host = state.inventory.get_host('somehost')
 
-        with patch('pyinfra.api.connectors.util._warn_invalid_auth_args') as fake_auth_args:
+        with patch('pyinfra.connectors.util._warn_invalid_auth_args') as fake_auth_args:
             command = make_unix_command_for_host(state, host, 'echo Šablony')
 
         assert command.get_raw_value() == "sh -c 'echo Šablony'"
@@ -148,7 +148,7 @@ class TestMakeUnixCommandConnectorUtilWarnings(TestCase):
         state = State(make_inventory(), Config(SU_USER=True, DOAS=True))
         host = state.inventory.get_host('somehost')
 
-        with patch('pyinfra.api.connectors.util._warn_invalid_auth_args') as fake_auth_args:
+        with patch('pyinfra.connectors.util._warn_invalid_auth_args') as fake_auth_args:
             command = make_unix_command_for_host(state, host, 'echo Šablony')
 
         assert command.get_raw_value() == "sh -c 'echo Šablony'"
@@ -161,7 +161,7 @@ class TestMakeUnixCommandConnectorUtilWarnings(TestCase):
         state = State(make_inventory(), Config(DOAS=True, SUDO=True))
         host = state.inventory.get_host('somehost')
 
-        with patch('pyinfra.api.connectors.util._warn_invalid_auth_args') as fake_auth_args:
+        with patch('pyinfra.connectors.util._warn_invalid_auth_args') as fake_auth_args:
             command = make_unix_command_for_host(state, host, 'echo Šablony')
 
         assert command.get_raw_value() == "sh -c 'echo Šablony'"

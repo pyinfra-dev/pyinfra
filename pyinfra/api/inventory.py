@@ -1,8 +1,8 @@
 from collections import defaultdict
 
 from pyinfra import logger
+from pyinfra.connectors import ALL_CONNECTORS, EXECUTION_CONNECTORS
 
-from .connectors import ALL_CONNECTORS, EXECUTION_CONNECTORS
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
 from .host import Host
 

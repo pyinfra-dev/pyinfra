@@ -8,7 +8,7 @@ from paramiko import (
 )
 from paramiko.agent import AgentRequestHandler
 
-from pyinfra.api.connectors import ssh
+from pyinfra.connectors import ssh
 
 
 class PatchSSHTestCase(TestCase):

@@ -4,9 +4,9 @@ import click
 
 import pyinfra
 from pyinfra import config, host, logger, state
-from pyinfra.api.connectors.util import run_local_process, split_combined_output
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import get_file_path
+from pyinfra.connectors.util import run_local_process, split_combined_output
 from pyinfra.context import ctx_state
 
 
