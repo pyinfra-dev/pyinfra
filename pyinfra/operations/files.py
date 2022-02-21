@@ -512,8 +512,8 @@ def sync(
     src = os_path.normpath(src)
 
     # Add deploy directory?
-    if add_deploy_dir and state.deploy_dir:
-        src = os_path.join(state.deploy_dir, src)
+    if add_deploy_dir and state.cwd:
+        src = os_path.join(state.cwd, src)
 
     # Ensure the source directory exists
     if not os_path.isdir(src):
@@ -679,8 +679,8 @@ def get(
         )
     '''
 
-    if add_deploy_dir and state.deploy_dir:
-        dest = os_path.join(state.deploy_dir, dest)
+    if add_deploy_dir and state.cwd:
+        dest = os_path.join(state.cwd, dest)
 
     if create_local_dir:
         local_pathname = os_path.dirname(dest)
@@ -762,8 +762,8 @@ def put(
     # Assume string filename
     else:
         # Add deploy directory?
-        if add_deploy_dir and state.deploy_dir:
-            src = os_path.join(state.deploy_dir, src)
+        if add_deploy_dir and state.cwd:
+            src = os_path.join(state.cwd, src)
 
         local_file = src
 
@@ -921,8 +921,8 @@ def template(
         {% endfor %}
     '''
 
-    if state.deploy_dir:
-        src = os_path.join(state.deploy_dir, src)
+    if state.cwd:
+        src = os_path.join(state.cwd, src)
 
     # Ensure host/state/inventory are available inside templates (if not set)
     data.setdefault('host', host)

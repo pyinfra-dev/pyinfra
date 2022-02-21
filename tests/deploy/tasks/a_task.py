@@ -20,6 +20,8 @@ with state.preserve_loop_order([1, 2]) as loop_items:
             commands='echo loop_{0}'.format(item),
         )
 
-# Import a file *relative* to this one (./another_task.py)
+# Import a file *relative* to this one (./empty_task.py)
 local.include(path.join('.', 'nested', 'empty_task.py'))
-local.include(path.join('.', 'another_task.py'))
+
+# Import a file from the CWD (tasks/another_task.py)
+local.include(path.join('tasks', 'another_task.py'))

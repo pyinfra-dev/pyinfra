@@ -37,7 +37,7 @@ def make_inventory(hosts=('somehost', 'anotherhost'), **kwargs):
 
 class FakeState(object):
     active = True
-    deploy_dir = '/'
+    cwd = '/'
     in_op = True
     in_deploy = True
     pipelining = False
@@ -277,7 +277,7 @@ class patch_files(object):
         self._directories = directories
 
     @staticmethod
-    def _parse_local_files(local_files, prefix=FakeState.deploy_dir):
+    def _parse_local_files(local_files, prefix=FakeState.cwd):
         files = []
         files_data = {}
         directories = {}

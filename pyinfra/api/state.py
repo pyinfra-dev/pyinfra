@@ -101,7 +101,7 @@ class State(object):
     print_fact_output = False
 
     # Used in CLI
-    deploy_dir = None  # base directory for locating files/templates/etc
+    cwd = None  # base directory for locating files/templates/etc
     current_deploy_filename = None
     current_exec_filename = None
 
@@ -150,7 +150,7 @@ class State(object):
             if isinstance(config.REQUIRE_PACKAGES, (list, tuple)):
                 requirements = config.REQUIRE_PACKAGES
             else:
-                with open(path.join(self.deploy_dir, config.REQUIRE_PACKAGES)) as f:
+                with open(path.join(self.cwd, config.REQUIRE_PACKAGES)) as f:
                     requirements = [
                         line.split('#egg=')[-1]
                         for line in f.read().splitlines()
