@@ -34,6 +34,18 @@ FILE_SHAS = {}
 PYINFRA_API_DIR = path.dirname(__file__)
 
 
+def get_file_path(state, filename):
+    if path.isabs(filename):
+        return filename
+
+    relative_to = state.cwd
+
+    if state.current_exec_filename and (filename.startswith('./') or filename.startswith('\\.')):
+        relative_to = path.dirname(state.current_exec_filename)
+
+    return path.join(relative_to, filename)
+
+
 def get_args_kwargs_spec(func):
     args = []
     kwargs = {}

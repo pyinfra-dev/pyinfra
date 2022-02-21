@@ -49,14 +49,12 @@ from .util import (
     exec_file,
     get_facts_and_args,
     get_operation_and_args,
-    list_dirs_above_file,
     load_deploy_file,
     parse_cli_arg,
 )
 from .virtualenv import init_virtualenv
 
 
-# Exit handler
 def _exit():
     if ctx_state.isset() and state.failed_hosts:
         sys.exit(1)
@@ -298,77 +296,6 @@ def _main(
     # Bootstrap any virtualenv
     init_virtualenv()
 
-    cwd = getcwd()
-    # Unconditionally adding cwd into sys.path
-    sys.path.append(cwd)
-
-    deploy_dir = cwd
-    potential_deploy_dirs = []
-
-    # This is the most common case: we have a deploy file so use it's
-    # pathname - we only look at the first file as we can't have multiple
-    # deploy directories.
-    if operations[0].endswith('.py') and path.isfile(operations[0]):
-        potential_deploy_dirs.extend(list_dirs_above_file(operations[0], cwd))
-
-    # If we have a valid inventory, look in it's path and it's parent for
-    # group_data or config.py to indicate deploy_dir (--fact, --run).
-    if inventory.endswith('.py') and path.isfile(inventory):
-        potential_deploy_dirs.extend([
-            dirname for dirname in list_dirs_above_file(inventory, cwd)
-            if dirname not in potential_deploy_dirs
-        ])
-
-    for potential_deploy_dir in potential_deploy_dirs:
-        logger.debug('Checking potential directory: {0}'.format(
-            potential_deploy_dir,
-        ))
-
-        if any((
-            path.isdir(path.join(potential_deploy_dir, 'group_data')),
-            path.isfile(path.join(potential_deploy_dir, config_filename)),
-        )):
-            logger.debug('Setting directory to: {0}'.format(potential_deploy_dir))
-            deploy_dir = potential_deploy_dir
-            break
-    else:
-        logger.debug('Deploy directory remains as cwd')
-
-    # Make sure imported files (deploy.py/etc) behave as if imported from the cwd
-    if deploy_dir not in sys.path:
-        sys.path.append(deploy_dir)
-
-    # Create an empty/unitialised state object
-    state = State()
-    # Set the deploy directory
-    state.deploy_dir = deploy_dir
-
-    ctx_state.set(state)
-
-    if verbosity > 0:
-        state.print_fact_info = True
-        state.print_noop_info = True
-
-    if verbosity > 1:
-        state.print_input = state.print_fact_input = True
-
-    if verbosity > 2:
-        state.print_output = state.print_fact_output = True
-
-    if not quiet:
-        click.echo('--> Loading config...', err=True)
-
-    config = Config()
-
-    # Load up any config.py from the filesystem
-    config_filename = path.join(deploy_dir, config_filename)
-    if path.exists(config_filename):
-        exec_file(config_filename)
-
-    # Lock the current config, this allows us to restore this version after
-    # executing deploy files that may alter them.
-    config.lock_current_sate()
-
     #  Check operations are valid and setup command
     #
 
@@ -432,8 +359,43 @@ def _main(
     pyinfra INVENTORY exec -- echo "hello world"
     pyinfra INVENTORY fact os [users]...'''.format(operations))
 
+    # Setup working directory
+    #
+
+    cwd = getcwd()
+    if cwd not in sys.path:  # ensure cwd is present in sys.path
+        sys.path.append(cwd)
+
     # Setup state, config & inventory
     #
+
+    state = State()
+    state.cwd = cwd
+    ctx_state.set(state)
+
+    if verbosity > 0:
+        state.print_fact_info = True
+        state.print_noop_info = True
+
+    if verbosity > 1:
+        state.print_input = state.print_fact_input = True
+
+    if verbosity > 2:
+        state.print_output = state.print_fact_output = True
+
+    if not quiet:
+        click.echo('--> Loading config...', err=True)
+
+    config = Config()
+
+    # Load up any config.py from the filesystem
+    config_filename = path.join(state.cwd, config_filename)
+    if path.exists(config_filename):
+        exec_file(config_filename)
+
+    # Lock the current config, this allows us to restore this version after
+    # executing deploy files that may alter them.
+    config.lock_current_sate()
 
     # Arg based config overrides
     if sudo:
@@ -487,9 +449,10 @@ def _main(
     # Load up the inventory from the filesystem
     inventory, inventory_group = make_inventory(
         inventory,
-        deploy_dir=deploy_dir,
+        cwd=state.cwd,
         override_data=override_data,
     )
+    ctx_inventory.set(inventory)
 
     # Now that we have inventory, apply --limit config override
     initial_limit = None
@@ -520,10 +483,6 @@ def _main(
 
     # Initialise the state
     state.init(inventory, config, initial_limit=initial_limit)
-
-    # Set state & inventory context
-    ctx_state.set(state)
-    ctx_inventory.set(inventory)
 
     if command == 'debug-inventory' or debug_data:
         if debug_data:

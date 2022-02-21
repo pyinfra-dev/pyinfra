@@ -35,9 +35,9 @@ def _is_inventory_group(key, value):
     )
 
 
-def _get_group_data(deploy_dir):
+def _get_group_data(cwd):
     group_data = {}
-    group_data_directory = path.join(deploy_dir, 'group_data')
+    group_data_directory = path.join(cwd, 'group_data')
 
     if path.exists(group_data_directory):
         files = listdir(group_data_directory)
@@ -74,7 +74,7 @@ def _get_groups_from_filename(inventory_filename):
     }
 
 
-def make_inventory(inventory_filename, override_data=None, deploy_dir=None):
+def make_inventory(inventory_filename, override_data=None, cwd=None):
     '''
     Builds a ``pyinfra.api.Inventory`` from the filesystem. If the file does not exist
     and doesn't contain a / attempts to use that as the only hostname.
@@ -137,7 +137,7 @@ def make_inventory(inventory_filename, override_data=None, deploy_dir=None):
 
     with ctx_inventory.use(fake_inventory):
         # Get all group data (group_data/*.py)
-        group_data = _get_group_data(deploy_dir)
+        group_data = _get_group_data(cwd)
 
     # For each group load up any data
     for name, hosts in groups.items():

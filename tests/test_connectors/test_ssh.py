@@ -100,8 +100,6 @@ class TestSSHConnector(TestCase):
             fake_key = MagicMock()
             fake_key_open.return_value = fake_key
 
-            state.deploy_dir = '/'
-
             connect_all(state)
 
             # Check the key was created properly
@@ -149,8 +147,6 @@ class TestSSHConnector(TestCase):
 
             fake_key_open.side_effect = fake_key_open_fail
 
-            state.deploy_dir = '/'
-
             connect_all(state)
 
             # Check the key was created properly
@@ -181,8 +177,6 @@ class TestSSHConnector(TestCase):
 
             fake_key_open.side_effect = fake_key_open_fail
 
-            state.deploy_dir = '/'
-
             pyinfra.is_cli = True
             connect_all(state)
             pyinfra.is_cli = False
@@ -208,8 +202,6 @@ class TestSSHConnector(TestCase):
 
             fake_key = MagicMock()
             fake_key_open.return_value = fake_key
-
-            state.deploy_dir = '/'
 
             with self.assertRaises(PyinfraError) as e:
                 connect_all(state)
@@ -274,8 +266,6 @@ class TestSSHConnector(TestCase):
             fake_key = MagicMock()
             fake_key_open.return_value = fake_key
 
-            state.deploy_dir = '/'
-
             connect_all(state)
 
             # Check the key was created properly
@@ -325,8 +315,6 @@ class TestSSHConnector(TestCase):
                 return fake_dss_key
 
             fake_dss_key_open.side_effect = fake_dss_key_func
-
-            state.deploy_dir = '/'
 
             connect_all(state)
 

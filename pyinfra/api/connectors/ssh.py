@@ -97,11 +97,9 @@ def _get_private_key(state, key_filename, key_password):
         path.expanduser(key_filename),
     ]
 
-    # Relative to the deploy
-    if state.deploy_dir:
-        ssh_key_filenames.append(
-            path.join(state.deploy_dir, key_filename),
-        )
+    if state.cwd:
+        # Relative to the CWD
+        path.join(state.cwd, key_filename)
 
     key = False
     key_file_exists = False

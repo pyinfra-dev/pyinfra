@@ -6,22 +6,20 @@ import pyinfra
 from pyinfra import config, host, logger, state
 from pyinfra.api.connectors.util import run_local_process, split_combined_output
 from pyinfra.api.exceptions import PyinfraError
+from pyinfra.api.util import get_file_path
 from pyinfra.context import ctx_state
 
 
 def include(filename):
     '''
-    Executes a local python file within the ``pyinfra.state.deploy_dir``
+    Executes a local python file within the ``pyinfra.state.cwd``
     directory.
     '''
 
     if not pyinfra.is_cli:
         raise PyinfraError('local.include is only available in CLI mode.')
 
-    if filename.startswith('.'):
-        filename = path.join(path.dirname(state.current_exec_filename), filename)
-    elif state.deploy_dir:
-        filename = path.join(state.deploy_dir, filename)
+    filename = get_file_path(state, filename)
 
     logger.debug('Including local file: {0}'.format(filename))
 
@@ -35,7 +33,7 @@ def include(filename):
 
         from pyinfra_cli.util import exec_file
 
-        with host.deploy(path.normpath(filename), None, None, in_deploy=False):
+        with host.deploy(path.relpath(filename, state.cwd), None, None, in_deploy=False):
             exec_file(filename)
 
         # One potential solution to the above is to add local as an actual

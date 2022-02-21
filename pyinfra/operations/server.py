@@ -941,8 +941,8 @@ def user(
 
         def read_any_pub_key_file(key):
             try_path = key
-            if add_deploy_dir and state.deploy_dir:
-                try_path = path.join(state.deploy_dir, key)
+            if add_deploy_dir and state.cwd:
+                try_path = path.join(state.cwd, key)
 
             if path.exists(try_path):
                 with open(try_path, 'r') as f:

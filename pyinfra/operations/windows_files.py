@@ -186,8 +186,8 @@ def put(
     # Assume string filename
     else:
         # Add deploy directory?
-        if add_deploy_dir and state.deploy_dir:
-            src = os.path.join(state.deploy_dir, src)
+        if add_deploy_dir and state.cwd:
+            src = os.path.join(state.cwd, src)
 
         local_file = src
 

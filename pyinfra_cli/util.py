@@ -41,21 +41,6 @@ def is_subdir(child, parent):
     return not relative.startswith(os.pardir)
 
 
-def list_dirs_above_file(filename, parent):
-    dirs = []
-
-    current_dir = path.dirname(filename)
-    dirs.append(current_dir)
-
-    while True:
-        current_dir, _ = path.split(current_dir)
-        if not current_dir or not is_subdir(current_dir, parent):
-            break
-
-        dirs.append(current_dir)
-    return dirs
-
-
 def exec_file(filename, return_locals=False, is_deploy_code=False):
     '''
     Execute a Python file and optionally return it's attributes as a dict.
