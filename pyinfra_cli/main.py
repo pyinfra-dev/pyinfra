@@ -3,7 +3,7 @@ import sys
 import warnings
 
 from fnmatch import fnmatch
-from os import getcwd, path
+from os import chdir as os_chdir, getcwd, path
 
 import click
 
@@ -125,6 +125,10 @@ def _print_support(ctx, param, value):
     'config_filename',
     help='Specify config file to use (default: config.py).',
     default='config.py',
+)
+@click.option(
+    '--chdir',
+    help='Set the working directory before executing.',
 )
 # Auth args
 @click.option(
@@ -274,7 +278,7 @@ if '--help' not in sys.argv:
 
 
 def _main(
-    inventory, operations, verbosity,
+    inventory, operations, verbosity, chdir,
     ssh_user, ssh_port, ssh_key, ssh_key_password, ssh_password,
     winrm_username, winrm_password, winrm_port,
     winrm_transport, shell_executable,
@@ -284,10 +288,18 @@ def _main(
     debug, debug_data, debug_facts, debug_operations,
     facts=None, print_operations=None, support=None,
 ):
+    # Setup working directory
+    #
+
+    if chdir:
+        os_chdir(chdir)
+
+    # Setup logging
+    #
+
     if not debug and not sys.warnoptions:
         warnings.simplefilter('ignore')
 
-    # Setup logging
     log_level = logging.INFO
     if debug:
         log_level = logging.DEBUG
@@ -342,11 +354,26 @@ def _main(
     # Execute one or more deploy files
     elif all(cmd.endswith('.py') for cmd in operations):
         command = 'deploy'
-        operations = operations[0:]
 
-        for file in operations:
-            if not path.exists(file):
-                raise CliError('No deploy file: {0}'.format(file))
+        filenames = []
+
+        for filename in operations[0:]:
+            if path.exists(filename):
+                filenames.append(filename)
+                continue
+            if chdir and filename.startswith(chdir):
+                correct_filename = path.relpath(filename, chdir)
+                logger.warning((
+                    'Fixing deploy filename under `--chdir` argument: '
+                    f'{filename} -> {correct_filename}'
+                ))
+                filenames.append(correct_filename)
+                continue
+            raise CliError('No deploy file: {0}'.format(
+                path.join(chdir, filename) if chdir else filename,
+            ))
+
+        operations = filenames
 
     # Operation w/optional args (<module>.<op> ARG1 ARG2 ...)
     elif len(operations[0].split('.')) == 2:
@@ -362,15 +389,12 @@ def _main(
     pyinfra INVENTORY exec -- echo "hello world"
     pyinfra INVENTORY fact os [users]...'''.format(operations))
 
-    # Setup working directory
+    # Setup state, config & inventory
     #
 
     cwd = getcwd()
     if cwd not in sys.path:  # ensure cwd is present in sys.path
         sys.path.append(cwd)
-
-    # Setup state, config & inventory
-    #
 
     state = State()
     state.cwd = cwd

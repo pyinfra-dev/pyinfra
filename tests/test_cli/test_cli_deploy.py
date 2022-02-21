@@ -15,6 +15,7 @@ class TestCliDeploy(PatchSSHTestCase):
         result = run_cli(
             'somehost',
             path.join('tests', 'deploy', 'deploy_interdependent.py'),
+            f'--chdir={path.join("tests", "deploy")}',
         )
         assert result.exit_code == 0, result.stdout
 
@@ -93,6 +94,7 @@ class TestCliDeployState(PatchSSHTestCase):
             result = run_cli(
                 ','.join(hosts),
                 path.join('tests', 'deploy', 'deploy.py'),
+                f'--chdir={path.join("tests", "deploy")}',
             )
             assert result.exit_code == 0, result.stdout
 
@@ -117,6 +119,7 @@ class TestCliDeployState(PatchSSHTestCase):
             result = run_cli(
                 ','.join(hosts),
                 path.join('tests', 'deploy', 'deploy_random.py'),
+                f'--chdir={path.join("tests", "deploy")}',
             )
             assert result.exit_code == 0, result.stdout
 
