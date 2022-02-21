@@ -8,8 +8,8 @@ from mock import MagicMock, mock_open, patch
 
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
-from pyinfra.api.connectors.util import make_unix_command
 from pyinfra.api.exceptions import PyinfraError
+from pyinfra.connectors.util import make_unix_command
 
 from ..util import make_inventory
 
@@ -21,14 +21,14 @@ def fake_chroot_shell(command, splitlines=None):
     raise PyinfraError('Invalid command: {0}'.format(command))
 
 
-@patch('pyinfra.api.connectors.chroot.local.shell', fake_chroot_shell)
-@patch('pyinfra.api.connectors.chroot.mkstemp', lambda: (None, '__tempfile__'))
-@patch('pyinfra.api.connectors.chroot.os.remove', lambda f: None)
-@patch('pyinfra.api.connectors.chroot.open', mock_open(read_data='test!'), create=True)
+@patch('pyinfra.connectors.chroot.local.shell', fake_chroot_shell)
+@patch('pyinfra.connectors.chroot.mkstemp', lambda: (None, '__tempfile__'))
+@patch('pyinfra.connectors.chroot.os.remove', lambda f: None)
+@patch('pyinfra.connectors.chroot.open', mock_open(read_data='test!'), create=True)
 @patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True)
 class TestChrootConnector(TestCase):
     def setUp(self):
-        self.fake_popen_patch = patch('pyinfra.api.connectors.util.Popen')
+        self.fake_popen_patch = patch('pyinfra.connectors.util.Popen')
         self.fake_popen_mock = self.fake_popen_patch.start()
 
     def tearDown(self):

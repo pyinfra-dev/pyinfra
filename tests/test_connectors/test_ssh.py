@@ -17,8 +17,8 @@ import pyinfra
 
 from pyinfra.api import Config, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
-from pyinfra.api.connectors.ssh import _get_sftp_connection
 from pyinfra.api.exceptions import ConnectError, PyinfraError
+from pyinfra.connectors.ssh import _get_sftp_connection
 
 from ..util import make_inventory
 
@@ -29,11 +29,11 @@ def make_raise_exception_function(cls, *args, **kwargs):
     return handler
 
 
-@patch('pyinfra.api.connectors.ssh.SSHClient.get_transport', MagicMock())
-@patch('pyinfra.api.connectors.ssh.open', mock_open(read_data='test!'), create=True)
+@patch('pyinfra.connectors.ssh.SSHClient.get_transport', MagicMock())
+@patch('pyinfra.connectors.ssh.open', mock_open(read_data='test!'), create=True)
 class TestSSHConnector(TestCase):
     def setUp(self):
-        self.fake_connect_patch = patch('pyinfra.api.connectors.ssh.SSHClient.connect')
+        self.fake_connect_patch = patch('pyinfra.connectors.ssh.SSHClient.connect')
         self.fake_connect_mock = self.fake_connect_patch.start()
         _get_sftp_connection.cache = {}
 
@@ -65,8 +65,8 @@ class TestSSHConnector(TestCase):
 
         assert len(state.active_hosts) == 2
 
-    @patch('pyinfra.api.connectors.ssh.path.isfile', lambda *args, **kwargs: True)
-    @patch('pyinfra.api.connectors.ssh.RSAKey.from_private_key_file')
+    @patch('pyinfra.connectors.ssh.path.isfile', lambda *args, **kwargs: True)
+    @patch('pyinfra.connectors.ssh.RSAKey.from_private_key_file')
     def test_connect_exceptions(self, fake_key_open):
         for exception_class in (
             AuthenticationException,
@@ -94,8 +94,8 @@ class TestSSHConnector(TestCase):
             ('somehost', {'ssh_key': 'testkey'}),
         )), Config())
 
-        with patch('pyinfra.api.connectors.ssh.path.isfile', lambda *args, **kwargs: True), \
-                patch('pyinfra.api.connectors.ssh.RSAKey.from_private_key_file') as fake_key_open:
+        with patch('pyinfra.connectors.ssh.path.isfile', lambda *args, **kwargs: True), \
+                patch('pyinfra.connectors.ssh.RSAKey.from_private_key_file') as fake_key_open:
 
             fake_key = MagicMock()
             fake_key_open.return_value = fake_key
@@ -133,10 +133,10 @@ class TestSSHConnector(TestCase):
         )), Config())
 
         with patch(
-            'pyinfra.api.connectors.ssh.path.isfile',
+            'pyinfra.connectors.ssh.path.isfile',
             lambda *args, **kwargs: True,
         ), patch(
-            'pyinfra.api.connectors.ssh.RSAKey.from_private_key_file',
+            'pyinfra.connectors.ssh.RSAKey.from_private_key_file',
         ) as fake_key_open:
             fake_key = MagicMock()
 
@@ -160,13 +160,13 @@ class TestSSHConnector(TestCase):
         )), Config())
 
         with patch(
-            'pyinfra.api.connectors.ssh.path.isfile',
+            'pyinfra.connectors.ssh.path.isfile',
             lambda *args, **kwargs: True,
         ), patch(
-            'pyinfra.api.connectors.ssh.getpass',
+            'pyinfra.connectors.ssh.getpass',
             lambda *args, **kwargs: 'testpass',
         ), patch(
-            'pyinfra.api.connectors.ssh.RSAKey.from_private_key_file',
+            'pyinfra.connectors.ssh.RSAKey.from_private_key_file',
         ) as fake_key_open:
             fake_key = MagicMock()
 
@@ -192,10 +192,10 @@ class TestSSHConnector(TestCase):
         )), Config())
 
         with patch(
-            'pyinfra.api.connectors.ssh.path.isfile',
+            'pyinfra.connectors.ssh.path.isfile',
             lambda *args, **kwargs: True,
         ), patch(
-            'pyinfra.api.connectors.ssh.RSAKey.from_private_key_file',
+            'pyinfra.connectors.ssh.RSAKey.from_private_key_file',
         ) as fake_key_open:
 
             fake_key_open.side_effect = make_raise_exception_function(PasswordRequiredException)
@@ -220,19 +220,19 @@ class TestSSHConnector(TestCase):
         fake_fail_from_private_key_file.side_effect = make_raise_exception_function(SSHException)
 
         with patch(
-            'pyinfra.api.connectors.ssh.path.isfile',
+            'pyinfra.connectors.ssh.path.isfile',
             lambda *args, **kwargs: True,
         ), patch(
-            'pyinfra.api.connectors.ssh.DSSKey.from_private_key_file',
+            'pyinfra.connectors.ssh.DSSKey.from_private_key_file',
             fake_fail_from_private_key_file,
         ), patch(
-            'pyinfra.api.connectors.ssh.ECDSAKey.from_private_key_file',
+            'pyinfra.connectors.ssh.ECDSAKey.from_private_key_file',
             fake_fail_from_private_key_file,
         ), patch(
-            'pyinfra.api.connectors.ssh.Ed25519Key.from_private_key_file',
+            'pyinfra.connectors.ssh.Ed25519Key.from_private_key_file',
             fake_fail_from_private_key_file,
         ), patch(
-            'pyinfra.api.connectors.ssh.RSAKey.from_private_key_file',
+            'pyinfra.connectors.ssh.RSAKey.from_private_key_file',
         ) as fake_key_open:
 
             def fake_key_open_fail(*args, **kwargs):
@@ -257,9 +257,9 @@ class TestSSHConnector(TestCase):
             ('somehost', {'ssh_key': 'testkey'}),
         )), Config())
 
-        with patch('pyinfra.api.connectors.ssh.path.isfile', lambda *args, **kwargs: True), \
-                patch('pyinfra.api.connectors.ssh.RSAKey.from_private_key_file') as fake_rsa_key_open, \
-                patch('pyinfra.api.connectors.ssh.DSSKey.from_private_key_file') as fake_key_open:  # noqa
+        with patch('pyinfra.connectors.ssh.path.isfile', lambda *args, **kwargs: True), \
+                patch('pyinfra.connectors.ssh.RSAKey.from_private_key_file') as fake_rsa_key_open, \
+                patch('pyinfra.connectors.ssh.DSSKey.from_private_key_file') as fake_key_open:  # noqa
 
             fake_rsa_key_open.side_effect = make_raise_exception_function(SSHException)
 
@@ -296,9 +296,9 @@ class TestSSHConnector(TestCase):
             ('somehost', {'ssh_key': 'testkey', 'ssh_key_password': 'testpass'}),
         )), Config())
 
-        with patch('pyinfra.api.connectors.ssh.path.isfile', lambda *args, **kwargs: True), \
-                patch('pyinfra.api.connectors.ssh.RSAKey.from_private_key_file') as fake_rsa_key_open, \
-                patch('pyinfra.api.connectors.ssh.DSSKey.from_private_key_file') as fake_dss_key_open:  # noqa
+        with patch('pyinfra.connectors.ssh.path.isfile', lambda *args, **kwargs: True), \
+                patch('pyinfra.connectors.ssh.RSAKey.from_private_key_file') as fake_rsa_key_open, \
+                patch('pyinfra.connectors.ssh.DSSKey.from_private_key_file') as fake_dss_key_open:  # noqa
 
             def fake_rsa_key_open_fail(*args, **kwargs):
                 if 'password' not in kwargs:
@@ -354,7 +354,7 @@ class TestSSHConnector(TestCase):
     # SSH command tests
     #
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
     def test_run_shell_command(self, fake_ssh_client):
         fake_ssh = MagicMock()
         fake_stdin = MagicMock()
@@ -386,8 +386,8 @@ class TestSSHConnector(TestCase):
 
         fake_ssh.exec_command.assert_called_with("sh -c 'echo Šablony'", get_pty=False)
 
-    @patch('pyinfra.api.connectors.ssh.click')
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.click')
+    @patch('pyinfra.connectors.ssh.SSHClient')
     def test_run_shell_command_masked(self, fake_ssh_client, fake_click):
         fake_ssh = MagicMock()
         fake_stdout = MagicMock()
@@ -419,7 +419,7 @@ class TestSSHConnector(TestCase):
             err=True,
         )
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
     def test_run_shell_command_success_exit_code(self, fake_ssh_client):
         fake_ssh = MagicMock()
         fake_stdout = MagicMock()
@@ -439,7 +439,7 @@ class TestSSHConnector(TestCase):
         assert len(out) == 3
         assert out[0] is True
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
     def test_run_shell_command_error(self, fake_ssh_client):
         fake_ssh = MagicMock()
         fake_stdout = MagicMock()
@@ -459,10 +459,10 @@ class TestSSHConnector(TestCase):
         assert len(out) == 3
         assert out[0] is False
 
-    @patch('pyinfra.api.connectors.util.getpass')
-    @patch('pyinfra.api.connectors.util.get_sudo_askpass_exe')
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    @patch('pyinfra.connectors.util.getpass')
+    @patch('pyinfra.connectors.util.get_sudo_askpass_exe')
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SFTPClient')
     def test_run_shell_command_sudo_password_prompt(
         self,
         fake_sftp_client,
@@ -500,10 +500,10 @@ class TestSSHConnector(TestCase):
             "sudo -H -A -k sh -c 'echo Šablony'"
         ), get_pty=False)
 
-    @patch('pyinfra.api.connectors.util.getpass')
-    @patch('pyinfra.api.connectors.util.get_sudo_askpass_exe')
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    @patch('pyinfra.connectors.util.getpass')
+    @patch('pyinfra.connectors.util.get_sudo_askpass_exe')
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SFTPClient')
     def test_run_shell_command_sudo_password_automatic_prompt(
         self,
         fake_sftp_client,
@@ -554,8 +554,11 @@ class TestSSHConnector(TestCase):
             "sudo -H -A -k sh -c 'echo Šablony'"
         ), get_pty=False)
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.util._get_sudo_password')
+    # SSH file put/get tests
+    #
+
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.util._get_sudo_password')
     def test_run_shell_command_retry_for_sudo_password(
         self,
         fake_get_sudo_password,
@@ -592,8 +595,8 @@ class TestSSHConnector(TestCase):
     # SSH file put/get tests
     #
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SFTPClient')
     def test_put_file(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('anotherhost',))
         State(inventory, Config())
@@ -612,8 +615,8 @@ class TestSSHConnector(TestCase):
             fake_open(), 'not-another-file',
         )
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SFTPClient')
     def test_put_file_sudo(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('anotherhost',))
         State(inventory, Config())
@@ -644,8 +647,8 @@ class TestSSHConnector(TestCase):
             fake_open(), '/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24',
         )
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SFTPClient')
     def test_put_file_su_user_fail_acl(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('anotherhost',))
         State(inventory, Config())
@@ -675,8 +678,8 @@ class TestSSHConnector(TestCase):
             fake_open(), '/tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487',
         )
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SFTPClient')
     def test_put_file_su_user_fail_copy(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('anotherhost',))
         State(inventory, Config())
@@ -713,8 +716,8 @@ class TestSSHConnector(TestCase):
             fake_open(), '/tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487',
         )
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SFTPClient')
     def test_put_file_sudo_custom_temp_file(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('anotherhost',))
         State(inventory, Config())
@@ -746,8 +749,8 @@ class TestSSHConnector(TestCase):
             fake_open(), '/a-different-tempfile',
         )
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SFTPClient')
     def test_get_file(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('somehost',))
         State(inventory, Config())
@@ -766,8 +769,8 @@ class TestSSHConnector(TestCase):
             'not-a-file', fake_open(),
         )
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SFTPClient')
     def test_get_file_sudo(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('somehost',))
         State(inventory, Config())
@@ -804,7 +807,7 @@ class TestSSHConnector(TestCase):
             '/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508', fake_open(),
         )
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
     def test_get_file_sudo_copy_fail(self, fake_ssh_client):
         inventory = make_inventory(hosts=('somehost',))
         State(inventory, Config())
@@ -831,8 +834,8 @@ class TestSSHConnector(TestCase):
             ), get_pty=False),
         ])
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SFTPClient')
     def test_get_file_sudo_remove_fail(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('somehost',))
         State(inventory, Config())
@@ -869,8 +872,8 @@ class TestSSHConnector(TestCase):
             '/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508', fake_open(),
         )
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SFTPClient')
     def test_get_file_su_user(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('somehost',))
         State(inventory, Config())
@@ -907,8 +910,8 @@ class TestSSHConnector(TestCase):
             '/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508', fake_open(),
         )
 
-    @patch('pyinfra.api.connectors.ssh.SSHClient')
-    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    @patch('pyinfra.connectors.ssh.SSHClient')
+    @patch('pyinfra.connectors.ssh.SFTPClient')
     def test_get_sftp_fail(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=('anotherhost',))
         State(inventory, Config())

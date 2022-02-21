@@ -308,12 +308,12 @@ class TestOperationsApi(PatchSSHTestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch('pyinfra.api.connectors.ssh.check_can_rsync'):
+        with patch('pyinfra.connectors.ssh.check_can_rsync'):
             add_op(state, files.rsync, 'src', 'dest', sudo=True, sudo_user='root')
 
         assert len(state.get_op_order()) == 1
 
-        with patch('pyinfra.api.connectors.ssh.run_local_process') as fake_run_local_process:
+        with patch('pyinfra.connectors.ssh.run_local_process') as fake_run_local_process:
             fake_run_local_process.return_value = 0, []
             run_ops(state)
 
@@ -332,7 +332,7 @@ class TestOperationsApi(PatchSSHTestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch('pyinfra.api.connectors.ssh.find_executable', lambda x: None):
+        with patch('pyinfra.connectors.ssh.find_executable', lambda x: None):
             with self.assertRaises(OperationError) as context:
                 add_op(state, files.rsync, 'src', 'dest')
 
@@ -365,7 +365,7 @@ class TestOperationFailures(PatchSSHTestCase):
 
         add_op(state, server.shell, 'echo "hi"')
 
-        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
             fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
                 False,
@@ -391,7 +391,7 @@ class TestOperationFailures(PatchSSHTestCase):
 
         add_op(state, server.shell, 'echo "hi"', ignore_errors=True)
 
-        with patch('pyinfra.api.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
             fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
                 False,

@@ -3,8 +3,8 @@ from unittest import TestCase
 from mock import mock_open, patch
 from paramiko import ProxyCommand
 
-from pyinfra.api.connectors.sshuserclient import SSHClient
-from pyinfra.api.connectors.sshuserclient.client import AskPolicy, get_ssh_config
+from pyinfra.connectors.sshuserclient import SSHClient
+from pyinfra.connectors.sshuserclient.client import AskPolicy, get_ssh_config
 
 SSH_CONFIG_DATA = '''
 # Comment
@@ -60,23 +60,23 @@ class TestSSHUserConfigMissing(TestCase):
 
 
 @patch(
-    'pyinfra.api.connectors.sshuserclient.client.path.exists',
+    'pyinfra.connectors.sshuserclient.client.path.exists',
     lambda path: True,
 )
 @patch(
-    'pyinfra.api.connectors.sshuserclient.config.glob.iglob',
+    'pyinfra.connectors.sshuserclient.config.glob.iglob',
     lambda path: ['other_file'],
 )
 @patch(
-    'pyinfra.api.connectors.sshuserclient.config.path.isfile',
+    'pyinfra.connectors.sshuserclient.config.path.isfile',
     lambda path: True,
 )
 @patch(
-    'pyinfra.api.connectors.sshuserclient.config.path.expanduser',
+    'pyinfra.connectors.sshuserclient.config.path.expanduser',
     lambda path: path,
 )
 @patch(
-    'pyinfra.api.connectors.sshuserclient.config.path.isabs',
+    'pyinfra.connectors.sshuserclient.config.path.isabs',
     lambda path: True,
 )
 @patch(
@@ -88,12 +88,12 @@ class TestSSHUserConfig(TestCase):
         get_ssh_config.cache = {}
 
     @patch(
-        'pyinfra.api.connectors.sshuserclient.client.open',
+        'pyinfra.connectors.sshuserclient.client.open',
         mock_open(read_data=SSH_CONFIG_DATA),
         create=True,
     )
     @patch(
-        'pyinfra.api.connectors.sshuserclient.config.open',
+        'pyinfra.connectors.sshuserclient.config.open',
         mock_open(read_data=SSH_CONFIG_OTHER_FILE),
         create=True,
     )
@@ -120,7 +120,7 @@ class TestSSHUserConfig(TestCase):
         assert host_keys_file == '~/.ssh/test3'
 
     @patch(
-        'pyinfra.api.connectors.sshuserclient.client.open',
+        'pyinfra.connectors.sshuserclient.client.open',
         mock_open(read_data=BAD_SSH_CONFIG_DATA),
         create=True,
     )
@@ -133,12 +133,12 @@ class TestSSHUserConfig(TestCase):
         assert context.exception.args[0] == 'Unparsable line &'
 
     @patch(
-        'pyinfra.api.connectors.sshuserclient.client.open',
+        'pyinfra.connectors.sshuserclient.client.open',
         mock_open(read_data=LOOPING_SSH_CONFIG_DATA),
         create=True,
     )
     @patch(
-        'pyinfra.api.connectors.sshuserclient.config.open',
+        'pyinfra.connectors.sshuserclient.config.open',
         mock_open(read_data=LOOPING_SSH_CONFIG_DATA),
         create=True,
     )
@@ -151,17 +151,17 @@ class TestSSHUserConfig(TestCase):
         assert context.exception.args[0] == 'Include loop detected in ssh config file: other_file'
 
     @patch(
-        'pyinfra.api.connectors.sshuserclient.client.open',
+        'pyinfra.connectors.sshuserclient.client.open',
         mock_open(read_data=SSH_CONFIG_DATA),
         create=True,
     )
     @patch(
-        'pyinfra.api.connectors.sshuserclient.config.open',
+        'pyinfra.connectors.sshuserclient.config.open',
         mock_open(read_data=SSH_CONFIG_OTHER_FILE_PROXYJUMP),
         create=True,
     )
-    @patch('pyinfra.api.connectors.sshuserclient.SSHClient.connect')
-    @patch('pyinfra.api.connectors.sshuserclient.SSHClient.gateway')
+    @patch('pyinfra.connectors.sshuserclient.SSHClient.connect')
+    @patch('pyinfra.connectors.sshuserclient.SSHClient.gateway')
     def test_load_ssh_config_proxyjump(self, fake_gateway, fake_ssh_connect):
         client = SSHClient()
 

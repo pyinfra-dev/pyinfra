@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from mock import mock_open, patch
 
-from pyinfra.api.connectors.vagrant import get_vagrant_options, make_names_data
+from pyinfra.connectors.vagrant import get_vagrant_options, make_names_data
 from pyinfra.api.exceptions import InventoryError
 
 FAKE_VAGRANT_OPTIONS = {
@@ -59,17 +59,17 @@ def fake_vagrant_shell(command, splitlines=None):
     return []
 
 
-@patch('pyinfra.api.connectors.vagrant.local.shell', fake_vagrant_shell)
+@patch('pyinfra.connectors.vagrant.local.shell', fake_vagrant_shell)
 class TestVagrantConnector(TestCase):
     def tearDown(self):
         get_vagrant_options.cache = {}
 
     @patch(
-        'pyinfra.api.connectors.vagrant.open',
+        'pyinfra.connectors.vagrant.open',
         mock_open(read_data=FAKE_VAGRANT_OPTIONS_DATA),
         create=True,
     )
-    @patch('pyinfra.api.connectors.vagrant.path.exists', lambda path: True)
+    @patch('pyinfra.connectors.vagrant.path.exists', lambda path: True)
     def test_make_names_data_with_options(self):
         data = make_names_data()
 

@@ -7,8 +7,8 @@ from mock import MagicMock, mock_open, patch
 
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
-from pyinfra.api.connectors.util import make_unix_command
 from pyinfra.api.exceptions import InventoryError, PyinfraError
+from pyinfra.connectors.util import make_unix_command
 
 from ..util import make_inventory
 
@@ -57,8 +57,8 @@ def get_docker_command(command):
     return docker_command
 
 
-@patch('pyinfra.api.connectors.ssh.connect', MagicMock())
-@patch('pyinfra.api.connectors.ssh.run_shell_command', fake_ssh_docker_shell)
+@patch('pyinfra.connectors.ssh.connect', MagicMock())
+@patch('pyinfra.connectors.ssh.run_shell_command', fake_ssh_docker_shell)
 @patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True)
 class TestDockerSSHConnector(TestCase):
     def setUp(self):
@@ -147,9 +147,9 @@ class TestDockerSSHConnector(TestCase):
         assert out[0] is False
         assert fake_ssh_docker_shell.ran_custom_command
 
-    @patch('pyinfra.api.connectors.dockerssh.mkstemp', lambda: (None, 'local_tempfile'))
-    @patch('pyinfra.api.connectors.docker.os.close', lambda f: None)
-    @patch('pyinfra.api.connectors.dockerssh.ssh.put_file')
+    @patch('pyinfra.connectors.dockerssh.mkstemp', lambda: (None, 'local_tempfile'))
+    @patch('pyinfra.connectors.docker.os.close', lambda f: None)
+    @patch('pyinfra.connectors.dockerssh.ssh.put_file')
     def test_put_file(self, fake_put_file):
         fake_ssh_docker_shell.custom_command = [
             'docker cp remote_tempfile containerid:not-another-file', True, [], []]
@@ -169,7 +169,7 @@ class TestDockerSSHConnector(TestCase):
         # ensure copy from remote host to remote docker container
         assert fake_ssh_docker_shell.ran_custom_command
 
-    @patch('pyinfra.api.connectors.dockerssh.ssh.put_file')
+    @patch('pyinfra.connectors.dockerssh.ssh.put_file')
     def test_put_file_error(self, fake_put_file):
         inventory = make_inventory(hosts=('@dockerssh/somehost:not-an-image',))
         state = State(inventory, Config())
@@ -193,7 +193,7 @@ class TestDockerSSHConnector(TestCase):
             host.put_file('not-a-file', 'not-another-file', print_output=True)
         assert str(exn.exception) == 'docker error'
 
-    @patch('pyinfra.api.connectors.dockerssh.ssh.get_file')
+    @patch('pyinfra.connectors.dockerssh.ssh.get_file')
     def test_get_file(self, fake_get_file):
         fake_ssh_docker_shell.custom_command = [
             'docker cp containerid:not-a-file remote_tempfile', True, [], []]
@@ -213,7 +213,7 @@ class TestDockerSSHConnector(TestCase):
         # ensure copy from remote host to remote docker container
         assert fake_ssh_docker_shell.ran_custom_command
 
-    @patch('pyinfra.api.connectors.dockerssh.ssh.get_file')
+    @patch('pyinfra.connectors.dockerssh.ssh.get_file')
     def test_get_file_error(self, fake_get_file):
         fake_ssh_docker_shell.custom_command = [
             'docker cp containerid:not-a-file remote_tempfile', False, [], ['docker error']]

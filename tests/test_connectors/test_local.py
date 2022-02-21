@@ -7,18 +7,18 @@ from mock import MagicMock, mock_open, patch
 
 from pyinfra.api import Config, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
-from pyinfra.api.connectors.util import make_unix_command
+from pyinfra.connectors.util import make_unix_command
 
 from ..util import make_inventory
 
 
-@patch('pyinfra.api.connectors.local.mkstemp', lambda: (None, '__tempfile__'))
-@patch('pyinfra.api.connectors.local.os.remove', lambda f: None)
-@patch('pyinfra.api.connectors.local.open', mock_open(read_data='test!'), create=True)
+@patch('pyinfra.connectors.local.mkstemp', lambda: (None, '__tempfile__'))
+@patch('pyinfra.connectors.local.os.remove', lambda f: None)
+@patch('pyinfra.connectors.local.open', mock_open(read_data='test!'), create=True)
 @patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True)
 class TestLocalConnector(TestCase):
     def setUp(self):
-        self.fake_popen_patch = patch('pyinfra.api.connectors.util.Popen')
+        self.fake_popen_patch = patch('pyinfra.connectors.util.Popen')
         self.fake_popen_mock = self.fake_popen_patch.start()
 
     def tearDown(self):
@@ -64,7 +64,7 @@ class TestLocalConnector(TestCase):
             stdout=PIPE, stderr=PIPE, stdin=PIPE,
         )
 
-    @patch('pyinfra.api.connectors.local.click')
+    @patch('pyinfra.connectors.local.click')
     def test_run_shell_command_masked(self, fake_click):
         inventory = make_inventory(hosts=('@local',))
         State(inventory, Config())

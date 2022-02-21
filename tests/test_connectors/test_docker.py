@@ -6,8 +6,8 @@ from mock import MagicMock, mock_open, patch
 
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
-from pyinfra.api.connectors.util import make_unix_command
 from pyinfra.api.exceptions import InventoryError, PyinfraError
+from pyinfra.connectors.util import make_unix_command
 
 from ..util import make_inventory
 
@@ -25,15 +25,15 @@ def fake_docker_shell(command, splitlines=None):
     raise PyinfraError('Invalid command: {0}'.format(command))
 
 
-@patch('pyinfra.api.connectors.docker.local.shell', fake_docker_shell)
-@patch('pyinfra.api.connectors.docker.mkstemp', lambda: (None, '__tempfile__'))
-@patch('pyinfra.api.connectors.docker.os.remove', lambda f: None)
-@patch('pyinfra.api.connectors.docker.os.close', lambda f: None)
-@patch('pyinfra.api.connectors.docker.open', mock_open(read_data='test!'), create=True)
+@patch('pyinfra.connectors.docker.local.shell', fake_docker_shell)
+@patch('pyinfra.connectors.docker.mkstemp', lambda: (None, '__tempfile__'))
+@patch('pyinfra.connectors.docker.os.remove', lambda f: None)
+@patch('pyinfra.connectors.docker.os.close', lambda f: None)
+@patch('pyinfra.connectors.docker.open', mock_open(read_data='test!'), create=True)
 @patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True)
 class TestDockerConnector(TestCase):
     def setUp(self):
-        self.fake_popen_patch = patch('pyinfra.api.connectors.util.Popen')
+        self.fake_popen_patch = patch('pyinfra.connectors.util.Popen')
         self.fake_popen_mock = self.fake_popen_patch.start()
 
     def tearDown(self):
