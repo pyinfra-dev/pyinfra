@@ -2,10 +2,10 @@
     "args": ["somefile"],
     "kwargs": {
         "database": "somedb",
-        "postgresql_user": "root",
-        "postgresql_password": "somepass",
-        "postgresql_host": "localhost",
-        "postgresql_port": 3306
+        "psql_user": "root",
+        "psql_password": "somepass",
+        "psql_host": "localhost",
+        "psql_port": 3306
     },
     "commands": [
         [

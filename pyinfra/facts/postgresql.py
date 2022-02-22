@@ -34,9 +34,9 @@ def make_psql_command(
     return StringCommand(*target_bits)
 
 
-def make_execute_psql_command(command, **postgresql_kwargs):
+def make_execute_psql_command(command, **psql_kwargs):
     return StringCommand(
-        make_psql_command(**postgresql_kwargs),
+        make_psql_command(**psql_kwargs),
         '-Ac',
         QuoteString(command),  # quote this whole item as a single shell argument
     )
@@ -49,15 +49,15 @@ class PostgresqlFactBase(FactBase):
 
     def command(
         self,
-        postgresql_user=None, postgresql_password=None,
-        postgresql_host=None, postgresql_port=None,
+        psql_user=None, psql_password=None,
+        psql_host=None, psql_port=None,
     ):
         return make_execute_psql_command(
-            self.postgresql_command,
-            user=postgresql_user,
-            password=postgresql_password,
-            host=postgresql_host,
-            port=postgresql_port,
+            self.psql_command,
+            user=psql_user,
+            password=psql_password,
+            host=psql_host,
+            port=psql_port,
         )
 
 
@@ -78,7 +78,7 @@ class PostgresqlRoles(PostgresqlFactBase):
     '''
 
     default = dict
-    postgresql_command = 'SELECT * FROM pg_catalog.pg_roles'
+    psql_command = 'SELECT * FROM pg_catalog.pg_roles'
 
     def process(self, output):
         # Remove the last line of the output (row count)
@@ -124,7 +124,7 @@ class PostgresqlDatabases(PostgresqlFactBase):
     '''
 
     default = dict
-    postgresql_command = (
+    psql_command = (
         'SELECT pg_catalog.pg_encoding_to_char(encoding), * FROM pg_catalog.pg_database'
     )
 

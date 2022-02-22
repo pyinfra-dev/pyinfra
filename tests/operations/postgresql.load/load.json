@@ -2,8 +2,8 @@
     "args": ["somefile"],
     "kwargs": {
         "database": "somedb",
-        "postgresql_user": "root",
-        "postgresql_password": "somepass"
+        "psql_user": "root",
+        "psql_password": "somepass"
     },
     "commands": [
         [
