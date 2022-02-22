@@ -189,7 +189,7 @@ def get_facts_and_args(commands):
     for command in commands:
         if '=' in command:
             if not current_fact:
-                raise CliError('Invalid fact commands: {0}'.format(commands))
+                raise CliError('Invalid fact commands: `{0}`'.format(commands))
 
             key, value = command.split('=', 1)
             current_fact[2][key] = value
@@ -200,7 +200,7 @@ def get_facts_and_args(commands):
             current_fact = None
 
         if '.' not in command:
-            raise CliError(f'Invalid fact, should be in the format `module.cls`: {command}')
+            raise CliError(f'Invalid fact: `{command}`, should be in the format `module.cls`')
 
         fact_module, fact_name = command.rsplit('.', 1)
         try:
@@ -209,11 +209,11 @@ def get_facts_and_args(commands):
             try:
                 fact_module = import_module(str(fact_module))
             except ImportError:
-                raise CliError('No such module: {0}'.format(fact_module))
+                raise CliError('No such module: `{0}`'.format(fact_module))
 
         fact_cls = getattr(fact_module, fact_name, None)
         if not fact_cls:
-            raise CliError('No such fact: {0}'.format(command))
+            raise CliError('No such fact: `{0}`'.format(command))
 
         current_fact = (fact_cls, (), {})
 
