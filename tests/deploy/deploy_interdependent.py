@@ -1,4 +1,4 @@
-from pyinfra.operations import apt, brew, files, git, init, server
+from pyinfra.operations import apt, brew, files, git, server, systemd
 
 
 # Add/remove/add same file
@@ -129,15 +129,15 @@ git.config(
 
 
 # Start/stop/start same systemd service
-init.systemd(
+systemd.service(
     'someservice',
 )
 
-init.systemd(
+systemd.service(
     'someservice',
     running=False,
 )
 
-init.systemd(
+systemd.service(
     'someservice',
 )
