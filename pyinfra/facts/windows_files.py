@@ -3,7 +3,7 @@ from pyinfra.api.facts import FactBase
 from .util.win_files import parse_win_ls_output
 
 
-class WindowsFile(FactBase):
+class File(FactBase):
     # Types must match WIN_FLAG_TO_TYPE in .util.win_files.py
     type = 'file'
     shell_executable = 'ps'
@@ -22,17 +22,17 @@ class WindowsFile(FactBase):
         return parse_win_ls_output(output[7], self.type)
 
 
-class WindowsLink(WindowsFile):
+class Link(File):
     # Types must match WIN_FLAG_TO_TYPE in .util.win_files.py
     type = 'link'
 
 
-class WindowsDirectory(WindowsFile):
+class Directory(File):
     # Types must match WIN_FLAG_TO_TYPE in .util.win_files.py
     type = 'directory'
 
 
-class WindowsTempDir(FactBase):
+class TempDir(FactBase):
     # Types must match WIN_FLAG_TO_TYPE in .util.win_files.py
     type = 'directory'
     shell_executable = 'ps'
@@ -44,7 +44,7 @@ class WindowsTempDir(FactBase):
         return output[0]
 
 
-class WindowsSha1File(FactBase):
+class Sha1File(FactBase):
     '''
     Returns a SHA1 hash of a file.
     '''
@@ -61,7 +61,7 @@ class WindowsSha1File(FactBase):
         return output[0] if not output else None
 
 
-class WindowsSha256File(FactBase):
+class Sha256File(FactBase):
     '''
     Returns a SHA256 hash of a file.
     '''
@@ -78,7 +78,7 @@ class WindowsSha256File(FactBase):
         return output[0] if len(output[0]) > 0 else None
 
 
-class WindowsMd5File(FactBase):
+class Md5File(FactBase):
     '''
     Returns an MD5 hash of a file.
     '''

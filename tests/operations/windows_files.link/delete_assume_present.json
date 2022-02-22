@@ -7,7 +7,7 @@
         "assume_present": true
     },
     "facts": {
-        "windows_files.WindowsLink": {
+        "windows_files.Link": {
             "name=testlink": null
         }
     },

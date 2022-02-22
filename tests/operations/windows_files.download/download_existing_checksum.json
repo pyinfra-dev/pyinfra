@@ -9,16 +9,16 @@
         "md5sum": "md5-sum"
     },
     "facts": {
-        "windows_files.WindowsFile": {
+        "windows_files.File": {
             "name=c:\\myfile": {}
         },
-        "windows_files.WindowsSha1File": {
+        "windows_files.Sha1File": {
             "name=c:\\myfile": "not-a-match"
         },
-        "windows_files.WindowsSha256File": {
+        "windows_files.Sha256File": {
             "name=c:\\myfile": "not-a-match"
         },
-        "windows_files.WindowsMd5File": {
+        "windows_files.Md5File": {
             "name=c:\\myfile": "not-a-match"
         }
     },

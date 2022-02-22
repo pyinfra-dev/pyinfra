@@ -6,7 +6,7 @@ from dateutil.parser import parse as parse_date
 from pyinfra.api import FactBase
 
 
-class WindowsHome(FactBase):
+class Home(FactBase):
     '''
     Returns the home directory of the current user.
     '''
@@ -19,7 +19,7 @@ class WindowsHome(FactBase):
         return ''.join(output).replace('\n', '')
 
 
-class WindowsHostname(FactBase):
+class Hostname(FactBase):
     '''
     Returns the current hostname of the server.
     '''
@@ -31,7 +31,7 @@ class WindowsHostname(FactBase):
         return ''.join(output).replace('\n', '')
 
 
-class WindowsLastReboot(FactBase):
+class LastReboot(FactBase):
     '''
     Returns the date and time of the last reboot.
     '''
@@ -44,7 +44,7 @@ class WindowsLastReboot(FactBase):
         return ''.join(output).replace('\n', '')
 
 
-class WindowsOs(FactBase):
+class Os(FactBase):
     '''
     Returns the OS name according to ``systeminfo``.
     '''
@@ -60,7 +60,7 @@ class WindowsOs(FactBase):
         return new_output
 
 
-class WindowsBios(FactBase):
+class Bios(FactBase):
     '''
     Returns the BIOS info.
     '''
@@ -132,7 +132,7 @@ def _format_windows_for_key(primary_key, output, return_primary_key=True):
         return lines
 
 
-class WindowsProcessors(FactBase):
+class Processors(FactBase):
     '''
     Returns the processors info.
     '''
@@ -144,7 +144,7 @@ class WindowsProcessors(FactBase):
         return _format_windows_for_key('DeviceID', output)
 
 
-class WindowsOsVersion(FactBase):
+class OsVersion(FactBase):
     '''
     Returns the OS version according to ``systeminfo``.
     '''
@@ -160,7 +160,7 @@ class WindowsOsVersion(FactBase):
         return new_output
 
 
-class WindowsSystemType(FactBase):
+class SystemType(FactBase):
     '''
     Returns the system type according to ``systeminfo``.
     '''
@@ -176,7 +176,7 @@ class WindowsSystemType(FactBase):
         return new_output
 
 
-class WindowsDate(FactBase):
+class Date(FactBase):
     '''
     Returns the current datetime on the server.
     '''
@@ -191,7 +191,7 @@ class WindowsDate(FactBase):
         return parse_date(new_output)
 
 
-class WindowsLocalGroups(FactBase):
+class LocalGroups(FactBase):
     '''
     Returns a list of groups on the system.
     '''
@@ -211,7 +211,7 @@ class WindowsLocalGroups(FactBase):
         return groups
 
 
-class WindowsWhere(FactBase):
+class Where(FactBase):
     '''
     Returns the full path for a command, if available.
     '''
@@ -227,7 +227,7 @@ class WindowsWhere(FactBase):
         return output[0].rstrip()
 
 
-class WindowsHotfixes(FactBase):
+class Hotfixes(FactBase):
     '''
     Returns the Windows hotfixes.
     '''
@@ -239,7 +239,7 @@ class WindowsHotfixes(FactBase):
         return _format_windows_for_key('HotFixID', output)
 
 
-class WindowsLocalDrivesInfo(FactBase):
+class LocalDrivesInfo(FactBase):
     '''
     Returns the Windows local drives info.
     '''
@@ -252,7 +252,7 @@ class WindowsLocalDrivesInfo(FactBase):
         return _format_windows_for_key('DeviceID', output)
 
 
-class WindowsLoggedInUserInfo(FactBase):
+class LoggedInUserInfo(FactBase):
     '''
     Returns the Windows user logged in info.
     '''
@@ -265,7 +265,7 @@ class WindowsLoggedInUserInfo(FactBase):
         return _format_windows_for_key('Name', output)
 
 
-class WindowsLogonSessionInfo(FactBase):
+class LogonSessionInfo(FactBase):
     '''
     Returns the Windows user logon session info.
     '''
@@ -277,7 +277,7 @@ class WindowsLogonSessionInfo(FactBase):
         return _format_windows_for_key('LogonId', output)
 
 
-class WindowsAliases(FactBase):
+class Aliases(FactBase):
     '''
     Returns the Windows aliases.
     '''
@@ -289,7 +289,7 @@ class WindowsAliases(FactBase):
         return _format_windows_for_key('Name', output)
 
 
-class WindowsServices(FactBase):
+class Services(FactBase):
     '''
     Returns the Windows services.
     '''
@@ -301,7 +301,7 @@ class WindowsServices(FactBase):
         return _format_windows_for_key('Name', output)
 
 
-class WindowsService(FactBase):
+class Service(FactBase):
     '''
     Returns info about a Windows service.
     '''
@@ -313,7 +313,7 @@ class WindowsService(FactBase):
         return _format_windows_for_key('Name', output, return_primary_key=False)
 
 
-class WindowsProcesses(FactBase):
+class Processes(FactBase):
     '''
     Returns the Windows processes.
     '''
@@ -325,7 +325,7 @@ class WindowsProcesses(FactBase):
         return _format_windows_for_key('Id', output)
 
 
-class WindowsNetworkConfiguration(FactBase):
+class NetworkConfiguration(FactBase):
     '''
     Returns the Windows network configuration.
     '''
@@ -337,7 +337,7 @@ class WindowsNetworkConfiguration(FactBase):
         return _format_windows_for_key('Index', output)
 
 
-class WindowsInstallerApplications(FactBase):
+class InstallerApplications(FactBase):
     '''
     Returns the Windows installer applications.
     '''
@@ -349,7 +349,7 @@ class WindowsInstallerApplications(FactBase):
         return _format_windows_for_key('IdentifyingNumber', output)
 
 
-class WindowsComputerInfo(FactBase):
+class ComputerInfo(FactBase):
     '''
     Returns the Windows info.
     '''
