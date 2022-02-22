@@ -6,7 +6,7 @@ for a deploy.
 
 import re
 
-from inspect import getcallargs, isclass
+from inspect import getcallargs
 from socket import (
     error as socket_error,
     timeout as timeout_error,
@@ -15,7 +15,6 @@ from socket import (
 import click
 import gevent
 
-from gevent.lock import BoundedSemaphore
 from paramiko import SSHException
 
 from pyinfra import logger
@@ -29,17 +28,12 @@ from pyinfra.api.util import (
     log_host_command_error,
     make_hash,
     print_host_combined_output,
-    underscore,
 )
 from pyinfra.connectors.util import split_combined_output
 from pyinfra.progress import progress_spinner
 
 from .arguments import get_executor_kwarg_keys
 
-
-# Index of snake_case facts -> CamelCase classes
-FACTS = {}
-FACT_LOCK = BoundedSemaphore()
 
 SUDO_REGEX = r'^sudo: unknown user:'
 SU_REGEXES = (
@@ -48,39 +42,13 @@ SU_REGEXES = (
 )
 
 
-def is_fact(name):
-    return name in FACTS
-
-
-def get_fact_class(name):
-    return FACTS[name]
-
-
-def get_fact_names():
-    '''
-    Returns a list of available facts in camel_case format.
-    '''
-
-    return list(FACTS.keys())
-
-
-class FactMeta(type):
-    '''
-    Metaclass to dynamically build the facts index.
-    '''
-
+class FactNameMeta(type):
     def __init__(cls, name, bases, attrs):
-        if attrs.get('abstract'):
-            return
-
-        fact_name = underscore(name)
-        cls.name = fact_name
-
-        # Get the an instance of the fact, attach to facts
-        FACTS[fact_name] = cls
+        module_name = cls.__module__.replace('pyinfra.facts.', '')
+        cls.name = f'{module_name}.{cls.__name__}'
 
 
-class FactBase(object, metaclass=FactMeta):
+class FactBase(object, metaclass=FactNameMeta):
     abstract = True
 
     shell_executable = None
@@ -104,17 +72,13 @@ class FactBase(object, metaclass=FactMeta):
         }
 
 
-class ShortFactBase(object, metaclass=FactMeta):
+class ShortFactBase(object, metaclass=FactNameMeta):
     fact = None
 
 
 def get_short_facts(state, host, short_fact, **kwargs):
-    facts = get_fact(state, host, short_fact.fact.name, **kwargs)
-
-    return {
-        host: short_fact.process_data(data)
-        for host, data in facts.items()
-    }
+    fact_data = get_fact(state, host, short_fact.fact, **kwargs)
+    return short_fact.process_data(fact_data)
 
 
 def _make_command(command_attribute, host_args):
@@ -170,13 +134,16 @@ def get_facts(state, *args, **kwargs):
 def get_fact(
     state,
     host,
-    name_or_cls,
+    cls,
     args=None,
     kwargs=None,
     ensure_hosts=None,
     apply_failed_hosts=True,
     fact_hash=None,
 ):
+    if issubclass(cls, ShortFactBase):
+        return get_short_facts(state, host, cls, args=args, ensure_hosts=ensure_hosts)
+
     with host.facts_lock:
         if fact_hash and fact_hash in host.facts:
             return host.facts[fact_hash]
@@ -184,7 +151,7 @@ def get_fact(
         return _get_fact(
             state,
             host,
-            name_or_cls,
+            cls,
             args,
             kwargs,
             ensure_hosts,
@@ -196,22 +163,15 @@ def get_fact(
 def _get_fact(
     state,
     host,
-    name_or_cls,
+    cls,
     args=None,
     kwargs=None,
     ensure_hosts=None,
     apply_failed_hosts=True,
     fact_hash=None,
 ):
-    if isclass(name_or_cls) and issubclass(name_or_cls, (FactBase, ShortFactBase)):
-        fact = name_or_cls()
-        name = fact.name
-    else:
-        fact = get_fact_class(name_or_cls)()
-        name = name_or_cls
-
-    if isinstance(fact, ShortFactBase):
-        return get_short_facts(state, host, fact, args=args, ensure_hosts=ensure_hosts)
+    fact = cls()
+    name = fact.name
 
     args = args or ()
     kwargs = kwargs or {}
