@@ -9,7 +9,7 @@
     "facts": {
         "windows.Date": "datetime:2015-01-01T00:00:00",
         "windows_files.File": {
-            "name=c:\\myfile": {
+            "path=c:\\myfile": {
                 "mtime": "datetime:2015-01-01T00:00:00"
             }
         }

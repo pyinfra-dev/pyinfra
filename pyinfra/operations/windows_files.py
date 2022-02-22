@@ -60,7 +60,7 @@ def download(
         )
     '''
 
-    info = host.get_fact(File, name=dest)
+    info = host.get_fact(File, path=dest)
     # Destination is a directory?
     if info is False:
         raise OperationError(
@@ -87,15 +87,15 @@ def download(
                 download = True
 
         if sha1sum:
-            if sha1sum != host.get_fact(Sha1File, name=dest):
+            if sha1sum != host.get_fact(Sha1File, path=dest):
                 download = True
 
         if sha256sum:
-            if sha256sum != host.get_fact(Sha256File, name=dest):
+            if sha256sum != host.get_fact(Sha256File, path=dest):
                 download = True
 
         if md5sum:
-            if md5sum != host.get_fact(Md5File, name=dest):
+            if md5sum != host.get_fact(Md5File, path=dest):
                 download = True
 
     # If we download, always do user/group/mode as SSH user may be different
@@ -195,7 +195,7 @@ def put(
             raise IOError('No such file: {0}'.format(local_file))
 
     mode = ensure_mode_int(mode)
-    remote_file = host.get_fact(File, name=dest)
+    remote_file = host.get_fact(File, path=dest)
 
     if create_remote_dir:
         yield from _create_remote_dir(state, host, dest, user, group)
@@ -213,7 +213,7 @@ def put(
     # File exists, check sum and check user/group/mode if supplied
     else:
         local_sum = get_file_sha1(src)
-        remote_sum = host.get_fact(Sha1File, name=dest)
+        remote_sum = host.get_fact(Sha1File, path=dest)
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
@@ -286,7 +286,7 @@ def file(
         raise OperationTypeError('Name must be a string')
 
     # mode = ensure_mode_int(mode)
-    info = host.get_fact(File, name=path)
+    info = host.get_fact(File, path=path)
 
     # Not a file?!
     if info is False:
@@ -397,7 +397,7 @@ def directory(
     if not isinstance(path, str):
         raise OperationTypeError('Name must be a string')
 
-    info = host.get_fact(Directory, name=path)
+    info = host.get_fact(Directory, path=path)
 
     # Not a directory?!
     if info is False:
@@ -414,7 +414,7 @@ def directory(
         # Somewhat bare fact, should flesh out more
         host.create_fact(
             Date,
-            kwargs={'name': path},
+            kwargs={'path': path},
             data={'type': 'directory'},
         )
 
@@ -505,7 +505,7 @@ def link(
     if present and not target:
         raise OperationError('If present is True target must be provided')
 
-    info = host.get_fact(Link, name=path)
+    info = host.get_fact(Link, path=path)
 
     # Not a link?
     if info is not None and not info:

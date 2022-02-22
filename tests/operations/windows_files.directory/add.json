@@ -7,7 +7,7 @@
     },
     "facts": {
         "windows_files.Directory": {
-            "name=testdir": null
+            "path=testdir": null
         }
     },
     "commands": [

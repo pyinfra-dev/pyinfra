@@ -7,7 +7,7 @@
     },
     "facts": {
         "windows_files.Link": {
-            "name=testlink": false
+            "path=testlink": false
         }
     },
     "exception": {

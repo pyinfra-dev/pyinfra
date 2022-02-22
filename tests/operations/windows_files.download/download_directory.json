@@ -7,7 +7,7 @@
     },
     "facts": {
         "windows_files.File": {
-            "name=c:\\": false
+            "path=c:\\": false
         }
     },
     "exception": {
