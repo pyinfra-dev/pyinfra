@@ -16,14 +16,6 @@ class TestCliEagerFlags(TestCase):
         result = run_cli('--help')
         assert result.exit_code == 0, result.stdout
 
-    def test_print_facts_list(self):
-        result = run_cli('--facts')
-        assert result.exit_code == 0, result.stdout
-
-    def test_print_operations_list(self):
-        result = run_cli('--operations')
-        assert result.exit_code == 0, result.stdout
-
 
 class TestDeployCli(PatchSSHTestCase):
     def setUp(self):
@@ -115,7 +107,7 @@ class TestFactCli(PatchSSHTestCase):
             'not_a_module.NotAFact',
         )
         assert result.exit_code == 1, result.stdout
-        assert 'No such module: not_a_module' in result.stdout
+        assert 'No such module: `not_a_module`' in result.stdout
 
     def test_invalid_fact_class(self):
         result = run_cli(
@@ -124,16 +116,7 @@ class TestFactCli(PatchSSHTestCase):
             'server.NotAFact',
         )
         assert result.exit_code == 1, result.stdout
-        assert 'No such fact: server.NotAFact' in result.stdout
-
-    def test_get_facts_legacy(self):
-        result = run_cli(
-            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
-            'fact',
-            'os',
-        )
-        assert result.exit_code == 0, result.stdout
-        assert '"somehost": null' in result.stdout
+        assert 'No such fact: `server.NotAFact`' in result.stdout
 
 
 class TestExecCli(PatchSSHTestCase):

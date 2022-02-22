@@ -31,10 +31,8 @@ from .inventory import make_inventory
 from .log import setup_logging
 from .prints import (
     print_facts,
-    print_facts_list,
     print_inventory,
     print_meta,
-    print_operations_list,
     print_results,
     print_state_facts,
     print_state_operations,
@@ -54,33 +52,6 @@ def _exit():
     if ctx_state.isset() and state.failed_hosts:
         sys.exit(1)
     sys.exit(0)
-
-
-def _print_facts(ctx, param, value):
-    if not value:
-        return
-
-    click.echo(click.style(
-        '--facts is deprecated and will be removed in the future.',
-        'yellow',
-    ), err=True)
-
-    click.echo('--> Available facts:', err=True)
-    print_facts_list()
-    ctx.exit()
-
-
-def _print_operations(ctx, param, value):
-    if not value:
-        return
-
-    click.echo(click.style(
-        '--operations is deprecated and will be removed in the future.',
-        'yellow',
-    ), err=True)
-    click.echo('--> Available operations:', err=True)
-    print_operations_list()
-    ctx.exit()
 
 
 def _print_support(ctx, param, value):
@@ -253,17 +224,6 @@ def cli(*args, **kwargs):
 
 if '--help' not in sys.argv:
     click.option(
-        '--facts', is_flag=True, is_eager=True, callback=_print_facts,
-        help='Print available facts list and exit.',
-    )(cli)
-    click.option(
-        'print_operations', '--operations',
-        is_flag=True,
-        is_eager=True,
-        callback=_print_operations,
-        help='Print available operations list and exit.',
-    )(cli)
-    click.option(
         '--debug-data', is_flag=True, default=False,
         help='Print host/group data before connecting and exit.',
     )(cli)
@@ -278,7 +238,7 @@ def _main(
     parallel, fail_percent, data, config_filename,
     dry, limit, no_wait, serial, quiet,
     debug, debug_data, debug_facts, debug_operations,
-    facts=None, print_operations=None, support=None,
+    support=None,
 ):
     # Setup working directory
     #
