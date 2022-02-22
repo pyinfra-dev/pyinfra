@@ -36,8 +36,20 @@ class TestCliExceptions(TestCase):
             'No deploy file: nop.py',
         )
 
-    def test_bad_fact(self):
+    def test_invalid_fact(self):
         self.assert_cli_exception(
             ['my-server.net', 'fact', 'thing'],
-            'No fact: thing',
+            'Invalid fact: `thing`, should be in the format `module.cls`',
+        )
+
+    def test_no_fact_module(self):
+        self.assert_cli_exception(
+            ['my-server.net', 'fact', 'not_a_module.SomeFact'],
+            'No such module: `not_a_module`',
+        )
+
+    def test_no_fact_cls(self):
+        self.assert_cli_exception(
+            ['my-server.net', 'fact', 'server.NotAFact'],
+            'No such fact: `server.NotAFact`',
         )
