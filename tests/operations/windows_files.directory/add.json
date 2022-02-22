@@ -6,7 +6,7 @@
         "recursive": true
     },
     "facts": {
-        "windows_files.WindowsDirectory": {
+        "windows_files.Directory": {
             "name=testdir": null
         }
     },

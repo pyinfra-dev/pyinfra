@@ -14,14 +14,14 @@ from pyinfra.api import (
     OperationTypeError,
 )
 from pyinfra.api.util import get_file_sha1
-from pyinfra.facts.windows import WindowsDate
+from pyinfra.facts.windows import Date
 from pyinfra.facts.windows_files import (
-    WindowsDirectory,
-    WindowsFile,
-    WindowsLink,
-    WindowsMd5File,
-    WindowsSha1File,
-    WindowsSha256File,
+    Directory,
+    File,
+    Link,
+    Md5File,
+    Sha1File,
+    Sha256File,
 )
 
 from .util.files import ensure_mode_int
@@ -60,7 +60,7 @@ def download(
         )
     '''
 
-    info = host.get_fact(WindowsFile, name=dest)
+    info = host.get_fact(File, name=dest)
     # Destination is a directory?
     if info is False:
         raise OperationError(
@@ -79,23 +79,23 @@ def download(
     else:
         if cache_time:
             # Time on files is not tz-aware, and will be the same tz as the server's time,
-            # so we can safely remove the tzinfo from WindowsDate before comparison.
+            # so we can safely remove the tzinfo from Date before comparison.
             cache_time = (
-                host.get_fact(WindowsDate).replace(tzinfo=None) - timedelta(seconds=cache_time)
+                host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
             )
             if info['mtime'] and info['mtime'] > cache_time:
                 download = True
 
         if sha1sum:
-            if sha1sum != host.get_fact(WindowsSha1File, name=dest):
+            if sha1sum != host.get_fact(Sha1File, name=dest):
                 download = True
 
         if sha256sum:
-            if sha256sum != host.get_fact(WindowsSha256File, name=dest):
+            if sha256sum != host.get_fact(Sha256File, name=dest):
                 download = True
 
         if md5sum:
-            if md5sum != host.get_fact(WindowsMd5File, name=dest):
+            if md5sum != host.get_fact(Md5File, name=dest):
                 download = True
 
     # If we download, always do user/group/mode as SSH user may be different
@@ -195,7 +195,7 @@ def put(
             raise IOError('No such file: {0}'.format(local_file))
 
     mode = ensure_mode_int(mode)
-    remote_file = host.get_fact(WindowsFile, name=dest)
+    remote_file = host.get_fact(File, name=dest)
 
     if create_remote_dir:
         yield from _create_remote_dir(state, host, dest, user, group)
@@ -213,7 +213,7 @@ def put(
     # File exists, check sum and check user/group/mode if supplied
     else:
         local_sum = get_file_sha1(src)
-        remote_sum = host.get_fact(WindowsSha1File, name=dest)
+        remote_sum = host.get_fact(Sha1File, name=dest)
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
@@ -286,7 +286,7 @@ def file(
         raise OperationTypeError('Name must be a string')
 
     # mode = ensure_mode_int(mode)
-    info = host.get_fact(WindowsFile, name=path)
+    info = host.get_fact(File, name=path)
 
     # Not a file?!
     if info is False:
@@ -397,7 +397,7 @@ def directory(
     if not isinstance(path, str):
         raise OperationTypeError('Name must be a string')
 
-    info = host.get_fact(WindowsDirectory, name=path)
+    info = host.get_fact(Directory, name=path)
 
     # Not a directory?!
     if info is False:
@@ -413,7 +413,7 @@ def directory(
 #
         # Somewhat bare fact, should flesh out more
         host.create_fact(
-            WindowsDate,
+            Date,
             kwargs={'name': path},
             data={'type': 'directory'},
         )
@@ -505,7 +505,7 @@ def link(
     if present and not target:
         raise OperationError('If present is True target must be provided')
 
-    info = host.get_fact(WindowsLink, name=path)
+    info = host.get_fact(Link, name=path)
 
     # Not a link?
     if info is not None and not info:
