@@ -7,7 +7,7 @@
     },
     "facts": {
         "windows_files.Link": {
-            "name=testlink": null
+            "path=testlink": null
         }
     },
     "commands": [

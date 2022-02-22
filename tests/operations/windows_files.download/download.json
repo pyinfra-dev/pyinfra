@@ -7,7 +7,7 @@
     },
     "facts": {
         "windows_files.File": {
-            "name=c:\\myfile": null
+            "path=c:\\myfile": null
         }
     },
     "commands": [

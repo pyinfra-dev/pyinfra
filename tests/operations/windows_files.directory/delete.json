@@ -5,7 +5,7 @@
     },
     "facts": {
         "windows_files.Directory": {
-            "name=testdir": {
+            "path=testdir": {
                 "type": "directory"
             }
         }

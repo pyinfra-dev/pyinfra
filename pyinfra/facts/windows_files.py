@@ -8,11 +8,11 @@ class File(FactBase):
     type = 'file'
     shell_executable = 'ps'
 
-    def command(self, name):
-        self.name = name
+    def command(self, path):
+        self.path = path
         return (
             'if (Test-Path "{0}") {{ Get-ItemProperty -Path "{0}" }}'
-        ).format(name)
+        ).format(path)
 
     def process(self, output):
         if len(output) < 7:
@@ -50,12 +50,12 @@ class Sha1File(FactBase):
     '''
     shell_executable = 'ps'
 
-    def command(self, name):
+    def command(self, path):
         return (
             'if (Test-Path "{0}") {{ '
             '(Get-FileHash -Algorithm SHA1 "{0}").hash'
             ' }}'
-        ).format(name)
+        ).format(path)
 
     def process(self, output):
         return output[0] if not output else None
@@ -67,12 +67,12 @@ class Sha256File(FactBase):
     '''
     shell_executable = 'ps'
 
-    def command(self, name):
+    def command(self, path):
         return (
             'if (Test-Path "{0}") {{ '
             '(Get-FileHash -Algorithm SHA256 "{0}").hash'
             ' }}'
-        ).format(name)
+        ).format(path)
 
     def process(self, output):
         return output[0] if len(output[0]) > 0 else None
@@ -84,12 +84,12 @@ class Md5File(FactBase):
     '''
     shell_executable = 'ps'
 
-    def command(self, name):
+    def command(self, path):
         return (
             'if (Test-Path "{0}") {{ '
             '(Get-FileHash -Algorithm MD5 "{0}").hash'
             ' }}'
-        ).format(name)
+        ).format(path)
 
     def process(self, output):
         return output[0] if len(output[0]) > 0 else None

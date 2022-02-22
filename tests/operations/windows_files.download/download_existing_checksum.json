@@ -10,16 +10,16 @@
     },
     "facts": {
         "windows_files.File": {
-            "name=c:\\myfile": {}
+            "path=c:\\myfile": {}
         },
         "windows_files.Sha1File": {
-            "name=c:\\myfile": "not-a-match"
+            "path=c:\\myfile": "not-a-match"
         },
         "windows_files.Sha256File": {
-            "name=c:\\myfile": "not-a-match"
+            "path=c:\\myfile": "not-a-match"
         },
         "windows_files.Md5File": {
-            "name=c:\\myfile": "not-a-match"
+            "path=c:\\myfile": "not-a-match"
         }
     },
     "commands": [
