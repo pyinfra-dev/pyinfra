@@ -23,7 +23,6 @@ import gevent
 from pyinfra import logger, state
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.api.facts import get_fact_class, is_fact
 from pyinfra.api.util import FallbackDict
 from pyinfra.context import ctx_config, ctx_host
 from pyinfra.progress import progress_spinner
@@ -201,35 +200,22 @@ def get_facts_and_args(commands):
             current_fact = None
 
         if '.' not in command:
-            args = None
-            if ':' in command:
-                command, args = command.split(':', 1)
-                args = args.split(',')
+            raise CliError(f'Invalid fact, should be in the format `module.cls`: {command}')
 
-            if not is_fact(command):
-                raise CliError('No fact: {0}'.format(command))
-
-            fact_cls = get_fact_class(command)
-            logger.warning((
-                'Named facts are deprecated, please use the explicit import: {0}.{1}'
-            ).format(fact_cls.__module__.replace('pyinfra.facts.', ''), fact_cls.__name__))
-            current_fact = (fact_cls, args, {})
-
-        else:
-            fact_module, fact_name = command.rsplit('.', 1)
+        fact_module, fact_name = command.rsplit('.', 1)
+        try:
+            fact_module = import_module('pyinfra.facts.{0}'.format(fact_module))
+        except ImportError:
             try:
-                fact_module = import_module('pyinfra.facts.{0}'.format(fact_module))
+                fact_module = import_module(str(fact_module))
             except ImportError:
-                try:
-                    fact_module = import_module(str(fact_module))
-                except ImportError:
-                    raise CliError('No such module: {0}'.format(fact_module))
+                raise CliError('No such module: {0}'.format(fact_module))
 
-            fact_cls = getattr(fact_module, fact_name, None)
-            if not fact_cls:
-                raise CliError('No such fact: {0}'.format(command))
+        fact_cls = getattr(fact_module, fact_name, None)
+        if not fact_cls:
+            raise CliError('No such fact: {0}'.format(command))
 
-            current_fact = (fact_cls, (), {})
+        current_fact = (fact_cls, (), {})
 
     if current_fact:
         facts.append(current_fact)

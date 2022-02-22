@@ -15,12 +15,7 @@ from pyinfra import (
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import NoGroupError, PyinfraError
-from pyinfra.api.facts import (
-    get_fact_class,
-    get_fact_names,
-    get_facts,
-    ShortFactBase,
-)
+from pyinfra.api.facts import get_facts
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.util import get_kwargs_str
@@ -320,26 +315,6 @@ def _main(
     # Debug (print) inventory + group data
     if operations[0] == 'debug-inventory':
         command = 'debug-inventory'
-
-    # Get all non-arg facts
-    elif operations[0] == 'all-facts':
-        click.echo(click.style(
-            'all-facts is deprecated and will be removed in the future.',
-            'yellow',
-        ), err=True)
-
-        command = 'fact'
-        fact_ops = []
-
-        for fact_name in get_fact_names():
-            fact_class = get_fact_class(fact_name)
-            if (
-                not issubclass(fact_class, ShortFactBase)
-                and not callable(fact_class.command)
-            ):
-                fact_ops.append((fact_class, None, None))
-
-        operations = fact_ops
 
     # Get one or more facts
     elif operations[0] == 'fact':

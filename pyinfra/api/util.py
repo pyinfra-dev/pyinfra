@@ -1,5 +1,3 @@
-import re
-
 from functools import wraps
 from hashlib import sha1
 from inspect import getframeinfo, getfullargspec, stack
@@ -243,15 +241,6 @@ def get_template(filename_or_string, is_string=False):
     ).from_string(template_string)
 
     return TEMPLATES[cache_key]
-
-
-def underscore(name):
-    '''
-    Transform CamelCase -> snake_case.
-    '''
-
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
 def sha1_hash(string):

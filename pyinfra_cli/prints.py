@@ -6,7 +6,6 @@ import sys
 import click
 
 from pyinfra import __version__, logger
-from pyinfra.api.facts import get_fact_names
 from pyinfra.api.host import Host
 from pyinfra.api.operation import get_operation_names
 

@@ -7,65 +7,9 @@ from pyinfra import logger
 from pyinfra.connectors import EXECUTION_CONNECTORS
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 
-from .exceptions import ConnectError, PyinfraError
-from .facts import (
-    create_host_fact,
-    delete_host_fact,
-    get_fact_class,
-    get_fact_names,
-    get_host_fact,
-    is_fact,
-)
+from .exceptions import ConnectError
+from .facts import create_host_fact, delete_host_fact, get_host_fact
 from .util import FallbackDict
-
-
-# TODO: remove this! COMPAT w/<2
-# This is the old-style `host.fact.<snake_case_name>` "magic" fact attributes
-# which have been replaced by the much cleaner `host.get_fact(fact_cls, *args, **kwargs)`.
-class HostFacts(object):
-    def __init__(self, host=None):
-        self.host = host
-
-    def __dir__(self):
-        return get_fact_names()
-
-    def _check_host(self):
-        if not self.host:
-            raise TypeError('Cannot call this function with no host!')
-
-    def __getattr__(self, key):
-        self._check_host()
-
-        if not is_fact(key):
-            raise AttributeError('No such fact: {0}'.format(key))
-
-        # Ensure this host is connected
-        connection = self.host.connect(reason='for {0} fact'.format(key))
-
-        # If we can't connect - fail immediately as we specifically need this
-        # fact for this host and without it we cannot satisfy the deploy.
-        if not connection:
-            raise PyinfraError('Could not connect to {0} for fact {1}!'.format(
-                self.host, key,
-            ))
-
-        # Expecting a function to return
-        if callable(getattr(get_fact_class(key), 'command', None)):
-            def wrapper(*args, **kwargs):
-                return get_host_fact(self.host.state, self.host, key, args=args, kwargs=kwargs)
-            return wrapper
-
-        # Expecting the fact as a return value
-        else:
-            return get_host_fact(self.host.state, self.host, key)
-
-    def _create(self, key, data=None, args=None):
-        self._check_host()
-        return create_host_fact(self.host.state, self.host, key, data, args)
-
-    def _delete(self, key, args=None):
-        self._check_host()
-        return delete_host_fact(self.host.state, self.host, key, args)
 
 
 class Host(object):
@@ -76,7 +20,6 @@ class Host(object):
 
     connection = None
     state = None
-    fact = HostFacts()  # this isn't usable, but provides support for dir()
 
     # Current context inside an @operation function
     in_op = False
@@ -98,9 +41,6 @@ class Host(object):
         self.groups = groups
         self.executor = executor
         self.name = name
-
-        # Attach the fact proxy
-        self.fact = HostFacts(self)
 
         # Arbitrary dict for connector use
         self.connector_data = {}
