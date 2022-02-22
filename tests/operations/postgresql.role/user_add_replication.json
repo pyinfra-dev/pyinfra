@@ -6,7 +6,7 @@
     },
     "facts": {
         "postgresql.PostgresqlRoles": {
-            "postgresql_host=None, postgresql_password=None, postgresql_port=None, postgresql_user=None": {}
+            "psql_host=None, psql_password=None, psql_port=None, psql_user=None": {}
         }
     },
     "commands": [

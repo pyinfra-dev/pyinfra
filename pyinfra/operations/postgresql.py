@@ -4,10 +4,10 @@ The PostgreSQL modules manage PostgreSQL databases, users and privileges.
 Requires the ``psql`` CLI executable on the target host(s).
 
 All operations in this module take four optional global arguments:
-    + ``postgresql_user``: the username to connect to postgresql to
-    + ``postgresql_password``: the password for the connecting user
-    + ``postgresql_host``: the hostname of the server to connect to
-    + ``postgresql_port``: the port of the server to connect to
+    + ``psql_user``: the username to connect to postgresql to
+    + ``psql_password``: the password for the connecting user
+    + ``psql_host``: the hostname of the server to connect to
+    + ``psql_port``: the port of the server to connect to
 
 See example/postgresql.py for detailed example
 
@@ -28,24 +28,24 @@ def sql(
     sql,
     database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
-    postgresql_user=None, postgresql_password=None,
-    postgresql_host=None, postgresql_port=None,
+    psql_user=None, psql_password=None,
+    psql_host=None, psql_port=None,
 ):
     '''
     Execute arbitrary SQL against PostgreSQL.
 
     + sql: SQL command(s) to execute
     + database: optional database to execute against
-    + postgresql_*: global module arguments, see above
+    + psql_*: global module arguments, see above
     '''
 
     yield make_execute_psql_command(
         sql,
         database=database,
-        user=postgresql_user,
-        password=postgresql_password,
-        host=postgresql_host,
-        port=postgresql_port,
+        user=psql_user,
+        password=psql_password,
+        host=psql_host,
+        port=psql_port,
     )
 
 
@@ -56,8 +56,8 @@ def role(
     password=None, login=True, superuser=False, inherit=False,
     createdb=False, createrole=False, replication=False, connection_limit=None,
     # Details for speaking to PostgreSQL via `psql` CLI
-    postgresql_user=None, postgresql_password=None,
-    postgresql_host=None, postgresql_port=None,
+    psql_user=None, psql_password=None,
+    psql_host=None, psql_port=None,
 ):
     '''
     Add/remove PostgreSQL roles.
@@ -72,7 +72,7 @@ def role(
     + createrole: whether the role is allowed to create new roles
     + replication: whether this role is allowed to replicate
     + connection_limit: the connection limit for the role
-    + postgresql_*: global module arguments, see above
+    + psql_*: global module arguments, see above
 
     Updates:
         pyinfra will not attempt to change existing roles - it will either
@@ -96,10 +96,10 @@ def role(
 
     roles = host.get_fact(
         PostgresqlRoles,
-        postgresql_user=postgresql_user,
-        postgresql_password=postgresql_password,
-        postgresql_host=postgresql_host,
-        postgresql_port=postgresql_port,
+        psql_user=psql_user,
+        psql_password=psql_password,
+        psql_host=psql_host,
+        psql_port=psql_port,
     )
 
     is_present = role in roles
@@ -109,10 +109,10 @@ def role(
         if is_present:
             yield make_execute_psql_command(
                 'DROP ROLE "{0}"'.format(role),
-                user=postgresql_user,
-                password=postgresql_password,
-                host=postgresql_host,
-                port=postgresql_port,
+                user=psql_user,
+                password=psql_password,
+                host=psql_host,
+                port=psql_port,
             )
         else:
             host.noop('postgresql role {0} does not exist'.format(role))
@@ -141,10 +141,10 @@ def role(
 
         yield make_execute_psql_command(
             StringCommand(*sql_bits),
-            user=postgresql_user,
-            password=postgresql_password,
-            host=postgresql_host,
-            port=postgresql_port,
+            user=psql_user,
+            password=psql_password,
+            host=psql_host,
+            port=psql_port,
         )
     else:
         host.noop('postgresql role {0} exists'.format(role))
@@ -158,8 +158,8 @@ def database(
     lc_collate=None, lc_ctype=None, tablespace=None,
     connection_limit=None,
     # Details for speaking to PostgreSQL via `psql` CLI
-    postgresql_user=None, postgresql_password=None,
-    postgresql_host=None, postgresql_port=None,
+    psql_user=None, psql_password=None,
+    psql_host=None, psql_port=None,
 ):
     '''
     Add/remove PostgreSQL databases.
@@ -173,7 +173,7 @@ def database(
     + lc_ctype: lc_ctype of the database
     + tablespace: the tablespace to use for the template
     + connection_limit: the connection limit to apply to the database
-    + postgresql_*: global module arguments, see above
+    + psql_*: global module arguments, see above
 
     Updates:
         pyinfra will not attempt to change existing databases - it will either
@@ -196,10 +196,10 @@ def database(
 
     current_databases = host.get_fact(
         PostgresqlDatabases,
-        postgresql_user=postgresql_user,
-        postgresql_password=postgresql_password,
-        postgresql_host=postgresql_host,
-        postgresql_port=postgresql_port,
+        psql_user=psql_user,
+        psql_password=psql_password,
+        psql_host=psql_host,
+        psql_port=psql_port,
     )
 
     is_present = database in current_databases
@@ -208,10 +208,10 @@ def database(
         if is_present:
             yield make_execute_psql_command(
                 'DROP DATABASE "{0}"'.format(database),
-                user=postgresql_user,
-                password=postgresql_password,
-                host=postgresql_host,
-                port=postgresql_port,
+                user=psql_user,
+                password=psql_password,
+                host=psql_host,
+                port=psql_port,
             )
         else:
             host.noop('postgresql database {0} does not exist'.format(database))
@@ -235,10 +235,10 @@ def database(
 
         yield make_execute_psql_command(
             StringCommand(*sql_bits),
-            user=postgresql_user,
-            password=postgresql_password,
-            host=postgresql_host,
-            port=postgresql_port,
+            user=psql_user,
+            password=psql_password,
+            host=psql_host,
+            port=psql_port,
         )
     else:
         host.noop('postgresql database {0} exists'.format(database))
@@ -248,15 +248,15 @@ def database(
 def dump(
     dest, database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
-    postgresql_user=None, postgresql_password=None,
-    postgresql_host=None, postgresql_port=None,
+    psql_user=None, psql_password=None,
+    psql_host=None, psql_port=None,
 ):
     '''
     Dump a PostgreSQL database into a ``.sql`` file. Requires ``pg_dump``.
 
     + dest: name of the file to dump the SQL to
     + database: name of the database to dump
-    + postgresql_*: global module arguments, see above
+    + psql_*: global module arguments, see above
 
     Example:
 
@@ -274,10 +274,10 @@ def dump(
     yield StringCommand(make_psql_command(
         executable='pg_dump',
         database=database,
-        user=postgresql_user,
-        password=postgresql_password,
-        host=postgresql_host,
-        port=postgresql_port,
+        user=psql_user,
+        password=psql_password,
+        host=psql_host,
+        port=psql_port,
     ), '>', dest)
 
 
@@ -285,15 +285,15 @@ def dump(
 def load(
     src, database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
-    postgresql_user=None, postgresql_password=None,
-    postgresql_host=None, postgresql_port=None,
+    psql_user=None, psql_password=None,
+    psql_host=None, psql_port=None,
 ):
     '''
     Load ``.sql`` file into a database.
 
     + src: the filename to read from
     + database: name of the database to import into
-    + postgresql_*: global module arguments, see above
+    + psql_*: global module arguments, see above
 
     Example:
 
@@ -310,8 +310,8 @@ def load(
 
     yield StringCommand(make_psql_command(
         database=database,
-        user=postgresql_user,
-        password=postgresql_password,
-        host=postgresql_host,
-        port=postgresql_port,
+        user=psql_user,
+        password=psql_password,
+        host=psql_host,
+        port=psql_port,
     ), '<', src)
