@@ -77,7 +77,7 @@ def _get_groups_from_filename(inventory_filename):
     }
 
 
-def make_inventory(inventory_filename, override_data=None, cwd=None):
+def make_inventory(inventory_filename, override_data=None, cwd=None, group_data_directories=None):
     '''
     Builds a ``pyinfra.api.Inventory`` from the filesystem. If the file does not exist
     and doesn't contain a / attempts to use that as the only hostname.
@@ -142,6 +142,9 @@ def make_inventory(inventory_filename, override_data=None, cwd=None):
     inventory_dirname = path.abspath(path.dirname(inventory_filename))
     if inventory_dirname != cwd:
         possible_group_data_folders.append(inventory_dirname)
+
+    if group_data_directories:
+        possible_group_data_folders.extend(group_data_directories)
 
     group_data = defaultdict(lambda: dict)
 

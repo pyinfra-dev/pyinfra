@@ -87,6 +87,11 @@ def _print_support(ctx, param, value):
     help='Override data values, format key=value.',
 )
 @click.option(
+    '--group-data',
+    multiple=True,
+    help='Paths to load additional group data from (overrides matching keys).',
+)
+@click.option(
     '--config',
     'config_filename',
     help='Specify config file to use (default: config.py).',
@@ -235,7 +240,7 @@ def _main(
     winrm_username, winrm_password, winrm_port,
     winrm_transport, shell_executable,
     sudo, sudo_user, use_sudo_password, su_user,
-    parallel, fail_percent, data, config_filename,
+    parallel, fail_percent, data, group_data, config_filename,
     dry, limit, no_wait, serial, quiet,
     debug, debug_data, debug_facts, debug_operations,
     support=None,
@@ -410,6 +415,7 @@ def _main(
         inventory,
         cwd=state.cwd,
         override_data=override_data,
+        group_data_directories=group_data,
     )
     ctx_inventory.set(inventory)
 
