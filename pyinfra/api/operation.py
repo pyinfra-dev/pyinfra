@@ -29,18 +29,6 @@ from .util import (
 )
 
 
-# List of available operation names
-OPERATIONS = []
-
-
-def get_operation_names():
-    '''
-    Returns a list of available operations.
-    '''
-
-    return OPERATIONS
-
-
 class OperationMeta(object):
     def __init__(self, hash=None, commands=None):
         # Wrap all the attributes
@@ -124,14 +112,6 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
             f.is_idempotent = is_idempotent
             return operation(f, _call_location=get_call_location())
         return decorator
-
-    # Index the operation!
-    # TODO: remove this in v2
-    if func.__module__:
-        module_bits = func.__module__.split('.')
-        module_name = module_bits[-1]
-        op_name = '.'.join((module_name, func.__name__))
-        OPERATIONS.append(op_name)
 
     # Check whether an operation is "legacy" - ie contains state=None, host=None kwargs
     # TODO: remove this! COMPAT with w/<v2

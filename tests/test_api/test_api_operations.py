@@ -19,7 +19,7 @@ from pyinfra.api import (
 )
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.api.operation import add_op, get_operation_names, OperationMeta
+from pyinfra.api.operation import add_op, OperationMeta
 from pyinfra.api.operations import run_ops
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.operations import files, python, server
@@ -33,9 +33,6 @@ from ..util import make_inventory
 
 
 class TestOperationMeta(TestCase):
-    def test_get_operation_names(self):
-        assert len(get_operation_names()) > 0
-
     def test_operation_meta_repr(self):
         op_meta = OperationMeta('hash', [])
         assert repr(op_meta) == 'commands:[] changed:False hash:hash'
