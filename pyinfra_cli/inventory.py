@@ -1,3 +1,4 @@
+from collections import defaultdict
 from os import listdir, path
 from types import GeneratorType
 
@@ -35,9 +36,11 @@ def _is_inventory_group(key, value):
     )
 
 
-def _get_group_data(cwd):
+def _get_group_data(dirname):
     group_data = {}
-    group_data_directory = path.join(cwd, 'group_data')
+    group_data_directory = path.join(dirname, 'group_data')
+
+    logger.debug(f'Checking possible group_data directory: {dirname}')
 
     if path.exists(group_data_directory):
         files = listdir(group_data_directory)
@@ -135,9 +138,17 @@ def make_inventory(inventory_filename, override_data=None, cwd=None):
     }
     fake_inventory = Inventory((all_hosts, all_data), **fake_groups)
 
+    possible_group_data_folders = [cwd]
+    inventory_dirname = path.abspath(path.dirname(inventory_filename))
+    if inventory_dirname != cwd:
+        possible_group_data_folders.append(inventory_dirname)
+
+    group_data = defaultdict(lambda: dict)
+
     with ctx_inventory.use(fake_inventory):
-        # Get all group data (group_data/*.py)
-        group_data = _get_group_data(cwd)
+        for folder in possible_group_data_folders:
+            for group_name, data in _get_group_data(folder).items():
+                group_data[group_name].update(data)
 
     # For each group load up any data
     for name, hosts in groups.items():
