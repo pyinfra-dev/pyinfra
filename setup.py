@@ -42,9 +42,9 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
     'codecov==2.1.12',
 
     # Linting
-    'flake8==3.8.3',
-    'flake8-commas==2.0.0',
-    'flake8-quotes==3.2.0',
+    'flake8==4.0.1',
+    'flake8-commas==2.1.0',
+    'flake8-quotes==3.3.1',
     'flake8-import-order==0.18.1',
 )
 
