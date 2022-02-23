@@ -73,7 +73,7 @@ class ContextManager(object):
         self.context = context_cls()
 
     def get(self):
-        return self.context._container.module
+        return getattr(self.context._container, 'module', None)
 
     def set(self, module):
         self.context._container.module = module
@@ -89,9 +89,10 @@ class ContextManager(object):
 
     @contextmanager
     def use(self, module):
+        old_module = self.get()
         self.set(module)
         yield
-        self.reset()
+        self.set(old_module)
 
 
 ctx_state = ContextManager('state', ContextObject)
