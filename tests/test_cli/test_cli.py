@@ -47,14 +47,6 @@ class TestOperationCli(PatchSSHTestCase):
         assert result.exit_code == 1, result.stdout
         assert 'No such operation: server.not_an_operation'
 
-    def test_deploy_inventory(self):
-        result = run_cli(
-            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
-            'server.shell',
-            '--debug-data',
-        )
-        assert result.exit_code == 0, result.stdout
-
     def test_deploy_operation(self):
         result = run_cli(
             path.join('tests', 'deploy', 'inventories', 'inventory.py'),
@@ -183,17 +175,6 @@ class TestExecCli(PatchSSHTestCase):
         )
         assert result.exit_code == 0, result.stdout
 
-    def test_exec_command_with_debug_data_limit(self):
-        result = run_cli(
-            path.join('tests', 'deploy', 'inventories', 'inventory.py'),
-            'exec',
-            '--debug-data',
-            '--limit', 'somehost',
-            '--',
-            'echo hi',
-        )
-        assert result.exit_code == 0, result.stdout
-
 
 class TestDirectMainExecution(PatchSSHTestCase):
     '''
@@ -213,7 +194,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 parallel=None, fail_percent=0, dry=False, limit=None, no_wait=False, serial=False,
                 winrm_username=None, winrm_password=None, winrm_port=None, winrm_transport=None,
                 shell_executable=None, quiet=False, data=tuple(),
-                debug=False, debug_data=False, debug_facts=False, debug_operations=False,
+                debug=False, debug_facts=False, debug_operations=False,
                 config_filename='config.py',
             )
             assert e.args == (0,)
