@@ -27,20 +27,3 @@ class TestStateApi(TestCase):
         assert context.exception.args[0] == (
             'pyinfra version requirement not met (requires >=100, running 99)'
         )
-
-    def test_require_pyinfra_min_version_ok(self):
-        config = Config(MIN_PYINFRA_VERSION=100)
-        inventory = make_inventory()
-
-        with patch('pyinfra.api.state.__version__', '100'):
-            State(inventory, config)
-
-    def test_pyinfra_min_version_ignored_when_required_version_set(self):
-        config = Config(
-            REQUIRE_PYINFRA_VERSION='==100',
-            MIN_PYINFRA_VERSION=1000,  # should be ignored
-        )
-        inventory = make_inventory()
-
-        with patch('pyinfra.api.state.__version__', '100'):
-            State(inventory, config)

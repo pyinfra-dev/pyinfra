@@ -117,20 +117,6 @@ class State(object):
         if config is None:
             config = Config()
 
-        # Error if our min version is not met
-        if config.MIN_PYINFRA_VERSION is not None:
-            # TODO: remove this
-            if config.REQUIRE_PYINFRA_VERSION is None:
-                config.REQUIRE_PYINFRA_VERSION = '>={0}'.format(config.MIN_PYINFRA_VERSION)
-                logger.warning(
-                    '`MIN_PYINFRA_VERSION` is deprecated, please use `REQUIRE_PYINFRA_VERSION`.',
-                )
-            else:
-                logger.warning(
-                    'Ignoring legacy `MIN_PYINFRA_VERSION` because '
-                    '`REQUIRE_PYINFRA_VERSION` also exists.',
-                )
-
         if config.REQUIRE_PYINFRA_VERSION is not None:
             running_version = parse_version(__version__)
             required_versions = Requirement.parse(
