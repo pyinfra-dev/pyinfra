@@ -4,7 +4,7 @@ Manage git repositories and configuration.
 
 import re
 
-from pyinfra import host, logger
+from pyinfra import host
 from pyinfra.api import operation, OperationError
 from pyinfra.facts.files import Directory
 from pyinfra.facts.git import GitBranch, GitConfig, GitTrackingBranch
@@ -165,7 +165,7 @@ def repo(
 @operation()
 def worktree(
     worktree,
-    repo=None, branch=None, create_branch=False, detached=False,
+    repo=None, detached=False,
     new_branch=None, commitish=None,
     pull=True, rebase=False, from_remote_branch=None,
     present=True, assume_repo_exists=False, force=False,
@@ -177,8 +177,6 @@ def worktree(
     + worktree: git working tree directory
     + repo: git main repository directory
     + detached: create a working tree with a detached HEAD
-    + branch: (deprecated)
-    + create_branch: (deprecated)
     + new_branch: local branch name created at the same time than the worktree
     + commitish: from which git commit, branch, ... the worktree is created
     + pull: pull any changes from a remote branch if set
@@ -278,35 +276,6 @@ def worktree(
             force=True,
         )
     '''
-
-    # handle deprecated arguments.
-    #  1) old api: branch=xxx, create_branch=True => git worktree add -b xxx <worktree_path>
-    #     new api: new_branch=xxx
-    #
-    #  2) old api: branch=xxx, create_branch=False => git worktree add <worktree_path> xxx
-    #     new api: commitish=xxx
-    if branch:
-        logger.warning(
-            'The `branch` and `create_branch` arguments are deprecated. '
-            'Please use `branch` and `commitish`.',
-        )
-
-        if create_branch:
-            if new_branch:
-                raise OperationError(
-                    'The deprecated arguments `branch` and `create_branch` are not compatible with'
-                    ' the new `branch` argument. Please use the new `branch` argument only.',
-                )
-            else:
-                new_branch = branch
-        else:
-            if commitish:
-                raise OperationError(
-                    'The deprecated arguments `branch` and `create_branch` are not compatible with'
-                    ' the new `commitish` argument. Please use the new `commitish` argument only.',
-                )
-            else:
-                commitish = branch
 
     # Doesn't exist & we want it
     if not host.get_fact(Directory, path=worktree) and present:
