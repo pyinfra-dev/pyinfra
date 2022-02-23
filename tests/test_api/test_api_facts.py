@@ -254,24 +254,3 @@ class TestOperationsApi(PatchSSHTestCase):
 
         assert fact_data == {anotherhost: cached_fact}
         fake_run_command.assert_not_called()
-
-    def test_get_fact_exception_non_executor_override_arguments(self):
-        inventory = make_inventory(hosts=('anotherhost',))
-        state = State(inventory, Config())
-
-        connect_all(state)
-
-        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
-            fake_run_command.return_value = MagicMock(), [('stdout', 'some-output')]
-
-            with self.assertRaises(PyinfraError) as context:
-                get_facts(
-                    state,
-                    Command,
-                    args=('yes',),
-                    kwargs={'_precondition': True},
-                )
-
-        assert context.exception.args[0] == (
-            'Global argument `_precondition` is not supported in facts.'
-        )
