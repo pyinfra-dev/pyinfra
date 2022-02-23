@@ -146,7 +146,7 @@ def make_inventory(inventory_filename, override_data=None, cwd=None, group_data_
     if group_data_directories:
         possible_group_data_folders.extend(group_data_directories)
 
-    group_data = defaultdict(lambda: dict)
+    group_data = defaultdict(dict)
 
     with ctx_inventory.use(fake_inventory):
         for folder in possible_group_data_folders:

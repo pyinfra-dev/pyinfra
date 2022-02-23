@@ -188,6 +188,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 inventory=path.join('tests', 'test_deploy', 'inventories', 'inventory.py'),
                 operations=['server.shell', 'echo hi'],
                 chdir=None,
+                group_data=None,
                 verbosity=0, ssh_user=None, ssh_port=None, ssh_key=None, ssh_key_password=None,
                 ssh_password=None,
                 sudo=False, sudo_user=None, use_sudo_password=False, su_user=None,
