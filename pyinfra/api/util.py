@@ -34,8 +34,11 @@ def get_file_path(state, filename):
 
     relative_to = state.cwd
 
+    print('CURRENT IS', state.current_exec_filename)
+    print('START?', filename.startswith('\\.'))
     if state.current_exec_filename and (filename.startswith('./') or filename.startswith('\\.')):
         relative_to = path.dirname(state.current_exec_filename)
+    print('PATH IS', relative_to, filename)
 
     return path.join(relative_to, filename)
 
