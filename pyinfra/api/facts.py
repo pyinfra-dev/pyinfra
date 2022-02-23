@@ -22,7 +22,6 @@ from pyinfra.api import StringCommand
 from pyinfra.api.arguments import pop_global_arguments
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import (
-    get_arg_value,
     get_kwargs_str,
     log_error_or_warning,
     log_host_command_error,
@@ -204,14 +203,8 @@ def _get_fact(
     if fact.shell_executable:
         executor_kwargs['shell_executable'] = fact.shell_executable
 
-    # Generate actual arguments by passing strings as jinja2 templates
-    host_kwargs = {
-        key: get_arg_value(state, host, arg)
-        for key, arg in kwargs.items()
-    }
-
-    command = _make_command(fact.command, host_kwargs)
-    requires_command = _make_command(fact.requires_command, host_kwargs)
+    command = _make_command(fact.command, kwargs)
+    requires_command = _make_command(fact.requires_command, kwargs)
     if requires_command:
         command = StringCommand(
             # Command doesn't exist, return 0 *or* run & return fact command
