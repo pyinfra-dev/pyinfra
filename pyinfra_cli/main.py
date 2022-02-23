@@ -230,13 +230,6 @@ def cli(*args, **kwargs):
             disconnect_all(state)
 
 
-if '--help' not in sys.argv:
-    click.option(
-        '--debug-data', is_flag=True, default=False,
-        help='Print host/group data before connecting and exit.',
-    )(cli)
-
-
 def _main(
     inventory, operations, verbosity, chdir,
     ssh_user, ssh_port, ssh_key, ssh_key_password, ssh_password,
@@ -245,7 +238,7 @@ def _main(
     sudo, sudo_user, use_sudo_password, su_user,
     parallel, fail_percent, data, group_data, config_filename,
     dry, limit, no_wait, serial, quiet,
-    debug, debug_data, debug_facts, debug_operations,
+    debug, debug_facts, debug_operations,
     support=None,
 ):
     # Setup working directory
@@ -452,12 +445,7 @@ def _main(
     # Initialise the state
     state.init(inventory, config, initial_limit=initial_limit)
 
-    if command == 'debug-inventory' or debug_data:
-        if debug_data:
-            logger.warning((
-                '--debug-data is deprecated, '
-                'please use `pyinfra INVENTORY debug-inventory` instead.'
-            ))
+    if command == 'debug-inventory':
         print_inventory(state)
         _exit()
 
