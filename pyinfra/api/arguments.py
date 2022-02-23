@@ -189,7 +189,9 @@ def pop_global_arguments(state, host, kwargs, keys_to_check=None):
 
     for _, kwarg_configs in OPERATION_KWARGS.items():
         for key, config in kwarg_configs.items():
-            if keys_to_check and key not in keys_to_check:
+            internal_key = _get_internal_key(key)
+
+            if keys_to_check and internal_key not in keys_to_check:
                 continue
 
             handler = None
@@ -200,8 +202,6 @@ def pop_global_arguments(state, host, kwargs, keys_to_check=None):
                 default = config.get('default')
                 if default:
                     default = default(state.config)
-
-            internal_key = _get_internal_key(key)
 
             host_default = getattr(host.data, key, None)
 
