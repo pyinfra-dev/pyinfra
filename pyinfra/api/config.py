@@ -17,11 +17,6 @@ config_defaults = {
     # Note: this can also include pyinfra, potentially replacing REQUIRE_PYINFRA_VERSION
     'REQUIRE_PACKAGES': None,
 
-    # COMPAT w/<1.1
-    # TODO: remove this in favour of above at v2
-    # Specify a minimum required pyinfra version for a deploy
-    'MIN_PYINFRA_VERSION': None,
-
     # All these can be overridden inside individual operation calls:
 
     # Switch to this user (from ssh_user) using su before executing operations
