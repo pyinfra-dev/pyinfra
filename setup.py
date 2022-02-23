@@ -63,8 +63,8 @@ DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
 
     # Dev debugging
     'ipython',
-    'ipdb==0.10.3',
-    'ipdbplugin==1.4.5',
+    'ipdb',
+    'ipdbplugin',
 
     # Lint spellchecking, dev only (don't fail CI)
     'flake8-spellcheck==0.12.1',
