@@ -6,7 +6,7 @@ Eg: ``pyinfra -> inventory-host.net <-> another-host.net``
 
 import shlex
 
-from pyinfra import host, logger, state
+from pyinfra import host, state
 from pyinfra.api import operation, OperationError
 from pyinfra.facts.files import File, FindInFile
 from pyinfra.facts.server import Home
@@ -70,17 +70,8 @@ def keyscan(hostname, force=False, port=22):
         )
 
 
-def _user_or_ssh_user(user, ssh_user):
-    if ssh_user:
-        logger.warning((
-            'The `ssh_user` argument is deprecated in `ssh.*` operations, '
-            'please use the `user` argument.'
-        ))
-    return user or ssh_user
-
-
 @operation(is_idempotent=False)
-def command(hostname, command, user=None, port=22, ssh_user=None):
+def command(hostname, command, user=None, port=22):
     '''
     Execute commands on other servers over SSH.
 
@@ -101,9 +92,6 @@ def command(hostname, command, user=None, port=22, ssh_user=None):
         )
     '''
 
-    # TODO: remove this (ssh_user is a legacy arg)
-    user = _user_or_ssh_user(user, ssh_user)
-
     command = shlex.quote(command)
 
     connection_target = hostname
@@ -121,7 +109,6 @@ def upload(
     user=None,
     use_remote_sudo=False,
     ssh_keyscan=False,
-    ssh_user=None,
 ):
     '''
     Upload files to other servers using ``scp``.
@@ -136,9 +123,6 @@ def upload(
     '''
 
     remote_filename = remote_filename or filename
-
-    # TODO: remove this (ssh_user is a legacy arg)
-    user = _user_or_ssh_user(user, ssh_user)
 
     # Figure out where we're connecting (host or user@host)
     connection_target = hostname
@@ -182,7 +166,6 @@ def download(
     port=22,
     user=None,
     ssh_keyscan=False,
-    ssh_user=None,
 ):
     '''
     Download files from other servers using ``scp``.
@@ -197,9 +180,6 @@ def download(
     '''
 
     local_filename = local_filename or filename
-
-    # TODO: remove this (ssh_user is a legacy arg)
-    user = _user_or_ssh_user(user, ssh_user)
 
     # Get local file info
     local_file_info = host.get_fact(File, path=local_filename)
@@ -219,8 +199,8 @@ def download(
 
     # Figure out where we're connecting (host or user@host)
     connection_target = hostname
-    if ssh_user:
-        connection_target = '@'.join((ssh_user, hostname))
+    if user:
+        connection_target = '@'.join((user, hostname))
 
     if ssh_keyscan:
         yield from keyscan(hostname)
