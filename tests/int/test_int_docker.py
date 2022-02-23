@@ -69,15 +69,6 @@ def test_int_docker_yum_on_centos(helpers):
 @pytest.mark.docker
 def test_int_docker_adhoc_fact_os(helpers):
     helpers.run(
-        'pyinfra @docker/ubuntu:18.04,@docker/centos:7.9.2009 fact os',
+        'pyinfra @docker/ubuntu:18.04,@docker/centos:7.9.2009 fact server.Os',
         expected_lines=['Gathering facts', 'Fact data'],
-    )
-
-
-@pytest.mark.int
-@pytest.mark.docker
-def test_int_docker_adhoc_all_facts(helpers):
-    helpers.run(
-        'pyinfra @docker/ubuntu:18.04,@docker/centos:7.9.2009 all-facts',
-        expected_lines=['Gathering facts', 'Loaded fact'],
     )
