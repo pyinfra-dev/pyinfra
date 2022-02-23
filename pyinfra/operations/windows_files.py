@@ -6,7 +6,7 @@ import ntpath
 import os
 from datetime import timedelta
 
-from pyinfra import host, logger, state
+from pyinfra import host, state
 from pyinfra.api import (
     FileUploadCommand,
     operation,
@@ -326,16 +326,6 @@ def file(
 #            yield chown(path, user, group)
 
 
-def windows_file(*args, **kwargs):
-    # COMPAT
-    # TODO: remove this
-    logger.warning((
-        'Use of `windows_files.windows_file` is deprecated, '
-        'please use `windows_files.file` instead.'
-    ))
-    return file(*args, **kwargs)
-
-
 def _create_remote_dir(state, host, remote_filename, user, group):
     # Always use POSIX style path as local might be Windows, remote always *nix
     remote_dirname = ntpath.dirname(remote_filename)
@@ -439,16 +429,6 @@ def directory(
 #            or (group and info['group'] != group)
 #        ):
 #            yield chown(path, user, group, recursive=recursive)
-
-
-def windows_directory(*args, **kwargs):
-    # COMPAT
-    # TODO: remove this
-    logger.warning((
-        'Use of `windows_files.windows_directory` is deprecated, '
-        'please use `windows_files.directory` instead.'
-    ))
-    return directory(*args, **kwargs)
 
 
 def _validate_path(path):
