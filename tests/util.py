@@ -4,8 +4,7 @@ import os
 from datetime import datetime
 from io import open
 from os import listdir, path
-
-from mock import patch
+from unittest.mock import patch
 
 from pyinfra.api import Config, Inventory
 from pyinfra.api.util import get_kwargs_str

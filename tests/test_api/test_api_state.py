@@ -1,6 +1,5 @@
 from unittest import TestCase
-
-from mock import patch
+from unittest.mock import patch
 
 from pyinfra.api import Config, State
 from pyinfra.api.exceptions import PyinfraError

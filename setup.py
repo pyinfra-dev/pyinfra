@@ -36,11 +36,10 @@ ANSIBLE_REQUIRES = (  # extras for parsing Ansible inventory
 
 TEST_REQUIRES = ANSIBLE_REQUIRES + (
     # Unit testing
-    'pytest==4.6.6',
-    'pytest-cov==2.8.1',
-    'coverage==4.5.4',
-    'mock==3.0.5',
-    'codecov==2.1.8',
+    'pytest==7.0.1',
+    'pytest-cov==3.0.0',
+    'coverage==6.2',
+    'codecov==2.1.12',
 
     # Linting
     'flake8==3.8.3',

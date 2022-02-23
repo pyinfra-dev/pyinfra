@@ -1,6 +1,5 @@
 from unittest import TestCase
-
-from mock import MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all

@@ -5,8 +5,8 @@ from socket import (
     gaierror,
 )
 from unittest import TestCase
+from unittest.mock import call, MagicMock, mock_open, patch
 
-from mock import call, MagicMock, mock_open, patch
 from paramiko import (
     AuthenticationException,
     PasswordRequiredException,

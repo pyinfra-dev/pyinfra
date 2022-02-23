@@ -5,8 +5,7 @@ import warnings
 from importlib import import_module
 from os import listdir, path
 from unittest import TestCase
-
-from mock import patch
+from unittest.mock import patch
 
 from pyinfra.api import (
     FileDownloadCommand,

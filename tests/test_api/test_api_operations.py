@@ -2,8 +2,7 @@ from collections import defaultdict
 from inspect import currentframe, getframeinfo
 from os import path
 from unittest import TestCase
-
-from mock import mock_open, patch
+from unittest.mock import mock_open, patch
 
 import pyinfra
 

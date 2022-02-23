@@ -1,8 +1,7 @@
 import shlex
 from subprocess import PIPE
 from unittest import TestCase
-
-from mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
