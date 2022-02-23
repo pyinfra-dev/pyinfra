@@ -54,7 +54,7 @@ class TestSSHConnector(TestCase):
         assert len(state.active_hosts) == 0
 
     def test_connect_all_password(self):
-        inventory = make_inventory(ssh_password='test')
+        inventory = make_inventory(override_data={'ssh_password': 'test'})
 
         # Get a host
         somehost = inventory.get_host('somehost')
