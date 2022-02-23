@@ -82,14 +82,6 @@ def add_op(state, op_func, *args, **kwargs):
 
 
 @memoize
-def show_set_name_warning(call_location):
-    logger.warning((
-        '{0}:\n\tUse of a `set` to name operations is deprecated, '
-        'please us the `name` keyword argument.'
-    ).format(call_location))
-
-
-@memoize
 def show_state_host_arguments_warning(call_location):
     logger.warning((
         '{0}:\n\tLegacy operation function detected! Operations should no longer define '
@@ -157,13 +149,6 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
 
         if name:
             names = {name}
-
-        # Look for a set as the first argument
-        # TODO: remove this! COMPAT w/<1
-        elif len(args) > 0 and isinstance(args[0], set):
-            show_set_name_warning(get_call_location())
-            names = args[0]
-            args = args[1:]
 
         # Generate an operation name if needed (Module/Operation format)
         else:
