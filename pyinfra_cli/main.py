@@ -421,17 +421,7 @@ def _main(
             try:
                 limit_hosts = inventory.get_group(limiter)
             except NoGroupError:
-                limits = limiter.split(',')
-                if len(limits) > 1:
-                    logger.warning((
-                        'Specifying comma separated --limit values is deprecated, '
-                        'please use multiple --limit options.'
-                    ))
-
-                limit_hosts = [
-                    host for host in inventory
-                    if any(fnmatch(host.name, match) for match in limits)
-                ]
+                limit_hosts = [host for host in inventory if fnmatch(host.name, limiter)]
 
             if not limit_hosts:
                 logger.warning('No host matches found for --limit pattern: {0}'.format(limiter))
