@@ -1,7 +1,7 @@
 {
     "args": ["remote-host.net", "remote_filename", "local_filename"],
     "kwargs": {
-        "ssh_user": "nick",
+        "user": "nick",
         "ssh_keyscan": true
     },
     "facts": {

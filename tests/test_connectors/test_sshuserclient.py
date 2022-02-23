@@ -47,7 +47,7 @@ class TestSSHUserConfigMissing(TestCase):
         get_ssh_config.cache = {}
 
     @patch(
-        'pyinfra.api.connectors.sshuserclient.client.path.exists',
+        'pyinfra.connectors.sshuserclient.client.path.exists',
         lambda path: False,
     )
     def test_load_ssh_config_no_exist(self):
