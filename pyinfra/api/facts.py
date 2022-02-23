@@ -20,7 +20,6 @@ from paramiko import SSHException
 from pyinfra import logger
 from pyinfra.api import StringCommand
 from pyinfra.api.arguments import pop_global_arguments
-from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import (
     get_kwargs_str,
     log_error_or_warning,
@@ -99,13 +98,6 @@ def _get_executor_kwargs(state, host, override_kwargs=None, override_kwarg_keys=
         if key not in override_kwarg_keys
     })
 
-    # Raise an exception if we have non-executor override kwargs (invalid in fact context)
-    for key in override_kwarg_keys:
-        if key not in get_executor_kwarg_keys():
-            raise PyinfraError((
-                'Global argument `_{0}` is not supported in facts.'
-            ).format(key))
-
     return {
         key: value
         for key, value in override_kwargs.items()
@@ -177,7 +169,12 @@ def _get_fact(
 
     # Get the defaults *and* overrides by popping from kwargs, executor kwargs passed
     # into get_fact override everything else (applied below).
-    override_kwargs, override_kwarg_keys = pop_global_arguments(state, host, kwargs)
+    override_kwargs, override_kwarg_keys = pop_global_arguments(
+        state,
+        host,
+        kwargs,
+        keys_to_check=get_executor_kwarg_keys(),
+    )
 
     executor_kwargs = _get_executor_kwargs(
         state,

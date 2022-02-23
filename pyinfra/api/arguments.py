@@ -162,7 +162,7 @@ def show_legacy_argument_host_data_warning(key):
     ).format(key))
 
 
-def pop_global_arguments(state, host, kwargs):
+def pop_global_arguments(state, host, kwargs, keys_to_check=None):
     '''
     Pop and return operation global keyword arguments, in preferred order:
 
@@ -189,6 +189,9 @@ def pop_global_arguments(state, host, kwargs):
 
     for _, kwarg_configs in OPERATION_KWARGS.items():
         for key, config in kwarg_configs.items():
+            if keys_to_check and key not in keys_to_check:
+                continue
+
             handler = None
             default = None
 
