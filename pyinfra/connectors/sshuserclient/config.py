@@ -48,7 +48,7 @@ paramiko.config.invoke = FakeInvoke
 def _expand_include_statements(file_obj, parsed_files=None):
     parsed_lines = []
 
-    for line in file_obj:
+    for line in file_obj.readlines():
         line = line.strip()
         if not line or line.startswith('#'):
             continue
