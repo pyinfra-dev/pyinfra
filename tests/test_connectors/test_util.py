@@ -1,8 +1,7 @@
 # encoding: utf-8
 
 from unittest import TestCase
-
-from mock import patch
+from unittest.mock import patch
 
 from pyinfra.api import Config, State
 from pyinfra.connectors.util import (

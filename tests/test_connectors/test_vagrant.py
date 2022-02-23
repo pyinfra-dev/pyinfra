@@ -1,8 +1,7 @@
 import json
 
 from unittest import TestCase
-
-from mock import mock_open, patch
+from unittest.mock import mock_open, patch
 
 from pyinfra.api.exceptions import InventoryError
 from pyinfra.connectors.vagrant import get_vagrant_options, make_names_data

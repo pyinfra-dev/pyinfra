@@ -1,6 +1,6 @@
 from unittest import TestCase
+from unittest.mock import mock_open, patch
 
-from mock import mock_open, patch
 from paramiko import ProxyCommand
 
 from pyinfra.connectors.sshuserclient import SSHClient
