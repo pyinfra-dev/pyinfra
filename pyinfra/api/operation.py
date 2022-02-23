@@ -19,7 +19,6 @@ from .command import StringCommand
 from .exceptions import OperationValueError, PyinfraError
 from .host import Host
 from .util import (
-    get_arg_value,
     get_args_kwargs_spec,
     get_call_location,
     get_caller_frameinfo,
@@ -254,13 +253,6 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
 
             op_meta[key] = global_value
 
-        # Add any meta kwargs (sudo, etc) to the meta - first parse any strings
-        # as jinja templates.
-        actual_global_kwargs = {
-            key: get_arg_value(state, host, a)
-            for key, a in global_kwargs.items()
-        }
-
         # Add any new names to the set
         op_meta['names'].update(names)
 
@@ -302,24 +294,10 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
         # Otherwise, flag as in-op and run it to get the commands
         host.in_op = True
         host.current_op_hash = op_hash
-        host.current_op_global_kwargs = actual_global_kwargs
-
-        # Generate actual arguments by parsing strings as jinja2 templates. This
-        # means you can string format arguments w/o generating multiple
-        # operations. Only affects top level operations, as must be run "in_op"
-        # so facts are gathered correctly.
-        actual_args = [
-            get_arg_value(state, host, a)
-            for a in args
-        ]
-
-        actual_kwargs = {
-            key: get_arg_value(state, host, a)
-            for key, a in kwargs.items()
-        }
+        host.current_op_global_kwargs = global_kwargs
 
         # Convert to list as the result may be a generator
-        commands = func(*actual_args, **actual_kwargs)
+        commands = func(*args, **kwargs)
         commands = [  # convert any strings -> StringCommand's
             StringCommand(command.strip())
             if isinstance(command, str) else command
@@ -340,7 +318,7 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
         # Add the server-relevant commands
         state.ops[host][op_hash] = {
             'commands': commands,
-            'global_kwargs': actual_global_kwargs,
+            'global_kwargs': global_kwargs,
         }
 
         # Return result meta for use in deploy scripts

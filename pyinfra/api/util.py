@@ -13,14 +13,10 @@ from jinja2 import (
     Environment,
     FileSystemLoader,
     StrictUndefined,
-    TemplateSyntaxError,
-    UndefinedError,
 )
 from paramiko import SSHException
 
 from pyinfra import logger
-
-from .exceptions import PyinfraError
 
 # 64kb chunks
 BLOCKSIZE = 65536
@@ -316,50 +312,6 @@ def log_host_command_error(host, e, timeout=0):
     # Still here? Re-raise!
     else:
         raise e
-
-
-@memoize
-def show_get_arg_value_warning():
-    logger.warning((
-        'Use of jinja2 templating in arguments is deprecated, '
-        'please use builtin Python string formatting.'
-    ))
-
-
-# TODO: remove this! COMPAT w/<1
-def get_arg_value(state, host, arg):
-    '''
-    This functions is **deprecated**.
-    '''
-
-    if isinstance(arg, str):
-        data = {
-            'host': host,
-            'inventory': state.inventory,
-        }
-
-        try:
-            rendered_arg = get_template(arg, is_string=True).render(data)
-        except (TemplateSyntaxError, UndefinedError) as e:
-            raise PyinfraError('Error in template string: {0}'.format(e))
-        else:
-            if rendered_arg != arg:
-                show_get_arg_value_warning()
-            return rendered_arg
-
-    elif isinstance(arg, list):
-        return [get_arg_value(state, host, value) for value in arg]
-
-    elif isinstance(arg, tuple):
-        return tuple(get_arg_value(state, host, value) for value in arg)
-
-    elif isinstance(arg, dict):
-        return {
-            key: get_arg_value(state, host, value)
-            for key, value in arg.items()
-        }
-
-    return arg
 
 
 def make_hash(obj):
