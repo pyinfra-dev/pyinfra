@@ -120,18 +120,7 @@ def _get_private_key(state, key_filename, key_password):
     if not key:
         if not key_file_exists:
             raise PyinfraError('No such private key file: {0}'.format(key_filename))
-
-        # TODO: upgrade min paramiko version to 2.7 and remove this (pyinfra v2)
-        extra_info = ''
-        from pkg_resources import get_distribution, parse_version
-        if get_distribution('paramiko').parsed_version < parse_version('2.7'):
-            extra_info = (
-                '\n    Paramiko versions under 2.7 do not support the latest OpenSSH key formats,'
-                ' upgrading may fix this error.'
-                '\n    For more information, see this issue: '
-                'https://github.com/Fizzadar/pyinfra/issues/548'
-            )
-        raise PyinfraError('Invalid private key file: {0}{1}'.format(key_filename, extra_info))
+        raise PyinfraError('Invalid private key file: {0}'.format(key_filename))
 
     # Load any certificate, names from OpenSSH:
     # https://github.com/openssh/openssh-portable/blob/049297de975b92adcc2db77e3fb7046c0e3c695d/ssh-keygen.c#L2453  # noqa: E501
