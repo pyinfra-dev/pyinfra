@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-from pyinfra import logger
 from pyinfra.connectors import ALL_CONNECTORS, EXECUTION_CONNECTORS
 
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
@@ -36,41 +35,13 @@ class Inventory(object):
     def __init__(
         self, names_data,
         override_data=None,
-        # The below are deprecated, override_data.X is now preferred
-        # TODO: remove these in v2
-        ssh_user=None, ssh_port=None, ssh_key=None,
-        ssh_key_password=None, ssh_password=None,
-        winrm_username=None, winrm_password=None,
-        winrm_port=None, winrm_transport=None,
         **groups
     ):
         # Setup basics
         self.groups = defaultdict(list)  # lists of Host objects
         self.host_data = defaultdict(dict)  # dict of name -> data
         self.group_data = defaultdict(dict)  # dict of name -> data
-
-        override_data = override_data or {}
-
-        # TODO: remove these in v2
-        for key, value in (
-            ('ssh_user', ssh_user),
-            ('ssh_key', ssh_key),
-            ('ssh_key_password', ssh_key_password),
-            ('ssh_port', ssh_port),
-            ('ssh_password', ssh_password),
-            ('winrm_username', winrm_username),
-            ('winrm_password', winrm_password),
-            ('winrm_port', winrm_port),
-            ('winrm_transport', winrm_transport),
-        ):
-            if value is not None:
-                logger.warning((
-                    'Use of `{0}` is deprecated when creating `Inventory` classes, '
-                    'please use `override_data.{0}`'
-                ).format(key))
-                override_data[key] = value
-
-        self.override_data = override_data
+        self.override_data = override_data or {}
 
         names, data = names_data
 
@@ -178,14 +149,6 @@ class Inventory(object):
         '''
 
         return iter(self.hosts.values())
-
-    def len_all_hosts(self):
-        logger.warning('`Inventory.len_all_hosts` is deprecated, please use `len(Inventory)`.')
-        return len(self)
-
-    def iter_all_hosts(self):
-        logger.warning('`Inventory.iter_all_hosts` is deprecated, please use `iter(Inventory)`.')
-        return iter(self)
 
     def iter_active_hosts(self):
         '''
