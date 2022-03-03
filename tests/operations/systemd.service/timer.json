@@ -2,7 +2,9 @@
     "args": ["logrotate.timer"],
     "facts": {
         "systemd.SystemdStatus": {
-            "logrotate.timer": false
+            "user_mode=False, machine=None, user_name=None": {
+                "logrotate.timer": false
+            }
         }
     },
     "commands": [

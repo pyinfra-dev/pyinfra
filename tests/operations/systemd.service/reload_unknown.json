@@ -4,7 +4,9 @@
         "reloaded": true
     },
     "facts": {
-        "systemd.SystemdStatus": {}
+        "systemd.SystemdStatus": {
+            "user_mode=False, machine=None, user_name=None": {}
+        }
     },
     "commands": [
         "if (systemctl status redis-server.service); then (true); (true); (systemctl reload redis-server.service); else (systemctl start redis-server.service); fi"

@@ -2,7 +2,9 @@
     "args": ["nginx.service"],
     "facts": {
         "systemd.SystemdStatus": {
-            "nginx.service": false
+            "user_mode=False, machine=None, user_name=None": {
+                "nginx.service": false
+            }
         },
         "server.Which": {
             "command=systemctl": true,
