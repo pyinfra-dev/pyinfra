@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
 import re
+from glob import glob
 from importlib import import_module
 from inspect import getargspec, getmembers
 from os import path
 from types import FunctionType
-
-from pyinfra import operations
 
 MODULE_DEF_LINE_MAX = 90
 
@@ -26,8 +25,15 @@ def _format_doc_line(line):
 def build_facts():
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, '..', 'docs'))
+    operations_dir = path.join(this_dir, '..', 'pyinfra', 'operations', '*.py')
 
-    for module_name in operations.__all__:
+    op_module_names = [
+        path.basename(name)[:-3]
+        for name in glob(operations_dir)
+        if not name.endswith('__init__.py')
+    ]
+
+    for module_name in op_module_names:
         lines = []
 
         print('--> Doing module: {0}'.format(module_name))

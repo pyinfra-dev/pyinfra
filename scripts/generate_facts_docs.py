@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
+from glob import glob
+from importlib import import_module
 from inspect import getargspec, getmembers, isclass
 from os import path
 from types import FunctionType, MethodType
 
-from pyinfra import facts
 from pyinfra.api.facts import FactBase, ShortFactBase
 
 
@@ -15,13 +16,18 @@ def _title_line(char, string):
 def build_facts():
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, '..', 'docs'))
+    facts_dir = path.join(this_dir, '..', 'pyinfra', 'facts', '*.py')
 
-    # Now we generate a facts.rst describing the use of the facts as:
-    # host.data.<snake_case_fact>
-    for module_name in sorted(facts.__all__):
+    fact_module_names = [
+        path.basename(name)[:-3]
+        for name in glob(facts_dir)
+        if not name.endswith('__init__.py')
+    ]
+
+    for module_name in sorted(fact_module_names):
         lines = []
         print('--> Doing fact module: {0}'.format(module_name))
-        module = getattr(facts, module_name)
+        module = import_module('pyinfra.facts.{0}'.format(module_name))
 
         full_title = '{0} Facts'.format(module_name.title())
         lines.append(full_title)
