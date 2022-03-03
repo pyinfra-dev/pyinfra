@@ -46,6 +46,7 @@ baseurl
 basic
 benchmarking
 blocksize
+bootloader
 bsdinit
 build
 bytecode
@@ -61,6 +62,7 @@ chocolately
 chown
 chroot
 cim
+codesign
 commitish
 comparator
 compat
@@ -150,9 +152,12 @@ greenlets
 groupname
 hacky
 hashability
+hiddenimports
 hklm
 homedir
 homepath
+hooksconfig
+hookspath
 hostnames
 hostport
 hotfixes
@@ -216,6 +221,7 @@ netsh
 nettools
 networkadapterconfiguration
 nl
+noarchive
 nobest
 nofile
 none
@@ -235,6 +241,7 @@ osversion
 pacman
 paramiko
 pardir
+pathex
 pathlib
 pathname
 perf
@@ -267,6 +274,7 @@ pyi
 pyinfra
 pyinfrawinrmsession
 pywinrm
+pyz
 quickfixengineering
 rcd
 readlink
@@ -343,6 +351,7 @@ testpass
 testuser
 tftp
 tls
+tmpdir
 todo
 topdown
 tty
@@ -357,6 +366,7 @@ unitialised
 unmount
 up
 up2
+upx
 useradd
 utf16
 v
@@ -387,4 +397,5 @@ xbps
 yaml
 yarn
 zfill
+zipfiles
 zypper
