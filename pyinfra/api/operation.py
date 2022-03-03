@@ -89,7 +89,7 @@ def show_state_host_arguments_warning(call_location):
     ).format(call_location))
 
 
-def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location=None):
+def operation(func=None, pipeline_facts=None, is_idempotent=True, frame_offset=1):
     '''
     Decorator that takes a simple module function and turn it into the internal
     operation representation that consists of a list of commands + options
@@ -101,7 +101,7 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
         def decorator(f):
             f.pipeline_facts = pipeline_facts
             f.is_idempotent = is_idempotent
-            return operation(f, _call_location=get_call_location())
+            return operation(f, frame_offset=2)
         return decorator
 
     # Check whether an operation is "legacy" - ie contains state=None, host=None kwargs
@@ -109,7 +109,7 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, _call_location
     is_legacy = False
     args, kwargs = get_args_kwargs_spec(func)
     if all(key in kwargs and kwargs[key] is None for key in ('state', 'host')):
-        show_state_host_arguments_warning(_call_location or get_call_location())
+        show_state_host_arguments_warning(get_call_location(frame_offset=frame_offset))
         is_legacy = True
     func.is_legacy = is_legacy
 
