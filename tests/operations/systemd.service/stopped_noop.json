@@ -5,7 +5,9 @@
     },
     "facts": {
         "systemd.SystemdStatus": {
-            "redis-server.service": false
+            "user_mode=False, machine=None, user_name=None": {
+                "redis-server.service": false
+            }
         }
     },
     "commands": [],
