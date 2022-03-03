@@ -11,15 +11,29 @@ from .util.service import handle_service_control
 
 
 @operation
-def daemon_reload(user_mode=False, state=None, host=None):
+def daemon_reload(
+    user_mode=False, machine=None, user_name=None, state=None, host=None,
+):
     '''
     Reload the systemd daemon to read unit file changes.
 
     + user_mode: whether to use per-user systemd (systemctl --user) or not
+    + machine: the machine name to connect to
+    + user_name: connect to a specific user's systemd session
     '''
 
     systemctl_cmd = 'systemctl --user' if user_mode else 'systemctl'
+
+    if machine is not None:
+        if user_name is not None:
+            machine_opt = '--machine={1}@{0}'.format(machine, user_name)
+        else:
+            machine_opt = '--machine={0}'.format(machine)
+
+        systemctl_cmd = '{0} {1}'.format(systemctl_cmd, machine_opt)
+
     yield '{0} daemon-reload'.format(systemctl_cmd)
+
 
 _daemon_reload = daemon_reload  # noqa: E305
 
@@ -29,7 +43,8 @@ def service(
     service,
     running=True, restarted=False, reloaded=False,
     command=None, enabled=None, daemon_reload=False,
-    user_mode=False, state=None, host=None,
+    user_mode=False, machine=None, user_name=None,
+    state=None, host=None,
 ):
     '''
     Manage the state of systemd managed units.
@@ -42,6 +57,8 @@ def service(
     + enabled: whether this unit should be enabled/disabled on boot
     + daemon_reload: reload the systemd daemon to read updated unit files
     + user_mode: whether to use per-user systemd (systemctl --user) or not
+    + machine: the machine name to connect to
+    + user_name: connect to a specific user's systemd session
 
     Example:
 
@@ -66,6 +83,14 @@ def service(
 
     systemctl_cmd = 'systemctl --user' if user_mode else 'systemctl'
 
+    if machine is not None:
+        if user_name is not None:
+            machine_opt = '--machine={1}@{0}'.format(machine, user_name)
+        else:
+            machine_opt = '--machine={0}'.format(machine)
+
+        systemctl_cmd = '{0} {1}'.format(systemctl_cmd, machine_opt)
+
     if '.' not in service:
         service = '{0}.service'.format(service)
 
@@ -74,22 +99,30 @@ def service(
 
     yield handle_service_control(
         host,
-        service, host.get_fact(SystemdStatus),
-        ' '.join([systemctl_cmd, '{1}', '{0}']),
+        service, host.get_fact(
+            SystemdStatus,
+            user_mode=user_mode,
+            machine=machine,
+            user_name=user_name,
+        ), ' '.join([systemctl_cmd, '{1}', '{0}']),
         running, restarted, reloaded, command,
     )
 
     if isinstance(enabled, bool):
-        systemd_enabled = host.get_fact(SystemdEnabled)
+        systemd_enabled = host.get_fact(
+            SystemdEnabled,
+            user_mode=user_mode,
+            machine=machine,
+            user_name=user_name,
+        )
         is_enabled = systemd_enabled.get(service, False)
 
         # Isn't enabled and want enabled?
         if not is_enabled and enabled is True:
-
-            yield ' '.join([systemctl_cmd, 'enable', '{0}']).format(service)
+            yield '{0} enable {1}'.format(systemctl_cmd, service)
             systemd_enabled[service] = True
 
         # Is enabled and want disabled?
         elif is_enabled and enabled is False:
-            yield ' '.join([systemctl_cmd, 'disable', '{0}']).format(service)
+            yield '{0} disable {1}'.format(systemctl_cmd, service)
             systemd_enabled[service] = False

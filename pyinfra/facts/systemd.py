@@ -25,13 +25,25 @@ class SystemdStatus(FactBase):
     Returns a dict of name -> status for systemd managed services.
     '''
 
-    command = 'systemctl -al list-units'
     requires_command = 'systemctl'
 
     default = dict
 
     regex = r'^({systemd_unit_name_regex})\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'.format(
         systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX)
+
+    def command(self, user_mode=False, machine=None, user_name=None):
+        fact_cmd = 'systemctl --user' if user_mode else 'systemctl'
+
+        if machine is not None:
+            if user_name is not None:
+                machine_opt = '--machine={1}@{0}'.format(machine, user_name)
+            else:
+                machine_opt = '--machine={0}'.format(machine)
+
+            fact_cmd = '{0} {1}'.format(fact_cmd, machine_opt)
+
+        return '{0} -al list-units'.format(fact_cmd)
 
     def process(self, output):
         services = {}
@@ -51,21 +63,33 @@ class SystemdEnabled(FactBase):
     Returns a dict of name -> whether enabled for systemd managed services.
     '''
 
-    command = '''
-        systemctl --no-legend -al list-unit-files | while read -r UNIT STATUS; do
-            if [ "$STATUS" = generated ] &&
-                systemctl is-enabled $UNIT >/dev/null 2>&1; then
-                STATUS=enabled
-            fi
-            echo $UNIT $STATUS
-        done
-    '''
     requires_command = 'systemctl'
 
     default = dict
 
     regex = r'^({systemd_unit_name_regex})\s+([a-z]+)'.format(
         systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX)
+
+    def command(self, user_mode=False, machine=None, user_name=None):
+        fact_cmd = 'systemctl --user' if user_mode else 'systemctl'
+
+        if machine is not None:
+            if user_name is not None:
+                machine_opt = '--machine={1}@{0}'.format(machine, user_name)
+            else:
+                machine_opt = '--machine={0}'.format(machine)
+
+            fact_cmd = '{0} {1}'.format(fact_cmd, machine_opt)
+
+        return '''
+            {0} --no-legend -al list-unit-files | while read -r UNIT STATUS; do
+                if [ "$STATUS" = generated ] &&
+                    {0} is-enabled $UNIT >/dev/null 2>&1; then
+                    STATUS=enabled
+                fi
+                echo $UNIT $STATUS
+            done
+        '''.format(fact_cmd)
 
     def process(self, output):
         units = {}
