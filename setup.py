@@ -58,9 +58,12 @@ DOCS_REQUIRES = (
     "docutils==0.17.1",
 )
 
+BUILD_REQUIRES = ("pyinstaller==4.9",)
+
 DEV_REQUIRES = (
     TEST_REQUIRES
     + DOCS_REQUIRES
+    + BUILD_REQUIRES
     + (
         # Releasing
         "wheel",
@@ -130,6 +133,7 @@ if __name__ == "__main__":
             "docs": DOCS_REQUIRES,
             "dev": DEV_REQUIRES,
             "ansible": ANSIBLE_REQUIRES,
+            "build": BUILD_REQUIRES,
         },
         include_package_data=True,
         classifiers=[
