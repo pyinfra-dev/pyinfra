@@ -248,9 +248,9 @@ def _get_fact(
     if status:
         log_message = '{0}{1}'.format(
             host.print_prefix,
-            'Loaded fact {0} ({1})'.format(
+            'Loaded fact {0}{1}'.format(
                 click.style(name, bold=True),
-                get_kwargs_str(kwargs),
+                f' ({get_kwargs_str(kwargs)})' if kwargs else '',
             ),
         )
         if state.print_fact_info:
