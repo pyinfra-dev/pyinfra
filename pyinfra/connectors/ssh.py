@@ -384,9 +384,17 @@ def get_file(
 
 
 def _put_file(host, filename_or_io, remote_location):
-    with get_file_io(filename_or_io) as file_io:
-        sftp = _get_sftp_connection(host)
-        sftp.putfo(file_io, remote_location)
+    attempts = 1
+
+    try:
+        with get_file_io(filename_or_io) as file_io:
+            sftp = _get_sftp_connection(host)
+            sftp.putfo(file_io, remote_location)
+    except OSError as e:
+        if attempts > 3:
+            raise
+        logger.warning(f'Failed to upload file, retrying: {e}')
+        attempts += 1
 
 
 def put_file(
