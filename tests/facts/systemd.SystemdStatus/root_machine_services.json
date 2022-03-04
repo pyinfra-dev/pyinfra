@@ -1,0 +1,17 @@
+{
+    "arg": [false, "testmachine"],
+    "command": "systemctl --machine=testmachine -al list-units",
+    "requires_command": "systemctl",
+    "output": [
+        "lvm2-activation.service      not-found inactive dead    lvm2-activation.service",
+        "lvm2-lvmetad.service         loaded    active   running LVM2 metadata daemon",
+        "lvm2-lvmpolld.service        loaded    inactive dead    LVM2 poll daemon",
+        "ebtables.timer             loaded    active   exited  ebtables ruleset management"
+    ],
+    "fact":  {
+        "lvm2-activation.service": false,
+        "lvm2-lvmetad.service": true,
+        "lvm2-lvmpolld.service": false,
+        "ebtables.timer": true
+    }
+}
