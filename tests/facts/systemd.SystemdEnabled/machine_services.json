@@ -1,0 +1,15 @@
+{
+    "arg": [false, "testmachine", "testuser"],
+    "command": "\n            systemctl --machine=testuser@testmachine --no-legend -al list-unit-files | while read -r UNIT STATUS; do\n                if [ \"$STATUS\" = generated ] &&\n                    systemctl --machine=testuser@testmachine is-enabled $UNIT >/dev/null 2>&1; then\n                    STATUS=enabled\n                fi\n                echo $UNIT $STATUS\n            done\n        ",
+    "requires_command": "systemctl",
+    "output": [
+        "vboxadd.service enabled",
+        "vgauth.timer enabled",
+        "x11-common.service masked"
+    ],
+    "fact":  {
+        "vboxadd.service": true,
+        "vgauth.timer": true,
+        "x11-common.service": false
+    }
+}
