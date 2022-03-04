@@ -1,0 +1,18 @@
+{
+    "args": ["redis-server.service"],
+    "kwargs": {
+        "user_mode": true,
+        "machine": "testmachine",
+        "user_name": "testuser"
+    },
+    "facts": {
+        "systemd.SystemdStatus": {
+            "user_mode=True, machine=testmachine, user_name=testuser": {
+                "redis-server.service": false
+            }
+        }
+    },
+    "commands": [
+        "systemctl --user --machine=testuser@testmachine start redis-server.service"
+    ]
+}

@@ -1,0 +1,19 @@
+{
+    "args": ["redis-server.service"],
+    "kwargs": {
+        "daemon_reload": true,
+        "user_mode": true
+    },
+    "facts": {
+        "systemd.SystemdStatus": {
+            "user_mode=True, machine=None, user_name=None": {
+                "redis-server.service": true
+            }
+        }
+    },
+    "commands": [
+        "systemctl --user daemon-reload"
+    ],
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "daemon reloads are always triggered"
+}
