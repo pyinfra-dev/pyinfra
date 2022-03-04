@@ -1,0 +1,24 @@
+{
+    "args": ["redis-server.service"],
+    "kwargs": {
+        "enabled": false,
+        "user_mode": true,
+        "machine": "testmachine",
+        "user_name": "testuser"
+    },
+    "facts": {
+        "systemd.SystemdStatus": {
+            "user_mode=True, machine=testmachine, user_name=testuser": {
+                "redis-server.service": true
+            }
+        },
+        "systemd.SystemdEnabled": {
+            "user_mode=True, machine=testmachine, user_name=testuser": {
+                "redis-server.service": true
+            }
+        }
+    },
+    "commands": [
+        "systemctl --user --machine=testuser@testmachine disable redis-server.service"
+    ]
+}
