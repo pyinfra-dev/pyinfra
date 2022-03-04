@@ -20,6 +20,22 @@ SYSTEMD_UNIT_NAME_REGEX = (
 )
 
 
+def _make_systemctl_cmd(user_mode=False, machine=None, user_name=None):
+    # base command for normal and user mode
+    systemctl_cmd = 'systemctl --user' if user_mode else 'systemctl'
+
+    # add user and machine flag if given in args
+    if machine is not None:
+        if user_name is not None:
+            machine_opt = '--machine={1}@{0}'.format(machine, user_name)
+        else:
+            machine_opt = '--machine={0}'.format(machine)
+
+        systemctl_cmd = '{0} {1}'.format(systemctl_cmd, machine_opt)
+
+    return systemctl_cmd
+
+
 class SystemdStatus(FactBase):
     '''
     Returns a dict of name -> status for systemd managed services.
@@ -33,15 +49,11 @@ class SystemdStatus(FactBase):
         systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX)
 
     def command(self, user_mode=False, machine=None, user_name=None):
-        fact_cmd = 'systemctl --user' if user_mode else 'systemctl'
-
-        if machine is not None:
-            if user_name is not None:
-                machine_opt = '--machine={1}@{0}'.format(machine, user_name)
-            else:
-                machine_opt = '--machine={0}'.format(machine)
-
-            fact_cmd = '{0} {1}'.format(fact_cmd, machine_opt)
+        fact_cmd = _make_systemctl_cmd(
+            user_mode=user_mode,
+            machine=machine,
+            user_name=user_name,
+        )
 
         return '{0} -al list-units'.format(fact_cmd)
 
@@ -71,15 +83,11 @@ class SystemdEnabled(FactBase):
         systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX)
 
     def command(self, user_mode=False, machine=None, user_name=None):
-        fact_cmd = 'systemctl --user' if user_mode else 'systemctl'
-
-        if machine is not None:
-            if user_name is not None:
-                machine_opt = '--machine={1}@{0}'.format(machine, user_name)
-            else:
-                machine_opt = '--machine={0}'.format(machine)
-
-            fact_cmd = '{0} {1}'.format(fact_cmd, machine_opt)
+        fact_cmd = _make_systemctl_cmd(
+            user_mode=user_mode,
+            machine=machine,
+            user_name=user_name,
+        )
 
         return '''
             {0} --no-legend -al list-unit-files | while read -r UNIT STATUS; do

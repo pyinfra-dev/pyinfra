@@ -10,6 +10,22 @@ from pyinfra.facts.systemd import SystemdEnabled, SystemdStatus
 from .util.service import handle_service_control
 
 
+def _make_systemctl_cmd(user_mode=False, machine=None, user_name=None):
+    # base command for normal and user mode
+    systemctl_cmd = 'systemctl --user' if user_mode else 'systemctl'
+
+    # add user and machine flag if given in args
+    if machine is not None:
+        if user_name is not None:
+            machine_opt = '--machine={1}@{0}'.format(machine, user_name)
+        else:
+            machine_opt = '--machine={0}'.format(machine)
+
+        systemctl_cmd = '{0} {1}'.format(systemctl_cmd, machine_opt)
+
+    return systemctl_cmd
+
+
 @operation
 def daemon_reload(
     user_mode=False, machine=None, user_name=None, state=None, host=None,
@@ -22,15 +38,11 @@ def daemon_reload(
     + user_name: connect to a specific user's systemd session
     '''
 
-    systemctl_cmd = 'systemctl --user' if user_mode else 'systemctl'
-
-    if machine is not None:
-        if user_name is not None:
-            machine_opt = '--machine={1}@{0}'.format(machine, user_name)
-        else:
-            machine_opt = '--machine={0}'.format(machine)
-
-        systemctl_cmd = '{0} {1}'.format(systemctl_cmd, machine_opt)
+    systemctl_cmd = _make_systemctl_cmd(
+        user_mode=user_mode,
+        machine=machine,
+        user_name=user_name,
+    )
 
     yield '{0} daemon-reload'.format(systemctl_cmd)
 
@@ -81,15 +93,11 @@ def service(
 
     '''
 
-    systemctl_cmd = 'systemctl --user' if user_mode else 'systemctl'
-
-    if machine is not None:
-        if user_name is not None:
-            machine_opt = '--machine={1}@{0}'.format(machine, user_name)
-        else:
-            machine_opt = '--machine={0}'.format(machine)
-
-        systemctl_cmd = '{0} {1}'.format(systemctl_cmd, machine_opt)
+    systemctl_cmd = _make_systemctl_cmd(
+        user_mode=user_mode,
+        machine=machine,
+        user_name=user_name,
+    )
 
     if '.' not in service:
         service = '{0}.service'.format(service)
