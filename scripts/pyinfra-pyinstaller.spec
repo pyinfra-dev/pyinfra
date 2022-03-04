@@ -1,33 +1,19 @@
 from os import environ
 
-import pkg_resources
-
-from PyInstaller.utils.hooks import collect_all, copy_metadata
+from PyInstaller.utils.hooks import collect_all
 
 
 ONE_FILE_MODE = environ.get('PYINFRA_BUILD_ONEDIR') != 'true'
 
 
-datas, binaries, hidden_imports = collect_all('pyinfra')
-
-
-def get_package_dependencies(package_name):
-    package = pkg_resources.working_set.by_key[package_name]
-
-    for require in package.requires():
-        yield require.name
-        yield from get_package_dependencies(require.name.lower())
-
-
-for missing_metadata in get_package_dependencies('pyinfra'):
-    datas.extend(copy_metadata(missing_metadata))
+_, binaries, hidden_imports = collect_all('pyinfra')
 
 
 a = Analysis(  # noqa
     ['pyinfra-pyinstaller-entrypoint.py'],
     pathex=[],
     binaries=binaries,
-    datas=datas,
+    datas=[],
     hiddenimports=hidden_imports,
     hookspath=[],
     hooksconfig={},
@@ -39,12 +25,16 @@ a = Analysis(  # noqa
     noarchive=False,
 )
 
+a.datas = [
+    data for data in a.datas
+    if '.dist-info' not in data[0] and '.egg-info' not in data[0]
+]
+
 pyz = PYZ(  # noqa
     a.pure,
     a.zipped_data,
     cipher=None,
 )
-
 
 if ONE_FILE_MODE:
     exe = EXE(  # noqa
