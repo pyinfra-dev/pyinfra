@@ -339,6 +339,7 @@ def _get_file(host, remote_filename, filename_or_io):
 
 def get_file(
     state, host, remote_filename, filename_or_io,
+    remote_temp_filename=None,
     sudo=False, sudo_user=None, su_user=None,
     print_output=False, print_input=False,
     **command_kwargs
@@ -351,7 +352,7 @@ def get_file(
 
     if sudo or su_user:
         # Get temp file location
-        temp_file = state.get_temp_filename(remote_filename)
+        temp_file = remote_temp_filename or state.get_temp_filename(remote_filename)
 
         # Copy the file to the tempfile location and add read permissions
         command = 'cp {0} {1} && chmod +r {0}'.format(remote_filename, temp_file)
@@ -406,6 +407,7 @@ def _put_file(host, filename_or_io, remote_location):
 
 def put_file(
     state, host, filename_or_io, remote_filename,
+    remote_temp_filename=None,
     sudo=False, sudo_user=None, su_user=None,
     print_output=False, print_input=False,
     **command_kwargs
@@ -419,7 +421,7 @@ def put_file(
     # user connected, so upload to tmp and copy/chown w/sudo and/or su_user
     if sudo or su_user:
         # Get temp file location
-        temp_file = state.get_temp_filename(remote_filename)
+        temp_file = remote_temp_filename or state.get_temp_filename(remote_filename)
         _put_file(host, filename_or_io, temp_file)
 
         # Make sure our sudo/su user can access the file

@@ -209,7 +209,11 @@ def put(
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
-        yield FileUploadCommand(local_file, dest)
+        yield FileUploadCommand(
+            local_file,
+            dest,
+            remote_temp_filename=state.get_temp_filename(dest),
+        )
 
         # if user or group:
         #    yield chown(dest, user, group)
@@ -224,7 +228,11 @@ def put(
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
-            yield FileUploadCommand(local_file, dest)
+            yield FileUploadCommand(
+                local_file,
+                dest,
+                remote_temp_filename=state.get_temp_filename(dest),
+            )
 
             # if user or group:
             #    yield chown(dest, user, group)

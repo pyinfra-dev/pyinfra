@@ -706,11 +706,11 @@ def get(
 
     # No remote file, so assume exists and download it "blind"
     if not remote_file or force:
-        yield FileDownloadCommand(src, dest)
+        yield FileDownloadCommand(src, dest, remote_temp_filename=state.get_temp_filename(dest))
 
     # No local file, so always download
     elif not os_path.exists(dest):
-        yield FileDownloadCommand(src, dest)
+        yield FileDownloadCommand(src, dest, remote_temp_filename=state.get_temp_filename(dest))
 
     # Remote file exists - check if it matches our local
     else:
@@ -719,7 +719,7 @@ def get(
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
-            yield FileDownloadCommand(src, dest)
+            yield FileDownloadCommand(src, dest, remote_temp_filename=state.get_temp_filename(dest))
 
 
 @operation(pipeline_facts={
@@ -799,7 +799,11 @@ def put(
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
-        yield FileUploadCommand(local_file, dest)
+        yield FileUploadCommand(
+            local_file,
+            dest,
+            remote_temp_filename=state.get_temp_filename(dest),
+        )
 
         if user or group:
             yield chown(dest, user, group)
@@ -813,7 +817,11 @@ def put(
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
-            yield FileUploadCommand(local_file, dest)
+            yield FileUploadCommand(
+                local_file,
+                dest,
+                remote_temp_filename=state.get_temp_filename(dest),
+            )
 
             if user or group:
                 yield chown(dest, user, group)

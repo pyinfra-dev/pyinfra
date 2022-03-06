@@ -568,9 +568,6 @@ class TestSSHConnector(TestCase):
             "sudo -H -A -k sh -c 'echo Šablony'"
         ), get_pty=False)
 
-    # SSH file put/get tests
-    #
-
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     @patch('pyinfra.api.connectors.util._get_sudo_password')
     def test_run_shell_command_retry_for_sudo_password(
@@ -605,6 +602,9 @@ class TestSSHConnector(TestCase):
             "env SUDO_ASKPASS=pyinfra-sudo-askpass PYINFRA_SUDO_PASSWORD=PASSWORD sh -c 'echo hi'",
             get_pty=False,
         )
+
+    # SSH file put/get tests
+    #
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')
     @patch('pyinfra.api.connectors.ssh.SFTPClient')
@@ -725,6 +725,39 @@ class TestSSHConnector(TestCase):
 
         fake_sftp_client.from_transport().putfo.assert_called_with(
             fake_open(), '/tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487',
+        )
+
+    @patch('pyinfra.api.connectors.ssh.SSHClient')
+    @patch('pyinfra.api.connectors.ssh.SFTPClient')
+    def test_put_file_sudo_custom_temp_file(self, fake_sftp_client, fake_ssh_client):
+        inventory = make_inventory(hosts=('anotherhost',))
+        State(inventory, Config())
+        host = inventory.get_host('anotherhost')
+        host.connect()
+
+        stdout_mock = MagicMock()
+        stdout_mock.channel.recv_exit_status.return_value = 0
+        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+
+        fake_open = mock_open(read_data='test!')
+        with patch('pyinfra.api.util.open', fake_open, create=True):
+            status = host.put_file(
+                'not-a-file', 'not another file',
+                print_output=True,
+                sudo=True,
+                sudo_user='ubuntu',
+                remote_temp_filename='/a-different-tempfile',
+            )
+
+        assert status is True
+
+        fake_ssh_client().exec_command.assert_called_with((
+            "sh -c 'rm -f "
+            "/a-different-tempfile'"
+        ), get_pty=False)
+
+        fake_sftp_client.from_transport().putfo.assert_called_with(
+            fake_open(), '/a-different-tempfile',
         )
 
     @patch('pyinfra.api.connectors.ssh.SSHClient')

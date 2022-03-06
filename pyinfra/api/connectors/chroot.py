@@ -93,6 +93,7 @@ def put_file(
     host,
     filename_or_io,
     remote_filename,
+    remote_temp_filename=None,  # ignored
     print_output=False,
     print_input=False,
     **kwargs  # ignored (sudo/etc)
@@ -146,6 +147,7 @@ def get_file(
     host,
     remote_filename,
     filename_or_io,
+    remote_temp_filename=None,  # ignored
     print_output=False,
     print_input=False,
     **kwargs  # ignored (sudo/etc)

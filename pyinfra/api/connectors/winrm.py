@@ -191,6 +191,7 @@ def run_shell_command(
 
 def get_file(
     state, host, remote_filename, filename_or_io,
+    remote_temp_filename=None,
     **command_kwargs
 ):
     raise PyinfraError('Not implemented')
@@ -222,6 +223,7 @@ def _put_file(state, host, filename_or_io, remote_location, chunk_size=2048):
 def put_file(
     state, host, filename_or_io, remote_filename,
     print_output=False, print_input=False,
+    remote_temp_filename=None,  # ignored
     **command_kwargs
 ):
     '''

@@ -96,6 +96,7 @@ def run_shell_command(
 
 def put_file(
     state, host, filename_or_io, remote_filename,
+    remote_temp_filename=None,  # ignored
     print_output=False, print_input=False,
     **command_kwargs
 ):
@@ -141,6 +142,7 @@ def put_file(
 
 def get_file(
     state, host, remote_filename, filename_or_io,
+    remote_temp_filename=None,  # ignored
     print_output=False, print_input=False,
     **command_kwargs
 ):

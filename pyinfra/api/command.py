@@ -127,10 +127,11 @@ class StringCommand(PyinfraCommand):
 
 
 class FileUploadCommand(PyinfraCommand):
-    def __init__(self, src, dest, **kwargs):
+    def __init__(self, src, dest, remote_temp_filename=None, **kwargs):
         super(FileUploadCommand, self).__init__(**kwargs)
         self.src = src
         self.dest = dest
+        self.remote_temp_filename = remote_temp_filename
 
     def __repr__(self):
         return 'FileUploadCommand({0}, {1})'.format(self.src, self.dest)
@@ -140,6 +141,7 @@ class FileUploadCommand(PyinfraCommand):
 
         return host.put_file(
             self.src, self.dest,
+            remote_temp_filename=self.remote_temp_filename,
             print_output=state.print_output,
             print_input=state.print_input,
             **executor_kwargs
@@ -147,10 +149,11 @@ class FileUploadCommand(PyinfraCommand):
 
 
 class FileDownloadCommand(PyinfraCommand):
-    def __init__(self, src, dest, **kwargs):
+    def __init__(self, src, dest, remote_temp_filename=None, **kwargs):
         super(FileDownloadCommand, self).__init__(**kwargs)
         self.src = src
         self.dest = dest
+        self.remote_temp_filename = remote_temp_filename
 
     def __repr__(self):
         return 'FileDownloadCommand({0}, {1})'.format(self.src, self.dest)
@@ -160,6 +163,7 @@ class FileDownloadCommand(PyinfraCommand):
 
         return host.get_file(
             self.src, self.dest,
+            remote_temp_filename=self.remote_temp_filename,
             print_output=state.print_output,
             print_input=state.print_input,
             **executor_kwargs

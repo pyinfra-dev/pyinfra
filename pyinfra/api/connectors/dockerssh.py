@@ -138,6 +138,7 @@ def run_shell_command(
 
 def put_file(
     state, host, filename_or_io, remote_filename,
+    remote_temp_filename=None,
     print_output=False, print_input=False,
     **kwargs  # ignored (sudo/etc)
 ):
@@ -146,12 +147,12 @@ def put_file(
     temporary location and then uploading it into the container using ``docker cp``.
     '''
 
-    fd, temp_filename = mkstemp()
-    remote_temp_filename = state.get_temp_filename(temp_filename)
+    fd, local_temp_filename = mkstemp()
+    remote_temp_filename = remote_temp_filename or state.get_temp_filename(local_temp_filename)
 
     # Load our file or IO object and write it to the temporary file
     with get_file_io(filename_or_io) as file_io:
-        with open(temp_filename, 'wb') as temp_f:
+        with open(local_temp_filename, 'wb') as temp_f:
             data = file_io.read()
 
             if isinstance(data, six.text_type):
@@ -160,7 +161,7 @@ def put_file(
             temp_f.write(data)
 
     # upload file to remote server
-    ssh_status = ssh.put_file(state, host, temp_filename, remote_temp_filename)
+    ssh_status = ssh.put_file(state, host, local_temp_filename, remote_temp_filename)
     if not ssh_status:
         raise IOError('Failed to copy file over ssh')
 
@@ -180,9 +181,9 @@ def put_file(
         )
     finally:
         os.close(fd)
-        os.remove(temp_filename)
+        os.remove(local_temp_filename)
         remote_remove(
-            state, host, temp_filename,
+            state, host, local_temp_filename,
             print_output=print_output,
             print_input=print_input,
         )
@@ -200,6 +201,7 @@ def put_file(
 
 def get_file(
     state, host, remote_filename, filename_or_io,
+    remote_temp_filename=None,
     print_output=False, print_input=False,
     **kwargs  # ignored (sudo/etc)
 ):
@@ -208,14 +210,14 @@ def get_file(
     location and then reading that into our final file/IO object.
     '''
 
-    temp_filename = state.get_temp_filename(remote_filename)
+    remote_temp_filename = remote_temp_filename or state.get_temp_filename(remote_filename)
 
     try:
         docker_id = host.host_data['docker_container_id']
         docker_command = 'docker cp {0}:{1} {2}'.format(
             docker_id,
             remote_filename,
-            temp_filename,
+            remote_temp_filename,
         )
 
         status, _, stderr = ssh.run_shell_command(
@@ -225,9 +227,9 @@ def get_file(
             print_input=print_input,
         )
 
-        ssh_status = ssh.get_file(state, host, temp_filename, filename_or_io)
+        ssh_status = ssh.get_file(state, host, remote_temp_filename, filename_or_io)
     finally:
-        remote_remove(state, host, temp_filename, print_output=print_output,
+        remote_remove(state, host, remote_temp_filename, print_output=print_output,
                       print_input=print_input)
 
     if not ssh_status:
