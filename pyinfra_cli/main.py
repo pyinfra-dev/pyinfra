@@ -19,7 +19,7 @@ from pyinfra.api.facts import get_facts
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.util import get_kwargs_str
-from pyinfra.context import ctx_inventory, ctx_state
+from pyinfra.context import ctx_config, ctx_inventory, ctx_state
 from pyinfra.operations import server
 
 from .exceptions import (
@@ -347,6 +347,7 @@ def _main(
         click.echo('--> Loading config...', err=True)
 
     config = Config()
+    ctx_config.set(config)
 
     # Load up any config.py from the filesystem
     config_filename = path.join(state.cwd, config_filename)
