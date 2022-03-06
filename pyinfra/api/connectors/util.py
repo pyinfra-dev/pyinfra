@@ -56,7 +56,7 @@ def execute_command_with_sudo_retry(host, command_kwargs, execute_command):
 
     if return_code != 0 and combined_output:
         last_line = combined_output[-1][1]
-        if last_line == 'sudo: a password is required':
+        if last_line.strip() == 'sudo: a password is required':
             command_kwargs['use_sudo_password'] = True  # ask for the password
             return_code, combined_output = execute_command()
 

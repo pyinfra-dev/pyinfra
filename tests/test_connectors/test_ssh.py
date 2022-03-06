@@ -529,7 +529,7 @@ class TestSSHConnector(TestCase):
         first_fake_stdout = MagicMock()
         second_fake_stdout = MagicMock()
 
-        first_fake_stdout.__iter__.return_value = ['sudo: a password is required']
+        first_fake_stdout.__iter__.return_value = ['sudo: a password is required\r']
 
         fake_ssh.exec_command.side_effect = [
             (MagicMock(), first_fake_stdout, MagicMock()),  # command w/o sudo password
