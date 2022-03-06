@@ -1,3 +1,12 @@
+# v1.7
+
++ Add `--user` and `--machine` flags to `systemd.*` operations (@jmpolom)
++ Fix treat Zypper package names as case-sensitive (@sysadmin75)
++ Fix CLI flags with `click<7.0` (@gchazot)
++ Fix automatic sudo check when `get_pty=True`
++ Fix respect `config.TEMP_DIR` setting for sudo file up/downloads
+
+
 # v1.6.3
 
 + Enable passing `success_exit_codes` into `host.get_fact` calls (@mohsinhijazee)
