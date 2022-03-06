@@ -3,7 +3,7 @@ The PostgreSQL modules manage PostgreSQL databases, users and privileges.
 
 Requires the ``psql`` CLI executable on the target host(s).
 
-All operations in this module take four optional global arguments:
+All operations in this module take four optional arguments:
     + ``psql_user``: the username to connect to postgresql to
     + ``psql_password``: the password for the connecting user
     + ``psql_host``: the hostname of the server to connect to
@@ -13,7 +13,7 @@ See example/postgresql.py for detailed example
 
 '''
 
-from pyinfra import host
+from pyinfra import host, logger
 from pyinfra.api import MaskString, operation, StringCommand
 from pyinfra.facts.postgresql import (
     make_execute_psql_command,
@@ -23,7 +23,29 @@ from pyinfra.facts.postgresql import (
 )
 
 
+LEGACY_ARG_MAP = {
+    'postgresql_user': 'psql_user',
+    'postgresql_password': 'psql_password',
+    'postgresql_host': 'psql_host',
+    'postgresql_port': 'psql_port',
+}
+
+
+def _translate_legacy_args(func):
+    def decorated_func(*args, **kwargs):
+        for legacy_key, key in LEGACY_ARG_MAP.items():
+            if legacy_key in kwargs:
+                kwargs[key] = kwargs.pop(legacy_key)
+                logger.warning((
+                    f'The `{legacy_key}` has been replaced '
+                    f'by `{key}` in `postgresql.*` operations.'
+                ))
+        return func(*args, **kwargs)
+    return decorated_func
+
+
 @operation(is_idempotent=False)
+@_translate_legacy_args
 def sql(
     sql,
     database=None,
@@ -50,6 +72,7 @@ def sql(
 
 
 @operation
+@_translate_legacy_args
 def role(
     role,
     present=True,
@@ -151,6 +174,7 @@ def role(
 
 
 @operation
+@_translate_legacy_args
 def database(
     database,
     present=True, owner=None,
@@ -245,6 +269,7 @@ def database(
 
 
 @operation(is_idempotent=False)
+@_translate_legacy_args
 def dump(
     dest, database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
@@ -282,6 +307,7 @@ def dump(
 
 
 @operation(is_idempotent=False)
+@_translate_legacy_args
 def load(
     src, database=None,
     # Details for speaking to PostgreSQL via `psql` CLI

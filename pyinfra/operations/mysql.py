@@ -3,7 +3,7 @@ Manage MySQL databases, users and privileges.
 
 Requires the ``mysql`` CLI executable on the target host(s).
 
-All operations in this module take four optional global arguments:
+All operations in this module take four optional arguments:
     + ``mysql_user``: the username to connect to mysql to
     + ``mysql_password``: the password for the connecting user
     + ``mysql_host``: the hostname of the server to connect to
