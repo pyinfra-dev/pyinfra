@@ -275,7 +275,7 @@ def make_unix_command(
 
     if env:
         env_string = ' '.join([
-            '{0}={1}'.format(key, value)
+            '"{0}={1}"'.format(key, value)
             for key, value in six.iteritems(env)
         ])
         command = StringCommand('export', env_string, '&&', command)
