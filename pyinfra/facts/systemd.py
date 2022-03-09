@@ -55,7 +55,7 @@ class SystemdStatus(FactBase):
             user_name=user_name,
         )
 
-        return '{0} -al list-units'.format(fact_cmd)
+        return '{0} -al --plain --legend=false list-units'.format(fact_cmd)
 
     def process(self, output):
         services = {}
@@ -90,12 +90,12 @@ class SystemdEnabled(FactBase):
         )
 
         return '''
-            {0} --no-legend -al list-unit-files | while read -r UNIT STATUS; do
-                if [ "$STATUS" = generated ] &&
-                    {0} is-enabled $UNIT >/dev/null 2>&1; then
-                    STATUS=enabled
+            {0} -al --plain --legend=false --state=loaded list-units |
+                while read -r UNIT REST; do
+                STATE=$(systemctl -P UnitFileState show -- "$UNIT")
+                if [ -n "$STATE" ]; then
+                    echo "$UNIT" "$STATE"
                 fi
-                echo $UNIT $STATUS
             done
         '''.format(fact_cmd)
 
