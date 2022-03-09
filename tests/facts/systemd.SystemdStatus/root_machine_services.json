@@ -1,6 +1,6 @@
 {
     "arg": [false, "testmachine"],
-    "command": "systemctl --machine=testmachine -al list-units",
+    "command": "systemctl --machine=testmachine -al --plain --legend=false list-units",
     "requires_command": "systemctl",
     "output": [
         "lvm2-activation.service      not-found inactive dead    lvm2-activation.service",

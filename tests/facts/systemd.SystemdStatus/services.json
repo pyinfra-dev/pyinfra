@@ -1,5 +1,5 @@
 {
-    "command": "systemctl -al list-units",
+    "command": "systemctl -al --plain --legend=false list-units",
     "requires_command": "systemctl",
     "output": [
         "lvm2-activation.service      not-found inactive dead    lvm2-activation.service",
