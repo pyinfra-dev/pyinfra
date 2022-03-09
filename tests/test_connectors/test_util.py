@@ -114,7 +114,8 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         assert command.get_raw_value() == (
             'sudo -H -n -E -u root '  # sudo bit
             'su pyinfra -c '  # su bit
-            "'bash -c '\"'\"'cd /opt/somedir && export \"key=value\" && echo hi'\"'\"''"  # command bit
+            "'bash -c '\"'\"'cd /opt/somedir && export \"key=value\" "  # shell and export bit
+            "&& echo hi'\"'\"''"  # command bit
         )
 
     def test_command_exists_su_config_only(self):
