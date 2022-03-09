@@ -91,8 +91,8 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             'anotherkey': 'anothervalue',
         })
         assert command.get_raw_value() in [
-            "sh -c 'export key=value anotherkey=anothervalue && uptime'",
-            "sh -c 'export anotherkey=anothervalue key=value && uptime'",
+            "sh -c 'export \"key=value\" \"anotherkey=anothervalue\" && uptime'",
+            "sh -c 'export \"anotherkey=anothervalue\" \"key=value\" && uptime'",
         ]
 
     def test_command_chdir(self):
@@ -117,7 +117,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         assert command.get_raw_value() == (
             'sudo -H -n -E -u root '  # sudo bit
             'su pyinfra -c '  # su bit
-            "'bash -c '\"'\"'cd /opt/somedir && export key=value && echo hi'\"'\"''"  # command bit
+            "'bash -c '\"'\"'cd /opt/somedir && export \"key=value\" && echo hi'\"'\"''"  # command bit
         )
 
     def test_command_exists_su_config_only(self):
