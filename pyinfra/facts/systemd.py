@@ -89,15 +89,15 @@ class SystemdEnabled(FactBase):
             user_name=user_name,
         )
 
-        return '''
-            {0} -al --plain --legend=false --state=loaded list-units |
-                while read -r UNIT REST; do
-                STATE=$(systemctl -P UnitFileState show -- "$UNIT")
-                if [ -n "$STATE" ]; then
-                    echo "$UNIT" "$STATE"
-                fi
-            done
-        '''.format(fact_cmd)
+        return (
+            '{0} -al --plain --legend=false --state=loaded list-units | '
+            'while read -r UNIT REST; do '
+            'STATE=$(systemctl -P UnitFileState show -- "$UNIT"); '
+            'if [ -n "$STATE" ]; then '
+            'echo "$UNIT" "$STATE"; '
+            'fi; '
+            'done'
+        ).format(fact_cmd)
 
     def process(self, output):
         units = {}
