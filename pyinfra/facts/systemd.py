@@ -92,7 +92,7 @@ class SystemdEnabled(FactBase):
         return (
             '{0} -al --plain --legend=false --state=loaded list-units | '
             'while read -r UNIT REST; do '
-            'STATE=$(systemctl -P UnitFileState show -- "$UNIT"); '
+            'STATE=$({0} -P UnitFileState show -- "$UNIT"); '
             'if [ -n "$STATE" ]; then '
             'echo "$UNIT" "$STATE"; '
             'fi; '
