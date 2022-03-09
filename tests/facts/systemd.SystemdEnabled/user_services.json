@@ -1,6 +1,6 @@
 {
     "arg": [true],
-    "command": "\n            systemctl --user --no-legend -al list-unit-files | while read -r UNIT STATUS; do\n                if [ \"$STATUS\" = generated ] &&\n                    systemctl --user is-enabled $UNIT >/dev/null 2>&1; then\n                    STATUS=enabled\n                fi\n                echo $UNIT $STATUS\n            done\n        ",
+    "command": "systemctl --user -al --plain --legend=false --state=loaded list-units | while read -r UNIT REST; do STATE=$(systemctl --user -P UnitFileState show -- \"$UNIT\"); if [ -n \"$STATE\" ]; then echo \"$UNIT\" \"$STATE\"; fi; done",
     "requires_command": "systemctl",
     "output": [
         "vboxadd.service enabled",
