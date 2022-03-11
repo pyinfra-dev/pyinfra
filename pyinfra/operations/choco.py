@@ -43,7 +43,7 @@ def packages(packages=None, present=True, latest=False):
     )
 
 
-@operation
+@operation(is_idempotent=False)
 def install():
     '''
     Install ``choco`` (Chocolatey).

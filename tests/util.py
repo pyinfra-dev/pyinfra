@@ -206,7 +206,7 @@ class FakeHost(object):
             return fact_ordered_keys.get(kwargs_str)
         return fact
 
-    def create_fact(self, fact_cls, data, kwargs):
+    def create_fact(self, fact_cls, data=None, kwargs=None):
         try:
             fact = self.get_fact(fact_cls)
         except KeyError:
@@ -214,7 +214,7 @@ class FakeHost(object):
             fact = self.fact[fact_key] = {}
         fact[_sort_kwargs_str(get_kwargs_str(kwargs))] = data
 
-    def delete_fact(self, fact_cls, kwargs):
+    def delete_fact(self, fact_cls, kwargs=None):
         try:
             fact = self.get_fact(fact_cls)
         except KeyError:

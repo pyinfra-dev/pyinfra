@@ -17,5 +17,6 @@
     "commands": [
         "cd /home/myrepo && git pull --rebase"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "git pull will always be executed"
 }

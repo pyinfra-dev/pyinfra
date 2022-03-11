@@ -9,5 +9,6 @@
     "commands": [
         "apt-key add mykey"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "the key will always be added if gpg cant check whether it exists"
 }
