@@ -5,6 +5,7 @@ on:
     branches:
       - next
       - current
+      - 2.x
       - 1.x
       - 0.x
 
