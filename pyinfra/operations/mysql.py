@@ -349,6 +349,7 @@ def database(
                 host=mysql_host,
                 port=mysql_port,
             )
+            current_databases.pop(database)
         else:
             host.noop('mysql database {0} does not exist'.format(database))
         return
@@ -370,6 +371,10 @@ def database(
             host=mysql_host,
             port=mysql_port,
         )
+        current_databases[database] = {
+            'collate': collate,
+            'charset': charset,
+        }
     else:
         host.noop('mysql database {0} exists'.format(database))
 

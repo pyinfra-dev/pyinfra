@@ -41,7 +41,8 @@ def container(
         )
     '''
 
-    container = get_container_named(id, host.get_fact(LxdContainers))
+    current_containers = host.get_fact(LxdContainers)
+    container = get_container_named(id, current_containers)
 
     # Container exists and we don't want it
     if not present:
@@ -51,6 +52,8 @@ def container(
 
             # Command to remove the container:
             yield 'lxc delete {0}'.format(id)
+
+            current_containers.remove(container)
         else:
             host.noop('container {0} does not exist'.format(id))
 
@@ -59,5 +62,9 @@ def container(
         if not container:
             # Command to create the container:
             yield 'lxc launch {image} {id}'.format(id=id, image=image)
+            current_containers.append({
+                'name': id,
+                'image': image,
+            })
         else:
             host.noop('container {0} exists'.format(id))

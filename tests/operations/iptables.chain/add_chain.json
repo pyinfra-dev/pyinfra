@@ -11,6 +11,5 @@
     "commands": [
         "iptables -t filter -N MYCHAIN",
         "iptables -t filter -P MYCHAIN DROP"
-    ],
-    "idempotent": false
+    ]
 }

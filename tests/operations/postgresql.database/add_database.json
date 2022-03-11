@@ -7,6 +7,5 @@
     },
     "commands": [
         "psql -Ac 'CREATE DATABASE \"somedb\"'"
-    ],
-    "idempotent": false
+    ]
 }

@@ -8,6 +8,5 @@
     },
     "commands": [
         "lxc launch ubuntu:16.04 container1"
-    ],
-    "idempotent": false
+    ]
 }

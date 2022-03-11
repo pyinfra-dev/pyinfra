@@ -10,6 +10,5 @@
             }
         }
     },
-    "commands": ["psql -Ac 'DROP ROLE \"testuser\"'"],
-    "idempotent": false
+    "commands": ["psql -Ac 'DROP ROLE \"testuser\"'"]
 }
