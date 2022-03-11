@@ -1,4 +1,4 @@
-name: "Execute tests"
+name: Lint & Test
 
 on:
   push:
@@ -8,7 +8,22 @@ on:
   pull_request:
 
 jobs:
-  Test:
+  # Linting
+  #
+
+  lint:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install '.[test]'
+      - run: flake8
+
+  # Unit tests
+  #
+
+  unit-test:
+    needs: lint
     strategy:
       matrix:
         os: [ubuntu-18.04]
@@ -18,30 +33,33 @@ jobs:
             python-version: 3.8
           - os: windows-2019
             python-version: 3.8
-
     runs-on: ${{ matrix.os }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+      - run: pip install '.[test]'
+      - run: pytest --cov --disable-warnings
+      - uses: codecov/codecov-action@v1
 
-      - name: Install
-        run: pip install '.[test]'
+  # End-to-end tests
+  #
 
-      - name: Lint
-        run: flake8
+  test-e2e-local:
+    needs: unit-test
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install '.[test]'
+      - run: pytest -m local
 
-      - name: Unit tests
-        run: pytest --cov --disable-warnings
-
-      - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v1
-
-      - name: Local integration tests
-        run: pytest -m local
-        if: ${{ matrix.os != 'windows-2019' }}
+  test-e2e-docker:
+    needs: unit-test
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install '.[test]'
+      - run: pytest -m docker
