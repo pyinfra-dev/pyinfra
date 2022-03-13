@@ -163,20 +163,17 @@ MYSQL_GRANT_REGEX = (
 )
 
 
-# TODO: remove the dictionary and just have GRANT OPTION as a listed privilege
 class MysqlUserGrants(MysqlFactBase):
     '''
-    Returns a dict of ``<database>`.<table>`` with granted privileges for each:
+    Returns a dict of ``<database>`.<table>`` with a set of granted privileges for each:
 
     .. code:: python
 
         {
             '`pyinfra_stuff`.*': {
-                'privileges': [
-                    'SELECT',
-                    'INSERT'
-                ],
-                "with_grant_option": false
+                'SELECT',
+                'INSERT',
+                'GRANT OPTION',
             },
         }
     '''
@@ -201,10 +198,7 @@ class MysqlUserGrants(MysqlFactBase):
 
     @staticmethod
     def process(output):
-        database_table_privileges = defaultdict(lambda: {
-            'privileges': set(),
-            'with_grant_option': False,
-        })
+        database_table_privileges = defaultdict(set)
 
         for line in output:
             matches = re.match(MYSQL_GRANT_REGEX, line)
@@ -218,10 +212,9 @@ class MysqlUserGrants(MysqlFactBase):
 
             for privilege in privileges.split(','):
                 privilege = privilege.strip()
-                database_table_privileges[database_table]['privileges'].add(privilege)
+                database_table_privileges[database_table].add(privilege)
 
             if 'WITH GRANT OPTION' in extras:
-                database_table_privileges[database_table]['with_grant_option'] = True
-                database_table_privileges[database_table]['privileges'].add('GRANT OPTION')
+                database_table_privileges[database_table].add('GRANT OPTION')
 
         return database_table_privileges

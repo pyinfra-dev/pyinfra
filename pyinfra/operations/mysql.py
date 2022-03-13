@@ -463,7 +463,7 @@ def privileges(
     if database_table in user_grants:
         existing_privileges = [
             'ALL' if privilege == 'ALL PRIVILEGES' else privilege
-            for privilege in user_grants[database_table]['privileges']
+            for privilege in user_grants[database_table]
         ]
 
     target = action = None
