@@ -30,7 +30,7 @@ def ensure_packages(
     host, packages, current_packages, present,
     install_command, uninstall_command,
     latest=False, upgrade_command=None,
-    version_join=None, lower=True,
+    version_join=None, lower=False,
     expand_package_fact=None,
 ):
     '''
