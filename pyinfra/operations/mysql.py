@@ -400,9 +400,8 @@ def privileges(
     user, privileges,
     user_hostname='localhost',
     database='*', table='*',
-    present=True,
     flush=True,
-    with_grant_option=None,
+    with_grant_option=False,
     # Details for speaking to MySQL via `mysql` CLI
     mysql_user=None, mysql_password=None,
     mysql_host=None, mysql_port=None,
@@ -411,30 +410,24 @@ def privileges(
     Add/remove MySQL privileges for a user, either global, database or table specific.
 
     + user: name of the user to manage privileges for
-    + privileges: list of privileges the user should have
+    + privileges: list of privileges the user should have (see also: ``with_grant_option`` argument)
     + user_hostname: the hostname of the user
     + database: name of the database to grant privileges to (defaults to all)
     + table: name of the table to grant privileges to (defaults to all)
-    + present: whether these privileges should exist (False to ``REVOKE``)
     + flush: whether to flush (and update) the privileges table after any changes
-    + with_grant_option: whether to add the with grant option privilege
+    + with_grant_option: whether the grant option privilege should be set
     + mysql_*: global module arguments, see above
-
-    Note:
-        This operation will either ensure permissions exist or are removed for a given database
-        & table combination. This means when ``present=True`` it won't add/remove any permissions
-        that already exist but aren't passed in as ``privileges``.
     '''
 
     # Ensure we have a list
     if isinstance(privileges, str):
-        privileges = [privileges]
+        privileges = {privileges}
 
-    if (
-        (present and with_grant_option)
-        or (present is False and with_grant_option is False)
-    ):
-        privileges.append('GRANT OPTION')
+    if isinstance(privileges, list):
+        privileges = set(privileges)
+
+    if with_grant_option:
+        privileges.add('GRANT OPTION')
 
     if database != '*':
         database = '`{0}`'.format(database)
@@ -459,44 +452,22 @@ def privileges(
         mysql_port=mysql_port,
     )
 
-    existing_privileges = []
+    existing_privileges = set()
     if database_table in user_grants:
-        existing_privileges = [
+        existing_privileges = {
             'ALL' if privilege == 'ALL PRIVILEGES' else privilege
             for privilege in user_grants[database_table]
-        ]
+        }
+    else:
+        user_grants[database_table] = set()
 
-    target = action = None
-
-    # No privilege and we want it
-    if present:
-        missing_privileges = [p for p in privileges if p not in existing_privileges]
-        if missing_privileges:
-            privileges_to_apply = missing_privileges
-            action = 'GRANT'
-            target = 'TO'
-        else:
-            host.noop('mysql privileges exist')
-            return
-
-    # Permission we don't want
-    if not present:
-        unwanted_privileges = [p for p in privileges if p in existing_privileges]
-        if unwanted_privileges:
-            privileges_to_apply = unwanted_privileges
-            action = 'REVOKE'
-            target = 'FROM'
-        else:
-            host.noop('mysql privileges do not exist')
-            return
-
-    if target and action:
+    def handle_privileges(action, target, privileges_to_apply):
         command = (
             '{action} {privileges} '
             'ON {database}.{table} '
             '{target} "{user}"@"{user_hostname}"'
         ).format(
-            privileges=', '.join(privileges_to_apply),
+            privileges=', '.join(sorted(privileges_to_apply)),
             action=action,
             target=target,
             database=database,
@@ -513,6 +484,21 @@ def privileges(
             port=mysql_port,
         )
 
+    # Find / revoke any privileges that exist that do not match the desired state
+    privileges_to_revoke = existing_privileges.difference(privileges)
+    # Find / grant any privileges that we want but do not exist
+    privileges_to_grant = privileges - existing_privileges
+
+    # No privilege and we want it
+    if privileges_to_grant:
+        yield from handle_privileges('GRANT', 'TO', privileges_to_grant)
+        user_grants[database_table].update(privileges_to_grant)
+
+    if privileges_to_revoke:
+        yield from handle_privileges('REVOKE', 'FROM', privileges_to_revoke)
+        user_grants[database_table] -= privileges_to_revoke
+
+    if privileges_to_grant or privileges_to_revoke:
         if flush:
             yield make_execute_mysql_command(
                 'FLUSH PRIVILEGES',
@@ -521,6 +507,8 @@ def privileges(
                 host=mysql_host,
                 port=mysql_port,
             )
+    else:
+        host.noop('mysql privileges are already correct')
 
 _privileges = privileges  # noqa: E305 (for use where kwarg is the same)
 

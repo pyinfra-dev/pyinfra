@@ -66,7 +66,7 @@ def parse_fact(fact):
 
     elif isinstance(fact, list):
         # Handle sets
-        if len(fact) > 1 and fact[0] == '_set':
+        if fact and fact[0] == 'set:':
             return set(parse_fact(value) for value in fact[1:])
 
         return [parse_fact(value) for value in fact]

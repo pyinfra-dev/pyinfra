@@ -16,6 +16,5 @@
         "mysql -Be 'CREATE USER \"someuser\"@\"localwhat\"'",
         "mysql -Be 'GRANT SELECT ON *.* TO \"someuser\"@\"localwhat\"'",
         "mysql -Be 'FLUSH PRIVILEGES'"
-    ],
-    "idempotent": false
+    ]
 }

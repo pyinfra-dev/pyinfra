@@ -1,19 +1,14 @@
 {
-    "args": ["someuser", []],
-    "kwargs": {
-        "present": false,
-        "with_grant_option": false
-    },
+    "args": ["someuser", ["SELECT"]],
     "facts": {
         "mysql.MysqlUserGrants": {
             "mysql_host=None, mysql_password=None, mysql_port=None, mysql_user=None, user=someuser, user_hostname=localhost": {
-                "*.*": ["SELECT", "GRANT OPTION"]
+                "*.*": ["set:", "SELECT", "GRANT OPTION"]
             }
         }
     },
     "commands": [
         "mysql -Be 'REVOKE GRANT OPTION ON *.* FROM \"someuser\"@\"localhost\"'",
         "mysql -Be 'FLUSH PRIVILEGES'"
-    ],
-    "idempotent": false
+    ]
 }

@@ -6,13 +6,12 @@
     "facts": {
         "mysql.MysqlUserGrants": {
             "mysql_host=None, mysql_password=None, mysql_port=None, mysql_user=None, user=someuser, user_hostname=localhost": {
-                "*.*": []
+                "*.*": ["set:"]
             }
         }
     },
     "commands": [
-        "mysql -Be 'GRANT SELECT, INSERT ON `mydb`.* TO \"someuser\"@\"localhost\"'",
+        "mysql -Be 'GRANT INSERT, SELECT ON `mydb`.* TO \"someuser\"@\"localhost\"'",
         "mysql -Be 'FLUSH PRIVILEGES'"
-    ],
-    "idempotent": false
+    ]
 }

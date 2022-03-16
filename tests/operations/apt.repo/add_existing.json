@@ -5,7 +5,7 @@
             "type": "deb",
             "url": "http://archive.canonical.com/ubuntu",
             "distribution": "hardy",
-            "components": ["_set", "partner"],
+            "components": ["set:", "partner"],
             "options": {}
         }]
     },

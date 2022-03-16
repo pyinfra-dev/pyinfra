@@ -3,10 +3,10 @@
     "facts": {
         "mysql.MysqlUserGrants": {
             "mysql_host=None, mysql_password=None, mysql_port=None, mysql_user=None, user=someuser, user_hostname=localhost": {
-                "*.*": ["SELECT", "INSERT"]
+                "*.*": ["set:", "SELECT", "INSERT"]
             }
         }
     },
     "commands": [],
-    "noop_description": "mysql privileges exist"
+    "noop_description": "mysql privileges are already correct"
 }

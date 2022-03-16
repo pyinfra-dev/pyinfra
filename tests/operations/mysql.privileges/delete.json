@@ -1,18 +1,14 @@
 {
-    "args": ["someuser", ["SELECT", "INSERT", "DELETE"]],
-    "kwargs": {
-        "present": false
-    },
+    "args": ["someuser", ["DELETE"]],
     "facts": {
         "mysql.MysqlUserGrants": {
             "mysql_host=None, mysql_password=None, mysql_port=None, mysql_user=None, user=someuser, user_hostname=localhost": {
-                "*.*": ["SELECT", "INSERT"]
+                "*.*": ["set:", "SELECT", "INSERT", "DELETE"]
             }
         }
     },
     "commands": [
-        "mysql -Be 'REVOKE SELECT, INSERT ON *.* FROM \"someuser\"@\"localhost\"'",
+        "mysql -Be 'REVOKE INSERT, SELECT ON *.* FROM \"someuser\"@\"localhost\"'",
         "mysql -Be 'FLUSH PRIVILEGES'"
-    ],
-    "idempotent": false
+    ]
 }
