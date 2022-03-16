@@ -16,6 +16,5 @@
     "commands": [
         "hostname my-hostname.net",
         ["upload", "my-hostname.net\n", "/etc/hostname"]
-    ],
-    "idempotent": false
+    ]
 }

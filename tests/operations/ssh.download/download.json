@@ -20,6 +20,5 @@
     },
     "commands": [
         "scp -P 22 nick@remote-host.net:remote_filename local_filename"
-    ],
-    "idempotent": false
+    ]
 }

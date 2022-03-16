@@ -209,3 +209,8 @@ def download(
     yield 'scp -P {0} {1}:{2} {3}'.format(
         port, connection_target, filename, local_filename,
     )
+    host.create_fact(
+        File,
+        kwargs={'path': local_filename},
+        data={'mode': None, 'group': None, 'user': user, 'mtime': None},
+    )

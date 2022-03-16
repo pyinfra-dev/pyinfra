@@ -212,7 +212,11 @@ class FakeHost(object):
         except KeyError:
             fact_key = self._get_fact_key(fact_cls)
             fact = self.fact[fact_key] = {}
-        fact[_sort_kwargs_str(get_kwargs_str(kwargs))] = data
+        if kwargs:
+            fact[_sort_kwargs_str(get_kwargs_str(kwargs))] = data
+        else:
+            fact_key = self._get_fact_key(fact_cls)
+            self.fact[fact_key] = data
 
     def delete_fact(self, fact_cls, kwargs=None):
         try:

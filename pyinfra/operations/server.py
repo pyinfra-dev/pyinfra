@@ -353,6 +353,7 @@ def hostname(hostname, hostname_file=None):
     if host.get_fact(Which, command='hostnamectl'):
         if current_hostname != hostname:
             yield 'hostnamectl set-hostname {0}'.format(hostname)
+            host.create_fact(Hostname, data=hostname)
         else:
             host.noop('hostname is set')
         return
@@ -367,6 +368,7 @@ def hostname(hostname, hostname_file=None):
 
     if current_hostname != hostname:
         yield 'hostname {0}'.format(hostname)
+        host.create_fact(Hostname, data=hostname)
     else:
         host.noop('hostname is set')
 

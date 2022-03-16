@@ -18,5 +18,6 @@
         "cd /home/myrepo && git pull",
         "cd /home/myrepo && git submodule update --init"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "git branch pull / submodule update always executed"
 }
