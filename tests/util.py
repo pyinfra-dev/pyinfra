@@ -316,11 +316,11 @@ class patch_files(object):
 
     def __enter__(self):
         self.patches = [
-            patch('pyinfra.operations.files.os_path.exists', self.exists),
-            patch('pyinfra.operations.files.os_path.isfile', self.isfile),
-            patch('pyinfra.operations.files.os_path.isdir', self.isdir),
-            patch('pyinfra.operations.files.walk', self.walk),
-            patch('pyinfra.operations.files.makedirs', lambda path: True),
+            patch('pyinfra.operations.files.os.path.exists', self.exists),
+            patch('pyinfra.operations.files.os.path.isfile', self.isfile),
+            patch('pyinfra.operations.files.os.path.isdir', self.isdir),
+            patch('pyinfra.operations.files.os.walk', self.walk),
+            patch('pyinfra.operations.files.os.makedirs', lambda path: True),
             patch('pyinfra.api.util.stat', self.stat),
             # Builtin patches
             patch('pyinfra.operations.files.open', self.get_file, create=True),
@@ -387,6 +387,7 @@ def create_host(name=None, facts=None, data=None):
 
     real_facts = {}
     facts = facts or {}
+    data = data or {}
 
     for name, fact_data in facts.items():
         real_facts[name] = fact_data
