@@ -82,7 +82,9 @@ class TestChrootConnector(TestCase):
 
     def test_run_shell_command_success_exit_codes(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        State(inventory, Config())
+        state = State(inventory, Config())
+        connect_all(state)
+
         host = inventory.get_host('@chroot/not-a-chroot')
 
         command = 'echo hoi'
@@ -94,7 +96,9 @@ class TestChrootConnector(TestCase):
 
     def test_run_shell_command_error(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        State(inventory, Config())
+        state = State(inventory, Config())
+        connect_all(state)
+
         host = inventory.get_host('@chroot/not-a-chroot')
 
         command = 'echo hoi'
@@ -106,7 +110,8 @@ class TestChrootConnector(TestCase):
 
     def test_put_file(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        State(inventory, Config())
+        state = State(inventory, Config())
+        connect_all(state)
 
         host = inventory.get_host('@chroot/not-a-chroot')
 
@@ -122,7 +127,8 @@ class TestChrootConnector(TestCase):
 
     def test_put_file_error(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        State(inventory, Config())
+        state = State(inventory, Config())
+        connect_all(state)
 
         host = inventory.get_host('@chroot/not-a-chroot')
 
@@ -134,7 +140,8 @@ class TestChrootConnector(TestCase):
 
     def test_get_file(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        State(inventory, Config())
+        state = State(inventory, Config())
+        connect_all(state)
 
         host = inventory.get_host('@chroot/not-a-chroot')
 
@@ -150,7 +157,8 @@ class TestChrootConnector(TestCase):
 
     def test_get_file_error(self):
         inventory = make_inventory(hosts=('@chroot/not-a-chroot',))
-        State(inventory, Config())
+        state = State(inventory, Config())
+        connect_all(state)
 
         host = inventory.get_host('@chroot/not-a-chroot')
 

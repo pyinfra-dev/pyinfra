@@ -23,7 +23,7 @@ import gevent
 from pyinfra import logger, state
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.api.util import FallbackDict
+from pyinfra.api.host import HostData
 from pyinfra.context import ctx_config, ctx_host
 from pyinfra.progress import progress_spinner
 
@@ -74,7 +74,7 @@ def exec_file(filename, return_locals=False, is_deploy_code=False):
 
 def json_encode(obj):
     # pyinfra types
-    if isinstance(obj, FallbackDict):
+    if isinstance(obj, HostData):
         return obj.dict()
 
     elif isinstance(obj, PyinfraCommand):

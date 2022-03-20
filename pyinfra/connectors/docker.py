@@ -42,8 +42,10 @@ def _start_docker_image(image_name):
 
 
 def connect(state, host):
-    if 'docker_container_id' in host.host_data:  # user can provide a docker_container_id
-        host.host_data['docker_container_no_disconnect'] = True
+    docker_container_id = host.data.get('docker_container_id')
+    if docker_container_id:  # user can provide a docker_container_id
+        host.connector_data['docker_container_no_disconnect'] = True
+        host.connector_data['docker_container_id'] = docker_container_id
         return True
 
     with progress_spinner({'prepare docker container'}):
@@ -54,16 +56,16 @@ def connect(state, host):
             container_id = _start_docker_image(host.data.docker_image)
         else:
             container_id = host.data.docker_image
-            host.host_data['docker_container_no_disconnect'] = True
+            host.connector_data['docker_container_no_disconnect'] = True
 
-    host.host_data['docker_container_id'] = container_id
+    host.connector_data['docker_container_id'] = container_id
     return True
 
 
 def disconnect(state, host):
-    container_id = host.host_data['docker_container_id']
+    container_id = host.connector_data['docker_container_id']
 
-    if host.host_data.get('docker_container_no_disconnect'):
+    if host.connector_data.get('docker_container_no_disconnect'):
         logger.info('{0}docker build complete, container left running: {1}'.format(
             host.print_prefix, click.style(container_id, bold=True),
         ))
@@ -96,7 +98,7 @@ def run_shell_command(
     return_combined_output=False,
     **command_kwargs
 ):
-    container_id = host.host_data['docker_container_id']
+    container_id = host.connector_data['docker_container_id']
 
     command = make_unix_command_for_host(state, host, command, **command_kwargs)
     command = QuoteString(command)
@@ -142,7 +144,7 @@ def put_file(
 
                 temp_f.write(data)
 
-        docker_id = host.host_data['docker_container_id']
+        docker_id = host.connector_data['docker_container_id']
         docker_command = 'docker cp {0} {1}:{2}'.format(
             temp_filename,
             docker_id,
@@ -183,7 +185,7 @@ def get_file(
     fd, temp_filename = mkstemp()
 
     try:
-        docker_id = host.host_data['docker_container_id']
+        docker_id = host.connector_data['docker_container_id']
         docker_command = 'docker cp {0}:{1} {2}'.format(
             docker_id,
             remote_filename,

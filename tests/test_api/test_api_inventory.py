@@ -42,7 +42,7 @@ class TestInventoryApi(TestCase):
         assert inventory.get_override_data() == override_data
 
         assert inventory.get_host('somehost').data.host_data == 'host_data'
-        assert inventory.get_host('anotherhost').data.host_data is None
+        assert inventory.get_host('anotherhost').data.get('host_data') is None
 
         assert inventory.get_host('somehost').data.override_data == 'override_data'
         assert inventory.get_host('anotherhost').data.override_data == 'override_data'
