@@ -51,7 +51,7 @@ def chain(
     if present:
         if chain not in chains:
             yield '{0} -N {1}'.format(command, chain)
-            chains[chain] = None  # pilciy will be set below
+            chains[chain] = None  # policy will be set below
         else:
             host.noop('iptables chain {0} exists'.format(chain))
 
