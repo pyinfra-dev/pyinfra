@@ -1,4 +1,4 @@
-# v2.0.dev0
+# v2.0.dev1
 
 The first `2.x` release! Like v0 -> v1 this release mostly removes legacy APIs and methods which show warnings in v1. Major changes:
 
@@ -20,8 +20,10 @@ pyinfra --chdir deploys/elasticsearch/ inventories/production.py deploy.py
 
 This change also brings **support for all of the execution global arguments to facts**, and hugely simplifies the facts implementation. Global arguments will now be read from host data in exactly the same way they are for operations, which was often a confusing gotcha in v1. This also means that the arguments can have different values for each host and this will not cause issues.
 
-**Other breaking changes** (warnings shown in v1):
+**Other breaking changes** (warnings shown in v1 for most):
 
++ Non-existent host data raises an `AttributeError` when accessed via `host.data.X`
++ `present` argument removed from `mysql.privileges` operation
 + Config variables must now be set on the global `config` object
 + Old style `host.fact.fact_name` access has been removed
 + The legacy `init.*` operations have been removed
@@ -34,6 +36,7 @@ This change also brings **support for all of the execution global arguments to f
 + Remove `config.MIN_PYINFRA_VERSION`
 + Remove `branch` and `create_branch` arguments in `git.worktree` operation
 + `pyinfra.api.connectors` module moved to `pyinfra.connectors`
++ Stop lowercasing package names in facts & operations
 
 **Deprecated** (showing warnings, to be removed in v3):
 
