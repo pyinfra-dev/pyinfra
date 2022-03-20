@@ -155,31 +155,33 @@ def _make_paramiko_kwargs(state, host):
     kwargs = {
         'allow_agent': False,
         'look_for_keys': False,
-        'hostname': host.data.ssh_hostname or host.name,
+        'hostname': host.data.get('ssh_hostname', host.name),
         # Special pyinfra specific kwarg for our custom SSHClient
-        '_pyinfra_force_forward_agent': host.data.ssh_forward_agent,
+        '_pyinfra_force_forward_agent': host.data.get('ssh_forward_agent'),
         # Special pyinfra specific kwarg to select an alternative SSH config
-        '_pyinfra_ssh_config_file': host.data.ssh_config_file,
+        '_pyinfra_ssh_config_file': host.data.get('ssh_config_file'),
     }
 
     for key, value in (
-        ('username', host.data.ssh_user),
-        ('port', int(host.data.ssh_port or 0)),
+        ('username', host.data.get('ssh_user')),
+        ('port', int(host.data.get('ssh_port', 0))),
         ('timeout', state.config.CONNECT_TIMEOUT),
     ):
         if value:
             kwargs[key] = value
 
     # Password auth (boo!)
-    if host.data.ssh_password:
-        kwargs['password'] = host.data.ssh_password
+    ssh_password = host.data.get('ssh_password')
+    if ssh_password:
+        kwargs['password'] = ssh_password
 
     # Key auth!
-    elif host.data.ssh_key:
+    ssh_key = host.data.get('ssh_key')
+    if ssh_key:
         kwargs['pkey'] = _get_private_key(
             state,
-            key_filename=host.data.ssh_key,
-            key_password=host.data.ssh_key_password,
+            key_filename=ssh_key,
+            key_password=host.data.get('ssh_key_password'),
         )
 
     # No key or password, so let's have paramiko look for SSH agents and user keys
@@ -217,7 +219,7 @@ def connect(state, host):
                 continue
 
             if key == 'pkey' and value:
-                auth_kwargs['key'] = host.data.ssh_key
+                auth_kwargs['key'] = host.data.get('ssh_key')
 
         auth_args = ', '.join(
             '{0}={1}'.format(key, value)
@@ -486,10 +488,10 @@ def put_file(
 
 
 def check_can_rsync(host):
-    if host.data.ssh_key_password:
+    if host.data.get('ssh_key_password'):
         raise NotImplementedError('Rsync does not currently work with SSH keys needing passwords.')
 
-    if host.data.ssh_password:
+    if host.data.get('ssh_password'):
         raise NotImplementedError('Rsync does not currently work with SSH passwords.')
 
     if not find_executable('rsync'):
@@ -503,18 +505,18 @@ def rsync(
     sudo_user=None,
     **ignored_kwargs
 ):
-    hostname = host.data.ssh_hostname or host.name
-    user = ''
-    if host.data.ssh_user:
-        user = '{0}@'.format(host.data.ssh_user)
+    hostname = host.data.get('ssh_hostname', host.name)
+    user = host.data.get('ssh_user', '')
+    if user:
+        user = '{0}@'.format(user)
 
     ssh_flags = []
 
-    port = host.data.ssh_port
+    port = host.data.get('ssh_port')
     if port:
         ssh_flags.append('-p {0}'.format(port))
 
-    ssh_key = host.data.ssh_key
+    ssh_key = host.data.get('ssh_key')
     if ssh_key:
         ssh_flags.append('-i {0}'.format(ssh_key))
 

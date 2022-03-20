@@ -153,7 +153,15 @@ class FallbackDict(object):
         self.__dict__['datas'] = tuple(datas)
 
     def __getattr__(self, key):
-        return self.get(key)
+        value = self.get(key)
+        if value is None:
+            logger.warning((
+                'Non-existent host data will raise an `AttributeError` '
+                'in pyinfra v2, please use `host.data.get("{0}")` ({1})'.format(
+                    key, get_call_location(),
+                )
+            ))
+        return value
 
     def __setattr__(self, key, value):
         self.override_datas[key] = value

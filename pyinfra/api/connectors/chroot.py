@@ -42,7 +42,7 @@ def connect(state, host):
     except PyinfraError as e:
         raise ConnectError(e.args[0])
 
-    host.host_data['chroot_directory'] = chroot_directory
+    host.connector_data['chroot_directory'] = chroot_directory
     return True
 
 
@@ -59,7 +59,7 @@ def run_shell_command(
     return_combined_output=False,
     **command_kwargs
 ):
-    chroot_directory = host.host_data['chroot_directory']
+    chroot_directory = host.connector_data['chroot_directory']
 
     command = make_unix_command_for_host(state, host, command, **command_kwargs)
     command = QuoteString(command)
@@ -112,7 +112,7 @@ def put_file(
 
                 temp_f.write(data)
 
-        chroot_directory = host.host_data['chroot_directory']
+        chroot_directory = host.connector_data['chroot_directory']
 
         chroot_command = 'cp {0} {1}/{2}'.format(
             temp_filename, chroot_directory, remote_filename,
@@ -156,7 +156,7 @@ def get_file(
     _, temp_filename = mkstemp()
 
     try:
-        chroot_directory = host.host_data['chroot_directory']
+        chroot_directory = host.connector_data['chroot_directory']
         chroot_command = 'cp {0}/{1} {2}'.format(
             chroot_directory, remote_filename, temp_filename,
         )
