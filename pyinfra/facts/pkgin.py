@@ -22,4 +22,4 @@ class PkginPackages(FactBase):
     default = dict
 
     def process(self, output):
-        return parse_packages(PKGIN_REGEX, output, lower=False)
+        return parse_packages(PKGIN_REGEX, output)

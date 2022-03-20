@@ -26,7 +26,7 @@ def ensure_packages(
     host, packages, current_packages, present,
     install_command, uninstall_command,
     latest=False, upgrade_command=None,
-    version_join=None, lower=True,
+    version_join=None,
     expand_package_fact=None,
 ):
     '''
@@ -48,7 +48,6 @@ def ensure_packages(
         upgrade_command (str): as above for upgrading
         version_join (str): the package manager specific "joiner", ie ``=`` for \
             ``<apt_pkg>=<version>``
-        lower (bool): whether to lowercase package names
     '''
 
     if packages is None:
@@ -57,13 +56,6 @@ def ensure_packages(
     # Accept a single package as string
     if isinstance(packages, str):
         packages = [packages]
-
-    # Lowercase packaging?
-    if lower:
-        packages = [
-            package.lower()
-            for package in packages
-        ]
 
     # Version support?
     if version_join:

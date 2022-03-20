@@ -186,7 +186,6 @@ def packages(
         uninstall_command=' '.join(uninstall_command),
         upgrade_command='yum update -y',
         version_join='=',
-        lower=False,  # yum packages are case sensitive
         latest=latest,
         expand_package_fact=lambda package: host.get_fact(
             RpmPackageProvides,

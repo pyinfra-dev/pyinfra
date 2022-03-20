@@ -190,5 +190,4 @@ def packages(
         upgrade_command=upgrade_command,
         version_join='=',
         latest=latest,
-        lower=False,
     )

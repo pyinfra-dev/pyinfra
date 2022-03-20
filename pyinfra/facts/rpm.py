@@ -25,11 +25,7 @@ class RpmPackages(FactBase):
     default = dict
 
     def process(self, output):
-        return parse_packages(
-            rpm_regex, output,
-            # yum packages are case-sensitive
-            lower=False,
-        )
+        return parse_packages(rpm_regex, output)
 
 
 class RpmPackage(FactBase):
