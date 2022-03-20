@@ -4,13 +4,13 @@ The files module handles filesystem state, file uploads and template generation.
 
 from __future__ import unicode_literals
 
+import os
 import posixpath
 import re
 import sys
 import traceback
 from datetime import timedelta
 from fnmatch import fnmatch
-from os import makedirs, path as os_path, walk
 
 import six
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
@@ -516,14 +516,14 @@ def sync(
 
     '''
     original_src = src  # Keep a copy to reference in errors
-    src = os_path.normpath(src)
+    src = os.path.normpath(src)
 
     # Add deploy directory?
     if add_deploy_dir and state.deploy_dir:
-        src = os_path.join(state.deploy_dir, src)
+        src = os.path.join(state.deploy_dir, src)
 
     # Ensure the source directory exists
-    if not os_path.isdir(src):
+    if not os.path.isdir(src):
         raise IOError('No such directory: {0}'.format(original_src))
 
     # Ensure exclude is a list/tuple
@@ -538,20 +538,20 @@ def sync(
 
     put_files = []
     ensure_dirnames = []
-    for dirpath, dirnames, filenames in walk(src, topdown=True):
-        remote_dirpath = os_path.normpath(os_path.relpath(dirpath, src))
+    for dirpath, dirnames, filenames in os.walk(src, topdown=True):
+        remote_dirpath = os.path.normpath(os.path.relpath(dirpath, src))
 
         # Filter excluded dirs
         for child_dir in dirnames[:]:
-            child_path = os_path.normpath(os_path.join(remote_dirpath, child_dir))
+            child_path = os.path.normpath(os.path.join(remote_dirpath, child_dir))
             if exclude_dir and any(fnmatch(child_path, match) for match in exclude_dir):
                 dirnames.remove(child_dir)
 
-        if remote_dirpath and remote_dirpath != os_path.curdir:
+        if remote_dirpath and remote_dirpath != os.path.curdir:
             ensure_dirnames.append((remote_dirpath, get_path_permissions_mode(dirpath)))
 
         for filename in filenames:
-            full_filename = os_path.join(dirpath, filename)
+            full_filename = os.path.join(dirpath, filename)
 
             # Should we exclude this file?
             if exclude and any(fnmatch(full_filename, match) for match in exclude):
@@ -560,7 +560,7 @@ def sync(
             remote_full_filename = unix_path_join(*[
                 item for item in
                 (dest, remote_dirpath, filename)
-                if item and item != os_path.curdir
+                if item and item != os.path.curdir
             ])
             put_files.append((full_filename, remote_full_filename))
 
@@ -695,12 +695,12 @@ def get(
     '''
 
     if add_deploy_dir and state.deploy_dir:
-        dest = os_path.join(state.deploy_dir, dest)
+        dest = os.path.join(state.deploy_dir, dest)
 
     if create_local_dir:
-        local_pathname = os_path.dirname(dest)
-        if not os_path.exists(local_pathname):
-            makedirs(local_pathname)
+        local_pathname = os.path.dirname(dest)
+        if not os.path.exists(local_pathname):
+            os.makedirs(local_pathname)
 
     remote_file = host.get_fact(File, path=src)
 
@@ -709,7 +709,7 @@ def get(
         yield FileDownloadCommand(src, dest, remote_temp_filename=state.get_temp_filename(dest))
 
     # No local file, so always download
-    elif not os_path.exists(dest):
+    elif not os.path.exists(dest):
         yield FileDownloadCommand(src, dest, remote_temp_filename=state.get_temp_filename(dest))
 
     # Remote file exists - check if it matches our local
@@ -779,18 +779,18 @@ def put(
     else:
         # Add deploy directory?
         if add_deploy_dir and state.deploy_dir:
-            src = os_path.join(state.deploy_dir, src)
+            src = os.path.join(state.deploy_dir, src)
 
         local_file = src
 
-        if not assume_exists and not os_path.isfile(local_file):
+        if not assume_exists and not os.path.isfile(local_file):
             raise IOError('No such file: {0}'.format(local_file))
 
     mode = ensure_mode_int(mode)
     remote_file = host.get_fact(File, path=dest)
 
     if not remote_file and host.get_fact(Directory, path=dest):
-        dest = unix_path_join(dest, os_path.basename(src))
+        dest = unix_path_join(dest, os.path.basename(src))
 
     if create_remote_dir:
         yield _create_remote_dir(state, host, dest, user, group)
@@ -939,7 +939,7 @@ def template(
     '''
 
     if state.deploy_dir:
-        src = os_path.join(state.deploy_dir, src)
+        src = os.path.join(state.deploy_dir, src)
 
     # Ensure host/state/inventory are available inside templates (if not set)
     data.setdefault('host', host)
@@ -1117,14 +1117,14 @@ def link(
 
         # If we have an absolute path - prepend to any non-absolute values from the fact
         # and/or the source.
-        if os_path.isabs(path):
-            link_dirname = os_path.dirname(path)
+        if os.path.isabs(path):
+            link_dirname = os.path.dirname(path)
 
-            if not os_path.isabs(target):
-                target = os_path.normpath(unix_path_join(link_dirname, target))
+            if not os.path.isabs(target):
+                target = os.path.normpath(unix_path_join(link_dirname, target))
 
-            if info and not os_path.isabs(info['link_target']):
-                info['link_target'] = os_path.normpath(
+            if info and not os.path.isabs(info['link_target']):
+                info['link_target'] = os.path.normpath(
                     unix_path_join(link_dirname, info['link_target']),
                 )
 
