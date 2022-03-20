@@ -154,61 +154,6 @@ def get_operation_order_from_stack(state):
     return line_numbers
 
 
-def extract_callable_datas(datas):
-    for data in datas:
-        # Support for dynamic data, ie @deploy wrapped data defaults where
-        # the data is stored on the state temporarily.
-        if callable(data):
-            data = data()
-
-        yield data
-
-
-class FallbackDict(object):
-    '''
-    Combines multiple AttrData's to search for attributes.
-    '''
-
-    override_datas = None
-
-    def __init__(self, *datas):
-        datas = list(datas)
-
-        # Inject an empty override data so we can assign during deploy
-        self.__dict__['override_datas'] = {}
-        datas.insert(0, self.override_datas)
-
-        self.__dict__['datas'] = tuple(datas)
-
-    def __getattr__(self, key):
-        return self.get(key)
-
-    def __setattr__(self, key, value):
-        self.override_datas[key] = value
-
-    def __str__(self):
-        return str(self.datas)
-
-    def get(self, key, default=None):
-        for data in extract_callable_datas(self.datas):
-            if key in data:
-                return data[key]
-        return default
-
-    def dict(self):
-        out = {}
-
-        # Copy and reverse data objects (such that the first items override
-        # the last, matching __getattr__ output).
-        datas = list(self.datas)
-        datas.reverse()
-
-        for data in extract_callable_datas(datas):
-            out.update(data)
-
-        return out
-
-
 def get_template(filename_or_string, is_string=False):
     '''
     Gets a jinja2 ``Template`` object for the input filename or string, with caching
