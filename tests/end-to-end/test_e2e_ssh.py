@@ -33,7 +33,7 @@ def run_docker_ssh_server(helpers):
             DOCKER_IMAGE,
         ]),
     )
-    time.sleep(5)  # allow openSSH to start
+    time.sleep(10)  # allow openSSH to start
     try:
         yield docker_container_id
     finally:
