@@ -1,3 +1,11 @@
+# v1.7.1
+
++ Escape exported `env` variables (@lun-4)
++ Expand units `Systemd*` facts pick up (@jmpolom)
++ Deprecate `match`, replace with `text` in `files.replace` operation
++ Show warnings for removal of `present` argument in `mysql.privileges` operation in v2
++ Import top level `os` to avoid confusion in files operation module
+
 # v1.7
 
 + Add `--user` and `--machine` flags to `systemd.*` operations (@jmpolom)
