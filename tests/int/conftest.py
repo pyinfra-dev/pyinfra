@@ -6,10 +6,7 @@ import pytest
 
 class Helpers:
     @staticmethod
-    def run(command, expected_lines=None, cwd='examples', expected_exit_code=0):
-        if expected_lines is None:
-            expected_lines = ['Connected', 'Starting operation', 'Errors: 0']
-
+    def run(command, cwd=None, expected_exit_code=0):
         results = subprocess.Popen(
             command,
             shell=True,
@@ -26,6 +23,15 @@ class Helpers:
             stderr = stderr.decode('utf-8')
 
         assert results.returncode == expected_exit_code, stderr
+
+        return stdout, stderr
+
+    @staticmethod
+    def run_check_output(command, expected_lines=None, **kwargs):
+        if expected_lines is None:
+            expected_lines = ['Connected', 'Starting operation', 'Errors: 0']
+
+        _, stderr = Helpers.run(command, **kwargs)
 
         for line in expected_lines:
             assert re.search(line, stderr, re.MULTILINE), \
