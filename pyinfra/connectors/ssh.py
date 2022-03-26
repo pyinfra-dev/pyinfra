@@ -140,10 +140,11 @@ def _make_paramiko_kwargs(state, host):
         'allow_agent': False,
         'look_for_keys': False,
         'hostname': host.data.get('ssh_hostname', host.name),
-        # Special pyinfra specific kwarg for our custom SSHClient
-        '_pyinfra_force_forward_agent': host.data.get('ssh_forward_agent'),
-        # Special pyinfra specific kwarg to select an alternative SSH config
+        # Overrides of SSH config via pyinfra host data
+        '_pyinfra_ssh_forward_agent': host.data.get('ssh_forward_agent'),
         '_pyinfra_ssh_config_file': host.data.get('ssh_config_file'),
+        '_pyinfra_ssh_known_hosts_file': host.data.get('ssh_known_hosts_file'),
+        '_pyinfra_ssh_strict_host_key_checking': host.data.get('ssh_strict_host_key_checking'),
     }
 
     for key, value in (

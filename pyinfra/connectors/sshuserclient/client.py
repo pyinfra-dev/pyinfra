@@ -57,8 +57,11 @@ class WarningPolicy(MissingHostKeyPolicy):
 
 @memoize
 def get_ssh_config(user_config_file=None):
+    logger.debug(f'Loading SSH config: {user_config_file}')
+
     if user_config_file is None:
         user_config_file = path.expanduser('~/.ssh/config')
+
     if path.exists(user_config_file):
         with open(user_config_file) as f:
             ssh_config = SSHConfig()
@@ -91,8 +94,10 @@ class SSHClient(ParamikoClient):
     def connect(
         self,
         hostname,
-        _pyinfra_force_forward_agent=None,
+        _pyinfra_ssh_forward_agent=None,
         _pyinfra_ssh_config_file=None,
+        _pyinfra_ssh_known_hosts_file=None,
+        _pyinfra_ssh_strict_host_key_checking=None,
         **kwargs
     ):
         hostname, config, forward_agent, missing_host_key_policy, host_keys_file = (
@@ -100,10 +105,14 @@ class SSHClient(ParamikoClient):
                 hostname,
                 kwargs,
                 ssh_config_file=_pyinfra_ssh_config_file,
+                strict_host_key_checking=_pyinfra_ssh_strict_host_key_checking,
             )
         )
         self.set_missing_host_key_policy(missing_host_key_policy)
         config.update(kwargs)
+
+        if _pyinfra_ssh_known_hosts_file:
+            host_keys_file = _pyinfra_ssh_known_hosts_file
 
         # Overwrite paramiko empty defaults with @memoize-d host keys object
         self._host_keys = get_host_keys(host_keys_file)
@@ -111,8 +120,8 @@ class SSHClient(ParamikoClient):
 
         super(SSHClient, self).connect(hostname, **config)
 
-        if _pyinfra_force_forward_agent is not None:
-            forward_agent = _pyinfra_force_forward_agent
+        if _pyinfra_ssh_forward_agent is not None:
+            forward_agent = _pyinfra_ssh_forward_agent
 
         if forward_agent:
             # Enable SSH forwarding
@@ -127,7 +136,13 @@ class SSHClient(ParamikoClient):
             (hostname, host_port),
         )
 
-    def parse_config(self, hostname, initial_cfg=None, ssh_config_file=None):
+    def parse_config(
+        self,
+        hostname,
+        initial_cfg=None,
+        ssh_config_file=None,
+        strict_host_key_checking=None,
+    ):
         cfg = {'port': 22}
         cfg.update(initial_cfg or {})
 
@@ -142,8 +157,11 @@ class SSHClient(ParamikoClient):
         host_config = ssh_config.lookup(hostname)
         forward_agent = host_config.get('forwardagent') == 'yes'
 
-        if 'stricthostkeychecking' in host_config:
-            v = host_config['stricthostkeychecking']
+        if strict_host_key_checking is None:
+            strict_host_key_checking = host_config.get('stricthostkeychecking')
+
+        if strict_host_key_checking:
+            v = strict_host_key_checking
             if v == 'ask':
                 missing_host_key_policy = AskPolicy()
             elif v == 'no' or v == 'off':
