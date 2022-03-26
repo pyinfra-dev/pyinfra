@@ -28,6 +28,7 @@ automagically
 automount
 autoname
 autosectionlabel
+autouse
 base64
 baseurl
 basic

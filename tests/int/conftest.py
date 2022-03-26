@@ -38,6 +38,6 @@ class Helpers:
                 'Line "{0}" not found in output!'.format(line)
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def helpers():
     return Helpers
