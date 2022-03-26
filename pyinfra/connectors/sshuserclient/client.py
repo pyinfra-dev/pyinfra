@@ -55,6 +55,17 @@ class WarningPolicy(MissingHostKeyPolicy):
         logger.warning('No host key for {0} found in known_hosts'.format(hostname))
 
 
+def get_missing_host_key_policy(policy):
+    if policy is None or policy == 'ask':
+        return AskPolicy()
+    elif policy == 'no' or policy == 'off':
+        return WarningPolicy()
+    elif policy == 'yes':
+        return StrictPolicy()
+    else:
+        raise SSHException('Invalid value StrictHostKeyChecking={}'.format(policy))
+
+
 @memoize
 def get_ssh_config(user_config_file=None):
     logger.debug(f'Loading SSH config: {user_config_file}')
@@ -147,7 +158,7 @@ class SSHClient(ParamikoClient):
         cfg.update(initial_cfg or {})
 
         forward_agent = False
-        missing_host_key_policy = AskPolicy()
+        missing_host_key_policy = get_missing_host_key_policy(strict_host_key_checking)
         host_keys_file = path.expanduser('~/.ssh/known_hosts')  # OpenSSH default
 
         ssh_config = get_ssh_config(ssh_config_file)
@@ -157,21 +168,11 @@ class SSHClient(ParamikoClient):
         host_config = ssh_config.lookup(hostname)
         forward_agent = host_config.get('forwardagent') == 'yes'
 
-        if strict_host_key_checking is None:
-            strict_host_key_checking = host_config.get('stricthostkeychecking')
-
-        if strict_host_key_checking:
-            v = strict_host_key_checking
-            if v == 'ask':
-                missing_host_key_policy = AskPolicy()
-            elif v == 'no' or v == 'off':
-                missing_host_key_policy = WarningPolicy()
-            elif v == 'yes':
-                missing_host_key_policy = StrictPolicy()
-            else:
-                raise SSHException(
-                    'Invalid value StrictHostKeyChecking={}'.format(
-                        host_config['stricthostkeychecking']))
+        # If not overridden, apply any StrictHostKeyChecking
+        if strict_host_key_checking is None and 'stricthostkeychecking' in host_config:
+            missing_host_key_policy = get_missing_host_key_policy(
+                host_config['stricthostkeychecking'],
+            )
 
         if 'userknownhostsfile' in host_config:
             host_keys_file = path.expanduser(host_config['userknownhostsfile'])
