@@ -407,15 +407,18 @@ def line(
 
 @operation
 def replace(
-    path, match, replace,
+    path,
+    text=None,
+    replace=None,
     flags=None, backup=False,
     interpolate_variables=False,
+    match=None,  # deprecated
 ):
     '''
     Replace contents of a file using ``sed``.
 
     + path: target remote file to edit
-    + match: text/regex to match for
+    + text: text/regex to match against
     + replace: text to replace with
     + flags: list of flags to pass to sed
     + backup: whether to backup the file (see below)
@@ -433,15 +436,27 @@ def replace(
         files.replace(
             name='Change part of a line in a file',
             path='/etc/motd',
-            match='verboten',
+            text='verboten',
             replace='forbidden',
         )
     '''
 
+    if text is None and match:
+        text = match
+        logger.warning(
+            'The `match` argument has been replaced by `text` in the `files.replace` operation',
+        )
+
+    if text is None:
+        raise TypeError('Missing argument `text` required in `files.replace` operation')
+
+    if replace is None:
+        raise TypeError('Missing argument `replace` required in `files.replace` operation')
+
     existing_lines = host.get_fact(
         FindInFile,
         path=path,
-        pattern=match,
+        pattern=text,
         interpolate_variables=interpolate_variables,
     )
 
@@ -449,7 +464,7 @@ def replace(
     # or we have matching lines.
     if existing_lines is None or existing_lines:
         yield sed_replace(
-            path, match, replace,
+            path, text, replace,
             flags=flags,
             backup=backup,
             interpolate_variables=interpolate_variables,
@@ -458,13 +473,13 @@ def replace(
             FindInFile,
             kwargs={
                 'path': path,
-                'pattern': match,
+                'pattern': text,
                 'interpolate_variables': interpolate_variables,
             },
             data=[],
         )
     else:
-        host.noop('string "{0}" does not exist in {1}'.format(match, path))
+        host.noop('string "{0}" does not exist in {1}'.format(text, path))
 
 
 @operation(pipeline_facts={
