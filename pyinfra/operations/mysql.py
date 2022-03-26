@@ -15,6 +15,7 @@ See the example/mysql.py
 
 import six
 
+from pyinfra import logger
 from pyinfra.api import MaskString, operation, OperationError, StringCommand
 from pyinfra.facts.mysql import (
     make_execute_mysql_command,
@@ -428,6 +429,12 @@ def privileges(
         & table combination. This means when ``present=True`` it won't add/remove any permissions
         that already exist but aren't passed in as ``privileges``.
     '''
+
+    logger.warning((
+        'Please note that the `present` argument in the `mysql.privileges` operation '
+        'will be removed in pyinfra v2, wich will grant/revoke privileges as required '
+        'to match the list in the `privileges` argument'
+    ))
 
     # Ensure we have a list
     if isinstance(privileges, six.string_types):
