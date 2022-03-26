@@ -7,8 +7,8 @@ most-specific tag available for each image to reduce/avoid this problem).
 import pytest
 
 
-@pytest.mark.int
-@pytest.mark.docker
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_docker
 def test_int_docker_install_package_ubuntu(helpers):
     helpers.run_check_output(
         'pyinfra --chdir examples @docker/ubuntu:18.04 apt.packages iftop update=true',
@@ -16,8 +16,8 @@ def test_int_docker_install_package_ubuntu(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.docker
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_docker
 def test_int_docker_apk_on_alpine(helpers):
     helpers.run_check_output(
         'pyinfra --chdir examples @docker/alpine:3.11 apk.py',
@@ -25,8 +25,8 @@ def test_int_docker_apk_on_alpine(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.docker
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_docker
 def test_int_docker_apt_and_npm_on_ubuntu(helpers):
     helpers.run_check_output(
         'pyinfra --chdir examples @docker/ubuntu:18.04 apt.py npm.py',
@@ -34,8 +34,8 @@ def test_int_docker_apt_and_npm_on_ubuntu(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.docker
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_docker
 def test_int_docker_git_gem_and_pip_on_mult(helpers):
     helpers.run_check_output(
         (
@@ -47,8 +47,8 @@ def test_int_docker_git_gem_and_pip_on_mult(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.docker
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_docker
 def test_int_docker_pacman_on_arch(helpers):
     helpers.run_check_output(
         'pyinfra --chdir examples @docker/archlinux:base-20220102.0.42924 pacman.py',
@@ -56,8 +56,8 @@ def test_int_docker_pacman_on_arch(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.docker
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_docker
 def test_int_docker_yum_on_centos(helpers):
     helpers.run_check_output(
         'pyinfra --chdir examples @docker/centos:7.9.2009 yum.py',
@@ -65,8 +65,8 @@ def test_int_docker_yum_on_centos(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.docker
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_docker
 def test_int_docker_adhoc_fact_os(helpers):
     helpers.run_check_output(
         'pyinfra --chdir examples @docker/ubuntu:18.04,@docker/centos:7.9.2009 fact server.Os',

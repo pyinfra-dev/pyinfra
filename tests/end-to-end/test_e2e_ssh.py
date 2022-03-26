@@ -40,8 +40,8 @@ def run_docker_ssh_server(helpers):
         helpers.run(f'docker kill {docker_container_id}')
 
 
-@pytest.mark.int
-@pytest.mark.ssh
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_ssh
 def test_int_local_file_no_changes(helpers):
     helpers.run_check_output(  # first run = create the file
         f'{PYINFRA_COMMAND} files.file _testfile',
@@ -54,8 +54,8 @@ def test_int_local_file_no_changes(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.ssh
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_ssh
 def test_int_local_directory_no_changes(helpers):
     helpers.run_check_output(  # first run = create the directory
         f'{PYINFRA_COMMAND} files.directory _testdir',
@@ -78,8 +78,8 @@ def test_int_local_directory_no_changes(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.ssh
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_ssh
 def test_int_local_link_no_changes(helpers):
     helpers.run_check_output(  # first run = create the link
         f'{PYINFRA_COMMAND} files.link _testlink target=_testfile',
@@ -92,8 +92,8 @@ def test_int_local_link_no_changes(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.ssh
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_ssh
 def test_int_local_line_no_changes(helpers):
     helpers.run_check_output(  # first run = create the line
         f'{PYINFRA_COMMAND} files.line _testfile someline',
@@ -116,8 +116,8 @@ def test_int_local_line_no_changes(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.ssh
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_ssh
 def test_int_local_pre_post_conditions(helpers):
     helpers.run_check_output(
         (
@@ -129,8 +129,8 @@ def test_int_local_pre_post_conditions(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.ssh
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_ssh
 def test_int_local_failed_precondition(helpers):
     helpers.run_check_output(
         f"{PYINFRA_COMMAND} server.shell uptime precondition='exit 1'",
@@ -139,8 +139,8 @@ def test_int_local_failed_precondition(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.ssh
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_ssh
 def test_int_local_failed_postcondition(helpers):
     helpers.run_check_output(
         f"{PYINFRA_COMMAND} server.shell uptime postcondition='exit 1'",

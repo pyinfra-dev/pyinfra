@@ -17,8 +17,8 @@ def temp_dir():
         rmtree(temp_dir)
 
 
-@pytest.mark.int
-@pytest.mark.local
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_local
 def test_int_local_file_no_changes(helpers, temp_dir):
     helpers.run_check_output(  # first run = create the file
         'pyinfra -v @local files.file _testfile',
@@ -33,8 +33,8 @@ def test_int_local_file_no_changes(helpers, temp_dir):
     )
 
 
-@pytest.mark.int
-@pytest.mark.local
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_local
 def test_int_local_directory_no_changes(helpers, temp_dir):
     helpers.run_check_output(  # first run = create the directory
         'pyinfra -v @local files.directory _testdir',
@@ -61,8 +61,8 @@ def test_int_local_directory_no_changes(helpers, temp_dir):
     )
 
 
-@pytest.mark.int
-@pytest.mark.local
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_local
 def test_int_local_link_no_changes(helpers, temp_dir):
     helpers.run_check_output(  # first run = create the link
         'pyinfra -v @local files.link _testlink target=_testfile',
@@ -77,8 +77,8 @@ def test_int_local_link_no_changes(helpers, temp_dir):
     )
 
 
-@pytest.mark.int
-@pytest.mark.local
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_local
 def test_int_local_line_no_changes(helpers, temp_dir):
     helpers.run_check_output(  # first run = create the line
         'pyinfra -v @local files.line _testfile someline',
@@ -105,8 +105,8 @@ def test_int_local_line_no_changes(helpers, temp_dir):
     )
 
 
-@pytest.mark.int
-@pytest.mark.local
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_local
 def test_int_local_pre_post_conditions(helpers):
     helpers.run_check_output(
         (
@@ -118,8 +118,8 @@ def test_int_local_pre_post_conditions(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.local
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_local
 def test_int_local_failed_precondition(helpers):
     helpers.run_check_output(
         "pyinfra -v @local server.shell uptime precondition='exit 1'",
@@ -128,8 +128,8 @@ def test_int_local_failed_precondition(helpers):
     )
 
 
-@pytest.mark.int
-@pytest.mark.local
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_local
 def test_int_local_failed_postcondition(helpers):
     helpers.run_check_output(
         "pyinfra -v @local server.shell uptime postcondition='exit 1'",
