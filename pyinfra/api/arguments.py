@@ -205,8 +205,7 @@ def pop_global_arguments(state, host, kwargs, keys_to_check=None):
 
             host_default = getattr(host.data, key, None)
 
-            # COMPAT w/<v3
-            # TODO: remove this additional check
+            # TODO: remove this additional check in v3
             if host_default is None and internal_key != key:
                 host_default = getattr(host.data, internal_key, None)
                 if host_default is not None:
@@ -219,8 +218,7 @@ def pop_global_arguments(state, host, kwargs, keys_to_check=None):
                 found_keys.append(internal_key)
                 value = kwargs.pop(key)
 
-            # COMPAT w/<v3
-            # TODO: remove this additional check
+            # TODO: remove this additional check in v3
             elif internal_key in kwargs:
                 show_legacy_argument_warning(internal_key, get_call_location(frame_offset=2))
                 found_keys.append(internal_key)

@@ -105,7 +105,7 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, frame_offset=1
         return decorator
 
     # Check whether an operation is "legacy" - ie contains state=None, host=None kwargs
-    # TODO: remove this! COMPAT with w/<v2
+    # TODO: remove this in v3
     is_legacy = False
     args, kwargs = get_args_kwargs_spec(func)
     if all(key in kwargs and kwargs[key] is None for key in ('state', 'host')):

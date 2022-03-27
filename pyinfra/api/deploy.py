@@ -75,7 +75,7 @@ def deploy(func_or_name, data_defaults=None, _call_location=None):
     func = func_or_name
 
     # Check whether an operation is "legacy" - ie contains state=None, host=None kwargs
-    # TODO: remove this! COMPAT with w/<v2
+    # TODO: remove this in v3
     is_legacy = False
     args, kwargs = get_args_kwargs_spec(func)
     if all(key in kwargs and kwargs[key] is None for key in ('state', 'host')):

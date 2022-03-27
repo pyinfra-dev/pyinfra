@@ -392,9 +392,6 @@ def database(
         )
 
 
-# TODO: make this behave like a proper state op in v2, by setting present=None as the default
-# and having that mode add/remove privileges to match the provided list. Retain True/False support
-# to ensure certain matches exist or not.
 @operation
 def privileges(
     user, privileges,
