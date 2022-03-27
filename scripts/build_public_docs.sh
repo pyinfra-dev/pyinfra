@@ -9,6 +9,9 @@ case "${BRANCH_NAME}" in
     "current")
         DOCS_VERSION="latest"
         ;;
+    "2.x")
+        DOCS_VERSION="2.x"
+        ;;
     "1.x")
         DOCS_VERSION="1.x"
         ;;
