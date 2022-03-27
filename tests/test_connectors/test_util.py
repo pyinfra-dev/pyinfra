@@ -1,7 +1,6 @@
 # encoding: utf-8
 
 from unittest import TestCase
-from unittest.mock import patch
 
 from pyinfra.api import Config, State
 from pyinfra.connectors.util import (
@@ -128,44 +127,3 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         host = state.inventory.get_host('somehost')
         command = make_unix_command_for_host(state, host, 'echo Šablony')
         assert command.get_raw_value() == "sh -c 'echo Šablony'"
-
-
-class TestMakeUnixCommandConnectorUtilWarnings(TestCase):
-    def test_doas_warnings(self):
-        state = State(make_inventory(), Config(SU_USER=True, SUDO=True))
-        host = state.inventory.get_host('somehost')
-
-        with patch('pyinfra.connectors.util._warn_invalid_auth_args') as fake_auth_args:
-            command = make_unix_command_for_host(state, host, 'echo Šablony')
-
-        assert command.get_raw_value() == "sh -c 'echo Šablony'"
-        fake_auth_args.assert_called_once()
-        _, args, kwargs = fake_auth_args.mock_calls[0]
-        assert args[1] == 'doas'
-        assert args[2] == ('doas_user',)
-
-    def test_sudo_warnings(self):
-        state = State(make_inventory(), Config(SU_USER=True, DOAS=True))
-        host = state.inventory.get_host('somehost')
-
-        with patch('pyinfra.connectors.util._warn_invalid_auth_args') as fake_auth_args:
-            command = make_unix_command_for_host(state, host, 'echo Šablony')
-
-        assert command.get_raw_value() == "sh -c 'echo Šablony'"
-        fake_auth_args.assert_called_once()
-        _, args, kwargs = fake_auth_args.mock_calls[0]
-        assert args[1] == 'sudo'
-        assert args[2] == ('use_sudo_password', 'use_sudo_login', 'preserve_sudo_env', 'sudo_user')
-
-    def test_su_warnings(self):
-        state = State(make_inventory(), Config(DOAS=True, SUDO=True))
-        host = state.inventory.get_host('somehost')
-
-        with patch('pyinfra.connectors.util._warn_invalid_auth_args') as fake_auth_args:
-            command = make_unix_command_for_host(state, host, 'echo Šablony')
-
-        assert command.get_raw_value() == "sh -c 'echo Šablony'"
-        fake_auth_args.assert_called_once()
-        _, args, kwargs = fake_auth_args.mock_calls[0]
-        assert args[1] == 'su_user'
-        assert args[2] == ('use_su_login', 'preserve_su_env', 'su_shell')

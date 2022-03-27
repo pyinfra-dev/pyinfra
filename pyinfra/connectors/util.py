@@ -196,35 +196,7 @@ def _show_use_su_login_warning():
     ))
 
 
-# TODO (v2): possibly raise an error for invalid arguments
-def _warn_invalid_auth_args(args, requires_key, invalid_keys):
-    for key in invalid_keys:
-        if args.get(key):
-            logger.warning((
-                'Invalid auth argument: cannot use `{0}` without `{1}`.'
-            ).format(key, requires_key))
-
-
 def make_unix_command_for_host(state, host, *command_args, **command_kwargs):
-    if not command_kwargs.get('doas') and not state.config.DOAS:
-        _warn_invalid_auth_args(command_kwargs, 'doas', ('doas_user',))
-
-    # If both sudo arg and config sudo are false, warn if any of the other sudo
-    # arguments are present as they will be ignored.
-    if not command_kwargs.get('sudo') and not state.config.SUDO:
-        _warn_invalid_auth_args(
-            command_kwargs,
-            'sudo',
-            ('use_sudo_password', 'use_sudo_login', 'preserve_sudo_env', 'sudo_user'),
-        )
-
-    if not command_kwargs.get('su_user') and not state.config.SU_USER:
-        _warn_invalid_auth_args(
-            command_kwargs,
-            'su_user',
-            ('use_su_login', 'preserve_su_env', 'su_shell'),
-        )
-
     use_sudo_password = command_kwargs.pop('use_sudo_password', None)
     if use_sudo_password:
         command_kwargs['sudo_password'] = _get_sudo_password(host, use_sudo_password)
