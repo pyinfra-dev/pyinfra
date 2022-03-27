@@ -1,6 +1,6 @@
 {
     "requires_command": "systemctl",
-    "command": "systemctl -al --plain --legend=false --state=loaded list-units | while read -r UNIT REST; do STATE=$(systemctl -P UnitFileState show -- \"$UNIT\"); if [ -n \"$STATE\" ]; then echo \"$UNIT\" \"$STATE\"; fi; done",
+    "command": "systemctl -al --plain --no-legend --state=loaded list-units | while read -r UNIT REST; do STATE=$(systemctl -P UnitFileState show -- \"$UNIT\"); if [ -n \"$STATE\" ]; then echo \"$UNIT\" \"$STATE\"; fi; done",
     "output": [
         "vboxadd.service enabled",
         "vgauth.timer enabled",

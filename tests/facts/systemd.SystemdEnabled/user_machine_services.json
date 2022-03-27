@@ -1,6 +1,6 @@
 {
     "arg": [true, "testmachine", "testuser"],
-    "command": "systemctl --user --machine=testuser@testmachine -al --plain --legend=false --state=loaded list-units | while read -r UNIT REST; do STATE=$(systemctl --user --machine=testuser@testmachine -P UnitFileState show -- \"$UNIT\"); if [ -n \"$STATE\" ]; then echo \"$UNIT\" \"$STATE\"; fi; done",
+    "command": "systemctl --user --machine=testuser@testmachine -al --plain --no-legend --state=loaded list-units | while read -r UNIT REST; do STATE=$(systemctl --user --machine=testuser@testmachine -P UnitFileState show -- \"$UNIT\"); if [ -n \"$STATE\" ]; then echo \"$UNIT\" \"$STATE\"; fi; done",
     "requires_command": "systemctl",
     "output": [
         "vboxadd.service enabled",
