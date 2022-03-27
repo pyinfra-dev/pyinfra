@@ -55,7 +55,7 @@ class SystemdStatus(FactBase):
             user_name=user_name,
         )
 
-        return '{0} -al --plain --legend=false list-units'.format(fact_cmd)
+        return '{0} -al --plain --no-legend list-units'.format(fact_cmd)
 
     def process(self, output):
         services = {}
@@ -90,7 +90,7 @@ class SystemdEnabled(FactBase):
         )
 
         return (
-            '{0} -al --plain --legend=false --state=loaded list-units | '
+            '{0} -al --plain --no-legend --state=loaded list-units | '
             'while read -r UNIT REST; do '
             'STATE=$({0} -P UnitFileState show -- "$UNIT"); '
             'if [ -n "$STATE" ]; then '
