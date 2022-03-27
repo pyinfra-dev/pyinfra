@@ -1,3 +1,7 @@
+# v1.7.2
+
++ Revert legend flag change in `Systemd*` facts
+
 # v1.7.1
 
 + Escape exported `env` variables (@lun-4)
