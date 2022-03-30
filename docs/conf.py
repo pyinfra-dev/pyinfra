@@ -44,8 +44,8 @@ html_theme_options = {
     'docsearch_index_name': 'pyinfra',
     'plausible_domain': 'docs.pyinfra.com',
     'plausible_stats_domain': 'stats.oxygem.com',
-    'doc_versions': ['1.x', '0.x', 'latest'],
-    'primary_doc_version': '1.x',
+    'doc_versions': ['2.x', '1.x', '0.x', 'latest'],
+    'primary_doc_version': '2.x',
 }
 
 templates_path = ['templates']
