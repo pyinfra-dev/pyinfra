@@ -6,7 +6,7 @@
 pyinfra Documentation
 =========================
 
-Welcome to the ``pyinfra`` v1 documentation. If you're new to ``pyinfra`` you should start with the :doc:`getting started <./getting_started>` page.
+Welcome to the ``pyinfra`` v2 documentation. If you're new to ``pyinfra`` you should start with the :doc:`getting started <./getting_started>` page.
 
 
 Using pyinfra

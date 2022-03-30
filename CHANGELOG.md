@@ -1,4 +1,4 @@
-# v2.0.dev1
+# v2.0rc1
 
 The first `2.x` release! Like v0 -> v1 this release mostly removes legacy APIs and methods which show warnings in v1. Major changes:
 
