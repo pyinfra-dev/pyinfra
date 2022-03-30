@@ -3,12 +3,6 @@
 BRANCH_NAME=`git rev-parse --abbrev-ref HEAD`
 
 case "${BRANCH_NAME}" in
-    "next")
-        DOCS_VERSION="next"
-        ;;
-    "current")
-        DOCS_VERSION="latest"
-        ;;
     "1.x")
         DOCS_VERSION="1.x"
         ;;
