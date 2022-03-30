@@ -13,11 +13,8 @@ Third party pull requests help expand pyinfra's functionality and are essential 
 
 ## Branches
 
-+ The default branch, `current`, tracks ongoing work for the current major version, ie `1.3`
-+ The `next` branch tracks work for the next major release, ie `2.0`
-+ There is a branch per major version, ie `1.x`, that tracks the latest release of that version
-
-Essentially this means if you're making a PR you almost always want to base it on `current` unless it includes backwards incompatible changes.
++ There is a branch per major version, ie `2.x`, that tracks the latest release of that version
++ Changes should generally be based off the latest major branch, unless fixing an old version
 
 ## Dev Setup
 
