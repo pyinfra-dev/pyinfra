@@ -51,7 +51,7 @@ def service(service, running=True, restart=False, suspend=False):
                 yield 'Start-Service -Name {0}'.format(service)
 
 
-@operation
+@operation(is_idempotent=False)
 def reboot():
     '''
     Restart the server.

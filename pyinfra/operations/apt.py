@@ -277,7 +277,13 @@ def deb(src, present=True, force=False):
             host.noop('deb {0} is not installed'.format(original_src))
 
 
-@operation
+@operation(
+    is_idempotent=False,
+    idempotent_notice=(
+        'This operation will always execute commands '
+        'unless the ``cache_time`` argument is provided.'
+    ),
+)
 def update(cache_time=None, touch_periodic=False):
     '''
     Updates apt repositories.
@@ -345,7 +351,7 @@ def upgrade():
 _upgrade = upgrade  # noqa: E305 (for use below where update is a kwarg)
 
 
-@operation
+@operation(is_idempotent=False)
 def dist_upgrade(state, host):
     '''
     Updates all apt packages, employing dist-upgrade.

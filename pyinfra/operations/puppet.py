@@ -1,7 +1,7 @@
 from pyinfra.api import operation
 
 
-@operation
+@operation(is_idempotent=False)
 def agent(server=None, port=None):
     '''
     Run puppet agent

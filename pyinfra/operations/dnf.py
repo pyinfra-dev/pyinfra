@@ -110,7 +110,7 @@ def rpm(src, present=True):
     yield from ensure_rpm(state, host, files, src, present, 'dnf')
 
 
-@operation
+@operation(is_idempotent=False)
 def update():
     '''
     Updates all dnf packages.

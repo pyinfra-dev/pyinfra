@@ -5,7 +5,7 @@ The Python module allows you to execute Python code within the context of a depl
 from pyinfra.api import FunctionCommand, operation
 
 
-@operation
+@operation(is_idempotent=False)
 def call(function, *args, **kwargs):
     '''
     Execute a Python function within a deploy.
@@ -45,7 +45,7 @@ def call(function, *args, **kwargs):
     yield FunctionCommand(function, args, kwargs)
 
 
-@operation
+@operation(is_idempotent=False)
 def raise_exception(exception, *args, **kwargs):
     def raise_exc(*args, **kwargs):  # pragma: no cover
         raise exception(*args, **kwargs)

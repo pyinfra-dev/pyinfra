@@ -9,7 +9,7 @@ from pyinfra.facts.systemd import _make_systemctl_cmd, SystemdEnabled, SystemdSt
 from .util.service import handle_service_control
 
 
-@operation
+@operation(is_idempotent=False)
 def daemon_reload(user_mode=False, machine=None, user_name=None):
     '''
     Reload the systemd daemon to read unit file changes.

@@ -9,7 +9,7 @@ from pyinfra.facts.apk import ApkPackages
 from .util.packaging import ensure_packages
 
 
-@operation
+@operation(is_idempotent=False)
 def upgrade(available=False):
     '''
     Upgrades all apk packages.
@@ -25,7 +25,7 @@ def upgrade(available=False):
 _upgrade = upgrade  # noqa: E305
 
 
-@operation
+@operation(is_idempotent=False)
 def update():
     '''
     Updates apk repositories.

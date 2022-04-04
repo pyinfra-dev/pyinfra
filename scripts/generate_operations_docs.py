@@ -66,6 +66,18 @@ def build_facts():
             # Underline name with -'s for title
             lines.append(_title_line('~', title_name))
 
+            if getattr(func, 'is_idempotent', None) is False:
+                text = (
+                    getattr(func, 'idempotent_notice', None)
+                    or 'This operation will always execute commands and is not idempotent.'
+                )
+                lines.append('''
+.. admonition:: Stateless operation
+    :class: important
+
+    {0}
+'''.format(text))
+
             doc = func.__doc__
             if doc:
                 docbits = doc.strip().split('\n')

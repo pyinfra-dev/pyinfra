@@ -621,7 +621,7 @@ def show_rsync_warning():
     logger.warning('The `files.rsync` operation is in alpha!')
 
 
-@operation
+@operation(is_idempotent=False)
 def rsync(src, dest, flags=['-ax', '--delete']):
     '''
     Use ``rsync`` to sync a local directory to the remote system. This operation will actually call

@@ -9,7 +9,7 @@ from pyinfra.facts.pacman import PacmanPackages, PacmanUnpackGroup
 from .util.packaging import ensure_packages
 
 
-@operation
+@operation(is_idempotent=False)
 def upgrade():
     '''
     Upgrades all pacman packages.
@@ -20,7 +20,7 @@ def upgrade():
 _upgrade = upgrade  # noqa: E305
 
 
-@operation
+@operation(is_idempotent=False)
 def update():
     '''
     Updates pacman repositories.
