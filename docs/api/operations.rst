@@ -6,18 +6,12 @@ Writing Operations
 Input: arguments
 ~~~~~~~~~~~~~~~~
 
-There are a number of arguments ``pyinfra`` uses that cannot be used within operations:
-
-+ All the `global operation arguments <../deploys.html#global-arguments>`_ are reserved for controlling how operations are executed
-+ The arguments ``state``, ``host``, ``frameinfo`` and ``_line_number`` are reserved for internal use within ``pyinfra``
-+ The *first* argument cannot accept ``set`` objects, as these will be removed for use as the operation name (this is legacy support for 0.x and will be removed in v2)
-
-In addition to any operation arguments, the function *must* take a ``state`` & ``host`` arguments, both defaulting to ``None``.
+Operations can accept any arguments except those starting with ``_`` which are reserved for internal use.
 
 .. code:: python
 
     @operation
-    def my_operation(..., state=None, host=None):
+    def my_operation(...):
         ...
 
 Output: commands
@@ -51,11 +45,12 @@ remote file based on the ``present`` kwargs:
 
 .. code:: python
 
+    from pyinfra import host
     from pyinfra.api import operation
     from pyinfra.facts.files import File
 
     @operation
-    def file(name, present=True, state=None, host=None):
+    def file(name, present=True):
         '''
         Manage the state of files.
 

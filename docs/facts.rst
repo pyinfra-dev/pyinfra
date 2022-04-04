@@ -37,6 +37,22 @@ You can leverage facts as part of :doc:`a deploy <deploys>` like this:
 
 Facts, like :doc:`operations <operations>`, are namespaced as different modules - shortcuts to each of these can be found in the sidebar.
 
+.. raw:: html
+
+   <style type="text/css">
+      #facts-index .toctree-wrapper > ul {
+         padding: 0;
+      }
+      #facts-index .toctree-wrapper > ul > li {
+         padding: 0;
+         list-style: none;
+         margin: 20px 0;
+      }
+      #facts-index .toctree-wrapper > ul > li > ul > li {
+         display: inline-block;
+      }
+   </style>
+
 .. toctree::
    :maxdepth: 2
    :glob:

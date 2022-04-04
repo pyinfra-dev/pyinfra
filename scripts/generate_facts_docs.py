@@ -13,7 +13,7 @@ def _title_line(char, string):
     return ''.join(char for _ in range(0, len(string)))
 
 
-def build_facts():
+def build_facts_docs():
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, '..', 'docs'))
     facts_dir = path.join(this_dir, '..', 'pyinfra', 'facts', '*.py')
@@ -111,12 +111,10 @@ def build_facts():
         module_filename = path.join(docs_dir, 'facts', '{0}.rst'.format(module_name))
         print('--> Writing {0}'.format(module_filename))
 
-        out = '\n'.join(lines)
-
         with open(module_filename, 'w') as outfile:
-            outfile.write(out)
+            outfile.write('\n'.join(lines))
 
 
 if __name__ == '__main__':
     print('### Building fact docs')
-    build_facts()
+    build_facts_docs()

@@ -6,7 +6,7 @@ from pyinfra.api import Config
 from pyinfra.api.arguments import OPERATION_KWARGS
 
 
-def build_global_kwargs_doc():
+def build_arguments_doc():
     pyinfra_config = Config()
 
     this_dir = path.dirname(path.realpath(__file__))
@@ -18,7 +18,9 @@ def build_global_kwargs_doc():
         if category is None:
             continue
 
-        lines.append('{0}:'.format(category))
+        lines.append('{0}'.format(category))
+        lines.append(''.join('~' for _ in range(len(category))))
+        lines.append('')
 
         for key, config in kwarg_configs.items():
             description = config
@@ -30,7 +32,7 @@ def build_global_kwargs_doc():
                 if default is not None:
                     key = '{0}={1}'.format(key, default)
 
-            lines.append('    + ``{0}``: {1}'.format(key, description))
+            lines.append('+ ``{0}``: {1}'.format(key, description))
 
     module_filename = path.join(docs_dir, '_deploy_globals.rst')
     print('--> Writing {0}'.format(module_filename))
@@ -42,5 +44,5 @@ def build_global_kwargs_doc():
 
 
 if __name__ == '__main__':
-    print('### Building global kwargs doc')
-    build_global_kwargs_doc()
+    print('### Building arguments doc')
+    build_arguments_doc()

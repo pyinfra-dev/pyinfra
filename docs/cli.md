@@ -49,11 +49,20 @@ By default `pyinfra` only prints high level information (this host connected, th
 When using ``pyinfra`` inventory can be provided direct via the command line or [defined in a file](./deploys.html#inventory). Both support the full range of [connectors](./connectors) and multiple hosts. Some CLI examples:
 
 ```sh
-pyinfra inventory.py ...  # load the inventory targets from this file
-pyinfra my-server.net,my-other-server.net ...  # execute via SSH on the two servers listed
-pyinfra @local ...  # execute on the local machine via subprocess
-pyinfra my-server.net,@local ...  # execute via local subprocess and a server over SSH
-pyinfra @docker/centos:8 ...  # execute against a Docker container
+# Load inventory hosts from a file
+pyinfra inventory.py ...
+
+# Execute via SSH against two servers
+pyinfra my-server.net,my-other-server.net ...
+
+# Execute on the local machine via subprocess
+pyinfra @local ...
+
+# Execute via local subprocess and a server over SSH
+pyinfra my-server.net,@local ...
+
+# Execute against a Docker container
+pyinfra @docker/centos:8 ...
 ```
 
 ### Limit
@@ -61,9 +70,17 @@ pyinfra @docker/centos:8 ...  # execute against a Docker container
 It is possible to limit the inventory at execution time using the `--limit` argument. Multiple `--limit`s can be provided. The value must either match a specific host by name or via glob style pattern, eg:
 
 ```sh
-pyinfra @local,my-server.net --limit @local ...  # only execute against @local
-pyinfra @local,my-server.net --limit *.net ...  # only execute against my-server.net
-pyinfra inventory.py --limit one-host.net --limit another-host.net ...  # multiple limit inventory file
+# Only execute against @local
+pyinfra inventory.py deploy.py --limit @local
+
+# Only execute against hosts in the `app_servers` grouo
+pyinfra inventory.py deploy.py --limit app_servers
+
+# Only execute against hosts with names matching db*
+pyinfra inventory.py deploy.py --limit "db*"
+
+# Combine multiple limits
+pyinfra inventory.py deploy.py --limit app_servers --limit db-1.net
 ```
 
 
@@ -78,7 +95,7 @@ pyinfra inventory.py exec -- my_command_goes_here --some-argument
 Note:
     Anything on the right hand side of the ``--`` will be passed into the target
 
-#### Example: debugging distributed services using ``pyinfra``
+### Example: debugging distributed services using ``pyinfra``
 
 One of ``pyinfra``'s top design features is its ability to return remote command output in real-time. This can be used to debug N remote services, and is perfect for debugging distributed services.
 
@@ -88,11 +105,11 @@ For example - a large Elasticsearch cluster. It can be useful to stream the log 
 pyinfra inventory.py exec --sudo -- tail -f /var/log/elasticsearch/elasticsearch.log
 ```
 
-### Executing ad-hoc operations
+## Executing ad-hoc operations
 
 In addition to executing simple commands, ``pyinfra`` can execute any of it's builtin operations on remote hosts direct via the CLI.
 
-#### Example: managing packages with ad-hoc ``pyinfra`` commands
+### Example: managing packages with ad-hoc ``pyinfra`` commands
 
 For example, here we ensure that `nginx` is installed on the remote servers:
 
@@ -104,7 +121,7 @@ pyinfra inventory.py apt.packages nginx sudo=true update=true
 pyinfra inventory2.py yum.packages nginx sudo=true
 ```
 
-#### Example: managing services with ad-hoc ``pyinfra`` commands
+### Example: managing services with ad-hoc ``pyinfra`` commands
 
 Now that nginx is installed on the box, we can use ``pyinfra`` to control the ``nginx`` service - here we ensure it's running and enabled to start on system boot:
 

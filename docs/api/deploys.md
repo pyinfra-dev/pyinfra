@@ -6,20 +6,17 @@ Deploys are usually defined by the user (see [writing deploys](../deploys)). It 
 
 Packaging a deploy essentially requires two changes from the usual deploy code:
 
-+ Wrap everything in a function, itself decorated with `@deploy(NAME)`
-+ Pass `state` and `host` as keyword arguments to all operation calls
++ Wrap everything in a function decorated with `@deploy(NAME)`
 
 ```py
 from pyinfra.api import deploy
 from pyinfra.operations import apt
 
 @deploy('Install MariaDB')
-def install_mariadb(state=None, host=None):
+def install_mariadb():
     apt.packages(
         name='Install MariaDB apt package',
         packages=['mariadb-server'],
-        state=state,  # note passing of state & host here
-        host=host,
     )
 ```
 
@@ -50,6 +47,7 @@ install_mariadb(sudo=True)
 Deploys can define their own set of data defaults. Any user provided host or group data with the same name will take precedent. This enables deploys to provide their own sensible default options and enable end-users to customise this by modifying group/host data.
 
 ```py
+from pyinfra import host
 from pyinfra.api import deploy
 from pyinfra.operations import apt
 
@@ -58,11 +56,9 @@ DEFAULTS = {
 }
 
 @deploy('Install mariadb', data_defaults=DEFAULTS)
-def install_mariadb(state=None, host=None):
+def install_mariadb():
     apt.packages(
         name='Install MariaDB apt package',
         packages=[f'mariadb-server={host.data.mariadb_version}'],
-        state=state,
-        host=host,
     )
 ```

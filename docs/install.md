@@ -1,12 +1,14 @@
-# Install `pyinfra`
+# Installation
 
-## Pip
+## Pipx
+
+It is recommended to install ``pyinfra`` using [`pipx`](https://pipxproject.github.io/pipx/):
 
 ```sh
-pip install pyinfra
+pipx install pyinfra
 ```
 
-### Windows
+## Windows
 
 Tested on WindowsServer2019 with python 3.7.
 

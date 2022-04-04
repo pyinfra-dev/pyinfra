@@ -1,4 +1,4 @@
-# Building Connectors
+# Writing Connectors
 
 [Connectors](../connectors) enable `pyinfra` to directly integrate with other tools and systems. These do not require the other system to have any knowledge of `pyinfra`.
 

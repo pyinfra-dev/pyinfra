@@ -18,6 +18,7 @@ venv/
 .docstmp
 docs/build/
 docs/public/
+docs/connectors/
 docs/facts/
 docs/operations/
 docs/apidoc/

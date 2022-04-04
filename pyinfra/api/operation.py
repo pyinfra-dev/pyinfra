@@ -89,7 +89,13 @@ def show_state_host_arguments_warning(call_location):
     ).format(call_location))
 
 
-def operation(func=None, pipeline_facts=None, is_idempotent=True, frame_offset=1):
+def operation(
+    func=None,
+    pipeline_facts=None,
+    is_idempotent=True,
+    idempotent_notice=None,
+    frame_offset=1,
+):
     '''
     Decorator that takes a simple module function and turn it into the internal
     operation representation that consists of a list of commands + options
@@ -101,6 +107,7 @@ def operation(func=None, pipeline_facts=None, is_idempotent=True, frame_offset=1
         def decorator(f):
             f.pipeline_facts = pipeline_facts
             f.is_idempotent = is_idempotent
+            f.idempotent_notice = idempotent_notice
             return operation(f, frame_offset=2)
         return decorator
 

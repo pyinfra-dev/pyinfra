@@ -1,5 +1,5 @@
-Executing Deploys
-=================
+Deploy Execution
+================
 
 ``pyinfra`` executes in two main phases: **fact gathering** and **executing operations**. This split is what enables ``pyinfra`` to execute dry runs (``--dry``) and output a "diff" of commands & files (``--debug-operations``) to update a servers state as defined.
 

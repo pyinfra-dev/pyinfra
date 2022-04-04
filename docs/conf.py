@@ -69,7 +69,8 @@ def setup(app):
 
     local.shell((
         'python {0}/generate_api_docs.py'.format(scripts_dir),
-        'python {0}/generate_global_kwargs_doc.py'.format(scripts_dir),
+        'python {0}/generate_arguments_doc.py'.format(scripts_dir),
+        'python {0}/generate_connectors_docs.py'.format(scripts_dir),
         'python {0}/generate_facts_docs.py'.format(scripts_dir),
         'python {0}/generate_operations_docs.py'.format(scripts_dir),
     ), print_input=True)
