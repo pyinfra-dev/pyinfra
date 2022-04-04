@@ -22,7 +22,7 @@ def _format_doc_line(line):
     return line[4:]
 
 
-def build_facts():
+def build_operations_docs():
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, '..', 'docs'))
     operations_dir = path.join(this_dir, '..', 'pyinfra', 'operations', '*.py')
@@ -60,6 +60,11 @@ def build_facts():
         ]
 
         for name, func in operation_functions:
+            decorated_func = getattr(func, '_pyinfra_op', None)
+            while decorated_func:
+                func = decorated_func
+                decorated_func = getattr(func, '_pyinfra_op', None)
+
             title_name = ':code:`{0}.{1}`'.format(module_name, name)
             lines.append(title_name)
 
@@ -169,5 +174,5 @@ def build_facts():
 
 
 if __name__ == '__main__':
-    print('### Building module docs')
-    build_facts()
+    print('### Building operations docs')
+    build_operations_docs()

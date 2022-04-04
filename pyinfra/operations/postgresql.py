@@ -41,6 +41,7 @@ def _translate_legacy_args(func):
                     f'by `{key}` in `postgresql.*` operations.'
                 ))
         return func(*args, **kwargs)
+    decorated_func._pyinfra_op = func
     return decorated_func
 
 
