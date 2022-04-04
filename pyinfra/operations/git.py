@@ -63,7 +63,7 @@ def config(key, value, repo=None):
 })
 def repo(
     src, dest,
-    branch='master',  # TODO: change the default to None
+    branch=None,
     pull=True, rebase=False,
     user=None, group=None, ssh_keyscan=False,
     update_submodules=False, recursive_submodules=False,
@@ -129,8 +129,7 @@ def repo(
 
     # Ensuring existing repo
     else:
-        current_branch = host.get_fact(GitBranch, repo=dest)
-        if current_branch != branch:
+        if branch and host.get_fact(GitBranch, repo=dest) != branch:
             git_commands.append('fetch')  # fetch to ensure we have the branch locally
             git_commands.append('checkout {0}'.format(branch))
             host.create_fact(GitBranch, kwargs={'repo': dest}, data=branch)
