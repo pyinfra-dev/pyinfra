@@ -284,12 +284,11 @@ def deb(src, present=True, force=False):
         'unless the ``cache_time`` argument is provided.'
     ),
 )
-def update(cache_time=None, touch_periodic=False):
+def update(cache_time=None):
     '''
     Updates apt repositories.
 
     + cache_time: cache updates for this many seconds
-    + touch_periodic: touch ``/var/lib/apt/periodic/update-success-stamp`` after update
 
     Example:
 
