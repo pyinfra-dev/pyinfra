@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from inspect import getfullargspec
-from os import path
+from os import makedirs, path
 
 from pyinfra.api.connectors import get_all_connectors
 
@@ -13,6 +13,8 @@ def _title_line(char, string):
 def build_connectors_docs():
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, '..', 'docs'))
+
+    makedirs(path.join(docs_dir, 'connectors'), exist_ok=True)
 
     for connector_name, connector in get_all_connectors().items():
         lines = []

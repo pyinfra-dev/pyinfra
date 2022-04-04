@@ -3,7 +3,7 @@
 from glob import glob
 from importlib import import_module
 from inspect import getargspec, getmembers, isclass
-from os import path
+from os import makedirs, path
 from types import FunctionType, MethodType
 
 from pyinfra.api.facts import FactBase, ShortFactBase
@@ -17,6 +17,8 @@ def build_facts_docs():
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, '..', 'docs'))
     facts_dir = path.join(this_dir, '..', 'pyinfra', 'facts', '*.py')
+
+    makedirs(path.join(docs_dir, 'operations'), exist_ok=True)
 
     fact_module_names = [
         path.basename(name)[:-3]

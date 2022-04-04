@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
 TAG_NAME=$(git tag --points-at HEAD)
 

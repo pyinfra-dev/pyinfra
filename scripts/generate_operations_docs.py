@@ -4,7 +4,7 @@ import re
 from glob import glob
 from importlib import import_module
 from inspect import getargspec, getmembers
-from os import path
+from os import makedirs, path
 from types import FunctionType
 
 MODULE_DEF_LINE_MAX = 90
@@ -26,6 +26,8 @@ def build_operations_docs():
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, '..', 'docs'))
     operations_dir = path.join(this_dir, '..', 'pyinfra', 'operations', '*.py')
+
+    makedirs(path.join(docs_dir, 'operations'), exist_ok=True)
 
     op_module_names = [
         path.basename(name)[:-3]
@@ -167,10 +169,8 @@ def build_operations_docs():
         module_filename = path.join(docs_dir, 'operations', '{0}.rst'.format(module_name))
         print('--> Writing {0}'.format(module_filename))
 
-        out = '\n'.join(lines)
-
         with open(module_filename, 'w') as outfile:
-            outfile.write(out)
+            outfile.write('\n'.join(lines))
 
 
 if __name__ == '__main__':
