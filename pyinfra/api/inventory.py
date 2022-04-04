@@ -1,7 +1,6 @@
 from collections import defaultdict
 
-from pyinfra.connectors import ALL_CONNECTORS, EXECUTION_CONNECTORS
-
+from .connectors import get_all_connectors, get_execution_connectors
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
 from .host import Host
 
@@ -52,6 +51,9 @@ class Inventory(object):
         self.hosts = self.make_hosts_and_groups(names, groups)
 
     def make_hosts_and_groups(self, names, groups):
+        all_connectors = get_all_connectors()
+        execution_connectors = get_execution_connectors()
+
         # Map name -> data
         name_to_data = defaultdict(dict)
         # Map name -> group names
@@ -78,7 +80,7 @@ class Inventory(object):
             host_data = name_to_data[name]
 
             # Default to executing commands with the ssh connector
-            executor = EXECUTION_CONNECTORS['ssh']
+            executor = execution_connectors['ssh']
 
             if name[0] == '@':
                 connector_name = name[1:]
@@ -87,16 +89,16 @@ class Inventory(object):
                 if '/' in connector_name:
                     connector_name, arg_string = connector_name.split('/', 1)
 
-                if connector_name not in ALL_CONNECTORS:
+                if connector_name not in get_all_connectors():
                     raise NoConnectorError(
                         'Invalid connector: {0}'.format(connector_name),
                     )
 
                 # Execution connector? Simple, just set it for their host
-                if connector_name in EXECUTION_CONNECTORS:
-                    executor = EXECUTION_CONNECTORS[connector_name]
+                if connector_name in execution_connectors:
+                    executor = execution_connectors[connector_name]
 
-                names_data = ALL_CONNECTORS[connector_name].make_names_data(arg_string)
+                names_data = all_connectors[connector_name].make_names_data(arg_string)
                 connector_inventory_name = name
             else:
                 names_data = [(name, {}, [])]

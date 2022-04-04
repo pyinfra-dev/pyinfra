@@ -1,3 +1,26 @@
+'''
+The ``@docker`` connector allows you to build Docker images, or modify running
+Docker containers, using ``pyinfra``. You can pass either an image name or
+existing container ID:
+
++ Image - will create a container from the image, execute operations and save
+    into a new image
++ Existing container ID - will simply execute operations against the container,
+    leaving it up afterwards
+
+
+.. code:: shell
+
+    # A Docker base image must be provided
+    pyinfra @docker/alpine:3.8 ...
+
+    # pyinfra can run on multiple Docker images in parallel
+    pyinfra @docker/alpine:3.8,@docker/ubuntu:bionic ...
+
+    # Execute against a running container
+    pyinfra @docker/2beb8c15a1b1 ...
+'''
+
 import json
 import os
 
@@ -7,12 +30,17 @@ import click
 
 from pyinfra import local, logger
 from pyinfra.api import QuoteString, StringCommand
+from pyinfra.api.connectors import BaseConnectorMeta
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io
 from pyinfra.progress import progress_spinner
 
 from .local import run_shell_command as run_local_shell_command
 from .util import make_unix_command_for_host
+
+
+class Meta(BaseConnectorMeta):
+    handles_execution = True
 
 
 def make_names_data(image=None):
@@ -220,6 +248,3 @@ def get_file(
         ), err=True)
 
     return status
-
-
-EXECUTION_CONNECTOR = True

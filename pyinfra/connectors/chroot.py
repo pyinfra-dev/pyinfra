@@ -6,12 +6,17 @@ import click
 
 from pyinfra import local, logger
 from pyinfra.api import QuoteString, StringCommand
+from pyinfra.api.connectors import BaseConnectorMeta
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
 from .local import run_shell_command as run_local_shell_command
 from .util import make_unix_command_for_host
+
+
+class Meta(BaseConnectorMeta):
+    handles_execution = True
 
 
 @memoize
@@ -192,6 +197,3 @@ def get_file(
         )
 
     return status
-
-
-EXECUTION_CONNECTOR = True

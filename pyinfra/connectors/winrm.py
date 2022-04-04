@@ -1,14 +1,48 @@
+'''
+**Note**: this connector is experimental and a work in progress! Some Windows
+facts and Windows operations work but this is to be considered experimental. For
+now, only `winrm-username` and `winrm-password` is being used. There are other
+methods for authentication, but they have not yet been added/experimented with.
+
+The `@winrm` connector can be used to communicate with Windows instances that have WinRM enabled.
+
+Examples using `@winrm`:
+
+.. code:: python
+
+    # get the windows_home fact
+    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \
+        --winrm-password vagrant --winrm-port 5985 -vv --debug fact windows_home
+    # create a directory
+    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \
+        --winrm-password vagrant --winrm-port 5985 windows_files.windows_directory 'c:\temp'
+    # Run a powershell command ('ps' is the default shell-executable for the winrm connector)
+    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \
+        --winrm-password vagrant --winrm-port 5985 exec -- write-host hello
+    # Run a command using the command prompt:
+    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \
+        --winrm-password vagrant --winrm-port 5985 --shell-executable cmd exec -- date /T
+    # Run a command using the winrm ntlm transport
+    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \
+        --winrm-password vagrant --winrm-port 5985 --winrm-transport ntlm exec -- hostname
+'''
+
 import base64
 import ntpath
 
 import click
 
 from pyinfra import logger
+from pyinfra.api.connectors import BaseConnectorMeta
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize, sha1_hash
 
 from .pyinfrawinrmsession import PyinfraWinrmSession
 from .util import make_win_command
+
+
+class Meta(BaseConnectorMeta):
+    handles_execution = True
 
 
 def _raise_connect_error(host, message, data):
@@ -260,6 +294,3 @@ def put_file(
         )
 
     return True
-
-
-EXECUTION_CONNECTOR = True

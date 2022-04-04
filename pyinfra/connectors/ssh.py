@@ -1,3 +1,14 @@
+'''
+Connect to hosts over SSH. This is the default connector and all targets default
+to this meaning you do not need to specify it - ie the following two commands
+are identical:
+
+.. code:: shell
+
+    pyinfra my-host.net ...
+    pyinfra @ssh/my-host.net ...
+'''
+
 from distutils.spawn import find_executable
 from getpass import getpass
 from os import path
@@ -23,6 +34,7 @@ import pyinfra
 
 from pyinfra import logger
 from pyinfra.api.command import QuoteString, StringCommand
+from pyinfra.api.connectors import BaseConnectorMeta
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 
@@ -36,11 +48,34 @@ from .util import (
     write_stdin,
 )
 
-EXECUTION_CONNECTOR = True
+
+class Meta(BaseConnectorMeta):
+    handles_execution = True
+    keys_prefix = 'ssh'
+
+    class DataKeys:
+        hostname = 'SSH hostname'
+        port = 'SSH port'
+
+        user = 'User to SSH as'
+        password = 'Password to use for authentication'
+        key = 'Key file to use for authentication'
+        key_password = 'Key file password'
+
+        allow_agent = 'Allow using SSH agent'
+        look_for_keys = 'Allow looking up users keys'
+
+        forward_agent = 'Enable SSH forward agent'
+        config_file = 'Custom SSH config file'
+        known_hosts_file = 'Custom SSH known hosts file'
+        strict_host_key_checking = 'Override strict host keys check setting'
+
+
+DATA_KEYS = Meta.keys()
 
 
 def make_names_data(hostname):
-    yield '@ssh/{0}'.format(hostname), {'ssh_hostname': hostname}, []
+    yield '@ssh/{0}'.format(hostname), {DATA_KEYS.hostname: hostname}, []
 
 
 def _raise_connect_error(host, message, data):
@@ -139,41 +174,41 @@ def _make_paramiko_kwargs(state, host):
     kwargs = {
         'allow_agent': False,
         'look_for_keys': False,
-        'hostname': host.data.get('ssh_hostname', host.name),
+        'hostname': host.data.get(DATA_KEYS.hostname, host.name),
         # Overrides of SSH config via pyinfra host data
-        '_pyinfra_ssh_forward_agent': host.data.get('ssh_forward_agent'),
-        '_pyinfra_ssh_config_file': host.data.get('ssh_config_file'),
-        '_pyinfra_ssh_known_hosts_file': host.data.get('ssh_known_hosts_file'),
-        '_pyinfra_ssh_strict_host_key_checking': host.data.get('ssh_strict_host_key_checking'),
+        '_pyinfra_ssh_forward_agent': host.data.get(DATA_KEYS.forward_agent),
+        '_pyinfra_ssh_config_file': host.data.get(DATA_KEYS.config_file),
+        '_pyinfra_ssh_known_hosts_file': host.data.get(DATA_KEYS.known_hosts_file),
+        '_pyinfra_ssh_strict_host_key_checking': host.data.get(DATA_KEYS.strict_host_key_checking),
     }
 
     for key, value in (
-        ('username', host.data.get('ssh_user')),
-        ('port', int(host.data.get('ssh_port', 0))),
+        ('username', host.data.get(DATA_KEYS.user)),
+        ('port', int(host.data.get(DATA_KEYS.port, 0))),
         ('timeout', state.config.CONNECT_TIMEOUT),
     ):
         if value:
             kwargs[key] = value
 
     # Password auth (boo!)
-    ssh_password = host.data.get('ssh_password')
+    ssh_password = host.data.get(DATA_KEYS.password)
     if ssh_password:
         kwargs['password'] = ssh_password
 
     # Key auth!
-    ssh_key = host.data.get('ssh_key')
+    ssh_key = host.data.get(DATA_KEYS.key)
     if ssh_key:
         kwargs['pkey'] = _get_private_key(
             state,
             key_filename=ssh_key,
-            key_password=host.data.get('ssh_key_password'),
+            key_password=host.data.get(DATA_KEYS.key_password),
         )
 
     # No key or password, so let's have paramiko look for SSH agents and user keys
     # unless disabled by the user.
     else:
-        kwargs['allow_agent'] = host.data.get('ssh_allow_agent', True)
-        kwargs['look_for_keys'] = host.data.get('ssh_look_for_keys', True)
+        kwargs['allow_agent'] = host.data.get(DATA_KEYS.allow_agent, True)
+        kwargs['look_for_keys'] = host.data.get(DATA_KEYS.look_for_keys, True)
 
     return kwargs
 
@@ -204,7 +239,7 @@ def connect(state, host):
                 continue
 
             if key == 'pkey' and value:
-                auth_kwargs['key'] = host.data.get('ssh_key')
+                auth_kwargs['key'] = host.data.get(DATA_KEYS.key)
 
         auth_args = ', '.join(
             '{0}={1}'.format(key, value)
@@ -481,10 +516,10 @@ def put_file(
 
 
 def check_can_rsync(host):
-    if host.data.get('ssh_key_password'):
+    if host.data.get(DATA_KEYS.key_password):
         raise NotImplementedError('Rsync does not currently work with SSH keys needing passwords.')
 
-    if host.data.get('ssh_password'):
+    if host.data.get(DATA_KEYS.password):
         raise NotImplementedError('Rsync does not currently work with SSH passwords.')
 
     if not find_executable('rsync'):
@@ -498,18 +533,18 @@ def rsync(
     sudo_user=None,
     **ignored_kwargs
 ):
-    hostname = host.data.get('ssh_hostname', host.name)
-    user = host.data.get('ssh_user', '')
+    hostname = host.data.get(DATA_KEYS.hostname, host.name)
+    user = host.data.get(DATA_KEYS.user, '')
     if user:
         user = '{0}@'.format(user)
 
     ssh_flags = []
 
-    port = host.data.get('ssh_port')
+    port = host.data.get(DATA_KEYS.port)
     if port:
         ssh_flags.append('-p {0}'.format(port))
 
-    ssh_key = host.data.get('ssh_key')
+    ssh_key = host.data.get(DATA_KEYS.key)
     if ssh_key:
         ssh_flags.append('-i {0}'.format(ssh_key))
 

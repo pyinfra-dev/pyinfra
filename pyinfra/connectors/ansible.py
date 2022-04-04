@@ -1,3 +1,18 @@
+'''
+**Note**: this connector is a work in progress! While it parses the list of
+hosts OK, it doesn't handle nested groups properly yet.
+
+The `@ansible` connector can be used to parse Ansible inventory files.
+
+.. code:: python
+
+    # Load an Ansible inventory relative to the current directory
+    pyinfra @ansible/path/to/inventory
+
+    # Load using an absolute path
+    pyinfra @ansible//absolute/path/to/inventory
+'''
+
 import json
 import re
 

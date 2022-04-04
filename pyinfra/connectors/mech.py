@@ -1,3 +1,19 @@
+'''
+The ``@mech`` connector reads the current mech status and generates an inventory
+for any running VMs.
+
+.. code:: python
+
+    # Run on all hosts
+    pyinfra @mech ...
+
+    # Run on a specific VM
+    pyinfra @mech/my-vm-name ...
+
+    # Run on multiple named VMs
+    pyinfra @mech/my-vm-name,@mech/another-vm-name ...
+'''
+
 import json
 
 from os import path

@@ -1,3 +1,7 @@
+'''
+The ``@local`` connector executes changes on the local machine using subprocesses.
+'''
+
 import os
 
 from distutils.spawn import find_executable
@@ -6,6 +10,7 @@ from tempfile import mkstemp
 import click
 
 from pyinfra import logger
+from pyinfra.api.connectors import BaseConnectorMeta
 from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import get_file_io
 
@@ -16,11 +21,13 @@ from .util import (
     split_combined_output,
 )
 
-EXECUTION_CONNECTOR = True
+
+class Meta(BaseConnectorMeta):
+    handles_execution = True
 
 
-def make_names_data(hostname=None):
-    if hostname is not None:
+def make_names_data(_=None):
+    if _ is not None:
         raise InventoryError('Cannot have more than one @local')
 
     yield '@local', {}, ['@local']

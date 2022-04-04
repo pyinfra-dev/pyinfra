@@ -1,3 +1,17 @@
+'''
+**Note**: this connector is in beta!
+
+The ``@dockerssh`` connector allows you to run commands on Docker containers on a remote machine.
+
+.. code:: shell
+
+    # A Docker base image must be provided
+    pyinfra @dockerssh/remotehost:alpine:3.8 ...
+
+    # pyinfra can run on multiple Docker images in parallel
+    pyinfra @dockerssh/remotehost:alpine:3.8,@dockerssh/remotehost:ubuntu:bionic ...
+'''
+
 import os
 
 from tempfile import mkstemp
@@ -6,12 +20,17 @@ import click
 
 from pyinfra import logger
 from pyinfra.api import QuoteString, StringCommand
+from pyinfra.api.connectors import BaseConnectorMeta
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
 from . import ssh
 from .util import make_unix_command_for_host
+
+
+class Meta(BaseConnectorMeta):
+    handles_execution = True
 
 
 def remote_remove(state, host, filename, print_output=False, print_input=False):
@@ -243,6 +262,3 @@ def get_file(
         ), err=True)
 
     return status
-
-
-EXECUTION_CONNECTOR = True
