@@ -165,9 +165,16 @@ def make_operation_tests(arg):
                                 ).format(op_test_name))
                             if not test_data.get('disable_idempotent_warning_reason'):
                                 warnings.warn((
-                                    'This operation should be idempotent, but the test has disabled'
-                                    ' this check without reason: {0}'
+                                    'This operation should be idempotent, but the test has '
+                                    'disabled this check without reason: {0}'
                                 ).format(op_test_name))
+
+                if op_is_idempotent is False:
+                    if 'disable_idempotent_warning_reason' in test_data:
+                        warnings.warn((
+                            'This operation is not idempotent and so the test does not need '
+                            '`disable_idempotent_warning_reason` set: {0}'
+                        ).format(op_test_name))
 
             commands = parse_commands(output_commands)
             assert_commands(commands, test_data['commands'])

@@ -6,6 +6,5 @@
     "commands": [
         "apk upgrade --available"
     ],
-    "idempotent": false,
-    "disable_idempotent_warning_reason": "package upgrades are always executed"
+    "idempotent": false
 }
