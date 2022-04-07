@@ -56,7 +56,11 @@ DOCS_REQUIRES = (
     'docutils==0.17.1',
 )
 
-DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
+BUILD_REQUIRES = (
+    'nuitka==0.7.7',
+)
+
+DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + BUILD_REQUIRES + (
     # Releasing
     'wheel',
     'twine',
@@ -125,6 +129,7 @@ if __name__ == '__main__':
         extras_require={
             'test': TEST_REQUIRES,
             'docs': DOCS_REQUIRES,
+            'build': BUILD_REQUIRES,
             'dev': DEV_REQUIRES,
             'ansible': ANSIBLE_REQUIRES,
         },

@@ -1,0 +1,65 @@
+name: "Build pyinfra Binary"
+
+on:
+  push:
+    branches:
+    - nuitka-binaries
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          # - os: ubuntu-18.04
+          #   python-version: 3.9
+          #   filename: pyinfra
+          - os: macos-10.15
+            python-version: 3.9
+            filename: pyinfra.bin
+          # - os: windows-2019
+          #   python-version: 3.9
+          #   filename: pyinfra.exe
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install
+        run: pip install '.[build]'
+
+      - name: Build pyinfra Binary
+        # TODO: autogenerate connector module list
+        run: |
+          nuitka3 \
+            --standalone \
+            --onefile \
+            --disable-ccache \
+            --assume-yes-for-downloads \
+            --prefer-source-code \
+            --static-libpython=no \
+            --include-package=gevent \
+            --include-package=pyinfra.connectors.ansible \
+            --include-package=pyinfra.connectors.chroot \
+            --include-package=pyinfra.connectors.docker \
+            --include-package=pyinfra.connectors.dockerssh \
+            --include-package=pyinfra.connectors.local \
+            --include-package=pyinfra.connectors.mech \
+            --include-package=pyinfra.connectors.ssh \
+            --include-package=pyinfra.connectors.terraform \
+            --include-package=pyinfra.connectors.vagrant \
+            --include-package=pyinfra.connectors.winrm \
+            $(which pyinfra)
+
+      - name: Upload pyinfra Binary Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: pyinfra-${{ matrix.os }}
+          path: ${{ matrix.filename }}
+          if-no-files-found: error
