@@ -60,7 +60,7 @@ In this case you can re-run the above commands and in the second instance ``pyin
 .. admonition:: Note for Docker users
     :class: note
 
-    When using ``@docker/IMAGE`` syntax, ``pyinfra`` will use a new container each run (meaning there will always be changes). You can use the container from the first run in the second (``@docker/CTID``) to test the state cahnge handling.
+    When using ``@docker/IMAGE`` syntax, ``pyinfra`` will use a new container each run (meaning there will always be changes). You can use the container from the first run in the second (``@docker/CTID``) to test the state change handling.
 
 Create a Deploy
 ---------------

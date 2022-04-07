@@ -104,21 +104,20 @@ class Inventory(object):
                 names_data = [(name, {}, [])]
                 connector_inventory_name = None
 
-            for name, data, group_names in names_data:
-                # Make a copy of the host data, update with any from
-                # the connector.
-                sub_host_data = host_data.copy()
-                sub_host_data.update(data)
+            for sub_name, sub_data, sub_groups in names_data:
+                # Update any connector data with a copy of the host data (so that
+                # host data can override connector data).
+                sub_data.update(host_data.copy())
 
-                # Assign the name/data/group_names from the connector
-                self.host_data[name] = sub_host_data
-                names_executors.append((name, executor))
-                name_to_group_names[name].extend(group_names)
+                # Assign the name/data/groups from the connector
+                self.host_data[sub_name] = sub_data
+                names_executors.append((sub_name, executor))
+                name_to_group_names[sub_name].extend(sub_groups)
 
                 # If we have a connector inventory name, copy any groups attached
                 # to the newly generated host name.
                 if connector_inventory_name:
-                    name_to_group_names[name].extend(
+                    name_to_group_names[sub_name].extend(
                         name_to_group_names[connector_inventory_name],
                     )
 

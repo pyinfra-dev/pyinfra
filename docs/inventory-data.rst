@@ -30,7 +30,7 @@ If you save this file as ``inventory.py``, you can then use it in when executing
     pyinfra inventory.py OPERATIONS...
 
 .. Note::
-    In addition to the groups defined in the inventory, all the hosts are added to a group with the name ame of the inventory file (eg ``production.py`` becomes ``production``).
+    In addition to the groups defined in the inventory, all the hosts are added to a group with the name of the inventory file (eg ``production.py`` becomes ``production``).
 
 Limiting inventory at runtime
 -----------------------------
