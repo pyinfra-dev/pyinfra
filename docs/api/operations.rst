@@ -6,7 +6,7 @@ Writing Operations
 Input: arguments
 ~~~~~~~~~~~~~~~~
 
-Operations can accept any arguments except those starting with ``_`` which are reserved for internal use.
+Operations can accept any arguments except ``name`` and those starting with ``_`` which are reserved for internal use.
 
 .. code:: python
 
@@ -36,6 +36,15 @@ Operations are generator functions and ``yield`` three types of command:
 
     # Additionally, commands can override some of the global arguments
     yield StringCommand('echo "Shell!"', sudo=True)
+
+Operations can also call other operations using ``yield from`` syntax:
+
+.. code:: python
+
+    yield from files.file(
+        path="/some/file",
+        ...,
+    )
 
 Example: managing files
 ~~~~~~~~~~~~~~~~~~~~~~~

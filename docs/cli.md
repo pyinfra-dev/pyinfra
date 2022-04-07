@@ -5,7 +5,7 @@
 
 ## CLI arguments & options
 
-As described in the [getting started page](./getting_started), `pyinfra` needs an **inventory** and some **operations**. These are used with the CLI as below:
+As described in the [getting started page](./getting-started), `pyinfra` needs an **inventory** and some **operations**. These are used with the CLI as below:
 
 ```sh
 Usage: pyinfra [OPTIONS] INVENTORY OPERATIONS...

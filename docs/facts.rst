@@ -23,7 +23,7 @@ Multiple facts with arguments may be called like so:
 
     pyinfra @local fact files.File path=setup.py files.File path=anotherfile.txt
 
-You can leverage facts as part of :doc:`a deploy <deploys>` like this:
+You can leverage facts as part of :doc:`within operations <using-operations>` like this:
 
 .. code:: py
 

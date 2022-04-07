@@ -9,10 +9,25 @@ Operations are used to describe changes to make to systems in the inventory. Use
 
    <h3>Popular operations by category:</h3>
 
-+ **Basics**: :doc:`Files <operations/files>`, :doc:`Server <operations/server>`, :doc:`Git <operations/git>`
-+ **System Packages**: :doc:`Apt <operations/apt>`, :doc:`Apk <operations/apk>`, :doc:`Brew <operations/brew>`, :doc:`Dnf <operations/dnf>`, :doc:`Yum <operations/yum>`
-+ **Language Packages**: :doc:`Gem <operations/gem>`, :doc:`Npm <operations/npm>`, :doc:`Pip <operations/pip>`
-+ **Databases**: :doc:`PostgreSQL <operations/postgresql>`, :doc:`MySQL <operations/mysql>`
+.. admonition:: Basics
+   :class: note inline
+
+   :doc:`operations/files`, :doc:`operations/server`, :doc:`operations/git`, :doc:`operations/systemd`
+
+.. admonition:: System Packages
+   :class: note inline
+
+   :doc:`operations/apt`, :doc:`operations/apk`, :doc:`operations/brew`, :doc:`operations/dnf`, :doc:`operations/yum`
+
+.. admonition:: Language Packages
+   :class: note inline
+
+   :doc:`operations/gem`, :doc:`operations/npm`, :doc:`operations/pip`
+
+.. admonition:: Databases
+   :class: note inline
+
+   :doc:`operations/postgresql`, :doc:`operations/mysql`
 
 .. raw:: html
 
