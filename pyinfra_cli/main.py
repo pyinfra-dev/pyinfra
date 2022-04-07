@@ -64,8 +64,8 @@ def _print_support(ctx, param, value):
 
 
 @click.command()
-@click.argument('inventory', nargs=1)
-@click.argument('operations', nargs=-1, required=True)
+@click.argument('inventory', nargs=1, type=click.Path(exists=False))
+@click.argument('operations', nargs=-1, required=True, type=click.Path(exists=False))
 @click.option(
     'verbosity', '-v',
     count=True,
