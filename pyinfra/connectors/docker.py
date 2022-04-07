@@ -41,14 +41,25 @@ from .util import make_unix_command_for_host
 
 class Meta(BaseConnectorMeta):
     handles_execution = True
+    keys_prefix = 'docker'
+
+    class DataKeys:
+        identifier = 'ID of container or image to target'
+        container_id = 'ID of container to target, overrides ``docker_identifier``'
 
 
-def make_names_data(image=None):
-    if not image:
-        raise InventoryError('No docker base image provided!')
+DATA_KEYS = Meta.keys()
 
-    # Save the image as the hostname, the image as data, @docker group
-    yield '@docker/{0}'.format(image), {'docker_image': image}, ['@docker']
+
+def make_names_data(identifier=None):
+    if not identifier:
+        raise InventoryError('No docker base ID provided!')
+
+    yield (
+        '@docker/{0}'.format(identifier),
+        {DATA_KEYS.identifier: identifier},
+        ['@docker'],
+    )
 
 
 def _find_start_docker_container(container_id):
@@ -70,20 +81,21 @@ def _start_docker_image(image_name):
 
 
 def connect(state, host):
-    docker_container_id = host.data.get('docker_container_id')
+    docker_container_id = host.data.get(DATA_KEYS.container_id)
     if docker_container_id:  # user can provide a docker_container_id
         host.connector_data['docker_container_no_disconnect'] = True
         host.connector_data['docker_container_id'] = docker_container_id
         return True
 
+    docker_identifier = getattr(host.data, DATA_KEYS.identifier)
     with progress_spinner({'prepare docker container'}):
         try:
             # Check if the provided @docker/X is an existing container ID
-            _find_start_docker_container(host.data.docker_image)
+            _find_start_docker_container(docker_identifier)
         except PyinfraError:
-            container_id = _start_docker_image(host.data.docker_image)
+            container_id = _start_docker_image(docker_identifier)
         else:
-            container_id = host.data.docker_image
+            container_id = docker_identifier
             host.connector_data['docker_container_no_disconnect'] = True
 
     host.connector_data['docker_container_id'] = container_id

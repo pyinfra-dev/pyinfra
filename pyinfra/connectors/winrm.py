@@ -1,29 +1,36 @@
 '''
-**Note**: this connector is experimental and a work in progress! Some Windows
-facts and Windows operations work but this is to be considered experimental. For
-now, only `winrm-username` and `winrm-password` is being used. There are other
-methods for authentication, but they have not yet been added/experimented with.
+.. warning::
+    This connector is in alpha and may change in future releases.
 
-The `@winrm` connector can be used to communicate with Windows instances that have WinRM enabled.
+Some Windows facts and Windows operations work but this is to be considered
+experimental. For now, only ``winrm_username`` and ``winrm_password`` is
+being used. There are other methods for authentication, but they have not yet
+been added/experimented with.
 
-Examples using `@winrm`:
+The ``@winrm`` connector can be used to communicate with Windows instances that have WinRM enabled.
+
+Examples using ``@winrm``:
 
 .. code:: python
 
-    # get the windows_home fact
-    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \
+    # Get the windows_home fact
+    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \\
         --winrm-password vagrant --winrm-port 5985 -vv --debug fact windows_home
-    # create a directory
-    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \
+
+    # Create a directory
+    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \\
         --winrm-password vagrant --winrm-port 5985 windows_files.windows_directory 'c:\temp'
+
     # Run a powershell command ('ps' is the default shell-executable for the winrm connector)
-    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \
+    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \\
         --winrm-password vagrant --winrm-port 5985 exec -- write-host hello
+
     # Run a command using the command prompt:
-    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \
+    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \\
         --winrm-password vagrant --winrm-port 5985 --shell-executable cmd exec -- date /T
+
     # Run a command using the winrm ntlm transport
-    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \
+    pyinfra @winrm/192.168.3.232 --winrm-username vagrant \\
         --winrm-password vagrant --winrm-port 5985 --winrm-transport ntlm exec -- hostname
 '''
 
@@ -43,6 +50,19 @@ from .util import make_win_command
 
 class Meta(BaseConnectorMeta):
     handles_execution = True
+    keys_prefix = 'winrm'
+
+    class DataKeys:
+        hostname = 'WinRM hostname to connect to'
+        port = 'WinRM port to connect to'
+        user = 'WinRM username'
+        password = 'WinRM password'
+        transport = 'WinRM transport (default: ``plaintext``)'
+        read_timeout_sec = 'Read timeout in seconds (default: ``30``)'
+        operation_timeout_sec = 'Operation timeout in seconds (default: ``20``)'
+
+
+DATA_KEYS = Meta.keys()
 
 
 def _raise_connect_error(host, message, data):
@@ -60,12 +80,18 @@ def _make_winrm_kwargs(state, host):
     }
 
     for key, value in (
-        ('username', host.data.winrm_user),
-        ('password', host.data.winrm_password),
-        ('winrm_port', int(host.data.winrm_port or 0)),
-        ('winrm_transport', host.data.winrm_transport or 'plaintext'),
-        ('winrm_read_timeout_sec', host.data.winrm_read_timeout_sec or 30),
-        ('winrm_operation_timeout_sec', host.data.winrm_operation_timeout_sec or 20),
+        ('username', host.data.get(DATA_KEYS.user)),
+        ('password', host.data.get(DATA_KEYS.password)),
+        ('winrm_port', int(host.data.get(DATA_KEYS.port, 0))),
+        ('winrm_transport', host.data.get(DATA_KEYS.transport, 'plaintext')),
+        (
+            'winrm_read_timeout_sec',
+            host.data.get(DATA_KEYS.read_timeout_sec, 30),
+        ),
+        (
+            'winrm_operation_timeout_sec',
+            host.data.get(DATA_KEYS.operation_timeout_sec, 20),
+        ),
     ):
         if value:
             kwargs[key] = value
@@ -95,12 +121,12 @@ def connect(state, host):
     # Hostname can be provided via winrm config (alias), data, or the hosts name
     hostname = kwargs.pop(
         'hostname',
-        host.data.winrm_hostname or host.name,
+        host.data.get(DATA_KEYS.hostname, host.name),
     )
 
     try:
         # Create new session
-        host_and_port = '{}:{}'.format(hostname, host.data.winrm_port)
+        host_and_port = '{}:{}'.format(hostname, host.data.get(DATA_KEYS.port))
         logger.debug('host_and_port: %s', host_and_port)
 
         session = PyinfraWinrmSession(
