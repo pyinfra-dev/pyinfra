@@ -118,6 +118,7 @@ if __name__ == '__main__':
                 'dockerssh = pyinfra.connectors.dockerssh',
                 'vagrant = pyinfra.connectors.vagrant',
                 'winrm = pyinfra.connectors.winrm',
+                'terraform = pyinfra.connectors.terraform',
             ],
         },
         install_requires=INSTALL_REQUIRES,
