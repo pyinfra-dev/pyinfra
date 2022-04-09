@@ -13,9 +13,9 @@ fi
 echo "Building latest docs (2.x branch HEAD)"
 env DOCS_VERSION=latest sphinx-build -a docs/ docs/public/en/latest/
 
-if [ -n "${TAG_NAME}" ] && [[ "$TAG_NAME" =~ ^2\.[0-9]+(\.[0-9]+)?$ ]]; then
+if [ -n "${TAG_NAME}" ] && [[ "$TAG_NAME" =~ ^v2\.[0-9]+(\.[0-9]+)?$ ]]; then
     echo "Building 2.x docs for tag: ${TAG_NAME}"
-    env DOCS_VERSION=2.x spinx-build -a docs/ docs/public/en/2.x/
+    env DOCS_VERSION=2.x sphinx-build -a docs/ docs/public/en/2.x/
     echo "Generating /page redirects"
     env DOCS_VERSION=$DOCS_VERSION python scripts/generate_redirect_pages.py
 fi
