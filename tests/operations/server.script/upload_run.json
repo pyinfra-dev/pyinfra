@@ -21,6 +21,5 @@
         "chmod +x _tempfile_",
         "_tempfile_"
     ],
-    "idempotent": false,
-    "disable_idempotent_warning_reason": "script operations are always executed"
+    "idempotent": false
 }

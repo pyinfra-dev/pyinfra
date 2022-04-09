@@ -2,5 +2,6 @@
     "commands": [
         "Restart-Computer -Force"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "reboot is always executed"
 }

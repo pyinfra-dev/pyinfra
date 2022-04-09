@@ -6,5 +6,6 @@
     "commands": [
         "Restart-Service -Name spooler"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "service restart is always executed"
 }

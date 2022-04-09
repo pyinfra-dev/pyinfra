@@ -3,6 +3,5 @@
     "commands": [
         ["raise_exc", ["arg1", "arg2"], {}]
     ],
-    "idempotent": false,
-    "disable_idempotent_warning_reason": "python callbacks are always executed"
+    "idempotent": false
 }
