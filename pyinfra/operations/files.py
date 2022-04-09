@@ -2,7 +2,6 @@
 The files module handles filesystem state, file uploads and template generation.
 '''
 
-
 import os
 import posixpath
 import re
@@ -998,6 +997,7 @@ def _raise_or_remove_invalid_path(fs_type, path, force, force_backup, force_back
         if force_backup:
             backup_path = '{0}.{1}'.format(path, get_timestamp())
             if force_backup_dir:
+                backup_path = os.path.basename(backup_path)
                 backup_path = '{0}/{1}'.format(force_backup_dir, backup_path)
             yield StringCommand('mv', QuoteString(path), QuoteString(backup_path))
         else:
