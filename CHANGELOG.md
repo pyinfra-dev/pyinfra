@@ -1,4 +1,4 @@
-# v2.0rc1
+# v2.0
 
 The first `2.x` release! Like v0 -> v1 this release mostly removes legacy APIs and methods which show warnings in v1. Major changes:
 
@@ -23,11 +23,13 @@ This change also brings **support for all of the execution global arguments to f
 **Other breaking changes** (warnings shown in v1 for most):
 
 + Non-existent host data raises an `AttributeError` when accessed via `host.data.X`
++ Change default `branch` argument to `None` in `git.repo` operation
 + `present` argument removed from `mysql.privileges` operation
 + Config variables must now be set on the global `config` object
 + Old style `host.fact.fact_name` access has been removed
 + The legacy `init.*` operations have been removed
-+ `--facts` and `--operations` CLI flags/modes removed
++ Stop lowercasing package names in facts & operations
++ Remove `--facts` and `--operations` CLI flags
 + Remove `--debug-data` CLI flag
 + Remove `Windows` prefix on all Windows facts
 + Rename `name` argument to `path` in `windows_files.*` operations
@@ -35,8 +37,8 @@ This change also brings **support for all of the execution global arguments to f
 + Remove old `pyinfra.modules` module/import
 + Remove `config.MIN_PYINFRA_VERSION`
 + Remove `branch` and `create_branch` arguments in `git.worktree` operation
++ Remove `touch_periodic` argument in `apt.update` operation (never used)
 + `pyinfra.api.connectors` module moved to `pyinfra.connectors`
-+ Stop lowercasing package names in facts & operations
 
 **Deprecated** (showing warnings, to be removed in v3):
 

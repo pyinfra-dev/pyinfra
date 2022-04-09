@@ -44,50 +44,59 @@ When you run pyinfra you'll see something like ([non animated version](https://p
 
 ## Quickstart
 
-pyinfra can be installed via pip:
+Install pyinfra with [`pipx`](https://pipxproject.github.io/pipx/) (recommended) or `pip`:
 
-```sh
-pip install pyinfra
+```
+pipx install pyinfra
 ```
 
-Now you can execute commands & operations over SSH:
+Now you can execute commands on hosts via SSH:
 
 ```sh
-# Execute an arbitrary shell command
 pyinfra my-server.net exec -- echo "hello world"
-
-# Install iftop apt package if not present
-pyinfra my-server.net apt.packages iftop sudo=true update=true
 ```
 
-These can then be saved to a _deploy file_, let's call it `deploy.py`:
+Or execute in Docker, on the local machine, and other [connectors]():
+
+```sh
+pyinfra @docker/ubuntu exec -- echo "Hello world"
+pyinfra @local exec -- echo "Hello world"
+```
+
+As well as executing commands you can define state using [operations]():
+
+```sh
+# Install iftop apt package if not present
+pyinfra @docker/ubuntu apt.packages iftop update=true _sudo=true
+```
+
+Which can then be saved as a Python file like `deploy.py`:
+
 
 ```py
 from pyinfra.operations import apt
 
 apt.packages(
-    name='Ensure iftop is installed',
+    name="Ensure iftop is installed",
     packages=['iftop'],
-    sudo=True,
     update=True,
+    _sudo=True,
 )
 ```
 
-And executed with:
+The hosts can also be saved in a file, for example `inventory.py`:
 
-```sh
-pyinfra my-server.net deploy.py
+```py
+targets = ["@docker/ubuntu", "my-test-server.net"]
 ```
 
-or
+
+And executed together:
 
 ```sh
-pyinfra @docker/ubuntu deploy.py
+pyinfra inventory.py deploy.py
 ```
 
-## [Documentation](https://docs.pyinfra.com)
+Now you know the building blocks of pyinfra! By combining inventory, operations and Python code you can deploy anything.
 
-+ [Getting started](https://docs.pyinfra.com/page/getting_started.html)
-+ [Writing deploys](https://docs.pyinfra.com/page/deploys.html)
-+ [Using the CLI](https://docs.pyinfra.com/page/cli.html)
-+ [Connectors](https://docs.pyinfra.com/page/connectors.html)
+See the more detailed [getting started](https://docs.pyinfra.com/page/getting-started.html) or [using operations](https://docs.pyinfra.com/page/using-operations.html) guides. See how to use [inventory & data](https://docs.pyinfra.com/page/inventory-data.html), [global arguments](https://docs.pyinfra.com/page/arguments.html) and [the CLI](https://docs.pyinfra.com/page/cli.html) or check out the [documented examples](https://docs.pyinfra.com/page/examples.html).
