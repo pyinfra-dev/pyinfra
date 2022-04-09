@@ -466,8 +466,10 @@ class TestOperationOrdering(PatchSSHTestCase):
         assert op_order[2] == second_context_hash
 
         # And that they have the expected line numbers
-        assert state.op_line_numbers_to_hash.get((first_context_call_line,)) == first_context_hash
-        assert state.op_line_numbers_to_hash.get((second_context_call_line,)) == second_context_hash
+        assert state.op_line_numbers_to_hash.get((0, first_context_call_line)) \
+            == first_context_hash
+        assert state.op_line_numbers_to_hash.get((0, second_context_call_line)) \
+            == second_context_hash
 
         # Ensure somehost has two ops and anotherhost only has the one
         assert len(state.ops[inventory.get_host('somehost')]) == 2
