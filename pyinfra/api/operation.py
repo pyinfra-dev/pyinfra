@@ -28,6 +28,9 @@ from .util import (
 )
 
 
+op_meta_default = object()
+
+
 class OperationMeta(object):
     def __init__(self, hash=None, commands=None):
         # Wrap all the attributes
@@ -238,9 +241,9 @@ def operation(
 
         for key in get_execution_kwarg_keys():
             global_value = global_kwargs.pop(key)
-            op_meta_value = op_meta.get(key)
+            op_meta_value = op_meta.get(key, op_meta_default)
 
-            if op_meta_value and global_value != op_meta_value:
+            if op_meta_value is not op_meta_default and global_value != op_meta_value:
                 raise OperationValueError('Cannot have different values for `{0}`.'.format(key))
 
             op_meta[key] = global_value
