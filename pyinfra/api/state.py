@@ -122,6 +122,7 @@ class State(object):
     deploy_dir = None  # base directory for locating files/templates/etc
     current_deploy_filename = None
     current_exec_filename = None
+    current_op_file_number = 0
 
     def __init__(self, inventory=None, config=None, **kwargs):
         if inventory:

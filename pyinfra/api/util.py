@@ -24,6 +24,7 @@ from jinja2 import (
 )
 from paramiko import SSHException
 
+import pyinfra
 from pyinfra import logger
 
 from .exceptions import PyinfraError
@@ -110,6 +111,10 @@ def get_operation_order_from_stack(state):
 
     # Now generate a list of line numbers *following that file*
     line_numbers = []
+
+    if pyinfra.is_cli:
+        line_numbers.append(state.current_op_file_number)
+
     for stack_item in stack_items[i:]:
         frame = getframeinfo(stack_item[0])
 
