@@ -1,3 +1,8 @@
+# v1.7.3
+
++ Basename files before appending to backup directory
++ Fix operation ordering when executing multiple files
+
 # v1.7.2
 
 + Revert legend flag change in `Systemd*` facts
