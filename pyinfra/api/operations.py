@@ -356,7 +356,7 @@ def run_ops(state, serial=False, no_wait=False):
     '''
 
     # Flag state as deploy in process
-    state.deploying = True
+    state.is_executing = True
 
     # Run all ops, but server by server
     if serial:

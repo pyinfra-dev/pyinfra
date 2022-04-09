@@ -13,5 +13,6 @@
     "commands": [
         "cd /home/myworktree && git pull"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "git pull is always executed"
 }

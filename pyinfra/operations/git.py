@@ -306,6 +306,9 @@ def worktree(
         if user or group:
             yield chown(worktree, user, group, recursive=True)
 
+        host.create_fact(Directory, kwargs={'path': worktree}, data={'user': user, 'group': group})
+        host.create_fact(GitTrackingBranch, kwargs={'repo': worktree}, data=new_branch)
+
     # It exists and we don't want it
     elif host.get_fact(Directory, path=worktree) and not present:
 
@@ -315,6 +318,9 @@ def worktree(
             command += ' --force'
 
         yield command
+
+        host.delete_fact(Directory, kwargs={'path': worktree})
+        host.create_fact(GitTrackingBranch, kwargs={'repo': worktree})
 
     # It exists and we still want it => pull/rebase it
     elif host.get_fact(Directory, path=worktree) and present:

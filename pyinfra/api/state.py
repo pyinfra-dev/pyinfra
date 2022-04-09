@@ -86,8 +86,8 @@ class State(object):
     # Main gevent pool
     pool = None
 
-    # Whether we are deploying (ie hosts are all ready)
-    deploying = False
+    # Whether we are executing operations (ie hosts are all ready)
+    is_executing = False
 
     loop_counter = None
     loop_line = None

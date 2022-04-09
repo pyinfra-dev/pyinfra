@@ -16,6 +16,5 @@
     },
     "commands": [
         "cd /home/mainrepo && git worktree add --detach /home/myworktree 70e8906a14"
-    ],
-    "idempotent": false
+    ]
 }

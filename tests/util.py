@@ -44,6 +44,7 @@ class FakeState(object):
     in_op = True
     in_deploy = True
     pipelining = False
+    is_executing = False
     deploy_name = None
     deploy_kwargs = None
 

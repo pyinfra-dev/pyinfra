@@ -16,5 +16,9 @@
     "commands": [
         "cd /home/mainrepo && git worktree add -b mybranch /home/myworktree"
     ],
-    "idempotent": false
+    "second_output_commands": [
+        "cd /home/myworktree && git pull"
+    ],
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "git pull is always executed"
 }
