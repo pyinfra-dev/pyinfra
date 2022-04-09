@@ -499,7 +499,10 @@ def _main(
         # Number of "steps" to make = number of files * number of hosts
         for i, filename in enumerate(operations):
             logger.info('Loading: {0}'.format(click.style(filename, bold=True)))
+
+            state.current_op_file_number = i
             load_deploy_file(state, filename)
+
             # Remove any config changes introduced by the deploy file & any includes
             config.reset_locked_state()
 
