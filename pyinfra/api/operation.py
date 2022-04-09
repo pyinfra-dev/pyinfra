@@ -126,6 +126,12 @@ def operation(
     # Actually decorate!
     @wraps(func)
     def decorated_func(*args, **kwargs):
+        if state.deploying:
+            raise PyinfraError((
+                'Operations cannot be used during execution, see '
+                '`host.run_shell_command` as an alternative'
+            ))
+
         # Configure operation
         #
 
