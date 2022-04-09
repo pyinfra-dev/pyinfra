@@ -1,0 +1,19 @@
+{
+    "args": ["/somewhere/testfile"],
+    "kwargs": {
+        "force": true,
+        "force_backup_dir": "/tmp/somewhere"
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/somewhere": true
+        },
+        "files.File": {
+            "path=/somewhere/testfile": false
+        }
+    },
+    "commands": [
+        "mv /somewhere/testfile /tmp/somewhere/testfile.a-timestamp",
+        "touch /somewhere/testfile"
+    ]
+}
