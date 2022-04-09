@@ -28,6 +28,7 @@ from pyinfra.api import (
 )
 from pyinfra.api.command import make_formatted_string_command
 from pyinfra.api.util import (
+    get_call_location,
     get_file_sha1,
     get_path_permissions_mode,
     get_template,
@@ -444,7 +445,10 @@ def replace(
     if text is None and match:
         text = match
         logger.warning(
-            'The `match` argument has been replaced by `text` in the `files.replace` operation',
+            (
+                'The `match` argument has been replaced by '
+                '`text` in the `files.replace` operation ({0})'
+            ).format(get_call_location()),
         )
 
     if text is None:
