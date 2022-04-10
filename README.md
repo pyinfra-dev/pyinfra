@@ -21,8 +21,8 @@
 
 <p align="center">
     <a href="https://docs.pyinfra.com"><strong>Documentation</strong></a> &bull;
-    <a href="https://docs.pyinfra.com/page/getting_started.html"><strong>Getting Started</strong></a> &bull;
-    <a href="https://docs.pyinfra.com/en/1.x/examples.html"><strong>Examples</strong></a> &bull;
+    <a href="https://docs.pyinfra.com/page/getting-started.html"><strong>Getting Started</strong></a> &bull;
+    <a href="https://docs.pyinfra.com/page/examples.html"><strong>Examples</strong></a> &bull;
     <a href="https://docs.pyinfra.com/page/support.html"><strong>Help & Support</strong></a> &bull;
     <a href="https://docs.pyinfra.com/page/contributing.html"><strong>Contributing</strong></a>
 </p>
@@ -56,14 +56,14 @@ Now you can execute commands on hosts via SSH:
 pyinfra my-server.net exec -- echo "hello world"
 ```
 
-Or execute in Docker, on the local machine, and other [connectors]():
+Or execute in Docker, on the local machine, and other [connectors](https://docs.pyinfra.com/page/connectors.html):
 
 ```sh
 pyinfra @docker/ubuntu exec -- echo "Hello world"
 pyinfra @local exec -- echo "Hello world"
 ```
 
-As well as executing commands you can define state using [operations]():
+As well as executing commands you can define state using [operations](https://docs.pyinfra.com/page/operations.html):
 
 ```sh
 # Install iftop apt package if not present
