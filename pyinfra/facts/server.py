@@ -346,27 +346,51 @@ class Groups(FactBase):
 
 class Crontab(FactBase):
     '''
-    Returns a dictionary of cron command -> execution time.
+    Returns a list of dictionaries where each entry corresponds to a single crontab "chunk".
+
+    Each chunk can have one of the following types:
+        - command 
+            - Also includes all comment lines directly above the command line.
+        - env
+            - Also includes all comment lines directly above the command line.
+        - comment 
+        - whitespace
 
     .. code:: python
 
-        {
-            '/path/to/command': {
-                'minute': '*',
-                'hour': '*',
-                'month': '*',
-                'day_of_month': '*',
-                'day_of_week': '*',
+        [
+            {
+                "data": [
+                    "# My special comment.",
+                    "# Multiple comment lines are fine.",
+                    "# pyinfra-name=Task A",
+                    '*/5 * * * * echo "hello"',
+                ],
+                "type": "command",
             },
-            'echo another command': {
-                'special_time': '@daily',
+            {
+                "data": [
+                    "",
+                ],
+                "type": "whitespace",
             },
-        }
+            {
+                "data": [
+                    '@daily echo "My daily task."',
+                ],
+                "type": "command",
+            },
+        ]
     '''
 
-    default = dict
+    default = list
 
     requires_command = 'crontab'
+
+    # Compile regex
+    whitespace_regex = re.compile(r"^\w*$")
+    comment_regex = re.compile(r"^#.+$")
+    command_regex = re.compile(r"^[\*\d@].+$")
 
     @staticmethod
     def command(user=None):
@@ -376,34 +400,111 @@ class Crontab(FactBase):
 
     @staticmethod
     def process(output):
-        crons = {}
-        current_comments = []
 
+        def _line_type(line):
+
+            match_obj = Crontab.whitespace_regex.match(line)
+            if match_obj:
+                line_type = "whitespace"
+
+            if match_obj is None:
+                match_obj = Crontab.comment_regex.match(line)
+                if match_obj:
+                    line_type = "comment"
+
+            if match_obj is None:
+                match_obj = Crontab.command_regex.match(line)
+                if match_obj:
+                    line_type = "command"
+                else:
+                    line_type = "env"
+
+            return line_type
+
+        def _prev(current_chunk):
+
+            if len(current_chunk["data"]) > 0:
+                return _line_type(current_chunk["data"][-1])
+            else:
+                return None
+
+        def _empty_chunk():
+
+            return {
+                "data": [],
+                "type": None,
+            }
+        
+        chunks = []
+        current_chunk = _empty_chunk()
         for line in output:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                current_comments.append(line)
+            # Get line type
+            line_type = _line_type(line)
+            prev = _prev(current_chunk)
+
+            # Cut chunk for command or env
+            if line_type in ("command", "env"):
+                if prev == "whitespace":
+                    # whitespace chunk
+                    current_chunk["type"] = "whitespace"
+                    chunks.append(current_chunk)
+
+                    # command/env chunk
+                    current_chunk = _empty_chunk()
+                    current_chunk["data"].append(line)
+                    current_chunk["type"] = "command" if line_type == "command" else "env"
+                    chunks.append(current_chunk)
+
+                    current_chunk = _empty_chunk()
+
+                    continue
+                else:
+                    # command/env chunk
+                    current_chunk["data"].append(line)
+                    current_chunk["type"] = "command" if line_type == "command" else "env"
+                    chunks.append(current_chunk)
+
+                    current_chunk = _empty_chunk()
+
+                    continue
+
+            # Update chunk
+            if prev is None:
+                # current chunk is new
+                current_chunk["data"].append(line)
                 continue
 
-            if line.startswith('@'):
-                special_time, command = line.split(None, 1)
-                crons[command] = {
-                    'special_time': special_time,
-                    'comments': current_comments,
-                }
-            else:
-                minute, hour, day_of_month, month, day_of_week, command = line.split(None, 5)
-                crons[command] = {
-                    'minute': try_int(minute),
-                    'hour': try_int(hour),
-                    'month': try_int(month),
-                    'day_of_month': try_int(day_of_month),
-                    'day_of_week': try_int(day_of_week),
-                    'comments': current_comments,
-                }
+            # NOTE: At this point, prev can only be either "whitespace" or "comment"
+            if prev == "whitespace":
+                if line_type == "whitespace":
+                    current_chunk["data"].append(line)
+                else:
+                    current_chunk["type"] = "whitespace"
+                    chunks.append(current_chunk)
 
-            current_comments = []
-        return crons
+                    current_chunk = _empty_chunk()
+                    current_chunk["data"].append(line)
+            else:
+                if line_type == "comment":
+                    current_chunk["data"].append(line)
+                else:
+                    current_chunk["type"] = "comment"
+                    chunks.append(current_chunk)
+
+                    current_chunk = _empty_chunk()
+                    current_chunk["data"].append(line)
+
+        # Handle final remaining "whitespace" or "comment" chunk
+        prev = _prev(current_chunk)
+        if prev is not None:
+            if prev == "whitespace":
+                    current_chunk["type"] = "whitespace"
+                    chunks.append(current_chunk)
+            else:
+                    current_chunk["type"] = "comment"
+                    chunks.append(current_chunk)
+
+        return chunks
 
 
 class Users(FactBase):
