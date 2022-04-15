@@ -5,12 +5,12 @@ def cleanup_words():
         data = f.read()
 
     lines = data.splitlines()
-    comment_line = lines[0]
-    lines = lines[1:]
+    lines = [line for line in lines if not line.startswith('#')]
 
     lines = sorted(set(lines))
 
-    lines.insert(0, comment_line)
+    lines.insert(0, '# it is automatically cleaned/sorted by scripts/cleaup_words.py')
+    lines.insert(0, '# This is a list of additional words for flake8-spellcheck')
 
     with open('words.txt', 'w') as f:
         f.write('\n'.join(lines))

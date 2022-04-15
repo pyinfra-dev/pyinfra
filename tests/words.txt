@@ -1,8 +1,18 @@
-# This is a list of additional allowed words for flake8-spellcheck
+# This is a list of additional words for flake8-spellcheck
+# it is automatically cleaned/sorted by scripts/cleaup_words.py
+0
+1
+2
 2x
+3
 4
+5
+6
 64kb
+7
 700
+8
+9
 FakePathLike
 Launchd
 Openvz
@@ -226,6 +236,7 @@ perf
 pip3
 pipelining
 pkey
+pkgin
 plaintext
 posix
 postcondition
