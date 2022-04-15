@@ -274,16 +274,22 @@ def _get_fact(
     return data
 
 
-def get_host_fact(state, host, name, args=None, kwargs=None):
-    fact_hash = make_hash((name, kwargs, _get_executor_kwargs(state, host)))
-    return get_fact(state, host, name, args=args, kwargs=kwargs, fact_hash=fact_hash)
+def _get_fact_hash(state, host, cls, args, kwargs):
+    args = args or None
+    kwargs = kwargs or None
+    return make_hash((cls, args, kwargs, _get_executor_kwargs(state, host)))
 
 
-def create_host_fact(state, host, name, data, args=None, kwargs=None):
-    fact_hash = make_hash((name, kwargs, _get_executor_kwargs(state, host)))
+def get_host_fact(state, host, cls, args=None, kwargs=None):
+    fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
+    return get_fact(state, host, cls, args=args, kwargs=kwargs, fact_hash=fact_hash)
+
+
+def create_host_fact(state, host, cls, data, args=None, kwargs=None):
+    fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
     host.facts[fact_hash] = data
 
 
-def delete_host_fact(state, host, name, args=None, kwargs=None):
-    fact_hash = make_hash((name, kwargs, _get_executor_kwargs(state, host)))
+def delete_host_fact(state, host, cls, args=None, kwargs=None):
+    fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
     host.facts.pop(fact_hash, None)
