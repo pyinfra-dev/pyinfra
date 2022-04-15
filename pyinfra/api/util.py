@@ -159,34 +159,31 @@ def get_operation_order_from_stack(state):
     return line_numbers
 
 
-def get_template(filename_or_string, is_string=False):
+def get_template(filename_or_io):
     '''
     Gets a jinja2 ``Template`` object for the input filename or string, with caching
     based on the filename of the template, or the SHA1 of the input string.
     '''
 
-    # Cache against string sha or just the filename
-    cache_key = sha1_hash(filename_or_string) if is_string else filename_or_string
+    file_data = get_file_io(filename_or_io, mode='r')
+    cache_key = file_data.cache_key
 
-    if cache_key in TEMPLATES:
+    if cache_key and cache_key in TEMPLATES:
         return TEMPLATES[cache_key]
 
-    if is_string:
-        # Set the input string as our template
-        template_string = filename_or_string
+    with file_data as file_io:
+        template_string = file_io.read()
 
-    else:
-        # Load template data into memory
-        with open(filename_or_string, 'r') as file_io:
-            template_string = file_io.read()
-
-    TEMPLATES[cache_key] = Environment(
+    template = Environment(
         undefined=StrictUndefined,
         keep_trailing_newline=True,
         loader=FileSystemLoader(getcwd()),
     ).from_string(template_string)
 
-    return TEMPLATES[cache_key]
+    if cache_key:
+        TEMPLATES[cache_key] = template
+
+    return template
 
 
 def sha1_hash(string):
