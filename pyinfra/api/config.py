@@ -1,3 +1,12 @@
+from os import path
+
+from pkg_resources import parse_version, require, Requirement, ResolutionError
+
+from pyinfra import __version__, state
+
+from .exceptions import PyinfraError
+
+
 config_defaults = {
     # % of hosts which have to fail for all operations to stop
     'FAIL_PERCENT': None,
@@ -48,6 +57,52 @@ config_defaults = {
 }
 
 
+def check_pyinfra_version(version):
+    if not version:
+        return
+
+    running_version = parse_version(__version__)
+    required_versions = Requirement.parse(
+        'pyinfra{0}'.format(version),
+    )
+
+    if running_version not in required_versions:
+        raise PyinfraError((
+            'pyinfra version requirement not met '
+            '(requires {0}, running {1})'
+        ).format(
+            version,
+            __version__,
+        ))
+
+
+def check_require_packages(requirements_config):
+    if not requirements_config:
+        return
+
+    if isinstance(requirements_config, (list, tuple)):
+        requirements = requirements_config
+    else:
+        with open(path.join(state.cwd, requirements_config)) as f:
+            requirements = [
+                line.split('#egg=')[-1]
+                for line in f.read().splitlines()
+            ]
+
+    try:
+        require(requirements)
+    except ResolutionError as e:
+        raise PyinfraError('Deploy requirements ({0}) not met: {1}'.format(
+            requirements_config, e,
+        ))
+
+
+config_checkers = {
+    'REQUIRE_PYINFRA_VERSION': check_pyinfra_version,
+    'REQUIRE_PACKAGES': check_require_packages,
+}
+
+
 class Config(object):
     '''
     The default/base configuration options for a pyinfra deploy.
@@ -65,6 +120,13 @@ class Config(object):
 
         for key, value in config.items():
             setattr(self, key, value)
+
+    def __setattr__(self, key, value):
+        super().__setattr__(key, value)
+
+        checker = config_checkers.get(key)
+        if checker:
+            checker(value)
 
     def get_current_state(self):
         return [

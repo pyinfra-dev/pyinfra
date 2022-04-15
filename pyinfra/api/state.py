@@ -1,12 +1,10 @@
 from contextlib import contextmanager
 from multiprocessing import cpu_count
-from os import path
 from uuid import uuid4
 
 from gevent.pool import Pool
-from pkg_resources import parse_version, require, Requirement, ResolutionError
 
-from pyinfra import __version__, logger
+from pyinfra import logger
 
 from .config import Config
 from .exceptions import PyinfraError
@@ -117,38 +115,6 @@ class State(object):
         # If no config, create one using the defaults
         if config is None:
             config = Config()
-
-        if config.REQUIRE_PYINFRA_VERSION is not None:
-            running_version = parse_version(__version__)
-            required_versions = Requirement.parse(
-                'pyinfra{0}'.format(config.REQUIRE_PYINFRA_VERSION),
-            )
-
-            if running_version not in required_versions:
-                raise PyinfraError((
-                    'pyinfra version requirement not met '
-                    '(requires {0}, running {1})'
-                ).format(
-                    config.REQUIRE_PYINFRA_VERSION,
-                    __version__,
-                ))
-
-        if config.REQUIRE_PACKAGES is not None:
-            if isinstance(config.REQUIRE_PACKAGES, (list, tuple)):
-                requirements = config.REQUIRE_PACKAGES
-            else:
-                with open(path.join(self.cwd, config.REQUIRE_PACKAGES)) as f:
-                    requirements = [
-                        line.split('#egg=')[-1]
-                        for line in f.read().splitlines()
-                    ]
-
-            try:
-                require(requirements)
-            except ResolutionError as e:
-                raise PyinfraError('Deploy requirements ({0}) not met: {1}'.format(
-                    config.REQUIRE_PACKAGES, e,
-                ))
 
         if not config.PARALLEL:
             # TODO: benchmark this
