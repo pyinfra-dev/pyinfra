@@ -22,13 +22,13 @@ def keyscan(hostname, force=False, port=22):
     + hostname: hostname that should have a key in ``known_hosts``
     + force: if the key already exists, remove and rescan
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         ssh.keyscan(
-            name='Set add server two to known_hosts on one',
-            hostname='two.example.com',
+            name="Set add server two to known_hosts on one",
+            hostname="two.example.com",
         )
     '''
 
@@ -80,15 +80,15 @@ def command(hostname, command, user=None, port=22):
     + user: connect with this user
     + port: connect to this port
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         ssh.command(
-            name='Create file by running echo from host one to host two',
-            hostname='two.example.com',
-            command='echo "one was here" > /tmp/one.txt',
-            user='vagrant',
+            name="Create file by running echo from host one to host two",
+            hostname="two.example.com",
+            command="echo "one was here" > /tmp/one.txt",
+            user="vagrant",
         )
     '''
 

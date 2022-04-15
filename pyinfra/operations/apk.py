@@ -53,21 +53,21 @@ def packages(
     Versions:
         Package versions can be pinned like apk: ``<pkg>=<version>``.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         # Update package list and install packages
         apk.packages(
-            name='Install Asterisk and Vim',
-            packages=['asterisk', 'vim'],
+            name="Install Asterisk and Vim",
+            packages=["asterisk", "vim"],
             update=True,
         )
 
         # Install the latest versions of packages (always check)
         apk.packages(
-            name='Install latest Vim',
-            packages=['vim'],
+            name="Install latest Vim",
+            packages=["vim"],
             latest=True,
         )
     '''

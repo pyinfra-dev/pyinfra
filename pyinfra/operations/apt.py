@@ -46,19 +46,19 @@ def key(src=None, keyserver=None, keyid=None):
     keyserver/id:
         These must be provided together.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         # Note: If using URL, wget is assumed to be installed.
         apt.key(
-            name='Add the Docker apt gpg key',
-            src='https://download.docker.com/linux/ubuntu/gpg',
+            name="Add the Docker apt gpg key",
+            src="https://download.docker.com/linux/ubuntu/gpg",
         )
 
         apt.key(
-            name='Install VirtualBox key',
-            src='https://www.virtualbox.org/download/oracle_vbox_2016.asc',
+            name="Install VirtualBox key",
+            src="https://www.virtualbox.org/download/oracle_vbox_2016.asc",
         )
     '''
 
@@ -113,13 +113,13 @@ def repo(src, present=True, filename=None):
     + filename: optional filename to use ``/etc/apt/sources.list.d/<filename>.list``. By
       default uses ``/etc/apt/sources.list``.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         apt.repo(
-            name='Install VirtualBox repo',
-            src='deb https://download.virtualbox.org/virtualbox/debian bionic contrib',
+            name="Install VirtualBox repo",
+            src="deb https://download.virtualbox.org/virtualbox/debian bionic contrib",
         )
     '''
 
@@ -175,14 +175,14 @@ def ppa(src, present=True):
     Note:
         requires ``apt-add-repository`` on the remote host
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         # Note: Assumes software-properties-common is installed.
         apt.ppa(
-            name='Add the Bitcoin ppa',
-            src='ppa:bitcoin/bitcoin',
+            name="Add the Bitcoin ppa",
+            src="ppa:bitcoin/bitcoin",
         )
 
     '''
@@ -211,14 +211,14 @@ def deb(src, present=True, force=False):
         If the ``.deb`` file isn't downloaded, pyinfra can't remove any existing
         package as the file won't exist until mid-deploy.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         # Note: Assumes wget is installed.
         apt.deb(
-            name='Install Chrome via deb',
-            src='https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb',
+            name="Install Chrome via deb",
+            src="https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb",
         )
     '''
 
@@ -290,12 +290,12 @@ def update(cache_time=None):
 
     + cache_time: cache updates for this many seconds
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         apt.update(
-            name='Update apt repositories',
+            name="Update apt repositories",
             cache_time=3600,
         )
     '''
@@ -336,12 +336,12 @@ def upgrade():
     '''
     Upgrades all apt packages.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         apt.upgrade(
-            name='Upgrade apt packages',
+            name="Upgrade apt packages",
         )
     '''
 
@@ -355,12 +355,12 @@ def dist_upgrade(state, host):
     '''
     Updates all apt packages, employing dist-upgrade.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         apt.dist_upgrade(
-            name='Upgrade apt packages using dist-upgrade',
+            name="Upgrade apt packages using dist-upgrade",
         )
     '''
 
@@ -397,28 +397,28 @@ def packages(
         is touched upon successful update. Some distros already do this (Ubuntu), but others
         simply leave the periodic directory empty (Debian).
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         # Update package list and install packages
         apt.packages(
-            name='Install Asterisk and Vim',
-            packages=['asterisk', 'vim'],
+            name="Install Asterisk and Vim",
+            packages=["asterisk", "vim"],
             update=True,
         )
 
         # Install the latest versions of packages (always check)
         apt.packages(
-            name='Install latest Vim',
-            packages=['vim'],
+            name="Install latest Vim",
+            packages=["vim"],
             latest=True,
         )
 
         # Note: host.get_fact(OsVersion) is the same as `uname -r` (ex: '4.15.0-72-generic')
         apt.packages(
-            name='Install kernel headers',
-            packages=['linux-headers-{}'.format(host.get_fact(OsVersion))],
+            name="Install kernel headers",
+            packages=[f"linux-headers-{host.get_fact(OsVersion)}"],
             update=True,
         )
     '''

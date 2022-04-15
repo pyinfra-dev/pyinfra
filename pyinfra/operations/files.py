@@ -78,14 +78,14 @@ def download(
     + sha1sum: sha1 hash to checksum the downloaded file against
     + md5sum: md5 hash to checksum the downloaded file against
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         files.download(
-            name='Download the Docker repo file',
-            src='https://download.docker.com/linux/centos/docker-ce.repo',
-            dest='/etc/yum.repos.d/docker-ce.repo',
+            name="Download the Docker repo file",
+            src="https://download.docker.com/linux/centos/docker-ce.repo",
+            dest="/etc/yum.repos.d/docker-ce.repo",
         )
     '''
 
@@ -236,49 +236,49 @@ def line(
         If ``line`` is not in the file but we want it (``present`` set to ``True``), then
         it will be append to the end of the file.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         # prepare to do some maintenance
-        maintenance_line = 'SYSTEM IS DOWN FOR MAINTENANCE'
+        maintenance_line = "SYSTEM IS DOWN FOR MAINTENANCE"
         files.line(
-            name='Add the down-for-maintence line in /etc/motd',
-            path='/etc/motd',
+            name="Add the down-for-maintence line in /etc/motd",
+            path="/etc/motd",
             line=maintenance_line,
         )
 
         # Then, after the mantenance is done, remove the maintenance line
         files.line(
-            name='Remove the down-for-maintenance line in /etc/motd',
-            path='/etc/motd',
+            name="Remove the down-for-maintenance line in /etc/motd",
+            path="/etc/motd",
             line=maintenance_line,
-            replace='',
+            replace="",
             present=False,
         )
 
         # example where there is '*' in the line
         files.line(
-            name='Ensure /netboot/nfs is in /etc/exports',
-            path='/etc/exports',
-            line=r'/netboot/nfs .*',
-            replace='/netboot/nfs *(ro,sync,no_wdelay,insecure_locks,no_root_squash,'
-            'insecure,no_subtree_check)',
+            name="Ensure /netboot/nfs is in /etc/exports",
+            path="/etc/exports",
+            line=r"/netboot/nfs .*",
+            replace="/netboot/nfs *(ro,sync,no_wdelay,insecure_locks,no_root_squash,"
+            "insecure,no_subtree_check)",
         )
 
         files.line(
-            name='Ensure myweb can run /usr/bin/python3 without password',
-            path='/etc/sudoers',
-            line=r'myweb .*',
-            replace='myweb ALL=(ALL) NOPASSWD: /usr/bin/python3',
+            name="Ensure myweb can run /usr/bin/python3 without password",
+            path="/etc/sudoers",
+            line=r"myweb .*",
+            replace="myweb ALL=(ALL) NOPASSWD: /usr/bin/python3",
         )
 
         # example when there are double quotes (")
         line = 'QUOTAUSER=""'
         files.line(
-            name='Example with double quotes (")',
-            path='/etc/adduser.conf',
-            line='^{}$'.format(line),
+            name="Example with double quotes (")",
+            path="/etc/adduser.conf",
+            line="^{}$".format(line),
             replace=line,
         )
     '''
@@ -429,15 +429,15 @@ def replace(
         date (taken from the machine running ``pyinfra``) appended as the extension. If
         you pass a string value this will be used as the extension of the backed up file.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         files.replace(
-            name='Change part of a line in a file',
-            path='/etc/motd',
-            text='verboten',
-            replace='forbidden',
+            name="Change part of a line in a file",
+            path="/etc/motd",
+            text="verboten",
+            replace="forbidden",
         )
     '''
 
@@ -507,15 +507,15 @@ def sync(
     + exclude_dir: string or list/tuple of strings to match & exclude directories (eg node_modules)
     + add_deploy_dir: interpret src as relative to deploy directory instead of current directory
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         # Sync local files/tempdir to remote /tmp/tempdir
         files.sync(
-            name='Sync a local directory with remote',
-            src='files/tempdir',
-            dest='/tmp/tempdir',
+            name="Sync a local directory with remote",
+            src="files/tempdir",
+            dest="/tmp/tempdir",
         )
 
     Note: ``exclude`` and ``exclude_dir`` use ``fnmatch`` behind the scenes to do the filtering.
@@ -687,14 +687,14 @@ def get(
         This operation is not suitable for large files as it may involve copying
         the remote file before downloading it.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         files.get(
-            name='Download a file from a remote',
-            src='/etc/centos-release',
-            dest='/tmp/whocares',
+            name="Download a file from a remote",
+            src="/etc/centos-release",
+            dest="/tmp/whocares",
         )
     '''
 
@@ -736,9 +736,9 @@ def put(
     create_remote_dir=True, force=False, assume_exists=False,
 ):
     '''
-    Upload a local file to the remote system.
+    Upload a local file, or file-like object, to the remote system.
 
-    + src: local filename to upload
+    + src: filename or IO-like object to upload
     + dest: remote filename to upload to
     + user: user to own the files
     + group: group to own the files
@@ -761,16 +761,21 @@ def put(
         This operation is not suitable for large files as it may involve copying
         the file before uploading it.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
-        # Note: This requires a 'files/motd' file on the local filesystem
         files.put(
-            name='Update the message of the day file',
-            src='files/motd',
-            dest='/etc/motd',
-            mode='644',
+            name="Update the message of the day file",
+            src="files/motd",
+            dest="/etc/motd",
+            mode="644",
+        )
+
+        files.put(
+            name="Upload a StringIO object",
+            src=StringIO("file contents"),
+            dest="/etc/motd",
         )
     '''
 
@@ -869,7 +874,7 @@ def template(
     '''
     Generate a template using jinja2 and write it to the remote system.
 
-    + src: local template filename
+    + src: template filename or IO-like object
     + dest: remote filename
     + user: user to own the files
     + group: group to own the files
@@ -888,23 +893,23 @@ def template(
        For information on the template syntax, see
        `the jinja2 docs <https://jinja.palletsprojects.com>`_.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         files.template(
-            name='Create a templated file',
-            src='templates/somefile.conf.j2',
-            dest='/etc/somefile.conf',
+            name="Create a templated file",
+            src="templates/somefile.conf.j2",
+            dest="/etc/somefile.conf",
         )
 
         files.template(
-            name='Create service file',
-            src='templates/myweb.service.j2',
-            dest='/etc/systemd/system/myweb.service',
-            mode='755',
-            user='root',
-            group='root',
+            name="Create service file",
+            src="templates/myweb.service.j2",
+            dest="/etc/systemd/system/myweb.service",
+            mode="755",
+            user="root",
+            group="root",
         )
 
         # Example showing how to pass python variable to template file. You can also
@@ -918,18 +923,8 @@ def template(
             "entry 1",
             "entry 2"
         ]
-        files.template(
-            name='Create a templated file',
-            src='templates/foo.yml.j2',
-            dest='/tmp/foo.yml',
-            foo_variable=foo_variable,
-            foo_dict=foo_dict,
-            foo_list=foo_list
-        )
 
-    .. code:: yml
-
-        # templates/foo.j2
+        template = StringIO("""
         name: "{{ foo_variable }}"
         dict_contents:
             str1: "{{ foo_dict.str1 }}"
@@ -938,6 +933,16 @@ def template(
         {% for entry in foo_list %}
             - "{{ entry }}"
         {% endfor %}
+        """)
+
+        files.template(
+            name="Create a templated file",
+            src=template,
+            dest="/tmp/foo.yml",
+            foo_variable=foo_variable,
+            foo_dict=foo_dict,
+            foo_list=foo_list
+        )
     '''
 
     if not hasattr(src, 'read') and state.cwd:
@@ -1040,29 +1045,28 @@ def link(
         If the link exists and points to a different target, pyinfra will remove it and
         recreate a new one pointing to then new target.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
-        # simple example showing how to link to a file
         files.link(
-            name='Create link /etc/issue2 that points to /etc/issue',
-            path='/etc/issue2',
-            target='/etc/issue',
+            name="Create link /etc/issue2 that points to /etc/issue",
+            path="/etc/issue2",
+            target="/etc/issue",
         )
 
 
-        # complex example demonstrating the assume_present option
+        # Complex example demonstrating the assume_present option
         from pyinfra.operations import apt, files
 
         install_nginx = apt.packages(
-            name='Install nginx',
-            packages=['nginx'],
+            name="Install nginx",
+            packages=["nginx"],
         )
 
         files.link(
-            name='Remove default nginx site',
-            path='/etc/nginx/sites-enabled/default',
+            name="Remove default nginx site",
+            path="/etc/nginx/sites-enabled/default",
             present=False,
             assume_present=install_nginx.changed,
         )
@@ -1185,17 +1189,17 @@ def file(
         user & group as passed to ``files.put``. The mode will *not* be copied over,
         if this is required call ``files.directory`` separately.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         # Note: The directory /tmp/secret will get created with the default umask.
         files.file(
-            name='Create /tmp/secret/file',
-            path='/tmp/secret/file',
-            mode='600',
-            user='root',
-            group='root',
+            name="Create /tmp/secret/file",
+            path="/tmp/secret/file",
+            mode="600",
+            user="root",
+            group="root",
             touch=True,
             create_remote_dir=True,
         )
@@ -1296,28 +1300,27 @@ def directory(
     + force_backup: set to ``False`` to remove any existing non-file when ``force=True``
     + force_backup_dir: directory to move any backup to when ``force=True``
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         files.directory(
-            name='Ensure the /tmp/dir_that_we_want_removed is removed',
-            path='/tmp/dir_that_we_want_removed',
+            name="Ensure the /tmp/dir_that_we_want_removed is removed",
+            path="/tmp/dir_that_we_want_removed",
             present=False,
         )
 
         files.directory(
-            name='Ensure /web exists',
-            path='/web',
-            user='myweb',
-            group='myweb',
+            name="Ensure /web exists",
+            path="/web",
+            user="myweb",
+            group="myweb",
         )
 
-        # multiple directories
-        dirs = ['/netboot/tftp', '/netboot/nfs']
-        for dir in dirs:
+        # Multiple directories
+        for dir in ["/netboot/tftp", "/netboot/nfs"]:
             files.directory(
-                name='Ensure the directory `{}` exists'.format(dir),
+                name="Ensure the directory `{}` exists".format(dir),
                 path=dir,
             )
     '''

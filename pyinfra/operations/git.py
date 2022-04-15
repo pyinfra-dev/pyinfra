@@ -24,15 +24,15 @@ def config(key, value, repo=None):
     + value: the value this key should have
     + repo: specify the git repo path to edit local config (defaults to global)
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         git.config(
-            name='Ensure user name is set for a repo',
-            key='user.name',
-            value='Anon E. Mouse',
-            repo='/usr/local/src/pyinfra',
+            name="Ensure user name is set for a repo",
+            key="user.name",
+            value="Anon E. Mouse",
+            repo="/usr/local/src/pyinfra",
         )
 
     '''
@@ -82,14 +82,14 @@ def repo(
     + update_submodules: update any git submodules
     + recursive_submodules: update git submodules recursively
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         git.repo(
-            name='Clone repo',
-            src='https://github.com/Fizzadar/pyinfra.git',
-            dest='/usr/local/src/pyinfra',
+            name="Clone repo",
+            src="https://github.com/Fizzadar/pyinfra.git",
+            dest="/usr/local/src/pyinfra",
         )
     '''
 
@@ -187,90 +187,90 @@ def worktree(
     + user: chown files to this user after
     + group: chown files to this group after
 
-    Example:
+    **Examples:**
 
     .. code:: python
 
         git.worktree(
-            name='Create a worktree from the current repo `HEAD`',
-            repo='/usr/local/src/pyinfra/master',
-            worktree='/usr/local/src/pyinfra/hotfix'
+            name="Create a worktree from the current repo `HEAD`",
+            repo="/usr/local/src/pyinfra/master",
+            worktree="/usr/local/src/pyinfra/hotfix"
         )
 
         git.worktree(
-            name='Create a worktree from the commit `4e091aa0`',
-            repo='/usr/local/src/pyinfra/master',
-            worktree='/usr/local/src/pyinfra/hotfix',
-            commitish='4e091aa0'
+            name="Create a worktree from the commit `4e091aa0`",
+            repo="/usr/local/src/pyinfra/master",
+            worktree="/usr/local/src/pyinfra/hotfix",
+            commitish="4e091aa0"
         )
 
         git.worktree(
-            name='Create a worktree with a new local branch `v1.0`',
-            repo='/usr/local/src/pyinfra/master',
-            worktree='/usr/local/src/pyinfra/hotfix',
-            new_branch='v1.0',
+            name="Create a worktree with a new local branch `v1.0`",
+            repo="/usr/local/src/pyinfra/master",
+            worktree="/usr/local/src/pyinfra/hotfix",
+            new_branch="v1.0",
         )
 
         git.worktree(
-            name='Create a worktree from the commit 4e091aa0 with the new local branch `v1.0`',
-            repo='/usr/local/src/pyinfra/master',
-            worktree='/usr/local/src/pyinfra/hotfix',
-            new_branch='v1.0',
-            commitish='4e091aa0'
+            name="Create a worktree from the commit 4e091aa0 with the new local branch `v1.0`",
+            repo="/usr/local/src/pyinfra/master",
+            worktree="/usr/local/src/pyinfra/hotfix",
+            new_branch="v1.0",
+            commitish="4e091aa0"
         )
 
         git.worktree(
-            name='Create a worktree with a detached `HEAD`',
-            repo='/usr/local/src/pyinfra/master',
-            worktree='/usr/local/src/pyinfra/hotfix',
+            name="Create a worktree with a detached `HEAD`",
+            repo="/usr/local/src/pyinfra/master",
+            worktree="/usr/local/src/pyinfra/hotfix",
             detached=True,
         )
 
         git.worktree(
-            name='Create a worktree with a detached `HEAD` from commit `4e091aa0`',
-            repo='/usr/local/src/pyinfra/master',
-            worktree='/usr/local/src/pyinfra/hotfix',
-            commitish='4e091aa0',
+            name="Create a worktree with a detached `HEAD` from commit `4e091aa0`",
+            repo="/usr/local/src/pyinfra/master",
+            worktree="/usr/local/src/pyinfra/hotfix",
+            commitish="4e091aa0",
             detached=True,
         )
 
         git.worktree(
-            name='Create a worktree from the existing local branch `v1.0`',
-            repo='/usr/local/src/pyinfra/master',
-            worktree='/usr/local/src/pyinfra/hotfix',
-            commitish='v1.0'
+            name="Create a worktree from the existing local branch `v1.0`",
+            repo="/usr/local/src/pyinfra/master",
+            worktree="/usr/local/src/pyinfra/hotfix",
+            commitish="v1.0"
         )
 
         git.worktree(
-            name='Create a worktree with a new branch `v1.0` that tracks `origin/v1.0`',
-            repo='/usr/local/src/pyinfra/master',
-            worktree='/usr/local/src/pyinfra/hotfix',
-            new_branch='v1.0',
-            commitish='v1.0'
+            name="Create a worktree with a new branch `v1.0` that tracks `origin/v1.0`",
+            repo="/usr/local/src/pyinfra/master",
+            worktree="/usr/local/src/pyinfra/hotfix",
+            new_branch="v1.0",
+            commitish="v1.0"
         )
 
         git.worktree(
-            name='Pull an existing worktree already linked to a tracking branch',
-            repo='/usr/local/src/pyinfra/master',
-            worktree='/usr/local/src/pyinfra/hotfix'
+            name="Pull an existing worktree already linked to a tracking branch",
+            repo="/usr/local/src/pyinfra/master",
+            worktree="/usr/local/src/pyinfra/hotfix"
         )
 
         git.worktree(
-            name='Pull an existing worktree from a specific remote branch',
-            repo='/usr/local/src/pyinfra/master',
-            worktree='/usr/local/src/pyinfra/hotfix',
-            from_remote_branch=('origin', 'master')
+            name="Pull an existing worktree from a specific remote branch",
+            repo="/usr/local/src/pyinfra/master",
+            worktree="/usr/local/src/pyinfra/hotfix",
+            from_remote_branch=("origin", "master")
         )
 
         git.worktree(
-            name='Remove a worktree',
-            worktree='/usr/local/src/pyinfra/hotfix',
+            name="Remove a worktree",
+            worktree="/usr/local/src/pyinfra/hotfix",
             present=False,
         )
 
         git.worktree(
-            name='Remove an unclean worktree',
-            worktree='/usr/local/src/pyinfra/hotfix',
+            name="Remove an unclean worktree",
+            worktree="/usr/local/src/pyinfra/hotfix",
             present=False,
             force=True,
         )
@@ -359,13 +359,13 @@ def bare_repo(
     + user: chown files to this user after
     + group: chown files to this group after
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         git.bare_repo(
-            name='Create bare repo',
-            path='/home/git/test.git',
+            name="Create bare repo",
+            path="/home/git/test.git",
         )
     '''
 

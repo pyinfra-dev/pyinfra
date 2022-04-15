@@ -103,17 +103,17 @@ def role(
         create or drop roles, but not alter them (if the role exists this
         operation will make no changes).
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         postgresql.role(
-            name='Create the pyinfra PostgreSQL role',
-            role='pyinfra',
-            password='somepassword',
+            name="Create the pyinfra PostgreSQL role",
+            role="pyinfra",
+            password="somepassword",
             superuser=True,
             login=True,
-            sudo_user='postgres',
+            sudo_user="postgres",
         )
 
     '''
@@ -211,16 +211,16 @@ def database(
         create or drop databases, but not alter them (if the db exists this
         operation will make no changes).
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         postgresql.database(
-            name='Create the pyinfra_stuff database',
-            database='pyinfra_stuff',
-            owner='pyinfra',
-            encoding='UTF8',
-            sudo_user='postgres',
+            name="Create the pyinfra_stuff database",
+            database="pyinfra_stuff",
+            owner="pyinfra",
+            encoding="UTF8",
+            sudo_user="postgres",
         )
 
     '''
@@ -299,15 +299,15 @@ def dump(
     + database: name of the database to dump
     + psql_*: global module arguments, see above
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         postgresql.dump(
-            name='Dump the pyinfra_stuff database',
-            dest='/tmp/pyinfra_stuff.dump',
-            database='pyinfra_stuff',
-            sudo_user='postgres',
+            name="Dump the pyinfra_stuff database",
+            dest="/tmp/pyinfra_stuff.dump",
+            database="pyinfra_stuff",
+            sudo_user="postgres",
         )
 
     '''
@@ -337,15 +337,15 @@ def load(
     + database: name of the database to import into
     + psql_*: global module arguments, see above
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         postgresql.load(
-            name='Import the pyinfra_stuff dump into pyinfra_stuff_copy',
-            src='/tmp/pyinfra_stuff.dump',
-            database='pyinfra_stuff_copy',
-            sudo_user='postgres',
+            name="Import the pyinfra_stuff dump into pyinfra_stuff_copy",
+            src="/tmp/pyinfra_stuff.dump",
+            database="pyinfra_stuff_copy",
+            sudo_user="postgres",
         )
 
     '''

@@ -30,14 +30,14 @@ def container(
     + image: image to base the container on
     + present: whether the container should be present or absent
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         lxd.container(
-            name='Add an ubuntu container',
-            id='ubuntu19',
-            image='ubuntu:19.10',
+            name="Add an ubuntu container",
+            id="ubuntu19",
+            image="ubuntu:19.10",
         )
     '''
 

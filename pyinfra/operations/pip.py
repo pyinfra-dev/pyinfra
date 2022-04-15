@@ -26,13 +26,13 @@ def virtualenv(
     + always_copy: always copy files rather than symlinking
     + present: whether the virtualenv should exist
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         pip.virtualenv(
-            name='Create a virtualenv',
-            path='/usr/local/bin/venv',
+            name="Create a virtualenv",
+            path="/usr/local/bin/venv",
         )
     '''
 
@@ -93,13 +93,13 @@ def venv(
     + always_copy: always copy files rather than symlinking
     + present: whether the virtualenv should exist
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         pip.venv(
-            name='Create a virtualenv',
-            path='/usr/local/bin/venv',
+            name="Create a virtualenv",
+            path="/usr/local/bin/venv",
         )
     '''
 
@@ -139,14 +139,14 @@ def packages(
     Versions:
         Package versions can be pinned like pip: ``<pkg>==<version>``.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         pip.packages(
-            name='Install pyinfra into a virtualenv',
-            packages=['pyinfra'],
-            virtualenv='/usr/local/bin/venv',
+            name="Install pyinfra into a virtualenv",
+            packages=["pyinfra"],
+            virtualenv="/usr/local/bin/venv",
         )
     '''
 

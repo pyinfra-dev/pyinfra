@@ -33,9 +33,9 @@ def call(function, *args, **kwargs):
                 )
 
         python.call(
-            name='Run my_callback function',
+            name="Run my_callback function",
             function=my_callback,
-            hello='world',
+            hello="world",
         )
 
     '''

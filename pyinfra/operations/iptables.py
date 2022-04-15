@@ -103,24 +103,25 @@ def rule(
     + destination_port: destination port (requires protocol)
     + source_port: source port (requires protocol)
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         iptables.rule(
-            name='Block SSH traffic',
-            chain='INPUT',
-            jump='DROP',
-            destination_port=22
+            name="Block SSH traffic",
+            chain="INPUT",
+            jump="DROP",
+            destination_port=22,
         )
 
         iptables.rule(
-            name='NAT traffic on from 8.8.8.8:53 to 8.8.4.4:8080',
-            chain='PREROUTING',
-            jump='DNAT',
-            table='nat',
-            source='8.8.8.8', destination_port=53,
-            to_destination='8.8.4.4:8080'
+            name="NAT traffic on from 8.8.8.8:53 to 8.8.4.4:8080",
+            chain="PREROUTING",
+            jump="DNAT",
+            table="nat",
+            source="8.8.8.8",
+            destination_port=53,
+            to_destination="8.8.4.4:8080",
         )
     '''
 

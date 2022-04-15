@@ -27,13 +27,13 @@ def service(service, running=True, restart=False, suspend=False):
     + restart: whether the the service should be restarted
     + suspend: whether the the service should be suspended
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         windows.service(
-            {'Stop the spooler service'},
-            'service',
+            name="Stop the spooler service",
+            service="service",
             running=False,
         )
     '''

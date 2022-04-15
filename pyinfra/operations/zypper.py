@@ -37,21 +37,21 @@ def repo(
         for manual construction of repository files. Use a URL to download and
         install remote repository files.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         # Download a repository file
         zypper.repo(
-            name='Install container virtualization repo via URL',
-            src='https://download.opensuse.org/repositories/Virtualization:containers/openSUSE_Tumbleweed/Virtualization:containers.repo',
+            name="Install container virtualization repo via URL",
+            src="https://download.opensuse.org/repositories/Virtualization:containers/openSUSE_Tumbleweed/Virtualization:containers.repo",
         )
 
         # Create the repository file from baseurl/etc
         zypper.repo(
-            name='Install container virtualization repo',
-            src=='Virtualization:containers (openSUSE_Tumbleweed)',
-            baseurl='https://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Tumbleweed/',
+            name="Install container virtualization repo",
+            src=="Virtualization:containers (openSUSE_Tumbleweed)",
+            baseurl="https://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Tumbleweed/",
         )
     '''
 
@@ -84,13 +84,13 @@ def rpm(src, present=True):
         If the ``.rpm`` file isn't downloaded, pyinfra can't remove any existing
         package as the file won't exist until mid-deploy.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         zypper.rpm(
-           name='Install task from rpm',
-           src='https://github.com/go-task/task/releases/download/v2.8.1/task_linux_amd64.rpm'
+           name="Install task from rpm",
+           src="https://github.com/go-task/task/releases/download/v2.8.1/task_linux_amd64.rpm",
         )
     '''
 
@@ -137,21 +137,21 @@ def packages(
     Versions:
         Package versions can be pinned like zypper: ``<pkg>=<version>``
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         # Update package list and install packages
         zypper.packages(
-            name='Install Vim and Vim enhanced',
-            packages=['vim-enhanced', 'vim'],
+            name="Install Vim and Vim enhanced",
+            packages=["vim-enhanced", "vim"],
             update=True,
         )
 
         # Install the latest versions of packages (always check)
         zypper.packages(
-            name='Install latest Vim',
-            packages=['vim'],
+            name="Install latest Vim",
+            packages=["vim"],
             latest=True,
         )
     '''

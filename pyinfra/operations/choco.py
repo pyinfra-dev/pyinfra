@@ -21,15 +21,15 @@ def packages(packages=None, present=True, latest=False):
     Versions:
         Package versions can be pinned like gem: ``<pkg>:<version>``.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         # Note: Assumes that 'choco' is installed and
         #       user has Administrator permission.
         choco.packages(
-            name='Install Notepad++',
-            packages=['notepadplusplus'],
+            name="Install Notepad++",
+            packages=["notepadplusplus"],
         )
     '''
 

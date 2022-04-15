@@ -52,21 +52,21 @@ def service(
     + machine: the machine name to connect to
     + user_name: connect to a specific user's systemd session
 
-    Example:
+    **Examples:**
 
     .. code:: python
 
         systemd.service(
-            name='Restart and enable the dnsmasq service',
-            service='dnsmasq.service',
+            name="Restart and enable the dnsmasq service",
+            service="dnsmasq.service",
             running=True,
             restarted=True,
             enabled=True,
         )
 
         systemd.service(
-            name='Enable logrotate timer',
-            service='logrotate.timer',
+            name="Enable logrotate timer",
+            service="logrotate.timer",
             running=True,
             enabled=True,
         )

@@ -54,21 +54,21 @@ def packages(
     Versions:
         Package versions can be pinned like brew: ``<pkg>@<version>``.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         # Update package list and install packages
         brew.packages(
             name='Install Vim and vimpager',
-            packages=['vimpager', 'vim'],
+            packages=["vimpager", "vim"],
             update=True,
         )
 
         # Install the latest versions of packages (always check)
         brew.packages(
-            name='Install latest Vim',
-            packages=['vim'],
+            name="Install latest Vim",
+            packages=["vim"],
             latest=True,
         )
     '''
@@ -123,13 +123,13 @@ def casks(
     Versions:
         Cask versions can be pinned like brew: ``<pkg>@<version>``.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         brew.casks(
             name='Upgrade and install the latest cask',
-            casks=['godot'],
+            casks=["godot"],
             upgrade=True,
             latest=True,
         )
@@ -159,20 +159,19 @@ def tap(src, present=True):
     + src: the name of the tap
     + present: whether this tap should be present or not
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         brew.tap(
-            name='Add a brew tap',
-            src='includeos/includeos',
+            name="Add a brew tap",
+            src="includeos/includeos",
         )
 
-        # multiple taps
-        taps = ['includeos/includeos', 'ktr0731/evans']
-        for tap in taps:
+        # Multiple taps
+        for tap in ["includeos/includeos", "ktr0731/evans"]:
             brew.tap(
-                name={f'Add brew tap {tap}'},
+                name={f"Add brew tap {tap}"},
                 src=tap,
             )
 

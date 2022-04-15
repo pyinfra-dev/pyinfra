@@ -49,14 +49,14 @@ def download(
     + sha1sum: sha1 hash to checksum the downloaded file against
     + md5sum: md5 hash to checksum the downloaded file against
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         winows_files.download(
-            name='Download the Docker repo file',
-            src='https://download.docker.com/linux/centos/docker-ce.repo',
-            dest='C:\\docker',
+            name="Download the Docker repo file",
+            src="https://download.docker.com/linux/centos/docker-ce.repo",
+            dest="C:\\docker",
         )
     '''
 
@@ -167,15 +167,15 @@ def put(
         This operation is not suitable for large files as it may involve copying
         the file before uploading it.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         # Note: This requires a 'files/motd' file on the local filesystem
         files.put(
-            name='Update the message of the day file',
-            src='data/content.json',
-            dest='C:\\data\\content.json'
+            name="Update the message of the day file",
+            src="data/content.json",
+            dest="C:\\data\\content.json",
         )
     '''
 
@@ -279,13 +279,13 @@ def file(
         user & group as passed to ``files.put``. The mode will *not* be copied over,
         if this is required call ``files.directory`` separately.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         files.file(
-            name='Create c:\\temp\\hello.txt',
-            path='c:\\temp\\hello.txt',
+            name="Create c:\\temp\\hello.txt",
+            path="c:\\temp\\hello.txt",
             touch=True,
         )
     '''
@@ -366,27 +366,27 @@ def directory(
     + TODO: mode: permissions of the folder
     + TODO: recursive: recursively apply user/group/mode
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         files.directory(
-            name='Ensure the c:\\temp\\dir_that_we_want_removed is removed',
-            path='c:\\temp\\dir_that_we_want_removed',
+            name="Ensure the c:\\temp\\dir_that_we_want_removed is removed",
+            path="c:\\temp\\dir_that_we_want_removed",
             present=False,
         )
 
         files.directory(
-            name='Ensure c:\\temp\\foo\\foo_dir exists',
-            path='c:\\temp\\foo\\foo_dir',
+            name="Ensure c:\\temp\\foo\\foo_dir exists",
+            path="c:\\temp\\foo\\foo_dir",
             recursive=True,
         )
 
         # multiple directories
-        dirs = ['c:\\temp\\foo_dir1', 'c:\\temp\\foo_dir2']
+        dirs = ["c:\\temp\\foo_dir1", "c:\\temp\\foo_dir2"]
         for dir in dirs:
             files.directory(
-                name='Ensure the directory `{}` exists'.format(dir),
+                name="Ensure the directory `{}` exists".format(dir),
                 path=dir,
             )
 
@@ -476,15 +476,15 @@ def link(
         If the link exists and points to a different target, pyinfra will remove it and
         recreate a new one pointing to then new target.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         # simple example showing how to link to a file
         files.link(
-            name=r'Create link C:\\issue2 that points to C:\\issue',
-            path=r'C:\\issue2',
-            target=r'C\\issue',
+            name=r"Create link C:\\issue2 that points to C:\\issue",
+            path=r"C:\\issue2",
+            target=r"C\\issue",
         )
     '''
 

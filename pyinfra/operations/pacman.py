@@ -47,13 +47,13 @@ def packages(
     Versions:
         Package versions can be pinned like pacman: ``<pkg>=<version>``.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         pacman.packages(
-            name='Install Vim and a plugin',
-            packages=['vim-fugitive', 'vim'],
+            name="Install Vim and a plugin",
+            packages=["vim-fugitive", "vim"],
             update=True,
         )
     '''

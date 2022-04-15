@@ -29,13 +29,13 @@ def packages(packages=None, present=True, pkg_path=None):
         NetBSD/FreeBSD helpfully use their own directory structures, so the default won't
         work.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         pkg.packages(
-            name='Install Vim and Vim Addon Manager',
-            packages=['vim-addon-manager', 'vim'],
+            name="Install Vim and Vim Addon Manager",
+            packages=["vim-addon-manager", "vim"],
         )
 
     '''

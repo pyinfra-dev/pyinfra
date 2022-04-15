@@ -39,13 +39,13 @@ def service(
         For other distributions and more granular service control, see the
         ``sysvinit.enable`` operation.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         sysvinit.service(
-            name='Restart and enable rsyslog',
-            service='rsyslog',
+            name="Restart and enable rsyslog",
+            service="rsyslog",
             restarted=True,
             enabled=True,
         )
@@ -110,13 +110,13 @@ def enable(
     + start_levels: which runlevels should the service run when enabled
     + stop_levels: which runlevels should the service stop when enabled
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         init.d_enable(
-            name='Finer control on which runlevels rsyslog should run',
-            service='rsyslog',
+            name="Finer control on which runlevels rsyslog should run",
+            service="rsyslog",
             start_levels=(3, 4, 5),
             stop_levels=(0, 1, 2, 6),
         )

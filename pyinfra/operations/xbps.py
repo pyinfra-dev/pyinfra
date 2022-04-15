@@ -44,13 +44,13 @@ def packages(
     + update: run ``xbps-install -S`` before installing packages
     + upgrade: run ``xbps-install -y -u`` before installing packages
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         xbps.packages(
-            name='Install Vim and Vim Pager',
-            packages=['vimpager', 'vim'],
+            name="Install Vim and Vim Pager",
+            packages=["vimpager", "vim"],
         )
 
     '''

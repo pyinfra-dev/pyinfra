@@ -55,12 +55,12 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
     + interval: interval (s) between reconnect attempts
     + reboot_timeout: total time before giving up reconnecting
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         server.reboot(
-            name='Reboot the server and wait to reconnect',
+            name="Reboot the server and wait to reconnect",
             delay=60,
             reboot_timeout=600,
         )
@@ -107,12 +107,12 @@ def wait(port=None):
 
     + port: port number to wait for
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         server.wait(
-            name='Wait for webserver to start',
+            name="Wait for webserver to start",
             port=80,
         )
     '''
@@ -134,13 +134,13 @@ def shell(commands):
 
     + commands: command or list of commands to execute on the remote server
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         server.shell(
-            name='Run lxd auto init',
-            commands=['lxd init --auto'],
+            name="Run lxd auto init",
+            commands=["lxd init --auto"],
         )
     '''
 
@@ -159,14 +159,14 @@ def script(src):
 
     + src: local script filename to upload & execute
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         # Note: This assumes there is a file in files/hello.bash locally.
         server.script(
-            name='Hello',
-            src='files/hello.bash',
+            name="Hello",
+            src="files/hello.bash",
         )
     '''
 
@@ -184,7 +184,7 @@ def script_template(src, **data):
 
     + src: local script template filename
 
-    Example:
+    **Example:**
 
     .. code:: python
 
@@ -194,8 +194,8 @@ def script_template(src, **data):
         # Note: This assumes there is a file in templates/hello2.bash.j2 locally.
         some_var = 'blah blah blah '
         server.script_template(
-            name='Hello from script',
-            src='templates/hello2.bash.j2',
+            name="Hello from script",
+            src="templates/hello2.bash.j2",
             some_var=some_var,
         )
     '''
@@ -216,13 +216,13 @@ def modprobe(module, present=True, force=False):
     + present: whether the module should be loaded or not
     + force: whether to force any add/remove modules
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         server.modprobe(
-            name='Silly example for modprobe',
-            module='floppy',
+            name="Silly example for modprobe",
+            module="floppy",
         )
     '''
     list_value = (
@@ -338,13 +338,13 @@ def hostname(hostname, hostname_file=None):
 
         To completely disable writing the hostname file, set ``hostname_file=False``.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         server.hostname(
-            name='Set the hostname',
-            hostname='server1.example.com',
+            name="Set the hostname",
+            hostname="server1.example.com",
         )
     '''
 
@@ -393,13 +393,13 @@ def sysctl(
     + persist: whether to write this sysctl to the config
     + persist_file: file to write the sysctl to persist on reboot
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         server.sysctl(
-            name='Change the fs.file-max value',
-            key='fs.file-max',
+            name="Change the fs.file-max value",
+            key="fs.file-max",
             value=100000,
             persist=True,
         )
@@ -451,13 +451,13 @@ def service(
     + command: custom command execute
     + enabled: whether this service should be enabled/disabled on boot
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         server.service(
-            name='Enable open-vm-tools service',
-            service='open-vm-tools',
+            name="Enable open-vm-tools service",
+            service="open-vm-tools",
             enabled=True,
         )
     '''
@@ -501,13 +501,13 @@ def packages(
     + packages: list of packages to ensure
     + present: whether the packages should be installed
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         server.packages(
-            name='Install Vim and vimpager',
-            packages=['vimpager', 'vim'],
+            name="Install Vim and vimpager",
+            packages=["vimpager", "vim"],
         )
     '''
 
@@ -585,15 +585,15 @@ def crontab(
         When provided, ``special_time`` will be used instead of any values passed in
         for ``minute``/``hour``/``month``/``day_of_week``/``day_of_month``.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         # simple example for a crontab
         server.crontab(
-            name='Backup /etc weekly',
-            command='/bin/tar cf /tmp/etc_bup.tar /etc',
-            name='backup_etc',
+            name="Backup /etc weekly",
+            command="/bin/tar cf /tmp/etc_bup.tar /etc",
+            name="backup_etc",
             day_of_week=0,
             hour=1,
             minute=0,
@@ -728,19 +728,19 @@ def group(group, present=True, system=False, gid=None):
     System users:
         System users don't exist on BSD, so the argument is ignored for BSD targets.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         server.group(
-            name='Create docker group',
-            group='docker',
+            name="Create docker group",
+            group="docker",
         )
 
         # multiple groups
-        for group in ['wheel', 'lusers']:
+        for group in ["wheel", "lusers"]:
             server.group(
-                name=f'Create the group {group}',
+                name=f"Create the group {group}",
                 group=group,
             )
     '''
@@ -808,26 +808,26 @@ def user(
         These can be provided as strings containing the public key or as a path to
         a public key file which ``pyinfra`` will read.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         server.user(
-            name='Ensure user is removed',
-            user='kevin',
+            name="Ensure user is removed",
+            user="kevin",
             present=False,
         )
 
         server.user(
-            name='Ensure myweb user exists',
-            user='myweb',
-            shell='/bin/bash',
+            name="Ensure myweb user exists",
+            user="myweb",
+            shell="/bin/bash",
         )
 
         # multiple users
-        for user in ['kevin', 'bob']:
+        for user in ["kevin", "bob"]:
             server.user(
-                name=f'Ensure user {user} is removed',
+                name=f"Ensure user {user} is removed",
                 user=user,
                 present=False,
             )

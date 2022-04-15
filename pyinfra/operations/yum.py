@@ -20,14 +20,14 @@ def key(src):
     Note:
         always returns one command, not state checking
 
-    Example:
+    **Example:**
 
     .. code:: python
 
-        linux_id = host.get_fact(LinuxDistribution)['release_meta'].get('ID')
+        linux_id = host.get_fact(LinuxDistribution)["release_meta"].get("ID")
         yum.key(
-            name='Add the Docker CentOS gpg key',
-            src='https://download.docker.com/linux/{}/gpg'.format(linux_id),
+            name="Add the Docker CentOS gpg key",
+            src=f"https://download.docker.com/linux/{linux_id}/gpg",
         )
 
     '''
@@ -59,21 +59,21 @@ def repo(
         for manual construction of repository files. Use a URL to download and
         install remote repository files.
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         # Download a repository file
         yum.repo(
-            name='Install Docker-CE repo via URL',
-            src='https://download.docker.com/linux/centos/docker-ce.repo',
+            name="Install Docker-CE repo via URL",
+            src="https://download.docker.com/linux/centos/docker-ce.repo",
         )
 
         # Create the repository file from baseurl/etc
         yum.repo(
-            name='Add the Docker CentOS repo',
-            src='DockerCE',
-            baseurl='https://download.docker.com/linux/centos/7/$basearch/stable',
+            name="Add the Docker CentOS repo",
+            src="DockerCE",
+            baseurl="https://download.docker.com/linux/centos/7/$basearch/stable",
         )
     '''
 
@@ -96,14 +96,14 @@ def rpm(src, present=True):
         If the ``.rpm`` file isn't downloaded, pyinfra can't remove any existing
         package as the file won't exist until mid-deploy.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
-        major_centos_version = host.get_fact(LinuxDistribution)['major']
+        major_version = host.get_fact(LinuxDistribution)["major"]
         dnf.rpm(
-           name='Install EPEL rpm to enable EPEL repo',
-           src='https://dl.fedoraproject.org/pub/epel/epel-release-latest-{}.noarch.rpm'.format(major_centos_version),
+           name="Install EPEL rpm to enable EPEL repo",
+           src=f"https://dl.fedoraproject.org/pub/epel/epel-release-latest-{major_version}.noarch.rpm",
         )
     '''
 
@@ -142,21 +142,21 @@ def packages(
     Versions:
         Package versions can be pinned as follows: ``<pkg>=<version>``
 
-    Examples:
+    **Examples:**
 
     .. code:: python
 
         # Update package list and install packages
         yum.packages(
-            name='Install Vim and Vim enhanced',
-            packages=['vim-enhanced', 'vim'],
+            name="Install Vim and Vim enhanced",
+            packages=["vim-enhanced", "vim"],
             update=True,
         )
 
         # Install the latest versions of packages (always check)
         yum.packages(
-            name='Install latest Vim',
-            packages=['vim'],
+            name="Install latest Vim",
+            packages=["vim"],
             latest=True,
         )
     '''

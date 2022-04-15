@@ -13,7 +13,7 @@ def agent(server=None, port=None):
     for puppet.agent() as `puppet` is added to the path in
     the .bash_profile.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
@@ -22,7 +22,7 @@ def agent(server=None, port=None):
         # We also expect a return code of:
         # 0=no changes or 2=changes applied
         puppet.agent(
-            name='Run the puppet agent',
+            name="Run the puppet agent",
             success_exit_codes=[0, 2],
         )
 

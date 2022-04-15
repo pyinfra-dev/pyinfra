@@ -92,40 +92,40 @@ def user(
         detect if the current password doesn't match the one provided, so won't
         attempt to change it.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         mysql.user(
-            name='Create the pyinfra@localhost MySQL user',
-            user='pyinfra',
-            password='somepassword',
+            name="Create the pyinfra@localhost MySQL user",
+            user="pyinfra",
+            password="somepassword",
         )
 
         # Create a user with resource limits
         mysql.user(
-            name='Create the pyinfra@localhost MySQL user',
-            user='pyinfra',
+            name="Create the pyinfra@localhost MySQL user",
+            user="pyinfra",
             max_connections=50,
             max_updates_per_hour=10,
         )
 
         # Create a user that requires SSL for connections
         mysql.user(
-            name='Create the pyinfra@localhost MySQL user',
-            user='pyinfra',
-            password='somepassword',
-            require='SSL',
+            name="Create the pyinfra@localhost MySQL user",
+            user="pyinfra",
+            password="somepassword",
+            require="SSL",
         )
 
         # Create a user that requires a specific certificate
         mysql.user(
-            name='Create the pyinfra@localhost MySQL user',
-            user='pyinfra',
-            password='somepassword',
-            require='X509',
-            require_issuer='/C=SE/ST=Stockholm...',
-            require_cipher='EDH-RSA-DES-CBC3-SHA',
+            name="Create the pyinfra@localhost MySQL user",
+            user="pyinfra",
+            password="somepassword",
+            require="X509",
+            require_issuer="/C=SE/ST=Stockholm...",
+            require_cipher="EDH-RSA-DES-CBC3-SHA",
         )
     '''
 
@@ -317,16 +317,16 @@ def database(
         these will only be applied if the database does not exist - ie pyinfra
         will not attempt to alter the existing databases collate/character sets.
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         mysql.database(
-            name='Create the pyinfra_stuff database',
-            database='pyinfra_stuff',
-            user='pyinfra',
-            user_privileges=['SELECT', 'INSERT'],
-            charset='utf8',
+            name="Create the pyinfra_stuff database",
+            database="pyinfra_stuff",
+            user="pyinfra",
+            user_privileges=["SELECT", "INSERT"],
+            charset="utf8",
         )
     '''
 
@@ -524,14 +524,14 @@ def dump(
     + database: name of the database to dump
     + mysql_*: global module arguments, see above
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         mysql.dump(
-            name='Dump the pyinfra_stuff database',
-            dest='/tmp/pyinfra_stuff.dump',
-            database='pyinfra_stuff',
+            name="Dump the pyinfra_stuff database",
+            dest="/tmp/pyinfra_stuff.dump",
+            database="pyinfra_stuff",
         )
     '''
 
@@ -559,14 +559,14 @@ def load(
     + database: name of the database to import into
     + mysql_*: global module arguments, see above
 
-    Example:
+    **Example:**
 
     .. code:: python
 
         mysql.load(
-            name='Import the pyinfra_stuff dump into pyinfra_stuff_copy',
-            src='/tmp/pyinfra_stuff.dump',
-            database='pyinfra_stuff_copy',
+            name="Import the pyinfra_stuff dump into pyinfra_stuff_copy",
+            src="/tmp/pyinfra_stuff.dump",
+            database="pyinfra_stuff_copy",
         )
     '''
 
