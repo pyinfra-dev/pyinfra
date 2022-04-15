@@ -10,7 +10,7 @@ class XbpsPackages(FactBase):
     .. code:: python
 
         {
-            'package_name': ['version'],
+            "package_name": ["version"],
         }
     '''
 

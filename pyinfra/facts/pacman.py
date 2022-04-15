@@ -13,7 +13,7 @@ class PacmanUnpackGroup(FactBase):
     .. code:: python
 
         [
-            'package_name',
+            "package_name",
         ]
     '''
 
@@ -36,7 +36,7 @@ class PacmanPackages(FactBase):
     .. code:: python
 
         {
-            'package_name': ['version'],
+            "package_name": ["version"],
         }
     '''
 

@@ -11,8 +11,8 @@ class OpenvzContainers(FactBase):
 
         {
             666: {
-                'ip': [],
-                'ostemplate': 'ubuntu...',
+                "ip": [],
+                "ostemplate": "ubuntu...",
                 ...
             },
         }

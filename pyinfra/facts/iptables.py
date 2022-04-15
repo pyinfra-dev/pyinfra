@@ -86,9 +86,8 @@ class IptablesRules(FactBase):
 
         [
             {
-                'chain': 'PREROUTING',
-                'jump': 'DNAT',
-                ...
+                "chain": "PREROUTING",
+                "jump": "DNAT",
             },
         ]
     '''
@@ -116,9 +115,8 @@ class Ip6tablesRules(IptablesRules):
 
         [
             {
-                'chain': 'PREROUTING',
-                'jump': 'DNAT',
-                ...
+                "chain": "PREROUTING",
+                "jump": "DNAT",
             },
         ]
     '''
@@ -134,7 +132,7 @@ class IptablesChains(IptablesRules):
     .. code:: python
 
         {
-            'NAME': 'POLICY',
+            "NAME": "POLICY",
         }
     '''
 
@@ -160,7 +158,7 @@ class Ip6tablesChains(IptablesChains):
     .. code:: python
 
         {
-            'NAME': 'POLICY',
+            "NAME": "POLICY",
         }
     '''
 

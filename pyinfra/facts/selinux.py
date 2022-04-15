@@ -8,10 +8,10 @@ class FileContext(FactBase):
     .. code:: python
 
         {
-            'user': 'system_u',
-            'role': 'object_r',
-            'type': 'deafult_t',
-            'level': 's0',
+            "user": "system_u",
+            "role": "object_r",
+            "type": "deafult_t",
+            "level": "s0",
         }
     '''
 

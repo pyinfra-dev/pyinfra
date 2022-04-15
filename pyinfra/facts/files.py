@@ -1,3 +1,7 @@
+'''
+The files facts provide information about the filesystem and it's contents on the target host.
+'''
+
 import re
 
 from datetime import datetime
@@ -57,6 +61,25 @@ def _parse_mode(mode):
 
 
 class File(FactBase):
+    '''
+    Returns information about a file on the remote system:
+
+    .. code:: python
+
+        {
+            "user": "pyinfra",
+            "group": "pyinfra",
+            "mode": 644,
+            "size": 3928,
+        }
+
+    If the path does not exist:
+        returns ``None``
+
+    If the path exists but is not a file:
+        returns ``False``
+    '''
+
     type = 'file'
 
     def command(self, path):
@@ -112,14 +135,66 @@ class File(FactBase):
 
 
 class Link(File):
+    '''
+    Returns information about a link on the remote system:
+
+    .. code:: python
+
+        {
+            "user": "pyinfra",
+            "group": "pyinfra",
+            "link_target": "/path/to/link/target"
+        }
+
+    If the path does not exist:
+        returns ``None``
+
+    If the path exists but is not a link:
+        returns ``False``
+    '''
+
     type = 'link'
 
 
 class Directory(File):
+    '''
+    Returns information about a directory on the remote system:
+
+    .. code:: python
+
+        {
+            "user": "pyinfra",
+            "group": "pyinfra",
+            "mode": 644,
+        }
+
+    If the path does not exist:
+        returns ``None``
+
+    If the path exists but is not a directory:
+        returns ``False``
+    '''
+
     type = 'directory'
 
 
 class Socket(File):
+    '''
+    Returns information about a socket on the remote system:
+
+    .. code:: python
+
+        {
+            "user": "pyinfra",
+            "group": "pyinfra",
+        }
+
+    If the path does not exist:
+        returns ``None``
+
+    If the path exists but is not a socket:
+        returns ``False``
+    '''
     type = 'socket'
 
 
@@ -250,7 +325,7 @@ class FindFilesBase(FactBase):
 
 class FindFiles(FindFilesBase):
     '''
-    Returns a list of files from a start path, recursively using find.
+    Returns a list of files from a start path, recursively using ``find``.
     '''
 
     type_flag = 'f'
@@ -258,7 +333,7 @@ class FindFiles(FindFilesBase):
 
 class FindLinks(FindFilesBase):
     '''
-    Returns a list of links from a start path, recursively using find.
+    Returns a list of links from a start path, recursively using ``find``.
     '''
 
     type_flag = 'l'
@@ -266,7 +341,7 @@ class FindLinks(FindFilesBase):
 
 class FindDirectories(FindFilesBase):
     '''
-    Returns a list of directories from a start path, recursively using find.
+    Returns a list of directories from a start path, recursively using ``find``.
     '''
 
     type_flag = 'd'

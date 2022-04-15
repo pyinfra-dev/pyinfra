@@ -42,10 +42,10 @@ class AptSources(FactBase):
 
         [
             {
-                'type': 'deb',
-                'url': 'http://archive.ubuntu.org',
-                'distribution': 'trusty',
-                'components', ['main', 'multiverse'],
+                "type": "deb",
+                "url": "http://archive.ubuntu.org",
+                "distribution": "trusty",
+                "components", ["main", "multiverse"],
             },
         ]
     '''

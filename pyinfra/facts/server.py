@@ -60,25 +60,25 @@ class KernelVersion(FactBase):
     command = 'uname -r'
 
 
-# Deprecated/renamed -> kernel
+# Deprecated/renamed -> Kernel
 class Os(FactBase):
     '''
     Returns the OS name according to ``uname``.
 
     .. warning::
-        This fact is deprecated/renamed, please use the ``kernel`` fact.
+        This fact is deprecated/renamed, please use the ``server.Kernel`` fact.
     '''
 
     command = 'uname -s'
 
 
-# Deprecated/renamed -> kernel_version
+# Deprecated/renamed -> KernelVersion
 class OsVersion(FactBase):
     '''
     Returns the OS version according to ``uname``.
 
     .. warning::
-        This fact is deprecated/renamed, please use the ``kernel_version`` fact.
+        This fact is deprecated/renamed, please use the ``server.KernelVersion`` fact.
     '''
 
     command = 'uname -r'
@@ -195,10 +195,10 @@ class KernelModules(FactBase):
     .. code:: python
 
         {
-            'module_name': {
-                'size': 0,
-                'instances': 0,
-                'state': 'Live',
+            "module_name": {
+                "size": 0,
+                "instances": 0,
+                "state": "Live",
             },
         }
     '''
@@ -349,15 +349,15 @@ class Crontab(FactBase):
     .. code:: python
 
         {
-            '/path/to/command': {
-                'minute': '*',
-                'hour': '*',
-                'month': '*',
-                'day_of_month': '*',
-                'day_of_week': '*',
+            "/path/to/command": {
+                "minute": "*",
+                "hour": "*",
+                "month": "*",
+                "day_of_month": "*",
+                "day_of_week": "*",
             },
-            'echo another command': {
-                'special_time': '@daily',
+            "echo another command": {
+                "special_time": "@daily",
             },
         }
     '''
@@ -411,18 +411,18 @@ class Users(FactBase):
     .. code:: python
 
         {
-            'user_name': {
-                'comment': 'Full Name',
-                'home': '/home/user_name',
-                'shell': '/bin/bash,
-                'group': 'main_user_group',
-                'groups': [
-                    'other',
-                    'groups'
+            "user_name": {
+                "comment": "Full Name",
+                "home": "/home/user_name",
+                "shell": "/bin/bash,
+                "group": "main_user_group",
+                "groups": [
+                    "other",
+                    "groups"
                 ],
-                'uid': user_id,
-                'gid': main_user_group_id,
-                'lastlog': last_login_time,
+                "uid": user_id,
+                "gid": main_user_group_id,
+                "lastlog": last_login_time,
             },
         }
     '''
@@ -489,12 +489,12 @@ class LinuxDistribution(FactBase):
     .. code:: python
 
         {
-            'name': 'Ubuntu',
-            'major': 20,
-            'minor': 04,
-            'release_meta': {
-                'CODENAME': 'focal',
-                'ID_LIKE': 'debian',
+            "name": "Ubuntu",
+            "major": 20,
+            "minor": 04,
+            "release_meta": {
+                "CODENAME": "focal",
+                "ID_LIKE": "debian",
                 ...
             }
         }
@@ -592,7 +592,7 @@ class Selinux(FactBase):
     .. code:: python
 
         {
-            'mode': 'enabled',
+            "mode": "enabled",
         }
     '''
 

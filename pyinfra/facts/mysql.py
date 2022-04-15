@@ -80,9 +80,9 @@ class MysqlDatabases(MysqlFactBase):
     .. code:: python
 
         {
-            'mysql': {
-                'character_set': 'latin1',
-                'collation_name': 'latin1_swedish_ci'
+            "mysql": {
+                "character_set": "latin1",
+                "collation_name": "latin1_swedish_ci"
             },
         }
     '''
@@ -114,8 +114,8 @@ class MysqlUsers(MysqlFactBase):
     .. code:: python
 
         {
-            'user@host': {
-                'privileges': ['Alter', 'Grant'],
+            "user@host": {
+                "privileges": ["Alter", "Grant"],
                 'max_connections': 5,
                 ...
             },
@@ -170,10 +170,10 @@ class MysqlUserGrants(MysqlFactBase):
     .. code:: python
 
         {
-            '`pyinfra_stuff`.*': {
-                'SELECT',
-                'INSERT',
-                'GRANT OPTION',
+            "`pyinfra_stuff`.*": {
+                "SELECT",
+                "INSERT",
+                "GRANT OPTION",
             },
         }
     '''

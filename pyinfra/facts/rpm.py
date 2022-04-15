@@ -15,7 +15,7 @@ class RpmPackages(FactBase):
     .. code:: python
 
         {
-            'package_name': ['version'],
+            "package_name": ["version"],
         }
     '''
 
@@ -35,8 +35,8 @@ class RpmPackage(FactBase):
     .. code:: python
 
         {
-            'name': 'my_package',
-            'version': '1.0.0',
+            "name": "my_package",
+            "version": "1.0.0",
         }
     '''
 

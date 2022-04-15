@@ -68,10 +68,10 @@ class PostgresqlRoles(PostgresqlFactBase):
     .. code:: python
 
         {
-            'pyinfra': {
-                'super': true,
-                'createrole': false,
-                'createdb': false,
+            "pyinfra": {
+                "super": true,
+                "createrole": false,
+                "createdb": false,
                 ...
             },
         }

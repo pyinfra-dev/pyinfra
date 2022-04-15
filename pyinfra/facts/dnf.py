@@ -12,11 +12,11 @@ class DnfRepositories(FactBase):
 
         [
             {
-                'name': 'CentOS-$releasever - Apps',
-                'baseurl': 'http://mirror.centos.org/$contentdir/$releasever/Apps/$basearch/os/',
-                'gpgcheck': '1',
-                'enabled': '1',
-                'gpgkey': 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial',
+                "name": "CentOS-$releasever - Apps",
+                "baseurl": "http://mirror.centos.org/$contentdir/$releasever/Apps/$basearch/os/",
+                "gpgcheck": "1",
+                "enabled": "1",
+                "gpgkey": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial",
             },
         ]
     '''

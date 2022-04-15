@@ -81,11 +81,10 @@ class GpgKey(GpgFactBase):
     .. code:: python
 
         {
-            'KEY-ID': {
-                'length': 4096,
-                'uid': 'Oxygem <hello@oxygem.com>'
+            "KEY-ID": {
+                "length": 4096,
+                "uid": "Oxygem <hello@oxygem.com>"
             },
-            ...
         }
     '''
 
@@ -105,11 +104,10 @@ class GpgKeys(GpgFactBase):
     .. code:: python
 
         {
-            'KEY-ID': {
-                'length': 4096,
-                'uid': 'Oxygem <hello@oxygem.com>'
+            "KEY-ID": {
+                "length": 4096,
+                "uid": "Oxygem <hello@oxygem.com>"
             },
-            ...
         }
     '''
 
@@ -129,12 +127,11 @@ class GpgSecretKeys(GpgFactBase):
     .. code:: python
 
         {
-            'KEY-ID': {
-                'length': 4096,
-                'fingerprint': 'ABC',
-                'uid': 'Oxygem <hello@oxygem.com>'
+            "KEY-ID": {
+                "length": 4096,
+                "fingerprint": "ABC",
+                "uid": "Oxygem <hello@oxygem.com>"
             },
-            ...
         }
     '''
 

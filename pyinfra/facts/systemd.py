@@ -49,7 +49,6 @@ class SystemdStatus(FactBase):
             "ssh.service": True,
             "containerd.service": True,
             "apt-daily.timer": False,
-            ...
         }
     '''
 
@@ -102,7 +101,6 @@ class SystemdEnabled(SystemdStatus):
             "ssh.service": True,
             "containerd.service": True,
             "apt-daily.timer": False,
-            ...
         }
     '''
 

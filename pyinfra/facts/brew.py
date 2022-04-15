@@ -57,7 +57,7 @@ class BrewPackages(FactBase):
     .. code:: python
 
         {
-            'package_name': ['version'],
+            "package_name": ["version"],
         }
     '''
 
@@ -77,7 +77,7 @@ class BrewCasks(BrewPackages):
     .. code:: python
 
         {
-            'package_name': ['version'],
+            "package_name": ["version"],
         }
     '''
 

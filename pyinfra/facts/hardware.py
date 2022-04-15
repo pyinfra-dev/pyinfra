@@ -63,12 +63,12 @@ class BlockDevices(FactBase):
     .. code:: python
 
         {
-            '/dev/sda1': {
-                'available': '39489508',
-                'used_percent': '3',
-                'mount': '/',
-                'used': '836392',
-                'blocks': '40325900'
+            "/dev/sda1": {
+                "available": "39489508",
+                "used_percent": "3",
+                "mount": "/",
+                "used": "836392",
+                "blocks": "40325900"
             },
         }
     '''
@@ -168,20 +168,20 @@ class NetworkDevices(FactBase):
     .. code:: python
 
         {
-            'eth0': {
-                'ipv4': {
-                    'address': '127.0.0.1',
-                    'broadcast': '127.0.0.13',
+            "eth0": {
+                "ipv4": {
+                    "address": "127.0.0.1",
+                    "broadcast": "127.0.0.13",
                     # Only one of these will exist:
-                    'netmask': '255.255.255.255',
-                    'mask_bits': 32,
+                    "netmask": "255.255.255.255",
+                    "mask_bits": 32,
                 },
-                'ipv6': {
-                    'address': 'fe80::a00:27ff:fec3:36f0',
-                    'mask_bits': 64,
-                    'additional_ips': [{
-                        'address': 'fe80::',
-                        'mask_bits': 128,
+                "ipv6": {
+                    "address": "fe80::a00:27ff:fec3:36f0",
+                    "mask_bits": 64,
+                    "additional_ips": [{
+                        "address": "fe80::",
+                        "mask_bits": 128,
                     }],
                 }
             },
@@ -256,7 +256,7 @@ class Ipv4Addrs(ShortFactBase):
     .. code:: python
 
         {
-            'eth0': ['127.0.0.1'],
+            "eth0": ["127.0.0.1"],
         }
 
     .. note::
@@ -292,7 +292,7 @@ class Ipv6Addrs(Ipv4Addrs):
     .. code:: python
 
         {
-            'eth0': ['fe80::a00:27ff::2'],
+            "eth0": ["fe80::a00:27ff::2"],
         }
 
     .. note::
@@ -302,6 +302,7 @@ class Ipv6Addrs(Ipv4Addrs):
     ip_type = 'ipv6'
 
 
+# TODO: remove these in v3
 # Legacy versions of the above that only support one IP per interface
 #
 
@@ -312,11 +313,11 @@ class Ipv4Addresses(ShortFactBase):
     .. code:: python
 
         {
-            'eth0': '127.0.0.1',
+            "eth0": "127.0.0.1",
         }
 
     .. warning::
-        This fact is deprecated, please use the ``ipv4_addrs`` fact.
+        This fact is deprecated, please use the ``hardware.Ipv4Addrs`` fact.
 
     .. note::
         Network interfaces with no IPv4 will not be part of the dictionary.
@@ -345,11 +346,11 @@ class Ipv6Addresses(Ipv4Addresses):
     .. code:: python
 
         {
-            'eth0': 'fe80::a00:27ff::2',
+            "eth0": "fe80::a00:27ff::2",
         }
 
     .. warning::
-        This fact is deprecated, please use the ``ipv6_addrs`` fact.
+        This fact is deprecated, please use the ``hardware.Ipv6Addrs`` fact.
 
     .. note::
         Network interfaces with no IPv6 will not be part of the dictionary.
