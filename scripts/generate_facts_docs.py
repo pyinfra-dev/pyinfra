@@ -15,7 +15,7 @@ def build_facts_docs():
     docs_dir = path.abspath(path.join(this_dir, '..', 'docs'))
     facts_dir = path.join(this_dir, '..', 'pyinfra', 'facts', '*.py')
 
-    makedirs(path.join(docs_dir, 'operations'), exist_ok=True)
+    makedirs(path.join(docs_dir, 'facts'), exist_ok=True)
 
     fact_module_names = [
         path.basename(name)[:-3]
@@ -32,6 +32,13 @@ def build_facts_docs():
         lines.append(full_title)
         lines.append(title_line('-', full_title))
         lines.append('')
+
+        if module.__doc__:
+            lines.append(module.__doc__)
+
+        if path.exists(path.join(this_dir, '..', 'pyinfra', 'operations', f'{module_name}.py')):
+            lines.append(f'See also: :doc:`../operations/{module_name}`.')
+            lines.append('')
 
         fact_classes = [
             (key, value)
@@ -79,6 +86,9 @@ def build_facts_docs():
                         for arg in argspec.args
                         if arg != 'self'
                     ))
+
+            lines.append('.. _facts:{0}.{1}:'.format(module_name, name))
+            lines.append('')
 
             title = ':code:`{0}.{1}`'.format(module_name, name)
             lines.append(title)

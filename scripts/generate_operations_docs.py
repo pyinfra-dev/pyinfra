@@ -2,11 +2,12 @@
 
 from glob import glob
 from importlib import import_module
-from inspect import getfullargspec, getmembers
+from inspect import getfullargspec, getmembers, isclass
 from os import makedirs, path
 from types import FunctionType
 
 from docs.utils import format_doc_line, title_line
+from pyinfra.api.facts import FactBase
 
 MODULE_DEF_LINE_MAX = 90
 
@@ -38,6 +39,26 @@ def build_operations_docs():
         if module.__doc__:
             lines.append(module.__doc__)
 
+        operation_facts = [
+            (key, value)
+            for key, value in getmembers(module)
+            if (
+                isclass(value)
+                and issubclass(value, FactBase)
+            )
+        ]
+
+        if operation_facts:
+            lines.append('')
+
+            items = []
+            for key, value in operation_facts:
+                fact_module = value.__module__.replace('pyinfra.facts.', '')
+                items.append(f':ref:`facts:{fact_module}.{key}`')
+
+            lines.append('Facts used in these operations: {0}.'.format(', '.join(items)))
+            lines.append('')
+
         operation_functions = [
             (key, value._pyinfra_op)
             for key, value in getmembers(module)
@@ -55,6 +76,9 @@ def build_operations_docs():
             while decorated_func:
                 func = decorated_func
                 decorated_func = getattr(func, '_pyinfra_op', None)
+
+            lines.append('.. _operations:{0}.{1}:'.format(module_name, name))
+            lines.append('')
 
             title_name = ':code:`{0}.{1}`'.format(module_name, name)
             lines.append(title_name)
