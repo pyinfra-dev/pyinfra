@@ -38,15 +38,27 @@ def _make_systemctl_cmd(user_mode=False, machine=None, user_name=None):
 
 class SystemdStatus(FactBase):
     '''
-    Returns a dict of name -> status for systemd managed services.
+    Returns a dictionary map of systemd units to booleans indicating whether they are active.
+
+    + user_mode: whether to use user mode
+    + machine: machine name
+
+    .. code:: python
+
+        {
+            "ssh.service": True,
+            "containerd.service": True,
+            "apt-daily.timer": False,
+            ...
+        }
     '''
 
     requires_command = 'systemctl'
 
     default = dict
 
-    regex = r'^({systemd_unit_name_regex})\s+[a-z\-]+\s+[a-z]+\s+([a-z]+)'.format(
-        systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX)
+    state_key = 'SubState'
+    state_values = ('running', 'waiting', 'exited')
 
     def command(self, user_mode=False, machine=None, user_name=None):
         fact_cmd = _make_systemctl_cmd(
@@ -55,58 +67,44 @@ class SystemdStatus(FactBase):
             user_name=user_name,
         )
 
-        return '{0} -al --plain --no-legend list-units'.format(fact_cmd)
+        return f"{fact_cmd} show --property Id --property {self.state_key} '*'"
 
     def process(self, output):
         services = {}
 
+        current_unit = None
         for line in output:
             line = line.strip()
-            matches = re.match(self.regex, line)
-            if matches:
-                is_active = matches.group(2) in ('running', 'waiting', 'exited')
-                services[matches.group(1)] = is_active
+
+            try:
+                key, value = line.split('=', 1)
+            except ValueError:
+                current_unit = None  # reset current_unit just in case
+                continue
+
+            if key == 'Id' and re.match(SYSTEMD_UNIT_NAME_REGEX, value):
+                current_unit = value
+                continue
+
+            if key == self.state_key and current_unit:
+                services[current_unit] = value in self.state_values
 
         return services
 
 
-class SystemdEnabled(FactBase):
+class SystemdEnabled(SystemdStatus):
     '''
-    Returns a dict of name -> whether enabled for systemd managed services.
+    Returns a dictionary map of systemd units to booleans indicating whether they are enabled.
+
+    .. code:: python
+
+        {
+            "ssh.service": True,
+            "containerd.service": True,
+            "apt-daily.timer": False,
+            ...
+        }
     '''
 
-    requires_command = 'systemctl'
-
-    default = dict
-
-    regex = r'^({systemd_unit_name_regex})\s+([a-z]+)'.format(
-        systemd_unit_name_regex=SYSTEMD_UNIT_NAME_REGEX)
-
-    def command(self, user_mode=False, machine=None, user_name=None):
-        fact_cmd = _make_systemctl_cmd(
-            user_mode=user_mode,
-            machine=machine,
-            user_name=user_name,
-        )
-
-        return (
-            '{0} -al --plain --no-legend --state=loaded list-units | '
-            'while read -r UNIT REST; do '
-            'STATE=$({0} -P UnitFileState show -- "$UNIT"); '
-            'if [ -n "$STATE" ]; then '
-            'echo "$UNIT" "$STATE"; '
-            'fi; '
-            'done'
-        ).format(fact_cmd)
-
-    def process(self, output):
-        units = {}
-
-        for line in output:
-            matches = re.match(self.regex, line)
-            if matches:
-                units[matches.group(1)] = (
-                    matches.group(2) in ('enabled', 'static')
-                )
-
-        return units
+    state_key = 'UnitFileState'
+    state_values = ('enabled', 'static')

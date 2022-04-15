@@ -1,17 +1,18 @@
 {
-    "arg": ["True"],
-    "command": "systemctl --user show --property Id --property SubState '*'",
+    "command": "systemctl show --property Id --property SubState '*'",
     "requires_command": "systemctl",
     "output": [
         "Id=lvm2-activation.service",
         "SubState=dead",
-        "",
+        "noblanklineinserthere",
         "Id=lvm2-lvmetad.service",
         "SubState=running",
         "",
+        "",
+        "",
         "Id=lvm2-lvmpolld.service",
         "SubState=dead",
-        "",
+        "-invalid-line==,yes",
         "Id=ebtables.timer",
         "SubState=exited"
     ],

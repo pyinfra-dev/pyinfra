@@ -1,11 +1,18 @@
 {
-    "command": "systemctl -al --plain --no-legend list-units",
+    "command": "systemctl show --property Id --property SubState '*'",
     "requires_command": "systemctl",
     "output": [
-        "lvm2-activation.service      not-found inactive dead    lvm2-activation.service",
-        "lvm2-lvmetad.service         loaded    active   running LVM2 metadata daemon",
-        "lvm2-lvmpolld.service        loaded    inactive dead    LVM2 poll daemon",
-        "ebtables.timer             loaded    active   exited  ebtables ruleset management"
+        "Id=lvm2-activation.service",
+        "SubState=dead",
+        "",
+        "Id=lvm2-lvmetad.service",
+        "SubState=running",
+        "",
+        "Id=lvm2-lvmpolld.service",
+        "SubState=dead",
+        "",
+        "Id=ebtables.timer",
+        "SubState=exited"
     ],
     "fact":  {
         "lvm2-activation.service": false,

@@ -1,11 +1,16 @@
 {
     "arg": [false, "testmachine"],
-    "command": "systemctl --machine=testmachine -al --plain --no-legend --state=loaded list-units | while read -r UNIT REST; do STATE=$(systemctl --machine=testmachine -P UnitFileState show -- \"$UNIT\"); if [ -n \"$STATE\" ]; then echo \"$UNIT\" \"$STATE\"; fi; done",
+    "command": "systemctl --machine=testmachine show --property Id --property UnitFileState '*'",
     "requires_command": "systemctl",
     "output": [
-        "vboxadd.service enabled",
-        "vgauth.timer enabled",
-        "x11-common.service masked"
+        "Id=vboxadd.service",
+        "UnitFileState=enabled",
+        "",
+        "Id=vgauth.timer",
+        "UnitFileState=enabled",
+        "",
+        "Id=x11-common.service",
+        "UnitFileState=masked"
     ],
     "fact":  {
         "vboxadd.service": true,
