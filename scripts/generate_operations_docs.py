@@ -1,25 +1,14 @@
 #!/usr/bin/env python
 
-import re
 from glob import glob
 from importlib import import_module
-from inspect import getargspec, getmembers
+from inspect import getfullargspec, getmembers
 from os import makedirs, path
 from types import FunctionType
 
+from docs.utils import format_doc_line, title_line
+
 MODULE_DEF_LINE_MAX = 90
-
-
-def _title_line(char, string):
-    return ''.join(char for _ in range(0, len(string)))
-
-
-def _format_doc_line(line):
-    # Bold the <arg>: part of each line
-    line = re.sub(r'\+ ([a-z_\/]+)(.*)', r'+ **\1**\2', line)
-
-    # Strip the first 4 characters (first indent from docstring)
-    return line[4:]
 
 
 def build_operations_docs():
@@ -43,7 +32,7 @@ def build_operations_docs():
 
         full_title = '{0} Operations'.format(module_name.title())
         lines.append(full_title)
-        lines.append(_title_line('-', full_title))
+        lines.append(title_line('-', full_title))
         lines.append('')
 
         if module.__doc__:
@@ -71,7 +60,7 @@ def build_operations_docs():
             lines.append(title_name)
 
             # Underline name with -'s for title
-            lines.append(_title_line('~', title_name))
+            lines.append(title_line('~', title_name))
 
             if getattr(func, 'is_idempotent', None) is False:
                 text = (
@@ -102,11 +91,11 @@ def build_operations_docs():
                     lines.append('')
                     doc = '\n'.join(docbits[len(description_lines):])
 
-            argspec = getargspec(func)
+            argspec = getfullargspec(func)
 
             # Make default strings appear as strings
             arg_defaults = [
-                "'{}'".format(arg) if isinstance(arg, str) else arg
+                '"{}"'.format(arg) if isinstance(arg, str) else arg
                 for arg in argspec.defaults
             ] if argspec.defaults else None
 
@@ -159,7 +148,7 @@ def build_operations_docs():
             if doc:
                 lines.append('')
                 lines.append('{0}'.format('\n'.join([
-                    _format_doc_line(line) for line in doc.split('\n')
+                    format_doc_line(line) for line in doc.split('\n')
                 ])).strip())
 
             lines.append('')

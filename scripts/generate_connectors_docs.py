@@ -3,11 +3,8 @@
 from inspect import getfullargspec
 from os import makedirs, path
 
+from docs.utils import title_line
 from pyinfra.api.connectors import get_all_connectors
-
-
-def _title_line(char, string):
-    return ''.join(char for _ in range(0, len(string)))
 
 
 def build_connectors_docs():
@@ -21,7 +18,7 @@ def build_connectors_docs():
 
         full_title = '``@{0}`` Connector'.format(connector_name)
         lines.append(full_title)
-        lines.append(_title_line('-', full_title))
+        lines.append(title_line('-', full_title))
         lines.append('')
 
         if connector.__doc__:
@@ -29,7 +26,7 @@ def build_connectors_docs():
 
         data_title = 'Usage'
         lines.append(data_title)
-        lines.append(_title_line('~', data_title))
+        lines.append(title_line('~', data_title))
         lines.append('')
 
         names_argument_key = getfullargspec(connector.make_names_data).args[0]
@@ -55,7 +52,7 @@ def build_connectors_docs():
         if data_key_lines:
             data_title = 'Available Data'
             lines.append(data_title)
-            lines.append(_title_line('~', data_title))
+            lines.append(title_line('~', data_title))
             lines.append('')
 
             data_key_lines = '\n'.join(data_key_lines)

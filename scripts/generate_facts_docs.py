@@ -6,11 +6,8 @@ from inspect import getargspec, getmembers, isclass
 from os import makedirs, path
 from types import FunctionType, MethodType
 
+from docs.utils import format_doc_line, title_line
 from pyinfra.api.facts import FactBase, ShortFactBase
-
-
-def _title_line(char, string):
-    return ''.join(char for _ in range(0, len(string)))
 
 
 def build_facts_docs():
@@ -33,7 +30,7 @@ def build_facts_docs():
 
         full_title = '{0} Facts'.format(module_name.title())
         lines.append(full_title)
-        lines.append(_title_line('-', full_title))
+        lines.append(title_line('-', full_title))
         lines.append('')
 
         fact_classes = [
@@ -87,7 +84,7 @@ def build_facts_docs():
             lines.append(title)
 
             # Underline name with -'s for title
-            lines.append(_title_line('~', title))
+            lines.append(title_line('~', title))
             lines.append('')
 
             # Attach the code block
@@ -103,8 +100,8 @@ def build_facts_docs():
             if doc:
                 lines.append('')
                 lines.append('{0}'.format('\n'.join([
-                    line[4:] for line in doc.split('\n')
-                ])))
+                    format_doc_line(line) for line in doc.split('\n')
+                ])).strip())
 
             lines.append('')
             lines.append('')

@@ -103,7 +103,7 @@ if __name__ == '__main__':
             'Documentation': 'https://docs.pyinfra.com',
             'GitHub': 'https://github.com/Fizzadar/pyinfra',
         },
-        packages=find_packages(exclude=['tests']),
+        packages=find_packages(exclude=['tests', 'docs']),
         entry_points={
             'console_scripts': (
                 'pyinfra=pyinfra_cli.__main__:execute_pyinfra',
