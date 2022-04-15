@@ -51,13 +51,8 @@ It is possible to limit the inventory at execution time using the ``--limit`` ar
     # Combine multiple limits
     pyinfra inventory.py deploy.py --limit app_servers --limit db-1.net
 
-Data
-----
-
-Data can be used to separate environment specific information from operations. Data is also used to configure :doc:`connectors <./connectors>`.
-
 Host Data
-~~~~~~~~~
+---------
 
 Data can be assigned to individual hosts in the inventory by using a tuple ``(hostname, data_dict)``:
 
@@ -79,8 +74,8 @@ This can then be used in operations files:
             packages=["postgresql-server"],
         )
 
-Group Data
-~~~~~~~~~~
+Group Data Files
+----------------
 
 Group data can be stored in separate files under the ``group_data`` directory (there's also a ``--group-data $DIR`` flag). Files will be loaded that match ``group_data/<group_name>.py``, and all hosts in any matching group will receive variables defined in the file as data:
 
@@ -105,7 +100,7 @@ These can then be used in operations:
     The ``group_data`` directory is relative to the current working directory. This can be changed at runtime via the ``--chdir`` flag.
 
 Data Hierarchy
-~~~~~~~~~~~~~~
+--------------
 
 The same keys can be defined for host and group data - this means we can set a default in ``all.py`` and override it on a group or host basis. When accessing data, the first match in the following is returned:
 
@@ -118,7 +113,7 @@ The same keys can be defined for host and group data - this means we can set a d
     pyinfra contains a ``debug-inventory`` command which can be used to explore the data output per-host for a given inventory/deploy, ie ``pyinfra inventory.py debug-inventory``.
 
 Connecting with Data
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 Data can be used to configure connectors, for example setting SSH connection details can be done like so:
 
@@ -131,7 +126,7 @@ Data can be used to configure connectors, for example setting SSH connection det
 The :doc:`connectors` contains full details of which data keys are available in each connector.
 
 Global Arguments with Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Data can also provide default values for :doc:`arguments`, for example:
 
@@ -141,6 +136,6 @@ Data can also provide default values for :doc:`arguments`, for example:
     _sudo_user = "pyinfra"
 
 External Sources for Data
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 Because ``pyinfra`` is configured in Python, you can pull in data from pretty much anywhere just using other Python packages.

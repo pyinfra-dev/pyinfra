@@ -33,7 +33,7 @@ Uses :doc:`operations/files` and :doc:`operations/server`. You can see all avail
     pyinfra @docker/ubuntu:20.04 deploy.py
 
 .. Important::
-    Operations that rely on one another (interdependency) must be treated with caution. See: `deploy limitations <deploy_process.html#limitations>`_.
+    Operations that rely on one another (interdependency) must be treated with caution. See: `deploy limitations <deploy-process.html#limitations>`_.
 
 Global Arguments
 ----------------
@@ -50,27 +50,28 @@ Global arguments are covered in detail here: :doc:`arguments`. There is a set of
         _sudo_user="pyinfra",
     )
 
-Data
-----
+The ``host`` Object
+-------------------
 
-Adding data to inventories is covered in detail here: :doc:`inventory-data`. Data can be accessed within operations via the ``host.data`` attribute:
+``pyinfra`` provides a global ``host`` object that can be used to retrieve information and metadata about the current host target. At all times the ``host`` variable represents the current host context, so you can think about the deploy code executing on individual hosts at a time.
+
+The ``host`` object has ``name`` and ``groups`` attributes which can be used to control operation flow:
 
 .. code:: python
 
     from pyinfra import host
-    from pyinfra.operations import server
 
-    # Ensure the state of a user based on host/group data
-    server.user(
-        name="Setup the app user",
-        user=host.data.app_user,
-        home=host.data.app_dir,
-    )
+    if host.name == "control-plane-1":
+        ...
 
-Facts
------
+    if "control-plane" in host.groups:
+        ...
 
-Facts allow you to use information about the target host to control and configure operations. A good example is switching between ``apt`` & ``yum`` depending on the Linux distribution. Facts are imported from ``pyinfra.facts.*``:
+
+Host Facts
+~~~~~~~~~~
+
+Facts allow you to use information about the target host to control and configure operations. A good example is switching between ``apt`` & ``yum`` depending on the Linux distribution. Facts are imported from ``pyinfra.facts.*`` and can be collected using ``host.get_fact(...)``:
 
 .. code:: python
 
@@ -86,6 +87,46 @@ Facts allow you to use information about the target host to control and configur
         )
 
 See :doc:`facts` for a full list of available facts and arguments.
+
+Host & Group Data
+~~~~~~~~~~~~~~~~~
+
+Adding data to inventories is covered in detail here: :doc:`inventory-data`. Data can be accessed within operations via the ``host.data`` attribute:
+
+.. code:: python
+
+    from pyinfra import host
+    from pyinfra.operations import server
+
+    # Ensure the state of a user based on host/group data
+    server.user(
+        name="Setup the app user",
+        user=host.data.app_user,
+        home=host.data.app_dir,
+    )
+
+
+The ``inventory`` Object
+------------------------
+
+Like ``host``, there is an ``inventory`` object that can be used to access the entire inventory of hosts. This is useful when you need facts or data from another host like the IP address of another node:
+
+.. code:: python
+
+    from pyinfra import inventory
+    from pyinfra.facts.server import Hostname
+    from pyinfra.operations import files
+
+    # Get the other host, load the hostname fact
+    db_host = inventory.get_host("postgres-main")
+    db_hostname = db_host.get_fact(Hostname)
+
+    files.template(
+        name="Generate app config",
+        src="templates/app-config.j2.yaml",
+        dest="/opt/myapp/config.yaml",
+        db_hostname=db_hostname,
+    )
 
 Operation Results
 -----------------
