@@ -224,7 +224,7 @@ class Host(object):
         if not self.state:
             raise TypeError('Cannot call this function with no state!')
 
-    def connect(self, reason=None, show_errors=True):
+    def connect(self, reason=None, show_errors=True, raise_exceptions=False):
         self._check_state()
         if not self.connection:
             self.state.trigger_callbacks('host_before_connect', self)
@@ -240,6 +240,9 @@ class Host(object):
                     logger.error(log_message)
 
                 self.state.trigger_callbacks('host_connect_error', self, e)
+
+                if raise_exceptions:
+                    raise
             else:
                 log_message = '{0}{1}'.format(
                     self.print_prefix,

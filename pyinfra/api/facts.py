@@ -187,9 +187,16 @@ def _get_fact(
         # Merges args & kwargs into a single kwargs dictionary
         kwargs = getcallargs(fact.command, *args, **kwargs)
 
+    kwargs_str = get_kwargs_str(kwargs)
     logger.debug('Getting fact: {0} ({1}) (ensure_hosts: {2})'.format(
-        name, get_kwargs_str(kwargs), ensure_hosts,
+        name, kwargs_str, ensure_hosts,
     ))
+
+    if not host.connected:
+        host.connect(
+            reason=f'to load fact: {name} ({kwargs_str})',
+            raise_exceptions=True,
+        )
 
     ignore_errors = (host.current_op_global_kwargs or {}).get(
         'ignore_errors',
