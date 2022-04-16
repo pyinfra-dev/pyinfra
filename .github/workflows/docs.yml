@@ -33,6 +33,8 @@ jobs:
 
       - name: Generate documentation
         run: scripts/build_public_docs.sh
+        env:
+          PYTHONPATH: '.'
 
       - name: Push & Update
         run: |
