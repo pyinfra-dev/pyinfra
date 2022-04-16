@@ -1,3 +1,13 @@
+# v2.0.1
+
++ Rewrite & fix/speedup `systemd` facts using `systemctl show`
++ Support passing IO-like objects into `files.template` operation
++ Support `accept-new` SSH config for `StrictHostKeyChecking`
++ Fix hashing of facts with non-keyword arguments
++ Fix connect to non-connected hosts before collecting facts
++ Fix `config.REQUIRE_PYINFRA_VERSION` & `config.REQUIRE_PACKAGES` handling
++ Many little docs improvements
+
 # v2.0
 
 The first `2.x` release! Like v0 -> v1 this release mostly removes legacy APIs and methods which show warnings in v1. Major changes:
