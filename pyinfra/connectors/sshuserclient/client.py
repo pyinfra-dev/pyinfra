@@ -30,6 +30,22 @@ class StrictPolicy(MissingHostKeyPolicy):
             'StrictPolicy: No host key for {0} found in known_hosts'.format(hostname))
 
 
+class AcceptNewPolicy(MissingHostKeyPolicy):
+    def missing_host_key(self, client, hostname, key):
+        logger.warning((
+            f'No host key for {hostname} found in known_hosts, '
+            'accepting & adding to host keys file'
+        ))
+
+        with HOST_KEYS_LOCK:
+            host_keys = client.get_host_keys()
+            host_keys.add(hostname, key.get_name(), key)
+            # The paramiko client saves host keys incorrectly whereas the host keys object does
+            # this correctly, so use that with the client filename variable.
+            # See: https://github.com/paramiko/paramiko/pull/1989
+            host_keys.save(client._host_keys_filename)
+
+
 class AskPolicy(MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
         should_continue = input(
@@ -62,6 +78,8 @@ def get_missing_host_key_policy(policy):
         return WarningPolicy()
     elif policy == 'yes':
         return StrictPolicy()
+    elif policy == 'accept-new':
+        return AcceptNewPolicy()
     else:
         raise SSHException('Invalid value StrictHostKeyChecking={}'.format(policy))
 
