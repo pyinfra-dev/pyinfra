@@ -2,6 +2,7 @@ name: Generate & Deploy Docs
 
 on:
   push:
+    tags:
     branches:
       - 2.x
       - 1.x
