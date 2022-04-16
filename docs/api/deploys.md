@@ -12,11 +12,11 @@ Packaging a deploy essentially requires two changes from the usual deploy code:
 from pyinfra.api import deploy
 from pyinfra.operations import apt
 
-@deploy('Install MariaDB')
+@deploy("Install MariaDB")
 def install_mariadb():
     apt.packages(
-        name='Install MariaDB apt package',
-        packages=['mariadb-server'],
+        name="Install MariaDB apt package",
+        packages=["mariadb-server"],
     )
 ```
 
@@ -52,13 +52,13 @@ from pyinfra.api import deploy
 from pyinfra.operations import apt
 
 DEFAULTS = {
-    'mariadb_version': '1.2.3',
+    "mariadb_version": "1.2.3",
 }
 
-@deploy('Install mariadb', data_defaults=DEFAULTS)
+@deploy("Install mariadb", data_defaults=DEFAULTS)
 def install_mariadb():
     apt.packages(
-        name='Install MariaDB apt package',
-        packages=[f'mariadb-server={host.data.mariadb_version}'],
+        name="Install MariaDB apt package",
+        packages=[f"mariadb-server={host.data.mariadb_version}"],
     )
 ```

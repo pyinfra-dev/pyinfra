@@ -70,6 +70,19 @@ class AptSources(FactBase):
 
 
 class AptKeys(GpgFactBase):
+    '''
+    Returns information on GPG keys apt has in its keychain:
+
+    .. code:: python
+
+        {
+            "KEY-ID": {
+                "length": 4096,
+                "uid": "Oxygem <hello@oxygem.com>"
+            },
+        }
+    '''
+
     # This requires both apt-key *and* apt-key itself requires gpg
     command = '! command -v gpg || apt-key list --with-colons'
     requires_command = 'apt-key'

@@ -69,13 +69,13 @@ The major disadvantage to separating the deploy into two phases comes into effec
     from pyinfra.operations import apt, files
 
     apt.packages(
-        {'Install nginx'},
-        'nginx',
+        name="Install nginx",
+        packages=["nginx"],
     )
 
     files.link(
-        {'Remove default nginx site'},
-        '/etc/nginx/sites-enabled/default',
+        name="Remove default nginx site",
+        src="/etc/nginx/sites-enabled/default",
         present=False,
     )
 
@@ -86,13 +86,13 @@ This is problematic because the link, ``/etc/nginx/sites-enabled/default``, won'
     from pyinfra.operations import apt, files
 
     install_nginx = apt.packages(
-        {'Install nginx'},
-        'nginx',
+        name="Install nginx",
+        packages=["nginx"],
     )
 
     files.link(
-        {'Remove default nginx site'},
-        '/etc/nginx/sites-enabled/default',
+        name="Remove default nginx site",
+        src="/etc/nginx/sites-enabled/default",
         present=False,
         assume_present=install_nginx.changed,
     )
@@ -114,7 +114,7 @@ In CLI mode ``pyinfra`` uses *line numbers* to determine the order in which oper
 .. code:: python
 
     # list of items
-    items = ['a', 'b', 'c']
+    items = ["a", "b", "c"]
 
     # This loop will be executed as:
     # > item: a
@@ -124,8 +124,8 @@ In CLI mode ``pyinfra`` uses *line numbers* to determine the order in which oper
     # > end item: b
     # > end item: c
     for item in items:
-        server.shell({'item: {0}'.format(item)}, 'hi')
-        server.shell({'end item: {0}'.format(item)}, 'hi')
+        server.shell(name="item: {0}".format(item)}, commands="hi")
+        server.shell(name="end item: {0}".format(item)}, commands="hi")
 
 
     # This loop will be executed as:
@@ -137,8 +137,8 @@ In CLI mode ``pyinfra`` uses *line numbers* to determine the order in which oper
     # > end item: c
     with state.preserve_loop_order(items) as loop_items:
         for item in loop_items():
-            server.shell({'item: {0}'.format(item)}, 'hi')
-            server.shell({'end item: {0}'.format(item)}, 'hi')
+            server.shell(name="item: {0}".format(item)}, commands="hi")
+            server.shell(name="end item: {0}".format(item)}, commands="hi")
 
 
 Deploy State

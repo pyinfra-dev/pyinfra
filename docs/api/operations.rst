@@ -22,8 +22,8 @@ Operations are generator functions and ``yield`` three types of command:
 .. code:: python
 
     # Shell commands, simply represented by a string OR the `StringCommand` class
-    yield 'echo "Shell!"'
-    yield StringCommand('echo "Shell!"')
+    yield "echo 'Shell!'"
+    yield StringCommand("echo 'Shell!'")
 
     # File uploads represented by the `FileUploadCommand` class
     yield FileUploadCommand(filename_or_io, remote_filename)
@@ -35,7 +35,7 @@ Operations are generator functions and ``yield`` three types of command:
     yield FunctionCommand(function, args_list, kwargs_dict)
 
     # Additionally, commands can override some of the global arguments
-    yield StringCommand('echo "Shell!"', sudo=True)
+    yield StringCommand("echo 'Shell!'", sudo=True)
 
 Operations can also call other operations using ``yield from`` syntax:
 
@@ -71,12 +71,12 @@ remote file based on the ``present`` kwargs:
 
         # Not a file?!
         if info is False:
-            raise OperationError('{0} exists and is not a file'.format(name))
+            raise OperationError("{0} exists and is not a file".format(name))
 
         # Doesn't exist & we want it
         if info is None and present:
-            yield 'touch {0}'.format(name)
+            yield "touch {0}".format(name)
 
         # It exists and we don't want it
         elif info and not present:
-            yield 'rm -f {0}'.format(name)
+            yield "rm -f {0}".format(name)

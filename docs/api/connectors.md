@@ -18,7 +18,7 @@ def make_names_data(hostname=None):
         tuple: (name, data, group_names)
     '''
 
-    yield 'name-of-host', {'key': 'value'}, ['a-group', 'another-group']
+    yield "name-of-host", {"key": "value"}, ["a-group", "another-group"]
 ```
 
 Furthermore, connectors that modify execution must provide the following functions:
@@ -71,9 +71,9 @@ def run_shell_command(
 
     status = True
     combined_output = [
-        ('stdout', 'some standard output'),
-        ('stderr', 'some standard error'),
-        ('stderr', 'some more standard error'),
+        ("stdout", "some standard output"),
+        ("stderr", "some standard error"),
+        ("stderr", "some more standard error"),
     ]
 
     if return_combined_output:

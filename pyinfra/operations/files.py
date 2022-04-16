@@ -1,5 +1,5 @@
 '''
-The files module handles filesystem state, file uploads and template generation.
+The files operations handles filesystem state, file uploads and template generation.
 '''
 
 import os
