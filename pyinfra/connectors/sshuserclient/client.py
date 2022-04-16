@@ -147,6 +147,8 @@ class SSHClient(ParamikoClient):
         self._host_keys = get_host_keys(host_keys_file)
         self._host_keys_filename = host_keys_file
 
+        self._ssh_config = config
+
         super(SSHClient, self).connect(hostname, **config)
 
         if _pyinfra_ssh_forward_agent is not None:

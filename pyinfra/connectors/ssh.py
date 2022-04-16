@@ -21,6 +21,7 @@ import click
 
 from paramiko import (
     AuthenticationException,
+    BadHostKeyException,
     DSSKey,
     ECDSAKey,
     Ed25519Key,
@@ -247,6 +248,26 @@ def connect(state, host):
         )
 
         _raise_connect_error(host, 'Authentication error ({0})'.format(auth_args), e)
+
+    except BadHostKeyException as e:
+        remove_entry = e.hostname
+        port = client._ssh_config.get('port', 22)
+        if port != 22:
+            remove_entry = f'[{e.hostname}]:{port}'
+
+        logger.warning('WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!')
+        logger.warning((
+            'Someone could be eavesdropping on you right now '
+            '(man-in-the-middle attack)!'
+        ))
+        logger.warning('If this is expected, you can remove the bad key using:')
+        logger.warning(f'    ssh-keygen -R {remove_entry}')
+
+        _raise_connect_error(
+            host,
+            'SSH host key error',
+            f'Host key for {e.hostname} does not match.',
+        )
 
     except SSHException as e:
         _raise_connect_error(host, 'SSH error', e)
