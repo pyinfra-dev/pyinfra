@@ -1,7 +1,7 @@
-'''
+"""
 The server module takes care of os-level state. Targets POSIX compatibility, tested on
 Linux/BSD.
-'''
+"""
 
 import shlex
 from io import StringIO
@@ -10,7 +10,7 @@ from os import path
 from time import sleep
 
 from pyinfra import host, state
-from pyinfra.api import FunctionCommand, operation, OperationError, StringCommand
+from pyinfra.api import FunctionCommand, OperationError, StringCommand, operation
 from pyinfra.api.util import try_int
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 from pyinfra.facts.files import Directory
@@ -48,7 +48,7 @@ from .util.files import chmod, sed_replace
 
 @operation(is_idempotent=False)
 def reboot(delay=10, interval=1, reboot_timeout=300):
-    '''
+    """
     Reboot the server and wait for reconnection.
 
     + delay: number of seconds to wait before attempting reconnect
@@ -64,7 +64,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
             delay=60,
             reboot_timeout=600,
         )
-    '''
+    """
 
     # Remove this now, before we reboot the server - if the reboot fails (expected or
     # not) we'll error if we don't clean this up now. Will simply be re-uploaded if
@@ -74,7 +74,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
     yield FunctionCommand(remove_any_askpass_file, (), {})
 
-    yield StringCommand('reboot', success_exit_codes=[0, -1])  # -1 being error/disconnected
+    yield StringCommand("reboot", success_exit_codes=[0, -1])  # -1 being error/disconnected
 
     def wait_and_reconnect(state, host):  # pragma: no cover
         sleep(delay)
@@ -89,9 +89,9 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
                 break
 
             if retries > max_retries:
-                raise Exception((
-                    'Server did not reboot in time (reboot_timeout={0}s)'
-                ).format(reboot_timeout))
+                raise Exception(
+                    ("Server did not reboot in time (reboot_timeout={0}s)").format(reboot_timeout),
+                )
 
             sleep(interval)
             retries += 1
@@ -101,7 +101,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
 @operation(is_idempotent=False)
 def wait(port=None):
-    '''
+    """
     Waits for a port to come active on the target machine. Requires netstat, checks every
     second.
 
@@ -115,19 +115,21 @@ def wait(port=None):
             name="Wait for webserver to start",
             port=80,
         )
-    '''
+    """
 
-    yield r'''
+    yield r"""
         while ! (netstat -an | grep LISTEN | grep -e "\.{0}" -e ":{0}"); do
             echo "waiting for port {0}..."
             sleep 1
         done
-    '''.format(port)
+    """.format(
+        port,
+    )
 
 
 @operation(is_idempotent=False)
 def shell(commands):
-    '''
+    """
     Run raw shell code on server during a deploy. If the command would
     modify data that would be in a fact, the fact would not be updated
     since facts are only run at the start of a deploy.
@@ -142,7 +144,7 @@ def shell(commands):
             name="Run lxd auto init",
             commands=["lxd init --auto"],
         )
-    '''
+    """
 
     # Ensure we have a list
     if isinstance(commands, str):
@@ -154,7 +156,7 @@ def shell(commands):
 
 @operation(is_idempotent=False)
 def script(src):
-    '''
+    """
     Upload and execute a local script on the remote host.
 
     + src: local script filename to upload & execute
@@ -168,18 +170,18 @@ def script(src):
             name="Hello",
             src="files/hello.bash",
         )
-    '''
+    """
 
     temp_file = state.get_temp_filename(src)
     yield from files.put(src, temp_file)
 
-    yield chmod(temp_file, '+x')
+    yield chmod(temp_file, "+x")
     yield temp_file
 
 
 @operation(is_idempotent=False)
 def script_template(src, **data):
-    '''
+    """
     Generate, upload and execute a local script template on the remote host.
 
     + src: local script template filename
@@ -198,18 +200,18 @@ def script_template(src, **data):
             src="templates/hello2.bash.j2",
             some_var=some_var,
         )
-    '''
+    """
 
-    temp_file = state.get_temp_filename('{0}{1}'.format(src, data))
+    temp_file = state.get_temp_filename("{0}{1}".format(src, data))
     yield from files.template(src, temp_file, **data)
 
-    yield chmod(temp_file, '+x')
+    yield chmod(temp_file, "+x")
     yield temp_file
 
 
 @operation
 def modprobe(module, present=True, force=False):
-    '''
+    """
     Load/unload kernel modules.
 
     + module: name of the module to manage
@@ -224,12 +226,8 @@ def modprobe(module, present=True, force=False):
             name="Silly example for modprobe",
             module="floppy",
         )
-    '''
-    list_value = (
-        [module]
-        if isinstance(module, str)
-        else module
-    )
+    """
+    list_value = [module] if isinstance(module, str) else module
 
     # NOTE: https://docs.python.org/3/library/itertools.html#itertools-recipes
     def partition(predicate, iterable):
@@ -239,39 +237,42 @@ def modprobe(module, present=True, force=False):
     modules = host.get_fact(KernelModules)
     present_mods, missing_mods = partition(lambda mod: mod in modules, list_value)
 
-    args = ''
+    args = ""
     if force:
-        args = ' -f'
+        args = " -f"
 
     # Module is loaded and we don't want it?
     if not present and present_mods:
-        yield 'modprobe{0} -r -a {1}'.format(args, ' '.join(present_mods))
+        yield "modprobe{0} -r -a {1}".format(args, " ".join(present_mods))
         for mod in present_mods:
             modules.pop(mod)
 
     # Module isn't loaded and we want it?
     elif present and missing_mods:
-        yield 'modprobe{0} -a {1}'.format(args, ' '.join(missing_mods))
+        yield "modprobe{0} -a {1}".format(args, " ".join(missing_mods))
         for mod in missing_mods:
             modules[mod] = {}
 
     else:
-        host.noop('{0} {1} {2} {3}'.format(
-            'modules' if len(list_value) > 1 else 'module',
-            '/'.join(list_value),
-            'are' if len(list_value) > 1 else 'is',
-            'loaded' if present else 'not loaded',
-        ))
+        host.noop(
+            "{0} {1} {2} {3}".format(
+                "modules" if len(list_value) > 1 else "module",
+                "/".join(list_value),
+                "are" if len(list_value) > 1 else "is",
+                "loaded" if present else "not loaded",
+            ),
+        )
 
 
 @operation
 def mount(
     path,
-    mounted=True, options=None,
+    mounted=True,
+    options=None,
     # TODO: do we want to manage fstab here?
     # update_fstab=False, device=None, fs_type=None,
 ):
-    '''
+    """
     Manage mounted filesystems.
 
     + path: the path of the mounted filesystem
@@ -285,45 +286,47 @@ def mount(
     ``/etc/fstab``:
         This operation does not attempt to modify the on disk fstab file - for
         that you should use the `files.line operation <./files.html#files-line>`_.
-    '''
+    """
 
     options = options or []
-    options_string = ','.join(options)
+    options_string = ",".join(options)
 
     mounts = host.get_fact(Mounts)
     is_mounted = path in mounts
 
     # Want mount but don't have?
     if mounted and not is_mounted:
-        yield 'mount{0} {1}'.format(
-            ' -o {0}'.format(options_string) if options_string else '',
+        yield "mount{0} {1}".format(
+            " -o {0}".format(options_string) if options_string else "",
             path,
         )
-        mounts[path] = {'options': options}
+        mounts[path] = {"options": options}
 
     # Want no mount but mounted?
     elif mounted is False and is_mounted:
-        yield 'umount {0}'.format(path)
+        yield "umount {0}".format(path)
         mounts.pop(path)
 
     # Want mount and is mounted! Check the options
     elif is_mounted and mounted and options:
-        mounted_options = mounts[path]['options']
+        mounted_options = mounts[path]["options"]
         needed_options = set(options) - set(mounted_options)
         if needed_options:
-            yield 'mount -o remount,{0} {1}'.format(options_string, path)
-            mounts[path]['options'] = options
+            yield "mount -o remount,{0} {1}".format(options_string, path)
+            mounts[path]["options"] = options
 
     else:
-        host.noop('filesystem {0} is {1}'.format(
-            path,
-            'mounted' if mounted else 'not mounted',
-        ))
+        host.noop(
+            "filesystem {0} is {1}".format(
+                path,
+                "mounted" if mounted else "not mounted",
+            ),
+        )
 
 
 @operation
 def hostname(hostname, hostname_file=None):
-    '''
+    """
     Set the system hostname using ``hostnamectl`` or ``hostname`` on older systems.
 
     + hostname: the hostname that should be set
@@ -346,35 +349,35 @@ def hostname(hostname, hostname_file=None):
             name="Set the hostname",
             hostname="server1.example.com",
         )
-    '''
+    """
 
     current_hostname = host.get_fact(Hostname)
 
-    if host.get_fact(Which, command='hostnamectl'):
+    if host.get_fact(Which, command="hostnamectl"):
         if current_hostname != hostname:
-            yield 'hostnamectl set-hostname {0}'.format(hostname)
+            yield "hostnamectl set-hostname {0}".format(hostname)
             host.create_fact(Hostname, data=hostname)
         else:
-            host.noop('hostname is set')
+            host.noop("hostname is set")
         return
 
     if hostname_file is None:
         os = host.get_fact(Os)
 
-        if os == 'Linux':
-            hostname_file = '/etc/hostname'
-        elif os == 'OpenBSD':
-            hostname_file = '/etc/myname'
+        if os == "Linux":
+            hostname_file = "/etc/hostname"
+        elif os == "OpenBSD":
+            hostname_file = "/etc/myname"
 
     if current_hostname != hostname:
-        yield 'hostname {0}'.format(hostname)
+        yield "hostname {0}".format(hostname)
         host.create_fact(Hostname, data=hostname)
     else:
-        host.noop('hostname is set')
+        host.noop("hostname is set")
 
     if hostname_file:
         # Create a whole new hostname file
-        file = StringIO('{0}\n'.format(hostname))
+        file = StringIO("{0}\n".format(hostname))
 
         # And ensure it exists
         yield from files.put(file, hostname_file)
@@ -382,10 +385,12 @@ def hostname(hostname, hostname_file=None):
 
 @operation
 def sysctl(
-    key, value,
-    persist=False, persist_file='/etc/sysctl.conf',
+    key,
+    value,
+    persist=False,
+    persist_file="/etc/sysctl.conf",
 ):
-    '''
+    """
     Edit sysctl configuration.
 
     + key: name of the sysctl setting to ensure
@@ -403,19 +408,11 @@ def sysctl(
             value=100000,
             persist=True,
         )
-    '''
+    """
 
-    string_value = (
-        ' '.join(['{0}'.format(v) for v in value])
-        if isinstance(value, list)
-        else value
-    )
+    string_value = " ".join(["{0}".format(v) for v in value]) if isinstance(value, list) else value
 
-    value = (
-        [try_int(v) for v in value]
-        if isinstance(value, list)
-        else try_int(value)
-    )
+    value = [try_int(v) for v in value] if isinstance(value, list) else try_int(value)
 
     existing_sysctls = host.get_fact(Sysctl)
 
@@ -424,23 +421,26 @@ def sysctl(
         yield "sysctl {0}='{1}'".format(key, string_value)
         existing_sysctls[key] = value
     else:
-        host.noop('sysctl {0} is set to {1}'.format(key, string_value))
+        host.noop("sysctl {0} is set to {1}".format(key, string_value))
 
     if persist:
         yield from files.line(
             path=persist_file,
-            line='{0}[[:space:]]*=[[:space:]]*{1}'.format(key, string_value),
-            replace='{0} = {1}'.format(key, string_value),
+            line="{0}[[:space:]]*=[[:space:]]*{1}".format(key, string_value),
+            replace="{0} = {1}".format(key, string_value),
         )
 
 
 @operation
 def service(
     service,
-    running=True, restarted=False, reloaded=False,
-    command=None, enabled=None,
+    running=True,
+    restarted=False,
+    reloaded=False,
+    command=None,
+    enabled=None,
 ):
-    '''
+    """
     Manage the state of services. This command checks for the presence of all the
     Linux init systems ``pyinfra`` can handle and executes the relevant operation.
 
@@ -460,41 +460,44 @@ def service(
             service="open-vm-tools",
             enabled=True,
         )
-    '''
+    """
 
-    if host.get_fact(Which, command='systemctl'):
+    if host.get_fact(Which, command="systemctl"):
         service_operation = systemd.service
 
-    elif host.get_fact(Which, command='rc-service'):
+    elif host.get_fact(Which, command="rc-service"):
         service_operation = openrc.service
 
-    elif host.get_fact(Which, command='initctl'):
+    elif host.get_fact(Which, command="initctl"):
         service_operation = upstart.service
 
-    elif host.get_fact(Directory, path='/etc/init.d'):
+    elif host.get_fact(Directory, path="/etc/init.d"):
         service_operation = sysvinit.service
 
-    elif host.get_fact(Directory, path='/etc/rc.d'):
+    elif host.get_fact(Directory, path="/etc/rc.d"):
         service_operation = bsdinit.service
 
     else:
-        raise OperationError((
-            'No init system found '
-            '(no systemctl, initctl, /etc/init.d or /etc/rc.d found)'
-        ))
+        raise OperationError(
+            ("No init system found " "(no systemctl, initctl, /etc/init.d or /etc/rc.d found)"),
+        )
 
     yield from service_operation(
         service,
-        running=running, restarted=restarted, reloaded=reloaded,
-        command=command, enabled=enabled,
+        running=running,
+        restarted=restarted,
+        reloaded=reloaded,
+        command=command,
+        enabled=enabled,
     )
 
 
 @operation
 def packages(
-    packages, present=True,
+    packages,
+    present=True,
 ):
-    '''
+    """
     Add or remove system packages. This command checks for the presence of all the
     system package managers ``pyinfra`` can handle and executes the relevant operation.
 
@@ -509,40 +512,42 @@ def packages(
             name="Install Vim and vimpager",
             packages=["vimpager", "vim"],
         )
-    '''
+    """
 
-    if host.get_fact(Which, command='apk'):
+    if host.get_fact(Which, command="apk"):
         package_operation = apk.packages
 
-    elif host.get_fact(Which, command='apt'):
+    elif host.get_fact(Which, command="apt"):
         package_operation = apt.packages
 
-    elif host.get_fact(Which, command='brew'):
+    elif host.get_fact(Which, command="brew"):
         package_operation = brew.packages
 
-    elif host.get_fact(Which, command='dnf'):
+    elif host.get_fact(Which, command="dnf"):
         package_operation = dnf.packages
 
-    elif host.get_fact(Which, command='pacman'):
+    elif host.get_fact(Which, command="pacman"):
         package_operation = pacman.packages
 
-    elif host.get_fact(Which, command='xbps'):
+    elif host.get_fact(Which, command="xbps"):
         package_operation = xbps.packages
 
-    elif host.get_fact(Which, command='yum'):
+    elif host.get_fact(Which, command="yum"):
         package_operation = yum.packages
 
-    elif host.get_fact(Which, command='zypper'):
+    elif host.get_fact(Which, command="zypper"):
         package_operation = zypper.packages
 
-    elif host.get_fact(Which, command='pkg') or host.get_fact(Which, command='pkg_add'):
+    elif host.get_fact(Which, command="pkg") or host.get_fact(Which, command="pkg_add"):
         package_operation = pkg.packages
 
     else:
-        raise OperationError((
-            'No system package manager found '
-            '(no apk, apt, brew, dnf, pacman, pkg, xbps, yum or zypper found)'
-        ))
+        raise OperationError(
+            (
+                "No system package manager found "
+                "(no apk, apt, brew, dnf, pacman, pkg, xbps, yum or zypper found)"
+            ),
+        )
 
     yield from package_operation(packages=packages, present=present)
 
@@ -553,15 +558,15 @@ def crontab(
     present=True,
     user=None,
     cron_name=None,
-    minute='*',
-    hour='*',
-    month='*',
-    day_of_week='*',
-    day_of_month='*',
+    minute="*",
+    hour="*",
+    month="*",
+    day_of_week="*",
+    day_of_month="*",
     special_time=None,
     interpolate_variables=False,
 ):
-    '''
+    """
     Add/remove/update crontab entries.
 
     + command: the command for the cron
@@ -598,11 +603,11 @@ def crontab(
             hour=1,
             minute=0,
         )
-    '''
+    """
 
     def comma_sep(value):
         if isinstance(value, (list, tuple)):
-            return ','.join('{0}'.format(v) for v in value)
+            return ",".join("{0}".format(v) for v in value)
         return value
 
     minute = comma_sep(minute)
@@ -612,7 +617,7 @@ def crontab(
     day_of_month = comma_sep(day_of_month)
 
     crontab = host.get_fact(Crontab, user=user)
-    name_comment = '# pyinfra-name={0}'.format(cron_name)
+    name_comment = "# pyinfra-name={0}".format(cron_name)
 
     existing_crontab = crontab.get(command)
     existing_crontab_command = command
@@ -620,7 +625,7 @@ def crontab(
 
     if not existing_crontab and cron_name:  # find the crontab by name if provided
         for cmd, details in crontab.items():
-            if name_comment in details['comments']:
+            if name_comment in details["comments"]:
                 existing_crontab = details
                 existing_crontab_match = cmd
                 existing_crontab_command = cmd
@@ -631,9 +636,9 @@ def crontab(
     temp_filename = state.get_temp_filename()
 
     if special_time:
-        new_crontab_line = '{0} {1}'.format(special_time, command)
+        new_crontab_line = "{0} {1}".format(special_time, command)
     else:
-        new_crontab_line = '{minute} {hour} {day_of_month} {month} {day_of_week} {command}'.format(
+        new_crontab_line = "{minute} {hour} {day_of_month} {month} {day_of_week} {command}".format(
             minute=minute,
             hour=hour,
             day_of_month=day_of_month,
@@ -642,83 +647,101 @@ def crontab(
             command=command,
         )
 
-    existing_crontab_match = '.*{0}.*'.format(existing_crontab_match)
+    existing_crontab_match = ".*{0}.*".format(existing_crontab_match)
 
     # Don't want the cron and it does exist? Remove the line
     if not present and exists:
-        edit_commands.append(sed_replace(
-            temp_filename, existing_crontab_match, '',
-            interpolate_variables=interpolate_variables,
-        ))
+        edit_commands.append(
+            sed_replace(
+                temp_filename,
+                existing_crontab_match,
+                "",
+                interpolate_variables=interpolate_variables,
+            ),
+        )
 
     # Want the cron but it doesn't exist? Append the line
     elif present and not exists:
         if cron_name:
             if crontab:  # append a blank line if cron entries already exist
                 edit_commands.append("echo '' >> {0}".format(temp_filename))
-            edit_commands.append('echo {0} >> {1}'.format(
-                shlex.quote(name_comment), temp_filename,
-            ))
+            edit_commands.append(
+                "echo {0} >> {1}".format(
+                    shlex.quote(name_comment),
+                    temp_filename,
+                ),
+            )
 
-        edit_commands.append('echo {0} >> {1}'.format(
-            shlex.quote(new_crontab_line), temp_filename,
-        ))
+        edit_commands.append(
+            "echo {0} >> {1}".format(
+                shlex.quote(new_crontab_line),
+                temp_filename,
+            ),
+        )
 
     # We have the cron and it exists, do it's details? If not, replace the line
     elif present and exists:
-        if any((
-            special_time != existing_crontab.get('special_time'),
-            minute != existing_crontab.get('minute'),
-            hour != existing_crontab.get('hour'),
-            month != existing_crontab.get('month'),
-            day_of_week != existing_crontab.get('day_of_week'),
-            day_of_month != existing_crontab.get('day_of_month'),
-            existing_crontab_command != command,
-        )):
-            edit_commands.append(sed_replace(
-                temp_filename, existing_crontab_match, new_crontab_line,
-                interpolate_variables=interpolate_variables,
-            ))
+        if any(
+            (
+                special_time != existing_crontab.get("special_time"),
+                minute != existing_crontab.get("minute"),
+                hour != existing_crontab.get("hour"),
+                month != existing_crontab.get("month"),
+                day_of_week != existing_crontab.get("day_of_week"),
+                day_of_month != existing_crontab.get("day_of_month"),
+                existing_crontab_command != command,
+            ),
+        ):
+            edit_commands.append(
+                sed_replace(
+                    temp_filename,
+                    existing_crontab_match,
+                    new_crontab_line,
+                    interpolate_variables=interpolate_variables,
+                ),
+            )
 
     if edit_commands:
         crontab_args = []
         if user:
-            crontab_args.append('-u {0}'.format(user))
+            crontab_args.append("-u {0}".format(user))
 
         # List the crontab into a temporary file if it exists
         if crontab:
-            yield 'crontab -l {0} > {1}'.format(' '.join(crontab_args), temp_filename)
+            yield "crontab -l {0} > {1}".format(" ".join(crontab_args), temp_filename)
 
         # Now yield any edits
         for edit_command in edit_commands:
             yield edit_command
 
         # Finally, use the tempfile to write a new crontab
-        yield 'crontab {0} {1}'.format(' '.join(crontab_args), temp_filename)
+        yield "crontab {0} {1}".format(" ".join(crontab_args), temp_filename)
 
         # Update the crontab fact
         if present:
             crontab[command] = {
-                'special_time': special_time,
-                'minute': minute,
-                'hour': hour,
-                'month': month,
-                'day_of_week': day_of_week,
-                'day_of_month': day_of_month,
-                'comments': [cron_name] if cron_name else [],
+                "special_time": special_time,
+                "minute": minute,
+                "hour": hour,
+                "month": month,
+                "day_of_week": day_of_week,
+                "day_of_month": day_of_month,
+                "comments": [cron_name] if cron_name else [],
             }
         else:
             crontab.pop(command)
     else:
-        host.noop('crontab {0} {1}'.format(
-            command,
-            'exists' if present else 'does not exist',
-        ))
+        host.noop(
+            "crontab {0} {1}".format(
+                command,
+                "exists" if present else "does not exist",
+            ),
+        )
 
 
 @operation
 def group(group, present=True, system=False, gid=None):
-    '''
+    """
     Add/remove system groups.
 
     + group: name of the group to ensure
@@ -743,14 +766,14 @@ def group(group, present=True, system=False, gid=None):
                 name=f"Create the group {group}",
                 group=group,
             )
-    '''
+    """
 
     groups = host.get_fact(Groups)
     is_present = group in groups
 
     # Group exists but we don't want them?
     if not present and is_present:
-        yield 'groupdel {0}'.format(group)
+        yield "groupdel {0}".format(group)
         groups.remove(group)
 
     # Group doesn't exist and we want it?
@@ -758,19 +781,19 @@ def group(group, present=True, system=False, gid=None):
         args = []
 
         # BSD doesn't do system users
-        if system and 'BSD' not in host.get_fact(Os):
-            args.append('-r')
+        if system and "BSD" not in host.get_fact(Os):
+            args.append("-r")
 
         args.append(group)
 
         if gid:
-            args.append('--gid {0}'.format(gid))
+            args.append("--gid {0}".format(gid))
 
         # Groups are often added by other operations (package installs), so check
         # for the group at runtime before adding.
         yield "grep '^{0}:' /etc/group || groupadd {1}".format(
             group,
-            ' '.join(args),
+            " ".join(args),
         )
         groups.append(group)
 
@@ -778,12 +801,21 @@ def group(group, present=True, system=False, gid=None):
 @operation
 def user(
     user,
-    present=True, home=None, shell=None, group=None, groups=None,
-    public_keys=None, delete_keys=False, ensure_home=True,
-    system=False, uid=None, comment=None, add_deploy_dir=True,
+    present=True,
+    home=None,
+    shell=None,
+    group=None,
+    groups=None,
+    public_keys=None,
+    delete_keys=False,
+    ensure_home=True,
+    system=False,
+    uid=None,
+    comment=None,
+    add_deploy_dir=True,
     unique=True,
 ):
-    '''
+    """
     Add/remove/update system users & their ssh `authorized_keys`.
 
     + user: name of the user to ensure
@@ -831,7 +863,7 @@ def user(
                 user=user,
                 present=False,
             )
-    '''
+    """
 
     users = host.get_fact(Users)
     existing_user = users.get(user)
@@ -840,12 +872,12 @@ def user(
         groups = []
 
     if home is None:
-        home = '/home/{0}'.format(user)
+        home = "/home/{0}".format(user)
 
     # User not wanted?
     if not present:
         if existing_user:
-            yield 'userdel {0}'.format(user)
+            yield "userdel {0}".format(user)
             users.pop(user)
         return
 
@@ -855,41 +887,41 @@ def user(
         args = []
 
         if home:
-            args.append('-d {0}'.format(home))
+            args.append("-d {0}".format(home))
 
         if shell:
-            args.append('-s {0}'.format(shell))
+            args.append("-s {0}".format(shell))
 
         if group:
-            args.append('-g {0}'.format(group))
+            args.append("-g {0}".format(group))
 
         if groups:
-            args.append('-G {0}'.format(','.join(groups)))
+            args.append("-G {0}".format(",".join(groups)))
 
-        if system and 'BSD' not in host.get_fact(Os):
-            args.append('-r')
+        if system and "BSD" not in host.get_fact(Os):
+            args.append("-r")
 
         if uid:
-            args.append('--uid {0}'.format(uid))
+            args.append("--uid {0}".format(uid))
 
         if comment:
             args.append("-c '{0}'".format(comment))
 
         if not unique:
-            args.append('-o')
+            args.append("-o")
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
         yield "grep '^{1}:' /etc/passwd || useradd {0} {1}".format(
-            ' '.join(args),
+            " ".join(args),
             user,
         )
         users[user] = {
-            'comment': comment,
-            'home': home,
-            'shell': shell,
-            'group': group,
-            'groups': groups,
+            "comment": comment,
+            "home": home,
+            "shell": shell,
+            "group": group,
+            "groups": groups,
         }
 
     # User exists and we want them, check home/shell/keys
@@ -897,43 +929,44 @@ def user(
         args = []
 
         # Check homedir
-        if home and existing_user['home'] != home:
-            args.append('-d {0}'.format(home))
+        if home and existing_user["home"] != home:
+            args.append("-d {0}".format(home))
 
         # Check shell
-        if shell and existing_user['shell'] != shell:
-            args.append('-s {0}'.format(shell))
+        if shell and existing_user["shell"] != shell:
+            args.append("-s {0}".format(shell))
 
         # Check primary group
-        if group and existing_user['group'] != group:
-            args.append('-g {0}'.format(group))
+        if group and existing_user["group"] != group:
+            args.append("-g {0}".format(group))
 
         # Check secondary groups, if defined
-        if groups and set(existing_user['groups']) != set(groups):
-            args.append('-G {0}'.format(','.join(groups)))
+        if groups and set(existing_user["groups"]) != set(groups):
+            args.append("-G {0}".format(",".join(groups)))
 
-        if comment and existing_user['comment'] != comment:
+        if comment and existing_user["comment"] != comment:
             args.append("-c '{0}'".format(comment))
 
         # Need to mod the user?
         if args:
-            yield 'usermod {0} {1}'.format(' '.join(args), user)
+            yield "usermod {0} {1}".format(" ".join(args), user)
             if comment:
-                existing_user['comment'] = comment
+                existing_user["comment"] = comment
             if home:
-                existing_user['home'] = home
+                existing_user["home"] = home
             if shell:
-                existing_user['shell'] = shell
+                existing_user["shell"] = shell
             if group:
-                existing_user['group'] = group
+                existing_user["group"] = group
             if groups:
-                existing_user['groups'] = groups
+                existing_user["groups"] = groups
 
     # Ensure home directory ownership
     if ensure_home:
         yield from files.directory(
             home,
-            user=user, group=group or user,
+            user=user,
+            group=group or user,
         )
 
     # Add SSH keys
@@ -947,7 +980,7 @@ def user(
                 try_path = path.join(state.cwd, key)
 
             if path.exists(try_path):
-                with open(try_path, 'r') as f:
+                with open(try_path, "r") as f:
                     return f.read()
 
             return key
@@ -958,19 +991,21 @@ def user(
         # note that this always outputs commands unless the SSH user has access to the
         # authorized_keys file, ie the SSH user is the user defined in this function
         yield from files.directory(
-            '{0}/.ssh'.format(home),
+            "{0}/.ssh".format(home),
             user=user,
             group=group or user,
             mode=700,
         )
 
-        filename = '{0}/.ssh/authorized_keys'.format(home)
+        filename = "{0}/.ssh/authorized_keys".format(home)
 
         if delete_keys:
             # Create a whole new authorized_keys file
-            keys_file = StringIO('{0}\n'.format(
-                '\n'.join(public_keys),
-            ))
+            keys_file = StringIO(
+                "{0}\n".format(
+                    "\n".join(public_keys),
+                ),
+            )
 
             # And ensure it exists
             yield from files.put(

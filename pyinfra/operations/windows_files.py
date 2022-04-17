@@ -1,41 +1,36 @@
-'''
+"""
 The windows_files module handles windows filesystem state, file uploads and template generation.
-'''
+"""
 
 import ntpath
 import os
 from datetime import timedelta
 
 from pyinfra import host, state
-from pyinfra.api import (
-    FileUploadCommand,
-    operation,
-    OperationError,
-    OperationTypeError,
-)
+from pyinfra.api import FileUploadCommand, OperationError, OperationTypeError, operation
 from pyinfra.api.util import get_file_sha1
 from pyinfra.facts.windows import Date
-from pyinfra.facts.windows_files import (
-    Directory,
-    File,
-    Link,
-    Md5File,
-    Sha1File,
-    Sha256File,
-)
+from pyinfra.facts.windows_files import Directory, File, Link, Md5File, Sha1File, Sha256File
 
 from .util.files import ensure_mode_int
 
 
-@operation(pipeline_facts={
-    'file': 'dest',
-})
+@operation(
+    pipeline_facts={"file": "dest"},
+)
 def download(
-    src, dest,
-    user=None, group=None, mode=None, cache_time=None, force=False,
-    sha256sum=None, sha1sum=None, md5sum=None,
+    src,
+    dest,
+    user=None,
+    group=None,
+    mode=None,
+    cache_time=None,
+    force=False,
+    sha256sum=None,
+    sha1sum=None,
+    md5sum=None,
 ):
-    '''
+    """
     Download files from remote locations using curl or wget.
 
     + src: source URL of the file
@@ -58,13 +53,13 @@ def download(
             src="https://download.docker.com/linux/centos/docker-ce.repo",
             dest="C:\\docker",
         )
-    '''
+    """
 
     info = host.get_fact(File, path=dest)
     # Destination is a directory?
     if info is False:
         raise OperationError(
-            'Destination {0} already exists and is not a file'.format(dest),
+            "Destination {0} already exists and is not a file".format(dest),
         )
 
     # Do we download the file? Force by default
@@ -80,10 +75,8 @@ def download(
         if cache_time:
             # Time on files is not tz-aware, and will be the same tz as the server's time,
             # so we can safely remove the tzinfo from Date before comparison.
-            cache_time = (
-                host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
-            )
-            if info['mtime'] and info['mtime'] > cache_time:
+            cache_time = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
+            if info["mtime"] and info["mtime"] > cache_time:
                 download = True
 
         if sha1sum:
@@ -101,8 +94,7 @@ def download(
     # If we download, always do user/group/mode as SSH user may be different
     if download:
         yield (
-            '$ProgressPreference = "SilentlyContinue"; '
-            'Invoke-WebRequest -Uri {0} -OutFile {1}'
+            '$ProgressPreference = "SilentlyContinue"; ' "Invoke-WebRequest -Uri {0} -OutFile {1}"
         ).format(src, dest)
 
         # if user or group:
@@ -115,37 +107,45 @@ def download(
             yield (
                 'if ((Get-FileHash -Algorithm SHA1 "{0}").hash -ne {1}) {{ '
                 'Write-Error "SHA1 did not match!" '
-                '}}'
+                "}}"
             ).format(dest, sha1sum)
 
         if sha256sum:
             yield (
                 'if ((Get-FileHash -Algorithm SHA256 "{0}").hash -ne {1}) {{ '
                 'Write-Error "SHA256 did not match!" '
-                '}}'
+                "}}"
             ).format(dest, sha256sum)
 
         if md5sum:
             yield (
                 'if ((Get-FileHash -Algorithm MD5 "{0}").hash -ne {1}) {{ '
                 'Write-Error "MD5 did not match!" '
-                '}}'
+                "}}"
             ).format(dest, md5sum)
 
     else:
-        host.noop('file {0} has already been downloaded'.format(dest))
+        host.noop("file {0} has already been downloaded".format(dest))
 
 
-@operation(pipeline_facts={
-    'file': 'dest',
-    'sha1_file': 'dest',
-})
+@operation(
+    pipeline_facts={
+        "file": "dest",
+        "sha1_file": "dest",
+    },
+)
 def put(
-    src, dest,
-    user=None, group=None, mode=None, add_deploy_dir=True,
-    create_remote_dir=True, force=False, assume_exists=False,
+    src,
+    dest,
+    user=None,
+    group=None,
+    mode=None,
+    add_deploy_dir=True,
+    create_remote_dir=True,
+    force=False,
+    assume_exists=False,
 ):
-    '''
+    """
     Upload a local file to the remote system.
 
     + src: local filename to upload
@@ -177,10 +177,10 @@ def put(
             src="data/content.json",
             dest="C:\\data\\content.json",
         )
-    '''
+    """
 
     # Upload IO objects as-is
-    if hasattr(src, 'read'):
+    if hasattr(src, "read"):
         local_file = src
 
     # Assume string filename
@@ -192,7 +192,7 @@ def put(
         local_file = src
 
         if not assume_exists and not os.path.isfile(local_file):
-            raise IOError('No such file: {0}'.format(local_file))
+            raise IOError("No such file: {0}".format(local_file))
 
     mode = ensure_mode_int(mode)
     remote_file = host.get_fact(File, path=dest)
@@ -250,19 +250,23 @@ def put(
             #    changed = True
 
             if not changed:
-                host.noop('file {0} is already uploaded'.format(dest))
+                host.noop("file {0} is already uploaded".format(dest))
 
 
-@operation(pipeline_facts={
-    'windows_file': 'name',
-})
+@operation(
+    pipeline_facts={"windows_file": "name"},
+)
 def file(
     path,
-    present=True, assume_present=False,
-    user=None, group=None, mode=None, touch=False,
+    present=True,
+    assume_present=False,
+    user=None,
+    group=None,
+    mode=None,
+    touch=False,
     create_remote_dir=True,
 ):
-    '''
+    """
     Add/remove/update files.
 
     + path: path of the remote file
@@ -288,33 +292,34 @@ def file(
             path="c:\\temp\\hello.txt",
             touch=True,
         )
-    '''
+    """
 
     if not isinstance(path, str):
-        raise OperationTypeError('Name must be a string')
+        raise OperationTypeError("Name must be a string")
 
     # mode = ensure_mode_int(mode)
     info = host.get_fact(File, path=path)
 
     # Not a file?!
     if info is False:
-        raise OperationError('{0} exists and is not a file'.format(path))
+        raise OperationError("{0} exists and is not a file".format(path))
 
     # Doesn't exist & we want it
     if not assume_present and info is None and present:
         if create_remote_dir:
             yield from _create_remote_dir(state, host, path, user, group)
 
-        yield 'New-Item -ItemType file {0}'.format(path)
+        yield "New-Item -ItemType file {0}".format(path)
 
-#        if mode:
-#            yield chmod(path, mode)
-#        if user or group:
-#            yield chown(path, user, group)
+    #        if mode:
+    #            yield chmod(path, mode)
+    #        if user or group:
+    #            yield chown(path, user, group)
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
-        yield 'Remove-Item {0}'.format(path)
+        yield "Remove-Item {0}".format(path)
+
 
 #    # It exists & we want to ensure its state
 #    elif (assume_present or info) and present:
@@ -347,15 +352,19 @@ def _create_remote_dir(state, host, remote_filename, user, group):
         )
 
 
-@operation(pipeline_facts={
-    'windows_directory': 'name',
-})
+@operation(
+    pipeline_facts={"windows_directory": "name"},
+)
 def directory(
     path,
-    present=True, assume_present=False,
-    user=None, group=None, mode=None, recursive=False,
+    present=True,
+    assume_present=False,
+    user=None,
+    group=None,
+    mode=None,
+    recursive=False,
 ):
-    '''
+    """
     Add/remove/update directories.
 
     + path: path of the remote folder
@@ -390,41 +399,43 @@ def directory(
                 path=dir,
             )
 
-    '''
+    """
 
     if not isinstance(path, str):
-        raise OperationTypeError('Name must be a string')
+        raise OperationTypeError("Name must be a string")
 
     info = host.get_fact(Directory, path=path)
 
     # Not a directory?!
     if info is False:
-        raise OperationError('{0} exists and is not a directory'.format(path))
+        raise OperationError("{0} exists and is not a directory".format(path))
 
     # Doesn't exist & we want it
     if not assume_present and info is None and present:
-        yield 'New-Item -Path {0} -ItemType Directory'.format(path)
-#        if mode:
-#            yield chmod(path, mode, recursive=recursive)
-#        if user or group:
-#            yield chown(path, user, group, recursive=recursive)
-#
+        yield "New-Item -Path {0} -ItemType Directory".format(path)
+        #        if mode:
+        #            yield chmod(path, mode, recursive=recursive)
+        #        if user or group:
+        #            yield chown(path, user, group, recursive=recursive)
+        #
         # Somewhat bare fact, should flesh out more
         host.create_fact(
             Date,
-            kwargs={'path': path},
-            data={'type': 'directory'},
+            kwargs={"path": path},
+            data={"type": "directory"},
         )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         # TODO: how to ensure we use 'ps'?
         # remove anything in the directory
-        yield 'Get-ChildItem {0} -Recurse | Remove-Item'.format(path)
+        yield "Get-ChildItem {0} -Recurse | Remove-Item".format(path)
         # remove directory
-        yield 'Remove-Item {0}'.format(path)
+        yield "Remove-Item {0}".format(path)
 
     # It exists & we want to ensure its state
+
+
 #    elif (assume_present or info) and present:
 #        # Check mode
 #        if mode and (not info or info['mode'] != mode):
@@ -443,19 +454,24 @@ def _validate_path(path):
     try:
         path = os.fspath(path)
     except TypeError:
-        raise OperationTypeError('`path` must be a string or `os.PathLike` object')
+        raise OperationTypeError("`path` must be a string or `os.PathLike` object")
 
 
-@operation(pipeline_facts={
-    'link': 'path',
-})
+@operation(
+    pipeline_facts={"link": "path"},
+)
 def link(
     path,
-    target=None, present=True, assume_present=False,
-    user=None, group=None, symbolic=True, force=True,
+    target=None,
+    present=True,
+    assume_present=False,
+    user=None,
+    group=None,
+    symbolic=True,
+    force=True,
     create_remote_dir=True,
 ):
-    '''
+    """
     Add/remove/update links.
 
     + path: the name of the link
@@ -486,27 +502,27 @@ def link(
             path=r"C:\\issue2",
             target=r"C\\issue",
         )
-    '''
+    """
 
     _validate_path(path)
 
     if present and not target:
-        raise OperationError('If present is True target must be provided')
+        raise OperationError("If present is True target must be provided")
 
     info = host.get_fact(Link, path=path)
 
     # Not a link?
     if info is not None and not info:
-        raise OperationError('{0} exists and is not a link'.format(path))
+        raise OperationError("{0} exists and is not a link".format(path))
 
-    add_cmd = 'New-Item -ItemType {0} -Path {1} -Target {2} {3}'.format(
-        'SymbolicLink' if symbolic else 'HardLink',
+    add_cmd = "New-Item -ItemType {0} -Path {1} -Target {2} {3}".format(
+        "SymbolicLink" if symbolic else "HardLink",
         path,
         target,
-        '-Force' if force else '',
+        "-Force" if force else "",
     )
 
-    remove_cmd = '(Get-Item {0}).Delete()'.format(path)
+    remove_cmd = "(Get-Item {0}).Delete()".format(path)
 
     # We will attempt to link regardless of current existence
     # since we know by now the path is either a link already
@@ -532,4 +548,4 @@ def link(
         # host.delete_fact(WindowsLink, kwargs={'name': path})
 
     else:
-        host.noop('link {0} already exists and force=False'.format(path))
+        host.noop("link {0} already exists and force=False".format(path))

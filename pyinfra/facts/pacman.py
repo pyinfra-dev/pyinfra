@@ -2,11 +2,11 @@ from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
 
-PACMAN_REGEX = r'^([0-9a-zA-Z\-]+)\s([0-9\._+a-z\-]+)'
+PACMAN_REGEX = r"^([0-9a-zA-Z\-]+)\s([0-9\._+a-z\-]+)"
 
 
 class PacmanUnpackGroup(FactBase):
-    '''
+    """
     Returns a list of actual packages belonging to the provided package name,
     expanding groups or virtual packages.
 
@@ -15,9 +15,9 @@ class PacmanUnpackGroup(FactBase):
         [
             "package_name",
         ]
-    '''
+    """
 
-    requires_command = 'pacman'
+    requires_command = "pacman"
 
     default = list
 
@@ -30,7 +30,7 @@ class PacmanUnpackGroup(FactBase):
 
 
 class PacmanPackages(FactBase):
-    '''
+    """
     Returns a dict of installed pacman packages:
 
     .. code:: python
@@ -38,10 +38,10 @@ class PacmanPackages(FactBase):
         {
             "package_name": ["version"],
         }
-    '''
+    """
 
-    command = 'pacman -Q'
-    requires_command = 'pacman'
+    command = "pacman -Q"
+    requires_command = "pacman"
 
     default = dict
 

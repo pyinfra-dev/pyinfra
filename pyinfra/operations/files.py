@@ -1,6 +1,6 @@
-'''
+"""
 The files operations handles filesystem state, file uploads and template generation.
-'''
+"""
 
 import os
 import posixpath
@@ -18,12 +18,12 @@ from pyinfra import host, logger, state
 from pyinfra.api import (
     FileDownloadCommand,
     FileUploadCommand,
-    operation,
     OperationError,
     OperationTypeError,
     QuoteString,
     RsyncCommand,
     StringCommand,
+    operation,
 )
 from pyinfra.api.command import make_formatted_string_command
 from pyinfra.api.util import (
@@ -56,15 +56,22 @@ from .util.files import (
 )
 
 
-@operation(pipeline_facts={
-    'file': 'dest',
-})
+@operation(
+    pipeline_facts={"file": "dest"},
+)
 def download(
-    src, dest,
-    user=None, group=None, mode=None, cache_time=None, force=False,
-    sha256sum=None, sha1sum=None, md5sum=None,
+    src,
+    dest,
+    user=None,
+    group=None,
+    mode=None,
+    cache_time=None,
+    force=False,
+    sha256sum=None,
+    sha1sum=None,
+    md5sum=None,
 ):
-    '''
+    """
     Download files from remote locations using ``curl`` or ``wget``.
 
     + src: source URL of the file
@@ -87,7 +94,7 @@ def download(
             src="https://download.docker.com/linux/centos/docker-ce.repo",
             dest="/etc/yum.repos.d/docker-ce.repo",
         )
-    '''
+    """
 
     info = host.get_fact(File, path=dest)
     host_datetime = host.get_fact(Date).replace(tzinfo=None)
@@ -95,7 +102,7 @@ def download(
     # Destination is a directory?
     if info is False:
         raise OperationError(
-            'Destination {0} already exists and is not a file'.format(dest),
+            "Destination {0} already exists and is not a file".format(dest),
         )
 
     # Do we download the file? Force by default
@@ -112,7 +119,7 @@ def download(
             # Time on files is not tz-aware, and will be the same tz as the server's time,
             # so we can safely remove the tzinfo from the Date fact before comparison.
             cache_time = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
-            if info['mtime'] and info['mtime'] < cache_time:
+            if info["mtime"] and info["mtime"] < cache_time:
                 download = True
 
         if sha1sum:
@@ -132,24 +139,24 @@ def download(
         temp_file = state.get_temp_filename(dest)
 
         curl_command = make_formatted_string_command(
-            'curl -sSLf {0} -o {1}',
+            "curl -sSLf {0} -o {1}",
             QuoteString(src),
             QuoteString(temp_file),
         )
         wget_command = make_formatted_string_command(
-            'wget -q {0} -O {1} || ( rm -f {1} ; exit 1 )',
+            "wget -q {0} -O {1} || ( rm -f {1} ; exit 1 )",
             QuoteString(src),
             QuoteString(temp_file),
         )
 
-        if host.get_fact(Which, command='curl'):
+        if host.get_fact(Which, command="curl"):
             yield curl_command
-        elif host.get_fact(Which, command='wget'):
+        elif host.get_fact(Which, command="wget"):
             yield wget_command
         else:
-            yield '( {0} ) || ( {1} )'.format(curl_command, wget_command)
+            yield "( {0} ) || ( {1} )".format(curl_command, wget_command)
 
-        yield StringCommand('mv', QuoteString(temp_file), QuoteString(dest))
+        yield StringCommand("mv", QuoteString(temp_file), QuoteString(dest))
 
         if user or group:
             yield chown(dest, user, group)
@@ -158,27 +165,42 @@ def download(
             yield chmod(dest, mode)
 
         if sha1sum:
-            yield make_formatted_string_command((
-                '(( sha1sum {0} 2> /dev/null || shasum {0} || sha1 {0} ) | grep {1} ) '
-                '|| ( echo {2} && exit 1 )'
-            ), QuoteString(dest), sha1sum, QuoteString('SHA1 did not match!'))
+            yield make_formatted_string_command(
+                (
+                    "(( sha1sum {0} 2> /dev/null || shasum {0} || sha1 {0} ) | grep {1} ) "
+                    "|| ( echo {2} && exit 1 )"
+                ),
+                QuoteString(dest),
+                sha1sum,
+                QuoteString("SHA1 did not match!"),
+            )
 
         if sha256sum:
-            yield make_formatted_string_command((
-                '(( sha256sum {0} 2> /dev/null || shasum -a 256 {0} || sha256 {0} ) | grep {1}) '
-                '|| ( echo {2} && exit 1 )'
-            ), QuoteString(dest), sha256sum, QuoteString('SHA256 did not match!'))
+            yield make_formatted_string_command(
+                (
+                    "(( sha256sum {0} 2> /dev/null || shasum -a 256 {0} || sha256 {0} ) "
+                    "| grep {1}) || ( echo {2} && exit 1 )"
+                ),
+                QuoteString(dest),
+                sha256sum,
+                QuoteString("SHA256 did not match!"),
+            )
 
         if md5sum:
-            yield make_formatted_string_command((
-                '(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1}) '
-                '|| ( echo {2} && exit 1 )'
-            ), QuoteString(dest), md5sum, QuoteString('MD5 did not match!'))
+            yield make_formatted_string_command(
+                (
+                    "(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1}) "
+                    "|| ( echo {2} && exit 1 )"
+                ),
+                QuoteString(dest),
+                md5sum,
+                QuoteString("MD5 did not match!"),
+            )
 
         host.create_fact(
             File,
-            kwargs={'path': dest},
-            data={'mode': mode, 'group': group, 'user': user, 'mtime': host_datetime},
+            kwargs={"path": dest},
+            data={"mode": mode, "group": group, "user": user, "mtime": host_datetime},
         )
 
         # Remove any checksum facts as we don't know the correct values
@@ -187,25 +209,29 @@ def download(
             (sha256sum, Sha256File),
             (md5sum, Md5File),
         ):
-            fact_kwargs = {'path': dest}
+            fact_kwargs = {"path": dest}
             if value:
                 host.create_fact(fact_cls, kwargs=fact_kwargs, data=value)
             else:
                 host.delete_fact(fact_cls, kwargs=fact_kwargs)
 
     else:
-        host.noop('file {0} has already been downloaded'.format(dest))
+        host.noop("file {0} has already been downloaded".format(dest))
 
 
 @operation
 def line(
-    path, line,
-    present=True, replace=None, flags=None, backup=False,
+    path,
+    line,
+    present=True,
+    replace=None,
+    flags=None,
+    backup=False,
     interpolate_variables=False,
     escape_regex_characters=False,
     assume_present=False,
 ):
-    '''
+    """
     Ensure lines in files using grep to locate and sed to replace.
 
     + path: target remote file to edit
@@ -281,12 +307,12 @@ def line(
             line="^{}$".format(line),
             replace=line,
         )
-    '''
+    """
 
     match_line = line
 
     if escape_regex_characters:
-        match_line = re.sub(r'([\.\\\+\*\?\[\^\]\$\(\)\{\}\-])', r'\\\1', match_line)
+        match_line = re.sub(r"([\.\\\+\*\?\[\^\]\$\(\)\{\}\-])", r"\\\1", match_line)
 
     match_line = ensure_whole_line_match(match_line)
 
@@ -306,23 +332,30 @@ def line(
         line = replace
     # We must provide some kind of replace to sed_replace_command below
     else:
-        replace = ''
+        replace = ""
 
     # Save commands for re-use in dynamic script when file not present at fact stage
     echo_command = make_formatted_string_command(
-        'echo {0} >> {1}',
+        "echo {0} >> {1}",
         '"{0}"'.format(line) if interpolate_variables else QuoteString(line),
         QuoteString(path),
     )
 
     if backup:
-        backup_filename = '{0}.{1}'.format(path, get_timestamp())
-        echo_command = StringCommand(make_formatted_string_command(
-            'cp {0} {1} && ', QuoteString(path), QuoteString(backup_filename),
-        ), echo_command)
+        backup_filename = "{0}.{1}".format(path, get_timestamp())
+        echo_command = StringCommand(
+            make_formatted_string_command(
+                "cp {0} {1} && ",
+                QuoteString(path),
+                QuoteString(backup_filename),
+            ),
+            echo_command,
+        )
 
     sed_replace_command = sed_replace(
-        path, match_line, replace,
+        path,
+        match_line,
+        replace,
         flags=flags,
         backup=backup,
         interpolate_variables=interpolate_variables,
@@ -334,7 +367,7 @@ def line(
         # dynamically with a little script.
         if present_lines is None:
             yield make_formatted_string_command(
-                '''
+                """
                     if [ -f '{target}' ]; then
                         ( grep {match_line} '{target}' && \
                         {sed_replace_command}) 2> /dev/null || \
@@ -342,7 +375,7 @@ def line(
                     else
                         {echo_command} ;
                     fi
-                ''',
+                """,
                 target=QuoteString(path),
                 match_line=QuoteString(match_line),
                 echo_command=echo_command,
@@ -369,9 +402,9 @@ def line(
         host.create_fact(
             FindInFile,
             kwargs={
-                'path': path,
-                'pattern': match_line,
-                'interpolate_variables': interpolate_variables,
+                "path": path,
+                "pattern": match_line,
+                "interpolate_variables": interpolate_variables,
             },
             data=[replace or line],
         )
@@ -379,7 +412,9 @@ def line(
     # Line(s) exists and we want to remove them, replace with nothing
     elif present_lines and not present:
         yield sed_replace(
-            path, match_line, '',
+            path,
+            match_line,
+            "",
             flags=flags,
             backup=backup,
             interpolate_variables=interpolate_variables,
@@ -388,9 +423,9 @@ def line(
         host.delete_fact(
             FindInFile,
             kwargs={
-                'path': path,
-                'pattern': match_line,
-                'interpolate_variables': interpolate_variables,
+                "path": path,
+                "pattern": match_line,
+                "interpolate_variables": interpolate_variables,
             },
         )
 
@@ -410,11 +445,12 @@ def replace(
     path,
     text=None,
     replace=None,
-    flags=None, backup=False,
+    flags=None,
+    backup=False,
     interpolate_variables=False,
     match=None,  # deprecated
 ):
-    '''
+    """
     Replace contents of a file using ``sed``.
 
     + path: target remote file to edit
@@ -439,22 +475,22 @@ def replace(
             text="verboten",
             replace="forbidden",
         )
-    '''
+    """
 
     if text is None and match:
         text = match
         logger.warning(
             (
-                'The `match` argument has been replaced by '
-                '`text` in the `files.replace` operation ({0})'
+                "The `match` argument has been replaced by "
+                "`text` in the `files.replace` operation ({0})"
             ).format(get_call_location()),
         )
 
     if text is None:
-        raise TypeError('Missing argument `text` required in `files.replace` operation')
+        raise TypeError("Missing argument `text` required in `files.replace` operation")
 
     if replace is None:
-        raise TypeError('Missing argument `replace` required in `files.replace` operation')
+        raise TypeError("Missing argument `replace` required in `files.replace` operation")
 
     existing_lines = host.get_fact(
         FindInFile,
@@ -467,7 +503,9 @@ def replace(
     # or we have matching lines.
     if existing_lines is None or existing_lines:
         yield sed_replace(
-            path, text, replace,
+            path,
+            text,
+            replace,
             flags=flags,
             backup=backup,
             interpolate_variables=interpolate_variables,
@@ -475,9 +513,9 @@ def replace(
         host.create_fact(
             FindInFile,
             kwargs={
-                'path': path,
-                'pattern': text,
-                'interpolate_variables': interpolate_variables,
+                "path": path,
+                "pattern": text,
+                "interpolate_variables": interpolate_variables,
             },
             data=[],
         )
@@ -485,15 +523,21 @@ def replace(
         host.noop('string "{0}" does not exist in {1}'.format(text, path))
 
 
-@operation(pipeline_facts={
-    'find_files': 'destination',
-})
+@operation(
+    pipeline_facts={"find_files": "destination"},
+)
 def sync(
-    src, dest,
-    user=None, group=None, mode=None, delete=False,
-    exclude=None, exclude_dir=None, add_deploy_dir=True,
+    src,
+    dest,
+    user=None,
+    group=None,
+    mode=None,
+    delete=False,
+    exclude=None,
+    exclude_dir=None,
+    add_deploy_dir=True,
 ):
-    '''
+    """
     Syncs a local directory with a remote one, with delete support. Note that delete will
     remove extra files on the remote side, but not extra directories.
 
@@ -526,7 +570,7 @@ def sync(
       excluding all directories matching a given name, however deep under ``src`` they are,
       can be done for example with ``exclude_dir=["__pycache__", "*/__pycache__"]``
 
-    '''
+    """
     original_src = src  # Keep a copy to reference in errors
     src = os.path.normpath(src)
 
@@ -536,7 +580,7 @@ def sync(
 
     # Ensure the source directory exists
     if not os.path.isdir(src):
-        raise IOError('No such directory: {0}'.format(original_src))
+        raise IOError("No such directory: {0}".format(original_src))
 
     # Ensure exclude is a list/tuple
     if exclude is not None:
@@ -569,11 +613,13 @@ def sync(
             if exclude and any(fnmatch(full_filename, match) for match in exclude):
                 continue
 
-            remote_full_filename = unix_path_join(*[
-                item for item in
-                (dest, remote_dirpath, filename)
-                if item and item != os.path.curdir
-            ])
+            remote_full_filename = unix_path_join(
+                *[
+                    item
+                    for item in (dest, remote_dirpath, filename)
+                    if item and item != os.path.curdir
+                ]
+            )
             put_files.append((full_filename, remote_full_filename))
 
     # Ensure the destination directory - if the destination is a link, ensure
@@ -581,11 +627,12 @@ def sync(
     dest_to_ensure = dest
     dest_link_info = host.get_fact(Link, path=dest)
     if dest_link_info:
-        dest_to_ensure = dest_link_info['link_target']
+        dest_to_ensure = dest_link_info["link_target"]
 
     yield from directory(
         dest_to_ensure,
-        user=user, group=group,
+        user=user,
+        group=group,
         mode=get_path_permissions_mode(src),
     )
 
@@ -593,14 +640,18 @@ def sync(
     for dirpath, dir_mode in ensure_dirnames:
         yield from directory(
             unix_path_join(dest, dirpath),
-            user=user, group=group, mode=dir_mode,
+            user=user,
+            group=group,
+            mode=dir_mode,
         )
 
     # Put each file combination
     for local_filename, remote_filename in put_files:
         yield from put(
-            local_filename, remote_filename,
-            user=user, group=group,
+            local_filename,
+            remote_filename,
+            user=user,
+            group=group,
             mode=mode or get_path_permissions_mode(local_filename),
             add_deploy_dir=False,
             create_remote_dir=False,  # handled above
@@ -621,12 +672,12 @@ def sync(
 
 @memoize
 def show_rsync_warning():
-    logger.warning('The `files.rsync` operation is in alpha!')
+    logger.warning("The `files.rsync` operation is in alpha!")
 
 
 @operation(is_idempotent=False)
-def rsync(src, dest, flags=['-ax', '--delete']):
-    '''
+def rsync(src, dest, flags=["-ax", "--delete"]):
+    """
     Use ``rsync`` to sync a local directory to the remote system. This operation will actually call
     the ``rsync`` binary on your system.
 
@@ -637,7 +688,7 @@ def rsync(src, dest, flags=['-ax', '--delete']):
     .. caution::
         When using SSH, the ``files.rsync`` operation only supports the ``sudo`` and ``sudo_user``
         global arguments.
-    '''
+    """
 
     show_rsync_warning()
 
@@ -655,7 +706,8 @@ def _create_remote_dir(state, host, remote_filename, user, group):
     if remote_dirname:
         yield from directory(
             path=remote_dirname,
-            user=user, group=group,
+            user=user,
+            group=group,
             _no_check_owner_mode=True,  # don't check existing user/mode
             _no_fail_on_link=True,  # don't fail if the path is a link
         )
@@ -666,15 +718,18 @@ def _create_remote_dir(state, host, remote_filename, user, group):
     # update to flag the local file as present.
     is_idempotent=False,
     pipeline_facts={
-        'file': 'src',
-        'sha1_file': 'src',
+        "file": "src",
+        "sha1_file": "src",
     },
 )
 def get(
-    src, dest,
-    add_deploy_dir=True, create_local_dir=False, force=False,
+    src,
+    dest,
+    add_deploy_dir=True,
+    create_local_dir=False,
+    force=False,
 ):
-    '''
+    """
     Download a file from the remote system.
 
     + src: the remote filename to download
@@ -696,7 +751,7 @@ def get(
             src="/etc/centos-release",
             dest="/tmp/whocares",
         )
-    '''
+    """
 
     if add_deploy_dir and state.cwd:
         dest = os.path.join(state.cwd, dest)
@@ -726,16 +781,24 @@ def get(
             yield FileDownloadCommand(src, dest, remote_temp_filename=state.get_temp_filename(dest))
 
 
-@operation(pipeline_facts={
-    'file': 'dest',
-    'sha1_file': 'dest',
-})
+@operation(
+    pipeline_facts={
+        "file": "dest",
+        "sha1_file": "dest",
+    },
+)
 def put(
-    src, dest,
-    user=None, group=None, mode=None, add_deploy_dir=True,
-    create_remote_dir=True, force=False, assume_exists=False,
+    src,
+    dest,
+    user=None,
+    group=None,
+    mode=None,
+    add_deploy_dir=True,
+    create_remote_dir=True,
+    force=False,
+    assume_exists=False,
 ):
-    '''
+    """
     Upload a local file, or file-like object, to the remote system.
 
     + src: filename or IO-like object to upload
@@ -777,10 +840,10 @@ def put(
             src=StringIO("file contents"),
             dest="/etc/motd",
         )
-    '''
+    """
 
     # Upload IO objects as-is
-    if hasattr(src, 'read'):
+    if hasattr(src, "read"):
         local_file = src
 
     # Assume string filename
@@ -792,7 +855,7 @@ def put(
         local_file = src
 
         if not assume_exists and not os.path.isfile(local_file):
-            raise IOError('No such file: {0}'.format(local_file))
+            raise IOError("No such file: {0}".format(local_file))
 
     mode = ensure_mode_int(mode)
     remote_file = host.get_fact(File, path=dest)
@@ -841,36 +904,29 @@ def put(
             changed = False
 
             # Check mode
-            if mode and remote_file['mode'] != mode:
+            if mode and remote_file["mode"] != mode:
                 yield chmod(dest, mode)
                 changed = True
 
             # Check user/group
-            if (
-                (user and remote_file['user'] != user)
-                or (group and remote_file['group'] != group)
-            ):
+            if (user and remote_file["user"] != user) or (group and remote_file["group"] != group):
                 yield chown(dest, user, group)
                 changed = True
 
             if not changed:
-                host.noop('file {0} is already uploaded'.format(dest))
+                host.noop("file {0} is already uploaded".format(dest))
 
     # Now we've uploaded the file and ensured user/group/mode, update the relevant fact data
-    host.create_fact(Sha1File, kwargs={'path': dest}, data=local_sum)
+    host.create_fact(Sha1File, kwargs={"path": dest}, data=local_sum)
     host.create_fact(
         File,
-        kwargs={'path': dest},
-        data={'user': user, 'group': group, 'mode': mode},
+        kwargs={"path": dest},
+        data={"user": user, "group": group, "mode": mode},
     )
 
 
 @operation
-def template(
-    src, dest,
-    user=None, group=None, mode=None, create_remote_dir=True,
-    **data
-):
+def template(src, dest, user=None, group=None, mode=None, create_remote_dir=True, **data):
     '''
     Generate a template using jinja2 and write it to the remote system.
 
@@ -945,14 +1001,14 @@ def template(
         )
     '''
 
-    if not hasattr(src, 'read') and state.cwd:
+    if not hasattr(src, "read") and state.cwd:
         src = os.path.join(state.cwd, src)
 
     # Ensure host/state/inventory are available inside templates (if not set)
-    data.setdefault('host', host)
-    data.setdefault('state', state)
-    data.setdefault('inventory', state.inventory)
-    data.setdefault('facts', pyinfra.facts)
+    data.setdefault("host", host)
+    data.setdefault("state", state)
+    data.setdefault("inventory", state.inventory)
+    data.setdefault("facts", pyinfra.facts)
 
     # Render and make file-like it's output
     try:
@@ -960,22 +1016,28 @@ def template(
     except (TemplateRuntimeError, TemplateSyntaxError, UndefinedError) as e:
         trace_frames = traceback.extract_tb(sys.exc_info()[2])
         trace_frames = [
-            frame for frame in trace_frames
-            if frame[2] in ('template', '<module>', 'top-level template code')
+            frame
+            for frame in trace_frames
+            if frame[2] in ("template", "<module>", "top-level template code")
         ]  # thank you https://github.com/saltstack/salt/blob/master/salt/utils/templates.py
 
         line_number = trace_frames[-1][1]
 
         # Quickly read the line in question and one above/below for nicer debugging
-        with open(src, 'r') as f:
+        with open(src, "r") as f:
             template_lines = f.readlines()
 
         template_lines = [line.strip() for line in template_lines]
-        relevant_lines = template_lines[max(line_number - 2, 0):line_number + 1]
+        relevant_lines = template_lines[max(line_number - 2, 0) : line_number + 1]
 
-        raise OperationError('Error in template: {0} (L{1}): {2}\n...\n{3}\n...'.format(
-            src, line_number, e, '\n'.join(relevant_lines),
-        ))
+        raise OperationError(
+            "Error in template: {0} (L{1}): {2}\n...\n{3}\n...".format(
+                src,
+                line_number,
+                e,
+                "\n".join(relevant_lines),
+            ),
+        )
 
     output_file = StringIO(output)
     # Set the template attribute for nicer debugging
@@ -983,8 +1045,11 @@ def template(
 
     # Pass to the put function
     yield from put(
-        output_file, dest,
-        user=user, group=group, mode=mode,
+        output_file,
+        dest,
+        user=user,
+        group=group,
+        mode=mode,
         add_deploy_dir=False,
         create_remote_dir=create_remote_dir,
     )
@@ -994,34 +1059,40 @@ def _validate_path(path):
     try:
         return os.fspath(path)
     except TypeError:
-        raise OperationTypeError('`path` must be a string or `os.PathLike` object')
+        raise OperationTypeError("`path` must be a string or `os.PathLike` object")
 
 
 def _raise_or_remove_invalid_path(fs_type, path, force, force_backup, force_backup_dir):
     if force:
         if force_backup:
-            backup_path = '{0}.{1}'.format(path, get_timestamp())
+            backup_path = "{0}.{1}".format(path, get_timestamp())
             if force_backup_dir:
                 backup_path = os.path.basename(backup_path)
-                backup_path = '{0}/{1}'.format(force_backup_dir, backup_path)
-            yield StringCommand('mv', QuoteString(path), QuoteString(backup_path))
+                backup_path = "{0}/{1}".format(force_backup_dir, backup_path)
+            yield StringCommand("mv", QuoteString(path), QuoteString(backup_path))
         else:
-            yield StringCommand('rm', '-rf', QuoteString(path))
+            yield StringCommand("rm", "-rf", QuoteString(path))
     else:
-        raise OperationError('{0} exists and is not a {1}'.format(path, fs_type))
+        raise OperationError("{0} exists and is not a {1}".format(path, fs_type))
 
 
-@operation(pipeline_facts={
-    'link': 'path',
-})
+@operation(
+    pipeline_facts={"link": "path"},
+)
 def link(
     path,
-    target=None, present=True, assume_present=False,
-    user=None, group=None, symbolic=True,
+    target=None,
+    present=True,
+    assume_present=False,
+    user=None,
+    group=None,
+    symbolic=True,
     create_remote_dir=True,
-    force=False, force_backup=True, force_backup_dir=None,
+    force=False,
+    force_backup=True,
+    force_backup_dir=None,
 ):
-    '''
+    """
     Add/remove/update links.
 
     + path: the name of the link
@@ -1070,28 +1141,32 @@ def link(
             present=False,
             assume_present=install_nginx.changed,
         )
-    '''
+    """
 
     path = _validate_path(path)
 
     if present and not target:
-        raise OperationError('If present is True target must be provided')
+        raise OperationError("If present is True target must be provided")
 
     info = host.get_fact(Link, path=path)
 
     # Not a link?
     if info is False:
         yield from _raise_or_remove_invalid_path(
-            'link', path, force, force_backup, force_backup_dir,
+            "link",
+            path,
+            force,
+            force_backup,
+            force_backup_dir,
         )
         info = None
 
-    add_args = ['ln']
+    add_args = ["ln"]
     if symbolic:
-        add_args.append('-s')
+        add_args.append("-s")
 
-    add_cmd = StringCommand(' '.join(add_args), QuoteString(target), QuoteString(path))
-    remove_cmd = StringCommand('rm', '-f', QuoteString(path))
+    add_cmd = StringCommand(" ".join(add_args), QuoteString(target), QuoteString(path))
+    remove_cmd = StringCommand("rm", "-f", QuoteString(path))
 
     # No link and we want it
     if not assume_present and info is None and present:
@@ -1105,20 +1180,20 @@ def link(
 
         host.create_fact(
             Link,
-            kwargs={'path': path},
-            data={'link_target': target, 'group': group, 'user': user},
+            kwargs={"path": path},
+            data={"link_target": target, "group": group, "user": user},
         )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield remove_cmd
-        host.delete_fact(Link, kwargs={'path': path})
+        host.delete_fact(Link, kwargs={"path": path})
 
     # Exists and want to ensure it's state
     elif (assume_present or info) and present:
         if assume_present and not info:
-            info = {'link_target': None, 'group': None, 'user': None}
-            host.create_fact(Link, kwargs={'path': path}, data=info)
+            info = {"link_target": None, "group": None, "user": None}
+            host.create_fact(Link, kwargs={"path": path}, data=info)
 
         # If we have an absolute path - prepend to any non-absolute values from the fact
         # and/or the source.
@@ -1128,48 +1203,54 @@ def link(
             if not os.path.isabs(target):
                 target = os.path.normpath(unix_path_join(link_dirname, target))
 
-            if info and not os.path.isabs(info['link_target']):
-                info['link_target'] = os.path.normpath(
-                    unix_path_join(link_dirname, info['link_target']),
+            if info and not os.path.isabs(info["link_target"]):
+                info["link_target"] = os.path.normpath(
+                    unix_path_join(link_dirname, info["link_target"]),
                 )
 
         changed = False
 
         # If the target is wrong, remove & recreate the link
-        if not info or info['link_target'] != target:
+        if not info or info["link_target"] != target:
             changed = True
             yield remove_cmd
             yield add_cmd
-            info['link_target'] = target
+            info["link_target"] = target
 
         # Check user/group
         if (
             (not info and (user or group))
-            or (user and info['user'] != user)
-            or (group and info['group'] != group)
+            or (user and info["user"] != user)
+            or (group and info["group"] != group)
         ):
             yield chown(path, user, group, dereference=False)
             changed = True
             if user:
-                info['user'] = user
+                info["user"] = user
             if group:
-                info['group'] = group
+                info["group"] = group
 
         if not changed:
-            host.noop('link {0} already exists'.format(path))
+            host.noop("link {0} already exists".format(path))
 
 
-@operation(pipeline_facts={
-    'file': 'path',
-})
+@operation(
+    pipeline_facts={"file": "path"},
+)
 def file(
     path,
-    present=True, assume_present=False,
-    user=None, group=None, mode=None, touch=False,
+    present=True,
+    assume_present=False,
+    user=None,
+    group=None,
+    mode=None,
+    touch=False,
     create_remote_dir=True,
-    force=False, force_backup=True, force_backup_dir=None,
+    force=False,
+    force_backup=True,
+    force_backup_dir=None,
 ):
-    '''
+    """
     Add/remove/update files.
 
     + path: name/path of the remote file
@@ -1203,7 +1284,7 @@ def file(
             touch=True,
             create_remote_dir=True,
         )
-    '''
+    """
 
     path = _validate_path(path)
 
@@ -1213,7 +1294,11 @@ def file(
     # Not a file?!
     if info is False:
         yield from _raise_or_remove_invalid_path(
-            'file', path, force, force_backup, force_backup_dir,
+            "file",
+            path,
+            force,
+            force_backup,
+            force_backup_dir,
         )
         info = None
 
@@ -1222,7 +1307,7 @@ def file(
         if create_remote_dir:
             yield from _create_remote_dir(state, host, path, user, group)
 
-        yield StringCommand('touch', QuoteString(path))
+        yield StringCommand("touch", QuoteString(path))
 
         if mode:
             yield chmod(path, mode)
@@ -1231,62 +1316,68 @@ def file(
 
         host.create_fact(
             File,
-            kwargs={'path': path},
-            data={'mode': mode, 'group': group, 'user': user},
+            kwargs={"path": path},
+            data={"mode": mode, "group": group, "user": user},
         )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
-        yield StringCommand('rm', '-f', QuoteString(path))
-        host.delete_fact(File, kwargs={'path': path})
+        yield StringCommand("rm", "-f", QuoteString(path))
+        host.delete_fact(File, kwargs={"path": path})
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
         if assume_present and not info:
-            info = {'mode': None, 'group': None, 'user': None}
-            host.create_fact(File, kwargs={'path': path}, data=info)
+            info = {"mode": None, "group": None, "user": None}
+            host.create_fact(File, kwargs={"path": path}, data=info)
 
         changed = False
 
         if touch:
             changed = True
-            yield StringCommand('touch', QuoteString(path))
+            yield StringCommand("touch", QuoteString(path))
 
         # Check mode
-        if mode and (not info or info['mode'] != mode):
+        if mode and (not info or info["mode"] != mode):
             yield chmod(path, mode)
-            info['mode'] = mode
+            info["mode"] = mode
             changed = True
 
         # Check user/group
         if (
             (not info and (user or group))
-            or (user and info['user'] != user)
-            or (group and info['group'] != group)
+            or (user and info["user"] != user)
+            or (group and info["group"] != group)
         ):
             yield chown(path, user, group)
             changed = True
             if user:
-                info['user'] = user
+                info["user"] = user
             if group:
-                info['group'] = group
+                info["group"] = group
 
         if not changed:
-            host.noop('file {0} already exists'.format(path))
+            host.noop("file {0} already exists".format(path))
 
 
-@operation(pipeline_facts={
-    'directory': 'path',
-})
+@operation(
+    pipeline_facts={"directory": "path"},
+)
 def directory(
     path,
-    present=True, assume_present=False,
-    user=None, group=None, mode=None, recursive=False,
-    force=False, force_backup=True, force_backup_dir=None,
+    present=True,
+    assume_present=False,
+    user=None,
+    group=None,
+    mode=None,
+    recursive=False,
+    force=False,
+    force_backup=True,
+    force_backup_dir=None,
     _no_check_owner_mode=False,
     _no_fail_on_link=False,
 ):
-    '''
+    """
     Add/remove/update directories.
 
     + path: path of the remote folder
@@ -1323,7 +1414,7 @@ def directory(
                 name="Ensure the directory `{}` exists".format(dir),
                 path=dir,
             )
-    '''
+    """
 
     path = _validate_path(path)
 
@@ -1333,16 +1424,20 @@ def directory(
     # Not a directory?!
     if info is False:
         if _no_fail_on_link and host.get_fact(Link, path=path):
-            host.noop('directory {0} already exists (as a link)'.format(path))
+            host.noop("directory {0} already exists (as a link)".format(path))
             return
         yield from _raise_or_remove_invalid_path(
-            'directory', path, force, force_backup, force_backup_dir,
+            "directory",
+            path,
+            force,
+            force_backup,
+            force_backup_dir,
         )
         info = None
 
     # Doesn't exist & we want it
     if not assume_present and info is None and present:
-        yield StringCommand('mkdir', '-p', QuoteString(path))
+        yield StringCommand("mkdir", "-p", QuoteString(path))
         if mode:
             yield chmod(path, mode, recursive=recursive)
         if user or group:
@@ -1350,42 +1445,42 @@ def directory(
 
         host.create_fact(
             Directory,
-            kwargs={'path': path},
-            data={'mode': mode, 'group': group, 'user': user},
+            kwargs={"path": path},
+            data={"mode": mode, "group": group, "user": user},
         )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
-        yield StringCommand('rm', '-rf', QuoteString(path))
-        host.delete_fact(Directory, kwargs={'path': path})
+        yield StringCommand("rm", "-rf", QuoteString(path))
+        host.delete_fact(Directory, kwargs={"path": path})
 
     # It exists & we want to ensure its state
     elif (assume_present or info) and present:
         if assume_present and not info:
-            info = {'mode': None, 'group': None, 'user': None}
-            host.create_fact(Directory, kwargs={'path': path}, data=info)
+            info = {"mode": None, "group": None, "user": None}
+            host.create_fact(Directory, kwargs={"path": path}, data=info)
 
         if _no_check_owner_mode:
             return
 
         changed = False
 
-        if mode and (not info or info['mode'] != mode):
+        if mode and (not info or info["mode"] != mode):
             yield chmod(path, mode, recursive=recursive)
-            info['mode'] = mode
+            info["mode"] = mode
             changed = True
 
         if (
             (not info and (user or group))
-            or (user and info['user'] != user)
-            or (group and info['group'] != group)
+            or (user and info["user"] != user)
+            or (group and info["group"] != group)
         ):
             yield chown(path, user, group, recursive=recursive)
             changed = True
             if user:
-                info['user'] = user
+                info["user"] = user
             if group:
-                info['group'] = group
+                info["group"] = group
 
         if not changed:
-            host.noop('directory {0} already exists'.format(path))
+            host.noop("directory {0} already exists".format(path))

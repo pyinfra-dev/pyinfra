@@ -7,7 +7,7 @@ from .util import make_cat_files_command
 
 
 def parse_apt_repo(name):
-    regex = r'^(deb(?:-src)?)(?:\s+\[([^\]]+)\])?\s+([^\s]+)\s+([a-z-]+)\s+([a-z-\s]*)$'
+    regex = r"^(deb(?:-src)?)(?:\s+\[([^\]]+)\])?\s+([^\s]+)\s+([a-z-]+)\s+([a-z-\s]*)$"
 
     matches = re.match(regex, name)
 
@@ -19,23 +19,23 @@ def parse_apt_repo(name):
     options_string = matches.group(2)
     if options_string:
         for option in options_string.split():
-            key, value = option.split('=', 1)
-            if ',' in value:
-                value = value.split(',')
+            key, value = option.split("=", 1)
+            if "," in value:
+                value = value.split(",")
 
             options[key] = value
 
     return {
-        'options': options,
-        'type': matches.group(1),
-        'url': matches.group(3),
-        'distribution': matches.group(4),
-        'components': set(matches.group(5).split()),
+        "options": options,
+        "type": matches.group(1),
+        "url": matches.group(3),
+        "distribution": matches.group(4),
+        "components": set(matches.group(5).split()),
     }
 
 
 class AptSources(FactBase):
-    '''
+    """
     Returns a list of installed apt sources:
 
     .. code:: python
@@ -48,13 +48,13 @@ class AptSources(FactBase):
                 "components", ["main", "multiverse"],
             },
         ]
-    '''
+    """
 
     command = make_cat_files_command(
-        '/etc/apt/sources.list',
-        '/etc/apt/sources.list.d/*.list',
+        "/etc/apt/sources.list",
+        "/etc/apt/sources.list.d/*.list",
     )
-    requires_command = 'apt'  # if apt installed, above should exist
+    requires_command = "apt"  # if apt installed, above should exist
 
     default = list
 
@@ -70,7 +70,7 @@ class AptSources(FactBase):
 
 
 class AptKeys(GpgFactBase):
-    '''
+    """
     Returns information on GPG keys apt has in its keychain:
 
     .. code:: python
@@ -81,8 +81,8 @@ class AptKeys(GpgFactBase):
                 "uid": "Oxygem <hello@oxygem.com>"
             },
         }
-    '''
+    """
 
     # This requires both apt-key *and* apt-key itself requires gpg
-    command = '! command -v gpg || apt-key list --with-colons'
-    requires_command = 'apt-key'
+    command = "! command -v gpg || apt-key list --with-colons"
+    requires_command = "apt-key"

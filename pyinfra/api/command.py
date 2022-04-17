@@ -1,12 +1,11 @@
 import shlex
-
 from string import Formatter
 
 from .arguments import get_executor_kwarg_keys
 
 
 def make_formatted_string_command(string, *args, **kwargs):
-    '''
+    """
     Helper function that takes a shell command or script as a string, splits it
     using ``shlex.split`` and then formats each bit, returning a ``StringCommand``
     instance with each bit.
@@ -20,7 +19,7 @@ def make_formatted_string_command(string, *args, **kwargs):
             QuoteString(src),
             QuoteString(dest),
         )
-    '''
+    """
 
     formatter = Formatter()
     string_bits = []
@@ -45,15 +44,13 @@ class QuoteString(object):
         self.object = obj
 
     def __repr__(self):
-        return 'QuoteString({0})'.format(self.object)
+        return "QuoteString({0})".format(self.object)
 
 
 class PyinfraCommand(object):
     def __init__(self, *args, **kwargs):
         self.executor_kwargs = {
-            key: kwargs[key]
-            for key in get_executor_kwarg_keys()
-            if key in kwargs
+            key: kwargs[key] for key in get_executor_kwarg_keys() if key in kwargs
         }
 
     def __eq__(self, other):
@@ -69,13 +66,13 @@ class StringCommand(PyinfraCommand):
     def __init__(self, *bits, **kwargs):
         super(StringCommand, self).__init__(**kwargs)
         self.bits = bits
-        self.separator = kwargs.pop('_separator', ' ')
+        self.separator = kwargs.pop("_separator", " ")
 
     def __str__(self):
         return self.get_masked_value()
 
     def __repr__(self):
-        return 'StringCommand({0})'.format(self.get_masked_value())
+        return "StringCommand({0})".format(self.get_masked_value())
 
     def _get_all_bits(self, bit_accessor):
         all_bits = []
@@ -90,7 +87,7 @@ class StringCommand(PyinfraCommand):
                 bit = bit_accessor(bit)
 
             if not isinstance(bit, str):
-                bit = '{0}'.format(bit)
+                bit = "{0}".format(bit)
 
             if quote:
                 bit = shlex.quote(bit)
@@ -100,15 +97,19 @@ class StringCommand(PyinfraCommand):
         return all_bits
 
     def get_raw_value(self):
-        return self.separator.join(self._get_all_bits(
-            lambda bit: bit.get_raw_value(),
-        ))
+        return self.separator.join(
+            self._get_all_bits(
+                lambda bit: bit.get_raw_value(),
+            ),
+        )
 
     def get_masked_value(self):
-        return self.separator.join([
-            '***' if isinstance(bit, MaskString) else bit
-            for bit in self._get_all_bits(lambda bit: bit.get_masked_value())
-        ])
+        return self.separator.join(
+            [
+                "***" if isinstance(bit, MaskString) else bit
+                for bit in self._get_all_bits(lambda bit: bit.get_masked_value())
+            ],
+        )
 
     def execute(self, state, host, executor_kwargs):
         executor_kwargs.update(self.executor_kwargs)
@@ -118,7 +119,7 @@ class StringCommand(PyinfraCommand):
             print_output=state.print_output,
             print_input=state.print_input,
             return_combined_output=True,
-            **executor_kwargs
+            **executor_kwargs,
         )
 
 
@@ -130,17 +131,18 @@ class FileUploadCommand(PyinfraCommand):
         self.remote_temp_filename = remote_temp_filename
 
     def __repr__(self):
-        return 'FileUploadCommand({0}, {1})'.format(self.src, self.dest)
+        return "FileUploadCommand({0}, {1})".format(self.src, self.dest)
 
     def execute(self, state, host, executor_kwargs):
         executor_kwargs.update(self.executor_kwargs)
 
         return host.put_file(
-            self.src, self.dest,
+            self.src,
+            self.dest,
             remote_temp_filename=self.remote_temp_filename,
             print_output=state.print_output,
             print_input=state.print_input,
-            **executor_kwargs
+            **executor_kwargs,
         )
 
 
@@ -152,17 +154,18 @@ class FileDownloadCommand(PyinfraCommand):
         self.remote_temp_filename = remote_temp_filename
 
     def __repr__(self):
-        return 'FileDownloadCommand({0}, {1})'.format(self.src, self.dest)
+        return "FileDownloadCommand({0}, {1})".format(self.src, self.dest)
 
     def execute(self, state, host, executor_kwargs):
         executor_kwargs.update(self.executor_kwargs)
 
         return host.get_file(
-            self.src, self.dest,
+            self.src,
+            self.dest,
             remote_temp_filename=self.remote_temp_filename,
             print_output=state.print_output,
             print_input=state.print_input,
-            **executor_kwargs
+            **executor_kwargs,
         )
 
 
@@ -174,7 +177,7 @@ class FunctionCommand(PyinfraCommand):
         self.kwargs = func_kwargs
 
     def __repr__(self):
-        return 'FunctionCommand({0}, {1}, {2})'.format(
+        return "FunctionCommand({0}, {1}, {2})".format(
             self.function.__name__,
             self.args,
             self.kwargs,
@@ -192,12 +195,14 @@ class RsyncCommand(PyinfraCommand):
         self.flags = flags
 
     def __repr__(self):
-        return 'RsyncCommand({0}, {1}, {2})'.format(self.src, self.dest, self.flags)
+        return "RsyncCommand({0}, {1}, {2})".format(self.src, self.dest, self.flags)
 
     def execute(self, state, host, executor_kwargs):
         return host.rsync(
-            self.src, self.dest, self.flags,
+            self.src,
+            self.dest,
+            self.flags,
             print_output=state.print_output,
             print_input=state.print_input,
-            **executor_kwargs
+            **executor_kwargs,
         )

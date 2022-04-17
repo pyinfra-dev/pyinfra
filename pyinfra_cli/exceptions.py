@@ -1,5 +1,4 @@
 import sys
-
 from traceback import format_exception, format_tb
 
 import click
@@ -11,13 +10,13 @@ from pyinfra.context import ctx_host
 
 class CliError(PyinfraError, click.ClickException):
     def show(self):
-        name = 'unknown error'
+        name = "unknown error"
 
         if isinstance(self, PyinfraError):
-            name = 'pyinfra error'
+            name = "pyinfra error"
 
         elif isinstance(self, IOError):
-            name = 'local IO error'
+            name = "local IO error"
 
         if ctx_host.isset():
             # Get any operation meta + name
@@ -25,16 +24,18 @@ class CliError(PyinfraError, click.ClickException):
             current_op_hash = host.current_op_hash
             current_op_meta = state.op_meta.get(current_op_hash)
             if current_op_meta:
-                op_name = ', '.join(current_op_meta['names'])
+                op_name = ", ".join(current_op_meta["names"])
 
-            sys.stderr.write('--> {0}{1}{2}: '.format(
-                host.print_prefix,
-                click.style(name, 'red', bold=True),
-                ' (operation={0})'.format(op_name) if op_name else '',
-            ))
+            sys.stderr.write(
+                "--> {0}{1}{2}: ".format(
+                    host.print_prefix,
+                    click.style(name, "red", bold=True),
+                    " (operation={0})".format(op_name) if op_name else "",
+                ),
+            )
         else:
             sys.stderr.write(
-                '--> {0}: '.format(click.style(name, 'red', bold=True)),
+                "--> {0}: ".format(click.style(name, "red", bold=True)),
             )
 
         logger.warning(self)
@@ -42,14 +43,14 @@ class CliError(PyinfraError, click.ClickException):
 
 class UnexpectedMixin(object):
     def get_traceback_lines(self):
-        traceback = getattr(self.e, '_traceback')
+        traceback = getattr(self.e, "_traceback")
         return format_tb(traceback)
 
     def get_traceback(self):
-        return ''.join(self.get_traceback_lines())
+        return "".join(self.get_traceback_lines())
 
     def get_exception(self):
-        return ''.join(format_exception(self.e.__class__, self.e, None))
+        return "".join(format_exception(self.e.__class__, self.e, None))
 
 
 class UnexpectedExternalError(click.ClickException, UnexpectedMixin):
@@ -60,11 +61,16 @@ class UnexpectedExternalError(click.ClickException, UnexpectedMixin):
         self.filename = filename
 
     def show(self):
-        click.echo('--> {0}:\n'.format(click.style(
-            'An unexpected exception occurred in: {0}'.format(self.filename),
-            'red',
-            bold=True,
-        )), err=True)
+        click.echo(
+            "--> {0}:\n".format(
+                click.style(
+                    "An unexpected exception occurred in: {0}".format(self.filename),
+                    "red",
+                    bold=True,
+                ),
+            ),
+            err=True,
+        )
 
         click.echo(self.get_traceback(), err=True, nl=False)
         click.echo(self.get_exception(), err=True)
@@ -77,11 +83,16 @@ class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
         self.e = e
 
     def show(self):
-        click.echo('--> {0}:\n'.format(click.style(
-            'An unexpected internal exception occurred',
-            'red',
-            bold=True,
-        )), err=True)
+        click.echo(
+            "--> {0}:\n".format(
+                click.style(
+                    "An unexpected internal exception occurred",
+                    "red",
+                    bold=True,
+                ),
+            ),
+            err=True,
+        )
 
         traceback_lines = self.get_traceback_lines()
         traceback = self.get_traceback()
@@ -94,17 +105,23 @@ class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
         exception = self.get_exception()
         click.echo(exception, err=True)
 
-        with open('pyinfra-debug.log', 'w') as f:
+        with open("pyinfra-debug.log", "w") as f:
             f.write(traceback)
             f.write(exception)
 
         logger.debug(traceback)
         logger.debug(exception)
 
-        click.echo('--> The full traceback has been written to {0}'.format(
-            click.style('pyinfra-debug.log', bold=True),
-        ), err=True)
-        click.echo((
-            '--> If this is unexpected please consider submitting a bug report '
-            'on GitHub, for more information run `pyinfra --support`.'
-        ), err=True)
+        click.echo(
+            "--> The full traceback has been written to {0}".format(
+                click.style("pyinfra-debug.log", bold=True),
+            ),
+            err=True,
+        )
+        click.echo(
+            (
+                "--> If this is unexpected please consider submitting a bug report "
+                "on GitHub, for more information run `pyinfra --support`."
+            ),
+            err=True,
+        )

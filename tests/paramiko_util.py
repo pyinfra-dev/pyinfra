@@ -1,21 +1,17 @@
 from inspect import isclass
 from unittest import TestCase
 
-from paramiko import (
-    RSAKey,
-    SFTPClient,
-    SSHClient,
-)
+from paramiko import RSAKey, SFTPClient, SSHClient
 from paramiko.agent import AgentRequestHandler
 
 from pyinfra.connectors import ssh
 
 
 class PatchSSHTestCase(TestCase):
-    '''
+    """
     A test class that patches out the paramiko SSH parts such that they succeed as normal.
     The SSH tests above check these are called correctly.
-    '''
+    """
 
     @classmethod
     def setUpClass(cls):

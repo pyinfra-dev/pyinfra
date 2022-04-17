@@ -4,10 +4,10 @@ from pyinfra.operations import server
 
 config.SUDO = True
 
-ip = host.get_fact(Ipv4Addresses)['eth0']
+ip = host.get_fact(Ipv4Addresses)["eth0"]
 
-if ip.startswith('10.'):
+if ip.startswith("10."):
     server.script(
-        name='Remove 10. network from eth0',
-        src='files/remove_10_on_eth0.bash',
+        name="Remove 10. network from eth0",
+        src="files/remove_10_on_eth0.bash",
     )

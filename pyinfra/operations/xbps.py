@@ -1,6 +1,6 @@
-'''
+"""
 Manage XBPS packages and repositories. Note that XBPS package names are case-sensitive.
-'''
+"""
 
 from pyinfra import host
 from pyinfra.api import operation
@@ -11,32 +11,36 @@ from .util.packaging import ensure_packages
 
 @operation(is_idempotent=False)
 def upgrade():
-    '''
+    """
     Upgrades all XBPS packages.
-    '''
+    """
 
-    yield 'xbps-install -y -u'
+    yield "xbps-install -y -u"
+
 
 _upgrade = upgrade  # noqa: E305
 
 
 @operation(is_idempotent=False)
 def update():
-    '''
+    """
     Update XBPS repositories.
-    '''
+    """
 
-    yield 'xbps-install -S'
+    yield "xbps-install -S"
+
 
 _update = update  # noqa: E305
 
 
 @operation
 def packages(
-    packages=None, present=True,
-    update=False, upgrade=False,
+    packages=None,
+    present=True,
+    update=False,
+    upgrade=False,
 ):
-    '''
+    """
     Install/remove/update XBPS packages.
 
     + packages: list of packages to ensure
@@ -53,7 +57,7 @@ def packages(
             packages=["vimpager", "vim"],
         )
 
-    '''
+    """
 
     if update:
         yield from _update()
@@ -62,7 +66,10 @@ def packages(
         yield from _upgrade()
 
     yield from ensure_packages(
-        host, packages, host.get_fact(XbpsPackages), present,
-        install_command='xbps-install -y -u',
-        uninstall_command='xbps-remove -y',
+        host,
+        packages,
+        host.get_fact(XbpsPackages),
+        present,
+        install_command="xbps-install -y -u",
+        uninstall_command="xbps-remove -y",
     )

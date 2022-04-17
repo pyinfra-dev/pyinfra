@@ -17,7 +17,7 @@ def extract_name_data(names):
 
 
 class Inventory(object):
-    '''
+    """
     Represents a collection of target hosts. Stores and provides access to group data,
     host data and default data for these hosts.
 
@@ -27,15 +27,11 @@ class Inventory(object):
         ssh_*: deprecated, use ``override_data.ssh_*``
         winrm_*: deprecated, use ``override_data.winrm_*``
         **groups: map of group name -> ``(names, data)``
-    '''
+    """
 
     state = None
 
-    def __init__(
-        self, names_data,
-        override_data=None,
-        **groups
-    ):
+    def __init__(self, names_data, override_data=None, **groups):
         # Setup basics
         self.groups = defaultdict(list)  # lists of Host objects
         self.host_data = defaultdict(dict)  # dict of name -> data
@@ -80,18 +76,18 @@ class Inventory(object):
             host_data = name_to_data[name]
 
             # Default to executing commands with the ssh connector
-            executor = execution_connectors['ssh']
+            executor = execution_connectors["ssh"]
 
-            if name[0] == '@':
+            if name[0] == "@":
                 connector_name = name[1:]
                 arg_string = None
 
-                if '/' in connector_name:
-                    connector_name, arg_string = connector_name.split('/', 1)
+                if "/" in connector_name:
+                    connector_name, arg_string = connector_name.split("/", 1)
 
                 if connector_name not in get_all_connectors():
                     raise NoConnectorError(
-                        'Invalid connector: {0}'.format(connector_name),
+                        "Invalid connector: {0}".format(connector_name),
                     )
 
                 # Execution connector? Simple, just set it for their host
@@ -138,106 +134,106 @@ class Inventory(object):
         return hosts
 
     def __len__(self):
-        '''
+        """
         Returns the number of inventory hosts.
-        '''
+        """
 
         return len(self.hosts)
 
     def __iter__(self):
-        '''
+        """
         Iterates over all inventory hosts.
-        '''
+        """
 
         return iter(self.hosts.values())
 
     def iter_active_hosts(self):
-        '''
+        """
         Iterates over active inventory hosts.
-        '''
+        """
 
         return iter(self.state.active_hosts)
 
     def len_active_hosts(self):
-        '''
+        """
         Returns the number of active inventory hosts.
-        '''
+        """
 
         return len(self.state.active_hosts)
 
     def iter_activated_hosts(self):
-        '''
+        """
         Iterates over activated inventory hosts.
-        '''
+        """
 
         return iter(self.state.activated_hosts)
 
     def len_activated_hosts(self):
-        '''
+        """
         Returns the number of activated inventory hosts.
-        '''
+        """
 
         return len(self.state.activated_hosts)
 
     def get_host(self, name, default=NoHostError):
-        '''
+        """
         Get a single host by name.
-        '''
+        """
 
         if name in self.hosts:
             return self.hosts[name]
 
         if default is NoHostError:
-            raise NoHostError('No such host: {0}'.format(name))
+            raise NoHostError("No such host: {0}".format(name))
 
         return default
 
     def get_group(self, name, default=NoGroupError):
-        '''
+        """
         Get a list of hosts belonging to a group.
-        '''
+        """
 
         if name in self.groups:
             return self.groups[name]
 
         if default is NoGroupError:
-            raise NoGroupError('No such group: {0}'.format(name))
+            raise NoGroupError("No such group: {0}".format(name))
 
         return default
 
     def get_data(self):
-        '''
+        """
         Get the base/all data attached to this inventory.
-        '''
+        """
 
         return self.data
 
     def get_override_data(self):
-        '''
+        """
         Get override data for this inventory.
-        '''
+        """
 
         return self.override_data
 
     def get_host_data(self, hostname):
-        '''
+        """
         Get data for a single host in this inventory.
-        '''
+        """
 
         return self.host_data.get(hostname, {})
 
     def get_group_data(self, group):
-        '''
+        """
         Get data for a single group in this inventory.
-        '''
+        """
 
         return self.group_data.get(group, {})
 
     def get_groups_data(self, groups):
-        '''
+        """
         Gets aggregated data from a list of groups. Vars are collected in order so, for
         any groups which define the same var twice, the last group's value will hold.
-        '''
+        """
 
         data = {}
 
@@ -247,9 +243,9 @@ class Inventory(object):
         return data
 
     def get_deploy_data(self):
-        '''
+        """
         Gets any default data attached to the current deploy, if any.
-        '''
+        """
 
         if self.state and self.state.deploy_data:
             return self.state.deploy_data

@@ -1,11 +1,11 @@
-'''
+"""
 Manage git repositories and configuration.
-'''
+"""
 
 import re
 
 from pyinfra import host
-from pyinfra.api import operation, OperationError
+from pyinfra.api import OperationError, operation
 from pyinfra.facts.files import Directory
 from pyinfra.facts.git import GitBranch, GitConfig, GitTrackingBranch
 
@@ -13,11 +13,11 @@ from . import files, ssh
 from .util.files import chown, unix_path_join
 
 
-@operation(pipeline_facts={
-    'git_config': 'repo',
-})
+@operation(
+    pipeline_facts={"git_config": "repo"},
+)
 def config(key, value, repo=None):
-    '''
+    """
     Manage git config for a repository or globally.
 
     + key: the key of the config to ensure
@@ -35,7 +35,7 @@ def config(key, value, repo=None):
             repo="/usr/local/src/pyinfra",
         )
 
-    '''
+    """
 
     existing_config = {}
 
@@ -43,7 +43,7 @@ def config(key, value, repo=None):
         existing_config = host.get_fact(GitConfig)
 
     # Only get the config if the repo exists at this stage
-    elif host.get_fact(Directory, path=unix_path_join(repo, '.git')):
+    elif host.get_fact(Directory, path=unix_path_join(repo, ".git")):
         existing_config = host.get_fact(GitConfig, repo=repo)
 
     if existing_config.get(key) != value:
@@ -55,20 +55,25 @@ def config(key, value, repo=None):
         existing_config[key] = value
 
     else:
-        host.noop('git config {0} is set to {1}'.format(key, value))
+        host.noop("git config {0} is set to {1}".format(key, value))
 
 
-@operation(pipeline_facts={
-    'git_branch': 'target',
-})
+@operation(
+    pipeline_facts={"git_branch": "target"},
+)
 def repo(
-    src, dest,
+    src,
+    dest,
     branch=None,
-    pull=True, rebase=False,
-    user=None, group=None, ssh_keyscan=False,
-    update_submodules=False, recursive_submodules=False,
+    pull=True,
+    rebase=False,
+    user=None,
+    group=None,
+    ssh_keyscan=False,
+    update_submodules=False,
+    recursive_submodules=False,
 ):
-    '''
+    """
     Clone/pull git repositories.
 
     + src: the git source URL
@@ -91,7 +96,7 @@ def repo(
             src="https://github.com/Fizzadar/pyinfra.git",
             dest="/usr/local/src/pyinfra",
         )
-    '''
+    """
 
     # Ensure our target directory exists
     yield from files.directory(dest)
@@ -99,59 +104,56 @@ def repo(
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
         # Attempt to parse the domain from the git repository
-        domain = re.match(r'^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)', src)
+        domain = re.match(r"^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)", src)
 
         if domain:
             yield from ssh.keyscan(domain.group(1))
         else:
             raise OperationError(
-                'Could not parse domain (to SSH keyscan) from: {0}'.format(src),
+                "Could not parse domain (to SSH keyscan) from: {0}".format(src),
             )
 
     # Store git commands for directory prefix
     git_commands = []
-    git_dir = unix_path_join(dest, '.git')
+    git_dir = unix_path_join(dest, ".git")
     is_repo = host.get_fact(Directory, path=git_dir)
 
     # Cloning new repo?
     if not is_repo:
         if branch:
-            git_commands.append('clone {0} --branch {1} .'.format(src, branch))
+            git_commands.append("clone {0} --branch {1} .".format(src, branch))
         else:
-            git_commands.append('clone {0} .'.format(src))
+            git_commands.append("clone {0} .".format(src))
 
-        host.create_fact(GitBranch, kwargs={'repo': dest}, data=branch)
+        host.create_fact(GitBranch, kwargs={"repo": dest}, data=branch)
         host.create_fact(
             Directory,
-            kwargs={'path': git_dir},
-            data={'user': user, 'group': group},
+            kwargs={"path": git_dir},
+            data={"user": user, "group": group},
         )
 
     # Ensuring existing repo
     else:
         if branch and host.get_fact(GitBranch, repo=dest) != branch:
-            git_commands.append('fetch')  # fetch to ensure we have the branch locally
-            git_commands.append('checkout {0}'.format(branch))
-            host.create_fact(GitBranch, kwargs={'repo': dest}, data=branch)
+            git_commands.append("fetch")  # fetch to ensure we have the branch locally
+            git_commands.append("checkout {0}".format(branch))
+            host.create_fact(GitBranch, kwargs={"repo": dest}, data=branch)
 
         if pull:
             if rebase:
-                git_commands.append('pull --rebase')
+                git_commands.append("pull --rebase")
             else:
-                git_commands.append('pull')
+                git_commands.append("pull")
 
     if update_submodules:
         if recursive_submodules:
-            git_commands.append('submodule update --init --recursive')
+            git_commands.append("submodule update --init --recursive")
         else:
-            git_commands.append('submodule update --init')
+            git_commands.append("submodule update --init")
 
     # Attach prefixes for directory
-    command_prefix = 'cd {0} && git'.format(dest)
-    git_commands = [
-        '{0} {1}'.format(command_prefix, command)
-        for command in git_commands
-    ]
+    command_prefix = "cd {0} && git".format(dest)
+    git_commands = ["{0} {1}".format(command_prefix, command) for command in git_commands]
 
     for cmd in git_commands:
         yield cmd
@@ -164,13 +166,20 @@ def repo(
 @operation()
 def worktree(
     worktree,
-    repo=None, detached=False,
-    new_branch=None, commitish=None,
-    pull=True, rebase=False, from_remote_branch=None,
-    present=True, assume_repo_exists=False, force=False,
-    user=None, group=None,
+    repo=None,
+    detached=False,
+    new_branch=None,
+    commitish=None,
+    pull=True,
+    rebase=False,
+    from_remote_branch=None,
+    present=True,
+    assume_repo_exists=False,
+    force=False,
+    user=None,
+    group=None,
 ):
-    '''
+    """
     Manage git worktrees.
 
     + worktree: git working tree directory
@@ -274,53 +283,53 @@ def worktree(
             present=False,
             force=True,
         )
-    '''
+    """
 
     # Doesn't exist & we want it
     if not host.get_fact(Directory, path=worktree) and present:
 
         # be sure that `repo` is a GIT repository
-        if (
-            not assume_repo_exists
-            and not host.get_fact(Directory, path=unix_path_join(repo, '.git'))
+        if not assume_repo_exists and not host.get_fact(
+            Directory,
+            path=unix_path_join(repo, ".git"),
         ):
             raise OperationError(
-                'The following folder is not a valid GIT repository : {0}'.format(repo),
+                "The following folder is not a valid GIT repository : {0}".format(repo),
             )
 
-        command_parts = ['cd {0} && git worktree add'.format(repo)]
+        command_parts = ["cd {0} && git worktree add".format(repo)]
 
         if new_branch:
-            command_parts.append('-b {0}'.format(new_branch))
+            command_parts.append("-b {0}".format(new_branch))
         elif detached:
-            command_parts.append('--detach')
+            command_parts.append("--detach")
 
         command_parts.append(worktree)
 
         if commitish:
             command_parts.append(commitish)
 
-        yield ' '.join(command_parts)
+        yield " ".join(command_parts)
 
         # Apply any user or group
         if user or group:
             yield chown(worktree, user, group, recursive=True)
 
-        host.create_fact(Directory, kwargs={'path': worktree}, data={'user': user, 'group': group})
-        host.create_fact(GitTrackingBranch, kwargs={'repo': worktree}, data=new_branch)
+        host.create_fact(Directory, kwargs={"path": worktree}, data={"user": user, "group": group})
+        host.create_fact(GitTrackingBranch, kwargs={"repo": worktree}, data=new_branch)
 
     # It exists and we don't want it
     elif host.get_fact(Directory, path=worktree) and not present:
 
-        command = 'cd {0} && git worktree remove .'.format(worktree)
+        command = "cd {0} && git worktree remove .".format(worktree)
 
         if force:
-            command += ' --force'
+            command += " --force"
 
         yield command
 
-        host.delete_fact(Directory, kwargs={'path': worktree})
-        host.create_fact(GitTrackingBranch, kwargs={'repo': worktree})
+        host.delete_fact(Directory, kwargs={"path": worktree})
+        host.create_fact(GitTrackingBranch, kwargs={"repo": worktree})
 
     # It exists and we still want it => pull/rebase it
     elif host.get_fact(Directory, path=worktree) and present:
@@ -328,18 +337,18 @@ def worktree(
         # pull the worktree only if it's already linked to a tracking branch or
         # if a remote branch is set
         if host.get_fact(GitTrackingBranch, repo=worktree) or from_remote_branch:
-            command = 'cd {0} && git pull'.format(worktree)
+            command = "cd {0} && git pull".format(worktree)
 
             if rebase:
-                command += ' --rebase'
+                command += " --rebase"
 
             if from_remote_branch:
                 if len(from_remote_branch) != 2 or type(from_remote_branch) not in (tuple, list):
                     raise OperationError(
-                        'The remote branch must be a 2-tuple (remote, branch) such as '
+                        "The remote branch must be a 2-tuple (remote, branch) such as "
                         '("origin", "master")',
                     )
-                command += ' {0} {1}'.format(*from_remote_branch)
+                command += " {0} {1}".format(*from_remote_branch)
 
             yield command
 
@@ -351,7 +360,7 @@ def bare_repo(
     group=None,
     present=True,
 ):
-    '''
+    """
     Create bare git repositories.
 
     + path: path to the folder
@@ -367,13 +376,13 @@ def bare_repo(
             name="Create bare repo",
             path="/home/git/test.git",
         )
-    '''
+    """
 
     yield from files.directory(path, present=present)
 
     # Ensure our target directory exists
     if present:
-        yield 'git init --bare {0}'.format(path)
+        yield "git init --bare {0}".format(path)
 
     # Apply any user or group
     if user or group:

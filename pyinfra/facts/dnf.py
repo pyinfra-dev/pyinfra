@@ -5,7 +5,7 @@ from .util.packaging import parse_yum_repositories
 
 
 class DnfRepositories(FactBase):
-    '''
+    """
     Returns a list of installed dnf repositories:
 
     .. code:: python
@@ -19,14 +19,14 @@ class DnfRepositories(FactBase):
                 "gpgkey": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial",
             },
         ]
-    '''
+    """
 
     command = make_cat_files_command(
-        '/etc/dnf.conf',
-        '/etc/dnf.repos.d/*.repo',
-        '/etc/yum.repos.d/*.repo',
+        "/etc/dnf.conf",
+        "/etc/dnf.repos.d/*.repo",
+        "/etc/yum.repos.d/*.repo",
     )
-    requires_command = 'dnf'
+    requires_command = "dnf"
 
     default = list
 

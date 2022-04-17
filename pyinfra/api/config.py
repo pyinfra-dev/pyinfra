@@ -1,59 +1,47 @@
 from os import path
 
-from pkg_resources import parse_version, require, Requirement, ResolutionError
+from pkg_resources import Requirement, ResolutionError, parse_version, require
 
 from pyinfra import __version__, state
 
 from .exceptions import PyinfraError
 
-
 config_defaults = {
     # % of hosts which have to fail for all operations to stop
-    'FAIL_PERCENT': None,
-
+    "FAIL_PERCENT": None,
     # Seconds to timeout SSH connections
-    'CONNECT_TIMEOUT': 10,
-
+    "CONNECT_TIMEOUT": 10,
     # Temporary directory (on the remote side) to use for caching any files/downloads
-    'TEMP_DIR': '/tmp',
-
+    "TEMP_DIR": "/tmp",
     # Gevent pool size (defaults to #of target hosts)
-    'PARALLEL': None,
-
+    "PARALLEL": None,
     # Specify the required pyinfra version (using PEP 440 setuptools specifier)
-    'REQUIRE_PYINFRA_VERSION': None,
+    "REQUIRE_PYINFRA_VERSION": None,
     # Specify any required packages (either using PEP 440 or a requirements file)
     # Note: this can also include pyinfra, potentially replacing REQUIRE_PYINFRA_VERSION
-    'REQUIRE_PACKAGES': None,
-
+    "REQUIRE_PACKAGES": None,
     # All these can be overridden inside individual operation calls:
-
     # Switch to this user (from ssh_user) using su before executing operations
-    'SU_USER': None,
-    'USE_SU_LOGIN': False,
-    'SU_SHELL': None,
-    'PRESERVE_SU_ENV': False,
-
+    "SU_USER": None,
+    "USE_SU_LOGIN": False,
+    "SU_SHELL": None,
+    "PRESERVE_SU_ENV": False,
     # Use sudo and optional user
-    'SUDO': False,
-    'SUDO_USER': None,
-    'PRESERVE_SUDO_ENV': False,
-    'USE_SUDO_LOGIN': False,
-    'USE_SUDO_PASSWORD': False,
-
+    "SUDO": False,
+    "SUDO_USER": None,
+    "PRESERVE_SUDO_ENV": False,
+    "USE_SUDO_LOGIN": False,
+    "USE_SUDO_PASSWORD": False,
     # Use doas and optional user
-    'DOAS': False,
-    'DOAS_USER': None,
-
+    "DOAS": False,
+    "DOAS_USER": None,
     # Use doas and optional user
-    'DOAS': False,
-    'DOAS_USER': None,
-
+    "DOAS": False,
+    "DOAS_USER": None,
     # Only show errors, but don't count as failure
-    'IGNORE_ERRORS': False,
-
+    "IGNORE_ERRORS": False,
     # Shell to use to execute commands
-    'SHELL': 'sh',
+    "SHELL": "sh",
 }
 
 
@@ -63,17 +51,16 @@ def check_pyinfra_version(version):
 
     running_version = parse_version(__version__)
     required_versions = Requirement.parse(
-        'pyinfra{0}'.format(version),
+        "pyinfra{0}".format(version),
     )
 
     if running_version not in required_versions:
-        raise PyinfraError((
-            'pyinfra version requirement not met '
-            '(requires {0}, running {1})'
-        ).format(
-            version,
-            __version__,
-        ))
+        raise PyinfraError(
+            ("pyinfra version requirement not met " "(requires {0}, running {1})").format(
+                version,
+                __version__,
+            ),
+        )
 
 
 def check_require_packages(requirements_config):
@@ -84,35 +71,35 @@ def check_require_packages(requirements_config):
         requirements = requirements_config
     else:
         with open(path.join(state.cwd, requirements_config)) as f:
-            requirements = [
-                line.split('#egg=')[-1]
-                for line in f.read().splitlines()
-            ]
+            requirements = [line.split("#egg=")[-1] for line in f.read().splitlines()]
 
     try:
         require(requirements)
     except ResolutionError as e:
-        raise PyinfraError('Deploy requirements ({0}) not met: {1}'.format(
-            requirements_config, e,
-        ))
+        raise PyinfraError(
+            "Deploy requirements ({0}) not met: {1}".format(
+                requirements_config,
+                e,
+            ),
+        )
 
 
 config_checkers = {
-    'REQUIRE_PYINFRA_VERSION': check_pyinfra_version,
-    'REQUIRE_PACKAGES': check_require_packages,
+    "REQUIRE_PYINFRA_VERSION": check_pyinfra_version,
+    "REQUIRE_PACKAGES": check_require_packages,
 }
 
 
 class Config(object):
-    '''
+    """
     The default/base configuration options for a pyinfra deploy.
-    '''
+    """
 
     state = None
 
     def __init__(self, **kwargs):
         # Always apply some env
-        env = kwargs.pop('ENV', {})
+        env = kwargs.pop("ENV", {})
         self.ENV = env
 
         config = config_defaults.copy()
@@ -129,10 +116,7 @@ class Config(object):
             checker(value)
 
     def get_current_state(self):
-        return [
-            (key, getattr(self, key))
-            for key in config_defaults.keys()
-        ]
+        return [(key, getattr(self, key)) for key in config_defaults.keys()]
 
     def set_current_state(self, config_state):
         for key, value in config_state:

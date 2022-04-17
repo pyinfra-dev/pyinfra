@@ -18,9 +18,9 @@ class Helpers:
         stdout, stderr = results.communicate()
 
         if type(stdout) is bytes:
-            stdout = stdout.decode('utf-8')
+            stdout = stdout.decode("utf-8")
         if type(stderr) is bytes:
-            stderr = stderr.decode('utf-8')
+            stderr = stderr.decode("utf-8")
 
         assert results.returncode == expected_exit_code, stderr
 
@@ -29,15 +29,16 @@ class Helpers:
     @staticmethod
     def run_check_output(command, expected_lines=None, **kwargs):
         if expected_lines is None:
-            expected_lines = ['Connected', 'Starting operation', 'Errors: 0']
+            expected_lines = ["Connected", "Starting operation", "Errors: 0"]
 
         _, stderr = Helpers.run(command, **kwargs)
 
         for line in expected_lines:
-            assert re.search(line, stderr, re.MULTILINE), \
-                'Line "{0}" not found in output!'.format(line)
+            assert re.search(line, stderr, re.MULTILINE), 'Line "{0}" not found in output!'.format(
+                line,
+            )
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def helpers():
     return Helpers

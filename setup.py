@@ -1,150 +1,150 @@
 import re
 import sys
-
 from io import open
 
 try:
-    from setuptools import setup, find_packages
+    from setuptools import find_packages, setup
 
 except ImportError:
-    print('''
+    print(
+        """
 Error: pyinfra needs setuptools in order to install:
 
 using pip: pip install setuptools
 using a package manager (apt, yum, etc), normally named: python-setuptools
-    '''.strip())
+    """.strip(),
+    )
 
     sys.exit(1)
 
 
 INSTALL_REQUIRES = (
-    'gevent>=1.5',
-    'paramiko>=2.7,<3',  # 2.7 (2019) adds OpenSSH key format + Match SSH config
-    'click>2',
-    'colorama<1',  # Windows color support for click
-    'jinja2>2,<4',
-    'python-dateutil>2,<3',
-    'setuptools',
-    'configparser',
-    'pywinrm',
-    'distro>=1.5,<2',
+    "gevent>=1.5",
+    "paramiko>=2.7,<3",  # 2.7 (2019) adds OpenSSH key format + Match SSH config
+    "click>2",
+    "colorama<1",  # Windows color support for click
+    "jinja2>2,<4",
+    "python-dateutil>2,<3",
+    "setuptools",
+    "configparser",
+    "pywinrm",
+    "distro>=1.5,<2",
 )
 
-ANSIBLE_REQUIRES = (  # extras for parsing Ansible inventory
-    'pyyaml',
-)
+ANSIBLE_REQUIRES = ("pyyaml",)  # extras for parsing Ansible inventory
 
 TEST_REQUIRES = ANSIBLE_REQUIRES + (
     # Unit testing
-    'pytest==7.0.1',
-    'pytest-cov==3.0.0',
-    'coverage==6.2',
-    'codecov==2.1.12',
-
-    # Linting
-    'flake8==4.0.1',
-    'flake8-commas==2.1.0',
-    'flake8-quotes==3.3.1',
-    'flake8-import-order==0.18.1',
+    "pytest==7.0.1",
+    "pytest-cov==3.0.0",
+    "coverage==6.2",
+    "codecov==2.1.12",
+    # Formatting & linting
+    "black==22.3.0",
+    "isort==5.10.1",
+    "flake8==4.0.1",
+    "flake8-commas==2.1.0",  # black does not enforce trailing commas itself
+    "flake8-black==0.3.2",
+    "flake8-isort==4.1.1",
 )
 
 DOCS_REQUIRES = (
-    'pyinfra-guzzle_sphinx_theme==0.14',
-    'recommonmark==0.5.0',
-    'sphinx==2.2.1',
+    "pyinfra-guzzle_sphinx_theme==0.14",
+    "recommonmark==0.5.0",
+    "sphinx==2.2.1",
     # Pinned to fix: https://github.com/sphinx-doc/sphinx/issues/9727
-    'docutils==0.17.1',
+    "docutils==0.17.1",
 )
 
-DEV_REQUIRES = TEST_REQUIRES + DOCS_REQUIRES + (
-    # Releasing
-    'wheel',
-    'twine',
-
-    # Dev debugging
-    'ipython',
-    'ipdb',
-    'ipdbplugin',
-
-    # Lint spellchecking, dev only (don't fail CI)
-    'flake8-spellcheck==0.12.1',
+DEV_REQUIRES = (
+    TEST_REQUIRES
+    + DOCS_REQUIRES
+    + (
+        # Releasing
+        "wheel",
+        "twine",
+        # Dev debugging
+        "ipython",
+        "ipdb",
+        "ipdbplugin",
+        # Lint spellchecking, dev only (don't fail CI)
+        "flake8-spellcheck==0.12.1",
+    )
 )
 
 
 def get_version_from_changelog():
     # Regex matching pattern followed by 3 numerical values separated by '.'
-    pattern = re.compile(r'^# v(?P<version>[0-9]+\.[0-9]+(\.[0-9]+)?(\.?[a-z0-9]+)?)$')
+    pattern = re.compile(r"^# v(?P<version>[0-9]+\.[0-9]+(\.[0-9]+)?(\.?[a-z0-9]+)?)$")
 
-    with open('CHANGELOG.md', 'r') as fn:
+    with open("CHANGELOG.md", "r") as fn:
         for line in fn.readlines():
             match = pattern.match(line.strip())
             if match:
-                return ''.join(match.group('version'))
-    raise RuntimeError('No version found in CHANGELOG.md')
+                return "".join(match.group("version"))
+    raise RuntimeError("No version found in CHANGELOG.md")
 
 
 def get_readme_contents():
-    with open('README.md', 'r', encoding='utf-8') as f:
+    with open("README.md", "r", encoding="utf-8") as f:
         return f.read()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     setup(
         version=get_version_from_changelog(),
-        name='pyinfra',
-        description='pyinfra automates/provisions/manages/deploys infrastructure.',
+        name="pyinfra",
+        description="pyinfra automates/provisions/manages/deploys infrastructure.",
         long_description=get_readme_contents(),
-        long_description_content_type='text/markdown',
-        author='Nick / Fizzadar',
-        author_email='pointlessrambler@gmail.com',
-        license='MIT',
-        url='https://pyinfra.com',
+        long_description_content_type="text/markdown",
+        author="Nick / Fizzadar",
+        author_email="pointlessrambler@gmail.com",
+        license="MIT",
+        url="https://pyinfra.com",
         project_urls={
-            'Documentation': 'https://docs.pyinfra.com',
-            'GitHub': 'https://github.com/Fizzadar/pyinfra',
+            "Documentation": "https://docs.pyinfra.com",
+            "GitHub": "https://github.com/Fizzadar/pyinfra",
         },
-        packages=find_packages(exclude=['tests', 'docs']),
+        packages=find_packages(exclude=["tests", "docs"]),
         entry_points={
-            'console_scripts': (
-                'pyinfra=pyinfra_cli.__main__:execute_pyinfra',
-            ),
-            'pyinfra.connectors': [
-                'ansible = pyinfra.connectors.ansible',
-                'chroot = pyinfra.connectors.chroot',
-                'docker = pyinfra.connectors.docker',
-                'local = pyinfra.connectors.local',
-                'mech = pyinfra.connectors.mech',
-                'ssh = pyinfra.connectors.ssh',
-                'dockerssh = pyinfra.connectors.dockerssh',
-                'vagrant = pyinfra.connectors.vagrant',
-                'winrm = pyinfra.connectors.winrm',
-                'terraform = pyinfra.connectors.terraform',
+            "console_scripts": ("pyinfra=pyinfra_cli.__main__:execute_pyinfra",),
+            "pyinfra.connectors": [
+                "ansible = pyinfra.connectors.ansible",
+                "chroot = pyinfra.connectors.chroot",
+                "docker = pyinfra.connectors.docker",
+                "local = pyinfra.connectors.local",
+                "mech = pyinfra.connectors.mech",
+                "ssh = pyinfra.connectors.ssh",
+                "dockerssh = pyinfra.connectors.dockerssh",
+                "vagrant = pyinfra.connectors.vagrant",
+                "winrm = pyinfra.connectors.winrm",
+                "terraform = pyinfra.connectors.terraform",
             ],
         },
         install_requires=INSTALL_REQUIRES,
         extras_require={
-            'test': TEST_REQUIRES,
-            'docs': DOCS_REQUIRES,
-            'dev': DEV_REQUIRES,
-            'ansible': ANSIBLE_REQUIRES,
+            "test": TEST_REQUIRES,
+            "docs": DOCS_REQUIRES,
+            "dev": DEV_REQUIRES,
+            "ansible": ANSIBLE_REQUIRES,
         },
         include_package_data=True,
         classifiers=[
-            'Development Status :: 5 - Production/Stable',
-            'Environment :: Console',
-            'Intended Audience :: Developers',
-            'Intended Audience :: System Administrators',
-            'Intended Audience :: Information Technology',
-            'License :: OSI Approved :: MIT License',
-            'Operating System :: OS Independent',
-            'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.6',
-            'Programming Language :: Python :: 3.7',
-            'Programming Language :: Python :: 3.8',
-            'Programming Language :: Python :: 3.9',
-            'Programming Language :: Python :: 3.10',
-            'Topic :: System :: Systems Administration',
-            'Topic :: System :: Installation/Setup',
-            'Topic :: Utilities',
+            "Development Status :: 5 - Production/Stable",
+            "Environment :: Console",
+            "Intended Audience :: Developers",
+            "Intended Audience :: System Administrators",
+            "Intended Audience :: Information Technology",
+            "License :: OSI Approved :: MIT License",
+            "Operating System :: OS Independent",
+            "Programming Language :: Python :: 3",
+            "Programming Language :: Python :: 3.6",
+            "Programming Language :: Python :: 3.7",
+            "Programming Language :: Python :: 3.8",
+            "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10",
+            "Topic :: System :: Systems Administration",
+            "Topic :: System :: Installation/Setup",
+            "Topic :: Utilities",
         ],
     )

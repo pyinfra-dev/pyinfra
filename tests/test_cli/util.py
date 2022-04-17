@@ -3,7 +3,6 @@ from os import chdir, getcwd
 from click.testing import CliRunner
 
 import pyinfra
-
 from pyinfra_cli.main import cli
 
 

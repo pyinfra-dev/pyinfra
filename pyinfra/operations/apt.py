@@ -1,12 +1,12 @@
-'''
+"""
 Manage apt packages and repositories.
-'''
+"""
 
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
 from pyinfra import host, state
-from pyinfra.api import operation, OperationError
+from pyinfra.api import OperationError, operation
 from pyinfra.facts.apt import AptKeys, AptSources, parse_apt_repo
 from pyinfra.facts.deb import DebPackage, DebPackages
 from pyinfra.facts.files import File
@@ -16,27 +16,29 @@ from pyinfra.facts.server import Date
 from . import files
 from .util.packaging import ensure_packages
 
-APT_UPDATE_FILENAME = '/var/lib/apt/periodic/update-success-stamp'
+APT_UPDATE_FILENAME = "/var/lib/apt/periodic/update-success-stamp"
 
 
 def noninteractive_apt(command, force=False):
-    args = ['DEBIAN_FRONTEND=noninteractive apt-get -y']
+    args = ["DEBIAN_FRONTEND=noninteractive apt-get -y"]
 
     if force:
-        args.append('--force-yes')
+        args.append("--force-yes")
 
-    args.extend((
-        '-o Dpkg::Options::="--force-confdef"',
-        '-o Dpkg::Options::="--force-confold"',
-        command,
-    ))
+    args.extend(
+        (
+            '-o Dpkg::Options::="--force-confdef"',
+            '-o Dpkg::Options::="--force-confold"',
+            command,
+        ),
+    )
 
-    return ' '.join(args)
+    return " ".join(args)
 
 
 @operation
 def key(src=None, keyserver=None, keyid=None):
-    '''
+    """
     Add apt gpg keys with ``apt-key``.
 
     + src: filename or URL
@@ -60,7 +62,7 @@ def key(src=None, keyserver=None, keyid=None):
             name="Install VirtualBox key",
             src="https://www.virtualbox.org/download/oracle_vbox_2016.asc",
         )
-    '''
+    """
 
     existing_keys = host.get_fact(AptKeys)
 
@@ -73,39 +75,42 @@ def key(src=None, keyserver=None, keyid=None):
             # If URL, wget the key to stdout and pipe into apt-key, because the "adv"
             # apt-key passes to gpg which doesn't always support https!
             if urlparse(src).scheme:
-                yield '(wget -O - {0} || curl -sSLf {0}) | apt-key add -'.format(src)
+                yield "(wget -O - {0} || curl -sSLf {0}) | apt-key add -".format(src)
             else:
-                yield 'apt-key add {0}'.format(src)
+                yield "apt-key add {0}".format(src)
 
             if keyid:
                 for kid in keyid:
                     existing_keys[kid] = {}
         else:
-            host.noop('All keys from {0} are already available in the apt keychain'.format(src))
+            host.noop("All keys from {0} are already available in the apt keychain".format(src))
 
     if keyserver:
         if not keyid:
-            raise OperationError('`keyid` must be provided with `keyserver`')
+            raise OperationError("`keyid` must be provided with `keyserver`")
 
         if isinstance(keyid, str):
             keyid = [keyid]
 
         needed_keys = sorted(set(keyid) - set(existing_keys.keys()))
         if needed_keys:
-            yield 'apt-key adv --keyserver {0} --recv-keys {1}'.format(
-                keyserver, ' '.join(needed_keys),
+            yield "apt-key adv --keyserver {0} --recv-keys {1}".format(
+                keyserver,
+                " ".join(needed_keys),
             )
             for kid in keyid:
                 existing_keys[kid] = {}
         else:
-            host.noop('Keys {0} are already available in the apt keychain'.format(
-                ', '.join(keyid),
-            ))
+            host.noop(
+                "Keys {0} are already available in the apt keychain".format(
+                    ", ".join(keyid),
+                ),
+            )
 
 
 @operation
 def repo(src, present=True, filename=None):
-    '''
+    """
     Add/remove apt repositories.
 
     + src: apt source string eg ``deb http://X hardy main``
@@ -121,13 +126,13 @@ def repo(src, present=True, filename=None):
             name="Install VirtualBox repo",
             src="deb https://download.virtualbox.org/virtualbox/debian bionic contrib",
         )
-    '''
+    """
 
     # Get the target .list file to manage
     if filename:
-        filename = '/etc/apt/sources.list.d/{0}.list'.format(filename)
+        filename = "/etc/apt/sources.list.d/{0}.list".format(filename)
     else:
-        filename = '/etc/apt/sources.list'
+        filename = "/etc/apt/sources.list"
 
     # Work out if the repo exists already
     apt_sources = host.get_fact(AptSources)
@@ -158,15 +163,17 @@ def repo(src, present=True, filename=None):
         apt_sources.remove(repo)
 
     else:
-        host.noop('apt repo "{0}" {1}'.format(
-            src,
-            'exists' if present else 'does not exist',
-        ))
+        host.noop(
+            'apt repo "{0}" {1}'.format(
+                src,
+                "exists" if present else "does not exist",
+            ),
+        )
 
 
 @operation(is_idempotent=False)
 def ppa(src, present=True):
-    '''
+    """
     Add/remove Ubuntu ppa repositories.
 
     + src: the PPA name (full ppa:user/repo format)
@@ -185,7 +192,7 @@ def ppa(src, present=True):
             src="ppa:bitcoin/bitcoin",
         )
 
-    '''
+    """
 
     if present:
         yield 'apt-add-repository -y "{0}"'.format(src)
@@ -196,7 +203,7 @@ def ppa(src, present=True):
 
 @operation
 def deb(src, present=True, force=False):
-    '''
+    """
     Add/remove ``.deb`` file packages.
 
     + src: filename or URL of the ``.deb`` file
@@ -220,7 +227,7 @@ def deb(src, present=True, force=False):
             name="Install Chrome via deb",
             src="https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb",
         )
-    '''
+    """
 
     original_src = src
 
@@ -244,8 +251,8 @@ def deb(src, present=True, force=False):
     # We have deb info! Check against installed packages
     if info:
         if (
-            info['name'] in current_packages
-            and info.get('version') in current_packages[info['name']]
+            info["name"] in current_packages
+            and info.get("version") in current_packages[info["name"]]
         ):
             exists = True
 
@@ -253,39 +260,39 @@ def deb(src, present=True, force=False):
     if present:
         if not exists:
             # Install .deb file - ignoring failure (on unmet dependencies)
-            yield 'dpkg --force-confdef --force-confold -i {0} 2> /dev/null || true'.format(src)
+            yield "dpkg --force-confdef --force-confold -i {0} 2> /dev/null || true".format(src)
             # Attempt to install any missing dependencies
-            yield '{0} -f'.format(noninteractive_apt('install', force=force))
+            yield "{0} -f".format(noninteractive_apt("install", force=force))
             # Now reinstall, and critically configure, the package - if there are still
             # missing deps, now we error
-            yield 'dpkg --force-confdef --force-confold -i {0}'.format(src)
+            yield "dpkg --force-confdef --force-confold -i {0}".format(src)
 
             if info:
-                current_packages[info['name']] = [info.get('version')]
+                current_packages[info["name"]] = [info.get("version")]
         else:
-            host.noop('deb {0} is installed'.format(original_src))
+            host.noop("deb {0} is installed".format(original_src))
 
     # Package exists but we don't want?
     if not present:
         if exists:
-            yield '{0} {1}'.format(
-                noninteractive_apt('remove', force=force),
-                info['name'],
+            yield "{0} {1}".format(
+                noninteractive_apt("remove", force=force),
+                info["name"],
             )
-            current_packages.pop(info['name'])
+            current_packages.pop(info["name"])
         else:
-            host.noop('deb {0} is not installed'.format(original_src))
+            host.noop("deb {0} is not installed".format(original_src))
 
 
 @operation(
     is_idempotent=False,
     idempotent_notice=(
-        'This operation will always execute commands '
-        'unless the ``cache_time`` argument is provided.'
+        "This operation will always execute commands "
+        "unless the ``cache_time`` argument is provided."
     ),
 )
 def update(cache_time=None):
-    '''
+    """
     Updates apt repositories.
 
     + cache_time: cache updates for this many seconds
@@ -298,7 +305,7 @@ def update(cache_time=None):
             name="Update apt repositories",
             cache_time=3600,
         )
-    '''
+    """
 
     # If cache_time check when apt was last updated, prevent updates if within time
     if cache_time:
@@ -308,32 +315,33 @@ def update(cache_time=None):
         # Time on files is not tz-aware, and will be the same tz as the server's time,
         # so we can safely remove the tzinfo from the Date fact before comparison.
         host_cache_time = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
-        if cache_info and cache_info['mtime'] and cache_info['mtime'] > host_cache_time:
-            host.noop('apt is already up to date')
+        if cache_info and cache_info["mtime"] and cache_info["mtime"] > host_cache_time:
+            host.noop("apt is already up to date")
             return
 
-    yield 'apt-get update'
+    yield "apt-get update"
 
     # Some apt systems (Debian) have the /var/lib/apt/periodic directory, but
     # don't bother touching anything in there - so pyinfra does it, enabling
     # cache_time to work.
     if cache_time:
-        yield 'touch {0}'.format(APT_UPDATE_FILENAME)
+        yield "touch {0}".format(APT_UPDATE_FILENAME)
         if cache_info is None:
             host.create_fact(
                 File,
-                kwargs={'path': APT_UPDATE_FILENAME},
-                data={'mtime': datetime.utcnow()},
+                kwargs={"path": APT_UPDATE_FILENAME},
+                data={"mtime": datetime.utcnow()},
             )
         else:
-            cache_info['mtime'] = datetime.utcnow()
+            cache_info["mtime"] = datetime.utcnow()
+
 
 _update = update  # noqa: E305
 
 
 @operation(is_idempotent=False)
 def upgrade():
-    '''
+    """
     Upgrades all apt packages.
 
     **Example:**
@@ -343,16 +351,17 @@ def upgrade():
         apt.upgrade(
             name="Upgrade apt packages",
         )
-    '''
+    """
 
-    yield noninteractive_apt('upgrade')
+    yield noninteractive_apt("upgrade")
+
 
 _upgrade = upgrade  # noqa: E305 (for use below where update is a kwarg)
 
 
 @operation(is_idempotent=False)
 def dist_upgrade(state, host):
-    '''
+    """
     Updates all apt packages, employing dist-upgrade.
 
     **Example:**
@@ -362,19 +371,26 @@ def dist_upgrade(state, host):
         apt.dist_upgrade(
             name="Upgrade apt packages using dist-upgrade",
         )
-    '''
+    """
 
-    yield noninteractive_apt('dist-upgrade')
+    yield noninteractive_apt("dist-upgrade")
 
 
 @operation
 def packages(
-    packages=None, present=True, latest=False,
-    update=False, cache_time=None, upgrade=False,
-    force=False, no_recommends=False, allow_downgrades=False,
-    extra_install_args=None, extra_uninstall_args=None,
+    packages=None,
+    present=True,
+    latest=False,
+    update=False,
+    cache_time=None,
+    upgrade=False,
+    force=False,
+    no_recommends=False,
+    allow_downgrades=False,
+    extra_install_args=None,
+    extra_uninstall_args=None,
 ):
-    '''
+    """
     Install/remove/update packages & update apt.
 
     + packages: list of packages to ensure
@@ -421,7 +437,7 @@ def packages(
             packages=[f"linux-headers-{host.get_fact(OsVersion)}"],
             update=True,
         )
-    '''
+    """
 
     if update:
         yield from _update(cache_time=cache_time)
@@ -429,31 +445,34 @@ def packages(
     if upgrade:
         yield from _upgrade()
 
-    install_command = ['install']
+    install_command = ["install"]
     if no_recommends is True:
-        install_command.append('--no-install-recommends')
+        install_command.append("--no-install-recommends")
     if allow_downgrades:
-        install_command.append('--allow-downgrades')
+        install_command.append("--allow-downgrades")
 
-    upgrade_command = ' '.join(install_command)
+    upgrade_command = " ".join(install_command)
 
     if extra_install_args:
         install_command.append(extra_install_args)
 
-    install_command = ' '.join(install_command)
+    install_command = " ".join(install_command)
 
-    uninstall_command = ['remove']
+    uninstall_command = ["remove"]
     if extra_uninstall_args:
         uninstall_command.append(extra_uninstall_args)
 
-    uninstall_command = ' '.join(uninstall_command)
+    uninstall_command = " ".join(uninstall_command)
 
     # Compare/ensure packages are present/not
     yield from ensure_packages(
-        host, packages, host.get_fact(DebPackages), present,
+        host,
+        packages,
+        host.get_fact(DebPackages),
+        present,
         install_command=noninteractive_apt(install_command, force=force),
         uninstall_command=noninteractive_apt(uninstall_command, force=force),
         upgrade_command=noninteractive_apt(upgrade_command, force=force),
-        version_join='=',
+        version_join="=",
         latest=latest,
     )

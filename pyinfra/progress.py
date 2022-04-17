@@ -2,7 +2,6 @@ import math
 import os
 import platform
 import sys
-
 from collections import deque
 from contextlib import contextmanager
 from threading import Event, Thread
@@ -10,10 +9,10 @@ from time import sleep
 
 import pyinfra
 
-IS_WINDOWS = platform.system() == 'Windows'
+IS_WINDOWS = platform.system() == "Windows"
 
 WAIT_TIME = 1 / 5
-WAIT_CHARS = deque(('-', '/', '|', '\\'))
+WAIT_CHARS = deque(("-", "/", "|", "\\"))
 
 # Hacky way of getting terminal size (so can clear lines)
 # Source: http://stackoverflow.com/questions/566746
@@ -25,17 +24,17 @@ if IS_TTY:
         TERMINAL_WIDTH = os.get_terminal_size().columns
     except AttributeError:
         if not IS_WINDOWS:
-            terminal_size = os.popen('stty size', 'r').read().split()
+            terminal_size = os.popen("stty size", "r").read().split()
             if len(terminal_size) == 2:
                 TERMINAL_WIDTH = int(terminal_size[1])
 
 
 def _print_spinner(stop_event, progress_queue):
-    if not IS_TTY or os.environ.get('PYINFRA_PROGRESS') == 'off':
+    if not IS_TTY or os.environ.get("PYINFRA_PROGRESS") == "off":
         return
 
-    progress = ''
-    text = ''
+    progress = ""
+    text = ""
 
     while True:
         # Stop when asked too
@@ -49,10 +48,10 @@ def _print_spinner(stop_event, progress_queue):
         except IndexError:
             pass
 
-        text = '    {0}'.format(
-            ' '.join((WAIT_CHARS[0], progress)),
+        text = "    {0}".format(
+            " ".join((WAIT_CHARS[0], progress)),
         )
-        text = '{0}\r'.format(text)
+        text = "{0}\r".format(text)
 
         sys.stderr.write(text)
         sys.stderr.flush()
@@ -61,7 +60,7 @@ def _print_spinner(stop_event, progress_queue):
         # so write this escape code (clear line) into the buffer but don't flush,
         # such that any next print/log/etc clear the line first.
         if not IS_WINDOWS:
-            sys.stderr.write('\033[K')
+            sys.stderr.write("\033[K")
 
         sleep(WAIT_TIME)
 
@@ -88,11 +87,13 @@ def progress_spinner(items, prefix_message=None):
             percentage_complete = 0
             complete = total_items - len(items)
             percentage_complete = int(math.floor(complete / total_items * 100))
-            message_bits.append('{0}% ({1}/{2})'.format(
-                percentage_complete,
-                complete,
-                total_items,
-            ))
+            message_bits.append(
+                "{0}% ({1}/{2})".format(
+                    percentage_complete,
+                    complete,
+                    total_items,
+                ),
+            )
 
         if prefix_message:
             message_bits.append(prefix_message)
@@ -104,24 +105,27 @@ def progress_spinner(items, prefix_message=None):
             items_allowed_width = TERMINAL_WIDTH - 10 - message_length
 
             if items_allowed_width > 0:
-                items_string = '{%s}' % (', '.join('{0}'.format(i) for i in items))
+                items_string = "{%s}" % (", ".join("{0}".format(i) for i in items))
                 if len(items_string) >= items_allowed_width:
-                    items_string = '%s...}' % (
+                    items_string = "%s...}" % (
                         # -3 for the ...
-                        items_string[:items_allowed_width - 3],
+                        items_string[: items_allowed_width - 3],
                     )
 
                 message_bits.append(items_string)
 
-        return ' - '.join(message_bits)
+        return " - ".join(message_bits)
 
     progress_queue = deque((make_progress_message(),))
 
     def progress(complete_item):
         if complete_item not in items:
-            raise ValueError('Invalid complete item: {0} not in {1}'.format(
-                complete_item, items,
-            ))
+            raise ValueError(
+                "Invalid complete item: {0} not in {1}".format(
+                    complete_item,
+                    items,
+                ),
+            )
 
         items.remove(complete_item)
         progress_queue.append(make_progress_message())

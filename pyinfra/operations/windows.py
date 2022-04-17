@@ -1,6 +1,6 @@
-'''
+"""
 The windows module handles misc windows operations.
-'''
+"""
 
 from pyinfra.api import operation
 
@@ -19,7 +19,7 @@ from pyinfra.api import operation
 
 @operation
 def service(service, running=True, restart=False, suspend=False):
-    '''
+    """
     Stop/Start a Windows service.
 
     + service: name of the service to manage
@@ -36,24 +36,24 @@ def service(service, running=True, restart=False, suspend=False):
             service="service",
             running=False,
         )
-    '''
+    """
 
     if suspend or not running:
         if suspend:
-            yield 'Suspend-Service -Name {0}'.format(service)
+            yield "Suspend-Service -Name {0}".format(service)
         else:
-            yield 'Stop-Service -Name {0}'.format(service)
+            yield "Stop-Service -Name {0}".format(service)
     else:
         if restart:
-            yield 'Restart-Service -Name {0}'.format(service)
+            yield "Restart-Service -Name {0}".format(service)
         else:
             if running:
-                yield 'Start-Service -Name {0}'.format(service)
+                yield "Start-Service -Name {0}".format(service)
 
 
 @operation(is_idempotent=False)
 def reboot():
-    '''
+    """
     Restart the server.
-    '''
-    yield 'Restart-Computer -Force'
+    """
+    yield "Restart-Computer -Force"

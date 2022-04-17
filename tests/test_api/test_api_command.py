@@ -2,6 +2,7 @@ from unittest import TestCase
 
 try:
     from pathlib import PurePosixPath
+
     HAS_PATHLIB = True
 except ImportError:
     HAS_PATHLIB = False
@@ -29,66 +30,66 @@ class TestBaseCommand(TestCase):
 
 class TestStringCommand(TestCase):
     def test_normal(self):
-        cmd = StringCommand('hello', 'world')
-        assert str(cmd) == cmd.get_raw_value() == 'hello world'
+        cmd = StringCommand("hello", "world")
+        assert str(cmd) == cmd.get_raw_value() == "hello world"
 
     def test_masked(self):
-        cmd = StringCommand(MaskString('adsfg'))
-        assert cmd.get_raw_value() == 'adsfg'
-        assert str(cmd) == '***'
+        cmd = StringCommand(MaskString("adsfg"))
+        assert cmd.get_raw_value() == "adsfg"
+        assert str(cmd) == "***"
 
     def test_mixed_masked(self):
-        cmd = StringCommand('some', 'stuff', MaskString('mask me'), 'other', 'stuff')
-        assert cmd.get_raw_value() == 'some stuff mask me other stuff'
-        assert str(cmd) == 'some stuff *** other stuff'
+        cmd = StringCommand("some", "stuff", MaskString("mask me"), "other", "stuff")
+        assert cmd.get_raw_value() == "some stuff mask me other stuff"
+        assert str(cmd) == "some stuff *** other stuff"
 
     def test_nested(self):
-        nested_cmd = StringCommand('some', 'stuff')
-        cmd = StringCommand('hello', nested_cmd, 'world')
-        assert str(cmd) == cmd.get_raw_value() == 'hello some stuff world'
+        nested_cmd = StringCommand("some", "stuff")
+        cmd = StringCommand("hello", nested_cmd, "world")
+        assert str(cmd) == cmd.get_raw_value() == "hello some stuff world"
 
     def test_quote(self):
-        quoted_str = QuoteString('quote me!')
-        cmd = StringCommand('hello', quoted_str)
+        quoted_str = QuoteString("quote me!")
+        cmd = StringCommand("hello", quoted_str)
         assert str(cmd) == cmd.get_raw_value() == "hello 'quote me!'"
 
     def test_eq(self):
-        assert StringCommand('hello world') == StringCommand('hello world')
+        assert StringCommand("hello world") == StringCommand("hello world")
         with self.assertRaises(AssertionError):
-            assert StringCommand('a') == StringCommand('b')
+            assert StringCommand("a") == StringCommand("b")
 
     def test_separator(self):
-        cmd = StringCommand('hello world', 'yes', _separator='')
-        assert str(cmd) == 'hello worldyes'
+        cmd = StringCommand("hello world", "yes", _separator="")
+        assert str(cmd) == "hello worldyes"
 
     def test_int(self):
-        cmd = StringCommand('hello', 'world', 4420)
-        assert str(cmd) == 'hello world 4420'
+        cmd = StringCommand("hello", "world", 4420)
+        assert str(cmd) == "hello world 4420"
 
     def test_list(self):
-        cmd = StringCommand('hello', 'world', ['a', 'b', 'c'])
+        cmd = StringCommand("hello", "world", ["a", "b", "c"])
         assert str(cmd) == "hello world ['a', 'b', 'c']"
 
     @pytest.mark.skipif(
         not HAS_PATHLIB,
-        reason='Requires Python 3.4+ (pathlib module)',
+        reason="Requires Python 3.4+ (pathlib module)",
     )
     def test_path(self):
-        cmd = StringCommand('hello', 'world', PurePosixPath('/path/to/somewhere'))
-        assert str(cmd) == 'hello world /path/to/somewhere'
+        cmd = StringCommand("hello", "world", PurePosixPath("/path/to/somewhere"))
+        assert str(cmd) == "hello world /path/to/somewhere"
 
 
 class TestFileCommands(TestCase):
     def test_file_upload_command_repr(self):
-        cmd = FileUploadCommand('src', 'dest')
-        assert repr(cmd) == 'FileUploadCommand(src, dest)'
+        cmd = FileUploadCommand("src", "dest")
+        assert repr(cmd) == "FileUploadCommand(src, dest)"
 
     def test_file_download_command_repr(self):
-        cmd = FileDownloadCommand('src', 'dest')
-        assert repr(cmd) == 'FileDownloadCommand(src, dest)'
+        cmd = FileDownloadCommand("src", "dest")
+        assert repr(cmd) == "FileDownloadCommand(src, dest)"
 
     def test_rsync_command_repr(self):
-        cmd = RsyncCommand('src', 'dest', ['-a'])
+        cmd = RsyncCommand("src", "dest", ["-a"])
         assert repr(cmd) == "RsyncCommand(src, dest, ['-a'])"
 
 
@@ -98,4 +99,4 @@ class TestFunctionCommand(TestCase):
             pass
 
         cmd = FunctionCommand(some_function, (), {})
-        assert repr(cmd) == 'FunctionCommand(some_function, (), {})'
+        assert repr(cmd) == "FunctionCommand(some_function, (), {})"

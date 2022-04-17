@@ -1,5 +1,6 @@
 try:
     from pkg_resources import get_distribution
-    __version__ = get_distribution('pyinfra').version
+
+    __version__ = get_distribution("pyinfra").version
 except Exception:
-    __version__ = 'unknown'
+    __version__ = "unknown"

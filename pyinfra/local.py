@@ -11,17 +11,17 @@ from pyinfra.context import ctx_state
 
 
 def include(filename):
-    '''
+    """
     Executes a local python file within the ``pyinfra.state.cwd``
     directory.
-    '''
+    """
 
     if not pyinfra.is_cli:
-        raise PyinfraError('local.include is only available in CLI mode.')
+        raise PyinfraError("local.include is only available in CLI mode.")
 
     filename = get_file_path(state, filename)
 
-    logger.debug('Including local file: {0}'.format(filename))
+    logger.debug("Including local file: {0}".format(filename))
 
     config_state = config.get_current_state()
 
@@ -41,7 +41,7 @@ def include(filename):
 
     except Exception as e:
         raise PyinfraError(
-            'Could not include local file: {0}:\n{1}'.format(filename, e),
+            "Could not include local file: {0}:\n{1}".format(filename, e),
         )
 
     finally:
@@ -49,14 +49,14 @@ def include(filename):
 
 
 def shell(commands, splitlines=False, ignore_errors=False, print_output=False, print_input=False):
-    '''
+    """
     Subprocess based implementation of pyinfra/api/ssh.py's ``run_shell_command``.
 
     Args:
         commands (string, list): command or list of commands to execute
         spltlines (bool): optionally have the output split by lines
         ignore_errors (bool): ignore errors when executing these commands
-    '''
+    """
 
     if isinstance(commands, str):
         commands = [commands]
@@ -70,10 +70,10 @@ def shell(commands, splitlines=False, ignore_errors=False, print_output=False, p
         print_input = state.print_input
 
     for command in commands:
-        print_prefix = 'localhost: '
+        print_prefix = "localhost: "
 
         if print_input:
-            click.echo('{0}>>> {1}'.format(print_prefix, command), err=True)
+            click.echo("{0}>>> {1}".format(print_prefix, command), err=True)
 
         return_code, combined_output = run_local_process(
             command,
@@ -84,12 +84,12 @@ def shell(commands, splitlines=False, ignore_errors=False, print_output=False, p
 
         if return_code > 0 and not ignore_errors:
             raise PyinfraError(
-                'Local command failed: {0}\n{1}'.format(command, stderr),
+                "Local command failed: {0}\n{1}".format(command, stderr),
             )
 
         all_stdout.extend(stdout)
 
     if not splitlines:
-        return '\n'.join(all_stdout)
+        return "\n".join(all_stdout)
 
     return all_stdout

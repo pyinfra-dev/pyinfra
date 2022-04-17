@@ -4,14 +4,14 @@
 
 # Define a group
 web_servers = [
-    'web-01.company.net',
-    'web-02.company.net',
+    "web-01.company.net",
+    "web-02.company.net",
 ]
 
 
 # Define another group
 db_servers = [
-    'db-01.company.net',
+    "db-01.company.net",
     # Define hosts with extra, per-host, data
-    ('db-02.company.net', {'hello': 'world'}),
+    ("db-02.company.net", {"hello": "world"}),
 ]

@@ -4,13 +4,12 @@ from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
 
-
-DEB_PACKAGE_NAME_REGEX = r'[a-zA-Z0-9\+\-\.]+'
-DEB_PACKAGE_VERSION_REGEX = r'[a-zA-Z0-9:~\.\-\+]+'
+DEB_PACKAGE_NAME_REGEX = r"[a-zA-Z0-9\+\-\.]+"
+DEB_PACKAGE_VERSION_REGEX = r"[a-zA-Z0-9:~\.\-\+]+"
 
 
 class DebPackages(FactBase):
-    '''
+    """
     Returns a dict of installed dpkg packages:
 
     .. code:: python
@@ -18,14 +17,14 @@ class DebPackages(FactBase):
         {
             "package_name": ["version"],
         }
-    '''
+    """
 
-    command = 'dpkg -l'
-    requires_command = 'dpkg'
+    command = "dpkg -l"
+    requires_command = "dpkg"
 
     default = dict
 
-    regex = r'^[i|h]i\s+({0}):?[a-zA-Z0-9]*\s+({1}).+$'.format(
+    regex = r"^[i|h]i\s+({0}):?[a-zA-Z0-9]*\s+({1}).+$".format(
         DEB_PACKAGE_NAME_REGEX,
         DEB_PACKAGE_VERSION_REGEX,
     )
@@ -35,19 +34,19 @@ class DebPackages(FactBase):
 
 
 class DebPackage(FactBase):
-    '''
+    """
     Returns information on a .deb archive or installed package.
-    '''
+    """
 
     _regexes = {
-        'name': r'^Package: ({0})$'.format(DEB_PACKAGE_NAME_REGEX),
-        'version': r'^Version: ({0})$'.format(DEB_PACKAGE_VERSION_REGEX),
+        "name": r"^Package: ({0})$".format(DEB_PACKAGE_NAME_REGEX),
+        "version": r"^Version: ({0})$".format(DEB_PACKAGE_VERSION_REGEX),
     }
 
-    requires_command = 'dpkg'
+    requires_command = "dpkg"
 
     def command(self, name):
-        return '! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}'.format(name)
+        return "! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}".format(name)
 
     def process(self, output):
         data = {}

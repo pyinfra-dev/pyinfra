@@ -10,7 +10,7 @@ def make_psql_command(
     password=None,
     host=None,
     port=None,
-    executable='psql',
+    executable="psql",
 ):
     target_bits = []
 
@@ -20,16 +20,16 @@ def make_psql_command(
     target_bits.append(executable)
 
     if database:
-        target_bits.append('-d {0}'.format(database))
+        target_bits.append("-d {0}".format(database))
 
     if user:
-        target_bits.append('-U {0}'.format(user))
+        target_bits.append("-U {0}".format(user))
 
     if host:
-        target_bits.append('-h {0}'.format(host))
+        target_bits.append("-h {0}".format(host))
 
     if port:
-        target_bits.append('-p {0}'.format(port))
+        target_bits.append("-p {0}".format(port))
 
     return StringCommand(*target_bits)
 
@@ -37,7 +37,7 @@ def make_psql_command(
 def make_execute_psql_command(command, **psql_kwargs):
     return StringCommand(
         make_psql_command(**psql_kwargs),
-        '-Ac',
+        "-Ac",
         QuoteString(command),  # quote this whole item as a single shell argument
     )
 
@@ -45,12 +45,14 @@ def make_execute_psql_command(command, **psql_kwargs):
 class PostgresqlFactBase(FactBase):
     abstract = True
 
-    requires_command = 'psql'
+    requires_command = "psql"
 
     def command(
         self,
-        psql_user=None, psql_password=None,
-        psql_host=None, psql_port=None,
+        psql_user=None,
+        psql_password=None,
+        psql_host=None,
+        psql_port=None,
     ):
         return make_execute_psql_command(
             self.psql_command,
@@ -62,7 +64,7 @@ class PostgresqlFactBase(FactBase):
 
 
 class PostgresqlRoles(PostgresqlFactBase):
-    '''
+    """
     Returns a dict of PostgreSQL roles and data:
 
     .. code:: python
@@ -75,40 +77,46 @@ class PostgresqlRoles(PostgresqlFactBase):
                 ...
             },
         }
-    '''
+    """
 
     default = dict
-    psql_command = 'SELECT * FROM pg_catalog.pg_roles'
+    psql_command = "SELECT * FROM pg_catalog.pg_roles"
 
     def process(self, output):
         # Remove the last line of the output (row count)
         output = output[:-1]
         rows = parse_columns_and_rows(
-            output, '|',
+            output,
+            "|",
             # Remove the "rol" prefix on column names
-            remove_column_prefix='rol',
+            remove_column_prefix="rol",
         )
 
         users = {}
 
         for details in rows:
             for key, value in list(details.items()):
-                if key in ('oid', 'connlimit'):
+                if key in ("oid", "connlimit"):
                     details[key] = try_int(value)
 
                 if key in (
-                    'super', 'inherit', 'createrole', 'createdb',
-                    'canlogin', 'replication', 'bypassrls',
+                    "super",
+                    "inherit",
+                    "createrole",
+                    "createdb",
+                    "canlogin",
+                    "replication",
+                    "bypassrls",
                 ):
-                    details[key] = value == 't'
+                    details[key] = value == "t"
 
-            users[details.pop('name')] = details
+            users[details.pop("name")] = details
 
         return users
 
 
 class PostgresqlDatabases(PostgresqlFactBase):
-    '''
+    """
     Returns a dict of PostgreSQL databases and metadata:
 
     .. code:: python
@@ -121,36 +129,37 @@ class PostgresqlDatabases(PostgresqlFactBase):
                 ...
             },
         }
-    '''
+    """
 
     default = dict
-    psql_command = (
-        'SELECT pg_catalog.pg_encoding_to_char(encoding), * FROM pg_catalog.pg_database'
-    )
+    psql_command = "SELECT pg_catalog.pg_encoding_to_char(encoding), * FROM pg_catalog.pg_database"
 
     def process(self, output):
         # Remove the last line of the output (row count)
         output = output[:-1]
         rows = parse_columns_and_rows(
-            output, '|',
+            output,
+            "|",
             # Remove the "dat" prefix on column names
-            remove_column_prefix='dat',
+            remove_column_prefix="dat",
         )
 
         databases = {}
 
         for details in rows:
-            details['encoding'] = details.pop('pg_encoding_to_char')
+            details["encoding"] = details.pop("pg_encoding_to_char")
 
             for key, value in list(details.items()):
-                if key.endswith('id') or key in (
-                    'dba', 'tablespace', 'connlimit',
+                if key.endswith("id") or key in (
+                    "dba",
+                    "tablespace",
+                    "connlimit",
                 ):
                     details[key] = try_int(value)
 
-                if key in ('istemplate', 'allowconn'):
-                    details[key] = value == 't'
+                if key in ("istemplate", "allowconn"):
+                    details[key] = value == "t"
 
-            databases[details.pop('name')] = details
+            databases[details.pop("name")] = details
 
         return databases

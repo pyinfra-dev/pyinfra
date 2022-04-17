@@ -1,6 +1,6 @@
-'''
+"""
 Manage npm (aka node aka Node.js) packages.
-'''
+"""
 
 from pyinfra import host
 from pyinfra.api import operation
@@ -11,7 +11,7 @@ from .util.packaging import ensure_packages
 
 @operation
 def packages(packages=None, present=True, latest=False, directory=None):
-    '''
+    """
     Install/remove/update npm packages.
 
     + packages: list of packages to ensure
@@ -21,33 +21,30 @@ def packages(packages=None, present=True, latest=False, directory=None):
 
     Versions:
         Package versions can be pinned like npm: ``<pkg>@<version>``.
-    '''
+    """
 
     current_packages = host.get_fact(NpmPackages, directory=directory)
 
     install_command = (
-        'npm install -g'
-        if directory is None
-        else 'cd {0} && npm install'.format(directory)
+        "npm install -g" if directory is None else "cd {0} && npm install".format(directory)
     )
 
     uninstall_command = (
-        'npm uninstall -g'
-        if directory is None
-        else 'cd {0} && npm uninstall'.format(directory)
+        "npm uninstall -g" if directory is None else "cd {0} && npm uninstall".format(directory)
     )
 
     upgrade_command = (
-        'npm update -g'
-        if directory is None
-        else 'cd {0} && npm update'.format(directory)
+        "npm update -g" if directory is None else "cd {0} && npm update".format(directory)
     )
 
     yield from ensure_packages(
-        host, packages, current_packages, present,
+        host,
+        packages,
+        current_packages,
+        present,
         install_command=install_command,
         uninstall_command=uninstall_command,
         upgrade_command=upgrade_command,
-        version_join='@',
+        version_join="@",
         latest=latest,
     )

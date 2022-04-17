@@ -1,6 +1,6 @@
-'''
+"""
 Manage ``choco`` (Chocolatey) packages (https://chocolatey.org).
-'''
+"""
 
 from pyinfra import host
 from pyinfra.api import operation
@@ -11,7 +11,7 @@ from .util.packaging import ensure_packages
 
 @operation
 def packages(packages=None, present=True, latest=False):
-    '''
+    """
     Add/remove/update ``choco`` packages.
 
     + packages: list of packages to ensure
@@ -31,24 +31,25 @@ def packages(packages=None, present=True, latest=False):
             name="Install Notepad++",
             packages=["notepadplusplus"],
         )
-    '''
+    """
 
     yield from ensure_packages(
-        host, packages, host.get_fact(ChocoPackages), present,
-        install_command='choco install -y',
-        uninstall_command='choco uninstall -y -x',
-        upgrade_command='choco update -y',
-        version_join=':',
+        host,
+        packages,
+        host.get_fact(ChocoPackages),
+        present,
+        install_command="choco install -y",
+        uninstall_command="choco uninstall -y -x",
+        upgrade_command="choco update -y",
+        version_join=":",
         latest=latest,
     )
 
 
 @operation(is_idempotent=False)
 def install():
-    '''
+    """
     Install ``choco`` (Chocolatey).
-    '''
+    """
 
-    yield 'Set-ExecutionPolicy Bypass -Scope Process -Force ;' \
-        'iex ((New-Object System.Net.WebClient).DownloadString' \
-        '("https://chocolatey.org/install.ps1"))'
+    yield "Set-ExecutionPolicy Bypass -Scope Process -Force ;" "iex ((New-Object System.Net.WebClient).DownloadString" '("https://chocolatey.org/install.ps1"))'  # noqa

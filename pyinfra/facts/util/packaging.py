@@ -21,18 +21,18 @@ def _parse_yum_or_zypper_repositories(output):
     current_repo = {}
     for line in output:
         line = line.strip()
-        if not line or line.startswith('#'):
+        if not line or line.startswith("#"):
             continue
 
-        if line.startswith('['):
+        if line.startswith("["):
             if current_repo:
                 repos.append(current_repo)
                 current_repo = {}
 
-            current_repo['name'] = line[1:-1]
+            current_repo["name"] = line[1:-1]
 
-        if current_repo and '=' in line:
-            key, value = line.split('=', 1)
+        if current_repo and "=" in line:
+            key, value = line.split("=", 1)
             current_repo[key] = value
 
     if current_repo:

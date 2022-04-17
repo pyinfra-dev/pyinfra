@@ -12,14 +12,11 @@ ALLOWED_HOST_TYPES = (str, tuple)
 
 
 def _is_inventory_group(key, value):
-    '''
+    """
     Verify that a module-level variable (key = value) is a valid inventory group.
-    '''
+    """
 
-    if (
-        key.startswith('_')
-        or not isinstance(value, (list, tuple, GeneratorType))
-    ):
+    if key.startswith("_") or not isinstance(value, (list, tuple, GeneratorType)):
         return False
 
     # If the group is a tuple of (hosts, data), check the hosts
@@ -30,38 +27,35 @@ def _is_inventory_group(key, value):
     if isinstance(value, GeneratorType):
         value = list(value)
 
-    return all(
-        isinstance(item, ALLOWED_HOST_TYPES)
-        for item in value
-    )
+    return all(isinstance(item, ALLOWED_HOST_TYPES) for item in value)
 
 
 def _get_group_data(dirname):
     group_data = {}
-    group_data_directory = path.join(dirname, 'group_data')
+    group_data_directory = path.join(dirname, "group_data")
 
-    logger.debug(f'Checking possible group_data directory: {dirname}')
+    logger.debug(f"Checking possible group_data directory: {dirname}")
 
     if path.exists(group_data_directory):
         files = listdir(group_data_directory)
 
         for file in files:
-            if not file.endswith('.py'):
+            if not file.endswith(".py"):
                 continue
 
             group_data_file = path.join(group_data_directory, file)
             group_name = path.basename(file)[:-3]
 
-            logger.debug('Looking for group data in: {0}'.format(group_data_file))
+            logger.debug("Looking for group data in: {0}".format(group_data_file))
 
             # Read the files locals into a dict
             attrs = exec_file(group_data_file, return_locals=True)
-            keys = attrs.get('__all__', attrs.keys())
+            keys = attrs.get("__all__", attrs.keys())
 
             group_data[group_name] = {
                 key: value
                 for key, value in attrs.items()
-                if key in keys and not key.startswith('_')
+                if key in keys and not key.startswith("_")
             }
 
     return group_data
@@ -70,36 +64,32 @@ def _get_group_data(dirname):
 def _get_groups_from_filename(inventory_filename):
     attrs = exec_file(inventory_filename, return_locals=True)
 
-    return {
-        key: value
-        for key, value in attrs.items()
-        if _is_inventory_group(key, value)
-    }
+    return {key: value for key, value in attrs.items() if _is_inventory_group(key, value)}
 
 
 def make_inventory(inventory_filename, override_data=None, cwd=None, group_data_directories=None):
-    '''
+    """
     Builds a ``pyinfra.api.Inventory`` from the filesystem. If the file does not exist
     and doesn't contain a / attempts to use that as the only hostname.
-    '''
+    """
 
     file_groupname = None
 
     # If we're not a valid file we assume a list of comma separated hostnames
     if not path.exists(inventory_filename):
         groups = {
-            'all': inventory_filename.split(','),
+            "all": inventory_filename.split(","),
         }
     else:
         groups = _get_groups_from_filename(inventory_filename)
         # Used to set all the hosts to an additional group - that of the filename
         # ie inventories/dev.py means all the hosts are in the dev group, if not present
-        file_groupname = path.basename(inventory_filename).rsplit('.', 1)[0]
+        file_groupname = path.basename(inventory_filename).rsplit(".", 1)[0]
 
     all_data = {}
 
-    if 'all' in groups:
-        all_hosts = groups.pop('all')
+    if "all" in groups:
+        all_hosts = groups.pop("all")
 
         if isinstance(all_hosts, tuple):
             all_hosts, all_data = all_hosts
@@ -118,7 +108,7 @@ def make_inventory(inventory_filename, override_data=None, cwd=None, group_data_
                 if hostname not in all_hosts:
                     all_hosts.append(hostname)
 
-    groups['all'] = (all_hosts, all_data)
+    groups["all"] = (all_hosts, all_data)
 
     # Apply the filename group if not already defined
     if file_groupname and file_groupname not in groups:
@@ -129,7 +119,7 @@ def make_inventory(inventory_filename, override_data=None, cwd=None, group_data_
     # issue is we want inventory access within the group data files - but at this point
     # we're not ready to make an Inventory. So here we just create a fake one, and
     # attach it to the inventory context while we import the data files.
-    logger.debug('Creating fake inventory...')
+    logger.debug("Creating fake inventory...")
 
     fake_groups = {
         # In API mode groups *must* be tuples of (hostnames, data)
@@ -172,8 +162,7 @@ def make_inventory(inventory_filename, override_data=None, cwd=None, group_data_
     for name, data in group_data.items():
         groups[name] = ([], data)
 
-    return Inventory(
-        groups.pop('all'),
-        override_data=override_data,
-        **groups
-    ), file_groupname and file_groupname.lower()
+    return (
+        Inventory(groups.pop("all"), override_data=override_data, **groups),
+        file_groupname and file_groupname.lower(),
+    )

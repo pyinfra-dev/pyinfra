@@ -1,6 +1,6 @@
-'''
+"""
 The LXD modules manage LXD containers
-'''
+"""
 
 from pyinfra import host
 from pyinfra.api import operation
@@ -9,7 +9,7 @@ from pyinfra.facts.lxd import LxdContainers
 
 def get_container_named(name, containers):
     for container in containers:
-        if container['name'] == name:
+        if container["name"] == name:
             return container
     else:
         return None
@@ -18,9 +18,10 @@ def get_container_named(name, containers):
 @operation
 def container(
     id,
-    present=True, image='ubuntu:16.04',
+    present=True,
+    image="ubuntu:16.04",
 ):
-    '''
+    """
     Add/remove LXD containers.
 
     Note: does not check if an existing container is based on the specified
@@ -39,7 +40,7 @@ def container(
             id="ubuntu19",
             image="ubuntu:19.10",
         )
-    '''
+    """
 
     current_containers = host.get_fact(LxdContainers)
     container = get_container_named(id, current_containers)
@@ -47,24 +48,26 @@ def container(
     # Container exists and we don't want it
     if not present:
         if container:
-            if container['status'] == 'Running':
-                yield 'lxc stop {0}'.format(id)
+            if container["status"] == "Running":
+                yield "lxc stop {0}".format(id)
 
             # Command to remove the container:
-            yield 'lxc delete {0}'.format(id)
+            yield "lxc delete {0}".format(id)
 
             current_containers.remove(container)
         else:
-            host.noop('container {0} does not exist'.format(id))
+            host.noop("container {0} does not exist".format(id))
 
     # Container doesn't exist and we want it
     if present:
         if not container:
             # Command to create the container:
-            yield 'lxc launch {image} {id}'.format(id=id, image=image)
-            current_containers.append({
-                'name': id,
-                'image': image,
-            })
+            yield "lxc launch {image} {id}".format(id=id, image=image)
+            current_containers.append(
+                {
+                    "name": id,
+                    "image": image,
+                },
+            )
         else:
-            host.noop('container {0} exists'.format(id))
+            host.noop("container {0} exists".format(id))

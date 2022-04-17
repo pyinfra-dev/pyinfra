@@ -1,20 +1,15 @@
-'''
+"""
 The pyinfra facts API. Facts enable pyinfra to collect remote server state which
 is used to "diff" with the desired state, producing the final commands required
 for a deploy.
-'''
+"""
 
 import re
-
 from inspect import getcallargs
-from socket import (
-    error as socket_error,
-    timeout as timeout_error,
-)
+from socket import error as socket_error, timeout as timeout_error
 
 import click
 import gevent
-
 from paramiko import SSHException
 
 from pyinfra import logger
@@ -32,18 +27,17 @@ from pyinfra.progress import progress_spinner
 
 from .arguments import get_executor_kwarg_keys
 
-
-SUDO_REGEX = r'^sudo: unknown user:'
+SUDO_REGEX = r"^sudo: unknown user:"
 SU_REGEXES = (
-    r'^su: user .+ does not exist',
-    r'^su: unknown login',
+    r"^su: user .+ does not exist",
+    r"^su: unknown login",
 )
 
 
 class FactNameMeta(type):
     def __init__(cls, name, bases, attrs):
-        module_name = cls.__module__.replace('pyinfra.facts.', '')
-        cls.name = f'{module_name}.{cls.__name__}'
+        module_name = cls.__module__.replace("pyinfra.facts.", "")
+        cls.name = f"{module_name}.{cls.__name__}"
 
 
 class FactBase(object, metaclass=FactNameMeta):
@@ -55,19 +49,16 @@ class FactBase(object, metaclass=FactNameMeta):
 
     @staticmethod
     def default():
-        '''
+        """
         Set the default attribute to be a type (eg list/dict).
-        '''
+        """
 
     @staticmethod
     def process(output):
-        return '\n'.join(output)
+        return "\n".join(output)
 
     def process_pipeline(self, args, output):
-        return {
-            arg: self.process([output[i]])
-            for i, arg in enumerate(args)
-        }
+        return {arg: self.process([output[i]]) for i, arg in enumerate(args)}
 
 
 class ShortFactBase(object, metaclass=FactNameMeta):
@@ -81,7 +72,7 @@ def get_short_facts(state, host, short_fact, **kwargs):
 
 def _make_command(command_attribute, host_args):
     if callable(command_attribute):
-        host_args.pop('self', None)
+        host_args.pop("self", None)
         return command_attribute(**host_args)
     return command_attribute
 
@@ -92,16 +83,16 @@ def _get_executor_kwargs(state, host, override_kwargs=None, override_kwarg_keys=
         override_kwarg_keys = []
 
     # Apply any current op kwargs that *weren't* found in the overrides
-    override_kwargs.update({
-        key: value
-        for key, value in (host.current_op_global_kwargs or {}).items()
-        if key not in override_kwarg_keys
-    })
+    override_kwargs.update(
+        {
+            key: value
+            for key, value in (host.current_op_global_kwargs or {}).items()
+            if key not in override_kwarg_keys
+        },
+    )
 
     return {
-        key: value
-        for key, value in override_kwargs.items()
-        if key in get_executor_kwarg_keys()
+        key: value for key, value in override_kwargs.items() if key in get_executor_kwarg_keys()
     }
 
 
@@ -188,31 +179,41 @@ def _get_fact(
         kwargs = getcallargs(fact.command, *args, **kwargs)
 
     kwargs_str = get_kwargs_str(kwargs)
-    logger.debug('Getting fact: {0} ({1}) (ensure_hosts: {2})'.format(
-        name, kwargs_str, ensure_hosts,
-    ))
+    logger.debug(
+        "Getting fact: {0} ({1}) (ensure_hosts: {2})".format(
+            name,
+            kwargs_str,
+            ensure_hosts,
+        ),
+    )
 
     if not host.connected:
         host.connect(
-            reason=f'to load fact: {name} ({kwargs_str})',
+            reason=f"to load fact: {name} ({kwargs_str})",
             raise_exceptions=True,
         )
 
     ignore_errors = (host.current_op_global_kwargs or {}).get(
-        'ignore_errors',
+        "ignore_errors",
         state.config.IGNORE_ERRORS,
     )
 
     # Facts can override the shell (winrm powershell vs cmd support)
     if fact.shell_executable:
-        executor_kwargs['shell_executable'] = fact.shell_executable
+        executor_kwargs["shell_executable"] = fact.shell_executable
 
     command = _make_command(fact.command, kwargs)
     requires_command = _make_command(fact.requires_command, kwargs)
     if requires_command:
         command = StringCommand(
             # Command doesn't exist, return 0 *or* run & return fact command
-            '!', 'command', '-v', requires_command, '>/dev/null', '||', command,
+            "!",
+            "command",
+            "-v",
+            requires_command,
+            ">/dev/null",
+            "||",
+            command,
         )
 
     status = False
@@ -228,8 +229,9 @@ def _get_fact(
         )
     except (timeout_error, socket_error, SSHException) as e:
         log_host_command_error(
-            host, e,
-            timeout=executor_kwargs['timeout'],
+            host,
+            e,
+            timeout=executor_kwargs["timeout"],
         )
 
     stdout, stderr = split_combined_output(combined_output_lines)
@@ -245,19 +247,17 @@ def _get_fact(
         # This allows for users that don't currently but may be created during
         # other operations.
         first_line = stderr[0]
-        if (executor_kwargs['sudo_user'] and re.match(SUDO_REGEX, first_line)):
+        if executor_kwargs["sudo_user"] and re.match(SUDO_REGEX, first_line):
             status = True
-        if (executor_kwargs['su_user'] and any(
-            re.match(regex, first_line) for regex in SU_REGEXES
-        )):
+        if executor_kwargs["su_user"] and any(re.match(regex, first_line) for regex in SU_REGEXES):
             status = True
 
     if status:
-        log_message = '{0}{1}'.format(
+        log_message = "{0}{1}".format(
             host.print_prefix,
-            'Loaded fact {0}{1}'.format(
+            "Loaded fact {0}{1}".format(
                 click.style(name, bold=True),
-                f' ({get_kwargs_str(kwargs)})' if kwargs else '',
+                f" ({get_kwargs_str(kwargs)})" if kwargs else "",
             ),
         )
         if state.print_fact_info:
@@ -268,9 +268,11 @@ def _get_fact(
         if not state.print_fact_output:
             print_host_combined_output(host, combined_output_lines)
 
-        log_error_or_warning(host, ignore_errors, description=(
-            'could not load fact: {0} {1}'
-        ).format(name, get_kwargs_str(kwargs)))
+        log_error_or_warning(
+            host,
+            ignore_errors,
+            description=("could not load fact: {0} {1}").format(name, get_kwargs_str(kwargs)),
+        )
 
     # Check we've not failed
     if not status and not ignore_errors and apply_failed_hosts:

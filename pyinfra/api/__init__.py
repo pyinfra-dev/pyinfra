@@ -1,5 +1,5 @@
-from .command import (  # noqa: F401 # pragma: no cover
-    FileDownloadCommand,
+from .command import FileDownloadCommand  # noqa: F401 # pragma: no cover
+from .command import (  # noqa: F401
     FileUploadCommand,
     FunctionCommand,
     MaskString,
@@ -9,8 +9,8 @@ from .command import (  # noqa: F401 # pragma: no cover
 )
 from .config import Config  # noqa: F401 # pragma: no cover
 from .deploy import deploy  # noqa: F401 # pragma: no cover
-from .exceptions import (  # noqa: F401 # pragma: no cover
-    DeployError,
+from .exceptions import DeployError  # noqa: F401 # pragma: no cover
+from .exceptions import (  # noqa: F401
     InventoryError,
     OperationError,
     OperationTypeError,

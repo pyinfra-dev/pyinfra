@@ -4,22 +4,20 @@ from pyinfra.progress import progress_spinner
 
 
 def connect_all(state):
-    '''
+    """
     Connect to all the configured servers in parallel. Reads/writes state.inventory.
 
     Args:
         state (``pyinfra.api.State`` obj): the state containing an inventory to connect to
-    '''
+    """
 
     hosts = [
-        host for host in state.inventory
+        host
+        for host in state.inventory
         if state.is_host_in_limit(host)  # these are the hosts to activate ("initially connect to")
     ]
 
-    greenlet_to_host = {
-        state.pool.spawn(host.connect): host
-        for host in hosts
-    }
+    greenlet_to_host = {state.pool.spawn(host.connect): host for host in hosts}
 
     with progress_spinner(greenlet_to_host.values()) as progress:
         for greenlet in gevent.iwait(greenlet_to_host.keys()):

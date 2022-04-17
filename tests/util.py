@@ -1,6 +1,5 @@
 import json
 import os
-
 from datetime import datetime
 from io import open
 from os import listdir, path
@@ -21,26 +20,29 @@ def get_command_string(command):
         return [value, masked_value]
 
 
-def make_inventory(hosts=('somehost', 'anotherhost'), **kwargs):
-    override_data = kwargs.pop('override_data', {})
-    if 'ssh_user' not in override_data:
-        override_data['ssh_user'] = 'vagrant'
+def make_inventory(hosts=("somehost", "anotherhost"), **kwargs):
+    override_data = kwargs.pop("override_data", {})
+    if "ssh_user" not in override_data:
+        override_data["ssh_user"] = "vagrant"
 
     return Inventory(
         (hosts, {}),
         override_data=override_data,
-        test_group=([
-            'somehost',
-        ], {
-            'group_data': 'hello world',
-        }),
-        **kwargs
+        test_group=(
+            [
+                "somehost",
+            ],
+            {
+                "group_data": "hello world",
+            },
+        ),
+        **kwargs,
     )
 
 
 class FakeState(object):
     active = True
-    cwd = '/'
+    cwd = "/"
     in_op = True
     in_deploy = True
     pipelining = False
@@ -53,30 +55,27 @@ class FakeState(object):
         self.config = Config()
 
     def get_temp_filename(*args):
-        return '_tempfile_'
+        return "_tempfile_"
 
 
 def parse_fact(fact):
-    '''
+    """
     Convert JSON types to more complex Python types because JSON is lacking.
-    '''
+    """
 
     # Handle datetimes
-    if isinstance(fact, str) and fact.startswith('datetime:'):
-        return datetime.strptime(fact[9:], '%Y-%m-%dT%H:%M:%S')
+    if isinstance(fact, str) and fact.startswith("datetime:"):
+        return datetime.strptime(fact[9:], "%Y-%m-%dT%H:%M:%S")
 
     elif isinstance(fact, list):
         # Handle sets
-        if fact and fact[0] == 'set:':
+        if fact and fact[0] == "set:":
             return set(parse_fact(value) for value in fact[1:])
 
         return [parse_fact(value) for value in fact]
 
     elif isinstance(fact, dict):
-        return {
-            key: parse_fact(value)
-            for key, value in fact.items()
-        }
+        return {key: parse_fact(value) for key, value in fact.items()}
 
     return fact
 
@@ -136,10 +135,7 @@ class FakeFact(object):
 
 class FakeFacts(object):
     def __init__(self, facts):
-        self.facts = {
-            key: FakeFact(value)
-            for key, value in facts.items()
-        }
+        self.facts = {key: FakeFact(value) for key, value in facts.items()}
 
     def __getattr__(self, key):
         return self.facts.get(key)
@@ -156,7 +152,7 @@ class FakeFacts(object):
 
 # TODO: remove after python2 removal, as only required because of different default ordering in 2/3
 def _sort_kwargs_str(string):
-    return ', '.join(sorted(string.split(', ')))
+    return ", ".join(sorted(string.split(", ")))
 
 
 class FakeHost(object):
@@ -182,28 +178,25 @@ class FakeHost(object):
 
     @property
     def print_prefix(self):
-        return ''
+        return ""
 
     def noop(self, description):
         self.noop_description = description
 
     @staticmethod
     def _get_fact_key(fact_cls):
-        return '{0}.{1}'.format(fact_cls.__module__.split('.')[-1], fact_cls.__name__)
+        return "{0}.{1}".format(fact_cls.__module__.split(".")[-1], fact_cls.__name__)
 
     def get_fact(self, fact_cls, **kwargs):
         fact_key = self._get_fact_key(fact_cls)
         fact = getattr(self.fact, fact_key, None)
         if fact is None:
-            raise KeyError('Missing test fact data: {0}'.format(fact_key))
+            raise KeyError("Missing test fact data: {0}".format(fact_key))
         if kwargs:
-            fact_ordered_keys = {
-                _sort_kwargs_str(key): value
-                for key, value in fact.items()
-            }
+            fact_ordered_keys = {_sort_kwargs_str(key): value for key, value in fact.items()}
             kwargs_str = _sort_kwargs_str(get_kwargs_str(kwargs))
             if kwargs_str not in fact:
-                logger.info('Possible missing fact key: {0}'.format(kwargs_str))
+                logger.info("Possible missing fact key: {0}".format(kwargs_str))
             return fact_ordered_keys.get(kwargs_str)
         return fact
 
@@ -248,9 +241,9 @@ class FakeFile(object):
             if self._data:
                 return self._data
             else:
-                return '_test_data_'
+                return "_test_data_"
 
-        return ''
+        return ""
 
     def readlines(self, *args, **kwargs):
         if self._read is False:
@@ -259,7 +252,7 @@ class FakeFile(object):
             if self._data:
                 return self._data.split()
             else:
-                return ['_test_data_']
+                return ["_test_data_"]
 
             return []
 
@@ -292,12 +285,12 @@ class patch_files(object):
 
         prefix = path.normpath(prefix)
 
-        for filename, file_data in local_files.get('files', {}).items():
+        for filename, file_data in local_files.get("files", {}).items():
             filepath = path.join(prefix, filename)
             files.append(filepath)
             files_data[filepath] = file_data
 
-        for dirname, dir_files in local_files.get('dirs', {}).items():
+        for dirname, dir_files in local_files.get("dirs", {}).items():
             sub_dirname = path.join(prefix, dirname)
             sub_directories, sub_files, sub_files_data = patch_files._parse_local_files(
                 dir_files,
@@ -308,8 +301,8 @@ class patch_files(object):
             files_data.update(sub_files_data)
 
             directories[sub_dirname] = {
-                'files': list(dir_files['files'].keys()),
-                'dirs': list(dir_files['dirs'].keys()),
+                "files": list(dir_files["files"].keys()),
+                "dirs": list(dir_files["dirs"].keys()),
             }
             directories.update(sub_directories)
 
@@ -317,16 +310,16 @@ class patch_files(object):
 
     def __enter__(self):
         self.patches = [
-            patch('pyinfra.operations.files.os.path.exists', self.exists),
-            patch('pyinfra.operations.files.os.path.isfile', self.isfile),
-            patch('pyinfra.operations.files.os.path.isdir', self.isdir),
-            patch('pyinfra.operations.files.os.walk', self.walk),
-            patch('pyinfra.operations.files.os.makedirs', lambda path: True),
-            patch('pyinfra.api.util.stat', self.stat),
+            patch("pyinfra.operations.files.os.path.exists", self.exists),
+            patch("pyinfra.operations.files.os.path.isfile", self.isfile),
+            patch("pyinfra.operations.files.os.path.isdir", self.isdir),
+            patch("pyinfra.operations.files.os.walk", self.walk),
+            patch("pyinfra.operations.files.os.makedirs", lambda path: True),
+            patch("pyinfra.api.util.stat", self.stat),
             # Builtin patches
-            patch('pyinfra.operations.files.open', self.get_file, create=True),
-            patch('pyinfra.operations.server.open', self.get_file, create=True),
-            patch('pyinfra.api.util.open', self.get_file, create=True),
+            patch("pyinfra.operations.files.open", self.get_file, create=True),
+            patch("pyinfra.operations.server.open", self.get_file, create=True),
+            patch("pyinfra.api.util.open", self.get_file, create=True),
         ]
 
         for patched in self.patches:
@@ -341,7 +334,7 @@ class patch_files(object):
             normalized_path = path.normpath(filename)
             return FakeFile(normalized_path, self._files_data.get(normalized_path))
 
-        raise IOError('Missing FakeFile: {0}'.format(filename))
+        raise IOError("Missing FakeFile: {0}".format(filename))
 
     def exists(self, filename, *args):
         return self.isfile(filename) or self.isdir(filename)
@@ -360,7 +353,7 @@ class patch_files(object):
         elif self.isdir(pathname):
             mode_int = 16877  # 755 directory
         else:
-            raise IOError('No such file or directory: {0}'.format(pathname))
+            raise IOError("No such file or directory: {0}".format(pathname))
 
         return os.stat_result((mode_int, 0, 0, 0, 0, 0, 0, 0, 0, 0))
 
@@ -370,8 +363,8 @@ class patch_files(object):
 
         normalized_path = path.normpath(dirname)
         dir_definition = self._directories[normalized_path]
-        child_dirs = dir_definition.get('dirs', [])
-        child_files = dir_definition.get('files', [])
+        child_dirs = dir_definition.get("dirs", [])
+        child_files = dir_definition.get("files", [])
 
         yield dirname, child_dirs, child_files
 
@@ -382,9 +375,9 @@ class patch_files(object):
 
 
 def create_host(name=None, facts=None, data=None):
-    '''
+    """
     Creates a FakeHost object with attached fact data.
-    '''
+    """
 
     real_facts = {}
     facts = facts or {}
@@ -399,17 +392,19 @@ def create_host(name=None, facts=None, data=None):
 class JsonTest(type):
     def __new__(cls, name, bases, attrs):
         # Get the JSON files
-        files = listdir(attrs['jsontest_files'])
-        files = [f for f in files if f.endswith('.json')]
+        files = listdir(attrs["jsontest_files"])
+        files = [f for f in files if f.endswith(".json")]
 
-        test_prefix = attrs.get('jsontest_prefix', 'test_')
+        test_prefix = attrs.get("jsontest_prefix", "test_")
 
         def gen_test(test_name, filename):
             def test(self):
-                test_data = json.loads(open(
-                    path.join(attrs['jsontest_files'], filename),
-                    encoding='utf-8',
-                ).read())
+                test_data = json.loads(
+                    open(
+                        path.join(attrs["jsontest_files"], filename),
+                        encoding="utf-8",
+                    ).read(),
+                )
                 self.jsontest_function(test_name, test_data)
 
             return test
@@ -419,7 +414,7 @@ class JsonTest(type):
             test_name = filename[:-5]
 
             # Attach the method
-            method_name = '{0}{1}'.format(test_prefix, test_name)
+            method_name = "{0}{1}".format(test_prefix, test_name)
             attrs[method_name] = gen_test(test_name, filename)
 
         return type.__new__(cls, name, bases, attrs)

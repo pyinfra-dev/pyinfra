@@ -2,18 +2,10 @@ from functools import wraps
 from hashlib import sha1
 from inspect import getframeinfo, getfullargspec, stack
 from os import getcwd, path, stat
-from socket import (
-    error as socket_error,
-    timeout as timeout_error,
-)
+from socket import error as socket_error, timeout as timeout_error
 
 import click
-
-from jinja2 import (
-    Environment,
-    FileSystemLoader,
-    StrictUndefined,
-)
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from paramiko import SSHException
 
 import pyinfra
@@ -35,7 +27,7 @@ def get_file_path(state, filename):
 
     relative_to = state.cwd
 
-    if state.current_exec_filename and (filename.startswith('./') or filename.startswith('.\\')):
+    if state.current_exec_filename and (filename.startswith("./") or filename.startswith(".\\")):
         relative_to = path.dirname(state.current_exec_filename)
 
     return path.join(relative_to, filename)
@@ -50,11 +42,13 @@ def get_args_kwargs_spec(func):
         return args, kwargs
 
     if argspec.defaults:
-        kwargs = dict(zip(
-            argspec.args[-len(argspec.defaults):],
-            argspec.defaults,
-        ))
-        args = argspec.args[:-len(argspec.defaults)]
+        kwargs = dict(
+            zip(
+                argspec.args[-len(argspec.defaults) :],
+                argspec.defaults,
+            ),
+        )
+        args = argspec.args[: -len(argspec.defaults)]
     else:
         args = argspec.args
 
@@ -63,14 +57,14 @@ def get_args_kwargs_spec(func):
 
 def get_kwargs_str(kwargs):
     if not kwargs:
-        return ''
+        return ""
 
     items = [
-        '{0}={1}'.format(key, value)
+        "{0}={1}".format(key, value)
         for key, value in sorted(kwargs.items())
-        if key not in ('self', 'state', 'host')
+        if key not in ("self", "state", "host")
     ]
-    return ', '.join(items)
+    return ", ".join(items)
 
 
 def try_int(value):
@@ -83,7 +77,7 @@ def try_int(value):
 def memoize(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        key = '{0}{1}'.format(args, kwargs)
+        key = "{0}{1}".format(args, kwargs)
         if key in wrapper.cache:
             return wrapper.cache[key]
 
@@ -106,7 +100,7 @@ def get_call_location(frame_offset=1):
     except ValueError:
         pass
 
-    return 'line {0} in {1}'.format(frame.lineno, relpath)
+    return "line {0} in {1}".format(frame.lineno, relpath)
 
 
 def get_caller_frameinfo(frame_offset=0):
@@ -160,12 +154,12 @@ def get_operation_order_from_stack(state):
 
 
 def get_template(filename_or_io):
-    '''
+    """
     Gets a jinja2 ``Template`` object for the input filename or string, with caching
     based on the filename of the template, or the SHA1 of the input string.
-    '''
+    """
 
-    file_data = get_file_io(filename_or_io, mode='r')
+    file_data = get_file_io(filename_or_io, mode="r")
     cache_key = file_data.cache_key
 
     if cache_key and cache_key in TEMPLATES:
@@ -187,74 +181,91 @@ def get_template(filename_or_io):
 
 
 def sha1_hash(string):
-    '''
+    """
     Return the SHA1 of the input string.
-    '''
+    """
 
     hasher = sha1()
-    hasher.update(string.encode('utf-8'))
+    hasher.update(string.encode("utf-8"))
     return hasher.hexdigest()
 
 
 def format_exception(e):
-    return '{0}{1}'.format(e.__class__.__name__, e.args)
+    return "{0}{1}".format(e.__class__.__name__, e.args)
 
 
 def print_host_combined_output(host, combined_output_lines):
     for type_, line in combined_output_lines:
-        if type_ == 'stderr':
-            logger.error('{0}{1}'.format(
-                host.print_prefix,
-                click.style(line, 'red'),
-            ))
+        if type_ == "stderr":
+            logger.error(
+                "{0}{1}".format(
+                    host.print_prefix,
+                    click.style(line, "red"),
+                ),
+            )
         else:
-            logger.error('{0}{1}'.format(
-                host.print_prefix,
-                line,
-            ))
+            logger.error(
+                "{0}{1}".format(
+                    host.print_prefix,
+                    line,
+                ),
+            )
 
 
-def log_error_or_warning(host, ignore_errors, description=''):
+def log_error_or_warning(host, ignore_errors, description=""):
     log_func = logger.error
-    log_color = 'red'
-    log_text = 'Error: ' if description else 'Error'
+    log_color = "red"
+    log_text = "Error: " if description else "Error"
 
     if ignore_errors:
         log_func = logger.warning
-        log_color = 'yellow'
-        log_text = 'Error (ignored): ' if description else 'Error (ignored)'
+        log_color = "yellow"
+        log_text = "Error (ignored): " if description else "Error (ignored)"
 
-    log_func('{0}{1}{2}'.format(
-        host.print_prefix,
-        click.style(log_text, log_color),
-        description,
-    ))
+    log_func(
+        "{0}{1}{2}".format(
+            host.print_prefix,
+            click.style(log_text, log_color),
+            description,
+        ),
+    )
 
 
 def log_host_command_error(host, e, timeout=0):
     if isinstance(e, timeout_error):
-        logger.error('{0}{1}'.format(
-            host.print_prefix,
-            click.style('Command timed out after {0}s'.format(
-                timeout,
-            ), 'red'),
-        ))
+        logger.error(
+            "{0}{1}".format(
+                host.print_prefix,
+                click.style(
+                    "Command timed out after {0}s".format(
+                        timeout,
+                    ),
+                    "red",
+                ),
+            ),
+        )
 
     elif isinstance(e, (socket_error, SSHException)):
-        logger.error('{0}{1}'.format(
-            host.print_prefix,
-            click.style('Command socket/SSH error: {0}'.format(
-                format_exception(e)), 'red',
+        logger.error(
+            "{0}{1}".format(
+                host.print_prefix,
+                click.style(
+                    "Command socket/SSH error: {0}".format(format_exception(e)),
+                    "red",
+                ),
             ),
-        ))
+        )
 
     elif isinstance(e, IOError):
-        logger.error('{0}{1}'.format(
-            host.print_prefix,
-            click.style('Command IO error: {0}'.format(
-                format_exception(e)), 'red',
+        logger.error(
+            "{0}{1}".format(
+                host.print_prefix,
+                click.style(
+                    "Command IO error: {0}".format(format_exception(e)),
+                    "red",
+                ),
             ),
-        ))
+        )
 
     # Still here? Re-raise!
     else:
@@ -262,33 +273,35 @@ def log_host_command_error(host, e, timeout=0):
 
 
 def make_hash(obj):
-    '''
+    """
     Make a hash from an arbitrary nested dictionary, list, tuple or set, used to generate
     ID's for operations based on their name & arguments.
-    '''
+    """
 
     if isinstance(obj, (set, tuple, list)):
-        hash_string = ''.join([make_hash(e) for e in obj])
+        hash_string = "".join([make_hash(e) for e in obj])
 
     elif isinstance(obj, dict):
-        hash_string = ''.join(
-            ''.join((key, make_hash(value)))
-            for key, value in obj.items()
-        )
+        hash_string = "".join("".join((key, make_hash(value))) for key, value in obj.items())
 
     else:
         hash_string = (
             # Capture integers first (as 1 == True)
-            '{0}'.format(obj) if isinstance(obj, int)
+            "{0}".format(obj)
+            if isinstance(obj, int)
             # Constants - the values can change between hosts but we should still
             # group them under the same operation hash.
-            else '_PYINFRA_CONSTANT' if obj in (True, False, None)
+            else "_PYINFRA_CONSTANT"
+            if obj in (True, False, None)
             # Plain strings
-            else obj if isinstance(obj, str)
+            else obj
+            if isinstance(obj, str)
             # Objects with __name__s
-            else obj.__name__ if hasattr(obj, '__name__')
+            else obj.__name__
+            if hasattr(obj, "__name__")
             # Objects with names
-            else obj.name if hasattr(obj, 'name')
+            else obj.name
+            if hasattr(obj, "name")
             # Repr anything else
             else repr(obj)
         )
@@ -297,30 +310,32 @@ def make_hash(obj):
 
 
 class get_file_io(object):
-    '''
+    """
     Given either a filename or an existing IO object, this context processor
     will open and close filenames, and leave IO objects alone.
-    '''
+    """
 
     close = False
 
-    def __init__(self, filename_or_io, mode='rb'):
+    def __init__(self, filename_or_io, mode="rb"):
         if not (
             # Check we can be read
-            hasattr(filename_or_io, 'read')
+            hasattr(filename_or_io, "read")
             # Or we're a filename
             or isinstance(filename_or_io, str)
         ):
-            raise TypeError('Invalid filename or IO object: {0}'.format(
-                filename_or_io,
-            ))
+            raise TypeError(
+                "Invalid filename or IO object: {0}".format(
+                    filename_or_io,
+                ),
+            )
 
         self.filename_or_io = filename_or_io
         self.mode = mode
 
     def __enter__(self):
         # If we have a read attribute, just use the object as-is
-        if hasattr(self.filename_or_io, 'read'):
+        if hasattr(self.filename_or_io, "read"):
             file_io = self.filename_or_io
 
         # Otherwise, assume a filename and open it up
@@ -348,9 +363,9 @@ class get_file_io(object):
 
 
 def get_file_sha1(filename_or_io):
-    '''
+    """
     Calculates the SHA1 of a file or file object using a buffer to handle larger files.
-    '''
+    """
 
     file_data = get_file_io(filename_or_io)
     cache_key = file_data.cache_key
@@ -364,7 +379,7 @@ def get_file_sha1(filename_or_io):
 
         while len(buff) > 0:
             if isinstance(buff, str):
-                buff = buff.encode('utf-8')
+                buff = buff.encode("utf-8")
 
             hasher.update(buff)
             buff = file_io.read(BLOCKSIZE)
@@ -378,9 +393,9 @@ def get_file_sha1(filename_or_io):
 
 
 def get_path_permissions_mode(pathname):
-    '''
+    """
     Get the permissions (bits) of a path as an integer.
-    '''
+    """
 
     mode_octal = oct(stat(pathname).st_mode)
     return mode_octal[-3:]

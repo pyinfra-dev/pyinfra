@@ -1,6 +1,6 @@
-'''
+"""
 Manage pkgin packages.
-'''
+"""
 
 from pyinfra import host
 from pyinfra.api import operation
@@ -11,32 +11,37 @@ from .util.packaging import ensure_packages
 
 @operation(is_idempotent=False)
 def upgrade():
-    '''
+    """
     Upgrades all pkgin packages.
-    '''
+    """
 
-    yield 'pkgin -y upgrade'
+    yield "pkgin -y upgrade"
+
 
 _upgrade = upgrade  # noqa: E305
 
 
 @operation(is_idempotent=False)
 def update():
-    '''
+    """
     Updates pkgin repositories.
-    '''
+    """
 
-    yield 'pkgin -y update'
+    yield "pkgin -y update"
+
 
 _update = update  # noqa: E305
 
 
 @operation
 def packages(
-    packages=None, present=True, latest=False,
-    update=False, upgrade=False,
+    packages=None,
+    present=True,
+    latest=False,
+    update=False,
+    upgrade=False,
 ):
-    '''
+    """
     Add/remove/update pkgin packages.
 
     + packages: list of packages to ensure
@@ -62,7 +67,7 @@ def packages(
             packages=["vim"],
             latest=True,
         )
-    '''
+    """
 
     if update:
         yield from _update()
@@ -73,9 +78,12 @@ def packages(
     # TODO support glob for specific versions (it isn't as simple
     # as apt-s, as pkgin supports something like 'mysql-server>=5.6<5.7')
     yield from ensure_packages(
-        host, packages, host.get_fact(PkginPackages), present,
-        install_command='pkgin -y install',
-        uninstall_command='pkgin -y remove',
-        upgrade_command='pkgin -y upgrade',
+        host,
+        packages,
+        host.get_fact(PkginPackages),
+        present,
+        install_command="pkgin -y install",
+        uninstall_command="pkgin -y remove",
+        upgrade_command="pkgin -y upgrade",
         latest=latest,
     )

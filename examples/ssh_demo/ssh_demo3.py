@@ -5,16 +5,16 @@ from pyinfra.operations import ssh
 SUDO = False
 
 
-if host.name == '@vagrant/one':
+if host.name == "@vagrant/one":
 
     ssh.keyscan(
-        name='Set add server two to known_hosts on one',
-        hostname='two.example.com',
+        name="Set add server two to known_hosts on one",
+        hostname="two.example.com",
     )
 
     ssh.command(
-        name='Create file by running echo from one to two',
-        hostname='two.example.com',
+        name="Create file by running echo from one to two",
+        hostname="two.example.com",
         command='echo "one was here" > /tmp/one.txt',
-        ssh_user='vagrant',
+        ssh_user="vagrant",
     )

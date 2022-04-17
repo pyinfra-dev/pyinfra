@@ -1,12 +1,13 @@
 def _remove_prefix(title, remove_prefix):
     if title.startswith(remove_prefix):
-        return title[len(remove_prefix):]
+        return title[len(remove_prefix) :]
 
     return title
 
 
 def parse_columns_and_rows(
-    lines, delimiter,
+    lines,
+    delimiter,
     remove_column_prefix=None,
     title_parser=None,
 ):
@@ -17,10 +18,7 @@ def parse_columns_and_rows(
         titles = [title_parser(title) for title in titles]
 
     if remove_column_prefix:
-        titles = [
-            _remove_prefix(title, remove_column_prefix)
-            for title in titles
-        ]
+        titles = [_remove_prefix(title, remove_column_prefix) for title in titles]
 
     rows = []
 

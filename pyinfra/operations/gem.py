@@ -1,6 +1,6 @@
-'''
+"""
 Manage Ruby gem packages. (see https://rubygems.org/ )
-'''
+"""
 
 from pyinfra import host
 from pyinfra.api import operation
@@ -11,7 +11,7 @@ from .util.packaging import ensure_packages
 
 @operation
 def packages(packages=None, present=True, latest=False):
-    '''
+    """
     Add/remove/update gem packages.
 
     + packages: list of packages to ensure
@@ -30,13 +30,16 @@ def packages(packages=None, present=True, latest=False):
             name="Install rspec",
             packages=["rspec"],
         )
-    '''
+    """
 
     yield from ensure_packages(
-        host, packages, host.get_fact(GemPackages), present,
-        install_command='gem install',
-        uninstall_command='gem uninstall',
-        upgrade_command='gem update',
-        version_join=':',
+        host,
+        packages,
+        host.get_fact(GemPackages),
+        present,
+        install_command="gem install",
+        uninstall_command="gem uninstall",
+        upgrade_command="gem update",
+        version_join=":",
         latest=latest,
     )

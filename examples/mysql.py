@@ -2,19 +2,18 @@ from pyinfra import host, state
 from pyinfra.facts.server import LinuxName
 from pyinfra.operations import apt, files, mysql, python
 
-
-if host.get_fact(LinuxName) != 'Debian':
+if host.get_fact(LinuxName) != "Debian":
     # Raises an exception mid-deploy
     python.raise_exception(
-        name='Ensure we are Debian',
+        name="Ensure we are Debian",
         exception=NotImplementedError,
-        args=('`mysql.py` only works on Debian',),
+        args=("`mysql.py` only works on Debian",),
     )
 
 
 apt.packages(
-    name='Install mysql server & client',
-    packages=['mysql-server'],
+    name="Install mysql server & client",
+    packages=["mysql-server"],
     update=True,
     cache_time=3600,
 )
@@ -24,36 +23,36 @@ apt.packages(
 #
 
 mysql.user(
-    name='Create the pyinfra@localhost MySQL user',
-    user='pyinfra',
-    password='somepassword',
+    name="Create the pyinfra@localhost MySQL user",
+    user="pyinfra",
+    password="somepassword",
 )
 
 mysql.database(
-    name='Create the pyinfra_stuff database',
-    database='pyinfra_stuff',
-    user='pyinfra',
-    user_privileges=['SELECT', 'INSERT'],
-    charset='utf8',
+    name="Create the pyinfra_stuff database",
+    database="pyinfra_stuff",
+    user="pyinfra",
+    user_privileges=["SELECT", "INSERT"],
+    charset="utf8",
 )
 
 
 # Upload & import a SQL file into the pyinfra_stuff database
 #
 
-filename = 'files/a_db.sql'
+filename = "files/a_db.sql"
 temp_filename = state.get_temp_filename(filename)
 
 files.put(
-    name='Upload the a_db.sql file',
+    name="Upload the a_db.sql file",
     src=filename,
     dest=temp_filename,
 )
 
 mysql.load(
-    name='Import the a_db.sql file',
+    name="Import the a_db.sql file",
     src=temp_filename,
-    database='pyinfra_stuff',
+    database="pyinfra_stuff",
 )
 
 
@@ -61,21 +60,21 @@ mysql.load(
 #
 
 mysql.database(
-    name='Create the pyinfra_stuff_copy database',
-    database='pyinfra_stuff_copy',
-    charset='utf8',
+    name="Create the pyinfra_stuff_copy database",
+    database="pyinfra_stuff_copy",
+    charset="utf8",
 )
 
-dump_filename = state.get_temp_filename('mysql_dump')
+dump_filename = state.get_temp_filename("mysql_dump")
 
 mysql.dump(
-    name='Dump the pyinfra_stuff database',
+    name="Dump the pyinfra_stuff database",
     dest=dump_filename,
-    database='pyinfra_stuff',
+    database="pyinfra_stuff",
 )
 
 mysql.load(
-    name='Import the pyinfra_stuff dump into pyinfra_stuff_copy',
+    name="Import the pyinfra_stuff dump into pyinfra_stuff_copy",
     src=dump_filename,
-    database='pyinfra_stuff_copy',
+    database="pyinfra_stuff_copy",
 )

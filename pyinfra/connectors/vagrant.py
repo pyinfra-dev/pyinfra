@@ -1,4 +1,4 @@
-'''
+"""
 The ``@vagrant`` connector reads the current Vagrant status and generates an
 inventory for any running VMs.
 
@@ -12,10 +12,9 @@ inventory for any running VMs.
 
     # Run on multiple named VMs
     pyinfra @vagrant/my-vm-name,@vagrant/another-vm-name ...
-'''
+"""
 
 import json
-
 from os import path
 from queue import Queue
 from threading import Thread
@@ -27,35 +26,37 @@ from pyinfra.progress import progress_spinner
 
 
 def _get_vagrant_ssh_config(queue, progress, target):
-    logger.debug('Loading SSH config for {0}'.format(target))
+    logger.debug("Loading SSH config for {0}".format(target))
 
-    queue.put(local.shell(
-        'vagrant ssh-config {0}'.format(target),
-        splitlines=True,
-    ))
+    queue.put(
+        local.shell(
+            "vagrant ssh-config {0}".format(target),
+            splitlines=True,
+        ),
+    )
 
     progress(target)
 
 
 @memoize
 def get_vagrant_config(limit=None):
-    logger.info('Getting Vagrant config...')
+    logger.info("Getting Vagrant config...")
 
     if limit and not isinstance(limit, (list, tuple)):
         limit = [limit]
 
-    with progress_spinner({'vagrant status'}) as progress:
+    with progress_spinner({"vagrant status"}) as progress:
         output = local.shell(
-            'vagrant status --machine-readable',
+            "vagrant status --machine-readable",
             splitlines=True,
         )
-        progress('vagrant status')
+        progress("vagrant status")
 
     targets = []
 
     for line in output:
         line = line.strip()
-        _, target, type_, data = line.split(',', 3)
+        _, target, type_, data = line.split(",", 3)
 
         # Skip anything not in the limit
         if limit is not None and target not in limit:
@@ -63,7 +64,7 @@ def get_vagrant_config(limit=None):
 
         # For each running container - fetch it's SSH config in a thread - this
         # is because Vagrant *really* slow to run each command.
-        if type_ == 'state' and data == 'running':
+        if type_ == "state" and data == "running":
             targets.append(target)
 
     threads = []
@@ -92,45 +93,45 @@ def get_vagrant_config(limit=None):
 
 @memoize
 def get_vagrant_options():
-    if path.exists('@vagrant.json'):
-        with open('@vagrant.json', 'r') as f:
+    if path.exists("@vagrant.json"):
+        with open("@vagrant.json", "r") as f:
             return json.loads(f.read())
     return {}
 
 
 def _make_name_data(host):
     vagrant_options = get_vagrant_options()
-    vagrant_host = host['Host']
+    vagrant_host = host["Host"]
 
     data = {
-        'ssh_hostname': host['HostName'],
+        "ssh_hostname": host["HostName"],
     }
 
     for config_key, data_key in (
-        ('Port', 'ssh_port'),
-        ('User', 'ssh_user'),
-        ('IdentityFile', 'ssh_key'),
+        ("Port", "ssh_port"),
+        ("User", "ssh_user"),
+        ("IdentityFile", "ssh_key"),
     ):
         if config_key in host:
             data[data_key] = host[config_key]
 
     # Update any configured JSON data
-    if vagrant_host in vagrant_options.get('data', {}):
-        data.update(vagrant_options['data'][vagrant_host])
+    if vagrant_host in vagrant_options.get("data", {}):
+        data.update(vagrant_options["data"][vagrant_host])
 
     # Work out groups
-    groups = vagrant_options.get('groups', {}).get(vagrant_host, [])
+    groups = vagrant_options.get("groups", {}).get(vagrant_host, [])
 
-    if '@vagrant' not in groups:
-        groups.append('@vagrant')
+    if "@vagrant" not in groups:
+        groups.append("@vagrant")
 
-    return '@vagrant/{0}'.format(host['Host']), data, groups
+    return "@vagrant/{0}".format(host["Host"]), data, groups
 
 
 def make_names_data(limit=None):
     vagrant_ssh_info = get_vagrant_config(limit)
 
-    logger.debug('Got Vagrant SSH info: \n{0}'.format(vagrant_ssh_info))
+    logger.debug("Got Vagrant SSH info: \n{0}".format(vagrant_ssh_info))
 
     hosts = []
     current_host = None
@@ -144,9 +145,9 @@ def make_names_data(limit=None):
             current_host = None
             continue
 
-        key, value = line.split(' ', 1)
+        key, value = line.split(" ", 1)
 
-        if key == 'Host':
+        if key == "Host":
             if current_host:
                 hosts.append(_make_name_data(current_host))
 
@@ -159,16 +160,19 @@ def make_names_data(limit=None):
             current_host[key] = value
 
         else:
-            logger.debug('Extra Vagrant SSH key/value ({0}={1})'.format(
-                key, value,
-            ))
+            logger.debug(
+                "Extra Vagrant SSH key/value ({0}={1})".format(
+                    key,
+                    value,
+                ),
+            )
 
     if current_host:
         hosts.append(_make_name_data(current_host))
 
     if not hosts:
         if limit:
-            raise InventoryError('No running Vagrant instances matching `{0}` found!'.format(limit))
-        raise InventoryError('No running Vagrant instances found!')
+            raise InventoryError("No running Vagrant instances matching `{0}` found!".format(limit))
+        raise InventoryError("No running Vagrant instances found!")
 
     return hosts

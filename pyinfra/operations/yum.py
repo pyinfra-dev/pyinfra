@@ -1,6 +1,6 @@
-'''
+"""
 Manage yum packages and repositories. Note that yum package names are case-sensitive.
-'''
+"""
 
 from pyinfra import host, state
 from pyinfra.api import operation
@@ -12,7 +12,7 @@ from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 
 @operation(is_idempotent=False)
 def key(src):
-    '''
+    """
     Add yum gpg keys with ``rpm``.
 
     + src: filename or URL
@@ -30,20 +30,23 @@ def key(src):
             src=f"https://download.docker.com/linux/{linux_id}/gpg",
         )
 
-    '''
+    """
 
-    yield 'rpm --import {0}'.format(src)
+    yield "rpm --import {0}".format(src)
 
 
 @operation
 def repo(
     src,
     present=True,
-    baseurl=None, description=None,
-    enabled=True, gpgcheck=True, gpgkey=None,
+    baseurl=None,
+    description=None,
+    enabled=True,
+    gpgcheck=True,
+    gpgkey=None,
 ):
     # NOTE: if updating this docstring also update `dnf.repo`
-    '''
+    """
     Add/remove/update yum repositories.
 
     + src: URL or name for the ``.repo``   file
@@ -75,18 +78,26 @@ def repo(
             src="DockerCE",
             baseurl="https://download.docker.com/linux/centos/7/$basearch/stable",
         )
-    '''
+    """
 
     yield from ensure_yum_repo(
-        state, host, files,
-        src, baseurl, present, description, enabled, gpgcheck, gpgkey,
+        state,
+        host,
+        files,
+        src,
+        baseurl,
+        present,
+        description,
+        enabled,
+        gpgcheck,
+        gpgkey,
     )
 
 
 @operation
 def rpm(src, present=True):
     # NOTE: if updating this docstring also update `dnf.rpm`
-    '''
+    """
     Add/remove ``.rpm`` file packages.
 
     + src: filename or URL of the ``.rpm`` package
@@ -105,18 +116,19 @@ def rpm(src, present=True):
            name="Install EPEL rpm to enable EPEL repo",
            src=f"https://dl.fedoraproject.org/pub/epel/epel-release-latest-{major_version}.noarch.rpm",
         )
-    '''
+    """
 
-    yield from ensure_rpm(state, host, files, src, present, 'yum')
+    yield from ensure_rpm(state, host, files, src, present, "yum")
 
 
 @operation(is_idempotent=False)
 def update():
-    '''
+    """
     Updates all yum packages.
-    '''
+    """
 
-    yield 'yum update -y'
+    yield "yum update -y"
+
 
 _update = update  # noqa: E305 (for use below where update is a kwarg)
 
@@ -124,10 +136,15 @@ _update = update  # noqa: E305 (for use below where update is a kwarg)
 @operation
 def packages(
     packages=None,
-    present=True, latest=False, update=False, clean=False, nobest=False,
-    extra_install_args=None, extra_uninstall_args=None,
+    present=True,
+    latest=False,
+    update=False,
+    clean=False,
+    nobest=False,
+    extra_install_args=None,
+    extra_uninstall_args=None,
 ):
-    '''
+    """
     Install/remove/update yum packages & updates.
 
     + packages: list of packages to ensure
@@ -159,33 +176,36 @@ def packages(
             packages=["vim"],
             latest=True,
         )
-    '''
+    """
 
     if clean:
-        yield 'yum clean all'
+        yield "yum clean all"
 
     if update:
         yield from _update()
 
-    install_command = ['yum', 'install', '-y']
+    install_command = ["yum", "install", "-y"]
 
     if nobest:
-        install_command.append('--nobest')
+        install_command.append("--nobest")
 
     if extra_install_args:
         install_command.append(extra_install_args)
 
-    uninstall_command = ['yum', 'remove', '-y']
+    uninstall_command = ["yum", "remove", "-y"]
 
     if extra_uninstall_args:
         uninstall_command.append(extra_uninstall_args)
 
     yield from ensure_packages(
-        host, packages, host.get_fact(RpmPackages), present,
-        install_command=' '.join(install_command),
-        uninstall_command=' '.join(uninstall_command),
-        upgrade_command='yum update -y',
-        version_join='=',
+        host,
+        packages,
+        host.get_fact(RpmPackages),
+        present,
+        install_command=" ".join(install_command),
+        uninstall_command=" ".join(uninstall_command),
+        upgrade_command="yum update -y",
+        version_join="=",
         latest=latest,
         expand_package_fact=lambda package: host.get_fact(
             RpmPackageProvides,

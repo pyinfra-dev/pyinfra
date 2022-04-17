@@ -1,7 +1,7 @@
-'''
+"""
 This file as originally part of the "sshuserclient" pypi package. The GitHub
 source has now vanished (https://github.com/tobald/sshuserclient).
-'''
+"""
 
 from os import path
 
@@ -25,17 +25,20 @@ HOST_KEYS_LOCK = BoundedSemaphore()
 
 class StrictPolicy(MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
-        logger.error('No host key for {0} found in known_hosts'.format(hostname))
+        logger.error("No host key for {0} found in known_hosts".format(hostname))
         raise SSHException(
-            'StrictPolicy: No host key for {0} found in known_hosts'.format(hostname))
+            "StrictPolicy: No host key for {0} found in known_hosts".format(hostname),
+        )
 
 
 class AcceptNewPolicy(MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
-        logger.warning((
-            f'No host key for {hostname} found in known_hosts, '
-            'accepting & adding to host keys file'
-        ))
+        logger.warning(
+            (
+                f"No host key for {hostname} found in known_hosts, "
+                "accepting & adding to host keys file"
+            ),
+        )
 
         with HOST_KEYS_LOCK:
             host_keys = client.get_host_keys()
@@ -49,11 +52,14 @@ class AcceptNewPolicy(MissingHostKeyPolicy):
 class AskPolicy(MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
         should_continue = input(
-            'No host key for {0} found in known_hosts, do you want to continue [y/n] '.format(
-                hostname))
-        if should_continue.lower() != 'y':
+            "No host key for {0} found in known_hosts, do you want to continue [y/n] ".format(
+                hostname,
+            ),
+        )
+        if should_continue.lower() != "y":
             raise SSHException(
-                'AskPolicy: No host key for {0} found in known_hosts'.format(hostname))
+                "AskPolicy: No host key for {0} found in known_hosts".format(hostname),
+            )
         else:
             with HOST_KEYS_LOCK:
                 host_keys = client.get_host_keys()
@@ -62,34 +68,34 @@ class AskPolicy(MissingHostKeyPolicy):
                 # this correctly, so use that with the client filename variable.
                 # See: https://github.com/paramiko/paramiko/pull/1989
                 host_keys.save(client._host_keys_filename)
-            logger.warning('Added host key for {0} to known_hosts'.format(hostname))
+            logger.warning("Added host key for {0} to known_hosts".format(hostname))
             return
 
 
 class WarningPolicy(MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
-        logger.warning('No host key for {0} found in known_hosts'.format(hostname))
+        logger.warning("No host key for {0} found in known_hosts".format(hostname))
 
 
 def get_missing_host_key_policy(policy):
-    if policy is None or policy == 'ask':
+    if policy is None or policy == "ask":
         return AskPolicy()
-    elif policy == 'no' or policy == 'off':
+    elif policy == "no" or policy == "off":
         return WarningPolicy()
-    elif policy == 'yes':
+    elif policy == "yes":
         return StrictPolicy()
-    elif policy == 'accept-new':
+    elif policy == "accept-new":
         return AcceptNewPolicy()
     else:
-        raise SSHException('Invalid value StrictHostKeyChecking={}'.format(policy))
+        raise SSHException("Invalid value StrictHostKeyChecking={}".format(policy))
 
 
 @memoize
 def get_ssh_config(user_config_file=None):
-    logger.debug(f'Loading SSH config: {user_config_file}')
+    logger.debug(f"Loading SSH config: {user_config_file}")
 
     if user_config_file is None:
-        user_config_file = path.expanduser('~/.ssh/config')
+        user_config_file = path.expanduser("~/.ssh/config")
 
     if path.exists(user_config_file):
         with open(user_config_file) as f:
@@ -109,16 +115,16 @@ def get_host_keys(filename):
         # entire load incorrectly.
         # See: https://github.com/paramiko/paramiko/pull/1990
         except Exception as e:
-            logger.warning('Failed to load host keys from {0}: {1}'.format(filename, e))
+            logger.warning("Failed to load host keys from {0}: {1}".format(filename, e))
 
         return host_keys
 
 
 class SSHClient(ParamikoClient):
-    '''
+    """
     An SSHClient which honors ssh_config and supports proxyjumping
     original idea at http://bitprophet.org/blog/2012/11/05/gateway-solutions/.
-    '''
+    """
 
     def connect(
         self,
@@ -127,15 +133,19 @@ class SSHClient(ParamikoClient):
         _pyinfra_ssh_config_file=None,
         _pyinfra_ssh_known_hosts_file=None,
         _pyinfra_ssh_strict_host_key_checking=None,
-        **kwargs
+        **kwargs,
     ):
-        hostname, config, forward_agent, missing_host_key_policy, host_keys_file = (
-            self.parse_config(
-                hostname,
-                kwargs,
-                ssh_config_file=_pyinfra_ssh_config_file,
-                strict_host_key_checking=_pyinfra_ssh_strict_host_key_checking,
-            )
+        (
+            hostname,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+        ) = self.parse_config(
+            hostname,
+            kwargs,
+            ssh_config_file=_pyinfra_ssh_config_file,
+            strict_host_key_checking=_pyinfra_ssh_strict_host_key_checking,
         )
         self.set_missing_host_key_policy(missing_host_key_policy)
         config.update(kwargs)
@@ -162,7 +172,7 @@ class SSHClient(ParamikoClient):
     def gateway(self, hostname, host_port, target, target_port):
         transport = self.get_transport()
         return transport.open_channel(
-            'direct-tcpip',
+            "direct-tcpip",
             (target, target_port),
             (hostname, host_port),
         )
@@ -174,97 +184,94 @@ class SSHClient(ParamikoClient):
         ssh_config_file=None,
         strict_host_key_checking=None,
     ):
-        cfg = {'port': 22}
+        cfg = {"port": 22}
         cfg.update(initial_cfg or {})
 
         forward_agent = False
         missing_host_key_policy = get_missing_host_key_policy(strict_host_key_checking)
-        host_keys_file = path.expanduser('~/.ssh/known_hosts')  # OpenSSH default
+        host_keys_file = path.expanduser("~/.ssh/known_hosts")  # OpenSSH default
 
         ssh_config = get_ssh_config(ssh_config_file)
         if not ssh_config:
             return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_file
 
         host_config = ssh_config.lookup(hostname)
-        forward_agent = host_config.get('forwardagent') == 'yes'
+        forward_agent = host_config.get("forwardagent") == "yes"
 
         # If not overridden, apply any StrictHostKeyChecking
-        if strict_host_key_checking is None and 'stricthostkeychecking' in host_config:
+        if strict_host_key_checking is None and "stricthostkeychecking" in host_config:
             missing_host_key_policy = get_missing_host_key_policy(
-                host_config['stricthostkeychecking'],
+                host_config["stricthostkeychecking"],
             )
 
-        if 'userknownhostsfile' in host_config:
-            host_keys_file = path.expanduser(host_config['userknownhostsfile'])
+        if "userknownhostsfile" in host_config:
+            host_keys_file = path.expanduser(host_config["userknownhostsfile"])
 
-        if 'hostname' in host_config:
-            hostname = host_config['hostname']
+        if "hostname" in host_config:
+            hostname = host_config["hostname"]
 
-        if 'user' in host_config:
-            cfg['username'] = host_config['user']
+        if "user" in host_config:
+            cfg["username"] = host_config["user"]
 
-        if 'identityfile' in host_config:
-            cfg['key_filename'] = host_config['identityfile']
+        if "identityfile" in host_config:
+            cfg["key_filename"] = host_config["identityfile"]
 
-        if 'port' in host_config:
-            cfg['port'] = int(host_config['port'])
+        if "port" in host_config:
+            cfg["port"] = int(host_config["port"])
 
-        if 'proxycommand' in host_config:
-            cfg['sock'] = ProxyCommand(host_config['proxycommand'])
+        if "proxycommand" in host_config:
+            cfg["sock"] = ProxyCommand(host_config["proxycommand"])
 
-        elif 'proxyjump' in host_config:
-            hops = host_config['proxyjump'].split(',')
+        elif "proxyjump" in host_config:
+            hops = host_config["proxyjump"].split(",")
             sock = None
 
             for i, hop in enumerate(hops):
                 hop_hostname, hop_config = self.derive_shorthand(ssh_config, hop)
-                logger.debug('SSH ProxyJump through %s:%s', hop_hostname, hop_config['port'])
+                logger.debug("SSH ProxyJump through %s:%s", hop_hostname, hop_config["port"])
 
                 c = SSHClient()
                 c.connect(
-                    hop_hostname,
-                    _pyinfra_ssh_config_file=ssh_config_file,
-                    sock=sock,
-                    **hop_config
+                    hop_hostname, _pyinfra_ssh_config_file=ssh_config_file, sock=sock, **hop_config
                 )
 
                 if i == len(hops) - 1:
                     target = hostname
-                    target_config = {'port': cfg['port']}
+                    target_config = {"port": cfg["port"]}
                 else:
                     target, target_config = self.derive_shorthand(ssh_config, hops[i + 1])
 
-                sock = c.gateway(hostname, cfg['port'], target, target_config['port'])
-            cfg['sock'] = sock
+                sock = c.gateway(hostname, cfg["port"], target, target_config["port"])
+            cfg["sock"] = sock
 
         return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_file
 
     @staticmethod
     def derive_shorthand(ssh_config, host_string):
         shorthand_config = {}
-        user_hostport = host_string.rsplit('@', 1)
+        user_hostport = host_string.rsplit("@", 1)
         hostport = user_hostport.pop()
         user = user_hostport[0] if user_hostport and user_hostport[0] else None
         if user:
-            shorthand_config['username'] = user
+            shorthand_config["username"] = user
 
         # IPv6: can't reliably tell where addr ends and port begins, so don't
         # try (and don't bother adding special syntax either, user should avoid
         # this situation by using port=).
-        if hostport.count(':') > 1:
+        if hostport.count(":") > 1:
             hostname = hostport
         # IPv4: can split on ':' reliably.
         else:
-            host_port = hostport.rsplit(':', 1)
+            host_port = hostport.rsplit(":", 1)
             hostname = host_port.pop(0) or None
             if host_port and host_port[0]:
-                shorthand_config['port'] = int(host_port[0])
+                shorthand_config["port"] = int(host_port[0])
 
         base_config = ssh_config.lookup(hostname)
 
         config = {
-            'port': base_config.get('port', 22),
-            'username': base_config.get('user'),
+            "port": base_config.get("port", 22),
+            "username": base_config.get("user"),
         }
         config.update(shorthand_config)
 

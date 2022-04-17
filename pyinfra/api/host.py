@@ -22,22 +22,22 @@ def extract_callable_datas(datas):
 
 
 class HostData(object):
-    '''
+    """
     Combines multiple AttrData's to search for attributes.
-    '''
+    """
 
     override_datas = None
 
     def __init__(self, host, *datas):
-        self.__dict__['host'] = host
+        self.__dict__["host"] = host
 
         datas = list(datas)
 
         # Inject an empty override data so we can assign during deploy
-        self.__dict__['override_datas'] = {}
+        self.__dict__["override_datas"] = {}
         datas.insert(0, self.override_datas)
 
-        self.__dict__['datas'] = tuple(datas)
+        self.__dict__["datas"] = tuple(datas)
 
     def __getattr__(self, key):
         for data in extract_callable_datas(self.datas):
@@ -46,7 +46,7 @@ class HostData(object):
             except KeyError:
                 pass
 
-        raise AttributeError(f'Host `{self.host}` has no data `{key}`')
+        raise AttributeError(f"Host `{self.host}` has no data `{key}`")
 
     def __setattr__(self, key, value):
         self.override_datas[key] = value
@@ -72,10 +72,10 @@ class HostData(object):
 
 
 class Host(object):
-    '''
+    """
     Represents a target host. Thin class that links up to facts and host/group
     data.
-    '''
+    """
 
     connection = None
     state = None
@@ -93,8 +93,11 @@ class Host(object):
     current_deploy_op_order = None
 
     def __init__(
-        self, name, inventory, groups,
-        executor=get_execution_connector('ssh'),
+        self,
+        name,
+        inventory,
+        groups,
+        executor=get_execution_connector("ssh"),
     ):
         self.inventory = inventory
         self.groups = groups
@@ -120,10 +123,10 @@ class Host(object):
         )
 
     def __str__(self):
-        return '{0}'.format(self.name)
+        return "{0}".format(self.name)
 
     def __repr__(self):
-        return 'Host({0})'.format(self.name)
+        return "Host({0})".format(self.name)
 
     @property
     def connected(self):
@@ -139,14 +142,14 @@ class Host(object):
 
     @property
     def print_prefix(self):
-        return '{0}[{1}] '.format(
-            click.style(''),  # reset
+        return "{0}[{1}] ".format(
+            click.style(""),  # reset
             click.style(self.name, bold=True),
         )
 
     def style_print_prefix(self, *args, **kwargs):
-        return '{0}[{1}] '.format(
-            click.style(''),  # reset
+        return "{0}[{1}] ".format(
+            click.style(""),  # reset
             click.style(self.name, *args, **kwargs),
         )
 
@@ -157,23 +160,23 @@ class Host(object):
         return {}
 
     def noop(self, description):
-        '''
+        """
         Log a description for a noop operation.
-        '''
+        """
 
         handler = logger.info if self.state.print_noop_info else logger.debug
-        handler('{0}noop: {1}'.format(self.print_prefix, description))
+        handler("{0}noop: {1}".format(self.print_prefix, description))
 
     @contextmanager
     def deploy(self, name, kwargs, data, in_deploy=True, deploy_op_order=None):
-        '''
+        """
         Wraps a group of operations as a deploy, this should not be used
         directly, instead use ``pyinfra.api.deploy.deploy``.
-        '''
+        """
 
         # Handle nested deploy names
         if self.current_deploy_name:
-            name = '{0} | {1}'.format(self.current_deploy_name, name)
+            name = "{0} | {1}".format(self.current_deploy_name, name)
 
         # Store the previous values
         old_in_deploy = self.in_deploy
@@ -188,9 +191,13 @@ class Host(object):
         self.current_deploy_kwargs = kwargs
         self.current_deploy_data = data
         self.current_deploy_op_order = deploy_op_order
-        logger.debug('Starting deploy {0} (args={1}, data={2})'.format(
-            name, kwargs, data,
-        ))
+        logger.debug(
+            "Starting deploy {0} (args={1}, data={2})".format(
+                name,
+                kwargs,
+                data,
+            ),
+        )
 
         yield
 
@@ -201,9 +208,13 @@ class Host(object):
         self.current_deploy_data = old_deploy_data
         self.current_deploy_op_order = old_deploy_op_order
 
-        logger.debug('Reset deploy to {0} (args={1}, data={2})'.format(
-            old_deploy_name, old_deploy_kwargs, old_deploy_data,
-        ))
+        logger.debug(
+            "Reset deploy to {0} (args={1}, data={2})".format(
+                old_deploy_name,
+                old_deploy_kwargs,
+                old_deploy_data,
+            ),
+        )
 
     # Host facts
     #
@@ -222,40 +233,40 @@ class Host(object):
 
     def _check_state(self):
         if not self.state:
-            raise TypeError('Cannot call this function with no state!')
+            raise TypeError("Cannot call this function with no state!")
 
     def connect(self, reason=None, show_errors=True, raise_exceptions=False):
         self._check_state()
         if not self.connection:
-            self.state.trigger_callbacks('host_before_connect', self)
+            self.state.trigger_callbacks("host_before_connect", self)
 
             try:
                 self.connection = self.executor.connect(self.state, self)
             except ConnectError as e:
                 if show_errors:
-                    log_message = '{0}{1}'.format(
+                    log_message = "{0}{1}".format(
                         self.print_prefix,
-                        click.style(e.args[0], 'red'),
+                        click.style(e.args[0], "red"),
                     )
                     logger.error(log_message)
 
-                self.state.trigger_callbacks('host_connect_error', self, e)
+                self.state.trigger_callbacks("host_connect_error", self, e)
 
                 if raise_exceptions:
                     raise
             else:
-                log_message = '{0}{1}'.format(
+                log_message = "{0}{1}".format(
                     self.print_prefix,
-                    click.style('Connected', 'green'),
+                    click.style("Connected", "green"),
                 )
                 if reason:
-                    log_message = '{0}{1}'.format(
+                    log_message = "{0}{1}".format(
                         log_message,
-                        ' ({0})'.format(reason),
+                        " ({0})".format(reason),
                     )
 
                 logger.info(log_message)
-                self.state.trigger_callbacks('host_connect', self)
+                self.state.trigger_callbacks("host_connect", self)
 
         return self.connection
 
@@ -263,14 +274,14 @@ class Host(object):
         self._check_state()
 
         # Disconnect is an optional function for executors if needed
-        disconnect_func = getattr(self.executor, 'disconnect', None)
+        disconnect_func = getattr(self.executor, "disconnect", None)
         if disconnect_func:
             return disconnect_func(self.state, self)
 
         # TODO: consider whether this should be here!
         remove_any_sudo_askpass_file(self)
 
-        self.state.trigger_callbacks('host_disconnect', self)
+        self.state.trigger_callbacks("host_disconnect", self)
 
     def run_shell_command(self, *args, **kwargs):
         self._check_state()
@@ -287,13 +298,15 @@ class Host(object):
     # Rsync - optional executor specific ability
 
     def check_can_rsync(self):
-        check_can_rsync_func = getattr(self.executor, 'check_can_rsync', None)
+        check_can_rsync_func = getattr(self.executor, "check_can_rsync", None)
         if check_can_rsync_func:
             return check_can_rsync_func(self)
 
-        raise NotImplementedError('The {0} connector does not support rsync!'.format(
-            self.executor.__name__,
-        ))
+        raise NotImplementedError(
+            "The {0} connector does not support rsync!".format(
+                self.executor.__name__,
+            ),
+        )
 
     def rsync(self, *args, **kwargs):
         self._check_state()

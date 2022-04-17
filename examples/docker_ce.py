@@ -15,71 +15,71 @@ config.SUDO = True
 
 
 def check_docker_works(state, host):
-    command = 'docker run hello-world'
+    command = "docker run hello-world"
     status, stdout, stderr = host.run_shell_command(
         command=command,
         sudo=config.SUDO,
     )
-    if not status or 'Hello from Docker!' not in stdout:
-        raise Exception('`{}` did not work as expected'.format(command))
+    if not status or "Hello from Docker!" not in stdout:
+        raise Exception("`{}` did not work as expected".format(command))
 
 
-if host.get_fact(LinuxName) == 'Ubuntu':
+if host.get_fact(LinuxName) == "Ubuntu":
 
     apt.packages(
-        name='Ensure old docker packages are not present',
+        name="Ensure old docker packages are not present",
         packages=[
-            'docker',
-            'docker-engine',
-            'docker.io',
-            'containerd runc',
+            "docker",
+            "docker-engine",
+            "docker.io",
+            "containerd runc",
         ],
         present=False,
     )
 
     apt.packages(
-        name='Ensure Docker CE prerequisites are present',
+        name="Ensure Docker CE prerequisites are present",
         packages=[
-            'apt-transport-https',
-            'ca-certificates',
-            'curl',
-            'gnupg-agent',
-            'software-properties-common',
+            "apt-transport-https",
+            "ca-certificates",
+            "curl",
+            "gnupg-agent",
+            "software-properties-common",
         ],
         update=True,
     )
 
     apt.key(
-        name='Add the Docker apt gpg key if we need to',
-        src='https://download.docker.com/linux/ubuntu/gpg',
+        name="Add the Docker apt gpg key if we need to",
+        src="https://download.docker.com/linux/ubuntu/gpg",
     )
 
     lsb_info = host.get_fact(LsbRelease)
-    linux_id = lsb_info['id'].lower()
-    code_name = lsb_info['codename']
+    linux_id = lsb_info["id"].lower()
+    code_name = lsb_info["codename"]
 
     apt.repo(
-        name='Add the Docker CE apt repo',
+        name="Add the Docker CE apt repo",
         src=(
-            'deb [arch=amd64] https://download.docker.com/linux/'
-            '{} {} stable'.format(linux_id, code_name)
+            "deb [arch=amd64] https://download.docker.com/linux/"
+            "{} {} stable".format(linux_id, code_name)
         ),
-        filename='docker-ce-stable',
+        filename="docker-ce-stable",
     )
 
     apt.packages(
-        name='Ensure Docker CE is installed',
+        name="Ensure Docker CE is installed",
         packages=[
-            'docker-ce',
-            'docker-ce-cli',
-            'containerd.io',
+            "docker-ce",
+            "docker-ce-cli",
+            "containerd.io",
         ],
         update=True,
     )
 
     init.service(
-        name='Ensure docker service is running',
-        service='docker',
+        name="Ensure docker service is running",
+        service="docker",
         running=True,
         enabled=True,
     )

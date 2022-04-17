@@ -5,8 +5,8 @@ from pyinfra.api import QuoteString, StringCommand
 
 def unix_path_join(*parts):
     parts = list(parts)
-    parts[0:-1] = [part.rstrip('/') for part in parts[0:-1]]
-    return '/'.join(parts)
+    parts[0:-1] = [part.rstrip("/") for part in parts[0:-1]]
+    return "/".join(parts)
 
 
 def ensure_mode_int(mode):
@@ -27,17 +27,17 @@ def ensure_mode_int(mode):
 
 def ensure_whole_line_match(line):
     # Ensure we're matching a whole ^line$
-    if not line.startswith('^'):
-        line = '^.*{0}'.format(line)
+    if not line.startswith("^"):
+        line = "^.*{0}".format(line)
 
-    if not line.endswith('$'):
-        line = '{0}.*$'.format(line)
+    if not line.endswith("$"):
+        line = "{0}.*$".format(line)
 
     return line
 
 
 def get_timestamp():
-    return datetime.now().strftime('%y%m%d%H%M')
+    return datetime.now().strftime("%y%m%d%H%M")
 
 
 def sed_replace(
@@ -48,11 +48,11 @@ def sed_replace(
     backup=False,
     interpolate_variables=False,
 ):
-    flags = ''.join(flags) if flags else ''
+    flags = "".join(flags) if flags else ""
 
-    line = line.replace('/', r'\/')
+    line = line.replace("/", r"\/")
     replace = str(replace)
-    replace = replace.replace('/', r'\/')
+    replace = replace.replace("/", r"\/")
     backup_extension = get_timestamp()
 
     if interpolate_variables:
@@ -69,45 +69,48 @@ def sed_replace(
     sed_script = sed_script_formatter.format(line, replace, flags)
 
     sed_command = StringCommand(
-        'sed', '-i.{0}'.format(backup_extension), sed_script, QuoteString(filename),
+        "sed",
+        "-i.{0}".format(backup_extension),
+        sed_script,
+        QuoteString(filename),
     )
 
     if not backup:  # if we're not backing up, remove the file *if* sed succeeds
-        backup_filename = '{0}.{1}'.format(filename, backup_extension)
-        sed_command = StringCommand(sed_command, '&&', 'rm', '-f', QuoteString(backup_filename))
+        backup_filename = "{0}.{1}".format(filename, backup_extension)
+        sed_command = StringCommand(sed_command, "&&", "rm", "-f", QuoteString(backup_filename))
 
     return sed_command
 
 
 def chmod(target, mode, recursive=False):
-    args = ['chmod']
+    args = ["chmod"]
     if recursive:
-        args.append('-R')
+        args.append("-R")
 
-    args.append('{0}'.format(mode))
+    args.append("{0}".format(mode))
 
-    return StringCommand(' '.join(args), QuoteString(target))
+    return StringCommand(" ".join(args), QuoteString(target))
 
 
 def chown(target, user, group=None, recursive=False, dereference=True):
-    command = 'chown'
+    command = "chown"
     user_group = None
 
     if user and group:
-        user_group = '{0}:{1}'.format(user, group)
+        user_group = "{0}:{1}".format(user, group)
 
     elif user:
         user_group = user
 
     elif group:
-        command = 'chgrp'
+        command = "chgrp"
         user_group = group
 
     args = [command]
     if recursive:
-        args.append('-R')
+        args.append("-R")
 
     if not dereference:
-        args.append('-h')
+        args.append("-h")
 
-    return StringCommand(' '.join(args), user_group, QuoteString(target))
+    return StringCommand(" ".join(args), user_group, QuoteString(target))

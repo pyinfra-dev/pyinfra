@@ -1,4 +1,4 @@
-'''
+"""
 The ``@docker`` connector allows you to build Docker images, or modify running
 Docker containers, using ``pyinfra``. You can pass either an image name or
 existing container ID:
@@ -19,11 +19,10 @@ existing container ID:
 
     # Execute against a running container
     pyinfra @docker/2beb8c15a1b1 ...
-'''
+"""
 
 import json
 import os
-
 from tempfile import mkstemp
 
 import click
@@ -41,11 +40,11 @@ from .util import make_unix_command_for_host
 
 class Meta(BaseConnectorMeta):
     handles_execution = True
-    keys_prefix = 'docker'
+    keys_prefix = "docker"
 
     class DataKeys:
-        identifier = 'ID of container or image to target'
-        container_id = 'ID of container to target, overrides ``docker_identifier``'
+        identifier = "ID of container or image to target"
+        container_id = "ID of container to target, overrides ``docker_identifier``"
 
 
 DATA_KEYS = Meta.keys()
@@ -53,29 +52,31 @@ DATA_KEYS = Meta.keys()
 
 def make_names_data(identifier=None):
     if not identifier:
-        raise InventoryError('No docker base ID provided!')
+        raise InventoryError("No docker base ID provided!")
 
     yield (
-        '@docker/{0}'.format(identifier),
+        "@docker/{0}".format(identifier),
         {DATA_KEYS.identifier: identifier},
-        ['@docker'],
+        ["@docker"],
     )
 
 
 def _find_start_docker_container(container_id):
-    docker_info = local.shell('docker container inspect {0}'.format(container_id))
+    docker_info = local.shell("docker container inspect {0}".format(container_id))
     docker_info = json.loads(docker_info)[0]
-    if docker_info['State']['Running'] is False:
-        logger.info('Starting stopped container: {0}'.format(container_id))
-        local.shell('docker container start {0}'.format(container_id))
+    if docker_info["State"]["Running"] is False:
+        logger.info("Starting stopped container: {0}".format(container_id))
+        local.shell("docker container start {0}".format(container_id))
 
 
 def _start_docker_image(image_name):
     try:
         return local.shell(
-            'docker run -d {0} tail -f /dev/null'.format(image_name),
+            "docker run -d {0} tail -f /dev/null".format(image_name),
             splitlines=True,
-        )[-1]  # last line is the container ID
+        )[
+            -1
+        ]  # last line is the container ID
     except PyinfraError as e:
         raise ConnectError(e.args[0])
 
@@ -83,12 +84,12 @@ def _start_docker_image(image_name):
 def connect(state, host):
     docker_container_id = host.data.get(DATA_KEYS.container_id)
     if docker_container_id:  # user can provide a docker_container_id
-        host.connector_data['docker_container_no_disconnect'] = True
-        host.connector_data['docker_container_id'] = docker_container_id
+        host.connector_data["docker_container_no_disconnect"] = True
+        host.connector_data["docker_container_id"] = docker_container_id
         return True
 
     docker_identifier = getattr(host.data, DATA_KEYS.identifier)
-    with progress_spinner({'prepare docker container'}):
+    with progress_spinner({"prepare docker container"}):
         try:
             # Check if the provided @docker/X is an existing container ID
             _find_start_docker_container(docker_identifier)
@@ -96,39 +97,46 @@ def connect(state, host):
             container_id = _start_docker_image(docker_identifier)
         else:
             container_id = docker_identifier
-            host.connector_data['docker_container_no_disconnect'] = True
+            host.connector_data["docker_container_no_disconnect"] = True
 
-    host.connector_data['docker_container_id'] = container_id
+    host.connector_data["docker_container_id"] = container_id
     return True
 
 
 def disconnect(state, host):
-    container_id = host.connector_data['docker_container_id']
+    container_id = host.connector_data["docker_container_id"]
 
-    if host.connector_data.get('docker_container_no_disconnect'):
-        logger.info('{0}docker build complete, container left running: {1}'.format(
-            host.print_prefix, click.style(container_id, bold=True),
-        ))
+    if host.connector_data.get("docker_container_no_disconnect"):
+        logger.info(
+            "{0}docker build complete, container left running: {1}".format(
+                host.print_prefix,
+                click.style(container_id, bold=True),
+            ),
+        )
         return
 
-    with progress_spinner({'docker commit'}):
-        image_id = local.shell(
-            'docker commit {0}'.format(container_id),
-            splitlines=True,
-        )[-1][7:19]  # last line is the image ID, get sha256:[XXXXXXXXXX]...
+    with progress_spinner({"docker commit"}):
+        image_id = local.shell("docker commit {0}".format(container_id), splitlines=True)[-1][
+            7:19
+        ]  # last line is the image ID, get sha256:[XXXXXXXXXX]...
 
-    with progress_spinner({'docker rm'}):
+    with progress_spinner({"docker rm"}):
         local.shell(
-            'docker rm -f {0}'.format(container_id),
+            "docker rm -f {0}".format(container_id),
         )
 
-    logger.info('{0}docker build complete, image ID: {1}'.format(
-        host.print_prefix, click.style(image_id, bold=True),
-    ))
+    logger.info(
+        "{0}docker build complete, image ID: {1}".format(
+            host.print_prefix,
+            click.style(image_id, bold=True),
+        ),
+    )
 
 
 def run_shell_command(
-    state, host, command,
+    state,
+    host,
+    command,
     get_pty=False,
     timeout=None,
     stdin=None,
@@ -136,21 +144,28 @@ def run_shell_command(
     print_output=False,
     print_input=False,
     return_combined_output=False,
-    **command_kwargs
+    **command_kwargs,
 ):
-    container_id = host.connector_data['docker_container_id']
+    container_id = host.connector_data["docker_container_id"]
 
     command = make_unix_command_for_host(state, host, command, **command_kwargs)
     command = QuoteString(command)
 
-    docker_flags = '-it' if get_pty else '-i'
+    docker_flags = "-it" if get_pty else "-i"
     docker_command = StringCommand(
-        'docker', 'exec', docker_flags, container_id,
-        'sh', '-c', command,
+        "docker",
+        "exec",
+        docker_flags,
+        container_id,
+        "sh",
+        "-c",
+        command,
     )
 
     return run_local_shell_command(
-        state, host, docker_command,
+        state,
+        host,
+        docker_command,
         timeout=timeout,
         stdin=stdin,
         success_exit_codes=success_exit_codes,
@@ -161,22 +176,26 @@ def run_shell_command(
 
 
 def put_file(
-    state, host, filename_or_io, remote_filename,
+    state,
+    host,
+    filename_or_io,
+    remote_filename,
     remote_temp_filename=None,  # ignored
-    print_output=False, print_input=False,
-    **kwargs  # ignored (sudo/etc)
+    print_output=False,
+    print_input=False,
+    **kwargs,  # ignored (sudo/etc)
 ):
-    '''
+    """
     Upload a file/IO object to the target Docker container by copying it to a
     temporary location and then uploading it into the container using ``docker cp``.
-    '''
+    """
 
     fd, temp_filename = mkstemp()
 
     try:
         # Load our file or IO object and write it to the temporary file
         with get_file_io(filename_or_io) as file_io:
-            with open(temp_filename, 'wb') as temp_f:
+            with open(temp_filename, "wb") as temp_f:
                 data = file_io.read()
 
                 if isinstance(data, str):
@@ -184,15 +203,17 @@ def put_file(
 
                 temp_f.write(data)
 
-        docker_id = host.connector_data['docker_container_id']
-        docker_command = 'docker cp {0} {1}:{2}'.format(
+        docker_id = host.connector_data["docker_container_id"]
+        docker_command = "docker cp {0} {1}:{2}".format(
             temp_filename,
             docker_id,
             remote_filename,
         )
 
         status, _, stderr = run_local_shell_command(
-            state, host, docker_command,
+            state,
+            host,
+            docker_command,
             print_output=print_output,
             print_input=print_input,
         )
@@ -201,46 +222,56 @@ def put_file(
         os.remove(temp_filename)
 
     if not status:
-        raise IOError('\n'.join(stderr))
+        raise IOError("\n".join(stderr))
 
     if print_output:
-        click.echo('{0}file uploaded to container: {1}'.format(
-            host.print_prefix, remote_filename,
-        ), err=True)
+        click.echo(
+            "{0}file uploaded to container: {1}".format(
+                host.print_prefix,
+                remote_filename,
+            ),
+            err=True,
+        )
 
     return status
 
 
 def get_file(
-    state, host, remote_filename, filename_or_io,
+    state,
+    host,
+    remote_filename,
+    filename_or_io,
     remote_temp_filename=None,  # ignored
-    print_output=False, print_input=False,
-    **kwargs  # ignored (sudo/etc)
+    print_output=False,
+    print_input=False,
+    **kwargs,  # ignored (sudo/etc)
 ):
-    '''
+    """
     Download a file from the target Docker container by copying it to a temporary
     location and then reading that into our final file/IO object.
-    '''
+    """
 
     fd, temp_filename = mkstemp()
 
     try:
-        docker_id = host.connector_data['docker_container_id']
-        docker_command = 'docker cp {0}:{1} {2}'.format(
+        docker_id = host.connector_data["docker_container_id"]
+        docker_command = "docker cp {0}:{1} {2}".format(
             docker_id,
             remote_filename,
             temp_filename,
         )
 
         status, _, stderr = run_local_shell_command(
-            state, host, docker_command,
+            state,
+            host,
+            docker_command,
             print_output=print_output,
             print_input=print_input,
         )
 
         # Load the temporary file and write it to our file or IO object
         with open(temp_filename) as temp_f:
-            with get_file_io(filename_or_io, 'wb') as file_io:
+            with get_file_io(filename_or_io, "wb") as file_io:
                 data = temp_f.read()
 
                 if isinstance(data, str):
@@ -252,11 +283,15 @@ def get_file(
         os.remove(temp_filename)
 
     if not status:
-        raise IOError('\n'.join(stderr))
+        raise IOError("\n".join(stderr))
 
     if print_output:
-        click.echo('{0}file downloaded from container: {1}'.format(
-            host.print_prefix, remote_filename,
-        ), err=True)
+        click.echo(
+            "{0}file downloaded from container: {1}".format(
+                host.print_prefix,
+                remote_filename,
+            ),
+            err=True,
+        )
 
     return status

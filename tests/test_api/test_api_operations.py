@@ -5,7 +5,6 @@ from unittest import TestCase
 from unittest.mock import mock_open, patch
 
 import pyinfra
-
 from pyinfra.api import (
     BaseStateCallback,
     Config,
@@ -18,30 +17,26 @@ from pyinfra.api import (
 )
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.api.operation import add_op, OperationMeta
+from pyinfra.api.operation import OperationMeta, add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.operations import files, python, server
 
-from ..paramiko_util import (
-    FakeBuffer,
-    FakeChannel,
-    PatchSSHTestCase,
-)
+from ..paramiko_util import FakeBuffer, FakeChannel, PatchSSHTestCase
 from ..util import make_inventory
 
 
 class TestOperationMeta(TestCase):
     def test_operation_meta_repr(self):
-        op_meta = OperationMeta('hash', [])
-        assert repr(op_meta) == 'commands:[] changed:False hash:hash'
+        op_meta = OperationMeta("hash", [])
+        assert repr(op_meta) == "commands:[] changed:False hash:hash"
 
 
 class TestOperationsApi(PatchSSHTestCase):
     def test_op(self):
         inventory = make_inventory()
-        somehost = inventory.get_host('somehost')
-        anotherhost = inventory.get_host('anotherhost')
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
 
         state = State(inventory, Config())
         state.add_callback_handler(BaseStateCallback())
@@ -55,18 +50,19 @@ class TestOperationsApi(PatchSSHTestCase):
         connect_all(state)
 
         add_op(
-            state, files.file,
-            '/var/log/pyinfra.log',
-            user='pyinfra',
-            group='pyinfra',
-            mode='644',
+            state,
+            files.file,
+            "/var/log/pyinfra.log",
+            user="pyinfra",
+            group="pyinfra",
+            mode="644",
             create_remote_dir=False,
             sudo=True,
-            sudo_user='test_sudo',
-            su_user='test_su',
+            sudo_user="test_sudo",
+            su_user="test_su",
             ignore_errors=True,
             env={
-                'TEST': 'what',
+                "TEST": "what",
             },
         )
 
@@ -78,40 +74,40 @@ class TestOperationsApi(PatchSSHTestCase):
         first_op_hash = op_order[0]
 
         # Ensure the op name
-        assert state.op_meta[first_op_hash]['names'] == {'Files/File'}
+        assert state.op_meta[first_op_hash]["names"] == {"Files/File"}
 
         # Ensure the commands
-        assert state.ops[somehost][first_op_hash]['commands'] == [
-            StringCommand('touch /var/log/pyinfra.log'),
-            StringCommand('chmod 644 /var/log/pyinfra.log'),
-            StringCommand('chown pyinfra:pyinfra /var/log/pyinfra.log'),
+        assert state.ops[somehost][first_op_hash]["commands"] == [
+            StringCommand("touch /var/log/pyinfra.log"),
+            StringCommand("chmod 644 /var/log/pyinfra.log"),
+            StringCommand("chown pyinfra:pyinfra /var/log/pyinfra.log"),
         ]
 
         # Ensure the global kwargs (same for both hosts)
-        somehost_global_kwargs = state.ops[somehost][first_op_hash]['global_kwargs']
-        assert somehost_global_kwargs['sudo'] is True
-        assert somehost_global_kwargs['sudo_user'] == 'test_sudo'
-        assert somehost_global_kwargs['su_user'] == 'test_su'
-        assert somehost_global_kwargs['ignore_errors'] is True
+        somehost_global_kwargs = state.ops[somehost][first_op_hash]["global_kwargs"]
+        assert somehost_global_kwargs["sudo"] is True
+        assert somehost_global_kwargs["sudo_user"] == "test_sudo"
+        assert somehost_global_kwargs["su_user"] == "test_su"
+        assert somehost_global_kwargs["ignore_errors"] is True
 
-        anotherhost_global_kwargs = state.ops[anotherhost][first_op_hash]['global_kwargs']
-        assert anotherhost_global_kwargs['sudo'] is True
-        assert anotherhost_global_kwargs['sudo_user'] == 'test_sudo'
-        assert anotherhost_global_kwargs['su_user'] == 'test_su'
-        assert anotherhost_global_kwargs['ignore_errors'] is True
+        anotherhost_global_kwargs = state.ops[anotherhost][first_op_hash]["global_kwargs"]
+        assert anotherhost_global_kwargs["sudo"] is True
+        assert anotherhost_global_kwargs["sudo_user"] == "test_sudo"
+        assert anotherhost_global_kwargs["su_user"] == "test_su"
+        assert anotherhost_global_kwargs["ignore_errors"] is True
 
         # Ensure run ops works
         run_ops(state)
 
         # Ensure ops completed OK
-        assert state.results[somehost]['success_ops'] == 1
-        assert state.results[somehost]['ops'] == 1
-        assert state.results[anotherhost]['success_ops'] == 1
-        assert state.results[anotherhost]['ops'] == 1
+        assert state.results[somehost]["success_ops"] == 1
+        assert state.results[somehost]["ops"] == 1
+        assert state.results[anotherhost]["success_ops"] == 1
+        assert state.results[anotherhost]["ops"] == 1
 
         # And w/o errors
-        assert state.results[somehost]['error_ops'] == 0
-        assert state.results[anotherhost]['error_ops'] == 0
+        assert state.results[somehost]["error_ops"] == 0
+        assert state.results[anotherhost]["error_ops"] == 0
 
         # And with the different modes
         run_ops(state, serial=True)
@@ -140,8 +136,8 @@ class TestOperationsApi(PatchSSHTestCase):
     #         'you must use `add_op` to add operations.'
     #     )
 
-    @patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True)
-    @patch('pyinfra.operations.files.os.path.isfile', lambda *args, **kwargs: True)
+    @patch("pyinfra.api.util.open", mock_open(read_data="test!"), create=True)
+    @patch("pyinfra.operations.files.os.path.isfile", lambda *args, **kwargs: True)
     def test_file_upload_op(self):
         inventory = make_inventory()
 
@@ -150,28 +146,31 @@ class TestOperationsApi(PatchSSHTestCase):
 
         # Test normal
         add_op(
-            state, files.put,
-            name='First op name',
-            src='files/file.txt',
-            dest='/home/vagrant/file.txt',
+            state,
+            files.put,
+            name="First op name",
+            src="files/file.txt",
+            dest="/home/vagrant/file.txt",
         )
 
         # And with sudo
         add_op(
-            state, files.put,
-            src='files/file.txt',
-            dest='/home/vagrant/file.txt',
+            state,
+            files.put,
+            src="files/file.txt",
+            dest="/home/vagrant/file.txt",
             sudo=True,
-            sudo_user='pyinfra',
+            sudo_user="pyinfra",
         )
 
         # And with su
         add_op(
-            state, files.put,
-            src='files/file.txt',
-            dest='/home/vagrant/file.txt',
+            state,
+            files.put,
+            src="files/file.txt",
+            dest="/home/vagrant/file.txt",
             sudo=True,
-            su_user='pyinfra',
+            su_user="pyinfra",
         )
 
         op_order = state.get_op_order()
@@ -183,36 +182,36 @@ class TestOperationsApi(PatchSSHTestCase):
         second_op_hash = op_order[1]
 
         # Ensure first op is the right one
-        assert state.op_meta[first_op_hash]['names'] == {'First op name'}
+        assert state.op_meta[first_op_hash]["names"] == {"First op name"}
 
-        somehost = inventory.get_host('somehost')
-        anotherhost = inventory.get_host('anotherhost')
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
 
         # Ensure first op has the right (upload) command
-        assert state.ops[somehost][first_op_hash]['commands'] == [
-            StringCommand('mkdir -p /home/vagrant'),
-            FileUploadCommand('files/file.txt', '/home/vagrant/file.txt'),
+        assert state.ops[somehost][first_op_hash]["commands"] == [
+            StringCommand("mkdir -p /home/vagrant"),
+            FileUploadCommand("files/file.txt", "/home/vagrant/file.txt"),
         ]
 
         # Ensure second op has sudo/sudo_user
-        assert state.ops[somehost][second_op_hash]['global_kwargs']['sudo'] is True
-        assert state.ops[somehost][second_op_hash]['global_kwargs']['sudo_user'] == 'pyinfra'
+        assert state.ops[somehost][second_op_hash]["global_kwargs"]["sudo"] is True
+        assert state.ops[somehost][second_op_hash]["global_kwargs"]["sudo_user"] == "pyinfra"
 
         # Ensure third has su_user
-        assert state.ops[somehost][op_order[2]]['global_kwargs']['su_user'] == 'pyinfra'
+        assert state.ops[somehost][op_order[2]]["global_kwargs"]["su_user"] == "pyinfra"
 
         # Check run ops works
         run_ops(state)
 
         # Ensure ops completed OK
-        assert state.results[somehost]['success_ops'] == 3
-        assert state.results[somehost]['ops'] == 3
-        assert state.results[anotherhost]['success_ops'] == 3
-        assert state.results[anotherhost]['ops'] == 3
+        assert state.results[somehost]["success_ops"] == 3
+        assert state.results[somehost]["ops"] == 3
+        assert state.results[anotherhost]["success_ops"] == 3
+        assert state.results[anotherhost]["ops"] == 3
 
         # And w/o errors
-        assert state.results[somehost]['error_ops'] == 0
-        assert state.results[anotherhost]['error_ops'] == 0
+        assert state.results[somehost]["error_ops"] == 0
+        assert state.results[anotherhost]["error_ops"] == 0
 
     def test_file_download_op(self):
         inventory = make_inventory()
@@ -220,12 +219,13 @@ class TestOperationsApi(PatchSSHTestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch('pyinfra.operations.files.os.path.isfile', lambda *args, **kwargs: True):
+        with patch("pyinfra.operations.files.os.path.isfile", lambda *args, **kwargs: True):
             add_op(
-                state, files.get,
-                name='First op name',
-                src='/home/vagrant/file.txt',
-                dest='files/file.txt',
+                state,
+                files.get,
+                name="First op name",
+                src="/home/vagrant/file.txt",
+                dest="files/file.txt",
             )
 
         op_order = state.get_op_order()
@@ -233,25 +233,25 @@ class TestOperationsApi(PatchSSHTestCase):
         assert len(op_order) == 1
 
         first_op_hash = op_order[0]
-        assert state.op_meta[first_op_hash]['names'] == {'First op name'}
+        assert state.op_meta[first_op_hash]["names"] == {"First op name"}
 
-        somehost = inventory.get_host('somehost')
-        anotherhost = inventory.get_host('anotherhost')
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
 
         # Ensure first op has the right (upload) command
-        assert state.ops[somehost][first_op_hash]['commands'] == [
-            FileDownloadCommand('/home/vagrant/file.txt', 'files/file.txt'),
+        assert state.ops[somehost][first_op_hash]["commands"] == [
+            FileDownloadCommand("/home/vagrant/file.txt", "files/file.txt"),
         ]
 
-        with patch('pyinfra.api.util.open', mock_open(read_data='test!'), create=True):
+        with patch("pyinfra.api.util.open", mock_open(read_data="test!"), create=True):
             run_ops(state)
 
-        assert state.results[somehost]['success_ops'] == 1
-        assert state.results[somehost]['ops'] == 1
-        assert state.results[anotherhost]['success_ops'] == 1
-        assert state.results[anotherhost]['ops'] == 1
-        assert state.results[somehost]['error_ops'] == 0
-        assert state.results[anotherhost]['error_ops'] == 0
+        assert state.results[somehost]["success_ops"] == 1
+        assert state.results[somehost]["ops"] == 1
+        assert state.results[anotherhost]["success_ops"] == 1
+        assert state.results[anotherhost]["ops"] == 1
+        assert state.results[somehost]["error_ops"] == 0
+        assert state.results[anotherhost]["error_ops"] == 0
 
     def test_function_call_op(self):
         inventory = make_inventory()
@@ -285,8 +285,8 @@ class TestOperationsApi(PatchSSHTestCase):
         # Ensure it's added to op_order
         assert len(state.get_op_order()) == 1
 
-        somehost = inventory.get_host('somehost')
-        anotherhost = inventory.get_host('anotherhost')
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
 
         # Ensure between the two hosts we only run the one op
         assert len(state.ops[somehost]) + len(state.ops[anotherhost]) == 1
@@ -295,44 +295,43 @@ class TestOperationsApi(PatchSSHTestCase):
         run_ops(state)
 
         assert (
-            state.results[somehost]['success_ops']
-            + state.results[anotherhost]['success_ops']
+            state.results[somehost]["success_ops"] + state.results[anotherhost]["success_ops"]
         ) == 1
 
     def test_rsync_op(self):
-        inventory = make_inventory(hosts=('somehost',))
+        inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch('pyinfra.connectors.ssh.check_can_rsync'):
-            add_op(state, files.rsync, 'src', 'dest', sudo=True, sudo_user='root')
+        with patch("pyinfra.connectors.ssh.check_can_rsync"):
+            add_op(state, files.rsync, "src", "dest", sudo=True, sudo_user="root")
 
         assert len(state.get_op_order()) == 1
 
-        with patch('pyinfra.connectors.ssh.run_local_process') as fake_run_local_process:
+        with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
             fake_run_local_process.return_value = 0, []
             run_ops(state)
 
         fake_run_local_process.assert_called_with(
             (
-                'rsync -ax --delete --rsh '
+                "rsync -ax --delete --rsh "
                 "'ssh -o BatchMode=yes '"
                 " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
-            print_prefix=inventory.get_host('somehost').print_prefix,
+            print_prefix=inventory.get_host("somehost").print_prefix,
         )
 
     def test_rsync_op_failure(self):
-        inventory = make_inventory(hosts=('somehost',))
+        inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch('pyinfra.connectors.ssh.find_executable', lambda x: None):
+        with patch("pyinfra.connectors.ssh.find_executable", lambda x: None):
             with self.assertRaises(OperationError) as context:
-                add_op(state, files.rsync, 'src', 'dest')
+                add_op(state, files.rsync, "src", "dest")
 
-        assert context.exception.args[0] == 'The `rsync` binary is not available on this system.'
+        assert context.exception.args[0] == "The `rsync` binary is not available on this system."
 
     def test_op_cannot_change_execution_kwargs(self):
         inventory = make_inventory()
@@ -343,14 +342,14 @@ class TestOperationsApi(PatchSSHTestCase):
             def setdefault(self, key, _):
                 return self[key]
 
-        state.op_meta = NoSetDefaultDict(lambda: {'serial': True})
+        state.op_meta = NoSetDefaultDict(lambda: {"serial": True})
 
         connect_all(state)
 
         with self.assertRaises(OperationValueError) as context:
-            add_op(state, files.file, '/var/log/pyinfra.log', serial=False)
+            add_op(state, files.file, "/var/log/pyinfra.log", serial=False)
 
-        assert context.exception.args[0] == 'Cannot have different values for `serial`.'
+        assert context.exception.args[0] == "Cannot have different values for `serial`."
 
 
 class TestOperationFailures(PatchSSHTestCase):
@@ -361,24 +360,24 @@ class TestOperationFailures(PatchSSHTestCase):
 
         add_op(state, server.shell, 'echo "hi"')
 
-        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch("pyinfra.connectors.ssh.run_shell_command") as fake_run_command:
             fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
                 False,
-                FakeBuffer('', fake_channel),
+                FakeBuffer("", fake_channel),
             )
 
             with self.assertRaises(PyinfraError) as e:
                 run_ops(state)
 
-            assert e.exception.args[0] == 'No hosts remaining!'
+            assert e.exception.args[0] == "No hosts remaining!"
 
-            somehost = inventory.get_host('somehost')
+            somehost = inventory.get_host("somehost")
 
             # Ensure the op was not flagged as success
-            assert state.results[somehost]['success_ops'] == 0
+            assert state.results[somehost]["success_ops"] == 0
             # And was flagged asn an error
-            assert state.results[somehost]['error_ops'] == 1
+            assert state.results[somehost]["error_ops"] == 1
 
     def test_ignore_errors_op_fail(self):
         inventory = make_inventory()
@@ -387,23 +386,23 @@ class TestOperationFailures(PatchSSHTestCase):
 
         add_op(state, server.shell, 'echo "hi"', ignore_errors=True)
 
-        with patch('pyinfra.connectors.ssh.run_shell_command') as fake_run_command:
+        with patch("pyinfra.connectors.ssh.run_shell_command") as fake_run_command:
             fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
                 False,
-                FakeBuffer('', fake_channel),
+                FakeBuffer("", fake_channel),
             )
 
             # This should run OK
             run_ops(state)
 
-        somehost = inventory.get_host('somehost')
+        somehost = inventory.get_host("somehost")
 
         # Ensure the op was added to results
-        assert state.results[somehost]['ops'] == 1
-        assert state.results[somehost]['error_ops'] == 1
+        assert state.results[somehost]["ops"] == 1
+        assert state.results[somehost]["error_ops"] == 1
         # But not as a success
-        assert state.results[somehost]['success_ops'] == 0
+        assert state.results[somehost]["success_ops"] == 0
 
     # def test_no_invalid_op_call(self):
     #     inventory = make_inventory()
@@ -413,12 +412,12 @@ class TestOperationFailures(PatchSSHTestCase):
 
     #     state.in_op = True
     #     with self.assertRaises(PyinfraError):
-    #         server.user('someuser')
+    #         server.user('user')
 
     #     state.in_op = False
     #     state.in_deploy = True
     #     with self.assertRaises(PyinfraError):
-    #         server.user('someuser')
+    #         server.user('user')
 
 
 class TestOperationOrdering(PatchSSHTestCase):
@@ -436,20 +435,20 @@ class TestOperationOrdering(PatchSSHTestCase):
         ctx_state.set(state)
 
         # Add op to both hosts
-        for name in ('anotherhost', 'somehost'):
+        for name in ("anotherhost", "somehost"):
             ctx_host.set(inventory.get_host(name))
-            server.shell('echo hi')  # note this is called twice but on *the same line*
+            server.shell("echo hi")  # note this is called twice but on *the same line*
 
         # Add op to just the second host - using the context modules such that
         # it replicates a deploy file.
-        ctx_host.set(inventory.get_host('anotherhost'))
-        first_context_hash = server.user('anotherhost_user').hash
+        ctx_host.set(inventory.get_host("anotherhost"))
+        first_context_hash = server.user("anotherhost_user").hash
         first_context_call_line = getframeinfo(currentframe()).lineno - 1
 
         # Add op to just the first host - using the context modules such that
         # it replicates a deploy file.
-        ctx_host.set(inventory.get_host('somehost'))
-        second_context_hash = server.user('somehost_user').hash
+        ctx_host.set(inventory.get_host("somehost"))
+        second_context_hash = server.user("somehost_user").hash
         second_context_call_line = getframeinfo(currentframe()).lineno - 1
 
         ctx_state.reset()
@@ -466,14 +465,14 @@ class TestOperationOrdering(PatchSSHTestCase):
         assert op_order[2] == second_context_hash
 
         # And that they have the expected line numbers
-        assert state.op_line_numbers_to_hash.get((0, first_context_call_line)) \
-            == first_context_hash
-        assert state.op_line_numbers_to_hash.get((0, second_context_call_line)) \
-            == second_context_hash
+        assert state.op_line_numbers_to_hash.get((0, first_context_call_line)) == first_context_hash
+        assert (
+            state.op_line_numbers_to_hash.get((0, second_context_call_line)) == second_context_hash
+        )
 
         # Ensure somehost has two ops and anotherhost only has the one
-        assert len(state.ops[inventory.get_host('somehost')]) == 2
-        assert len(state.ops[inventory.get_host('anotherhost')]) == 2
+        assert len(state.ops[inventory.get_host("somehost")]) == 2
+        assert len(state.ops[inventory.get_host("anotherhost")]) == 2
 
     # In API mode, pyinfra *overrides* the line numbers such that whenever an
     # operation or deploy is added it is simply appended. This makes sense as
@@ -483,12 +482,12 @@ class TestOperationOrdering(PatchSSHTestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        another_host = inventory.get_host('anotherhost')
+        another_host = inventory.get_host("anotherhost")
 
         def add_another_op():
-            return add_op(state, server.shell, 'echo second-op')[another_host].hash
+            return add_op(state, server.shell, "echo second-op")[another_host].hash
 
-        first_op_hash = add_op(state, server.shell, 'echo first-op')[another_host].hash
+        first_op_hash = add_op(state, server.shell, "echo first-op")[another_host].hash
         second_op_hash = add_another_op()  # note `add_op` will be called on an earlier line
 
         op_order = state.get_op_order()
@@ -498,7 +497,7 @@ class TestOperationOrdering(PatchSSHTestCase):
         assert op_order[1] == second_op_hash
 
 
-this_filename = path.join('tests', 'test_api', 'test_api_operations.py')
+this_filename = path.join("tests", "test_api", "test_api_operations.py")
 
 
 # class TestOperationExceptions(TestCase):

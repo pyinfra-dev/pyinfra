@@ -1,2 +1,2 @@
-master_servers = ['@vagrant/master']
-agent_servers = ['@vagrant/agent']
+master_servers = ["@vagrant/master"]
+agent_servers = ["@vagrant/agent"]

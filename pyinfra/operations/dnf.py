@@ -1,6 +1,6 @@
-'''
+"""
 Manage dnf packages and repositories. Note that dnf package names are case-sensitive.
-'''
+"""
 
 from pyinfra import host, state
 from pyinfra.api import operation
@@ -12,7 +12,7 @@ from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 
 @operation(is_idempotent=False)
 def key(src):
-    '''
+    """
     Add dnf gpg keys with ``rpm``.
 
     + key: filename or URL
@@ -30,20 +30,23 @@ def key(src):
             src=f"https://download.docker.com/linux/{linux_id}/gpg",
         )
 
-    '''
+    """
 
-    yield 'rpm --import {0}'.format(src)
+    yield "rpm --import {0}".format(src)
 
 
 @operation
 def repo(
     src,
     present=True,
-    baseurl=None, description=None,
-    enabled=True, gpgcheck=True, gpgkey=None,
+    baseurl=None,
+    description=None,
+    enabled=True,
+    gpgcheck=True,
+    gpgkey=None,
 ):
     # NOTE: if updating this docstring also update `yum.repo`
-    '''
+    """
     Add/remove/update dnf repositories.
 
     + name: URL or name for the ``.repo``   file
@@ -75,18 +78,26 @@ def repo(
             src="DockerCE",
             baseurl="https://download.docker.com/linux/centos/7/$basearch/stable",
         )
-    '''
+    """
 
     yield from ensure_yum_repo(
-        state, host, files,
-        src, baseurl, present, description, enabled, gpgcheck, gpgkey,
+        state,
+        host,
+        files,
+        src,
+        baseurl,
+        present,
+        description,
+        enabled,
+        gpgcheck,
+        gpgkey,
     )
 
 
 @operation
 def rpm(src, present=True):
     # NOTE: if updating this docstring also update `yum.rpm`
-    '''
+    """
     Add/remove ``.rpm`` file packages.
 
     + src: filename or URL of the ``.rpm`` package
@@ -105,18 +116,19 @@ def rpm(src, present=True):
            name="Install EPEL rpm to enable EPEL repo",
            src=f"https://dl.fedoraproject.org/pub/epel/epel-release-latest-{major_centos_version}.noarch.rpm",
         )
-    '''
+    """
 
-    yield from ensure_rpm(state, host, files, src, present, 'dnf')
+    yield from ensure_rpm(state, host, files, src, present, "dnf")
 
 
 @operation(is_idempotent=False)
 def update():
-    '''
+    """
     Updates all dnf packages.
-    '''
+    """
 
-    yield 'dnf update -y'
+    yield "dnf update -y"
+
 
 _update = update  # noqa: E305 (for use below where update is a kwarg)
 
@@ -124,10 +136,15 @@ _update = update  # noqa: E305 (for use below where update is a kwarg)
 @operation
 def packages(
     packages=None,
-    present=True, latest=False, update=False, clean=False, nobest=False,
-    extra_install_args=None, extra_uninstall_args=None,
+    present=True,
+    latest=False,
+    update=False,
+    clean=False,
+    nobest=False,
+    extra_install_args=None,
+    extra_uninstall_args=None,
 ):
-    '''
+    """
     Install/remove/update dnf packages & updates.
 
     + packages: list of packages to ensure
@@ -159,33 +176,36 @@ def packages(
             packages=["vim"],
             latest=True,
         )
-    '''
+    """
 
     if clean:
-        yield 'dnf clean all'
+        yield "dnf clean all"
 
     if update:
         yield from _update()
 
-    install_command = ['dnf', 'install', '-y']
+    install_command = ["dnf", "install", "-y"]
 
     if nobest:
-        install_command.append('--nobest')
+        install_command.append("--nobest")
 
     if extra_install_args:
         install_command.append(extra_install_args)
 
-    uninstall_command = ['dnf', 'remove', '-y']
+    uninstall_command = ["dnf", "remove", "-y"]
 
     if extra_uninstall_args:
         uninstall_command.append(extra_uninstall_args)
 
     yield from ensure_packages(
-        host, packages, host.get_fact(RpmPackages), present,
-        install_command=' '.join(install_command),
-        uninstall_command=' '.join(uninstall_command),
-        upgrade_command='dnf update -y',
-        version_join='=',
+        host,
+        packages,
+        host.get_fact(RpmPackages),
+        present,
+        install_command=" ".join(install_command),
+        uninstall_command=" ".join(uninstall_command),
+        upgrade_command="dnf update -y",
+        version_join="=",
         latest=latest,
         expand_package_fact=lambda package: host.get_fact(
             RpmPackageProvides,

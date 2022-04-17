@@ -1,4 +1,4 @@
-'''
+"""
 Manage MySQL databases, users and privileges.
 
 Requires the ``mysql`` CLI executable on the target host(s).
@@ -11,16 +11,16 @@ All operations in this module take four optional arguments:
 
 See the example/mysql.py
 
-'''
+"""
 
 from pyinfra import host
-from pyinfra.api import MaskString, operation, OperationError, StringCommand
+from pyinfra.api import MaskString, OperationError, StringCommand, operation
 from pyinfra.facts.mysql import (
-    make_execute_mysql_command,
-    make_mysql_command,
     MysqlDatabases,
     MysqlUserGrants,
     MysqlUsers,
+    make_execute_mysql_command,
+    make_mysql_command,
 )
 
 
@@ -29,16 +29,18 @@ def sql(
     sql,
     database=None,
     # Details for speaking to MySQL via `mysql` CLI
-    mysql_user=None, mysql_password=None,
-    mysql_host=None, mysql_port=None,
+    mysql_user=None,
+    mysql_password=None,
+    mysql_host=None,
+    mysql_port=None,
 ):
-    '''
+    """
     Execute arbitrary SQL against MySQL.
 
     + sql: SQL command(s) to execute
     + database: optional database to open the connection with
     + mysql_*: global module arguments, see above
-    '''
+    """
 
     yield make_execute_mysql_command(
         sql,
@@ -54,7 +56,7 @@ def sql(
 def user(
     user,
     present=True,
-    user_hostname='localhost',
+    user_hostname="localhost",
     password=None,
     privileges=None,
     # MySQL REQUIRE SSL/TLS options
@@ -73,7 +75,7 @@ def user(
     mysql_host=None,
     mysql_port=None,
 ):
-    '''
+    """
     Add/remove/update MySQL users.
 
     + user: the name of the user
@@ -127,12 +129,12 @@ def user(
             require_issuer="/C=SE/ST=Stockholm...",
             require_cipher="EDH-RSA-DES-CBC3-SHA",
         )
-    '''
+    """
 
-    if require and require not in ('SSL', 'X509'):
+    if require and require not in ("SSL", "X509"):
         raise OperationError('Invalid `require` value, must be: "SSL" or "X509"')
 
-    if require != 'X509':
+    if require != "X509":
         if require_cipher:
             raise OperationError('Cannot set `require_cipher` if `require` is not "X509"')
         if require_issuer:
@@ -148,7 +150,7 @@ def user(
         mysql_port=mysql_port,
     )
 
-    user_host = '{0}@{1}'.format(user, user_hostname)
+    user_host = "{0}@{1}".format(user, user_hostname)
     is_present = user_host in current_users
 
     if not present:
@@ -162,18 +164,18 @@ def user(
             )
             current_users.pop(user_host)
         else:
-            host.noop('mysql user {0}@{1} does not exist'.format(user, user_hostname))
+            host.noop("mysql user {0}@{1} does not exist".format(user, user_hostname))
         return
 
     new_or_updated_user_fact = {
-        'ssl_type': 'ANY' if require == 'SSL' else require,
-        'ssl_cipher': require_cipher,
-        'x509_issuer': require_issuer,
-        'x509_subject': require_subject,
-        'max_user_connections': max_connections,
-        'max_questions': max_queries_per_hour,
-        'max_updates': max_updates_per_hour,
-        'max_connections': max_connections_per_hour,
+        "ssl_type": "ANY" if require == "SSL" else require,
+        "ssl_cipher": require_cipher,
+        "x509_issuer": require_issuer,
+        "x509_subject": require_subject,
+        "max_user_connections": max_connections,
+        "max_questions": max_queries_per_hour,
+        "max_updates": max_updates_per_hour,
+        "max_connections": max_connections_per_hour,
     }
 
     if present and not is_present:
@@ -181,11 +183,11 @@ def user(
         if password:
             sql_bits.append(MaskString('IDENTIFIED BY "{0}"'.format(password)))
 
-        if require == 'SSL':
-            sql_bits.append('REQUIRE SSL')
+        if require == "SSL":
+            sql_bits.append("REQUIRE SSL")
 
-        if require == 'X509':
-            sql_bits.append('REQUIRE')
+        if require == "X509":
+            sql_bits.append("REQUIRE")
             require_bits = []
 
             if require_cipher:
@@ -196,23 +198,23 @@ def user(
                 require_bits.append('SUBJECT "{0}"'.format(require_subject))
 
             if not require_bits:
-                require_bits.append('X509')
+                require_bits.append("X509")
 
             sql_bits.extend(require_bits)
 
         resource_bits = []
         if max_connections:
-            resource_bits.append('MAX_USER_CONNECTIONS {0}'.format(max_connections))
+            resource_bits.append("MAX_USER_CONNECTIONS {0}".format(max_connections))
         if max_queries_per_hour:
-            resource_bits.append('MAX_QUERIES_PER_HOUR {0}'.format(max_queries_per_hour))
+            resource_bits.append("MAX_QUERIES_PER_HOUR {0}".format(max_queries_per_hour))
         if max_updates_per_hour:
-            resource_bits.append('MAX_UPDATES_PER_HOUR {0}'.format(max_updates_per_hour))
+            resource_bits.append("MAX_UPDATES_PER_HOUR {0}".format(max_updates_per_hour))
         if max_connections_per_hour:
-            resource_bits.append('MAX_CONNECTIONS_PER_HOUR {0}'.format(max_connections_per_hour))
+            resource_bits.append("MAX_CONNECTIONS_PER_HOUR {0}".format(max_connections_per_hour))
 
         if resource_bits:
-            sql_bits.append('WITH')
-            sql_bits.append(' '.join(resource_bits))
+            sql_bits.append("WITH")
+            sql_bits.append(" ".join(resource_bits))
 
         yield make_execute_mysql_command(
             StringCommand(*sql_bits),
@@ -229,41 +231,41 @@ def user(
 
         alter_bits = []
 
-        if require == 'SSL':
-            if current_user['ssl_type'] != 'ANY':
-                alter_bits.append('REQUIRE SSL')
+        if require == "SSL":
+            if current_user["ssl_type"] != "ANY":
+                alter_bits.append("REQUIRE SSL")
 
-        if require == 'X509':
+        if require == "X509":
             require_bits = []
 
-            if require_cipher and current_user['ssl_cipher'] != require_cipher:
+            if require_cipher and current_user["ssl_cipher"] != require_cipher:
                 require_bits.append('CIPHER "{0}"'.format(require_cipher))
-            if require_issuer and current_user['x509_issuer'] != require_issuer:
+            if require_issuer and current_user["x509_issuer"] != require_issuer:
                 require_bits.append('ISSUER "{0}"'.format(require_issuer))
-            if require_subject and current_user['x509_subject'] != require_subject:
+            if require_subject and current_user["x509_subject"] != require_subject:
                 require_bits.append('SUBJECT "{0}"'.format(require_subject))
 
             if not require_bits:
-                if current_user['ssl_type'] != 'X509':
-                    require_bits.append('X509')
+                if current_user["ssl_type"] != "X509":
+                    require_bits.append("X509")
 
             if require_bits:
-                alter_bits.append('REQUIRE')
+                alter_bits.append("REQUIRE")
                 alter_bits.extend(require_bits)
 
         resource_bits = []
-        if max_connections and current_user['max_user_connections'] != max_connections:
-            resource_bits.append('MAX_USER_CONNECTIONS {0}'.format(max_connections))
-        if max_queries_per_hour and current_user['max_questions'] != max_queries_per_hour:
-            resource_bits.append('MAX_QUERIES_PER_HOUR {0}'.format(max_queries_per_hour))
-        if max_updates_per_hour and current_user['max_updates'] != max_updates_per_hour:
-            resource_bits.append('MAX_UPDATES_PER_HOUR {0}'.format(max_updates_per_hour))
-        if max_connections_per_hour and current_user['max_connections'] != max_connections_per_hour:
-            resource_bits.append('MAX_CONNECTIONS_PER_HOUR {0}'.format(max_connections_per_hour))
+        if max_connections and current_user["max_user_connections"] != max_connections:
+            resource_bits.append("MAX_USER_CONNECTIONS {0}".format(max_connections))
+        if max_queries_per_hour and current_user["max_questions"] != max_queries_per_hour:
+            resource_bits.append("MAX_QUERIES_PER_HOUR {0}".format(max_queries_per_hour))
+        if max_updates_per_hour and current_user["max_updates"] != max_updates_per_hour:
+            resource_bits.append("MAX_UPDATES_PER_HOUR {0}".format(max_updates_per_hour))
+        if max_connections_per_hour and current_user["max_connections"] != max_connections_per_hour:
+            resource_bits.append("MAX_CONNECTIONS_PER_HOUR {0}".format(max_connections_per_hour))
 
         if resource_bits:
-            alter_bits.append('WITH')
-            alter_bits.append(' '.join(resource_bits))
+            alter_bits.append("WITH")
+            alter_bits.append(" ".join(resource_bits))
 
         if alter_bits:
             sql_bits = ['ALTER USER "{0}"@"{1}"'.format(user, user_hostname)]
@@ -277,16 +279,19 @@ def user(
             )
             current_user.update(new_or_updated_user_fact)
         else:
-            host.noop('mysql user {0}@{1} exists'.format(user, user_hostname))
+            host.noop("mysql user {0}@{1} exists".format(user, user_hostname))
 
     # If we're here either the user exists or we just created them; either way
     # now we can check any privileges are set.
     if privileges:
         yield from _privileges(
-            user, privileges,
+            user,
+            privileges,
             user_hostname=user_hostname,
-            mysql_user=mysql_user, mysql_password=mysql_password,
-            mysql_host=mysql_host, mysql_port=mysql_port,
+            mysql_user=mysql_user,
+            mysql_password=mysql_password,
+            mysql_host=mysql_host,
+            mysql_port=mysql_port,
         )
 
 
@@ -295,13 +300,18 @@ def database(
     database,
     # Desired database settings
     present=True,
-    collate=None, charset=None,
-    user=None, user_hostname='localhost', user_privileges='ALL',
+    collate=None,
+    charset=None,
+    user=None,
+    user_hostname="localhost",
+    user_privileges="ALL",
     # Details for speaking to MySQL via `mysql` CLI
-    mysql_user=None, mysql_password=None,
-    mysql_host=None, mysql_port=None,
+    mysql_user=None,
+    mysql_password=None,
+    mysql_host=None,
+    mysql_port=None,
 ):
-    '''
+    """
     Add/remove MySQL databases.
 
     + name: the name of the database
@@ -328,7 +338,7 @@ def database(
             user_privileges=["SELECT", "INSERT"],
             charset="utf8",
         )
-    '''
+    """
 
     current_databases = host.get_fact(
         MysqlDatabases,
@@ -343,7 +353,7 @@ def database(
     if not present:
         if is_present:
             yield make_execute_mysql_command(
-                'DROP DATABASE {0}'.format(database),
+                "DROP DATABASE {0}".format(database),
                 user=mysql_user,
                 password=mysql_password,
                 host=mysql_host,
@@ -351,32 +361,32 @@ def database(
             )
             current_databases.pop(database)
         else:
-            host.noop('mysql database {0} does not exist'.format(database))
+            host.noop("mysql database {0} does not exist".format(database))
         return
 
     # We want the database but it doesn't exist
     if present and not is_present:
-        sql_bits = ['CREATE DATABASE {0}'.format(database)]
+        sql_bits = ["CREATE DATABASE {0}".format(database)]
 
         if collate:
-            sql_bits.append('COLLATE {0}'.format(collate))
+            sql_bits.append("COLLATE {0}".format(collate))
 
         if charset:
-            sql_bits.append('CHARSET {0}'.format(charset))
+            sql_bits.append("CHARSET {0}".format(charset))
 
         yield make_execute_mysql_command(
-            ' '.join(sql_bits),
+            " ".join(sql_bits),
             user=mysql_user,
             password=mysql_password,
             host=mysql_host,
             port=mysql_port,
         )
         current_databases[database] = {
-            'collate': collate,
-            'charset': charset,
+            "collate": collate,
+            "charset": charset,
         }
     else:
-        host.noop('mysql database {0} exists'.format(database))
+        host.noop("mysql database {0} exists".format(database))
 
     # Ensure any user privileges for this database
     if user and user_privileges:
@@ -394,16 +404,20 @@ def database(
 
 @operation
 def privileges(
-    user, privileges,
-    user_hostname='localhost',
-    database='*', table='*',
+    user,
+    privileges,
+    user_hostname="localhost",
+    database="*",
+    table="*",
     flush=True,
     with_grant_option=False,
     # Details for speaking to MySQL via `mysql` CLI
-    mysql_user=None, mysql_password=None,
-    mysql_host=None, mysql_port=None,
+    mysql_user=None,
+    mysql_password=None,
+    mysql_host=None,
+    mysql_port=None,
 ):
-    '''
+    """
     Add/remove MySQL privileges for a user, either global, database or table specific.
 
     + user: name of the user to manage privileges for
@@ -414,7 +428,7 @@ def privileges(
     + flush: whether to flush (and update) the privileges table after any changes
     + with_grant_option: whether the grant option privilege should be set
     + mysql_*: global module arguments, see above
-    '''
+    """
 
     # Ensure we have a list
     if isinstance(privileges, str):
@@ -424,21 +438,24 @@ def privileges(
         privileges = set(privileges)
 
     if with_grant_option:
-        privileges.add('GRANT OPTION')
+        privileges.add("GRANT OPTION")
 
-    if database != '*':
-        database = '`{0}`'.format(database)
+    if database != "*":
+        database = "`{0}`".format(database)
 
-    if table != '*':
-        table = '`{0}`'.format(table)
+    if table != "*":
+        table = "`{0}`".format(table)
 
         # We can't set privileges on *.tablename as MySQL won't allow it
-        if database == '*':
-            raise OperationError((
-                'Cannot apply MySQL privileges on {0}.{1}, no database provided'
-            ).format(database, table))
+        if database == "*":
+            raise OperationError(
+                ("Cannot apply MySQL privileges on {0}.{1}, no database provided").format(
+                    database,
+                    table,
+                ),
+            )
 
-    database_table = '{0}.{1}'.format(database, table)
+    database_table = "{0}.{1}".format(database, table)
     user_grants = host.get_fact(
         MysqlUserGrants,
         user=user,
@@ -452,7 +469,7 @@ def privileges(
     existing_privileges = set()
     if database_table in user_grants:
         existing_privileges = {
-            'ALL' if privilege == 'ALL PRIVILEGES' else privilege
+            "ALL" if privilege == "ALL PRIVILEGES" else privilege
             for privilege in user_grants[database_table]
         }
     else:
@@ -460,11 +477,9 @@ def privileges(
 
     def handle_privileges(action, target, privileges_to_apply):
         command = (
-            '{action} {privileges} '
-            'ON {database}.{table} '
-            '{target} "{user}"@"{user_hostname}"'
+            "{action} {privileges} " "ON {database}.{table} " '{target} "{user}"@"{user_hostname}"'
         ).format(
-            privileges=', '.join(sorted(privileges_to_apply)),
+            privileges=", ".join(sorted(privileges_to_apply)),
             action=action,
             target=target,
             database=database,
@@ -488,36 +503,40 @@ def privileges(
 
     # No privilege and we want it
     if privileges_to_grant:
-        yield from handle_privileges('GRANT', 'TO', privileges_to_grant)
+        yield from handle_privileges("GRANT", "TO", privileges_to_grant)
         user_grants[database_table].update(privileges_to_grant)
 
     if privileges_to_revoke:
-        yield from handle_privileges('REVOKE', 'FROM', privileges_to_revoke)
+        yield from handle_privileges("REVOKE", "FROM", privileges_to_revoke)
         user_grants[database_table] -= privileges_to_revoke
 
     if privileges_to_grant or privileges_to_revoke:
         if flush:
             yield make_execute_mysql_command(
-                'FLUSH PRIVILEGES',
+                "FLUSH PRIVILEGES",
                 user=mysql_user,
                 password=mysql_password,
                 host=mysql_host,
                 port=mysql_port,
             )
     else:
-        host.noop('mysql privileges are already correct')
+        host.noop("mysql privileges are already correct")
+
 
 _privileges = privileges  # noqa: E305 (for use where kwarg is the same)
 
 
 @operation(is_idempotent=False)
 def dump(
-    dest, database=None,
+    dest,
+    database=None,
     # Details for speaking to MySQL via `mysql` CLI
-    mysql_user=None, mysql_password=None,
-    mysql_host=None, mysql_port=None,
+    mysql_user=None,
+    mysql_password=None,
+    mysql_host=None,
+    mysql_port=None,
 ):
-    '''
+    """
     Dump a MySQL database into a ``.sql`` file. Requires ``mysqldump``.
 
     + dest: name of the file to dump the SQL to
@@ -533,26 +552,32 @@ def dump(
             dest="/tmp/pyinfra_stuff.dump",
             database="pyinfra_stuff",
         )
-    '''
+    """
 
-    yield '{0} > {1}'.format(make_mysql_command(
-        executable='mysqldump',
-        database=database,
-        user=mysql_user,
-        password=mysql_password,
-        host=mysql_host,
-        port=mysql_port,
-    ), dest)
+    yield "{0} > {1}".format(
+        make_mysql_command(
+            executable="mysqldump",
+            database=database,
+            user=mysql_user,
+            password=mysql_password,
+            host=mysql_host,
+            port=mysql_port,
+        ),
+        dest,
+    )
 
 
 @operation(is_idempotent=False)
 def load(
-    src, database=None,
+    src,
+    database=None,
     # Details for speaking to MySQL via `mysql` CLI
-    mysql_user=None, mysql_password=None,
-    mysql_host=None, mysql_port=None,
+    mysql_user=None,
+    mysql_password=None,
+    mysql_host=None,
+    mysql_port=None,
 ):
-    '''
+    """
     Load ``.sql`` file into a database.
 
     + src: the filename to read from
@@ -568,12 +593,15 @@ def load(
             src="/tmp/pyinfra_stuff.dump",
             database="pyinfra_stuff_copy",
         )
-    '''
+    """
 
-    yield '{0} < {1}'.format(make_mysql_command(
-        database=database,
-        user=mysql_user,
-        password=mysql_password,
-        host=mysql_host,
-        port=mysql_port,
-    ), src)
+    yield "{0} < {1}".format(
+        make_mysql_command(
+            database=database,
+            user=mysql_user,
+            password=mysql_password,
+            host=mysql_host,
+            port=mysql_port,
+        ),
+        src,
+    )

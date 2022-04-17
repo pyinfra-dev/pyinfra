@@ -1,16 +1,16 @@
-'''
+"""
 The `ContextObject` and `ContextManager` provide context specific variables that
 are imported and used throughout pyinfra and end user deploy code (CLI mode).
 
 These variables always represent the current executing pyinfra context.
-'''
+"""
 
 from contextlib import contextmanager
 
 from gevent.local import local
 
 
-class container():
+class container:
     pass
 
 
@@ -26,7 +26,7 @@ class ContextObject(object):
         return self._container.module
 
     def __repr__(self):
-        return 'ContextObject({0}):{1}'.format(
+        return "ContextObject({0}):{1}".format(
             self._base_cls.__name__,
             repr(self._get_module()),
         )
@@ -43,11 +43,11 @@ class ContextObject(object):
         return getattr(self._get_module(), key)
 
     def __setattr__(self, key, value):
-        if key in ('_container', '_base_cls'):
+        if key in ("_container", "_base_cls"):
             return super(ContextObject, self).__setattr__(key, value)
 
         if self._get_module() is None:
-            raise TypeError('Cannot assign to context base module')
+            raise TypeError("Cannot assign to context base module")
 
         return setattr(self._get_module(), key, value)
 
@@ -73,7 +73,7 @@ class ContextManager(object):
         self.context = context_cls()
 
     def get(self):
-        return getattr(self.context._container, 'module', None)
+        return getattr(self.context._container, "module", None)
 
     def set(self, module):
         self.context._container.module = module
@@ -95,25 +95,26 @@ class ContextManager(object):
         self.set(old_module)
 
 
-ctx_state = ContextManager('state', ContextObject)
+ctx_state = ContextManager("state", ContextObject)
 state = ctx_state.context
 
-ctx_inventory = ContextManager('inventory', ContextObject)
+ctx_inventory = ContextManager("inventory", ContextObject)
 inventory = ctx_inventory.context
 
 # Config can be modified mid-deploy, so we use a local object here which
 # is based on a copy of the state config.
-ctx_config = ContextManager('config', LocalContextObject)
+ctx_config = ContextManager("config", LocalContextObject)
 config = ctx_config.context
 
 # Hosts are prepared in parallel each in a greenlet, so we use a local to
 # point at different host objects in each greenlet.
-ctx_host = ContextManager('host', LocalContextObject)
+ctx_host = ContextManager("host", LocalContextObject)
 host = ctx_host.context
 
 
 def init_base_classes():
     from pyinfra.api import Config, Host, Inventory, State
+
     ctx_config.set_base(Config)
     ctx_inventory.set_base(Inventory)
     ctx_host.set_base(Host)

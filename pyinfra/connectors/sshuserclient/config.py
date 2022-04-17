@@ -1,21 +1,19 @@
-'''
+"""
 This file as originally part of the "sshuserclient" pypi package. The GitHub
 source has now vanished (https://github.com/tobald/sshuserclient).
-'''
+"""
 
 import glob
 import re
-
 from os import environ, path
 
 import paramiko.config
-
 from gevent.subprocess import CalledProcessError, check_call
 from paramiko import SSHConfig as ParamikoSSHConfig
 
 from pyinfra import logger
 
-SETTINGS_REGEX = re.compile(r'(\w+)(?:\s*=\s*|\s+)(.+)')
+SETTINGS_REGEX = re.compile(r"(\w+)(?:\s*=\s*|\s+)(.+)")
 
 
 class FakeInvokeResult(object):
@@ -28,16 +26,19 @@ class FakeInvoke(object):
         result = FakeInvokeResult()
 
         try:
-            cmd = [environ['SHELL'], cmd]
+            cmd = [environ["SHELL"], cmd]
             try:
                 code = check_call(cmd)
             except CalledProcessError as e:
                 code = e.returncode
             result.ok = code == 0
         except Exception as e:
-            logger.warning((
-                'pyinfra encountered an error loading SSH config match exec {0}: {1}'
-            ).format(cmd, e))
+            logger.warning(
+                ("pyinfra encountered an error loading SSH config match exec {0}: {1}").format(
+                    cmd,
+                    e,
+                ),
+            )
 
         return result
 
@@ -50,7 +51,7 @@ def _expand_include_statements(file_obj, parsed_files=None):
 
     for line in file_obj.readlines():
         line = line.strip()
-        if not line or line.startswith('#'):
+        if not line or line.startswith("#"):
             continue
 
         match = re.match(SETTINGS_REGEX, line)
@@ -61,7 +62,7 @@ def _expand_include_statements(file_obj, parsed_files=None):
         key = match.group(1).lower()
         value = match.group(2)
 
-        if key != 'include':
+        if key != "include":
             parsed_lines.append(line)
             continue
 
@@ -69,7 +70,7 @@ def _expand_include_statements(file_obj, parsed_files=None):
             parsed_files = []
 
         # The path can be relative to its parent configuration file
-        if path.isabs(value) is False and value[0] != '~':
+        if path.isabs(value) is False and value[0] != "~":
             folder = path.dirname(file_obj.name)
             value = path.join(folder, value)
 
@@ -79,7 +80,7 @@ def _expand_include_statements(file_obj, parsed_files=None):
             if path.isfile(filename):
                 if filename in parsed_files:
                     raise Exception(
-                        'Include loop detected in ssh config file: %s' % filename,
+                        "Include loop detected in ssh config file: %s" % filename,
                     )
                 with open(filename) as fd:
                     parsed_files.append(filename)
@@ -89,10 +90,10 @@ def _expand_include_statements(file_obj, parsed_files=None):
 
 
 class SSHConfig(ParamikoSSHConfig):
-    '''
+    """
     an SSHConfig that supports includes directives
     https://github.com/paramiko/paramiko/pull/1194
-    '''
+    """
 
     def parse(self, file_obj):
         file_obj = _expand_include_statements(file_obj)

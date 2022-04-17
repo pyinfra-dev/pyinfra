@@ -1,6 +1,5 @@
 import json
 import os
-
 from datetime import datetime
 from importlib import import_module
 from os import path
@@ -8,13 +7,16 @@ from types import FunctionType, ModuleType
 
 # py2/3 switcheroo
 try:
-    from StringIO import StringIO
-    from cStringIO import OutputType, InputType
     from types import FileType
+
+    from cStringIO import InputType, OutputType
+    from StringIO import StringIO
+
     io_bases = (FileType, OutputType, InputType, StringIO)
 
 except ImportError:  # pragma: no cover
     from io import IOBase
+
     io_bases = IOBase
 
 import click
@@ -41,23 +43,23 @@ def is_subdir(child, parent):
 
 
 def exec_file(filename, return_locals=False, is_deploy_code=False):
-    '''
+    """
     Execute a Python file and optionally return it's attributes as a dict.
-    '''
+    """
 
     old_current_exec_filename = state.current_exec_filename
     state.current_exec_filename = filename
 
     if filename not in PYTHON_CODES:
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             code = f.read()
 
-        code = compile(code, filename, 'exec')
+        code = compile(code, filename, "exec")
         PYTHON_CODES[filename] = code
 
     # Create some base attributes for our "module"
     data = {
-        '__file__': filename,
+        "__file__": filename,
     }
 
     # Execute the code with locals/globals going into the dict above
@@ -82,23 +84,23 @@ def json_encode(obj):
 
     # Python types
     elif isinstance(obj, ModuleType):
-        return 'Module: {0}'.format(obj.__name__)
+        return "Module: {0}".format(obj.__name__)
 
     elif isinstance(obj, FunctionType):
-        return 'Function: {0}'.format(obj.__name__)
+        return "Function: {0}".format(obj.__name__)
 
     elif isinstance(obj, datetime):
         return obj.isoformat()
 
     elif isinstance(obj, io_bases):
-        if hasattr(obj, 'name'):
-            return 'File: {0}'.format(obj.name)
+        if hasattr(obj, "name"):
+            return "File: {0}".format(obj.name)
 
-        elif hasattr(obj, 'template'):
-            return 'Template: {0}'.format(obj.template)
+        elif hasattr(obj, "template"):
+            return "Template: {0}".format(obj.template)
 
         obj.seek(0)
-        return 'In memory file: {0}'.format(obj.read())
+        return "In memory file: {0}".format(obj.read())
 
     elif isinstance(obj, set):
         return sorted(list(obj))
@@ -107,17 +109,17 @@ def json_encode(obj):
         return obj.decode()
 
     else:
-        raise TypeError('Cannot serialize: {0} ({1})'.format(type(obj), obj))
+        raise TypeError("Cannot serialize: {0} ({1})".format(type(obj), obj))
 
 
 def parse_cli_arg(arg):
     if isinstance(arg, list):
         return [parse_cli_arg(a) for a in arg]
 
-    if arg.lower() == 'false':
+    if arg.lower() == "false":
         return False
 
-    if arg.lower() == 'true':
+    if arg.lower() == "true":
         return True
 
     try:
@@ -137,21 +139,21 @@ def get_operation_and_args(commands):
     operation_name = commands[0]
 
     # Get the module & operation name
-    op_module, op_name = operation_name.rsplit('.', 1)
+    op_module, op_name = operation_name.rsplit(".", 1)
 
     # Try to load the requested operation from the main operations package.
     # If that fails, try to load from the user's operations package.
     try:
-        op_module = import_module('pyinfra.operations.{0}'.format(op_module))
+        op_module = import_module("pyinfra.operations.{0}".format(op_module))
     except ImportError:
         try:
             op_module = import_module(str(op_module))
         except ImportError:
-            raise CliError('No such module: {0}'.format(op_module))
+            raise CliError("No such module: {0}".format(op_module))
 
     op = getattr(op_module, op_name, None)
     if not op:
-        raise CliError('No such operation: {0}'.format(operation_name))
+        raise CliError("No such operation: {0}".format(operation_name))
 
     # Parse the arguments
     operation_args = commands[1:]
@@ -165,17 +167,11 @@ def get_operation_and_args(commands):
         except ValueError:
             pass
 
-    args = [
-        parse_cli_arg(arg)
-        for arg in operation_args if '=' not in arg
-    ]
+    args = [parse_cli_arg(arg) for arg in operation_args if "=" not in arg]
 
     kwargs = {
         key: parse_cli_arg(value)
-        for key, value in [
-            arg.split('=', 1)
-            for arg in operation_args if '=' in arg
-        ]
+        for key, value in [arg.split("=", 1) for arg in operation_args if "=" in arg]
     }
 
     return op, (args, kwargs)
@@ -187,11 +183,11 @@ def get_facts_and_args(commands):
     current_fact = None
 
     for command in commands:
-        if '=' in command:
+        if "=" in command:
             if not current_fact:
-                raise CliError('Invalid fact commands: `{0}`'.format(commands))
+                raise CliError("Invalid fact commands: `{0}`".format(commands))
 
-            key, value = command.split('=', 1)
+            key, value = command.split("=", 1)
             current_fact[2][key] = value
             continue
 
@@ -199,21 +195,21 @@ def get_facts_and_args(commands):
             facts.append(current_fact)
             current_fact = None
 
-        if '.' not in command:
-            raise CliError(f'Invalid fact: `{command}`, should be in the format `module.cls`')
+        if "." not in command:
+            raise CliError(f"Invalid fact: `{command}`, should be in the format `module.cls`")
 
-        fact_module, fact_name = command.rsplit('.', 1)
+        fact_module, fact_name = command.rsplit(".", 1)
         try:
-            fact_module = import_module('pyinfra.facts.{0}'.format(fact_module))
+            fact_module = import_module("pyinfra.facts.{0}".format(fact_module))
         except ImportError:
             try:
                 fact_module = import_module(str(fact_module))
             except ImportError:
-                raise CliError('No such module: `{0}`'.format(fact_module))
+                raise CliError("No such module: `{0}`".format(fact_module))
 
         fact_cls = getattr(fact_module, fact_name, None)
         if not fact_cls:
-            raise CliError('No such fact: `{0}`'.format(command))
+            raise CliError("No such fact: `{0}`".format(command))
 
         current_fact = (fact_cls, (), {})
 
@@ -230,15 +226,16 @@ def load_deploy_file(state, filename):
         with ctx_config.use(state.config.copy()):
             with ctx_host.use(local_host):
                 exec_file(filename)
-                logger.info('{0}{1} {2}'.format(
-                    local_host.print_prefix,
-                    click.style('Ready:', 'green'),
-                    click.style(filename, bold=True),
-                ))
+                logger.info(
+                    "{0}{1} {2}".format(
+                        local_host.print_prefix,
+                        click.style("Ready:", "green"),
+                        click.style(filename, bold=True),
+                    ),
+                )
 
     greenlet_to_host = {
-        state.pool.spawn(load_file, host): host
-        for host in state.inventory.iter_active_hosts()
+        state.pool.spawn(load_file, host): host for host in state.inventory.iter_active_hosts()
     }
 
     with progress_spinner(greenlet_to_host.values()) as progress:

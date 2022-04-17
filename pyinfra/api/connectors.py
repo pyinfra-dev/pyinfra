@@ -3,7 +3,7 @@ import pkg_resources
 
 class BaseConnectorMeta:
     handles_execution = False
-    keys_prefix = ''
+    keys_prefix = ""
 
     class DataKeys:
         pass
@@ -14,15 +14,15 @@ class BaseConnectorMeta:
             pass
 
         for key in cls.DataKeys.__dict__:
-            if not key.startswith('_'):
-                setattr(Keys, key, f'{cls.keys_prefix}_{key}')
+            if not key.startswith("_"):
+                setattr(Keys, key, f"{cls.keys_prefix}_{key}")
 
         return Keys
 
 
 def _load_connector(entrypoint):
     connector = entrypoint.load()
-    if not getattr(connector, 'Meta', None):
+    if not getattr(connector, "Meta", None):
         connector.Meta = BaseConnectorMeta
     return connector
 
@@ -30,7 +30,7 @@ def _load_connector(entrypoint):
 def get_all_connectors():
     return {
         entrypoint.name: _load_connector(entrypoint)
-        for entrypoint in pkg_resources.iter_entry_points('pyinfra.connectors')
+        for entrypoint in pkg_resources.iter_entry_points("pyinfra.connectors")
     }
 
 

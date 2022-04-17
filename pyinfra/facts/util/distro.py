@@ -9,7 +9,7 @@ except ImportError:
 def get_distro_info(root_dir):
     # We point _UNIXCONFDIR to root_dir
     old_value = distro._UNIXCONFDIR
-    distro._UNIXCONFDIR = os.path.join(root_dir, 'etc')
+    distro._UNIXCONFDIR = os.path.join(root_dir, "etc")
 
     obj = distro.LinuxDistribution(include_lsb=False, include_uname=False)
 

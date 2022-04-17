@@ -14,7 +14,8 @@ from .util import get_caller_frameinfo, sha1_hash
 # take 10 for opening Python files and /3 for ~3 files per host during op runs.
 # See: https://github.com/Fizzadar/pyinfra/issues/44
 try:
-    from resource import getrlimit, RLIMIT_NOFILE
+    from resource import RLIMIT_NOFILE, getrlimit
+
     nofile_limit, _ = getrlimit(RLIMIT_NOFILE)
     MAX_PARALLEL = round((nofile_limit - 10) / 3)
 
@@ -69,9 +70,9 @@ class BaseStateCallback(object):
 
 
 class State(object):
-    '''
+    """
     Manages state for a pyinfra deploy.
-    '''
+    """
 
     initialised = False
 
@@ -131,10 +132,12 @@ class State(object):
 
         # If explicitly set, just issue a warning
         elif MAX_PARALLEL is not None and config.PARALLEL > MAX_PARALLEL:
-            logger.warning((
-                'Parallel set to {0}, but this may hit the open files limit of {1}.\n'
-                '    Max recommended value: {2}'
-            ).format(config.PARALLEL, nofile_limit, MAX_PARALLEL))
+            logger.warning(
+                (
+                    "Parallel set to {0}, but this may hit the open files limit of {1}.\n"
+                    "    Max recommended value: {2}"
+                ).format(config.PARALLEL, nofile_limit, MAX_PARALLEL),
+            )
 
         # Actually initialise the state object
         #
@@ -172,23 +175,17 @@ class State(object):
         self.ops_run = set()  # list of ops which have been started/run
 
         # Op dict for each host
-        self.ops = {
-            host: {}
-            for host in inventory
-        }
+        self.ops = {host: {} for host in inventory}
 
         # Facts dict for each host
-        self.facts = {
-            host: {}
-            for host in inventory
-        }
+        self.facts = {host: {} for host in inventory}
 
         # Meta dict for each host
         self.meta = {
             host: {
-                'ops': 0,  # one function call in a deploy file
-                'commands': 0,  # actual # of commands to run
-                'op_hashes': set(),
+                "ops": 0,  # one function call in a deploy file
+                "commands": 0,  # actual # of commands to run
+                "op_hashes": set(),
             }
             for host in inventory
         }
@@ -196,10 +193,10 @@ class State(object):
         # Results dict for each host
         self.results = {
             host: {
-                'ops': 0,  # success_ops + failed ops w/ignore_errors
-                'success_ops': 0,
-                'error_ops': 0,
-                'commands': 0,
+                "ops": 0,  # success_ops + failed ops w/ignore_errors
+                "success_ops": 0,
+                "error_ops": 0,
+                "commands": 0,
             }
             for host in inventory
         }
@@ -213,18 +210,18 @@ class State(object):
 
     def to_dict(self):
         return {
-            'op_order': self.get_op_order(),
-            'ops': self.ops,
-            'facts': self.facts,
-            'meta': self.meta,
-            'results': self.results,
+            "op_order": self.get_op_order(),
+            "ops": self.ops,
+            "facts": self.facts,
+            "meta": self.meta,
+            "results": self.results,
         }
 
     def add_callback_handler(self, handler):
         if not isinstance(handler, BaseStateCallback):
-            raise TypeError((
-                '{0} is not a valid callback handler (use `BaseStateCallback`)'
-            ).format(handler))
+            raise TypeError(
+                ("{0} is not a valid callback handler (use `BaseStateCallback`)").format(handler),
+            )
         self.callback_handlers.append(handler)
 
     def trigger_callbacks(self, method_name, *args, **kwargs):
@@ -253,10 +250,7 @@ class State(object):
         line_numbers_to_hash = self.op_line_numbers_to_hash
         sorted_line_numbers = sorted(list(line_numbers_to_hash.keys()))
 
-        return [
-            line_numbers_to_hash[numbers]
-            for numbers in sorted_line_numbers
-        ]
+        return [line_numbers_to_hash[numbers] for numbers in sorted_line_numbers]
 
     def get_op_meta(self, op_hash):
         return self.op_meta[op_hash]
@@ -265,11 +259,11 @@ class State(object):
         return self.ops[host][op_hash]
 
     def activate_host(self, host):
-        '''
+        """
         Flag a host as active.
-        '''
+        """
 
-        logger.debug('Activating host: {0}'.format(host))
+        logger.debug("Activating host: {0}".format(host))
 
         # Add to *both* activated and active - active will reduce as hosts fail
         # but connected will not, enabling us to track failed %.
@@ -277,18 +271,22 @@ class State(object):
         self.active_hosts.add(host)
 
     def fail_hosts(self, hosts_to_fail, activated_count=None):
-        '''
+        """
         Flag a ``set`` of hosts as failed, error for ``config.FAIL_PERCENT``.
-        '''
+        """
 
         if not hosts_to_fail:
             return
 
         activated_count = activated_count or len(self.activated_hosts)
 
-        logger.debug('Failing hosts: {0}'.format(', '.join(
-            (host.name for host in hosts_to_fail),
-        )))
+        logger.debug(
+            "Failing hosts: {0}".format(
+                ", ".join(
+                    (host.name for host in hosts_to_fail),
+                ),
+            ),
+        )
 
         self.failed_hosts.update(hosts_to_fail)
 
@@ -299,23 +297,23 @@ class State(object):
 
         # No hosts left!
         if not active_hosts:
-            raise PyinfraError('No hosts remaining!')
+            raise PyinfraError("No hosts remaining!")
 
         if self.config.FAIL_PERCENT is not None:
-            percent_failed = (
-                1 - len(active_hosts) / activated_count
-            ) * 100
+            percent_failed = (1 - len(active_hosts) / activated_count) * 100
 
             if percent_failed > self.config.FAIL_PERCENT:
-                raise PyinfraError('Over {0}% of hosts failed ({1}%)'.format(
-                    self.config.FAIL_PERCENT,
-                    int(round(percent_failed)),
-                ))
+                raise PyinfraError(
+                    "Over {0}% of hosts failed ({1}%)".format(
+                        self.config.FAIL_PERCENT,
+                        int(round(percent_failed)),
+                    ),
+                )
 
     def is_host_in_limit(self, host):
-        '''
+        """
         Returns a boolean indicating if the host is within the current state limit.
-        '''
+        """
 
         limit_hosts = self.limit_hosts
 
@@ -324,9 +322,9 @@ class State(object):
         return host in limit_hosts
 
     def get_temp_filename(self, hash_key=None, hash_filename=True):
-        '''
+        """
         Generate a temporary filename for this deploy.
-        '''
+        """
 
         if not hash_key:
             hash_key = str(uuid4())
@@ -334,4 +332,4 @@ class State(object):
         if hash_filename:
             hash_key = sha1_hash(hash_key)
 
-        return '{0}/pyinfra-{1}'.format(self.config.TEMP_DIR, hash_key)
+        return "{0}/pyinfra-{1}".format(self.config.TEMP_DIR, hash_key)

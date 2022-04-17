@@ -1,6 +1,6 @@
-'''
+"""
 Manage apk packages.
-'''
+"""
 
 from pyinfra import host
 from pyinfra.api import operation
@@ -11,37 +11,42 @@ from .util.packaging import ensure_packages
 
 @operation(is_idempotent=False)
 def upgrade(available=False):
-    '''
+    """
     Upgrades all apk packages.
 
     + available: force all packages to be upgraded (recommended on whole Alpine version upgrades)
-    '''
+    """
 
     if available:
-        yield 'apk upgrade --available'
+        yield "apk upgrade --available"
     else:
-        yield 'apk upgrade'
+        yield "apk upgrade"
+
 
 _upgrade = upgrade  # noqa: E305
 
 
 @operation(is_idempotent=False)
 def update():
-    '''
+    """
     Updates apk repositories.
-    '''
+    """
 
-    yield 'apk update'
+    yield "apk update"
+
 
 _update = update  # noqa: E305
 
 
 @operation
 def packages(
-    packages=None, present=True, latest=False,
-    update=False, upgrade=False,
+    packages=None,
+    present=True,
+    latest=False,
+    update=False,
+    upgrade=False,
 ):
-    '''
+    """
     Add/remove/update apk packages.
 
     + packages: list of packages to ensure
@@ -70,7 +75,7 @@ def packages(
             packages=["vim"],
             latest=True,
         )
-    '''
+    """
 
     if update:
         yield from _update()
@@ -79,10 +84,13 @@ def packages(
         yield from _upgrade()
 
     yield from ensure_packages(
-        host, packages, host.get_fact(ApkPackages), present,
-        install_command='apk add',
-        uninstall_command='apk del',
-        upgrade_command='apk upgrade',
-        version_join='=',
+        host,
+        packages,
+        host.get_fact(ApkPackages),
+        present,
+        install_command="apk add",
+        uninstall_command="apk del",
+        upgrade_command="apk upgrade",
+        version_join="=",
         latest=latest,
     )

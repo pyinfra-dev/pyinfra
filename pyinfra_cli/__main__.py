@@ -9,7 +9,6 @@ import pyinfra
 
 from .main import cli
 
-
 # Set CLI mode
 pyinfra.is_cli = True
 
@@ -20,12 +19,12 @@ sys.dont_write_bytecode = True
 click.disable_unicode_literals_warning = True  # noqa
 
 # Force line buffering
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1)
-sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 1)
+sys.stdout = os.fdopen(sys.stdout.fileno(), "w", 1)
+sys.stderr = os.fdopen(sys.stderr.fileno(), "w", 1)
 
 
 def _handle_interrupt(signum, frame):
-    click.echo('Exiting upon user request!')
+    click.echo("Exiting upon user request!")
     sys.exit(0)
 
 
@@ -39,5 +38,5 @@ except AttributeError:
 signal.signal(signal.SIGINT, _handle_interrupt)  # print the message and exit main
 
 
-if __name__ == 'pyinfra_cli.__main__':
+if __name__ == "pyinfra_cli.__main__":
     cli()

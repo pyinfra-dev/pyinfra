@@ -2,12 +2,12 @@ from pyinfra.api import FactBase
 
 
 class LaunchdStatus(FactBase):
-    '''
+    """
     Returns a dict of name -> status for launchd managed services.
-    '''
+    """
 
-    command = 'launchctl list'
-    requires_command = 'launchctl'
+    command = "launchctl list"
+    requires_command = "launchctl"
 
     default = dict
 
@@ -17,7 +17,7 @@ class LaunchdStatus(FactBase):
         for line in output:
             bits = line.split()
 
-            if not bits or bits[0] == 'PID':
+            if not bits or bits[0] == "PID":
                 continue
 
             name = bits[2]

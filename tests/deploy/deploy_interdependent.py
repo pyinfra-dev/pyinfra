@@ -1,143 +1,142 @@
 from pyinfra.operations import apt, brew, files, git, server, systemd
 
-
 # Add/remove/add same file
 files.file(
-    path='/somefile',
+    path="/somefile",
 )
 
 files.file(
-    path='/somefile',
+    path="/somefile",
     present=False,
 )
 
 files.file(
-    path='/somefile',
+    path="/somefile",
 )
 
 # Add/remove/add same directory
 files.directory(
-    path='/somedir',
+    path="/somedir",
 )
 
 files.directory(
-    path='/somedir',
+    path="/somedir",
     present=False,
 )
 
 files.directory(
-    path='/somedir',
+    path="/somedir",
 )
 
 # Add/remove/add same link
 files.link(
-    path='/somelink',
-    target='/elsewhere',
+    path="/somelink",
+    target="/elsewhere",
 )
 
 files.link(
-    path='/somelink',
+    path="/somelink",
     present=False,
 )
 
 files.link(
-    path='/somelink',
-    target='/elsewhere',
+    path="/somelink",
+    target="/elsewhere",
 )
 
 
 # Add/remove/add same user
 server.user(
-    user='someuser',
+    user="someuser",
 )
 
 server.user(
-    user='someuser',
+    user="someuser",
     present=False,
 )
 
 server.user(
-    user='someuser',
+    user="someuser",
 )
 
 # Add/remove/add same group
 server.group(
-    group='somegroup',
+    group="somegroup",
 )
 
 server.group(
-    group='somegroup',
+    group="somegroup",
     present=False,
 )
 
 server.group(
-    group='somegroup',
+    group="somegroup",
 )
 
 
 # Add/remove same apt repo
 apt.repo(
-    src='deb https://download.virtualbox.org/virtualbox/debian bionic contrib',
+    src="deb https://download.virtualbox.org/virtualbox/debian bionic contrib",
 )
 
 apt.repo(
-    src='deb https://download.virtualbox.org/virtualbox/debian bionic contrib',
+    src="deb https://download.virtualbox.org/virtualbox/debian bionic contrib",
     present=False,
 )
 
 # Add/remove same apt package
 apt.packages(
-    packages=['htop'],
+    packages=["htop"],
 )
 
 apt.packages(
-    packages=['htop'],
+    packages=["htop"],
     present=False,
 )
 
 
 # Add/remove/add same brew tap
 brew.tap(
-    'sometap/somewhere',
+    "sometap/somewhere",
 )
 
 brew.tap(
-    'sometap/somewhere',
+    "sometap/somewhere",
     present=False,
 )
 
 brew.tap(
-    'sometap/somewhere',
+    "sometap/somewhere",
 )
 
 
 # Add/change/add same git config
 git.config(
-    'somekey',
-    'somevalue',
+    "somekey",
+    "somevalue",
 )
 
 git.config(
-    'somekey',
-    'someothervalue',
+    "somekey",
+    "someothervalue",
 )
 
 git.config(
-    'somekey',
-    'somevalue',
+    "somekey",
+    "somevalue",
 )
 
 
 # Start/stop/start same systemd service
 systemd.service(
-    'someservice',
+    "someservice",
 )
 
 systemd.service(
-    'someservice',
+    "someservice",
     running=False,
 )
 
 systemd.service(
-    'someservice',
+    "someservice",
 )

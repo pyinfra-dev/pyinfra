@@ -18,9 +18,9 @@ def repo(
     enabled=True,
     gpgcheck=True,
     gpgkey=None,
-    type='rpm-md',
+    type="rpm-md",
 ):
-    '''
+    """
     Add/remove/update zypper repositories.
 
     + src: URL or name for the ``.repo``   file
@@ -53,7 +53,7 @@ def repo(
             src=="Virtualization:containers (openSUSE_Tumbleweed)",
             baseurl="https://download.opensuse.org/repositories/Virtualization:/containers/openSUSE_Tumbleweed/",
         )
-    '''
+    """
 
     yield from ensure_yum_repo(
         state,
@@ -67,14 +67,14 @@ def repo(
         gpgcheck,
         gpgkey,
         type_=type,
-        repo_directory='/etc/zypp/repos.d/',
+        repo_directory="/etc/zypp/repos.d/",
     )
 
 
 @operation
 def rpm(src, present=True):
     # NOTE: if updating this docstring also update `dnf.rpm`
-    '''
+    """
     Add/remove ``.rpm`` file packages.
 
     + src: filename or URL of the ``.rpm`` package
@@ -92,18 +92,18 @@ def rpm(src, present=True):
            name="Install task from rpm",
            src="https://github.com/go-task/task/releases/download/v2.8.1/task_linux_amd64.rpm",
         )
-    '''
+    """
 
-    yield from ensure_rpm(state, host, files, src, present, 'zypper --non-interactive')
+    yield from ensure_rpm(state, host, files, src, present, "zypper --non-interactive")
 
 
 @operation(is_idempotent=False)
 def update():
-    '''
+    """
     Updates all zypper packages.
-    '''
+    """
 
-    yield 'zypper update -y'
+    yield "zypper update -y"
 
 
 _update = update  # noqa: E305 (for use below where update is a kwarg)
@@ -121,7 +121,7 @@ def packages(
     extra_global_uninstall_args=None,
     extra_uninstall_args=None,
 ):
-    '''
+    """
     Install/remove/update zypper packages & updates.
 
     + packages: list of packages to ensure
@@ -154,15 +154,15 @@ def packages(
             packages=["vim"],
             latest=True,
         )
-    '''
+    """
 
     if clean:
-        yield 'zypper clean --all'
+        yield "zypper clean --all"
 
     if update:
         yield from _update()
 
-    install_command = ['zypper', '--non-interactive', 'install', '-y']
+    install_command = ["zypper", "--non-interactive", "install", "-y"]
 
     if extra_install_args:
         install_command.append(extra_install_args)
@@ -170,7 +170,7 @@ def packages(
     if extra_global_install_args:
         install_command.insert(1, extra_global_install_args)
 
-    uninstall_command = ['zypper', '--non-interactive', 'remove', '-y']
+    uninstall_command = ["zypper", "--non-interactive", "remove", "-y"]
 
     if extra_uninstall_args:
         uninstall_command.append(extra_uninstall_args)
@@ -178,16 +178,16 @@ def packages(
     if extra_global_uninstall_args:
         uninstall_command.insert(1, extra_global_uninstall_args)
 
-    upgrade_command = 'zypper update -y'
+    upgrade_command = "zypper update -y"
 
     yield from ensure_packages(
         host,
         packages,
         host.get_fact(RpmPackages),
         present,
-        install_command=' '.join(install_command),
-        uninstall_command=' '.join(uninstall_command),
+        install_command=" ".join(install_command),
+        uninstall_command=" ".join(uninstall_command),
         upgrade_command=upgrade_command,
-        version_join='=',
+        version_join="=",
         latest=latest,
     )

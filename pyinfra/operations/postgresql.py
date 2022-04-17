@@ -1,4 +1,4 @@
-'''
+"""
 The PostgreSQL modules manage PostgreSQL databases, users and privileges.
 
 Requires the ``psql`` CLI executable on the target host(s).
@@ -11,23 +11,22 @@ All operations in this module take four optional arguments:
 
 See example/postgresql.py for detailed example
 
-'''
+"""
 
 from pyinfra import host, logger
-from pyinfra.api import MaskString, operation, StringCommand
+from pyinfra.api import MaskString, StringCommand, operation
 from pyinfra.facts.postgresql import (
-    make_execute_psql_command,
-    make_psql_command,
     PostgresqlDatabases,
     PostgresqlRoles,
+    make_execute_psql_command,
+    make_psql_command,
 )
 
-
 LEGACY_ARG_MAP = {
-    'postgresql_user': 'psql_user',
-    'postgresql_password': 'psql_password',
-    'postgresql_host': 'psql_host',
-    'postgresql_port': 'psql_port',
+    "postgresql_user": "psql_user",
+    "postgresql_password": "psql_password",
+    "postgresql_host": "psql_host",
+    "postgresql_port": "psql_port",
 }
 
 
@@ -36,11 +35,14 @@ def _translate_legacy_args(func):
         for legacy_key, key in LEGACY_ARG_MAP.items():
             if legacy_key in kwargs:
                 kwargs[key] = kwargs.pop(legacy_key)
-                logger.warning((
-                    f'The `{legacy_key}` has been replaced '
-                    f'by `{key}` in `postgresql.*` operations.'
-                ))
+                logger.warning(
+                    (
+                        f"The `{legacy_key}` has been replaced "
+                        f"by `{key}` in `postgresql.*` operations."
+                    ),
+                )
         return func(*args, **kwargs)
+
     decorated_func._pyinfra_op = func
     return decorated_func
 
@@ -51,16 +53,18 @@ def sql(
     sql,
     database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
-    psql_user=None, psql_password=None,
-    psql_host=None, psql_port=None,
+    psql_user=None,
+    psql_password=None,
+    psql_host=None,
+    psql_port=None,
 ):
-    '''
+    """
     Execute arbitrary SQL against PostgreSQL.
 
     + sql: SQL command(s) to execute
     + database: optional database to execute against
     + psql_*: global module arguments, see above
-    '''
+    """
 
     yield make_execute_psql_command(
         sql,
@@ -77,13 +81,21 @@ def sql(
 def role(
     role,
     present=True,
-    password=None, login=True, superuser=False, inherit=False,
-    createdb=False, createrole=False, replication=False, connection_limit=None,
+    password=None,
+    login=True,
+    superuser=False,
+    inherit=False,
+    createdb=False,
+    createrole=False,
+    replication=False,
+    connection_limit=None,
     # Details for speaking to PostgreSQL via `psql` CLI
-    psql_user=None, psql_password=None,
-    psql_host=None, psql_port=None,
+    psql_user=None,
+    psql_password=None,
+    psql_host=None,
+    psql_port=None,
 ):
-    '''
+    """
     Add/remove PostgreSQL roles.
 
     + role: name of the role
@@ -116,7 +128,7 @@ def role(
             sudo_user="postgres",
         )
 
-    '''
+    """
 
     roles = host.get_fact(
         PostgresqlRoles,
@@ -140,7 +152,7 @@ def role(
             )
             roles.pop(role)
         else:
-            host.noop('postgresql role {0} does not exist'.format(role))
+            host.noop("postgresql role {0} does not exist".format(role))
         return
 
     # If we want the user and they don't exist
@@ -148,18 +160,18 @@ def role(
         sql_bits = ['CREATE ROLE "{0}"'.format(role)]
 
         for key, value in (
-            ('LOGIN', login),
-            ('SUPERUSER', superuser),
-            ('INHERIT', inherit),
-            ('CREATEDB', createdb),
-            ('CREATEROLE', createrole),
-            ('REPLICATION', replication),
+            ("LOGIN", login),
+            ("SUPERUSER", superuser),
+            ("INHERIT", inherit),
+            ("CREATEDB", createdb),
+            ("CREATEROLE", createrole),
+            ("REPLICATION", replication),
         ):
             if value:
                 sql_bits.append(key)
 
         if connection_limit:
-            sql_bits.append('CONNECTION LIMIT {0}'.format(connection_limit))
+            sql_bits.append("CONNECTION LIMIT {0}".format(connection_limit))
 
         if password:
             sql_bits.append(MaskString("PASSWORD '{0}'".format(password)))
@@ -172,27 +184,33 @@ def role(
             port=psql_port,
         )
         roles[role] = {
-            'super': superuser,
-            'cretedb': createdb,
-            'createrole': createrole,
+            "super": superuser,
+            "cretedb": createdb,
+            "createrole": createrole,
         }
     else:
-        host.noop('postgresql role {0} exists'.format(role))
+        host.noop("postgresql role {0} exists".format(role))
 
 
 @operation
 @_translate_legacy_args
 def database(
     database,
-    present=True, owner=None,
-    template=None, encoding=None,
-    lc_collate=None, lc_ctype=None, tablespace=None,
+    present=True,
+    owner=None,
+    template=None,
+    encoding=None,
+    lc_collate=None,
+    lc_ctype=None,
+    tablespace=None,
     connection_limit=None,
     # Details for speaking to PostgreSQL via `psql` CLI
-    psql_user=None, psql_password=None,
-    psql_host=None, psql_port=None,
+    psql_user=None,
+    psql_password=None,
+    psql_host=None,
+    psql_port=None,
 ):
-    '''
+    """
     Add/remove PostgreSQL databases.
 
     + name: name of the database
@@ -223,7 +241,7 @@ def database(
             sudo_user="postgres",
         )
 
-    '''
+    """
 
     current_databases = host.get_fact(
         PostgresqlDatabases,
@@ -246,7 +264,7 @@ def database(
             )
             current_databases.pop(database)
         else:
-            host.noop('postgresql database {0} does not exist'.format(database))
+            host.noop("postgresql database {0} does not exist".format(database))
         return
 
     # We want the database but it doesn't exist
@@ -254,16 +272,16 @@ def database(
         sql_bits = ['CREATE DATABASE "{0}"'.format(database)]
 
         for key, value in (
-            ('OWNER', '"{0}"'.format(owner) if owner else owner),
-            ('TEMPLATE', template),
-            ('ENCODING', encoding),
-            ('LC_COLLATE', lc_collate),
-            ('LC_CTYPE', lc_ctype),
-            ('TABLESPACE', tablespace),
-            ('CONNECTION LIMIT', connection_limit),
+            ("OWNER", '"{0}"'.format(owner) if owner else owner),
+            ("TEMPLATE", template),
+            ("ENCODING", encoding),
+            ("LC_COLLATE", lc_collate),
+            ("LC_CTYPE", lc_ctype),
+            ("TABLESPACE", tablespace),
+            ("CONNECTION LIMIT", connection_limit),
         ):
             if value:
-                sql_bits.append('{0} {1}'.format(key, value))
+                sql_bits.append("{0} {1}".format(key, value))
 
         yield make_execute_psql_command(
             StringCommand(*sql_bits),
@@ -273,26 +291,29 @@ def database(
             port=psql_port,
         )
         current_databases[database] = {
-            'template': template,
-            'encoding': encoding,
-            'lc_collate': lc_collate,
-            'lc_ctype': lc_ctype,
-            'tablespace': tablespace,
-            'connection_limit': connection_limit,
+            "template": template,
+            "encoding": encoding,
+            "lc_collate": lc_collate,
+            "lc_ctype": lc_ctype,
+            "tablespace": tablespace,
+            "connection_limit": connection_limit,
         }
     else:
-        host.noop('postgresql database {0} exists'.format(database))
+        host.noop("postgresql database {0} exists".format(database))
 
 
 @operation(is_idempotent=False)
 @_translate_legacy_args
 def dump(
-    dest, database=None,
+    dest,
+    database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
-    psql_user=None, psql_password=None,
-    psql_host=None, psql_port=None,
+    psql_user=None,
+    psql_password=None,
+    psql_host=None,
+    psql_port=None,
 ):
-    '''
+    """
     Dump a PostgreSQL database into a ``.sql`` file. Requires ``pg_dump``.
 
     + dest: name of the file to dump the SQL to
@@ -310,27 +331,34 @@ def dump(
             sudo_user="postgres",
         )
 
-    '''
+    """
 
-    yield StringCommand(make_psql_command(
-        executable='pg_dump',
-        database=database,
-        user=psql_user,
-        password=psql_password,
-        host=psql_host,
-        port=psql_port,
-    ), '>', dest)
+    yield StringCommand(
+        make_psql_command(
+            executable="pg_dump",
+            database=database,
+            user=psql_user,
+            password=psql_password,
+            host=psql_host,
+            port=psql_port,
+        ),
+        ">",
+        dest,
+    )
 
 
 @operation(is_idempotent=False)
 @_translate_legacy_args
 def load(
-    src, database=None,
+    src,
+    database=None,
     # Details for speaking to PostgreSQL via `psql` CLI
-    psql_user=None, psql_password=None,
-    psql_host=None, psql_port=None,
+    psql_user=None,
+    psql_password=None,
+    psql_host=None,
+    psql_port=None,
 ):
-    '''
+    """
     Load ``.sql`` file into a database.
 
     + src: the filename to read from
@@ -348,12 +376,16 @@ def load(
             sudo_user="postgres",
         )
 
-    '''
+    """
 
-    yield StringCommand(make_psql_command(
-        database=database,
-        user=psql_user,
-        password=psql_password,
-        host=psql_host,
-        port=psql_port,
-    ), '<', src)
+    yield StringCommand(
+        make_psql_command(
+            database=database,
+            user=psql_user,
+            password=psql_password,
+            host=psql_host,
+            port=psql_port,
+        ),
+        "<",
+        src,
+    )

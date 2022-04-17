@@ -16,10 +16,10 @@ class LogHandler(logging.Handler):
 
 class LogFormatter(logging.Formatter):
     level_to_format = {
-        logging.DEBUG: lambda s: click.style(s, 'green'),
-        logging.WARNING: lambda s: click.style(s, 'yellow'),
-        logging.ERROR: lambda s: click.style(s, 'red'),
-        logging.CRITICAL: lambda s: click.style(s, 'red', bold=True),
+        logging.DEBUG: lambda s: click.style(s, "green"),
+        logging.WARNING: lambda s: click.style(s, "yellow"),
+        logging.ERROR: lambda s: click.style(s, "red"),
+        logging.CRITICAL: lambda s: click.style(s, "red", bold=True),
     }
 
     def format(self, record):
@@ -30,17 +30,17 @@ class LogFormatter(logging.Formatter):
 
         # Add path/module info for debug
         if record.levelno is logging.DEBUG:
-            path_start = record.pathname.rfind('pyinfra')
+            path_start = record.pathname.rfind("pyinfra")
 
             if path_start:
                 pyinfra_path = record.pathname[path_start:-3]  # -3 removes `.py`
-                module_name = pyinfra_path.replace('/', '.')
-                message = '[{0}] {1}'.format(module_name, message)
+                module_name = pyinfra_path.replace("/", ".")
+                message = "[{0}] {1}".format(module_name, message)
 
         # We only handle strings here
         if isinstance(message, str):
-            if '-->' not in message:
-                message = '    {0}'.format(message)
+            if "-->" not in message:
+                message = "    {0}".format(message)
 
             if record.levelno in self.level_to_format:
                 message = self.level_to_format[record.levelno](message)

@@ -21,12 +21,12 @@ class TestHostContextObject(TestCase):
     def test_context_host_repr(self):
         host_obj = _create_host()
         ctx_host.set(host_obj)
-        assert repr(host) == 'ContextObject(Host):Host(None)'
+        assert repr(host) == "ContextObject(Host):Host(None)"
 
     def test_context_host_str(self):
         host_obj = _create_host()
         ctx_host.set(host_obj)
-        assert str(host_obj) == 'None'
+        assert str(host_obj) == "None"
 
     def test_context_host_attr(self):
         host_obj = _create_host()
@@ -35,7 +35,7 @@ class TestHostContextObject(TestCase):
         with self.assertRaises(AttributeError):
             host_obj.hello
 
-        setattr(host, 'hello', 'world')
+        setattr(host, "hello", "world")
         assert host_obj.hello == host.hello
 
     def test_context_host_class_attr(self):
@@ -46,27 +46,27 @@ class TestHostContextObject(TestCase):
         with self.assertRaises(AttributeError):
             host_obj.hello
 
-        setattr(Host, 'hello', 'class_world')
-        setattr(host_obj, 'hello', 'instance_world')
+        setattr(Host, "hello", "class_world")
+        setattr(host_obj, "hello", "instance_world")
 
         assert host.hello == host.hello
 
         # Reset and check fallback to class variable
         ctx_host.reset()
         assert ctx_host.isset() is False
-        assert host.hello == 'class_world'
+        assert host.hello == "class_world"
 
 
 class TestInventoryContextObject(TestCase):
     def test_context_inventory_len(self):
-        inventory_obj = Inventory(('host', 'anotherhost'))
+        inventory_obj = Inventory(("host", "anotherhost"))
         ctx_inventory.set(inventory_obj)
         assert ctx_inventory.isset() is True
 
         assert len(inventory) == len(inventory_obj)
 
     def test_context_inventory_iter(self):
-        inventory_obj = Inventory(('host', 'anotherhost'))
+        inventory_obj = Inventory(("host", "anotherhost"))
         ctx_inventory.set(inventory_obj)
         assert ctx_inventory.isset() is True
 

@@ -3,7 +3,7 @@ from pyinfra.api import operation
 
 @operation(is_idempotent=False)
 def agent(server=None, port=None):
-    '''
+    """
     Run puppet agent
 
     + server: master server URL
@@ -26,13 +26,13 @@ def agent(server=None, port=None):
             success_exit_codes=[0, 2],
         )
 
-    '''
+    """
 
     args = []
 
     if server:
-        args.append('--server=%s' % server)
+        args.append("--server=%s" % server)
     if port:
-        args.append('--masterport=%s' % port)
+        args.append("--masterport=%s" % port)
 
-    yield 'puppet agent -t %s' % ' '.join(args)
+    yield "puppet agent -t %s" % " ".join(args)

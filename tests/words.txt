@@ -28,12 +28,14 @@ apk
 arg1
 arg2
 argbits
+endian
 argspec
 argstring
 askpass
 asn
 autodetect
 autogenerate
+utf16
 automagically
 automount
 autoname
@@ -71,6 +73,7 @@ createrole
 credssp
 cron
 crons
+UNIXCONFDIR
 crontab
 ctid
 ctrl

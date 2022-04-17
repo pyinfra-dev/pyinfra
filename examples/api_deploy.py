@@ -1,8 +1,8 @@
 from gevent import monkey  # noqa
+
 monkey.patch_all()  # noqa async things (speed++, optional)
 
 import logging  # noqa: E402, I100
-
 from collections import defaultdict  # noqa: E402
 
 from pyinfra.api import BaseStateCallback, Config, Inventory, State  # noqa: E402
@@ -17,20 +17,20 @@ from pyinfra_cli.prints import jsonify  # noqa: E402
 
 class StateCallback(BaseStateCallback):
     def host_connect(self, state, host):
-        print('Host connected: {0}'.format(host))
+        print("Host connected: {0}".format(host))
 
     def operation_start(self, state, op_hash):
-        print('Start operation: {0}'.format(op_hash))
+        print("Start operation: {0}".format(op_hash))
 
     def operation_end(self, state, op_hash):
-        print('End operation: {0}'.format(op_hash))
+        print("End operation: {0}".format(op_hash))
 
 
 logging.basicConfig(level=logging.CRITICAL)
 
 
 # Make our hosts and groups data (using the Vagrant connector in this case)
-print('Loading Vagrant config...')
+print("Loading Vagrant config...")
 hosts = []
 groups = defaultdict(lambda: ([], {}))
 
@@ -57,40 +57,40 @@ state.add_callback_handler(StateCallback())
 
 
 # Connect to all the hosts
-print('Connecting...')
+print("Connecting...")
 connect_all(state)
 
 
 # Start adding operations
-print('Generating operations...')
+print("Generating operations...")
 add_op(
     state,
     server.user,
-    user='pyinfra',
-    home='/home/pyinfra',
-    shell='/bin/bash',
+    user="pyinfra",
+    home="/home/pyinfra",
+    shell="/bin/bash",
     sudo=True,
 )
 
 add_op(
     state,
     server.group,
-    group='pyinfra2',
-    name='Ensure pyinfra2 group exists',
+    group="pyinfra2",
+    name="Ensure pyinfra2 group exists",
     sudo=True,
     # Add an op only to a subset of hosts
     # (in this case, the inventory.centos group)
-    host=inventory.get_group('centos', default=[]),
+    host=inventory.get_group("centos", default=[]),
 )
 
 # Ensure the state of files
 add_op(
     state,
     files.file,
-    path='/var/log/pyinfra.log',
-    user='pyinfra',
-    group='pyinfra',
-    mode='644',
+    path="/var/log/pyinfra.log",
+    user="pyinfra",
+    group="pyinfra",
+    mode="644",
     sudo=True,
 )
 
@@ -98,10 +98,10 @@ add_op(
 add_op(
     state,
     files.directory,
-    path='/tmp/email',
-    user='pyinfra',
-    group='pyinfra',
-    mode='755',
+    path="/tmp/email",
+    user="pyinfra",
+    group="pyinfra",
+    mode="755",
     sudo=True,
 )
 
@@ -109,8 +109,8 @@ add_op(
 add_op(
     state,
     files.put,
-    src='files/motd',
-    dest='/home/vagrant/motd',
+    src="files/motd",
+    dest="/home/vagrant/motd",
 )
 
 
@@ -119,5 +119,5 @@ run_ops(state)
 
 
 # We can also get facts for all the hosts
-facts = get_facts(state, 'os')
+facts = get_facts(state, "os")
 print(jsonify(facts, indent=4))

@@ -5,7 +5,7 @@ from .util.packaging import parse_yum_repositories
 
 
 class YumRepositories(FactBase):
-    '''
+    """
     Returns a list of installed yum repositories:
 
     .. code:: python
@@ -19,13 +19,13 @@ class YumRepositories(FactBase):
                 "gpgkey": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial",
             },
         ]
-    '''
+    """
 
     command = make_cat_files_command(
-        '/etc/yum.conf',
-        '/etc/yum.repos.d/*.repo',
+        "/etc/yum.conf",
+        "/etc/yum.repos.d/*.repo",
     )
-    requires_command = 'yum'
+    requires_command = "yum"
 
     default = list
 

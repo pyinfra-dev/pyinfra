@@ -8,8 +8,8 @@ config.SUDO = True
 line = 'QUOTAUSER=""'
 results = files.line(
     name='Example with double quotes (")',
-    path='/etc/adduser.conf',
-    line='^{}$'.format(line),
+    path="/etc/adduser.conf",
+    line="^{}$".format(line),
     replace=line,
 )
 print(results.changed)
