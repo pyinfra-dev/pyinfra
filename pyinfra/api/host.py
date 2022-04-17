@@ -8,7 +8,7 @@ from pyinfra.connectors.util import remove_any_sudo_askpass_file
 
 from .connectors import get_execution_connector
 from .exceptions import ConnectError
-from .facts import create_host_fact, delete_host_fact, get_host_fact
+from .facts import create_host_fact, delete_host_fact, get_host_fact, reload_host_fact
 
 
 def extract_callable_datas(datas):
@@ -221,6 +221,9 @@ class Host(object):
 
     def get_fact(self, name_or_cls, *args, **kwargs):
         return get_host_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
+
+    def reload_fact(self, name_or_cls, *args, **kwargs):
+        return reload_host_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
 
     def create_fact(self, name_or_cls, data=None, kwargs=None):
         return create_host_fact(self.state, self, name_or_cls, data, kwargs=kwargs)

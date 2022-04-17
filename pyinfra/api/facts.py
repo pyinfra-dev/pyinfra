@@ -122,12 +122,13 @@ def get_fact(
     ensure_hosts=None,
     apply_failed_hosts=True,
     fact_hash=None,
+    use_cache=True,
 ):
     if issubclass(cls, ShortFactBase):
         return get_short_facts(state, host, cls, args=args, ensure_hosts=ensure_hosts)
 
     with host.facts_lock:
-        if fact_hash and fact_hash in host.facts:
+        if use_cache and fact_hash and fact_hash in host.facts:
             return host.facts[fact_hash]
 
         return _get_fact(
@@ -292,6 +293,19 @@ def _get_fact_hash(state, host, cls, args, kwargs):
 def get_host_fact(state, host, cls, args=None, kwargs=None):
     fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
     return get_fact(state, host, cls, args=args, kwargs=kwargs, fact_hash=fact_hash)
+
+
+def reload_host_fact(state, host, cls, args=None, kwargs=None):
+    fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
+    return get_fact(
+        state,
+        host,
+        cls,
+        args=args,
+        kwargs=kwargs,
+        fact_hash=fact_hash,
+        use_cache=False,
+    )
 
 
 def create_host_fact(state, host, cls, data, args=None, kwargs=None):
