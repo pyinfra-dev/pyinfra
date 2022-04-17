@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 100
+target-version = ["py36"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+combine_as_imports = true
+include_trailing_comma = true
