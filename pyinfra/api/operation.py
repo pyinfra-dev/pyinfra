@@ -240,11 +240,13 @@ def operation(
             if host.in_deploy:
                 frameinfo = get_caller_frameinfo()
                 op_order = host.current_deploy_op_order + [frameinfo.lineno]
+            elif host.nested_executing_op_hash:
+                raise PyinfraError("Nested operations are not supported in API mode")
             else:
                 raise PyinfraError(
                     (
                         "Operation order number not provided in API mode - "
-                        "you must use `add_op` to add operations."
+                        "you must use `add_op` to add operations"
                     ),
                 )
 

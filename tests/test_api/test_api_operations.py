@@ -27,9 +27,13 @@ from ..util import make_inventory
 
 
 class TestOperationMeta(TestCase):
-    def test_operation_meta_repr(self):
+    def test_operation_meta_repr_no_change(self):
         op_meta = OperationMeta("hash", [])
-        assert repr(op_meta) == "commands:[] changed:False hash:hash"
+        assert repr(op_meta) == "OperationMeta(commands=0, changed=False, hash=hash)"
+
+    def test_operation_meta_repr_changes(self):
+        op_meta = OperationMeta("hash", ["a-command"])
+        assert repr(op_meta) == "OperationMeta(commands=1, changed=True, hash=hash)"
 
 
 class TestOperationsApi(PatchSSHTestCase):
@@ -350,6 +354,43 @@ class TestOperationsApi(PatchSSHTestCase):
             add_op(state, files.file, "/var/log/pyinfra.log", serial=False)
 
         assert context.exception.args[0] == "Cannot have different values for `serial`."
+
+
+class TestNestedOperationsApi(PatchSSHTestCase):
+    def test_nested_op_api(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+
+        connect_all(state)
+
+        somehost = inventory.get_host("somehost")
+
+        ctx_state.set(state)
+        ctx_host.set(somehost)
+
+        pyinfra.is_cli = True
+
+        try:
+            outer_result = server.shell(commands="echo outer")
+            assert outer_result.combined_output_lines is None
+
+            def callback():
+                inner_result = server.shell(commands="echo inner")
+                assert inner_result.combined_output_lines is not None
+
+            python.call(function=callback)
+
+            assert len(state.get_op_order()) == 2
+
+            run_ops(state)
+
+            assert len(state.get_op_order()) == 3
+            assert state.results[somehost]["success_ops"] == 3
+            assert outer_result.combined_output_lines is not None
+
+            disconnect_all(state)
+        finally:
+            pyinfra.is_cli = False
 
 
 class TestOperationFailures(PatchSSHTestCase):
