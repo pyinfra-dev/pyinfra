@@ -51,6 +51,8 @@ def _run_shell_command(
     if status is False and not state.print_output:
         print_host_combined_output(host, combined_output_lines)
 
+    if return_combined_output:
+        return status, combined_output_lines
     return status
 
 
@@ -107,6 +109,8 @@ def run_host_op(state, host, op_hash):
         host.nested_executing_op_hash = op_hash
 
     return_status = False
+    all_combined_output_lines = []
+
     for i, command in enumerate(op_data["commands"]):
 
         status = False
@@ -138,7 +142,15 @@ def run_host_op(state, host, op_hash):
                 )
 
         elif isinstance(command, StringCommand):
-            status = _run_shell_command(state, host, command, global_kwargs, executor_kwargs)
+            status, combined_output_lines = _run_shell_command(
+                state,
+                host,
+                command,
+                global_kwargs,
+                executor_kwargs,
+                return_combined_output=True,
+            )
+            all_combined_output_lines.extend(combined_output_lines)
 
         else:
             try:
@@ -217,6 +229,8 @@ def run_host_op(state, host, op_hash):
 
         if ignore_errors:
             return_status = True
+
+    op_data["operation_meta"].set_combined_output_lines(all_combined_output_lines)
 
     if host.nested_executing_op_hash:
         host.nested_executing_op_hash = None

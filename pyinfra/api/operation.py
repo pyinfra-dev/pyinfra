@@ -30,6 +30,8 @@ op_meta_default = object()
 
 
 class OperationMeta(object):
+    combined_output_lines = None
+
     def __init__(self, hash=None, commands=None):
         # Wrap all the attributes
         commands = commands or []
@@ -40,8 +42,39 @@ class OperationMeta(object):
         self.changed = len(self.commands) > 0
 
     def __repr__(self):
-        """Return Operation object as a string."""
-        return "commands:{} changed:{} hash:{}".format(self.commands, self.changed, self.hash)
+        """
+        Return Operation object as a string.
+        """
+
+        return (
+            f"OperationMeta(commands={len(self.commands)}, "
+            f"changed={self.changed}, hash={self.hash})"
+        )
+
+    def set_combined_output_lines(self, combined_output_lines):
+        self.combined_output_lines = combined_output_lines
+
+    def _get_lines(self, types=("stdout", "stderr")):
+        if self.combined_output_lines is None:
+            raise AttributeError("Output is not available until operations have been executed")
+
+        return [line for type_, line in self.combined_output_lines if type_ in types]
+
+    @property
+    def stdout_lines(self):
+        return self._get_lines(types=("stdout",))
+
+    @property
+    def stderr_lines(self):
+        return self._get_lines(types=("stderr",))
+
+    @property
+    def stdout(self):
+        return "\n".join(self.stdout_lines)
+
+    @property
+    def stderr(self):
+        return "\n".join(self.stderr_lines)
 
 
 def add_op(state, op_func, *args, **kwargs):
