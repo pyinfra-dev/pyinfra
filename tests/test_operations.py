@@ -4,7 +4,7 @@ import warnings
 from importlib import import_module
 from os import listdir, path
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from pyinfra.api import FileDownloadCommand, FileUploadCommand, FunctionCommand, StringCommand
 from pyinfra_cli.util import json_encode
@@ -89,6 +89,7 @@ def make_operation_tests(arg):
     # Generate a test class
     @patch("pyinfra.operations.files.get_timestamp", lambda: "a-timestamp")
     @patch("pyinfra.operations.util.files.get_timestamp", lambda: "a-timestamp")
+    @patch("pyinfra.operations.python.getfullargspec", lambda x: MagicMock())
     class TestTests(TestCase, metaclass=JsonTest):
         jsontest_files = path.join("tests", "operations", arg)
         jsontest_prefix = "test_{0}_{1}_".format(module_name, op_name)

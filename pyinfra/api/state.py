@@ -258,6 +258,9 @@ class State(object):
     def get_op_data(self, host, op_hash):
         return self.ops[host][op_hash]
 
+    def set_op_data(self, host, op_hash, op_data):
+        self.ops[host][op_hash] = op_data
+
     def activate_host(self, host):
         """
         Flag a host as active.

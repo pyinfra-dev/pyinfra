@@ -27,7 +27,14 @@ def show_pre_or_post_condition_warning(condition_name):
     logger.warning("The `{0}` argument is in beta!".format(condition_name))
 
 
-def _run_shell_command(state, host, command, global_kwargs, executor_kwargs):
+def _run_shell_command(
+    state,
+    host,
+    command,
+    global_kwargs,
+    executor_kwargs,
+    return_combined_output=False,
+):
     status = False
     combined_output_lines = []
 
@@ -47,7 +54,7 @@ def _run_shell_command(state, host, command, global_kwargs, executor_kwargs):
     return status
 
 
-def _run_server_op(state, host, op_hash):
+def run_host_op(state, host, op_hash):
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
     if op_hash not in state.ops[host]:
@@ -94,7 +101,12 @@ def _run_server_op(state, host, op_hash):
 
     state.ops_run.add(op_hash)
 
-    # ...loop through each command
+    if host.executing_op_hash is None:
+        host.executing_op_hash = op_hash
+    else:
+        host.nested_executing_op_hash = op_hash
+
+    return_status = False
     for i, command in enumerate(op_data["commands"]):
 
         status = False
@@ -184,30 +196,38 @@ def _run_server_op(state, host, op_hash):
             global_kwargs["on_success"](state, host, op_hash)
 
         state.trigger_callbacks("operation_host_success", host, op_hash)
-        return True
+        return_status = True
 
-    # Up error_ops & log
-    state.results[host]["error_ops"] += 1
+    if return_status is False:
+        # Up error_ops & log
+        state.results[host]["error_ops"] += 1
 
-    log_error_or_warning(host, ignore_errors)
+        log_error_or_warning(host, ignore_errors)
 
-    # Always trigger any error handler
-    if global_kwargs["on_error"]:
-        global_kwargs["on_error"](state, host, op_hash)
+        # Always trigger any error handler
+        if global_kwargs["on_error"]:
+            global_kwargs["on_error"](state, host, op_hash)
 
-    # Ignored, op "completes" w/ ignored error
-    if ignore_errors:
-        state.results[host]["ops"] += 1
+        # Ignored, op "completes" w/ ignored error
+        if ignore_errors:
+            state.results[host]["ops"] += 1
 
-    # Unignored error -> False
-    state.trigger_callbacks("operation_host_error", host, op_hash)
-    if ignore_errors:
-        return True
-    return False
+        # Unignored error -> False
+        state.trigger_callbacks("operation_host_error", host, op_hash)
+
+        if ignore_errors:
+            return_status = True
+
+    if host.nested_executing_op_hash:
+        host.nested_executing_op_hash = None
+    else:
+        host.executing_op_hash = None
+
+    return return_status
 
 
-def _log_operation_start(op_meta):
-    op_types = []
+def log_operation_start(op_meta, op_types=None, prefix="--> "):
+    op_types = op_types or []
     if op_meta["serial"]:
         op_types.append("serial")
     if op_meta["run_once"]:
@@ -220,7 +240,8 @@ def _log_operation_start(op_meta):
     logger.info(
         "{0} {1} {2}".format(
             click.style(
-                "--> Starting{0}operation:".format(
+                "{0}Starting{1}operation:".format(
+                    prefix,
                     " {0} ".format(", ".join(op_types)) if op_types else " ",
                 ),
                 "blue",
@@ -231,7 +252,7 @@ def _log_operation_start(op_meta):
     )
 
 
-def _run_server_ops(state, host, progress=None):
+def _run_host_ops(state, host, progress=None):
     """
     Run all ops for a single server.
     """
@@ -240,9 +261,9 @@ def _run_server_ops(state, host, progress=None):
 
     for op_hash in state.get_op_order():
         op_meta = state.get_op_meta(op_hash)
-        _log_operation_start(op_meta)
+        log_operation_start(op_meta)
 
-        result = _run_server_op(state, host, op_hash)
+        result = run_host_op(state, host, op_hash)
 
         # Trigger CLI progress if provided
         if progress:
@@ -269,7 +290,7 @@ def _run_serial_ops(state):
         host_operations = product([host], state.get_op_order())
         with progress_spinner(host_operations) as progress:
             try:
-                _run_server_ops(
+                _run_host_ops(
                     state,
                     host,
                     progress=progress,
@@ -288,7 +309,7 @@ def _run_no_wait_ops(state):
         # Spawn greenlet for each host to run *all* ops
         greenlets = [
             state.pool.spawn(
-                _run_server_ops,
+                _run_host_ops,
                 state,
                 host,
                 progress=progress,
@@ -306,7 +327,7 @@ def _run_single_op(state, op_hash):
     state.trigger_callbacks("operation_start", op_hash)
 
     op_meta = state.get_op_meta(op_hash)
-    _log_operation_start(op_meta)
+    log_operation_start(op_meta)
 
     failed_hosts = set()
 
@@ -314,7 +335,7 @@ def _run_single_op(state, op_hash):
         with progress_spinner(state.inventory.iter_active_hosts()) as progress:
             # For each host, run the op
             for host in state.inventory.iter_active_hosts():
-                result = _run_server_op(state, host, op_hash)
+                result = run_host_op(state, host, op_hash)
                 progress(host)
 
                 if not result:
@@ -335,7 +356,7 @@ def _run_single_op(state, op_hash):
             with progress_spinner(batch) as progress:
                 # Spawn greenlet for each host
                 greenlet_to_host = {
-                    state.pool.spawn(_run_server_op, state, host, op_hash): host for host in batch
+                    state.pool.spawn(run_host_op, state, host, op_hash): host for host in batch
                 }
 
                 # Trigger CLI progress as hosts complete if provided

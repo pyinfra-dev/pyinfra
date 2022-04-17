@@ -16,6 +16,7 @@ from .arguments import get_execution_kwarg_keys, pop_global_arguments
 from .command import StringCommand
 from .exceptions import OperationValueError, PyinfraError
 from .host import Host
+from .operations import log_operation_start, run_host_op
 from .util import (
     get_args_kwargs_spec,
     get_call_location,
@@ -130,14 +131,6 @@ def operation(
     def decorated_func(*args, **kwargs):
         state = context.state
         host = context.host
-
-        if state.is_executing:
-            raise PyinfraError(
-                (
-                    "Operations cannot be used during execution, see "
-                    "`host.run_shell_command` as an alternative"
-                ),
-            )
 
         # Configure operation
         #
@@ -331,14 +324,24 @@ def operation(
         state.meta[host]["ops"] += 1
         state.meta[host]["commands"] += len(commands)
 
+        operation_meta = OperationMeta(op_hash, commands)
+
         # Add the server-relevant commands
-        state.ops[host][op_hash] = {
+        op_data = {
             "commands": commands,
             "global_kwargs": global_kwargs,
+            "operation_meta": operation_meta,
         }
+        state.set_op_data(host, op_hash, op_data)
+
+        # If we're already in the execution phase, execute this operation immediately
+        if state.is_executing:
+            op_data["parent_op_hash"] = host.executing_op_hash
+            log_operation_start(op_meta, op_types=["nested"], prefix="")
+            run_host_op(state, host, op_hash)
 
         # Return result meta for use in deploy scripts
-        return OperationMeta(op_hash, commands)
+        return operation_meta
 
     decorated_func._pyinfra_op = func
     return decorated_func

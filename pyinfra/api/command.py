@@ -1,5 +1,10 @@
 import shlex
+from inspect import getfullargspec
 from string import Formatter
+
+import gevent
+
+from pyinfra.context import ctx_config, ctx_host
 
 from .arguments import get_executor_kwarg_keys
 
@@ -184,7 +189,17 @@ class FunctionCommand(PyinfraCommand):
         )
 
     def execute(self, state, host, executor_kwargs):
-        return self.function(state, host, *self.args, **self.kwargs)
+        argspec = getfullargspec(self.function)
+        if "state" in argspec.args and "host" in argspec.args:
+            return self.function(state, host, *self.args, **self.kwargs)
+
+        def execute_function():
+            with ctx_config.use(state.config.copy()):
+                with ctx_host.use(host):
+                    self.function(*self.args, **self.kwargs)
+
+        greenlet = gevent.spawn(execute_function)
+        return greenlet.get()
 
 
 class RsyncCommand(PyinfraCommand):

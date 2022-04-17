@@ -80,17 +80,21 @@ class Host(object):
     connection = None
     state = None
 
-    # Current context inside an @operation function
+    # Current context inside an @operation function (op gen stage)
     in_op = False
     current_op_hash = None
     current_op_global_kwargs = None
 
-    # Current context inside a @deploy function
+    # Current context inside a @deploy function (op gen stage)
     in_deploy = False
     current_deploy_name = None
     current_deploy_kwargs = None
     current_deploy_data = None
     current_deploy_op_order = None
+
+    # Current context during operation execution
+    executing_op_hash = None
+    nested_executing_op_hash = None
 
     def __init__(
         self,
@@ -142,6 +146,13 @@ class Host(object):
 
     @property
     def print_prefix(self):
+        if self.nested_executing_op_hash:
+            return "{0}[{1}] {2} ".format(
+                click.style(""),  # reset
+                click.style(self.name, bold=True),
+                click.style("nested", "blue"),
+            )
+
         return "{0}[{1}] ".format(
             click.style(""),  # reset
             click.style(self.name, bold=True),
