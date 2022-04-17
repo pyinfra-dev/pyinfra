@@ -4,7 +4,7 @@ import warnings
 from importlib import import_module
 from os import listdir, path
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from pyinfra.api import FileDownloadCommand, FileUploadCommand, FunctionCommand, StringCommand
 from pyinfra_cli.util import json_encode
