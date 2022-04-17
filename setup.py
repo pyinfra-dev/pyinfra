@@ -44,7 +44,7 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
     "isort==5.10.1",
     "flake8==4.0.1",
     "flake8-commas==2.1.0",  # black does not enforce trailing commas itself
-    "flake8-black==0.3.2",
+    "flake8-black==0.3.0",
     "flake8-isort==4.1.1",
 )
 
