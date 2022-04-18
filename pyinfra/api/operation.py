@@ -250,6 +250,13 @@ def operation(
                     ),
                 )
 
+        # This a nested operation, so place the line order underneath the parent
+        # operation lines so the final order makes sense. Nested operations are
+        # executed immediately so the order is only for debugging purposes.
+        if host.executing_op_hash:
+            executing_lines = state.op_meta[host.executing_op_hash]["op_order"]
+            op_order = executing_lines + tuple(op_order)
+
         # Make a hash from the call stack lines
         op_hash = make_hash(op_order)
 
@@ -286,6 +293,7 @@ def operation(
             {
                 "names": set(),
                 "args": [],
+                "op_order": op_order,
             },
         )
 
