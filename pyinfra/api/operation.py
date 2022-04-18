@@ -10,8 +10,7 @@ from types import FunctionType
 
 import pyinfra
 
-from pyinfra import host, state
-from pyinfra import logger
+from pyinfra import context, logger
 from pyinfra.context import ctx_host, ctx_state
 
 from .arguments import get_execution_kwarg_keys, pop_global_arguments
@@ -126,6 +125,9 @@ def operation(
     # Actually decorate!
     @wraps(func)
     def decorated_func(*args, **kwargs):
+        state = context.state
+        host = context.host
+
         if state.is_executing:
             raise PyinfraError((
                 'Operations cannot be used during execution, see '
@@ -136,7 +138,7 @@ def operation(
         #
 
         # Get the meta kwargs (globals that apply to all hosts)
-        global_kwargs, global_kwarg_keys = pop_global_arguments(state, host, kwargs)
+        global_kwargs, global_kwarg_keys = pop_global_arguments(kwargs)
 
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).

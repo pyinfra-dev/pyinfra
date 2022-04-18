@@ -14,7 +14,7 @@ from ..util import make_inventory
 
 
 def _get_executor_defaults(state, host):
-    global_argument_defaults, _ = pop_global_arguments(state, host, {})
+    global_argument_defaults, _ = pop_global_arguments({}, state=state, host=host)
     return {
         key: value
         for key, value in global_argument_defaults.items()
@@ -22,7 +22,7 @@ def _get_executor_defaults(state, host):
     }
 
 
-class TestOperationsApi(PatchSSHTestCase):
+class TestFactsApi(PatchSSHTestCase):
     def test_get_fact(self):
         inventory = make_inventory(hosts=('anotherhost',))
         state = State(inventory, Config())
