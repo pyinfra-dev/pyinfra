@@ -105,6 +105,10 @@ class TestCliDeployState(PatchSSHTestCase):
             ("First main operation", True),
             ("Second main somehost operation", ("somehost",)),
             ("Second main anotherhost operation", ("anotherhost",)),
+            ("Function call operation", True),
+            ("First nested operation", True),
+            ("Second nested anotherhost operation", ("anotherhost",)),
+            ("Second nested somehost operation", ("somehost",)),
             ("Third main operation", True),
         ]
 

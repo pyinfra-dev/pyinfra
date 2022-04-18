@@ -7,7 +7,7 @@ from time import sleep
 
 from pyinfra import config, host, inventory
 from pyinfra.facts.server import Arch, Os
-from pyinfra.operations import server
+from pyinfra.operations import python, server
 
 config.SUDO = True
 
@@ -50,6 +50,31 @@ else:  # some other host
     somehost.get_fact(Os)
 
     assert config.SUDO is True
+
+
+def nested_op():
+    sleep(randint(1, 10) * 0.01)
+    server.shell(
+        name="First nested operation",
+        commands="echo first_nested_operation",
+    )
+
+    if host.name == "anotherhost":
+        sleep(randint(1, 10) * 0.01)
+        server.shell(
+            name="Second nested anotherhost operation",
+            commands="echo first_nested_operation",
+        )
+
+    if host.name == "somehost":
+        server.shell(
+            name="Second nested somehost operation",
+            commands="echo first_nested_operation",
+        )
+
+
+python.call(name="Function call operation", function=nested_op)
+
 
 sleep(randint(1, 10) * 0.01)
 server.shell(
