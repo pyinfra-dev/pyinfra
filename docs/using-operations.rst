@@ -35,6 +35,7 @@ Uses :doc:`operations/files` and :doc:`operations/server`. You can see all avail
 .. Important::
     Operations that rely on one another (interdependency) must be treated with caution. See: `deploy limitations <deploy-process.html#limitations>`_.
 
+
 Global Arguments
 ----------------
 
@@ -49,6 +50,7 @@ Global arguments are covered in detail here: :doc:`arguments`. There is a set of
         _sudo=True,
         _sudo_user="pyinfra",
     )
+
 
 The ``host`` Object
 -------------------
@@ -128,27 +130,80 @@ Like ``host``, there is an ``inventory`` object that can be used to access the e
         db_hostname=db_hostname,
     )
 
-Operation Results
------------------
 
-All operations return an operation meta object which provides information about the changes the operation will execute. This can be used for subsequent operations:
+Operation Changes & Output
+--------------------------
+
+All operations return an operation meta object which provides information about the changes the operation *will* execute. The meta object provides ``changes`` (integer) and ``changed`` (boolean) attributes initially. This can be used to control subsequent operations:
 
 .. code:: python
 
     from pyinfra.operations import server
 
-    # Run an operation, collecting its meta output
     create_user = server.user(
         name="Create user myuser",
         user="myuser",
-    }
+    )
 
     # If we added a user above, do something extra
     if create_user.changed:
         server.shell( # add user to sudo, etc...
 
-Multiple Operation Files
-------------------------
+Operation Output
+~~~~~~~~~~~~~~~~
+
+``pyinfra`` doesn't immediately execute normal operations meaning output is not available right away. It is possible to access this output at runtime by providing a callback function using the :ref:`operations:python.call` operation.
+
+.. code:: python
+
+    from pyinfra import logger
+    from pyinfra.operations import python, server
+
+    result = server.shell(
+        commands=["echo output"],
+    )
+    # result.stdout raises exception here, but works inside callback()
+
+    def callback():
+        logger.info(f"Got result: {result.stdout}")
+
+    python.call(
+        name="Execute callback function",
+        function=callback,
+    )
+
+
+Nested Operations
+-----------------
+
+.. important::
+
+    Nested operations should be kept to a minimum as they cannot be tracked as changes prior to execution.
+
+Nested operations are called during the execution phase within a callback function passed into a :ref:`operations:python.call`. Calling a nested operation generates and immediately executes it on the target machine. This is useful in complex scenarios where one operation output is required in another.
+
+Because nested operations are executed immediately, the output is always available right away:
+
+.. code:: python
+
+    from pyinfra import logger
+    from pyinfra.operations import python, server
+
+    def callback():
+        result = server.shell(
+            commands=["echo output"],
+        )
+
+        logger.info(f"Got result: {result.stdout}")
+
+    python.call(
+        name="Execute callback function",
+        function=callback,
+    )
+
+
+Include Multiple Files
+----------------------
 
 Including files can be used to break out operations across multiple files. Files can be included using ``local.include``.
 
@@ -161,39 +216,37 @@ Including files can be used to break out operations across multiple files. Files
 
 See more in :doc:`examples: groups & roles <./examples/groups_roles>`.
 
-.. Important::
-    It is also possible to group operations into Python functions - see :doc:`packaging deploys <./api/deploys>` for more information.
 
-Config
-------
+The ``config`` Object
+---------------------
 
-There are a number of configuration options for how deploys are managed. These can be defined at the top of a deploy file, or in a ``config.py`` alongside the deploy file. See :doc:`the full list of options & defaults <./apidoc/pyinfra.api.config>`.
+Like ``host`` and ``inventory``, ``config`` can be used to set global defaults for operations. For example, to use sudo in all operations following:
 
 .. code:: python
 
-    # config.py or top of deploy.py
+    from pyinfra import config
 
-    # SSH connect timeout
-    CONNECT_TIMEOUT = 1
+    config.SUDO = True
 
-    # Fail the entire deploy after 10% of hosts fail
-    FAIL_PERCENT = 10
+    # all operations below will use sudo by default (unless overridden by `_sudo=False`)
 
-.. note::
-    When added to ``config.py`` (vs the deploy file), these options will take effect for any CLI usage (ie ``pyinfra host exec -- "tail -f /var/log/syslog"``).
+Enforcing Requirements
+~~~~~~~~~~~~~~~~~~~~~~
 
-Requirements
-~~~~~~~~~~~~
-
-The config can be used to check Python package requirements before ``pyinfra`` executes, helping to prevent unexpected errors. This can either be defined as a requirements text file path or simply a list of requirements:
+The config object can be used to enforce a ``pyinfra`` version or Python package requirements. This can either be defined as a requirements text file path or simply a list of requirements:
 
 .. code:: python
 
-    REQUIRE_PACKAGES = "requirements.txt"  # path relative to the deploy
-    REQUIRE_PACKAGES = [
+    # Require a certain pyinfra version
+    config.REQUIRE_PYINFRA_VERSION = "~=1.1"
+
+    # Require certain packages
+    config.REQUIRE_PACKAGES = "requirements.txt"  # path relative to the current working directory
+    config.REQUIRE_PACKAGES = [
         "pyinfra~=1.1",
         "pyinfra-docker~=1.0",
     ]
+
 
 Examples
 --------
