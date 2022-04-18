@@ -85,7 +85,7 @@ class ContextManager(object):
         self.context._container.module = None
 
     def isset(self):
-        return self.context._container.module is not None
+        return self.get() is not None
 
     @contextmanager
     def use(self, module):
