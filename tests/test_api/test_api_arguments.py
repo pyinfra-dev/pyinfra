@@ -11,7 +11,7 @@ class TestOperationKwargs(TestCase):
 
         state = State(config=config, inventory=inventory)
 
-        kwargs, keys = pop_global_arguments(state, inventory.get_host("somehost"), {})
+        kwargs, keys = pop_global_arguments({}, state=state, host=inventory.get_host("somehost"))
         assert kwargs["sudo"] == "config-value"
 
     def test_get_from_host(self):
@@ -20,7 +20,7 @@ class TestOperationKwargs(TestCase):
 
         state = State(config=config, inventory=inventory)
 
-        kwargs, keys = pop_global_arguments(state, inventory.get_host("somehost"), {})
+        kwargs, keys = pop_global_arguments({}, state=state, host=inventory.get_host("somehost"))
         assert kwargs["sudo"] == "host-value"
 
     def test_get_from_state_deploy_kwargs(self):
@@ -31,7 +31,7 @@ class TestOperationKwargs(TestCase):
         state = State(config=config, inventory=inventory)
         somehost.current_deploy_kwargs = {"sudo": "deploy-kwarg-value"}
 
-        kwargs, keys = pop_global_arguments(state, somehost, {})
+        kwargs, keys = pop_global_arguments({}, state=state, host=somehost)
         assert kwargs["sudo"] == "deploy-kwarg-value"
 
     def test_get_from_kwargs(self):
@@ -46,9 +46,9 @@ class TestOperationKwargs(TestCase):
         }
 
         kwargs, keys = pop_global_arguments(
-            state,
-            somehost,
             {"sudo": "kwarg-value"},
+            state=state,
+            host=somehost,
         )
         assert kwargs["sudo"] == "kwarg-value"
         assert kwargs["sudo_user"] == "deploy-kwarg-user"

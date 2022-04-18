@@ -7,7 +7,7 @@ creation (eg pyinfra-openstack).
 from functools import wraps
 
 import pyinfra
-from pyinfra import host, logger, state
+from pyinfra import context, logger
 from pyinfra.context import ctx_host, ctx_state
 
 from .arguments import pop_global_arguments
@@ -89,15 +89,15 @@ def deploy(func_or_name, data_defaults=None, _call_location=None):
 
     @wraps(func)
     def decorated_func(*args, **kwargs):
-        deploy_kwargs, _ = pop_global_arguments(state, host, kwargs)
+        deploy_kwargs, _ = pop_global_arguments(kwargs)
 
         # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
         # and host are included as kwargs.
         if func.is_legacy:
             if "state" not in kwargs:
-                kwargs["state"] = state
+                kwargs["state"] = context.state
             if "host" not in kwargs:
-                kwargs["host"] = host
+                kwargs["host"] = context.host
         # If not legacy, pop off any state/host kwargs that may come from legacy @deploy functions
         else:
             kwargs.pop("state", None)
@@ -115,9 +115,9 @@ def deploy(func_or_name, data_defaults=None, _call_location=None):
             if op_order_number is not None:
                 deploy_op_order = [op_order_number]
             # API mode: nested deploy wrapped function call
-            elif host.current_deploy_op_order:
+            elif context.host.current_deploy_op_order:
                 frameinfo = get_caller_frameinfo()
-                deploy_op_order = host.current_deploy_op_order + [frameinfo.lineno]
+                deploy_op_order = context.host.current_deploy_op_order + [frameinfo.lineno]
             else:
                 raise PyinfraError(
                     (
@@ -126,7 +126,7 @@ def deploy(func_or_name, data_defaults=None, _call_location=None):
                     ),
                 )
 
-        with host.deploy(
+        with context.host.deploy(
             name=deploy_name,
             kwargs=deploy_kwargs,
             data=deploy_data,

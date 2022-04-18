@@ -162,9 +162,9 @@ def _get_fact(
     # Get the defaults *and* overrides by popping from kwargs, executor kwargs passed
     # into get_fact override everything else (applied below).
     override_kwargs, override_kwarg_keys = pop_global_arguments(
-        state,
-        host,
         kwargs,
+        state=state,
+        host=host,
         keys_to_check=get_executor_kwarg_keys(),
     )
 

@@ -1,4 +1,4 @@
-from pyinfra import logger
+from pyinfra import context, logger
 
 from .util import get_call_location, memoize
 
@@ -165,7 +165,7 @@ def show_legacy_argument_host_data_warning(key):
     )
 
 
-def pop_global_arguments(state, host, kwargs, keys_to_check=None):
+def pop_global_arguments(kwargs, state=None, host=None, keys_to_check=None):
     """
     Pop and return operation global keyword arguments, in preferred order:
 
@@ -185,13 +185,20 @@ def pop_global_arguments(state, host, kwargs, keys_to_check=None):
     TODO: is this wird-ness acceptable? Is it worth updating internal use to _prefix?
     """
 
+    state = state or context.state
+    host = host or context.host
+
+    config = state.config
+    if context.ctx_config.isset():
+        config = context.config
+
     meta_kwargs = host.current_deploy_kwargs or {}
 
     global_kwargs = {}
     found_keys = []
 
-    for _, kwarg_configs in OPERATION_KWARGS.items():
-        for key, config in kwarg_configs.items():
+    for _, arguments in OPERATION_KWARGS.items():
+        for key, argument in arguments.items():
             internal_key = _get_internal_key(key)
 
             if keys_to_check and internal_key not in keys_to_check:
@@ -200,11 +207,11 @@ def pop_global_arguments(state, host, kwargs, keys_to_check=None):
             handler = None
             default = None
 
-            if isinstance(config, dict):
-                handler = config.get("handler")
-                default = config.get("default")
+            if isinstance(argument, dict):
+                handler = argument.get("handler")
+                default = argument.get("default")
                 if default:
-                    default = default(state.config)
+                    default = default(config)
 
             host_default = getattr(host.data, key, None)
 
@@ -231,7 +238,7 @@ def pop_global_arguments(state, host, kwargs, keys_to_check=None):
                 value = meta_kwargs.get(internal_key, default)
 
             if handler:
-                value = handler(state.config, value)
+                value = handler(config, value)
 
             global_kwargs[internal_key] = value
     return global_kwargs, found_keys
