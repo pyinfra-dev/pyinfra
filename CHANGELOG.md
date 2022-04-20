@@ -1,3 +1,7 @@
+# v2.0.2
+
++ Fix for `config.SUDO`/etc handling for operation argument defaults 
+
 # v2.0.1
 
 + Rewrite & fix/speedup `systemd` facts using `systemctl show`
