@@ -28,6 +28,3 @@ If you need to build any python packages on Windows, perhaps because one of the 
     + "C++ ATL for latest..."
     + "C++/cli support for v142..."
     + "C++ Modules for v142..."
-
-
-To do something with pyinfra you need two things:
