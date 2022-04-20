@@ -866,7 +866,10 @@ def put(
     if create_remote_dir:
         yield from _create_remote_dir(state, host, dest, user, group)
 
-    local_sum = get_file_sha1(src)
+    if assume_exists and not os.path.isfile(local_file):
+        local_sum = None
+    else:
+        local_sum = get_file_sha1(src)
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
