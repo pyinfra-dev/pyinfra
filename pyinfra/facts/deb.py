@@ -8,6 +8,15 @@ DEB_PACKAGE_NAME_REGEX = r"[a-zA-Z0-9\+\-\.]+"
 DEB_PACKAGE_VERSION_REGEX = r"[a-zA-Z0-9:~\.\-\+]+"
 
 
+class DebArch(FactBase):
+    """
+    Returns the architecture string used in apt repository sources, eg ``amd64``.
+    """
+
+    command = "dpkg --print-architecture"
+    requires_command = "dpkg"
+
+
 class DebPackages(FactBase):
     """
     Returns a dict of installed dpkg packages:
