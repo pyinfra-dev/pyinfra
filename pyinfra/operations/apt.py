@@ -360,7 +360,7 @@ _upgrade = upgrade  # noqa: E305 (for use below where update is a kwarg)
 
 
 @operation(is_idempotent=False)
-def dist_upgrade(state, host):
+def dist_upgrade():
     """
     Updates all apt packages, employing dist-upgrade.
 
