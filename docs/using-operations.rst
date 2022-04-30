@@ -178,7 +178,7 @@ Nested Operations
 
 .. important::
 
-    Nested operations should be kept to a minimum as they cannot be tracked as changes prior to execution.
+    **Nested operations are currently in beta**. Nested operations should be kept to a minimum as they cannot be tracked as changes prior to execution.
 
 Nested operations are called during the execution phase within a callback function passed into a :ref:`operations:python.call`. Calling a nested operation generates and immediately executes it on the target machine. This is useful in complex scenarios where one operation output is required in another.
 

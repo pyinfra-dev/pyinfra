@@ -379,6 +379,11 @@ def operation(
 
         # If we're already in the execution phase, execute this operation immediately
         if state.is_executing:
+            logger.warning(
+                f"Note: nested operations are currently in beta ({get_call_location()})\n"
+                "    More information: "
+                "https://docs.pyinfra.com/en/latest/using-operations.html#nested-operations",
+            )
             op_data["parent_op_hash"] = host.executing_op_hash
             log_operation_start(op_meta, op_types=["nested"], prefix="")
             run_host_op(state, host, op_hash)
