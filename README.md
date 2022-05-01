@@ -14,7 +14,7 @@
     <a href="https://docs.pyinfra.com"><img alt="Docs status" src="https://img.shields.io/github/workflow/status/Fizzadar/pyinfra/Generate%20&amp;%20Deploy%20Docs/master?label=docs"></a>
     <a href="https://github.com/Fizzadar/pyinfra/actions?query=workflow%3A%22Execute+tests%22"><img alt="Execute tests status" src="https://img.shields.io/github/workflow/status/Fizzadar/pyinfra/Execute%20tests/master?label=tests"></a>
     <a href="https://codecov.io/github/Fizzadar/pyinfra"><img alt="Codecov Coverage" src="https://img.shields.io/codecov/c/gh/Fizzadar/pyinfra"></a>
-    <a href="https://github.com/Fizzadar/pyinfra/blob/develop/LICENSE.md"><img alt="MIT Licensed" src="https://img.shields.io/pypi/l/pyinfra"></a>
+    <a href="https://github.com/Fizzadar/pyinfra/blob/2.x/LICENSE.md"><img alt="MIT Licensed" src="https://img.shields.io/pypi/l/pyinfra"></a>
 </p>
 
 ---
