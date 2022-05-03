@@ -382,7 +382,7 @@ def operation(
             logger.warning(
                 f"Note: nested operations are currently in beta ({get_call_location()})\n"
                 "    More information: "
-                "https://docs.pyinfra.com/en/latest/using-operations.html#nested-operations",
+                "https://docs.pyinfra.com/en/2.x/using-operations.html#nested-operations",
             )
             op_data["parent_op_hash"] = host.executing_op_hash
             log_operation_start(op_meta, op_types=["nested"], prefix="")

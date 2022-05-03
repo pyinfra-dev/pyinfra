@@ -1,3 +1,41 @@
+# v2.1
+
+First `2.x` point release! Major feature: **nested operations** (at last!).
+
+Based on the changes to operations in `2.x` nested operations make it possible to generate & execute operations on the fly at execution time, rather than using the low-level connector API. This unlocks all kinds of complex deploys that were previously impossible or complex to implement. Let's look at an example:
+
+```py
+from pyinfra import logger
+from pyinfra.operations import python, server
+
+def callback():
+    result = server.shell(commands=["echo output"])
+    logger.info(f"Got result: {result.stdout}")
+
+python.call(
+    name="Execute callback function",
+    function=callback,
+)
+```
+
+Other new stuff:
+
++ Add `host.reload_fact(...)` - bypasses the fact cache to force reloading of fact data
++ Add `deb.DebArch` fact
++ Add `ssh_paramiko_connect_kwargs` host data used in the `@ssh` connector
+
+Bugfixes:
+
++ Fix: Remove state/host arguments from apt.dist_upgrade operation (@pabloxio)
++ Fix `files.put` hashing local file that doesn't exist when `assume_exists=True`
++ Fix parsing of link targets in RHEL 6 systems
++ Prefer `zypper` over `apt` when both present in `server.packages` operation
+
+Internal changes:
+
++ Fix license link (@Lab-Brat)
++ Run `black` and `isort` across the codebase, now part of CI
+
 # v2.0.2
 
 + Fix for `config.SUDO`/etc handling for operation argument defaults 
