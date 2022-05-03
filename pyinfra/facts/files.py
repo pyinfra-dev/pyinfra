@@ -126,7 +126,7 @@ class File(FactBase):
         if path_type == "link":
             filename = match.group(8)
             filename, target = filename.split(" -> ")
-            data["link_target"] = target.strip("'")
+            data["link_target"] = target.strip("'").lstrip("`")
 
         return data
 
