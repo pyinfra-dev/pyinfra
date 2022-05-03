@@ -187,3 +187,15 @@ class TestSSHUserConfig(TestCase):
             username="nottestuser",
         )
         fake_gateway.assert_called_once_with("192.168.1.2", 1022, "192.168.1.2", 1022)
+
+    @patch("pyinfra.connectors.sshuserclient.client.open", mock_open(), create=True)
+    @patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect")
+    def test_test_paramiko_connect_kwargs(self, fake_paramiko_connect):
+        client = SSHClient()
+        client.connect("hostname", _pyinfra_ssh_paramiko_connect_kwargs={"test": "kwarg"})
+
+        fake_paramiko_connect.assert_called_once_with(
+            "hostname",
+            port=22,
+            test="kwarg",
+        )

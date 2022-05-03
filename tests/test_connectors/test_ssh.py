@@ -109,6 +109,7 @@ class TestSSHConnector(TestCase):
                 _pyinfra_ssh_config_file=None,
                 _pyinfra_ssh_known_hosts_file=None,
                 _pyinfra_ssh_strict_host_key_checking=None,
+                _pyinfra_ssh_paramiko_connect_kwargs=None,
             )
 
         # Check that loading the same key again is cached in the state
@@ -265,6 +266,7 @@ class TestSSHConnector(TestCase):
                 _pyinfra_ssh_config_file=None,
                 _pyinfra_ssh_known_hosts_file=None,
                 _pyinfra_ssh_strict_host_key_checking=None,
+                _pyinfra_ssh_paramiko_connect_kwargs=None,
             )
 
         # Check that loading the same key again is cached in the state
@@ -323,6 +325,7 @@ class TestSSHConnector(TestCase):
                 _pyinfra_ssh_config_file=None,
                 _pyinfra_ssh_known_hosts_file=None,
                 _pyinfra_ssh_strict_host_key_checking=None,
+                _pyinfra_ssh_paramiko_connect_kwargs=None,
             )
 
         # Check that loading the same key again is cached in the state

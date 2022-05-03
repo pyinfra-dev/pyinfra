@@ -133,6 +133,7 @@ class SSHClient(ParamikoClient):
         _pyinfra_ssh_config_file=None,
         _pyinfra_ssh_known_hosts_file=None,
         _pyinfra_ssh_strict_host_key_checking=None,
+        _pyinfra_ssh_paramiko_connect_kwargs=None,
         **kwargs,
     ):
         (
@@ -157,8 +158,10 @@ class SSHClient(ParamikoClient):
         self._host_keys = get_host_keys(host_keys_file)
         self._host_keys_filename = host_keys_file
 
-        self._ssh_config = config
+        if _pyinfra_ssh_paramiko_connect_kwargs:
+            config.update(_pyinfra_ssh_paramiko_connect_kwargs)
 
+        self._ssh_config = config
         super(SSHClient, self).connect(hostname, **config)
 
         if _pyinfra_ssh_forward_agent is not None:

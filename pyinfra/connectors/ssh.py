@@ -66,6 +66,10 @@ class Meta(BaseConnectorMeta):
         known_hosts_file = "Custom SSH known hosts file"
         strict_host_key_checking = "Override strict host keys check setting"
 
+        paramiko_connect_kwargs = (
+            "Override keyword arguments passed into paramiko's `SSHClient.connect`"
+        )
+
 
 DATA_KEYS = Meta.keys()
 
@@ -176,6 +180,7 @@ def _make_paramiko_kwargs(state, host):
         "_pyinfra_ssh_config_file": host.data.get(DATA_KEYS.config_file),
         "_pyinfra_ssh_known_hosts_file": host.data.get(DATA_KEYS.known_hosts_file),
         "_pyinfra_ssh_strict_host_key_checking": host.data.get(DATA_KEYS.strict_host_key_checking),
+        "_pyinfra_ssh_paramiko_connect_kwargs": host.data.get(DATA_KEYS.paramiko_connect_kwargs),
     }
 
     for key, value in (
