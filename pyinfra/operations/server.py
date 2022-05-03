@@ -514,7 +514,13 @@ def packages(
         )
     """
 
-    if host.get_fact(Which, command="apk"):
+    # TODO: improve this - use LinuxDistribution fact + mapping with fallback below?
+    # Here to be preferred on openSUSE which also provides aptitude
+    # See: https://github.com/Fizzadar/pyinfra/issues/799
+    if host.get_fact(Which, command="zypper"):
+        package_operation = zypper.packages
+
+    elif host.get_fact(Which, command="apk"):
         package_operation = apk.packages
 
     elif host.get_fact(Which, command="apt"):
@@ -534,9 +540,6 @@ def packages(
 
     elif host.get_fact(Which, command="yum"):
         package_operation = yum.packages
-
-    elif host.get_fact(Which, command="zypper"):
-        package_operation = zypper.packages
 
     elif host.get_fact(Which, command="pkg") or host.get_fact(Which, command="pkg_add"):
         package_operation = pkg.packages
