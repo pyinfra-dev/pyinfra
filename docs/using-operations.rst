@@ -253,5 +253,5 @@ Examples
 
 A great way to learn more about writing ``pyinfra`` deploys is to see some in action. There's a number of resources for this:
 
-- `the pyinfra examples folder on GitHub <https://github.com/Fizzadar/pyinfra/tree/master/examples>`_ - a general collection of all kinds of example deploy
+- `the pyinfra examples folder on GitHub <https://github.com/Fizzadar/pyinfra/tree/2.x/examples>`_ - a general collection of all kinds of example deploy
 - :doc:`the example deploys in this documentation <./examples>` - these highlight specific common patterns
