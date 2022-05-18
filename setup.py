@@ -71,6 +71,7 @@ DEV_REQUIRES = (
         "ipdbplugin",
         # Lint spellchecking, dev only (don't fail CI)
         "flake8-spellcheck==0.12.1",
+        "redbaron", # for generating type stubs
     )
 )
 
