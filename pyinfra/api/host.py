@@ -115,6 +115,10 @@ class Host(object):
         self.facts = {}
         self.facts_lock = BoundedSemaphore()
 
+        # Append only list of operation hashes as called on this host, used to
+        # generate a DAG to create the final operation order.
+        self.op_hash_order = []
+
         # Create the (waterfall data: override, host, group, global)
         self.data = HostData(
             self,

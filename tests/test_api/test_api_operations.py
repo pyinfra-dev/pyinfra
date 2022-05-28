@@ -1,5 +1,4 @@
 from collections import defaultdict
-from inspect import currentframe, getframeinfo
 from os import path
 from unittest import TestCase
 from unittest.mock import mock_open, patch
@@ -484,13 +483,11 @@ class TestOperationOrdering(PatchSSHTestCase):
         # it replicates a deploy file.
         ctx_host.set(inventory.get_host("anotherhost"))
         first_context_hash = server.user("anotherhost_user").hash
-        first_context_call_line = getframeinfo(currentframe()).lineno - 1
 
         # Add op to just the first host - using the context modules such that
         # it replicates a deploy file.
         ctx_host.set(inventory.get_host("somehost"))
         second_context_hash = server.user("somehost_user").hash
-        second_context_call_line = getframeinfo(currentframe()).lineno - 1
 
         ctx_state.reset()
         ctx_host.reset()
@@ -504,12 +501,6 @@ class TestOperationOrdering(PatchSSHTestCase):
         # And that the two ops above were called in the expected order
         assert op_order[1] == first_context_hash
         assert op_order[2] == second_context_hash
-
-        # And that they have the expected line numbers
-        assert state.op_line_numbers_to_hash.get((0, first_context_call_line)) == first_context_hash
-        assert (
-            state.op_line_numbers_to_hash.get((0, second_context_call_line)) == second_context_hash
-        )
 
         # Ensure somehost has two ops and anotherhost only has the one
         assert len(state.ops[inventory.get_host("somehost")]) == 2
