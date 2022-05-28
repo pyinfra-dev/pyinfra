@@ -1,1 +1,35 @@
-def agent(server=None, port=None, _sudo = None, _sudo_user = None, _use_sudo_login = None, _use_sudo_password = None, _preserve_sudo_env = None, _su_user = None, _use_su_login = None, _preserve_su_env = None, _su_shell = None, _doas = None, _doas_user = None, _shell_executable = None, _chdir = None, _env = None, _success_exit_codes = None, _timeout = None, _get_pty = None, _stdin = None, name = None, _ignore_errors = None, _precondition = None, _postcondition = None, _on_success = None, _on_error = None, _parallel = None, _run_once = None, _serial = None):...
+import typing
+
+
+def agent(
+    server=None,
+    port=None,
+    _sudo: typing.Optional[bool] = None,
+    _sudo_user: typing.Optional[bool] = None,
+    _use_sudo_login: typing.Optional[bool] = None,
+    _use_sudo_password: typing.Optional[bool] = None,
+    _preserve_sudo_env: typing.Optional[bool] = None,
+    _su_user: typing.Optional[bool] = None,
+    _use_su_login: typing.Optional[bool] = None,
+    _preserve_su_env: typing.Optional[bool] = None,
+    _su_shell: typing.Optional[str] = None,
+    _doas: typing.Optional[bool] = None,
+    _doas_user: typing.Optional[bool] = None,
+    _shell_executable: typing.Optional[str] = None,
+    _chdir: typing.Optional[str] = None,
+    _env: typing.Optional[typing.Mapping[str, str]] = None,
+    _success_exit_codes: typing.Optional[typing.Iterable[int]] = None,
+    _timeout: typing.Optional[int] = None,
+    _get_pty: typing.Optional[bool] = None,
+    _stdin: typing.Optional[str] = None,
+    name: typing.Optional[str] = None,
+    _ignore_errors: typing.Optional[bool] = None,
+    _precondition: typing.Optional[str] = None,
+    _postcondition: typing.Optional[str] = None,
+    _on_success: typing.Optional[typing.Callable] = None,
+    _on_error: typing.Optional[typing.Callable] = None,
+    _parallel: typing.Optional[bool] = None,
+    _run_once: typing.Optional[bool] = None,
+    _serial: typing.Optional[bool] = None,
+):
+    ...
