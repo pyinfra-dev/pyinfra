@@ -1,3 +1,5 @@
+from typing import Callable, Iterable, Mapping
+
 from pyinfra import context, logger
 
 from .util import get_call_location, memoize
@@ -6,34 +8,42 @@ auth_kwargs = {
     "_sudo": {
         "description": "Execute/apply any changes with ``sudo``.",
         "default": lambda config: config.SUDO,
+        "type": bool,
     },
     "_sudo_user": {
         "description": "Execute/apply any changes with ``sudo`` as a non-root user.",
         "default": lambda config: config.SUDO_USER,
+        "type": bool,
     },
     "_use_sudo_login": {
         "description": "Execute ``sudo`` with a login shell.",
         "default": lambda config: config.USE_SUDO_LOGIN,
+        "type": bool,
     },
     "_use_sudo_password": {
         "description": "Whether to use a password with ``sudo`` (will ask).",
         "default": lambda config: config.USE_SUDO_PASSWORD,
+        "type": bool,
     },
     "_preserve_sudo_env": {
         "description": "Preserve the shell environment when using ``sudo``.",
         "default": lambda config: config.PRESERVE_SUDO_ENV,
+        "type": bool,
     },
     "_su_user": {
         "description": "Execute/apply any changes with ``su``.",
         "default": lambda config: config.SU_USER,
+        "type": bool,
     },
     "_use_su_login": {
         "description": "Execute ``su`` with a login shell.",
         "default": lambda config: config.USE_SU_LOGIN,
+        "type": bool,
     },
     "_preserve_su_env": {
         "description": "Preserve the shell environment when using ``su``.",
         "default": lambda config: config.PRESERVE_SU_ENV,
+        "type": bool,
     },
     "_su_shell": {
         "description": (
@@ -42,14 +52,17 @@ auth_kwargs = {
             "has nologin/similar as their login shell."
         ),
         "default": lambda config: config.SU_SHELL,
+        "type": str,
     },
     "_doas": {
         "description": "Execute/apply any changes with ``doas``.",
         "defailt": lambda config: config.DOAS,
+        "type": bool,
     },
     "_doas_user": {
         "description": "Execute/apply any changes with ``doas`` as a non-root user.",
         "default": lambda config: config.DOAS_USER,
+        "type": bool,
     },
 }
 
@@ -71,36 +84,63 @@ shell_kwargs = {
     "_shell_executable": {
         "description": "The shell to use. Defaults to ``sh`` (Unix) or ``cmd`` (Windows).",
         "default": lambda config: config.SHELL,
+        "type": str,
     },
     "_chdir": {
         "description": "Directory to switch to before executing the command.",
+        "type": str,
     },
     "_env": {
         "description": "Dictionary of environment variables to set.",
         "handler": generate_env,
+        "type": Mapping[str, str],
     },
     "_success_exit_codes": {
         "description": "List of exit codes to consider a success.",
         "default": lambda config: [0],
+        "type": Iterable[int],
     },
-    "_timeout": "Timeout for *each* command executed during the operation.",
-    "_get_pty": "Whether to get a pseudoTTY when executing any commands.",
-    "_stdin": "String or buffer to send to the stdin of any commands.",
+    "_timeout": {
+        "description": "Timeout for *each* command executed during the operation.",
+        "type": int,
+    },  # TODO not sure
+    "_get_pty": {
+        "description": "Whether to get a pseudoTTY when executing any commands.",
+        "type": bool,
+    },
+    "_stdin": {
+        "description": "String or buffer to send to the stdin of any commands.",
+        "type": str,  # TODO don't know the type for buffer
+    },
 }
 
 meta_kwargs = {
     # NOTE: name is the only non-_-prefixed argument
     "name": {
         "description": "Name of the operation.",
+        "type": str,
     },
     "_ignore_errors": {
         "description": "Ignore errors when executing the operation.",
         "default": lambda config: config.IGNORE_ERRORS,
+        "type": bool,
     },
-    "_precondition": "Command to execute & check before the operation commands begin.",
-    "_postcondition": "Command to execute & check after the operation commands complete.",
-    "_on_success": "Callback function to execute on success.",
-    "_on_error": "Callback function to execute on error.",
+    "_precondition": {
+        "description": "Command to execute & check before the operation commands begin.",
+        "type": str,
+    },  # TODO not sure
+    "_postcondition": {
+        "description": "Command to execute & check after the operation commands complete.",
+        "type": str,
+    },  # TODO not sure
+    "_on_success": {
+        "description": "Callback function to execute on success.",
+        "type": Callable,
+    },  # TODO not sure if arguments can be typed too
+    "_on_error": {
+        "description": "Callback function to execute on error.",
+        "type": Callable,
+    },  # TODO not sure if arguments can be typed too
 }
 
 # Execution kwargs are global - ie must be identical for every host
@@ -108,14 +148,17 @@ execution_kwargs = {
     "_parallel": {
         "description": "Run this operation in batches of hosts.",
         "default": lambda config: config.PARALLEL,
+        "type": bool,
     },
     "_run_once": {
         "description": "Only execute this operation once, on the first host to see it.",
         "default": lambda config: False,
+        "type": bool,
     },
     "_serial": {
         "description": "Run this operation host by host, rather than in parallel.",
         "default": lambda config: False,
+        "type": bool,
     },
 }
 
