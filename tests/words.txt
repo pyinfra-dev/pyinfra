@@ -16,6 +16,7 @@
 FakePathLike
 Launchd
 Openvz
+UNIXCONFDIR
 acl
 addrs
 addsitedir
@@ -28,14 +29,12 @@ apk
 arg1
 arg2
 argbits
-endian
 argspec
 argstring
 askpass
 asn
 autodetect
 autogenerate
-utf16
 automagically
 automount
 autoname
@@ -73,7 +72,6 @@ createrole
 credssp
 cron
 crons
-UNIXCONFDIR
 crontab
 ctid
 ctrl
@@ -106,6 +104,7 @@ e305
 e402
 e501
 ed25519
+endian
 entrypoint
 epel
 excuted
@@ -261,6 +260,7 @@ pxelinux
 py
 pyc
 pygments
+pyi
 pyinfra
 pyinfrawinrmsession
 pywinrm
@@ -269,6 +269,7 @@ rcd
 readlink
 rebase
 recv
+redbaron
 release
 remote
 remoteforward
@@ -353,6 +354,7 @@ unitialised
 unmount
 up
 up2
+utf16
 v
 v0
 v1
