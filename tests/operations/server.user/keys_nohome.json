@@ -1,0 +1,40 @@
+{
+    "args": ["root"],
+    "kwargs": {
+        "public_keys": ["abc"]
+    },
+    "facts": {
+        "server.Users": {
+            "root": {
+                "home": "/root",
+                "group": "root",
+                "groups": []
+            }
+        },
+        "files.Directory": {
+            "path=/root": {
+                "user": "root",
+                "group": "root"
+            },
+            "path=/root/.ssh": {
+                "user": "root",
+                "group": "root",
+                "mode": 700
+            }
+        },
+        "files.File": {
+            "path=/root/.ssh/authorized_keys": {
+                "user": "root",
+                "group": "root",
+                "mode": 601
+            }
+        },
+        "files.FindInFile": {
+            "path=/root/.ssh/authorized_keys, pattern=^.*abc.*$, interpolate_variables=False": []
+        }
+    },
+    "commands": [
+        "chmod 600 /root/.ssh/authorized_keys",
+        "echo abc >> /root/.ssh/authorized_keys"
+    ]
+}

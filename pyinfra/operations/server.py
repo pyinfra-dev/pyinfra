@@ -876,6 +876,8 @@ def user(
 
     if home is None:
         home = "/home/{0}".format(user)
+        if existing_user:
+            home = existing_user.get("home", home)
 
     # User not wanted?
     if not present:
