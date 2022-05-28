@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from graphlib import TopologicalSorter
 from multiprocessing import cpu_count
 from uuid import uuid4
 
@@ -170,7 +171,6 @@ class State(object):
         self.limit_hosts = initial_limit
 
         # Op basics
-        self.op_line_numbers_to_hash = {}
         self.op_meta = {}  # maps operation hash -> names/etc
         self.ops_run = set()  # list of ops which have been started/run
 
@@ -247,10 +247,30 @@ class State(object):
         self.loop_filename = None
 
     def get_op_order(self):
-        line_numbers_to_hash = self.op_line_numbers_to_hash
-        sorted_line_numbers = sorted(list(line_numbers_to_hash.keys()))
+        ts = TopologicalSorter()
 
-        return [line_numbers_to_hash[numbers] for numbers in sorted_line_numbers]
+        for host in self.inventory:
+            for i, op_hash in enumerate(host.op_hash_order):
+                if not i:
+                    ts.add(op_hash)
+                else:
+                    ts.add(op_hash, host.op_hash_order[i - 1])
+
+        final_op_order = []
+
+        ts.prepare()
+
+        while ts.is_active():
+            # Ensure that where we have multiple different operations that can be executed in any
+            # dependency order we order them by line numbers.
+            node_group = sorted(
+                ts.get_ready(),
+                key=lambda op_hash: self.op_meta[op_hash]["op_order"],
+            )
+            ts.done(*node_group)
+            final_op_order.extend(node_group)
+
+        return final_op_order
 
     def get_op_meta(self, op_hash):
         return self.op_meta[op_hash]

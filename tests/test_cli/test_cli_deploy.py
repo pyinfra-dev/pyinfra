@@ -43,11 +43,10 @@ class TestCliDeployState(PatchSSHTestCase):
             assert list(op_meta["names"])[0] == correct_op_name
 
             for host in state.inventory:
-                op_hashes = state.meta[host]["op_hashes"]
                 if correct_host_names is True or host.name in correct_host_names:
-                    self.assertIn(op_hash, op_hashes)
+                    self.assertIn(op_hash, host.op_hash_order)
                 else:
-                    self.assertNotIn(op_hash, op_hashes)
+                    self.assertNotIn(op_hash, host.op_hash_order)
 
     def test_deploy(self):
         task_file_path = path.join("tasks", "a_task.py")
@@ -106,10 +105,10 @@ class TestCliDeployState(PatchSSHTestCase):
             ("Second main somehost operation", ("somehost",)),
             ("Second main anotherhost operation", ("anotherhost",)),
             ("Function call operation", True),
+            ("Third main operation", True),
             ("First nested operation", True),
             ("Second nested anotherhost operation", ("anotherhost",)),
             ("Second nested somehost operation", ("somehost",)),
-            ("Third main operation", True),
         ]
 
         # Run 3 iterations of the test - each time shuffling the order of the

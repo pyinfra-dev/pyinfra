@@ -264,14 +264,13 @@ def operation(
         # a loop - such that the filename/lineno/code _are_ the same, but the
         # arguments might be different. We just append an increasing number to
         # the op hash and also handle below with the op order.
-        host_op_hashes = state.meta[host]["op_hashes"]
         duplicate_op_count = 0
-        while op_hash in host_op_hashes:
+        while op_hash in host.op_hash_order:
             logger.debug("Duplicate hash ({0}) detected!".format(op_hash))
             op_hash = "{0}-{1}".format(op_hash, duplicate_op_count)
             duplicate_op_count += 1
 
-        host_op_hashes.add(op_hash)
+        host.op_hash_order.append(op_hash)
 
         if duplicate_op_count:
             op_order.append(duplicate_op_count)
@@ -285,7 +284,6 @@ def operation(
                 op_hash,
             ),
         )
-        state.op_line_numbers_to_hash[op_order] = op_hash
 
         # Ensure shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(
