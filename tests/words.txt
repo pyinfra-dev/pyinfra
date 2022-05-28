@@ -262,6 +262,7 @@ pxelinux
 py
 pyc
 pygments
+pyi
 pyinfra
 pyinfrawinrmsession
 pywinrm
@@ -270,6 +271,7 @@ rcd
 readlink
 rebase
 recv
+redbaron
 release
 remote
 remoteforward
