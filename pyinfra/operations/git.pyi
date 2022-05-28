@@ -1,6 +1,5 @@
 import typing
 
-
 def config(
     key,
     value,
@@ -32,10 +31,7 @@ def config(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def repo(
     src,
     dest,
@@ -74,10 +70,7 @@ def repo(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def worktree(
     worktree,
     repo=None,
@@ -119,10 +112,7 @@ def worktree(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def bare_repo(
     path,
     user=None,
@@ -155,5 +145,4 @@ def bare_repo(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

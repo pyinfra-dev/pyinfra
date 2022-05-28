@@ -1,6 +1,5 @@
 import typing
 
-
 def call(
     function,
     _sudo: typing.Optional[bool] = None,
@@ -32,10 +31,7 @@ def call(
     _serial: typing.Optional[bool] = None,
     *args,
     **kwargs
-):
-    ...
-
-
+): ...
 def raise_exception(
     exception,
     _sudo: typing.Optional[bool] = None,
@@ -67,5 +63,4 @@ def raise_exception(
     _serial: typing.Optional[bool] = None,
     *args,
     **kwargs
-):
-    ...
+): ...

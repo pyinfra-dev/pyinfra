@@ -1,6 +1,5 @@
 import typing
 
-
 def service(
     service,
     running=True,
@@ -35,10 +34,7 @@ def service(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def enable(
     service,
     start_priority=20,
@@ -72,5 +68,4 @@ def enable(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

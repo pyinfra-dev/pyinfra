@@ -1,6 +1,5 @@
 import typing
 
-
 def virtualenv(
     path,
     python=None,
@@ -35,10 +34,7 @@ def virtualenv(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def venv(
     path,
     python=None,
@@ -72,10 +68,7 @@ def venv(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def packages(
     packages=None,
     present=True,
@@ -112,5 +105,4 @@ def packages(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

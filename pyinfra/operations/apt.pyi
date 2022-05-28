@@ -1,6 +1,5 @@
 import typing
 
-
 def key(
     src=None,
     keyserver=None,
@@ -32,10 +31,7 @@ def key(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def repo(
     src,
     present=True,
@@ -67,10 +63,7 @@ def repo(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def ppa(
     src,
     present=True,
@@ -101,10 +94,7 @@ def ppa(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def deb(
     src,
     present=True,
@@ -136,10 +126,7 @@ def deb(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def update(
     cache_time=None,
     _sudo: typing.Optional[bool] = None,
@@ -169,10 +156,7 @@ def update(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def upgrade(
     _sudo: typing.Optional[bool] = None,
     _sudo_user: typing.Optional[bool] = None,
@@ -201,10 +185,7 @@ def upgrade(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def dist_upgrade(
     _sudo: typing.Optional[bool] = None,
     _sudo_user: typing.Optional[bool] = None,
@@ -233,10 +214,7 @@ def dist_upgrade(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def packages(
     packages=None,
     present=True,
@@ -276,5 +254,4 @@ def packages(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

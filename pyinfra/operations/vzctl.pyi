@@ -1,6 +1,5 @@
 import typing
 
-
 def start(
     ctid,
     force=False,
@@ -31,10 +30,7 @@ def start(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def stop(
     ctid,
     _sudo: typing.Optional[bool] = None,
@@ -64,10 +60,7 @@ def stop(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def restart(
     ctid,
     force=False,
@@ -98,10 +91,7 @@ def restart(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def mount(
     ctid,
     _sudo: typing.Optional[bool] = None,
@@ -131,10 +121,7 @@ def mount(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def unmount(
     ctid,
     _sudo: typing.Optional[bool] = None,
@@ -164,10 +151,7 @@ def unmount(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def delete(
     ctid,
     _sudo: typing.Optional[bool] = None,
@@ -197,10 +181,7 @@ def delete(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def create(
     ctid,
     template=None,
@@ -231,10 +212,7 @@ def create(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def set(
     ctid,
     save=True,
@@ -266,5 +244,4 @@ def set(
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
     **settings
-):
-    ...
+): ...

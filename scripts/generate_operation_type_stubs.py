@@ -7,9 +7,16 @@ especially https://github.com/Fizzadar/pyinfra/issues/476#issuecomment-110074832
 
 See any stub pyinfra/operations/*.pyi to see an example.
 
+If run from the commandline without arguments it will generate a stub for each
+.py file in pyinfra/operations.
+
+If run from the commandline with 1 or more file paths as arguments
+it will generate a stub for each.
+
 """
 
 import os
+import sys
 from logging import getLogger
 
 import black
@@ -88,7 +95,7 @@ def create_operation_stub(file_path: str):
         pyi_content = tree.dumps() + "\n\n"
         # If using @operation(...) as opposed to @operation, it will generate a single long
         # for each function. Formatting with black solves this.
-        pyi_content_formatted = black.format_str(pyi_content, mode=black.FileMode())
+        pyi_content_formatted = black.format_str(pyi_content, mode=black.FileMode(is_pyi=True))
 
         with open(output_file_path, "w") as f:
             f.write(pyi_content_formatted)
@@ -109,4 +116,9 @@ def create_all_operation_stubs():
 
 
 if __name__ == "__main__":
-    create_all_operation_stubs()
+    if len(sys.argv) > 1:
+        for path in sys.argv[1:]:
+            logger.info(f"generate for file {path}")
+            create_operation_stub(path)
+    else:
+        create_all_operation_stubs()

@@ -1,6 +1,5 @@
 import typing
 
-
 def download(
     src,
     dest,
@@ -39,10 +38,7 @@ def download(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def line(
     path,
     line,
@@ -80,10 +76,7 @@ def line(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def replace(
     path,
     text=None,
@@ -119,10 +112,7 @@ def replace(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def sync(
     src,
     dest,
@@ -160,10 +150,7 @@ def sync(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def rsync(
     src,
     dest,
@@ -195,10 +182,7 @@ def rsync(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def get(
     src,
     dest,
@@ -232,10 +216,7 @@ def get(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def put(
     src,
     dest,
@@ -273,10 +254,7 @@ def put(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def template(
     src,
     dest,
@@ -312,10 +290,7 @@ def template(
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
     **data
-):
-    ...
-
-
+): ...
 def link(
     path,
     target=None,
@@ -355,10 +330,7 @@ def link(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def file(
     path,
     present=True,
@@ -398,10 +370,7 @@ def file(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def directory(
     path,
     present=True,
@@ -442,5 +411,4 @@ def directory(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

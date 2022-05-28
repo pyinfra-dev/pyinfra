@@ -1,6 +1,5 @@
 import typing
 
-
 def sql(
     sql,
     database=None,
@@ -36,10 +35,7 @@ def sql(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def user(
     user,
     present=True,
@@ -88,10 +84,7 @@ def user(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def database(
     database,
     # Desired database settings
@@ -133,10 +126,7 @@ def database(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def privileges(
     user,
     privileges,
@@ -177,10 +167,7 @@ def privileges(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def dump(
     dest,
     database=None,
@@ -216,10 +203,7 @@ def dump(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def load(
     src,
     database=None,
@@ -255,5 +239,4 @@ def load(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

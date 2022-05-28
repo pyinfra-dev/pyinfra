@@ -1,6 +1,5 @@
 import typing
 
-
 def reboot(
     delay=10,
     interval=1,
@@ -32,10 +31,7 @@ def reboot(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def wait(
     port=None,
     _sudo: typing.Optional[bool] = None,
@@ -65,10 +61,7 @@ def wait(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def shell(
     commands,
     _sudo: typing.Optional[bool] = None,
@@ -98,10 +91,7 @@ def shell(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def script(
     src,
     _sudo: typing.Optional[bool] = None,
@@ -131,10 +121,7 @@ def script(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def script_template(
     src,
     _sudo: typing.Optional[bool] = None,
@@ -165,10 +152,7 @@ def script_template(
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
     **data
-):
-    ...
-
-
+): ...
 def modprobe(
     module,
     present=True,
@@ -200,10 +184,7 @@ def modprobe(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def mount(
     path,
     mounted=True,
@@ -237,10 +218,7 @@ def mount(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def hostname(
     hostname,
     hostname_file=None,
@@ -271,10 +249,7 @@ def hostname(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def sysctl(
     key,
     value,
@@ -307,10 +282,7 @@ def sysctl(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def service(
     service,
     running=True,
@@ -345,10 +317,7 @@ def service(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def packages(
     packages,
     present=True,
@@ -379,10 +348,7 @@ def packages(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def crontab(
     command,
     present=True,
@@ -422,10 +388,7 @@ def crontab(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def group(
     group,
     present=True,
@@ -458,10 +421,7 @@ def group(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def user(
     user,
     present=True,
@@ -504,5 +464,4 @@ def user(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...
