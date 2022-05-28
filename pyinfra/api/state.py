@@ -9,7 +9,7 @@ from pyinfra import logger
 
 from .config import Config
 from .exceptions import PyinfraError
-from .util import get_caller_frameinfo, sha1_hash
+from .util import sha1_hash
 
 # Work out the max parallel we can achieve with the open files limit of the user/process,
 # take 10 for opening Python files and /3 for ~3 files per host during op runs.
@@ -88,10 +88,6 @@ class State(object):
 
     # Whether we are executing operations (ie hosts are all ready)
     is_executing = False
-
-    loop_counter = None
-    loop_line = None
-    loop_filename = None
 
     print_noop_info = False  # print "[host] noop: reason for noop"
     print_fact_info = False  # print "loaded fact X"
@@ -231,20 +227,13 @@ class State(object):
 
     @contextmanager
     def preserve_loop_order(self, items):
-        frameinfo = get_caller_frameinfo(frame_offset=1)  # escape contextlib
-        self.loop_line = frameinfo.lineno
-        self.loop_filename = frameinfo.filename
-
-        def item_generator():
-            for i, item in enumerate(items, 1):
-                self.loop_counter = i
-                yield item
-
-        yield item_generator
-
-        self.loop_counter = None
-        self.loop_line = None
-        self.loop_filename = None
+        logger.warning(
+            (
+                "Using `state.preserve_loop_order` is not longer required for operations to be "
+                "executed in correct loop order and can be safely removed."
+            ),
+        )
+        yield lambda: items
 
     def get_op_order(self):
         ts = TopologicalSorter()

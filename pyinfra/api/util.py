@@ -143,9 +143,6 @@ def get_operation_order_from_stack(state):
         if frame.filename.startswith(PYINFRA_API_DIR):
             continue
 
-        if state.loop_filename and frame.filename == state.loop_filename:
-            line_numbers.extend([state.loop_line, state.loop_counter])
-
         line_numbers.append(frame.lineno)
 
     del stack_items
