@@ -29,6 +29,8 @@ INSTALL_REQUIRES = (
     "configparser",
     "pywinrm",
     "distro>=1.5,<2",
+    # Backport of graphlib used for DAG operation ordering
+    'graphlib_backport ; python_version < "3.9"',
 )
 
 ANSIBLE_REQUIRES = ("pyyaml",)  # extras for parsing Ansible inventory
