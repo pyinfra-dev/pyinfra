@@ -1,6 +1,5 @@
 import typing
 
-
 def chain(
     chain,
     present=True,
@@ -34,10 +33,7 @@ def chain(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def rule(
     chain,
     jump,
@@ -92,5 +88,4 @@ def rule(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

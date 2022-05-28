@@ -1,6 +1,5 @@
 import typing
 
-
 def keyscan(
     hostname,
     force=False,
@@ -32,10 +31,7 @@ def keyscan(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def command(
     hostname,
     command,
@@ -68,10 +64,7 @@ def command(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def upload(
     hostname,
     filename,
@@ -107,10 +100,7 @@ def upload(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def download(
     hostname,
     filename,
@@ -146,5 +136,4 @@ def download(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

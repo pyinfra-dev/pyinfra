@@ -1,6 +1,5 @@
 import typing
 
-
 def agent(
     server=None,
     port=None,
@@ -31,5 +30,4 @@ def agent(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

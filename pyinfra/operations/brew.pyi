@@ -1,6 +1,5 @@
 import typing
 
-
 def update(
     _sudo: typing.Optional[bool] = None,
     _sudo_user: typing.Optional[bool] = None,
@@ -29,10 +28,7 @@ def update(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def upgrade(
     _sudo: typing.Optional[bool] = None,
     _sudo_user: typing.Optional[bool] = None,
@@ -61,10 +57,7 @@ def upgrade(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def packages(
     packages=None,
     present=True,
@@ -98,10 +91,7 @@ def packages(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def cask_upgrade(
     _sudo: typing.Optional[bool] = None,
     _sudo_user: typing.Optional[bool] = None,
@@ -130,10 +120,7 @@ def cask_upgrade(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def casks(
     casks=None,
     present=True,
@@ -166,10 +153,7 @@ def casks(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def tap(
     src,
     present=True,
@@ -200,5 +184,4 @@ def tap(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

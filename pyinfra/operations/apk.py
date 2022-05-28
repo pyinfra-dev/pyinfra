@@ -10,7 +10,7 @@ from .util.packaging import ensure_packages
 
 
 @operation(is_idempotent=False)
-def upgrade(available=False):
+def upgrade(available: bool = False):
     """
     Upgrades all apk packages.
 

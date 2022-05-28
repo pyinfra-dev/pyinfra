@@ -1,6 +1,5 @@
 import typing
 
-
 def service(
     service,
     running=True,
@@ -33,10 +32,7 @@ def service(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def reboot(
     _sudo: typing.Optional[bool] = None,
     _sudo_user: typing.Optional[bool] = None,
@@ -65,5 +61,4 @@ def reboot(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

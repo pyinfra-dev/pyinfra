@@ -1,6 +1,5 @@
 import typing
 
-
 def packages(
     packages=None,
     present=True,
@@ -33,5 +32,4 @@ def packages(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

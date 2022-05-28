@@ -1,6 +1,5 @@
 import typing
 
-
 def download(
     src,
     dest,
@@ -39,10 +38,7 @@ def download(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def put(
     src,
     dest,
@@ -80,10 +76,7 @@ def put(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def file(
     path,
     present=True,
@@ -120,10 +113,7 @@ def file(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def directory(
     path,
     present=True,
@@ -159,10 +149,7 @@ def directory(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def link(
     path,
     target=None,
@@ -200,5 +187,4 @@ def link(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...

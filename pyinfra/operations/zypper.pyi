@@ -1,6 +1,5 @@
 import typing
 
-
 def repo(
     src,
     baseurl=None,
@@ -37,10 +36,7 @@ def repo(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def rpm(
     src,
     present=True,
@@ -71,10 +67,7 @@ def rpm(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def update(
     _sudo: typing.Optional[bool] = None,
     _sudo_user: typing.Optional[bool] = None,
@@ -103,10 +96,7 @@ def update(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
-
-
+): ...
 def packages(
     packages=None,
     present=True,
@@ -144,5 +134,4 @@ def packages(
     _parallel: typing.Optional[bool] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-):
-    ...
+): ...
