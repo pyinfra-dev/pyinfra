@@ -31,9 +31,9 @@ auth_kwargs = {
         "type": bool,
     },
     "_su_user": {
-        "description": "Execute/apply any changes with ``su``.",
+        "description": "Execute/apply any changes with this user using ``su``.",
         "default": lambda config: config.SU_USER,
-        "type": bool,
+        "type": str,
     },
     "_use_su_login": {
         "description": "Execute ``su`` with a login shell.",
@@ -62,7 +62,7 @@ auth_kwargs = {
     "_doas_user": {
         "description": "Execute/apply any changes with ``doas`` as a non-root user.",
         "default": lambda config: config.DOAS_USER,
-        "type": bool,
+        "type": str,
     },
 }
 
@@ -110,7 +110,7 @@ shell_kwargs = {
     },
     "_stdin": {
         "description": "String or buffer to send to the stdin of any commands.",
-        "type": str,  # TODO don't know the type for buffer
+        "type": Union[str, list, tuple],
     },
 }
 
@@ -135,7 +135,7 @@ meta_kwargs = {
     },  # TODO not sure
     "_on_success": {
         "description": "Callback function to execute on success.",
-        "type": Callable,
+        "type": Callable[[State, Host, str], None],
     },  # TODO not sure if arguments can be typed too
     "_on_error": {
         "description": "Callback function to execute on error.",
@@ -148,7 +148,7 @@ execution_kwargs = {
     "_parallel": {
         "description": "Run this operation in batches of hosts.",
         "default": lambda config: config.PARALLEL,
-        "type": bool,
+        "type": int,
     },
     "_run_once": {
         "description": "Only execute this operation once, on the first host to see it.",
