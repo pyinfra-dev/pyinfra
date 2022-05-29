@@ -1,6 +1,8 @@
-from typing import Callable, Iterable, Mapping
+from typing import Callable, Iterable, Mapping, Union
 
 from pyinfra import context, logger
+from pyinfra.api.host import Host
+from pyinfra.api.state import State
 
 from .util import get_call_location, memoize
 
@@ -103,7 +105,7 @@ shell_kwargs = {
     "_timeout": {
         "description": "Timeout for *each* command executed during the operation.",
         "type": int,
-    },  # TODO not sure
+    },
     "_get_pty": {
         "description": "Whether to get a pseudoTTY when executing any commands.",
         "type": bool,
@@ -128,19 +130,19 @@ meta_kwargs = {
     "_precondition": {
         "description": "Command to execute & check before the operation commands begin.",
         "type": str,
-    },  # TODO not sure
+    },
     "_postcondition": {
         "description": "Command to execute & check after the operation commands complete.",
         "type": str,
-    },  # TODO not sure
+    },
     "_on_success": {
         "description": "Callback function to execute on success.",
         "type": Callable[[State, Host, str], None],
-    },  # TODO not sure if arguments can be typed too
+    },
     "_on_error": {
         "description": "Callback function to execute on error.",
-        "type": Callable,
-    },  # TODO not sure if arguments can be typed too
+        "type": Callable[[State, Host, str], None],
+    },
 }
 
 # Execution kwargs are global - ie must be identical for every host
