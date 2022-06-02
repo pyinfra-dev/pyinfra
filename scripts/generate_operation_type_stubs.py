@@ -104,6 +104,7 @@ def create_operation_stub(file_path: str):
 
         with open(output_file_path, "w") as f:
             f.write(pyi_content_formatted)
+        print(f"--> Generated: {output_file_path}")
 
     else:
         logger.info(f"No operations found in file {file_path}")
