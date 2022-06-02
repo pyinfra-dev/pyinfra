@@ -1,3 +1,16 @@
+# v2.2
+
+The main feature of `2.2` is the switch to **using a DAG to generate operation order**. This mostly replaces line-number ordering (still used to tie-break) and means hacks such as `state.preserve_loop_order` are no longer required!
+
+The second highlight feature is the inclusion of **type stub files for operations** that include all of the global arguments. Thank you to @StefanBRas for implementing this.
+
+Other changes:
+
++ Use home directory fact for default in `server.user` operation (@yunzheng)
++ Fix matching `replace` as a whole line in `files.line` operation
++ Fix bug in `mysql.privileges` invalid argument requesting `MysqlUserGrants` fact
+
+
 # v2.1
 
 First `2.x` point release! Major feature: **nested operations** (at last!).
@@ -35,6 +48,7 @@ Internal changes:
 
 + Fix license link (@Lab-Brat)
 + Run `black` and `isort` across the codebase, now part of CI
+
 
 # v2.0.2
 
