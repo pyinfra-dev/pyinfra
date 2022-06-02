@@ -25,17 +25,6 @@ def ensure_mode_int(mode):
     return mode
 
 
-def ensure_whole_line_match(line):
-    # Ensure we're matching a whole ^line$
-    if not line.startswith("^"):
-        line = "^.*{0}".format(line)
-
-    if not line.endswith("$"):
-        line = "{0}.*$".format(line)
-
-    return line
-
-
 def get_timestamp():
     return datetime.now().strftime("%y%m%d%H%M")
 

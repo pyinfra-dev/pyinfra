@@ -7,7 +7,7 @@
     "facts": {
         "files.FindInFile": {
             "path=somefile, pattern=^.*match_line.*$, interpolate_variables=False": [],
-            "path=somefile, pattern=^.*replace_line.*$, interpolate_variables=False": ["replace_line"]
+            "path=somefile, pattern=^replace_line$, interpolate_variables=False": ["replace_line"]
         }
     },
     "commands": [],

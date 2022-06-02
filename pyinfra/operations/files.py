@@ -45,15 +45,7 @@ from pyinfra.facts.files import (
 )
 from pyinfra.facts.server import Date, Which
 
-from .util.files import (
-    chmod,
-    chown,
-    ensure_mode_int,
-    ensure_whole_line_match,
-    get_timestamp,
-    sed_replace,
-    unix_path_join,
-)
+from .util.files import chmod, chown, ensure_mode_int, get_timestamp, sed_replace, unix_path_join
 
 
 @operation(
@@ -314,7 +306,12 @@ def line(
     if escape_regex_characters:
         match_line = re.sub(r"([\.\\\+\*\?\[\^\]\$\(\)\{\}\-])", r"\\\1", match_line)
 
-    match_line = ensure_whole_line_match(match_line)
+    # Ensure we're matching a whole line, note: match may be a partial line so we
+    # put any matches on either side.
+    if not match_line.startswith("^"):
+        match_line = "^.*{0}".format(match_line)
+    if not match_line.endswith("$"):
+        match_line = "{0}.*$".format(match_line)
 
     # Is there a matching line in this file?
     if assume_present:
@@ -387,10 +384,17 @@ def line(
             # If we're doing replacement, only append if the *replacement* line
             # does not exist (as we are appending the replacement).
             if replace:
+                # Ensure replace explicitly matches a whole line
+                replace_line = replace
+                if not replace_line.startswith("^"):
+                    replace_line = f"^{replace_line}"
+                if not replace_line.endswith("$"):
+                    replace_line = f"{replace_line}$"
+
                 present_lines = host.get_fact(
                     FindInFile,
                     path=path,
-                    pattern=ensure_whole_line_match(replace),
+                    pattern=replace_line,
                     interpolate_variables=interpolate_variables,
                 )
 
