@@ -90,7 +90,6 @@ class Host(object):
     current_deploy_name = None
     current_deploy_kwargs = None
     current_deploy_data = None
-    current_deploy_op_order = None
 
     # Current context during operation execution
     executing_op_hash = None
@@ -183,7 +182,7 @@ class Host(object):
         handler("{0}noop: {1}".format(self.print_prefix, description))
 
     @contextmanager
-    def deploy(self, name, kwargs, data, in_deploy=True, deploy_op_order=None):
+    def deploy(self, name, kwargs, data, in_deploy=True):
         """
         Wraps a group of operations as a deploy, this should not be used
         directly, instead use ``pyinfra.api.deploy.deploy``.
@@ -198,14 +197,12 @@ class Host(object):
         old_deploy_name = self.current_deploy_name
         old_deploy_kwargs = self.current_deploy_kwargs
         old_deploy_data = self.current_deploy_data
-        old_deploy_op_order = self.current_deploy_op_order
         self.in_deploy = in_deploy
 
         # Set the new values
         self.current_deploy_name = name
         self.current_deploy_kwargs = kwargs
         self.current_deploy_data = data
-        self.current_deploy_op_order = deploy_op_order
         logger.debug(
             "Starting deploy {0} (args={1}, data={2})".format(
                 name,
@@ -221,7 +218,6 @@ class Host(object):
         self.current_deploy_name = old_deploy_name
         self.current_deploy_kwargs = old_deploy_kwargs
         self.current_deploy_data = old_deploy_data
-        self.current_deploy_op_order = old_deploy_op_order
 
         logger.debug(
             "Reset deploy to {0} (args={1}, data={2})".format(
