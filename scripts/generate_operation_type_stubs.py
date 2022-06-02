@@ -18,6 +18,7 @@ it will generate a stub for each.
 import os
 import sys
 from logging import getLogger
+from types import LambdaType
 
 import black
 from redbaron import RedBaron
@@ -34,10 +35,14 @@ def _get_global_arg_names():
     for arg_group in OPERATION_KWARGS.values():
         for arg_name, arg_config in arg_group.items():
             type_ = arg_config["type"]
+            if isinstance(type_, LambdaType):
+                type_ = type_()
             if type(type_) == type:
                 # types like int' string representation is <class 'str'> so we extract the name
                 type_ = type_.__name__
-            args.append(f"{arg_name}: typing.Optional[{type_}] = None\n")
+            arg = f"{arg_name}: typing.Optional[{type_}] = None\n"
+            arg = arg.replace("NoneType", "None")
+            args.append(arg)
     return args
 
 
@@ -58,7 +63,7 @@ def create_operation_stub(file_path: str):
         ),  # with decorator named "operation"
     )
     if operations:
-        tree = RedBaron("import typing \n")
+        tree = RedBaron("import typing\nimport pyinfra\n")
         global_args = _get_global_arg_names()
         ellipses = RedBaron("...")
         for operation in operations:

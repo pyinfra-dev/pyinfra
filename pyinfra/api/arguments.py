@@ -1,7 +1,7 @@
 from typing import Callable, Iterable, Mapping, Union
 
+import pyinfra
 from pyinfra import context, logger
-from pyinfra.api.host import Host
 from pyinfra.api.state import State
 
 from .util import get_call_location, memoize
@@ -135,13 +135,14 @@ meta_kwargs = {
         "description": "Command to execute & check after the operation commands complete.",
         "type": str,
     },
+    # Lambda on the next two are to workaround a circular import
     "_on_success": {
         "description": "Callback function to execute on success.",
-        "type": Callable[[State, Host, str], None],
+        "type": lambda: Callable[[State, pyinfra.api.Host, str], None],
     },
     "_on_error": {
         "description": "Callback function to execute on error.",
-        "type": Callable[[State, Host, str], None],
+        "type": lambda: Callable[[State, pyinfra.api.Host, str], None],
     },
 }
 
