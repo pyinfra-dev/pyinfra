@@ -459,7 +459,7 @@ def privileges(
     user_grants = host.get_fact(
         MysqlUserGrants,
         user=user,
-        user_hostname=user_hostname,
+        hostname=user_hostname,
         mysql_user=mysql_user,
         mysql_password=mysql_password,
         mysql_host=mysql_host,

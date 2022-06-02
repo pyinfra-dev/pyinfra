@@ -9,7 +9,7 @@
             "mysql_host=None, mysql_password=None, mysql_port=None, mysql_user=None": {}
         },
         "mysql.MysqlUserGrants": {
-            "mysql_host=None, mysql_password=None, mysql_port=None, mysql_user=None, user=someuser, user_hostname=localhost": {
+            "mysql_host=None, mysql_password=None, mysql_port=None, mysql_user=None, user=someuser, hostname=localhost": {
                 "localhost": {}
             }
         }
