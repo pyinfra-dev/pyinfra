@@ -20,7 +20,6 @@ from .operations import log_operation_start, run_host_op
 from .util import (
     get_args_kwargs_spec,
     get_call_location,
-    get_caller_frameinfo,
     get_operation_order_from_stack,
     make_hash,
     memoize,
@@ -97,10 +96,6 @@ def add_op(state, op_func, *args, **kwargs):
                 get_call_location(),
             ),
         )
-
-    # This ensures that every time an operation is added (API mode), it is simply
-    # appended to the operation order.
-    kwargs["_op_order_number"] = len(state.op_meta)
 
     hosts = kwargs.pop("host", state.inventory.iter_active_hosts())
     if isinstance(hosts, Host):
@@ -218,44 +213,13 @@ def operation(
         if host.current_deploy_name:
             names = {"{0} | {1}".format(host.current_deploy_name, name) for name in names}
 
-        # API mode: `add_op` provides the order number
-        op_order_number = kwargs.pop("_op_order_number", None)
-        if op_order_number is not None:
-            op_order = [op_order_number]
-
-        # CLI mode: we simply use the line order to place the operation - ie starting
-        # with the current operation call we traverse up the stack to the first occurrence
-        # of the current deploy file. This means operations are ordered as you would expect
-        # reading the deployment code, even though the code is technically executed once
-        # for each host sequentially.
-        elif pyinfra.is_cli:
+        # Operation order is used to tie-break available nodes in the operation DAG, in CLI mode
+        # we use stack call order so this matches as defined by the user deploy code.
+        if pyinfra.is_cli:
             op_order = get_operation_order_from_stack(state)
-
-        # API mode: no op order number, deploy provided or fail
+        # In API mode we just increase the order for each host
         else:
-            # API mode deployments are a special case - the order is based on where the
-            # deploy function is called first, and then the operation position *within*
-            # that function. Because functions have to exist in one file, we can simply
-            # use the line number to get correct ordering.
-            if host.in_deploy:
-                frameinfo = get_caller_frameinfo()
-                op_order = host.current_deploy_op_order + [frameinfo.lineno]
-            elif host.nested_executing_op_hash:
-                raise PyinfraError("Nested operations are not supported in API mode")
-            else:
-                raise PyinfraError(
-                    (
-                        "Operation order number not provided in API mode - "
-                        "you must use `add_op` to add operations"
-                    ),
-                )
-
-        # This a nested operation, so place the line order underneath the parent
-        # operation lines so the final order makes sense. Nested operations are
-        # executed immediately so the order is only for debugging purposes.
-        if host.executing_op_hash:
-            executing_lines = state.op_meta[host.executing_op_hash]["op_order"]
-            op_order = executing_lines + tuple(op_order)
+            op_order = [len(host.op_hash_order)]
 
         # Make a hash from the call stack lines
         op_hash = make_hash(op_order)

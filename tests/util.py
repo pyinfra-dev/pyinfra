@@ -168,7 +168,6 @@ class FakeHost(object):
     current_deploy_name = None
     current_deploy_kwargs = None
     current_deploy_data = None
-    current_deploy_op_order = None
 
     def __init__(self, name, facts, data):
         self.name = name
