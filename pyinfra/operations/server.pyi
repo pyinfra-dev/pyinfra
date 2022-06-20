@@ -485,6 +485,7 @@ def user(
     public_keys=None,
     delete_keys=False,
     ensure_home=True,
+    create_home=False,
     system=False,
     uid=None,
     comment=None,
