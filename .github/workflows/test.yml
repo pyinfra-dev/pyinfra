@@ -20,11 +20,28 @@ jobs:
       - run: pip install '.[test]'
       - run: flake8
 
+  check-operation-type-stubs:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install '.[dev]'
+      - run: python scripts/generate_operation_type_stubs.py
+      # Check we didn't generate any changed operation stub files
+      - run: |
+          if [[ `git status --porcelain` ]]; then
+            echo "Operation type stubs are not up to date!"
+            echo "${gitStatus}"
+            exit 1
+          fi
+
   # Unit tests
   #
 
   unit-test:
-    needs: lint
+    needs:
+      - lint
+      - check-operation-type-stubs
     strategy:
       matrix:
         os: [ubuntu-18.04]
