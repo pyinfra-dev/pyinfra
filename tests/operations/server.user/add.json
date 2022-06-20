@@ -7,7 +7,8 @@
         "groups": ["secondary_group", "another"],
         "uid" : 1000,
         "system": true,
-        "comment": "Full Name"
+        "comment": "Full Name",
+        "create_home": true
     },
     "facts": {
         "server.Users": {},
@@ -17,7 +18,7 @@
         "server.Os": "Linux"
     },
     "commands": [
-        "grep '^someuser:' /etc/passwd || useradd -d homedir -s shellbin -g mygroup -G secondary_group,another -r --uid 1000 -c 'Full Name' someuser",
+        "grep '^someuser:' /etc/passwd || useradd -d homedir -s shellbin -g mygroup -G secondary_group,another -r --uid 1000 -c 'Full Name' -m someuser",
         "mkdir -p homedir",
         "chown someuser:mygroup homedir"
     ]

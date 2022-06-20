@@ -812,6 +812,7 @@ def user(
     public_keys=None,
     delete_keys=False,
     ensure_home=True,
+    create_home=False,
     system=False,
     uid=None,
     comment=None,
@@ -830,6 +831,7 @@ def user(
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
     + delete_keys: whether to remove any keys not specified in ``public_keys``
     + ensure_home: whether to ensure the ``home`` directory exists
+    + create_home: whether to new user create home directories from the system skeleton
     + system: whether to create a system account
     + comment: the user GECOS comment
     + add_deploy_dir: any public_key filenames are relative to the deploy directory
@@ -837,7 +839,9 @@ def user(
 
     Home directory:
         When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
-        ``/home/{name}``.
+        ``/home/{name}``. When ``create_home`` is ``True`` any newly created users
+        will be created with the ``-m`` flag to build a new home directory from the
+        systems skeleton directory.
 
     Public keys:
         These can be provided as strings containing the public key or as a path to
@@ -914,6 +918,9 @@ def user(
 
         if not unique:
             args.append("-o")
+
+        if create_home:
+            args.append("-m")
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
