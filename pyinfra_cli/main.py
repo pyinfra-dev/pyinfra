@@ -402,7 +402,7 @@ def _main(
 
     # Lock the current config, this allows us to restore this version after
     # executing deploy files that may alter them.
-    config.lock_current_sate()
+    config.lock_current_state()
 
     # Arg based config overrides
     if sudo:
