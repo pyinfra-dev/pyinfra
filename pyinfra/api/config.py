@@ -122,7 +122,7 @@ class Config(object):
         for key, value in config_state:
             setattr(self, key, value)
 
-    def lock_current_sate(self):
+    def lock_current_state(self):
         self._locked_config = self.get_current_state()
 
     def reset_locked_state(self):
