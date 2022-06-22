@@ -985,6 +985,8 @@ def user(
             home,
             user=user,
             group=group or user,
+            # Don't fail if the home directory exists as a link
+            _no_fail_on_link=True,
         )
 
     # Add SSH keys
