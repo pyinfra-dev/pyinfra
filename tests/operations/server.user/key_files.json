@@ -41,7 +41,8 @@
             "path=homedir/.ssh/authorized_keys, pattern=^.*abc.*$, interpolate_variables=False": [],
             "path=homedir/.ssh/authorized_keys, pattern=^.*somekeydata.*$, interpolate_variables=False": ["somekeydata"],
             "path=homedir/.ssh/authorized_keys, pattern=^.*someotherkeydata.*$, interpolate_variables=False": []
-        }
+        },
+        "server.Groups": {}
     },
     "commands": [
         "chmod 600 homedir/.ssh/authorized_keys",

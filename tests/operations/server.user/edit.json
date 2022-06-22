@@ -28,7 +28,8 @@
                 "user": "someuser",
                 "group": "somegroup"
             }
-        }
+        },
+        "server.Groups": {}
     },
     "commands": [
         "usermod -d /home/someotheruser -s /bin/false -g somegroup -G group1,group2,group3 -c 'New Full Name' someuser"

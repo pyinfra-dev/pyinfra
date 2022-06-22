@@ -9,7 +9,8 @@
                 "home": "/home",
                 "shell": "/bin/bash"
             }
-        }
+        },
+        "server.Groups": {}
     },
     "commands": [
         "userdel someuser"

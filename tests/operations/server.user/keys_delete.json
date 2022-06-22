@@ -36,7 +36,8 @@
         },
         "files.Sha1File": {
             "path=homedir/.ssh/authorized_keys": null
-        }
+        },
+        "server.Groups": {}
     },
     "commands": [
         ["upload", "abc\ndef\n", "homedir/.ssh/authorized_keys"],

@@ -32,7 +32,8 @@
         },
         "files.FindInFile": {
             "path=homedir/.ssh/authorized_keys, pattern=^.*abc.*$, interpolate_variables=False": []
-        }
+        },
+        "server.Groups": {}
     },
     "commands": [
         "chmod 600 homedir/.ssh/authorized_keys",

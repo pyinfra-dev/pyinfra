@@ -873,6 +873,7 @@ def user(
     """
 
     users = host.get_fact(Users)
+    existing_groups = host.get_fact(Groups)
     existing_user = users.get(user)
 
     if groups is None:
@@ -892,6 +893,11 @@ def user(
 
     # User doesn't exist but we want them?
     if present and existing_user is None:
+        # Fix the case where a group of the same name already exists, tell useradd to use this
+        # group rather than failing trying to create it.
+        if not group and user in existing_groups:
+            group = user
+
         # Create the user w/home/shell
         args = []
 

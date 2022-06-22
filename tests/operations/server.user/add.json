@@ -12,6 +12,7 @@
     },
     "facts": {
         "server.Users": {},
+        "server.Groups": {},
         "files.Directory": {
             "path=homedir": null
         },
