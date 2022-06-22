@@ -1,8 +1,9 @@
 # encoding: utf-8
 
+from io import StringIO
 from subprocess import PIPE
 from unittest import TestCase
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, call, mock_open, patch
 
 from pyinfra.api import Config, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
@@ -181,3 +182,35 @@ class TestLocalConnector(TestCase):
 
         with self.assertRaises(IOError):
             host.get_file("not-a-file", "not-another-file", print_output=True)
+
+    def test_write_stdin(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        command = "echo Šablony"
+        self.fake_popen_mock().returncode = 0
+
+        host.run_shell_command(command, stdin=["hello", "abc"], print_output=True)
+        self.fake_popen_mock().stdin.write.assert_has_calls(
+            [
+                call(b"hello\n"),
+                call(b"abc\n"),
+            ],
+        )
+
+    def test_write_stdin_io_object(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        command = "echo Šablony"
+        self.fake_popen_mock().returncode = 0
+
+        host.run_shell_command(command, stdin=StringIO("hello\nabc"), print_output=True)
+        self.fake_popen_mock().stdin.write.assert_has_calls(
+            [
+                call(b"hello\n"),
+                call(b"abc\n"),
+            ],
+        )

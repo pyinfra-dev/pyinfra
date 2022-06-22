@@ -155,6 +155,8 @@ def split_combined_output(combined_output):
 
 
 def write_stdin(stdin, buffer):
+    if hasattr(stdin, "readlines"):
+        stdin = stdin.readlines()
     if not isinstance(stdin, (list, tuple)):
         stdin = [stdin]
 
