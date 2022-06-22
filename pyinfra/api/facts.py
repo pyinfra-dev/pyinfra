@@ -67,7 +67,7 @@ class ShortFactBase(object, metaclass=FactNameMeta):
 
 def get_short_facts(state, host, short_fact, **kwargs):
     fact_data = get_fact(state, host, short_fact.fact, **kwargs)
-    return short_fact.process_data(fact_data)
+    return short_fact().process_data(fact_data)
 
 
 def _make_command(command_attribute, host_args):
