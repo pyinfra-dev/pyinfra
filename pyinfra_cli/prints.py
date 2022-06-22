@@ -239,7 +239,8 @@ def print_meta(state):
                     [
                         host.print_prefix,
                         "Operations: {0}".format(meta["ops"]),
-                        "Commands: {0}".format(meta["commands"]),
+                        "Change: {0}".format(meta["ops_change"]),
+                        "No change: {0}".format(meta["ops_no_change"]),
                     ],
                 ),
             )
@@ -288,6 +289,7 @@ def print_results(state):
 
             meta = state.meta[host]
             success_ops = results["success_ops"]
+            changed_ops = success_ops - meta["ops_no_change"]
             error_ops = results["error_ops"]
 
             host_args = ("green",)
@@ -309,9 +311,9 @@ def print_results(state):
                     logger.info,
                     [
                         host.style_print_prefix(*host_args, **host_kwargs),
-                        "Successful: {0}".format(click.style(str(success_ops), bold=True)),
-                        "Errors: {0}".format(click.style(str(error_ops), bold=True)),
-                        "Commands: {0}/{1}".format(results["commands"], meta["commands"]),
+                        "Changed: {0}".format(click.style(changed_ops, bold=True)),
+                        "No change: {0}".format(click.style(meta["ops_no_change"], bold=True)),
+                        "Errors: {0}".format(click.style(error_ops, bold=True)),
                     ],
                 ),
             )

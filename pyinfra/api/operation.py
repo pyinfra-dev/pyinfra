@@ -329,6 +329,11 @@ def operation(
         state.meta[host]["ops"] += 1
         state.meta[host]["commands"] += len(commands)
 
+        if commands:
+            state.meta[host]["ops_change"] += 1
+        else:
+            state.meta[host]["ops_no_change"] += 1
+
         operation_meta = OperationMeta(op_hash, commands)
 
         # Add the server-relevant commands

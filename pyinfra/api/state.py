@@ -180,6 +180,8 @@ class State(object):
         self.meta = {
             host: {
                 "ops": 0,  # one function call in a deploy file
+                "ops_change": 0,
+                "ops_no_change": 0,
                 "commands": 0,  # actual # of commands to run
                 "op_hashes": set(),
             }
