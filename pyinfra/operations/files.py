@@ -45,7 +45,8 @@ from pyinfra.facts.files import (
 )
 from pyinfra.facts.server import Date, Which
 
-from .util.files import chmod, chown, ensure_mode_int, get_timestamp, sed_replace, unix_path_join
+from .util import files as file_utils
+from .util.files import ensure_mode_int, get_timestamp, sed_replace, unix_path_join
 
 
 @operation(
@@ -151,10 +152,10 @@ def download(
         yield StringCommand("mv", QuoteString(temp_file), QuoteString(dest))
 
         if user or group:
-            yield chown(dest, user, group)
+            yield file_utils.chown(dest, user, group)
 
         if mode:
-            yield chmod(dest, mode)
+            yield file_utils.chmod(dest, mode)
 
         if sha1sum:
             yield make_formatted_string_command(
@@ -884,10 +885,10 @@ def put(
         )
 
         if user or group:
-            yield chown(dest, user, group)
+            yield file_utils.chown(dest, user, group)
 
         if mode:
-            yield chmod(dest, mode)
+            yield file_utils.chmod(dest, mode)
 
     # File exists, check sum and check user/group/mode if supplied
     else:
@@ -902,22 +903,22 @@ def put(
             )
 
             if user or group:
-                yield chown(dest, user, group)
+                yield file_utils.chown(dest, user, group)
 
             if mode:
-                yield chmod(dest, mode)
+                yield file_utils.chmod(dest, mode)
 
         else:
             changed = False
 
             # Check mode
             if mode and remote_file["mode"] != mode:
-                yield chmod(dest, mode)
+                yield file_utils.chmod(dest, mode)
                 changed = True
 
             # Check user/group
             if (user and remote_file["user"] != user) or (group and remote_file["group"] != group):
-                yield chown(dest, user, group)
+                yield file_utils.chown(dest, user, group)
                 changed = True
 
             if not changed:
@@ -1183,7 +1184,7 @@ def link(
         yield add_cmd
 
         if user or group:
-            yield chown(path, user, group, dereference=False)
+            yield file_utils.chown(path, user, group, dereference=False)
 
         host.create_fact(
             Link,
@@ -1230,7 +1231,7 @@ def link(
             or (user and info["user"] != user)
             or (group and info["group"] != group)
         ):
-            yield chown(path, user, group, dereference=False)
+            yield file_utils.chown(path, user, group, dereference=False)
             changed = True
             if user:
                 info["user"] = user
@@ -1317,9 +1318,9 @@ def file(
         yield StringCommand("touch", QuoteString(path))
 
         if mode:
-            yield chmod(path, mode)
+            yield file_utils.chmod(path, mode)
         if user or group:
-            yield chown(path, user, group)
+            yield file_utils.chown(path, user, group)
 
         host.create_fact(
             File,
@@ -1346,7 +1347,7 @@ def file(
 
         # Check mode
         if mode and (not info or info["mode"] != mode):
-            yield chmod(path, mode)
+            yield file_utils.chmod(path, mode)
             info["mode"] = mode
             changed = True
 
@@ -1356,7 +1357,7 @@ def file(
             or (user and info["user"] != user)
             or (group and info["group"] != group)
         ):
-            yield chown(path, user, group)
+            yield file_utils.chown(path, user, group)
             changed = True
             if user:
                 info["user"] = user
@@ -1446,9 +1447,9 @@ def directory(
     if not assume_present and info is None and present:
         yield StringCommand("mkdir", "-p", QuoteString(path))
         if mode:
-            yield chmod(path, mode, recursive=recursive)
+            yield file_utils.chmod(path, mode, recursive=recursive)
         if user or group:
-            yield chown(path, user, group, recursive=recursive)
+            yield file_utils.chown(path, user, group, recursive=recursive)
 
         host.create_fact(
             Directory,
@@ -1473,7 +1474,7 @@ def directory(
         changed = False
 
         if mode and (not info or info["mode"] != mode):
-            yield chmod(path, mode, recursive=recursive)
+            yield file_utils.chmod(path, mode, recursive=recursive)
             info["mode"] = mode
             changed = True
 
@@ -1482,7 +1483,7 @@ def directory(
             or (user and info["user"] != user)
             or (group and info["group"] != group)
         ):
-            yield chown(path, user, group, recursive=recursive)
+            yield file_utils.chown(path, user, group, recursive=recursive)
             changed = True
             if user:
                 info["user"] = user
