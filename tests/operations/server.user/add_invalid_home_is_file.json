@@ -1,0 +1,18 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "home": "homedir"
+    },
+    "facts": {
+        "server.Users": {},
+        "server.Groups": {},
+        "files.Directory": {
+            "path=homedir": false
+        },
+        "files.Link": {}
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "homedir exists and is not a directory"
+    }
+}

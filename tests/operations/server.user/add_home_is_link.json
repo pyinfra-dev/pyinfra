@@ -1,0 +1,19 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "home": "homedir"
+    },
+    "facts": {
+        "server.Users": {},
+        "server.Groups": {},
+        "files.Directory": {
+            "path=homedir": false
+        },
+        "files.Link": {
+            "path=homedir": true
+        }
+    },
+    "commands": [
+        "grep '^someuser:' /etc/passwd || useradd -d homedir someuser"
+    ]
+}
