@@ -1,3 +1,24 @@
+# v2.3
+
+Relatively small quick release with two additions and a bunch of fixes.
+
+Added:
+
++ Add `create_home` argument to `server.user` operation
++ Separate no change/change in proposed changes & results output
++ Support IO-like objects as `stdin`
+
+Fixed:
+
++ Fix short fact gathering
++ Fix handling of IO-like objects when `assume_exists=True` in `files.put` operation
++ Don't fail to ensure user home dir that already exists as a link
++ Rename file utils to avoid clashes/confusion with operations
+
+Internal:
+
++ Check operation type stubs during CI
+
 # v2.2
 
 The main feature of `2.2` is the switch to **using a DAG to generate operation order**. This mostly replaces line-number ordering (still used to tie-break) and means hacks such as `state.preserve_loop_order` are no longer required!
