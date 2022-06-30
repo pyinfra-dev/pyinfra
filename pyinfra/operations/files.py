@@ -850,6 +850,7 @@ def put(
     # Upload IO objects as-is
     if hasattr(src, "read"):
         local_file = src
+        local_sum = get_file_sha1(src)
 
     # Assume string filename
     else:
@@ -859,7 +860,11 @@ def put(
 
         local_file = src
 
-        if not assume_exists and not os.path.isfile(local_file):
+        if os.path.isfile(local_file):
+            local_sum = get_file_sha1(local_file)
+        elif assume_exists:
+            local_sum = None
+        else:
             raise IOError("No such file: {0}".format(local_file))
 
     mode = ensure_mode_int(mode)
@@ -870,11 +875,6 @@ def put(
 
     if create_remote_dir:
         yield from _create_remote_dir(state, host, dest, user, group)
-
-    if assume_exists and not os.path.isfile(local_file):
-        local_sum = None
-    else:
-        local_sum = get_file_sha1(src)
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
