@@ -1,0 +1,16 @@
+{
+    "args": ["someuser"],
+    "facts": {
+        "server.Users": {},
+        "server.Groups": [
+            "someuser"
+        ],
+        "files.Directory": {},
+        "server.Os": "Linux"
+    },
+    "commands": [
+        "grep '^someuser:' /etc/passwd || useradd -d /home/someuser -g someuser someuser",
+        "mkdir -p /home/someuser",
+        "chown someuser:someuser /home/someuser"
+    ]
+}
