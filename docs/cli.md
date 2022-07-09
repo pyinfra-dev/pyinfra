@@ -160,6 +160,6 @@ Add the following to your `~/.bash_profile` or `~/.profile` files:
 These files were generated using these commands:
 
 ```
-env _PYINFRA_COMPLETE=source_bash pyinfra > pyinfra-complete.sh
-env _PYINFRA_COMPLETE=source_zsh pyinfra > pyinfra-complete.zsh
+env _PYINFRA_COMPLETE=bash_source pyinfra > pyinfra-complete.sh
+env _PYINFRA_COMPLETE=zsh_source pyinfra > pyinfra-complete.zsh
 ```
