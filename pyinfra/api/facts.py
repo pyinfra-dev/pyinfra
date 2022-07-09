@@ -219,6 +219,7 @@ def _get_fact(
 
     status = False
     stdout = []
+    combined_output_lines = []
 
     try:
         status, combined_output_lines = host.run_shell_command(
