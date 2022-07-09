@@ -1,4 +1,5 @@
 from pyinfra import config, host, inventory
+from pyinfra.facts.hardware import Ipv4Addresses
 from pyinfra.operations import files, server
 
 config.SUDO = True
@@ -18,7 +19,7 @@ def update_hosts_file(name, ip):
 # ensure all hosts are added to each /etc/hosts file
 inv = inventory.get_group("@vagrant")
 for item in inv:
-    update_hosts_file(item.name, item.fact.ipv4_addresses["eth0"])
+    update_hosts_file(item.name, item.get_fact(Ipv4Addresses)["eth0"])
 
 if host.name == "@vagrant/two":
     server.hostname(
