@@ -131,7 +131,14 @@ def get_fact(
     use_cache=True,
 ):
     if issubclass(cls, ShortFactBase):
-        return get_short_facts(state, host, cls, args=args, ensure_hosts=ensure_hosts)
+        return get_short_facts(
+            state,
+            host,
+            cls,
+            args=args,
+            kwargs=kwargs,
+            ensure_hosts=ensure_hosts,
+        )
 
     with host.facts_lock:
         if use_cache and fact_hash and fact_hash in host.facts:
