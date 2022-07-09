@@ -1,6 +1,5 @@
 import shlex
 from getpass import getpass
-from io import StringIO
 from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
 
@@ -13,17 +12,17 @@ from pyinfra.api import MaskString, QuoteString, StringCommand
 from pyinfra.api.util import memoize
 
 SUDO_ASKPASS_ENV_VAR = "PYINFRA_SUDO_PASSWORD"
-SUDO_ASKPASS_EXE_FILENAME = "pyinfra-sudo-askpass"
-
-
-def get_sudo_askpass_exe():
-    return StringIO(
-        """#!/bin/sh
-echo ${0}
+SUDO_ASKPASS_COMMAND = r"""
+temp=$(mktemp /tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX)
+cat >"$temp"<<'__EOF__'
+#!/bin/sh
+printf '%s\n' "${0}"
+__EOF__
+chmod 755 "$temp"
+echo "$temp"
 """.format(
-            SUDO_ASKPASS_ENV_VAR,
-        ),
-    )
+    SUDO_ASKPASS_ENV_VAR,
+)
 
 
 def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
@@ -169,11 +168,9 @@ def write_stdin(stdin, buffer):
 
 
 def _get_sudo_password(host, use_sudo_password):
-    sudo_askpass_uploaded = host.connector_data.get("sudo_askpass_uploaded", False)
-    if not sudo_askpass_uploaded:
-        host.put_file(get_sudo_askpass_exe(), SUDO_ASKPASS_EXE_FILENAME)
-        host.run_shell_command("chmod +x {0}".format(SUDO_ASKPASS_EXE_FILENAME))
-        host.connector_data["sudo_askpass_uploaded"] = True
+    if not host.connector_data.get("sudo_askpass_path"):
+        _, stdout, _ = host.run_shell_command(SUDO_ASKPASS_COMMAND)
+        host.connector_data["sudo_askpass_path"] = shlex.quote(stdout[0])
 
     if use_sudo_password is True:
         sudo_password = host.connector_data.get("sudo_password")
@@ -190,10 +187,10 @@ def _get_sudo_password(host, use_sudo_password):
 
 
 def remove_any_sudo_askpass_file(host):
-    sudo_askpass_uploaded = host.connector_data.get("sudo_askpass_uploaded", False)
-    if sudo_askpass_uploaded:
-        host.run_shell_command("rm -f {0}".format(SUDO_ASKPASS_EXE_FILENAME))
-        host.connector_data["sudo_askpass_uploaded"] = False
+    sudo_askpass_path = host.connector_data.get("sudo_askpass_path")
+    if sudo_askpass_path:
+        host.run_shell_command("rm -f {0}".format(sudo_askpass_path))
+        host.connector_data["sudo_askpass_path"] = None
 
 
 @memoize
@@ -211,6 +208,7 @@ def make_unix_command_for_host(state, host, *command_args, **command_kwargs):
     use_sudo_password = command_kwargs.pop("use_sudo_password", None)
     if use_sudo_password:
         command_kwargs["sudo_password"] = _get_sudo_password(host, use_sudo_password)
+        command_kwargs["sudo_askpass_path"] = host.connector_data.get("sudo_askpass_path")
 
     return make_unix_command(*command_args, **command_kwargs)
 
@@ -230,6 +228,7 @@ def make_unix_command(
     sudo_user=None,
     use_sudo_login=False,
     sudo_password=False,
+    sudo_askpass_path=None,
     preserve_sudo_env=False,
     # Doas config
     doas=False,
@@ -260,11 +259,11 @@ def make_unix_command(
         if doas_user:
             command_bits.extend(["-u", doas_user])
 
-    if sudo_password:
+    if sudo_password and sudo_askpass_path:
         command_bits.extend(
             [
                 "env",
-                "SUDO_ASKPASS={0}".format(SUDO_ASKPASS_EXE_FILENAME),
+                "SUDO_ASKPASS={0}".format(sudo_askpass_path),
                 MaskString("{0}={1}".format(SUDO_ASKPASS_ENV_VAR, sudo_password)),
             ],
         )
