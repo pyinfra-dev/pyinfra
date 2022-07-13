@@ -10,7 +10,7 @@ class FileContext(FactBase):
         {
             "user": "system_u",
             "role": "object_r",
-            "type": "deafult_t",
+            "type": "default_t",
             "level": "s0",
         }
     """
