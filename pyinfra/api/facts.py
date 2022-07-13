@@ -23,6 +23,7 @@ from pyinfra.api.util import (
     print_host_combined_output,
 )
 from pyinfra.connectors.util import split_combined_output
+from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
 from .arguments import get_executor_kwarg_keys
@@ -97,8 +98,13 @@ def _get_executor_kwargs(state, host, override_kwargs=None, override_kwarg_keys=
 
 
 def get_facts(state, *args, **kwargs):
+    def get_fact_with_context(state, host, *args, **kwargs):
+        with ctx_state.use(state):
+            with ctx_host.use(host):
+                return get_fact(state, host, *args, **kwargs)
+
     greenlet_to_host = {
-        state.pool.spawn(get_fact, state, host, *args, **kwargs): host
+        state.pool.spawn(get_fact_with_context, state, host, *args, **kwargs): host
         for host in state.inventory.iter_active_hosts()
     }
 
