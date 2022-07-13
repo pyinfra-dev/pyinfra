@@ -336,7 +336,7 @@ def hostname(hostname, hostname_file=None):
         The hostname file only matters no systems that do not have ``hostnamectl``,
         which is part of ``systemd``.
 
-        By default pyinfra will auto detect this by targetting ``/etc/hostname``
+        By default pyinfra will auto detect this by targeting ``/etc/hostname``
         on Linux and ``/etc/myname`` on OpenBSD.
 
         To completely disable writing the hostname file, set ``hostname_file=False``.
