@@ -6,7 +6,7 @@ import re
 
 from pyinfra import host
 from pyinfra.api import OperationError, operation
-from pyinfra.facts.files import Directory
+from pyinfra.facts.files import Directory, File
 from pyinfra.facts.git import GitBranch, GitConfig, GitTrackingBranch
 
 from . import files, ssh
@@ -380,10 +380,20 @@ def bare_repo(
 
     yield from files.directory(path, present=present)
 
-    # Ensure our target directory exists
     if present:
-        yield "git init --bare {0}".format(path)
+        head_filename = unix_path_join(path, "HEAD")
+        head_file = host.get_fact(File, path=head_filename)
 
-    # Apply any user or group
-    if user or group:
-        yield chown(path, user, group, recursive=True)
+        if not head_file:
+            yield "git init --bare {0}".format(path)
+            if user or group:
+                yield chown(path, user, group, recursive=True)
+        else:
+            if (user and head_file["user"] != user) or (group and head_file["group"] != group):
+                yield chown(path, user, group, recursive=True)
+
+        host.create_fact(
+            File,
+            kwargs={"path": head_filename},
+            data={"user": user, "group": group, "mode": None},
+        )

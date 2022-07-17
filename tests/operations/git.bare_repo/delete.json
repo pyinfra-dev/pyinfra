@@ -6,6 +6,9 @@
     "facts": {
         "files.Directory": {
             "path=/home/mybarerepo.git": {"mode": 0}
+        },
+        "files.File": {
+            "path=/home/mybarerepo.git/HEAD": null
         }
     },
     "commands": [
