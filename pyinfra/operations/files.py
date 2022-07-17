@@ -63,6 +63,8 @@ def download(
     sha256sum=None,
     sha1sum=None,
     md5sum=None,
+    headers=None,
+    insecure=False,
 ):
     """
     Download files from remote locations using ``curl`` or ``wget``.
@@ -77,6 +79,8 @@ def download(
     + sha256sum: sha256 hash to checksum the downloaded file against
     + sha1sum: sha1 hash to checksum the downloaded file against
     + md5sum: md5 hash to checksum the downloaded file against
+    + headers: optional dictionary of headers to set for the HTTP request
+    + insecure: disable SSL verification for the HTTP request
 
     **Example:**
 
@@ -131,13 +135,27 @@ def download(
     if download:
         temp_file = state.get_temp_filename(dest)
 
+        curl_args = ["-sSLf"]
+        wget_args = ["-q"]
+        if insecure:
+            curl_args.append("--insecure")
+            wget_args.append("--no-check-certificate")
+
+        if headers:
+            for key, value in headers.items():
+                header_arg = StringCommand("--header", QuoteString(f"{key}: {value}"))
+                curl_args.append(header_arg)
+                wget_args.append(header_arg)
+
         curl_command = make_formatted_string_command(
-            "curl -sSLf {0} -o {1}",
+            "curl {0} {1} -o {2}",
+            StringCommand(*curl_args),
             QuoteString(src),
             QuoteString(temp_file),
         )
         wget_command = make_formatted_string_command(
-            "wget -q {0} -O {1} || ( rm -f {1} ; exit 1 )",
+            "wget {0} {1} -O {2} || ( rm -f {2} ; exit 1 )",
+            StringCommand(*wget_args),
             QuoteString(src),
             QuoteString(temp_file),
         )
