@@ -7,9 +7,10 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from pyinfra.api import FileDownloadCommand, FileUploadCommand, FunctionCommand, StringCommand
+from pyinfra.context import ctx_host, ctx_state
 from pyinfra_cli.util import json_encode
 
-from .util import FakeState, JsonTest, create_host, get_command_string, patch_files
+from .util import FakeState, JsonTest, create_host, get_command_string, parse_value, patch_files
 
 PLATFORM_NAME = platform.system()
 
@@ -43,11 +44,11 @@ def parse_commands(commands):
                 command.src.seek(0)
                 data = command.src.read()
             else:
-                data = command.src
-            json_command = ["upload", data, command.dest]
+                data = str(command.src)
+            json_command = ["upload", data, str(command.dest)]
 
         elif isinstance(command, FileDownloadCommand):
-            json_command = ["download", command.src, command.dest]
+            json_command = ["download", str(command.src), str(command.dest)]
 
         else:
             raise Exception("{0} is not a valid command!".format(command))
@@ -113,73 +114,67 @@ def make_operation_tests(arg):
 
             allowed_exception = test_data.get("exception")
 
-            kwargs = test_data.get("kwargs", {})
+            args = parse_value(test_data.get("args", []))
+            kwargs = parse_value(test_data.get("kwargs", {}))
 
-            from pyinfra.context import ctx_host, ctx_state
+            with ctx_state.use(self.state):
+                with ctx_host.use(host):
+                    with patch_files(test_data.get("local_files", {})):
+                        try:
+                            output_commands = list(op._pyinfra_op(*args, **kwargs))
+                        except Exception as e:
+                            if allowed_exception:
+                                allowed_exception_names = allowed_exception.get("names")
+                                if not allowed_exception_names:
+                                    allowed_exception_names = [allowed_exception["name"]]
 
-            ctx_state.set(self.state)
-            ctx_host.set(host)
-            # kwargs['state'] = self.state
-            # kwargs['host'] = host
+                                if e.__class__.__name__ not in allowed_exception_names:
+                                    print("Wrong execption raised!")
+                                    raise
 
-            with patch_files(test_data.get("local_files", {})):
-                try:
-                    output_commands = list(op._pyinfra_op(*test_data.get("args", []), **kwargs))
-                except Exception as e:
-                    if allowed_exception:
-                        allowed_exception_names = allowed_exception.get("names")
-                        if not allowed_exception_names:
-                            allowed_exception_names = [allowed_exception["name"]]
+                                assert e.args[0] == allowed_exception["message"]
+                                return
 
-                        if e.__class__.__name__ not in allowed_exception_names:
-                            print("Wrong execption raised!")
                             raise
 
-                        assert e.args[0] == allowed_exception["message"]
-                        return
+                        op_is_idempotent = getattr(op._pyinfra_op, "is_idempotent", True)
+                        second_output_commands = []
+                        test_second_output_commands = "second_output_commands" in test_data
 
-                    raise
+                        if op_is_idempotent or test_second_output_commands:
+                            second_output_commands = list(op._pyinfra_op(*args, **kwargs))
 
-                op_is_idempotent = getattr(op._pyinfra_op, "is_idempotent", True)
-                test_second_output_commands = "second_output_commands" in test_data
-
-                if op_is_idempotent or test_second_output_commands:
-                    second_output_commands = list(
-                        op._pyinfra_op(*test_data.get("args", []), **kwargs),
-                    )
-
-                    if op_is_idempotent:
-                        if test_data.get("idempotent", True):
-                            if second_output_commands:
-                                raise Exception(
-                                    (
-                                        "Operation not idempotent, second output commands: {0}"
-                                    ).format(second_output_commands),
-                                )
-                        else:
-                            if not second_output_commands:
-                                raise Exception(
-                                    (
-                                        "Operation tests as idempotent but test "
-                                        "says it is not: {0}"
-                                    ).format(op_test_name),
-                                )
-                            if not test_data.get("disable_idempotent_warning_reason"):
-                                warnings.warn(
-                                    (
-                                        "This operation should be idempotent, but the test has "
-                                        "disabled this check without reason: {0}"
-                                    ).format(op_test_name),
-                                )
-
-                if op_is_idempotent is False:
-                    if "disable_idempotent_warning_reason" in test_data:
-                        warnings.warn(
+            if op_is_idempotent:
+                if test_data.get("idempotent", True):
+                    if second_output_commands:
+                        raise Exception(
+                            "Operation not idempotent, second output commands: {0}".format(
+                                second_output_commands,
+                            ),
+                        )
+                else:
+                    if not second_output_commands:
+                        raise Exception(
                             (
-                                "This operation is not idempotent and so the test does not need "
-                                "`disable_idempotent_warning_reason` set: {0}"
+                                "Operation tests as idempotent but test " "says it is not: {0}"
                             ).format(op_test_name),
                         )
+                    if not test_data.get("disable_idempotent_warning_reason"):
+                        warnings.warn(
+                            (
+                                "This operation should be idempotent, but the test has "
+                                "disabled this check without reason: {0}"
+                            ).format(op_test_name),
+                        )
+
+            if op_is_idempotent is False:
+                if "disable_idempotent_warning_reason" in test_data:
+                    warnings.warn(
+                        (
+                            "This operation is not idempotent and so the test does not need "
+                            "`disable_idempotent_warning_reason` set: {0}"
+                        ).format(op_test_name),
+                    )
 
             commands = parse_commands(output_commands)
             assert_commands(commands, test_data["commands"])

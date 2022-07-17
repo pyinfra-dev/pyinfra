@@ -1,0 +1,22 @@
+{
+    "args": ["path:testlink"],
+    "kwargs": {
+        "target": "/etc/init.d/nginx",
+        "user": "testuser",
+        "group": "testgroup"
+    },
+    "facts": {
+        "files.Link": {
+            "path=testlink": {
+                "link_target": "/etc/init.d/not-nginx",
+                "user": "wronguser",
+                "group": "wronggroup"
+            }
+        }
+    },
+    "commands": [
+        "rm -f testlink",
+        "ln -s /etc/init.d/nginx testlink",
+        "chown -h testuser:testgroup testlink"
+    ]
+}

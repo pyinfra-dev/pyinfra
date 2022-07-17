@@ -1,0 +1,17 @@
+{
+    "args": ["path:somefile", "match_line"],
+    "kwargs": {
+        "replace": "replace_line",
+        "flags": "abc"
+    },
+    "facts": {
+        "files.FindInFile": {
+            "path=somefile, pattern=^.*match_line.*$, interpolate_variables=False": [
+                "match_line"
+            ]
+        }
+    },
+    "commands": [
+        "sed -i.a-timestamp 's/^.*match_line.*$/replace_line/abc' somefile && rm -f somefile.a-timestamp"
+    ]
+}

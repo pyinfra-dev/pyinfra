@@ -4,6 +4,7 @@ from datetime import datetime
 from inspect import getfullargspec
 from io import open
 from os import listdir, path
+from pathlib import Path
 from unittest.mock import patch
 
 from pyinfra.api import Config, Inventory
@@ -59,31 +60,32 @@ class FakeState(object):
         return "_tempfile_"
 
 
-def parse_fact(fact):
+def parse_value(value):
     """
     Convert JSON types to more complex Python types because JSON is lacking.
     """
 
-    # Handle datetimes
-    if isinstance(fact, str) and fact.startswith("datetime:"):
-        return datetime.strptime(fact[9:], "%Y-%m-%dT%H:%M:%S")
+    if isinstance(value, str):
+        if value.startswith("datetime:"):
+            return datetime.strptime(value[9:], "%Y-%m-%dT%H:%M:%S")
+        if value.startswith("path:"):
+            return Path(value[5:])
+        return value
 
-    elif isinstance(fact, list):
-        # Handle sets
-        if fact and fact[0] == "set:":
-            return set(parse_fact(value) for value in fact[1:])
+    if isinstance(value, list):
+        if value and value[0] == "set:":
+            return set(parse_value(value) for value in value[1:])
+        return [parse_value(value) for value in value]
 
-        return [parse_fact(value) for value in fact]
+    if isinstance(value, dict):
+        return {key: parse_value(value) for key, value in value.items()}
 
-    elif isinstance(fact, dict):
-        return {key: parse_fact(value) for key, value in fact.items()}
-
-    return fact
+    return value
 
 
 class FakeFact(object):
     def __init__(self, data):
-        self.data = parse_fact(data)
+        self.data = parse_value(data)
 
     def __iter__(self):
         return iter(self.data)

@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from importlib import import_module
 from os import path
+from pathlib import Path
 from types import FunctionType, ModuleType
 
 # py2/3 switcheroo
@@ -80,40 +81,42 @@ def json_encode(obj):
     if isinstance(obj, HostData):
         return obj.dict()
 
-    elif isinstance(obj, PyinfraCommand):
+    if isinstance(obj, PyinfraCommand):
         return repr(obj)
 
-    elif isinstance(obj, OperationMeta):
+    if isinstance(obj, OperationMeta):
         return repr(obj)
 
     # Python types
-    elif isinstance(obj, ModuleType):
+    if isinstance(obj, ModuleType):
         return "Module: {0}".format(obj.__name__)
 
-    elif isinstance(obj, FunctionType):
+    if isinstance(obj, FunctionType):
         return "Function: {0}".format(obj.__name__)
 
-    elif isinstance(obj, datetime):
+    if isinstance(obj, datetime):
         return obj.isoformat()
 
-    elif isinstance(obj, io_bases):
+    if isinstance(obj, io_bases):
         if hasattr(obj, "name"):
             return "File: {0}".format(obj.name)
 
-        elif hasattr(obj, "template"):
+        if hasattr(obj, "template"):
             return "Template: {0}".format(obj.template)
 
         obj.seek(0)
         return "In memory file: {0}".format(obj.read())
 
-    elif isinstance(obj, set):
+    if isinstance(obj, Path):
+        return str(obj)
+
+    if isinstance(obj, set):
         return sorted(list(obj))
 
-    elif isinstance(obj, bytes):
+    if isinstance(obj, bytes):
         return obj.decode()
 
-    else:
-        raise TypeError("Cannot serialize: {0} ({1})".format(type(obj), obj))
+    raise TypeError("Cannot serialize: {0} ({1})".format(type(obj), obj))
 
 
 def parse_cli_arg(arg):
