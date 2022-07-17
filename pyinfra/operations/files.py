@@ -810,7 +810,7 @@ def put(
     + dest: remote filename to upload to
     + user: user to own the files
     + group: group to own the files
-    + mode: permissions of the files
+    + mode: permissions of the files, use ``True`` to copy the local file
     + add_deploy_dir: src is relative to the deploy directory
     + create_remote_dir: create the remote directory if it doesn't exist
     + force: always upload the file, even if the remote copy matches
@@ -819,6 +819,10 @@ def put(
     ``dest``:
         If this is a directory that already exists on the remote side, the local
         file will be uploaded to that directory with the same filename.
+
+    ``mode``:
+        When set to ``True`` the permissions of the local file are applied to the
+        remote file after the upload is complete.
 
     ``create_remote_dir``:
         If the remote directory does not exist it will be created using the same
@@ -867,7 +871,18 @@ def put(
         else:
             raise IOError("No such file: {0}".format(local_file))
 
-    mode = ensure_mode_int(mode)
+    if mode is True:
+        if os.path.isfile(local_file):
+            mode = get_path_permissions_mode(local_file)
+        else:
+            logger.warning(
+                ("No local file exists to get permissions from with `mode=True` ({0})").format(
+                    get_call_location(),
+                ),
+            )
+    else:
+        mode = ensure_mode_int(mode)
+
     remote_file = host.get_fact(File, path=dest)
 
     if not remote_file and host.get_fact(Directory, path=dest):

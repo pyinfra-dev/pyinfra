@@ -1,0 +1,24 @@
+{
+    "args": ["somefile.txt", "/somefile.txt"],
+    "kwargs": {
+        "mode": true
+    },
+    "local_files": {
+        "files": {
+            "somefile.txt": null
+        },
+        "dirs": {}
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/some\\ file.txt": null
+        },
+        "files.Directory": {
+            "path=/": true
+        }
+    },
+    "commands": [
+        ["upload", "/somefile.txt", "/somefile.txt"],
+        "chmod 644 /somefile.txt"
+    ]
+}
