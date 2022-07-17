@@ -7,6 +7,7 @@ for a deploy.
 import re
 from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
+from typing import Optional, Type
 
 import click
 import gevent
@@ -44,9 +45,9 @@ class FactNameMeta(type):
 class FactBase(object, metaclass=FactNameMeta):
     abstract = True
 
-    shell_executable = None
+    shell_executable: Optional[str] = None
 
-    requires_command = None
+    requires_command: Optional[str] = None
 
     @staticmethod
     def default():
@@ -63,7 +64,7 @@ class FactBase(object, metaclass=FactNameMeta):
 
 
 class ShortFactBase(object, metaclass=FactNameMeta):
-    fact = None
+    fact: Type[FactBase]
 
 
 def get_short_facts(state, host, short_fact, **kwargs):
