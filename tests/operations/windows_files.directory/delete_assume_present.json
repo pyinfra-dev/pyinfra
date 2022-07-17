@@ -13,5 +13,6 @@
         "Get-ChildItem testdir -Recurse | Remove-Item",
         "Remove-Item testdir"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "Assume present means we always attempt to delete"
 }

@@ -14,5 +14,6 @@
     "commands": [
         "(Get-Item testlink).Delete()"
     ],
-    "idempotent": false
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "Assume present means we always attempt to delete"
 }
