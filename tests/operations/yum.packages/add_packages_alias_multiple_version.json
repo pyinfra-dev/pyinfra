@@ -1,0 +1,22 @@
+{
+    "args": [[
+        "vim",
+        "kernel"
+    ]],
+    "facts": {
+        "rpm.RpmPackages": {},
+        "rpm.RpmPackageProvides": {
+            "name=vim": [
+                ["vim-enhanced", "1.2.3"],
+                ["vim-enhanced", "2.3.4"]
+            ],
+            "name=kernel": [
+                ["kernel", "abc"],
+                ["kernel-core", "abc"]
+            ]
+        }
+    },
+    "commands": [
+        "yum install -y vim kernel"
+    ]
+}

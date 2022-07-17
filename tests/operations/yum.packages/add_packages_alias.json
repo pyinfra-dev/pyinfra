@@ -1,0 +1,14 @@
+{
+    "args": [[
+        "vim"
+    ]],
+    "facts": {
+        "rpm.RpmPackages": {},
+        "rpm.RpmPackageProvides": {
+            "name=vim": [["vim-enhanced", "1.2.3"]]
+        }
+    },
+    "commands": [
+        "yum install -y vim"
+    ]
+}

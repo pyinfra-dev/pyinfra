@@ -1,4 +1,5 @@
 import shlex
+from collections import defaultdict
 from io import StringIO
 from urllib.parse import urlparse
 
@@ -6,20 +7,39 @@ from pyinfra.facts.files import File
 from pyinfra.facts.rpm import RpmPackage
 
 
+def _package_name(package):
+    if isinstance(package, list):
+        return package[0]
+    return package
+
+
 def _has_package(package, packages, expand_package_fact=None, match_any=False):
-    def in_packages(pkg):
-        if isinstance(pkg, list):
-            return pkg[0] in packages and pkg[1] in packages[pkg[0]]
-        return pkg in packages
+    def in_packages(pkg_name, pkg_versions):
+        if not pkg_versions:
+            return pkg_name in packages
+        return pkg_name in packages and any(
+            version in packages[pkg_name] for version in pkg_versions
+        )
 
     packages_to_check = [package]
     if expand_package_fact:
         packages_to_check = expand_package_fact(package) or packages_to_check
 
-    checks = (in_packages(pkg) for pkg in packages_to_check)
+    package_name_to_versions = defaultdict(set)
+    for pkg in packages_to_check:
+        if isinstance(pkg, list):
+            package_name_to_versions[pkg[0]].add(pkg[1])
+        else:
+            package_name_to_versions[pkg]  # just make sure it exists
+
+    checks = (
+        in_packages(pkg_name, pkg_versions)
+        for pkg_name, pkg_versions in package_name_to_versions.items()
+    )
+
     if match_any:
-        return any(checks)
-    return all(checks)
+        return any(checks), package_name_to_versions
+    return all(checks), package_name_to_versions
 
 
 def ensure_packages(
@@ -58,84 +78,90 @@ def ensure_packages(
     if packages is None:
         return
 
-    # Accept a single package as string
     if isinstance(packages, str):
         packages = [packages]
 
-    # Version support?
     if version_join:
-        # Split where versions present
-        packages = [package.rsplit(version_join, 1) for package in packages]
+        packages = [
+            package[0] if len(package) == 1 else package
+            for package in [package.rsplit(version_join, 1) for package in packages]
+        ]
 
-        # Covert to either string or list
-        packages = [package[0] if len(package) == 1 else package for package in packages]
-
-    # Diff the ensured packages against the remote state/fact
     diff_packages = []
+    diff_expanded_packages = {}
 
-    # Packages to upgrade? (install only)
     upgrade_packages = []
 
-    # Installing?
     if present is True:
         for package in packages:
-            # String version, just check if not existing
-            if not _has_package(package, current_packages, expand_package_fact):
-                diff_packages.append(package)
+            has_package, expanded_packages = _has_package(
+                package,
+                current_packages,
+                expand_package_fact,
+            )
 
+            if not has_package:
+                diff_packages.append(package)
+                diff_expanded_packages[_package_name(package)] = expanded_packages
             else:
                 # Present packages w/o version specified - for upgrade if latest
                 if isinstance(package, str):
                     upgrade_packages.append(package)
 
                 if not latest:
-                    pkg_key = package[0] if isinstance(package, list) else package
-                    if pkg_key in current_packages:
+                    pkg_name = _package_name(package)
+                    if pkg_name in current_packages:
                         host.noop(
                             "package {0} is installed ({1})".format(
                                 package,
-                                ", ".join(current_packages[pkg_key]),
+                                ", ".join(current_packages[pkg_name]),
                             ),
                         )
                     else:
                         host.noop("package {0} is installed".format(package))
 
-    # Uninstalling?
-    else:
+    if present is False:
         for package in packages:
             # String version, just check if existing
-            if _has_package(package, current_packages, expand_package_fact, match_any=True):
-                diff_packages.append(package)
+            has_package, expanded_packages = _has_package(
+                package,
+                current_packages,
+                expand_package_fact,
+                match_any=True,
+            )
 
+            if has_package:
+                diff_packages.append(package)
+                diff_expanded_packages[_package_name(package)] = expanded_packages
             else:
                 host.noop("package {0} is not installed".format(package))
-
-    # Convert packages back to string(/version)
-    diff_packages = [
-        version_join.join(package) if isinstance(package, list) else package
-        for package in diff_packages
-    ]
 
     if diff_packages:
         command = install_command if present else uninstall_command
 
+        joined_packages = [
+            version_join.join(package) if isinstance(package, list) else package
+            for package in diff_packages
+        ]
+
         yield "{0} {1}".format(
             command,
-            " ".join([shlex.quote(pkg) for pkg in diff_packages]),
+            " ".join([shlex.quote(pkg) for pkg in joined_packages]),
         )
 
         for package in diff_packages:  # add/remove from current packages
+            pkg_name = _package_name(package)
             version = "unknown"
-            if version_join:
-                bits = package.rsplit(version_join, 1)
-                package = bits[0]
-                if len(bits) == 2:
-                    version = bits[1]
+            if isinstance(package, list):
+                version = package[1]
 
             if present:
-                current_packages[package] = [version]
+                current_packages[pkg_name] = [version]
+                current_packages.update(diff_expanded_packages.get(pkg_name, {}))
             else:
-                current_packages.pop(package, None)
+                current_packages.pop(pkg_name, None)
+                for name in diff_expanded_packages.get(pkg_name, {}):
+                    current_packages.pop(name, None)
 
     if latest and upgrade_command and upgrade_packages:
         yield "{0} {1}".format(

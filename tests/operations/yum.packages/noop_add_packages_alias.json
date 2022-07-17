@@ -1,0 +1,15 @@
+{
+    "args": [[
+        "vim"
+    ]],
+    "facts": {
+        "rpm.RpmPackages": {
+            "vim-enhanced": ["1.2.3"]
+        },
+        "rpm.RpmPackageProvides": {
+            "name=vim": [["vim-enhanced", "1.2.3"]]
+        }
+    },
+    "commands": [],
+    "noop_description": "package vim is installed"
+}

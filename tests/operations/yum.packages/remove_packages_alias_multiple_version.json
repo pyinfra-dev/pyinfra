@@ -1,0 +1,21 @@
+{
+    "args": [[
+        "vim"
+    ]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "rpm.RpmPackages": {
+            "vim-enhanced": ["1.2.3"]
+        },
+        "rpm.RpmPackageProvides": {
+            "name=vim": [
+                ["vim-enhanced", "1.2.3"],
+                ["vim-enhanced", "2.3.4"],
+                ["vim-enhanced", "4.5.6"]
+            ]
+        }
+    },
+    "commands": ["yum remove -y vim"]
+}

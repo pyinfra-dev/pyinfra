@@ -16,6 +16,5 @@
     },
     "commands": [
         "pacman --noconfirm -R curl xorg-fonts"
-    ],
-    "idempotent": false
+    ]
 }

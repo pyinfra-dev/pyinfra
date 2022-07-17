@@ -9,6 +9,5 @@
     },
     "commands": [
         "pacman --noconfirm -S curl xorg-fonts"
-    ],
-    "idempotent": false
+    ]
 }
