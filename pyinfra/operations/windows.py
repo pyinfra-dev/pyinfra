@@ -17,7 +17,7 @@ from pyinfra.api import operation
 # FUTURE: add ability to stop processes (ex: "Stop-Process <id>")
 
 
-@operation
+@operation(is_idempotent=False)
 def service(service, running=True, restart=False, suspend=False):
     """
     Stop/Start a Windows service.
