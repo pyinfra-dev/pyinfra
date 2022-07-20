@@ -802,6 +802,101 @@ def group(group, present=True, system=False, gid=None):
 
 
 @operation
+def user_authorized_keys(
+    user,
+    public_keys,
+    group=None,
+    delete_keys=False,
+    authorized_key_directory=None,
+    authorized_key_filename=None,
+):
+    """
+    Manage `authorized_keys` of system users.
+
+    + user: name of the user to ensure
+    + public_keys: list of public keys to attach to this user, ``home`` must be specified
+    + group: the users primary group
+    + delete_keys: whether to remove any keys not specified in ``public_keys``
+
+    Public keys:
+        These can be provided as strings containing the public key or as a path to
+        a public key file which ``pyinfra`` will read.
+
+    **Examples:**
+
+    .. code:: python
+
+        server.user_authorized_keys(
+            name="Ensure user has a public key",
+            user="kevin",
+            public_keys=["ed25519..."],
+        )
+    """
+    if not authorized_key_directory:
+        authorized_key_directory = f"/home/{user}/.ssh/"
+    if not authorized_key_filename:
+        authorized_key_filename = "authorized_keys"
+
+    if isinstance(public_keys, str):
+        public_keys = [public_keys]
+
+    def read_any_pub_key_file(key):
+        try_path = key
+        if state.cwd:
+            try_path = path.join(state.cwd, key)
+
+        if path.exists(try_path):
+            with open(try_path, "r") as f:
+                return f.read()
+
+        return key
+
+    public_keys = list(map(read_any_pub_key_file, public_keys))
+
+    # Ensure .ssh directory
+    # note that this always outputs commands unless the SSH user has access to the
+    # authorized_keys file, ie the SSH user is the user defined in this function
+    yield from files.directory(
+        authorized_key_directory,
+        user=user,
+        group=group or user,
+        mode=700,
+    )
+
+    authorized_key_file = f"{authorized_key_directory}/{authorized_key_filename}"
+
+    if delete_keys:
+        # Create a whole new authorized_keys file
+        keys_file = StringIO(
+            "{0}\n".format(
+                "\n".join(public_keys),
+            ),
+        )
+
+        # And ensure it exists
+        yield from files.put(
+            src=keys_file,
+            dest=authorized_key_file,
+            user=user,
+            group=group or user,
+            mode=600,
+        )
+
+    else:
+        # Ensure authorized_keys exists
+        yield from files.file(
+            path=authorized_key_file,
+            user=user,
+            group=group or user,
+            mode=600,
+        )
+
+        # And every public key is present
+        for key in public_keys:
+            yield from files.line(path=authorized_key_file, line=key)
+
+
+@operation
 def user(
     user,
     present=True,
@@ -991,60 +1086,11 @@ def user(
 
     # Add SSH keys
     if public_keys is not None:
-        if isinstance(public_keys, str):
-            public_keys = [public_keys]
-
-        def read_any_pub_key_file(key):
-            try_path = key
-            if add_deploy_dir and state.cwd:
-                try_path = path.join(state.cwd, key)
-
-            if path.exists(try_path):
-                with open(try_path, "r") as f:
-                    return f.read()
-
-            return key
-
-        public_keys = list(map(read_any_pub_key_file, public_keys))
-
-        # Ensure .ssh directory
-        # note that this always outputs commands unless the SSH user has access to the
-        # authorized_keys file, ie the SSH user is the user defined in this function
-        yield from files.directory(
-            "{0}/.ssh".format(home),
-            user=user,
-            group=group or user,
-            mode=700,
+        yield from user_authorized_keys(
+            user,
+            public_keys,
+            group=group,
+            delete_keys=delete_keys,
+            authorized_key_directory="{0}/.ssh".format(home),
+            authorized_key_filename=None,
         )
-
-        filename = "{0}/.ssh/authorized_keys".format(home)
-
-        if delete_keys:
-            # Create a whole new authorized_keys file
-            keys_file = StringIO(
-                "{0}\n".format(
-                    "\n".join(public_keys),
-                ),
-            )
-
-            # And ensure it exists
-            yield from files.put(
-                src=keys_file,
-                dest=filename,
-                user=user,
-                group=group or user,
-                mode=600,
-            )
-
-        else:
-            # Ensure authorized_keys exists
-            yield from files.file(
-                path=filename,
-                user=user,
-                group=group or user,
-                mode=600,
-            )
-
-            # And every public key is present
-            for key in public_keys:
-                yield from files.line(path=filename, line=key)
