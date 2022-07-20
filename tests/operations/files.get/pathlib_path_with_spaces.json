@@ -1,4 +1,5 @@
 {
+    "require_platform": ["Darwin", "Linux"],
     "args": ["path:/home/some file.txt", "path:somefile.txt"],
     "facts": {
         "files.File": {
