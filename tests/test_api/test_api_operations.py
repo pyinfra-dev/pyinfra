@@ -440,7 +440,7 @@ class TestOperationFailures(PatchSSHTestCase):
 
         # Ensure the op was added to results
         assert state.results[somehost]["ops"] == 1
-        assert state.results[somehost]["error_ops"] == 1
+        assert state.results[somehost]["ignored_error_ops"] == 1
         # But not as a success
         assert state.results[somehost]["success_ops"] == 0
 

@@ -289,8 +289,10 @@ def print_results(state):
 
             meta = state.meta[host]
             success_ops = results["success_ops"]
+            partial_ops = results["partial_ops"]
             changed_ops = success_ops - meta["ops_no_change"]
             error_ops = results["error_ops"]
+            ignored_error_ops = results["ignored_error_ops"]
 
             host_args = ("green",)
             host_kwargs = {}
@@ -306,14 +308,22 @@ def print_results(state):
                 host_args = ("red",)
                 host_kwargs["bold"] = True
 
+            changed_str = "Changed: {0}".format(click.style(changed_ops, bold=True))
+            if partial_ops:
+                changed_str = f"{changed_str} ({partial_ops} partial)"
+
+            error_str = "Errors: {0}".format(click.style(error_ops, bold=True))
+            if ignored_error_ops:
+                error_str = f"{error_str} ({ignored_error_ops} ignored)"
+
             rows.append(
                 (
                     logger.info,
                     [
                         host.style_print_prefix(*host_args, **host_kwargs),
-                        "Changed: {0}".format(click.style(changed_ops, bold=True)),
+                        changed_str,
                         "No change: {0}".format(click.style(meta["ops_no_change"], bold=True)),
-                        "Errors: {0}".format(click.style(error_ops, bold=True)),
+                        error_str,
                     ],
                 ),
             )

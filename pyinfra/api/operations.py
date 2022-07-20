@@ -69,6 +69,7 @@ def run_host_op(state, host, op_hash):
     op_meta = state.get_op_meta(op_hash)
 
     ignore_errors = global_kwargs["ignore_errors"]
+    continue_on_error = global_kwargs["continue_on_error"]
 
     logger.debug(
         "Starting operation {0} on {1}".format(
@@ -109,6 +110,8 @@ def run_host_op(state, host, op_hash):
         host.nested_executing_op_hash = op_hash
 
     return_status = False
+    did_error = False
+    executed_commands = 0
     all_combined_output_lines = []
 
     for i, command in enumerate(op_data["commands"]):
@@ -164,8 +167,12 @@ def run_host_op(state, host, op_hash):
 
         # Break the loop to trigger a failure
         if status is False:
+            if continue_on_error is True:
+                did_error = True
+                continue
             break
 
+        executed_commands += 1
         state.results[host]["commands"] += 1
 
     # Commands didn't break, so count our successes & return True!
@@ -189,7 +196,10 @@ def run_host_op(state, host, op_hash):
                 state.trigger_callbacks("operation_host_error", host, op_hash)
                 return False
 
-        # Count success
+        if not did_error:
+            return_status = True
+
+    if return_status is True:
         state.results[host]["ops"] += 1
         state.results[host]["success_ops"] += 1
 
@@ -208,13 +218,21 @@ def run_host_op(state, host, op_hash):
             global_kwargs["on_success"](state, host, op_hash)
 
         state.trigger_callbacks("operation_host_success", host, op_hash)
-        return_status = True
+    else:
+        if ignore_errors:
+            state.results[host]["ignored_error_ops"] += 1
+        else:
+            state.results[host]["error_ops"] += 1
 
-    if return_status is False:
-        # Up error_ops & log
-        state.results[host]["error_ops"] += 1
+        if executed_commands:
+            state.results[host]["partial_ops"] += 1
 
-        log_error_or_warning(host, ignore_errors)
+        log_error_or_warning(
+            host,
+            ignore_errors,
+            continue_on_error=continue_on_error,
+            description=f"executed {executed_commands}/{len(op_data['commands'])} commands",
+        )
 
         # Always trigger any error handler
         if global_kwargs["on_error"]:

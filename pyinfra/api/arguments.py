@@ -127,6 +127,14 @@ meta_kwargs = {
         "default": lambda config: config.IGNORE_ERRORS,
         "type": bool,
     },
+    "_continue_on_error": {
+        "description": (
+            "Continue executing operation commands after error. "
+            "Only applies when ``_ignore_errors`` is true."
+        ),
+        "default": False,
+        "type": bool,
+    },
     "_precondition": {
         "description": "Command to execute & check before the operation commands begin.",
         "type": str,

@@ -194,6 +194,8 @@ class State(object):
                 "ops": 0,  # success_ops + failed ops w/ignore_errors
                 "success_ops": 0,
                 "error_ops": 0,
+                "ignored_error_ops": 0,
+                "partial_ops": 0,  # operations that had an error, but did do something
                 "commands": 0,
             }
             for host in inventory

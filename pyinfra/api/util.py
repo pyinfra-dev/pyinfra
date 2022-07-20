@@ -209,7 +209,7 @@ def print_host_combined_output(host, combined_output_lines):
             )
 
 
-def log_error_or_warning(host, ignore_errors, description=""):
+def log_error_or_warning(host, ignore_errors, description="", continue_on_error=False):
     log_func = logger.error
     log_color = "red"
     log_text = "Error: " if description else "Error"
@@ -217,7 +217,11 @@ def log_error_or_warning(host, ignore_errors, description=""):
     if ignore_errors:
         log_func = logger.warning
         log_color = "yellow"
-        log_text = "Error (ignored): " if description else "Error (ignored)"
+        log_text = (
+            "Error (ignored, execution continued)" if continue_on_error else "Error (ignored)"
+        )
+        if description:
+            log_text = f"{log_text}: "
 
     log_func(
         "{0}{1}{2}".format(
