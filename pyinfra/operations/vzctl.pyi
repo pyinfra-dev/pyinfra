@@ -24,6 +24,7 @@ def start(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -58,6 +59,7 @@ def stop(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -93,6 +95,7 @@ def restart(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -127,6 +130,7 @@ def mount(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -161,6 +165,7 @@ def unmount(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -195,6 +200,7 @@ def delete(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -230,6 +236,7 @@ def create(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -265,6 +272,7 @@ def set(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[

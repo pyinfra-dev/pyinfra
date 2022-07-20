@@ -25,6 +25,7 @@ def config(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -68,6 +69,7 @@ def repo(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -114,6 +116,7 @@ def worktree(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -151,6 +154,7 @@ def bare_repo(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[

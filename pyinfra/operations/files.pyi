@@ -12,6 +12,8 @@ def download(
     sha256sum=None,
     sha1sum=None,
     md5sum=None,
+    headers=None,
+    insecure=False,
     _sudo: typing.Optional[bool] = None,
     _sudo_user: typing.Optional[bool] = None,
     _use_sudo_login: typing.Optional[bool] = None,
@@ -32,6 +34,7 @@ def download(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -74,6 +77,7 @@ def line(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -114,6 +118,7 @@ def replace(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -156,6 +161,7 @@ def sync(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -192,6 +198,7 @@ def rsync(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -230,6 +237,7 @@ def get(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -272,6 +280,7 @@ def put(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -311,6 +320,7 @@ def template(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -356,6 +366,7 @@ def link(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -400,6 +411,7 @@ def file(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
@@ -445,6 +457,7 @@ def directory(
     _stdin: typing.Optional[typing.Union[str, list, tuple]] = None,
     name: typing.Optional[str] = None,
     _ignore_errors: typing.Optional[bool] = None,
+    _continue_on_error: typing.Optional[bool] = None,
     _precondition: typing.Optional[str] = None,
     _postcondition: typing.Optional[str] = None,
     _on_success: typing.Optional[
