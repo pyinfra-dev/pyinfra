@@ -64,29 +64,19 @@ jobs:
   # End-to-end tests
   #
 
-  test-e2e-local:
-    needs: unit-test
-    runs-on: ubuntu-18.04
+  end-to-end-test:
+    needs:
+      - unit-test
+    strategy:
+      matrix:
+        os: [ubuntu-18.04]
+        test-name: [local, ssh, docker]
+        include:
+          - os: macos-10.15
+            test-name: local
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
       - run: pip install '.[test]'
-      - run: pytest -m end_to_end_local
-
-  test-e2e-ssh:
-    needs: unit-test
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-      - run: pip install '.[test]'
-      - run: pytest -m end_to_end_ssh
-
-  test-e2e-docker:
-    needs: unit-test
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-      - run: pip install '.[test]'
-      - run: pytest -m end_to_end_docker
+      - run: pytest -m end_to_end_${{ matrix.test-name }}
