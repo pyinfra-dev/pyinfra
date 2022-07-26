@@ -11,13 +11,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-18.04
-            python-version: 3.9
+            python-version: "3.10"
             filename: pyinfra
           - os: macos-10.15
-            python-version: 3.9
+            python-version: "3.10"
             filename: pyinfra
           - os: windows-2019
-            python-version: 3.9
+            python-version: "3.10"
             filename: pyinfra.exe
 
     runs-on: ${{ matrix.os }}
