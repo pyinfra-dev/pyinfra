@@ -101,6 +101,7 @@ docbits
 docopt
 dport
 dss
+e2e
 e305
 e402
 e501

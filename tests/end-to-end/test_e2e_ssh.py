@@ -1,5 +1,5 @@
 """
-Local integration tests - mostly checking for idempotency on file operations.
+SSH integration tests - mostly checking for idempotency on file operations.
 """
 
 import time
@@ -31,6 +31,7 @@ def run_docker_ssh_server(helpers):
                 "-e PASSWORD_ACCESS=true",
                 "-e USER_PASSWORD=password",
                 "-e USER_NAME=pyinfra",
+                "-e SUDO_ACCESS=true",
                 DOCKER_IMAGE,
             ],
         ),
@@ -40,6 +41,20 @@ def run_docker_ssh_server(helpers):
         yield docker_container_id
     finally:
         helpers.run(f"docker kill {docker_container_id}")
+
+
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_ssh
+def test_e2e_ssh_sudo_password(helpers):
+    helpers.run_check_output(
+        f"{PYINFRA_COMMAND} server.shell echo _sudo=True _use_sudo_password=password",
+        expected_lines=["localhost] Success"],
+    )
+    helpers.run_check_output(
+        f"{PYINFRA_COMMAND} server.shell echo _sudo=True _use_sudo_password=wrongpassword",
+        expected_lines=["localhost] Error"],
+        expected_exit_code=1,
+    )
 
 
 @pytest.mark.end_to_end
