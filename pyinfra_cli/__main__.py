@@ -39,4 +39,7 @@ signal.signal(signal.SIGINT, _handle_interrupt)  # print the message and exit ma
 
 
 if __name__ == "pyinfra_cli.__main__":
+    if getattr(sys, "frozen", False):
+        click.echo(click.style("Warning: running alpha pyinfra binary build", "yellow"), err=True)
+
     cli()
