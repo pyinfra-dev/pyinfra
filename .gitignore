@@ -9,6 +9,7 @@ build/
 dist/
 
 venv/
+.venv/
 .cache/
 
 .vagrant*
