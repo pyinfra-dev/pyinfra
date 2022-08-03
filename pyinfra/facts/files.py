@@ -367,7 +367,8 @@ class Flags(FactBase):
 
     def command(self, path):
         return make_formatted_string_command(
-            "test -e {0} && ( test -d {0} && ls -Old {0} || ls -Ol {0} ) || true", QuoteString(path),
+            "test -e {0} && ( test -d {0} && ls -Old {0} || ls -Ol {0} ) || true",
+            QuoteString(path),
         )
 
     def process(self, output):
