@@ -1580,6 +1580,5 @@ def flags(path, flags=None, present=True):
             )
         else:
             host.noop(
-                f'file \'{path}\' already has \'{",".join(flags)}\' \
-                    {"set" if present else "clear"}',
+                f'\'{path}\' already has \'{",".join(flags)}\' {"set" if present else "clear"}',
             )

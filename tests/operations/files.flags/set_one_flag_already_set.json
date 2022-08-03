@@ -11,5 +11,5 @@
     },
     "commands": [
     ],
-    "noop_description": "file 'testdir' already has 'dump' set"
+    "noop_description": "'testdir' already has 'dump' set"
 }
