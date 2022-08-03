@@ -474,8 +474,6 @@ def flags(
     path,
     flags=None,
     present=True,
-    _no_check_owner_mode=False,
-    _no_fail_on_link=False,
     _sudo: typing.Optional[bool] = None,
     _sudo_user: typing.Optional[bool] = None,
     _use_sudo_login: typing.Optional[bool] = None,
