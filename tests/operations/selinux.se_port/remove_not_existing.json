@@ -1,0 +1,18 @@
+{
+    "args": [
+        "tcp",
+        22,
+        "ssh_port_t"
+    ],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "selinux.SEPort": {
+            "protocol=tcp, port=22": ""
+        }
+    },
+    "commands": [
+    ],
+    "noop_description": "setype for 'tcp/22' is already unset"
+}

@@ -1,0 +1,15 @@
+{
+    "args": ["/web(/.*)?"],
+    "kwargs": {
+        "present":false
+    },
+    "facts": {
+        "selinux.FileContextMapping": {
+            "target=/web(/.*)?": {}
+        }
+    },
+    "commands": [
+    ],
+    "noop_description": "no existing mapping for '/web(/.*)?'"
+
+}

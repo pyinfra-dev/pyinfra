@@ -1,0 +1,14 @@
+{
+    "args": ["some_boolean", "on"],
+    "kwargs": {
+        "persistent":true
+    },
+    "facts": {
+        "selinux.SEBoolean": {
+            "boolean=some_boolean": "off"
+        }
+    },
+    "commands": [
+        "setsebool -P some_boolean on"
+    ]
+}

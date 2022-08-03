@@ -1,0 +1,13 @@
+{
+    "arg": "/etc/hosts",
+    "command": "stat -c %C /etc/hosts || exit 0",
+    "output": [
+        "system_u:object_r:net_conf_t:s0"
+    ],
+    "fact": {
+        "user":"system_u",
+        "role": "object_r",
+        "type": "net_conf_t",
+        "level": "s0"
+    }
+}
