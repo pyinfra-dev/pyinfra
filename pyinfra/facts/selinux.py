@@ -81,8 +81,6 @@ class SEPort(FactBase):
     def process(self, output):
         # if type set, first line is specific and second is generic type for port range
         # each rows in the format "22: tcp ssh_port_t 22"
-        if len(output) < 1:
-            return self.default()
 
-        return output[0].split(" ")[2] if len(output) > 0 else self.default()
+        return output[0].split(" ")[2] if len(output) > 1 else self.default()
 
