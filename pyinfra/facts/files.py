@@ -373,4 +373,4 @@ class Flags(FactBase):
 
     def process(self, output):
 
-        return [flag for flag in output[0].split(",") if len(flag)>0]  if len(output) == 1 else []
+        return [flag for flag in output[0].split(",") if len(flag) > 0] if len(output) == 1 else []
