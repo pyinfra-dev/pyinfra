@@ -5,7 +5,7 @@ from pyinfra import host
 from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.selinux import FileContext, FileContextMapping, SEBoolean, SEPort
 
-VALID_STATE = ["on", "off"]
+_VALID_STATE = ["on", "off"]
 
 @operation
 def file_context(path, se_type):
@@ -98,9 +98,9 @@ def se_boolean(boolean, state, persistent=False):
         )
     """
 
-    if state not in VALID_STATE:
+    if state not in _VALID_STATE:
         raise ValueError(
-            f"se_boolean: 'state' must be one of '{','.join(VALID_STATE)}' but found '{state}'",
+            f"se_boolean: 'state' must be one of '{','.join(_VALID_STATE)}' but found '{state}'",
         )
 
     if host.get_fact(SEBoolean, boolean=boolean) != state:
