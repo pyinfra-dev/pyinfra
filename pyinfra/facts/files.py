@@ -367,15 +367,10 @@ class Flags(FactBase):
 
     def command(self, path):
         return make_formatted_string_command(
-            "test -e {0} && ( test -d {0} && ls -Old {0} || ls -Ol {0} ) || true",
+            "stat -f %Sf {0} || true",
             QuoteString(path),
         )
 
     def process(self, output):
-        if len(output) != 1:
-            return []
-        match = FLAGS_PATTERN.match(output[0])
-        if not match:
-            return []
 
-        return match.group(1).split(",") if match.group(1) != "-" else []
+        return [flag for flag in output[0].split(",") if len(flag)>0]  if len(output) == 1 else []

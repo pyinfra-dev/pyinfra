@@ -1,9 +1,9 @@
 {
     "arg": ["/foo/bar/baz"],
     "requires_command": "chflags",
-    "command": "test -e /foo/bar/baz && ( test -d /foo/bar/baz && ls -Old /foo/bar/baz || ls -Ol /foo/bar/baz ) || true",
+    "command": "stat -f %Sf /foo/bar/baz || true",
     "output": [
-        "drwxr-xr-x  25 pyinfra  pyinfra  - 800 Feb  2 13:51 ./"
+        ""
     ],
     "fact": [
     ]
