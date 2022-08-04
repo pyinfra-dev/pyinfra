@@ -6,7 +6,9 @@ from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.selinux import FileContext, FileContextMapping, SEBoolean, SEPort
 
 
-@operation
+@operation(
+    pipeline_facts={"filecontext": "path"},
+)
 def file_context(path, se_type):
     """
     Set the SELinux type for the specified path .
@@ -33,7 +35,9 @@ def file_context(path, se_type):
         host.noop(f'file_context: \'{path}\' already had type \'{se_type}\'')
 
 
-@operation
+@operation(
+    pipeline_facts={"filecontextmapping": "target"},
+)
 def file_context_mapping(target, se_type=None, present=True):
     """
     Set the SELinux file context mapping for paths matching the target.
@@ -76,7 +80,9 @@ def file_context_mapping(target, se_type=None, present=True):
             host.noop(f'no existing mapping for \'{target}\'')
 
 
-@operation
+@operation(
+    pipeline_facts={"seboolean": "boolean"},
+)
 def se_boolean(boolean, state, persistent=False):
     """
     Set the SELinux boolean to the desired state.
@@ -112,7 +118,9 @@ def se_boolean(boolean, state, persistent=False):
 
 
 
-@operation
+@operation(
+    pipeline_facts={"seport": "protocol, port"},
+)
 def se_port(protocol, port, se_type=None, present=True):
     """
     Set the SELinux type for the specified protocol and port.
