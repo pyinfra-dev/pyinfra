@@ -132,7 +132,7 @@ config = Config(
 
 # Initialize the State object & Connect
 state = State(inventory, config)
-connect_all(state)
+state.connect_all()
 
 # Add operations to state
 add_op(
@@ -149,13 +149,15 @@ run_ops(state)
 
 # Get facts for all hosts
 facts = get_facts(state, LinuxName)
+
+state.disconnect_all()
 ```
 
 ## Developing
 
-Create a new fork: you can do this straight from Github.
-Clone the forked repository with `git clone https://github.com/<you_user_name>/pyinfra.git`
-Set the original repo as upstram with `git remote add upstream https://github.com/Fizzadar/pyinfra`
-Insall the necessary packages `python3 setup.py install`
-Create your new branch `git checkout -b my_new_feature`
-Test everything is working: `pytest`
+- Create a new fork: you can do this straight from Github.
+- Clone the forked repository with `git clone https://github.com/<you_user_name>/pyinfra.git`
+- Set the original repo as upstram with `git remote add upstream https://github.com/Fizzadar/pyinfra`
+- Insall the necessary packages `python3 setup.py install`
+- Create your new branch `git checkout -b my_new_feature`
+- Test everything is working: `pytest`

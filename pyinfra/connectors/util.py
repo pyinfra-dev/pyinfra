@@ -1,7 +1,14 @@
 import shlex
+import typing as t
 from getpass import getpass
 from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
+
+from pyinfra.api.command import PyinfraCommand
+
+if t.TYPE_CHECKING:
+    from pyinfra.api.state import State
+    from pyinfra.api.inventory import Host
 
 import click
 import gevent
@@ -25,7 +32,7 @@ echo "$temp"
 )
 
 
-def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
+def read_buffer(type_, io, output_queue, print_output: bool = False, print_func=None):
     """
     Reads a file-like buffer object into lines and optionally prints the output.
     """
@@ -48,7 +55,7 @@ def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
             _print(line)
 
 
-def execute_command_with_sudo_retry(host, command_kwargs, execute_command):
+def execute_command_with_sudo_retry(host: "Host", command_kwargs, execute_command: t.Callable[..., tuple[t.Any, ...]]):
     return_code, combined_output = execute_command()
 
     if return_code != 0 and combined_output:
@@ -64,7 +71,7 @@ def run_local_process(
     command,
     stdin=None,
     timeout=None,
-    print_output=False,
+    print_output: bool = False,
     print_prefix=None,
 ):
     process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
@@ -167,7 +174,7 @@ def write_stdin(stdin, buffer):
     buffer.close()
 
 
-def _get_sudo_password(host, use_sudo_password):
+def _get_sudo_password(host: "Host", use_sudo_password):
     if not host.connector_data.get("sudo_askpass_path"):
         _, stdout, _ = host.run_shell_command(SUDO_ASKPASS_COMMAND)
         host.connector_data["sudo_askpass_path"] = shlex.quote(stdout[0])
@@ -186,7 +193,7 @@ def _get_sudo_password(host, use_sudo_password):
     return shlex.quote(sudo_password)
 
 
-def remove_any_sudo_askpass_file(host):
+def remove_any_sudo_askpass_file(host: "Host"):
     sudo_askpass_path = host.connector_data.get("sudo_askpass_path")
     if sudo_askpass_path:
         host.run_shell_command("rm -f {0}".format(sudo_askpass_path))
@@ -204,7 +211,7 @@ def _show_use_su_login_warning():
     )
 
 
-def make_unix_command_for_host(state, host, *command_args, **command_kwargs):
+def make_unix_command_for_host(state: "State", host: "Host", *command_args, **command_kwargs):
     use_sudo_password = command_kwargs.pop("use_sudo_password", None)
     if use_sudo_password:
         command_kwargs["sudo_password"] = _get_sudo_password(host, use_sudo_password)
@@ -217,21 +224,21 @@ def make_unix_command(
     command,
     env=None,
     chdir=None,
-    shell_executable="sh",
+    shell_executable: str ="sh",
     # Su config
     su_user=None,
-    use_su_login=False,
+    use_su_login: bool = False,
     su_shell=None,
-    preserve_su_env=False,
+    preserve_su_env: bool = False,
     # Sudo config
-    sudo=False,
+    sudo: bool = False,
     sudo_user=None,
-    use_sudo_login=False,
-    sudo_password=False,
+    use_sudo_login: bool = False,
+    sudo_password: bool = False,
     sudo_askpass_path=None,
-    preserve_sudo_env=False,
+    preserve_sudo_env: bool = False,
     # Doas config
-    doas=False,
+    doas: bool = False, 
     doas_user=None,
 ):
     """
@@ -251,7 +258,7 @@ def make_unix_command(
     if chdir:
         command = StringCommand("cd", chdir, "&&", command)
 
-    command_bits = []
+    command_bits: list["PyinfraCommand" | "QuoteString" | str] = []
 
     if doas:
         command_bits.extend(["doas", "-n"])

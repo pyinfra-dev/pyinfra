@@ -156,7 +156,7 @@ class State(object):
         # Actually initialise the state object
         #
 
-        self.callback_handlers = []
+        self.callback_handlers: list[BaseStateCallback] = []
 
         # Setup greenlet pools
         self.pool = Pool(config.PARALLEL)
@@ -167,18 +167,18 @@ class State(object):
         self.sftp_connections = {}
 
         # Private keys
-        self.private_keys = {}
+        self.private_keys: dict[str, t.Any] = {}
 
         # Assign inventory/config
         self.inventory = inventory
         self.config = config
 
         # Hosts we've activated at any time
-        self.activated_hosts = set()
+        self.activated_hosts: t.Set["Host"] = set()
         # Active hosts that *haven't* failed yet
-        self.active_hosts = set()
+        self.active_hosts: t.Set["Host"] = set()
         # Hosts that have failed
-        self.failed_hosts = set()
+        self.failed_hosts: t.Set["Host"] = set()
 
         # Limit hosts changes dynamically to limit operations to a subset of hosts
         self.limit_hosts = initial_limit
@@ -188,13 +188,13 @@ class State(object):
         self.ops_run = set()  # list of ops which have been started/run
 
         # Op dict for each host
-        self.ops_hosts = {host: {} for host in inventory}
+        self.ops_hosts: dict["Host", t.Any] = {host: {} for host in inventory}
 
         # Facts dict for each host
-        self.facts = {host: {} for host in inventory}
+        self.facts: dict["Host", t.Any] = {host: {} for host in inventory}
 
         # Meta dict for each host
-        self.host_meta = {
+        self.host_meta: dict["Host", t.Any] = {
             host: {
                 "ops": 0,  # one function call in a deploy file
                 "ops_change": 0,
@@ -303,7 +303,7 @@ class State(object):
         self.activated_hosts.add(host)
         self.active_hosts.add(host)
 
-    def fail_hosts(self, hosts_to_fail, activated_count=None):
+    def fail_hosts(self, hosts_to_fail: list["Host"], activated_count: t.Optional[int] = None):
         """
         Flag a ``set`` of hosts as failed, error for ``config.FAIL_PERCENT``.
         """
@@ -404,5 +404,8 @@ class State(object):
         self.fail_hosts(failed_hosts, activated_count=len(hosts))
 
     def disconnect_all(self):
-        for host in self.activated_hosts:  # only hosts we connected to please!
-            host.disconnect()  # normally a noop
+        """
+        Disconnect from all activated hosts on a given state.
+        """        
+        for host in self.activated_hosts:
+            host.disconnect()

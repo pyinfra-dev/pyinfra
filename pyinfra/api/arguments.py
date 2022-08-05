@@ -1,8 +1,15 @@
+from __future__ import annotations
+
+import typing as t
 from typing import Callable, Iterable, Mapping, Union
 
 import pyinfra
 from pyinfra import context, logger
+from pyinfra.api.config import Config
 from pyinfra.api.state import State
+
+if t.TYPE_CHECKING:
+    from pyinfra.api.inventory import Host
 
 from .util import get_call_location, memoize
 
@@ -69,7 +76,7 @@ auth_kwargs = {
 }
 
 
-def generate_env(config, value):
+def generate_env(config: "Config", value):
     env = config.ENV.copy()
 
     # TODO: this is to protect against host.data.env being a string or similar,
@@ -219,7 +226,7 @@ def show_legacy_argument_host_data_warning(key):
     )
 
 
-def pop_global_arguments(kwargs, state=None, host=None, keys_to_check=None):
+def pop_global_arguments(kwargs, state: t.Optional["State"] = None, host: t.Optional["Host"] = None, keys_to_check=None):
     """
     Pop and return operation global keyword arguments, in preferred order:
 

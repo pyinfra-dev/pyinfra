@@ -98,6 +98,32 @@ class Config(object):
     state = None
 
     def __init__(self, **kwargs):
+        """
+        Initialise the config with the given kwargs.
+        Has pre defined attributes to help with autocomplete & type checking.
+        """        
+        self.FAIL_PERCENT = None
+        self.CONNECT_TIMEOUT: int = 10
+        self.TEMP_DIR = None
+        self.PARALLEL = None
+        self.REQUIRE_PYINFRA_VERSION = None
+        self.REQUIRE_PACKAGES = None
+        self.SU_USER = None
+        self.USE_SU_LOGIN: bool = False
+        self.SU_SHELL = None
+        self.PRESERVE_SU_ENV: bool = False
+        self.SUDO: bool = False
+        self.SUDO_USER = None
+        self.PRESERVE_SUDO_ENV: bool = False
+        self.USE_SUDO_LOGIN: bool = False
+        self.USE_SUDO_PASSWORD: bool = False
+        self.DOAS: bool = False
+        self.DOAS_USER = None
+        self.DOAS = None
+        self.DOAS_USER = None
+        self.IGNORE_ERRORS: bool = False
+        self.SHELL = None
+
         # Always apply some env
         env = kwargs.pop("ENV", {})
         self.ENV = env

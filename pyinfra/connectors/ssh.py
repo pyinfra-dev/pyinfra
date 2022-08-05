@@ -8,7 +8,7 @@ are identical:
     pyinfra my-host.net ...
     pyinfra @ssh/my-host.net ...
 """
-
+import typing as t
 from distutils.spawn import find_executable
 from getpass import getpass
 from os import path
@@ -32,6 +32,11 @@ from pyinfra import logger
 from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.connectors import BaseConnectorMeta
 from pyinfra.api.exceptions import ConnectError, PyinfraError
+
+if t.TYPE_CHECKING:
+    from pyinfra.api.state import State
+    from pyinfra.api.inventory import Host
+
 from pyinfra.api.util import get_file_io, memoize
 
 from .sshuserclient import SSHClient
@@ -74,16 +79,16 @@ class Meta(BaseConnectorMeta):
 DATA_KEYS = Meta.keys()
 
 
-def make_names_data(hostname):
+def make_names_data(hostname: str):
     yield "@ssh/{0}".format(hostname), {DATA_KEYS.hostname: hostname}, []
 
 
-def _raise_connect_error(host, message, data):
+def _raise_connect_error(host: "Host", message, data):
     message = "{0} ({1})".format(message, data)
     raise ConnectError(message)
 
 
-def _load_private_key_file(filename, key_filename, key_password):
+def _load_private_key_file(filename: str, key_filename: str, key_password):
     exception = PyinfraError("Invalid key: {0}".format(filename))
 
     for key_cls in (RSAKey, DSSKey, ECDSAKey, Ed25519Key):
@@ -123,7 +128,7 @@ def _load_private_key_file(filename, key_filename, key_password):
     raise exception
 
 
-def _get_private_key(state, key_filename, key_password):
+def _get_private_key(state: "State", key_filename: str, key_password):
     if key_filename in state.private_keys:
         return state.private_keys[key_filename]
 
@@ -170,7 +175,7 @@ def _get_private_key(state, key_filename, key_password):
     return key
 
 
-def _make_paramiko_kwargs(state, host):
+def _make_paramiko_kwargs(state: "State", host: "Host"):
     kwargs = {
         "allow_agent": False,
         "look_for_keys": False,
@@ -214,7 +219,7 @@ def _make_paramiko_kwargs(state, host):
     return kwargs
 
 
-def connect(state, host):
+def connect(state: "State", host: "Host"):
     """
     Connect to a single host. Returns the SSH client if succesful. Stateless by
     design so can be run in parallel.
@@ -279,16 +284,16 @@ def connect(state, host):
 
 
 def run_shell_command(
-    state,
-    host,
-    command,
-    get_pty=False,
-    timeout=None,
+    state: "State",
+    host: "Host",
+    command: str,
+    get_pty: bool = False,
+    timeout: t.Optional[int] = None,
     stdin=None,
     success_exit_codes=None,
-    print_output=False,
-    print_input=False,
-    return_combined_output=False,
+    print_output: bool = False,
+    print_input: bool = False,
+    return_combined_output: bool = False,
     **command_kwargs,
 ):
     """
