@@ -52,7 +52,7 @@ def print_state_facts(state):
 
 
 def print_state_operations(state):
-    state_ops = {host: ops for host, ops in state.ops.items() if state.is_host_in_limit(host)}
+    state_ops = {host: ops for host, ops in state.ops_hosts.items() if state.is_host_in_limit(host)}
 
     click.echo(err=True)
     click.echo("--> Operations:", err=True)
@@ -66,7 +66,7 @@ def print_state_operations(state):
     click.echo(err=True)
     for op_hash in state.get_op_order():
         meta = state.op_hash_map[op_hash]
-        hosts = set(host for host, operations in state.ops.items() if op_hash in operations)
+        hosts = set(host for host, operations in state.ops_hosts.items() if op_hash in operations)
 
         click.echo(
             "    {0} (names={1}, hosts={2})".format(

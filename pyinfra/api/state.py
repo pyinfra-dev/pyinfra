@@ -187,7 +187,7 @@ class State(object):
         self.ops_run = set()  # list of ops which have been started/run
 
         # Op dict for each host
-        self.ops = {host: {} for host in inventory}
+        self.ops_hosts = {host: {} for host in inventory}
 
         # Facts dict for each host
         self.facts = {host: {} for host in inventory}
@@ -227,7 +227,7 @@ class State(object):
     def to_dict(self):
         return {
             "op_order": self.get_op_order(),
-            "ops": self.ops,
+            "ops": self.ops_hosts,
             "facts": self.facts,
             "meta": self.host_meta,
             "results": self.results,
@@ -285,10 +285,10 @@ class State(object):
         return self.op_hash_map[op_hash]
 
     def get_op_data(self, host, op_hash):
-        return self.ops[host][op_hash]
+        return self.ops_hosts[host][op_hash]
 
     def set_op_data(self, host, op_hash, op_data):
-        self.ops[host][op_hash] = op_data
+        self.ops_hosts[host][op_hash] = op_data
 
     def activate_host(self, host):
         """

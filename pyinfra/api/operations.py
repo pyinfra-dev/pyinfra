@@ -59,7 +59,7 @@ def _run_shell_command(
 def run_host_op(state, host, op_hash):
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
-    if op_hash not in state.ops[host]:
+    if op_hash not in state.ops_hosts[host]:
         logger.info("{0}{1}".format(host.print_prefix, click.style("Skipped", "blue")))
         return True
 

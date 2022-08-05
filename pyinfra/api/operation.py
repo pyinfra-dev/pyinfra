@@ -206,7 +206,7 @@ def operation(
         # Run once and we've already added meta for this op? Stop here.
         if op_hash_map["run_once"]:
             has_run = False
-            for ops in state.ops.values():
+            for ops in state.ops_hosts.values():
                 if op_hash in ops:
                     has_run = True
                     break

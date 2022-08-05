@@ -21,7 +21,7 @@ class TestCliDeploy(PatchSSHTestCase):
 
         # Check every operation had commands/changes - this ensures that each
         # combo (add/remove/add) always had changes.
-        for host, ops in state.ops.items():
+        for host, ops in state.ops_hosts.items():
             for _, op in ops.items():
                 assert len(op["commands"]) > 0
 

@@ -80,20 +80,20 @@ class TestOperationsApi(PatchSSHTestCase):
         assert state.op_hash_map[first_op_hash]["names"] == {"Files/File"}
 
         # Ensure the commands
-        assert state.ops[somehost][first_op_hash]["commands"] == [
+        assert state.ops_hosts[somehost][first_op_hash]["commands"] == [
             StringCommand("touch /var/log/pyinfra.log"),
             StringCommand("chmod 644 /var/log/pyinfra.log"),
             StringCommand("chown pyinfra:pyinfra /var/log/pyinfra.log"),
         ]
 
         # Ensure the global kwargs (same for both hosts)
-        somehost_global_kwargs = state.ops[somehost][first_op_hash]["global_kwargs"]
+        somehost_global_kwargs = state.ops_hosts[somehost][first_op_hash]["global_kwargs"]
         assert somehost_global_kwargs["sudo"] is True
         assert somehost_global_kwargs["sudo_user"] == "test_sudo"
         assert somehost_global_kwargs["su_user"] == "test_su"
         assert somehost_global_kwargs["ignore_errors"] is True
 
-        anotherhost_global_kwargs = state.ops[anotherhost][first_op_hash]["global_kwargs"]
+        anotherhost_global_kwargs = state.ops_hosts[anotherhost][first_op_hash]["global_kwargs"]
         assert anotherhost_global_kwargs["sudo"] is True
         assert anotherhost_global_kwargs["sudo_user"] == "test_sudo"
         assert anotherhost_global_kwargs["su_user"] == "test_su"
@@ -191,17 +191,17 @@ class TestOperationsApi(PatchSSHTestCase):
         anotherhost = inventory.get_host("anotherhost")
 
         # Ensure first op has the right (upload) command
-        assert state.ops[somehost][first_op_hash]["commands"] == [
+        assert state.ops_hosts[somehost][first_op_hash]["commands"] == [
             StringCommand("mkdir -p /home/vagrant"),
             FileUploadCommand("files/file.txt", "/home/vagrant/file.txt"),
         ]
 
         # Ensure second op has sudo/sudo_user
-        assert state.ops[somehost][second_op_hash]["global_kwargs"]["sudo"] is True
-        assert state.ops[somehost][second_op_hash]["global_kwargs"]["sudo_user"] == "pyinfra"
+        assert state.ops_hosts[somehost][second_op_hash]["global_kwargs"]["sudo"] is True
+        assert state.ops_hosts[somehost][second_op_hash]["global_kwargs"]["sudo_user"] == "pyinfra"
 
         # Ensure third has su_user
-        assert state.ops[somehost][op_order[2]]["global_kwargs"]["su_user"] == "pyinfra"
+        assert state.ops_hosts[somehost][op_order[2]]["global_kwargs"]["su_user"] == "pyinfra"
 
         # Check run ops works
         run_ops(state)
@@ -242,7 +242,7 @@ class TestOperationsApi(PatchSSHTestCase):
         anotherhost = inventory.get_host("anotherhost")
 
         # Ensure first op has the right (upload) command
-        assert state.ops[somehost][first_op_hash]["commands"] == [
+        assert state.ops_hosts[somehost][first_op_hash]["commands"] == [
             FileDownloadCommand("/home/vagrant/file.txt", "files/file.txt"),
         ]
 
@@ -292,7 +292,7 @@ class TestOperationsApi(PatchSSHTestCase):
         anotherhost = inventory.get_host("anotherhost")
 
         # Ensure between the two hosts we only run the one op
-        assert len(state.ops[somehost]) + len(state.ops[anotherhost]) == 1
+        assert len(state.ops_hosts[somehost]) + len(state.ops_hosts[anotherhost]) == 1
 
         # Check run works
         run_ops(state)
@@ -503,8 +503,8 @@ class TestOperationOrdering(PatchSSHTestCase):
         assert op_order[2] == second_context_hash
 
         # Ensure somehost has two ops and anotherhost only has the one
-        assert len(state.ops[inventory.get_host("somehost")]) == 2
-        assert len(state.ops[inventory.get_host("anotherhost")]) == 2
+        assert len(state.ops_hosts[inventory.get_host("somehost")]) == 2
+        assert len(state.ops_hosts[inventory.get_host("anotherhost")]) == 2
 
     # In API mode, pyinfra *overrides* the line numbers such that whenever an
     # operation or deploy is added it is simply appended. This makes sense as
