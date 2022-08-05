@@ -21,6 +21,19 @@ class Inventory(object):
     Represents a collection of target hosts. Stores and provides access to group data,
     host data and default data for these hosts.
 
+    Example::
+
+        ..code-block:: python
+
+            >>> host_details = {
+                    "ssh_hostname": "localhost",
+                    "ssh_user": "vagrant",
+                    "ssh_port": "2222",
+                    "ssh_key": "/path/to/my/ssh_key_file"
+                }
+            >>> single_host = (['myhostname'], host_details)
+            >>> inventory = Inventory(single host)
+
     Args:
         names_data: tuple of ``(names, data)``
         override_data: dictionary of data overrides

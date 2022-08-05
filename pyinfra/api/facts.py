@@ -5,6 +5,7 @@ for a deploy.
 """
 
 import re
+import typing as t
 from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
 from typing import Optional, Type
@@ -16,6 +17,11 @@ from paramiko import SSHException
 from pyinfra import logger
 from pyinfra.api import StringCommand
 from pyinfra.api.arguments import pop_global_arguments
+
+if t.TYPE_CHECKING:
+    from pyinfra.api.host import Host
+    from pyinfra.api.state import State
+
 from pyinfra.api.util import (
     get_kwargs_str,
     log_error_or_warning,
@@ -98,7 +104,29 @@ def _get_executor_kwargs(state, host, override_kwargs=None, override_kwarg_keys=
     }
 
 
-def get_facts(state, *args, **kwargs):
+def get_facts(state: "State", *args, **kwargs):
+    """Get a set of Facts for a specific state.
+    Accepts the state or the host as the first argument, and the Fact class as the second.
+    Example::
+
+        ..codeblock:: python
+
+            >>> facts = get_facts(state, HostFact)
+
+    Args:
+        state (State): The State Object
+        host (Host): The Host Object
+        cls (FactBase): A Fact class that inherits from FactBase
+        args (_type_, optional): _description_. Defaults to None.
+        kwargs (_type_, optional): _description_. Defaults to None.
+        ensure_hosts (_type_, optional): _description_. Defaults to None.
+        apply_failed_hosts (bool, optional): _description_. Defaults to True.
+        fact_hash (_type_, optional): _description_. Defaults to None.
+        use_cache (bool, optional): _description_. Defaults to True.
+
+    Returns:
+        _type_: _description_
+    """
     def get_fact_with_context(state, host, *args, **kwargs):
         with ctx_state.use(state):
             with ctx_host.use(host):
@@ -121,16 +149,33 @@ def get_facts(state, *args, **kwargs):
 
 
 def get_fact(
-    state,
-    host,
-    cls,
-    args=None,
-    kwargs=None,
-    ensure_hosts=None,
-    apply_failed_hosts=True,
-    fact_hash=None,
-    use_cache=True,
+    state: "State",
+    host: "Host",
+    cls: t.Type[FactBase],
+    args = None,
+    kwargs = None,
+    ensure_hosts = None,
+    apply_failed_hosts: bool = True,
+    fact_hash = None,
+    use_cache: bool = True,
 ):
+    """
+    Get Fact for a specific state / host.
+
+    Args:
+        state (State): The State Object
+        host (Host): The Host Object
+        cls (FactBase): A Fact class that inherits from FactBase
+        args (_type_, optional): _description_. Defaults to None.
+        kwargs (_type_, optional): _description_. Defaults to None.
+        ensure_hosts (_type_, optional): _description_. Defaults to None.
+        apply_failed_hosts (bool, optional): _description_. Defaults to True.
+        fact_hash (_type_, optional): _description_. Defaults to None.
+        use_cache (bool, optional): _description_. Defaults to True.
+
+    Returns:
+        _type_: _description_
+    """
     if issubclass(cls, ShortFactBase):
         return get_short_facts(
             state,

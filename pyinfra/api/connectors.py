@@ -35,11 +35,12 @@ def get_all_connectors():
 
 
 def get_execution_connectors():
-    return {
+    all_conectors = {
         connector: connector_mod
         for connector, connector_mod in get_all_connectors().items()
         if connector_mod.Meta.handles_execution
     }
+    return all_conectors
 
 
 def get_execution_connector(name):

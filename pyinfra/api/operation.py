@@ -10,6 +10,7 @@ from types import FunctionType
 
 import pyinfra
 from pyinfra import context, logger
+from pyinfra.api.state import State
 from pyinfra.context import ctx_host, ctx_state
 
 from .arguments import get_execution_kwarg_keys, pop_global_arguments
@@ -111,16 +112,6 @@ def add_op(state, op_func, *args, **kwargs):
     return results
 
 
-@memoize
-def show_state_host_arguments_warning(call_location):
-    logger.warning(
-        (
-            "{0}:\n\tLegacy operation function detected! Operations should no longer define "
-            "`state` and `host` arguments."
-        ).format(call_location),
-    )
-
-
 def operation(
     func=None,
     pipeline_facts=None,
@@ -180,74 +171,9 @@ def operation(
 
         # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
         # and host are included as kwargs.
-        if func.is_legacy:
-            if "state" not in kwargs:
-                kwargs["state"] = state
-            if "host" not in kwargs:
-                kwargs["host"] = host
-        # If not legacy, pop off any state/host kwargs that may come from legacy @deploy functions
-        else:
-            kwargs.pop("state", None)
-            kwargs.pop("host", None)
-
-        # Name the operation
-        name = global_kwargs.get("name")
-        add_args = False
-
-        if name:
-            names = {name}
-
-        # Generate an operation name if needed (Module/Operation format)
-        else:
-            add_args = True
-
-            if func.__module__:
-                module_bits = func.__module__.split(".")
-                module_name = module_bits[-1]
-                name = "{0}/{1}".format(module_name.title(), func.__name__.title())
-            else:
-                name = func.__name__
-
-            names = {name}
-
-        if host.current_deploy_name:
-            names = {"{0} | {1}".format(host.current_deploy_name, name) for name in names}
-
-        # Operation order is used to tie-break available nodes in the operation DAG, in CLI mode
-        # we use stack call order so this matches as defined by the user deploy code.
-        if pyinfra.is_cli:
-            op_order = get_operation_order_from_stack(state)
-        # In API mode we just increase the order for each host
-        else:
-            op_order = [len(host.op_hash_order)]
-
-        # Make a hash from the call stack lines
-        op_hash = make_hash(op_order)
-
-        # Avoid adding duplicates! This happens if an operation is called within
-        # a loop - such that the filename/lineno/code _are_ the same, but the
-        # arguments might be different. We just append an increasing number to
-        # the op hash and also handle below with the op order.
-        duplicate_op_count = 0
-        while op_hash in host.op_hash_order:
-            logger.debug("Duplicate hash ({0}) detected!".format(op_hash))
-            op_hash = "{0}-{1}".format(op_hash, duplicate_op_count)
-            duplicate_op_count += 1
-
-        host.op_hash_order.append(op_hash)
-
-        if duplicate_op_count:
-            op_order.append(duplicate_op_count)
-
-        op_order = tuple(op_order)
-
-        logger.debug(
-            "Adding operation, {0}, opOrder={1}, opHash={2}".format(
-                names,
-                op_order,
-                op_hash,
-            ),
-        )
+        _solve_legacy_operation_arguments(func, state, host, kwargs)
+        names, add_args = _generate_operation_name(func, host, kwargs, global_kwargs)
+        op_order, op_hash = _solve_operation_consistency(names, state, host)
 
         # Ensure shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(
@@ -360,3 +286,90 @@ def operation(
 
     decorated_func._pyinfra_op = func
     return decorated_func
+
+
+@memoize
+def show_state_host_arguments_warning(call_location):
+    logger.warning(
+        (
+            "{0}:\n\tLegacy operation function detected! Operations should no longer define "
+            "`state` and `host` arguments."
+        ).format(call_location),
+    )
+
+
+def _solve_legacy_operation_arguments(op_func, state: "State", host: "Host", kwargs):
+    """
+    Solve legacy operation arguments.
+    """
+    
+    # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
+    # and host are included as kwargs.
+
+    # Legacy operation arguments
+    if op_func.is_legacy:
+        if "state" not in kwargs:
+            kwargs["state"] = state
+        if "host" not in kwargs:
+            kwargs["host"] = host
+    # If not legacy, pop off any state/host kwargs that may come from legacy @deploy functions
+    else:
+        kwargs.pop("state", None)
+        kwargs.pop("host", None)
+
+    return None
+
+
+def _generate_operation_name(func, host, kwargs, global_kwargs):
+    # Generate an operation name if needed (Module/Operation format)
+    name = global_kwargs.get("name")
+    add_args = False
+    if name:
+        names = {name}
+    else:
+        add_args = True
+
+        if func.__module__:
+            module_bits = func.__module__.split(".")
+            module_name = module_bits[-1]
+            name = "{0}/{1}".format(module_name.title(), func.__name__.title())
+        else:
+            name = func.__name__
+
+        names = {name}
+
+    if host.current_deploy_name:
+        names = {"{0} | {1}".format(host.current_deploy_name, name) for name in names}
+
+    return names, add_args
+
+
+def _solve_operation_consistency(names, state, host):
+    # Operation order is used to tie-break available nodes in the operation DAG, in CLI mode
+    # we use stack call order so this matches as defined by the user deploy code.
+    if pyinfra.is_cli:
+        op_order = get_operation_order_from_stack(state)
+    # In API mode we just increase the order for each host
+    else:
+        op_order = [len(host.op_hash_order)]
+
+    # Make a hash from the call stack lines
+    op_hash = make_hash(op_order)
+
+    # Avoid adding duplicates! This happens if an operation is called within
+    # a loop - such that the filename/lineno/code _are_ the same, but the
+    # arguments might be different. We just append an increasing number to
+    # the op hash and also handle below with the op order.
+    duplicate_op_count = 0
+    while op_hash in host.op_hash_order:
+        logger.debug("Duplicate hash ({0}) detected!".format(op_hash))
+        op_hash = "{0}-{1}".format(op_hash, duplicate_op_count)
+        duplicate_op_count += 1
+
+    host.op_hash_order.append(op_hash)
+    if duplicate_op_count:
+        op_order.append(duplicate_op_count)
+
+    op_order = tuple(op_order)
+    logger.debug(f"Adding operation, {names}, opOrder={op_order}, opHash={op_hash}")
+    return op_order, op_hash
