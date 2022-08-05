@@ -66,7 +66,7 @@ def run_host_op(state, host, op_hash):
     op_data = state.get_op_data(host, op_hash)
     global_kwargs = op_data["global_kwargs"]
 
-    op_hash_map = state.get_op_meta(op_hash)
+    op_hash_map = state.get_op_hash_map(op_hash)
 
     ignore_errors = global_kwargs["ignore_errors"]
     continue_on_error = global_kwargs["continue_on_error"]
@@ -292,7 +292,7 @@ def _run_host_ops(state, host, progress=None):
     logger.debug("Running all ops on {0}".format(host))
 
     for op_hash in state.get_op_order():
-        op_hash_map = state.get_op_meta(op_hash)
+        op_hash_map = state.get_op_hash_map(op_hash)
         log_operation_start(op_hash_map)
 
         result = run_host_op(state, host, op_hash)
@@ -358,7 +358,7 @@ def _run_single_op(state, op_hash):
 
     state.trigger_callbacks("operation_start", op_hash)
 
-    op_hash_map = state.get_op_meta(op_hash)
+    op_hash_map = state.get_op_hash_map(op_hash)
     log_operation_start(op_hash_map)
 
     failed_hosts = set()

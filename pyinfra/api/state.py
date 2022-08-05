@@ -281,7 +281,7 @@ class State(object):
 
         return final_op_order
 
-    def get_op_meta(self, op_hash):
+    def get_op_hash_map(self, op_hash):
         return self.op_hash_map[op_hash]
 
     def get_op_data(self, host, op_hash):
