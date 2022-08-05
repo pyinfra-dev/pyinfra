@@ -1,9 +1,14 @@
+import typing as t
 from contextlib import contextmanager
 
 import click
 from gevent.lock import BoundedSemaphore
 
 from pyinfra import logger
+
+if t.TYPE_CHECKING:
+    from pyinfra.api.inventory import Inventory
+
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 
 from .connectors import get_execution_connector
@@ -97,8 +102,8 @@ class Host(object):
 
     def __init__(
         self,
-        name,
-        inventory,
+        name: str,
+        inventory: "Inventory",
         groups,
         executor=get_execution_connector("ssh"),
     ):

@@ -1,9 +1,16 @@
+from __future__ import annotations
+
+import typing as t
 from contextlib import contextmanager
 from graphlib import TopologicalSorter
 from multiprocessing import cpu_count
+from typing import Optional
 from uuid import uuid4
 
 from gevent.pool import Pool
+
+if t.TYPE_CHECKING:
+    from pyinfra.api.inventory import Inventory
 
 from pyinfra import logger
 
@@ -78,10 +85,10 @@ class State(object):
     initialised = False
 
     # A pyinfra.api.Inventory which stores all our pyinfra.api.Host's
-    inventory = None
+    inventory: "Inventory" = None
 
     # A pyinfra.api.Config
-    config = None
+    config: "Config" = None
 
     # Main gevent pool
     pool = None
@@ -102,7 +109,13 @@ class State(object):
     current_exec_filename = None
     current_op_file_number = 0
 
-    def __init__(self, inventory=None, config=None, **kwargs):
+    def __init__(self, inventory: Optional["Inventory"] =None, config: Optional["Config"] = None, **kwargs):
+        """Initializes the state, the main Pyinfra
+
+        Args:
+            inventory (Optional[Inventory], optional): The inventory. Defaults to None.
+            config (Optional[Config], optional): The config object. Defaults to None.
+        """        
         if inventory:
             self.init(inventory, config, **kwargs)
 

@@ -31,12 +31,12 @@
 
 pyinfra automates/provisions/manages/deploys infrastructure. It can be used for ad-hoc command execution, service deployment, configuration management and more. Design features include:
 
-+ 🚀 **Super fast** execution over thousands of hosts with predictable performance.
-+ 🚨 **Instant debugging** with stdout & stderr output on error or as required (`-v`|`-vv`|`-vvv`).
-+ 📦 **Extendable** with _any_ Python package as configured & written in standard Python.
-+ 💻 **Agentless execution** against SSH/Docker/subprocess/winrm hosts.
-+ ❗️ **Two stage process** that enables `--dry` runs before executing any changes.
-+ 🔌 **Integrated** with Docker, Vagrant/Mech & Ansible out of the box.
+- 🚀 **Super fast** execution over thousands of hosts with predictable performance.
+- 🚨 **Instant debugging** with stdout & stderr output on error or as required (`-v`|`-vv`|`-vvv`).
+- 📦 **Extendable** with _any_ Python package as configured & written in standard Python.
+- 💻 **Agentless execution** against SSH/Docker/subprocess/winrm hosts.
+- ❗️ **Two stage process** that enables `--dry` runs before executing any changes.
+- 🔌 **Integrated** with Docker, Vagrant/Mech & Ansible out of the box.
 
 When you run pyinfra you'll see something like ([non animated version](https://pyinfra.com/static/example_deploy.png)):
 
@@ -72,7 +72,6 @@ pyinfra @docker/ubuntu apt.packages iftop update=true _sudo=true
 
 Which can then be saved as a Python file like `deploy.py`:
 
-
 ```py
 from pyinfra.operations import apt
 
@@ -90,7 +89,6 @@ The hosts can also be saved in a file, for example `inventory.py`:
 targets = ["@docker/ubuntu", "my-test-server.net"]
 ```
 
-
 And executed together:
 
 ```sh
@@ -100,3 +98,64 @@ pyinfra inventory.py deploy.py
 Now you know the building blocks of pyinfra! By combining inventory, operations and Python code you can deploy anything.
 
 See the more detailed [getting started](https://docs.pyinfra.com/page/getting-started.html) or [using operations](https://docs.pyinfra.com/page/using-operations.html) guides. See how to use [inventory & data](https://docs.pyinfra.com/page/inventory-data.html), [global arguments](https://docs.pyinfra.com/page/arguments.html) and [the CLI](https://docs.pyinfra.com/page/cli.html) or check out the [documented examples](https://docs.pyinfra.com/page/examples.html).
+
+## Using Pyinfra Programtically
+
+Pyinfra can also be used directly from within a Python a application, without the need of the CLI.
+Quick example shown below:
+
+```python
+# Basic imports
+from pyinfra.api import Config, Inventory, State
+from pyinfra.api.operation import add_op
+from pyinfra.api.operations import run_ops
+from pyinfra.api.connect import connect_all
+from pyinfra.api.facts import get_facts
+
+
+# Build your inventory:
+inventory = Inventory(
+    (["myhostname"], {
+            "ssh_hostname": "localhost",
+            "ssh_user": "vagrant",
+            "ssh_port": "2222",
+            "ssh_key": "/path/to/ssh_key/file"
+        })
+)
+
+# Initialize the configuration
+config = Config(
+    FAIL_PERCENT=81,
+    CONNECT_TIMEOUT=5
+)
+
+
+# Initialize the State object & Connect
+state = State(inventory, config)
+connect_all(state)
+
+# Add operations to state
+add_op(
+    state,
+    server.user,
+    user='vagrant',
+    home='/home/vagrant',
+    shell='/bin/bash',
+    sudo=True
+)
+
+# Run all state operations
+run_ops(state)
+
+# Get facts for all hosts
+facts = get_facts(state, LinuxName)
+```
+
+## Developing
+
+Create a new fork: you can do this straight from Github.
+Clone the forked repository with `git clone https://github.com/<you_user_name>/pyinfra.git`
+Set the original repo as upstram with `git remote add upstream https://github.com/Fizzadar/pyinfra`
+Insall the necessary packages `python3 setup.py install`
+Create your new branch `git checkout -b my_new_feature`
+Test everything is working: `pytest`
