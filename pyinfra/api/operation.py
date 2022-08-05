@@ -152,8 +152,6 @@ def operation(
         host = context.host
 
         # Configure operation
-        #
-
         # Get the meta kwargs (globals that apply to all hosts)
         global_kwargs, global_kwarg_keys = pop_global_arguments(kwargs)
 
@@ -172,6 +170,9 @@ def operation(
         # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
         # and host are included as kwargs.
         _solve_legacy_operation_arguments(func, state, host, kwargs)
+
+        # Generates the operation unique name and hash
+        # and unsures unique execution through the hash and the operation order
         names, add_args = _generate_operation_name(func, host, kwargs, global_kwargs)
         op_order, op_hash = _solve_operation_consistency(names, state, host)
 
@@ -199,25 +200,9 @@ def operation(
 
         # Attach normal args, if we're auto-naming this operation
         if add_args:
-            for arg in args:
-                if isinstance(arg, FunctionType):
-                    arg = arg.__name__
-
-                if arg not in op_meta["args"]:
-                    op_meta["args"].append(arg)
-
-            # Attach keyword args
-            for key, value in kwargs.items():
-                if isinstance(value, FunctionType):
-                    value = value.__name__
-
-                arg = "=".join((str(key), str(value)))
-                if arg not in op_meta["args"]:
-                    op_meta["args"].append(arg)
+            args, op_meta, kwargs = _add_arguments(args, op_meta, kwargs)
 
         # Check if we're actually running the operation on this host
-        #
-
         # Run once and we've already added meta for this op? Stop here.
         if op_meta["run_once"]:
             has_run = False
@@ -229,13 +214,12 @@ def operation(
             if has_run:
                 return OperationMeta(op_hash)
 
-        # "Run" operation
-        #
-
         # Otherwise, flag as in-op and run it to get the commands
+        # Add host-specific operation data to state
         host.in_op = True
         host.current_op_hash = op_hash
         host.current_op_global_kwargs = global_kwargs
+
 
         # Convert to list as the result may be a generator
         commands = func(*args, **kwargs)
@@ -247,9 +231,6 @@ def operation(
         host.in_op = False
         host.current_op_hash = None
         host.current_op_global_kwargs = None
-
-        # Add host-specific operation data to state
-        #
 
         # We're doing some commands, meta/ops++
         state.meta[host]["ops"] += 1
@@ -373,3 +354,23 @@ def _solve_operation_consistency(names, state, host):
     op_order = tuple(op_order)
     logger.debug(f"Adding operation, {names}, opOrder={op_order}, opHash={op_hash}")
     return op_order, op_hash
+
+
+def _add_arguments(args, op_meta, kwargs):
+    for arg in args:
+        if isinstance(arg, FunctionType):
+            arg = arg.__name__
+
+        if arg not in op_meta["args"]:
+            op_meta["args"].append(arg)
+
+    # Attach keyword args
+    for key, value in kwargs.items():
+        if isinstance(value, FunctionType):
+            value = value.__name__
+
+        arg = "=".join((str(key), str(value)))
+        if arg not in op_meta["args"]:
+            op_meta["args"].append(arg)
+
+    return args, op_meta, kwargs
