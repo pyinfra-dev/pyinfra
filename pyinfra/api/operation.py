@@ -77,7 +77,7 @@ class OperationMeta(object):
         return "\n".join(self.stderr_lines)
 
 
-def add_op(state, op_func, *args, **kwargs):
+def add_op(state: "State", op_func, *args, **kwargs):
     """
     Prepare & add an operation to ``pyinfra.state`` by executing it on all hosts.
 
@@ -115,9 +115,9 @@ def add_op(state, op_func, *args, **kwargs):
 def operation(
     func=None,
     pipeline_facts=None,
-    is_idempotent=True,
+    is_idempotent: bool = True,
     idempotent_notice=None,
-    frame_offset=1,
+    frame_offset: int = 1,
 ):
     """
     Decorator that takes a simple module function and turn it into the internal
@@ -301,7 +301,7 @@ def _solve_legacy_operation_arguments(op_func, state: "State", host: "Host", kwa
     return None
 
 
-def _generate_operation_name(func, host, kwargs, global_kwargs):
+def _generate_operation_name(func, host: "Host", kwargs, global_kwargs):
     # Generate an operation name if needed (Module/Operation format)
     name = global_kwargs.get("name")
     add_args = False
@@ -325,7 +325,7 @@ def _generate_operation_name(func, host, kwargs, global_kwargs):
     return names, add_args
 
 
-def _solve_operation_consistency(names, state, host):
+def _solve_operation_consistency(names, state: "State", host: "Host"):
     # Operation order is used to tie-break available nodes in the operation DAG, in CLI mode
     # we use stack call order so this matches as defined by the user deploy code.
     if pyinfra.is_cli:

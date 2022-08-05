@@ -132,7 +132,7 @@ class Inventory(object):
                     )
 
         # Now we can actually make Host instances
-        hosts = {}
+        hosts: dict[str, "Host"] = {}
 
         for name, executor in names_executors:
             host_groups = name_to_group_names[name]
@@ -161,32 +161,36 @@ class Inventory(object):
 
         return iter(self.hosts.values())
 
-    def iter_active_hosts(self):
+    def iter_active_hosts(self) -> t.Iterator["Host"]:
         """
         Iterates over active inventory hosts.
         """
-
+        if self.state is None:
+            raise RuntimeError("No state set. Set the `State` to get the active hosts.")
         return iter(self.state.active_hosts)
 
-    def len_active_hosts(self):
+    def len_active_hosts(self) -> int:
         """
         Returns the number of active inventory hosts.
         """
-
+        if self.state is None:
+            raise RuntimeError("No state set. Set the state to get the number of active hosts.")
         return len(self.state.active_hosts)
 
-    def iter_activated_hosts(self):
+    def iter_activated_hosts(self) -> t.Iterator["Host"]:
         """
         Iterates over activated inventory hosts.
         """
-
+        if self.state is None:
+            raise RuntimeError("No state set. Set the `State` to get the activated hosts.")
         return iter(self.state.activated_hosts)
 
-    def len_activated_hosts(self):
+    def len_activated_hosts(self) -> int:
         """
         Returns the number of activated inventory hosts.
         """
-
+        if self.state is None:
+            raise RuntimeError("No state set. Set the state to get the number of actived hosts.")
         return len(self.state.activated_hosts)
 
     def get_host(self, name: str, default=NoHostError):

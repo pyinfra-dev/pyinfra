@@ -344,6 +344,8 @@ def _run_no_wait_ops(state: "State"):
     hosts_operations = product(state.inventory.iter_active_hosts(), state.get_op_order())
     with progress_spinner(hosts_operations) as progress:
         # Spawn greenlet for each host to run *all* ops
+        if state.pool is None:
+            raise PyinfraError("No pool found on state.")
         greenlets = [
             state.pool.spawn(
                 _run_host_ops,
@@ -392,6 +394,8 @@ def _run_single_op(state: "State", op_hash):
         for batch in batches:
             with progress_spinner(batch) as progress:
                 # Spawn greenlet for each host
+                if state.pool is None:
+                    raise PyinfraError("No pool found on state.")                
                 greenlet_to_host = {
                     state.pool.spawn(run_host_op, state, host, op_hash): host for host in batch
                 }
