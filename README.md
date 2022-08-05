@@ -157,7 +157,10 @@ state.disconnect_all()
 
 - Create a new fork: you can do this straight from Github.
 - Clone the forked repository with `git clone https://github.com/<you_user_name>/pyinfra.git`
+- Into the repo `cd pyinfra`
 - Set the original repo as upstram with `git remote add upstream https://github.com/Fizzadar/pyinfra`
-- Insall the necessary packages `python3 setup.py install`
+- Insall the necessary packages `pip install -e '.[dev]'`
 - Create your new branch `git checkout -b my_new_feature`
-- Test everything is working: `pytest`
+- Test everything is working: `pytest --cov`
+- Generate docs: `sphinx-build -a docs/ docs/build/`
+- View docs locally: `python -m http.server -d docs/build/` (http://localhost:8000)
