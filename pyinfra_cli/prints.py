@@ -59,13 +59,13 @@ def print_state_operations(state):
     click.echo(jsonify(state_ops, indent=4, default=json_encode), err=True)
     click.echo(err=True)
     click.echo("--> Operation meta:", err=True)
-    click.echo(jsonify(state.op_meta, indent=4, default=json_encode), err=True)
+    click.echo(jsonify(state.op_hash_map, indent=4, default=json_encode), err=True)
 
     click.echo(err=True)
     click.echo("--> Operation order:", err=True)
     click.echo(err=True)
     for op_hash in state.get_op_order():
-        meta = state.op_meta[op_hash]
+        meta = state.op_hash_map[op_hash]
         hosts = set(host for host, operations in state.ops.items() if op_hash in operations)
 
         click.echo(

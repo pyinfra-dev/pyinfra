@@ -66,14 +66,14 @@ def run_host_op(state, host, op_hash):
     op_data = state.get_op_data(host, op_hash)
     global_kwargs = op_data["global_kwargs"]
 
-    op_meta = state.get_op_meta(op_hash)
+    op_hash_map = state.get_op_meta(op_hash)
 
     ignore_errors = global_kwargs["ignore_errors"]
     continue_on_error = global_kwargs["continue_on_error"]
 
     logger.debug(
         "Starting operation {0} on {1}".format(
-            ", ".join(op_meta["names"]),
+            ", ".join(op_hash_map["names"]),
             host,
         ),
     )
@@ -258,16 +258,16 @@ def run_host_op(state, host, op_hash):
     return return_status
 
 
-def log_operation_start(op_meta, op_types=None, prefix="--> "):
+def log_operation_start(op_hash_map, op_types=None, prefix="--> "):
     op_types = op_types or []
-    if op_meta["serial"]:
+    if op_hash_map["serial"]:
         op_types.append("serial")
-    if op_meta["run_once"]:
+    if op_hash_map["run_once"]:
         op_types.append("run once")
 
     args = ""
-    if op_meta["args"]:
-        args = "({0})".format(", ".join(str(arg) for arg in op_meta["args"]))
+    if op_hash_map["args"]:
+        args = "({0})".format(", ".join(str(arg) for arg in op_hash_map["args"]))
 
     logger.info(
         "{0} {1} {2}".format(
@@ -278,7 +278,7 @@ def log_operation_start(op_meta, op_types=None, prefix="--> "):
                 ),
                 "blue",
             ),
-            click.style(", ".join(op_meta["names"]), bold=True),
+            click.style(", ".join(op_hash_map["names"]), bold=True),
             args,
         ),
     )
@@ -292,8 +292,8 @@ def _run_host_ops(state, host, progress=None):
     logger.debug("Running all ops on {0}".format(host))
 
     for op_hash in state.get_op_order():
-        op_meta = state.get_op_meta(op_hash)
-        log_operation_start(op_meta)
+        op_hash_map = state.get_op_meta(op_hash)
+        log_operation_start(op_hash_map)
 
         result = run_host_op(state, host, op_hash)
 
@@ -304,7 +304,7 @@ def _run_host_ops(state, host, progress=None):
         if result is False:
             raise PyinfraError(
                 "Error in operation {0} on {1}".format(
-                    ", ".join(op_meta["names"]),
+                    ", ".join(op_hash_map["names"]),
                     host,
                 ),
             )
@@ -358,12 +358,12 @@ def _run_single_op(state, op_hash):
 
     state.trigger_callbacks("operation_start", op_hash)
 
-    op_meta = state.get_op_meta(op_hash)
-    log_operation_start(op_meta)
+    op_hash_map = state.get_op_meta(op_hash)
+    log_operation_start(op_hash_map)
 
     failed_hosts = set()
 
-    if op_meta["serial"]:
+    if op_hash_map["serial"]:
         with progress_spinner(state.inventory.iter_active_hosts()) as progress:
             # For each host, run the op
             for host in state.inventory.iter_active_hosts():
@@ -378,8 +378,8 @@ def _run_single_op(state, op_hash):
         batches = [list(state.inventory.iter_active_hosts())]
 
         # If parallel set break up the inventory into a series of batches
-        if op_meta["parallel"]:
-            parallel = op_meta["parallel"]
+        if op_hash_map["parallel"]:
+            parallel = op_hash_map["parallel"]
             hosts = list(state.inventory.iter_active_hosts())
 
             batches = [hosts[i : i + parallel] for i in range(0, len(hosts), parallel)]

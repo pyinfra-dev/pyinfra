@@ -177,7 +177,7 @@ def operation(
         op_order, op_hash = _solve_operation_consistency(names, state, host)
 
         # Ensure shared (between servers) operation meta
-        op_meta = state.op_meta.setdefault(
+        op_hash_map = state.op_hash_map.setdefault(
             op_hash,
             {
                 "names": set(),
@@ -188,23 +188,23 @@ def operation(
 
         for key in get_execution_kwarg_keys():
             global_value = global_kwargs.pop(key)
-            op_meta_value = op_meta.get(key, op_meta_default)
+            op_meta_value = op_hash_map.get(key, op_meta_default)
 
             if op_meta_value is not op_meta_default and global_value != op_meta_value:
                 raise OperationValueError("Cannot have different values for `{0}`.".format(key))
 
-            op_meta[key] = global_value
+            op_hash_map[key] = global_value
 
         # Add any new names to the set
-        op_meta["names"].update(names)
+        op_hash_map["names"].update(names)
 
         # Attach normal args, if we're auto-naming this operation
         if add_args:
-            args, op_meta, kwargs = _add_arguments(args, op_meta, kwargs)
+            args, op_hash_map, kwargs = _add_arguments(args, op_hash_map, kwargs)
 
         # Check if we're actually running the operation on this host
         # Run once and we've already added meta for this op? Stop here.
-        if op_meta["run_once"]:
+        if op_hash_map["run_once"]:
             has_run = False
             for ops in state.ops.values():
                 if op_hash in ops:
@@ -259,7 +259,7 @@ def operation(
                 "https://docs.pyinfra.com/en/2.x/using-operations.html#nested-operations",
             )
             op_data["parent_op_hash"] = host.executing_op_hash
-            log_operation_start(op_meta, op_types=["nested"], prefix="")
+            log_operation_start(op_hash_map, op_types=["nested"], prefix="")
             run_host_op(state, host, op_hash)
 
         # Return result meta for use in deploy scripts
@@ -356,13 +356,13 @@ def _solve_operation_consistency(names, state, host):
     return op_order, op_hash
 
 
-def _add_arguments(args, op_meta, kwargs):
+def _add_arguments(args, op_hash_map, kwargs):
     for arg in args:
         if isinstance(arg, FunctionType):
             arg = arg.__name__
 
-        if arg not in op_meta["args"]:
-            op_meta["args"].append(arg)
+        if arg not in op_hash_map["args"]:
+            op_hash_map["args"].append(arg)
 
     # Attach keyword args
     for key, value in kwargs.items():
@@ -370,7 +370,7 @@ def _add_arguments(args, op_meta, kwargs):
             value = value.__name__
 
         arg = "=".join((str(key), str(value)))
-        if arg not in op_meta["args"]:
-            op_meta["args"].append(arg)
+        if arg not in op_hash_map["args"]:
+            op_hash_map["args"].append(arg)
 
-    return args, op_meta, kwargs
+    return args, op_hash_map, kwargs

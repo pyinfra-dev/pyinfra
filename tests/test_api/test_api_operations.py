@@ -27,12 +27,12 @@ from ..util import make_inventory
 
 class TestOperationMeta(TestCase):
     def test_operation_meta_repr_no_change(self):
-        op_meta = OperationMeta("hash", [])
-        assert repr(op_meta) == "OperationMeta(commands=0, changed=False, hash=hash)"
+        op_hash_map = OperationMeta("hash", [])
+        assert repr(op_hash_map) == "OperationMeta(commands=0, changed=False, hash=hash)"
 
     def test_operation_meta_repr_changes(self):
-        op_meta = OperationMeta("hash", ["a-command"])
-        assert repr(op_meta) == "OperationMeta(commands=1, changed=True, hash=hash)"
+        op_hash_map = OperationMeta("hash", ["a-command"])
+        assert repr(op_hash_map) == "OperationMeta(commands=1, changed=True, hash=hash)"
 
 
 class TestOperationsApi(PatchSSHTestCase):
@@ -77,7 +77,7 @@ class TestOperationsApi(PatchSSHTestCase):
         first_op_hash = op_order[0]
 
         # Ensure the op name
-        assert state.op_meta[first_op_hash]["names"] == {"Files/File"}
+        assert state.op_hash_map[first_op_hash]["names"] == {"Files/File"}
 
         # Ensure the commands
         assert state.ops[somehost][first_op_hash]["commands"] == [
@@ -185,7 +185,7 @@ class TestOperationsApi(PatchSSHTestCase):
         second_op_hash = op_order[1]
 
         # Ensure first op is the right one
-        assert state.op_meta[first_op_hash]["names"] == {"First op name"}
+        assert state.op_hash_map[first_op_hash]["names"] == {"First op name"}
 
         somehost = inventory.get_host("somehost")
         anotherhost = inventory.get_host("anotherhost")
@@ -236,7 +236,7 @@ class TestOperationsApi(PatchSSHTestCase):
         assert len(op_order) == 1
 
         first_op_hash = op_order[0]
-        assert state.op_meta[first_op_hash]["names"] == {"First op name"}
+        assert state.op_hash_map[first_op_hash]["names"] == {"First op name"}
 
         somehost = inventory.get_host("somehost")
         anotherhost = inventory.get_host("anotherhost")
@@ -345,7 +345,7 @@ class TestOperationsApi(PatchSSHTestCase):
             def setdefault(self, key, _):
                 return self[key]
 
-        state.op_meta = NoSetDefaultDict(lambda: {"serial": True})
+        state.op_hash_map = NoSetDefaultDict(lambda: {"serial": True})
 
         connect_all(state)
 

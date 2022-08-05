@@ -183,7 +183,7 @@ class State(object):
         self.limit_hosts = initial_limit
 
         # Op basics
-        self.op_meta = {}  # maps operation hash -> names/etc
+        self.op_hash_map = {}  # maps operation hash -> names/etc
         self.ops_run = set()  # list of ops which have been started/run
 
         # Op dict for each host
@@ -274,7 +274,7 @@ class State(object):
             # dependency order we order them by line numbers.
             node_group = sorted(
                 ts.get_ready(),
-                key=lambda op_hash: self.op_meta[op_hash]["op_order"],
+                key=lambda op_hash: self.op_hash_map[op_hash]["op_order"],
             )
             ts.done(*node_group)
             final_op_order.extend(node_group)
@@ -282,7 +282,7 @@ class State(object):
         return final_op_order
 
     def get_op_meta(self, op_hash):
-        return self.op_meta[op_hash]
+        return self.op_hash_map[op_hash]
 
     def get_op_data(self, host, op_hash):
         return self.ops[host][op_hash]

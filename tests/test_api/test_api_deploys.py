@@ -37,7 +37,7 @@ class TestDeploysApi(PatchSSHTestCase):
         assert len(op_order) == 2
 
         first_op_hash = op_order[0]
-        assert state.op_meta[first_op_hash]["names"] == {"test_deploy | Server/Shell"}
+        assert state.op_hash_map[first_op_hash]["names"] == {"test_deploy | Server/Shell"}
         assert state.ops[somehost][first_op_hash]["commands"] == [
             StringCommand("echo first command"),
         ]
@@ -46,7 +46,7 @@ class TestDeploysApi(PatchSSHTestCase):
         ]
 
         second_op_hash = op_order[1]
-        assert state.op_meta[second_op_hash]["names"] == {"test_deploy | Server/Shell"}
+        assert state.op_hash_map[second_op_hash]["names"] == {"test_deploy | Server/Shell"}
         assert state.ops[somehost][second_op_hash]["commands"] == [
             StringCommand("echo second command"),
         ]
@@ -105,13 +105,13 @@ class TestDeploysApi(PatchSSHTestCase):
         assert len(op_order) == 3
 
         first_op_hash = op_order[0]
-        assert state.op_meta[first_op_hash]["names"] == {"test_deploy | Server/Shell"}
+        assert state.op_hash_map[first_op_hash]["names"] == {"test_deploy | Server/Shell"}
         assert state.ops[somehost][first_op_hash]["commands"] == [
             StringCommand("echo first command"),
         ]
 
         second_op_hash = op_order[1]
-        assert state.op_meta[second_op_hash]["names"] == {
+        assert state.op_hash_map[second_op_hash]["names"] == {
             "test_deploy | test_nested_deploy | Server/Shell",
         }
         assert state.ops[somehost][second_op_hash]["commands"] == [
@@ -119,7 +119,7 @@ class TestDeploysApi(PatchSSHTestCase):
         ]
 
         third_op_hash = op_order[2]
-        assert state.op_meta[third_op_hash]["names"] == {"test_deploy | Server/Shell"}
+        assert state.op_hash_map[third_op_hash]["names"] == {"test_deploy | Server/Shell"}
         assert state.ops[somehost][third_op_hash]["commands"] == [
             StringCommand("echo second command"),
         ]

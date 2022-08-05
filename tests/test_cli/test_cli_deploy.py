@@ -38,9 +38,9 @@ class TestCliDeployState(PatchSSHTestCase):
             correct_op_name_and_host_names,
         ):
             op_hash = op_order[i]
-            op_meta = state.op_meta[op_hash]
+            op_hash_map = state.op_hash_map[op_hash]
 
-            assert list(op_meta["names"])[0] == correct_op_name
+            assert list(op_hash_map["names"])[0] == correct_op_name
 
             for host in state.inventory:
                 if correct_host_names is True or host.name in correct_host_names:
