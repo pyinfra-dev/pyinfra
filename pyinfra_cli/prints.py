@@ -218,7 +218,7 @@ def print_meta(state):
             rows.append((logger.info, "Ungrouped:"))
 
         for host in hosts:
-            meta = state.meta[host]
+            meta = state.host_meta[host]
 
             # Didn't connect to this host?
             if host not in state.activated_hosts:
@@ -287,7 +287,7 @@ def print_results(state):
 
             results = state.results[host]
 
-            meta = state.meta[host]
+            meta = state.host_meta[host]
             success_ops = results["success_ops"]
             partial_ops = results["partial_ops"]
             changed_ops = success_ops - meta["ops_no_change"]

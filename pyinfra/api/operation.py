@@ -233,13 +233,13 @@ def operation(
         host.current_op_global_kwargs = None
 
         # We're doing some commands, meta/ops++
-        state.meta[host]["ops"] += 1
-        state.meta[host]["commands"] += len(commands)
+        state.host_meta[host]["ops"] += 1
+        state.host_meta[host]["commands"] += len(commands)
 
         if commands:
-            state.meta[host]["ops_change"] += 1
+            state.host_meta[host]["ops_change"] += 1
         else:
-            state.meta[host]["ops_no_change"] += 1
+            state.host_meta[host]["ops_no_change"] += 1
 
         operation_meta = OperationMeta(op_hash, commands)
 

@@ -193,7 +193,7 @@ class State(object):
         self.facts = {host: {} for host in inventory}
 
         # Meta dict for each host
-        self.meta = {
+        self.host_meta = {
             host: {
                 "ops": 0,  # one function call in a deploy file
                 "ops_change": 0,
@@ -229,7 +229,7 @@ class State(object):
             "op_order": self.get_op_order(),
             "ops": self.ops,
             "facts": self.facts,
-            "meta": self.meta,
+            "meta": self.host_meta,
             "results": self.results,
         }
 
