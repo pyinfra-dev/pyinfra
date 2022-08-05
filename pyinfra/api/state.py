@@ -13,6 +13,7 @@ from gevent.pool import Pool
 from pyinfra.progress import progress_spinner
 
 if t.TYPE_CHECKING:
+    from pyinfra.api.host import Host
     from pyinfra.api.inventory import Inventory
 
 from pyinfra import logger
@@ -122,7 +123,7 @@ class State(object):
         if inventory:
             self.init(inventory, config, **kwargs)
 
-    def init(self, inventory, config, initial_limit=None):
+    def init(self, inventory: "Inventory", config: Optional["Config"], initial_limit=None):
         # Config validation
         #
 
@@ -240,7 +241,7 @@ class State(object):
             )
         self.callback_handlers.append(handler)
 
-    def trigger_callbacks(self, method_name, *args, **kwargs):
+    def trigger_callbacks(self, method_name: str, *args, **kwargs):
         for handler in self.callback_handlers:
             func = getattr(handler, method_name)
             func(self, *args, **kwargs)
@@ -284,13 +285,13 @@ class State(object):
     def get_op_hash_map(self, op_hash):
         return self.op_hash_map[op_hash]
 
-    def get_op_data(self, host, op_hash):
+    def get_op_data(self, host: "Host", op_hash):
         return self.ops_hosts[host][op_hash]
 
-    def set_op_data(self, host, op_hash, op_data):
+    def set_op_data(self, host: "Host", op_hash, op_data):
         self.ops_hosts[host][op_hash] = op_data
 
-    def activate_host(self, host):
+    def activate_host(self, host: "Host"):
         """
         Flag a host as active.
         """
@@ -342,7 +343,7 @@ class State(object):
                     ),
                 )
 
-    def is_host_in_limit(self, host):
+    def is_host_in_limit(self, host: "Host"):
         """
         Returns a boolean indicating if the host is within the current state limit.
         """

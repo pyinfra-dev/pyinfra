@@ -1,3 +1,4 @@
+import typing as t
 from collections import defaultdict
 
 from .connectors import get_all_connectors, get_execution_connectors
@@ -146,14 +147,14 @@ class Inventory(object):
 
         return hosts
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         Returns the number of inventory hosts.
         """
 
         return len(self.hosts)
 
-    def __iter__(self):
+    def __iter__(self) -> t.Iterator["Host"]:
         """
         Iterates over all inventory hosts.
         """
@@ -188,7 +189,7 @@ class Inventory(object):
 
         return len(self.state.activated_hosts)
 
-    def get_host(self, name, default=NoHostError):
+    def get_host(self, name: str, default=NoHostError):
         """
         Get a single host by name.
         """
@@ -201,7 +202,7 @@ class Inventory(object):
 
         return default
 
-    def get_group(self, name, default=NoGroupError):
+    def get_group(self, name: str, default=NoGroupError):
         """
         Get a list of hosts belonging to a group.
         """
@@ -228,7 +229,7 @@ class Inventory(object):
 
         return self.override_data
 
-    def get_host_data(self, hostname):
+    def get_host_data(self, hostname: str):
         """
         Get data for a single host in this inventory.
         """

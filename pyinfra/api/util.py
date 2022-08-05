@@ -1,3 +1,4 @@
+import typing as t
 from functools import wraps
 from hashlib import sha1
 from inspect import getframeinfo, getfullargspec, stack
@@ -11,6 +12,10 @@ from paramiko import SSHException
 import pyinfra
 from pyinfra import logger
 
+if t.TYPE_CHECKING:
+    from pyinfra.api.host import Host
+    from pyinfra.api.state import State
+
 # 64kb chunks
 BLOCKSIZE = 65536
 
@@ -21,7 +26,7 @@ FILE_SHAS = {}
 PYINFRA_API_DIR = path.dirname(__file__)
 
 
-def get_file_path(state, filename):
+def get_file_path(state: "State", filename: str):
     if path.isabs(filename):
         return filename
 
@@ -33,7 +38,7 @@ def get_file_path(state, filename):
     return path.join(relative_to, filename)
 
 
-def get_args_kwargs_spec(func):
+def get_args_kwargs_spec(func: t.Callable):
     args = []
     kwargs = {}
 
@@ -74,7 +79,7 @@ def try_int(value):
         return value
 
 
-def memoize(func):
+def memoize(func: t.Callable):
     @wraps(func)
     def wrapper(*args, **kwargs):
         key = "{0}{1}".format(args, kwargs)
@@ -89,7 +94,7 @@ def memoize(func):
     return wrapper
 
 
-def get_call_location(frame_offset=1):
+def get_call_location(frame_offset: int=1):
     frame = get_caller_frameinfo(frame_offset=frame_offset)  # escape *this* function
     relpath = frame.filename
 
@@ -103,7 +108,7 @@ def get_call_location(frame_offset=1):
     return "line {0} in {1}".format(frame.lineno, relpath)
 
 
-def get_caller_frameinfo(frame_offset=0):
+def get_caller_frameinfo(frame_offset: int=0):
     # Default frames to look at is 2; one for this function call itself
     # in util.py and one for the caller of this function within pyinfra
     # giving the external call frame (ie end user deploy code).
@@ -119,7 +124,7 @@ def get_caller_frameinfo(frame_offset=0):
     return info
 
 
-def get_operation_order_from_stack(state):
+def get_operation_order_from_stack(state: "State"):
     stack_items = list(reversed(stack()))
 
     # Find the *first* occurrence of our deploy file in the reversed stack
@@ -150,7 +155,7 @@ def get_operation_order_from_stack(state):
     return line_numbers
 
 
-def get_template(filename_or_io):
+def get_template(filename_or_io: str):
     """
     Gets a jinja2 ``Template`` object for the input filename or string, with caching
     based on the filename of the template, or the SHA1 of the input string.
@@ -177,7 +182,7 @@ def get_template(filename_or_io):
     return template
 
 
-def sha1_hash(string):
+def sha1_hash(string: str):
     """
     Return the SHA1 of the input string.
     """
@@ -191,7 +196,7 @@ def format_exception(e):
     return "{0}{1}".format(e.__class__.__name__, e.args)
 
 
-def print_host_combined_output(host, combined_output_lines):
+def print_host_combined_output(host: "Host", combined_output_lines):
     for type_, line in combined_output_lines:
         if type_ == "stderr":
             logger.error(
@@ -209,7 +214,7 @@ def print_host_combined_output(host, combined_output_lines):
             )
 
 
-def log_error_or_warning(host, ignore_errors, description="", continue_on_error=False):
+def log_error_or_warning(host: "Host", ignore_errors, description="", continue_on_error=False):
     log_func = logger.error
     log_color = "red"
     log_text = "Error: " if description else "Error"
@@ -232,7 +237,7 @@ def log_error_or_warning(host, ignore_errors, description="", continue_on_error=
     )
 
 
-def log_host_command_error(host, e, timeout=0):
+def log_host_command_error(host: "Host", e, timeout=0):
     if isinstance(e, timeout_error):
         logger.error(
             "{0}{1}".format(
@@ -393,7 +398,7 @@ def get_file_sha1(filename_or_io):
     return digest
 
 
-def get_path_permissions_mode(pathname):
+def get_path_permissions_mode(pathname: str):
     """
     Get the permissions (bits) of a path as an integer.
     """

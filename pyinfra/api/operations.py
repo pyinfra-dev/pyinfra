@@ -1,6 +1,11 @@
 import traceback
+import typing as t
 from itertools import product
 from socket import error as socket_error, timeout as timeout_error
+
+if t.TYPE_CHECKING:
+    from .state import State
+    from .inventory import Host
 
 import click
 import gevent
@@ -28,8 +33,8 @@ def show_pre_or_post_condition_warning(condition_name):
 
 
 def _run_shell_command(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     command,
     global_kwargs,
     executor_kwargs,
@@ -56,7 +61,7 @@ def _run_shell_command(
     return status
 
 
-def run_host_op(state, host, op_hash):
+def run_host_op(state: "State", host: "Host", op_hash):
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
     if op_hash not in state.ops_hosts[host]:
@@ -284,7 +289,7 @@ def log_operation_start(op_hash_map, op_types=None, prefix="--> "):
     )
 
 
-def _run_host_ops(state, host, progress=None):
+def _run_host_ops(state: "State", host: "Host", progress=None):
     """
     Run all ops for a single server.
     """
@@ -313,7 +318,7 @@ def _run_host_ops(state, host, progress=None):
             click.echo(err=True)
 
 
-def _run_serial_ops(state):
+def _run_serial_ops(state: "State"):
     """
     Run all ops for all servers, one server at a time.
     """
@@ -331,7 +336,7 @@ def _run_serial_ops(state):
                 state.fail_hosts({host})
 
 
-def _run_no_wait_ops(state):
+def _run_no_wait_ops(state: "State"):
     """
     Run all ops for all servers at once.
     """
@@ -351,7 +356,7 @@ def _run_no_wait_ops(state):
         gevent.joinall(greenlets)
 
 
-def _run_single_op(state, op_hash):
+def _run_single_op(state: "State", op_hash):
     """
     Run a single operation for all servers. Can be configured to run in serial.
     """
@@ -410,7 +415,7 @@ def _run_single_op(state, op_hash):
     state.trigger_callbacks("operation_end", op_hash)
 
 
-def run_ops(state, serial=False, no_wait=False):
+def run_ops(state: "State", serial: bool = False, no_wait: bool = False):
     """
     Runs all operations across all servers in a configurable manner.
 
