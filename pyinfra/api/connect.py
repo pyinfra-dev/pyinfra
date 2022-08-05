@@ -1,9 +1,14 @@
+import typing as t
+
 import gevent
+
+if t.TYPE_CHECKING:
+    from pyinfra.api.state import State
 
 from pyinfra.progress import progress_spinner
 
 
-def connect_all(state):
+def connect_all(state: "State"):
     """
     Connect to all the configured servers in parallel. Reads/writes state.inventory.
 

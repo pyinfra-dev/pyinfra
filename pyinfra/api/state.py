@@ -7,7 +7,10 @@ from multiprocessing import cpu_count
 from typing import Optional
 from uuid import uuid4
 
+import gevent
 from gevent.pool import Pool
+
+from pyinfra.progress import progress_spinner
 
 if t.TYPE_CHECKING:
     from pyinfra.api.inventory import Inventory
@@ -362,3 +365,43 @@ class State(object):
             hash_key = sha1_hash(hash_key)
 
         return "{0}/pyinfra-{1}".format(self.config.TEMP_DIR, hash_key)
+
+    def connect_all(self):
+        """
+        Connect to all the configured servers in parallel. Reads/writes state.inventory.
+
+        Args:
+            state (``pyinfra.api.State`` obj): the state containing an inventory to connect to
+        """
+
+        hosts = [
+            host
+            for host in self.inventory
+            if self.is_host_in_limit(host)  # these are the hosts to activate ("initially connect to")
+        ]
+
+        greenlet_to_host = {self.pool.spawn(host.connect): host for host in hosts}
+
+        with progress_spinner(greenlet_to_host.values()) as progress:
+            for greenlet in gevent.iwait(greenlet_to_host.keys()):
+                host = greenlet_to_host[greenlet]
+                progress(host)
+
+        # Get/set the results
+        failed_hosts = set()
+
+        for greenlet, host in greenlet_to_host.items():
+            # Raise any unexpected exception
+            greenlet.get()
+
+            if host.connection:
+                self.activate_host(host)
+            else:
+                failed_hosts.add(host)
+
+        # Remove those that failed, triggering FAIL_PERCENT check
+        self.fail_hosts(failed_hosts, activated_count=len(hosts))
+
+    def disconnect_all(self):
+        for host in self.activated_hosts:  # only hosts we connected to please!
+            host.disconnect()  # normally a noop
