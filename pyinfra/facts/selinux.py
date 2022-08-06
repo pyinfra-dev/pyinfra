@@ -37,6 +37,7 @@ class FileContextMapping(FactBase):
     """
     Returns structured SELinux file context data for the specified target path prefix
     using the same format as :ref:`selinux.FileContext`.  If there is no mapping, it returns ``{}``
+    Note: This fact must be called with either ``su_`` set or ``_sudo=True``
     """
 
     requires_command = "semanage"
@@ -47,6 +48,7 @@ class FileContextMapping(FactBase):
 
     def process(self, output):
         # example output: /etc       all files          system_u:object_r:etc_t:s0 # noqa: SC100
+        # but lines at end that won't match: /etc/systemd/system = /usr/lib/systemd/system
         if len(output) != 1:
             return self.default()
         m = re.match(r"^.*\s+(\w+):(\w+):(\w+):(\w+)", output[0])
@@ -74,7 +76,7 @@ class SEPort(FactBase):
     """
     Returns the SELinux 'type' for the specified protocol ``(tcp|udp|dccp|sctp)`` and port number.
     If no type has been set, ``SEPort`` returns the empty string.
-    This fact must be called with either ``su_`` set or ``_sudo=True``
+    Note: This fact must be called with either ``su_`` set or ``_sudo=True``
     """
 
     requires_command = "semanage"
