@@ -29,10 +29,12 @@ def file_context(path, se_type):
 
     current = host.get_fact(FileContext, path=path) or {}
     if se_type != current.get("type", ""):
-        yield StringCommand('chcon', '-t', se_type, QuoteString(path))
-        host.create_fact(FileContext, kwargs={"path": path}, data=dict(current, **{"type":se_type}))
+        yield StringCommand("chcon", "-t", se_type, QuoteString(path))
+        host.create_fact(
+            FileContext, kwargs={"path": path}, data=dict(current, **{"type": se_type}),
+        )
     else:
-        host.noop(f'file_context: \'{path}\' already had type \'{se_type}\'')
+        host.noop(f"file_context: '{path}' already had type '{se_type}'")
 
 
 @operation(
@@ -61,23 +63,25 @@ def file_context_mapping(target, se_type=None, present=True):
         )
     """
     if present and (se_type is None):
-        raise ValueError(f'se_type must have a valid value if present is set')
+        raise ValueError("se_type must have a valid value if present is set")
 
     current = host.get_fact(FileContextMapping, target=target)
     kwargs = {"target": target}
     if present:
-        op = '-a' if len(current) == 0 else ('-m' if current.get('type') != se_type else '')
+        op = "-a" if len(current) == 0 else ("-m" if current.get("type") != se_type else "")
         if op != "":
-            yield StringCommand('semanage', 'fcontext', op, '-t', se_type, QuoteString(target))
-            host.create_fact(FileContextMapping, kwargs=kwargs, data=dict(current, **{"type":se_type}))
+            yield StringCommand("semanage", "fcontext", op, "-t", se_type, QuoteString(target))
+            host.create_fact(
+                FileContextMapping, kwargs=kwargs, data=dict(current, **{"type": se_type}),
+            )
         else:
-            host.noop(f'mapping for \'{target}\' -> \'{se_type}\' already present')
+            host.noop(f"mapping for '{target}' -> '{se_type}' already present")
     else:
         if len(current) > 0:
-            yield StringCommand('semanage', 'fcontext', '-d', QuoteString(target))
-            host.create_fact(FileContextMapping, kwargs=kwargs,data={})
+            yield StringCommand("semanage", "fcontext", "-d", QuoteString(target))
+            host.create_fact(FileContextMapping, kwargs=kwargs, data={})
         else:
-            host.noop(f'no existing mapping for \'{target}\'')
+            host.noop(f"no existing mapping for '{target}'")
 
 
 @operation(
@@ -106,7 +110,7 @@ def se_boolean(boolean, state, persistent=False):
 
     if state not in _valid_states:
         raise ValueError(
-            f"se_boolean: 'state' must be one of '{','.join(_valid_states)}' but found '{state}'",
+            f"'state' must be one of '{','.join(_valid_states)}' but found '{state}'",
         )
 
     if host.get_fact(SEBoolean, boolean=boolean) != state:
@@ -115,7 +119,6 @@ def se_boolean(boolean, state, persistent=False):
         host.create_fact(SEBoolean, kwargs={"boolean": boolean}, data=state)
     else:
         host.noop(f"seboolean '{boolean}' already had the value '{state}'")
-
 
 
 @operation(
@@ -143,20 +146,24 @@ def se_port(protocol, port, se_type=None, present=True):
     """
 
     if present and (se_type is None):
-        raise ValueError(f'se_port: se_type must have a valid value if present is set')
+        raise ValueError("se_type must have a valid value if present is set")
 
-    kwargs = {'protocol': protocol, 'port': port}
+    kwargs = {"protocol": protocol, "port": port}
     current = host.get_fact(SEPort, protocol=protocol, port=port)
     if present:
-        op = '-a' if current == '' else ('-m' if current != se_type else '')
-        if op != '':
-            yield StringCommand('semanage', 'port', op, '-t', se_type, '-p', protocol, port)
-            host.create_fact(SEPort, kwargs=kwargs, data=se_type,)
+        op = "-a" if current == "" else ("-m" if current != se_type else "")
+        if op != "":
+            yield StringCommand("semanage", "port", op, "-t", se_type, "-p", protocol, port)
+            host.create_fact(
+                SEPort,
+                kwargs=kwargs,
+                data=se_type,
+            )
         else:
-            host.noop(f'setype for \'{protocol}/{port}\' is already \'{se_type}\'')
+            host.noop(f"setype for '{protocol}/{port}' is already '{se_type}'")
     else:
-        if current != '':
-            yield StringCommand('semanage', 'port', '-d', '-p', protocol, port)
-            host.create_fact(SEPort, kwargs=kwargs, data='')
+        if current != "":
+            yield StringCommand("semanage", "port", "-d", "-p", protocol, port)
+            host.create_fact(SEPort, kwargs=kwargs, data="")
         else:
-            host.noop(f'setype for \'{protocol}/{port}\' is already unset')
+            host.noop(f"setype for '{protocol}/{port}' is already unset")
