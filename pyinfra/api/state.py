@@ -113,13 +113,15 @@ class State(object):
     current_exec_filename = None
     current_op_file_number = 0
 
-    def __init__(self, inventory: Optional["Inventory"] =None, config: Optional["Config"] = None, **kwargs):
+    def __init__(
+        self, inventory: Optional["Inventory"] = None, config: Optional["Config"] = None, **kwargs
+    ):
         """Initializes the state, the main Pyinfra
 
         Args:
             inventory (Optional[Inventory], optional): The inventory. Defaults to None.
             config (Optional[Config], optional): The config object. Defaults to None.
-        """        
+        """
         if inventory:
             self.init(inventory, config, **kwargs)
 
@@ -376,10 +378,8 @@ class State(object):
         """
 
         hosts = [
-            host
-            for host in self.inventory
-            if self.is_host_in_limit(host)  # these are the hosts to activate ("initially connect to")
-        ]
+            host for host in self.inventory if self.is_host_in_limit(host)
+        ]  # these are the hosts to activate ("initially connect to")
 
         greenlet_to_host = {self.pool.spawn(host.connect): host for host in hosts}
 
@@ -406,6 +406,6 @@ class State(object):
     def disconnect_all(self):
         """
         Disconnect from all activated hosts on a given state.
-        """        
+        """
         for host in self.activated_hosts:
             host.disconnect()
