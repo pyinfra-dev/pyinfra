@@ -105,11 +105,12 @@ class Host(object):
         name: str,
         inventory: "Inventory",
         groups,
-        executor=get_execution_connector("ssh"),
+        executor: str | t.Any = "ssh",
     ):
         self.inventory = inventory
         self.groups = groups
-        self.executor = executor
+        self._executor = None
+        self.default_executor = executor
         self.name = name
 
         # Arbitrary dict for connector use
@@ -133,6 +134,8 @@ class Host(object):
             # @deploy function data are default values, so come last
             self.get_deploy_data,
         )
+
+        self.set_executor(executor)
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -165,6 +168,12 @@ class Host(object):
             click.style(""),  # reset
             click.style(self.name, bold=True),
         )
+
+    @property
+    def executor(self):
+        if self._executor is None:
+            return self.set_executor("ssh")
+        return self._executor
 
     def style_print_prefix(self, *args, **kwargs):
         return "{0}[{1}] ".format(
@@ -330,3 +339,31 @@ class Host(object):
     def rsync(self, *args, **kwargs):
         self._check_state()
         return self.executor.rsync(self.state, self, *args, **kwargs)
+
+    # Executor options
+
+    def set_executor(self, executor: str | t.Any):
+        """
+        Sets the Host executor.
+        This runs when the Host is initialized.
+        Get's the connector and sets the executor attribute.
+        Avoids having a "mutable" default argument.
+
+        Avaliable executors:
+            - local
+            - ssh
+            - winrm
+            - chroot
+            - docker
+            - dockerssh
+            - mech
+            - terraform
+            - vagrant
+
+        Args:
+            executor (str): A string of the executor name.
+        """
+        if not isinstance(executor, str):
+            self._executor = executor
+            return
+        self._executor = get_execution_connector(executor)
