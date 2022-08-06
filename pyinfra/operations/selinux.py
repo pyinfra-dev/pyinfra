@@ -27,7 +27,7 @@ def file_context(path, se_type):
         )
     """
 
-    current = host.get_fact(FileContext, path=path)
+    current = host.get_fact(FileContext, path=path) or {}
     if se_type != current.get("type", ""):
         yield StringCommand('chcon', '-t', se_type, QuoteString(path))
         host.create_fact(FileContext, kwargs={"path": path}, data=dict(current, **{"type":se_type}))

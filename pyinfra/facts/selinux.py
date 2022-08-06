@@ -6,7 +6,7 @@ FIELDS = ["user", "role", "type", "level"] # order is significant, do not change
 
 class FileContext(FactBase):
     """
-    Returns structured SELinux file context data for a specified file.
+    Returns structured SELinux file context data for a specified file or ``None`` if the file does not exist.
 
     .. code:: python
 
