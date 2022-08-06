@@ -2,11 +2,13 @@ import re
 
 from pyinfra.api import FactBase
 
-FIELDS = ["user", "role", "type", "level"] # order is significant, do not change
+FIELDS = ["user", "role", "type", "level"]  # order is significant, do not change
+
 
 class FileContext(FactBase):
     """
-    Returns structured SELinux file context data for a specified file or ``None`` if the file does not exist.
+    Returns structured SELinux file context data for a specified file
+    or ``None`` if the file does not exist.
 
     .. code:: python
 
@@ -44,11 +46,11 @@ class FileContextMapping(FactBase):
         return "semanage fcontext -n -l | grep '^ {0}'".format(target)
 
     def process(self, output):
-        # /etc                                               all files          system_u:object_r:etc_t:s0
+        # example output: /etc       all files          system_u:object_r:etc_t:s0 # noqa: SC100
         if len(output) != 1:
             return self.default()
         m = re.match(r"^.*\s+(\w+):(\w+):(\w+):(\w+)", output[0])
-        return {k: m.group(i) for i,k in enumerate(FIELDS, 1)} if m is not None else self.default()
+        return {k: m.group(i) for i, k in enumerate(FIELDS, 1)} if m is not None else self.default()
 
 
 class SEBoolean(FactBase):
@@ -58,10 +60,10 @@ class SEBoolean(FactBase):
     """
 
     requires_command = "getsebool"
-    default = lambda x: ""
+    default = str
 
     def command(self, boolean):
-        return "getsebool {0} 2>/dev/null || true".format(boolean)
+        return "getsebool {0}".format(boolean)
 
     def process(self, output):
         components = output[0].split(" --> ")
@@ -71,11 +73,47 @@ class SEBoolean(FactBase):
 class SEPort(FactBase):
     """
     Returns the SELinux 'type' for the specified protocol ``(tcp|udp|dccp|sctp)`` and port number.
-    If not type has been set, ``SEPort`` returns the empty string.
+    If no type has been set, ``SEPort`` returns the empty string.
+    This fact must be called with either ``su_`` set or ``_sudo=True``
+    """
+
+    requires_command = "semanage"
+    default = str
+    # example output: amqp_port_t                    tcp      15672, 5671-5672  # noqa: SC100
+    _regex = re.compile(r"^([\w_]+)\s+(\w+)\s+([\w\-,\s]+)$")
+
+    def command(self, protocol, port):
+        self.port = int(port)
+        return "semanage port -ln | grep {0}".format(protocol)
+
+    def process(self, output):
+        labels = dict()
+        for line in output:
+            if (m := SEPort._regex.match(line)) is None:  # something went wrong
+                break
+            if m.group(1) == "unreserved_port_t":  # these cover the entire space
+                continue
+            for item in m.group(3).split(","):
+                item = item.strip()
+                if "-" in item:
+                    pieces = item.split("-")
+                    start, stop = int(pieces[0]), int(pieces[1])
+                else:
+                    start = stop = int(item)
+                labels.update({port: m.group(1) for port in range(start, stop + 1)})
+
+        return labels.get(self.port, self.default())
+
+
+class SEPortB(FactBase):
+    """
+    Returns the SELinux 'type' for the specified protocol ``(tcp|udp|dccp|sctp)`` and port number.
+    If no type has been set, ``SEPort`` returns the empty string.
+    Note: ``policycoreutils-dev`` must be installed for this to work.
     """
 
     requires_command = "sepolicy"
-    default = lambda x: ""
+    default = str
 
     def command(self, protocol, port):
         return "(sepolicy network -p {0} 2>/dev/null || true) | grep {1}".format(port, protocol)
@@ -85,4 +123,3 @@ class SEPort(FactBase):
         # each rows in the format "22: tcp ssh_port_t 22"
 
         return output[0].split(" ")[2] if len(output) > 1 else self.default()
-
