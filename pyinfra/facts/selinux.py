@@ -53,14 +53,15 @@ class FileContextMapping(FactBase):
 
 class SEBoolean(FactBase):
     """
-    Returns the status of a SELinux Boolean as a string (``on`` or ``off``)
+    Returns the status of a SELinux Boolean as a string (``on`` or ``off``).
+    If ``boolean`` does not exist, ``SEBoolean`` returns the empty string.
     """
 
     requires_command = "getsebool"
     default = lambda x: ""
 
     def command(self, boolean):
-        return "getsebool {0}".format(boolean)
+        return "getsebool {0} 2>/dev/null || true".format(boolean)
 
     def process(self, output):
         components = output[0].split(" --> ")
@@ -70,6 +71,7 @@ class SEBoolean(FactBase):
 class SEPort(FactBase):
     """
     Returns the SELinux 'type' for the specified protocol ``(tcp|udp|dccp|sctp)`` and port number.
+    If not type has been set, ``SEPort`` returns the empty string.
     """
 
     requires_command = "sepolicy"
