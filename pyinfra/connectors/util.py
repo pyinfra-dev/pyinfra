@@ -10,6 +10,7 @@ from gevent.queue import Queue
 from pyinfra import logger
 from pyinfra.api import MaskString, QuoteString, StringCommand
 from pyinfra.api.util import memoize
+from pyinfra.context import ctx_host, ctx_state
 
 SUDO_ASKPASS_ENV_VAR = "PYINFRA_SUDO_PASSWORD"
 SUDO_ASKPASS_COMMAND = r"""
@@ -167,7 +168,7 @@ def write_stdin(stdin, buffer):
     buffer.close()
 
 
-def _get_sudo_password(host, use_sudo_password):
+def _get_sudo_password(state, host, use_sudo_password):
     if not host.connector_data.get("sudo_askpass_path"):
         _, stdout, _ = host.run_shell_command(SUDO_ASKPASS_COMMAND)
         host.connector_data["sudo_askpass_path"] = shlex.quote(stdout[0])
@@ -179,7 +180,9 @@ def _get_sudo_password(host, use_sudo_password):
             host.connector_data["sudo_password"] = sudo_password
         sudo_password = sudo_password
     elif callable(use_sudo_password):
-        sudo_password = use_sudo_password()
+        with ctx_state.use(state):
+            with ctx_host.use(host):
+                sudo_password = use_sudo_password()
     else:
         sudo_password = use_sudo_password
 
@@ -207,7 +210,7 @@ def _show_use_su_login_warning():
 def make_unix_command_for_host(state, host, *command_args, **command_kwargs):
     use_sudo_password = command_kwargs.pop("use_sudo_password", None)
     if use_sudo_password:
-        command_kwargs["sudo_password"] = _get_sudo_password(host, use_sudo_password)
+        command_kwargs["sudo_password"] = _get_sudo_password(state, host, use_sudo_password)
         command_kwargs["sudo_askpass_path"] = host.connector_data.get("sudo_askpass_path")
 
     return make_unix_command(*command_args, **command_kwargs)
