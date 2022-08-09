@@ -8,6 +8,7 @@ from paramiko import SSHException
 
 import pyinfra
 from pyinfra import logger
+from pyinfra.context import ctx_host
 from pyinfra.progress import progress_spinner
 
 from .arguments import get_executor_kwarg_keys
@@ -57,6 +58,14 @@ def _run_shell_command(
 
 
 def run_host_op(state, host, op_hash):
+    # We may already have a host context (nested operations)
+    if ctx_host.isset():
+        return _run_host_op(state, host, op_hash)
+    with ctx_host.use(host):
+        return _run_host_op(state, host, op_hash)
+
+
+def _run_host_op(state, host, op_hash):
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
     if op_hash not in state.ops[host]:
