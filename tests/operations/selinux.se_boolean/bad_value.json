@@ -5,7 +5,7 @@
     },
     "exception": {
         "name": "ValueError",
-        "message": "se_boolean: 'state' must be one of 'on,off' but found 'really-off'"
+        "message": "'state' must be one of 'on,off' but found 'really-off'"
     }
 }
 
