@@ -31,7 +31,9 @@ def file_context(path, se_type):
     if se_type != current.get("type", ""):
         yield StringCommand("chcon", "-t", se_type, QuoteString(path))
         host.create_fact(
-            FileContext, kwargs={"path": path}, data=dict(current, **{"type": se_type}),
+            FileContext,
+            kwargs={"path": path},
+            data=dict(current, **{"type": se_type}),
         )
     else:
         host.noop(f"file_context: '{path}' already had type '{se_type}'")
@@ -72,7 +74,9 @@ def file_context_mapping(target, se_type=None, present=True):
         if op != "":
             yield StringCommand("semanage", "fcontext", op, "-t", se_type, QuoteString(target))
             host.create_fact(
-                FileContextMapping, kwargs=kwargs, data=dict(current, **{"type": se_type}),
+                FileContextMapping,
+                kwargs=kwargs,
+                data=dict(current, **{"type": se_type}),
             )
         else:
             host.noop(f"mapping for '{target}' -> '{se_type}' already present")
