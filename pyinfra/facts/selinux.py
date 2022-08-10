@@ -44,7 +44,7 @@ class FileContextMapping(FactBase):
     default = dict
 
     def command(self, target):
-        return "semanage fcontext -n -l | (grep '^{0}' || true)".format(target)
+        return "set -o pipefail && semanage fcontext -n -l | (grep '^{0}' || true)".format(target)
 
     def process(self, output):
         # example output: /etc       all files          system_u:object_r:etc_t:s0 # noqa: SC100

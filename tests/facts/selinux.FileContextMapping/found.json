@@ -1,7 +1,7 @@
 {
     "arg": "/etc/zebra(/.*)?",
     "requires_command": "semanage",
-    "command": "semanage fcontext -n -l | (grep '^/etc/zebra(/.*)?' || true)",
+    "command": "set -o pipefail && semanage fcontext -n -l | (grep '^/etc/zebra(/.*)?' || true)",
     "output": [
         "/etc/zebra(/.*)?                                   all files          system_u:object_r:zebra_conf_t:s0"
     ],
