@@ -115,7 +115,7 @@ def se_boolean(
 def se_port(
     protocol,
     port,
-    se_type,
+    se_type=None,
     present=True,
     _sudo: typing.Optional[bool] = None,
     _sudo_user: typing.Optional[bool] = None,
