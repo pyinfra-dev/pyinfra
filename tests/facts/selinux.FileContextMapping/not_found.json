@@ -1,7 +1,7 @@
 {
     "arg": "/etc/etc/etc/etc/etc/etc",
     "requires_command": "semanage",
-    "command": "semanage fcontext -n -l | grep '^ /etc/etc/etc/etc/etc/etc'",
+    "command": "semanage fcontext -n -l | grep '^/etc/etc/etc/etc/etc/etc'",
     "output": [
     ],
     "fact": {}
