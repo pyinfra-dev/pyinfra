@@ -99,6 +99,8 @@ def se_boolean(boolean, value, persistent=False):
     + state: 'on' or 'off'
     + persistent: whether to write updated policy or not
 
+    Note: This operation requires root privileges.
+
     **Example:**
 
     .. code:: python
@@ -136,6 +138,8 @@ def se_port(protocol, port, se_type=None, present=True):
     + port: the port
     + se_type: the SELinux type for the given port
     + present: whether to add or remove the SELinux type for the port
+
+    Note: This operation requires root privileges.
 
     **Example:**
 

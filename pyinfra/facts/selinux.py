@@ -37,7 +37,7 @@ class FileContextMapping(FactBase):
     """
     Returns structured SELinux file context data for the specified target path prefix
     using the same format as :ref:`selinux.FileContext`.  If there is no mapping, it returns ``{}``
-    Note: This fact must be called with either ``su_`` set or ``_sudo=True``
+    Note: This fact requires root privileges.
     """
 
     requires_command = "semanage"
@@ -76,7 +76,7 @@ class SEPort(FactBase):
     """
     Returns the SELinux 'type' for the specified protocol ``(tcp|udp|dccp|sctp)`` and port number.
     If no type has been set, ``SEPort`` returns the empty string.
-    Note: This fact must be called with either ``su_`` set or ``_sudo=True``
+    Note: This fact requires root privileges.
     """
 
     requires_command = "semanage"
