@@ -91,7 +91,7 @@ def file_context_mapping(target, se_type=None, present=True):
 @operation(
     pipeline_facts={"seboolean": "boolean"},
 )
-def se_boolean(boolean, state, persistent=False):
+def se_boolean(boolean, value, persistent=False):
     """
     Set the SELinux boolean to the desired state.
 
@@ -104,7 +104,7 @@ def se_boolean(boolean, state, persistent=False):
     .. code:: python
 
         selinux.boolean(
-            name = "Allow Apache to connect to TBD",
+            name = "Allow Apache to connect to LDAP server",
             "httpd_can_network_connect",
             "on",
             persistent=True
@@ -112,17 +112,17 @@ def se_boolean(boolean, state, persistent=False):
     """
     _valid_states = ["on", "off"]
 
-    if state not in _valid_states:
+    if value not in _valid_states:
         raise ValueError(
-            f"'state' must be one of '{','.join(_valid_states)}' but found '{state}'",
+            f"'value' must be one of '{','.join(_valid_states)}' but found '{value}'",
         )
 
-    if host.get_fact(SEBoolean, boolean=boolean) != state:
+    if host.get_fact(SEBoolean, boolean=boolean) != value:
         persist = "-P " if persistent else ""
-        yield StringCommand("setsebool", f"{persist}{boolean}", state)
-        host.create_fact(SEBoolean, kwargs={"boolean": boolean}, data=state)
+        yield StringCommand("setsebool", f"{persist}{boolean}", value)
+        host.create_fact(SEBoolean, kwargs={"boolean": boolean}, data=value)
     else:
-        host.noop(f"seboolean '{boolean}' already had the value '{state}'")
+        host.noop(f"seboolean '{boolean}' already had the value '{value}'")
 
 
 @operation(
