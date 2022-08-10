@@ -5,6 +5,23 @@ from pyinfra.api import FactBase
 FIELDS = ["user", "role", "type", "level"]  # order is significant, do not change
 
 
+class SEBoolean(FactBase):
+    """
+    Returns the status of a SELinux Boolean as a string (``on`` or ``off``).
+    If ``boolean`` does not exist, ``SEBoolean`` returns the empty string.
+    """
+
+    requires_command = "getsebool"
+    default = str
+
+    def command(self, boolean):
+        return "getsebool {0}".format(boolean)
+
+    def process(self, output):
+        components = output[0].split(" --> ")
+        return components[1]
+
+
 class FileContext(FactBase):
     """
     Returns structured SELinux file context data for a specified file
@@ -53,23 +70,6 @@ class FileContextMapping(FactBase):
             return self.default()
         m = re.match(r"^.*\s+(\w+):(\w+):(\w+):(\w+)", output[0])
         return {k: m.group(i) for i, k in enumerate(FIELDS, 1)} if m is not None else self.default()
-
-
-class SEBoolean(FactBase):
-    """
-    Returns the status of a SELinux Boolean as a string (``on`` or ``off``).
-    If ``boolean`` does not exist, ``SEBoolean`` returns the empty string.
-    """
-
-    requires_command = "getsebool"
-    default = str
-
-    def command(self, boolean):
-        return "getsebool {0}".format(boolean)
-
-    def process(self, output):
-        components = output[0].split(" --> ")
-        return components[1]
 
 
 class SEPort(FactBase):

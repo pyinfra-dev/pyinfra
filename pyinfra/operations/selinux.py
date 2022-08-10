@@ -7,6 +7,45 @@ from pyinfra.facts.selinux import FileContext, FileContextMapping, SEBoolean, SE
 
 
 @operation(
+    pipeline_facts={"seboolean": "boolean"},
+)
+def se_boolean(boolean, value, persistent=False):
+    """
+    Set the SELinux boolean to the desired state.
+
+    + boolean: name of an SELinux boolean
+    + state: 'on' or 'off'
+    + persistent: whether to write updated policy or not
+
+    Note: This operation requires root privileges.
+
+    **Example:**
+
+    .. code:: python
+
+        selinux.boolean(
+            name = "Allow Apache to connect to LDAP server",
+            "httpd_can_network_connect",
+            "on",
+            persistent=True
+        )
+    """
+    _valid_states = ["on", "off"]
+
+    if value not in _valid_states:
+        raise ValueError(
+            f"'value' must be one of '{','.join(_valid_states)}' but found '{value}'",
+        )
+
+    if host.get_fact(SEBoolean, boolean=boolean) != value:
+        persist = "-P " if persistent else ""
+        yield StringCommand("setsebool", f"{persist}{boolean}", value)
+        host.create_fact(SEBoolean, kwargs={"boolean": boolean}, data=value)
+    else:
+        host.noop(f"seboolean '{boolean}' already had the value '{value}'")
+
+
+@operation(
     pipeline_facts={"filecontext": "path"},
 )
 def file_context(path, se_type):
@@ -86,45 +125,6 @@ def file_context_mapping(target, se_type=None, present=True):
             host.create_fact(FileContextMapping, kwargs=kwargs, data={})
         else:
             host.noop(f"no existing mapping for '{target}'")
-
-
-@operation(
-    pipeline_facts={"seboolean": "boolean"},
-)
-def se_boolean(boolean, value, persistent=False):
-    """
-    Set the SELinux boolean to the desired state.
-
-    + boolean: name of an SELinux boolean
-    + state: 'on' or 'off'
-    + persistent: whether to write updated policy or not
-
-    Note: This operation requires root privileges.
-
-    **Example:**
-
-    .. code:: python
-
-        selinux.boolean(
-            name = "Allow Apache to connect to LDAP server",
-            "httpd_can_network_connect",
-            "on",
-            persistent=True
-        )
-    """
-    _valid_states = ["on", "off"]
-
-    if value not in _valid_states:
-        raise ValueError(
-            f"'value' must be one of '{','.join(_valid_states)}' but found '{value}'",
-        )
-
-    if host.get_fact(SEBoolean, boolean=boolean) != value:
-        persist = "-P " if persistent else ""
-        yield StringCommand("setsebool", f"{persist}{boolean}", value)
-        host.create_fact(SEBoolean, kwargs={"boolean": boolean}, data=value)
-    else:
-        host.noop(f"seboolean '{boolean}' already had the value '{value}'")
 
 
 @operation(
