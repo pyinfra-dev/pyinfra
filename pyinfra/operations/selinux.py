@@ -11,7 +11,7 @@ from pyinfra.facts.selinux import FileContext, FileContextMapping, SEBoolean, SE
 )
 def se_boolean(boolean, value, persistent=False):
     """
-    Set the SELinux boolean to the desired state.
+    Set the specified SELinux boolean to the desired state.
 
     + boolean: name of an SELinux boolean
     + state: 'on' or 'off'
@@ -50,7 +50,7 @@ def se_boolean(boolean, value, persistent=False):
 )
 def file_context(path, se_type):
     """
-    Set the SELinux type for the specified path .
+    Set the SELinux type for the specified path to the specified value.
 
     + path: the target path (expression) for the context
     + se_type: the SELinux type for the given target
@@ -146,10 +146,10 @@ def se_port(protocol, port, se_type=None, present=True):
     .. code:: python
 
         selinux.port(
-            name = 'Allow Apache to connect to LDAP server',
-            'httpd_can_network_connect',
-            'on',
-            persistent=True
+            name = 'Allow Apache to provide service on port 2222',
+            'tcp',
+            2222,
+            'http_port_t',
         )
     """
 
