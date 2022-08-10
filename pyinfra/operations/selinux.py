@@ -58,7 +58,7 @@ def file_context_mapping(target, se_type=None, present=True):
 
     .. code:: python
 
-        selinux.file_context(
+        selinux.file_context_mapping(
             name = "Allow Apache to serve content from the /web directory",
             "/web(/.*)?",
             se_type="httpd_sys_content_t"
