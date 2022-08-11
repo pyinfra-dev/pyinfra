@@ -62,7 +62,7 @@ def container(
     if present:
         if not container:
             # Command to create the container:
-            yield "lxc launch {image} {id}".format(id=id, image=image)
+            yield "lxc launch {image} {id} < /dev/null".format(id=id, image=image)
             current_containers.append(
                 {
                     "name": id,
