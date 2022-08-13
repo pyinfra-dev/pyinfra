@@ -18,6 +18,7 @@ from .util import (
     format_exception,
     log_error_or_warning,
     log_host_command_error,
+    log_operation_start,
     memoize,
     print_host_combined_output,
 )
@@ -257,32 +258,6 @@ def run_host_op(state, host, op_hash):
         host.executing_op_hash = None
 
     return return_status
-
-
-def log_operation_start(op_meta, op_types=None, prefix="--> "):
-    op_types = op_types or []
-    if op_meta["serial"]:
-        op_types.append("serial")
-    if op_meta["run_once"]:
-        op_types.append("run once")
-
-    args = ""
-    if op_meta["args"]:
-        args = "({0})".format(", ".join(str(arg) for arg in op_meta["args"]))
-
-    logger.info(
-        "{0} {1} {2}".format(
-            click.style(
-                "{0}Starting{1}operation:".format(
-                    prefix,
-                    " {0} ".format(", ".join(op_types)) if op_types else " ",
-                ),
-                "blue",
-            ),
-            click.style(", ".join(op_meta["names"]), bold=True),
-            args,
-        ),
-    )
 
 
 def _run_host_op_with_context(state, host, op_hash):
