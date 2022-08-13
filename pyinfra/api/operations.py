@@ -58,14 +58,6 @@ def _run_shell_command(
 
 
 def run_host_op(state, host, op_hash):
-    # We may already have a host context (nested operations)
-    if ctx_host.isset():
-        return _run_host_op(state, host, op_hash)
-    with ctx_host.use(host):
-        return _run_host_op(state, host, op_hash)
-
-
-def _run_host_op(state, host, op_hash):
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
     if op_hash not in state.ops[host]:
@@ -293,6 +285,11 @@ def log_operation_start(op_meta, op_types=None, prefix="--> "):
     )
 
 
+def _run_host_op_with_context(state, host, op_hash):
+    with ctx_host.use(host):
+        return run_host_op(state, host, op_hash)
+
+
 def _run_host_ops(state, host, progress=None):
     """
     Run all ops for a single server.
@@ -304,7 +301,7 @@ def _run_host_ops(state, host, progress=None):
         op_meta = state.get_op_meta(op_hash)
         log_operation_start(op_meta)
 
-        result = run_host_op(state, host, op_hash)
+        result = _run_host_op_with_context(state, host, op_hash)
 
         # Trigger CLI progress if provided
         if progress:
@@ -376,7 +373,7 @@ def _run_single_op(state, op_hash):
         with progress_spinner(state.inventory.iter_active_hosts()) as progress:
             # For each host, run the op
             for host in state.inventory.iter_active_hosts():
-                result = run_host_op(state, host, op_hash)
+                result = _run_host_op_with_context(state, host, op_hash)
                 progress(host)
 
                 if not result:
@@ -397,7 +394,8 @@ def _run_single_op(state, op_hash):
             with progress_spinner(batch) as progress:
                 # Spawn greenlet for each host
                 greenlet_to_host = {
-                    state.pool.spawn(run_host_op, state, host, op_hash): host for host in batch
+                    state.pool.spawn(_run_host_op_with_context, state, host, op_hash): host
+                    for host in batch
                 }
 
                 # Trigger CLI progress as hosts complete if provided
