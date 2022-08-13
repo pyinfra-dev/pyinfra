@@ -17,11 +17,12 @@ from .arguments import get_execution_kwarg_keys, pop_global_arguments
 from .command import StringCommand
 from .exceptions import OperationValueError, PyinfraError
 from .host import Host
-from .operations import log_operation_start, run_host_op
+from .operations import run_host_op
 from .util import (
     get_args_kwargs_spec,
     get_call_location,
     get_operation_order_from_stack,
+    log_operation_start,
     make_hash,
     memoize,
 )

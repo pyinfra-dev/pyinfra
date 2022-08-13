@@ -94,7 +94,7 @@ def memoize(func: t.Callable):
     return wrapper
 
 
-def get_call_location(frame_offset: int=1):
+def get_call_location(frame_offset: int = 1):
     frame = get_caller_frameinfo(frame_offset=frame_offset)  # escape *this* function
     relpath = frame.filename
 
@@ -108,7 +108,7 @@ def get_call_location(frame_offset: int=1):
     return "line {0} in {1}".format(frame.lineno, relpath)
 
 
-def get_caller_frameinfo(frame_offset: int=0):
+def get_caller_frameinfo(frame_offset: int = 0):
     # Default frames to look at is 2; one for this function call itself
     # in util.py and one for the caller of this function within pyinfra
     # giving the external call frame (ie end user deploy code).
@@ -214,7 +214,33 @@ def print_host_combined_output(host: "Host", combined_output_lines):
             )
 
 
-def log_error_or_warning(host: "Host", ignore_errors, description="", continue_on_error=False):
+def log_operation_start(op_meta, op_types=None, prefix="--> "):
+    op_types = op_types or []
+    if op_meta["serial"]:
+        op_types.append("serial")
+    if op_meta["run_once"]:
+        op_types.append("run once")
+
+    args = ""
+    if op_meta["args"]:
+        args = "({0})".format(", ".join(str(arg) for arg in op_meta["args"]))
+
+    logger.info(
+        "{0} {1} {2}".format(
+            click.style(
+                "{0}Starting{1}operation:".format(
+                    prefix,
+                    " {0} ".format(", ".join(op_types)) if op_types else " ",
+                ),
+                "blue",
+            ),
+            click.style(", ".join(op_meta["names"]), bold=True),
+            args,
+        ),
+    )
+
+
+def log_error_or_warning(host: "Host", ignore_errors, description: str = "", continue_on_error: bool = False):
     log_func = logger.error
     log_color = "red"
     log_text = "Error: " if description else "Error"

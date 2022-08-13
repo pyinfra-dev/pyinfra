@@ -13,6 +13,7 @@ from paramiko import SSHException
 
 import pyinfra
 from pyinfra import logger
+from pyinfra.context import ctx_host
 from pyinfra.progress import progress_spinner
 
 from .arguments import get_executor_kwarg_keys
@@ -22,6 +23,7 @@ from .util import (
     format_exception,
     log_error_or_warning,
     log_host_command_error,
+    log_operation_start,
     memoize,
     print_host_combined_output,
 )
@@ -263,30 +265,9 @@ def run_host_op(state: "State", host: "Host", op_hash):
     return return_status
 
 
-def log_operation_start(op_hash_map, op_types=None, prefix="--> "):
-    op_types = op_types or []
-    if op_hash_map["serial"]:
-        op_types.append("serial")
-    if op_hash_map["run_once"]:
-        op_types.append("run once")
-
-    args = ""
-    if op_hash_map["args"]:
-        args = "({0})".format(", ".join(str(arg) for arg in op_hash_map["args"]))
-
-    logger.info(
-        "{0} {1} {2}".format(
-            click.style(
-                "{0}Starting{1}operation:".format(
-                    prefix,
-                    " {0} ".format(", ".join(op_types)) if op_types else " ",
-                ),
-                "blue",
-            ),
-            click.style(", ".join(op_hash_map["names"]), bold=True),
-            args,
-        ),
-    )
+def _run_host_op_with_context(state, host, op_hash):
+    with ctx_host.use(host):
+        return run_host_op(state, host, op_hash)
 
 
 def _run_host_ops(state: "State", host: "Host", progress=None):
@@ -300,7 +281,7 @@ def _run_host_ops(state: "State", host: "Host", progress=None):
         op_hash_map = state.get_op_hash_map(op_hash)
         log_operation_start(op_hash_map)
 
-        result = run_host_op(state, host, op_hash)
+        result = _run_host_op_with_context(state, host, op_hash)
 
         # Trigger CLI progress if provided
         if progress:
@@ -374,7 +355,7 @@ def _run_single_op(state: "State", op_hash):
         with progress_spinner(state.inventory.iter_active_hosts()) as progress:
             # For each host, run the op
             for host in state.inventory.iter_active_hosts():
-                result = run_host_op(state, host, op_hash)
+                result = _run_host_op_with_context(state, host, op_hash)
                 progress(host)
 
                 if not result:
@@ -395,9 +376,10 @@ def _run_single_op(state: "State", op_hash):
             with progress_spinner(batch) as progress:
                 # Spawn greenlet for each host
                 if state.pool is None:
-                    raise PyinfraError("No pool found on state.")                
+                    raise PyinfraError("No pool found on state.")
                 greenlet_to_host = {
-                    state.pool.spawn(run_host_op, state, host, op_hash): host for host in batch
+                    state.pool.spawn(_run_host_op_with_context, state, host, op_hash): host
+                    for host in batch
                 }
 
                 # Trigger CLI progress as hosts complete if provided
