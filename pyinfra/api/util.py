@@ -214,16 +214,16 @@ def print_host_combined_output(host: "Host", combined_output_lines):
             )
 
 
-def log_operation_start(op_meta, op_types=None, prefix="--> "):
+def log_operation_start(op_hash_map, op_types=None, prefix="--> "):
     op_types = op_types or []
-    if op_meta["serial"]:
+    if op_hash_map["serial"]:
         op_types.append("serial")
-    if op_meta["run_once"]:
+    if op_hash_map["run_once"]:
         op_types.append("run once")
 
     args = ""
-    if op_meta["args"]:
-        args = "({0})".format(", ".join(str(arg) for arg in op_meta["args"]))
+    if op_hash_map["args"]:
+        args = "({0})".format(", ".join(str(arg) for arg in op_hash_map["args"]))
 
     logger.info(
         "{0} {1} {2}".format(
@@ -234,13 +234,15 @@ def log_operation_start(op_meta, op_types=None, prefix="--> "):
                 ),
                 "blue",
             ),
-            click.style(", ".join(op_meta["names"]), bold=True),
+            click.style(", ".join(op_hash_map["names"]), bold=True),
             args,
         ),
     )
 
 
-def log_error_or_warning(host: "Host", ignore_errors, description: str = "", continue_on_error: bool = False):
+def log_error_or_warning(
+    host: "Host", ignore_errors, description: str = "", continue_on_error: bool = False
+):
     log_func = logger.error
     log_color = "red"
     log_text = "Error: " if description else "Error"

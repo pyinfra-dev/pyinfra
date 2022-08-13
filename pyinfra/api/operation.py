@@ -27,7 +27,7 @@ from .util import (
     memoize,
 )
 
-op_meta_default = object()
+op_hash_map_default = object()
 
 
 class OperationMeta(object):
@@ -189,9 +189,9 @@ def operation(
 
         for key in get_execution_kwarg_keys():
             global_value = global_kwargs.pop(key)
-            op_meta_value = op_hash_map.get(key, op_meta_default)
+            op_hash_map_value = op_hash_map.get(key, op_hash_map_default)
 
-            if op_meta_value is not op_meta_default and global_value != op_meta_value:
+            if op_hash_map_value is not op_hash_map_default and global_value != op_hash_map_value:
                 raise OperationValueError("Cannot have different values for `{0}`.".format(key))
 
             op_hash_map[key] = global_value
@@ -220,7 +220,6 @@ def operation(
         host.in_op = True
         host.current_op_hash = op_hash
         host.current_op_global_kwargs = global_kwargs
-
 
         # Convert to list as the result may be a generator
         commands = func(*args, **kwargs)
@@ -266,7 +265,7 @@ def operation(
         # Return result meta for use in deploy scripts
         return operation_meta
 
-    decorated_func._pyinfra_op = func
+    decorated_func._pyinfra_op = func  # type: ignore
     return decorated_func
 
 
@@ -284,7 +283,7 @@ def _solve_legacy_operation_arguments(op_func, state: "State", host: "Host", kwa
     """
     Solve legacy operation arguments.
     """
-    
+
     # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
     # and host are included as kwargs.
 

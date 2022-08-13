@@ -22,9 +22,9 @@ class CliError(PyinfraError, click.ClickException):
             # Get any operation meta + name
             op_name = None
             current_op_hash = host.current_op_hash
-            current_op_meta = state.op_hash_map.get(current_op_hash)
-            if current_op_meta:
-                op_name = ", ".join(current_op_meta["names"])
+            current_op_hash_map = state.op_hash_map.get(current_op_hash)
+            if current_op_hash_map:
+                op_name = ", ".join(current_op_hash_map["names"])
 
             sys.stderr.write(
                 "--> {0}{1}{2}: ".format(
