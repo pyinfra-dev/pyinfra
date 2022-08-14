@@ -73,12 +73,7 @@ def run_host_op(state, host, op_hash):
     ignore_errors = global_kwargs["ignore_errors"]
     continue_on_error = global_kwargs["continue_on_error"]
 
-    logger.debug(
-        "Starting operation {0} on {1}".format(
-            ", ".join(op_meta["names"]),
-            host,
-        ),
-    )
+    logger.debug("Starting operation %r on %s", op_meta["names"], host)
 
     executor_kwarg_keys = get_executor_kwarg_keys()
     base_executor_kwargs = {
@@ -270,7 +265,7 @@ def _run_host_ops(state, host, progress=None):
     Run all ops for a single server.
     """
 
-    logger.debug("Running all ops on {0}".format(host))
+    logger.debug("Running all ops on %s", host)
 
     for op_hash in state.get_op_order():
         op_meta = state.get_op_meta(op_hash)

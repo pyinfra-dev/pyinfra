@@ -82,7 +82,7 @@ def run_local_process(
 
     logger.debug("--> Waiting for exit status...")
     process.wait()
-    logger.debug("--> Command exit status: {0}".format(process.returncode))
+    logger.debug("--> Command exit status: %i", process.returncode)
 
     # Close any open file descriptors
     process.stdout.close()

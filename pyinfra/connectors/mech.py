@@ -26,7 +26,7 @@ from pyinfra.progress import progress_spinner
 
 
 def _get_mech_ssh_config(queue, progress, target):
-    logger.debug("Loading SSH config for {0}".format(target))
+    logger.debug("Loading SSH config for %s", target)
 
     # Note: We have to work-around the fact that "mech ssh-config somehost"
     # does not return the correct "Host" value. When "mech" fixes this
@@ -147,7 +147,7 @@ def _make_name_data(host):
 def make_names_data(limit=None):
     mech_ssh_info = get_mech_config(limit)
 
-    logger.debug("Got Mech SSH info: \n{0}".format(mech_ssh_info))
+    logger.debug("Got Mech SSH info: \n%s", mech_ssh_info)
 
     hosts = []
     current_host = None
@@ -175,12 +175,7 @@ def make_names_data(limit=None):
             current_host[key] = value
 
         else:
-            logger.debug(
-                "Extra Mech SSH key/value ({0}={1})".format(
-                    key,
-                    value,
-                ),
-            )
+            logger.debug("Extra Mech SSH key/value (%s=%s)", key, value)
 
     if current_host:
         hosts.append(_make_name_data(current_host))

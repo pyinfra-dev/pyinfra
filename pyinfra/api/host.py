@@ -204,11 +204,10 @@ class Host(object):
         self.current_deploy_kwargs = kwargs
         self.current_deploy_data = data
         logger.debug(
-            "Starting deploy {0} (args={1}, data={2})".format(
-                name,
-                kwargs,
-                data,
-            ),
+            "Starting deploy %s (args=%r, data=%r)",
+            name,
+            kwargs,
+            data,
         )
 
         yield
@@ -220,11 +219,10 @@ class Host(object):
         self.current_deploy_data = old_deploy_data
 
         logger.debug(
-            "Reset deploy to {0} (args={1}, data={2})".format(
-                old_deploy_name,
-                old_deploy_kwargs,
-                old_deploy_data,
-            ),
+            "Reset deploy to %s (args=%r, data=%r)",
+            old_deploy_name,
+            old_deploy_kwargs,
+            old_deploy_data,
         )
 
     # Host facts

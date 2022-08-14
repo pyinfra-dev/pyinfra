@@ -21,7 +21,7 @@ def include(filename):
 
     filename = get_file_path(state, filename)
 
-    logger.debug("Including local file: {0}".format(filename))
+    logger.debug("Including local file: %s", filename)
 
     config_state = config.get_current_state()
 

@@ -221,7 +221,7 @@ def connect(state, host):
     """
 
     kwargs = _make_paramiko_kwargs(state, host)
-    logger.debug("Connecting to: {0} ({1})".format(host.name, kwargs))
+    logger.debug("Connecting to: %s (%r)", host.name, kwargs)
 
     hostname = kwargs.pop("hostname")
 
@@ -314,11 +314,10 @@ def run_shell_command(
         actual_command = unix_command.get_raw_value()
 
         logger.debug(
-            "Running command on {0}: (pty={1}) {2}".format(
-                host.name,
-                get_pty,
-                unix_command,
-            ),
+            "Running command on %s: (pty=%s) %s",
+            host.name,
+            get_pty,
+            unix_command,
         )
 
         if print_input:
@@ -343,7 +342,7 @@ def run_shell_command(
 
         logger.debug("Waiting for exit status...")
         exit_status = stdout_buffer.channel.recv_exit_status()
-        logger.debug("Command exit status: {0}".format(exit_status))
+        logger.debug("Command exit status: %i", exit_status)
 
         return exit_status, combined_output
 

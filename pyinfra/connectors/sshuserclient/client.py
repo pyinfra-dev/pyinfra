@@ -92,7 +92,7 @@ def get_missing_host_key_policy(policy):
 
 @memoize
 def get_ssh_config(user_config_file=None):
-    logger.debug(f"Loading SSH config: {user_config_file}")
+    logger.debug("Loading SSH config: %s", user_config_file)
 
     if user_config_file is None:
         user_config_file = path.expanduser("~/.ssh/config")
