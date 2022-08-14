@@ -67,6 +67,4 @@ python -m http.server -d docs/build/
 
 ## Code Style
 
-+ 100 max line length
-+ no hanging indents
-+ single quotes everywhere possible
+Code is linted using `flake8` and uses the `black` / `isort` codestyles. To check you can just run `flake8` from the root directory.
