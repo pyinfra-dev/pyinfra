@@ -32,7 +32,24 @@ pip install -e '.[dev]'
 
 ## Tests
 
-Use `pytest` to run tests, or `pytest --cov` to run with coverage. Pull requests are expected to be tested and not drop overall project coverage by >1%.
+GitHub will run all the test suites as part of any pull requests, here's how you can run them locally:
+
+### Unit Tests
+
+Use `pytest` to run the unit tests, or `pytest --cov` to run with coverage. Pull requests are expected to be tested and not drop overall project coverage by >1%.
+
+### End to End Testst
+
+The end to end tests are also executed via `pytest` but not selected by default, options/usage:
+
+```sh
+# Run local e2e tests (works on Linux / MacOS, no Windows yet)
+pytest -m end_to_end_local
+
+# Run Docker and SSH e2e tests (Linux / MacOS with Docker installed)
+pytest -m end_to_end_ssh
+pytest -m end_to_end_docker
+```
 
 ## Generate Documentation
 
