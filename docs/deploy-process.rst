@@ -106,40 +106,44 @@ Sometimes it is impossible to know all the facts before executing operations. Fo
 
 See the :doc:`./examples/dynamic_execution_deploy` example.
 
-Loops
-~~~~~
+Loops & Cycle Errors
+~~~~~~~~~~~~~~~~~~~~
 
-In CLI mode ``pyinfra`` uses *line numbers* to determine the order in which operations are executed. While this is very effective and executing in an order users would expect, loops are an exception. ``pyinfra`` inclues a workaround for this with the ``state.preserve_loop_order`` function:
+In CLI mode ``pyinfra`` uses a single DAG to determine the order in which operations are executed. Line numbers are also used to tie-break. While this is very effective and executing in an order users would expect, certain loops result in cycles within the DAG which raise an error - there is a workaround using the ``host.loop`` function.
+
+Let's walk through an example:
 
 .. code:: python
 
-    # list of items
-    items = ["a", "b", "c"]
+    for i in range(0, 2):
+        if i > 0 or (i == 0 and host.name == "@local"):
+            server.shell(name="A", ...)
 
-    # This loop will be executed as:
-    # > item: a
-    # > item: b
-    # > item: c
-    # > end item: a
-    # > end item: b
-    # > end item: c
-    for item in items:
-        server.shell(name="item: {0}".format(item)}, commands="hi")
-        server.shell(name="end item: {0}".format(item)}, commands="hi")
+        server.shell(name="B", ...)
 
+This results in the following DAGs for each host:
 
-    # This loop will be executed as:
-    # > item: a
-    # > end item: a
-    # > item: b
-    # > end item: b
-    # > item: c
-    # > end item: c
-    with state.preserve_loop_order(items) as loop_items:
-        for item in loop_items():
-            server.shell(name="item: {0}".format(item)}, commands="hi")
-            server.shell(name="end item: {0}".format(item)}, commands="hi")
+.. code:: shell
 
+    # @local: A0 -> B0 -> A1 -> B1
+    # Other:  B0 -> A1 -> B1
+
+Problem is, by default ``pyinfra`` doesn't know the loop position. To work around this duplicate issues have numbers appended, so now we have:
+
+.. code:: shell
+
+    # @local: A -> B -> A-1 -> B-1
+    # Other:  B -> A -> B-1
+
+So now A needs B which needs A. We can use the ``host.loop`` function to prevent this occurring by providing the loop position to ``pyinfra``:
+
+.. code:: python
+
+    for i in host.loop(range(0, 2)):
+        if i > 0 or (i == 0 and host.name == "@local"):
+            server.shell(name="ls B", commands="ls")
+
+        server.shell(name="ls C", commands="ls")
 
 Deploy State
 ------------

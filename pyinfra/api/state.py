@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from graphlib import TopologicalSorter
+from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
 from uuid import uuid4
 
@@ -251,7 +251,17 @@ class State(object):
 
         final_op_order = []
 
-        ts.prepare()
+        try:
+            ts.prepare()
+        except CycleError as e:
+            raise PyinfraError(
+                (
+                    "Cycle detected in operation ordering DAG.\n"
+                    f"    Error: {e}\n\n"
+                    "    This can happen when using loops in operation code, "
+                    "please see: https://docs.pyinfra.com/en/latest/deploy-process.html#loops-cycle-errors"  # noqa: E501
+                ),
+            )
 
         while ts.is_active():
             # Ensure that where we have multiple different operations that can be executed in any
