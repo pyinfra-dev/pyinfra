@@ -95,6 +95,14 @@ class Host(object):
     executing_op_hash = None
     nested_executing_op_hash = None
 
+    loop_position = 0
+
+    def loop(self, iterable):
+        for i, item in enumerate(iterable):
+            self.loop_position = i
+            yield item
+        self.loop_position = 0
+
     def __init__(
         self,
         name,
