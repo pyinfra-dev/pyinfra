@@ -105,7 +105,7 @@ class Host(object):
         name: str,
         inventory: "Inventory",
         groups,
-        executor: str | t.Any = "ssh",
+        executor: t.Union[str, t.Any] = "ssh",
     ):
         self.inventory = inventory
         self.groups = groups
@@ -172,7 +172,7 @@ class Host(object):
     @property
     def executor(self):
         if self._executor is None:
-            return self.set_executor("ssh")
+            return self.set_executor(self.default_executor)
         return self._executor
 
     def style_print_prefix(self, *args, **kwargs):
@@ -263,7 +263,7 @@ class Host(object):
         if not self.state:
             raise TypeError("Cannot call this function with no state!")
 
-    def connect(self, reason=None, show_errors=True, raise_exceptions=False):
+    def connect(self, reason=None, show_errors: bool = True, raise_exceptions: bool = False):
         self._check_state()
         if not self.connection:
             self.state.trigger_callbacks("host_before_connect", self)
@@ -342,7 +342,7 @@ class Host(object):
 
     # Executor options
 
-    def set_executor(self, executor: str | t.Any):
+    def set_executor(self, executor: t.Union[str, t.Any]):
         """
         Sets the Host executor.
         This runs when the Host is initialized.

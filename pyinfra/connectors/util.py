@@ -55,7 +55,9 @@ def read_buffer(type_, io, output_queue, print_output: bool = False, print_func=
             _print(line)
 
 
-def execute_command_with_sudo_retry(host: "Host", command_kwargs, execute_command: t.Callable[..., tuple[t.Any, ...]]):
+def execute_command_with_sudo_retry(
+    host: "Host", command_kwargs, execute_command: t.Callable[..., tuple[t.Any, ...]]
+):
     return_code, combined_output = execute_command()
 
     if return_code != 0 and combined_output:
@@ -224,7 +226,7 @@ def make_unix_command(
     command,
     env=None,
     chdir=None,
-    shell_executable: str ="sh",
+    shell_executable: str = "sh",
     # Su config
     su_user=None,
     use_su_login: bool = False,
@@ -238,7 +240,7 @@ def make_unix_command(
     sudo_askpass_path=None,
     preserve_sudo_env: bool = False,
     # Doas config
-    doas: bool = False, 
+    doas: bool = False,
     doas_user=None,
 ):
     """
@@ -258,7 +260,7 @@ def make_unix_command(
     if chdir:
         command = StringCommand("cd", chdir, "&&", command)
 
-    command_bits: list["PyinfraCommand" | "QuoteString" | str] = []
+    command_bits: list[t.Union["PyinfraCommand", "QuoteString", str]] = []
 
     if doas:
         command_bits.extend(["doas", "-n"])
