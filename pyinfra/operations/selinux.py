@@ -7,7 +7,7 @@ from pyinfra.facts.selinux import FileContext, FileContextMapping, SEBoolean, SE
 
 
 @operation(
-    pipeline_facts={'seboolean': 'boolean'},
+    pipeline_facts={"seboolean": "boolean"},
 )
 def se_boolean(boolean, value, persistent=False):
     """
@@ -30,7 +30,7 @@ def se_boolean(boolean, value, persistent=False):
             persistent=True
         )
     """
-    _valid_states = ['on', 'off']
+    _valid_states = ["on", "off"]
 
     if value not in _valid_states:
         raise ValueError(
@@ -38,15 +38,15 @@ def se_boolean(boolean, value, persistent=False):
         )
 
     if host.get_fact(SEBoolean, boolean=boolean) != value:
-        persist = '-P ' if persistent else ''
-        yield StringCommand('setsebool', f'{persist}{boolean}', value)
-        host.create_fact(SEBoolean, kwargs={'boolean': boolean}, data=value)
+        persist = "-P " if persistent else ""
+        yield StringCommand("setsebool", f"{persist}{boolean}", value)
+        host.create_fact(SEBoolean, kwargs={"boolean": boolean}, data=value)
     else:
-        host.noop(f'seboolean \'{boolean}\' already had the value \'{value}\'')
+        host.noop(f"seboolean '{boolean}' already had the value '{value}'")
 
 
 @operation(
-    pipeline_facts={'filecontext': 'path'},
+    pipeline_facts={"filecontext": "path"},
 )
 def file_context(path, se_type):
     """
@@ -67,19 +67,19 @@ def file_context(path, se_type):
     """
 
     current = host.get_fact(FileContext, path=path) or {}
-    if se_type != current.get('type', ''):
-        yield StringCommand('chcon', '-t', se_type, QuoteString(path))
+    if se_type != current.get("type", ""):
+        yield StringCommand("chcon", "-t", se_type, QuoteString(path))
         host.create_fact(
             FileContext,
-            kwargs={'path': path},
-            data=dict(current, **{'type': se_type}),
+            kwargs={"path": path},
+            data=dict(current, **{"type": se_type}),
         )
     else:
-        host.noop(f'file_context: \'{path}\' already had type \'{se_type}\'')
+        host.noop(f"file_context: '{path}' already had type '{se_type}'")
 
 
 @operation(
-    pipeline_facts={'filecontextmapping': 'target'},
+    pipeline_facts={"filecontextmapping": "target"},
 )
 def file_context_mapping(target, se_type=None, present=True):
     """
@@ -104,31 +104,31 @@ def file_context_mapping(target, se_type=None, present=True):
         )
     """
     if present and (se_type is None):
-        raise ValueError('se_type must have a valid value if present is set')
+        raise ValueError("se_type must have a valid value if present is set")
 
     current = host.get_fact(FileContextMapping, target=target)
-    kwargs = {'target': target}
+    kwargs = {"target": target}
     if present:
-        op = '-a' if len(current) == 0 else ('-m' if current.get('type') != se_type else '')
-        if op != '':
-            yield StringCommand('semanage', 'fcontext', op, '-t', se_type, QuoteString(target))
+        op = "-a" if len(current) == 0 else ("-m" if current.get("type") != se_type else "")
+        if op != "":
+            yield StringCommand("semanage", "fcontext", op, "-t", se_type, QuoteString(target))
             host.create_fact(
                 FileContextMapping,
                 kwargs=kwargs,
-                data=dict(current, **{'type': se_type}),
+                data=dict(current, **{"type": se_type}),
             )
         else:
-            host.noop(f'mapping for \'{target}\' -> \'{se_type}\' already present')
+            host.noop(f"mapping for '{target}' -> '{se_type}' already present")
     else:
         if len(current) > 0:
-            yield StringCommand('semanage', 'fcontext', '-d', QuoteString(target))
+            yield StringCommand("semanage", "fcontext", "-d", QuoteString(target))
             host.create_fact(FileContextMapping, kwargs=kwargs, data={})
         else:
-            host.noop(f'no existing mapping for \'{target}\'')
+            host.noop(f"no existing mapping for '{target}'")
 
 
 @operation(
-    pipeline_facts={'seport': 'protocol, port'},
+    pipeline_facts={"seport": "protocol, port"},
 )
 def se_port(protocol, port, se_type=None, present=True):
     """
@@ -154,24 +154,24 @@ def se_port(protocol, port, se_type=None, present=True):
     """
 
     if present and (se_type is None):
-        raise ValueError('se_type must have a valid value if present is set')
+        raise ValueError("se_type must have a valid value if present is set")
 
-    kwargs = {'protocol': protocol, 'port': port}
+    kwargs = {"protocol": protocol, "port": port}
     current = host.get_fact(SEPort, protocol=protocol, port=port)
     if present:
-        op = '-a' if current == '' else ('-m' if current != se_type else '')
-        if op != '':
-            yield StringCommand('semanage', 'port', op, '-t', se_type, '-p', protocol, port)
+        op = "-a" if current == "" else ("-m" if current != se_type else "")
+        if op != "":
+            yield StringCommand("semanage", "port", op, "-t", se_type, "-p", protocol, port)
             host.create_fact(
                 SEPort,
                 kwargs=kwargs,
                 data=se_type,
             )
         else:
-            host.noop(f'setype for \'{protocol}/{port}\' is already \'{se_type}\'')
+            host.noop(f"setype for '{protocol}/{port}' is already '{se_type}'")
     else:
-        if current != '':
-            yield StringCommand('semanage', 'port', '-d', '-p', protocol, port)
-            host.create_fact(SEPort, kwargs=kwargs, data='')
+        if current != "":
+            yield StringCommand("semanage", "port", "-d", "-p", protocol, port)
+            host.create_fact(SEPort, kwargs=kwargs, data="")
         else:
-            host.noop(f'setype for \'{protocol}/{port}\' is already unset')
+            host.noop(f"setype for '{protocol}/{port}' is already unset")
