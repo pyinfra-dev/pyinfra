@@ -7,6 +7,6 @@
         "lxd.LxdContainers": []
     },
     "commands": [
-        "lxc launch ubuntu:16.04 container1"
+        "lxc launch ubuntu:16.04 container1 < /dev/null"
     ]
 }

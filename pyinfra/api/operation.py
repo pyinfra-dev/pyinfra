@@ -16,11 +16,12 @@ from .arguments import get_execution_kwarg_keys, pop_global_arguments
 from .command import StringCommand
 from .exceptions import OperationValueError, PyinfraError
 from .host import Host
-from .operations import log_operation_start, run_host_op
+from .operations import run_host_op
 from .util import (
     get_args_kwargs_spec,
     get_call_location,
     get_operation_order_from_stack,
+    log_operation_start,
     make_hash,
     memoize,
 )
@@ -230,7 +231,7 @@ def operation(
         # the op hash and also handle below with the op order.
         duplicate_op_count = 0
         while op_hash in host.op_hash_order:
-            logger.debug("Duplicate hash ({0}) detected!".format(op_hash))
+            logger.debug("Duplicate hash (%s) detected!", op_hash)
             op_hash = "{0}-{1}".format(op_hash, duplicate_op_count)
             duplicate_op_count += 1
 
@@ -242,11 +243,11 @@ def operation(
         op_order = tuple(op_order)
 
         logger.debug(
-            "Adding operation, {0}, opOrder={1}, opHash={2}".format(
-                names,
-                op_order,
-                op_hash,
-            ),
+            "Adding operation names=%r, host=%s, opOrder=%r, opHash=%s",
+            names,
+            host,
+            op_order,
+            op_hash,
         )
 
         # Ensure shared (between servers) operation meta

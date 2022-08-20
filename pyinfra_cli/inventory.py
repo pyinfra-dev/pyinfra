@@ -34,7 +34,7 @@ def _get_group_data(dirname):
     group_data = {}
     group_data_directory = path.join(dirname, "group_data")
 
-    logger.debug(f"Checking possible group_data directory: {dirname}")
+    logger.debug("Checking possible group_data directory: %s", dirname)
 
     if path.exists(group_data_directory):
         files = listdir(group_data_directory)
@@ -46,7 +46,7 @@ def _get_group_data(dirname):
             group_data_file = path.join(group_data_directory, file)
             group_name = path.basename(file)[:-3]
 
-            logger.debug("Looking for group data in: {0}".format(group_data_file))
+            logger.debug("Looking for group data in: %s", group_data_file)
 
             # Read the files locals into a dict
             attrs = exec_file(group_data_file, return_locals=True)

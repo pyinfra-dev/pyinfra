@@ -8,6 +8,7 @@ from paramiko import SSHException
 
 import pyinfra
 from pyinfra import logger
+from pyinfra.context import ctx_host
 from pyinfra.progress import progress_spinner
 
 from .arguments import get_executor_kwarg_keys
@@ -17,6 +18,7 @@ from .util import (
     format_exception,
     log_error_or_warning,
     log_host_command_error,
+    log_operation_start,
     memoize,
     print_host_combined_output,
 )
@@ -71,12 +73,7 @@ def run_host_op(state, host, op_hash):
     ignore_errors = global_kwargs["ignore_errors"]
     continue_on_error = global_kwargs["continue_on_error"]
 
-    logger.debug(
-        "Starting operation {0} on {1}".format(
-            ", ".join(op_meta["names"]),
-            host,
-        ),
-    )
+    logger.debug("Starting operation %r on %s", op_meta["names"], host)
 
     executor_kwarg_keys = get_executor_kwarg_keys()
     base_executor_kwargs = {
@@ -258,30 +255,9 @@ def run_host_op(state, host, op_hash):
     return return_status
 
 
-def log_operation_start(op_meta, op_types=None, prefix="--> "):
-    op_types = op_types or []
-    if op_meta["serial"]:
-        op_types.append("serial")
-    if op_meta["run_once"]:
-        op_types.append("run once")
-
-    args = ""
-    if op_meta["args"]:
-        args = "({0})".format(", ".join(str(arg) for arg in op_meta["args"]))
-
-    logger.info(
-        "{0} {1} {2}".format(
-            click.style(
-                "{0}Starting{1}operation:".format(
-                    prefix,
-                    " {0} ".format(", ".join(op_types)) if op_types else " ",
-                ),
-                "blue",
-            ),
-            click.style(", ".join(op_meta["names"]), bold=True),
-            args,
-        ),
-    )
+def _run_host_op_with_context(state, host, op_hash):
+    with ctx_host.use(host):
+        return run_host_op(state, host, op_hash)
 
 
 def _run_host_ops(state, host, progress=None):
@@ -289,13 +265,13 @@ def _run_host_ops(state, host, progress=None):
     Run all ops for a single server.
     """
 
-    logger.debug("Running all ops on {0}".format(host))
+    logger.debug("Running all ops on %s", host)
 
     for op_hash in state.get_op_order():
         op_meta = state.get_op_meta(op_hash)
         log_operation_start(op_meta)
 
-        result = run_host_op(state, host, op_hash)
+        result = _run_host_op_with_context(state, host, op_hash)
 
         # Trigger CLI progress if provided
         if progress:
@@ -367,7 +343,7 @@ def _run_single_op(state, op_hash):
         with progress_spinner(state.inventory.iter_active_hosts()) as progress:
             # For each host, run the op
             for host in state.inventory.iter_active_hosts():
-                result = run_host_op(state, host, op_hash)
+                result = _run_host_op_with_context(state, host, op_hash)
                 progress(host)
 
                 if not result:
@@ -388,7 +364,8 @@ def _run_single_op(state, op_hash):
             with progress_spinner(batch) as progress:
                 # Spawn greenlet for each host
                 greenlet_to_host = {
-                    state.pool.spawn(run_host_op, state, host, op_hash): host for host in batch
+                    state.pool.spawn(_run_host_op_with_context, state, host, op_hash): host
+                    for host in batch
                 }
 
                 # Trigger CLI progress as hosts complete if provided

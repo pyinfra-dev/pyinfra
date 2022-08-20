@@ -10,7 +10,11 @@ labels: Bug
 A clear and concise description of what the bug is.
 
 ## To Reproduce
-Steps to reproduce the behavior (include code & usage example):
+Steps to reproduce the behavior, please include where possible:
+
++ Operation code & usage
++ Target system information
++ Example using the `@docker` connector (helps isolate the problem)
 
 ## Expected behavior
 A clear and concise description of what you expected to happen.

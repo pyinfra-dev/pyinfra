@@ -279,7 +279,7 @@ class State(object):
         Flag a host as active.
         """
 
-        logger.debug("Activating host: {0}".format(host))
+        logger.debug("Activating host: %s", host)
 
         # Add to *both* activated and active - active will reduce as hosts fail
         # but connected will not, enabling us to track failed %.
@@ -296,13 +296,7 @@ class State(object):
 
         activated_count = activated_count or len(self.activated_hosts)
 
-        logger.debug(
-            "Failing hosts: {0}".format(
-                ", ".join(
-                    (host.name for host in hosts_to_fail),
-                ),
-            ),
-        )
+        logger.debug("Failing hosts: %r", hosts_to_fail)
 
         self.failed_hosts.update(hosts_to_fail)
 

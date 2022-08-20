@@ -195,11 +195,10 @@ def _get_fact(
 
     kwargs_str = get_kwargs_str(kwargs)
     logger.debug(
-        "Getting fact: {0} ({1}) (ensure_hosts: {2})".format(
-            name,
-            kwargs_str,
-            ensure_hosts,
-        ),
+        "Getting fact: %s (%s) (ensure_hosts: %r)",
+        name,
+        kwargs_str,
+        ensure_hosts,
     )
 
     if not host.connected:

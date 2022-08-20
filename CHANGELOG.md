@@ -1,3 +1,32 @@
+# v2.4
+
+Delayed getting this out, lots of little improvements.
+
+Added:
+
++ Add `server.user_authorized_keys` operation
++ Add global `_continue_on_error` argument
++ Add `dir_mode` argument to `files.sync` operation (@filips123)
++ Copy local permissions when `mode=True` in `files.put` operation
++ Add `headers` and `insecure` arguments to `files.download` operation
+
+Fixed:
+
++ Get facts with host & state context (@jaysoffian)
++ Fix short facts with arguments (@jaysoffian)
++ Fix hang on launch of container in `lxd.container` operation (@zachwaite)
++ Run operations with host context
++ Fix idempotency with uploads to a directory in `files.put` operation
+
+Other changes:
+
++ Fix multiple doc typos (@timgates42)
++ Fix variable typo (@bouke-sf)
++ Fix CLI shell autocomplete doc (@jaysoffian)
++ Implement idempotency in `git.bare_repo` operation
++ Add typing to fact classes
++ Start testing files operations with `pathlib` objects
+
 # v2.3
 
 Relatively small quick release with two additions and a bunch of fixes.

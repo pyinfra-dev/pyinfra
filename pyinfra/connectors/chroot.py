@@ -68,12 +68,7 @@ def run_shell_command(
     command = make_unix_command_for_host(state, host, command, **command_kwargs)
     command = QuoteString(command)
 
-    logger.debug(
-        "--> Running chroot command on ({0}):{1}".format(
-            chroot_directory,
-            command,
-        ),
-    )
+    logger.debug("--> Running chroot command on (%s): %s", chroot_directory, command)
 
     chroot_command = StringCommand(
         "chroot",

@@ -555,6 +555,7 @@ def sync(
     user=None,
     group=None,
     mode=None,
+    dir_mode=None,
     delete=False,
     exclude=None,
     exclude_dir=None,
@@ -569,6 +570,7 @@ def sync(
     + user: user to own the files and directories
     + group: group to own the files and directories
     + mode: permissions of the files
+    + dir_mode: permissions of the directories
     + delete: delete remote files not present locally
     + exclude: string or list/tuple of strings to match & exclude files (eg *.pyc)
     + exclude_dir: string or list/tuple of strings to match & exclude directories (eg node_modules)
@@ -656,16 +658,16 @@ def sync(
         dest_to_ensure,
         user=user,
         group=group,
-        mode=get_path_permissions_mode(src),
+        mode=dir_mode or get_path_permissions_mode(src),
     )
 
     # Ensure any remote dirnames
-    for dirpath, dir_mode in ensure_dirnames:
+    for dir_path_curr, dir_mode_curr in ensure_dirnames:
         yield from directory(
-            unix_path_join(dest, dirpath),
+            unix_path_join(dest, dir_path_curr),
             user=user,
             group=group,
-            mode=dir_mode,
+            mode=dir_mode or dir_mode_curr,
         )
 
     # Put each file combination

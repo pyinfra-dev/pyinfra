@@ -137,6 +137,7 @@ def sync(
     user=None,
     group=None,
     mode=None,
+    dir_mode=None,
     delete=False,
     exclude=None,
     exclude_dir=None,

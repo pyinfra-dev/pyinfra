@@ -26,7 +26,7 @@ from pyinfra.progress import progress_spinner
 
 
 def _get_vagrant_ssh_config(queue, progress, target):
-    logger.debug("Loading SSH config for {0}".format(target))
+    logger.debug("Loading SSH config for %s", target)
 
     queue.put(
         local.shell(
@@ -131,7 +131,7 @@ def _make_name_data(host):
 def make_names_data(limit=None):
     vagrant_ssh_info = get_vagrant_config(limit)
 
-    logger.debug("Got Vagrant SSH info: \n{0}".format(vagrant_ssh_info))
+    logger.debug("Got Vagrant SSH info: \n%s", vagrant_ssh_info)
 
     hosts = []
     current_host = None
@@ -160,12 +160,7 @@ def make_names_data(limit=None):
             current_host[key] = value
 
         else:
-            logger.debug(
-                "Extra Vagrant SSH key/value ({0}={1})".format(
-                    key,
-                    value,
-                ),
-            )
+            logger.debug("Extra Vagrant SSH key/value (%s=%s)", key, value)
 
     if current_host:
         hosts.append(_make_name_data(current_host))
