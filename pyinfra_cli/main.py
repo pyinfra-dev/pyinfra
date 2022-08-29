@@ -285,8 +285,116 @@ def _main(
     if chdir:
         os_chdir(chdir)
 
-    # Setup logging
+    # Setup logging & Virtual Env
+    _setup_log_level(debug, quiet)
+
+    # Bootstrap any virtualenv
+    init_virtualenv()
+
+    #  Check operations are valid and setup command
     #
+    original_operations, operations, command, chdir = _validate_operations(operations, chdir)
+
+    # Setup state, config & inventory
+    #
+    state = _setup_state(verbosity, quiet)
+
+    config = Config()
+    ctx_config.set(config)
+
+    config = _set_config(
+        config,
+        config_filename,
+        sudo,
+        sudo_user,
+        use_sudo_password,
+        su_user,
+        parallel,
+        shell_executable,
+        fail_percent,
+        quiet,
+    )
+
+    override_data = _set_override_data(
+        data,
+        ssh_user,
+        ssh_key,
+        ssh_key_password,
+        ssh_port,
+        ssh_password,
+        winrm_username,
+        winrm_password,
+        winrm_port,
+        winrm_transport,
+    )
+
+    # Load up the inventory from the filesystem
+    inventory, inventory_group = make_inventory(
+        inventory,
+        cwd=state.cwd,
+        override_data=override_data,
+        group_data_directories=group_data,
+    )
+    ctx_inventory.set(inventory)
+
+    # Now that we have inventory, apply --limit config override
+    initial_limit = _apply_inventory_limit(inventory, limit)
+
+    # Initialise the state
+    state.init(inventory, config, initial_limit=initial_limit)
+
+    if command == "debug-inventory":
+        print_inventory(state)
+        _exit()
+
+    # Connect to the hosts & start handling the user commands
+    #
+
+    if not quiet:
+        click.echo(err=True)
+        click.echo("--> Connecting to hosts...", err=True)
+
+    connect_all(state)
+    state, config = _handle_commands(state, config, command, original_operations, operations, quiet)
+
+    # Print proposed changes, execute unless --dry, and exit
+    #
+
+    if not quiet:
+        click.echo(err=True)
+        click.echo("--> Proposed changes:", err=True)
+    print_meta(state)
+
+    # If --debug-facts or --debug-operations, print and exit
+    if debug_facts or debug_operations:
+        if debug_facts:
+            print_state_facts(state)
+
+        if debug_operations:
+            print_state_operations(state)
+
+        _exit()
+
+    if dry:
+        _exit()
+
+    if not quiet:
+        click.echo(err=True)
+
+    if not quiet:
+        click.echo("--> Beginning operation run...", err=True)
+    run_ops(state, serial=serial, no_wait=no_wait)
+
+    if not quiet:
+        click.echo("--> Results:", err=True)
+    print_results(state)
+
+    _exit()
+
+
+# Setup
+#
+def _setup_log_level(debug, quiet):
 
     if not debug and not sys.warnoptions:
         warnings.simplefilter("ignore")
@@ -299,11 +407,8 @@ def _main(
 
     setup_logging(log_level)
 
-    # Bootstrap any virtualenv
-    init_virtualenv()
 
-    #  Check operations are valid and setup command
-    #
+def _validate_operations(operations, chdir):
 
     # Make a copy before we overwrite
     original_operations = operations
@@ -368,9 +473,10 @@ def _main(
             ),
         )
 
-    # Setup state, config & inventory
-    #
+    return original_operations, operations, command, chdir
 
+
+def _setup_state(verbosity, quiet):
     cwd = getcwd()
     if cwd not in sys.path:  # ensure cwd is present in sys.path
         sys.path.append(cwd)
@@ -379,22 +485,59 @@ def _main(
     state.cwd = cwd
     ctx_state.set(state)
 
-    if verbosity > 0:
-        state.print_fact_info = True
-        state.print_noop_info = True
+    state = _set_verbosity(state, verbosity, quiet)
+    return state
 
-    if verbosity > 1:
-        state.print_input = state.print_fact_input = True
 
-    if verbosity > 2:
-        state.print_output = state.print_fact_output = True
+def _set_override_data(
+    data,
+    ssh_user,
+    ssh_key,
+    ssh_key_password,
+    ssh_port,
+    ssh_password,
+    winrm_username,
+    winrm_password,
+    winrm_port,
+    winrm_transport,
+):
+    override_data = {}
 
-    if not quiet:
-        click.echo("--> Loading config...", err=True)
+    for arg in data:
+        key, value = arg.split("=", 1)
+        override_data[key] = value
 
-    config = Config()
-    ctx_config.set(config)
+    override_data = {key: parse_cli_arg(value) for key, value in override_data.items()}
 
+    for key, value in (
+        ("ssh_user", ssh_user),
+        ("ssh_key", ssh_key),
+        ("ssh_key_password", ssh_key_password),
+        ("ssh_port", ssh_port),
+        ("ssh_password", ssh_password),
+        ("winrm_username", winrm_username),
+        ("winrm_password", winrm_password),
+        ("winrm_port", winrm_port),
+        ("winrm_transport", winrm_transport),
+    ):
+        if value:
+            override_data[key] = value
+
+    return override_data
+
+
+def _set_config(
+    config,
+    config_filename,
+    sudo,
+    sudo_user,
+    use_sudo_password,
+    su_user,
+    parallel,
+    shell_executable,
+    fail_percent,
+    quiet,
+):
     # Load up any config.py from the filesystem
     config_filename = path.join(state.cwd, config_filename)
     if path.exists(config_filename):
@@ -428,38 +571,27 @@ def _main(
     if not quiet:
         click.echo("--> Loading inventory...", err=True)
 
-    override_data = {}
+    return config
 
-    for arg in data:
-        key, value = arg.split("=", 1)
-        override_data[key] = value
 
-    override_data = {key: parse_cli_arg(value) for key, value in override_data.items()}
+def _set_verbosity(state, verbosity, quiet):
+    if verbosity > 0:
+        state.print_fact_info = True
+        state.print_noop_info = True
 
-    for key, value in (
-        ("ssh_user", ssh_user),
-        ("ssh_key", ssh_key),
-        ("ssh_key_password", ssh_key_password),
-        ("ssh_port", ssh_port),
-        ("ssh_password", ssh_password),
-        ("winrm_username", winrm_username),
-        ("winrm_password", winrm_password),
-        ("winrm_port", winrm_port),
-        ("winrm_transport", winrm_transport),
-    ):
-        if value:
-            override_data[key] = value
+    if verbosity > 1:
+        state.print_input = state.print_fact_input = True
 
-    # Load up the inventory from the filesystem
-    inventory, inventory_group = make_inventory(
-        inventory,
-        cwd=state.cwd,
-        override_data=override_data,
-        group_data_directories=group_data,
-    )
-    ctx_inventory.set(inventory)
+    if verbosity > 2:
+        state.print_output = state.print_fact_output = True
 
-    # Now that we have inventory, apply --limit config override
+    if not quiet:
+        click.echo("--> Loading config...", err=True)
+
+    return state
+
+
+def _apply_inventory_limit(inventory, limit):
     initial_limit = None
     if limit:
         all_limit_hosts = []
@@ -476,131 +608,107 @@ def _main(
             all_limit_hosts.extend(limit_hosts)
         initial_limit = list(set(all_limit_hosts))
 
-    # Initialise the state
-    state.init(inventory, config, initial_limit=initial_limit)
+    return initial_limit
 
-    if command == "debug-inventory":
-        print_inventory(state)
-        _exit()
 
-    # Connect to the hosts & start handling the user commands
-    #
-
-    if not quiet:
-        click.echo(err=True)
-        click.echo("--> Connecting to hosts...", err=True)
-
-    connect_all(state)
+# Operations Execution
+#
+def _handle_commands(state, config, command, original_operations, operations, quiet):
 
     if command == "fact":
-        if not quiet:
-            click.echo(err=True)
-            click.echo("--> Gathering facts...", err=True)
-
-        state.print_fact_info = True
-        fact_data = {}
-
-        for i, command in enumerate(operations):
-            fact_cls, args, kwargs = command
-            fact_key = fact_cls.name
-
-            if args or kwargs:
-                fact_key = "{0}{1}{2}".format(
-                    fact_cls.name,
-                    args or "",
-                    " ({0})".format(get_kwargs_str(kwargs)) if kwargs else "",
-                )
-
-            try:
-                fact_data[fact_key] = get_facts(
-                    state,
-                    fact_cls,
-                    args=args,
-                    kwargs=kwargs,
-                    apply_failed_hosts=False,
-                )
-            except PyinfraError:
-                pass
-
+        state, fact_data = _run_fact_operations(state, config, operations, quiet)
         print_facts(fact_data)
         _exit()
 
     if command == "exec":
-        state.print_output = True
-        add_op(
-            state,
-            server.shell,
-            " ".join(operations),
-            _allow_cli_mode=True,
-        )
+        state = _run_exec_operations(state, config, operations, quiet)
 
     elif command == "deploy":
-        if not quiet:
-            click.echo(err=True)
-            click.echo("--> Preparing operations...", err=True)
-
-        # Number of "steps" to make = number of files * number of hosts
-        for i, filename in enumerate(operations):
-            logger.info("Loading: {0}".format(click.style(filename, bold=True)))
-
-            state.current_op_file_number = i
-            load_deploy_file(state, filename)
-
-            # Remove any config changes introduced by the deploy file & any includes
-            config.reset_locked_state()
+        state, config, operations = _run_deploy_operations(state, config, operations, quiet)
 
     elif command == "op":
-        if not quiet:
-            click.echo(err=True)
-            click.echo("--> Preparing operation...", err=True)
+        state, kwargs = _run_op_operations(state, config, operations, original_operations, quiet)
 
-        op, args = operations
-        args, kwargs = args
-        kwargs["_allow_cli_mode"] = True
+    return state, config
 
-        def print_host_ready(host):
-            logger.info(
-                "{0}{1} {2}".format(
-                    host.print_prefix,
-                    click.style("Ready:", "green"),
-                    click.style(original_operations[0], bold=True),
-                ),
+
+def _run_fact_operations(state, config, operations, quiet):
+    if not quiet:
+        click.echo(err=True)
+        click.echo("--> Gathering facts...", err=True)
+
+    state.print_fact_info = True
+    fact_data = {}
+
+    for i, command in enumerate(operations):
+        fact_cls, args, kwargs = command
+        fact_key = fact_cls.name
+
+        if args or kwargs:
+            _fact_args = args or ""
+            _fact_details = " ({0})".format(get_kwargs_str(kwargs)) if kwargs else ""
+            fact_key = "{0}{1}{2}".format(fact_cls.name, _fact_args, _fact_details)
+
+        try:
+            fact_data[fact_key] = get_facts(
+                state,
+                fact_cls,
+                args=args,
+                kwargs=kwargs,
+                apply_failed_hosts=False,
             )
+        except PyinfraError:
+            pass
 
-        kwargs["_after_host_callback"] = print_host_ready
+    return state, fact_data
 
-        add_op(state, op, *args, **kwargs)
 
-    # Print proposed changes, execute unless --dry, and exit
-    #
+def _run_exec_operations(state, config, operations, quiet):
+    state.print_output = True
+    add_op(
+        state,
+        server.shell,
+        " ".join(operations),
+        _allow_cli_mode=True,
+    )
+    return state
 
+
+def _run_deploy_operations(state, config, operations, quiet):
     if not quiet:
         click.echo(err=True)
-        click.echo("--> Proposed changes:", err=True)
-    print_meta(state)
+        click.echo("--> Preparing operations...", err=True)
 
-    # If --debug-facts or --debug-operations, print and exit
-    if debug_facts or debug_operations:
-        if debug_facts:
-            print_state_facts(state)
+    # Number of "steps" to make = number of files * number of hosts
+    for i, filename in enumerate(operations):
+        _log_styled_msg = click.style(filename, bold=True)
+        logger.info("Loading: {0}".format(_log_styled_msg))
 
-        if debug_operations:
-            print_state_operations(state)
+        state.current_op_file_number = i
+        load_deploy_file(state, filename)
 
-        _exit()
+        # Remove any config changes introduced by the deploy file & any includes
+        config.reset_locked_state()
 
-    if dry:
-        _exit()
+    return state, config, operations
 
+
+def _run_op_operations(state, config, operations, original_operations, quiet):
     if not quiet:
         click.echo(err=True)
+        click.echo("--> Preparing operation...", err=True)
 
-    if not quiet:
-        click.echo("--> Beginning operation run...", err=True)
-    run_ops(state, serial=serial, no_wait=no_wait)
+    op, args = operations
+    args, kwargs = args
+    kwargs["_allow_cli_mode"] = True
 
-    if not quiet:
-        click.echo("--> Results:", err=True)
-    print_results(state)
+    def print_host_ready(host):
+        _ready_style = click.style("Ready:", "green")
+        _original_op_msg = click.style(original_operations[0], bold=True)
+        logger.info("{0}{1} {2}".format(host.print_prefix, _ready_style, _original_op_msg))
 
-    _exit()
+    kwargs["_after_host_callback"] = print_host_ready
+
+    add_op(state, op, *args, **kwargs)
+
+    return state, kwargs
