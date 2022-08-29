@@ -27,3 +27,4 @@ docs/_deploy_globals.rst
 .idea/
 
 pyinfra-debug.log
+Makefile

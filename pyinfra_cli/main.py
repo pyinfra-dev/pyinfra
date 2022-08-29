@@ -287,168 +287,47 @@ def _main(
 
     # Setup logging
     #
-
-    if not debug and not sys.warnoptions:
-        warnings.simplefilter("ignore")
-
-    log_level = logging.INFO
-    if debug:
-        log_level = logging.DEBUG
-    elif quiet:
-        log_level = logging.WARNING
-
-    setup_logging(log_level)
+    _setup_log_level(debug, quiet)
 
     # Bootstrap any virtualenv
     init_virtualenv()
 
     #  Check operations are valid and setup command
     #
-
-    # Make a copy before we overwrite
-    original_operations = operations
-
-    # Debug (print) inventory + group data
-    if operations[0] == "debug-inventory":
-        command = "debug-inventory"
-
-    # Get one or more facts
-    elif operations[0] == "fact":
-        command = "fact"
-        operations = get_facts_and_args(operations[1:])
-
-    # Execute a raw command with server.shell
-    elif operations[0] == "exec":
-        command = "exec"
-        operations = operations[1:]
-
-    # Execute one or more deploy files
-    elif all(cmd.endswith(".py") for cmd in operations):
-        command = "deploy"
-
-        filenames = []
-
-        for filename in operations[0:]:
-            if path.exists(filename):
-                filenames.append(filename)
-                continue
-            if chdir and filename.startswith(chdir):
-                correct_filename = path.relpath(filename, chdir)
-                logger.warning(
-                    (
-                        "Fixing deploy filename under `--chdir` argument: "
-                        f"{filename} -> {correct_filename}"
-                    ),
-                )
-                filenames.append(correct_filename)
-                continue
-            raise CliError(
-                "No deploy file: {0}".format(
-                    path.join(chdir, filename) if chdir else filename,
-                ),
-            )
-
-        operations = filenames
-
-    # Operation w/optional args (<module>.<op> ARG1 ARG2 ...)
-    elif len(operations[0].split(".")) == 2:
-        command = "op"
-        operations = get_operation_and_args(operations)
-
-    else:
-        raise CliError(
-            """Invalid operations: {0}
-
-    Operation usage:
-    pyinfra INVENTORY deploy_web.py [deploy_db.py]...
-    pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
-    pyinfra INVENTORY exec -- echo "hello world"
-    pyinfra INVENTORY fact os [users]...""".format(
-                operations,
-            ),
-        )
+    original_operations, operations, command, chdir = _validate_operations(operations, chdir)
 
     # Setup state, config & inventory
     #
-
-    cwd = getcwd()
-    if cwd not in sys.path:  # ensure cwd is present in sys.path
-        sys.path.append(cwd)
-
-    state = State()
-    state.cwd = cwd
-    ctx_state.set(state)
-
-    if verbosity > 0:
-        state.print_fact_info = True
-        state.print_noop_info = True
-
-    if verbosity > 1:
-        state.print_input = state.print_fact_input = True
-
-    if verbosity > 2:
-        state.print_output = state.print_fact_output = True
-
-    if not quiet:
-        click.echo("--> Loading config...", err=True)
+    state = _setup_state(verbosity, quiet)
 
     config = Config()
     ctx_config.set(config)
 
-    # Load up any config.py from the filesystem
-    config_filename = path.join(state.cwd, config_filename)
-    if path.exists(config_filename):
-        exec_file(config_filename)
+    config = _set_config(
+        config,
+        config_filename,
+        sudo,
+        sudo_user,
+        use_sudo_password,
+        su_user,
+        parallel,
+        shell_executable,
+        fail_percent,
+        quiet,
+    )
 
-    # Lock the current config, this allows us to restore this version after
-    # executing deploy files that may alter them.
-    config.lock_current_state()
-
-    # Arg based config overrides
-    if sudo:
-        config.SUDO = True
-        if sudo_user:
-            config.SUDO_USER = sudo_user
-
-    if use_sudo_password:
-        config.USE_SUDO_PASSWORD = use_sudo_password
-
-    if su_user:
-        config.SU_USER = su_user
-
-    if parallel:
-        config.PARALLEL = parallel
-
-    if shell_executable:
-        config.SHELL = None if shell_executable in ("None", "null") else shell_executable
-
-    if fail_percent is not None:
-        config.FAIL_PERCENT = fail_percent
-
-    if not quiet:
-        click.echo("--> Loading inventory...", err=True)
-
-    override_data = {}
-
-    for arg in data:
-        key, value = arg.split("=", 1)
-        override_data[key] = value
-
-    override_data = {key: parse_cli_arg(value) for key, value in override_data.items()}
-
-    for key, value in (
-        ("ssh_user", ssh_user),
-        ("ssh_key", ssh_key),
-        ("ssh_key_password", ssh_key_password),
-        ("ssh_port", ssh_port),
-        ("ssh_password", ssh_password),
-        ("winrm_username", winrm_username),
-        ("winrm_password", winrm_password),
-        ("winrm_port", winrm_port),
-        ("winrm_transport", winrm_transport),
-    ):
-        if value:
-            override_data[key] = value
+    override_data = _set_override_data(
+        data,
+        ssh_user,
+        ssh_key,
+        ssh_key_password,
+        ssh_port,
+        ssh_password,
+        winrm_username,
+        winrm_password,
+        winrm_port,
+        winrm_transport,
+    )
 
     # Load up the inventory from the filesystem
     inventory, inventory_group = make_inventory(
@@ -604,3 +483,206 @@ def _main(
     print_results(state)
 
     _exit()
+
+
+# Setup
+#
+def _setup_log_level(debug, quiet):
+    if not debug and not sys.warnoptions:
+        warnings.simplefilter("ignore")
+
+    log_level = logging.INFO
+    if debug:
+        log_level = logging.DEBUG
+    elif quiet:
+        log_level = logging.WARNING
+
+    setup_logging(log_level)
+
+
+def _validate_operations(operations, chdir):
+
+    # Make a copy before we overwrite
+    original_operations = operations
+
+    # Debug (print) inventory + group data
+    if operations[0] == "debug-inventory":
+        command = "debug-inventory"
+
+    # Get one or more facts
+    elif operations[0] == "fact":
+        command = "fact"
+        operations = get_facts_and_args(operations[1:])
+
+    # Execute a raw command with server.shell
+    elif operations[0] == "exec":
+        command = "exec"
+        operations = operations[1:]
+
+    # Execute one or more deploy files
+    elif all(cmd.endswith(".py") for cmd in operations):
+        command = "deploy"
+
+        filenames = []
+
+        for filename in operations[0:]:
+            if path.exists(filename):
+                filenames.append(filename)
+                continue
+            if chdir and filename.startswith(chdir):
+                correct_filename = path.relpath(filename, chdir)
+                logger.warning(
+                    (
+                        "Fixing deploy filename under `--chdir` argument: "
+                        f"{filename} -> {correct_filename}"
+                    ),
+                )
+                filenames.append(correct_filename)
+                continue
+            raise CliError(
+                "No deploy file: {0}".format(
+                    path.join(chdir, filename) if chdir else filename,
+                ),
+            )
+
+        operations = filenames
+
+    # Operation w/optional args (<module>.<op> ARG1 ARG2 ...)
+    elif len(operations[0].split(".")) == 2:
+        command = "op"
+        operations = get_operation_and_args(operations)
+
+    else:
+        raise CliError(
+            """Invalid operations: {0}
+
+    Operation usage:
+    pyinfra INVENTORY deploy_web.py [deploy_db.py]...
+    pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
+    pyinfra INVENTORY exec -- echo "hello world"
+    pyinfra INVENTORY fact os [users]...""".format(
+                operations,
+            ),
+        )
+
+    return original_operations, operations, command, chdir
+
+
+def _set_verbosity(state, verbosity, quiet):
+    if verbosity > 0:
+        state.print_fact_info = True
+        state.print_noop_info = True
+
+    if verbosity > 1:
+        state.print_input = state.print_fact_input = True
+
+    if verbosity > 2:
+        state.print_output = state.print_fact_output = True
+
+    return state
+
+
+def _setup_state(verbosity, quiet):
+    cwd = getcwd()
+    if cwd not in sys.path:  # ensure cwd is present in sys.path
+        sys.path.append(cwd)
+
+    state = State()
+    state.cwd = cwd
+    ctx_state.set(state)
+
+    state = _set_verbosity(state, verbosity, quiet)
+    return state
+
+
+def _set_config(
+    config,
+    config_filename,
+    sudo,
+    sudo_user,
+    use_sudo_password,
+    su_user,
+    parallel,
+    shell_executable,
+    fail_percent,
+    quiet,
+):
+    echo_msg("--> Loading config...", quiet)
+
+    # Load up any config.py from the filesystem
+    config_filename = path.join(state.cwd, config_filename)
+    if path.exists(config_filename):
+        exec_file(config_filename)
+
+    # Lock the current config, this allows us to restore this version after
+    # executing deploy files that may alter them.
+    config.lock_current_state()
+
+    # Arg based config overrides
+    if sudo:
+        config.SUDO = True
+        if sudo_user:
+            config.SUDO_USER = sudo_user
+
+    if use_sudo_password:
+        config.USE_SUDO_PASSWORD = use_sudo_password
+
+    if su_user:
+        config.SU_USER = su_user
+
+    if parallel:
+        config.PARALLEL = parallel
+
+    if shell_executable:
+        config.SHELL = None if shell_executable in ("None", "null") else shell_executable
+
+    if fail_percent is not None:
+        config.FAIL_PERCENT = fail_percent
+
+    return config
+
+
+def _set_override_data(
+    data,
+    ssh_user,
+    ssh_key,
+    ssh_key_password,
+    ssh_port,
+    ssh_password,
+    winrm_username,
+    winrm_password,
+    winrm_port,
+    winrm_transport,
+):
+    override_data = {}
+
+    for arg in data:
+        key, value = arg.split("=", 1)
+        override_data[key] = value
+
+    override_data = {key: parse_cli_arg(value) for key, value in override_data.items()}
+
+    for key, value in (
+        ("ssh_user", ssh_user),
+        ("ssh_key", ssh_key),
+        ("ssh_key_password", ssh_key_password),
+        ("ssh_port", ssh_port),
+        ("ssh_password", ssh_password),
+        ("winrm_username", winrm_username),
+        ("winrm_password", winrm_password),
+        ("winrm_port", winrm_port),
+        ("winrm_transport", winrm_transport),
+    ):
+        if value:
+            override_data[key] = value
+
+    return override_data
+
+
+# Utils
+#
+def echo_msg(msg=None, quiet=None):
+    if not quiet:
+        click.echo(err=True)
+    if msg:
+        click.echo(msg, err=True)
