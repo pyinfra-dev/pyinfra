@@ -180,29 +180,7 @@ def operation(
             return func(*args, **kwargs) or []
 
         kwargs = _solve_legacy_operation_arguments(func, state, host, kwargs)
-
-        # Name the operation
-        name = global_kwargs.get("name")
-        add_args = False
-
-        if name:
-            names = {name}
-
-        # Generate an operation name if needed (Module/Operation format)
-        else:
-            add_args = True
-
-            if func.__module__:
-                module_bits = func.__module__.split(".")
-                module_name = module_bits[-1]
-                name = "{0}/{1}".format(module_name.title(), func.__name__.title())
-            else:
-                name = func.__name__
-
-            names = {name}
-
-        if host.current_deploy_name:
-            names = {"{0} | {1}".format(host.current_deploy_name, name) for name in names}
+        names, add_args = _generate_operation_name(func, host, kwargs, global_kwargs)
 
         # Operation order is used to tie-break available nodes in the operation DAG, in CLI mode
         # we use stack call order so this matches as defined by the user deploy code.
@@ -330,6 +308,30 @@ def operation(
 
     decorated_func._pyinfra_op = func
     return decorated_func
+
+
+def _generate_operation_name(func, host, kwargs, global_kwargs):
+    # Generate an operation name if needed (Module/Operation format)
+    name = global_kwargs.get("name")
+    add_args = False
+    if name:
+        names = {name}
+    else:
+        add_args = True
+
+        if func.__module__:
+            module_bits = func.__module__.split(".")
+            module_name = module_bits[-1]
+            name = "{0}/{1}".format(module_name.title(), func.__name__.title())
+        else:
+            name = func.__name__
+
+        names = {name}
+
+    if host.current_deploy_name:
+        names = {"{0} | {1}".format(host.current_deploy_name, name) for name in names}
+
+    return names, add_args
 
 
 def _solve_legacy_operation_arguments(op_func, state, host, kwargs):
