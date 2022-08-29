@@ -333,20 +333,24 @@ def operation(
 
         # If we're already in the execution phase, execute this operation immediately
         if state.is_executing:
-            logger.warning(
-                f"Note: nested operations are currently in beta ({get_call_location()})\n"
-                "    More information: "
-                "https://docs.pyinfra.com/en/2.x/using-operations.html#nested-operations",
-            )
-            op_data["parent_op_hash"] = host.executing_op_hash
-            log_operation_start(op_meta, op_types=["nested"], prefix="")
-            run_host_op(state, host, op_hash)
+            _execute_immediately(state, host, op_data, op_meta, op_hash)
 
         # Return result meta for use in deploy scripts
         return operation_meta
 
     decorated_func._pyinfra_op = func
     return decorated_func
+
+
+def _execute_immediately(state, host, op_data, op_meta, op_hash):
+    logger.warning(
+        f"Note: nested operations are currently in beta ({get_call_location()})\n"
+        "    More information: "
+        "https://docs.pyinfra.com/en/2.x/using-operations.html#nested-operations",
+    )
+    op_data["parent_op_hash"] = host.executing_op_hash
+    log_operation_start(op_meta, op_types=["nested"], prefix="")
+    run_host_op(state, host, op_hash)
 
 
 def _attach_args(op_meta, args, kwargs):
