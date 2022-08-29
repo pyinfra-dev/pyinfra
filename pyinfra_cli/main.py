@@ -281,28 +281,26 @@ def _main(
 ):
     # Setup working directory
     #
-
     if chdir:
         os_chdir(chdir)
 
-    # Setup logging
+    # Setup logging & Bootstrap/Venv
     #
     _setup_log_level(debug, quiet)
-
-    # Bootstrap any virtualenv
     init_virtualenv()
 
-    #  Check operations are valid and setup command
+    # Check operations are valid and setup commands
     #
     original_operations, operations, command, chdir = _validate_operations(operations, chdir)
 
     # Setup state, config & inventory
     #
     state = _setup_state(verbosity, quiet)
-
     config = Config()
     ctx_config.set(config)
 
+    # Update Config & Override Data
+    #
     config = _set_config(
         config,
         config_filename,
@@ -315,7 +313,6 @@ def _main(
         fail_percent,
         quiet,
     )
-
     override_data = _set_override_data(
         data,
         ssh_user,
@@ -330,6 +327,7 @@ def _main(
     )
 
     # Load up the inventory from the filesystem
+    #
     echo_msg("--> Loading inventory...", quiet)
     inventory, inventory_group = make_inventory(
         inventory,
@@ -351,15 +349,12 @@ def _main(
 
     # Connect to the hosts & start handling the user commands
     #
-
     echo_msg("--> Connecting to hosts...", quiet)
-
     connect_all(state)
-
     state, config = _handle_commands(state, config, command, original_operations, operations, quiet)
+
     # Print proposed changes, execute unless --dry, and exit
     #
-
     echo_msg("--> Proposed changes:", quiet)
     print_meta(state)
 
@@ -376,17 +371,13 @@ def _main(
     if dry:
         _exit()
 
-    if not quiet:
-        click.echo(err=True)
+    echo_msg(quiet=quiet)
+    echo_msg("--> Beginning operation run...", quiet)
 
-    if not quiet:
-        click.echo("--> Beginning operation run...", err=True)
     run_ops(state, serial=serial, no_wait=no_wait)
 
-    if not quiet:
-        click.echo("--> Results:", err=True)
+    echo_msg("--> Results:", quiet)
     print_results(state)
-
     _exit()
 
 
