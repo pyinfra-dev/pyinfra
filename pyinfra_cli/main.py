@@ -328,6 +328,7 @@ def _main(
     )
 
     # Load up the inventory from the filesystem
+    echo_msg("--> Loading inventory...", quiet)
     inventory, inventory_group = make_inventory(
         inventory,
         cwd=state.cwd,
@@ -527,6 +528,8 @@ def _set_config(
     fail_percent,
     quiet,
 ):
+    echo_msg("--> Loading config...", quiet)
+
     # Load up any config.py from the filesystem
     config_filename = path.join(state.cwd, config_filename)
     if path.exists(config_filename):
@@ -557,8 +560,6 @@ def _set_config(
     if fail_percent is not None:
         config.FAIL_PERCENT = fail_percent
 
-    echo_msg("--> Loading inventory...", quiet)
-
     return config
 
 
@@ -572,8 +573,6 @@ def _set_verbosity(state, verbosity, quiet):
 
     if verbosity > 2:
         state.print_output = state.print_fact_output = True
-
-    echo_msg("--> Loading config...", quiet)
 
     return state
 
