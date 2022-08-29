@@ -330,6 +330,7 @@ def _main(
     )
 
     # Load up the inventory from the filesystem
+    echo_msg("--> Loading inventory...", quiet)
     inventory, inventory_group = make_inventory(
         inventory,
         cwd=state.cwd,
@@ -339,21 +340,7 @@ def _main(
     ctx_inventory.set(inventory)
 
     # Now that we have inventory, apply --limit config override
-    initial_limit = None
-    if limit:
-        all_limit_hosts = []
-
-        for limiter in limit:
-            try:
-                limit_hosts = inventory.get_group(limiter)
-            except NoGroupError:
-                limit_hosts = [host for host in inventory if fnmatch(host.name, limiter)]
-
-            if not limit_hosts:
-                logger.warning("No host matches found for --limit pattern: {0}".format(limiter))
-
-            all_limit_hosts.extend(limit_hosts)
-        initial_limit = list(set(all_limit_hosts))
+    initial_limit = _apply_inventory_limit(inventory, limit)
 
     # Initialise the state
     state.init(inventory, config, initial_limit=initial_limit)
@@ -365,97 +352,15 @@ def _main(
     # Connect to the hosts & start handling the user commands
     #
 
-    if not quiet:
-        click.echo(err=True)
-        click.echo("--> Connecting to hosts...", err=True)
+    echo_msg("--> Connecting to hosts...", quiet)
 
     connect_all(state)
 
-    if command == "fact":
-        if not quiet:
-            click.echo(err=True)
-            click.echo("--> Gathering facts...", err=True)
-
-        state.print_fact_info = True
-        fact_data = {}
-
-        for i, command in enumerate(operations):
-            fact_cls, args, kwargs = command
-            fact_key = fact_cls.name
-
-            if args or kwargs:
-                fact_key = "{0}{1}{2}".format(
-                    fact_cls.name,
-                    args or "",
-                    " ({0})".format(get_kwargs_str(kwargs)) if kwargs else "",
-                )
-
-            try:
-                fact_data[fact_key] = get_facts(
-                    state,
-                    fact_cls,
-                    args=args,
-                    kwargs=kwargs,
-                    apply_failed_hosts=False,
-                )
-            except PyinfraError:
-                pass
-
-        print_facts(fact_data)
-        _exit()
-
-    if command == "exec":
-        state.print_output = True
-        add_op(
-            state,
-            server.shell,
-            " ".join(operations),
-            _allow_cli_mode=True,
-        )
-
-    elif command == "deploy":
-        if not quiet:
-            click.echo(err=True)
-            click.echo("--> Preparing operations...", err=True)
-
-        # Number of "steps" to make = number of files * number of hosts
-        for i, filename in enumerate(operations):
-            logger.info("Loading: {0}".format(click.style(filename, bold=True)))
-
-            state.current_op_file_number = i
-            load_deploy_file(state, filename)
-
-            # Remove any config changes introduced by the deploy file & any includes
-            config.reset_locked_state()
-
-    elif command == "op":
-        if not quiet:
-            click.echo(err=True)
-            click.echo("--> Preparing operation...", err=True)
-
-        op, args = operations
-        args, kwargs = args
-        kwargs["_allow_cli_mode"] = True
-
-        def print_host_ready(host):
-            logger.info(
-                "{0}{1} {2}".format(
-                    host.print_prefix,
-                    click.style("Ready:", "green"),
-                    click.style(original_operations[0], bold=True),
-                ),
-            )
-
-        kwargs["_after_host_callback"] = print_host_ready
-
-        add_op(state, op, *args, **kwargs)
-
+    state, config = _handle_commands(state, config, command, original_operations, operations, quiet)
     # Print proposed changes, execute unless --dry, and exit
     #
 
-    if not quiet:
-        click.echo(err=True)
-        click.echo("--> Proposed changes:", err=True)
+    echo_msg("--> Proposed changes:", quiet)
     print_meta(state)
 
     # If --debug-facts or --debug-operations, print and exit
@@ -677,6 +582,123 @@ def _set_override_data(
             override_data[key] = value
 
     return override_data
+
+
+def _apply_inventory_limit(inventory, limit):
+    initial_limit = None
+    if limit:
+        all_limit_hosts = []
+
+        for limiter in limit:
+            try:
+                limit_hosts = inventory.get_group(limiter)
+            except NoGroupError:
+                limit_hosts = [host for host in inventory if fnmatch(host.name, limiter)]
+
+            if not limit_hosts:
+                logger.warning("No host matches found for --limit pattern: {0}".format(limiter))
+
+            all_limit_hosts.extend(limit_hosts)
+        initial_limit = list(set(all_limit_hosts))
+
+    return initial_limit
+
+
+# Operations Execution
+#
+def _handle_commands(state, config, command, original_operations, operations, quiet):
+
+    if command == "fact":
+        state, fact_data = _run_fact_operations(state, config, operations, quiet)
+        print_facts(fact_data)
+        _exit()
+
+    if command == "exec":
+        state = _run_exec_operations(state, config, operations, quiet)
+
+    elif command == "deploy":
+        state, config, operations = _run_deploy_operations(state, config, operations, quiet)
+
+    elif command == "op":
+        state, kwargs = _run_op_operations(state, config, operations, original_operations, quiet)
+
+    return state, config
+
+
+def _run_fact_operations(state, config, operations, quiet):
+    echo_msg("--> Gathering Facts...", quiet)
+
+    state.print_fact_info = True
+    fact_data = {}
+
+    for i, command in enumerate(operations):
+        fact_cls, args, kwargs = command
+        fact_key = fact_cls.name
+
+        if args or kwargs:
+            _fact_args = args or ""
+            _fact_details = " ({0})".format(get_kwargs_str(kwargs)) if kwargs else ""
+            fact_key = "{0}{1}{2}".format(fact_cls.name, _fact_args, _fact_details)
+
+        try:
+            fact_data[fact_key] = get_facts(
+                state,
+                fact_cls,
+                args=args,
+                kwargs=kwargs,
+                apply_failed_hosts=False,
+            )
+        except PyinfraError:
+            pass
+
+    return state, fact_data
+
+
+def _run_exec_operations(state, config, operations, quiet):
+    state.print_output = True
+    add_op(
+        state,
+        server.shell,
+        " ".join(operations),
+        _allow_cli_mode=True,
+    )
+    return state
+
+
+def _run_deploy_operations(state, config, operations, quiet):
+    echo_msg("--> Preparing Operations...", quiet)
+
+    # Number of "steps" to make = number of files * number of hosts
+    for i, filename in enumerate(operations):
+        _log_styled_msg = click.style(filename, bold=True)
+        logger.info("Loading: {0}".format(_log_styled_msg))
+
+        state.current_op_file_number = i
+        load_deploy_file(state, filename)
+
+        # Remove any config changes introduced by the deploy file & any includes
+        config.reset_locked_state()
+
+    return state, config, operations
+
+
+def _run_op_operations(state, config, operations, original_operations, quiet):
+    echo_msg("--> Preparing operation...", quiet)
+
+    op, args = operations
+    args, kwargs = args
+    kwargs["_allow_cli_mode"] = True
+
+    def print_host_ready(host):
+        _ready_style = click.style("Ready:", "green")
+        _original_op_msg = click.style(original_operations[0], bold=True)
+        logger.info("{0}{1} {2}".format(host.print_prefix, _ready_style, _original_op_msg))
+
+    kwargs["_after_host_callback"] = print_host_ready
+
+    add_op(state, op, *args, **kwargs)
+
+    return state, kwargs
 
 
 # Utils
