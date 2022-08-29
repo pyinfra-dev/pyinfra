@@ -281,7 +281,6 @@ def _main(
 ):
     # Setup working directory
     #
-
     if chdir:
         os_chdir(chdir)
 
@@ -349,20 +348,13 @@ def _main(
 
     # Connect to the hosts & start handling the user commands
     #
-
-    if not quiet:
-        click.echo(err=True)
-        click.echo("--> Connecting to hosts...", err=True)
-
+    echo_msg("--> Connecting to hosts...", quiet)
     connect_all(state)
     state, config = _handle_commands(state, config, command, original_operations, operations, quiet)
 
     # Print proposed changes, execute unless --dry, and exit
     #
-
-    if not quiet:
-        click.echo(err=True)
-        click.echo("--> Proposed changes:", err=True)
+    echo_msg("--> Proposed changes:", quiet)
     print_meta(state)
 
     # If --debug-facts or --debug-operations, print and exit
@@ -378,15 +370,12 @@ def _main(
     if dry:
         _exit()
 
-    if not quiet:
-        click.echo(err=True)
+    echo_msg(quiet=quiet)
+    echo_msg("--> Beginning operation run...", quiet)
 
-    if not quiet:
-        click.echo("--> Beginning operation run...", err=True)
     run_ops(state, serial=serial, no_wait=no_wait)
 
-    if not quiet:
-        click.echo("--> Results:", err=True)
+    echo_msg("--> Results:", quiet)
     print_results(state)
 
     _exit()
@@ -568,8 +557,7 @@ def _set_config(
     if fail_percent is not None:
         config.FAIL_PERCENT = fail_percent
 
-    if not quiet:
-        click.echo("--> Loading inventory...", err=True)
+    echo_msg("--> Loading inventory...", quiet)
 
     return config
 
@@ -585,8 +573,7 @@ def _set_verbosity(state, verbosity, quiet):
     if verbosity > 2:
         state.print_output = state.print_fact_output = True
 
-    if not quiet:
-        click.echo("--> Loading config...", err=True)
+    echo_msg("--> Loading config...", quiet)
 
     return state
 
@@ -633,9 +620,7 @@ def _handle_commands(state, config, command, original_operations, operations, qu
 
 
 def _run_fact_operations(state, config, operations, quiet):
-    if not quiet:
-        click.echo(err=True)
-        click.echo("--> Gathering facts...", err=True)
+    echo_msg("--> Gathering Facts...", quiet)
 
     state.print_fact_info = True
     fact_data = {}
@@ -675,9 +660,7 @@ def _run_exec_operations(state, config, operations, quiet):
 
 
 def _run_deploy_operations(state, config, operations, quiet):
-    if not quiet:
-        click.echo(err=True)
-        click.echo("--> Preparing operations...", err=True)
+    echo_msg("--> Preparing Operations...", quiet)
 
     # Number of "steps" to make = number of files * number of hosts
     for i, filename in enumerate(operations):
@@ -694,9 +677,7 @@ def _run_deploy_operations(state, config, operations, quiet):
 
 
 def _run_op_operations(state, config, operations, original_operations, quiet):
-    if not quiet:
-        click.echo(err=True)
-        click.echo("--> Preparing operation...", err=True)
+    echo_msg("--> Preparing operation...", quiet)
 
     op, args = operations
     args, kwargs = args
@@ -712,3 +693,12 @@ def _run_op_operations(state, config, operations, original_operations, quiet):
     add_op(state, op, *args, **kwargs)
 
     return state, kwargs
+
+
+# Utils
+#
+def echo_msg(msg=None, quiet=None):
+    if not quiet:
+        click.echo(err=True)
+    if msg:
+        click.echo(msg, err=True)
