@@ -274,21 +274,7 @@ def operation(
 
         # Attach normal args, if we're auto-naming this operation
         if add_args:
-            for arg in args:
-                if isinstance(arg, FunctionType):
-                    arg = arg.__name__
-
-                if arg not in op_meta["args"]:
-                    op_meta["args"].append(arg)
-
-            # Attach keyword args
-            for key, value in kwargs.items():
-                if isinstance(value, FunctionType):
-                    value = value.__name__
-
-                arg = "=".join((str(key), str(value)))
-                if arg not in op_meta["args"]:
-                    op_meta["args"].append(arg)
+            op_meta = _attach_args(op_meta, args, kwargs)
 
         # Check if we're actually running the operation on this host
         #
@@ -361,3 +347,23 @@ def operation(
 
     decorated_func._pyinfra_op = func
     return decorated_func
+
+
+def _attach_args(op_meta, args, kwargs):
+    for arg in args:
+        if isinstance(arg, FunctionType):
+            arg = arg.__name__
+
+        if arg not in op_meta["args"]:
+            op_meta["args"].append(arg)
+
+    # Attach keyword args
+    for key, value in kwargs.items():
+        if isinstance(value, FunctionType):
+            value = value.__name__
+
+        arg = "=".join((str(key), str(value)))
+        if arg not in op_meta["args"]:
+            op_meta["args"].append(arg)
+
+    return op_meta
