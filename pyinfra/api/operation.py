@@ -179,17 +179,7 @@ def operation(
                 )
             return func(*args, **kwargs) or []
 
-        # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
-        # and host are included as kwargs.
-        if func.is_legacy:
-            if "state" not in kwargs:
-                kwargs["state"] = state
-            if "host" not in kwargs:
-                kwargs["host"] = host
-        # If not legacy, pop off any state/host kwargs that may come from legacy @deploy functions
-        else:
-            kwargs.pop("state", None)
-            kwargs.pop("host", None)
+        kwargs = _solve_legacy_operation_arguments(func, state, host, kwargs)
 
         # Name the operation
         name = global_kwargs.get("name")
@@ -340,6 +330,28 @@ def operation(
 
     decorated_func._pyinfra_op = func
     return decorated_func
+
+
+def _solve_legacy_operation_arguments(op_func, state, host, kwargs):
+    """
+    Solve legacy operation arguments.
+    """
+
+    # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
+    # and host are included as kwargs.
+
+    # Legacy operation arguments
+    if op_func.is_legacy:
+        if "state" not in kwargs:
+            kwargs["state"] = state
+        if "host" not in kwargs:
+            kwargs["host"] = host
+    # If not legacy, pop off any state/host kwargs that may come from legacy @deploy functions
+    else:
+        kwargs.pop("state", None)
+        kwargs.pop("host", None)
+
+    return kwargs
 
 
 def _execute_immediately(state, host, op_data, op_meta, op_hash):
