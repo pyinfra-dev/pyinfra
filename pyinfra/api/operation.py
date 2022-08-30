@@ -163,7 +163,6 @@ def operation(
 
         # Configure operation
         #
-
         # Get the meta kwargs (globals that apply to all hosts)
         global_kwargs, global_kwarg_keys = pop_global_arguments(kwargs)
 
@@ -189,8 +188,6 @@ def operation(
             op_meta = _attach_args(op_meta, args, kwargs)
 
         # Check if we're actually running the operation on this host
-        #
-
         # Run once and we've already added meta for this op? Stop here.
         if op_meta["run_once"]:
             has_run = False
@@ -222,30 +219,9 @@ def operation(
         host.current_op_global_kwargs = None
 
         # Add host-specific operation data to state
-        #
-
-        # We're doing some commands, meta/ops++
-        state.meta[host]["ops"] += 1
-        state.meta[host]["commands"] += len(commands)
-
-        if commands:
-            state.meta[host]["ops_change"] += 1
-        else:
-            state.meta[host]["ops_no_change"] += 1
-
-        operation_meta = OperationMeta(op_hash, commands)
-
-        # Add the server-relevant commands
-        op_data = {
-            "commands": commands,
-            "global_kwargs": global_kwargs,
-            "operation_meta": operation_meta,
-        }
-        state.set_op_data(host, op_hash, op_data)
-
-        # If we're already in the execution phase, execute this operation immediately
-        if state.is_executing:
-            _execute_immediately(state, host, op_data, op_meta, op_hash)
+        state, operation_meta = _update_state_meta(
+            state, host, commands, op_hash, op_meta, global_kwargs
+        )
 
         # Return result meta for use in deploy scripts
         return operation_meta
@@ -385,3 +361,30 @@ def _attach_args(op_meta, args, kwargs):
             op_meta["args"].append(arg)
 
     return op_meta
+
+
+def _update_state_meta(state, host, commands, op_hash, op_meta, global_kwargs):
+    # We're doing some commands, meta/ops++
+    state.meta[host]["ops"] += 1
+    state.meta[host]["commands"] += len(commands)
+
+    if commands:
+        state.meta[host]["ops_change"] += 1
+    else:
+        state.meta[host]["ops_no_change"] += 1
+
+    operation_meta = OperationMeta(op_hash, commands)
+
+    # Add the server-relevant commands
+    op_data = {
+        "commands": commands,
+        "global_kwargs": global_kwargs,
+        "operation_meta": operation_meta,
+    }
+    state.set_op_data(host, op_hash, op_data)
+
+    # If we're already in the execution phase, execute this operation immediately
+    if state.is_executing:
+        _execute_immediately(state, host, op_data, op_meta, op_hash)
+
+    return state, operation_meta
