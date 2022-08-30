@@ -83,18 +83,18 @@ def run_host_op(state, host, op_hash):
     precondition = global_kwargs["precondition"]
     if precondition:
         show_pre_or_post_condition_warning("precondition")
-    if precondition and not _run_shell_command(
+
+    _shell_command_status = _run_shell_command(
         state,
         host,
         StringCommand(precondition),
         global_kwargs,
         base_executor_kwargs,
-    ):
-        log_error_or_warning(
-            host,
-            ignore_errors,
-            description="precondition failed: {0}".format(precondition),
-        )
+    )
+    if precondition and not _shell_command_status:
+        _log_msg = "precondition failed: {0}".format(precondition)
+        log_error_or_warning(host, ignore_errors, description=_log_msg)
+
         if not ignore_errors:
             state.trigger_callbacks("operation_host_error", host, op_hash)
             return False
@@ -128,18 +128,12 @@ def run_host_op(state, host, op_hash):
             try:
                 status = command.execute(state, host, executor_kwargs)
             except Exception as e:  # Custom functions could do anything, so expect anything!
+                _formatted_exc = format_exception(e)
+                _error_msg = "Unexpected error in Python callback: {0}".format(_formatted_exc)
+                _error_msg_styled = click.style(_error_msg, "red")
+                _error_log = "{0}{1}".format(host.print_prefix, _error_msg_styled)
                 logger.warning(traceback.format_exc())
-                logger.error(
-                    "{0}{1}".format(
-                        host.print_prefix,
-                        click.style(
-                            "Unexpected error in Python callback: {0}".format(
-                                format_exception(e),
-                            ),
-                            "red",
-                        ),
-                    ),
-                )
+                logger.error(_error_log)
 
         elif isinstance(command, StringCommand):
             status, combined_output_lines = _run_shell_command(
@@ -156,11 +150,8 @@ def run_host_op(state, host, op_hash):
             try:
                 status = command.execute(state, host, executor_kwargs)
             except (timeout_error, socket_error, SSHException, IOError) as e:
-                log_host_command_error(
-                    host,
-                    e,
-                    timeout=global_kwargs["timeout"],
-                )
+                _timeout = global_kwargs["timeout"]
+                log_host_command_error(host, e, timeout=_timeout)
 
         # Break the loop to trigger a failure
         if status is False:
@@ -177,18 +168,18 @@ def run_host_op(state, host, op_hash):
         postcondition = global_kwargs["postcondition"]
         if postcondition:
             show_pre_or_post_condition_warning("postcondition")
-        if postcondition and not _run_shell_command(
+
+        _shell_command_status = _run_shell_command(
             state,
             host,
             StringCommand(postcondition),
             global_kwargs,
             base_executor_kwargs,
-        ):
-            log_error_or_warning(
-                host,
-                ignore_errors,
-                description="postcondition failed: {0}".format(postcondition),
-            )
+        )
+        if postcondition and not _shell_command_status:
+            _postcondition_log_msg = "postcondition failed: {0}".format(postcondition)
+            log_error_or_warning(host, ignore_errors, description=_postcondition_log_msg)
+
             if not ignore_errors:
                 state.trigger_callbacks("operation_host_error", host, op_hash)
                 return False
@@ -200,15 +191,9 @@ def run_host_op(state, host, op_hash):
         state.results[host]["ops"] += 1
         state.results[host]["success_ops"] += 1
 
-        logger.info(
-            "{0}{1}".format(
-                host.print_prefix,
-                click.style(
-                    "Success" if len(op_data["commands"]) > 0 else "No changes",
-                    "green",
-                ),
-            ),
-        )
+        _status_log = "Success" if len(op_data["commands"]) > 0 else "No changes"
+        _click_log_status = click.style(_status_log, "green")
+        logger.info("{0}{1}".format(host.print_prefix, _click_log_status))
 
         # Trigger any success handler
         if global_kwargs["on_success"]:
@@ -224,12 +209,8 @@ def run_host_op(state, host, op_hash):
         if executed_commands:
             state.results[host]["partial_ops"] += 1
 
-        log_error_or_warning(
-            host,
-            ignore_errors,
-            continue_on_error=continue_on_error,
-            description=f"executed {executed_commands}/{len(op_data['commands'])} commands",
-        )
+        _command_description = f"executed {executed_commands}/{len(op_data['commands'])} commands"
+        log_error_or_warning(host, ignore_errors, _command_description, continue_on_error)
 
         # Always trigger any error handler
         if global_kwargs["on_error"]:
