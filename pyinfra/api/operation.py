@@ -171,12 +171,10 @@ def operation(
         # (any unwanted/op-related kwargs removed above).
         if host.in_op:
             if global_kwarg_keys:
-                raise PyinfraError(
-                    ("Nested operation called with global arguments: {0} ({1})").format(
-                        global_kwarg_keys,
-                        get_call_location(),
-                    ),
+                _error_msg = "Nested operation called with global arguments: {0} ({1})".format(
+                    global_kwarg_keys, get_call_location()
                 )
+                raise PyinfraError(_error_msg)
             return func(*args, **kwargs) or []
 
         kwargs = _solve_legacy_operation_arguments(func, state, host, kwargs)
@@ -184,26 +182,7 @@ def operation(
         op_order, op_hash = _solve_operation_consistency(names, state, host)
 
         # Ensure shared (between servers) operation meta
-        op_meta = state.op_meta.setdefault(
-            op_hash,
-            {
-                "names": set(),
-                "args": [],
-                "op_order": op_order,
-            },
-        )
-
-        for key in get_execution_kwarg_keys():
-            global_value = global_kwargs.pop(key)
-            op_meta_value = op_meta.get(key, op_meta_default)
-
-            if op_meta_value is not op_meta_default and global_value != op_meta_value:
-                raise OperationValueError("Cannot have different values for `{0}`.".format(key))
-
-            op_meta[key] = global_value
-
-        # Add any new names to the set
-        op_meta["names"].update(names)
+        op_meta = _ensure_shared_op_meta(state, op_hash, op_order, global_kwargs, names)
 
         # Attach normal args, if we're auto-naming this operation
         if add_args:
@@ -275,6 +254,52 @@ def operation(
     return decorated_func
 
 
+def _solve_legacy_operation_arguments(op_func, state, host, kwargs):
+    """
+    Solve legacy operation arguments.
+    """
+
+    # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
+    # and host are included as kwargs.
+
+    # Legacy operation arguments
+    if op_func.is_legacy:
+        if "state" not in kwargs:
+            kwargs["state"] = state
+        if "host" not in kwargs:
+            kwargs["host"] = host
+    # If not legacy, pop off any state/host kwargs that may come from legacy @deploy functions
+    else:
+        kwargs.pop("state", None)
+        kwargs.pop("host", None)
+
+    return kwargs
+
+
+def _generate_operation_name(func, host, kwargs, global_kwargs):
+    # Generate an operation name if needed (Module/Operation format)
+    name = global_kwargs.get("name")
+    add_args = False
+    if name:
+        names = {name}
+    else:
+        add_args = True
+
+        if func.__module__:
+            module_bits = func.__module__.split(".")
+            module_name = module_bits[-1]
+            name = "{0}/{1}".format(module_name.title(), func.__name__.title())
+        else:
+            name = func.__name__
+
+        names = {name}
+
+    if host.current_deploy_name:
+        names = {"{0} | {1}".format(host.current_deploy_name, name) for name in names}
+
+    return names, add_args
+
+
 def _solve_operation_consistency(names, state, host):
     # Operation order is used to tie-break available nodes in the operation DAG, in CLI mode
     # we use stack call order so this matches as defined by the user deploy code.
@@ -306,50 +331,29 @@ def _solve_operation_consistency(names, state, host):
     return op_order, op_hash
 
 
-def _generate_operation_name(func, host, kwargs, global_kwargs):
-    # Generate an operation name if needed (Module/Operation format)
-    name = global_kwargs.get("name")
-    add_args = False
-    if name:
-        names = {name}
-    else:
-        add_args = True
+def _ensure_shared_op_meta(state, op_hash, op_order, global_kwargs, names):
+    op_meta = state.op_meta.setdefault(
+        op_hash,
+        {
+            "names": set(),
+            "args": [],
+            "op_order": op_order,
+        },
+    )
 
-        if func.__module__:
-            module_bits = func.__module__.split(".")
-            module_name = module_bits[-1]
-            name = "{0}/{1}".format(module_name.title(), func.__name__.title())
-        else:
-            name = func.__name__
+    for key in get_execution_kwarg_keys():
+        global_value = global_kwargs.pop(key)
+        op_meta_value = op_meta.get(key, op_meta_default)
 
-        names = {name}
+        if op_meta_value is not op_meta_default and global_value != op_meta_value:
+            raise OperationValueError("Cannot have different values for `{0}`.".format(key))
 
-    if host.current_deploy_name:
-        names = {"{0} | {1}".format(host.current_deploy_name, name) for name in names}
+        op_meta[key] = global_value
 
-    return names, add_args
+    # Add any new names to the set
+    op_meta["names"].update(names)
 
-
-def _solve_legacy_operation_arguments(op_func, state, host, kwargs):
-    """
-    Solve legacy operation arguments.
-    """
-
-    # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
-    # and host are included as kwargs.
-
-    # Legacy operation arguments
-    if op_func.is_legacy:
-        if "state" not in kwargs:
-            kwargs["state"] = state
-        if "host" not in kwargs:
-            kwargs["host"] = host
-    # If not legacy, pop off any state/host kwargs that may come from legacy @deploy functions
-    else:
-        kwargs.pop("state", None)
-        kwargs.pop("host", None)
-
-    return kwargs
+    return op_meta
 
 
 def _execute_immediately(state, host, op_data, op_meta, op_hash):
