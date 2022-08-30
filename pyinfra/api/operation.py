@@ -181,42 +181,7 @@ def operation(
 
         kwargs = _solve_legacy_operation_arguments(func, state, host, kwargs)
         names, add_args = _generate_operation_name(func, host, kwargs, global_kwargs)
-
-        # Operation order is used to tie-break available nodes in the operation DAG, in CLI mode
-        # we use stack call order so this matches as defined by the user deploy code.
-        if pyinfra.is_cli:
-            op_order = get_operation_order_from_stack(state)
-        # In API mode we just increase the order for each host
-        else:
-            op_order = [len(host.op_hash_order)]
-
-        # Make a hash from the call stack lines
-        op_hash = make_hash(op_order)
-
-        # Avoid adding duplicates! This happens if an operation is called within
-        # a loop - such that the filename/lineno/code _are_ the same, but the
-        # arguments might be different. We just append an increasing number to
-        # the op hash and also handle below with the op order.
-        duplicate_op_count = 0
-        while op_hash in host.op_hash_order:
-            logger.debug("Duplicate hash (%s) detected!", op_hash)
-            op_hash = "{0}-{1}".format(op_hash, duplicate_op_count)
-            duplicate_op_count += 1
-
-        host.op_hash_order.append(op_hash)
-
-        if duplicate_op_count:
-            op_order.append(duplicate_op_count)
-
-        op_order = tuple(op_order)
-
-        logger.debug(
-            "Adding operation names=%r, host=%s, opOrder=%r, opHash=%s",
-            names,
-            host,
-            op_order,
-            op_hash,
-        )
+        op_order, op_hash = _solve_operation_consistency(names, state, host)
 
         # Ensure shared (between servers) operation meta
         op_meta = state.op_meta.setdefault(
@@ -308,6 +273,37 @@ def operation(
 
     decorated_func._pyinfra_op = func
     return decorated_func
+
+
+def _solve_operation_consistency(names, state, host):
+    # Operation order is used to tie-break available nodes in the operation DAG, in CLI mode
+    # we use stack call order so this matches as defined by the user deploy code.
+    if pyinfra.is_cli:
+        op_order = get_operation_order_from_stack(state)
+    # In API mode we just increase the order for each host
+    else:
+        op_order = [len(host.op_hash_order)]
+
+    # Make a hash from the call stack lines
+    op_hash = make_hash(op_order)
+
+    # Avoid adding duplicates! This happens if an operation is called within
+    # a loop - such that the filename/lineno/code _are_ the same, but the
+    # arguments might be different. We just append an increasing number to
+    # the op hash and also handle below with the op order.
+    duplicate_op_count = 0
+    while op_hash in host.op_hash_order:
+        logger.debug("Duplicate hash ({0}) detected!".format(op_hash))
+        op_hash = "{0}-{1}".format(op_hash, duplicate_op_count)
+        duplicate_op_count += 1
+
+    host.op_hash_order.append(op_hash)
+    if duplicate_op_count:
+        op_order.append(duplicate_op_count)
+
+    op_order = tuple(op_order)
+    logger.debug(f"Adding operation, {names}, opOrder={op_order}, opHash={op_hash}")
+    return op_order, op_hash
 
 
 def _generate_operation_name(func, host, kwargs, global_kwargs):
