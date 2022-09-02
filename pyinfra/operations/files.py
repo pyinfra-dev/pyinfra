@@ -4,7 +4,6 @@ The files operations handles filesystem state, file uploads and template generat
 
 import os
 import posixpath
-import re
 import sys
 import traceback
 from datetime import timedelta
@@ -51,7 +50,7 @@ from pyinfra.facts.files import (
 from pyinfra.facts.server import Date, Which
 
 from .util import files as file_utils
-from .util.files import ensure_mode_int, get_timestamp, sed_replace, unix_path_join
+from .util.files import adjust_regex, ensure_mode_int, get_timestamp, sed_replace, unix_path_join
 
 
 @operation(
@@ -325,17 +324,17 @@ def line(
         )
     """
 
-    match_line = line
-
-    if escape_regex_characters:
-        match_line = re.sub(r"([\.\\\+\*\?\[\^\]\$\(\)\{\}\-])", r"\\\1", match_line)
-
-    # Ensure we're matching a whole line, note: match may be a partial line so we
-    # put any matches on either side.
-    if not match_line.startswith("^"):
-        match_line = "^.*{0}".format(match_line)
-    if not match_line.endswith("$"):
-        match_line = "{0}.*$".format(match_line)
+    match_line = adjust_regex(line, escape_regex_characters)
+    #
+    # if escape_regex_characters:
+    #     match_line = re.sub(r"([\.\\\+\*\?\[\^\]\$\(\)\{\}\-])", r"\\\1", match_line)
+    #
+    # # Ensure we're matching a whole line, note: match may be a partial line so we
+    # # put any matches on either side.
+    # if not match_line.startswith("^"):
+    #     match_line = "^.*{0}".format(match_line)
+    # if not match_line.endswith("$"):
+    #     match_line = "{0}.*$".format(match_line)
 
     # Is there a matching line in this file?
     if assume_present:
@@ -1598,6 +1597,7 @@ def block(
     content=None,
     present=True,
     line=None,
+    escape_regex_characters=False,
     before=False,
     after=False,
     marker=None,
@@ -1613,6 +1613,7 @@ def block(
     + before: should the content be added before ``line`` if it doesn't exist
     + after: should the content be added after ``line`` if it doesn't exist
     + line: regex before or after which the content should be added if it doesn't exist.
+    + escape_regex_characters: whether to escape regex characters from the matching line
     + marker: the base string used to mark the text.  Default is ``# {mark} PYINFRA BLOCK``
     + begin: the value for ``{mark}`` in the marker before the content. Default is ``BEGIN``
     + end: the value for ``{mark}`` in the marker after the content. Default is ``END``
@@ -1670,17 +1671,14 @@ def block(
 
     **Questions/Notes:**
 
-        #. Is it impolite to create a file without an explicit indication to do so from the caller ?
-        #. Even though this uses a temporary file (as not all awk's have inplace editing),
+        1. Is it impolite to create a file without an explicit indication to do so from the caller ?
+        2. Even though this uses a temporary file (as not all awk's have inplace editing),
            do we also want a backup option.
-        #. Given we (currently) create a file if it doesn't exist, do we need to allow the caller to
+        3. Given we (currently) create a file if it doesn't exist, do we need to allow the caller to
             set user, group and mode ?
-        #. Would assume_present be helpful here ? If so do we assume only the file is present
+        4. Would assume_present be helpful here ? If so do we assume only the file is present
         but neither the markers nor the content are ?
-        #  Is it too demanding to require a regex from the caller ? For consistency should we take
-           the approach of files.line (including allow the caller
-           to ask us to escape special chars) ?
-        #. Tested with different awks (macOS, gnu, fedora, openwrt, ...)
+        5. Tested with different awks (macOS, gnu, fedora, openwrt, ...)
     """
     mark_1 = (marker or MARKER_DEFAULT).format(mark=begin or MARKER_BEGIN_DEFAULT)
     mark_2 = (marker or MARKER_DEFAULT).format(mark=end or MARKER_END_DEFAULT)
@@ -1725,11 +1723,12 @@ def block(
             here = "HERE"
             cmd = StringCommand(f"cat {stdin}{redirect}", q_path, f"<<{here}\n{the_block}\n{here}")
         elif current == []:  # markers not found and have a pattern to match (not start or end)
+            regex = adjust_regex(line, escape_regex_characters)
             print_before = "{ print }" if before else ""
             print_after = "{ print }" if after else ""
             prog = (
                 'awk \'BEGIN {x=ARGV[2]; ARGV[2]=""} '
-                f"{print_after} f!=1 && /{line}/ {{ print x; f=1}} "
+                f"{print_after} f!=1 && /{regex}/ {{ print x; f=1}} "
                 f"END {{if (f==0) print ARGV[2] }} {print_before}'"
             )
             cmd = StringCommand(out_prep, prog, q_path, f'$"{the_block}"', "> $OUT &&", real_out)
