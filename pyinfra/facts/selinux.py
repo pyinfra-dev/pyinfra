@@ -91,7 +91,8 @@ class SEPort(FactBase):
     def process(self, output):
         labels = dict()
         for line in output:
-            if (m := SEPort._regex.match(line)) is None:  # something went wrong
+            m = SEPort._regex.match(line)
+            if m is None:  # something went wrong
                 break
             if m.group(1) == "unreserved_port_t":  # these cover the entire space
                 continue
