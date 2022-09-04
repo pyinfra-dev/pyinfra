@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Iterator, List, Optional
+from typing import TYPE_CHECKING, Any, Iterator, List
 
 if TYPE_CHECKING:
     from pyinfra.api.state import State
@@ -33,7 +33,7 @@ class Inventory(object):
         **groups: map of group name -> ``(names, data)``
     """
 
-    state: Optional["State"] = None
+    state: "State"
 
     def __init__(self, names_data, override_data=None, **groups):
         # Setup basics

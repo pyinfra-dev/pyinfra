@@ -7,8 +7,8 @@ from uuid import uuid4
 from gevent.pool import Pool
 
 if TYPE_CHECKING:
+    from pyinfra.api.host import Host
     from pyinfra.api.inventory import Inventory
-    from pyinfra.api.inventory import Host
 
 from pyinfra import logger
 
@@ -83,10 +83,10 @@ class State(object):
     initialised: bool = False
 
     # A pyinfra.api.Inventory which stores all our pyinfra.api.Host's
-    inventory: Optional["Inventory"] = None
+    inventory: "Inventory"
 
     # A pyinfra.api.Config
-    config: Optional["Config"] = None
+    config: "Config"
 
     # Main gevent pool
     pool = None
