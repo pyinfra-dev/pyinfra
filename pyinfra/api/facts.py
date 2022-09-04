@@ -84,7 +84,10 @@ def _make_command(command_attribute, host_args):
 
 
 def _get_executor_kwargs(
-    state: "State", host: "Host", override_kwargs=None, override_kwarg_keys=None
+    state: "State",
+    host: "Host",
+    override_kwargs=None,
+    override_kwarg_keys=None,
 ):
     if override_kwargs is None:
         override_kwargs = {}
@@ -311,14 +314,22 @@ def _get_fact_hash(state: "State", host: "Host", cls, args, kwargs):
 
 
 def get_host_fact(
-    state: "State", host: "Host", cls, args: Optional[List] = None, kwargs: Optional[Dict] = None
+    state: "State",
+    host: "Host",
+    cls,
+    args: Optional[List] = None,
+    kwargs: Optional[Dict] = None,
 ):
     fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
     return get_fact(state, host, cls, args=args, kwargs=kwargs, fact_hash=fact_hash)
 
 
 def reload_host_fact(
-    state: "State", host: "Host", cls, args: Optional[List] = None, kwargs: Optional[Dict] = None
+    state: "State",
+    host: "Host",
+    cls,
+    args: Optional[List] = None,
+    kwargs: Optional[Dict] = None,
 ):
     fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
     return get_fact(
@@ -345,7 +356,11 @@ def create_host_fact(
 
 
 def delete_host_fact(
-    state: "State", host: "Host", cls, args: Optional[List] = None, kwargs: Optional[Dict] = None
+    state: "State",
+    host: "Host",
+    cls,
+    args: Optional[List] = None,
+    kwargs: Optional[Dict] = None,
 ):
     fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
     host.facts.pop(fact_hash, None)
