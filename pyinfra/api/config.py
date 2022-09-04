@@ -1,15 +1,10 @@
 from os import path
-from typing import TYPE_CHECKING, Optional
 
 from pkg_resources import Requirement, ResolutionError, parse_version, require
 
 from pyinfra import __version__, state
 
 from .exceptions import PyinfraError
-
-if TYPE_CHECKING:
-    from pyinfra.api.state import State
-
 
 config_defaults = {
     # % of hosts which have to fail for all operations to stop
@@ -99,8 +94,6 @@ class Config(object):
     """
     The default/base configuration options for a pyinfra deploy.
     """
-
-    state: Optional["State"] = None
 
     def __init__(self, **kwargs):
         # Always apply some env
