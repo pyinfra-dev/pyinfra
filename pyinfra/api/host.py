@@ -84,7 +84,7 @@ class Host(object):
     """
 
     connection = None
-    state: Optional["State"] = None
+    state: "State"
 
     # Current context inside an @operation function (op gen stage)
     in_op: bool = False
