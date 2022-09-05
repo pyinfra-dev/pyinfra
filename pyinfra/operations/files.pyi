@@ -513,6 +513,7 @@ def block(
     content=None,
     present=True,
     line=None,
+    escape_regex_characters=False,
     before=False,
     after=False,
     marker=None,
