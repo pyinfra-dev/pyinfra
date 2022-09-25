@@ -1,0 +1,9 @@
+{
+    "arg": "foo",
+    "command": "snap info foo",
+    "requires_command": "snap",
+    "output": [
+        "error: no snap found for \"foo\""
+    ],
+    "fact": {}
+}

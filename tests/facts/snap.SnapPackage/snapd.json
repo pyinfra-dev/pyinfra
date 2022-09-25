@@ -1,0 +1,36 @@
+{
+    "arg": "snapd",
+    "command": "snap info snapd",
+    "requires_command": "snap",
+    "output": [
+        "name:      snapd",
+        "summary:   Daemon and tooling that enable snap packages",
+        "publisher: Canonical**",
+        "store-url: https://snapcraft.io/snapd",
+        "license:   GPL-3.0",
+        "description: |",
+        "  Install, configure, refresh and remove snap packages. Snaps are",
+        "  'universal' packages that work across many different Linux systems,",
+        "  enabling secure distribution of the latest apps and utilities for",
+        "  cloud, servers, desktops and the internet of things.",
+        "  ",
+        "  Start with 'snap list' to see installed snaps.",
+        "type:         snapd",
+        "snap-id:      PMrrV4ml8uWuEUDBT8dSGnKUYbevVhc4",
+        "tracking:     latest/stable",
+        "refresh-date: today at 17:27 UTC",
+        "channels:",
+        "  latest/stable:    2.57.2                 2022-09-27 (17029) 50MB -",
+        "  latest/candidate: 2.57.2                 2022-09-14 (17029) 50MB -",
+        "  latest/beta:      2.57.4                 2022-09-29 (17336) 50MB -",
+        "  latest/edge:      2.57.4+git586.g707c153 2022-10-01 (17380) 50MB -",
+        "installed:          2.57.2                            (17029) 50MB snapd"
+    ],
+    "fact": {
+        "name": "snapd",
+        "publisher": "Canonical**",
+        "snap-id": "PMrrV4ml8uWuEUDBT8dSGnKUYbevVhc4",
+        "channel": "latest/stable",
+        "version": "2.57.2"
+    }
+}
