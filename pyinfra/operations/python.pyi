@@ -1,4 +1,5 @@
 import typing
+
 import pyinfra
 
 def call(
@@ -36,7 +37,7 @@ def call(
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
     *args,
-    **kwargs
+    **kwargs,
 ): ...
 def raise_exception(
     exception,
@@ -73,5 +74,5 @@ def raise_exception(
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
     *args,
-    **kwargs
+    **kwargs,
 ): ...

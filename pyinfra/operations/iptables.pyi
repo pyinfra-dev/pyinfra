@@ -1,4 +1,5 @@
 import typing
+
 import pyinfra
 
 def chain(
