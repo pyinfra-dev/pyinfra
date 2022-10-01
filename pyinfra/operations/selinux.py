@@ -9,7 +9,7 @@ from pyinfra.facts.selinux import FileContext, FileContextMapping, SEBoolean, SE
 @operation(
     pipeline_facts={"seboolean": "boolean"},
 )
-def se_boolean(boolean, value, persistent=False):
+def boolean(boolean, value, persistent=False):
     """
     Set the specified SELinux boolean to the desired state.
 
