@@ -1,7 +1,7 @@
 import typing
 import pyinfra
 
-def se_boolean(
+def boolean(
     boolean,
     value,
     persistent=False,
@@ -111,7 +111,7 @@ def file_context_mapping(
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
 ): ...
-def se_port(
+def port(
     protocol,
     port,
     se_type=None,
