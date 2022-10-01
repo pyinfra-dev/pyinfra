@@ -1597,6 +1597,7 @@ def block(
     content=None,
     present=True,
     line=None,
+    backup=False,
     escape_regex_characters=False,
     before=False,
     after=False,
@@ -1613,6 +1614,7 @@ def block(
     + before: should the content be added before ``line`` if it doesn't exist
     + after: should the content be added after ``line`` if it doesn't exist
     + line: regex before or after which the content should be added if it doesn't exist.
+    + backup: whether to backup the file (see ``files.line``). Default False.
     + escape_regex_characters: whether to escape regex characters from the matching line
     + marker: the base string used to mark the text.  Default is ``# {mark} PYINFRA BLOCK``
     + begin: the value for ``{mark}`` in the marker before the content. Default is ``BEGIN``
@@ -1673,9 +1675,17 @@ def block(
     mark_2 = (marker or MARKER_DEFAULT).format(mark=end or MARKER_END_DEFAULT)
 
     # standard awk doesn't have an "in-place edit" option so we write to a tempfile and
-    # iff edits were successful move to dest i.e. we do: <out_prep> ... do some work ... <real_out>
+    # if edits were successful move to dest i.e. we do: <out_prep> ... do some work ... <real_out>
     q_path = QuoteString(path)
     out_prep = 'OUT="$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)" && '
+    if backup:
+        out_prep = StringCommand(
+            "cp",
+            q_path,
+            QuoteString(f"{path}.{get_timestamp()}"),
+            "&&",
+            out_prep,
+        )
     real_out = StringCommand(
         "chmod $(stat -c %a",
         q_path,
