@@ -367,7 +367,7 @@ class Flags(FactBase):
 
     def command(self, path):
         return make_formatted_string_command(
-            "stat -f %Sf {0} || true",
+            "! test -e {0} || stat -f %Sf {0}",
             QuoteString(path),
         )
 
