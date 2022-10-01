@@ -9,7 +9,7 @@
     },
     "facts": {
         "selinux.SEPort": {
-            "protocol=tcp, port=22": ""
+            "tcp": {"22":  ""}
         }
     },
     "commands": [

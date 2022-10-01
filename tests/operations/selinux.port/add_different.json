@@ -4,8 +4,8 @@
         "present":true
     },
     "facts": {
-        "selinux.SEPort": {
-            "protocol=tcp, port=22": "xray_port_t"
+        "selinux.SEPorts": {
+            "tcp": {22:  "xray_port_t"},
         }
     },
     "commands": [

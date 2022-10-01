@@ -3,7 +3,7 @@ Provides operations to set SELinux file contexts, booleans and port types.
 """
 from pyinfra import host
 from pyinfra.api import QuoteString, StringCommand, operation
-from pyinfra.facts.selinux import FileContext, FileContextMapping, SEBoolean, SEPort
+from pyinfra.facts.selinux import FileContext, FileContextMapping, SEBoolean, SEPorts
 
 
 @operation(
@@ -42,7 +42,7 @@ def se_boolean(boolean, value, persistent=False):
         yield StringCommand("setsebool", f"{persist}{boolean}", value)
         host.create_fact(SEBoolean, kwargs={"boolean": boolean}, data=value)
     else:
-        host.noop(f"seboolean '{boolean}' already had the value '{value}'")
+        host.noop(f"boolean '{boolean}' already had the value '{value}'")
 
 
 @operation(
@@ -128,9 +128,9 @@ def file_context_mapping(target, se_type=None, present=True):
 
 
 @operation(
-    pipeline_facts={"seport": "protocol, port"},
+    pipeline_facts={"seports": {}},
 )
-def se_port(protocol, port, se_type=None, present=True):
+def port(protocol, port, se_type=None, present=True):
     """
     Set the SELinux type for the specified protocol and port.
 
@@ -156,22 +156,22 @@ def se_port(protocol, port, se_type=None, present=True):
     if present and (se_type is None):
         raise ValueError("se_type must have a valid value if present is set")
 
-    kwargs = {"protocol": protocol, "port": port}
-    current = host.get_fact(SEPort, protocol=protocol, port=port)
+    port_info = host.get_fact(SEPorts)
+    current = port_info.get(protocol, {}).get(port, '')
     if present:
         op = "-a" if current == "" else ("-m" if current != se_type else "")
         if op != "":
             yield StringCommand("semanage", "port", op, "-t", se_type, "-p", protocol, port)
-            host.create_fact(
-                SEPort,
-                kwargs=kwargs,
-                data=se_type,
-            )
+            if protocol not in port_info:
+                port_info[protocol] = {}
+            port_info[protocol][port] = se_type
         else:
             host.noop(f"setype for '{protocol}/{port}' is already '{se_type}'")
     else:
         if current != "":
             yield StringCommand("semanage", "port", "-d", "-p", protocol, port)
-            host.create_fact(SEPort, kwargs=kwargs, data="")
+            if protocol not in port_info:
+                port_info[protocol] = {}
+            port_info[protocol][port] = ""
         else:
             host.noop(f"setype for '{protocol}/{port}' is already unset")

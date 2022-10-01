@@ -5,7 +5,7 @@
     },
     "facts": {
         "selinux.SEPort": {
-            "protocol=tcp, port=22": "ssh_port_t"
+            "tcp": {"22":  "ssh_port_t"}
         }
     },
     "commands": [
