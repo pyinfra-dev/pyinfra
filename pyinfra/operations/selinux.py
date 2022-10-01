@@ -7,9 +7,9 @@ from pyinfra.facts.selinux import FileContext, FileContextMapping, SEBoolean, SE
 
 
 @operation(
-    pipeline_facts={"seboolean": "boolean"},
+    pipeline_facts={"seboolean": "bool_name"},
 )
-def boolean(boolean, value, persistent=False):
+def boolean(bool_name, value, persistent=False):
     """
     Set the specified SELinux boolean to the desired state.
 
@@ -24,7 +24,7 @@ def boolean(boolean, value, persistent=False):
     .. code:: python
 
         selinux.boolean(
-            name = 'Allow Apache to connect to LDAP server',
+            name='Allow Apache to connect to LDAP server',
             'httpd_can_network_connect',
             'on',
             persistent=True
@@ -37,12 +37,12 @@ def boolean(boolean, value, persistent=False):
             f'\'value\' must be one of \'{",".join(_valid_states)}\' but found \'{value}\'',
         )
 
-    if host.get_fact(SEBoolean, boolean=boolean) != value:
+    if host.get_fact(SEBoolean, boolean=bool_name) != value:
         persist = "-P " if persistent else ""
-        yield StringCommand("setsebool", f"{persist}{boolean}", value)
-        host.create_fact(SEBoolean, kwargs={"boolean": boolean}, data=value)
+        yield StringCommand("setsebool", f"{persist}{bool_name}", value)
+        host.create_fact(SEBoolean, kwargs={"boolean": bool_name}, data=value)
     else:
-        host.noop(f"boolean '{boolean}' already had the value '{value}'")
+        host.noop(f"boolean '{bool_name}' already had the value '{value}'")
 
 
 @operation(
@@ -60,7 +60,7 @@ def file_context(path, se_type):
     .. code:: python
 
         selinux.file_context(
-            name = 'Allow /foo/bar to be served by the web server',
+            name='Allow /foo/bar to be served by the web server',
             '/foo/bar',
             'httpd_sys_content_t'
         )
@@ -98,7 +98,7 @@ def file_context_mapping(target, se_type=None, present=True):
     .. code:: python
 
         selinux.file_context_mapping(
-            name = 'Allow Apache to serve content from the /web directory',
+            name='Allow Apache to serve content from the /web directory',
             r'/web(/.*)?',
             se_type='httpd_sys_content_t'
         )
@@ -146,7 +146,7 @@ def port(protocol, port, se_type=None, present=True):
     .. code:: python
 
         selinux.port(
-            name = 'Allow Apache to provide service on port 2222',
+            name='Allow Apache to provide service on port 2222',
             'tcp',
             2222,
             'http_port_t',

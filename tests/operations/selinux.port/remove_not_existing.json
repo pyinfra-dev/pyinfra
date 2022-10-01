@@ -1,9 +1,5 @@
 {
-    "args": [
-        "tcp",
-        22,
-        "ssh_port_t"
-    ],
+    "args": ["tcp", 22, "ssh_port_t"],
     "kwargs": {
         "present": false
     },
@@ -12,7 +8,6 @@
             "tcp": {"22":  ""}
         }
     },
-    "commands": [
-    ],
+    "commands": [],
     "noop_description": "setype for 'tcp/22' is already unset"
 }
