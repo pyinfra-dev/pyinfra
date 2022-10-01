@@ -12,6 +12,6 @@
         }
     },
     "commands": [
-        "cat > /home/someone/something <<HERE\n# BEGIN PYINFRA BLOCK\nplease add this\n# END PYINFRA BLOCK\nHERE"
+        "cat > /home/someone/something <<PYINFRAHERE\n# BEGIN PYINFRA BLOCK\nplease add this\n# END PYINFRA BLOCK\nPYINFRAHERE"
     ]
 }

@@ -1636,55 +1636,44 @@ def block(
 
         # add entry to /etc/host
         files.marked_block(
-            name = "add IP address for red server",
-            path = "/etc/hosts",
-            content = "10.0.0.1 mars-one",
+            name="add IP address for red server",
+            path="/etc/hosts",
+            content="10.0.0.1 mars-one",
             before=True,
-            regex = ".*localhost",
+            regex=".*localhost",
         )
 
         # have two entries in /etc/host
         files.marked_block(
-            name = "add IP address for red server",
-            path = "/etc/hosts",
-            content = "10.0.0.1 mars-one\\n10.0.0.2 mars-two",
+            name="add IP address for red server",
+            path="/etc/hosts",
+            content="10.0.0.1 mars-one\\n10.0.0.2 mars-two",
             before=True,
-            regex = ".*localhost",
+            regex=".*localhost",
         )
 
         # remove marked entry from /etc/hosts
         files.marked_block(
-            name = "remove all 10.* addresses from /etc/hosts",
-            path = "/etc/hosts",
-            present = False
+            name="remove all 10.* addresses from /etc/hosts",
+            path="/etc/hosts",
+            present=False
         )
 
         # add out of date warning to web page
         files.marked_block(
-            name = "add out of date warning to web page",
-            path = "/var/www/html/something.html",
-            content = "<p>Warning: this page is out of date.</p>",
-            regex = ".*<body>.*",
+            name="add out of date warning to web page",
+            path="/var/www/html/something.html",
+            content= "<p>Warning: this page is out of date.</p>",
+            regex=".*<body>.*",
             after=True
-            marker = "<!-- {mark} PYINFRA BLOCK -->",
+            marker="<!-- {mark} PYINFRA BLOCK -->",
         )
-
-    **Questions/Notes:**
-
-        1. Is it impolite to create a file without an explicit indication to do so from the caller ?
-        2. Even though this uses a temporary file (as not all awk's have inplace editing),
-           do we also want a backup option.
-        3. Given we (currently) create a file if it doesn't exist, do we need to allow the caller to
-            set user, group and mode ?
-        4. Would assume_present be helpful here ? If so do we assume only the file is present
-        but neither the markers nor the content are ?
-        5. Tested with different awks (macOS, gnu, fedora, openwrt, ...)
     """
     mark_1 = (marker or MARKER_DEFAULT).format(mark=begin or MARKER_BEGIN_DEFAULT)
     mark_2 = (marker or MARKER_DEFAULT).format(mark=end or MARKER_END_DEFAULT)
 
-    # standard awk doesn't have an "in-place edit" option so we write to a tempfile
-    # and move if edits were successful, i.e. we do: <out_prep> ... do some work ... <real_out>
+    # standard awk doesn't have an "in-place edit" option so we write to a tempfile and
+    # iff edits were successful move to dest i.e. we do: <out_prep> ... do some work ... <real_out>
     q_path = QuoteString(path)
     out_prep = 'OUT="$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)" && '
     real_out = StringCommand(
@@ -1720,7 +1709,7 @@ def block(
             redirect = ">" if (current is None) else ">>"
             stdin = "- " if ((current == []) and before) else ""
             # here = hex(random.randint(0, 2147483647))
-            here = "HERE"
+            here = "PYINFRAHERE"
             cmd = StringCommand(f"cat {stdin}{redirect}", q_path, f"<<{here}\n{the_block}\n{here}")
         elif current == []:  # markers not found and have a pattern to match (not start or end)
             regex = adjust_regex(line, escape_regex_characters)
