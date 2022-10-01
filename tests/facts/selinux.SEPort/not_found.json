@@ -1,9 +1,0 @@
-{
-    "arg": ["udp", "15673"],
-    "requires_command": "semanage",
-    "command": "semanage port -ln | grep udp",
-    "output": [
-        "example_port_t                    udp      15672, 5671-5675"
-    ],
-    "fact": ""
-}

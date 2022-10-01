@@ -1,0 +1,10 @@
+{
+    "requires_command": "semanage",
+    "command": "semanage port -ln",
+    "output": [
+        "example_port_t                    tcp      20,30,40"
+    ],
+    "fact": {
+        "tcp": { "20": "example_port_t", "30": "example_port_t", "40": "example_port_t"}
+    }
+}

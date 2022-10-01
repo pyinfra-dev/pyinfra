@@ -1,9 +1,8 @@
 {
-    "arg": ["tcp", "5673"],
     "requires_command": "semanage",
-    "command": "semanage port -ln | grep tcp",
+    "command": "semanage port -ln",
     "output": [
         "!$%(*&Q#(*&%_)*Q%#(*Q)%@#(*&Q)@(*$)Q(*@$)(*)(Q@*$()*Q@$)"
     ],
-    "fact": ""
+    "fact": {}
 }

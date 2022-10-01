@@ -1,9 +1,0 @@
-{
-    "arg": ["tcp", "60"],
-    "requires_command": "semanage",
-    "command": "semanage port -ln | grep tcp",
-    "output": [
-        "example_port_t                    tcp      93, 50-100"
-    ],
-    "fact": "example_port_t"
-}
