@@ -1,5 +1,4 @@
 import typing
-
 import pyinfra
 
 def start(
@@ -285,5 +284,5 @@ def set(
     _parallel: typing.Optional[int] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-    **settings,
+    **settings
 ): ...

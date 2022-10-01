@@ -1,5 +1,4 @@
 import typing
-
 import pyinfra
 
 def key(
