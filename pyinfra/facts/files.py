@@ -38,8 +38,6 @@ SYMBOL_TO_OCTAL_PERMISSIONS = {
     "--x": "1",
 }
 
-FLAGS_PATTERN = re.compile(r"^[d-][rwx-]{9}.\s+\d+\s+\w+\s+\w+\s+([a-z,]+).*$")
-
 
 def _parse_mode(mode):
     """
