@@ -1,5 +1,5 @@
-from collections import defaultdict
 import re
+from collections import defaultdict
 
 from pyinfra.api import FactBase
 
@@ -92,7 +92,7 @@ class SEPorts(FactBase):
     default = dict
     # example output: amqp_port_t                    tcp      15672, 5671-5672  # noqa: SC100
     _regex = re.compile(r"^([\w_]+)\s+(\w+)\s+([\w\-,\s]+)$")
-    ignored = ["ephemeral_port_t", "unreserved_port_t", "reserved_port_t", "hi_reserved_port_t" ]
+    ignored = ["ephemeral_port_t", "unreserved_port_t", "reserved_port_t", "hi_reserved_port_t"]
 
     def command(self, ignored=None):
         self.ignored = ignored or SEPorts.ignored
@@ -104,7 +104,7 @@ class SEPorts(FactBase):
             m = SEPorts._regex.match(line)
             if m is None:  # something went wrong
                 continue
-            if m.group(1) in self.ignored :  # these cover the entire space
+            if m.group(1) in self.ignored:  # these cover the entire space
                 continue
             for item in m.group(3).split(","):
                 item = item.strip()

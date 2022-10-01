@@ -157,7 +157,7 @@ def port(protocol, port, se_type=None, present=True):
         raise ValueError("se_type must have a valid value if present is set")
 
     port_info = host.get_fact(SEPorts)
-    current = port_info.get(protocol, {}).get(port, '')
+    current = port_info.get(protocol, {}).get(port, "")
     if present:
         op = "-a" if current == "" else ("-m" if current != se_type else "")
         if op != "":
