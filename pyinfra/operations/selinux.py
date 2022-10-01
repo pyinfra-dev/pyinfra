@@ -109,9 +109,9 @@ def file_context_mapping(target, se_type=None, present=True):
     current = host.get_fact(FileContextMapping, target=target)
     kwargs = {"target": target}
     if present:
-        op = "-a" if len(current) == 0 else ("-m" if current.get("type") != se_type else "")
-        if op != "":
-            yield StringCommand("semanage", "fcontext", op, "-t", se_type, QuoteString(target))
+        option = "-a" if len(current) == 0 else ("-m" if current.get("type") != se_type else "")
+        if option != "":
+            yield StringCommand("semanage", "fcontext", option, "-t", se_type, QuoteString(target))
             host.create_fact(
                 FileContextMapping,
                 kwargs=kwargs,
@@ -130,7 +130,7 @@ def file_context_mapping(target, se_type=None, present=True):
 @operation(
     pipeline_facts={"seports": {}},
 )
-def port(protocol, port, se_type=None, present=True):
+def port(protocol, port_num, se_type=None, present=True):
     """
     Set the SELinux type for the specified protocol and port.
 
@@ -157,21 +157,21 @@ def port(protocol, port, se_type=None, present=True):
         raise ValueError("se_type must have a valid value if present is set")
 
     port_info = host.get_fact(SEPorts)
-    current = port_info.get(protocol, {}).get(str(port), "")
+    current = port_info.get(protocol, {}).get(str(port_num), "")
     if present:
-        op = "-a" if current == "" else ("-m" if current != se_type else "")
-        if op != "":
-            yield StringCommand("semanage", "port", op, "-t", se_type, "-p", protocol, port)
+        option = "-a" if current == "" else ("-m" if current != se_type else "")
+        if option != "":
+            yield StringCommand("semanage", "port", option, "-t", se_type, "-p", protocol, port_num)
             if protocol not in port_info:
                 port_info[protocol] = {}
-            port_info[protocol][str(port)] = se_type
+            port_info[protocol][str(port_num)] = se_type
         else:
-            host.noop(f"setype for '{protocol}/{port}' is already '{se_type}'")
+            host.noop(f"setype for '{protocol}/{port_num}' is already '{se_type}'")
     else:
         if current != "":
-            yield StringCommand("semanage", "port", "-d", "-p", protocol, port)
+            yield StringCommand("semanage", "port", "-d", "-p", protocol, port_num)
             if protocol not in port_info:
                 port_info[protocol] = {}
-            port_info[protocol][str(port)] = ""
+            port_info[protocol][str(port_num)] = ""
         else:
-            host.noop(f"setype for '{protocol}/{port}' is already unset")
+            host.noop(f"setype for '{protocol}/{port_num}' is already unset")
