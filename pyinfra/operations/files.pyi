@@ -1,5 +1,4 @@
 import typing
-
 import pyinfra
 
 def download(
@@ -334,7 +333,7 @@ def template(
     _parallel: typing.Optional[int] = None,
     _run_once: typing.Optional[bool] = None,
     _serial: typing.Optional[bool] = None,
-    **data,
+    **data
 ): ...
 def link(
     path,
