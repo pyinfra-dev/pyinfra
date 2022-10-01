@@ -5,7 +5,7 @@
     },
     "facts": {
         "selinux.SEPorts": {
-            "tcp": {22:  "xray_port_t"},
+            "tcp": {"22":  "xray_port_t"}
         }
     },
     "commands": [

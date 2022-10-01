@@ -157,14 +157,14 @@ def port(protocol, port, se_type=None, present=True):
         raise ValueError("se_type must have a valid value if present is set")
 
     port_info = host.get_fact(SEPorts)
-    current = port_info.get(protocol, {}).get(port, "")
+    current = port_info.get(protocol, {}).get(str(port), "")
     if present:
         op = "-a" if current == "" else ("-m" if current != se_type else "")
         if op != "":
             yield StringCommand("semanage", "port", op, "-t", se_type, "-p", protocol, port)
             if protocol not in port_info:
                 port_info[protocol] = {}
-            port_info[protocol][port] = se_type
+            port_info[protocol][str(port)] = se_type
         else:
             host.noop(f"setype for '{protocol}/{port}' is already '{se_type}'")
     else:
@@ -172,6 +172,6 @@ def port(protocol, port, se_type=None, present=True):
             yield StringCommand("semanage", "port", "-d", "-p", protocol, port)
             if protocol not in port_info:
                 port_info[protocol] = {}
-            port_info[protocol][port] = ""
+            port_info[protocol][str(port)] = ""
         else:
             host.noop(f"setype for '{protocol}/{port}' is already unset")

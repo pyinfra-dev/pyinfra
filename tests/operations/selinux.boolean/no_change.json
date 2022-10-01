@@ -10,5 +10,5 @@
     },
     "commands": [
     ],
-    "noop_description": "seboolean 'some_boolean' already had the value 'on'"
+    "noop_description": "boolean 'some_boolean' already had the value 'on'"
 }
