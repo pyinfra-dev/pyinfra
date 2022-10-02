@@ -2,7 +2,7 @@ import typing
 import pyinfra
 
 def boolean(
-    boolean,
+    bool_name,
     value,
     persistent=False,
     _sudo: typing.Optional[bool] = None,
@@ -113,7 +113,7 @@ def file_context_mapping(
 ): ...
 def port(
     protocol,
-    port,
+    port_num,
     se_type=None,
     present=True,
     _sudo: typing.Optional[bool] = None,
