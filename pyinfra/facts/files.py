@@ -354,3 +354,21 @@ class FindDirectories(FindFilesBase):
     """
 
     type_flag = "d"
+
+
+class Flags(FactBase):
+    """
+    Returns a list of the file flags set for the specified file or directory.
+    """
+
+    requires_command = "chflags"  # don't try to retrieve them if we can't set them
+
+    def command(self, path):
+        return make_formatted_string_command(
+            "! test -e {0} || stat -f %Sf {0}",
+            QuoteString(path),
+        )
+
+    def process(self, output):
+
+        return [flag for flag in output[0].split(",") if len(flag) > 0] if len(output) == 1 else []

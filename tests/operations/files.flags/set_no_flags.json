@@ -1,0 +1,12 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "flags": null,
+        "present": true
+    },
+    "facts": {
+    },
+    "commands": [
+    ],
+    "noop_description": "no changes requested to flags for 'testdir'"
+}

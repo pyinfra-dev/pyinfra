@@ -38,6 +38,7 @@ from pyinfra.facts.files import (
     File,
     FindFiles,
     FindInFile,
+    Flags,
     Link,
     Md5File,
     Sha1File,
@@ -1528,3 +1529,58 @@ def directory(
 
         if not changed:
             host.noop("directory {0} already exists".format(path))
+
+
+@operation(pipeline_facts={"flags": "path"})
+def flags(path, flags=None, present=True):
+    """
+    Set/clear file flags.
+
+    + path: path of the remote folder
+    + flags: a list of the file flags to be set or cleared
+    + present: whether the flags should be set or cleared
+
+    **Examples:**
+
+    .. code:: python
+
+        files.flags(
+            name="Ensure ~/Library is visible in the GUI",
+            path="~/Library",
+            flags="hidden",
+            present=False
+        )
+
+        files.directory(
+            name="Ensure no one can change these files",
+            path="/something/very/important",
+            flags=["uchg", "schg"],
+            present=True,
+            _sudo=True
+        )
+    """
+    flags = flags or []
+    if not isinstance(flags, list):
+        flags = [flags]
+
+    if len(flags) == 0:
+        host.noop(f"no changes requested to flags for '{path}'")
+    else:
+        current_set = set(host.get_fact(Flags, path=path))
+        to_change = list(set(flags) - current_set) if present else list(current_set & set(flags))
+
+        if len(to_change) > 0:
+            prefix = "" if present else "no"
+            new_flags = ",".join([prefix + flag for flag in sorted(to_change)])
+            yield StringCommand("chflags", new_flags, QuoteString(path))
+            host.create_fact(
+                Flags,
+                kwargs={"path": path},
+                data=list(current_set | set(to_change))
+                if present
+                else list(current_set - set(to_change)),
+            )
+        else:
+            host.noop(
+                f'\'{path}\' already has \'{",".join(flags)}\' {"set" if present else "clear"}',
+            )

@@ -1,0 +1,12 @@
+{
+    "args": ["/path/to/something"],
+    "kwargs": {
+        "flags": null,
+        "present": false
+    },
+    "facts": {
+    },
+    "commands": [
+    ],
+    "noop_description": "no changes requested to flags for '/path/to/something'"
+}

@@ -1,0 +1,15 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "flags": ["dump", "hidden"],
+        "present": false
+    },
+    "facts": {
+        "files.Flags": {
+            "path=testdir": ["hidden", "archive"]
+        }
+    },
+    "commands": [
+        "chflags nohidden testdir"
+    ]
+}
