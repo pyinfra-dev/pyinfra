@@ -62,7 +62,13 @@ def package(
             yield " ".join(["snap", "remove", package])
             snap_packages.remove(package)
 
-    # it's not installed and we want it
-    if package not in snap_packages and present:
-        yield " ".join(["snap", "install", package, f"--channel={channel}"])
-        snap_packages.append(package)
+    # it's not installed
+    if package not in snap_packages:
+        # we want it
+        if present:
+            yield " ".join(["snap", "install", package, f"--channel={channel}"])
+            snap_packages.append(package)
+
+        # we don't want it
+        else:
+            host.noop(f"snap package {package} is not installed")
