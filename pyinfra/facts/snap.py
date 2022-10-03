@@ -19,9 +19,10 @@ class SnapPackage(SnapBaseFact):
             "publisher": "Canonical✓",
             "snap-id": "J60k4JY0HppjwOjW8dZdYc8obXKxujRu",
             "channel": "4.0/stable",
-            "version": "4.0.9-8e2046b"
+            "version": "4.0.9"
         }
     """
+
     default = dict
     _regexes = {
         "name": "^name:[ ]+(.*)",
@@ -59,8 +60,9 @@ class SnapPackages(SnapBaseFact):
             "snapd"
         ]
     """
-    command = "snap list"
+
     default = list
+    command = "snap list"
 
     def process(self, output):
         # Discard header output line from snap list command
@@ -68,7 +70,6 @@ class SnapPackages(SnapBaseFact):
         #    $ snap list
         #    Name              Version        Rev    Tracking         Publisher     Notes
         #    core              16-2.57.2      13886  latest/stable    canonical✓    core
-        #    core18            20220831       2566   latest/stable    canonical✓    base
-        #    lxd               4.0.9-8e2046b  22753  4.0/stable/…     canonical✓    -
+        #    lxd               4.0.9          22753  4.0/stable/…     canonical✓    -
         #
         return [snap.split()[0] for snap in output[1:]]
