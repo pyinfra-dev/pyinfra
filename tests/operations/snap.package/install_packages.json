@@ -1,0 +1,20 @@
+{
+    "kwargs": {
+        "packages": ["vlc", "present", "not_present"]
+    },
+    "facts": {
+        "snap.SnapPackage": {
+            "package=present": {
+                "name": "present",
+                "publisher": "Acme Corp",
+                "snap-id": "fake-snap-id",
+                "channel": "latest/stable",
+                "version": "0.0.1"
+            }
+        },
+        "snap.SnapPackages": ["core", "core18", "core20", "present"]
+    },
+    "commands": [
+        "snap install vlc not_present --channel=latest/stable"
+    ]
+}

@@ -1,6 +1,6 @@
 {
     "kwargs": {
-        "package": "lxd",
+        "packages": ["lxd"],
         "channel": "4.0/stable"
     },
     "facts": {

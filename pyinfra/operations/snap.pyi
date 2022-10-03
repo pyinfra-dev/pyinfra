@@ -2,7 +2,7 @@ import typing
 import pyinfra
 
 def package(
-    package,
+    packages=None,
     channel="latest/stable",
     present=True,
     _sudo: typing.Optional[bool] = None,

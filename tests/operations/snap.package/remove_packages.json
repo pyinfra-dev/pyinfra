@@ -1,0 +1,14 @@
+{
+    "kwargs": {
+        "packages": ["vlc", "present", "not_present"],
+        "present": false
+    },
+    "facts": {
+        "snap.SnapPackage": {},
+        "snap.SnapPackages": ["core", "core18", "lxd", "vlc", "present"]
+    },
+    "commands": [
+        "snap remove vlc present"
+    ],
+    "noop_description": "snap package not_present is not installed"
+}

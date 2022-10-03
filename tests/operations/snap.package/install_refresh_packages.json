@@ -1,0 +1,29 @@
+{
+    "kwargs": {
+        "packages": ["lxd", "present", "not_present"],
+        "channel": "latest/edge"
+    },
+    "facts": {
+        "snap.SnapPackage": {
+            "package=lxd": {
+                "name": "lxd",
+                "publisher": "Canonical✓",
+                "snap-id": "J60k4JY0HppjwOjW8dZdYc8obXKxujRu",
+                "channel": "latest/stable",
+                "version": "5.6-794016a"
+            },
+            "package=present": {
+                "name": "present",
+                "publisher": "Acme Corp",
+                "snap-id": "fake-snap-id",
+                "channel": "latest/edge",
+                "version": "0.0.1"
+            }
+        },
+        "snap.SnapPackages": ["core", "core18", "lxd", "present"]
+    },
+    "commands": [
+        "snap install not_present --channel=latest/edge",
+        "snap refresh lxd --channel=latest/edge"
+    ]
+}

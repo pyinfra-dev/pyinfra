@@ -1,6 +1,6 @@
 {
     "kwargs": {
-        "package": "vlc"
+        "packages": ["vlc"]
     },
     "facts": {
         "snap.SnapPackage": {},
