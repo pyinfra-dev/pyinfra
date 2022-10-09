@@ -2,23 +2,10 @@ import json
 import os
 from datetime import datetime
 from importlib import import_module
+from io import IOBase
 from os import path
 from pathlib import Path
 from types import FunctionType, ModuleType
-
-# py2/3 switcheroo
-try:
-    from types import FileType
-
-    from cStringIO import InputType, OutputType
-    from StringIO import StringIO
-
-    io_bases = (FileType, OutputType, InputType, StringIO)
-
-except ImportError:  # pragma: no cover
-    from io import IOBase
-
-    io_bases = IOBase
 
 import click
 import gevent
@@ -97,7 +84,7 @@ def json_encode(obj):
     if isinstance(obj, datetime):
         return obj.isoformat()
 
-    if isinstance(obj, io_bases):
+    if isinstance(obj, IOBase):
         if hasattr(obj, "name"):
             return "File: {0}".format(obj.name)
 
