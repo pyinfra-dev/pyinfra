@@ -223,7 +223,7 @@ def operation(
             op_order = [len(host.op_hash_order)]
 
         if host.loop_position:
-            op_order.append(host.loop_position)
+            op_order.extend(host.loop_position)
 
         # Make a hash from the call stack lines
         op_hash = make_hash(op_order)
