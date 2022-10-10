@@ -1,17 +1,15 @@
 {
     "args": ["tcp", 22, "ssh_port_t"],
     "kwargs": {
-        "present":false
+        "present":true
     },
     "facts": {
         "selinux.SEPorts": {
-            "tcp": {"22":  "ssh_port_t"}
+            "udp": {"53":  "dns_port_t"}
         },
         "server.Which": {
             "sepolicy": null
         }
     },
-    "commands": [
-        "semanage port -d -p tcp 22"
-    ]
+    "commands": ["semanage port -a -t ssh_port_t -p tcp 22"]
 }

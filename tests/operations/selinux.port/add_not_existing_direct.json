@@ -4,16 +4,14 @@
         "present":true
     },
     "facts": {
-        "selinux.SEPorts": {
-            "tcp": {
-                "22": "xray_port_t"
-            }
+        "selinux.SEPort": {
+            "protocol=tcp, port=22": ""
         },
         "server.Which": {
-            "sepolicy": null
+            "command=sepolicy": "/usr/bin/sepolicy"
         }
     },
     "commands": [
-        "semanage port -m -t ssh_port_t -p tcp 22"
+        "semanage port -a -t ssh_port_t -p tcp 22"
     ]
 }

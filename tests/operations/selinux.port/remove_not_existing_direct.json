@@ -4,11 +4,11 @@
         "present": false
     },
     "facts": {
-        "selinux.SEPorts": {
-            "tcp": {"22":  ""}
+        "selinux.SEPort": {
+            "protocol=tcp, port=22": ""
         },
-        "server.Which": {
-            "sepolicy": null
+         "server.Which": {
+            "command=sepolicy": "/usr/bin/sepolicy"
         }
     },
     "commands": [],

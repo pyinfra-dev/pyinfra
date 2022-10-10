@@ -76,9 +76,6 @@ class FileContextMapping(FactBase):
 class SEPorts(FactBase):
     """
     Returns the SELinux 'type' definitions for ``(tcp|udp|dccp|sctp)`` ports.
-    By defaults ports with a type of ``reserved_port_t``, ``hi_reserved_port_t``,
-    ``unreserved_port_t`` or ``ephemeral_port_t`` are excluded from the
-    list; an alternate list of types to ignored can be provided in the ``ignored`` parameter
     Note: This fact requires root privileges.
 
     .. code:: python
@@ -92,10 +89,8 @@ class SEPorts(FactBase):
     default = dict
     # example output: amqp_port_t                    tcp      15672, 5671-5672  # noqa: SC100
     _regex = re.compile(r"^([\w_]+)\s+(\w+)\s+([\w\-,\s]+)$")
-    ignored = ["ephemeral_port_t", "unreserved_port_t", "reserved_port_t", "hi_reserved_port_t"]
 
-    def command(self, ignored=None):
-        self.ignored = ignored or SEPorts.ignored
+    def command(self):
         return "semanage port -ln"
 
     def process(self, output):
@@ -104,7 +99,7 @@ class SEPorts(FactBase):
             m = SEPorts._regex.match(line)
             if m is None:  # something went wrong
                 continue
-            if m.group(1) in self.ignored:  # these cover the entire space
+            if m.group(1) == "unreserved_port_t":  # these cover the entire space
                 continue
             for item in m.group(3).split(","):
                 item = item.strip()

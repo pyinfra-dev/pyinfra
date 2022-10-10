@@ -6,6 +6,9 @@
     "facts": {
         "selinux.SEPorts": {
             "tcp": {"22":  ""}
+        },
+        "server.Which": {
+            "sepolicy": null
         }
     },
     "commands": [
