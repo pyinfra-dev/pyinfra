@@ -109,9 +109,17 @@ See the :doc:`./examples/dynamic_execution_deploy` example.
 Loops & Cycle Errors
 ~~~~~~~~~~~~~~~~~~~~
 
-In CLI mode ``pyinfra`` uses a single DAG to determine the order in which operations are executed. Line numbers are also used to tie-break. While this is very effective and executing in an order users would expect, certain loops result in cycles within the DAG which raise an error - there is a workaround using the ``host.loop`` function.
+In CLI mode ``pyinfra`` uses a single DAG to determine the order in which operations are executed. While this is very effective and executing in an order users would expect, certain loops result in cycles within the DAG which raise an error. This can be fixed using the ``host.loop`` function as follows:
 
-Let's walk through an example:
+.. code:: python
+
+    for i in host.loop(range(0, 2)):
+        server.shell(name="Do a thing", commands="ls")
+
+Technical walk through
+++++++++++++++++++++++
+
+In the below section we'll walk through an example of the problem described above by looking at operations that would generate a cycle and the resulting DAG, and then the fix. First up let's consider this example:
 
 .. code:: python
 
@@ -121,21 +129,14 @@ Let's walk through an example:
 
         server.shell(name="B", ...)
 
-This results in the following DAGs for each host:
-
-.. code:: shell
-
-    # @local: A0 -> B0 -> A1 -> B1
-    # Other:  B0 -> A1 -> B1
-
-Problem is, by default ``pyinfra`` doesn't know the loop position. To work around this duplicate issues have numbers appended, so now we have:
+This results in the following DAG order for each host - note that ``pyinfra`` does not know the loop position, so when an operation is seen twice on the same line, it just appends a number, like so:
 
 .. code:: shell
 
     # @local: A -> B -> A-1 -> B-1
-    # Other:  B -> A -> B-1
+    # Other:       B -> A   -> B-1
 
-So now A needs B which needs A. We can use the ``host.loop`` function to prevent this occurring by providing the loop position to ``pyinfra``:
+The probelm is that combining these two means A needs B and B needs A, causing a loop and raising an error. We can use the ``host.loop`` function to prevent this occurring by providing the loop position to ``pyinfra``:
 
 .. code:: python
 
@@ -144,6 +145,14 @@ So now A needs B which needs A. We can use the ``host.loop`` function to prevent
             server.shell(name="ls B", commands="ls")
 
         server.shell(name="ls C", commands="ls")
+
+Now the loop position is provided as a hint to ``pyinfra``, it can resolve the DAGs correctly:
+
+.. code:: shell
+
+    # @local: 0A -> 0B -> 1A -> 1B
+    # Other:        0B -> 1A -> 1B
+
 
 Deploy State
 ------------
