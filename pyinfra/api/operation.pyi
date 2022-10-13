@@ -23,7 +23,7 @@ class OperationMeta(Generator[Command, None, None]):
 class Operation(Generic[P], Protocol):
     def __call__(self, 
         _sudo: bool|None = None,
-        _sudo_user: bool|None = None,
+        _sudo_user: str|None = None,
         _use_sudo_login: bool|None = None,
         _use_sudo_password: bool|None = None,
         _preserve_sudo_env: bool|None = None,
@@ -57,7 +57,7 @@ class Operation(Generic[P], Protocol):
 
 def add_op(state: State, op_func: Operation[P], 
     _sudo: bool|None = None,
-    _sudo_user: bool|None = None,
+    _sudo_user: str|None = None,
     _use_sudo_login: bool|None = None,
     _use_sudo_password: bool|None = None,
     _preserve_sudo_env: bool|None = None,
