@@ -15,7 +15,7 @@ auth_kwargs = {
     "_sudo_user": {
         "description": "Execute/apply any changes with ``sudo`` as a non-root user.",
         "default": lambda config: config.SUDO_USER,
-        "type": bool,
+        "type": str,
     },
     "_use_sudo_login": {
         "description": "Execute ``sudo`` with a login shell.",
