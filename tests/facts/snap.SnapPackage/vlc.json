@@ -1,0 +1,42 @@
+{
+    "arg": "vlc",
+    "command": "snap info vlc",
+    "requires_command": "snap",
+    "output": [
+        "name:      vlc",
+        "summary:   The ultimate media player",
+        "publisher: VideoLAN**",
+        "store-url: https://snapcraft.io/vlc",
+        "contact:   https://www.videolan.org/support/",
+        "license:   unset",
+        "description: |",
+        "  VLC is the VideoLAN project's media player.",
+        "  ",
+        "  Completely open source and privacy-friendly, it plays every multimedia file",
+        "  and streams.",
+        "  ",
+        "  It notably plays MKV, MP4, MPEG, MPEG-2, MPEG-4, DivX, MOV, WMV, QuickTime,",
+        "  WebM, FLAC, MP3, Ogg/Vorbis files, BluRays, DVDs, VCDs, podcasts, and",
+        "  multimedia streams from various network sources. It supports subtitles,",
+        "  closed captions and is translated in numerous languages.",
+        "commands:",
+        "  - vlc",
+        "snap-id:      RT9mcUhVsRYrDLG8qnvGiy26NKvv6Qkd",
+        "tracking:     latest/stable",
+        "refresh-date: today at 17:29 UTC",
+        "channels:",
+        "  latest/stable:    3.0.16                      2021-06-28 (2344) 310MB -",
+        "  latest/candidate: 3.0.16                      2021-06-28 (2344) 310MB -",
+        "  latest/beta:      3.0.18-rc2                  2022-10-01 (3043) 335MB -",
+        "  latest/edge:      4.0.0-dev-20921-g251455ffdd 2022-10-01 (3044) 659MB -",
+        "installed:          3.0.16                                 (2344) 310MB -"
+
+    ],
+    "fact": {
+        "name": "vlc",
+        "publisher": "VideoLAN**",
+        "snap-id": "RT9mcUhVsRYrDLG8qnvGiy26NKvv6Qkd",
+        "channel": "latest/stable",
+        "version": "3.0.16"
+    }
+}

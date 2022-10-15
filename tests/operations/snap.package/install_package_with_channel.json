@@ -1,0 +1,13 @@
+{
+    "kwargs": {
+        "packages": ["lxd"],
+        "channel": "4.0/stable"
+    },
+    "facts": {
+        "snap.SnapPackage": {},
+        "snap.SnapPackages": ["core", "snapd"]
+    },
+    "commands": [
+        "snap install lxd --channel=4.0/stable"
+    ]
+}

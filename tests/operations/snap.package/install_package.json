@@ -1,0 +1,12 @@
+{
+    "kwargs": {
+        "packages": ["vlc"]
+    },
+    "facts": {
+        "snap.SnapPackage": {},
+        "snap.SnapPackages": ["core", "core18", "core20"]
+    },
+    "commands": [
+        "snap install vlc --channel=latest/stable"
+    ]
+}

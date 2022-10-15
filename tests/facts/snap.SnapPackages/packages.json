@@ -1,0 +1,19 @@
+{
+    "output": [
+        "Name              Version        Rev    Tracking         Publisher     Notes",
+        "core              16-2.57.2      13886  latest/stable    canonical✓    core",
+        "core18            20220831       2566   latest/stable    canonical✓    base",
+        "core20            20220826       1623   latest/stable    canonical✓    base",
+        "lxd               4.0.9-8e2046b  22753  4.0/stable/…     canonical✓    -",
+        "snapd             2.57.2         17029  latest/stable    canonical✓    snapd"
+    ],
+    "command": "snap list",
+    "requires_command": "snap",
+    "fact": [
+        "core",
+        "core18",
+        "core20",
+        "lxd",
+        "snapd"
+    ]
+}
