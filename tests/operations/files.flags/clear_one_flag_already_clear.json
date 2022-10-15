@@ -1,0 +1,15 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "flags": "dump",
+        "present": false
+    },
+    "facts": {
+        "files.Flags": {
+            "path=testdir": []
+        }
+    },
+    "commands": [
+    ],
+    "noop_description": "'testdir' already has 'dump' clear"
+}

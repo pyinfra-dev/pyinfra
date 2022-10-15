@@ -171,7 +171,8 @@ def operation(
         if host.in_op:
             if global_kwarg_keys:
                 _error_msg = "Nested operation called with global arguments: {0} ({1})".format(
-                    global_kwarg_keys, get_call_location()
+                    global_kwarg_keys,
+                    get_call_location(),
                 )
                 raise PyinfraError(_error_msg)
             return func(*args, **kwargs) or []
@@ -284,6 +285,9 @@ def _solve_operation_consistency(names, state, host):
     # In API mode we just increase the order for each host
     else:
         op_order = [len(host.op_hash_order)]
+
+    if host.loop_position:
+        op_order.extend(host.loop_position)
 
     # Make a hash from the call stack lines
     op_hash = make_hash(op_order)

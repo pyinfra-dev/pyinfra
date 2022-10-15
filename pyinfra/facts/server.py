@@ -11,6 +11,8 @@ from pyinfra.api.util import try_int
 
 from .util.distro import get_distro_info
 
+ISO_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
+
 
 class User(FactBase):
     """
@@ -119,12 +121,12 @@ class Date(FactBase):
     Returns the current datetime on the server.
     """
 
-    command = "LANG=C LC_TIME=en_US.UTF-8 date"
+    command = f"date +'{ISO_DATE_FORMAT}'"
     default = datetime.now
 
     @staticmethod
     def process(output):
-        return parse_date(output[0])
+        return datetime.strptime(output[0], ISO_DATE_FORMAT)
 
 
 class MacosVersion(FactBase):

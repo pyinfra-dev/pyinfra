@@ -1,0 +1,15 @@
+{
+    "args": ["testdir"],
+    "kwargs": {
+        "flags": "dump",
+        "present": true
+    },
+    "facts": {
+        "files.Flags": {
+            "path=testdir": ["dump", "hidden", "archive"]
+        }
+    },
+    "commands": [
+    ],
+    "noop_description": "'testdir' already has 'dump' set"
+}

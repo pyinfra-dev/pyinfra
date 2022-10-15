@@ -1,0 +1,15 @@
+{
+    "args": ["/web(/.*)?"],
+    "kwargs": {
+        "se_type": "httpd_sys_content_t",
+        "present":true
+    },
+    "facts": {
+        "selinux.FileContextMapping": {
+            "target=/web(/.*)?": {"type": "httpd_sys_content_t"}
+        }
+    },
+    "commands": [
+    ],
+    "noop_description": "mapping for '/web(/.*)?' -> 'httpd_sys_content_t' already present"
+}

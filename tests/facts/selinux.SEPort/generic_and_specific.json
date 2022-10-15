@@ -1,0 +1,10 @@
+{
+    "arg": ["tcp", 22],
+    "requires_command": "sepolicy",
+    "command": "(sepolicy network -p 22 2>/dev/null || true) | grep tcp",
+    "output": [
+        "22: tcp ssh_port_t 22",
+        "22: tcp reserved_port_t 1-511"
+    ],
+    "fact": "ssh_port_t"
+}

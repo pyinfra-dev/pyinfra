@@ -1,0 +1,9 @@
+{
+    "arg": "some_boolean",
+    "requires_command": "getsebool",
+    "command": "getsebool some_boolean",
+    "output": [
+        "some_boolean --> off"
+    ],
+    "fact": "off"
+}

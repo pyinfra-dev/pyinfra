@@ -1,0 +1,13 @@
+{
+    "args": ["/foo/bar", "httpd_sys_content_t"],
+    "kwargs": {
+    },
+    "facts": {
+        "selinux.FileContext": {
+            "path=/foo/bar": {"type": "httpd_sys_content_t"}
+        }
+    },
+    "commands": [
+    ],
+    "noop_description": "file_context: '/foo/bar' already had type 'httpd_sys_content_t'"
+}

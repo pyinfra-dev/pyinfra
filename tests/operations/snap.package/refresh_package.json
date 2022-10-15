@@ -1,0 +1,21 @@
+{
+    "kwargs": {
+        "packages": ["lxd"],
+        "channel": "4.0/stable"
+    },
+    "facts": {
+        "snap.SnapPackage": {
+            "package=lxd": {
+                "name": "lxd",
+                "publisher": "Canonical✓",
+                "snap-id": "J60k4JY0HppjwOjW8dZdYc8obXKxujRu",
+                "channel": "latest/stable",
+                "version": "5.6-794016a"
+            }
+        },
+        "snap.SnapPackages": ["core", "core18", "lxd"]
+    },
+    "commands": [
+        "snap refresh lxd --channel=4.0/stable"
+    ]
+}

@@ -1,0 +1,8 @@
+{
+    "requires_command": "semanage",
+    "command": "semanage port -ln",
+    "output": [
+        "!$%(*&Q#(*&%_)*Q%#(*Q)%@#(*&Q)@(*$)Q(*@$)(*)(Q@*$()*Q@$)"
+    ],
+    "fact": {}
+}

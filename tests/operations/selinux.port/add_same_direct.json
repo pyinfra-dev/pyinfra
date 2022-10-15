@@ -1,0 +1,16 @@
+{
+    "args": ["tcp", 22, "ssh_port_t"],
+    "kwargs": {
+        "present":true
+    },
+    "facts": {
+        "selinux.SEPort": {
+            "protocol=tcp, port=22": "ssh_port_t"
+        },
+        "server.Which": {
+            "command=sepolicy": "/usr/bin/sepolicy"
+        }
+    },
+    "commands": [],
+    "noop_description": "setype for 'tcp/22' is already 'ssh_port_t'"
+}

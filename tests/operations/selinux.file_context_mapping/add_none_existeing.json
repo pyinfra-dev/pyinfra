@@ -1,0 +1,15 @@
+{
+    "args": ["/web(/.*)?"],
+    "kwargs": {
+        "se_type": "httpd_sys_content_t",
+        "present":true
+    },
+    "facts": {
+        "selinux.FileContextMapping": {
+            "target=/web(/.*)?": {}
+        }
+    },
+    "commands": [
+        "semanage fcontext -a -t httpd_sys_content_t '/web(/.*)?'"
+    ]
+}

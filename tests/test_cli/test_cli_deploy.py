@@ -76,9 +76,11 @@ class TestCliDeployState(PatchSSHTestCase):
             ("Loop-1 main operation", True),
             ("Third main operation", True),
             ("Order loop 1", True),
-            ("2nd Order loop 1", True),
+            ("Nested order loop 1/1", ("anotherhost",)),
+            ("Nested order loop 1/2", ("anotherhost",)),
             ("Order loop 2", True),
-            ("2nd Order loop 2", True),
+            ("Nested order loop 2/1", ("somehost", "anotherhost")),
+            ("Nested order loop 2/2", ("somehost", "anotherhost")),
             ("Final limited operation", ("somehost",)),
         ]
 

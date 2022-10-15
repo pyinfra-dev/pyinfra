@@ -1,0 +1,8 @@
+{
+    "arg": ["tcp","portname"],
+    "requires_command": "sepolicy",
+    "command": "(sepolicy network -p portname 2>/dev/null || true) | grep tcp",
+    "output": [
+    ],
+    "fact": ""
+}

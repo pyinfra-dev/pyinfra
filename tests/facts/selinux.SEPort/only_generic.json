@@ -1,0 +1,9 @@
+{
+    "arg": ["tcp", 9997],
+    "requires_command": "sepolicy",
+    "command": "(sepolicy network -p 9997 2>/dev/null || true) | grep tcp",
+    "output": [
+        "9997: tcp unreserved_port_t 1024-32767"
+    ],
+    "fact": ""
+}

@@ -1,0 +1,10 @@
+{
+    "arg": ["/foo/bar/baz"],
+    "requires_command": "chflags",
+    "command": "! test -e /foo/bar/baz || stat -f %Sf /foo/bar/baz",
+    "output": [
+        ""
+    ],
+    "fact": [
+    ]
+}
