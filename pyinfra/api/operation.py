@@ -181,7 +181,7 @@ def operation(
         names, add_args = _generate_operation_name(func, host, kwargs, global_kwargs)
         op_order, op_hash = _solve_operation_consistency(names, state, host)
 
-        # Ensure shared (between servers) operation meta
+        # Ensure shared (between servers) operation meta, mutates state
         op_meta = _ensure_shared_op_meta(state, op_hash, op_order, global_kwargs, names)
 
         # Attach normal args, if we're auto-naming this operation
@@ -219,10 +219,8 @@ def operation(
         host.current_op_hash = None
         host.current_op_global_kwargs = None
 
-        # Add host-specific operation data to state
-        state, operation_meta = _update_state_meta(
-            state, host, commands, op_hash, op_meta, global_kwargs
-        )
+        # Add host-specific operation data to state, this mutates state
+        operation_meta = _update_state_meta(state, host, commands, op_hash, op_meta, global_kwargs)
 
         # Return result meta for use in deploy scripts
         return operation_meta
@@ -311,6 +309,7 @@ def _solve_operation_consistency(names, state, host):
     return op_order, op_hash
 
 
+# NOTE: this function mutates state.op_meta for this hash
 def _ensure_shared_op_meta(state, op_hash, op_order, global_kwargs, names):
     op_meta = state.op_meta.setdefault(
         op_hash,
@@ -367,6 +366,7 @@ def _attach_args(op_meta, args, kwargs):
     return op_meta
 
 
+# NOTE: this function mutates state.meta for this host
 def _update_state_meta(state, host, commands, op_hash, op_meta, global_kwargs):
     # We're doing some commands, meta/ops++
     state.meta[host]["ops"] += 1
@@ -391,4 +391,4 @@ def _update_state_meta(state, host, commands, op_hash, op_meta, global_kwargs):
     if state.is_executing:
         _execute_immediately(state, host, op_data, op_meta, op_hash)
 
-    return state, operation_meta
+    return operation_meta
