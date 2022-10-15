@@ -1,0 +1,14 @@
+{
+    "requires_command": "semanage",
+    "command": "semanage port -ln",
+    "output": [
+        "example_port_t                    tcp      50-52",
+        "unreserved_port_t              sctp     1024-65535",
+        "unreserved_port_t              tcp      61000-65535, 1024-32767",
+        "unreserved_port_t              udp      61000-65535, 1024-32767"
+    ],
+    "fact": {
+
+        "tcp": {"50": "example_port_t", "51":  "example_port_t", "52": "example_port_t"}
+    }
+}

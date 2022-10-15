@@ -1,0 +1,10 @@
+{
+    "args": ["tcp", 22],
+    "kwargs": {
+        "present": true
+    },
+    "exception": {
+        "name": "ValueError",
+        "message": "se_type must have a valid value if present is set"
+    }
+}

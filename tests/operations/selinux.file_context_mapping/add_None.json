@@ -1,0 +1,11 @@
+{
+    "args": ["/web(/.*)?"],
+    "kwargs": {
+        "se_type": null,
+        "present": true
+    },
+    "exception": {
+        "name": "ValueError",
+        "message": "se_type must have a valid value if present is set"
+    }
+}

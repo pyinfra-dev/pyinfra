@@ -1,0 +1,10 @@
+{
+    "requires_command": "semanage",
+    "command": "semanage port -ln",
+    "output": [
+        "example_port_t                    sctp      99"
+    ],
+    "fact": {
+        "sctp": { "99": "example_port_t"}
+    }
+}

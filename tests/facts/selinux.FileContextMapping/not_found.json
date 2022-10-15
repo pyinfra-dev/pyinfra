@@ -1,0 +1,8 @@
+{
+    "arg": "/etc/etc/etc/etc/etc/etc",
+    "requires_command": "semanage",
+    "command": "set -o pipefail && semanage fcontext -n -l | (grep '^/etc/etc/etc/etc/etc/etc' || true)",
+    "output": [
+    ],
+    "fact": {}
+}

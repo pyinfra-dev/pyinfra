@@ -1,0 +1,13 @@
+{
+    "args": ["/etc", "var_t"],
+    "kwargs": {
+    },
+    "facts": {
+        "selinux.FileContext": {
+            "path=/etc": {"type": "etc_t"}
+        }
+    },
+    "commands": [
+        "chcon -t var_t /etc"
+    ]
+}
