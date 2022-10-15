@@ -2,7 +2,7 @@ from os import path
 
 from utils import call_file_op
 
-from pyinfra import host, local, state
+from pyinfra import host, local
 from pyinfra.api import deploy
 from pyinfra.operations import files, server
 
@@ -59,16 +59,18 @@ for i in range(2):
 
 call_file_op()
 
-with state.preserve_loop_order([1, 2]) as loop_items:
-    for item in loop_items():
-        server.shell(
-            name="Order loop {0}".format(item),
-            commands="echo loop_{0}".format(item),
-        )
-        server.shell(
-            name="2nd Order loop {0}".format(item),
-            commands="echo loop_{0}".format(item),
-        )
+# Ensure complex nested loops don't generate cycles
+for item in host.loop([1, 2]):
+    server.shell(
+        name=f"Order loop {item}",
+        commands=f"echo loop_{item}",
+    )
+    if host.name == "anotherhost" or (item == 2 and host.name == "somehost"):
+        for inner_item in host.loop([1, 2]):
+            server.shell(
+                name=f"Nested order loop {item}/{inner_item}",
+                commands=f"echo loop_{item}/{inner_item}",
+            )
 
 if host.name == "somehost":
     files.template(
