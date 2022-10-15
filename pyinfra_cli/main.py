@@ -617,7 +617,7 @@ def _handle_commands(state, config, command, original_operations, operations, qu
 
 
 def _run_fact_operations(state, config, operations, quiet):
-    echo_msg("--> Gathering Facts...", quiet)
+    echo_msg("--> Gathering facts...", quiet)
 
     state.print_fact_info = True
     fact_data = {}
