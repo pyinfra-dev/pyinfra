@@ -47,6 +47,8 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
     "flake8==4.0.1",
     "flake8-black==0.3.0",
     "flake8-isort==4.1.1",
+    # Typing
+    "mypy==0.971",
 )
 
 DOCS_REQUIRES = (
