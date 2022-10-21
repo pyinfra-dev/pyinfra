@@ -10,7 +10,7 @@ P = ParamSpec("P")
 
 Command=str|StringCommand|FileDownloadCommand|FileUploadCommand|FunctionCommand
 
-class OperationMeta(Generator[Command, None, None]):
+class OperationMeta(object):
     changed: bool
     commands: List[str]|None
     hash: str|None
@@ -94,7 +94,6 @@ def operation(func: Callable[P, Generator[Command, None, None]]) -> Operation[P]
 
 @overload
 def operation(
-    func=None,
     pipeline_facts=None,
     is_idempotent: bool = True,
     idempotent_notice=None,
