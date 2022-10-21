@@ -65,7 +65,7 @@ class SystemdStatus(FactBase):
             user_name=user_name,
         )
 
-        return f"{fact_cmd} show --property Id --property {self.state_key} '*'"
+        return f"{fact_cmd} show --all --property Id --property {self.state_key} '*'"
 
     def process(self, output):
         services = {}
