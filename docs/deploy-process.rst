@@ -136,7 +136,7 @@ This results in the following DAG order for each host - note that ``pyinfra`` do
     # @local: A -> B -> A-1 -> B-1
     # Other:       B -> A   -> B-1
 
-The probelm is that combining these two means A needs B and B needs A, causing a loop and raising an error. We can use the ``host.loop`` function to prevent this occurring by providing the loop position to ``pyinfra``:
+The problem is that combining these two means A needs B and B needs A, causing a loop and raising an error. We can use the ``host.loop`` function to prevent this occurring by providing the loop position to ``pyinfra``:
 
 .. code:: python
 

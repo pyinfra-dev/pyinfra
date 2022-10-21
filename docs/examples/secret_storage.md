@@ -1,6 +1,6 @@
 # Using Secrets in pyinfra
 
-Encrpyting sensitive information can be achieved using Python packages such as [privy](https://pypi.org/project/privy/).
+Encrypting sensitive information can be achieved using Python packages such as [privy](https://pypi.org/project/privy/).
 
 ```py
 # group_data/all.py

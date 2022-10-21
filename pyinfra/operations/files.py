@@ -284,12 +284,12 @@ def line(
         # prepare to do some maintenance
         maintenance_line = "SYSTEM IS DOWN FOR MAINTENANCE"
         files.line(
-            name="Add the down-for-maintence line in /etc/motd",
+            name="Add the down-for-maintenance line in /etc/motd",
             path="/etc/motd",
             line=maintenance_line,
         )
 
-        # Then, after the mantenance is done, remove the maintenance line
+        # Then, after the maintenance is done, remove the maintenance line
         files.line(
             name="Remove the down-for-maintenance line in /etc/motd",
             path="/etc/motd",

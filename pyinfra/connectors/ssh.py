@@ -216,7 +216,7 @@ def _make_paramiko_kwargs(state, host):
 
 def connect(state, host):
     """
-    Connect to a single host. Returns the SSH client if succesful. Stateless by
+    Connect to a single host. Returns the SSH client if successful. Stateless by
     design so can be run in parallel.
     """
 
