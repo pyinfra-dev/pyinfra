@@ -100,7 +100,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
 
 @operation(is_idempotent=False)
-def wait(port=None):
+def wait(port: int):
     """
     Waits for a port to come active on the target machine. Requires netstat, checks every
     second.

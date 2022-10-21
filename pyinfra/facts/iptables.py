@@ -118,7 +118,7 @@ class Ip6tablesRules(IptablesRules):
         return "ip6tables-save -t {0}".format(table)
 
 
-class IptablesChains(IptablesRules):
+class IptablesChains(FactBase):
     """
     Returns a dict of iptables chains & policies:
 
@@ -130,6 +130,9 @@ class IptablesChains(IptablesRules):
     """
 
     default = dict
+
+    def command(self, table="filter"):
+        return "iptables-save -t {0}".format(table)
 
     def process(self, output):
         chains = {}

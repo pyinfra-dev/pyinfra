@@ -56,7 +56,7 @@ class SystemdStatus(FactBase):
     default = dict
 
     state_key = "SubState"
-    state_values = ("running", "waiting", "exited")
+    state_values = ["running", "waiting", "exited"]
 
     def command(self, user_mode=False, machine=None, user_name=None):
         fact_cmd = _make_systemctl_cmd(
@@ -104,4 +104,4 @@ class SystemdEnabled(SystemdStatus):
     """
 
     state_key = "UnitFileState"
-    state_values = ("enabled", "static")
+    state_values = ["enabled", "static"]
