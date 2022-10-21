@@ -13,7 +13,7 @@ from distutils.spawn import find_executable
 from getpass import getpass
 from os import path
 from socket import error as socket_error, gaierror
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Type, Union
 
 import click
 from paramiko import (
@@ -89,7 +89,9 @@ def _raise_connect_error(host: "Host", message, data):
 
 
 def _load_private_key_file(filename: str, key_filename: str, key_password: str):
-    exception = PyinfraError("Invalid key: {0}".format(filename))
+    exception: Union[PyinfraError, SSHException] = PyinfraError("Invalid key: {0}".format(filename))
+
+    key_cls: Union[Type[RSAKey], Type[DSSKey], Type[ECDSAKey], Type[Ed25519Key]]
 
     for key_cls in (RSAKey, DSSKey, ECDSAKey, Ed25519Key):
         try:
@@ -141,7 +143,7 @@ def _get_private_key(state: "State", key_filename: str, key_password: str):
         # Relative to the CWD
         path.join(state.cwd, key_filename)
 
-    key = False
+    key = None
     key_file_exists = False
 
     for filename in ssh_key_filenames:
@@ -371,6 +373,7 @@ def run_shell_command(
 
 @memoize
 def _get_sftp_connection(host: "Host"):
+    assert host.connection is not None
     transport = host.connection.get_transport()
 
     try:
