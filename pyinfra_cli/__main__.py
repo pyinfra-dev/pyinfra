@@ -16,7 +16,7 @@ pyinfra.is_cli = True
 sys.dont_write_bytecode = True
 
 # Shut it click
-click.disable_unicode_literals_warning = True  # noqa
+click.disable_unicode_literals_warning = True  # type: ignore
 
 # Force line buffering
 sys.stdout = os.fdopen(sys.stdout.fileno(), "w", 1)
