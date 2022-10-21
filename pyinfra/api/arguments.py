@@ -1,10 +1,14 @@
-from typing import Callable, Iterable, Mapping, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
 
 import pyinfra
 from pyinfra import context, logger
 from pyinfra.api.state import State
 
 from .util import get_call_location, memoize
+
+if TYPE_CHECKING:
+    from pyinfra.api.config import Config
+    from pyinfra.api.host import Host
 
 auth_kwargs = {
     "_sudo": {
@@ -69,7 +73,7 @@ auth_kwargs = {
 }
 
 
-def generate_env(config, value):
+def generate_env(config: "Config", value):
     env = config.ENV.copy()
 
     # TODO: this is to protect against host.data.env being a string or similar,
@@ -181,19 +185,19 @@ OPERATION_KWARGS = {
 }
 
 
-def _get_internal_key(key):
+def _get_internal_key(key: str) -> str:
     if key.startswith("_"):
         return key[1:]
     return key
 
 
 @memoize
-def get_execution_kwarg_keys():
+def get_execution_kwarg_keys() -> List[Any]:
     return [_get_internal_key(key) for key in execution_kwargs.keys()]
 
 
 @memoize
-def get_executor_kwarg_keys():
+def get_executor_kwarg_keys() -> List[Any]:
     keys = set()
     keys.update(auth_kwargs.keys(), shell_kwargs.keys())
     return [_get_internal_key(key) for key in keys]
@@ -219,7 +223,12 @@ def show_legacy_argument_host_data_warning(key):
     )
 
 
-def pop_global_arguments(kwargs, state=None, host=None, keys_to_check=None):
+def pop_global_arguments(
+    kwargs: Dict[Any, Any],
+    state: Optional["State"] = None,
+    host: Optional["Host"] = None,
+    keys_to_check=None,
+):
     """
     Pop and return operation global keyword arguments, in preferred order:
 

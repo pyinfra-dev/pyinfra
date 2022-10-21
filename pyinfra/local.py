@@ -10,7 +10,7 @@ from pyinfra.connectors.util import run_local_process, split_combined_output
 from pyinfra.context import ctx_state
 
 
-def include(filename):
+def include(filename: str):
     """
     Executes a local python file within the ``pyinfra.state.cwd``
     directory.
@@ -48,7 +48,13 @@ def include(filename):
         config.set_current_state(config_state)
 
 
-def shell(commands, splitlines=False, ignore_errors=False, print_output=False, print_input=False):
+def shell(
+    commands,
+    splitlines: bool = False,
+    ignore_errors: bool = False,
+    print_output: bool = False,
+    print_input: bool = False,
+):
     """
     Subprocess based implementation of pyinfra/api/ssh.py's ``run_shell_command``.
 

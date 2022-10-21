@@ -2,11 +2,16 @@ import json
 import platform
 import re
 import sys
+from typing import TYPE_CHECKING
 
 import click
 
 from pyinfra import __version__, logger
 from pyinfra.api.host import Host
+
+if TYPE_CHECKING:
+    from pyinfra.api.state import State
+    from pyinfra.api.inventory import Inventory
 
 from .util import json_encode
 
@@ -17,7 +22,7 @@ def _strip_ansi(value):
     return ANSI_RE.sub("", value)
 
 
-def _get_group_combinations(inventory):
+def _get_group_combinations(inventory: "Inventory"):
     group_combinations = {}
 
     for host in inventory:
@@ -45,13 +50,13 @@ def jsonify(data, *args, **kwargs):
     return json.dumps(data, *args, **kwargs)
 
 
-def print_state_facts(state):
+def print_state_facts(state: "State"):
     click.echo(err=True)
     click.echo("--> Facts:", err=True)
     click.echo(jsonify(state.facts, indent=4, default=json_encode), err=True)
 
 
-def print_state_operations(state):
+def print_state_operations(state: "State"):
     state_ops = {host: ops for host, ops in state.ops.items() if state.is_host_in_limit(host)}
 
     click.echo(err=True)
@@ -108,7 +113,7 @@ def print_fact(fact_data):
     click.echo(jsonify(fact_data, indent=4, default=json_encode), err=True)
 
 
-def print_inventory(state):
+def print_inventory(state: "State"):
     for host in state.inventory:
         click.echo(err=True)
         click.echo(host.print_prefix, err=True)
@@ -197,7 +202,7 @@ def print_rows(rows):
         func(line)
 
 
-def print_meta(state):
+def print_meta(state: "State"):
     group_combinations = _get_group_combinations(state.inventory.iter_activated_hosts())
     rows = []
 
@@ -251,7 +256,7 @@ def print_meta(state):
     print_rows(rows)
 
 
-def print_results(state):
+def print_results(state: "State"):
     group_combinations = _get_group_combinations(state.inventory.iter_activated_hosts())
     rows = []
 

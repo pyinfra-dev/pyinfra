@@ -9,7 +9,10 @@ build/
 dist/
 
 venv/
+.venv/
 .cache/
+.mypy_cache/
+.pytest_cache/
 
 .vagrant*
 
@@ -25,6 +28,7 @@ docs/apidoc/
 docs/_deploy_globals.rst
 
 .idea/
+.vscode/
 
 pyinfra-debug.log
 Makefile

@@ -12,12 +12,15 @@ The `@ansible` connector can be used to parse Ansible inventory files.
     # Load using an absolute path
     pyinfra @ansible//absolute/path/to/inventory
 """
-
 import json
 import re
 from collections import defaultdict
 from configparser import ConfigParser
 from os import path
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from pyinfra.api.host import Host
 
 try:
     import yaml
@@ -34,7 +37,7 @@ def show_warning():
     logger.warning("The @ansible connector is in alpha!")
 
 
-def make_names_data(inventory_filename=None):
+def make_names_data(inventory_filename: Optional[str] = None):
     show_warning()
 
     if not inventory_filename:
@@ -48,7 +51,7 @@ def make_names_data(inventory_filename=None):
     return parse_inventory(inventory_filename)
 
 
-def parse_inventory(inventory_filename):
+def parse_inventory(inventory_filename: str):
     # fallback to INI if no extension
     extension = inventory_filename.split(".")[-1] if "." in inventory_filename else "ini"
 
@@ -80,7 +83,7 @@ def parse_inventory(inventory_filename):
     return [(host, {}, sorted(list(host_to_groups.get(host)))) for host in host_to_groups]
 
 
-def parse_inventory_ini(inventory_filename):
+def parse_inventory_ini(inventory_filename: str):
     config = ConfigParser(
         delimiters=(" "),  # we only handle the hostnames for now
         allow_no_value=True,  # we don't by default have = values
@@ -160,7 +163,7 @@ def parse_inventory_tree(inventory_tree, host_to_groups=dict(), group_stack=set(
     return host_to_groups
 
 
-def append_groups_to_host(host, groups, host_to_groups):
+def append_groups_to_host(host: "Host", groups, host_to_groups):
     if host in host_to_groups:
         # set logic handles de-duplication
         host_to_groups[host] = host_to_groups[host].union(groups)

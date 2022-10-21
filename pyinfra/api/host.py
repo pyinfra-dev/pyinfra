@@ -1,9 +1,15 @@
 from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any, Callable, Generator, List, Optional, Union
 
 import click
 from gevent.lock import BoundedSemaphore
 
 from pyinfra import logger
+
+if TYPE_CHECKING:
+    from pyinfra.api.state import State
+    from pyinfra.api.inventory import Inventory
+
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 
 from .connectors import get_execution_connector
@@ -11,7 +17,7 @@ from .exceptions import ConnectError
 from .facts import create_host_fact, delete_host_fact, get_host_fact, reload_host_fact
 
 
-def extract_callable_datas(datas):
+def extract_callable_datas(datas: List[Union[Callable[..., Any], Any]]) -> Generator[Any, Any, Any]:
     for data in datas:
         # Support for dynamic data, ie @deploy wrapped data defaults where
         # the data is stored on the state temporarily.
@@ -28,18 +34,18 @@ class HostData(object):
 
     override_datas = None
 
-    def __init__(self, host, *datas):
+    def __init__(self, host: "Host", *datas):
         self.__dict__["host"] = host
 
-        datas = list(datas)
+        parsed_datas = list(datas)
 
         # Inject an empty override data so we can assign during deploy
         self.__dict__["override_datas"] = {}
-        datas.insert(0, self.override_datas)
+        parsed_datas.insert(0, self.override_datas)
 
-        self.__dict__["datas"] = tuple(datas)
+        self.__dict__["datas"] = tuple(parsed_datas)
 
-    def __getattr__(self, key):
+    def __getattr__(self, key: str):
         for data in extract_callable_datas(self.datas):
             try:
                 return data[key]
@@ -48,13 +54,13 @@ class HostData(object):
 
         raise AttributeError(f"Host `{self.host}` has no data `{key}`")
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: str, value: Any):
         self.override_datas[key] = value
 
     def __str__(self):
         return str(self.datas)
 
-    def get(self, key, default=None):
+    def get(self, key: str, default=None):
         return getattr(self, key, default)
 
     def dict(self):
@@ -78,16 +84,16 @@ class Host(object):
     """
 
     connection = None
-    state = None
+    state: Optional["State"] = None
 
     # Current context inside an @operation function (op gen stage)
-    in_op = False
+    in_op: bool = False
     current_op_hash = None
     current_op_global_kwargs = None
 
     # Current context inside a @deploy function (op gen stage)
-    in_deploy = False
-    current_deploy_name = None
+    in_deploy: bool = False
+    current_deploy_name: Optional[str] = None
     current_deploy_kwargs = None
     current_deploy_data = None
 
@@ -106,8 +112,8 @@ class Host(object):
 
     def __init__(
         self,
-        name,
-        inventory,
+        name: str,
+        inventory: "Inventory",
         groups,
         executor=get_execution_connector("ssh"),
     ):
@@ -145,7 +151,7 @@ class Host(object):
         return "Host({0})".format(self.name)
 
     @property
-    def connected(self):
+    def connected(self) -> bool:
         return self.connection is not None
 
     @property
@@ -191,7 +197,7 @@ class Host(object):
         handler("{0}noop: {1}".format(self.print_prefix, description))
 
     @contextmanager
-    def deploy(self, name, kwargs, data, in_deploy=True):
+    def deploy(self, name: str, kwargs, data, in_deploy: bool = True):
         """
         Wraps a group of operations as a deploy, this should not be used
         directly, instead use ``pyinfra.api.deploy.deploy``.
@@ -256,7 +262,7 @@ class Host(object):
         if not self.state:
             raise TypeError("Cannot call this function with no state!")
 
-    def connect(self, reason=None, show_errors=True, raise_exceptions=False):
+    def connect(self, reason=None, show_errors: bool = True, raise_exceptions: bool = False):
         self._check_state()
         if not self.connection:
             self.state.trigger_callbacks("host_before_connect", self)

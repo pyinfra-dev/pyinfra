@@ -1,9 +1,14 @@
 from contextlib import contextmanager
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
+from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
 
 from gevent.pool import Pool
+
+if TYPE_CHECKING:
+    from pyinfra.api.inventory import Inventory
+    from pyinfra.api.inventory import Host
 
 from pyinfra import logger
 
@@ -31,42 +36,42 @@ class BaseStateCallback(object):
     #
 
     @staticmethod
-    def host_before_connect(state, host):
+    def host_before_connect(state: "State", host: "Host"):
         pass
 
     @staticmethod
-    def host_connect(state, host):
+    def host_connect(state: "State", host: "Host"):
         pass
 
     @staticmethod
-    def host_connect_error(state, host, error):
+    def host_connect_error(state: "State", host: "Host", error):
         pass
 
     @staticmethod
-    def host_disconnect(state, host):
+    def host_disconnect(state: "State", host: "Host"):
         pass
 
     # Operation callbacks
     #
 
     @staticmethod
-    def operation_start(state, op_hash):
+    def operation_start(state: "State", op_hash):
         pass
 
     @staticmethod
-    def operation_host_start(state, host, op_hash):
+    def operation_host_start(state: "State", host: "Host", op_hash):
         pass
 
     @staticmethod
-    def operation_host_success(state, host, op_hash):
+    def operation_host_success(state: "State", host: "Host", op_hash):
         pass
 
     @staticmethod
-    def operation_host_error(state, host, op_hash):
+    def operation_host_error(state: "State", host: "Host", op_hash):
         pass
 
     @staticmethod
-    def operation_end(state, op_hash):
+    def operation_end(state: "State", op_hash):
         pass
 
 
@@ -75,38 +80,46 @@ class State(object):
     Manages state for a pyinfra deploy.
     """
 
-    initialised = False
+    initialised: bool = False
 
     # A pyinfra.api.Inventory which stores all our pyinfra.api.Host's
-    inventory = None
+    inventory: Optional["Inventory"] = None
 
     # A pyinfra.api.Config
-    config = None
+    config: Optional["Config"] = None
 
     # Main gevent pool
     pool = None
 
     # Whether we are executing operations (ie hosts are all ready)
-    is_executing = False
+    is_executing: bool = False
 
-    print_noop_info = False  # print "[host] noop: reason for noop"
-    print_fact_info = False  # print "loaded fact X"
-    print_input = False
-    print_fact_input = False
-    print_output = False
-    print_fact_output = False
+    print_noop_info: bool = False  # print "[host] noop: reason for noop"
+    print_fact_info: bool = False  # print "loaded fact X"
+    print_input: bool = False
+    print_fact_input: bool = False
+    print_output: bool = False
+    print_fact_output: bool = False
 
     # Used in CLI
-    cwd = None  # base directory for locating files/templates/etc
-    current_deploy_filename = None
-    current_exec_filename = None
-    current_op_file_number = 0
+    cwd: Optional[str] = None  # base directory for locating files/templates/etc
+    current_deploy_filename: Optional[str] = None
+    current_exec_filename: Optional[str] = None
+    current_op_file_number: int = 0
 
-    def __init__(self, inventory=None, config=None, **kwargs):
+    def __init__(
+        self, inventory: Optional["Inventory"] = None, config: Optional["Config"] = None, **kwargs
+    ):
+        """Initializes the state, the main Pyinfra
+
+        Args:
+            inventory (Optional[Inventory], optional): The inventory. Defaults to None.
+            config (Optional[Config], optional): The config object. Defaults to None.
+        """
         if inventory:
             self.init(inventory, config, **kwargs)
 
-    def init(self, inventory, config, initial_limit=None):
+    def init(self, inventory: "Inventory", config: Optional["Config"], initial_limit=None):
         # Config validation
         #
 
@@ -224,7 +237,7 @@ class State(object):
             )
         self.callback_handlers.append(handler)
 
-    def trigger_callbacks(self, method_name, *args, **kwargs):
+    def trigger_callbacks(self, method_name: str, *args, **kwargs):
         for handler in self.callback_handlers:
             func = getattr(handler, method_name)
             func(self, *args, **kwargs)
@@ -275,16 +288,16 @@ class State(object):
 
         return final_op_order
 
-    def get_op_meta(self, op_hash):
+    def get_op_meta(self, op_hash: str):
         return self.op_meta[op_hash]
 
-    def get_op_data(self, host, op_hash):
+    def get_op_data(self, host: "Host", op_hash: str):
         return self.ops[host][op_hash]
 
-    def set_op_data(self, host, op_hash, op_data):
+    def set_op_data(self, host: "Host", op_hash: str, op_data):
         self.ops[host][op_hash] = op_data
 
-    def activate_host(self, host):
+    def activate_host(self, host: "Host"):
         """
         Flag a host as active.
         """
@@ -306,7 +319,13 @@ class State(object):
 
         activated_count = activated_count or len(self.activated_hosts)
 
-        logger.debug("Failing hosts: %r", hosts_to_fail)
+        logger.debug(
+            "Failing hosts: {0}".format(
+                ", ".join(
+                    (host.name for host in hosts_to_fail),
+                ),
+            ),
+        )
 
         self.failed_hosts.update(hosts_to_fail)
 
@@ -330,7 +349,7 @@ class State(object):
                     ),
                 )
 
-    def is_host_in_limit(self, host):
+    def is_host_in_limit(self, host: "Host"):
         """
         Returns a boolean indicating if the host is within the current state limit.
         """
@@ -341,7 +360,7 @@ class State(object):
             return True
         return host in limit_hosts
 
-    def get_temp_filename(self, hash_key=None, hash_filename=True):
+    def get_temp_filename(self, hash_key: Optional[str] = None, hash_filename: bool = True):
         """
         Generate a temporary filename for this deploy.
         """

@@ -1,6 +1,11 @@
 import traceback
 from itertools import product
 from socket import error as socket_error, timeout as timeout_error
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .state import State
+    from .inventory import Host
 
 import click
 import gevent
@@ -30,12 +35,12 @@ def show_pre_or_post_condition_warning(condition_name):
 
 
 def _run_shell_command(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     command,
     global_kwargs,
     executor_kwargs,
-    return_combined_output=False,
+    return_combined_output: bool = False,
 ):
     status = False
     combined_output_lines = []
@@ -58,7 +63,7 @@ def _run_shell_command(
     return status
 
 
-def run_host_op(state, host, op_hash):
+def run_host_op(state: "State", host: "Host", op_hash):
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
     if op_hash not in state.ops[host]:
@@ -236,12 +241,12 @@ def run_host_op(state, host, op_hash):
     return return_status
 
 
-def _run_host_op_with_context(state, host, op_hash):
+def _run_host_op_with_context(state: "State", host: "Host", op_hash: str):
     with ctx_host.use(host):
         return run_host_op(state, host, op_hash)
 
 
-def _run_host_ops(state, host, progress=None):
+def _run_host_ops(state: "State", host: "Host", progress=None):
     """
     Run all ops for a single server.
     """
@@ -270,7 +275,7 @@ def _run_host_ops(state, host, progress=None):
             click.echo(err=True)
 
 
-def _run_serial_ops(state):
+def _run_serial_ops(state: "State"):
     """
     Run all ops for all servers, one server at a time.
     """
@@ -288,7 +293,7 @@ def _run_serial_ops(state):
                 state.fail_hosts({host})
 
 
-def _run_no_wait_ops(state):
+def _run_no_wait_ops(state: "State"):
     """
     Run all ops for all servers at once.
     """
@@ -296,6 +301,8 @@ def _run_no_wait_ops(state):
     hosts_operations = product(state.inventory.iter_active_hosts(), state.get_op_order())
     with progress_spinner(hosts_operations) as progress:
         # Spawn greenlet for each host to run *all* ops
+        if state.pool is None:
+            raise PyinfraError("No pool found on state.")
         greenlets = [
             state.pool.spawn(
                 _run_host_ops,
@@ -308,7 +315,7 @@ def _run_no_wait_ops(state):
         gevent.joinall(greenlets)
 
 
-def _run_single_op(state, op_hash):
+def _run_single_op(state: "State", op_hash: str):
     """
     Run a single operation for all servers. Can be configured to run in serial.
     """
@@ -344,6 +351,8 @@ def _run_single_op(state, op_hash):
         for batch in batches:
             with progress_spinner(batch) as progress:
                 # Spawn greenlet for each host
+                if state.pool is None:
+                    raise PyinfraError("No pool found on state.")
                 greenlet_to_host = {
                     state.pool.spawn(_run_host_op_with_context, state, host, op_hash): host
                     for host in batch
@@ -368,7 +377,7 @@ def _run_single_op(state, op_hash):
     state.trigger_callbacks("operation_end", op_hash)
 
 
-def run_ops(state, serial=False, no_wait=False):
+def run_ops(state: "State", serial: bool = False, no_wait: bool = False):
     """
     Runs all operations across all servers in a configurable manner.
 
