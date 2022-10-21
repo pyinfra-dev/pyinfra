@@ -229,7 +229,7 @@ def operation(
         # Return result meta for use in deploy scripts
         return operation_meta
 
-    decorated_func._pyinfra_op = func
+    decorated_func._pyinfra_op = func  # type: ignore
     return decorated_func
 
 

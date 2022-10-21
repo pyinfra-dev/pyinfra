@@ -7,7 +7,7 @@ for a deploy.
 import re
 from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
 
 import click
 import gevent
@@ -47,11 +47,15 @@ class FactNameMeta(type):
 
 
 class FactBase(object, metaclass=FactNameMeta):
+    name: str
+
     abstract: bool = True
 
     shell_executable: Optional[str] = None
 
     requires_command: Optional[str] = None
+
+    command: Union[str, Callable]
 
     @staticmethod
     def default():
@@ -86,11 +90,12 @@ def _make_command(command_attribute, host_args):
 def _get_executor_kwargs(
     state: "State",
     host: "Host",
-    override_kwargs=None,
-    override_kwarg_keys=None,
+    override_kwargs: Optional[Dict[str, Any]] = None,
+    override_kwarg_keys: Optional[List[str]] = None,
 ):
     if override_kwargs is None:
         override_kwargs = {}
+    if override_kwarg_keys is None:
         override_kwarg_keys = []
 
     # Apply any current op kwargs that *weren't* found in the overrides
@@ -179,7 +184,7 @@ def _get_fact(
     fact = cls()
     name = fact.name
 
-    args = args or ()
+    args = args or []
     kwargs = kwargs or {}
 
     # Get the defaults *and* overrides by popping from kwargs, executor kwargs passed
@@ -199,6 +204,7 @@ def _get_fact(
     )
 
     if args or kwargs:
+        assert not isinstance(fact.command, str)
         # Merges args & kwargs into a single kwargs dictionary
         kwargs = getcallargs(fact.command, *args, **kwargs)
 

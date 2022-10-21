@@ -86,7 +86,7 @@ def deploy(func_or_name: Union[Callable[..., Any], str], data_defaults=None, _ca
     if all(key in kwargs and kwargs[key] is None for key in ("state", "host")):
         show_state_host_arguments_warning(_call_location or get_call_location())
         is_legacy = True
-    func.is_legacy = is_legacy
+    func.is_legacy = is_legacy  # type: ignore
 
     @wraps(func)
     def decorated_func(*args, **kwargs):

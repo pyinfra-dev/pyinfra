@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Generator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, List, Optional, Union
 
 import click
 from gevent.lock import BoundedSemaphore
@@ -32,7 +32,7 @@ class HostData(object):
     Combines multiple AttrData's to search for attributes.
     """
 
-    override_datas = None
+    override_datas: Dict[str, Any]
 
     def __init__(self, host: "Host", *datas):
         self.__dict__["host"] = host
@@ -88,8 +88,8 @@ class Host(object):
 
     # Current context inside an @operation function (op gen stage)
     in_op: bool = False
-    current_op_hash = None
-    current_op_global_kwargs = None
+    current_op_hash: Optional[str] = None
+    current_op_global_kwargs: Dict[str, Any]
 
     # Current context inside a @deploy function (op gen stage)
     in_deploy: bool = False
@@ -101,7 +101,10 @@ class Host(object):
     executing_op_hash = None
     nested_executing_op_hash = None
 
-    loop_position = []
+    loop_position: List[int] = []
+
+    # Arbitrary data dictionary connectors may use
+    connector_data: Dict[str, Any]
 
     def loop(self, iterable):
         self.loop_position.append(0)
@@ -122,16 +125,17 @@ class Host(object):
         self.executor = executor
         self.name = name
 
-        # Arbitrary dict for connector use
         self.connector_data = {}
+        self.current_op_global_kwargs = {}
 
         # Fact data store
-        self.facts = {}
+        # TODO: how to not have Any here?
+        self.facts: Dict[str, Any] = {}
         self.facts_lock = BoundedSemaphore()
 
         # Append only list of operation hashes as called on this host, used to
         # generate a DAG to create the final operation order.
-        self.op_hash_order = []
+        self.op_hash_order: List[str] = []
 
         # Create the (waterfall data: override, host, group, global)
         self.data = HostData(

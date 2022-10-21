@@ -30,6 +30,7 @@ def get_file_path(state: "State", filename: str):
     if path.isabs(filename):
         return filename
 
+    assert state.cwd is not None, "Cannot use `get_file_path` with no `state.cwd` set"
     relative_to = state.cwd
 
     if state.current_exec_filename and (filename.startswith("./") or filename.startswith(".\\")):
@@ -90,7 +91,7 @@ def memoize(func: Callable[..., Any]):
         wrapper.cache[key] = value
         return value
 
-    wrapper.cache = {}
+    wrapper.cache = {}  # type: ignore
     return wrapper
 
 

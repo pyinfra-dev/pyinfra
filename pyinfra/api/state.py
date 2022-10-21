@@ -1,10 +1,11 @@
 from contextlib import contextmanager
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 from uuid import uuid4
 
 from gevent.pool import Pool
+from paramiko import PKey
 
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
@@ -28,7 +29,7 @@ try:
 # Resource isn't available on Windows
 except ImportError:
     nofile_limit = 0
-    MAX_PARALLEL = None
+    MAX_PARALLEL = 100000
 
 
 class BaseStateCallback(object):
@@ -89,7 +90,7 @@ class State(object):
     config: "Config"
 
     # Main gevent pool
-    pool = None
+    pool: "Pool"
 
     # Whether we are executing operations (ie hosts are all ready)
     is_executing: bool = False
@@ -134,14 +135,10 @@ class State(object):
             cpus = cpu_count()
             ideal_parallel = cpus * 20
 
-            config.PARALLEL = (
-                min(ideal_parallel, len(inventory), MAX_PARALLEL)
-                if MAX_PARALLEL is not None
-                else min(ideal_parallel, len(inventory))
-            )
+            config.PARALLEL = min(ideal_parallel, len(inventory), MAX_PARALLEL)
 
         # If explicitly set, just issue a warning
-        elif MAX_PARALLEL is not None and config.PARALLEL > MAX_PARALLEL:
+        elif config.PARALLEL > MAX_PARALLEL:
             logger.warning(
                 (
                     "Parallel set to {0}, but this may hit the open files limit of {1}.\n"
@@ -152,42 +149,38 @@ class State(object):
         # Actually initialise the state object
         #
 
-        self.callback_handlers = []
+        self.callback_handlers: List[BaseStateCallback] = []
 
         # Setup greenlet pools
         self.pool = Pool(config.PARALLEL)
         self.fact_pool = Pool(config.PARALLEL)
 
-        # Connection storage
-        self.ssh_connections = {}
-        self.sftp_connections = {}
-
         # Private keys
-        self.private_keys = {}
+        self.private_keys: Dict[str, PKey] = {}
 
         # Assign inventory/config
         self.inventory = inventory
         self.config = config
 
         # Hosts we've activated at any time
-        self.activated_hosts = set()
+        self.activated_hosts: Set["Host"] = set()
         # Active hosts that *haven't* failed yet
-        self.active_hosts = set()
+        self.active_hosts: Set["Host"] = set()
         # Hosts that have failed
-        self.failed_hosts = set()
+        self.failed_hosts: Set["Host"] = set()
 
         # Limit hosts changes dynamically to limit operations to a subset of hosts
-        self.limit_hosts = initial_limit
+        self.limit_hosts: List["Host"] = initial_limit
 
         # Op basics
-        self.op_meta = {}  # maps operation hash -> names/etc
-        self.ops_run = set()  # list of ops which have been started/run
+        self.op_meta: Dict[str, dict] = {}  # maps operation hash -> names/etc
+        self.ops_run: Set[str] = set()  # list of ops which have been started/run
 
         # Op dict for each host
-        self.ops = {host: {} for host in inventory}
+        self.ops: Dict["Host", dict] = {host: {} for host in inventory}
 
         # Facts dict for each host
-        self.facts = {host: {} for host in inventory}
+        self.facts: Dict["Host", Any] = {host: {} for host in inventory}
 
         # Meta dict for each host
         self.meta = {

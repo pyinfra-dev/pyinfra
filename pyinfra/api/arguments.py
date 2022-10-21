@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Union
 
 import pyinfra
 from pyinfra import context, logger
@@ -177,7 +177,8 @@ execution_kwargs = {
     },
 }
 
-OPERATION_KWARGS = {
+# TODO: refactor these into classes so they can be typed properly, remove Any
+OPERATION_KWARGS: Dict[str, Dict[str, Dict[str, Any]]] = {
     "Privilege & user escalation": auth_kwargs,
     "Shell control & features": shell_kwargs,
     "Operation meta & callbacks (not available in facts)": meta_kwargs,
@@ -198,7 +199,7 @@ def get_execution_kwarg_keys() -> List[Any]:
 
 @memoize
 def get_executor_kwarg_keys() -> List[Any]:
-    keys = set()
+    keys: Set[str] = set()
     keys.update(auth_kwargs.keys(), shell_kwargs.keys())
     return [_get_internal_key(key) for key in keys]
 
@@ -267,8 +268,8 @@ def pop_global_arguments(
             if keys_to_check and internal_key not in keys_to_check:
                 continue
 
-            handler = None
-            default = None
+            handler: Optional[Callable] = None
+            default: Optional[Callable] = None
 
             if isinstance(argument, dict):
                 handler = argument.get("handler")
