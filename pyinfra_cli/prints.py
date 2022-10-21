@@ -2,7 +2,7 @@ import json
 import platform
 import re
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Dict, Iterator, List, Tuple, Union
 
 import click
 
@@ -11,7 +11,6 @@ from pyinfra.api.host import Host
 
 if TYPE_CHECKING:
     from pyinfra.api.state import State
-    from pyinfra.api.inventory import Inventory
 
 from .util import json_encode
 
@@ -22,8 +21,8 @@ def _strip_ansi(value):
     return ANSI_RE.sub("", value)
 
 
-def _get_group_combinations(inventory: "Inventory"):
-    group_combinations = {}
+def _get_group_combinations(inventory: Iterator[Host]):
+    group_combinations: Dict[Tuple, List[Host]] = {}
 
     for host in inventory:
         # Tuple for hashability, set to normalise order
@@ -204,7 +203,7 @@ def print_rows(rows):
 
 def print_meta(state: "State"):
     group_combinations = _get_group_combinations(state.inventory.iter_activated_hosts())
-    rows = []
+    rows: List[Tuple[Callable, Union[List[str], str]]] = []
 
     for i, (groups, hosts) in enumerate(group_combinations.items(), 1):
         if not hosts:
@@ -258,7 +257,7 @@ def print_meta(state: "State"):
 
 def print_results(state: "State"):
     group_combinations = _get_group_combinations(state.inventory.iter_activated_hosts())
-    rows = []
+    rows: List[Tuple[Callable, Union[List[str], str]]] = []
 
     for i, (groups, hosts) in enumerate(group_combinations.items(), 1):
         if not hosts:
@@ -295,7 +294,8 @@ def print_results(state: "State"):
             meta = state.meta[host]
             success_ops = results["success_ops"]
             partial_ops = results["partial_ops"]
-            changed_ops = success_ops - meta["ops_no_change"]
+            # TODO: type meta object
+            changed_ops = success_ops - meta["ops_no_change"]  # type: ignore
             error_ops = results["error_ops"]
             ignored_error_ops = results["ignored_error_ops"]
 

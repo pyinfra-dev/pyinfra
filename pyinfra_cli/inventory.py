@@ -1,7 +1,7 @@
 from collections import defaultdict
 from os import listdir, path
 from types import GeneratorType
-from typing import Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pyinfra import logger
 from pyinfra.api.inventory import Inventory
@@ -12,7 +12,7 @@ from pyinfra_cli.util import exec_file
 ALLOWED_HOST_TYPES = (str, tuple)
 
 
-def _is_inventory_group(key: str, value: str):
+def _is_inventory_group(key: str, value: Any):
     """
     Verify that a module-level variable (key = value) is a valid inventory group.
     """
@@ -81,6 +81,9 @@ def make_inventory(
 
     file_groupname = None
 
+    # TODO: this type is complex & convoluted, fix this
+    groups: Dict[str, Union[List[str], Tuple[List[str], Dict[str, Any]]]]
+
     # If we're not a valid file we assume a list of comma separated hostnames
     if not path.exists(inventory_filename):
         groups = {
@@ -92,7 +95,7 @@ def make_inventory(
         # ie inventories/dev.py means all the hosts are in the dev group, if not present
         file_groupname = path.basename(inventory_filename).rsplit(".", 1)[0]
 
-    all_data = {}
+    all_data: Dict[str, Any] = {}
 
     if "all" in groups:
         all_hosts = groups.pop("all")
@@ -134,7 +137,9 @@ def make_inventory(
     }
     fake_inventory = Inventory((all_hosts, all_data), **fake_groups)
 
-    possible_group_data_folders = [cwd]
+    possible_group_data_folders = []
+    if cwd:
+        possible_group_data_folders.append(cwd)
     inventory_dirname = path.abspath(path.dirname(inventory_filename))
     if inventory_dirname != cwd:
         possible_group_data_folders.append(inventory_dirname)
@@ -142,7 +147,7 @@ def make_inventory(
     if group_data_directories:
         possible_group_data_folders.extend(group_data_directories)
 
-    group_data = defaultdict(dict)
+    group_data: Dict[str, Dict[str, Any]] = defaultdict(dict)
 
     with ctx_inventory.use(fake_inventory):
         for folder in possible_group_data_folders:
