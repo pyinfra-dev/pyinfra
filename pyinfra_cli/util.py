@@ -6,6 +6,7 @@ from io import IOBase
 from os import path
 from pathlib import Path
 from types import FunctionType, ModuleType
+from typing import TYPE_CHECKING
 
 import click
 import gevent
@@ -20,6 +21,9 @@ from pyinfra.progress import progress_spinner
 
 from .exceptions import CliError, UnexpectedExternalError
 
+if TYPE_CHECKING:
+    from pyinfra.api.state import State
+
 # Cache for compiled Python deploy code
 PYTHON_CODES = {}
 
@@ -31,7 +35,7 @@ def is_subdir(child, parent):
     return not relative.startswith(os.pardir)
 
 
-def exec_file(filename, return_locals=False, is_deploy_code=False):
+def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = False):
     """
     Execute a Python file and optionally return it's attributes as a dict.
     """
@@ -213,7 +217,7 @@ def get_facts_and_args(commands):
     return facts
 
 
-def load_deploy_file(state, filename):
+def load_deploy_file(state: "State", filename):
     state.current_deploy_filename = filename
 
     def load_file(local_host):

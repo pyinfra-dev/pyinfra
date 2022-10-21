@@ -5,6 +5,7 @@ creation (eg pyinfra-openstack).
 """
 
 from functools import wraps
+from typing import TYPE_CHECKING, Any, Callable, Union
 
 import pyinfra
 from pyinfra import context, logger
@@ -14,6 +15,9 @@ from .arguments import pop_global_arguments
 from .exceptions import PyinfraError
 from .host import Host
 from .util import get_args_kwargs_spec, get_call_location, memoize
+
+if TYPE_CHECKING:
+    from pyinfra.api.state import State
 
 
 @memoize
@@ -26,7 +30,7 @@ def show_state_host_arguments_warning(call_location):
     )
 
 
-def add_deploy(state, deploy_func, *args, **kwargs):
+def add_deploy(state: "State", deploy_func: Callable[..., Any], *args, **kwargs):
     """
     Prepare & add an deploy to pyinfra.state by executing it on all hosts.
 
@@ -54,7 +58,7 @@ def add_deploy(state, deploy_func, *args, **kwargs):
                 deploy_func(*args, **kwargs)
 
 
-def deploy(func_or_name, data_defaults=None, _call_location=None):
+def deploy(func_or_name: Union[Callable[..., Any], str], data_defaults=None, _call_location=None):
     """
     Decorator that takes a deploy function (normally from a pyinfra_* package)
     and wraps any operations called inside with any deploy-wide kwargs/data.

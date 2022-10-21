@@ -1,9 +1,14 @@
+from typing import TYPE_CHECKING
+
 import gevent
 
 from pyinfra.progress import progress_spinner
 
+if TYPE_CHECKING:
+    from pyinfra.api.state import State
 
-def connect_all(state):
+
+def connect_all(state: "State"):
     """
     Connect to all the configured servers in parallel. Reads/writes state.inventory.
 
@@ -40,6 +45,6 @@ def connect_all(state):
     state.fail_hosts(failed_hosts, activated_count=len(hosts))
 
 
-def disconnect_all(state):
+def disconnect_all(state: "State"):
     for host in state.activated_hosts:  # only hosts we connected to please!
         host.disconnect()  # normally a noop

@@ -7,6 +7,7 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 
 from functools import wraps
 from types import FunctionType
+from typing import TYPE_CHECKING
 
 import pyinfra
 from pyinfra import context, logger
@@ -25,6 +26,9 @@ from .util import (
     make_hash,
     memoize,
 )
+
+if TYPE_CHECKING:
+    from pyinfra.api.state import State
 
 op_meta_default = object()
 
@@ -77,7 +81,7 @@ class OperationMeta(object):
         return "\n".join(self.stderr_lines)
 
 
-def add_op(state, op_func, *args, **kwargs):
+def add_op(state: "State", op_func, *args, **kwargs):
     """
     Prepare & add an operation to ``pyinfra.state`` by executing it on all hosts.
 
@@ -125,9 +129,9 @@ def show_state_host_arguments_warning(call_location):
 def operation(
     func=None,
     pipeline_facts=None,
-    is_idempotent=True,
+    is_idempotent: bool = True,
     idempotent_notice=None,
-    frame_offset=1,
+    frame_offset: int = 1,
 ):
     """
     Decorator that takes a simple module function and turn it into the internal

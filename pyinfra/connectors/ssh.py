@@ -13,6 +13,7 @@ from distutils.spawn import find_executable
 from getpass import getpass
 from os import path
 from socket import error as socket_error, gaierror
+from typing import TYPE_CHECKING
 
 import click
 from paramiko import (
@@ -43,6 +44,10 @@ from .util import (
     split_combined_output,
     write_stdin,
 )
+
+if TYPE_CHECKING:
+    from pyinfra.api.host import Host
+    from pyinfra.api.state import State
 
 
 class Meta(BaseConnectorMeta):
@@ -78,12 +83,12 @@ def make_names_data(hostname):
     yield "@ssh/{0}".format(hostname), {DATA_KEYS.hostname: hostname}, []
 
 
-def _raise_connect_error(host, message, data):
+def _raise_connect_error(host: "Host", message, data):
     message = "{0} ({1})".format(message, data)
     raise ConnectError(message)
 
 
-def _load_private_key_file(filename, key_filename, key_password):
+def _load_private_key_file(filename: str, key_filename: str, key_password: str):
     exception = PyinfraError("Invalid key: {0}".format(filename))
 
     for key_cls in (RSAKey, DSSKey, ECDSAKey, Ed25519Key):
@@ -123,7 +128,7 @@ def _load_private_key_file(filename, key_filename, key_password):
     raise exception
 
 
-def _get_private_key(state, key_filename, key_password):
+def _get_private_key(state: "State", key_filename: str, key_password: str):
     if key_filename in state.private_keys:
         return state.private_keys[key_filename]
 
@@ -170,7 +175,7 @@ def _get_private_key(state, key_filename, key_password):
     return key
 
 
-def _make_paramiko_kwargs(state, host):
+def _make_paramiko_kwargs(state: "State", host: "Host"):
     kwargs = {
         "allow_agent": False,
         "look_for_keys": False,
@@ -214,7 +219,7 @@ def _make_paramiko_kwargs(state, host):
     return kwargs
 
 
-def connect(state, host):
+def connect(state: "State", host: "Host"):
     """
     Connect to a single host. Returns the SSH client if successful. Stateless by
     design so can be run in parallel.
@@ -279,16 +284,16 @@ def connect(state, host):
 
 
 def run_shell_command(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     command,
-    get_pty=False,
+    get_pty: bool = False,
     timeout=None,
     stdin=None,
     success_exit_codes=None,
-    print_output=False,
-    print_input=False,
-    return_combined_output=False,
+    print_output: bool = False,
+    print_input: bool = False,
+    return_combined_output: bool = False,
     **command_kwargs,
 ):
     """
@@ -365,7 +370,7 @@ def run_shell_command(
 
 
 @memoize
-def _get_sftp_connection(host):
+def _get_sftp_connection(host: "Host"):
     transport = host.connection.get_transport()
 
     try:
@@ -379,23 +384,23 @@ def _get_sftp_connection(host):
         ) from e
 
 
-def _get_file(host, remote_filename, filename_or_io):
+def _get_file(host: "Host", remote_filename: str, filename_or_io):
     with get_file_io(filename_or_io, "wb") as file_io:
         sftp = _get_sftp_connection(host)
         sftp.getfo(remote_filename, file_io)
 
 
 def get_file(
-    state,
-    host,
-    remote_filename,
+    state: "State",
+    host: "Host",
+    remote_filename: str,
     filename_or_io,
     remote_temp_filename=None,
-    sudo=False,
+    sudo: bool = False,
     sudo_user=None,
     su_user=None,
-    print_output=False,
-    print_input=False,
+    print_output: bool = False,
+    print_input: bool = False,
     **command_kwargs,
 ):
     """
@@ -461,7 +466,7 @@ def get_file(
     return True
 
 
-def _put_file(host, filename_or_io, remote_location):
+def _put_file(host: "Host", filename_or_io, remote_location):
     attempts = 1
 
     try:
@@ -476,16 +481,16 @@ def _put_file(host, filename_or_io, remote_location):
 
 
 def put_file(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     filename_or_io,
     remote_filename,
     remote_temp_filename=None,
-    sudo=False,
+    sudo: bool = False,
     sudo_user=None,
     su_user=None,
-    print_output=False,
-    print_input=False,
+    print_output: bool = False,
+    print_input: bool = False,
     **command_kwargs,
 ):
     """
@@ -569,7 +574,7 @@ def put_file(
     return True
 
 
-def check_can_rsync(host):
+def check_can_rsync(host: "Host"):
     if host.data.get(DATA_KEYS.key_password):
         raise NotImplementedError("Rsync does not currently work with SSH keys needing passwords.")
 
@@ -581,14 +586,14 @@ def check_can_rsync(host):
 
 
 def rsync(
-    state,
-    host,
-    src,
-    dest,
+    state: "State",
+    host: "Host",
+    src: str,
+    dest: str,
     flags,
-    print_output=False,
-    print_input=False,
-    sudo=False,
+    print_output: bool = False,
+    print_input: bool = False,
+    sudo: bool = False,
     sudo_user=None,
     **ignored_kwargs,
 ):

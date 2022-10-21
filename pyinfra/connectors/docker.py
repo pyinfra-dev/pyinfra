@@ -24,6 +24,7 @@ existing container ID:
 import json
 import os
 from tempfile import mkstemp
+from typing import TYPE_CHECKING
 
 import click
 
@@ -37,10 +38,14 @@ from pyinfra.progress import progress_spinner
 from .local import run_shell_command as run_local_shell_command
 from .util import make_unix_command_for_host
 
+if TYPE_CHECKING:
+    from pyinfra.api.host import Host
+    from pyinfra.api.state import State
+
 
 class Meta(BaseConnectorMeta):
-    handles_execution = True
-    keys_prefix = "docker"
+    handles_execution: bool = True
+    keys_prefix: str = "docker"
 
     class DataKeys:
         identifier = "ID of container or image to target"
@@ -81,7 +86,7 @@ def _start_docker_image(image_name):
         raise ConnectError(e.args[0])
 
 
-def connect(state, host):
+def connect(state: "State", host: "Host"):
     docker_container_id = host.data.get(DATA_KEYS.container_id)
     if docker_container_id:  # user can provide a docker_container_id
         host.connector_data["docker_container_no_disconnect"] = True
@@ -134,8 +139,8 @@ def disconnect(state, host):
 
 
 def run_shell_command(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     command,
     get_pty=False,
     timeout=None,
@@ -176,8 +181,8 @@ def run_shell_command(
 
 
 def put_file(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     filename_or_io,
     remote_filename,
     remote_temp_filename=None,  # ignored
@@ -237,8 +242,8 @@ def put_file(
 
 
 def get_file(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     remote_filename,
     filename_or_io,
     remote_temp_filename=None,  # ignored

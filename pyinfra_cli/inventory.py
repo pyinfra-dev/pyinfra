@@ -1,6 +1,7 @@
 from collections import defaultdict
 from os import listdir, path
 from types import GeneratorType
+from typing import Optional
 
 from pyinfra import logger
 from pyinfra.api.inventory import Inventory
@@ -11,7 +12,7 @@ from pyinfra_cli.util import exec_file
 ALLOWED_HOST_TYPES = (str, tuple)
 
 
-def _is_inventory_group(key, value):
+def _is_inventory_group(key: str, value: str):
     """
     Verify that a module-level variable (key = value) is a valid inventory group.
     """
@@ -30,7 +31,7 @@ def _is_inventory_group(key, value):
     return all(isinstance(item, ALLOWED_HOST_TYPES) for item in value)
 
 
-def _get_group_data(dirname):
+def _get_group_data(dirname: str):
     group_data = {}
     group_data_directory = path.join(dirname, "group_data")
 
@@ -61,13 +62,18 @@ def _get_group_data(dirname):
     return group_data
 
 
-def _get_groups_from_filename(inventory_filename):
+def _get_groups_from_filename(inventory_filename: str):
     attrs = exec_file(inventory_filename, return_locals=True)
 
     return {key: value for key, value in attrs.items() if _is_inventory_group(key, value)}
 
 
-def make_inventory(inventory_filename, override_data=None, cwd=None, group_data_directories=None):
+def make_inventory(
+    inventory_filename: str,
+    override_data=None,
+    cwd: Optional[str] = None,
+    group_data_directories=None,
+):
     """
     Builds a ``pyinfra.api.Inventory`` from the filesystem. If the file does not exist
     and doesn't contain a / attempts to use that as the only hostname.

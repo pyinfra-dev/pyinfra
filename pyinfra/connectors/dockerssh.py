@@ -14,6 +14,7 @@ The ``@dockerssh`` connector allows you to run commands on Docker containers on 
 
 import os
 from tempfile import mkstemp
+from typing import TYPE_CHECKING
 
 import click
 
@@ -27,12 +28,18 @@ from pyinfra.progress import progress_spinner
 from . import ssh
 from .util import make_unix_command_for_host
 
+if TYPE_CHECKING:
+    from pyinfra.api.host import Host
+    from pyinfra.api.state import State
+
 
 class Meta(BaseConnectorMeta):
     handles_execution = True
 
 
-def remote_remove(state, host, filename, print_output=False, print_input=False):
+def remote_remove(
+    state: "State", host: "Host", filename, print_output: bool = False, print_input: bool = False
+):
     """
     Deletes a file on a remote machine over ssh.
     """
@@ -71,7 +78,7 @@ def make_names_data(host_image_str):
     )
 
 
-def connect(state, host):
+def connect(state: "State", host: "Host"):
     if not host.connection:
         host.connection = ssh.connect(state, host)
 
@@ -98,7 +105,7 @@ def connect(state, host):
     return host.connection
 
 
-def disconnect(state, host):
+def disconnect(state: "State", host: "Host"):
     container_id = host.host_data["docker_container_id"][:12]
 
     with progress_spinner({"docker commit"}):
@@ -124,15 +131,15 @@ def disconnect(state, host):
 
 
 def run_shell_command(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     command,
-    get_pty=False,
+    get_pty: bool = False,
     timeout=None,
     stdin=None,
     success_exit_codes=None,
-    print_output=False,
-    print_input=False,
+    print_output: bool = False,
+    print_input: bool = False,
     return_combined_output=False,
     **command_kwargs,
 ):
@@ -172,13 +179,13 @@ def run_shell_command(
 
 
 def put_file(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     filename_or_io,
     remote_filename,
     remote_temp_filename=None,
-    print_output=False,
-    print_input=False,
+    print_output: bool = False,
+    print_input: bool = False,
     **kwargs,  # ignored (sudo/etc)
 ):
     """
@@ -246,13 +253,13 @@ def put_file(
 
 
 def get_file(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     remote_filename,
     filename_or_io,
     remote_temp_filename=None,
-    print_output=False,
-    print_input=False,
+    print_output: bool = False,
+    print_input: bool = False,
     **kwargs,  # ignored (sudo/etc)
 ):
     """

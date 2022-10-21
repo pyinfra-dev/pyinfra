@@ -1,10 +1,15 @@
 from os import path
+from typing import TYPE_CHECKING, Optional
 
 from pkg_resources import Requirement, ResolutionError, parse_version, require
 
 from pyinfra import __version__, state
 
 from .exceptions import PyinfraError
+
+if TYPE_CHECKING:
+    from pyinfra.api.state import State
+
 
 config_defaults = {
     # % of hosts which have to fail for all operations to stop
@@ -45,7 +50,7 @@ config_defaults = {
 }
 
 
-def check_pyinfra_version(version):
+def check_pyinfra_version(version: str):
     if not version:
         return
 
@@ -95,7 +100,7 @@ class Config(object):
     The default/base configuration options for a pyinfra deploy.
     """
 
-    state = None
+    state: Optional["State"] = None
 
     def __init__(self, **kwargs):
         # Always apply some env
@@ -128,5 +133,5 @@ class Config(object):
     def reset_locked_state(self):
         self.set_current_state(self._locked_config)
 
-    def copy(self):
+    def copy(self) -> "Config":
         return Config(**dict(self.get_current_state()))

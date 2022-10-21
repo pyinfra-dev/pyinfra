@@ -1,5 +1,6 @@
 import os
 from tempfile import mkstemp
+from typing import TYPE_CHECKING, Optional
 
 import click
 
@@ -9,6 +10,10 @@ from pyinfra.api.connectors import BaseConnectorMeta
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
+
+if TYPE_CHECKING:
+    from pyinfra.api.host import Host
+    from pyinfra.api.state import State
 
 from .local import run_shell_command as run_local_shell_command
 from .util import make_unix_command_for_host
@@ -23,7 +28,7 @@ def show_warning():
     logger.warning("The @chroot connector is in beta!")
 
 
-def make_names_data(directory=None):
+def make_names_data(directory: Optional[str] = None):
     if not directory:
         raise InventoryError("No directory provided!")
 
@@ -34,7 +39,7 @@ def make_names_data(directory=None):
     }, ["@chroot"]
 
 
-def connect(state, host):
+def connect(state: "State", host: "Host"):
     chroot_directory = host.data.chroot_directory
 
     try:
@@ -51,16 +56,16 @@ def connect(state, host):
 
 
 def run_shell_command(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     command,
-    get_pty=False,
+    get_pty: bool = False,
     timeout=None,
     stdin=None,
     success_exit_codes=None,
-    print_output=False,
-    print_input=False,
-    return_combined_output=False,
+    print_output: bool = False,
+    print_input: bool = False,
+    return_combined_output: bool = False,
     **command_kwargs,
 ):
     chroot_directory = host.connector_data["chroot_directory"]
@@ -92,13 +97,13 @@ def run_shell_command(
 
 
 def put_file(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     filename_or_io,
     remote_filename,
     remote_temp_filename=None,  # ignored
-    print_output=False,
-    print_input=False,
+    print_output: bool = False,
+    print_input: bool = False,
     **kwargs,  # ignored (sudo/etc)
 ):
 
@@ -149,13 +154,13 @@ def put_file(
 
 
 def get_file(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     remote_filename,
     filename_or_io,
     remote_temp_filename=None,  # ignored
-    print_output=False,
-    print_input=False,
+    print_output: bool = False,
+    print_input: bool = False,
     **kwargs,  # ignored (sudo/etc)
 ):
 

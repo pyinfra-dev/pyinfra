@@ -5,6 +5,7 @@ The ``@local`` connector executes changes on the local machine using subprocesse
 import os
 from distutils.spawn import find_executable
 from tempfile import mkstemp
+from typing import TYPE_CHECKING
 
 import click
 
@@ -20,6 +21,10 @@ from .util import (
     split_combined_output,
 )
 
+if TYPE_CHECKING:
+    from pyinfra.api.host import Host
+    from pyinfra.api.state import State
+
 
 class Meta(BaseConnectorMeta):
     handles_execution = True
@@ -32,21 +37,21 @@ def make_names_data(_=None):
     yield "@local", {}, ["@local"]
 
 
-def connect(state, host):
+def connect(state: "State", host: "Host"):
     return True
 
 
 def run_shell_command(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     command,
-    get_pty=False,  # ignored
+    get_pty: bool = False,  # ignored
     timeout=None,
     stdin=None,
     success_exit_codes=None,
-    print_output=False,
-    print_input=False,
-    return_combined_output=False,
+    print_output: bool = False,
+    print_input: bool = False,
+    return_combined_output: bool = False,
     **command_kwargs,
 ):
     """
@@ -102,13 +107,13 @@ def run_shell_command(
 
 
 def put_file(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     filename_or_io,
     remote_filename,
     remote_temp_filename=None,  # ignored
-    print_output=False,
-    print_input=False,
+    print_output: bool = False,
+    print_input: bool = False,
     **command_kwargs,
 ):
     """
@@ -154,13 +159,13 @@ def put_file(
 
 
 def get_file(
-    state,
-    host,
+    state: "State",
+    host: "Host",
     remote_filename,
     filename_or_io,
     remote_temp_filename=None,  # ignored
-    print_output=False,
-    print_input=False,
+    print_output: bool = False,
+    print_input: bool = False,
     **command_kwargs,
 ):
     """
@@ -210,7 +215,16 @@ def check_can_rsync(host):
         raise NotImplementedError("The `rsync` binary is not available on this system.")
 
 
-def rsync(state, host, src, dest, flags, print_output=False, print_input=False, **command_kwargs):
+def rsync(
+    state: "State",
+    host: "Host",
+    src,
+    dest,
+    flags,
+    print_output: bool = False,
+    print_input: bool = False,
+    **command_kwargs,
+):
     status, _, stderr = run_shell_command(
         state,
         host,

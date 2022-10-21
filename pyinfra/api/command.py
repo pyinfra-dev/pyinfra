@@ -1,6 +1,7 @@
 import shlex
 from inspect import getfullargspec
 from string import Formatter
+from typing import TYPE_CHECKING
 
 import gevent
 
@@ -8,8 +9,12 @@ from pyinfra.context import ctx_config, ctx_host
 
 from .arguments import get_executor_kwarg_keys
 
+if TYPE_CHECKING:
+    from pyinfra.api.host import Host
+    from pyinfra.api.state import State
 
-def make_formatted_string_command(string, *args, **kwargs):
+
+def make_formatted_string_command(string: str, *args, **kwargs):
     """
     Helper function that takes a shell command or script as a string, splits it
     using ``shlex.split`` and then formats each bit, returning a ``StringCommand``
@@ -63,7 +68,7 @@ class PyinfraCommand(object):
             return True
         return False
 
-    def execute(self, state, host, executor_kwargs):
+    def execute(self, state: "State", host: "Host", executor_kwargs):
         raise NotImplementedError
 
 
@@ -116,7 +121,7 @@ class StringCommand(PyinfraCommand):
             ],
         )
 
-    def execute(self, state, host, executor_kwargs):
+    def execute(self, state: "State", host: "Host", executor_kwargs):
         executor_kwargs.update(self.executor_kwargs)
 
         return host.run_shell_command(
@@ -129,7 +134,7 @@ class StringCommand(PyinfraCommand):
 
 
 class FileUploadCommand(PyinfraCommand):
-    def __init__(self, src, dest, remote_temp_filename=None, **kwargs):
+    def __init__(self, src: str, dest: str, remote_temp_filename=None, **kwargs):
         super(FileUploadCommand, self).__init__(**kwargs)
         self.src = src
         self.dest = dest
@@ -138,7 +143,7 @@ class FileUploadCommand(PyinfraCommand):
     def __repr__(self):
         return "FileUploadCommand({0}, {1})".format(self.src, self.dest)
 
-    def execute(self, state, host, executor_kwargs):
+    def execute(self, state: "State", host: "Host", executor_kwargs):
         executor_kwargs.update(self.executor_kwargs)
 
         return host.put_file(
@@ -152,7 +157,7 @@ class FileUploadCommand(PyinfraCommand):
 
 
 class FileDownloadCommand(PyinfraCommand):
-    def __init__(self, src, dest, remote_temp_filename=None, **kwargs):
+    def __init__(self, src: str, dest: str, remote_temp_filename=None, **kwargs):
         super(FileDownloadCommand, self).__init__(**kwargs)
         self.src = src
         self.dest = dest
@@ -161,7 +166,7 @@ class FileDownloadCommand(PyinfraCommand):
     def __repr__(self):
         return "FileDownloadCommand({0}, {1})".format(self.src, self.dest)
 
-    def execute(self, state, host, executor_kwargs):
+    def execute(self, state: "State", host: "Host", executor_kwargs):
         executor_kwargs.update(self.executor_kwargs)
 
         return host.get_file(
@@ -188,7 +193,7 @@ class FunctionCommand(PyinfraCommand):
             self.kwargs,
         )
 
-    def execute(self, state, host, executor_kwargs):
+    def execute(self, state: "State", host: "Host", executor_kwargs):
         argspec = getfullargspec(self.function)
         if "state" in argspec.args and "host" in argspec.args:
             return self.function(state, host, *self.args, **self.kwargs)
@@ -203,7 +208,7 @@ class FunctionCommand(PyinfraCommand):
 
 
 class RsyncCommand(PyinfraCommand):
-    def __init__(self, src, dest, flags, **kwargs):
+    def __init__(self, src: str, dest: str, flags, **kwargs):
         super(RsyncCommand, self).__init__(**kwargs)
         self.src = src
         self.dest = dest
@@ -212,7 +217,7 @@ class RsyncCommand(PyinfraCommand):
     def __repr__(self):
         return "RsyncCommand({0}, {1}, {2})".format(self.src, self.dest, self.flags)
 
-    def execute(self, state, host, executor_kwargs):
+    def execute(self, state: "State", host: "Host", executor_kwargs):
         return host.rsync(
             self.src,
             self.dest,

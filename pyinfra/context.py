@@ -4,10 +4,16 @@ are imported and used throughout pyinfra and end user deploy code (CLI mode).
 
 These variables always represent the current executing pyinfra context.
 """
-
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 
 from gevent.local import local
+
+if TYPE_CHECKING:
+    from pyinfra.api.config import Config
+    from pyinfra.api.host import Host
+    from pyinfra.api.inventory import Inventory
+    from pyinfra.api.state import State
 
 
 class container:
@@ -96,23 +102,23 @@ class ContextManager(object):
 
 
 ctx_state = ContextManager("state", ContextObject)
-state = ctx_state.context
+state: "State" = ctx_state.context
 
 ctx_inventory = ContextManager("inventory", ContextObject)
-inventory = ctx_inventory.context
+inventory: "Inventory" = ctx_inventory.context
 
 # Config can be modified mid-deploy, so we use a local object here which
 # is based on a copy of the state config.
 ctx_config = ContextManager("config", LocalContextObject)
-config = ctx_config.context
+config: "Config" = ctx_config.context
 
 # Hosts are prepared in parallel each in a greenlet, so we use a local to
 # point at different host objects in each greenlet.
 ctx_host = ContextManager("host", LocalContextObject)
-host = ctx_host.context
+host: "Host" = ctx_host.context
 
 
-def init_base_classes():
+def init_base_classes() -> None:
     from pyinfra.api import Config, Host, Inventory, State
 
     ctx_config.set_base(Config)

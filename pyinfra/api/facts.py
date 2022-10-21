@@ -7,7 +7,7 @@ for a deploy.
 import re
 from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
-from typing import Optional, Type
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type
 
 import click
 import gevent
@@ -29,6 +29,10 @@ from pyinfra.progress import progress_spinner
 
 from .arguments import get_executor_kwarg_keys
 
+if TYPE_CHECKING:
+    from pyinfra.api.host import Host
+    from pyinfra.api.state import State
+
 SUDO_REGEX = r"^sudo: unknown user:"
 SU_REGEXES = (
     r"^su: user .+ does not exist",
@@ -37,13 +41,13 @@ SU_REGEXES = (
 
 
 class FactNameMeta(type):
-    def __init__(cls, name, bases, attrs):
+    def __init__(cls, name: str, bases, attrs):
         module_name = cls.__module__.replace("pyinfra.facts.", "")
         cls.name = f"{module_name}.{cls.__name__}"
 
 
 class FactBase(object, metaclass=FactNameMeta):
-    abstract = True
+    abstract: bool = True
 
     shell_executable: Optional[str] = None
 
@@ -67,7 +71,7 @@ class ShortFactBase(object, metaclass=FactNameMeta):
     fact: Type[FactBase]
 
 
-def get_short_facts(state, host, short_fact, **kwargs):
+def get_short_facts(state: "State", host: "Host", short_fact, **kwargs):
     fact_data = get_fact(state, host, short_fact.fact, **kwargs)
     return short_fact().process_data(fact_data)
 
@@ -79,7 +83,9 @@ def _make_command(command_attribute, host_args):
     return command_attribute
 
 
-def _get_executor_kwargs(state, host, override_kwargs=None, override_kwarg_keys=None):
+def _get_executor_kwargs(
+    state: "State", host: "Host", override_kwargs=None, override_kwarg_keys=None
+):
     if override_kwargs is None:
         override_kwargs = {}
         override_kwarg_keys = []
@@ -98,7 +104,7 @@ def _get_executor_kwargs(state, host, override_kwargs=None, override_kwarg_keys=
     }
 
 
-def get_facts(state, *args, **kwargs):
+def get_facts(state: "State", *args, **kwargs):
     def get_fact_with_context(state, host, *args, **kwargs):
         with ctx_state.use(state):
             with ctx_host.use(host):
@@ -121,15 +127,15 @@ def get_facts(state, *args, **kwargs):
 
 
 def get_fact(
-    state,
-    host,
-    cls,
-    args=None,
-    kwargs=None,
-    ensure_hosts=None,
-    apply_failed_hosts=True,
-    fact_hash=None,
-    use_cache=True,
+    state: "State",
+    host: "Host",
+    cls: Type[FactBase],
+    args: Optional[Any] = None,
+    kwargs: Optional[Any] = None,
+    ensure_hosts: Optional[Any] = None,
+    apply_failed_hosts: bool = True,
+    fact_hash: Optional[Any] = None,
+    use_cache: bool = True,
 ):
     if issubclass(cls, ShortFactBase):
         return get_short_facts(
@@ -158,14 +164,14 @@ def get_fact(
 
 
 def _get_fact(
-    state,
-    host,
-    cls,
-    args=None,
-    kwargs=None,
-    ensure_hosts=None,
-    apply_failed_hosts=True,
-    fact_hash=None,
+    state: "State",
+    host: "Host",
+    cls: Type[FactBase],
+    args: Optional[List] = None,
+    kwargs: Optional[Dict] = None,
+    ensure_hosts: Optional[Any] = None,
+    apply_failed_hosts: bool = True,
+    fact_hash: Optional[Any] = None,
 ):
     fact = cls()
     name = fact.name
@@ -298,18 +304,22 @@ def _get_fact(
     return data
 
 
-def _get_fact_hash(state, host, cls, args, kwargs):
+def _get_fact_hash(state: "State", host: "Host", cls, args, kwargs):
     args = args or None
     kwargs = kwargs or None
     return make_hash((cls, args, kwargs, _get_executor_kwargs(state, host)))
 
 
-def get_host_fact(state, host, cls, args=None, kwargs=None):
+def get_host_fact(
+    state: "State", host: "Host", cls, args: Optional[List] = None, kwargs: Optional[Dict] = None
+):
     fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
     return get_fact(state, host, cls, args=args, kwargs=kwargs, fact_hash=fact_hash)
 
 
-def reload_host_fact(state, host, cls, args=None, kwargs=None):
+def reload_host_fact(
+    state: "State", host: "Host", cls, args: Optional[List] = None, kwargs: Optional[Dict] = None
+):
     fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
     return get_fact(
         state,
@@ -322,11 +332,20 @@ def reload_host_fact(state, host, cls, args=None, kwargs=None):
     )
 
 
-def create_host_fact(state, host, cls, data, args=None, kwargs=None):
+def create_host_fact(
+    state: "State",
+    host: "Host",
+    cls,
+    data,
+    args: Optional[List] = None,
+    kwargs: Optional[Dict] = None,
+):
     fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
     host.facts[fact_hash] = data
 
 
-def delete_host_fact(state, host, cls, args=None, kwargs=None):
+def delete_host_fact(
+    state: "State", host: "Host", cls, args: Optional[List] = None, kwargs: Optional[Dict] = None
+):
     fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
     host.facts.pop(fact_hash, None)

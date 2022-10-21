@@ -3,6 +3,7 @@ import sys
 import warnings
 from fnmatch import fnmatch
 from os import chdir as os_chdir, getcwd, path
+from typing import Iterable, List, Tuple, Union
 
 import click
 
@@ -247,37 +248,37 @@ def cli(*args, **kwargs):
 
 def _main(
     inventory,
-    operations,
-    verbosity,
-    chdir,
+    operations: Union[List, Tuple],
+    verbosity: int,
+    chdir: str,
     ssh_user,
-    ssh_port,
+    ssh_port: int,
     ssh_key,
-    ssh_key_password,
-    ssh_password,
-    winrm_username,
-    winrm_password,
+    ssh_key_password: str,
+    ssh_password: str,
+    winrm_username: str,
+    winrm_password: str,
     winrm_port,
     winrm_transport,
     shell_executable,
-    sudo,
-    sudo_user,
-    use_sudo_password,
-    su_user,
-    parallel,
-    fail_percent,
+    sudo: bool,
+    sudo_user: str,
+    use_sudo_password: bool,
+    su_user: str,
+    parallel: int,
+    fail_percent: int,
     data,
     group_data,
-    config_filename,
-    dry,
-    limit,
-    no_wait,
-    serial,
-    quiet,
-    debug,
-    debug_facts,
-    debug_operations,
-    support=None,
+    config_filename: str,
+    dry: bool,
+    limit: Iterable,
+    no_wait: bool,
+    serial: bool,
+    quiet: bool,
+    debug: bool,
+    debug_facts: bool,
+    debug_operations: bool,
+    support: bool = None,
 ):
     # Setup working directory
     #
