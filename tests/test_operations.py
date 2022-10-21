@@ -129,7 +129,7 @@ def make_operation_tests(arg):
                                     allowed_exception_names = [allowed_exception["name"]]
 
                                 if e.__class__.__name__ not in allowed_exception_names:
-                                    print("Wrong execption raised!")
+                                    print("Wrong exception raised!")
                                     raise
 
                                 assert e.args[0] == allowed_exception["message"]

@@ -58,7 +58,7 @@ auth_kwargs = {
     },
     "_doas": {
         "description": "Execute/apply any changes with ``doas``.",
-        "defailt": lambda config: config.DOAS,
+        "default": lambda config: config.DOAS,
         "type": bool,
     },
     "_doas_user": {
