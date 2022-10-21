@@ -186,11 +186,14 @@ def get_file(
         with open(temp_filename) as temp_f:
             with get_file_io(filename_or_io, "wb") as file_io:
                 data = temp_f.read()
+                data_bytes: bytes
 
                 if isinstance(data, str):
-                    data = data.encode()
+                    data_bytes = data.encode()
+                else:
+                    data_bytes = data
 
-                file_io.write(data)
+                file_io.write(data_bytes)
     finally:
         os.remove(temp_filename)
 

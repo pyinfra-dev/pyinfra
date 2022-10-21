@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 try:
     import yaml
 except ImportError:
-    yaml = None
+    yaml = None  # type: ignore
 
 from pyinfra import logger
 from pyinfra.api.exceptions import InventoryError
@@ -80,7 +80,7 @@ def parse_inventory(inventory_filename: str):
     else:
         raise InventoryError(("Ansible inventory file format not supported: {0}").format(extension))
 
-    return [(host, {}, sorted(list(host_to_groups.get(host)))) for host in host_to_groups]
+    return [(host, {}, sorted(list(host_to_groups.get(host, [])))) for host in host_to_groups]
 
 
 def parse_inventory_ini(inventory_filename: str):
