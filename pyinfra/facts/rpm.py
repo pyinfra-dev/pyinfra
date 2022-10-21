@@ -44,8 +44,9 @@ class RpmPackage(FactBase):
 
     def command(self, name):
         return (
+            'rpm --queryformat "{0}" -q {1} || '
             "! test -e {1} || "
-            '(rpm --queryformat "{0}" -qp {1} 2> /dev/null || rpm --queryformat "{0}" -q {1})'
+            'rpm --queryformat "{0}" -qp {1} 2> /dev/null'
         ).format(rpm_query_format, name)
 
     def process(self, output):
