@@ -20,12 +20,21 @@ jobs:
       - run: pip install '.[test]'
       - run: flake8
 
+  type-check:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install '.[test]'
+      - run: mypy pyinfra pyinfra_cli
+
   # Unit tests
   #
 
   unit-test:
     needs:
       - lint
+      - type-check
     strategy:
       matrix:
         os: [ubuntu-18.04]
