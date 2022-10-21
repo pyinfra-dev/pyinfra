@@ -1,6 +1,6 @@
 # Dynamic Execution during Deploy
 
-pyinfra is desigend around the idea of defining the end-state _before_ excuting any changes on the remote server. Generally this works well but sometimes you need the output of one command to feed into another. This can be achieved by executing Python functions mid-deploy.
+pyinfra is designed around the idea of defining the end-state _before_ executing any changes on the remote server. Generally this works well but sometimes you need the output of one command to feed into another. This can be achieved by executing Python functions mid-deploy.
 
 In this example we install a service (ZeroTier) that generates a random ID for the remote host. We then use this ID to authenticate the server with the ZeroTier API.
 
