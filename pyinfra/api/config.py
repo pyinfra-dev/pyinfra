@@ -6,43 +6,46 @@ from pyinfra import __version__, state
 
 from .exceptions import PyinfraError
 
-config_defaults = {
+
+class ConfigDefaults:
     # % of hosts which have to fail for all operations to stop
-    "FAIL_PERCENT": None,
+    FAIL_PERCENT = None
     # Seconds to timeout SSH connections
-    "CONNECT_TIMEOUT": 10,
+    CONNECT_TIMEOUT = 10
     # Temporary directory (on the remote side) to use for caching any files/downloads
-    "TEMP_DIR": "/tmp",
+    TEMP_DIR = "/tmp"
     # Gevent pool size (defaults to #of target hosts)
-    "PARALLEL": None,
+    PARALLEL = 0
     # Specify the required pyinfra version (using PEP 440 setuptools specifier)
-    "REQUIRE_PYINFRA_VERSION": None,
+    REQUIRE_PYINFRA_VERSION = None
     # Specify any required packages (either using PEP 440 or a requirements file)
-    # Note: this can also include pyinfra, potentially replacing REQUIRE_PYINFRA_VERSION
-    "REQUIRE_PACKAGES": None,
+    # Note: this can also include pyinfra potentially replacing REQUIRE_PYINFRA_VERSION
+    REQUIRE_PACKAGES = None
     # All these can be overridden inside individual operation calls:
     # Switch to this user (from ssh_user) using su before executing operations
-    "SU_USER": None,
-    "USE_SU_LOGIN": False,
-    "SU_SHELL": None,
-    "PRESERVE_SU_ENV": False,
+    SU_USER = None
+    USE_SU_LOGIN = False
+    SU_SHELL = None
+    PRESERVE_SU_ENV = False
     # Use sudo and optional user
-    "SUDO": False,
-    "SUDO_USER": None,
-    "PRESERVE_SUDO_ENV": False,
-    "USE_SUDO_LOGIN": False,
-    "USE_SUDO_PASSWORD": False,
+    SUDO = False
+    SUDO_USER = None
+    PRESERVE_SUDO_ENV = False
+    USE_SUDO_LOGIN = False
+    USE_SUDO_PASSWORD = False
     # Use doas and optional user
-    "DOAS": False,
-    "DOAS_USER": None,
+    DOAS = False
+    DOAS_USER = None
     # Use doas and optional user
-    "DOAS": False,
-    "DOAS_USER": None,
-    # Only show errors, but don't count as failure
-    "IGNORE_ERRORS": False,
+    DOAS = False
+    DOAS_USER = None
+    # Only show errors but don't count as failure
+    IGNORE_ERRORS = False
     # Shell to use to execute commands
-    "SHELL": "sh",
-}
+    SHELL = "sh"
+
+
+config_defaults = {key: value for key, value in ConfigDefaults.__dict__.items() if key.isupper()}
 
 
 def check_pyinfra_version(version: str):
@@ -90,7 +93,7 @@ config_checkers = {
 }
 
 
-class Config(object):
+class Config(ConfigDefaults):
     """
     The default/base configuration options for a pyinfra deploy.
     """
