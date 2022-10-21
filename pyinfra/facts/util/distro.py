@@ -3,7 +3,7 @@ import os
 try:
     from distro import distro
 except ImportError:
-    import distro
+    import distro  # type: ignore
 
 
 def get_distro_info(root_dir):
