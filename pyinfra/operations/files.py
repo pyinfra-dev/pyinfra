@@ -1671,6 +1671,9 @@ def block(
             marker="<!-- {mark} PYINFRA BLOCK -->",
         )
     """
+
+    logger.warning("The `files.block` operation is currently in beta!")
+
     mark_1 = (marker or MARKER_DEFAULT).format(mark=begin or MARKER_BEGIN_DEFAULT)
     mark_2 = (marker or MARKER_DEFAULT).format(mark=end or MARKER_END_DEFAULT)
 
