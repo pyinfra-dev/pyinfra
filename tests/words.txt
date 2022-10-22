@@ -40,6 +40,7 @@ automount
 autoname
 autosectionlabel
 autouse
+awk
 backport
 base64
 baseurl
@@ -209,6 +210,7 @@ memoize
 modprobe
 motd
 mult
+mv
 mware
 nameserver
 netboot

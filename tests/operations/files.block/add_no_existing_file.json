@@ -1,0 +1,17 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["/home/someone/something"],
+    "kwargs": {
+        "content": "please add this",
+        "line": "after this",
+        "after": true
+    },
+    "facts": {
+        "files.Block": {
+            "path=/home/someone/something, marker=None, begin=None, end=None": null
+        }
+    },
+    "commands": [
+        "cat > /home/someone/something <<HERE\n# BEGIN PYINFRA BLOCK\nplease add this\n# END PYINFRA BLOCK\nHERE"
+    ]
+}

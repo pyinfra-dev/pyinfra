@@ -372,3 +372,64 @@ class Flags(FactBase):
     def process(self, output):
 
         return [flag for flag in output[0].split(",") if len(flag) > 0] if len(output) == 1 else []
+
+
+MARKER_DEFAULT = "# {mark} PYINFRA BLOCK"
+MARKER_BEGIN_DEFAULT = "BEGIN"
+MARKER_END_DEFAULT = "END"
+EXISTS = "__pyinfra_exists_"
+MISSING = "__pyinfra_missing_"
+
+
+class Block(FactBase):
+    """
+    Returns a (possibly empty) list of the lines found between the markers.
+
+    .. code:: python
+
+        [
+            "xray: one",
+            "alpha: two"
+        ]
+
+    If the ``path`` doesn't exist
+        returns ``None``
+
+    If the ``path`` exists but the markers are not found
+        returns ``[]``
+    """
+
+    # if markers aren't found, awk will return 0 and produce no output but we need to
+    # distinguish between "markers not found" and "markers found but nothing between them"
+    # for the former we use the empty list (created the call to default) and for the latter
+    # the list with a single empty string.
+    default = list
+
+    def command(self, path, marker=None, begin=None, end=None):
+
+        self.path = path
+        start = (marker or MARKER_DEFAULT).format(mark=begin or MARKER_BEGIN_DEFAULT)
+        end = (marker or MARKER_DEFAULT).format(mark=end or MARKER_END_DEFAULT)
+        if start == end:
+            raise ValueError(f"delimiters for block must be different but found only '{start}'")
+
+        backstop = make_formatted_string_command(
+            "(find {0} -type f > /dev/null && echo {1} || echo {2} )",
+            QuoteString(path),
+            QuoteString(f"{EXISTS}{path}"),
+            QuoteString(f"{MISSING}{path}"),
+        )
+        # m_f_s_c inserts blanks in unfortunate places, e.g. after first slash
+        cmd = make_formatted_string_command(
+            f"awk \\'/{end}/{{{{f=0}}}} f; /{start}/{{{{f=1}}}}\\' {{0}} || {backstop}",
+            QuoteString(path),
+        )
+        return cmd
+
+    def process(self, output):
+        if output and (output[0] == f"{EXISTS}{self.path}"):
+            return []
+        elif output and (output[0] == f"{MISSING}{self.path}"):
+            return None
+        else:
+            return output

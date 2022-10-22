@@ -1,0 +1,8 @@
+{
+    "arg": "/tmp/foo",
+    "command": "awk '/# END PYINFRA BLOCK/{ f=0} f; /# BEGIN PYINFRA BLOCK/{ f=1} ' /tmp/foo || (find /tmp/foo -type f > /dev/null && echo __pyinfra_exists_/tmp/foo || echo __pyinfra_missing_/tmp/foo )",
+    "output": [
+        "__pyinfra_exists_/tmp/foo"
+    ],
+    "fact": []
+}
