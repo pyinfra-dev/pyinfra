@@ -163,7 +163,6 @@ def operation(
 
         # Configure operation
         #
-
         # Get the meta kwargs (globals that apply to all hosts)
         global_kwargs, global_kwarg_keys = pop_global_arguments(kwargs)
 
@@ -171,131 +170,25 @@ def operation(
         # (any unwanted/op-related kwargs removed above).
         if host.in_op:
             if global_kwarg_keys:
-                raise PyinfraError(
-                    ("Nested operation called with global arguments: {0} ({1})").format(
-                        global_kwarg_keys,
-                        get_call_location(),
-                    ),
+                _error_msg = "Nested operation called with global arguments: {0} ({1})".format(
+                    global_kwarg_keys,
+                    get_call_location(),
                 )
+                raise PyinfraError(_error_msg)
             return func(*args, **kwargs) or []
 
-        # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
-        # and host are included as kwargs.
-        if func.is_legacy:
-            if "state" not in kwargs:
-                kwargs["state"] = state
-            if "host" not in kwargs:
-                kwargs["host"] = host
-        # If not legacy, pop off any state/host kwargs that may come from legacy @deploy functions
-        else:
-            kwargs.pop("state", None)
-            kwargs.pop("host", None)
+        kwargs = _solve_legacy_operation_arguments(func, state, host, kwargs)
+        names, add_args = _generate_operation_name(func, host, kwargs, global_kwargs)
+        op_order, op_hash = _solve_operation_consistency(names, state, host)
 
-        # Name the operation
-        name = global_kwargs.get("name")
-        add_args = False
-
-        if name:
-            names = {name}
-
-        # Generate an operation name if needed (Module/Operation format)
-        else:
-            add_args = True
-
-            if func.__module__:
-                module_bits = func.__module__.split(".")
-                module_name = module_bits[-1]
-                name = "{0}/{1}".format(module_name.title(), func.__name__.title())
-            else:
-                name = func.__name__
-
-            names = {name}
-
-        if host.current_deploy_name:
-            names = {"{0} | {1}".format(host.current_deploy_name, name) for name in names}
-
-        # Operation order is used to tie-break available nodes in the operation DAG, in CLI mode
-        # we use stack call order so this matches as defined by the user deploy code.
-        if pyinfra.is_cli:
-            op_order = get_operation_order_from_stack(state)
-        # In API mode we just increase the order for each host
-        else:
-            op_order = [len(host.op_hash_order)]
-
-        if host.loop_position:
-            op_order.extend(host.loop_position)
-
-        # Make a hash from the call stack lines
-        op_hash = make_hash(op_order)
-
-        # Avoid adding duplicates! This happens if an operation is called within
-        # a loop - such that the filename/lineno/code _are_ the same, but the
-        # arguments might be different. We just append an increasing number to
-        # the op hash and also handle below with the op order.
-        duplicate_op_count = 0
-        while op_hash in host.op_hash_order:
-            logger.debug("Duplicate hash (%s) detected!", op_hash)
-            op_hash = "{0}-{1}".format(op_hash, duplicate_op_count)
-            duplicate_op_count += 1
-
-        host.op_hash_order.append(op_hash)
-
-        if duplicate_op_count:
-            op_order.append(duplicate_op_count)
-
-        op_order = tuple(op_order)
-
-        logger.debug(
-            "Adding operation names=%r, host=%s, opOrder=%r, opHash=%s",
-            names,
-            host,
-            op_order,
-            op_hash,
-        )
-
-        # Ensure shared (between servers) operation meta
-        op_meta = state.op_meta.setdefault(
-            op_hash,
-            {
-                "names": set(),
-                "args": [],
-                "op_order": op_order,
-            },
-        )
-
-        for key in get_execution_kwarg_keys():
-            global_value = global_kwargs.pop(key)
-            op_meta_value = op_meta.get(key, op_meta_default)
-
-            if op_meta_value is not op_meta_default and global_value != op_meta_value:
-                raise OperationValueError("Cannot have different values for `{0}`.".format(key))
-
-            op_meta[key] = global_value
-
-        # Add any new names to the set
-        op_meta["names"].update(names)
+        # Ensure shared (between servers) operation meta, mutates state
+        op_meta = _ensure_shared_op_meta(state, op_hash, op_order, global_kwargs, names)
 
         # Attach normal args, if we're auto-naming this operation
         if add_args:
-            for arg in args:
-                if isinstance(arg, FunctionType):
-                    arg = arg.__name__
-
-                if arg not in op_meta["args"]:
-                    op_meta["args"].append(arg)
-
-            # Attach keyword args
-            for key, value in kwargs.items():
-                if isinstance(value, FunctionType):
-                    value = value.__name__
-
-                arg = "=".join((str(key), str(value)))
-                if arg not in op_meta["args"]:
-                    op_meta["args"].append(arg)
+            op_meta = _attach_args(op_meta, args, kwargs)
 
         # Check if we're actually running the operation on this host
-        #
-
         # Run once and we've already added meta for this op? Stop here.
         if op_meta["run_once"]:
             has_run = False
@@ -326,41 +219,176 @@ def operation(
         host.current_op_hash = None
         host.current_op_global_kwargs = None
 
-        # Add host-specific operation data to state
-        #
-
-        # We're doing some commands, meta/ops++
-        state.meta[host]["ops"] += 1
-        state.meta[host]["commands"] += len(commands)
-
-        if commands:
-            state.meta[host]["ops_change"] += 1
-        else:
-            state.meta[host]["ops_no_change"] += 1
-
-        operation_meta = OperationMeta(op_hash, commands)
-
-        # Add the server-relevant commands
-        op_data = {
-            "commands": commands,
-            "global_kwargs": global_kwargs,
-            "operation_meta": operation_meta,
-        }
-        state.set_op_data(host, op_hash, op_data)
-
-        # If we're already in the execution phase, execute this operation immediately
-        if state.is_executing:
-            logger.warning(
-                f"Note: nested operations are currently in beta ({get_call_location()})\n"
-                "    More information: "
-                "https://docs.pyinfra.com/en/2.x/using-operations.html#nested-operations",
-            )
-            op_data["parent_op_hash"] = host.executing_op_hash
-            log_operation_start(op_meta, op_types=["nested"], prefix="")
-            run_host_op(state, host, op_hash)
+        # Add host-specific operation data to state, this mutates state
+        operation_meta = _update_state_meta(state, host, commands, op_hash, op_meta, global_kwargs)
 
         # Return result meta for use in deploy scripts
         return operation_meta
 
     decorated_func._pyinfra_op = func
     return decorated_func
+
+
+def _solve_legacy_operation_arguments(op_func, state, host, kwargs):
+    """
+    Solve legacy operation arguments.
+    """
+
+    # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
+    # and host are included as kwargs.
+
+    # Legacy operation arguments
+    if op_func.is_legacy:
+        if "state" not in kwargs:
+            kwargs["state"] = state
+        if "host" not in kwargs:
+            kwargs["host"] = host
+    # If not legacy, pop off any state/host kwargs that may come from legacy @deploy functions
+    else:
+        kwargs.pop("state", None)
+        kwargs.pop("host", None)
+
+    return kwargs
+
+
+def _generate_operation_name(func, host, kwargs, global_kwargs):
+    # Generate an operation name if needed (Module/Operation format)
+    name = global_kwargs.get("name")
+    add_args = False
+    if name:
+        names = {name}
+    else:
+        add_args = True
+
+        if func.__module__:
+            module_bits = func.__module__.split(".")
+            module_name = module_bits[-1]
+            name = "{0}/{1}".format(module_name.title(), func.__name__.title())
+        else:
+            name = func.__name__
+
+        names = {name}
+
+    if host.current_deploy_name:
+        names = {"{0} | {1}".format(host.current_deploy_name, name) for name in names}
+
+    return names, add_args
+
+
+def _solve_operation_consistency(names, state, host):
+    # Operation order is used to tie-break available nodes in the operation DAG, in CLI mode
+    # we use stack call order so this matches as defined by the user deploy code.
+    if pyinfra.is_cli:
+        op_order = get_operation_order_from_stack(state)
+    # In API mode we just increase the order for each host
+    else:
+        op_order = [len(host.op_hash_order)]
+
+    if host.loop_position:
+        op_order.extend(host.loop_position)
+
+    # Make a hash from the call stack lines
+    op_hash = make_hash(op_order)
+
+    # Avoid adding duplicates! This happens if an operation is called within
+    # a loop - such that the filename/lineno/code _are_ the same, but the
+    # arguments might be different. We just append an increasing number to
+    # the op hash and also handle below with the op order.
+    duplicate_op_count = 0
+    while op_hash in host.op_hash_order:
+        logger.debug("Duplicate hash ({0}) detected!".format(op_hash))
+        op_hash = "{0}-{1}".format(op_hash, duplicate_op_count)
+        duplicate_op_count += 1
+
+    host.op_hash_order.append(op_hash)
+    if duplicate_op_count:
+        op_order.append(duplicate_op_count)
+
+    op_order = tuple(op_order)
+    logger.debug(f"Adding operation, {names}, opOrder={op_order}, opHash={op_hash}")
+    return op_order, op_hash
+
+
+# NOTE: this function mutates state.op_meta for this hash
+def _ensure_shared_op_meta(state, op_hash, op_order, global_kwargs, names):
+    op_meta = state.op_meta.setdefault(
+        op_hash,
+        {
+            "names": set(),
+            "args": [],
+            "op_order": op_order,
+        },
+    )
+
+    for key in get_execution_kwarg_keys():
+        global_value = global_kwargs.pop(key)
+        op_meta_value = op_meta.get(key, op_meta_default)
+
+        if op_meta_value is not op_meta_default and global_value != op_meta_value:
+            raise OperationValueError("Cannot have different values for `{0}`.".format(key))
+
+        op_meta[key] = global_value
+
+    # Add any new names to the set
+    op_meta["names"].update(names)
+
+    return op_meta
+
+
+def _execute_immediately(state, host, op_data, op_meta, op_hash):
+    logger.warning(
+        f"Note: nested operations are currently in beta ({get_call_location()})\n"
+        "    More information: "
+        "https://docs.pyinfra.com/en/2.x/using-operations.html#nested-operations",
+    )
+    op_data["parent_op_hash"] = host.executing_op_hash
+    log_operation_start(op_meta, op_types=["nested"], prefix="")
+    run_host_op(state, host, op_hash)
+
+
+def _attach_args(op_meta, args, kwargs):
+    for arg in args:
+        if isinstance(arg, FunctionType):
+            arg = arg.__name__
+
+        if arg not in op_meta["args"]:
+            op_meta["args"].append(arg)
+
+    # Attach keyword args
+    for key, value in kwargs.items():
+        if isinstance(value, FunctionType):
+            value = value.__name__
+
+        arg = "=".join((str(key), str(value)))
+        if arg not in op_meta["args"]:
+            op_meta["args"].append(arg)
+
+    return op_meta
+
+
+# NOTE: this function mutates state.meta for this host
+def _update_state_meta(state, host, commands, op_hash, op_meta, global_kwargs):
+    # We're doing some commands, meta/ops++
+    state.meta[host]["ops"] += 1
+    state.meta[host]["commands"] += len(commands)
+
+    if commands:
+        state.meta[host]["ops_change"] += 1
+    else:
+        state.meta[host]["ops_no_change"] += 1
+
+    operation_meta = OperationMeta(op_hash, commands)
+
+    # Add the server-relevant commands
+    op_data = {
+        "commands": commands,
+        "global_kwargs": global_kwargs,
+        "operation_meta": operation_meta,
+    }
+    state.set_op_data(host, op_hash, op_data)
+
+    # If we're already in the execution phase, execute this operation immediately
+    if state.is_executing:
+        _execute_immediately(state, host, op_data, op_meta, op_hash)
+
+    return operation_meta
