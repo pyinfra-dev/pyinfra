@@ -1,0 +1,16 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["/home/someone/something"],
+    "kwargs": {
+        "content": "please check this",
+        "present": false
+    },
+    "facts": {
+        "files.Block": {
+            "path=/home/someone/something, marker=None, begin=None, end=None": ["some existing content"]
+        }
+    },
+    "commands": [
+        "OUT=\"$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)\" &&  awk '/# BEGIN PYINFRA BLOCK/,/# END PYINFRA BLOCK/ {next} 1' /home/someone/something > $OUT && chmod $(stat -c %a /home/someone/something 2>/dev/null || stat -f %Lp /home/someone/something ) $OUT &&  (chown $(stat -c \"%U:%G\" /home/someone/something 2>/dev/null) $OUT ||  chown -n $(stat -f \"%u:%g\" /home/someone/something ) $OUT)  && mv \"$OUT\" /home/someone/something"
+    ]
+}

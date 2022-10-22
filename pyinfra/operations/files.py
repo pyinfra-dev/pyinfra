@@ -4,7 +4,6 @@ The files operations handles filesystem state, file uploads and template generat
 
 import os
 import posixpath
-import re
 import sys
 import traceback
 from datetime import timedelta
@@ -34,6 +33,10 @@ from pyinfra.api.util import (
     memoize,
 )
 from pyinfra.facts.files import (
+    MARKER_BEGIN_DEFAULT,
+    MARKER_DEFAULT,
+    MARKER_END_DEFAULT,
+    Block,
     Directory,
     File,
     FindFiles,
@@ -47,7 +50,7 @@ from pyinfra.facts.files import (
 from pyinfra.facts.server import Date, Which
 
 from .util import files as file_utils
-from .util.files import ensure_mode_int, get_timestamp, sed_replace, unix_path_join
+from .util.files import adjust_regex, ensure_mode_int, get_timestamp, sed_replace, unix_path_join
 
 
 @operation(
@@ -321,17 +324,17 @@ def line(
         )
     """
 
-    match_line = line
-
-    if escape_regex_characters:
-        match_line = re.sub(r"([\.\\\+\*\?\[\^\]\$\(\)\{\}\-])", r"\\\1", match_line)
-
-    # Ensure we're matching a whole line, note: match may be a partial line so we
-    # put any matches on either side.
-    if not match_line.startswith("^"):
-        match_line = "^.*{0}".format(match_line)
-    if not match_line.endswith("$"):
-        match_line = "{0}.*$".format(match_line)
+    match_line = adjust_regex(line, escape_regex_characters)
+    #
+    # if escape_regex_characters:
+    #     match_line = re.sub(r"([\.\\\+\*\?\[\^\]\$\(\)\{\}\-])", r"\\\1", match_line)
+    #
+    # # Ensure we're matching a whole line, note: match may be a partial line so we
+    # # put any matches on either side.
+    # if not match_line.startswith("^"):
+    #     match_line = "^.*{0}".format(match_line)
+    # if not match_line.endswith("$"):
+    #     match_line = "{0}.*$".format(match_line)
 
     # Is there a matching line in this file?
     if assume_present:
@@ -1583,4 +1586,192 @@ def flags(path, flags=None, present=True):
         else:
             host.noop(
                 f'\'{path}\' already has \'{",".join(flags)}\' {"set" if present else "clear"}',
+            )
+
+
+@operation(
+    pipeline_facts={"file": "path"},
+)
+def block(
+    path,
+    content=None,
+    present=True,
+    line=None,
+    backup=False,
+    escape_regex_characters=False,
+    before=False,
+    after=False,
+    marker=None,
+    begin=None,
+    end=None,
+):
+    """
+    Ensure content, surrounded by the appropriate markers, is present (or not) in the file.
+
+    + path: target remote file
+    + content: what should be present in the file (between markers).
+    + present: whether the content should be present in the file
+    + before: should the content be added before ``line`` if it doesn't exist
+    + after: should the content be added after ``line`` if it doesn't exist
+    + line: regex before or after which the content should be added if it doesn't exist.
+    + backup: whether to backup the file (see ``files.line``). Default False.
+    + escape_regex_characters: whether to escape regex characters from the matching line
+    + marker: the base string used to mark the text.  Default is ``# {mark} PYINFRA BLOCK``
+    + begin: the value for ``{mark}`` in the marker before the content. Default is ``BEGIN``
+    + end: the value for ``{mark}`` in the marker after the content. Default is ``END``
+
+    Content appended if ``line`` not found in the file
+        If ``content`` is not in the file but is required (``present=True``) and ``line`` is not
+        found in the file, ``content`` (surrounded by markers) will be appended to the file.  The
+        file is created if necessary.
+
+    Content prepended or appended if ``line`` not specified
+        If ``content`` is not in the file but is required and ``line`` was not provided the content
+        will either be  prepended to the file (if both ``before`` and ``after``
+        are ``True``) or appended to the file (if both are ``False``).
+
+    Removal ignores ``content`` and ``line``
+
+    **Examples:**
+
+    .. code:: python
+
+        # add entry to /etc/host
+        files.marked_block(
+            name="add IP address for red server",
+            path="/etc/hosts",
+            content="10.0.0.1 mars-one",
+            before=True,
+            regex=".*localhost",
+        )
+
+        # have two entries in /etc/host
+        files.marked_block(
+            name="add IP address for red server",
+            path="/etc/hosts",
+            content="10.0.0.1 mars-one\\n10.0.0.2 mars-two",
+            before=True,
+            regex=".*localhost",
+        )
+
+        # remove marked entry from /etc/hosts
+        files.marked_block(
+            name="remove all 10.* addresses from /etc/hosts",
+            path="/etc/hosts",
+            present=False
+        )
+
+        # add out of date warning to web page
+        files.marked_block(
+            name="add out of date warning to web page",
+            path="/var/www/html/something.html",
+            content= "<p>Warning: this page is out of date.</p>",
+            regex=".*<body>.*",
+            after=True
+            marker="<!-- {mark} PYINFRA BLOCK -->",
+        )
+    """
+
+    logger.warning("The `files.block` operation is currently in beta!")
+
+    mark_1 = (marker or MARKER_DEFAULT).format(mark=begin or MARKER_BEGIN_DEFAULT)
+    mark_2 = (marker or MARKER_DEFAULT).format(mark=end or MARKER_END_DEFAULT)
+
+    # standard awk doesn't have an "in-place edit" option so we write to a tempfile and
+    # if edits were successful move to dest i.e. we do: <out_prep> ... do some work ... <real_out>
+    q_path = QuoteString(path)
+    out_prep = 'OUT="$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)" && '
+    if backup:
+        out_prep = StringCommand(
+            "cp",
+            q_path,
+            QuoteString(f"{path}.{get_timestamp()}"),
+            "&&",
+            out_prep,
+        )
+    real_out = StringCommand(
+        "chmod $(stat -c %a",
+        q_path,
+        "2>/dev/null || stat -f %Lp",
+        q_path,
+        ") $OUT && ",
+        '(chown $(stat -c "%U:%G"',
+        q_path,
+        "2>/dev/null) $OUT || ",
+        'chown -n $(stat -f "%u:%g"',
+        q_path,
+        ') $OUT)  && mv "$OUT"',
+        q_path,
+    )
+
+    current = host.get_fact(Block, path=path, marker=marker, begin=begin, end=end)
+    cmd = None
+    if present:
+        if not content:
+            raise ValueError("'content' must be supplied when 'present' == True")
+        if line:
+            if before == after:
+                raise ValueError("only one of 'before' or 'after' used when 'line` is specified")
+        elif before != after:
+            raise ValueError("'line' must be supplied or 'before' and 'after' must be equal")
+
+        the_block = "\n".join([mark_1, content, mark_2])
+
+        if (current is None) or ((current == []) and (before == after)):
+            # a) no file or b) file but no markers and we're adding at start or end. Both use 'cat'
+            redirect = ">" if (current is None) else ">>"
+            stdin = "- " if ((current == []) and before) else ""
+            # here = hex(random.randint(0, 2147483647))
+            here = "PYINFRAHERE"
+            cmd = StringCommand(f"cat {stdin}{redirect}", q_path, f"<<{here}\n{the_block}\n{here}")
+        elif current == []:  # markers not found and have a pattern to match (not start or end)
+            regex = adjust_regex(line, escape_regex_characters)
+            print_before = "{ print }" if before else ""
+            print_after = "{ print }" if after else ""
+            prog = (
+                'awk \'BEGIN {x=ARGV[2]; ARGV[2]=""} '
+                f"{print_after} f!=1 && /{regex}/ {{ print x; f=1}} "
+                f"END {{if (f==0) print ARGV[2] }} {print_before}'"
+            )
+            cmd = StringCommand(out_prep, prog, q_path, f'$"{the_block}"', "> $OUT &&", real_out)
+        else:
+            pieces = content.split("\n")
+            if (len(current) != len(pieces)) or (
+                not all(lines[0] == lines[1] for lines in zip(pieces, current))
+            ):  # marked_block found but text is different
+                prog = (
+                    'awk \'BEGIN {{f=1; x=ARGV[2]; ARGV[2]=""}}'
+                    f"/{mark_1}/ {{print; print x; f=0}} /{mark_2}/ {{print; f=1}} f'"
+                )
+                cmd = StringCommand(
+                    out_prep,
+                    prog,
+                    q_path,
+                    '$"' + content + '"',
+                    "> $OUT &&",
+                    real_out,
+                )
+            else:
+                host.noop("content already present")
+
+        if cmd:
+            yield cmd
+            host.create_fact(
+                Block,
+                kwargs={"path": path, "marker": marker, "begin": begin, "end": end},
+                data=content.split("\n"),
+            )
+    else:  # remove the marked_block
+        if content:
+            logger.warning("'content' ignored when removing a marked_block")
+        if current is None:
+            host.noop("no remove required: file did not exist")
+        elif current == []:
+            host.noop("no remove required: markers not found")
+        else:
+            cmd = f"awk '/{mark_1}/,/{mark_2}/ {{next}} 1'"
+            yield StringCommand(out_prep, cmd, q_path, "> $OUT &&", real_out)
+            host.delete_fact(
+                Block,
+                kwargs={"path": path, "marker": marker, "begin": begin, "end": end},
             )

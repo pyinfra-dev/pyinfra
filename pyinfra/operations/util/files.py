@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from pyinfra.api import QuoteString, StringCommand
@@ -103,3 +104,22 @@ def chown(target, user, group=None, recursive=False, dereference=True):
         args.append("-h")
 
     return StringCommand(" ".join(args), user_group, QuoteString(target))
+
+
+def adjust_regex(line, escape_regex_characters):
+    """
+    Ensure the regex starts with '^' and ends with '$' and escape regex characters if requested
+    """
+    match_line = line
+
+    if escape_regex_characters:
+        match_line = re.sub(r"([\.\\\+\*\?\[\^\]\$\(\)\{\}\-])", r"\\\1", match_line)
+
+    # Ensure we're matching a whole line, note: match may be a partial line so we
+    # put any matches on either side.
+    if not match_line.startswith("^"):
+        match_line = "^.*{0}".format(match_line)
+    if not match_line.endswith("$"):
+        match_line = "{0}.*$".format(match_line)
+
+    return match_line

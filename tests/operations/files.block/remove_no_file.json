@@ -1,0 +1,12 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["/home/someone/something"],
+    "kwargs": {"present": false},
+    "facts": {
+        "files.Block": {
+            "path=/home/someone/something, marker=None, begin=None, end=None": null
+        }
+    },
+    "commands": [],
+    "noop_description": "no remove required: file did not exist"
+}
