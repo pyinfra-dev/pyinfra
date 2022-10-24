@@ -1,3 +1,29 @@
+# v2.5
+
+Added:
+
++ Add `selinux.boolean`, `selinux.file_context`, `selinux.file_context_mapping` & `selinux.port` operations (@morrison12)
++ Add `selinux.SEBoolean`, `selinux.FileContextMapping`, `selinux.SEPorts`, `selinux.SEPort` facts (@morrison12)
++ Add `snap.package` operation & `snap.SnapPackage`, `snap.SnapPackages` facts (@pabloxio)
++ Add beta `files.block` operation implementation (@morrison12)
+
+Fixed:
+
++ Include all systemd units in `systemd.SystemdStatus` fact (@mariusmuja)
++ Handle installed RPM packages in `rpm.RpmPackage` fact (@mariusmuja)
++ Fix host loop cycle errors with new `host.loop` method
++ Always use ISO format date in `server.Date` fact, should resolve any outstanding parse errors
+
+Other changes:
+
++ Fix a whole load of documentation typos (@simonw)
++ Generic typing stub for operation decorator (@mariusmuja)
++ First pass at type annotations for the API (@lowercase00)
++ Add type checking CI job
++ Decomposition of many internal API functions & cleanup (@lowercase00)
++ Use `macos-latest` GitHub runner (@morrison12)
++ Fix documentation URL (@blaisep)
+
 # v2.4
 
 Delayed getting this out, lots of little improvements.
