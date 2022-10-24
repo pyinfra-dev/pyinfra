@@ -3,6 +3,7 @@ import re
 import shutil
 from datetime import datetime
 from tempfile import mkdtemp
+from typing import Dict, List, NewType, Optional, TypedDict, Union
 
 from dateutil.parser import parse as parse_date
 from distro import distro
@@ -70,7 +71,7 @@ class KernelVersion(FactBase):
 
 
 # Deprecated/renamed -> Kernel
-class Os(FactBase):
+class Os(FactBase[str]):
     """
     Returns the OS name according to ``uname``.
 
@@ -82,7 +83,7 @@ class Os(FactBase):
 
 
 # Deprecated/renamed -> KernelVersion
-class OsVersion(FactBase):
+class OsVersion(FactBase[str]):
     """
     Returns the OS version according to ``uname``.
 
@@ -93,7 +94,7 @@ class OsVersion(FactBase):
     command = "uname -r"
 
 
-class Arch(FactBase):
+class Arch(FactBase[str]):
     """
     Returns the system architecture according to ``uname``.
     """
@@ -103,27 +104,27 @@ class Arch(FactBase):
     command = "uname -m"
 
 
-class Command(FactBase):
+class Command(FactBase[List[str]]):
     """
     Returns the raw output lines of a given command.
     """
 
     @staticmethod
-    def command(command):
+    def command(command) -> List[str]:
         return command
 
 
-class Which(FactBase):
+class Which(FactBase[Optional[str]]):
     """
     Returns the path of a given command, if available.
     """
 
     @staticmethod
-    def command(command):
+    def command(command) -> Optional[str]:
         return "which {0} || true".format(command)
 
 
-class Date(FactBase):
+class Date(FactBase[datetime]):
     """
     Returns the current datetime on the server.
     """
@@ -132,11 +133,11 @@ class Date(FactBase):
     default = datetime.now
 
     @staticmethod
-    def process(output):
+    def process(output) -> datetime:
         return datetime.strptime(output[0], ISO_DATE_FORMAT)
 
 
-class MacosVersion(FactBase):
+class MacosVersion(FactBase[str]):
     """
     Returns the installed MacOS version.
     """
@@ -145,7 +146,13 @@ class MacosVersion(FactBase):
     requires_command = "sw_vers"
 
 
-class Mounts(FactBase):
+class MountsDict(TypedDict):
+    device: str
+    type: str
+    options: List[str]
+
+
+class Mounts(FactBase[Dict[str, MountsDict]]):
     """
     Returns a dictionary of mounted filesystems and information.
 
@@ -167,8 +174,8 @@ class Mounts(FactBase):
     default = dict
 
     @staticmethod
-    def process(output):
-        devices = {}
+    def process(output) -> Dict[str, MountsDict]:
+        devices: Dict[str, MountsDict] = {}
 
         for line in output:
             is_map = False
@@ -330,7 +337,7 @@ class Sysctl(FactBase):
         return sysctls
 
 
-class Groups(FactBase):
+class Groups(FactBase[List[str]]):
     """
     Returns a list of groups on the system.
     """
@@ -339,8 +346,8 @@ class Groups(FactBase):
     default = list
 
     @staticmethod
-    def process(output):
-        groups = []
+    def process(output) -> List[str]:
+        groups: List[str] = []
 
         for line in output:
             if ":" in line:
@@ -349,7 +356,20 @@ class Groups(FactBase):
         return groups
 
 
-class Crontab(FactBase):
+CrontabCommand = NewType("CrontabCommand", int)
+
+
+class CrontabDict(TypedDict):
+    minute: Union[int, str]
+    hour: Union[int, str]
+    month: Union[int, str]
+    day_of_month: Union[int, str]
+    day_of_week: Union[int, str]
+    comments: Optional[str]
+    special_time: Optional[str]
+
+
+class Crontab(FactBase[Dict[CrontabCommand, CrontabDict]]):
     """
     Returns a dictionary of cron command -> execution time.
 
@@ -381,7 +401,7 @@ class Crontab(FactBase):
 
     @staticmethod
     def process(output):
-        crons = {}
+        crons: Dict[Command, CrontabDict] = {}
         current_comments = []
 
         for line in output:
@@ -491,7 +511,14 @@ class Users(FactBase):
         return users
 
 
-class LinuxDistribution(FactBase):
+class LinuxDistributionDict(TypedDict):
+    name: Optional[str]
+    major: Optional[int]
+    minor: Optional[int]
+    release_meta: Dict
+
+
+class LinuxDistribution(FactBase[LinuxDistributionDict]):
     """
     Returns a dict of the Linux distribution version. Ubuntu, Debian, CentOS,
     Fedora & Gentoo currently. Also contains any key/value items located in
@@ -529,7 +556,7 @@ class LinuxDistribution(FactBase):
     }
 
     @staticmethod
-    def default():
+    def default() -> LinuxDistributionDict:
         return {
             "name": None,
             "major": None,
@@ -537,7 +564,7 @@ class LinuxDistribution(FactBase):
             "release_meta": {},
         }
 
-    def process(self, output):
+    def process(self, output) -> LinuxDistributionDict:
         parts = {}
         for part in "\n".join(output).strip().split("---"):
             if not part.strip():
@@ -591,7 +618,7 @@ class LinuxDistribution(FactBase):
         return release_info
 
 
-class LinuxName(ShortFactBase):
+class LinuxName(ShortFactBase[str]):
     """
     Returns the name of the Linux distribution. Shortcut for
     ``host.get_fact(LinuxDistribution)['name']``.
@@ -604,7 +631,11 @@ class LinuxName(ShortFactBase):
         return data["name"]
 
 
-class Selinux(FactBase):
+class SelinuxDict(TypedDict):
+    mode: Optional[str]
+
+
+class Selinux(FactBase[SelinuxDict]):
     """
     Discovers the SELinux related facts on the target host.
 
@@ -619,12 +650,12 @@ class Selinux(FactBase):
     requires_command = "sestatus"
 
     @staticmethod
-    def default():
+    def default() -> SelinuxDict:
         return {
             "mode": None,
         }
 
-    def process(self, output):
+    def process(self, output) -> SelinuxDict:
         selinux_info = self.default()
 
         match = re.match(r"^SELinux status:\s+(\S+)", "\n".join(output))
@@ -637,7 +668,7 @@ class Selinux(FactBase):
         return selinux_info
 
 
-class LinuxGui(FactBase):
+class LinuxGui(FactBase[List[str]]):
     """
     Returns a list of available Linux GUIs.
     """
@@ -653,7 +684,7 @@ class LinuxGui(FactBase):
         "/usr/bin/xfce4-session": "XFCE 4",
     }
 
-    def process(self, output):
+    def process(self, output) -> List[str]:
         gui_names = []
 
         for line in output:
@@ -664,7 +695,7 @@ class LinuxGui(FactBase):
         return gui_names
 
 
-class HasGui(ShortFactBase):
+class HasGui(ShortFactBase[bool]):
     """
     Returns a boolean indicating the remote side has GUI capabilities. Linux only.
     """
@@ -672,7 +703,7 @@ class HasGui(ShortFactBase):
     fact = LinuxGui
 
     @staticmethod
-    def process_data(data):
+    def process_data(data) -> bool:
         return len(data) > 0
 
 

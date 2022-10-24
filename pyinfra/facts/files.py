@@ -5,7 +5,7 @@ The files facts provide information about the filesystem and it's contents on th
 import re
 import stat
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Literal, Optional, Tuple, TypedDict, Union
 
 from pyinfra.api.command import QuoteString, make_formatted_string_command
 from pyinfra.api.facts import FactBase
@@ -64,7 +64,18 @@ def _parse_mode(mode: str) -> int:
     return int(oct(out)[2:])
 
 
-class File(FactBase):
+class FileDict(TypedDict):
+    mode: int
+    size: Union[int, str]
+    atime: Optional[datetime]
+    mtime: Optional[datetime]
+    ctime: Optional[datetime]
+    user: str
+    group: str
+    link_target: Optional[str]
+
+
+class File(FactBase[Union[FileDict, Literal[False], None]]):
     """
     Returns information about a file on the remote system:
 
@@ -98,12 +109,12 @@ class File(FactBase):
             bsd_stat_command=BSD_STAT_COMMAND,
         )
 
-    def process(self, output):
+    def process(self, output) -> Union[FileDict, Literal[False], None]:
         match = re.match(STAT_REGEX, output[0])
         if not match:
             return None
 
-        data = {}
+        data: FileDict = {}
         path_type = None
 
         for key, value in (
@@ -205,7 +216,7 @@ class Socket(File):
     type = "socket"
 
 
-class HashFileFactBase(FactBase):
+class HashFileFactBase(FactBase[Optional[str]]):
     _raw_cmd: str
     _regexes: Tuple[str, str]
 
@@ -229,13 +240,14 @@ class HashFileFactBase(FactBase):
         self.path = path
         return make_formatted_string_command(self._raw_cmd, QuoteString(path))
 
-    def process(self, output):
+    def process(self, output) -> Optional[str]:
         output = output[0]
         escaped_path = re.escape(self.path)
         for regex in self._regexes:
             matches = re.match(regex % escaped_path, output)
             if matches:
                 return matches.group(1)
+        return None
 
 
 class Sha1File(HashFileFactBase, digits=40, cmds=["sha1sum", "shasum", "sha1"]):

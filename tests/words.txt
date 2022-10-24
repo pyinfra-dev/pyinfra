@@ -94,6 +94,7 @@ crontab
 ctid
 ctrl
 ctx
+ctime
 ctype
 curdir
 currentframe

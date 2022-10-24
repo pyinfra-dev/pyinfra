@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 import click
 import gevent
@@ -53,7 +53,10 @@ class FactNameMeta(type):
         cls.name = f"{module_name}.{cls.__name__}"
 
 
-class FactBase(metaclass=FactNameMeta):
+T = TypeVar("T")
+
+
+class FactBase(Generic[T], metaclass=FactNameMeta):
     name: str
 
     abstract: bool = True
@@ -65,21 +68,21 @@ class FactBase(metaclass=FactNameMeta):
     command: Union[str, Callable]
 
     @staticmethod
-    def default():
+    def default() -> T:
         """
         Set the default attribute to be a type (eg list/dict).
         """
 
     @staticmethod
-    def process(output):
+    def process(output) -> T:
         return "\n".join(output)
 
     def process_pipeline(self, args, output):
         return {arg: self.process([output[i]]) for i, arg in enumerate(args)}
 
 
-class ShortFactBase(metaclass=FactNameMeta):
-    fact: type[FactBase]
+class ShortFactBase(Generic[T], metaclass=FactNameMeta):
+    fact: Type[FactBase]
 
     @staticmethod
     def process_data(data):
