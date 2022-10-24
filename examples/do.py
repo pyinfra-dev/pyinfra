@@ -29,8 +29,8 @@ def create_inventory():
     my_droplets = manager.get_all_droplets()
     data = "{'ssh_user': 'root'}"
 
-    main_inventory = open("do_inv.py", "w")
-    puppet_inventory = open("puppet/do_inv.py", "w")
+    main_inventory = open("do_inv.py", "w", encoding='utf-8')
+    puppet_inventory = open("puppet/do_inv.py", "w", encoding='utf-8')
 
     for droplet in my_droplets:
         if droplet.name.startswith("pyinfra-"):

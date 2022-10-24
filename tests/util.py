@@ -18,8 +18,7 @@ def get_command_string(command):
     masked_value = command.get_masked_value()
     if value == masked_value:
         return value
-    else:
-        return [value, masked_value]
+    return [value, masked_value]
 
 
 def make_inventory(hosts=("somehost", "anotherhost"), **kwargs):
@@ -42,7 +41,7 @@ def make_inventory(hosts=("somehost", "anotherhost"), **kwargs):
     )
 
 
-class FakeState(object):
+class FakeState():
     active = True
     cwd = "/"
     in_op = True
@@ -83,7 +82,7 @@ def parse_value(value):
     return value
 
 
-class FakeFact(object):
+class FakeFact():
     def __init__(self, data):
         self.data = parse_value(data)
 
@@ -136,7 +135,7 @@ class FakeFact(object):
         return default
 
 
-class FakeFacts(object):
+class FakeFacts():
     def __init__(self, facts):
         self.facts = {key: FakeFact(value) for key, value in facts.items()}
 
@@ -158,7 +157,7 @@ def _sort_kwargs_str(string):
     return ", ".join(sorted(string.split(", ")))
 
 
-class FakeHost(object):
+class FakeHost():
     noop_description = None
 
     # Current context inside an @operation function
@@ -239,7 +238,7 @@ class FakeHost(object):
                 break
 
 
-class FakeFile(object):
+class FakeFile():
     _read = False
     _data = None
 
@@ -253,8 +252,7 @@ class FakeFile(object):
 
             if self._data:
                 return self._data
-            else:
-                return "_test_data_"
+            return "_test_data_"
 
         return ""
 
@@ -264,8 +262,7 @@ class FakeFile(object):
 
             if self._data:
                 return self._data.split()
-            else:
-                return ["_test_data_"]
+            return ["_test_data_"]
 
             return []
 
@@ -282,7 +279,7 @@ class FakeFile(object):
         pass
 
 
-class patch_files(object):
+class patch_files():
     def __init__(self, local_files):
         directories, files, files_data = self._parse_local_files(local_files)
 

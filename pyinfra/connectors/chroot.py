@@ -11,12 +11,14 @@ from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
+from .local import run_shell_command as run_local_shell_command
+from .util import make_unix_command_for_host
+
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
     from pyinfra.api.state import State
 
-from .local import run_shell_command as run_local_shell_command
-from .util import make_unix_command_for_host
+
 
 
 class Meta(BaseConnectorMeta):
@@ -183,7 +185,7 @@ def get_file(
         )
 
         # Load the temporary file and write it to our file or IO object
-        with open(temp_filename) as temp_f:
+        with open(temp_filename, encoding='utf-8') as temp_f:
             with get_file_io(filename_or_io, "wb") as file_io:
                 data = temp_f.read()
                 data_bytes: bytes

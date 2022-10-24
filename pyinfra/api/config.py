@@ -73,7 +73,7 @@ def check_require_packages(requirements_config):
     if isinstance(requirements_config, (list, tuple)):
         requirements = requirements_config
     else:
-        with open(path.join(state.cwd, requirements_config)) as f:
+        with open(path.join(state.cwd, requirements_config), encoding='utf-8') as f:
             requirements = [line.split("#egg=")[-1] for line in f.read().splitlines()]
 
     try:

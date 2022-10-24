@@ -5,7 +5,6 @@ for a deploy.
 """
 
 import re
-from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
 
@@ -46,7 +45,7 @@ class FactNameMeta(type):
         cls.name = f"{module_name}.{cls.__name__}"
 
 
-class FactBase(object, metaclass=FactNameMeta):
+class FactBase(metaclass=FactNameMeta):
     name: str
 
     abstract: bool = True
@@ -71,7 +70,7 @@ class FactBase(object, metaclass=FactNameMeta):
         return {arg: self.process([output[i]]) for i, arg in enumerate(args)}
 
 
-class ShortFactBase(object, metaclass=FactNameMeta):
+class ShortFactBase(metaclass=FactNameMeta):
     fact: Type[FactBase]
 
 
@@ -206,7 +205,7 @@ def _get_fact(
     if args or kwargs:
         assert not isinstance(fact.command, str)
         # Merges args & kwargs into a single kwargs dictionary
-        kwargs = getcallargs(fact.command, *args, **kwargs)
+        kwargs = signature(fact.command, *args, **kwargs)
 
     kwargs_str = get_kwargs_str(kwargs)
     logger.debug(

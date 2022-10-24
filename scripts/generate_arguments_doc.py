@@ -39,7 +39,7 @@ def build_arguments_doc():
 
     out = "\n".join(lines)
 
-    with open(module_filename, "w") as outfile:
+    with open(module_filename, "w", encoding='utf-8') as outfile:
         outfile.write(out)
 
 

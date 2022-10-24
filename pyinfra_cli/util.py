@@ -44,7 +44,7 @@ def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = Fals
     state.current_exec_filename = filename
 
     if filename not in PYTHON_CODES:
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding='utf-8') as f:
             code = f.read()
 
         code = compile(code, filename, "exec")

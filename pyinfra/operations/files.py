@@ -1072,7 +1072,7 @@ def template(src, dest, user=None, group=None, mode=None, create_remote_dir=True
         line_number = trace_frames[-1][1]
 
         # Quickly read the line in question and one above/below for nicer debugging
-        with open(src, "r") as f:
+        with open(src, "r", encoding='utf-8') as f:
             template_lines = f.readlines()
 
         template_lines = [line.strip() for line in template_lines]

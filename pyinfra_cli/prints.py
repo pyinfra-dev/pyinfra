@@ -8,11 +8,12 @@ import click
 
 from pyinfra import __version__, logger
 from pyinfra.api.host import Host
+from .util import json_encode
 
 if TYPE_CHECKING:
     from pyinfra.api.state import State
 
-from .util import json_encode
+
 
 ANSI_RE = re.compile(r"\033\[((?:\d|;)*)([a-zA-Z])")
 

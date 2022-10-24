@@ -344,7 +344,7 @@ def make_hash(obj):
     return sha1_hash(hash_string)
 
 
-class get_file_io(object):
+class get_file_io():
     """
     Given either a filename or an existing IO object, this context processor
     will open and close filenames, and leave IO objects alone.
@@ -375,7 +375,7 @@ class get_file_io(object):
 
         # Otherwise, assume a filename and open it up
         else:
-            file_io = open(self.filename_or_io, self.mode)
+            file_io = open(self.filename_or_io, self.mode, encoding='utf-8')
 
             # Attach to self for closing on __exit__
             self.file_io = file_io

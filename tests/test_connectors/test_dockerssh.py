@@ -32,18 +32,18 @@ def fake_ssh_docker_shell(
     if command == "docker run -d not-an-image tail -f /dev/null":
         return (True, ["containerid"], [])
 
-    elif command == "docker commit containerid":
+    if command == "docker commit containerid":
         return (True, ["sha256:blahsomerandomstringdata"], [])
 
-    elif command == "docker rm -f containerid":
+    if command == "docker rm -f containerid":
         return (True, [], [])
 
-    elif str(command).startswith("rm -f"):
+    if str(command).startswith("rm -f"):
         return (True, [], [])
 
     # This is a bit messy. But it's easier than trying to swap out a mock
     # when it needs to be used...
-    elif fake_ssh_docker_shell.custom_command:
+    if fake_ssh_docker_shell.custom_command:
         custom_command, status, stdout, stderr = fake_ssh_docker_shell.custom_command
         if str(command) == custom_command:
             fake_ssh_docker_shell.ran_custom_command = True

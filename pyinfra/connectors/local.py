@@ -3,9 +3,10 @@ The ``@local`` connector executes changes on the local machine using subprocesse
 """
 
 import os
-from distutils.spawn import find_executable
 from tempfile import mkstemp
 from typing import TYPE_CHECKING
+from setuptools.spawn import find_executable
+
 
 import click
 
@@ -190,7 +191,7 @@ def get_file(
             raise IOError("\n".join(stderr))
 
         # Load our file or IO object and write it to the temporary file
-        with open(temp_filename) as temp_f:
+        with open(temp_filename, encoding='utf-8') as temp_f:
             with get_file_io(filename_or_io, "wb") as file_io:
                 data_bytes: bytes
 

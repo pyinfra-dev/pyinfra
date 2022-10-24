@@ -429,7 +429,6 @@ class Block(FactBase):
     def process(self, output):
         if output and (output[0] == f"{EXISTS}{self.path}"):
             return []
-        elif output and (output[0] == f"{MISSING}{self.path}"):
+        if output and (output[0] == f"{MISSING}{self.path}"):
             return None
-        else:
-            return output
+        return output

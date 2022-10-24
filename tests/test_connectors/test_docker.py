@@ -15,10 +15,10 @@ def fake_docker_shell(command, splitlines=None):
     if command == "docker run -d not-an-image tail -f /dev/null":
         return ["containerid"]
 
-    elif command == "docker commit containerid":
+    if command == "docker commit containerid":
         return ["sha256:blahsomerandomstringdata"]
 
-    elif command == "docker rm -f containerid":
+    if command == "docker rm -f containerid":
         return []
 
     raise PyinfraError("Invalid command: {0}".format(command))

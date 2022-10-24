@@ -130,8 +130,7 @@ def _format_windows_for_key(primary_key, output, return_primary_key=True):
                 one_item.update({this_key: appended_data})
     if return_primary_key:
         return {primary_key: lines}
-    else:
-        return lines
+    return lines
 
 
 class Processors(FactBase):

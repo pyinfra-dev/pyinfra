@@ -60,16 +60,15 @@ class AskPolicy(MissingHostKeyPolicy):
             raise SSHException(
                 "AskPolicy: No host key for {0} found in known_hosts".format(hostname),
             )
-        else:
-            with HOST_KEYS_LOCK:
-                host_keys = client.get_host_keys()
-                host_keys.add(hostname, key.get_name(), key)
-                # The paramiko client saves host keys incorrectly whereas the host keys object does
-                # this correctly, so use that with the client filename variable.
-                # See: https://github.com/paramiko/paramiko/pull/1989
-                host_keys.save(client._host_keys_filename)
-            logger.warning("Added host key for {0} to known_hosts".format(hostname))
-            return
+        with HOST_KEYS_LOCK:
+            host_keys = client.get_host_keys()
+            host_keys.add(hostname, key.get_name(), key)
+            # The paramiko client saves host keys incorrectly whereas the host keys object does
+            # this correctly, so use that with the client filename variable.
+            # See: https://github.com/paramiko/paramiko/pull/1989
+            host_keys.save(client._host_keys_filename)
+        logger.warning("Added host key for {0} to known_hosts".format(hostname))
+        return
 
 
 class WarningPolicy(MissingHostKeyPolicy):
@@ -80,14 +79,13 @@ class WarningPolicy(MissingHostKeyPolicy):
 def get_missing_host_key_policy(policy):
     if policy is None or policy == "ask":
         return AskPolicy()
-    elif policy == "no" or policy == "off":
+    if policy == "no" or policy == "off":
         return WarningPolicy()
-    elif policy == "yes":
+    if policy == "yes":
         return StrictPolicy()
-    elif policy == "accept-new":
+    if policy == "accept-new":
         return AcceptNewPolicy()
-    else:
-        raise SSHException("Invalid value StrictHostKeyChecking={}".format(policy))
+    raise SSHException("Invalid value StrictHostKeyChecking={}".format(policy))
 
 
 @memoize
@@ -98,7 +96,7 @@ def get_ssh_config(user_config_file=None):
         user_config_file = path.expanduser("~/.ssh/config")
 
     if path.exists(user_config_file):
-        with open(user_config_file) as f:
+        with open(user_config_file, encoding='utf-8') as f:
             ssh_config = SSHConfig()
             ssh_config.parse(f)
             return ssh_config
@@ -162,7 +160,7 @@ class SSHClient(ParamikoClient):
             config.update(_pyinfra_ssh_paramiko_connect_kwargs)
 
         self._ssh_config = config
-        super(SSHClient, self).connect(hostname, **config)
+        super().connect(hostname, **config)
 
         if _pyinfra_ssh_forward_agent is not None:
             forward_agent = _pyinfra_ssh_forward_agent

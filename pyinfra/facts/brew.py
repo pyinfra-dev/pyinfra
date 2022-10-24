@@ -46,9 +46,8 @@ class BrewVersion(FactBase):
         m = VERSION_MATCHER.match(output[0])
         if m is not None:
             return [int(m.group(key)) for key in ["major", "minor", "patch"]]
-        else:
-            logger.warning("could not parse version string from brew: %s", output[0])
-            return self.default()
+        logger.warning("could not parse version string from brew: %s", output[0])
+        return self.default()
 
 
 class BrewPackages(FactBase):

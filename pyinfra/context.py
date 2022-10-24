@@ -20,7 +20,7 @@ class container:
     pass
 
 
-class ContextObject(object):
+class ContextObject():
     _container_cls = container
     _base_cls = None
 
@@ -50,7 +50,7 @@ class ContextObject(object):
 
     def __setattr__(self, key, value):
         if key in ("_container", "_base_cls"):
-            return super(ContextObject, self).__setattr__(key, value)
+            return super().__setattr__(key, value)
 
         if self._get_module() is None:
             raise TypeError("Cannot assign to context base module")
@@ -74,7 +74,7 @@ class LocalContextObject(ContextObject):
     _container_cls = local
 
 
-class ContextManager(object):
+class ContextManager():
     def __init__(self, key, context_cls):
         self.context = context_cls()
 

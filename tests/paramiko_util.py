@@ -28,12 +28,12 @@ class PatchSSHTestCase(TestCase):
         ssh.AgentRequestHandler = AgentRequestHandler
 
 
-class FakeAgentRequestHandler(object):
+class FakeAgentRequestHandler(objct):
     def __init__(self, arg):
         pass
 
 
-class FakeChannel(object):
+class FakeChannel():
     def __init__(self, exit_status):
         self.exit_status = exit_status
 
@@ -50,7 +50,7 @@ class FakeChannel(object):
         pass
 
 
-class FakeBuffer(object):
+class FakeBuffer():
     def __init__(self, data, channel):
         self.channel = channel
         self.data = data
@@ -59,7 +59,7 @@ class FakeBuffer(object):
         return iter(self.data)
 
 
-class FakeSSHClient(object):
+class FakeSSHClient():
     def load_system_host_keys(self):
         pass
 
@@ -85,7 +85,7 @@ class FakeSSHClient(object):
         )
 
 
-class FakeSFTPClient(object):
+class FakeSFTPClient():
     @classmethod
     def from_transport(cls, transport):
         return cls()
@@ -97,7 +97,7 @@ class FakeSFTPClient(object):
         pass
 
 
-class FakeRSAKey(object):
+class FakeRSAKey():
     @classmethod
     def from_private_key_file(cls, *args, **kwargs):
         return cls()

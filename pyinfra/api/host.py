@@ -5,16 +5,17 @@ import click
 from gevent.lock import BoundedSemaphore
 
 from pyinfra import logger
-
-if TYPE_CHECKING:
-    from pyinfra.api.state import State
-    from pyinfra.api.inventory import Inventory
-
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 
 from .connectors import get_execution_connector
 from .exceptions import ConnectError
 from .facts import create_host_fact, delete_host_fact, get_host_fact, reload_host_fact
+
+if TYPE_CHECKING:
+    from pyinfra.api.state import State
+    from pyinfra.api.inventory import Inventory
+
+
 
 
 def extract_callable_datas(datas: List[Union[Callable[..., Any], Any]]) -> Generator[Any, Any, Any]:
@@ -27,7 +28,7 @@ def extract_callable_datas(datas: List[Union[Callable[..., Any], Any]]) -> Gener
         yield data
 
 
-class HostData(object):
+class HostData():
     """
     Combines multiple AttrData's to search for attributes.
     """
@@ -77,7 +78,7 @@ class HostData(object):
         return out
 
 
-class Host(object):
+class Host():
     """
     Represents a target host. Thin class that links up to facts and host/group
     data.

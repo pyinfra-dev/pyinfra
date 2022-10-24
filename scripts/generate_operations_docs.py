@@ -194,7 +194,7 @@ def build_operations_docs():
         module_filename = path.join(docs_dir, "operations", "{0}.rst".format(module_name))
         print("--> Writing {0}".format(module_filename))
 
-        with open(module_filename, "w") as outfile:
+        with open(module_filename, "w", encoding='utf-8') as outfile:
             outfile.write("\n".join(lines))
 
 

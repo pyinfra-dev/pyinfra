@@ -27,7 +27,7 @@ def fake_vagrant_shell(command, splitlines=None):
             "1574707743,centos7,state,running",
             "1574707743,centos6,state,running",
         ]
-    elif command == "vagrant ssh-config ubuntu16":
+    if command == "vagrant ssh-config ubuntu16":
         return [
             "ExtraKey logme!",
             "Host ubuntu16",
@@ -38,7 +38,7 @@ def fake_vagrant_shell(command, splitlines=None):
             "IdentityFile path/to/key",
             "",
         ]
-    elif command == "vagrant ssh-config centos7":
+    if command == "vagrant ssh-config centos7":
         return [
             "",
             "Host centos7",
@@ -48,7 +48,7 @@ def fake_vagrant_shell(command, splitlines=None):
             "PasswordAuthentication no",
             "IdentityFile path/to/key",
         ]
-    elif command == "vagrant ssh-config centos6":
+    if command == "vagrant ssh-config centos6":
         return [
             "Host centos6",
             "HostName 127.0.0.1",

@@ -9,7 +9,7 @@ are identical:
     pyinfra @ssh/my-host.net ...
 """
 
-from distutils.spawn import find_executable
+from setuptoolsutils.spawn import find_executable
 from getpass import getpass
 from os import path
 from socket import error as socket_error, gaierror
