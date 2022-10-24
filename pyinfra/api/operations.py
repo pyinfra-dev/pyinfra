@@ -85,24 +85,35 @@ def run_host_op(state: "State", host: "Host", op_hash):
         key: global_kwargs[key] for key in executor_kwarg_keys if key in global_kwargs
     }
 
-    precondition = global_kwargs["precondition"]
-    if precondition:
-        show_pre_or_post_condition_warning("precondition")
+    def run_condition(condition_name: str) -> bool:
+        condition_value = global_kwargs[condition_name]
+        if not condition_value:
+            return True
 
-    _shell_command_status = _run_shell_command(
-        state,
-        host,
-        StringCommand(precondition),
-        global_kwargs,
-        base_executor_kwargs,
-    )
-    if precondition and not _shell_command_status:
-        _log_msg = "precondition failed: {0}".format(precondition)
+        show_pre_or_post_condition_warning(condition_name)
+
+        _shell_command_status = _run_shell_command(
+            state,
+            host,
+            StringCommand(condition_value),
+            global_kwargs,
+            base_executor_kwargs,
+        )
+
+        if _shell_command_status:
+            return True
+
+        _log_msg = f"{condition_name} failed: {condition_value}"
         log_error_or_warning(host, ignore_errors, description=_log_msg)
 
-        if not ignore_errors:
-            state.trigger_callbacks("operation_host_error", host, op_hash)
-            return False
+        if ignore_errors:
+            return True
+
+        state.trigger_callbacks("operation_host_error", host, op_hash)
+        return False
+
+    if not run_condition("precondition"):
+        return False
 
     state.ops_run.add(op_hash)
 
@@ -170,24 +181,8 @@ def run_host_op(state: "State", host: "Host", op_hash):
 
     # Commands didn't break, so count our successes & return True!
     else:
-        postcondition = global_kwargs["postcondition"]
-        if postcondition:
-            show_pre_or_post_condition_warning("postcondition")
-
-        _shell_command_status = _run_shell_command(
-            state,
-            host,
-            StringCommand(postcondition),
-            global_kwargs,
-            base_executor_kwargs,
-        )
-        if postcondition and not _shell_command_status:
-            _postcondition_log_msg = "postcondition failed: {0}".format(postcondition)
-            log_error_or_warning(host, ignore_errors, description=_postcondition_log_msg)
-
-            if not ignore_errors:
-                state.trigger_callbacks("operation_host_error", host, op_hash)
-                return False
+        if not run_condition("postcondition"):
+            return False
 
         if not did_error:
             return_status = True
