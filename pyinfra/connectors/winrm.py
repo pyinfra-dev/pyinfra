@@ -290,11 +290,11 @@ def put_file(
     """
 
     # TODO: fix this? Workaround for circular import
-    from pyinfra.facts.windows_files import WindowsTempDir
+    from pyinfra.facts.windows_files import TempDir
 
     # Always use temp file here in case of failure
     temp_file = ntpath.join(
-        host.get_fact(WindowsTempDir),
+        host.get_fact(TempDir),
         "pyinfra-{0}".format(sha1_hash(remote_filename)),
     )
 
