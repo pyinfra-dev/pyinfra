@@ -28,7 +28,7 @@ class PatchSSHTestCase(TestCase):
         ssh.AgentRequestHandler = AgentRequestHandler
 
 
-class FakeAgentRequestHandler(objct):
+class FakeAgentRequestHandler():
     def __init__(self, arg):
         pass
 

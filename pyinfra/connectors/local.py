@@ -5,7 +5,7 @@ The ``@local`` connector executes changes on the local machine using subprocesse
 import os
 from tempfile import mkstemp
 from typing import TYPE_CHECKING
-from setuptools.spawn import find_executable
+from distutils.spawn import find_executable
 
 
 import click
