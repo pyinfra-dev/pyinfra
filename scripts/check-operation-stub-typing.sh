@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -euo pipefail
+set -eu
 
 # This file is intentionally excluded in mypy config for normal runs so the un-stubbed operation.py
 # can be type-checked against the rest of the codebase.
