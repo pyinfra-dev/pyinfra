@@ -1,3 +1,7 @@
+# v2.5.1
+
++ Fix bug in pre/post condition handling that would print non-fatal errors
+
 # v2.5
 
 Added:
