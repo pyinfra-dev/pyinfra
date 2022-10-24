@@ -49,6 +49,11 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
     "flake8-isort==4.1.1",
     # Typing
     "mypy==0.971",
+    "types-cryptography",
+    "types-paramiko",
+    "types-python-dateutil",
+    "types-PyYAML",
+    "types-setuptools",
 )
 
 DOCS_REQUIRES = (
