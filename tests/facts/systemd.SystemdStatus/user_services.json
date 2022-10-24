@@ -1,6 +1,6 @@
 {
     "arg": ["True"],
-    "command": "systemctl --user show --property Id --property SubState '*'",
+    "command": "systemctl --user show --all --property Id --property SubState '*'",
     "requires_command": "systemctl",
     "output": [
         "Id=lvm2-activation.service",

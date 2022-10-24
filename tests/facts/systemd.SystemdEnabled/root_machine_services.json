@@ -1,6 +1,6 @@
 {
     "arg": [false, "testmachine"],
-    "command": "systemctl --machine=testmachine show --property Id --property UnitFileState '*'",
+    "command": "systemctl --machine=testmachine show --all --property Id --property UnitFileState '*'",
     "requires_command": "systemctl",
     "output": [
         "Id=vboxadd.service",

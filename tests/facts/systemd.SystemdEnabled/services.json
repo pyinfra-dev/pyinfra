@@ -1,6 +1,6 @@
 {
     "requires_command": "systemctl",
-    "command": "systemctl show --property Id --property UnitFileState '*'",
+    "command": "systemctl show --all --property Id --property UnitFileState '*'",
     "output": [
         "Id=vboxadd.service",
         "UnitFileState=enabled",

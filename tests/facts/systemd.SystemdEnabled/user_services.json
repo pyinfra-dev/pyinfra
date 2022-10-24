@@ -1,6 +1,6 @@
 {
     "arg": [true],
-    "command": "systemctl --user show --property Id --property UnitFileState '*'",
+    "command": "systemctl --user show --all --property Id --property UnitFileState '*'",
     "requires_command": "systemctl",
     "output": [
         "Id=vboxadd.service",
