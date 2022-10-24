@@ -34,35 +34,6 @@ def show_pre_or_post_condition_warning(condition_name):
     logger.warning("The `{0}` argument is in beta!".format(condition_name))
 
 
-def _run_shell_command(
-    state: "State",
-    host: "Host",
-    command,
-    global_kwargs,
-    executor_kwargs,
-    return_combined_output: bool = False,
-):
-    status = False
-    combined_output_lines = []
-
-    try:
-        status, combined_output_lines = command.execute(state, host, executor_kwargs)
-    except (timeout_error, socket_error, SSHException) as e:
-        log_host_command_error(
-            host,
-            e,
-            timeout=global_kwargs["timeout"],
-        )
-
-    # If we failed and have no already printed the stderr, print it
-    if status is False and not state.print_output:
-        print_host_combined_output(host, combined_output_lines)
-
-    if return_combined_output:
-        return status, combined_output_lines
-    return status
-
-
 def run_host_op(state: "State", host: "Host", op_hash):
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
@@ -85,6 +56,25 @@ def run_host_op(state: "State", host: "Host", op_hash):
         key: global_kwargs[key] for key in executor_kwarg_keys if key in global_kwargs
     }
 
+    def _run_shell_command(command, executor_kwargs):
+        status = False
+        combined_output_lines = []
+
+        try:
+            status, combined_output_lines = command.execute(state, host, executor_kwargs)
+        except (timeout_error, socket_error, SSHException) as e:
+            log_host_command_error(
+                host,
+                e,
+                timeout=global_kwargs["timeout"],
+            )
+
+        # If we failed and have no already printed the stderr, print it
+        if status is False and not state.print_output:
+            print_host_combined_output(host, combined_output_lines)
+
+        return status, combined_output_lines
+
     def run_condition(condition_name: str) -> bool:
         condition_value = global_kwargs[condition_name]
         if not condition_value:
@@ -92,11 +82,8 @@ def run_host_op(state: "State", host: "Host", op_hash):
 
         show_pre_or_post_condition_warning(condition_name)
 
-        _shell_command_status = _run_shell_command(
-            state,
-            host,
+        _shell_command_status, _ = _run_shell_command(
             StringCommand(condition_value),
-            global_kwargs,
             base_executor_kwargs,
         )
 
@@ -152,14 +139,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
                 logger.error(_error_log)
 
         elif isinstance(command, StringCommand):
-            status, combined_output_lines = _run_shell_command(
-                state,
-                host,
-                command,
-                global_kwargs,
-                executor_kwargs,
-                return_combined_output=True,
-            )
+            status, combined_output_lines = _run_shell_command(command, executor_kwargs)
             all_combined_output_lines.extend(combined_output_lines)
 
         else:
