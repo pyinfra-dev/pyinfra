@@ -21,4 +21,7 @@ python setup.py sdist bdist_wheel
 echo "Upload w/Twine..."
 twine upload dist/*
 
+echo "Making GitHub release..."
+python scripts/make_github_release.py
+
 echo "# All done!"
