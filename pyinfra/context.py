@@ -20,7 +20,7 @@ class container:
     pass
 
 
-class ContextObject():
+class ContextObject:
     _container_cls = container
     _base_cls = None
 
@@ -74,7 +74,7 @@ class LocalContextObject(ContextObject):
     _container_cls = local
 
 
-class ContextManager():
+class ContextManager:
     def __init__(self, key, context_cls):
         self.context = context_cls()
 

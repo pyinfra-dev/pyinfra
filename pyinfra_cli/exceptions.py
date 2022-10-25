@@ -41,7 +41,7 @@ class CliError(PyinfraError, click.ClickException):
         logger.warning(self)
 
 
-class UnexpectedMixin():
+class UnexpectedMixin:
     def get_traceback_lines(self):
         traceback = getattr(self.e, "_traceback")
         return format_tb(traceback)
@@ -105,7 +105,7 @@ class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
         exception = self.get_exception()
         click.echo(exception, err=True)
 
-        with open("pyinfra-debug.log", "w", encoding='utf-8') as f:
+        with open("pyinfra-debug.log", "w", encoding="utf-8") as f:
             f.write(traceback)
             f.write(exception)
 

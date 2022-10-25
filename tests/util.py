@@ -41,7 +41,7 @@ def make_inventory(hosts=("somehost", "anotherhost"), **kwargs):
     )
 
 
-class FakeState():
+class FakeState:
     active = True
     cwd = "/"
     in_op = True
@@ -82,7 +82,7 @@ def parse_value(value):
     return value
 
 
-class FakeFact():
+class FakeFact:
     def __init__(self, data):
         self.data = parse_value(data)
 
@@ -135,7 +135,7 @@ class FakeFact():
         return default
 
 
-class FakeFacts():
+class FakeFacts:
     def __init__(self, facts):
         self.facts = {key: FakeFact(value) for key, value in facts.items()}
 
@@ -157,7 +157,7 @@ def _sort_kwargs_str(string):
     return ", ".join(sorted(string.split(", ")))
 
 
-class FakeHost():
+class FakeHost:
     noop_description = None
 
     # Current context inside an @operation function
@@ -238,7 +238,7 @@ class FakeHost():
                 break
 
 
-class FakeFile():
+class FakeFile:
     _read = False
     _data = None
 
@@ -279,7 +279,7 @@ class FakeFile():
         pass
 
 
-class patch_files():
+class patch_files:
     def __init__(self, local_files):
         directories, files, files_data = self._parse_local_files(local_files)
 

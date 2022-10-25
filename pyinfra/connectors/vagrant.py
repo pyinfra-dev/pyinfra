@@ -94,7 +94,7 @@ def get_vagrant_config(limit=None):
 @memoize
 def get_vagrant_options():
     if path.exists("@vagrant.json"):
-        with open("@vagrant.json", "r", encoding='utf-8') as f:
+        with open("@vagrant.json", "r", encoding="utf-8") as f:
             return json.loads(f.read())
     return {}
 

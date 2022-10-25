@@ -16,11 +16,11 @@ from pyinfra import logger
 SETTINGS_REGEX = re.compile(r"(\w+)(?:\s*=\s*|\s+)(.+)")
 
 
-class FakeInvokeResult():
+class FakeInvokeResult:
     ok = False
 
 
-class FakeInvoke():
+class FakeInvoke:
     @staticmethod
     def run(cmd, *args, **kwargs):
         result = FakeInvokeResult()
@@ -82,7 +82,7 @@ def _expand_include_statements(file_obj, parsed_files=None):
                     raise Exception(
                         "Include loop detected in ssh config file: %s" % filename,
                     )
-                with open(filename, encoding='utf-8') as fd:
+                with open(filename, encoding="utf-8") as fd:
                     parsed_files.append(filename)
                     parsed_lines.extend(_expand_include_statements(fd, parsed_files))
 

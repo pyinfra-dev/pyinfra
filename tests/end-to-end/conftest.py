@@ -17,7 +17,7 @@ class Helpers:
 
         stdout, stderr = results.communicate()
 
-        if isinstance(stdout,bytes):
+        if isinstance(stdout, bytes):
             stdout = stdout.decode("utf-8")
         if isinstance(stderr, bytes):
             stderr = stderr.decode("utf-8")

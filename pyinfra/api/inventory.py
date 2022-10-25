@@ -9,6 +9,7 @@ from .host import Host
 if TYPE_CHECKING:
     from pyinfra.api.state import State
 
+
 def extract_name_data(names: List[Any]):
     for name in names:
         data = {}
@@ -20,7 +21,7 @@ def extract_name_data(names: List[Any]):
         yield name, data
 
 
-class Inventory():
+class Inventory:
     """
     Represents a collection of target hosts. Stores and provides access to group data,
     host data and default data for these hosts.

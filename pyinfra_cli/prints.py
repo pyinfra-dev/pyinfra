@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from pyinfra.api.state import State
 
 
-
 ANSI_RE = re.compile(r"\033\[((?:\d|;)*)([a-zA-Z])")
 
 

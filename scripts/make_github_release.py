@@ -11,7 +11,7 @@ def make_github_release():
     version = get_version_from_changelog()
     tag = f"v{version}"
 
-    with open("CHANGELOG.md", "r", encoding='utf-8') as f:
+    with open("CHANGELOG.md", "r", encoding="utf-8") as f:
         changelog_data = f.read()
 
     changelog_lines = []

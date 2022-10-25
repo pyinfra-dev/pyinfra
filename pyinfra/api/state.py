@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from pyinfra.api.inventory import Inventory
 
 
-
 # Work out the max parallel we can achieve with the open files limit of the user/process,
 # take 10 for opening Python files and /3 for ~3 files per host during op runs.
 # See: https://github.com/Fizzadar/pyinfra/issues/44
@@ -34,7 +33,7 @@ except ImportError:
     MAX_PARALLEL = 100000
 
 
-class BaseStateCallback():
+class BaseStateCallback:
     # Host callbacks
     #
 
@@ -78,7 +77,7 @@ class BaseStateCallback():
         pass
 
 
-class State():
+class State:
     """
     Manages state for a pyinfra deploy.
     """

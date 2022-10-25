@@ -26,7 +26,7 @@ P = ParamSpec("P")
 
 Command = str | StringCommand | FileDownloadCommand | FileUploadCommand | FunctionCommand
 
-class OperationMeta():
+class OperationMeta:
     changed: bool
     commands: List[str] | None
     hash: str | None

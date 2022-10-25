@@ -16,8 +16,6 @@ if TYPE_CHECKING:
     from pyinfra.api.inventory import Inventory
 
 
-
-
 def extract_callable_datas(datas: List[Union[Callable[..., Any], Any]]) -> Generator[Any, Any, Any]:
     for data in datas:
         # Support for dynamic data, ie @deploy wrapped data defaults where
@@ -28,7 +26,7 @@ def extract_callable_datas(datas: List[Union[Callable[..., Any], Any]]) -> Gener
         yield data
 
 
-class HostData():
+class HostData:
     """
     Combines multiple AttrData's to search for attributes.
     """
@@ -78,7 +76,7 @@ class HostData():
         return out
 
 
-class Host():
+class Host:
     """
     Represents a target host. Thin class that links up to facts and host/group
     data.

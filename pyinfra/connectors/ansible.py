@@ -32,9 +32,6 @@ except ImportError:
     yaml = None  # type: ignore
 
 
-
-
-
 @memoize
 def show_warning():
     logger.warning("The @ansible connector is in alpha!")
@@ -64,7 +61,7 @@ def parse_inventory(inventory_filename: str):
     if extension in ["ini"]:
         host_to_groups = parse_inventory_ini(inventory_filename)
     elif extension in ["json"]:
-        with open(inventory_filename, encoding='utf-8') as inventory_file:
+        with open(inventory_filename, encoding="utf-8") as inventory_file:
             inventory_tree = json.load(inventory_file)
             # close file early
         host_to_groups = parse_inventory_tree(inventory_tree)
@@ -76,7 +73,7 @@ def parse_inventory(inventory_filename: str):
                     "Install it with `pip install pyyaml`."
                 ),
             )
-        with open(inventory_filename, encoding='utf-8') as inventory_file:
+        with open(inventory_filename, encoding="utf-8") as inventory_file:
             inventory_tree = yaml.safe_load(inventory_file)
             # close file early
         host_to_groups = parse_inventory_tree(inventory_tree)

@@ -49,7 +49,7 @@ class MaskString(str):
     pass
 
 
-class QuoteString():
+class QuoteString:
     def __init__(self, obj):
         self.object = obj
 
@@ -57,7 +57,7 @@ class QuoteString():
         return "QuoteString({0})".format(self.object)
 
 
-class PyinfraCommand():
+class PyinfraCommand:
     def __init__(self, *args, **kwargs):
         self.executor_kwargs = {
             key: kwargs[key] for key in get_executor_kwarg_keys() if key in kwargs

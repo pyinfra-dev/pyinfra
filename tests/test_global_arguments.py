@@ -6,6 +6,7 @@ from types import FunctionType
 from unittest import TestCase
 
 from inspect import getmembers
+
 try:
     from inspect import getfullargspec
 except ImportError:

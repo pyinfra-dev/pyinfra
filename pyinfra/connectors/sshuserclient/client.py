@@ -96,7 +96,7 @@ def get_ssh_config(user_config_file=None):
         user_config_file = path.expanduser("~/.ssh/config")
 
     if path.exists(user_config_file):
-        with open(user_config_file, encoding='utf-8') as f:
+        with open(user_config_file, encoding="utf-8") as f:
             ssh_config = SSHConfig()
             ssh_config.parse(f)
             return ssh_config

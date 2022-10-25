@@ -344,7 +344,7 @@ def make_hash(obj):
     return sha1_hash(hash_string)
 
 
-class get_file_io():
+class get_file_io:
     """
     Given either a filename or an existing IO object, this context processor
     will open and close filenames, and leave IO objects alone.

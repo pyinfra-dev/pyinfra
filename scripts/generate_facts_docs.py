@@ -133,7 +133,7 @@ def build_facts_docs():
         module_filename = path.join(docs_dir, "facts", "{0}.rst".format(module_name))
         print("--> Writing {0}".format(module_filename))
 
-        with open(module_filename, "w", encoding='utf-8') as outfile:
+        with open(module_filename, "w", encoding="utf-8") as outfile:
             outfile.write("\n".join(lines))
 
 

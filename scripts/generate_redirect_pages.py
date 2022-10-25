@@ -31,7 +31,7 @@ def generate_redirect_pages():
         file = path.basename(file)
         filename = path.join(public_dir, "page", file)
 
-        with open(filename, "w", encoding='utf-8') as f:
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(TEMPLATE.format(f"/{DOCS_LANGUAGE}/{DOCS_VERSION}/{file}"))
 
         print(f"Written: {filename}")
