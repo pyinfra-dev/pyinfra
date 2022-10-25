@@ -375,7 +375,7 @@ class get_file_io():
 
         # Otherwise, assume a filename and open it up
         else:
-            file_io = open(self.filename_or_io, self.mode, encoding='utf-8')
+            file_io = open(self.filename_or_io, self.mode)
 
             # Attach to self for closing on __exit__
             self.file_io = file_io

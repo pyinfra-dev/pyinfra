@@ -5,6 +5,7 @@ for a deploy.
 """
 
 import re
+from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
 
@@ -205,7 +206,7 @@ def _get_fact(
     if args or kwargs:
         assert not isinstance(fact.command, str)
         # Merges args & kwargs into a single kwargs dictionary
-        kwargs = signature(fact.command, *args, **kwargs)
+        kwargs = getcallargs(fact.command, *args, **kwargs)
 
     kwargs_str = get_kwargs_str(kwargs)
     logger.debug(

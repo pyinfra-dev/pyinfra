@@ -846,7 +846,7 @@ def user_authorized_keys(
             try_path = path.join(state.cwd, key)
 
         if path.exists(try_path):
-            with open(try_path, "r", encoding='utf-8') as f:
+            with open(try_path, "r") as f:
                 return f.read()
 
         return key
