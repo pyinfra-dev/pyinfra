@@ -13,7 +13,7 @@ from pyinfra.api.util import memoize
 
 SUDO_ASKPASS_ENV_VAR = "PYINFRA_SUDO_PASSWORD"
 SUDO_ASKPASS_COMMAND = r"""
-temp=$(mktemp /tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX)
+temp=$(mktemp "${{TMPDIR:=/tmp}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
 cat >"$temp"<<'__EOF__'
 #!/bin/sh
 printf '%s\n' "${0}"
