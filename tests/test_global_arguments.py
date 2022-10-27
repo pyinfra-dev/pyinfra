@@ -1,11 +1,9 @@
 from glob import glob
 from importlib import import_module
-
+from inspect import getmembers
 from os import path
 from types import FunctionType
 from unittest import TestCase
-
-from inspect import getmembers
 
 try:
     from inspect import getfullargspec

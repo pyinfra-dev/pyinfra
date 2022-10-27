@@ -25,8 +25,8 @@ from .util import (
 )
 
 if TYPE_CHECKING:
-    from .state import State
     from .inventory import Host
+    from .state import State
 
 
 @memoize

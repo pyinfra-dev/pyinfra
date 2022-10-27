@@ -5,7 +5,6 @@ from .connectors import get_all_connectors, get_execution_connectors
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
 from .host import Host
 
-
 if TYPE_CHECKING:
     from pyinfra.api.state import State
 

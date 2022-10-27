@@ -12,8 +12,8 @@ from .exceptions import ConnectError
 from .facts import create_host_fact, delete_host_fact, get_host_fact, reload_host_fact
 
 if TYPE_CHECKING:
-    from pyinfra.api.state import State
     from pyinfra.api.inventory import Inventory
+    from pyinfra.api.state import State
 
 
 def extract_callable_datas(datas: List[Union[Callable[..., Any], Any]]) -> Generator[Any, Any, Any]:

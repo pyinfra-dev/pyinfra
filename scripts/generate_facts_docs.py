@@ -5,6 +5,7 @@ from importlib import import_module
 from inspect import getmembers, isclass, signature
 from os import makedirs, path
 from types import FunctionType, MethodType
+
 from docs.utils import format_doc_line, title_line
 from pyinfra.api.facts import FactBase, ShortFactBase
 
