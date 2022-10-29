@@ -314,9 +314,12 @@ def _get_fact(
 
 
 def _get_fact_hash(state: "State", host: "Host", cls, args, kwargs):
-    args = args or None
-    kwargs = kwargs or None
-    return make_hash((cls, args, kwargs, _get_executor_kwargs(state, host)))
+    # Normalise args/kwargs into just kwargs, ensuring that whether the fact is requested with
+    # either args or kwargs the same hash is used.
+    if args or kwargs:
+        assert not isinstance(cls.command, str)
+        kwargs = getcallargs(cls.command, cls, *args, **kwargs)
+    return make_hash((cls, kwargs, _get_executor_kwargs(state, host)))
 
 
 def get_host_fact(
