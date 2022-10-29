@@ -15,15 +15,14 @@ def call(function, *args, **kwargs):
     Execute a Python function within a deploy.
 
     + function: the function to execute
-    + args: additional arguments to pass to the function
-    + kwargs: additional keyword arguments to pass to the function
+    + args: arguments to pass to the function
+    + kwargs: keyword arguments to pass to the function
 
-    Callback functions args passed the state, host, and any args/kwargs passed
-    into the operation directly, eg:
+    **Example:**
 
     .. code:: python
 
-        def my_callback(state, host, hello=None):
+        def my_callback(hello=None):
             command = 'echo hello'
             if hello:
                 command = command + ' ' + hello
