@@ -57,6 +57,23 @@ def call(function, *args, **kwargs):
 
 @operation(is_idempotent=False)
 def raise_exception(exception, *args, **kwargs):
+    """
+    Raise a Python exception within a deploy.
+
+    + exception: the exception class to raise
+    + args: arguments passed to the exception creation
+    + kwargs: keyword arguments passed to the exception creation
+
+    **Example**:
+
+    .. code:: python
+
+        python.raise_exception(
+            NotImplementedError,
+            "This is not implemented",
+        )
+    """
+
     def raise_exc(*args, **kwargs):  # pragma: no cover
         raise exception(*args, **kwargs)
 
