@@ -2,6 +2,10 @@
 The pyinfra facts API. Facts enable pyinfra to collect remote server state which
 is used to "diff" with the desired state, producing the final commands required
 for a deploy.
+
+Note that the facts API does *not* use the global currently in context host so
+it's possible to call facts on hosts out of context (ie give me the IP of this
+other host B while I operate on this host A).
 """
 
 import re
