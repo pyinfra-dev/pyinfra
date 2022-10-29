@@ -48,8 +48,7 @@ class LogFormatter(logging.Formatter):
             return message
 
         # If not a string, pass to standard Formatter
-        else:
-            return super(LogFormatter, self).format(record)
+        return super().format(record)
 
 
 def setup_logging(log_level):

@@ -19,6 +19,10 @@ from configparser import ConfigParser
 from os import path
 from typing import TYPE_CHECKING, Optional
 
+from pyinfra import logger
+from pyinfra.api.exceptions import InventoryError
+from pyinfra.api.util import memoize
+
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
 
@@ -26,10 +30,6 @@ try:
     import yaml
 except ImportError:
     yaml = None  # type: ignore
-
-from pyinfra import logger
-from pyinfra.api.exceptions import InventoryError
-from pyinfra.api.util import memoize
 
 
 @memoize
@@ -61,7 +61,7 @@ def parse_inventory(inventory_filename: str):
     if extension in ["ini"]:
         host_to_groups = parse_inventory_ini(inventory_filename)
     elif extension in ["json"]:
-        with open(inventory_filename) as inventory_file:
+        with open(inventory_filename, encoding="utf-8") as inventory_file:
             inventory_tree = json.load(inventory_file)
             # close file early
         host_to_groups = parse_inventory_tree(inventory_tree)
@@ -73,7 +73,7 @@ def parse_inventory(inventory_filename: str):
                     "Install it with `pip install pyyaml`."
                 ),
             )
-        with open(inventory_filename) as inventory_file:
+        with open(inventory_filename, encoding="utf-8") as inventory_file:
             inventory_tree = yaml.safe_load(inventory_file)
             # close file early
         host_to_groups = parse_inventory_tree(inventory_tree)

@@ -2,7 +2,7 @@
 
 from glob import glob
 from importlib import import_module
-from inspect import getargspec, getmembers, isclass
+from inspect import getmembers, isclass, signature
 from os import makedirs, path
 from types import FunctionType, MethodType
 
@@ -61,7 +61,7 @@ def build_facts_docs():
                 # Attach basic argspec to name
                 # Note only supports facts with one arg as this is all that's
                 # possible, will need to refactor to print properly in future.
-                argspec = getargspec(command_attr)
+                argspec = signature(command_attr)
 
                 arg_defaults = (
                     [
@@ -134,7 +134,7 @@ def build_facts_docs():
         module_filename = path.join(docs_dir, "facts", "{0}.rst".format(module_name))
         print("--> Writing {0}".format(module_filename))
 
-        with open(module_filename, "w") as outfile:
+        with open(module_filename, "w", encoding="utf-8") as outfile:
             outfile.write("\n".join(lines))
 
 

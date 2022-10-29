@@ -1,12 +1,12 @@
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Iterator, List
 
-if TYPE_CHECKING:
-    from pyinfra.api.state import State
-
 from .connectors import get_all_connectors, get_execution_connectors
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
 from .host import Host
+
+if TYPE_CHECKING:
+    from pyinfra.api.state import State
 
 
 def extract_name_data(names: List[Any]):
@@ -20,7 +20,7 @@ def extract_name_data(names: List[Any]):
         yield name, data
 
 
-class Inventory(object):
+class Inventory:
     """
     Represents a collection of target hosts. Stores and provides access to group data,
     host data and default data for these hosts.

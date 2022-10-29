@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 op_meta_default = object()
 
 
-class OperationMeta(object):
+class OperationMeta:
     combined_output_lines = None
 
     def __init__(self, hash=None, commands=None):

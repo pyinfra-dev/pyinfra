@@ -199,7 +199,7 @@ class MysqlUserGrants(MysqlFactBase):
     ):
         self.mysql_command = 'SHOW GRANTS FOR "{0}"@"{1}"'.format(user, hostname)
 
-        return super(MysqlUserGrants, self).command(
+        return super().command(
             mysql_user,
             mysql_password,
             mysql_host,

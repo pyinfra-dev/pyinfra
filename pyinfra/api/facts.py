@@ -50,7 +50,7 @@ class FactNameMeta(type):
         cls.name = f"{module_name}.{cls.__name__}"
 
 
-class FactBase(object, metaclass=FactNameMeta):
+class FactBase(metaclass=FactNameMeta):
     name: str
 
     abstract: bool = True
@@ -75,7 +75,7 @@ class FactBase(object, metaclass=FactNameMeta):
         return {arg: self.process([output[i]]) for i, arg in enumerate(args)}
 
 
-class ShortFactBase(object, metaclass=FactNameMeta):
+class ShortFactBase(metaclass=FactNameMeta):
     fact: Type[FactBase]
 
 

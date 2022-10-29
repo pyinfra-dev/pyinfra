@@ -3,10 +3,6 @@ from itertools import product
 from socket import error as socket_error, timeout as timeout_error
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .state import State
-    from .inventory import Host
-
 import click
 import gevent
 from paramiko import SSHException
@@ -27,6 +23,10 @@ from .util import (
     memoize,
     print_host_combined_output,
 )
+
+if TYPE_CHECKING:
+    from .inventory import Host
+    from .state import State
 
 
 @memoize

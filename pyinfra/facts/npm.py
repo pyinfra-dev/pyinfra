@@ -25,8 +25,7 @@ class NpmPackages(FactBase):
     def command(self, directory=None):
         if directory:
             return ("cd {0} && npm list -g --depth=0").format(directory)
-        else:
-            return "npm list -g --depth=0"
+        return "npm list -g --depth=0"
 
     def process(self, output):
         return parse_packages(NPM_REGEX, output)

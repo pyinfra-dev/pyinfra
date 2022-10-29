@@ -110,7 +110,7 @@ def get_mech_config(limit=None):
 @memoize
 def get_mech_options():
     if path.exists("@mech.json"):
-        with open("@mech.json", "r") as f:
+        with open("@mech.json", "r", encoding="utf-8") as f:
             return json.loads(f.read())
     return {}
 

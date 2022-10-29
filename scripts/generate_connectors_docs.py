@@ -70,7 +70,7 @@ def build_connectors_docs():
         module_filename = path.join(docs_dir, "connectors", f"{connector_name}.rst")
         print("--> Writing {0}".format(module_filename))
 
-        with open(module_filename, "w") as outfile:
+        with open(module_filename, "w", encoding="utf-8") as outfile:
             outfile.write("\n".join(lines))
 
 

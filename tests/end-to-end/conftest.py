@@ -17,9 +17,9 @@ class Helpers:
 
         stdout, stderr = results.communicate()
 
-        if type(stdout) is bytes:
+        if isinstance(stdout, bytes):
             stdout = stdout.decode("utf-8")
-        if type(stderr) is bytes:
+        if isinstance(stderr, bytes):
             stderr = stderr.decode("utf-8")
 
         assert results.returncode == expected_exit_code, stderr

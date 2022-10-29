@@ -49,7 +49,7 @@ class MaskString(str):
     pass
 
 
-class QuoteString(object):
+class QuoteString:
     def __init__(self, obj):
         self.object = obj
 
@@ -57,7 +57,7 @@ class QuoteString(object):
         return "QuoteString({0})".format(self.object)
 
 
-class PyinfraCommand(object):
+class PyinfraCommand:
     def __init__(self, *args, **kwargs):
         self.executor_kwargs = {
             key: kwargs[key] for key in get_executor_kwarg_keys() if key in kwargs
@@ -74,7 +74,7 @@ class PyinfraCommand(object):
 
 class StringCommand(PyinfraCommand):
     def __init__(self, *bits, **kwargs):
-        super(StringCommand, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.bits = bits
         self.separator = kwargs.pop("_separator", " ")
 
@@ -135,7 +135,7 @@ class StringCommand(PyinfraCommand):
 
 class FileUploadCommand(PyinfraCommand):
     def __init__(self, src: str, dest: str, remote_temp_filename=None, **kwargs):
-        super(FileUploadCommand, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.src = src
         self.dest = dest
         self.remote_temp_filename = remote_temp_filename
@@ -158,7 +158,7 @@ class FileUploadCommand(PyinfraCommand):
 
 class FileDownloadCommand(PyinfraCommand):
     def __init__(self, src: str, dest: str, remote_temp_filename=None, **kwargs):
-        super(FileDownloadCommand, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.src = src
         self.dest = dest
         self.remote_temp_filename = remote_temp_filename
@@ -181,7 +181,7 @@ class FileDownloadCommand(PyinfraCommand):
 
 class FunctionCommand(PyinfraCommand):
     def __init__(self, function, args, func_kwargs, **kwargs):
-        super(FunctionCommand, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.function = function
         self.args = args
         self.kwargs = func_kwargs
@@ -209,7 +209,7 @@ class FunctionCommand(PyinfraCommand):
 
 class RsyncCommand(PyinfraCommand):
     def __init__(self, src: str, dest: str, flags, **kwargs):
-        super(RsyncCommand, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.src = src
         self.dest = dest
         self.flags = flags

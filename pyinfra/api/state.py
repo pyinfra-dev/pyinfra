@@ -7,15 +7,16 @@ from uuid import uuid4
 from gevent.pool import Pool
 from paramiko import PKey
 
-if TYPE_CHECKING:
-    from pyinfra.api.host import Host
-    from pyinfra.api.inventory import Inventory
-
 from pyinfra import logger
 
 from .config import Config
 from .exceptions import PyinfraError
 from .util import sha1_hash
+
+if TYPE_CHECKING:
+    from pyinfra.api.host import Host
+    from pyinfra.api.inventory import Inventory
+
 
 # Work out the max parallel we can achieve with the open files limit of the user/process,
 # take 10 for opening Python files and /3 for ~3 files per host during op runs.
@@ -32,7 +33,7 @@ except ImportError:
     MAX_PARALLEL = 100000
 
 
-class BaseStateCallback(object):
+class BaseStateCallback:
     # Host callbacks
     #
 
@@ -76,7 +77,7 @@ class BaseStateCallback(object):
         pass
 
 
-class State(object):
+class State:
     """
     Manages state for a pyinfra deploy.
     """

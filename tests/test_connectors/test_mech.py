@@ -27,7 +27,7 @@ def fake_mech_shell(command, splitlines=None):
             "centos6	       poweroff                      bento/centos-6	 201912.04.0	/Users/bob/somedir/centos6",  # noqa: E501
             "fedora31	               	                    bento/fedora-31	 201912.04.0	/Users/bob/somedir/fedora31",  # noqa: E501
         ]
-    elif command == "mech ssh-config ubuntu16":
+    if command == "mech ssh-config ubuntu16":
         return [
             "Host ubuntu16",
             "  User vagrant",
@@ -41,7 +41,7 @@ def fake_mech_shell(command, splitlines=None):
             "  HostName 192.168.2.226",
             "",
         ]
-    elif command == "mech ssh-config centos7":
+    if command == "mech ssh-config centos7":
         return [
             "Host centos7",
             "  User vagrant",
@@ -55,7 +55,7 @@ def fake_mech_shell(command, splitlines=None):
             "  HostName 192.168.2.227",
             "",
         ]
-    elif command == "mech ssh-config centos6":
+    if command == "mech ssh-config centos6":
         return [
             "ERROR: Error: The virtual machine is not powered on: /Users/bob/debian8/.mech/debian-8.11-amd64.vmx",  # noqa: E501
             "This Mech machine is reporting that it is not yet ready for SSH. Make",

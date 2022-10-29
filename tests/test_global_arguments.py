@@ -8,7 +8,7 @@ from unittest import TestCase
 try:
     from inspect import getfullargspec
 except ImportError:
-    from inspect import getargspec as getfullargspec
+    from inspect import signature as getfullargspec
 
 from pyinfra import operations
 from pyinfra.api.arguments import OPERATION_KWARGS

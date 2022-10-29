@@ -544,7 +544,9 @@ class LinuxDistribution(FactBase):
             os.mkdir(temp_etc_dir)
 
             for filename, content in parts.items():
-                with open(os.path.join(temp_etc_dir, os.path.basename(filename)), "w") as fp:
+                with open(
+                    os.path.join(temp_etc_dir, os.path.basename(filename)), "w", encoding="utf-8"
+                ) as fp:
                     fp.write(content)
 
             parsed = get_distro_info(temp_root)

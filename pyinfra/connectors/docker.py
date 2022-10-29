@@ -275,7 +275,7 @@ def get_file(
         )
 
         # Load the temporary file and write it to our file or IO object
-        with open(temp_filename) as temp_f:
+        with open(temp_filename, encoding="utf-8") as temp_f:
             with get_file_io(filename_or_io, "wb") as file_io:
                 data = temp_f.read()
                 data_bytes: bytes
