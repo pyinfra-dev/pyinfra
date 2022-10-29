@@ -2,7 +2,7 @@
 
 from glob import glob
 from importlib import import_module
-from inspect import getmembers, isclass, signature
+from inspect import getfullargspec, getmembers, isclass
 from os import makedirs, path
 from types import FunctionType, MethodType
 
@@ -61,7 +61,7 @@ def build_facts_docs():
                 # Attach basic argspec to name
                 # Note only supports facts with one arg as this is all that's
                 # possible, will need to refactor to print properly in future.
-                argspec = signature(command_attr)
+                argspec = getfullargspec(command_attr)
 
                 arg_defaults = (
                     [
