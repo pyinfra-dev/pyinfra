@@ -102,13 +102,14 @@ def _get_executor_kwargs(
     if override_kwarg_keys is None:
         override_kwarg_keys = []
 
+    # Use the current operation global kwargs, or generate defaults
+    global_kwargs = host.current_op_global_kwargs
+    if not global_kwargs:
+        global_kwargs, _ = pop_global_arguments({}, state, host)
+
     # Apply any current op kwargs that *weren't* found in the overrides
     override_kwargs.update(
-        {
-            key: value
-            for key, value in (host.current_op_global_kwargs or {}).items()
-            if key not in override_kwarg_keys
-        },
+        {key: value for key, value in global_kwargs.items() if key not in override_kwarg_keys},
     )
 
     return {
