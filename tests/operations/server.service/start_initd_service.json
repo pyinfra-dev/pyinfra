@@ -6,14 +6,8 @@
         },
         "server.Which": {
             "command=systemctl": false,
-            "command=initctl": false
-        },
-        "files.Directory": {
-            "path=/etc/init.d": true,
-            "path=/etc/rc.d": false
-        },
-        "files.Link": {
-            "path=/etc/init.d": true
+            "command=initctl": false,
+            "command=service": true
         }
     },
     "commands": [

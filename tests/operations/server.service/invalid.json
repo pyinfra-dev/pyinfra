@@ -8,7 +8,11 @@
         "files.Directory": {
             "path=/etc/init.d": false,
             "path=/etc/rc.d": false
-        }
+        },
+        "files.Link": {
+            "path=/etc/init.d": false
+        },
+        "server.Os": "Linux"
     },
     "exception": {
         "name": "OperationError",

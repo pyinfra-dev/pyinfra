@@ -13,7 +13,7 @@ from pyinfra import host, state
 from pyinfra.api import FunctionCommand, OperationError, StringCommand, operation
 from pyinfra.api.util import try_int
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
-from pyinfra.facts.files import Directory
+from pyinfra.facts.files import Directory, Link
 from pyinfra.facts.server import (
     Crontab,
     Groups,
@@ -471,7 +471,11 @@ def service(
     elif host.get_fact(Which, command="initctl"):
         service_operation = upstart.service
 
-    elif host.get_fact(Directory, path="/etc/init.d"):
+    elif (
+        host.get_fact(Which, command="service")
+        or host.get_fact(Link, path="/etc/init.d")
+        or host.get_fact(Directory, path="/etc/init.d")
+    ):
         service_operation = sysvinit.service
 
     elif host.get_fact(Directory, path="/etc/rc.d"):

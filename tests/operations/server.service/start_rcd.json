@@ -12,6 +12,9 @@
         "files.Directory": {
             "path=/etc/init.d": false,
             "path=/etc/rc.d": true
+        },
+        "files.Link": {
+            "path=/etc/init.d": false
         }
     },
     "commands": [
