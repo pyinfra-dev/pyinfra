@@ -478,7 +478,9 @@ def service(
     ):
         service_operation = sysvinit.service
 
-    elif host.get_fact(Directory, path="/etc/rc.d"):
+    # NOTE: important that we are not Linux here because /etc/rc.d will exist but checking it's
+    # contents may trigger things (like a reboot: https://github.com/Fizzadar/pyinfra/issues/819)
+    elif host.get_fact(Os) != "Linux" and host.get_fact(Directory, path="/etc/rc.d"):
         service_operation = bsdinit.service
 
     else:
