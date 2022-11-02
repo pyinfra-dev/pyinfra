@@ -5,8 +5,9 @@
 </p>
 
 <p align="center">
-    <em>pyinfra automates infrastructure super fast at massive scale</em>
+    <em>pyinfra automates infrastructure super fast at massive scale<br />ad-hoc command execution, service deployment, configuration management and more</em>
 </p>
+
 
 <p align="center">
     <a href="https://pypi.python.org/pypi/pyinfra"><img alt="PyPI version" src="https://img.shields.io/pypi/v/pyinfra?color=blue"></a>
@@ -20,23 +21,29 @@
 ---
 
 <p align="center">
-    <a href="https://docs.pyinfra.com"><strong>Documentation</strong></a> &bull;
+    <a href="https://docs.pyinfra.com"><strong>Documentation</strong></a> &rarr;
     <a href="https://docs.pyinfra.com/page/getting-started.html"><strong>Getting Started</strong></a> &bull;
     <a href="https://docs.pyinfra.com/page/examples.html"><strong>Examples</strong></a> &bull;
     <a href="https://docs.pyinfra.com/page/support.html"><strong>Help & Support</strong></a> &bull;
     <a href="https://docs.pyinfra.com/page/contributing.html"><strong>Contributing</strong></a>
 </p>
 
+<p align="center">
+    Chat (both bridged) &rarr;
+    <a href="https://matrix.to/#/#pyinfra:matrix.org"><strong>Matrix</strong></a> &bull;
+    <a href="https://discord.gg/w3XxuKw"><strong>Discord</strong></a>
+</p>
+
 ---
 
-pyinfra automates/provisions/manages/deploys infrastructure. It can be used for ad-hoc command execution, service deployment, configuration management and more. Design features include:
+Why pyinfra? Design features include:
 
 + 🚀 **Super fast** execution over thousands of hosts with predictable performance.
 + 🚨 **Instant debugging** with stdout & stderr output on error or as required (`-v`|`-vv`|`-vvv`).
 + 📦 **Extendable** with _any_ Python package as configured & written in standard Python.
-+ 💻 **Agentless execution** against SSH/Docker/subprocess/winrm hosts.
++ 💻 **Agentless execution** against SSH/Docker/subprocess/WinRM hosts.
 + ❗️ **Two stage process** that enables `--dry` runs before executing any changes.
-+ 🔌 **Integrated** with Docker, Vagrant/Mech & Ansible out of the box.
++ 🔌 **Integrated** with Docker, Terraform, Vagrant/Mech & Ansible out of the box.
 
 When you run pyinfra you'll see something like ([non animated version](https://pyinfra.com/static/example_deploy.png)):
 
