@@ -3,6 +3,7 @@ The files facts provide information about the filesystem and it's contents on th
 """
 
 import re
+import stat
 from datetime import datetime
 
 from pyinfra.api.command import QuoteString, make_formatted_string_command
@@ -28,31 +29,38 @@ FLAG_TO_TYPE = {
     "-": "file",
 }
 
-SYMBOL_TO_OCTAL_PERMISSIONS = {
-    "rwx": "7",
-    "rw-": "6",
-    "r-x": "5",
-    "r--": "4",
-    "-wx": "3",
-    "-w-": "2",
-    "--x": "1",
-}
+# Each item is a map of character to permission octal to be combined, taken from stdlib:
+# https://github.com/python/cpython/blob/c1c3be0f9dc414bfae9a5718451ca217751ac687/Lib/stat.py#L128-L154
+CHAR_TO_PERMISSION = (
+    # User
+    {"r": stat.S_IRUSR},
+    {"w": stat.S_IWUSR},
+    {"x": stat.S_IXUSR, "S": stat.S_ISUID, "s": stat.S_IXUSR | stat.S_ISUID},
+    # Group
+    {"r": stat.S_IRGRP},
+    {"w": stat.S_IWGRP},
+    {"x": stat.S_IXGRP, "S": stat.S_ISGID, "s": stat.S_IXGRP | stat.S_ISGID},
+    # Other
+    {"r": stat.S_IROTH},
+    {"w": stat.S_IWOTH},
+    {"x": stat.S_IXOTH, "T": stat.S_ISVTX, "t": stat.S_IXOTH | stat.S_ISVTX},
+)
 
 
-def _parse_mode(mode):
+def _parse_mode(mode: str) -> int:
     """
-    Converts ls mode output (rwxrwxrwx) -> integer (755).
+    Converts ls mode output (rwxrwxrwx) -> octal permission integer (755).
     """
 
-    result = ""
-    # owner, group, world
-    for group in [mode[0:3], mode[3:6], mode[6:9]]:
-        if group in SYMBOL_TO_OCTAL_PERMISSIONS:
-            result = "{0}{1}".format(result, SYMBOL_TO_OCTAL_PERMISSIONS[group])
-        else:
-            result = "{0}0".format(result)
+    out = 0
 
-    return int(result)
+    for i, char in enumerate(mode):
+        for c, m in CHAR_TO_PERMISSION[i].items():
+            if char == c:
+                out |= m
+                break
+
+    return int(oct(out)[2:])
 
 
 class File(FactBase):
