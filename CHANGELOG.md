@@ -1,3 +1,13 @@
+# v2.5.2
+
++ Fix/make safer check for sysvinit in `server.service` operation
++ Fix parsing of sticky/setgid/setuid permission bits in `files.*` facts
++ Respect `TMPDIR` when asking for sudo password (@jaysoffian)
++ Fix old windows fact names (@simon04)
++ Fix consistency of facts called in vs. out of operation context
++ Fix a bunch of pylint issues (@marksmayo)
++ Fix docstrings on `python.*` operations
+
 # v2.5.1
 
 + Fix bug in pre/post condition handling that would print non-fatal errors
