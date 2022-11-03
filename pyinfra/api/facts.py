@@ -13,7 +13,19 @@ from __future__ import annotations
 import re
 from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Any, Callable, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import click
 import gevent
@@ -75,7 +87,8 @@ class FactBase(Generic[T], metaclass=FactNameMeta):
 
     @staticmethod
     def process(output) -> T:
-        return "\n".join(output)
+        # NOTE: TypeVar does not support a default, so we have to cast this str -> T
+        return cast(T, "\n".join(output))
 
     def process_pipeline(self, args, output):
         return {arg: self.process([output[i]]) for i, arg in enumerate(args)}
