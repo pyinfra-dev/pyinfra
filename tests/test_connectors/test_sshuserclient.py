@@ -13,7 +13,7 @@ Host 127.0.0.1
     IdentityFile /id_rsa2
     User testuser
     Port 33
-    ProxyCommand ssh thing
+    ProxyCommand echo thing
 
 Include other_file
 """
