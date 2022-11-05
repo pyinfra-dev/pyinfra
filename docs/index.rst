@@ -1,6 +1,6 @@
 .. meta::
-    :description: pyinfra documentation
-    :keywords: pyinfra, documentation
+    :description: Documentation for pyinfra
+    :keywords: pyinfra, documentation, configuration, management, infrastructure
 
 
 pyinfra Documentation
@@ -31,6 +31,10 @@ Using pyinfra
 .. compound::
     :doc:`cli`
         The ``pyinfra`` CLI is extremely powerful for ad hoc command execution and management.
+
+.. compound::
+    :doc:`faq`
+        Quick answers to the most commonly asked questions for using ``pyinfra``.
 
 
 Deploy Reference
@@ -86,6 +90,7 @@ How pyinfra Works
     inventory-data
     arguments
     cli
+    faq
 
 .. toctree::
     :hidden:
