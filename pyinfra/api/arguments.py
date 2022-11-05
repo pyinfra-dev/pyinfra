@@ -1,4 +1,16 @@
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import pyinfra
 from pyinfra import context, logger
@@ -178,12 +190,23 @@ execution_kwargs = {
 }
 
 # TODO: refactor these into classes so they can be typed properly, remove Any
-OPERATION_KWARGS: Dict[str, Dict[str, Dict[str, Any]]] = {
-    "Privilege & user escalation": auth_kwargs,
-    "Shell control & features": shell_kwargs,
-    "Operation meta & callbacks (not available in facts)": meta_kwargs,
-    "Execution strategy (not available in facts, must be the same for all hosts)": execution_kwargs,
+ALL_ARGUMENTS: Dict[str, Dict[str, Any]] = {
+    **auth_kwargs,
+    **shell_kwargs,
+    **meta_kwargs,
+    **execution_kwargs,
 }
+
+OPERATION_KWARG_DOC: List[Tuple[str, Optional[str], Dict[str, Dict[str, Any]]]] = [
+    ("Privilege & user escalation", None, auth_kwargs),
+    ("Shell control & features", None, shell_kwargs),
+    ("Operation meta & callbacks", "Not available in facts.", meta_kwargs),
+    (
+        "Execution strategy",
+        "Not available in facts, value must be the same for all hosts.",
+        execution_kwargs,
+    ),
+]
 
 
 def _get_internal_key(key: str) -> str:
@@ -261,48 +284,47 @@ def pop_global_arguments(
     global_kwargs = {}
     found_keys = []
 
-    for _, arguments in OPERATION_KWARGS.items():
-        for key, argument in arguments.items():
-            internal_key = _get_internal_key(key)
+    for key, argument in ALL_ARGUMENTS.items():
+        internal_key = _get_internal_key(key)
 
-            if keys_to_check and internal_key not in keys_to_check:
-                continue
+        if keys_to_check and internal_key not in keys_to_check:
+            continue
 
-            handler: Optional[Callable] = None
-            default: Optional[Callable] = None
+        handler: Optional[Callable] = None
+        default: Optional[Callable] = None
 
-            if isinstance(argument, dict):
-                handler = argument.get("handler")
-                default = argument.get("default")
-                if default:
-                    default = default(config)
+        if isinstance(argument, dict):
+            handler = argument.get("handler")
+            default = argument.get("default")
+            if default:
+                default = default(config)
 
-            host_default = getattr(host.data, key, None)
+        host_default = getattr(host.data, key, None)
 
-            # TODO: remove this additional check in v3
-            if host_default is None and internal_key != key:
-                host_default = getattr(host.data, internal_key, None)
-                if host_default is not None:
-                    show_legacy_argument_host_data_warning(internal_key)
-
+        # TODO: remove this additional check in v3
+        if host_default is None and internal_key != key:
+            host_default = getattr(host.data, internal_key, None)
             if host_default is not None:
-                default = host_default
+                show_legacy_argument_host_data_warning(internal_key)
 
-            if key in kwargs:
-                found_keys.append(internal_key)
-                value = kwargs.pop(key)
+        if host_default is not None:
+            default = host_default
 
-            # TODO: remove this additional check in v3
-            elif internal_key in kwargs:
-                show_legacy_argument_warning(internal_key, get_call_location(frame_offset=2))
-                found_keys.append(internal_key)
-                value = kwargs.pop(internal_key)
+        if key in kwargs:
+            found_keys.append(internal_key)
+            value = kwargs.pop(key)
 
-            else:
-                value = meta_kwargs.get(internal_key, default)
+        # TODO: remove this additional check in v3
+        elif internal_key in kwargs:
+            show_legacy_argument_warning(internal_key, get_call_location(frame_offset=2))
+            found_keys.append(internal_key)
+            value = kwargs.pop(internal_key)
 
-            if handler:
-                value = handler(config, value)
+        else:
+            value = meta_kwargs.get(internal_key, default)
 
-            global_kwargs[internal_key] = value
+        if handler:
+            value = handler(config, value)
+
+        global_kwargs[internal_key] = value
     return global_kwargs, found_keys

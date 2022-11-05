@@ -11,7 +11,7 @@ except ImportError:
     from inspect import signature as getfullargspec
 
 from pyinfra import operations
-from pyinfra.api.arguments import OPERATION_KWARGS
+from pyinfra.api.arguments import ALL_ARGUMENTS
 
 
 def _is_pyinfra_operation(module, key, value):
@@ -41,9 +41,7 @@ def iter_operations():
 
 class TestOperationGlobalArguments(TestCase):
     def test_operations_do_not_use_global_arguments(self):
-        global_arg_keys = set()
-        for group, kwargs in OPERATION_KWARGS.items():
-            global_arg_keys.update(kwargs.keys())
+        global_arg_keys = ALL_ARGUMENTS.keys()
 
         for op_module, op_func in iter_operations():
             argspec = getfullargspec(op_func._pyinfra_op)
