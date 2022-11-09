@@ -117,6 +117,40 @@ def _get_executor_kwargs(
     }
 
 
+def _handle_fact_kwargs(state, host, cls, args, kwargs):
+    args = args or []
+    kwargs = kwargs or {}
+
+    # TODO: this is here to avoid popping stuff accidentally, this is horrible! Change the
+    # pop function to return the clean kwargs to avoid the indirect mutation.
+    kwargs = kwargs.copy()
+
+    # Get the defaults *and* overrides by popping from kwargs, executor kwargs passed
+    # into get_fact override everything else (applied below).
+    override_kwargs, override_kwarg_keys = pop_global_arguments(
+        kwargs,
+        state=state,
+        host=host,
+        keys_to_check=get_executor_kwarg_keys(),
+    )
+
+    executor_kwargs = _get_executor_kwargs(
+        state,
+        host,
+        override_kwargs=override_kwargs,
+        override_kwarg_keys=override_kwarg_keys,
+    )
+
+    fact_kwargs = {}
+
+    if args or kwargs:
+        assert not isinstance(cls.command, str)
+        # Merges args & kwargs into a single kwargs dictionary
+        fact_kwargs = getcallargs(cls().command, *args, **kwargs)
+
+    return fact_kwargs, executor_kwargs
+
+
 def get_facts(state: "State", *args, **kwargs):
     def get_fact_with_context(state, host, *args, **kwargs):
         with ctx_state.use(state):
@@ -189,31 +223,9 @@ def _get_fact(
     fact = cls()
     name = fact.name
 
-    args = args or []
-    kwargs = kwargs or {}
+    fact_kwargs, executor_kwargs = _handle_fact_kwargs(state, host, cls, args, kwargs)
 
-    # Get the defaults *and* overrides by popping from kwargs, executor kwargs passed
-    # into get_fact override everything else (applied below).
-    override_kwargs, override_kwarg_keys = pop_global_arguments(
-        kwargs,
-        state=state,
-        host=host,
-        keys_to_check=get_executor_kwarg_keys(),
-    )
-
-    executor_kwargs = _get_executor_kwargs(
-        state,
-        host,
-        override_kwargs=override_kwargs,
-        override_kwarg_keys=override_kwarg_keys,
-    )
-
-    if args or kwargs:
-        assert not isinstance(fact.command, str)
-        # Merges args & kwargs into a single kwargs dictionary
-        kwargs = getcallargs(fact.command, *args, **kwargs)
-
-    kwargs_str = get_kwargs_str(kwargs)
+    kwargs_str = get_kwargs_str(fact_kwargs)
     logger.debug(
         "Getting fact: %s (%s) (ensure_hosts: %r)",
         name,
@@ -236,8 +248,8 @@ def _get_fact(
     if fact.shell_executable:
         executor_kwargs["shell_executable"] = fact.shell_executable
 
-    command = _make_command(fact.command, kwargs)
-    requires_command = _make_command(fact.requires_command, kwargs)
+    command = _make_command(fact.command, fact_kwargs)
+    requires_command = _make_command(fact.requires_command, fact_kwargs)
     if requires_command:
         command = StringCommand(
             # Command doesn't exist, return 0 *or* run & return fact command
@@ -319,14 +331,8 @@ def _get_fact(
 
 
 def _get_fact_hash(state: "State", host: "Host", cls, args, kwargs):
-    # Normalise args/kwargs into just kwargs, ensuring that whether the fact is requested with
-    # either args or kwargs the same hash is used.
-    if args or kwargs:
-        assert not isinstance(cls.command, str)
-        args = args or []
-        kwargs = kwargs or {}
-        kwargs = getcallargs(cls().command, *args, **kwargs)
-    return make_hash((cls, kwargs, _get_executor_kwargs(state, host)))
+    fact_kwargs, executor_kwargs = _handle_fact_kwargs(state, host, cls, args, kwargs)
+    return make_hash((cls, fact_kwargs, executor_kwargs))
 
 
 def get_host_fact(
