@@ -1,3 +1,9 @@
+# v2.5.3
+
++ Fix handling of facts with no arguments or with global arguments
++ Fix mutable default breaking `Host.loop` position tracking
++ Cleanup exception handling within operation code
+
 # v2.5.2
 
 + Fix/make safer check for sysvinit in `server.service` operation
