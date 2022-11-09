@@ -5,7 +5,7 @@ from pyinfra.api.arguments import get_executor_kwarg_keys, pop_global_arguments
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.facts import get_facts
-from pyinfra.facts.server import Command
+from pyinfra.facts.server import Arch, Command
 
 from ..paramiko_util import PatchSSHTestCase
 from ..util import make_inventory
@@ -252,3 +252,103 @@ class TestFactsApi(PatchSSHTestCase):
 
         assert fact_data == {anotherhost: cached_fact}
         fake_run_command.assert_not_called()
+
+    def test_get_fact_no_args(self):
+        inventory = make_inventory(hosts=("host-1",))
+        state = State(inventory, Config())
+
+        connect_all(state)
+
+        host_1 = inventory.get_host("host-1")
+        defaults = _get_executor_defaults(state, host_1)
+
+        with patch("pyinfra.connectors.ssh.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = MagicMock(), [("stdout", "some-output")]
+            fact_data = get_facts(state, Arch)
+
+        assert fact_data == {host_1: "some-output"}
+        fake_run_command.assert_called_with(
+            state,
+            host_1,
+            Arch.command,
+            print_input=False,
+            print_output=False,
+            return_combined_output=True,
+            **defaults,
+        )
+
+
+class TestHostFactsApi(PatchSSHTestCase):
+    def test_get_host_fact(self):
+        inventory = make_inventory(hosts=("host-1",))
+        state = State(inventory, Config())
+
+        connect_all(state)
+
+        host_1 = inventory.get_host("host-1")
+        defaults = _get_executor_defaults(state, host_1)
+
+        with patch("pyinfra.connectors.ssh.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = MagicMock(), [("stdout", "some-output")]
+            fact_data = host_1.get_fact(Command, command="echo hello world")
+
+        assert fact_data == "some-output"
+        fake_run_command.assert_called_with(
+            state,
+            host_1,
+            "echo hello world",
+            print_input=False,
+            print_output=False,
+            return_combined_output=True,
+            **defaults,
+        )
+
+    def test_get_host_fact_sudo(self):
+        inventory = make_inventory(hosts=("host-1",))
+        state = State(inventory, Config())
+
+        connect_all(state)
+
+        host_1 = inventory.get_host("host-1")
+        defaults = _get_executor_defaults(state, host_1)
+        defaults["sudo"] = True
+
+        with patch("pyinfra.connectors.ssh.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = MagicMock(), [("stdout", "some-output")]
+            fact_data = host_1.get_fact(Command, command="echo hello world", _sudo=True)
+
+        assert fact_data == "some-output"
+        fake_run_command.assert_called_with(
+            state,
+            host_1,
+            "echo hello world",
+            print_input=False,
+            print_output=False,
+            return_combined_output=True,
+            **defaults,
+        )
+
+    def test_get_host_fact_sudo_no_args(self):
+        inventory = make_inventory(hosts=("host-1",))
+        state = State(inventory, Config())
+
+        connect_all(state)
+
+        host_1 = inventory.get_host("host-1")
+        defaults = _get_executor_defaults(state, host_1)
+        defaults["sudo"] = True
+
+        with patch("pyinfra.connectors.ssh.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = MagicMock(), [("stdout", "some-output")]
+            fact_data = host_1.get_fact(Arch, _sudo=True)
+
+        assert fact_data == "some-output"
+        fake_run_command.assert_called_with(
+            state,
+            host_1,
+            Arch.command,
+            print_input=False,
+            print_output=False,
+            return_combined_output=True,
+            **defaults,
+        )
