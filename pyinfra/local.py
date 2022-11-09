@@ -39,11 +39,6 @@ def include(filename: str):
         # One potential solution to the above is to add local as an actual
         # module, ie `pyinfra.operations.local`.
 
-    except Exception as e:
-        raise PyinfraError(
-            "Could not include local file: {0}:\n{1}".format(filename, e),
-        )
-
     finally:
         config.set_current_state(config_state)
 

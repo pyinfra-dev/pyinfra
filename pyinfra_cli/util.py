@@ -59,7 +59,7 @@ def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = Fals
     try:
         exec(PYTHON_CODES[filename], data)
     except Exception as e:
-        if isinstance(e, PyinfraError):
+        if isinstance(e, (PyinfraError, UnexpectedExternalError)):
             raise
         raise UnexpectedExternalError(e, filename)
 

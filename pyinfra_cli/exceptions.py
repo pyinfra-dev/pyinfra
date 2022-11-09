@@ -64,7 +64,7 @@ class UnexpectedExternalError(click.ClickException, UnexpectedMixin):
         click.echo(
             "--> {0}:\n".format(
                 click.style(
-                    "An unexpected exception occurred in: {0}".format(self.filename),
+                    "An exception occurred in: {0}".format(self.filename),
                     "red",
                     bold=True,
                 ),
@@ -86,7 +86,7 @@ class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
         click.echo(
             "--> {0}:\n".format(
                 click.style(
-                    "An unexpected internal exception occurred",
+                    "An internal exception occurred",
                     "red",
                     bold=True,
                 ),
