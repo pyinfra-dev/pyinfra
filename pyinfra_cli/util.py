@@ -221,16 +221,19 @@ def load_deploy_file(state: "State", filename):
     state.current_deploy_filename = filename
 
     def load_file(local_host):
-        with ctx_config.use(state.config.copy()):
-            with ctx_host.use(local_host):
-                exec_file(filename)
-                logger.info(
-                    "{0}{1} {2}".format(
-                        local_host.print_prefix,
-                        click.style("Ready:", "green"),
-                        click.style(filename, bold=True),
-                    ),
-                )
+        try:
+            with ctx_config.use(state.config.copy()):
+                with ctx_host.use(local_host):
+                    exec_file(filename)
+                    logger.info(
+                        "{0}{1} {2}".format(
+                            local_host.print_prefix,
+                            click.style("Ready:", "green"),
+                            click.style(filename, bold=True),
+                        ),
+                    )
+        except Exception as e:
+            return e
 
     greenlet_to_host = {
         state.pool.spawn(load_file, host): host for host in state.inventory.iter_active_hosts()
@@ -239,5 +242,7 @@ def load_deploy_file(state: "State", filename):
     with progress_spinner(greenlet_to_host.values()) as progress:
         for greenlet in gevent.iwait(greenlet_to_host.keys()):
             host = greenlet_to_host[greenlet]
-            greenlet.get()
+            result = greenlet.get()
+            if isinstance(result, Exception):
+                raise result
             progress(host)
