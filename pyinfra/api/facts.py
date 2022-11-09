@@ -318,7 +318,7 @@ def _get_fact(
         log_error_or_warning(
             host,
             ignore_errors,
-            description=("could not load fact: {0} {1}").format(name, get_kwargs_str(kwargs)),
+            description=("could not load fact: {0} {1}").format(name, get_kwargs_str(fact_kwargs)),
         )
 
     # Check we've not failed
