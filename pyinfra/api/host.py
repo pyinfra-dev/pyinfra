@@ -100,7 +100,7 @@ class Host:
     executing_op_hash = None
     nested_executing_op_hash = None
 
-    loop_position: List[int] = []
+    loop_position: List[int]
 
     # Arbitrary data dictionary connectors may use
     connector_data: Dict[str, Any]
@@ -123,6 +123,8 @@ class Host:
         self.groups = groups
         self.executor = executor
         self.name = name
+
+        self.loop_position = []
 
         self.connector_data = {}
         self.current_op_global_kwargs = {}
