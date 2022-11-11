@@ -5,7 +5,6 @@ from uuid import uuid4
 import click
 from gevent.lock import BoundedSemaphore
 
-import pyinfra
 from pyinfra import logger
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 
@@ -256,12 +255,12 @@ class Host:
         temp_directory = self.state.config.TEMP_DIR
 
         if temp_directory is None:
-            temp_directory = self.get_fact(
-                # Prevent unfortunate circular import
-                pyinfra.facts.server.TmpDir,  # type: ignore[attr-defined]
-            )
+            # uUnfortunate, but very hard to fix, circular import
+            from pyinfra.facts.server import TmpDir
 
-        if temp_directory is None:
+            temp_directory = self.get_fact(TmpDir)
+
+        if not temp_directory:
             temp_directory = self.state.config.DEFAULT_TEMP_DIR
 
         if not hash_key:
