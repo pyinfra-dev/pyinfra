@@ -5,7 +5,7 @@ Manage apt packages and repositories.
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
-from pyinfra import host, state
+from pyinfra import host
 from pyinfra.api import OperationError, operation
 from pyinfra.facts.apt import AptKeys, AptSources, parse_apt_repo
 from pyinfra.facts.deb import DebPackage, DebPackages
