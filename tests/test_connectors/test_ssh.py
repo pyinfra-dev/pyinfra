@@ -831,7 +831,6 @@ class TestSSHConnector(TestCase):
             fake_open(),
         )
 
-
     @patch("pyinfra.connectors.ssh.SSHClient")
     def test_get_file_sudo_copy_fail(self, fake_ssh_client):
         inventory = make_inventory(hosts=("somehost",))
