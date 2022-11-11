@@ -1,0 +1,5 @@
+{
+    "command": "echo $TMPDIR",
+    "output": ["/tmp"],
+    "fact": "/tmp"
+}

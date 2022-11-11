@@ -1,0 +1,5 @@
+{
+    "command": "echo $USER",
+    "output": ["pyinfra"],
+    "fact": "pyinfra"
+}

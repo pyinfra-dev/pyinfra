@@ -1,0 +1,5 @@
+{
+    "command": "echo $PATH",
+    "output": ["/usr/local/bin:/usr/local/sbin"],
+    "fact": "/usr/local/bin:/usr/local/sbin"
+}
