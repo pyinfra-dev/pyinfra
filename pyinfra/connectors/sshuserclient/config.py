@@ -43,7 +43,7 @@ class FakeInvoke:
         return result
 
 
-paramiko.config.invoke = FakeInvoke  # type: ignore
+paramiko.config.invoke = FakeInvoke  # type: ignore[attr-defined]
 
 
 def _expand_include_statements(file_obj, parsed_files=None):

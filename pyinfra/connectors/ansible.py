@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 try:
     import yaml
 except ImportError:
-    yaml = None  # type: ignore
+    yaml = None  # type: ignore[assignment]
 
 
 @memoize

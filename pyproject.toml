@@ -14,6 +14,7 @@ include_trailing_comma = true
 
 [tool.mypy]
 ignore_missing_imports = true
+show_error_codes = true
 exclude = [
     # Exclude the stub operation file so the actual operation.py gets type checked
     # by default with mypy. There are extra tests (see check-operation-stub-typing.sh)

@@ -225,7 +225,7 @@ def operation(
         # Return result meta for use in deploy scripts
         return operation_meta
 
-    decorated_func._pyinfra_op = func  # type: ignore
+    decorated_func._pyinfra_op = func  # type: ignore[attr-defined]
     return decorated_func
 
 
