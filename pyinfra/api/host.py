@@ -1,15 +1,18 @@
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, List, Optional, Union
+from uuid import uuid4
 
 import click
 from gevent.lock import BoundedSemaphore
 
+import pyinfra
 from pyinfra import logger
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 
 from .connectors import get_execution_connector
 from .exceptions import ConnectError
 from .facts import create_host_fact, delete_host_fact, get_host_fact, reload_host_fact
+from .util import sha1_hash
 
 if TYPE_CHECKING:
     from pyinfra.api.inventory import Inventory
@@ -244,6 +247,27 @@ class Host:
             old_deploy_kwargs,
             old_deploy_data,
         )
+
+    def get_temp_filename(self, hash_key: Optional[str] = None, hash_filename: bool = True):
+        """
+        Generate a temporary filename for this deploy.
+        """
+
+        temp_directory = self.state.config.TEMP_DIR
+
+        if temp_directory is None:
+            temp_directory = self.get_fact(pyinfra.facts.server.TmpDir)
+
+        if temp_directory is None:
+            temp_directory = self.state.config.DEFAULT_TEMP_DIR
+
+        if not hash_key:
+            hash_key = str(uuid4())
+
+        if hash_filename:
+            hash_key = sha1_hash(hash_key)
+
+        return "{0}/pyinfra-{1}".format(temp_directory, hash_key)
 
     # Host facts
     #
