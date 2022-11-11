@@ -256,7 +256,10 @@ class Host:
         temp_directory = self.state.config.TEMP_DIR
 
         if temp_directory is None:
-            temp_directory = self.get_fact(pyinfra.facts.server.TmpDir)
+            temp_directory = self.get_fact(
+                # Prevent unfortunate circular import
+                pyinfra.facts.server.TmpDir,  # type: ignore[attr-defined]
+            )
 
         if temp_directory is None:
             temp_directory = self.state.config.DEFAULT_TEMP_DIR
