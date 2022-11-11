@@ -353,6 +353,7 @@ tablespace
 tarfile
 tcp
 tempdir
+terraform
 testpass
 testuser
 tftp
