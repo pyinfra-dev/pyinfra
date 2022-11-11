@@ -234,7 +234,7 @@ def deb(src, present=True, force=False):
     # If source is a url
     if urlparse(src).scheme:
         # Generate a temp filename
-        temp_filename = state.get_temp_filename(src)
+        temp_filename = host.get_temp_filename(src)
 
         # Ensure it's downloaded
         yield from files.download(src, temp_filename)

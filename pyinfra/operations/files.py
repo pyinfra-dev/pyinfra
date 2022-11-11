@@ -137,7 +137,7 @@ def download(
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
-        temp_file = state.get_temp_filename(dest)
+        temp_file = host.get_temp_filename(dest)
 
         curl_args = ["-sSLf"]
         wget_args = ["-q"]
@@ -795,11 +795,11 @@ def get(
 
     # No remote file, so assume exists and download it "blind"
     if not remote_file or force:
-        yield FileDownloadCommand(src, dest, remote_temp_filename=state.get_temp_filename(dest))
+        yield FileDownloadCommand(src, dest, remote_temp_filename=host.get_temp_filename(dest))
 
     # No local file, so always download
     elif not os.path.exists(dest):
-        yield FileDownloadCommand(src, dest, remote_temp_filename=state.get_temp_filename(dest))
+        yield FileDownloadCommand(src, dest, remote_temp_filename=host.get_temp_filename(dest))
 
     # Remote file exists - check if it matches our local
     else:
@@ -808,7 +808,7 @@ def get(
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
-            yield FileDownloadCommand(src, dest, remote_temp_filename=state.get_temp_filename(dest))
+            yield FileDownloadCommand(src, dest, remote_temp_filename=host.get_temp_filename(dest))
 
 
 @operation(
@@ -922,7 +922,7 @@ def put(
         yield FileUploadCommand(
             local_file,
             dest,
-            remote_temp_filename=state.get_temp_filename(dest),
+            remote_temp_filename=host.get_temp_filename(dest),
         )
 
         if user or group:
@@ -940,7 +940,7 @@ def put(
             yield FileUploadCommand(
                 local_file,
                 dest,
-                remote_temp_filename=state.get_temp_filename(dest),
+                remote_temp_filename=host.get_temp_filename(dest),
             )
 
             if user or group:

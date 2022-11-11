@@ -194,7 +194,7 @@ def put_file(
     """
 
     fd, local_temp_filename = mkstemp()
-    remote_temp_filename = remote_temp_filename or state.get_temp_filename(local_temp_filename)
+    remote_temp_filename = remote_temp_filename or host.get_temp_filename(local_temp_filename)
 
     # Load our file or IO object and write it to the temporary file
     with get_file_io(filename_or_io) as file_io:
@@ -267,7 +267,7 @@ def get_file(
     location and then reading that into our final file/IO object.
     """
 
-    remote_temp_filename = remote_temp_filename or state.get_temp_filename(remote_filename)
+    remote_temp_filename = remote_temp_filename or host.get_temp_filename(remote_filename)
 
     try:
         docker_id = host.host_data["docker_container_id"]
