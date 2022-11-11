@@ -359,6 +359,10 @@ class State:
         Generate a temporary filename for this deploy.
         """
 
+        logger.warning(
+            "Using `state.get_temp_filename` is deprecated, please use `host.get_temp_filename`.",
+        )
+
         if not hash_key:
             hash_key = str(uuid4())
 
