@@ -76,7 +76,8 @@ def make_names_data(output_key=None):
 
     if not isinstance(tf_output_value, list):
         raise InventoryError(
-            f"Invalid Terraform output type, should be list, got `{type(tf_output_value)}`",
+            "Invalid Terraform output type, should be `list`, got "
+            f"`{type(tf_output_value).__name__}`",
         )
 
     for ssh_target in tf_output_value:
@@ -94,5 +95,6 @@ def make_names_data(output_key=None):
 
         else:
             raise InventoryError(
-                f"Invalid Terraform list item, should be dict or str got `{type(ssh_target)}`",
+                "Invalid Terraform list item, should be `dict` or `str` got "
+                f"`{type(ssh_target).__name__}`",
             )
