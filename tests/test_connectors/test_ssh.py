@@ -22,6 +22,7 @@ def make_raise_exception_function(cls, *args, **kwargs):
     return handler
 
 
+@patch("pyinfra.api.host.Host.get_fact", lambda *args, **kwargs: "")
 @patch("pyinfra.connectors.ssh.SSHClient.get_transport", MagicMock())
 @patch("pyinfra.connectors.ssh.open", mock_open(read_data="test!"), create=True)
 class TestSSHConnector(TestCase):
@@ -829,6 +830,7 @@ class TestSSHConnector(TestCase):
             "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508",
             fake_open(),
         )
+
 
     @patch("pyinfra.connectors.ssh.SSHClient")
     def test_get_file_sudo_copy_fail(self, fake_ssh_client):

@@ -162,9 +162,9 @@ class TestDockerSSHConnector(TestCase):
 
         inventory = make_inventory(hosts=("@dockerssh/somehost:not-an-image",))
         state = State(inventory, Config())
-        state.get_temp_filename = lambda _: "remote_tempfile"
 
         host = inventory.get_host("@dockerssh/somehost:not-an-image")
+        host.get_temp_filename = lambda _: "remote_tempfile"
         host.connect()
 
         host.put_file("not-a-file", "not-another-file", print_output=True)
@@ -182,6 +182,7 @@ class TestDockerSSHConnector(TestCase):
         state.get_temp_filename = lambda _: "remote_tempfile"
 
         host = inventory.get_host("@dockerssh/somehost:not-an-image")
+        host.get_temp_filename = lambda _: "remote_tempfile"
         host.connect()
 
         # SSH error
@@ -213,9 +214,9 @@ class TestDockerSSHConnector(TestCase):
 
         inventory = make_inventory(hosts=("@dockerssh/somehost:not-an-image",))
         state = State(inventory, Config())
-        state.get_temp_filename = lambda _: "remote_tempfile"
 
         host = inventory.get_host("@dockerssh/somehost:not-an-image")
+        host.get_temp_filename = lambda _: "remote_tempfile"
         host.connect()
 
         host.get_file("not-a-file", "not-another-file", print_output=True)
@@ -236,10 +237,10 @@ class TestDockerSSHConnector(TestCase):
         ]
 
         inventory = make_inventory(hosts=("@dockerssh/somehost:not-an-image",))
-        state = State(inventory, Config())
-        state.get_temp_filename = lambda _: "remote_tempfile"
+        State(inventory, Config())
 
         host = inventory.get_host("@dockerssh/somehost:not-an-image")
+        host.get_temp_filename = lambda _: "remote_tempfile"
         host.connect()
 
         fake_get_file.return_value = True
