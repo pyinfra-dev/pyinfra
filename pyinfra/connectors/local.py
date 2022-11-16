@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 import click
 
 from pyinfra import logger
+from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.connectors import BaseConnectorMeta
 from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import get_file_io
@@ -138,7 +139,7 @@ def put_file(
         status, _, stderr = run_shell_command(
             state,
             host,
-            "cp {0} {1}".format(temp_filename, remote_filename),
+            StringCommand("cp", temp_filename, QuoteString(remote_filename)),
             print_output=print_output,
             print_input=print_input,
             **command_kwargs,
