@@ -140,6 +140,25 @@ class TestLocalConnector(TestCase):
             stdin=PIPE,
         )
 
+    def test_put_file_with_spaces(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+
+        host = inventory.get_host("@local")
+
+        fake_process = MagicMock(returncode=0)
+        self.fake_popen_mock.return_value = fake_process
+
+        host.put_file("not-a-file", "not another file with spaces", print_output=True)
+
+        self.fake_popen_mock.assert_called_with(
+            "sh -c 'cp __tempfile__ '\"'\"'not another file with spaces'\"'\"''",
+            shell=True,
+            stdout=PIPE,
+            stderr=PIPE,
+            stdin=PIPE,
+        )
+
     def test_put_file_error(self):
         inventory = make_inventory(hosts=("@local",))
         State(inventory, Config())
