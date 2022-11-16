@@ -7,12 +7,16 @@
         "  net-online                                    [  started  ]",
         "  sshd                                    [  started  ]",
         "  virtualbox-guest-additions              [  crashed  ]",
-        "  crond                                    [  started  ]"
+        "  crond                                    [  started  ]",
+        "  podman                                   [  started 00:34:14 (10) ]",
+        "  podman-long-running                      [  started 15 day(s) 00:34:14 (10) ]"
     ],
     "fact":  {
         "net-online": true,
         "sshd": true,
         "virtualbox-guest-additions": false,
-        "crond": true
+        "crond": true,
+        "podman": true,
+        "podman-long-running": true
     }
 }

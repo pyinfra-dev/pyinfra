@@ -7,7 +7,9 @@
         "musl-1.1.22-r3 x86_64 {musl} (MIT) [installed]",
         "zlib-1.2.11-r1 x86_64 {zlib} (zlib) [installed]",
         "apk-tools-2.10.4-r2 x86_64 {apk-tools} (GPL2) [installed]",
-        "musl-utils-1.1.22-r3 x86_64 {musl} (MIT BSD GPL2+) [installed]"
+        "musl-utils-1.1.22-r3 x86_64 {musl} (MIT BSD GPL2+) [installed]",
+        "iproute2-5.17.0-r0 x86_64 {iproute2} (GPL-2.0-or-later) [installed]",
+        "linux-firmware-rtl_nic-20220509-r1 x86_64 {linux-firmware} (custom:multiple) [installed]"
     ],
     "fact": {
         "musl": [
@@ -21,6 +23,12 @@
         ],
         "musl-utils": [
             "1.1.22-r3"
+        ],
+        "iproute2": [
+            "5.17.0-r0"
+        ],
+        "linux-firmware-rtl_nic": [
+            "20220509-r1"
         ]
     }
 }
