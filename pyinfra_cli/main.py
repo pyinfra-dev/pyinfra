@@ -6,6 +6,7 @@ from os import chdir as os_chdir, getcwd, path
 from typing import Iterable, List, Tuple, Union
 
 import click
+import getpass
 
 from pyinfra import __version__, logger, state
 from pyinfra.api import Config, State
@@ -520,8 +521,12 @@ def _set_config(
         config.SUDO = True
         if sudo_user:
             config.SUDO_USER = sudo_user
-
+    
     if use_sudo_password:
+        if use_sudo_password == True:
+            sudo_password = getpass.getpass('--> Sudo password (enter to skip): ')
+        if sudo_password:
+            use_sudo_password = sudo_password
         config.USE_SUDO_PASSWORD = use_sudo_password
 
     if su_user:
