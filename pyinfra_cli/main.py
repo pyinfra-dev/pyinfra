@@ -521,9 +521,9 @@ def _set_config(
         config.SUDO = True
         if sudo_user:
             config.SUDO_USER = sudo_user
-    
+
     if use_sudo_password:
-        if use_sudo_password == True:
+        if use_sudo_password is True:
             sudo_password = getpass.getpass('--> Sudo password (enter to skip): ')
         if sudo_password:
             use_sudo_password = sudo_password
