@@ -10,7 +10,14 @@ class OpenrcStatus(FactBase):
 
     default = dict
     requires_command = "rc-status"
-    regex = r"\s+([a-zA-Z0-9\-_]+)\s+\[\s+([a-z]+)(?:\s(?:[0-9]+\sday\(s\)\s)?[0-9]+\:[0-9]+\:[0-9]+\s\([0-9]+\))?\s+\]"
+    regex = (
+        r"\s+([a-zA-Z0-9\-_]+)"
+        r"\s+\[\s+"
+        r"([a-z]+)"
+        r"(?:\s(?:[0-9]+\sday\(s\)\s)?"
+        r"[0-9]+\:[0-9]+\:[0-9]+\s\([0-9]+\))?"
+        r"\s+\]"
+    )
 
     def command(self, runlevel="default"):
         return "rc-status {0}".format(runlevel)
