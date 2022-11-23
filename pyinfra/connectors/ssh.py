@@ -8,7 +8,7 @@ are identical:
     pyinfra my-host.net ...
     pyinfra @ssh/my-host.net ...
 """
-
+import shlex
 from distutils.spawn import find_executable
 from getpass import getpass
 from os import path
@@ -606,6 +606,20 @@ def rsync(
         user = "{0}@".format(user)
 
     ssh_flags = []
+    # To avoid asking for interactive input, specify BatchMode=yes
+    ssh_flags.append("-o BatchMode=yes")
+
+    known_hosts_file = host.data.get(DATA_KEYS.known_hosts_file, "")
+    if known_hosts_file:
+        ssh_flags.append('-o \\"UserKnownHostsFile={0}\\"'.format(shlex.quote(known_hosts_file)))  # never trust users
+
+    strict_host_key_checking = host.data.get(DATA_KEYS.strict_host_key_checking, "")
+    if strict_host_key_checking:
+        ssh_flags.append('-o \\"StrictHostKeyChecking={0}\\"'.format(shlex.quote(strict_host_key_checking)))
+
+    ssh_config_file = host.data.get(DATA_KEYS.config_file, "")
+    if ssh_config_file:
+        ssh_flags.append('-F {0}'.format(shlex.quote(ssh_config_file)))
 
     port = host.data.get(DATA_KEYS.port)
     if port:
@@ -621,10 +635,9 @@ def rsync(
         if sudo_user:
             remote_rsync_command = "sudo -u {0} rsync".format(sudo_user)
 
-    # To avoid asking for interactive input, specify BatchMode=yes
     rsync_command = (
         "rsync {rsync_flags} "
-        "--rsh 'ssh -o BatchMode=yes {ssh_flags}' "
+        "--rsh \"ssh {ssh_flags}\" "
         "--rsync-path '{remote_rsync_command}' "
         "{src} {user}{hostname}:{dest}"
     ).format(
