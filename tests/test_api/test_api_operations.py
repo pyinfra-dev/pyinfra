@@ -318,7 +318,88 @@ class TestOperationsApi(PatchSSHTestCase):
         fake_run_local_process.assert_called_with(
             (
                 "rsync -ax --delete --rsh "
-                "'ssh -o BatchMode=yes '"
+                "\"ssh -o BatchMode=yes\""
+                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+            ),
+            print_output=False,
+            print_prefix=inventory.get_host("somehost").print_prefix,
+        )
+
+    def test_rsync_op_with_strict_host_key_checking_disabled(self):
+        inventory = make_inventory(hosts=(("somehost", {"ssh_strict_host_key_checking": "no"}),))
+        state = State(inventory, Config())
+        connect_all(state)
+
+        with patch("pyinfra.connectors.ssh.check_can_rsync"):
+            add_op(state, files.rsync, "src", "dest", sudo=True, sudo_user="root")
+
+        assert len(state.get_op_order()) == 1
+
+        with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
+            fake_run_local_process.return_value = 0, []
+            run_ops(state)
+
+        fake_run_local_process.assert_called_with(
+            (
+                "rsync -ax --delete --rsh "
+                "\"ssh -o BatchMode=yes -o \\\"StrictHostKeyChecking=no\\\"\""
+                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+            ),
+            print_output=False,
+            print_prefix=inventory.get_host("somehost").print_prefix,
+        )
+
+    def test_rsync_op_with_strict_host_key_checking_disabled_and_custom_config_file(self):
+        inventory = make_inventory(hosts=(
+            ("somehost", {
+                "ssh_strict_host_key_checking": "no",
+                "ssh_config_file": "/home/me/ssh_test_config"
+            }),
+        ))
+        state = State(inventory, Config())
+        connect_all(state)
+
+        with patch("pyinfra.connectors.ssh.check_can_rsync"):
+            add_op(state, files.rsync, "src", "dest", sudo=True, sudo_user="root")
+
+        assert len(state.get_op_order()) == 1
+
+        with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
+            fake_run_local_process.return_value = 0, []
+            run_ops(state)
+
+        fake_run_local_process.assert_called_with(
+            (
+                "rsync -ax --delete --rsh "
+                "\"ssh -o BatchMode=yes -o \\\"StrictHostKeyChecking=no\\\" -F /home/me/ssh_test_config\""
+                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+            ),
+            print_output=False,
+            print_prefix=inventory.get_host("somehost").print_prefix,
+        )
+
+    def test_rsync_op_with_sanitized_custom_config_file(self):
+        inventory = make_inventory(hosts=(
+            ("somehost", {
+                "ssh_config_file": "/home/me/ssh_test_config && echo hi"
+            }),
+        ))
+        state = State(inventory, Config())
+        connect_all(state)
+
+        with patch("pyinfra.connectors.ssh.check_can_rsync"):
+            add_op(state, files.rsync, "src", "dest", sudo=True, sudo_user="root")
+
+        assert len(state.get_op_order()) == 1
+
+        with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
+            fake_run_local_process.return_value = 0, []
+            run_ops(state)
+
+        fake_run_local_process.assert_called_with(
+            (
+                "rsync -ax --delete --rsh "
+                "\"ssh -o BatchMode=yes -F '/home/me/ssh_test_config && echo hi'\""
                 " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
