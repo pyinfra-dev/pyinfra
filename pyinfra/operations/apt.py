@@ -340,20 +340,34 @@ _update = update  # noqa: E305
 
 
 @operation(is_idempotent=False)
-def upgrade():
+def upgrade(auto_remove: bool = False):
     """
     Upgrades all apt packages.
+
+    + autoremove: removes transitive dependencies that are no longer needed.
 
     **Example:**
 
     .. code:: python
 
+        # Upgrade all packages
         apt.upgrade(
             name="Upgrade apt packages",
         )
+
+        # Upgrade all packages and remove unneeded transitive dependencies
+        apt.upgrade(
+            name="Upgrade apt packages and remove unneeded dependencies"
+            auto_remove=True
+        )
     """
 
-    yield noninteractive_apt("upgrade")
+    command = ["upgrade"]
+
+    if auto_remove:
+        command.append("--autoremove")
+
+    yield noninteractive_apt(" ".join(command))
 
 
 _upgrade = upgrade  # noqa: E305 (for use below where update is a kwarg)

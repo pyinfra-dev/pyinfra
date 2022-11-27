@@ -1,0 +1,7 @@
+{
+    "kwargs": {"auto_remove": true},
+    "commands": [
+        "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" upgrade --autoremove"
+    ],
+    "idempotent": false
+}
