@@ -2,7 +2,7 @@ from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
 
-APK_REGEX = r"^([a-zA-Z\-]+)-([0-9\.]+\-?[a-z0-9]*)\s"
+APK_REGEX = r"^([a-zA-Z0-9\-_]+)-([0-9\.]+\-?[a-z0-9]*)\s"
 
 
 class ApkPackages(FactBase):
