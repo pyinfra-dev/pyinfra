@@ -611,15 +611,19 @@ def rsync(
 
     known_hosts_file = host.data.get(DATA_KEYS.known_hosts_file, "")
     if known_hosts_file:
-        ssh_flags.append('-o \\"UserKnownHostsFile={0}\\"'.format(shlex.quote(known_hosts_file)))  # never trust users
+        ssh_flags.append(
+            '-o \\"UserKnownHostsFile={0}\\"'.format(shlex.quote(known_hosts_file))
+        )  # never trust users
 
     strict_host_key_checking = host.data.get(DATA_KEYS.strict_host_key_checking, "")
     if strict_host_key_checking:
-        ssh_flags.append('-o \\"StrictHostKeyChecking={0}\\"'.format(shlex.quote(strict_host_key_checking)))
+        ssh_flags.append(
+            '-o \\"StrictHostKeyChecking={0}\\"'.format(shlex.quote(strict_host_key_checking))
+        )
 
     ssh_config_file = host.data.get(DATA_KEYS.config_file, "")
     if ssh_config_file:
-        ssh_flags.append('-F {0}'.format(shlex.quote(ssh_config_file)))
+        ssh_flags.append("-F {0}".format(shlex.quote(ssh_config_file)))
 
     port = host.data.get(DATA_KEYS.port)
     if port:
@@ -637,7 +641,7 @@ def rsync(
 
     rsync_command = (
         "rsync {rsync_flags} "
-        "--rsh \"ssh {ssh_flags}\" "
+        '--rsh "ssh {ssh_flags}" '
         "--rsync-path '{remote_rsync_command}' "
         "{src} {user}{hostname}:{dest}"
     ).format(
