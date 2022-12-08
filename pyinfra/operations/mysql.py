@@ -514,6 +514,9 @@ def privileges(
             yield from handle_privileges("GRANT", "TO", privileges_to_grant)
         user_grants[database_table].update(privileges_to_grant)
 
+        # We have granted something on this table, no need to revoke "USAGE" as it was overridden
+        privileges_to_revoke.discard("USAGE")
+
     if privileges_to_revoke:
         if {"ALL", "GRANT OPTION"} == privileges_to_revoke:
             # This specific case is identified as the alternative syntax for revoke (without ON).

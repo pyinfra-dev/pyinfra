@@ -222,8 +222,7 @@ class MysqlUserGrants(MysqlFactBase):
 
             for privilege in privileges.split(","):
                 privilege = privilege.strip()
-                if privilege != "USAGE":  # USAGE means no privilege
-                    database_table_privileges[database_table].add(privilege)
+                database_table_privileges[database_table].add(privilege)
 
             if "WITH GRANT OPTION" in extras:
                 database_table_privileges[database_table].add("GRANT OPTION")
