@@ -504,17 +504,9 @@ def privileges(
     # Find / grant any privileges that we want but do not exist
     privileges_to_grant = privileges - existing_privileges
 
-    if privileges_to_grant:
-        if {"ALL", "GRANT OPTION"} == privileges_to_grant:
-            # ALL must be named by itself and cannot be specified along with other privileges
-            # The only exception for us is GRANT OPTION but as a WITH clause
-            # So handle this case and let the other ones fail
-            yield from handle_privileges("GRANT", "TO", {"ALL PRIVILEGES"}, "GRANT OPTION")
-        else:
-            yield from handle_privileges("GRANT", "TO", privileges_to_grant)
-        user_grants[database_table].update(privileges_to_grant)
 
-        # We have granted something on this table, no need to revoke "USAGE" as it was overridden
+    if privileges_to_grant:
+        # We will grant something on this table, no need to revoke "USAGE" as it will be overridden
         privileges_to_revoke.discard("USAGE")
 
     if privileges_to_revoke:
@@ -526,6 +518,16 @@ def privileges(
         else:
             yield from handle_privileges("REVOKE", "FROM", privileges_to_revoke)
         user_grants[database_table] -= privileges_to_revoke
+
+    if privileges_to_grant:
+        if {"ALL", "GRANT OPTION"} == privileges_to_grant:
+            # ALL must be named by itself and cannot be specified along with other privileges
+            # The only exception for us is GRANT OPTION but as a WITH clause
+            # So handle this case and let the other ones fail
+            yield from handle_privileges("GRANT", "TO", {"ALL PRIVILEGES"}, "GRANT OPTION")
+        else:
+            yield from handle_privileges("GRANT", "TO", privileges_to_grant)
+        user_grants[database_table].update(privileges_to_grant)
 
     if privileges_to_grant or privileges_to_revoke:
         if flush:
