@@ -1,0 +1,17 @@
+{
+    "args": ["someuser", ["ALL"]],
+    "kwargs": {
+        "with_grant_option": true
+    },
+    "facts": {
+        "mysql.MysqlUserGrants": {
+            "mysql_host=None, mysql_password=None, mysql_port=None, mysql_user=None, user=someuser, hostname=localhost": {
+                "*.*": ["set:"]
+            }
+        }
+    },
+    "commands": [
+        "mysql -Be 'GRANT ALL PRIVILEGES ON *.* TO \"someuser\"@\"localhost\" WITH GRANT OPTION'",
+        "mysql -Be 'FLUSH PRIVILEGES'"
+    ]
+}
