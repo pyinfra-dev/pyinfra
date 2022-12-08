@@ -14,7 +14,7 @@ See the example/mysql.py
 """
 
 from pyinfra import host
-from pyinfra.api import MaskString, OperationError, StringCommand, operation
+from pyinfra.api import MaskString, OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.mysql import (
     MysqlDatabases,
     MysqlUserGrants,
@@ -595,7 +595,7 @@ def load(
         )
     """
 
-    yield "{0} < {1}".format(
+    commands_bits = [
         make_mysql_command(
             database=database,
             user=mysql_user,
@@ -603,5 +603,7 @@ def load(
             host=mysql_host,
             port=mysql_port,
         ),
-        src,
-    )
+        "<",
+        QuoteString(src),
+    ]
+    yield StringCommand(*commands_bits)
