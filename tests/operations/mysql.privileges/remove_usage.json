@@ -1,0 +1,14 @@
+{
+    "args": ["someuser", []],
+    "facts": {
+        "mysql.MysqlUserGrants": {
+            "mysql_host=None, mysql_password=None, mysql_port=None, mysql_user=None, user=someuser, hostname=localhost": {
+                "*.*": ["set:", "USAGE"]
+            }
+        }
+    },
+    "commands": [
+        "mysql -Be 'REVOKE USAGE ON *.* FROM \"someuser\"@\"localhost\"'",
+        "mysql -Be 'FLUSH PRIVILEGES'"
+    ]
+}
