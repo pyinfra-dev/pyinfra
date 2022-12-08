@@ -163,8 +163,8 @@ class MysqlUsers(MysqlFactBase):
 
 
 MYSQL_GRANT_REGEX = (
-    r"^GRANT ([A-Z,\s]+) ON ((?:\*|`[a-z_\\]+`)(?:\.\*|'[a-z_]+')) "
-    r"TO `[A-Z0-9a-z_\-]+`@`[A-Z0-9a-z_\.\-]+`(.*)"
+    r"^GRANT ([A-Z,\s]+) ON ((?:\*|`[a-z_\\]+`)\.(?:\*|`[a-z_]+`)) "
+    r"TO `[A-Z0-9a-z_\-]+`@`(?:%|[A-Z0-9a-z_\.\-]+)`(.*)"
 )
 
 
@@ -222,7 +222,8 @@ class MysqlUserGrants(MysqlFactBase):
 
             for privilege in privileges.split(","):
                 privilege = privilege.strip()
-                database_table_privileges[database_table].add(privilege)
+                if privilege != "USAGE":  # USAGE means no privilege
+                    database_table_privileges[database_table].add(privilege)
 
             if "WITH GRANT OPTION" in extras:
                 database_table_privileges[database_table].add("GRANT OPTION")

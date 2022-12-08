@@ -475,7 +475,7 @@ def privileges(
     else:
         user_grants[database_table] = set()
 
-    def handle_privileges(action, target, privileges_to_apply):
+    def handle_privileges(action, target, privileges_to_apply, with_statement=None):
         command = (
             "{action} {privileges} " "ON {database}.{table} " '{target} "{user}"@"{user_hostname}"'
         ).format(
@@ -487,6 +487,9 @@ def privileges(
             user=user,
             user_hostname=user_hostname,
         )
+
+        if with_statement:
+            command += " WITH {with_statement}".format(with_statement=with_statement)
 
         yield make_execute_mysql_command(
             command,
@@ -501,13 +504,24 @@ def privileges(
     # Find / grant any privileges that we want but do not exist
     privileges_to_grant = privileges - existing_privileges
 
-    # No privilege and we want it
     if privileges_to_grant:
-        yield from handle_privileges("GRANT", "TO", privileges_to_grant)
+        if {"ALL", "GRANT OPTION"} == privileges_to_grant:
+            # ALL must be named by itself and cannot be specified along with other privileges
+            # The only exception for us is GRANT OPTION but as a WITH clause
+            # So handle this case and let the other ones fail
+            yield from handle_privileges("GRANT", "TO", {"ALL PRIVILEGES"}, "GRANT OPTION")
+        else:
+            yield from handle_privileges("GRANT", "TO", privileges_to_grant)
         user_grants[database_table].update(privileges_to_grant)
 
     if privileges_to_revoke:
-        yield from handle_privileges("REVOKE", "FROM", privileges_to_revoke)
+        if {"ALL", "GRANT OPTION"} == privileges_to_revoke:
+            # This specific case is identified as the alternative syntax for revoke (without ON).
+            # To avoid this problem, revoke in 2 steps.
+            yield from handle_privileges("REVOKE", "FROM", {"GRANT OPTION"})
+            yield from handle_privileges("REVOKE", "FROM", {"ALL PRIVILEGES"})
+        else:
+            yield from handle_privileges("REVOKE", "FROM", privileges_to_revoke)
         user_grants[database_table] -= privileges_to_revoke
 
     if privileges_to_grant or privileges_to_revoke:
