@@ -504,7 +504,6 @@ def privileges(
     # Find / grant any privileges that we want but do not exist
     privileges_to_grant = privileges - existing_privileges
 
-
     if privileges_to_grant:
         # We will grant something on this table, no need to revoke "USAGE" as it will be overridden
         privileges_to_revoke.discard("USAGE")
