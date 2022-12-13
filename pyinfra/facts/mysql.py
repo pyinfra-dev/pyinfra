@@ -163,8 +163,8 @@ class MysqlUsers(MysqlFactBase):
 
 
 MYSQL_GRANT_REGEX = (
-    r"^GRANT ([A-Z,\s]+) ON ((?:\*|`[a-z_\\]+`)(?:\.\*|'[a-z_]+')) "
-    r"TO `[A-Z0-9a-z_\-]+`@`[A-Z0-9a-z_\.\-]+`(.*)"
+    r"^GRANT ([A-Z,\s]+) ON ((?:\*|`[a-z_\\]+`)\.(?:\*|`[a-z_]+`)) "
+    r"TO `[A-Z0-9a-z_\-]+`@`(?:%|[A-Z0-9a-z_\.\-]+)`(.*)"
 )
 
 

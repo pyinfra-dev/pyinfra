@@ -1,15 +1,15 @@
 {
-    "args": ["someuser", ["SELECT", "INSERT", "DELETE"]],
+    "args": ["someuser", ["DELETE"]],
     "facts": {
         "mysql.MysqlUserGrants": {
             "mysql_host=None, mysql_password=None, mysql_port=None, mysql_user=None, user=someuser, hostname=localhost": {
-                "*.*": ["set:", "DELETE", "UPDATE"]
+                "*.*": ["set:", "ALL"]
             }
         }
     },
     "commands": [
-        "mysql -Be 'REVOKE UPDATE ON *.* FROM \"someuser\"@\"localhost\"'",
-        "mysql -Be 'GRANT INSERT, SELECT ON *.* TO \"someuser\"@\"localhost\"'",
+        "mysql -Be 'REVOKE ALL ON *.* FROM \"someuser\"@\"localhost\"'",
+        "mysql -Be 'GRANT DELETE ON *.* TO \"someuser\"@\"localhost\"'",
         "mysql -Be 'FLUSH PRIVILEGES'"
     ]
 }
