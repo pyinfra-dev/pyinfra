@@ -92,10 +92,7 @@ def add_op(state: "State", op_func, *args, **kwargs):
         args/kwargs: passed to the operation function
     """
 
-    allow_cli_mode = kwargs.pop("_allow_cli_mode", False)
-    after_host_callback = kwargs.pop("_after_host_callback", lambda host: None)
-
-    if pyinfra.is_cli and not allow_cli_mode:
+    if pyinfra.is_cli:
         raise PyinfraError(
             ("`add_op` should not be called when pyinfra is executing in CLI mode! ({0})").format(
                 get_call_location(),
@@ -111,7 +108,6 @@ def add_op(state: "State", op_func, *args, **kwargs):
         for op_host in hosts:
             with ctx_host.use(op_host):
                 results[op_host] = op_func(*args, **kwargs)
-            after_host_callback(op_host)
 
     return results
 

@@ -6,7 +6,7 @@ from io import IOBase
 from os import path
 from pathlib import Path
 from types import FunctionType, ModuleType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import click
 import gevent
@@ -133,7 +133,7 @@ def parse_cli_arg(arg):
     return arg
 
 
-def get_operation_and_args(commands):
+def get_func_and_args(commands):
     operation_name = commands[0]
 
     # Get the module & operation name
@@ -145,7 +145,7 @@ def get_operation_and_args(commands):
         op_module = import_module("pyinfra.operations.{0}".format(op_module))
     except ImportError:
         try:
-            op_module = import_module(str(op_module))
+            op_module = import_module(op_module)
         except ImportError:
             raise CliError("No such module: {0}".format(op_module))
 
@@ -217,19 +217,17 @@ def get_facts_and_args(commands):
     return facts
 
 
-def load_deploy_file(state: "State", filename):
-    state.current_deploy_filename = filename
-
+def _parallel_load_hosts(state: "State", callback: Callable, name: str):
     def load_file(local_host):
         try:
             with ctx_config.use(state.config.copy()):
                 with ctx_host.use(local_host):
-                    exec_file(filename)
+                    callback()
                     logger.info(
                         "{0}{1} {2}".format(
                             local_host.print_prefix,
                             click.style("Ready:", "green"),
-                            click.style(filename, bold=True),
+                            click.style(name, bold=True),
                         ),
                     )
         except Exception as e:
@@ -246,3 +244,12 @@ def load_deploy_file(state: "State", filename):
             if isinstance(result, Exception):
                 raise result
             progress(host)
+
+
+def load_deploy_file(state: "State", filename):
+    state.current_deploy_filename = filename
+    _parallel_load_hosts(state, lambda: exec_file(filename), filename)
+
+
+def load_func(state: "State", op_func, *args, **kwargs):
+    _parallel_load_hosts(state, lambda: op_func(*args, **kwargs), op_func.__name__)
