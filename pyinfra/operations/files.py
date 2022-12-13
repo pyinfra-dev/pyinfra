@@ -712,7 +712,8 @@ def rsync(src, dest, flags=["-ax", "--delete"]):
 
     .. important::
         The ``files.rsync`` operation is in alpha, and only supported using SSH
-        or ``@local`` connectors.
+        or ``@local`` connectors. When using the SSH connector, rsync will automatically use the
+        StrictHostKeyChecking setting, config and known_hosts file (when specified).
 
     .. caution::
         When using SSH, the ``files.rsync`` operation only supports the ``sudo`` and ``sudo_user``
