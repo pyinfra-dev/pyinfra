@@ -11,6 +11,7 @@ are identical:
 import shlex
 from distutils.spawn import find_executable
 from getpass import getpass
+from io import IOBase, StringIO
 from os import path
 from socket import error as socket_error, gaierror
 from typing import TYPE_CHECKING, Type, Union
@@ -88,15 +89,17 @@ def _raise_connect_error(host: "Host", message, data):
     raise ConnectError(message)
 
 
-def _load_private_key_file(filename: str, key_filename: str, key_password: str):
+def _load_private_key_file(file_obj: IOBase, filename: str, key_filename: str, key_password: str):
     exception: Union[PyinfraError, SSHException] = PyinfraError("Invalid key: {0}".format(filename))
 
     key_cls: Union[Type[RSAKey], Type[DSSKey], Type[ECDSAKey], Type[Ed25519Key]]
 
     for key_cls in (RSAKey, DSSKey, ECDSAKey, Ed25519Key):
+        file_obj.seek(0)
+
         try:
-            return key_cls.from_private_key_file(
-                filename=filename,
+            return key_cls.from_private_key(
+                file_obj=file_obj,
             )
 
         except PasswordRequiredException:
@@ -119,8 +122,8 @@ def _load_private_key_file(filename: str, key_filename: str, key_password: str):
                     )
 
             try:
-                return key_cls.from_private_key_file(
-                    filename=filename,
+                return key_cls.from_private_key(
+                    file_obj=file_obj,
                     password=key_password,
                 )
             except SSHException as e:  # key does not match key_cls type
@@ -152,16 +155,25 @@ def _get_private_key(state: "State", key_filename: str, key_password: str):
 
         key_file_exists = True
 
+        with open(filename, "r") as file_obj:
+            try:
+                key = _load_private_key_file(file_obj, filename, key_filename, key_password)
+                break
+            except SSHException:
+                pass
+
+    if not key_file_exists:
+        # Replace newlines escaped by click with actual newlines
+        file_obj = StringIO(key_filename.replace("\\n", "\n"))
         try:
-            key = _load_private_key_file(filename, key_filename, key_password)
-            break
+            key = _load_private_key_file(file_obj, filename, key_filename, key_password)
         except SSHException:
-            pass
+            raise PyinfraError("No such private key file: {0}".format(key_filename))
+        else:
+            logger.warning("Loaded private key contents from CLI!")
 
     # No break, so no key found
     if not key:
-        if not key_file_exists:
-            raise PyinfraError("No such private key file: {0}".format(key_filename))
         raise PyinfraError("Invalid private key file: {0}".format(key_filename))
 
     # Load any certificate, names from OpenSSH:
