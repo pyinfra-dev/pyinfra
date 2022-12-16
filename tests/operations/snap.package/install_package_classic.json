@@ -1,0 +1,19 @@
+{
+  "kwargs": {
+    "packages": [
+      "nvim"
+    ],
+    "classic": true
+  },
+  "facts": {
+    "snap.SnapPackage": {},
+    "snap.SnapPackages": [
+      "core",
+      "core18",
+      "core20"
+    ]
+  },
+  "commands": [
+    "snap install --classic nvim --channel=latest/stable"
+  ]
+}

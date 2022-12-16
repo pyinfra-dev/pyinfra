@@ -11,6 +11,7 @@ from pyinfra.facts.snap import SnapPackage, SnapPackages
 def package(
     packages=None,
     channel="latest/stable",
+    classic=False,
     present=True,
 ):
     """
@@ -18,7 +19,12 @@ def package(
 
     + packages: List of packages
     + channel: tracking channel
+    + classic: Use classic confinement
     + present: whether the package should be installed
+
+    ``classic``:
+        Allows access to your system’s resources in much the same way traditional
+        packages do. This option corresponds to the ``--classic`` argument.
 
     **Examples:**
 
@@ -48,6 +54,13 @@ def package(
             name="Install LXD 4.0/stable",
             packages=["lxd"],
             channel="4.0/stable",
+        )
+
+        # Install neovim with classic confinement
+        snap.package(
+            name="Install Neovim",
+            packages=["nvim"],
+            classic=True,
         )
     """
 
@@ -91,8 +104,11 @@ def package(
             else:
                 host.noop(f"snap package {package} is not installed")
 
+    install_cmd = ["snap", "install"]
+    if classic:
+        install_cmd.append("--classic")
     if install_packages:
-        yield " ".join(["snap", "install"] + install_packages + [f"--channel={channel}"])
+        yield " ".join(install_cmd + install_packages + [f"--channel={channel}"])
 
     if remove_packages:
         yield " ".join(["snap", "remove"] + remove_packages)
