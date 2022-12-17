@@ -70,15 +70,29 @@ def make_names_data(output_key=None):
     tf_output = json.loads(tf_output_raw)
     tf_output = _flatten_dict(tf_output)
 
-    if output_key not in tf_output:
+    tf_output_value = tf_output.get(output_key)
+    if tf_output_value is None:
         raise InventoryError(f"No Terraform output with key: `{output_key}`")
 
-    tf_output_value = tf_output[output_key]
     if not isinstance(tf_output_value, list):
         raise InventoryError(
             f"Invalid Terraform output type, should be list, got `{type(tf_output_value)}`",
         )
 
     for ssh_target in tf_output_value:
-        data = {"ssh_hostname": ssh_target}
-        yield "@terraform/{0}".format(ssh_target), data, ["@terraform"]
+        if isinstance(ssh_target, dict):
+            name = ssh_target.pop("name", ssh_target.get("ssh_hostname"))
+            if name is None:
+                raise InventoryError(
+                    "Invalid Terraform list item, missing `name` or `ssh_hostname` keys",
+                )
+            yield f"@terraform/{name}", ssh_target, ["@terraform"]
+
+        elif isinstance(ssh_target, str):
+            data = {"ssh_hostname": ssh_target}
+            yield f"@terraform/{ssh_target}", data, ["@terraform"]
+
+        else:
+            raise InventoryError(
+                f"Invalid Terraform list item, should be dict or str got `{type(ssh_target)}`",
+            )
