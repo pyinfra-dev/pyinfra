@@ -172,7 +172,7 @@ def script(src):
         )
     """
 
-    temp_file = state.get_temp_filename(src)
+    temp_file = state.get_temp_filename()
     yield from files.put(src, temp_file)
 
     yield chmod(temp_file, "+x")
