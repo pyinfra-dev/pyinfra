@@ -314,11 +314,11 @@ def print_results(state: "State"):
                 host_args = ("red",)
                 host_kwargs["bold"] = True
 
-            changed_str = "Changed: {0}".format(click.style(changed_ops, bold=True))
+            changed_str = "Changed: {0}".format(click.style(f"{changed_ops}", bold=True))
             if partial_ops:
                 changed_str = f"{changed_str} ({partial_ops} partial)"
 
-            error_str = "Errors: {0}".format(click.style(error_ops, bold=True))
+            error_str = "Errors: {0}".format(click.style(f"{error_ops}", bold=True))
             if ignored_error_ops:
                 error_str = f"{error_str} ({ignored_error_ops} ignored)"
 
@@ -328,7 +328,7 @@ def print_results(state: "State"):
                     [
                         host.style_print_prefix(*host_args, **host_kwargs),
                         changed_str,
-                        "No change: {0}".format(click.style(meta["ops_no_change"], bold=True)),
+                        "No change: {0}".format(click.style(f"{meta['ops_no_change']}", bold=True)),
                         error_str,
                     ],
                 ),
