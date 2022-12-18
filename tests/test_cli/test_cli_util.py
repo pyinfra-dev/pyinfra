@@ -8,12 +8,12 @@ import pytest
 
 from pyinfra.operations import server
 from pyinfra_cli.exceptions import CliError
-from pyinfra_cli.util import get_operation_and_args, json_encode
+from pyinfra_cli.util import get_func_and_args, json_encode
 
 
 class TestCliUtil(TestCase):
     def test_json_encode_function(self):
-        assert json_encode(get_operation_and_args) == "Function: get_operation_and_args"
+        assert json_encode(get_func_and_args) == "Function: get_func_and_args"
 
     def test_json_encode_datetime(self):
         now = datetime.utcnow()
@@ -28,19 +28,19 @@ class TestCliUtil(TestCase):
 
     def test_setup_no_module(self):
         with self.assertRaises(CliError) as context:
-            get_operation_and_args(("no.op",))
+            get_func_and_args(("no.op",))
         assert context.exception.message == "No such module: no"
 
     def test_setup_no_op(self):
         with self.assertRaises(CliError) as context:
-            get_operation_and_args(("server.no",))
+            get_func_and_args(("server.no",))
 
         assert context.exception.message == "No such operation: server.no"
 
     def test_setup_op_and_args(self):
-        commands = ("server.user", "one", "two", "hello=world")
+        commands = ("pyinfra.operations.server.user", "one", "two", "hello=world")
 
-        assert get_operation_and_args(commands) == (
+        assert get_func_and_args(commands) == (
             server.user,
             (["one", "two"], {"hello": "world"}),
         )
@@ -48,7 +48,7 @@ class TestCliUtil(TestCase):
     def test_setup_op_and_json_args(self):
         commands = ("server.user", '[["one", "two"], {"hello": "world"}]')
 
-        assert get_operation_and_args(commands) == (
+        assert get_func_and_args(commands) == (
             server.user,
             (["one", "two"], {"hello": "world"}),
         )
@@ -72,12 +72,12 @@ def user_sys_path():
 # def test_no_user_op():
 #     commands = ('test_ops.dummy_op', 'arg1', 'arg2')
 #     with pytest.raises(CliError, match='^No such module: test_ops$'):
-#         get_operation_and_args(commands)
+#         get_func_and_args(commands)
 
 
 def test_user_op(user_sys_path):
     commands = ("test_ops.dummy_op", "arg1", "arg2")
-    res = get_operation_and_args(commands)
+    res = get_func_and_args(commands)
 
     import test_ops
 
