@@ -51,7 +51,8 @@ def test_int_docker_git_gem_and_pip_on_mult(helpers):
 @pytest.mark.end_to_end_docker
 def test_int_docker_pacman_on_arch(helpers):
     helpers.run_check_output(
-        "pyinfra --chdir examples @docker/archlinux:base-20220102.0.42924 pacman.py",
+        # ArchLinux is continuously updated so using latest here seems most sensible
+        "pyinfra --chdir examples @docker/archlinux:latest pacman.py",
         expected_lines=["docker build complete"],
     )
 
