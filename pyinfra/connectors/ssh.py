@@ -11,10 +11,10 @@ are identical:
 import shlex
 from distutils.spawn import find_executable
 from getpass import getpass
-from io import IOBase, StringIO
+from io import StringIO
 from os import path
 from socket import error as socket_error, gaierror
-from typing import TYPE_CHECKING, Type, Union
+from typing import IO, TYPE_CHECKING, Type, Union
 
 import click
 from paramiko import (
@@ -89,7 +89,7 @@ def _raise_connect_error(host: "Host", message, data):
     raise ConnectError(message)
 
 
-def _load_private_key_file(file_obj: IOBase, filename: str, key_filename: str, key_password: str):
+def _load_private_key_file(file_obj: IO[str], filename: str, key_filename: str, key_password: str):
     exception: Union[PyinfraError, SSHException] = PyinfraError("Invalid key: {0}".format(filename))
 
     key_cls: Union[Type[RSAKey], Type[DSSKey], Type[ECDSAKey], Type[Ed25519Key]]
