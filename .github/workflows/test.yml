@@ -13,7 +13,7 @@ jobs:
   #
 
   lint:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -21,7 +21,7 @@ jobs:
       - run: flake8
 
   type-check:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -38,7 +38,7 @@ jobs:
       - type-check
     strategy:
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-22.04]
         python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
         include:
           - os: macos-latest
@@ -63,7 +63,7 @@ jobs:
       - unit-test
     strategy:
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-22.04]
         test-name: [local, ssh, docker]
         include:
           - os: macos-latest
