@@ -41,9 +41,9 @@ jobs:
         os: [ubuntu-22.04]
         python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
         include:
-          - os: macos-latest
+          - os: macos-12
             python-version: 3.8
-          - os: windows-2019
+          - os: windows-2022
             python-version: 3.8
     runs-on: ${{ matrix.os }}
     steps:
