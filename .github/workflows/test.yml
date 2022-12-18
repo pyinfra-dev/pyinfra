@@ -76,5 +76,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
       - run: pip install '.[test]'
       - run: pytest -m end_to_end_${{ matrix.test-name }}
