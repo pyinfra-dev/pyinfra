@@ -37,9 +37,12 @@ ANSIBLE_REQUIRES = ("pyyaml",)  # extras for parsing Ansible inventory
 
 TEST_REQUIRES = ANSIBLE_REQUIRES + (
     # Unit testing
-    "pytest==7.0.1",
-    "pytest-cov==3.0.0",
-    "coverage==6.2",
+    # TODO: drop Python 3.6 support
+    'pytest==7.0.1 ; python_version <= "3.6"',
+    'coverage==6.2 ; python_version <= "3.6"',
+    'pytest==7.2.0 ; python_version > "3.6"',
+    'coverage==6.5 ; python_version > "3.6"',
+    "pytest-cov==4.0.0",
     "codecov==2.1.12",
     # Formatting & linting
     "black==22.3.0",
