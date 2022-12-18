@@ -13,18 +13,22 @@ jobs:
   #
 
   lint:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
       - run: pip install '.[test]'
       - run: flake8
 
   type-check:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
       - run: pip install '.[test]'
       - run: scripts/check-operation-stub-typing.sh
       - run: mypy pyinfra pyinfra_cli
@@ -38,17 +42,17 @@ jobs:
       - type-check
     strategy:
       matrix:
-        os: [ubuntu-18.04]
-        python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
+        os: [ubuntu-20.04]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
         include:
-          - os: macos-latest
-            python-version: 3.8
-          - os: windows-2019
-            python-version: 3.8
+          - os: macos-12
+            python-version: "3.11"
+          - os: windows-2022
+            python-version: "3.11"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install '.[test]'
@@ -63,14 +67,16 @@ jobs:
       - unit-test
     strategy:
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-20.04]
         test-name: [local, ssh, docker]
         include:
           - os: macos-latest
             test-name: local
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
       - run: pip install '.[test]'
       - run: pytest -m end_to_end_${{ matrix.test-name }}
