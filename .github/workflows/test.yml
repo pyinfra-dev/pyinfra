@@ -17,6 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
       - run: pip install '.[test]'
       - run: flake8
 
@@ -25,6 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
       - run: pip install '.[test]'
       - run: scripts/check-operation-stub-typing.sh
       - run: mypy pyinfra pyinfra_cli
