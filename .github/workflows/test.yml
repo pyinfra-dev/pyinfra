@@ -38,13 +38,13 @@ jobs:
       - type-check
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
         os: [ubuntu-20.04]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
         include:
           - os: macos-12
-            python-version: 3.8
+            python-version: "3.8"
           - os: windows-2022
-            python-version: 3.8
+            python-version: "3.8"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
