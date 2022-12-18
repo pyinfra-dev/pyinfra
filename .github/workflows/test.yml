@@ -15,16 +15,16 @@ jobs:
   lint:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
       - run: pip install '.[test]'
       - run: flake8
 
   type-check:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
       - run: pip install '.[test]'
       - run: scripts/check-operation-stub-typing.sh
       - run: mypy pyinfra pyinfra_cli
@@ -47,8 +47,8 @@ jobs:
             python-version: 3.8
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install '.[test]'
@@ -70,7 +70,7 @@ jobs:
             test-name: local
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
       - run: pip install '.[test]'
       - run: pytest -m end_to_end_${{ matrix.test-name }}
