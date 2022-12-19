@@ -12,7 +12,6 @@ from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import NoGroupError, PyinfraError
 from pyinfra.api.facts import get_facts
-from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.util import get_kwargs_str
 from pyinfra.context import ctx_config, ctx_inventory, ctx_state
@@ -33,8 +32,9 @@ from .prints import (
 from .util import (
     exec_file,
     get_facts_and_args,
-    get_operation_and_args,
+    get_func_and_args,
     load_deploy_file,
+    load_func,
     parse_cli_arg,
 )
 from .virtualenv import init_virtualenv
@@ -75,7 +75,7 @@ def _print_support(ctx, param, value):
     help="Restrict the target hosts by name and group name.",
     multiple=True,
 )
-@click.option("--fail-percent", type=int, help="% of hosts allowed to fail.")
+@click.option("--fail-percent", type=int, help="% of hosts that need to fail before exiting early.")
 @click.option(
     "--data",
     multiple=True,
@@ -246,6 +246,14 @@ def cli(*args, **kwargs):
             disconnect_all(state)
 
 
+class CliCommands:
+    DEBUG_INVENTORY = "DEBUG_INVENTORY"
+    FACT = "FACT"
+    SHELL = "SHELL"
+    DEPLOY_FILES = "DEPLOY_FILES"
+    FUNC = "FUNC"
+
+
 def _main(
     inventory,
     operations: Union[List, Tuple],
@@ -344,7 +352,7 @@ def _main(
     # Initialise the state
     state.init(inventory, config, initial_limit=initial_limit)
 
-    if command == "debug-inventory":
+    if command == CliCommands.DEBUG_INVENTORY:
         print_inventory(state)
         _exit()
 
@@ -404,21 +412,21 @@ def _validate_operations(operations, chdir):
 
     # Debug (print) inventory + group data
     if operations[0] == "debug-inventory":
-        command = "debug-inventory"
+        command = CliCommands.DEBUG_INVENTORY
 
     # Get one or more facts
     elif operations[0] == "fact":
-        command = "fact"
+        command = CliCommands.FACT
         operations = get_facts_and_args(operations[1:])
 
     # Execute a raw command with server.shell
     elif operations[0] == "exec":
-        command = "exec"
+        command = CliCommands.SHELL
         operations = operations[1:]
 
     # Execute one or more deploy files
     elif all(cmd.endswith(".py") for cmd in operations):
-        command = "deploy"
+        command = CliCommands.DEPLOY_FILES
 
         filenames = []
 
@@ -444,10 +452,10 @@ def _validate_operations(operations, chdir):
 
         operations = filenames
 
-    # Operation w/optional args (<module>.<op> ARG1 ARG2 ...)
-    elif len(operations[0].split(".")) == 2:
-        command = "op"
-        operations = get_operation_and_args(operations)
+    # Load a function (op or deploy) directly with arguments
+    elif "." in operations[0]:
+        command = CliCommands.FUNC
+        operations = get_func_and_args(operations)
 
     else:
         raise CliError(
@@ -600,19 +608,19 @@ def _apply_inventory_limit(inventory, limit):
 #
 def _handle_commands(state, config, command, original_operations, operations, quiet):
 
-    if command == "fact":
+    if command is CliCommands.FACT:
         state, fact_data = _run_fact_operations(state, config, operations, quiet)
         print_facts(fact_data)
         _exit()
 
-    if command == "exec":
+    if command == CliCommands.SHELL:
         state = _run_exec_operations(state, config, operations, quiet)
 
-    elif command == "deploy":
+    elif command == CliCommands.DEPLOY_FILES:
         state, config, operations = _run_deploy_operations(state, config, operations, quiet)
 
-    elif command == "op":
-        state, kwargs = _run_op_operations(state, config, operations, original_operations, quiet)
+    elif command == CliCommands.FUNC:
+        state, kwargs = _run_func_operations(state, config, operations, original_operations, quiet)
 
     return state, config
 
@@ -648,11 +656,10 @@ def _run_fact_operations(state, config, operations, quiet):
 
 def _run_exec_operations(state, config, operations, quiet):
     state.print_output = True
-    add_op(
+    load_func(
         state,
         server.shell,
         " ".join(operations),
-        _allow_cli_mode=True,
     )
     return state
 
@@ -674,21 +681,13 @@ def _run_deploy_operations(state, config, operations, quiet):
     return state, config, operations
 
 
-def _run_op_operations(state, config, operations, original_operations, quiet):
+def _run_func_operations(state, config, operations, original_operations, quiet):
     echo_msg("--> Preparing operation...", quiet)
 
     op, args = operations
     args, kwargs = args
-    kwargs["_allow_cli_mode"] = True
 
-    def print_host_ready(host):
-        _ready_style = click.style("Ready:", "green")
-        _original_op_msg = click.style(original_operations[0], bold=True)
-        logger.info("{0}{1} {2}".format(host.print_prefix, _ready_style, _original_op_msg))
-
-    kwargs["_after_host_callback"] = print_host_ready
-
-    add_op(state, op, *args, **kwargs)
+    load_func(state, op, *args, **kwargs)
 
     return state, kwargs
 
