@@ -1,3 +1,20 @@
+# v2.6
+
+Added:
+
++ Use SSH connector parameters with `files.rsync` operation (@StevenKGER)
++ Add `auto_remove` arguments to `apt.upgrade` operation (@mcataford)
++ Make it possible to call any function/op/deploy from the CLI
+
+Fixed:
+
++ Fix handling of ALL/GRANT OPTION permissions in `mysql.privileges` operation (@gchazot)
++ Fix `mysql.load` operation with spaces in filenames (@gchazot)
++ Fix fact `apk.ApkPackages` for packages with numbers in the name (@dchauviere)
++ Fix fact `openrc.OpenrcStatus` for services with start times (@dchauviere)
++ Fix `files.put` for files containing spaces in local connector (@uggedal)
++ Fix performance of fact phase when calling functions/operations directly in CLI
+
 # v2.5.3
 
 + Fix handling of facts with no arguments or with global arguments
