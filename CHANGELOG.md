@@ -1,3 +1,8 @@
+# v2.6.1
+
++ Fix reuse of temporary file names in `server.script` operation (@link2xt)
++ Fix retry handling on SFTP errors
+
 # v2.6
 
 Added:
