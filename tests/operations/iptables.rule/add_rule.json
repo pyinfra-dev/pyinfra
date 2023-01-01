@@ -4,11 +4,11 @@
         "table": "nat",
         "destination_port": 8080,
         "source_port": 80,
-        "protocol": "tcp",
+        "protocol": "TCP",
         "source": "0.0.0.0",
         "in_interface": "eth0",
         "out_interface": "eth1",
-        "not_protocol": "udp",
+        "not_protocol": "UDP",
         "not_source": "192.168.1.0/24",
         "not_in_interface": "eth10",
         "not_out_interface": "eth10"
