@@ -3,7 +3,7 @@
     "kwargs": {
         "version": 6,
         "table": "nat",
-        "protocol": "tcp",
+        "protocol": "TCP",
         "source": "0.0.0.0"
     },
     "facts": {

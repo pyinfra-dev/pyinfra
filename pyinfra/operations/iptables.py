@@ -273,7 +273,7 @@ def rule(
             args.extend(("-o", out_interface))
 
         if not_protocol:
-            args.extend(("!", "-p", not_protocol))
+            args.extend(("!", "-p", not_protocol.lower()))
 
         if not_source:
             args.extend(("!", "-s", not_source))
