@@ -153,6 +153,7 @@ def rule(
     # When protocol is set, the extension is automagically added by iptables (which shows
     # in iptables-save): http://ipset.netfilter.org/iptables-extensions.man.html
     if protocol:
+        protocol = protocol.lower()
         extras_set.add("-m")
         extras_set.add(protocol)
 
