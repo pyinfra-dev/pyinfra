@@ -272,7 +272,7 @@ class Md5File(FactBase):
 
     _regexes = [
         r"^([a-zA-Z0-9]{32})\s+%s$",
-        r"^SHA256\s+\(%s\)\s+=\s+([a-zA-Z0-9]{32})$",
+        r"^MD5\s+\(%s\)\s+=\s+([a-zA-Z0-9]{32})$",
     ]
 
     def command(self, path):
