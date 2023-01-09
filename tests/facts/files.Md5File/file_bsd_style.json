@@ -1,0 +1,8 @@
+{
+    "arg": "myfile",
+    "command": "test -e myfile && ( md5sum myfile 2> /dev/null || md5 myfile ) || true",
+    "output": [
+        "MD5 (myfile) = c10ba97d7c9078a006d26b5db01d8ee7"
+    ],
+    "fact": "c10ba97d7c9078a006d26b5db01d8ee7"
+}
