@@ -333,7 +333,7 @@ class Ipv4Addresses(ShortFactBase):
         for interface, details in data.items():
             ip_details = details.get(self.ip_type)
             if not ip_details:
-                continue  # pramga: no cover
+                continue  # pragma: no cover
 
             addresses[interface] = ip_details["address"]
 

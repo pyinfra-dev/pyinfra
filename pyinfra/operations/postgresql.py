@@ -185,7 +185,7 @@ def role(
         )
         roles[role] = {
             "super": superuser,
-            "cretedb": createdb,
+            "createdb": createdb,
             "createrole": createrole,
         }
     else:
