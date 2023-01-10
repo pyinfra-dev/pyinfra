@@ -55,7 +55,7 @@ def shell(
 
     Args:
         commands (string, list): command or list of commands to execute
-        spltlines (bool): optionally have the output split by lines
+        splitlines (bool): optionally have the output split by lines
         ignore_errors (bool): ignore errors when executing these commands
     """
 

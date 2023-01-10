@@ -1,5 +1,5 @@
 # This is a list of additional words for flake8-spellcheck
-# it is automatically cleaned/sorted by scripts/cleaup_words.py
+# it is automatically cleaned/sorted by scripts/cleanup_words.py
 0
 1
 2
@@ -70,7 +70,6 @@ cfg
 changelog
 chdir
 choco
-chocolately
 chown
 chroot
 cim
@@ -370,7 +369,6 @@ uefi
 ufw
 uname
 unignored
-unitialised
 unmount
 up
 up2

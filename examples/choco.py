@@ -8,7 +8,7 @@ if computer_info:
     if product_name:
         if product_name.split()[0] == "Windows":
 
-            # install Chocolately
+            # install Chocolatey
             choco.install()
 
             choco.packages(
