@@ -48,7 +48,7 @@ def download(
 
     .. code:: python
 
-        winows_files.download(
+        windows_files.download(
             name="Download the Docker repo file",
             src="https://download.docker.com/linux/centos/docker-ce.repo",
             dest="C:\\docker",

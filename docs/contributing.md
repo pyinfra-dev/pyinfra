@@ -38,7 +38,7 @@ GitHub will run all the test suites as part of any pull requests, here's how you
 
 Use `pytest` to run the unit tests, or `pytest --cov` to run with coverage. Pull requests are expected to be tested and not drop overall project coverage by >1%.
 
-### End to End Testst
+### End to End Tests
 
 The end to end tests are also executed via `pytest` but not selected by default, options/usage:
 

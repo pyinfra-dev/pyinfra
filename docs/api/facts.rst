@@ -52,7 +52,7 @@ This fact could then be used like so:
 Example: getting the list of files in a directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This fact returns a list of files found in a given directory. For this fact the ``command`` is delcated as a class method, indicating the fact takes arguments.
+This fact returns a list of files found in a given directory. For this fact the ``command`` is declared as a class method, indicating the fact takes arguments.
 
 .. code:: python
 
@@ -80,7 +80,7 @@ This fact could then be used like so:
 Example: getting any output from a command
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This fact returns the raw output of any command. For this fact the ``command`` is delcated as a class method, indicating the fact takes arguments.
+This fact returns the raw output of any command. For this fact the ``command`` is declared as a class method, indicating the fact takes arguments.
 
 .. code:: python
 

@@ -269,7 +269,7 @@ def pop_global_arguments(
     This is a bit strange because internally pyinfra uses non-_-prefixed arguments,
     and this function is responsible for the translation between the two.
 
-    TODO: is this wird-ness acceptable? Is it worth updating internal use to _prefix?
+    TODO: is this weird-ness acceptable? Is it worth updating internal use to _prefix?
     """
 
     state = state or context.state

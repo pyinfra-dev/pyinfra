@@ -73,7 +73,7 @@ It is possible to limit the inventory at execution time using the `--limit` argu
 # Only execute against @local
 pyinfra inventory.py deploy.py --limit @local
 
-# Only execute against hosts in the `app_servers` grouo
+# Only execute against hosts in the `app_servers` group
 pyinfra inventory.py deploy.py --limit app_servers
 
 # Only execute against hosts with names matching db*
