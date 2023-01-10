@@ -264,7 +264,6 @@ postgre
 powershell
 ppa
 ppk
-pramga
 precondition
 procs
 proxyjump
