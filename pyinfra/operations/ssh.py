@@ -89,7 +89,7 @@ def command(hostname, command, user=None, port=22):
         ssh.command(
             name="Create file by running echo from host one to host two",
             hostname="two.example.com",
-            command="echo "one was here" > /tmp/one.txt",
+            command="echo 'one was here' > /tmp/one.txt",
             user="vagrant",
         )
     """
