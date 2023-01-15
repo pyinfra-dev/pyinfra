@@ -1,0 +1,17 @@
+{
+    "arg": "link",
+    "command": "! (test -e link || test -L link ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' link 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' link )",
+    "output": [
+        "user=root group=root mode=lrw-r--r-- atime=1594804774 mtime=1594804770 ctime=0 size=11 `link' -> `install.log'"
+    ],
+    "fact": {
+        "group": "root",
+        "user": "root",
+        "mode": 644,
+        "link_target": "install.log",
+        "atime": "2020-07-15T09:19:34",
+        "mtime": "2020-07-15T09:19:30",
+        "ctime": "1970-01-01T00:00:00",
+        "size": 11
+    }
+}
