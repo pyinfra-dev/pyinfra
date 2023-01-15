@@ -5,6 +5,7 @@ The files facts provide information about the filesystem and it's contents on th
 import re
 import stat
 from datetime import datetime
+from typing import List, Tuple
 
 from pyinfra.api.command import QuoteString, make_formatted_string_command
 from pyinfra.api.facts import FactBase
@@ -204,90 +205,56 @@ class Socket(File):
     type = "socket"
 
 
-class Sha1File(FactBase):
+class HashFileFactBase(FactBase):
+    _raw_cmd: str
+    _regexes: Tuple[str, str]
+
+    def __init_subclass__(cls, digits: int, cmds: List[str], **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+
+        raw_hash_cmds = ["%s {0} 2> /dev/null" % cmd for cmd in cmds]
+        raw_hash_cmd = " || ".join(raw_hash_cmds)
+        cls._raw_cmd = "test -e {0} && ( %s ) || true" % raw_hash_cmd
+
+        assert cls.__name__.endswith("File")
+        hash_name = cls.__name__[:-4].upper()
+        cls._regexes = (
+            # GNU coreutils style:
+            r"^([a-fA-F0-9]{%d})\s+%%s$" % digits,
+            # BSD style:
+            r"^%s\s+\(%%s\)\s+=\s+([a-fA-F0-9]{%d})$" % (hash_name, digits),
+        )
+
+    def command(self, path):
+        self.path = path
+        return make_formatted_string_command(self._raw_cmd, QuoteString(path))
+
+    def process(self, output):
+        output = output[0]
+        escaped_path = re.escape(self.path)
+        for regex in self._regexes:
+            matches = re.match(regex % escaped_path, output)
+            if matches:
+                return matches.group(1)
+
+
+class Sha1File(HashFileFactBase, digits=40, cmds=["sha1sum", "shasum", "sha1"]):
     """
     Returns a SHA1 hash of a file. Works with both sha1sum and sha1. Returns
     ``None`` if the file doest not exist.
     """
 
-    _regexes = [
-        r"^([a-zA-Z0-9]{40})\s+%s$",
-        r"^SHA1\s+\(%s\)\s+=\s+([a-zA-Z0-9]{40})$",
-    ]
 
-    def command(self, path):
-        self.path = path
-        return make_formatted_string_command(
-            (
-                "test -e {0} && ( "
-                "sha1sum {0} 2> /dev/null || shasum {0} 2> /dev/null || sha1 {0} "
-                ") || true"
-            ),
-            QuoteString(path),
-        )
-
-    def process(self, output):
-        for regex in self._regexes:
-            regex = regex % re.escape(self.path)
-            matches = re.match(regex, output[0])
-            if matches:
-                return matches.group(1)
-
-
-class Sha256File(FactBase):
+class Sha256File(HashFileFactBase, digits=64, cmds=["sha256sum", "shasum -a 256", "sha256"]):
     """
     Returns a SHA256 hash of a file, or ``None`` if the file does not exist.
     """
 
-    _regexes = [
-        r"^([a-zA-Z0-9]{64})\s+%s$",
-        r"^SHA256\s+\(%s\)\s+=\s+([a-zA-Z0-9]{64})$",
-    ]
 
-    def command(self, path):
-        self.path = path
-        return make_formatted_string_command(
-            (
-                "test -e {0} && ( "
-                "sha256sum {0} 2> /dev/null "
-                "|| shasum -a 256 {0} 2> /dev/null "
-                "|| sha256 {0} "
-                ") || true"
-            ),
-            QuoteString(path),
-        )
-
-    def process(self, output):
-        for regex in self._regexes:
-            regex = regex % re.escape(self.path)
-            matches = re.match(regex, output[0])
-            if matches:
-                return matches.group(1)
-
-
-class Md5File(FactBase):
+class Md5File(HashFileFactBase, digits=32, cmds=["md5sum", "md5"]):
     """
     Returns an MD5 hash of a file, or ``None`` if the file does not exist.
     """
-
-    _regexes = [
-        r"^([a-zA-Z0-9]{32})\s+%s$",
-        r"^MD5\s+\(%s\)\s+=\s+([a-zA-Z0-9]{32})$",
-    ]
-
-    def command(self, path):
-        self.path = path
-        return make_formatted_string_command(
-            "test -e {0} && ( md5sum {0} 2> /dev/null || md5 {0} ) || true",
-            QuoteString(path),
-        )
-
-    def process(self, output):
-        for regex in self._regexes:
-            regex = regex % re.escape(self.path)
-            matches = re.match(regex, output[0])
-            if matches:
-                return matches.group(1)
 
 
 class FindInFile(FactBase):

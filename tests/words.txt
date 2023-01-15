@@ -74,11 +74,13 @@ chocolately
 chown
 chroot
 cim
+cmds
 commitish
 comparator
 compat
 computersystem
 configparser
+coreutils
 cp
 cpus
 createdb
