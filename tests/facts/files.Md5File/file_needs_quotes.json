@@ -1,6 +1,6 @@
 {
     "arg": "my () file && special_chars.txt",
-    "command": "test -e 'my () file && special_chars.txt' && ( md5sum 'my () file && special_chars.txt' 2> /dev/null || md5 'my () file && special_chars.txt' ) || true",
+    "command": "test -e 'my () file && special_chars.txt' && ( md5sum 'my () file && special_chars.txt' 2> /dev/null || md5 'my () file && special_chars.txt' 2> /dev/null ) || true",
     "output": [
         "c10ba97d7c9078a006d26b5db01d8ee7 my () file && special_chars.txt"
     ],
