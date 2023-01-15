@@ -45,7 +45,8 @@ SU_REGEXES = (
 
 
 class FactNameMeta(type):
-    def __init__(cls, name: str, bases, attrs):
+    def __init__(cls, name: str, bases, attrs, **kwargs):
+        super().__init__(name, bases, attrs, **kwargs)
         module_name = cls.__module__.replace("pyinfra.facts.", "")
         cls.name = f"{module_name}.{cls.__name__}"
 
