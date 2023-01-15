@@ -5,11 +5,10 @@ from datetime import datetime
 from tempfile import mkdtemp
 
 from dateutil.parser import parse as parse_date
+from distro import distro
 
 from pyinfra.api import FactBase, ShortFactBase
 from pyinfra.api.util import try_int
-
-from .util.distro import get_distro_info
 
 ISO_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 
@@ -549,7 +548,11 @@ class LinuxDistribution(FactBase):
                 ) as fp:
                     fp.write(content)
 
-            parsed = get_distro_info(temp_root)
+            parsed = distro.LinuxDistribution(
+                root_dir=temp_root,
+                include_lsb=False,
+                include_uname=False,
+            )
 
             release_meta = {key.upper(): value for key, value in parsed.os_release_info().items()}
             # Distro 1.7+ adds this, breaking tests
