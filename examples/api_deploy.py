@@ -11,6 +11,7 @@ from pyinfra.api.facts import get_facts  # noqa: E402
 from pyinfra.api.operation import add_op  # noqa: E402
 from pyinfra.api.operations import run_ops  # noqa: E402
 from pyinfra.connectors.vagrant import make_names_data  # noqa: E402
+from pyinfra.facts.server import Os  # noqa: E402
 from pyinfra.operations import files, server  # noqa: E402
 from pyinfra_cli.prints import jsonify  # noqa: E402
 
@@ -119,5 +120,5 @@ run_ops(state)
 
 
 # We can also get facts for all the hosts
-facts = get_facts(state, "os")
+facts = get_facts(state, Os)
 print(jsonify(facts, indent=4))
