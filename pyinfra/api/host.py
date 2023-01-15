@@ -249,15 +249,28 @@ class Host:
     #
 
     def get_fact(self, name_or_cls, *args, **kwargs):
+        """
+        Get a fact for this host, reading from the cache if present.
+        """
         return get_host_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
 
     def reload_fact(self, name_or_cls, *args, **kwargs):
+        """
+        Get a fact for this host without using any cached value, always re-fetch the fact data
+        from the host and then cache it.
+        """
         return reload_host_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
 
     def create_fact(self, name_or_cls, data=None, kwargs=None):
+        """
+        Create a new fact for this host in the fact cache.
+        """
         return create_host_fact(self.state, self, name_or_cls, data, kwargs=kwargs)
 
     def delete_fact(self, name_or_cls, kwargs=None):
+        """
+        Remove an existing fact for this host in the fact cache.
+        """
         return delete_host_fact(self.state, self, name_or_cls, kwargs=kwargs)
 
     # Connector proxy
@@ -268,6 +281,10 @@ class Host:
             raise TypeError("Cannot call this function with no state!")
 
     def connect(self, reason=None, show_errors: bool = True, raise_exceptions: bool = False):
+        """
+        Connect to the host using it's configured connector.
+        """
+
         self._check_state()
         if not self.connection:
             self.state.trigger_callbacks("host_before_connect", self)
@@ -303,6 +320,9 @@ class Host:
         return self.connection
 
     def disconnect(self):
+        """
+        Disconnect from the host using it's configured connector.
+        """
         self._check_state()
 
         # Disconnect is an optional function for executors if needed
@@ -316,14 +336,23 @@ class Host:
         self.state.trigger_callbacks("host_disconnect", self)
 
     def run_shell_command(self, *args, **kwargs):
+        """
+        Low level method to execute a shell command on the host via it's configured connector.
+        """
         self._check_state()
         return self.executor.run_shell_command(self.state, self, *args, **kwargs)
 
     def put_file(self, *args, **kwargs):
+        """
+        Low level method to upload a file to the host via it's configured connector.
+        """
         self._check_state()
         return self.executor.put_file(self.state, self, *args, **kwargs)
 
     def get_file(self, *args, **kwargs):
+        """
+        Low level method to download a file from the host via it's configured connector.
+        """
         self._check_state()
         return self.executor.get_file(self.state, self, *args, **kwargs)
 
