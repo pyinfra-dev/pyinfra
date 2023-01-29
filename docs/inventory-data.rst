@@ -69,7 +69,7 @@ This can then be used in operations files:
 
     from pyinfra import host
 
-    if host.data.get("install_postgres"'):
+    if host.data.get("install_postgres"):
         apt.packages(
             packages=["postgresql-server"],
         )
