@@ -1,3 +1,15 @@
+# v2.6.2
+
++ Add support for classic confinment in `snap.packages` operation (@pabloxio)
++ Support dictionaries for Terraform connector inventory
++ Upgrade to `distro>1.6` and remove patch hack
++ Fix `files.Md5File` fact for BSD style output (@ScottKevill)
++ Fix handling of `protocol` in `iptables.rule` operation (@sysadmin75)
++ Fix a large number of documentation issues
++ Add docstrings to `Host` methods
++ Cleanup duplicate code (@minusf)
++ Refactor has files facts (@ScottKevill)
+
 # v2.6.1
 
 + Fix reuse of temporary file names in `server.script` operation (@link2xt)
