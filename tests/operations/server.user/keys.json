@@ -37,6 +37,6 @@
     },
     "commands": [
         "chmod 600 homedir/.ssh/authorized_keys",
-        "echo abc >> homedir/.ssh/authorized_keys"
+        "( [ $(tail -c1 homedir/.ssh/authorized_keys | wc -l) -eq 0 ] && echo ; echo abc ) >> homedir/.ssh/authorized_keys"
     ]
 }

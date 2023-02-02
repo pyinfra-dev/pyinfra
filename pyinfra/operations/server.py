@@ -899,7 +899,7 @@ def user_authorized_keys(
 
         # And every public key is present
         for key in public_keys:
-            yield from files.line(path=authorized_key_file, line=key)
+            yield from files.line(path=authorized_key_file, line=key, ensure_newline=True)
 
 
 @operation
