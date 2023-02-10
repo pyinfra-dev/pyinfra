@@ -1,6 +1,6 @@
 from pyinfra import config, host
 from pyinfra.facts.server import LinuxName, LsbRelease
-from pyinfra.operations import apt, init, python
+from pyinfra.operations import apt, systemd, python
 
 # Standalone example to show how to install Docker CE using
 # https://docs.docker.com/install/linux/docker-ce/ubuntu/
@@ -77,7 +77,7 @@ if host.get_fact(LinuxName) == "Ubuntu":
         update=True,
     )
 
-    init.service(
+    systemd.service(
         name="Ensure docker service is running",
         service="docker",
         running=True,
