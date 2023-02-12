@@ -1,6 +1,6 @@
 from pyinfra import config, host
 from pyinfra.facts.server import LinuxName, LsbRelease
-from pyinfra.operations import apt, systemd, python
+from pyinfra.operations import apt, python, systemd
 
 # Standalone example to show how to install Docker CE using
 # https://docs.docker.com/install/linux/docker-ce/ubuntu/
