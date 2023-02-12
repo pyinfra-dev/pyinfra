@@ -245,6 +245,7 @@ def line(
     interpolate_variables=False,
     escape_regex_characters=False,
     assume_present=False,
+    ensure_newline=False,
 ):
     """
     Ensure lines in files using grep to locate and sed to replace.
@@ -258,6 +259,7 @@ def line(
     + interpolate_variables: whether to interpolate variables in ``replace``
     + assume_present: whether to assume a matching line already exists in the file
     + escape_regex_characters: whether to escape regex characters from the matching line
+    + ensure_newline: ensures that the appended line is on a new line
 
     Regex line matching:
         Unless line matches a line (starts with ^, ends $), pyinfra will wrap it such that
@@ -276,6 +278,11 @@ def line(
     Append:
         If ``line`` is not in the file but we want it (``present`` set to ``True``), then
         it will be append to the end of the file.
+
+    Ensure new line:
+        This will ensure that the ``line`` being appended is always on a seperate new
+        line in case the file doesn't end with a newline character.
+
 
     **Examples:**
 
@@ -355,11 +362,18 @@ def line(
         replace = ""
 
     # Save commands for re-use in dynamic script when file not present at fact stage
-    echo_command = make_formatted_string_command(
-        "echo {0} >> {1}",
-        '"{0}"'.format(line) if interpolate_variables else QuoteString(line),
-        QuoteString(path),
-    )
+    if ensure_newline:
+        echo_command = make_formatted_string_command(
+            "( [ $(tail -c1 {1} | wc -l) -eq 0 ] && echo ; echo {0} ) >> {1}",
+            '"{0}"'.format(line) if interpolate_variables else QuoteString(line),
+            QuoteString(path),
+        )
+    else:
+        echo_command = make_formatted_string_command(
+            "echo {0} >> {1}",
+            '"{0}"'.format(line) if interpolate_variables else QuoteString(line),
+            QuoteString(path),
+        )
 
     if backup:
         backup_filename = "{0}.{1}".format(path, get_timestamp())

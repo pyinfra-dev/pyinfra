@@ -136,3 +136,47 @@ def test_int_local_failed_postcondition(helpers):
         expected_lines=["@local] Error: postcondition failed: exit 1"],
         expected_exit_code=1,
     )
+
+
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_local
+def test_int_local_line_ensure_newline_true(helpers, tmp_path):
+    path = tmp_path / "_testfile"
+
+    path.write_bytes(b"hello world")
+    helpers.run_check_output(
+        "pyinfra -v @local files.line _testfile someline ensure_newline=true",
+        expected_lines=["@local] Success"],
+        cwd=tmp_path,
+    )
+    assert path.read_bytes() == b"hello world\nsomeline\n"
+
+    path.write_bytes(b"hello world\n")
+    helpers.run_check_output(
+        "pyinfra -v @local files.line _testfile someline ensure_newline=true",
+        expected_lines=["@local] Success"],
+        cwd=tmp_path,
+    )
+    assert path.read_bytes() == b"hello world\nsomeline\n"
+
+
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_local
+def test_int_local_line_ensure_newline_false(helpers, tmp_path):
+    path = tmp_path / "_testfile"
+
+    path.write_bytes(b"hello world")
+    helpers.run_check_output(
+        "pyinfra -v @local files.line _testfile someline ensure_newline=false",
+        expected_lines=["@local] Success"],
+        cwd=tmp_path,
+    )
+    assert path.read_bytes() == b"hello worldsomeline\n"
+
+    path.write_bytes(b"hello world\n")
+    helpers.run_check_output(
+        "pyinfra -v @local files.line _testfile someline ensure_newline=false",
+        expected_lines=["@local] Success"],
+        cwd=tmp_path,
+    )
+    assert path.read_bytes() == b"hello world\nsomeline\n"
