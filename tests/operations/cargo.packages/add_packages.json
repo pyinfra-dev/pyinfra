@@ -1,0 +1,12 @@
+{
+    "args": [["git@1.1", "react", "test@1.1"]],
+    "facts": {
+        "cargo.CargoPackages": {
+            "git": ["1.0"],
+            "test": ["1.1"]
+        }
+    },
+    "commands": [
+        "cargo install git@1.1 react"
+    ]
+}
