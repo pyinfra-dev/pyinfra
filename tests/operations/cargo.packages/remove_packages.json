@@ -1,0 +1,16 @@
+{
+    "args": [["git@1.1", "react", "test@1.1"]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "cargo.CargoPackages": {
+            "git": ["1.0"],
+            "react": [""],
+            "test": ["1.1"]
+        }
+    },
+    "commands": [
+        "cargo uninstall react test@1.1"
+    ]
+}

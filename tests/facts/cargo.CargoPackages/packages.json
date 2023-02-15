@@ -1,0 +1,14 @@
+{
+    "command": "cargo install --list",
+    "requires_command": "cargo",
+    "output": [
+        "vigil-server v1.25.2:",
+        "    vigil",
+        "zee v0.4.0 (https://github.com/zee-editor/zee#08c9f31d):",
+        "    zee"
+    ],
+    "fact": {
+        "vigil-server": ["1.25.2"],
+        "zee": ["0.4.0"]
+    }
+}
