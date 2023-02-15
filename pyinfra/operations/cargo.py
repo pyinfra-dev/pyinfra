@@ -24,17 +24,11 @@ def packages(packages=None, present=True, latest=False):
 
     current_packages = host.get_fact(CargoPackages)
 
-    install_command = (
-        "cargo install"
-    )
+    install_command = "cargo install"
 
-    uninstall_command = (
-        "cargo uninstall"
-    )
+    uninstall_command = "cargo uninstall"
 
-    upgrade_command = (
-        "cargo install"
-    )
+    upgrade_command = "cargo install"
 
     yield from ensure_packages(
         host,
