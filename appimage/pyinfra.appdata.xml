@@ -2,7 +2,7 @@
 <component type="desktop-application">
     <id>pyinfra</id>
     <metadata_license>MIT</metadata_license>
-    <project_license>BSD</project_license>
+    <project_license>MIT</project_license>
     <name>Pyinfra</name>
     <summary>Pyinfra on Python {{ python-fullversion }}</summary>
     <description>
