@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=pyinfra
+Exec=pyinfra
+Comment=pyinfraon Python {{ python-fullversion }}
+Icon=python
+Categories=System;
+Terminal=true

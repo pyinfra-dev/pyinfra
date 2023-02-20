@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>pyinfra</id>
+    <metadata_license>MIT</metadata_license>
+    <project_license>BSD</project_license>
+    <name>Pyinfra</name>
+    <summary>Pyinfra on Python {{ python-fullversion }}</summary>
+    <description>
+        <p>  Python {{ python-fullversion }} + Pyinfra bundled in an AppImage.
+        </p>
+    </description>
+    <launchable type="desktop-id">pyinfra.desktop</launchable>
+    <url type="homepage">https://pyinfra.com</url>
+    <provides>
+        <binary>python{{ python-version }}</binary>
+    </provides>
+</component>
