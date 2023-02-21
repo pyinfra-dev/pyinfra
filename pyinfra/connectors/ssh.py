@@ -470,10 +470,10 @@ def get_file(
 
 
 def _put_file(host: "Host", filename_or_io, remote_location):
-    attempts = 1
+    attempts = 0
     last_e = None
 
-    while attempts < 4:
+    while attempts < 3:
         try:
             with get_file_io(filename_or_io) as file_io:
                 sftp = _get_sftp_connection(host)
