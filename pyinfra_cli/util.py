@@ -133,6 +133,29 @@ def parse_cli_arg(arg):
     return arg
 
 
+def try_import_module_attribute(path, prefix=None):
+    mod_path, attr_name = path.rsplit(".", 1)
+    module = None
+
+    if prefix:
+        try:
+            module = import_module(f"{prefix}.{mod_path}")
+        except (ModuleNotFoundError, ImportError):
+            pass
+
+    if module is None:
+        try:
+            module = import_module(mod_path)
+        except (ModuleNotFoundError, ImportError):
+            raise CliError(f"No such module: {mod_path}")
+
+    attr = getattr(module, attr_name, None)
+    if attr is None:
+        raise CliError(f"No such attribute in module {mod_path}: {attr_name}")
+
+    return attr
+
+
 def get_func_and_args(commands):
     operation_name = commands[0]
 
