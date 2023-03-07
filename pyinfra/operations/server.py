@@ -155,11 +155,12 @@ def shell(commands):
 
 
 @operation(is_idempotent=False)
-def script(src):
+def script(src, args=()):
     """
     Upload and execute a local script on the remote host.
 
     + src: local script filename to upload & execute
+    + args: iterable to pass as arguments to the script
 
     **Example:**
 
@@ -170,13 +171,20 @@ def script(src):
             name="Hello",
             src="files/hello.bash",
         )
+
+        # Example passing arguments to the script
+        server.script(
+            name="Hello",
+            src="files/hello.bash",
+            args=("do-something", "with-this"),
+        )
     """
 
     temp_file = state.get_temp_filename()
     yield from files.put(src, temp_file)
 
     yield chmod(temp_file, "+x")
-    yield temp_file
+    yield StringCommand(temp_file, *args)
 
 
 @operation(is_idempotent=False)
