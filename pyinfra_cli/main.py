@@ -332,7 +332,7 @@ def _main(
     # Load up the inventory from the filesystem
     #
     echo_msg("--> Loading inventory...", quiet)
-    inventory, inventory_group = make_inventory(
+    inventory = make_inventory(
         inventory,
         cwd=state.cwd,
         override_data=override_data,
