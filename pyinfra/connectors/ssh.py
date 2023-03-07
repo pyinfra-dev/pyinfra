@@ -470,6 +470,8 @@ def get_file(
 
 
 def _put_file(host: "Host", filename_or_io, remote_location):
+    logger.debug("Attempting upload of %s to %s", filename_or_io, remote_location)
+
     attempts = 0
     last_e = None
 
