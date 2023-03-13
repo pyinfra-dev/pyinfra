@@ -6,7 +6,7 @@
     "facts": {
         "git.GitConfig": {
             "repo=/my/repo": {
-                "another_key": "value"
+                "another_key": ["value"]
             }
         },
         "files.Directory": {

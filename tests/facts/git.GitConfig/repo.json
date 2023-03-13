@@ -6,6 +6,6 @@
         "user.email=nick@gmail.com"
     ],
     "fact": {
-        "user.email": "nick@gmail.com"
+        "user.email": ["nick@gmail.com"]
     }
 }

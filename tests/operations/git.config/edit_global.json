@@ -2,7 +2,7 @@
     "args": ["key", "value"],
     "facts": {
         "git.GitConfig": {
-            "key": "wrongvalue"
+            "key": ["wrongvalue"]
         }
     },
     "commands": [

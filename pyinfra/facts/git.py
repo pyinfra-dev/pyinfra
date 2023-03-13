@@ -33,7 +33,7 @@ class GitConfig(FactBase):
 
         for line in output:
             key, value = line.split("=", 1)
-            items[key] = value
+            items.setdefault(key, []).append(value)
 
         return items
 
