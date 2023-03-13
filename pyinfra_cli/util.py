@@ -138,20 +138,23 @@ def try_import_module_attribute(path, prefix=None):
     module = None
 
     if prefix:
+        full_path = f"{prefix}.{mod_path}"
         try:
-            module = import_module(f"{prefix}.{mod_path}")
+            module = import_module(full_path)
         except (ModuleNotFoundError, ImportError):
             pass
+    else:
+        full_path = mod_path
 
     if module is None:
         try:
             module = import_module(mod_path)
         except (ModuleNotFoundError, ImportError):
-            raise CliError(f"No such module: {mod_path}")
+            raise CliError(f"No such module: {full_path}")
 
     attr = getattr(module, attr_name, None)
     if attr is None:
-        raise CliError(f"No such attribute in module {mod_path}: {attr_name}")
+        raise CliError(f"No such attribute in module {full_path}: {attr_name}")
 
     return attr
 
