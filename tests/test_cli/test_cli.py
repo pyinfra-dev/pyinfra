@@ -99,7 +99,7 @@ class TestFactCli(PatchSSHTestCase):
             "not_a_module.NotAFact",
         )
         assert result.exit_code == 1, result.stdout
-        assert "No such module: `not_a_module`" in result.stdout
+        assert "No such module: not_a_module" in result.stdout
 
     def test_invalid_fact_class(self):
         result = run_cli(
@@ -108,7 +108,7 @@ class TestFactCli(PatchSSHTestCase):
             "server.NotAFact",
         )
         assert result.exit_code == 1, result.stdout
-        assert "No such fact: `server.NotAFact`" in result.stdout
+        assert "No such attribute in module server: NotAFact" in result.stdout
 
 
 class TestExecCli(PatchSSHTestCase):

@@ -36,7 +36,7 @@ class TestCliUtil(TestCase):
         with self.assertRaises(CliError) as context:
             get_func_and_args(("server.no",))
 
-        assert context.exception.message == "No such operation: server.no"
+        assert context.exception.message == "No such attribute in module server: no"
 
     def test_setup_op_and_args(self):
         commands = ("pyinfra.operations.server.user", "one", "two", "hello=world")
