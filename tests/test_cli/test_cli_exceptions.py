@@ -45,11 +45,11 @@ class TestCliExceptions(TestCase):
     def test_no_fact_module(self):
         self.assert_cli_exception(
             ["my-server.net", "fact", "not_a_module.SomeFact"],
-            "No such module: `not_a_module`",
+            "No such module: not_a_module",
         )
 
     def test_no_fact_cls(self):
         self.assert_cli_exception(
             ["my-server.net", "fact", "server.NotAFact"],
-            "No such fact: `server.NotAFact`",
+            "No such attribute in module server: NotAFact",
         )
