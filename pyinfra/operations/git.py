@@ -16,12 +16,13 @@ from .util.files import chown, unix_path_join
 @operation(
     pipeline_facts={"git_config": "repo"},
 )
-def config(key, value, repo=None):
+def config(key, value, multi_value=False, repo=None):
     """
     Manage git config for a repository or globally.
 
     + key: the key of the config to ensure
     + value: the value this key should have
+    + multi_value: Add the value rather than set it for settings that can have multiple values
     + repo: specify the git repo path to edit local config (defaults to global)
 
     **Example:**
@@ -46,13 +47,18 @@ def config(key, value, repo=None):
     elif host.get_fact(Directory, path=unix_path_join(repo, ".git")):
         existing_config = host.get_fact(GitConfig, repo=repo)
 
-    if existing_config.get(key) != value:
-        if repo is None:
-            yield 'git config --global {0} "{1}"'.format(key, value)
-        else:
-            yield 'cd {0} && git config --local {1} "{2}"'.format(repo, key, value)
+    if repo is None:
+        base_command = "git config --global"
+    else:
+        base_command = "cd {0} && git config --local".format(repo)
 
-        existing_config[key] = value
+    if not multi_value and existing_config.get(key) != [value]:
+        yield '{0} {1} "{2}"'.format(base_command, key, value)
+        existing_config[key] = [value]
+
+    elif multi_value and value not in existing_config.get(key, []):
+        yield '{0} --add {1} "{2}"'.format(base_command, key, value)
+        existing_config.setdefault(key, []).append(value)
 
     else:
         host.noop("git config {0} is set to {1}".format(key, value))

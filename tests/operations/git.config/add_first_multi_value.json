@@ -1,0 +1,12 @@
+{
+    "args": ["key", "value"],
+    "kwargs": {
+        "multi_value": true
+    },
+    "facts": {
+        "git.GitConfig": {}
+    },
+    "commands": [
+        "git config --global --add key \"value\""
+    ]
+}

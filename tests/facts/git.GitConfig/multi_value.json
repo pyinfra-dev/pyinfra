@@ -1,0 +1,14 @@
+{
+    "command": "git config --global -l || true",
+    "requires_command": "git",
+    "output": [
+        "safe.directory=/a/safe/repo",
+        "safe.directory=/another/safe/repo"
+    ],
+    "fact": {
+        "safe.directory": [
+            "/a/safe/repo",
+            "/another/safe/repo"
+        ]
+    }
+}
