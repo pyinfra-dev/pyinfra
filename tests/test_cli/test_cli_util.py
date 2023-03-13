@@ -7,8 +7,9 @@ from unittest import TestCase
 import pytest
 
 from pyinfra.operations import server
+from pyinfra_cli.commands import get_func_and_args
 from pyinfra_cli.exceptions import CliError
-from pyinfra_cli.util import get_func_and_args, json_encode
+from pyinfra_cli.util import json_encode
 
 
 class TestCliUtil(TestCase):
