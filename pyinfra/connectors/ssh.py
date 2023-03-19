@@ -498,6 +498,8 @@ def put_file(
     remote_temp_filename=None,
     sudo: bool = False,
     sudo_user=None,
+    doas: bool = False,
+    doas_user=None,
     su_user=None,
     print_output: bool = False,
     print_input: bool = False,
@@ -510,7 +512,7 @@ def put_file(
 
     # sudo/su are a little more complicated, as you can only sftp with the SSH
     # user connected, so upload to tmp and copy/chown w/sudo and/or su_user
-    if sudo or su_user:
+    if sudo or doas or su_user:
         # Get temp file location
         temp_file = remote_temp_filename or state.get_temp_filename(remote_filename)
         _put_file(host, filename_or_io, temp_file)
@@ -544,6 +546,8 @@ def put_file(
             command,
             sudo=sudo,
             sudo_user=sudo_user,
+            doas=doas,
+            doas_user=doas_user,
             su_user=su_user,
             print_output=print_output,
             print_input=print_input,
@@ -562,6 +566,7 @@ def put_file(
             host,
             command,
             sudo=False,
+            doas=False,
             print_output=print_output,
             print_input=print_input,
             **command_kwargs,
