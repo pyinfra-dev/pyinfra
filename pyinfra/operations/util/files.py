@@ -43,6 +43,7 @@ def sed_replace(
     line = line.replace("/", r"\/")
     replace = str(replace)
     replace = replace.replace("/", r"\/")
+    replace = replace.replace("&", r"\&")
     backup_extension = get_timestamp()
 
     if interpolate_variables:
