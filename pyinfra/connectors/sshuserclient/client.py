@@ -12,7 +12,9 @@ from paramiko import (
     ProxyCommand,
     SSHClient as ParamikoClient,
     SSHException,
+    Transport,
 )
+from paramiko.ssh_exception import BadAuthenticationType
 from paramiko.agent import AgentRequestHandler
 
 from pyinfra import logger
@@ -160,7 +162,15 @@ class SSHClient(ParamikoClient):
             config.update(_pyinfra_ssh_paramiko_connect_kwargs)
 
         self._ssh_config = config
-        super().connect(hostname, **config)
+        try:
+            super().connect(hostname, **config)
+        except BadAuthenticationType:
+            super()
+            transport = Transport(hostname)
+            transport.start_client()
+            transport.auth_interactive_dumb(config["username"])
+            transport.auth_publickey(username=config["username"], key=config["pkey"])
+            self._transport = transport
 
         if _pyinfra_ssh_forward_agent is not None:
             forward_agent = _pyinfra_ssh_forward_agent
