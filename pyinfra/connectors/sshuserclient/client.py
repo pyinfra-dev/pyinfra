@@ -239,7 +239,9 @@ class SSHClient(ParamikoClient):
 
             for i, hop in enumerate(hops):
                 hop_hostname, hop_config = self.derive_shorthand(ssh_config, hop)
-                logger.debug("SSH ProxyJump through %s:%s", hop_hostname, hop_config["port"])
+                if "pkey" in initial_cfg:
+                    hop_config["pkey"] = initial_cfg["pkey"]
+                logger.debug("SSH ProxyJump through %s:%s", hop_hostname, hop_config)
 
                 c = SSHClient()
                 c.connect(
