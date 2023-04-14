@@ -43,7 +43,6 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
     'pytest==7.2.0 ; python_version > "3.6"',
     'coverage==6.5 ; python_version > "3.6"',
     "pytest-cov==4.0.0",
-    "codecov==2.1.12",
     # Formatting & linting
     "black==22.3.0",
     "isort==5.10.1",
