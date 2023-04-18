@@ -1,0 +1,17 @@
+{
+    "command": "locale -a ",
+    "output": [
+        "C",
+        "C.UTF-8",
+        "en_US.utf8",
+        "fr_FR.utf8",
+        "POSIX"
+    ],
+    "fact": [
+        "C",
+        "C.UTF-8",
+        "en_US.UTF-8",
+        "fr_FR.UTF-8",
+        "POSIX"
+    ]
+}

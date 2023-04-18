@@ -9,11 +9,11 @@ from itertools import filterfalse, tee
 from os import path
 from time import sleep
 
-from pyinfra import host, state
+from pyinfra import host, state, logger
 from pyinfra.api import FunctionCommand, OperationError, StringCommand, operation
 from pyinfra.api.util import try_int
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
-from pyinfra.facts.files import Directory, Link
+from pyinfra.facts.files import Directory, Link, FindInFile
 from pyinfra.facts.server import (
     Crontab,
     Groups,
@@ -24,6 +24,7 @@ from pyinfra.facts.server import (
     Sysctl,
     Users,
     Which,
+    Locales,
 )
 
 from . import (
@@ -1108,3 +1109,75 @@ def user(
             authorized_key_directory="{0}/.ssh".format(home),
             authorized_key_filename=None,
         )
+
+
+@operation
+def locale(
+    locale,
+    present=True,
+):
+    """
+    Enable/Disable locale.
+
+    + locale: name of the locale to enable/disable
+    + present: whether this locale should be present or not
+
+    **Examples:**
+
+    .. code:: python
+
+        server.locale(
+            name="Ensure en_GB.UTF-8 locale is not present",
+            locale="en_GB.UTF-8",
+            present=False,
+        )
+
+        server.locale(
+            name="Ensure en_GB.UTF-8 locale is present",
+            locale="en_GB.UTF-8",
+        )
+
+   """
+
+    locales = host.get_fact(Locales)
+
+    logger.debug("Enabled locales: {0}".format(locales))
+
+    locales_definitions_file = "/etc/locale.gen"
+
+    # Find the matching line in /etc/locale.gen
+    matching_lines = host.get_fact(FindInFile, path=locales_definitions_file, pattern=fr"^.*{locale}[[:space:]]\+.*$")
+
+    if not matching_lines:
+        raise OperationError(
+            f"Locale {locale} not found in {locales_definitions_file}"
+        )
+
+    if len(matching_lines) > 1:
+        raise OperationError(
+            f"Multiple locales matches for {locale} in {locales_definitions_file}"
+        )
+
+    matching_line = matching_lines[0]
+
+    # Remove locale
+    if not present and locale in locales:
+        logger.debug(f"Removing locale {locale}")
+
+        yield from files.line(
+            path=locales_definitions_file, line=f"^{matching_line}$", replace=f"# {matching_line}"
+        )
+
+        yield "locale-gen"
+
+    # Add locale
+    if present and locale not in locales:
+        logger.debug(f"Adding locale {locale}")
+
+        yield from files.replace(
+            path=locales_definitions_file,
+            text=f"^{matching_line}$",
+            replace=f"{matching_line}".replace("# ", ""),
+        )
+
+        yield "locale-gen"
