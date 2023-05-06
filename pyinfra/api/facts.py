@@ -343,7 +343,10 @@ def get_host_fact(
     args: Optional[List] = None,
     kwargs: Optional[Dict] = None,
 ):
-    fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
+    if issubclass(cls, ShortFactBase):
+        fact_hash = None
+    else:
+        fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
     return get_fact(state, host, cls, args=args, kwargs=kwargs, fact_hash=fact_hash)
 
 
