@@ -6,7 +6,7 @@
         "noshell:x:1002:1002:noshell comment with spaces:/home/noshell:|noshell||noshell **Never logged in**",
         "nohome:x:1002:1002:nohome comment::/bin/bash|nohome||**Never logged in**"
     ],
-    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ENTRY=`grep ^$i: /etc/passwd`;\n            LASTLOG=`lastlog -u $i | grep ^$i` | tr -s ' ';\n            echo \"$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG\";\n        done",
+    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ENTRY=`grep ^$i: /etc/passwd`;\n            LASTLOG=`lastlog -u $i | grep ^$i | tr -s ' '`;\n            echo \"$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG\";\n        done",
     "fact": {
         "root": {
             "home": "/root",
