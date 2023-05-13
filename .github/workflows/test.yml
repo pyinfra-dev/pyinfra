@@ -67,7 +67,8 @@ jobs:
 
   end-to-end-test:
     needs:
-      - unit-test
+      - lint
+      - type-check
     strategy:
       matrix:
         os: [ubuntu-20.04, ubuntu-latest]
@@ -83,3 +84,19 @@ jobs:
           python-version: "3.11"
       - run: pip install '.[test]'
       - run: pytest -m end_to_end_${{ matrix.test-name }}
+
+  # Finally, single jon to check if all completed, for use in protected branch
+  #
+
+  tests-done:
+    if: ${{ always() }}
+    needs:
+      - lint
+      - type-check
+      - unit-test
+      - end-to-end-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: matrix-org/done-action@v2
+        with:
+          needs: ${{ toJSON(needs) }}
