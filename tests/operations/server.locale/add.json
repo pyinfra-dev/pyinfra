@@ -22,6 +22,9 @@
         "sed -i.a-timestamp 's/^# fr_FR.UTF-8 UTF-8$/fr_FR.UTF-8 UTF-8/' /etc/locale.gen && rm -f /etc/locale.gen.a-timestamp",
         "locale-gen"
     ],
+    "second_output_commands": [
+        "locale-gen"
+    ],
     "idempotent": false,
     "disable_idempotent_warning_reason": "localgen is always executed"
 }
