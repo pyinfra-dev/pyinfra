@@ -1,16 +1,17 @@
 {
-    "args": [["git@1.1", "react", "test@1.1"]],
+    "args": [["git@1.1", "react", "test@1.1", "ansible"]],
     "kwargs": {
         "present": false
     },
     "facts": {
         "cargo.CargoPackages": {
             "git": ["1.0"],
-            "react": [""],
-            "test": ["1.1"]
+            "react": ["1"],
+            "test": ["1.1"],
+            "ansible": ["1.2.1.0"]
         }
     },
     "commands": [
-        "cargo uninstall react test@1.1"
+        "cargo uninstall react test@1.1 ansible"
     ]
 }
