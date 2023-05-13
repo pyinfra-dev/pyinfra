@@ -9,22 +9,22 @@ from itertools import filterfalse, tee
 from os import path
 from time import sleep
 
-from pyinfra import host, state, logger
+from pyinfra import host, logger, state
 from pyinfra.api import FunctionCommand, OperationError, StringCommand, operation
 from pyinfra.api.util import try_int
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
-from pyinfra.facts.files import Directory, Link, FindInFile
+from pyinfra.facts.files import Directory, FindInFile, Link
 from pyinfra.facts.server import (
     Crontab,
     Groups,
     Hostname,
     KernelModules,
+    Locales,
     Mounts,
     Os,
     Sysctl,
     Users,
     Which,
-    Locales,
 )
 
 from . import (
@@ -1137,7 +1137,7 @@ def locale(
             locale="en_GB.UTF-8",
         )
 
-   """
+    """
 
     locales = host.get_fact(Locales)
 
@@ -1146,17 +1146,15 @@ def locale(
     locales_definitions_file = "/etc/locale.gen"
 
     # Find the matching line in /etc/locale.gen
-    matching_lines = host.get_fact(FindInFile, path=locales_definitions_file, pattern=fr"^.*{locale}[[:space:]]\+.*$")
+    matching_lines = host.get_fact(
+        FindInFile, path=locales_definitions_file, pattern=rf"^.*{locale}[[:space:]]\+.*$"
+    )
 
     if not matching_lines:
-        raise OperationError(
-            f"Locale {locale} not found in {locales_definitions_file}"
-        )
+        raise OperationError(f"Locale {locale} not found in {locales_definitions_file}")
 
     if len(matching_lines) > 1:
-        raise OperationError(
-            f"Multiple locales matches for {locale} in {locales_definitions_file}"
-        )
+        raise OperationError(f"Multiple locales matches for {locale} in {locales_definitions_file}")
 
     matching_line = matching_lines[0]
 
