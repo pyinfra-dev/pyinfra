@@ -86,7 +86,6 @@ class TestSSHConnector(TestCase):
         with patch("pyinfra.connectors.ssh.path.isfile", lambda *args, **kwargs: True), patch(
             "pyinfra.connectors.ssh.RSAKey.from_private_key_file",
         ) as fake_key_open:
-
             fake_key = MagicMock()
             fake_key_open.return_value = fake_key
 
@@ -181,7 +180,6 @@ class TestSSHConnector(TestCase):
         with patch("pyinfra.connectors.ssh.path.isfile", lambda *args, **kwargs: True), patch(
             "pyinfra.connectors.ssh.RSAKey.from_private_key_file",
         ) as fake_key_open:
-
             fake_key_open.side_effect = make_raise_exception_function(PasswordRequiredException)
 
             fake_key = MagicMock()
@@ -243,7 +241,6 @@ class TestSSHConnector(TestCase):
         ) as fake_rsa_key_open, patch(
             "pyinfra.connectors.ssh.DSSKey.from_private_key_file",
         ) as fake_key_open:  # noqa
-
             fake_rsa_key_open.side_effect = make_raise_exception_function(SSHException)
 
             fake_key = MagicMock()
@@ -633,9 +630,77 @@ class TestSSHConnector(TestCase):
 
         assert status is True
 
-        fake_ssh_client().exec_command.assert_called_with(
-            ("sh -c 'rm -f " "/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24'"),
-            get_pty=False,
+        fake_ssh_client().exec_command.assert_has_calls(
+            [
+                call(
+                    (
+                        "sh -c 'setfacl -m u:ubuntu:r "
+                        "/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24'"
+                    ),
+                    get_pty=False,
+                ),
+                call(
+                    (
+                        "sudo -H -n -u ubuntu sh -c 'cp /tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24 '\"'\"'not another file'\"'\"''"  # noqa: E501
+                    ),
+                    get_pty=False,
+                ),
+                call(
+                    ("sh -c 'rm -f /tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24'"),
+                    get_pty=False,
+                ),
+            ],
+        )
+
+        fake_sftp_client.from_transport().putfo.assert_called_with(
+            fake_open(),
+            "/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24",
+        )
+
+    @patch("pyinfra.connectors.ssh.SSHClient")
+    @patch("pyinfra.connectors.ssh.SFTPClient")
+    def test_put_file_doas(self, fake_sftp_client, fake_ssh_client):
+        inventory = make_inventory(hosts=("anotherhost",))
+        State(inventory, Config())
+        host = inventory.get_host("anotherhost")
+        host.connect()
+
+        stdout_mock = MagicMock()
+        stdout_mock.channel.recv_exit_status.return_value = 0
+        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+
+        fake_open = mock_open(read_data="test!")
+        with patch("pyinfra.api.util.open", fake_open, create=True):
+            status = host.put_file(
+                "not-a-file",
+                "not another file",
+                print_output=True,
+                doas=True,
+                doas_user="ubuntu",
+            )
+
+        assert status is True
+
+        fake_ssh_client().exec_command.assert_has_calls(
+            [
+                call(
+                    (
+                        "sh -c 'setfacl -m u:ubuntu:r "
+                        "/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24'"
+                    ),
+                    get_pty=False,
+                ),
+                call(
+                    (
+                        "doas -n -u ubuntu sh -c 'cp /tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24 '\"'\"'not another file'\"'\"''"  # noqa: E501
+                    ),
+                    get_pty=False,
+                ),
+                call(
+                    ("sh -c 'rm -f /tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24'"),
+                    get_pty=False,
+                ),
+            ],
         )
 
         fake_sftp_client.from_transport().putfo.assert_called_with(
