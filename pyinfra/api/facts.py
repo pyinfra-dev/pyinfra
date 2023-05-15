@@ -197,6 +197,9 @@ def get_fact(
             args=args,
             kwargs=kwargs,
             ensure_hosts=ensure_hosts,
+            apply_failed_hosts=apply_failed_hosts,
+            fact_hash=fact_hash,
+            use_cache=use_cache,
         )
 
     with host.facts_lock:
@@ -336,6 +339,8 @@ def _get_fact(
 
 
 def _get_fact_hash(state: "State", host: "Host", cls, args, kwargs):
+    if issubclass(cls, ShortFactBase):
+        cls = cls.fact
     fact_kwargs, executor_kwargs = _handle_fact_kwargs(state, host, cls, args, kwargs)
     return make_hash((cls, fact_kwargs, executor_kwargs))
 
