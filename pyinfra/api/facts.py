@@ -79,6 +79,10 @@ class FactBase(metaclass=FactNameMeta):
 class ShortFactBase(metaclass=FactNameMeta):
     fact: Type[FactBase]
 
+    @staticmethod
+    def process_data(data):
+        return data
+
 
 def get_short_facts(state: "State", host: "Host", short_fact, **kwargs):
     fact_data = get_fact(state, host, short_fact.fact, **kwargs)
