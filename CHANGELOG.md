@@ -1,3 +1,25 @@
+# v2.7
+
+Been a while since a release, so there's a bunch of great stuff in thise one!
+
+Added:
+
++ Add experimental support for importing inventories from Python modules
++ Add `caro.packages` operation (@wowi42)
++ Add `server.locale` operation and `server.Locales` fact (@maisim)
++ Add `ensure_newline` keyword argument to `files.line` (@yunzheng)
++ Add `args` argument to `server.script` operation
++ Add make `put_file` work with `doas` (@minusf)
++ Handle adding git config key-values with multiple lines (@gchazot)
+
+Fixed:
+
++ Add Ubuntu latest (22.04) to CI tests (@gchazot)
++ Fix codecov workflow (@ioO)
++ Escape & character during sed replacement during `line.replace` (@sysadmin75)
++ Fix last login time in `server.users` operation (@minusf)
++ Fix fact hash for short facts where the backing fact takes arguments
+
 # v2.6.2
 
 + Add support for classic confinment in `snap.packages` operation (@pabloxio)
