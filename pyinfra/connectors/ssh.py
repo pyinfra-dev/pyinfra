@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import shlex
 from distutils.spawn import find_executable
+from random import uniform
 from socket import error as socket_error, gaierror
+from time import sleep
 from typing import TYPE_CHECKING, Any, Iterable, Optional, Tuple
 
 import click
@@ -48,6 +50,10 @@ class ConnectorData(TypedDict):
 
     ssh_paramiko_connect_kwargs: dict
 
+    ssh_connect_retries: int
+    ssh_connect_retry_min_delay: float
+    ssh_connect_retry_max_delay: float
+
 
 connector_data_meta: dict[str, DataMeta] = {
     "ssh_hostname": DataMeta("SSH hostname"),
@@ -76,6 +82,15 @@ connector_data_meta: dict[str, DataMeta] = {
     ),
     "ssh_paramiko_connect_kwargs": DataMeta(
         "Override keyword arguments passed into Paramiko's ``SSHClient.connect``"
+    ),
+    "ssh_connect_retries": DataMeta("Number of tries to connect via ssh", 0),
+    "ssh_connect_retry_min_delay": DataMeta(
+        "Lower bound for random delay between retries",
+        0.1,
+    ),
+    "ssh_connect_retry_max_delay": DataMeta(
+        "Upper bound for random delay between retries",
+        0.5,
     ),
 }
 
@@ -172,6 +187,29 @@ class SSHConnector(BaseConnector):
         return kwargs
 
     def connect(self) -> None:
+        retries = self.data["ssh_connect_retries"]
+
+        try:
+            while True:
+                try:
+                    return self._connect()
+                except (SSHException, gaierror, socket_error, EOFError):
+                    if retries == 0:
+                        raise
+                    retries -= 1
+                    min_delay = self.data["ssh_connect_retry_min_delay"]
+                    max_delay = self.data["ssh_connect_retry_max_delay"]
+                    sleep(uniform(min_delay, max_delay))
+        except SSHException as e:
+            raise_connect_error(self.host, "SSH error", e)
+        except gaierror as e:
+            raise_connect_error(self.host, "Could not resolve hostname", e)
+        except socket_error as e:
+            raise_connect_error(self.host, "Could not connect", e)
+        except EOFError as e:
+            raise_connect_error(self.host, "EOF error", e)
+
+    def _connect(self) -> None:
         """
         Connect to a single host. Returns the SSH client if successful. Stateless by
         design so can be run in parallel.
@@ -220,18 +258,6 @@ class SSHConnector(BaseConnector):
                 "SSH host key error",
                 f"Host key for {e.hostname} does not match.",
             )
-
-        except SSHException as e:
-            raise_connect_error(self.host, "SSH error", e)
-
-        except gaierror:
-            raise_connect_error(self.host, "Could not resolve hostname", hostname)
-
-        except socket_error as e:
-            raise_connect_error(self.host, "Could not connect", e)
-
-        except EOFError as e:
-            raise_connect_error(self.host, "EOF error", e)
 
     def run_shell_command(
         self,
