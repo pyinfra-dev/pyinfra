@@ -12,7 +12,9 @@ import shlex
 from distutils.spawn import find_executable
 from getpass import getpass
 from os import path
+from random import uniform
 from socket import error as socket_error, gaierror
+from time import sleep
 from typing import TYPE_CHECKING, Type, Union
 
 import click
@@ -70,6 +72,10 @@ class Meta(BaseConnectorMeta):
         config_file = "Custom SSH config file"
         known_hosts_file = "Custom SSH known hosts file"
         strict_host_key_checking = "Override strict host keys check setting"
+
+        connect_retries = "Number of tries to connect via ssh"
+        connect_retry_min_delay = "Lower bound for random delay between retries"
+        connect_retry_max_delay = "Upper bound for random delay between retries"
 
         paramiko_connect_kwargs = (
             "Override keyword arguments passed into paramiko's `SSHClient.connect`"
@@ -226,7 +232,14 @@ def connect(state: "State", host: "Host"):
     Connect to a single host. Returns the SSH client if successful. Stateless by
     design so can be run in parallel.
     """
+    retries = host.data.get(DATA_KEYS.connect_retries, 0)
 
+    for tries_left in range(retries, -1, -1):
+        if con := _connect(state, host, tries_left):
+            return con
+
+
+def _connect(state: "State", host: "Host", tries_left: int):
     kwargs = _make_paramiko_kwargs(state, host)
     logger.debug("Connecting to: %s (%r)", host.name, kwargs)
 
@@ -273,16 +286,26 @@ def connect(state: "State", host: "Host"):
         )
 
     except SSHException as e:
-        _raise_connect_error(host, "SSH error", e)
+        if tries_left == 0:
+            _raise_connect_error(host, "SSH error", e)
 
     except gaierror:
-        _raise_connect_error(host, "Could not resolve hostname", hostname)
+        if tries_left == 0:
+            _raise_connect_error(host, "Could not resolve hostname", hostname)
 
     except socket_error as e:
-        _raise_connect_error(host, "Could not connect", e)
+        if tries_left == 0:
+            _raise_connect_error(host, "Could not connect", e)
 
     except EOFError as e:
-        _raise_connect_error(host, "EOF error", e)
+        if tries_left == 0:
+            _raise_connect_error(host, "EOF error", e)
+
+    min_delay = host.data.get(DATA_KEYS.connect_retry_min_delay, 0.1)
+    max_delay = host.data.get(DATA_KEYS.connect_retry_max_delay, 0.5)
+    sleep(uniform(min_delay, max_delay))
+
+    return None
 
 
 def run_shell_command(
