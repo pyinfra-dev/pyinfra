@@ -353,7 +353,7 @@ def database(
     if not present:
         if is_present:
             yield make_execute_mysql_command(
-                "DROP DATABASE {0}".format(database),
+                "DROP DATABASE `{0}`".format(database),
                 user=mysql_user,
                 password=mysql_password,
                 host=mysql_host,
@@ -366,7 +366,7 @@ def database(
 
     # We want the database but it doesn't exist
     if present and not is_present:
-        sql_bits = ["CREATE DATABASE {0}".format(database)]
+        sql_bits = ["CREATE DATABASE `{0}`".format(database)]
 
         if collate:
             sql_bits.append("COLLATE {0}".format(collate))
