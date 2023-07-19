@@ -1207,7 +1207,15 @@ def link(
     add_cmd = StringCommand(" ".join(add_args), QuoteString(target), QuoteString(path))
     remove_cmd = StringCommand("rm", "-f", QuoteString(path))
 
-    if info is None and present:  # doesn't exist, but should
+    if not present:
+        if info:
+            yield remove_cmd
+            host.delete_fact(Link, kwargs={"path": path})
+        else:
+            host.noop("link {link} does not exist")
+        return
+
+    if info is None:  # create
         if create_remote_dir:
             yield from _create_remote_dir(state, host, path, user, group)
 
@@ -1221,16 +1229,7 @@ def link(
             kwargs={"path": path},
             data={"link_target": target, "group": group, "user": user},
         )
-
-    elif info and not present:  # exists, but shouldn't
-        yield remove_cmd
-        host.delete_fact(Link, kwargs={"path": path})
-
-    else:
-        if assume_present and not info:
-            info = {"link_target": None, "group": None, "user": None}
-            host.create_fact(Link, kwargs={"path": path}, data=info)
-
+    else:  # edit
         # If we have an absolute path - prepend to any non-absolute values from the fact
         # and/or the source.
         if os.path.isabs(path):
@@ -1247,18 +1246,14 @@ def link(
         changed = False
 
         # If the target is wrong, remove & recreate the link
-        if not info or info["link_target"] != target:
+        if info["link_target"] != target:
             changed = True
             yield remove_cmd
             yield add_cmd
             info["link_target"] = target
 
         # Check user/group
-        if (
-            (not info and (user or group))
-            or (user and info["user"] != user)
-            or (group and info["group"] != group)
-        ):
+        if (user and info["user"] != user) or (group and info["group"] != group):
             yield file_utils.chown(path, user, group, dereference=False)
             changed = True
             if user:
@@ -1341,7 +1336,15 @@ def file(
         )
         info = None
 
-    if info is None and present:  # doesn't exist, but should
+    if not present:
+        if info:
+            yield StringCommand("rm", "-f", QuoteString(path))
+            host.delete_fact(File, kwargs={"path": path})
+        else:
+            host.noop("file {0} does not exist")
+        return
+
+    if info is None:  # create
         if create_remote_dir:
             yield from _create_remote_dir(state, host, path, user, group)
 
@@ -1357,12 +1360,7 @@ def file(
             kwargs={"path": path},
             data={"mode": mode, "group": group, "user": user},
         )
-
-    elif info and not present:  # exists but shouldn't
-        yield StringCommand("rm", "-f", QuoteString(path))
-        host.delete_fact(File, kwargs={"path": path})
-
-    else:
+    else:  # update
         if assume_present and not info:
             info = {"mode": None, "group": None, "user": None}
             host.create_fact(File, kwargs={"path": path}, data=info)
@@ -1373,18 +1371,12 @@ def file(
             changed = True
             yield StringCommand("touch", QuoteString(path))
 
-        # Check mode
-        if mode and (not info or info["mode"] != mode):
+        if mode and info["mode"] != mode:
             yield file_utils.chmod(path, mode)
             info["mode"] = mode
             changed = True
 
-        # Check user/group
-        if (
-            (not info and (user or group))
-            or (user and info["user"] != user)
-            or (group and info["group"] != group)
-        ):
+        if (user and info["user"] != user) or (group and info["group"] != group):
             yield file_utils.chown(path, user, group)
             changed = True
             if user:
@@ -1474,7 +1466,15 @@ def directory(
         )
         info = None
 
-    if info is None and present:  # doesn't exist, but should
+    if not present:
+        if info:
+            yield StringCommand("rm", "-rf", QuoteString(path))
+            host.delete_fact(Directory, kwargs={"path": path})
+        else:
+            host.noop("directory {0} does not exist")
+        return
+
+    if info is None:  # create
         yield StringCommand("mkdir", "-p", QuoteString(path))
         if mode:
             yield file_utils.chmod(path, mode, recursive=recursive)
@@ -1486,12 +1486,7 @@ def directory(
             kwargs={"path": path},
             data={"mode": mode, "group": group, "user": user},
         )
-
-    elif info and not present:  # exists, but shouldn't
-        yield StringCommand("rm", "-rf", QuoteString(path))
-        host.delete_fact(Directory, kwargs={"path": path})
-
-    else:
+    else:  # update
         if assume_present and not info:
             info = {"mode": None, "group": None, "user": None}
             host.create_fact(Directory, kwargs={"path": path}, data=info)
@@ -1501,16 +1496,12 @@ def directory(
 
         changed = False
 
-        if mode and (not info or info["mode"] != mode):
+        if mode and info["mode"] != mode:
             yield file_utils.chmod(path, mode, recursive=recursive)
             info["mode"] = mode
             changed = True
 
-        if (
-            (not info and (user or group))
-            or (user and info["user"] != user)
-            or (group and info["group"] != group)
-        ):
+        if (user and info["user"] != user) or (group and info["group"] != group):
             yield file_utils.chown(path, user, group, recursive=recursive)
             changed = True
             if user:

@@ -790,6 +790,9 @@ def group(group, present=True, system=False, gid=None):
     groups = host.get_fact(Groups)
     is_present = group in groups
 
+    if not is_present and not state.is_executing:
+        return EvalOperationAtExecution  # eval at execute because we can't tell state now
+
     # Group exists but we don't want them?
     if not present and is_present:
         yield "groupdel {0}".format(group)
@@ -810,10 +813,7 @@ def group(group, present=True, system=False, gid=None):
 
         # Groups are often added by other operations (package installs), so check
         # for the group at runtime before adding.
-        yield "grep '^{0}:' /etc/group || groupadd {1}".format(
-            group,
-            " ".join(args),
-        )
+        yield "groupadd {0}".format(" ".join(args))
         groups.append(group)
 
 
@@ -987,7 +987,7 @@ def user(
     existing_groups = host.get_fact(Groups)
     existing_user = users.get(user)
 
-    if existing_user is None:
+    if existing_user is None and not state.is_executing:
         return EvalOperationAtExecution  # eval at execute because we can't tell state now
 
     if groups is None:
@@ -1044,10 +1044,7 @@ def user(
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
-        yield "grep '^{1}:' /etc/passwd || useradd {0} {1}".format(
-            " ".join(args),
-            user,
-        )
+        yield "useradd {0} {1}".format(" ".join(args), user)
         users[user] = {
             "comment": comment,
             "home": home,
