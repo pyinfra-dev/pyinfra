@@ -11,6 +11,7 @@ from time import sleep
 
 from pyinfra import host, logger, state
 from pyinfra.api import FunctionCommand, OperationError, StringCommand, operation
+from pyinfra.api.command import EvalOperationAtExecution
 from pyinfra.api.util import try_int
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 from pyinfra.facts.files import Directory, FindInFile, Link
@@ -985,6 +986,9 @@ def user(
     users = host.get_fact(Users)
     existing_groups = host.get_fact(Groups)
     existing_user = users.get(user)
+
+    if existing_user is None:
+        return EvalOperationAtExecution  # eval at execute because we can't tell state now
 
     if groups is None:
         groups = []
