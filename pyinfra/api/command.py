@@ -45,6 +45,9 @@ def make_formatted_string_command(string: str, *args, **kwargs):
     return StringCommand(*string_bits)
 
 
+EvalOperationAtExecution = object()
+
+
 class MaskString(str):
     pass
 

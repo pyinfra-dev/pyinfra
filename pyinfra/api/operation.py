@@ -14,11 +14,12 @@ from pyinfra import context, logger
 from pyinfra.context import ctx_host, ctx_state
 
 from .arguments import get_execution_kwarg_keys, pop_global_arguments
-from .command import StringCommand
+from .command import EvalOperationAtExecution, FunctionCommand, StringCommand
 from .exceptions import OperationValueError, PyinfraError
 from .host import Host
 from .operations import run_host_op
 from .util import (
+    ReturnCatchingGenerator,
     get_args_kwargs_spec,
     get_call_location,
     get_operation_order_from_stack,
@@ -209,11 +210,14 @@ def operation(
         host.current_op_global_kwargs = global_kwargs
 
         # Convert to list as the result may be a generator
-        commands = func(*args, **kwargs)
+        command_gen = ReturnCatchingGenerator(func(*args, **kwargs))
         commands = [  # convert any strings -> StringCommand's
             StringCommand(command.strip()) if isinstance(command, str) else command
-            for command in commands
+            for command in command_gen
         ]
+        if command_gen.value == EvalOperationAtExecution:
+            logger.warning("Defering operation evaluation until execution: %s", op_meta["names"])
+            commands = [FunctionCommand(operation(func), args, kwargs)]
 
         host.in_op = False
         host.current_op_hash = None
