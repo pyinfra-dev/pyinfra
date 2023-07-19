@@ -24,7 +24,7 @@ from pyinfra.api import (
     StringCommand,
     operation,
 )
-from pyinfra.api.command import make_formatted_string_command
+from pyinfra.api.command import EvalOperationAtExecution, make_formatted_string_command
 from pyinfra.api.util import (
     get_call_location,
     get_file_sha1,
@@ -332,16 +332,6 @@ def line(
     """
 
     match_line = adjust_regex(line, escape_regex_characters)
-    #
-    # if escape_regex_characters:
-    #     match_line = re.sub(r"([\.\\\+\*\?\[\^\]\$\(\)\{\}\-])", r"\\\1", match_line)
-    #
-    # # Ensure we're matching a whole line, note: match may be a partial line so we
-    # # put any matches on either side.
-    # if not match_line.startswith("^"):
-    #     match_line = "^.*{0}".format(match_line)
-    # if not match_line.endswith("$"):
-    #     match_line = "{0}.*$".format(match_line)
 
     # Is there a matching line in this file?
     if assume_present:
@@ -353,6 +343,9 @@ def line(
             pattern=match_line,
             interpolate_variables=interpolate_variables,
         )
+
+    if present_lines is None and not state.is_executing:
+        return EvalOperationAtExecution
 
     # If replace present, use that over the matching line
     if replace:
@@ -397,48 +390,27 @@ def line(
 
     # No line and we want it, append it
     if not present_lines and present:
-        # If the file does not exist - it *might* be created, so we handle it
-        # dynamically with a little script.
-        if present_lines is None:
-            yield make_formatted_string_command(
-                """
-                    if [ -f '{target}' ]; then
-                        ( grep {match_line} '{target}' && \
-                        {sed_replace_command}) 2> /dev/null || \
-                        {echo_command} ;
-                    else
-                        {echo_command} ;
-                    fi
-                """,
-                target=QuoteString(path),
-                match_line=QuoteString(match_line),
-                echo_command=echo_command,
-                sed_replace_command=sed_replace_command,
+        # If we're doing replacement, only append if the *replacement* line
+        # does not exist (as we are appending the replacement).
+        if replace:
+            # Ensure replace explicitly matches a whole line
+            replace_line = replace
+            if not replace_line.startswith("^"):
+                replace_line = f"^{replace_line}"
+            if not replace_line.endswith("$"):
+                replace_line = f"{replace_line}$"
+
+            present_lines = host.get_fact(
+                FindInFile,
+                path=path,
+                pattern=replace_line,
+                interpolate_variables=interpolate_variables,
             )
 
-        # File exists but has no matching lines - append it.
+        if not present_lines:
+            yield echo_command
         else:
-            # If we're doing replacement, only append if the *replacement* line
-            # does not exist (as we are appending the replacement).
-            if replace:
-                # Ensure replace explicitly matches a whole line
-                replace_line = replace
-                if not replace_line.startswith("^"):
-                    replace_line = f"^{replace_line}"
-                if not replace_line.endswith("$"):
-                    replace_line = f"{replace_line}$"
-
-                present_lines = host.get_fact(
-                    FindInFile,
-                    path=path,
-                    pattern=replace_line,
-                    interpolate_variables=interpolate_variables,
-                )
-
-            if not present_lines:
-                yield echo_command
-            else:
-                host.noop('line "{0}" exists in {1}'.format(replace or line, path))
+            host.noop('line "{0}" exists in {1}'.format(replace or line, path))
 
         host.create_fact(
             FindInFile,
@@ -1213,8 +1185,12 @@ def link(
 
     info = host.get_fact(Link, path=path)
 
-    # Not a link?
-    if info is False:
+    if info is None and not state.is_executing:  # eval at execute because we can't tell state now
+        return EvalOperationAtExecution
+    if assume_present:
+        logger.warning("The `assume_present` argument is no longer needed in `files.link`")
+
+    if info is False:  # not a link
         yield from _raise_or_remove_invalid_path(
             "link",
             path,
@@ -1231,8 +1207,7 @@ def link(
     add_cmd = StringCommand(" ".join(add_args), QuoteString(target), QuoteString(path))
     remove_cmd = StringCommand("rm", "-f", QuoteString(path))
 
-    # No link and we want it
-    if not assume_present and info is None and present:
+    if info is None and present:  # doesn't exist, but should
         if create_remote_dir:
             yield from _create_remote_dir(state, host, path, user, group)
 
@@ -1247,13 +1222,11 @@ def link(
             data={"link_target": target, "group": group, "user": user},
         )
 
-    # It exists and we don't want it
-    elif (assume_present or info) and not present:
+    elif info and not present:  # exists, but shouldn't
         yield remove_cmd
         host.delete_fact(Link, kwargs={"path": path})
 
-    # Exists and want to ensure it's state
-    elif (assume_present or info) and present:
+    else:
         if assume_present and not info:
             info = {"link_target": None, "group": None, "user": None}
             host.create_fact(Link, kwargs={"path": path}, data=info)
@@ -1318,7 +1291,6 @@ def file(
 
     + path: name/path of the remote file
     + present: whether the file should exist
-    + assume_present: whether to assume the file exists
     + user: user to own the files
     + group: group to own the files
     + mode: permissions of the files as an integer, eg: 755
@@ -1354,8 +1326,12 @@ def file(
     mode = ensure_mode_int(mode)
     info = host.get_fact(File, path=path)
 
-    # Not a file?!
-    if info is False:
+    if info is None and not state.is_executing:  # eval at execute because we can't tell state now
+        return EvalOperationAtExecution
+    if assume_present:
+        logger.warning("The `assume_present` argument is no longer needed in `files.file`")
+
+    if info is False:  # not a file
         yield from _raise_or_remove_invalid_path(
             "file",
             path,
@@ -1365,8 +1341,7 @@ def file(
         )
         info = None
 
-    # Doesn't exist & we want it
-    if not assume_present and info is None and present:
+    if info is None and present:  # doesn't exist, but should
         if create_remote_dir:
             yield from _create_remote_dir(state, host, path, user, group)
 
@@ -1383,13 +1358,11 @@ def file(
             data={"mode": mode, "group": group, "user": user},
         )
 
-    # It exists and we don't want it
-    elif (assume_present or info) and not present:
+    elif info and not present:  # exists but shouldn't
         yield StringCommand("rm", "-f", QuoteString(path))
         host.delete_fact(File, kwargs={"path": path})
 
-    # It exists & we want to ensure its state
-    elif (assume_present or info) and present:
+    else:
         if assume_present and not info:
             info = {"mode": None, "group": None, "user": None}
             host.create_fact(File, kwargs={"path": path}, data=info)
@@ -1445,7 +1418,6 @@ def directory(
 
     + path: path of the remote folder
     + present: whether the folder should exist
-    + assume_present: whether to assume the directory exists
     + user: user to own the folder
     + group: group to own the folder
     + mode: permissions of the folder
@@ -1484,8 +1456,12 @@ def directory(
     mode = ensure_mode_int(mode)
     info = host.get_fact(Directory, path=path)
 
-    # Not a directory?!
-    if info is False:
+    if info is None and not state.is_executing:  # eval at execute because we can't tell state now
+        return EvalOperationAtExecution
+    if assume_present:
+        logger.warning("The `assume_present` argument is no longer needed in `files.directory`")
+
+    if info is False:  # not a directory
         if _no_fail_on_link and host.get_fact(Link, path=path):
             host.noop("directory {0} already exists (as a link)".format(path))
             return
@@ -1498,8 +1474,7 @@ def directory(
         )
         info = None
 
-    # Doesn't exist & we want it
-    if not assume_present and info is None and present:
+    if info is None and present:  # doesn't exist, but should
         yield StringCommand("mkdir", "-p", QuoteString(path))
         if mode:
             yield file_utils.chmod(path, mode, recursive=recursive)
@@ -1512,13 +1487,11 @@ def directory(
             data={"mode": mode, "group": group, "user": user},
         )
 
-    # It exists and we don't want it
-    elif (assume_present or info) and not present:
+    elif info and not present:  # exists, but shouldn't
         yield StringCommand("rm", "-rf", QuoteString(path))
         host.delete_fact(Directory, kwargs={"path": path})
 
-    # It exists & we want to ensure its state
-    elif (assume_present or info) and present:
+    else:
         if assume_present and not info:
             info = {"mode": None, "group": None, "user": None}
             host.create_fact(Directory, kwargs={"path": path}, data=info)
