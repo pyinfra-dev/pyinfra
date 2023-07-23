@@ -41,7 +41,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
         logger.info("{0}{1}".format(host.print_prefix, click.style("Skipped", "blue")))
         return True
 
-    op_data = state.get_op_data(host, op_hash)
+    op_data = state.get_op_data_for_host(host, op_hash)
     global_kwargs = op_data["global_kwargs"]
 
     op_meta = state.get_op_meta(op_hash)
@@ -114,8 +114,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
     executed_commands = 0
     all_combined_output_lines = []
 
-    for i, command in enumerate(op_data["commands"]):
-
+    for command in op_data["command_generator"]():
         status = False
 
         executor_kwargs = base_executor_kwargs.copy()
@@ -171,7 +170,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
         state.results[host]["ops"] += 1
         state.results[host]["success_ops"] += 1
 
-        _status_log = "Success" if len(op_data["commands"]) > 0 else "No changes"
+        _status_log = "Success" if executed_commands > 0 else "No changes"
         _click_log_status = click.style(_status_log, "green")
         logger.info("{0}{1}".format(host.print_prefix, _click_log_status))
 
@@ -189,7 +188,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
         if executed_commands:
             state.results[host]["partial_ops"] += 1
 
-        _command_description = f"executed {executed_commands}/{len(op_data['commands'])} commands"
+        _command_description = f"executed {executed_commands} commands"
         log_error_or_warning(host, ignore_errors, _command_description, continue_on_error)
 
         # Always trigger any error handler
