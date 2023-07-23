@@ -9,7 +9,7 @@ from paramiko import SSHException
 
 import pyinfra
 from pyinfra import logger
-from pyinfra.context import ctx_host
+from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
 from .arguments import get_executor_kwarg_keys
@@ -115,7 +115,6 @@ def run_host_op(state: "State", host: "Host", op_hash):
     all_combined_output_lines = []
 
     for i, command in enumerate(op_data["commands"]):
-
         status = False
 
         executor_kwargs = base_executor_kwargs.copy()
@@ -217,8 +216,9 @@ def run_host_op(state: "State", host: "Host", op_hash):
 
 
 def _run_host_op_with_context(state: "State", host: "Host", op_hash: str):
-    with ctx_host.use(host):
-        return run_host_op(state, host, op_hash)
+    with ctx_state.use(state):
+        with ctx_host.use(host):
+            return run_host_op(state, host, op_hash)
 
 
 def _run_host_ops(state: "State", host: "Host", progress=None):
