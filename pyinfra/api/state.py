@@ -224,6 +224,10 @@ class State:
             "results": self.results,
         }
 
+    def should_diff(self):
+        # TODO: disable diffs if -y/--yes
+        return not self.is_executing
+
     def add_callback_handler(self, handler):
         if not isinstance(handler, BaseStateCallback):
             raise TypeError(
@@ -285,10 +289,13 @@ class State:
     def get_op_meta(self, op_hash: str):
         return self.op_meta[op_hash]
 
-    def get_op_data(self, host: "Host", op_hash: str):
+    def get_meta_for_host(self, host: "Host"):
+        return self.meta[host]
+
+    def get_op_data_for_host(self, host: "Host", op_hash: str):
         return self.ops[host][op_hash]
 
-    def set_op_data(self, host: "Host", op_hash: str, op_data):
+    def set_op_data_for_host(self, host: "Host", op_hash: str, op_data):
         self.ops[host][op_hash] = op_data
 
     def activate_host(self, host: "Host"):
