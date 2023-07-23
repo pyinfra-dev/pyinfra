@@ -36,24 +36,16 @@ op_meta_default = object()
 class OperationMeta:
     combined_output_lines = None
 
-    def __init__(self, hash=None, commands=None):
-        # Wrap all the attributes
-        commands = commands or []
-        self.commands = commands
+    def __init__(self, hash=None, is_change=False):
         self.hash = hash
-
-        # Changed flag = did we do anything?
-        self.changed = len(self.commands) > 0
+        self.changed = is_change
 
     def __repr__(self):
         """
         Return Operation object as a string.
         """
 
-        return (
-            f"OperationMeta(commands={len(self.commands)}, "
-            f"changed={self.changed}, hash={self.hash})"
-        )
+        return f"OperationMeta(changed={self.changed}, hash={self.hash})"
 
     def set_combined_output_lines(self, combined_output_lines):
         self.combined_output_lines = combined_output_lines
@@ -200,27 +192,42 @@ def operation(
             if has_run:
                 return OperationMeta(op_hash)
 
-        # "Run" operation
-        #
+        # "Run" operation - here we make a generator that will yield out actual commands to execute
+        # and, if we're diff-ing, we then iterate the generator now to determine if any changes
+        # *would* be made based on the *current* remote state.
 
-        # Otherwise, flag as in-op and run it to get the commands
-        host.in_op = True
-        host.current_op_hash = op_hash
-        host.current_op_global_kwargs = global_kwargs
+        def command_generator():
+            host.in_op = True
+            host.current_op_hash = op_hash
+            host.current_op_global_kwargs = global_kwargs
 
-        # Convert to list as the result may be a generator
-        commands = func(*args, **kwargs)
-        commands = [  # convert any strings -> StringCommand's
-            StringCommand(command.strip()) if isinstance(command, str) else command
-            for command in commands
-        ]
+            for command in func(*args, **kwargs):
+                command = StringCommand(command.strip()) if isinstance(command, str) else command
+                yield command
 
-        host.in_op = False
-        host.current_op_hash = None
-        host.current_op_global_kwargs = None
+            host.in_op = False
+            host.current_op_hash = None
+            host.current_op_global_kwargs = None
+
+        op_is_change = False
+        if state.should_diff():
+            for command in command_generator():
+                op_is_change = True
+                break
 
         # Add host-specific operation data to state, this mutates state
-        operation_meta = _update_state_meta(state, host, commands, op_hash, op_meta, global_kwargs)
+        operation_meta = _add_host_op_to_state(
+            state,
+            host,
+            op_hash,
+            op_is_change,
+            command_generator,
+            global_kwargs,
+        )
+
+        # If we're already in the execution phase, execute this operation immediately
+        if state.is_executing:
+            _execute_immediately(state, host, op_hash)
 
         # Return result meta for use in deploy scripts
         return operation_meta
@@ -335,12 +342,14 @@ def _ensure_shared_op_meta(state, op_hash, op_order, global_kwargs, names):
     return op_meta
 
 
-def _execute_immediately(state, host, op_data, op_meta, op_hash):
+def _execute_immediately(state, host, op_hash):
     logger.warning(
         f"Note: nested operations are currently in beta ({get_call_location()})\n"
         "    More information: "
         "https://docs.pyinfra.com/en/2.x/using-operations.html#nested-operations",
     )
+    op_meta = state.get_op_meta(op_hash)
+    op_data = state.get_op_data_for_host(host, op_hash)
     op_data["parent_op_hash"] = host.executing_op_hash
     log_operation_start(op_meta, op_types=["nested"], prefix="")
     run_host_op(state, host, op_hash)
@@ -367,28 +376,24 @@ def _attach_args(op_meta, args, kwargs):
 
 
 # NOTE: this function mutates state.meta for this host
-def _update_state_meta(state, host, commands, op_hash, op_meta, global_kwargs):
-    # We're doing some commands, meta/ops++
-    state.meta[host]["ops"] += 1
-    state.meta[host]["commands"] += len(commands)
+def _add_host_op_to_state(state, host, op_hash, is_change, command_generator, global_kwargs):
+    host_meta = state.get_meta_for_host(host)
 
-    if commands:
-        state.meta[host]["ops_change"] += 1
+    host_meta["ops"] += 1
+
+    if is_change:
+        host_meta["ops_change"] += 1
     else:
-        state.meta[host]["ops_no_change"] += 1
+        host_meta["ops_no_change"] += 1
 
-    operation_meta = OperationMeta(op_hash, commands)
+    operation_meta = OperationMeta(op_hash, is_change)
 
     # Add the server-relevant commands
     op_data = {
-        "commands": commands,
+        "command_generator": command_generator,
         "global_kwargs": global_kwargs,
         "operation_meta": operation_meta,
     }
-    state.set_op_data(host, op_hash, op_data)
-
-    # If we're already in the execution phase, execute this operation immediately
-    if state.is_executing:
-        _execute_immediately(state, host, op_data, op_meta, op_hash)
+    state.set_op_data_for_host(host, op_hash, op_data)
 
     return operation_meta
