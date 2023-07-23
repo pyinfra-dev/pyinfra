@@ -26,15 +26,6 @@ FILE_SHAS: Dict[Any, Any] = {}
 PYINFRA_API_DIR = path.dirname(__file__)
 
 
-class ReturnCatchingGenerator:
-    def __init__(self, gen):
-        self.gen = gen
-
-    def __iter__(self):
-        self.value = yield from self.gen
-        return self.value
-
-
 def get_file_path(state: "State", filename: str):
     if path.isabs(filename):
         return filename

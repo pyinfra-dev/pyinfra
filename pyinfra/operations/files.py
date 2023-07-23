@@ -345,7 +345,8 @@ def line(
         )
 
     if present_lines is None and not state.is_executing:
-        return EvalOperationAtExecution
+        yield EvalOperationAtExecution
+        return
 
     # If replace present, use that over the matching line
     if replace:
@@ -1186,7 +1187,8 @@ def link(
     info = host.get_fact(Link, path=path)
 
     if info is None and not state.is_executing:  # eval at execute because we can't tell state now
-        return EvalOperationAtExecution
+        yield EvalOperationAtExecution
+        return
     if assume_present:
         logger.warning("The `assume_present` argument is no longer needed in `files.link`")
 
@@ -1322,7 +1324,8 @@ def file(
     info = host.get_fact(File, path=path)
 
     if info is None and not state.is_executing:  # eval at execute because we can't tell state now
-        return EvalOperationAtExecution
+        yield EvalOperationAtExecution
+        return
     if assume_present:
         logger.warning("The `assume_present` argument is no longer needed in `files.file`")
 
@@ -1449,7 +1452,8 @@ def directory(
     info = host.get_fact(Directory, path=path)
 
     if info is None and not state.is_executing:  # eval at execute because we can't tell state now
-        return EvalOperationAtExecution
+        yield EvalOperationAtExecution
+        return
     if assume_present:
         logger.warning("The `assume_present` argument is no longer needed in `files.directory`")
 

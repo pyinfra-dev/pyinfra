@@ -791,7 +791,8 @@ def group(group, present=True, system=False, gid=None):
     is_present = group in groups
 
     if not is_present and not state.is_executing:
-        return EvalOperationAtExecution  # eval at execute because we can't tell state now
+        yield EvalOperationAtExecution  # eval at execute because we can't tell state now
+        return
 
     # Group exists but we don't want them?
     if not present and is_present:
@@ -988,7 +989,8 @@ def user(
     existing_user = users.get(user)
 
     if existing_user is None and not state.is_executing:
-        return EvalOperationAtExecution  # eval at execute because we can't tell state now
+        yield EvalOperationAtExecution  # eval at execute because we can't tell state now
+        return
 
     if groups is None:
         groups = []
