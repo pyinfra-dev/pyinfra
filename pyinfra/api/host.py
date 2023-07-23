@@ -2,14 +2,13 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, List, Optional, Union
 
 import click
-from gevent.lock import BoundedSemaphore
 
 from pyinfra import logger
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 
 from .connectors import get_execution_connector
 from .exceptions import ConnectError
-from .facts import create_host_fact, delete_host_fact, get_host_fact, reload_host_fact
+from .facts import get_host_fact
 
 if TYPE_CHECKING:
     from pyinfra.api.inventory import Inventory
@@ -128,11 +127,6 @@ class Host:
 
         self.connector_data = {}
         self.current_op_global_kwargs = {}
-
-        # Fact data store
-        # TODO: how to not have Any here?
-        self.facts: Dict[str, Any] = {}
-        self.facts_lock = BoundedSemaphore()
 
         # Append only list of operation hashes as called on this host, used to
         # generate a DAG to create the final operation order.
@@ -253,25 +247,6 @@ class Host:
         Get a fact for this host, reading from the cache if present.
         """
         return get_host_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
-
-    def reload_fact(self, name_or_cls, *args, **kwargs):
-        """
-        Get a fact for this host without using any cached value, always re-fetch the fact data
-        from the host and then cache it.
-        """
-        return reload_host_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
-
-    def create_fact(self, name_or_cls, data=None, kwargs=None):
-        """
-        Create a new fact for this host in the fact cache.
-        """
-        return create_host_fact(self.state, self, name_or_cls, data, kwargs=kwargs)
-
-    def delete_fact(self, name_or_cls, kwargs=None):
-        """
-        Remove an existing fact for this host in the fact cache.
-        """
-        return delete_host_fact(self.state, self, name_or_cls, kwargs=kwargs)
 
     # Connector proxy
     #

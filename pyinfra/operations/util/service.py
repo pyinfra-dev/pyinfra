@@ -25,14 +25,11 @@ def handle_service_control(
             restart_command=(formatter.format(name, "restart") if restarted else "true"),
             reload_command=(formatter.format(name, "reload") if reloaded else "true"),
         )
-        statuses[name] = running
-
     else:
         # Need down but running
         if running is False:
             if status:
                 yield formatter.format(name, "stop")
-                statuses[name] = False
             else:
                 host.noop("service {0} is stopped".format(name))
 
@@ -40,7 +37,6 @@ def handle_service_control(
         if running is True:
             if not status:
                 yield formatter.format(name, "start")
-                statuses[name] = True
             else:
                 host.noop("service {0} is running".format(name))
 

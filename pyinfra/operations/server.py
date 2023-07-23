@@ -253,14 +253,10 @@ def modprobe(module, present=True, force=False):
     # Module is loaded and we don't want it?
     if not present and present_mods:
         yield "modprobe{0} -r -a {1}".format(args, " ".join(present_mods))
-        for mod in present_mods:
-            modules.pop(mod)
 
     # Module isn't loaded and we want it?
     elif present and missing_mods:
         yield "modprobe{0} -a {1}".format(args, " ".join(missing_mods))
-        for mod in missing_mods:
-            modules[mod] = {}
 
     else:
         host.noop(
@@ -309,12 +305,10 @@ def mount(
             " -o {0}".format(options_string) if options_string else "",
             path,
         )
-        mounts[path] = {"options": options}
 
     # Want no mount but mounted?
     elif mounted is False and is_mounted:
         yield "umount {0}".format(path)
-        mounts.pop(path)
 
     # Want mount and is mounted! Check the options
     elif is_mounted and mounted and options:
@@ -322,7 +316,6 @@ def mount(
         needed_options = set(options) - set(mounted_options)
         if needed_options:
             yield "mount -o remount,{0} {1}".format(options_string, path)
-            mounts[path]["options"] = options
 
     else:
         host.noop(
@@ -365,7 +358,6 @@ def hostname(hostname, hostname_file=None):
     if host.get_fact(Which, command="hostnamectl"):
         if current_hostname != hostname:
             yield "hostnamectl set-hostname {0}".format(hostname)
-            host.create_fact(Hostname, data=hostname)
         else:
             host.noop("hostname is set")
         return
@@ -380,7 +372,6 @@ def hostname(hostname, hostname_file=None):
 
     if current_hostname != hostname:
         yield "hostname {0}".format(hostname)
-        host.create_fact(Hostname, data=hostname)
     else:
         host.noop("hostname is set")
 
@@ -428,7 +419,6 @@ def sysctl(
     existing_value = existing_sysctls.get(key)
     if not existing_value or existing_value != value:
         yield "sysctl {0}='{1}'".format(key, string_value)
-        existing_sysctls[key] = value
     else:
         host.noop("sysctl {0} is set to {1}".format(key, string_value))
 
@@ -734,20 +724,6 @@ def crontab(
 
         # Finally, use the tempfile to write a new crontab
         yield "crontab {0} {1}".format(" ".join(crontab_args), temp_filename)
-
-        # Update the crontab fact
-        if present:
-            crontab[command] = {
-                "special_time": special_time,
-                "minute": minute,
-                "hour": hour,
-                "month": month,
-                "day_of_week": day_of_week,
-                "day_of_month": day_of_month,
-                "comments": [cron_name] if cron_name else [],
-            }
-        else:
-            crontab.pop(command)
     else:
         host.noop(
             "crontab {0} {1}".format(
@@ -792,7 +768,6 @@ def group(group, present=True, system=False, gid=None):
     # Group exists but we don't want them?
     if not present and is_present:
         yield "groupdel {0}".format(group)
-        groups.remove(group)
 
     # Group doesn't exist and we want it?
     elif present and not is_present:
@@ -809,11 +784,7 @@ def group(group, present=True, system=False, gid=None):
 
         # Groups are often added by other operations (package installs), so check
         # for the group at runtime before adding.
-        yield "grep '^{0}:' /etc/group || groupadd {1}".format(
-            group,
-            " ".join(args),
-        )
-        groups.append(group)
+        yield "groupadd {0}".format(" ".join(args))
 
 
 @operation
@@ -998,7 +969,6 @@ def user(
     if not present:
         if existing_user:
             yield "userdel {0}".format(user)
-            users.pop(user)
         return
 
     # User doesn't exist but we want them?
@@ -1040,17 +1010,7 @@ def user(
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
-        yield "grep '^{1}:' /etc/passwd || useradd {0} {1}".format(
-            " ".join(args),
-            user,
-        )
-        users[user] = {
-            "comment": comment,
-            "home": home,
-            "shell": shell,
-            "group": group,
-            "groups": groups,
-        }
+        yield "useradd {0} {1}".format(" ".join(args), user)
 
     # User exists and we want them, check home/shell/keys
     else:

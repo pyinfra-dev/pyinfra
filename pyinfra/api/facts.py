@@ -186,8 +186,6 @@ def get_fact(
     kwargs: Optional[Any] = None,
     ensure_hosts: Optional[Any] = None,
     apply_failed_hosts: bool = True,
-    fact_hash: Optional[Any] = None,
-    use_cache: bool = True,
 ):
     if issubclass(cls, ShortFactBase):
         return get_short_facts(
@@ -198,24 +196,17 @@ def get_fact(
             kwargs=kwargs,
             ensure_hosts=ensure_hosts,
             apply_failed_hosts=apply_failed_hosts,
-            fact_hash=fact_hash,
-            use_cache=use_cache,
         )
 
-    with host.facts_lock:
-        if use_cache and fact_hash and fact_hash in host.facts:
-            return host.facts[fact_hash]
-
-        return _get_fact(
-            state,
-            host,
-            cls,
-            args,
-            kwargs,
-            ensure_hosts,
-            apply_failed_hosts,
-            fact_hash,
-        )
+    return _get_fact(
+        state,
+        host,
+        cls,
+        args,
+        kwargs,
+        ensure_hosts,
+        apply_failed_hosts,
+    )
 
 
 def _get_fact(
@@ -226,7 +217,6 @@ def _get_fact(
     kwargs: Optional[Dict] = None,
     ensure_hosts: Optional[Any] = None,
     apply_failed_hosts: bool = True,
-    fact_hash: Optional[Any] = None,
 ):
     fact = cls()
     name = fact.name
@@ -333,8 +323,6 @@ def _get_fact(
     if not status and not ignore_errors and apply_failed_hosts:
         state.fail_hosts({host})
 
-    if fact_hash:
-        host.facts[fact_hash] = data
     return data
 
 
@@ -352,47 +340,4 @@ def get_host_fact(
     args: Optional[List] = None,
     kwargs: Optional[Dict] = None,
 ):
-    fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
-    return get_fact(state, host, cls, args=args, kwargs=kwargs, fact_hash=fact_hash)
-
-
-def reload_host_fact(
-    state: "State",
-    host: "Host",
-    cls,
-    args: Optional[List] = None,
-    kwargs: Optional[Dict] = None,
-):
-    fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
-    return get_fact(
-        state,
-        host,
-        cls,
-        args=args,
-        kwargs=kwargs,
-        fact_hash=fact_hash,
-        use_cache=False,
-    )
-
-
-def create_host_fact(
-    state: "State",
-    host: "Host",
-    cls,
-    data,
-    args: Optional[List] = None,
-    kwargs: Optional[Dict] = None,
-):
-    fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
-    host.facts[fact_hash] = data
-
-
-def delete_host_fact(
-    state: "State",
-    host: "Host",
-    cls,
-    args: Optional[List] = None,
-    kwargs: Optional[Dict] = None,
-):
-    fact_hash = _get_fact_hash(state, host, cls, args, kwargs)
-    host.facts.pop(fact_hash, None)
+    return get_fact(state, host, cls, args=args, kwargs=kwargs)

@@ -212,31 +212,6 @@ class FakeHost:
             return fact_ordered_keys.get(kwargs_str)
         return fact
 
-    def create_fact(self, fact_cls, data=None, kwargs=None):
-        try:
-            fact = self.get_fact(fact_cls)
-        except KeyError:
-            fact_key = self._get_fact_key(fact_cls)
-            fact = self.fact[fact_key] = {}
-        if kwargs:
-            fact[_sort_kwargs_str(get_kwargs_str(kwargs))] = data
-        else:
-            fact_key = self._get_fact_key(fact_cls)
-            self.fact[fact_key] = data
-
-    def delete_fact(self, fact_cls, kwargs=None):
-        try:
-            fact = self.get_fact(fact_cls)
-        except KeyError:
-            return
-
-        ordered_kwargs = _sort_kwargs_str(get_kwargs_str(kwargs))
-        for key in fact.keys():
-            ordered_key = _sort_kwargs_str(key)
-            if ordered_key == ordered_kwargs:
-                fact.pop(key)
-                break
-
 
 class FakeFile:
     _read = False

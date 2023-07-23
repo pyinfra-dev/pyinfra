@@ -54,11 +54,9 @@ def config(key, value, multi_value=False, repo=None):
 
     if not multi_value and existing_config.get(key) != [value]:
         yield '{0} {1} "{2}"'.format(base_command, key, value)
-        existing_config[key] = [value]
 
     elif multi_value and value not in existing_config.get(key, []):
         yield '{0} --add {1} "{2}"'.format(base_command, key, value)
-        existing_config.setdefault(key, []).append(value)
 
     else:
         host.noop("git config {0} is set to {1}".format(key, value))
@@ -130,21 +128,11 @@ def repo(
             git_commands.append("clone {0} --branch {1} .".format(src, branch))
         else:
             git_commands.append("clone {0} .".format(src))
-
-        host.create_fact(GitBranch, kwargs={"repo": dest}, data=branch)
-        host.create_fact(
-            Directory,
-            kwargs={"path": git_dir},
-            data={"user": user, "group": group},
-        )
-
     # Ensuring existing repo
     else:
         if branch and host.get_fact(GitBranch, repo=dest) != branch:
             git_commands.append("fetch")  # fetch to ensure we have the branch locally
             git_commands.append("checkout {0}".format(branch))
-            host.create_fact(GitBranch, kwargs={"repo": dest}, data=branch)
-
         if pull:
             if rebase:
                 git_commands.append("pull --rebase")
@@ -293,7 +281,6 @@ def worktree(
 
     # Doesn't exist & we want it
     if not host.get_fact(Directory, path=worktree) and present:
-
         # be sure that `repo` is a GIT repository
         if not assume_repo_exists and not host.get_fact(
             Directory,
@@ -321,12 +308,8 @@ def worktree(
         if user or group:
             yield chown(worktree, user, group, recursive=True)
 
-        host.create_fact(Directory, kwargs={"path": worktree}, data={"user": user, "group": group})
-        host.create_fact(GitTrackingBranch, kwargs={"repo": worktree}, data=new_branch)
-
     # It exists and we don't want it
     elif host.get_fact(Directory, path=worktree) and not present:
-
         command = "cd {0} && git worktree remove .".format(worktree)
 
         if force:
@@ -334,12 +317,8 @@ def worktree(
 
         yield command
 
-        host.delete_fact(Directory, kwargs={"path": worktree})
-        host.create_fact(GitTrackingBranch, kwargs={"repo": worktree})
-
     # It exists and we still want it => pull/rebase it
     elif host.get_fact(Directory, path=worktree) and present:
-
         # pull the worktree only if it's already linked to a tracking branch or
         # if a remote branch is set
         if host.get_fact(GitTrackingBranch, repo=worktree) or from_remote_branch:
@@ -397,9 +376,3 @@ def bare_repo(
         else:
             if (user and head_file["user"] != user) or (group and head_file["group"] != group):
                 yield chown(path, user, group, recursive=True)
-
-        host.create_fact(
-            File,
-            kwargs={"path": head_filename},
-            data={"user": user, "group": group, "mode": None},
-        )

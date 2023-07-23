@@ -2,7 +2,7 @@
 Manage apt packages and repositories.
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from urllib.parse import urlparse
 
 from pyinfra import host, state
@@ -78,10 +78,6 @@ def key(src=None, keyserver=None, keyid=None):
                 yield "(wget -O - {0} || curl -sSLf {0}) | apt-key add -".format(src)
             else:
                 yield "apt-key add {0}".format(src)
-
-            if keyid:
-                for kid in keyid:
-                    existing_keys[kid] = {}
         else:
             host.noop("All keys from {0} are already available in the apt keychain".format(src))
 
@@ -98,8 +94,6 @@ def key(src=None, keyserver=None, keyid=None):
                 keyserver,
                 " ".join(needed_keys),
             )
-            for kid in keyid:
-                existing_keys[kid] = {}
         else:
             host.noop(
                 "Keys {0} are already available in the apt keychain".format(
@@ -149,7 +143,6 @@ def repo(src, present=True, filename=None):
             src,
             escape_regex_characters=True,
         )
-        apt_sources.append(repo)
 
     # Exists and we don't want it
     elif is_present and not present:
@@ -160,8 +153,6 @@ def repo(src, present=True, filename=None):
             assume_present=True,
             escape_regex_characters=True,
         )
-        apt_sources.remove(repo)
-
     else:
         host.noop(
             'apt repo "{0}" {1}'.format(
@@ -266,9 +257,6 @@ def deb(src, present=True, force=False):
             # Now reinstall, and critically configure, the package - if there are still
             # missing deps, now we error
             yield "dpkg --force-confdef --force-confold -i {0}".format(src)
-
-            if info:
-                current_packages[info["name"]] = [info.get("version")]
         else:
             host.noop("deb {0} is installed".format(original_src))
 
@@ -279,7 +267,6 @@ def deb(src, present=True, force=False):
                 noninteractive_apt("remove", force=force),
                 info["name"],
             )
-            current_packages.pop(info["name"])
         else:
             host.noop("deb {0} is not installed".format(original_src))
 
@@ -326,14 +313,6 @@ def update(cache_time=None):
     # cache_time to work.
     if cache_time:
         yield "touch {0}".format(APT_UPDATE_FILENAME)
-        if cache_info is None:
-            host.create_fact(
-                File,
-                kwargs={"path": APT_UPDATE_FILENAME},
-                data={"mtime": datetime.utcnow()},
-            )
-        else:
-            cache_info["mtime"] = datetime.utcnow()
 
 
 _update = update  # noqa: E305
