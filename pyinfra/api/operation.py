@@ -7,17 +7,18 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 
 from functools import wraps
 from types import FunctionType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Iterator, Set, Tuple
 
 import pyinfra
 from pyinfra import context, logger
 from pyinfra.context import ctx_host, ctx_state
 
 from .arguments import get_execution_kwarg_keys, pop_global_arguments
-from .command import StringCommand
+from .command import PyinfraCommand, StringCommand
 from .exceptions import OperationValueError, PyinfraError
 from .host import Host
 from .operations import run_host_op
+from .state import State, StateOperationMeta
 from .util import (
     get_args_kwargs_spec,
     get_call_location,
@@ -26,9 +27,6 @@ from .util import (
     make_hash,
     memoize,
 )
-
-if TYPE_CHECKING:
-    from pyinfra.api.state import State
 
 op_meta_default = object()
 
@@ -73,7 +71,7 @@ class OperationMeta:
         return "\n".join(self.stderr_lines)
 
 
-def add_op(state: "State", op_func, *args, **kwargs):
+def add_op(state: State, op_func, *args, **kwargs):
     """
     Prepare & add an operation to ``pyinfra.state`` by executing it on all hosts.
 
@@ -182,7 +180,7 @@ def operation(
 
         # Check if we're actually running the operation on this host
         # Run once and we've already added meta for this op? Stop here.
-        if op_meta["run_once"]:
+        if op_meta.global_kwargs["run_once"]:
             has_run = False
             for ops in state.ops.values():
                 if op_hash in ops:
@@ -196,7 +194,7 @@ def operation(
         # and, if we're diff-ing, we then iterate the generator now to determine if any changes
         # *would* be made based on the *current* remote state.
 
-        def command_generator():
+        def command_generator() -> Iterator[PyinfraCommand]:
             host.in_op = True
             host.current_op_hash = op_hash
             host.current_op_global_kwargs = global_kwargs
@@ -317,27 +315,26 @@ def _solve_operation_consistency(names, state, host):
 
 
 # NOTE: this function mutates state.op_meta for this hash
-def _ensure_shared_op_meta(state, op_hash, op_order, global_kwargs, names):
-    op_meta = state.op_meta.setdefault(
-        op_hash,
-        {
-            "names": set(),
-            "args": [],
-            "op_order": op_order,
-        },
-    )
+def _ensure_shared_op_meta(
+    state: State,
+    op_hash: str,
+    op_order: Tuple[int],
+    global_kwargs: Dict,
+    names: Set[str],
+):
+    op_meta = state.op_meta.setdefault(op_hash, StateOperationMeta(op_order))
 
     for key in get_execution_kwarg_keys():
         global_value = global_kwargs.pop(key)
-        op_meta_value = op_meta.get(key, op_meta_default)
+        op_meta_value = op_meta.global_kwargs.get(key, op_meta_default)
 
         if op_meta_value is not op_meta_default and global_value != op_meta_value:
             raise OperationValueError("Cannot have different values for `{0}`.".format(key))
 
-        op_meta[key] = global_value
+        op_meta.global_kwargs[key] = global_value
 
     # Add any new names to the set
-    op_meta["names"].update(names)
+    op_meta.names.update(names)
 
     return op_meta
 
@@ -360,8 +357,8 @@ def _attach_args(op_meta, args, kwargs):
         if isinstance(arg, FunctionType):
             arg = arg.__name__
 
-        if arg not in op_meta["args"]:
-            op_meta["args"].append(arg)
+        if arg not in op_meta.args:
+            op_meta.args.append(arg)
 
     # Attach keyword args
     for key, value in kwargs.items():
@@ -369,22 +366,29 @@ def _attach_args(op_meta, args, kwargs):
             value = value.__name__
 
         arg = "=".join((str(key), str(value)))
-        if arg not in op_meta["args"]:
-            op_meta["args"].append(arg)
+        if arg not in op_meta.args:
+            op_meta.args.append(arg)
 
     return op_meta
 
 
 # NOTE: this function mutates state.meta for this host
-def _add_host_op_to_state(state, host, op_hash, is_change, command_generator, global_kwargs):
+def _add_host_op_to_state(
+    state: State,
+    host: Host,
+    op_hash: str,
+    is_change: bool,
+    command_generator,
+    global_kwargs,
+):
     host_meta = state.get_meta_for_host(host)
 
-    host_meta["ops"] += 1
+    host_meta.ops += 1
 
     if is_change:
-        host_meta["ops_change"] += 1
+        host_meta.ops_change += 1
     else:
-        host_meta["ops_no_change"] += 1
+        host_meta.ops_no_change += 1
 
     operation_meta = OperationMeta(op_hash, is_change)
 

@@ -76,7 +76,7 @@ def print_state_operations(state: "State"):
         click.echo(
             "    {0} (names={1}, hosts={2})".format(
                 op_hash,
-                meta["names"],
+                meta.names,
                 hosts,
             ),
             err=True,
@@ -243,9 +243,9 @@ def print_meta(state: "State"):
                     logger.info,
                     [
                         host.print_prefix,
-                        "Operations: {0}".format(meta["ops"]),
-                        "Change: {0}".format(meta["ops_change"]),
-                        "No change: {0}".format(meta["ops_no_change"]),
+                        "Operations: {0}".format(meta.ops),
+                        "Change: {0}".format(meta.ops_change),
+                        "No change: {0}".format(meta.ops_no_change),
                     ],
                 ),
             )
@@ -293,18 +293,18 @@ def print_results(state: "State"):
             results = state.results[host]
 
             meta = state.meta[host]
-            success_ops = results["success_ops"]
-            partial_ops = results["partial_ops"]
+            success_ops = results.success_ops
+            partial_ops = results.partial_ops
             # TODO: type meta object
-            changed_ops = success_ops - meta["ops_no_change"]  # type: ignore
-            error_ops = results["error_ops"]
-            ignored_error_ops = results["ignored_error_ops"]
+            changed_ops = success_ops - meta.ops_no_change  # type: ignore
+            error_ops = results.error_ops
+            ignored_error_ops = results.ignored_error_ops
 
             host_args = ("green",)
             host_kwargs = {}
 
             # If all ops got complete
-            if results["ops"] == meta["ops"]:
+            if results.ops == meta.ops:
                 # We had some errors - but we ignored them - so "warning" color
                 if error_ops != 0:
                     host_args = ("yellow",)
@@ -328,7 +328,7 @@ def print_results(state: "State"):
                     [
                         host.style_print_prefix(*host_args, **host_kwargs),
                         changed_str,
-                        "No change: {0}".format(click.style(f"{meta['ops_no_change']}", bold=True)),
+                        "No change: {0}".format(click.style(f"{meta.ops_no_change}", bold=True)),
                         error_str,
                     ],
                 ),

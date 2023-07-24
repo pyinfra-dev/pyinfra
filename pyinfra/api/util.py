@@ -218,14 +218,14 @@ def print_host_combined_output(host: "Host", combined_output_lines):
 
 def log_operation_start(op_meta: Dict, op_types: Optional[List] = None, prefix: str = "--> "):
     op_types = op_types or []
-    if op_meta["serial"]:
+    if op_meta.global_kwargs["serial"]:
         op_types.append("serial")
-    if op_meta["run_once"]:
+    if op_meta.global_kwargs["run_once"]:
         op_types.append("run once")
 
     args = ""
-    if op_meta["args"]:
-        args = "({0})".format(", ".join(str(arg) for arg in op_meta["args"]))
+    if op_meta.args:
+        args = "({0})".format(", ".join(str(arg) for arg in op_meta.args))
 
     logger.info(
         "{0} {1} {2}".format(
@@ -236,7 +236,7 @@ def log_operation_start(op_meta: Dict, op_types: Optional[List] = None, prefix: 
                 ),
                 "blue",
             ),
-            click.style(", ".join(op_meta["names"]), bold=True),
+            click.style(", ".join(op_meta.names), bold=True),
             args,
         ),
     )
