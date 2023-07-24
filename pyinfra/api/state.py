@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Set, Tuple
 from uuid import uuid4
 
 from gevent.pool import Pool
@@ -14,8 +14,10 @@ from .exceptions import PyinfraError
 from .util import sha1_hash
 
 if TYPE_CHECKING:
+    from pyinfra.api.command import PyinfraCommand
     from pyinfra.api.host import Host
     from pyinfra.api.inventory import Inventory
+    from pyinfra.api.operation import OperationMeta
 
 
 # Work out the max parallel we can achieve with the open files limit of the user/process,
@@ -75,6 +77,43 @@ class BaseStateCallback:
     @staticmethod
     def operation_end(state: "State", op_hash):
         pass
+
+
+class StateOperationMeta:
+    names: Set[str]
+    args: List[str]
+    op_order: Tuple[int]
+    global_kwargs: Dict
+
+    def __init__(self, op_order: Tuple[int]):
+        self.names = set()
+        self.args = []
+        self.op_order = op_order
+        self.global_kwargs = {}
+
+
+class StateOperationHostData:
+    comand_generator: Iterator["PyinfraCommand"]
+    global_kwargs: Dict
+    operation_meta: "OperationMeta"
+
+
+class StateHostMeta:
+    ops = 0
+    ops_change = 0
+    ops_no_change = 0
+    op_hashes: Set[str]
+
+    def __init__(self):
+        self.op_hashes = set()
+
+
+class StateHostResults:
+    ops = 0
+    success_ops = 0
+    error_ops = 0
+    ignored_error_ops = 0
+    partial_ops = 0
 
 
 class State:
@@ -174,38 +213,17 @@ class State:
         self.limit_hosts: List["Host"] = initial_limit
 
         # Op basics
-        self.op_meta: Dict[str, dict] = {}  # maps operation hash -> names/etc
-        self.ops_run: Set[str] = set()  # list of ops which have been started/run
+        self.op_meta: Dict[str, StateOperationMeta] = {}  # maps operation hash -> names/etc
 
         # Op dict for each host
         self.ops: Dict["Host", dict] = {host: {} for host in inventory}
 
-        # Facts dict for each host
-        self.facts: Dict["Host", Any] = {host: {} for host in inventory}
-
         # Meta dict for each host
-        self.meta = {
-            host: {
-                "ops": 0,  # one function call in a deploy file
-                "ops_change": 0,
-                "ops_no_change": 0,
-                "commands": 0,  # actual # of commands to run
-                "op_hashes": set(),
-            }
-            for host in inventory
-        }
+        self.meta: Dict["Host", StateHostMeta] = {host: StateHostMeta() for host in inventory}
 
         # Results dict for each host
-        self.results = {
-            host: {
-                "ops": 0,  # success_ops + failed ops w/ignore_errors
-                "success_ops": 0,
-                "error_ops": 0,
-                "ignored_error_ops": 0,
-                "partial_ops": 0,  # operations that had an error, but did do something
-                "commands": 0,
-            }
-            for host in inventory
+        self.results: Dict["Host", StateHostResults] = {
+            host: StateHostResults() for host in inventory
         }
 
         # Assign state back references to inventory & config
@@ -279,7 +297,7 @@ class State:
             # dependency order we order them by line numbers.
             node_group = sorted(
                 ts.get_ready(),
-                key=lambda op_hash: self.op_meta[op_hash]["op_order"],
+                key=lambda op_hash: self.op_meta[op_hash].op_order,
             )
             ts.done(*node_group)
             final_op_order.extend(node_group)
@@ -289,8 +307,11 @@ class State:
     def get_op_meta(self, op_hash: str):
         return self.op_meta[op_hash]
 
-    def get_meta_for_host(self, host: "Host"):
+    def get_meta_for_host(self, host: "Host") -> StateHostMeta:
         return self.meta[host]
+
+    def get_results_for_host(self, host: "Host") -> StateHostResults:
+        return self.results[host]
 
     def get_op_data_for_host(self, host: "Host", op_hash: str):
         return self.ops[host][op_hash]
