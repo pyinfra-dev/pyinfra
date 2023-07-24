@@ -49,7 +49,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
     ignore_errors = global_kwargs["ignore_errors"]
     continue_on_error = global_kwargs["continue_on_error"]
 
-    logger.debug("Starting operation %r on %s", op_meta["names"], host)
+    logger.debug("Starting operation %r on %s", op_meta.names, host)
 
     executor_kwarg_keys = get_executor_kwarg_keys()
     base_executor_kwargs = {
@@ -101,8 +101,6 @@ def run_host_op(state: "State", host: "Host", op_hash):
 
     if not run_condition("precondition"):
         return False
-
-    state.ops_run.add(op_hash)
 
     if host.executing_op_hash is None:
         host.executing_op_hash = op_hash
@@ -156,7 +154,6 @@ def run_host_op(state: "State", host: "Host", op_hash):
             break
 
         executed_commands += 1
-        state.results[host]["commands"] += 1
 
     # Commands didn't break, so count our successes & return True!
     else:
@@ -166,9 +163,11 @@ def run_host_op(state: "State", host: "Host", op_hash):
         if not did_error:
             return_status = True
 
+    host_results = state.get_results_for_host(host)
+
     if return_status is True:
-        state.results[host]["ops"] += 1
-        state.results[host]["success_ops"] += 1
+        host_results.ops += 1
+        host_results.success_ops += 1
 
         _status_log = "Success" if executed_commands > 0 else "No changes"
         _click_log_status = click.style(_status_log, "green")
@@ -181,12 +180,12 @@ def run_host_op(state: "State", host: "Host", op_hash):
         state.trigger_callbacks("operation_host_success", host, op_hash)
     else:
         if ignore_errors:
-            state.results[host]["ignored_error_ops"] += 1
+            host_results.ignored_error_ops += 1
         else:
-            state.results[host]["error_ops"] += 1
+            host_results.error_ops += 1
 
         if executed_commands:
-            state.results[host]["partial_ops"] += 1
+            host_results.partial_ops += 1
 
         _command_description = f"executed {executed_commands} commands"
         log_error_or_warning(host, ignore_errors, _command_description, continue_on_error)
@@ -197,7 +196,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
 
         # Ignored, op "completes" w/ ignored error
         if ignore_errors:
-            state.results[host]["ops"] += 1
+            host_results.ops += 1
 
         # Unignored error -> False
         state.trigger_callbacks("operation_host_error", host, op_hash)
@@ -301,7 +300,7 @@ def _run_single_op(state: "State", op_hash: str):
 
     failed_hosts = set()
 
-    if op_meta["serial"]:
+    if op_meta.global_kwargs["serial"]:
         with progress_spinner(state.inventory.iter_active_hosts()) as progress:
             # For each host, run the op
             for host in state.inventory.iter_active_hosts():
@@ -316,8 +315,8 @@ def _run_single_op(state: "State", op_hash: str):
         batches = [list(state.inventory.iter_active_hosts())]
 
         # If parallel set break up the inventory into a series of batches
-        if op_meta["parallel"]:
-            parallel = op_meta["parallel"]
+        if op_meta.global_kwargs["parallel"]:
+            parallel = op_meta.global_kwargs["parallel"]
             hosts = list(state.inventory.iter_active_hosts())
 
             batches = [hosts[i : i + parallel] for i in range(0, len(hosts), parallel)]
