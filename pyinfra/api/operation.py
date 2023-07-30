@@ -7,7 +7,7 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 
 from functools import wraps
 from types import FunctionType
-from typing import TYPE_CHECKING, Dict, Iterator, Set, Tuple
+from typing import Dict, Iterator, Set, Tuple
 
 import pyinfra
 from pyinfra import context, logger
@@ -18,7 +18,7 @@ from .command import PyinfraCommand, StringCommand
 from .exceptions import OperationValueError, PyinfraError
 from .host import Host
 from .operations import run_host_op
-from .state import State, StateOperationMeta
+from .state import State, StateOperationHostData, StateOperationMeta
 from .util import (
     get_args_kwargs_spec,
     get_call_location,
@@ -154,25 +154,25 @@ def operation(
         # Configure operation
         #
         # Get the meta kwargs (globals that apply to all hosts)
-        global_kwargs, global_kwarg_keys = pop_global_arguments(kwargs)
+        global_arguments, global_argument_keys = pop_global_arguments(kwargs)
 
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).
         if host.in_op:
-            if global_kwarg_keys:
+            if global_argument_keys:
                 _error_msg = "Nested operation called with global arguments: {0} ({1})".format(
-                    global_kwarg_keys,
+                    global_argument_keys,
                     get_call_location(),
                 )
                 raise PyinfraError(_error_msg)
             return func(*args, **kwargs) or []
 
         kwargs = _solve_legacy_operation_arguments(func, state, host, kwargs)
-        names, add_args = _generate_operation_name(func, host, kwargs, global_kwargs)
+        names, add_args = _generate_operation_name(func, host, kwargs, global_arguments)
         op_order, op_hash = _solve_operation_consistency(names, state, host)
 
         # Ensure shared (between servers) operation meta, mutates state
-        op_meta = _ensure_shared_op_meta(state, op_hash, op_order, global_kwargs, names)
+        op_meta = _ensure_shared_op_meta(state, op_hash, op_order, global_arguments, names)
 
         # Attach normal args, if we're auto-naming this operation
         if add_args:
@@ -180,7 +180,7 @@ def operation(
 
         # Check if we're actually running the operation on this host
         # Run once and we've already added meta for this op? Stop here.
-        if op_meta.global_kwargs["run_once"]:
+        if op_meta.global_arguments["_run_once"]:
             has_run = False
             for ops in state.ops.values():
                 if op_hash in ops:
@@ -197,7 +197,7 @@ def operation(
         def command_generator() -> Iterator[PyinfraCommand]:
             host.in_op = True
             host.current_op_hash = op_hash
-            host.current_op_global_kwargs = global_kwargs
+            host.current_op_global_arguments = global_arguments
 
             for command in func(*args, **kwargs):
                 command = StringCommand(command.strip()) if isinstance(command, str) else command
@@ -205,7 +205,7 @@ def operation(
 
             host.in_op = False
             host.current_op_hash = None
-            host.current_op_global_kwargs = None
+            host.current_op_global_arguments = None
 
         op_is_change = False
         if state.should_diff():
@@ -220,7 +220,7 @@ def operation(
             op_hash,
             op_is_change,
             command_generator,
-            global_kwargs,
+            global_arguments,
         )
 
         # If we're already in the execution phase, execute this operation immediately
@@ -256,9 +256,9 @@ def _solve_legacy_operation_arguments(op_func, state, host, kwargs):
     return kwargs
 
 
-def _generate_operation_name(func, host, kwargs, global_kwargs):
+def _generate_operation_name(func, host, kwargs, global_arguments):
     # Generate an operation name if needed (Module/Operation format)
-    name = global_kwargs.get("name")
+    name = global_arguments.get("name")
     add_args = False
     if name:
         names = {name}
@@ -319,19 +319,19 @@ def _ensure_shared_op_meta(
     state: State,
     op_hash: str,
     op_order: Tuple[int],
-    global_kwargs: Dict,
+    global_arguments: Dict,
     names: Set[str],
 ):
     op_meta = state.op_meta.setdefault(op_hash, StateOperationMeta(op_order))
 
     for key in get_execution_kwarg_keys():
-        global_value = global_kwargs.pop(key)
-        op_meta_value = op_meta.global_kwargs.get(key, op_meta_default)
+        global_value = global_arguments.pop(key)
+        op_meta_value = op_meta.global_arguments.get(key, op_meta_default)
 
         if op_meta_value is not op_meta_default and global_value != op_meta_value:
             raise OperationValueError("Cannot have different values for `{0}`.".format(key))
 
-        op_meta.global_kwargs[key] = global_value
+        op_meta.global_arguments[key] = global_value
 
     # Add any new names to the set
     op_meta.names.update(names)
@@ -379,8 +379,8 @@ def _add_host_op_to_state(
     op_hash: str,
     is_change: bool,
     command_generator,
-    global_kwargs,
-):
+    global_arguments,
+) -> OperationMeta:
     host_meta = state.get_meta_for_host(host)
 
     host_meta.ops += 1
@@ -393,11 +393,7 @@ def _add_host_op_to_state(
     operation_meta = OperationMeta(op_hash, is_change)
 
     # Add the server-relevant commands
-    op_data = {
-        "command_generator": command_generator,
-        "global_kwargs": global_kwargs,
-        "operation_meta": operation_meta,
-    }
+    op_data = StateOperationHostData(command_generator, global_arguments, operation_meta)
     state.set_op_data_for_host(host, op_hash, op_data)
 
     return operation_meta

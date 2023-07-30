@@ -1,7 +1,7 @@
 import traceback
 from itertools import product
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import click
 import gevent
@@ -12,7 +12,7 @@ from pyinfra import logger
 from pyinfra.context import ctx_host
 from pyinfra.progress import progress_spinner
 
-from .arguments import get_executor_kwarg_keys
+from .arguments import ConnectorArguments, get_connector_argument_keys
 from .command import FunctionCommand, PyinfraCommand, StringCommand
 from .exceptions import PyinfraError
 from .util import (
@@ -42,31 +42,34 @@ def run_host_op(state: "State", host: "Host", op_hash):
         return True
 
     op_data = state.get_op_data_for_host(host, op_hash)
-    global_kwargs = op_data["global_kwargs"]
+    global_arguments = op_data.global_arguments
 
     op_meta = state.get_op_meta(op_hash)
 
-    ignore_errors = global_kwargs["ignore_errors"]
-    continue_on_error = global_kwargs["continue_on_error"]
+    ignore_errors = global_arguments["_ignore_errors"]
+    continue_on_error = global_arguments["_continue_on_error"]
 
     logger.debug("Starting operation %r on %s", op_meta.names, host)
 
-    executor_kwarg_keys = get_executor_kwarg_keys()
-    base_executor_kwargs = {
-        key: global_kwargs[key] for key in executor_kwarg_keys if key in global_kwargs
-    }
+    executor_kwarg_keys = get_connector_argument_keys()
+    base_connector_arguments: ConnectorArguments = (
+        cast(  # https://github.com/python/mypy/issues/10371
+            ConnectorArguments,
+            {key: global_arguments[key] for key in executor_kwarg_keys if key in global_arguments},
+        )
+    )
 
-    def _run_shell_command(command, executor_kwargs):
+    def _run_shell_command(command, connector_arguments):
         status = False
         combined_output_lines = []
 
         try:
-            status, combined_output_lines = command.execute(state, host, executor_kwargs)
+            status, combined_output_lines = command.execute(state, host, connector_arguments)
         except (timeout_error, socket_error, SSHException) as e:
             log_host_command_error(
                 host,
                 e,
-                timeout=global_kwargs["timeout"],
+                timeout=global_arguments["_timeout"],
             )
 
         # If we failed and have no already printed the stderr, print it
@@ -76,7 +79,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
         return status, combined_output_lines
 
     def run_condition(condition_name: str) -> bool:
-        condition_value = global_kwargs[condition_name]
+        condition_value = global_arguments[condition_name]
         if not condition_value:
             return True
 
@@ -84,7 +87,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
 
         _shell_command_status, _ = _run_shell_command(
             StringCommand(condition_value),
-            base_executor_kwargs,
+            base_connector_arguments,
         )
 
         if _shell_command_status:
@@ -99,7 +102,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
         state.trigger_callbacks("operation_host_error", host, op_hash)
         return False
 
-    if not run_condition("precondition"):
+    if not run_condition("_precondition"):
         return False
 
     if host.executing_op_hash is None:
@@ -112,11 +115,11 @@ def run_host_op(state: "State", host: "Host", op_hash):
     executed_commands = 0
     all_combined_output_lines = []
 
-    for command in op_data["command_generator"]():
+    for command in op_data.command_generator():
         status = False
 
-        executor_kwargs = base_executor_kwargs.copy()
-        executor_kwargs.update(command.executor_kwargs)
+        connector_arguments = base_connector_arguments.copy()
+        connector_arguments.update(command.connector_arguments)
 
         # Now we attempt to execute the command
         #
@@ -126,7 +129,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
 
         if isinstance(command, FunctionCommand):
             try:
-                status = command.execute(state, host, executor_kwargs)
+                status = command.execute(state, host, connector_arguments)
             except Exception as e:  # Custom functions could do anything, so expect anything!
                 _formatted_exc = format_exception(e)
                 _error_msg = "Unexpected error in Python callback: {0}".format(_formatted_exc)
@@ -136,14 +139,14 @@ def run_host_op(state: "State", host: "Host", op_hash):
                 logger.error(_error_log)
 
         elif isinstance(command, StringCommand):
-            status, combined_output_lines = _run_shell_command(command, executor_kwargs)
+            status, combined_output_lines = _run_shell_command(command, connector_arguments)
             all_combined_output_lines.extend(combined_output_lines)
 
         else:
             try:
-                status = command.execute(state, host, executor_kwargs)
+                status = command.execute(state, host, connector_arguments)
             except (timeout_error, socket_error, SSHException, IOError) as e:
-                _timeout = global_kwargs["timeout"]
+                _timeout = global_arguments["_timeout"]
                 log_host_command_error(host, e, timeout=_timeout)
 
         # Break the loop to trigger a failure
@@ -157,7 +160,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
 
     # Commands didn't break, so count our successes & return True!
     else:
-        if not run_condition("postcondition"):
+        if not run_condition("_postcondition"):
             return False
 
         if not did_error:
@@ -174,8 +177,8 @@ def run_host_op(state: "State", host: "Host", op_hash):
         logger.info("{0}{1}".format(host.print_prefix, _click_log_status))
 
         # Trigger any success handler
-        if global_kwargs["on_success"]:
-            global_kwargs["on_success"](state, host, op_hash)
+        if global_arguments["_on_success"]:
+            global_arguments["_on_success"](state, host, op_hash)
 
         state.trigger_callbacks("operation_host_success", host, op_hash)
     else:
@@ -191,8 +194,8 @@ def run_host_op(state: "State", host: "Host", op_hash):
         log_error_or_warning(host, ignore_errors, _command_description, continue_on_error)
 
         # Always trigger any error handler
-        if global_kwargs["on_error"]:
-            global_kwargs["on_error"](state, host, op_hash)
+        if global_arguments["_on_error"]:
+            global_arguments["_on_error"](state, host, op_hash)
 
         # Ignored, op "completes" w/ ignored error
         if ignore_errors:
@@ -204,7 +207,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
         if ignore_errors:
             return_status = True
 
-    op_data["operation_meta"].set_combined_output_lines(all_combined_output_lines)
+    op_data.operation_meta.set_combined_output_lines(all_combined_output_lines)
 
     if host.nested_executing_op_hash:
         host.nested_executing_op_hash = None
@@ -239,7 +242,7 @@ def _run_host_ops(state: "State", host: "Host", progress=None):
         if result is False:
             raise PyinfraError(
                 "Error in operation {0} on {1}".format(
-                    ", ".join(op_meta["names"]),
+                    ", ".join(op_meta.names),
                     host,
                 ),
             )
@@ -300,7 +303,7 @@ def _run_single_op(state: "State", op_hash: str):
 
     failed_hosts = set()
 
-    if op_meta.global_kwargs["serial"]:
+    if op_meta.global_arguments["_serial"]:
         with progress_spinner(state.inventory.iter_active_hosts()) as progress:
             # For each host, run the op
             for host in state.inventory.iter_active_hosts():
@@ -315,8 +318,8 @@ def _run_single_op(state: "State", op_hash: str):
         batches = [list(state.inventory.iter_active_hosts())]
 
         # If parallel set break up the inventory into a series of batches
-        if op_meta.global_kwargs["parallel"]:
-            parallel = op_meta.global_kwargs["parallel"]
+        if op_meta.global_arguments["_parallel"]:
+            parallel = op_meta.global_arguments["_parallel"]
             hosts = list(state.inventory.iter_active_hosts())
 
             batches = [hosts[i : i + parallel] for i in range(0, len(hosts), parallel)]
