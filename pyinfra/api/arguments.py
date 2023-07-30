@@ -2,87 +2,70 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     Iterable,
-    List,
     Mapping,
     Optional,
-    Set,
-    Tuple,
+    TypedDict,
+    TypeVar,
     Union,
 )
 
-import pyinfra
-from pyinfra import context, logger
+from pyinfra import context
 from pyinfra.api.state import State
 
-from .util import get_call_location, memoize
+from .util import memoize
 
 if TYPE_CHECKING:
     from pyinfra.api.config import Config
     from pyinfra.api.host import Host
 
-auth_kwargs = {
-    "_sudo": {
-        "description": "Execute/apply any changes with ``sudo``.",
-        "default": lambda config: config.SUDO,
-        "type": bool,
-    },
-    "_sudo_user": {
-        "description": "Execute/apply any changes with ``sudo`` as a non-root user.",
-        "default": lambda config: config.SUDO_USER,
-        "type": str,
-    },
-    "_use_sudo_login": {
-        "description": "Execute ``sudo`` with a login shell.",
-        "default": lambda config: config.USE_SUDO_LOGIN,
-        "type": bool,
-    },
-    "_use_sudo_password": {
-        "description": "Whether to use a password with ``sudo`` (will ask).",
-        "default": lambda config: config.USE_SUDO_PASSWORD,
-        "type": bool,
-    },
-    "_preserve_sudo_env": {
-        "description": "Preserve the shell environment when using ``sudo``.",
-        "default": lambda config: config.PRESERVE_SUDO_ENV,
-        "type": bool,
-    },
-    "_su_user": {
-        "description": "Execute/apply any changes with this user using ``su``.",
-        "default": lambda config: config.SU_USER,
-        "type": str,
-    },
-    "_use_su_login": {
-        "description": "Execute ``su`` with a login shell.",
-        "default": lambda config: config.USE_SU_LOGIN,
-        "type": bool,
-    },
-    "_preserve_su_env": {
-        "description": "Preserve the shell environment when using ``su``.",
-        "default": lambda config: config.PRESERVE_SU_ENV,
-        "type": bool,
-    },
-    "_su_shell": {
-        "description": (
-            "Use this shell (instead of user login shell) when using ``su``). "
-            "Only available under Linux, for use when using `su` with a user that "
-            "has nologin/similar as their login shell."
-        ),
-        "default": lambda config: config.SU_SHELL,
-        "type": str,
-    },
-    "_doas": {
-        "description": "Execute/apply any changes with ``doas``.",
-        "default": lambda config: config.DOAS,
-        "type": bool,
-    },
-    "_doas_user": {
-        "description": "Execute/apply any changes with ``doas`` as a non-root user.",
-        "default": lambda config: config.DOAS_USER,
-        "type": str,
-    },
-}
+
+T = TypeVar("T")
+
+
+default_sentinel = object()
+
+
+class ArgumentMeta:
+    description: str
+    default: Callable[["Config"], T]
+    handler: Callable[["Config", T], T]
+
+    def __init__(self, description, default, handler=default_sentinel):
+        self.description = description
+        self.default = default
+        self.handler = handler
+
+
+# Connector arguments
+# These are arguments passed to the various connectors that provide the underlying
+# API to read/write external systems.
+
+
+class ConnectorArguments(TypedDict, total=False):
+    # Auth arguments
+    _sudo: bool
+    _sudo_user: str
+    _use_sudo_login: bool
+    _use_sudo_password: bool
+    _preserve_sudo_env: bool
+    _su_user: str
+    _use_su_login: bool
+    _preserve_su_env: bool
+    _su_shell: str
+    _doas: bool
+    _doas_user: str
+
+    # Shell arguments
+    _shell_executable: str
+    _chdir: str
+    _env: Mapping[str, str]
+
+    # Connector control (outside of command generation)
+    _success_exit_codes: Iterable[int]
+    _timeout: int
+    _get_pty: bool
+    _stdin: Union[str, list, tuple]
 
 
 def generate_env(config: "Config", value):
@@ -98,157 +81,204 @@ def generate_env(config: "Config", value):
     return env
 
 
-shell_kwargs = {
-    "_shell_executable": {
-        "description": "The shell to use. Defaults to ``sh`` (Unix) or ``cmd`` (Windows).",
-        "default": lambda config: config.SHELL,
-        "type": str,
-    },
-    "_chdir": {
-        "description": "Directory to switch to before executing the command.",
-        "type": str,
-    },
-    "_env": {
-        "description": "Dictionary of environment variables to set.",
-        "handler": generate_env,
-        "type": Mapping[str, str],
-    },
-    "_success_exit_codes": {
-        "description": "List of exit codes to consider a success.",
-        "default": lambda config: [0],
-        "type": Iterable[int],
-    },
-    "_timeout": {
-        "description": "Timeout for *each* command executed during the operation.",
-        "type": int,
-    },
-    "_get_pty": {
-        "description": "Whether to get a pseudoTTY when executing any commands.",
-        "type": bool,
-    },
-    "_stdin": {
-        "description": "String or buffer to send to the stdin of any commands.",
-        "type": Union[str, list, tuple],
-    },
+auth_argument_meta: dict[str, ArgumentMeta] = {
+    "_sudo": ArgumentMeta(
+        "Execute/apply any changes with ``sudo``.",
+        default=lambda config: config.SUDO,
+    ),
+    "_sudo_user": ArgumentMeta(
+        "Execute/apply any changes with ``sudo`` as a non-root user.",
+        default=lambda config: config.SUDO_USER,
+    ),
+    "_use_sudo_login": ArgumentMeta(
+        "Execute ``sudo`` with a login shell.",
+        default=lambda config: config.USE_SUDO_LOGIN,
+    ),
+    "_use_sudo_password": ArgumentMeta(
+        "Whether to use a password with ``sudo`` (will ask).",
+        default=lambda config: config.USE_SUDO_PASSWORD,
+    ),
+    "_preserve_sudo_env": ArgumentMeta(
+        "Preserve the shell environment when using ``sudo``.",
+        default=lambda config: config.PRESERVE_SUDO_ENV,
+    ),
+    "_su_user": ArgumentMeta(
+        "Execute/apply any changes with this user using ``su``.",
+        default=lambda config: config.SU_USER,
+    ),
+    "_use_su_login": ArgumentMeta(
+        "Execute ``su`` with a login shell.",
+        default=lambda config: config.USE_SU_LOGIN,
+    ),
+    "_preserve_su_env": ArgumentMeta(
+        "Preserve the shell environment when using ``su``.",
+        default=lambda config: config.PRESERVE_SU_ENV,
+    ),
+    "_su_shell": ArgumentMeta(
+        "Use this shell (instead of user login shell) when using ``su``). "
+        "Only available under Linux, for use when using `su` with a user that "
+        "has nologin/similar as their login shell.",
+        default=lambda config: config.SU_SHELL,
+    ),
+    "_doas": ArgumentMeta(
+        "Execute/apply any changes with ``doas``.",
+        default=lambda config: config.DOAS,
+    ),
+    "_doas_user": ArgumentMeta(
+        "Execute/apply any changes with ``doas`` as a non-root user.",
+        default=lambda config: config.DOAS_USER,
+    ),
 }
 
-meta_kwargs = {
+shell_argument_meta: dict[str, ArgumentMeta] = {
+    "_shell_executable": ArgumentMeta(
+        "The shell to use. Defaults to ``sh`` (Unix) or ``cmd`` (Windows).",
+        default=lambda config: config.SHELL,
+    ),
+    "_chdir": ArgumentMeta(
+        "Directory to switch to before executing the command.",
+        default=lambda config: "",
+    ),
+    "_env": ArgumentMeta(
+        "Dictionary of environment variables to set.",
+        default=lambda config: {},
+        handler=generate_env,
+    ),
+    "_success_exit_codes": ArgumentMeta(
+        "List of exit codes to consider a success.",
+        default=lambda config: [0],
+    ),
+    "_timeout": ArgumentMeta(
+        "Timeout for *each* command executed during the operation.",
+        default=lambda config: None,
+    ),
+    "_get_pty": ArgumentMeta(
+        "Whether to get a pseudoTTY when executing any commands.",
+        default=lambda config: False,
+    ),
+    "_stdin": ArgumentMeta(
+        "String or buffer to send to the stdin of any commands.",
+        default=lambda config: None,
+    ),
+}
+
+
+# Meta arguments
+# These provide/extend additional operation metadata
+
+
+class MetaArguments(TypedDict, total=False):
+    name: str
+    _ignore_errors: bool
+    _continue_on_error: bool
+    _precondition: str
+    _postcondition: str
+    _on_success: Callable[[State, "Host", str], None]
+    _on_error: Callable[[State, "Host", str], None]
+
+
+meta_argument_meta: dict[str, ArgumentMeta] = {
     # NOTE: name is the only non-_-prefixed argument
-    "name": {
-        "description": "Name of the operation.",
-        "type": str,
-    },
-    "_ignore_errors": {
-        "description": "Ignore errors when executing the operation.",
-        "default": lambda config: config.IGNORE_ERRORS,
-        "type": bool,
-    },
-    "_continue_on_error": {
-        "description": (
+    "name": ArgumentMeta(
+        "Name of the operation.",
+        default=lambda config: None,
+    ),
+    "_ignore_errors": ArgumentMeta(
+        "Ignore errors when executing the operation.",
+        default=lambda config: config.IGNORE_ERRORS,
+    ),
+    "_continue_on_error": ArgumentMeta(
+        (
             "Continue executing operation commands after error. "
             "Only applies when ``_ignore_errors`` is true."
         ),
-        "default": False,
-        "type": bool,
-    },
-    "_precondition": {
-        "description": "Command to execute & check before the operation commands begin.",
-        "type": str,
-    },
-    "_postcondition": {
-        "description": "Command to execute & check after the operation commands complete.",
-        "type": str,
-    },
+        default=lambda config: False,
+    ),
+    "_precondition": ArgumentMeta(
+        "Command to execute & check before the operation commands begin.",
+        default=lambda config: None,
+    ),
+    "_postcondition": ArgumentMeta(
+        "Command to execute & check after the operation commands complete.",
+        default=lambda config: None,
+    ),
     # Lambda on the next two are to workaround a circular import
-    "_on_success": {
-        "description": "Callback function to execute on success.",
-        "type": lambda: Callable[[State, pyinfra.api.Host, str], None],
-    },
-    "_on_error": {
-        "description": "Callback function to execute on error.",
-        "type": lambda: Callable[[State, pyinfra.api.Host, str], None],
-    },
+    "_on_success": ArgumentMeta(
+        "Callback function to execute on success.",
+        default=lambda config: None,
+    ),
+    "_on_error": ArgumentMeta(
+        "Callback function to execute on error.",
+        default=lambda config: None,
+    ),
 }
 
-# Execution kwargs are global - ie must be identical for every host
-execution_kwargs = {
-    "_parallel": {
-        "description": "Run this operation in batches of hosts.",
-        "default": lambda config: config.PARALLEL,
-        "type": int,
-    },
-    "_run_once": {
-        "description": "Only execute this operation once, on the first host to see it.",
-        "default": lambda config: False,
-        "type": bool,
-    },
-    "_serial": {
-        "description": "Run this operation host by host, rather than in parallel.",
-        "default": lambda config: False,
-        "type": bool,
-    },
+
+# Execution arguments
+# These alter how pyinfra is to execute an operation. Notably these must all have the same value
+# over every target host for the same operation.
+
+
+class ExecutionArguments(TypedDict, total=False):
+    _parallel: int
+    _run_once: bool
+    _serial: bool
+
+
+execution_argument_meta: dict[str, ArgumentMeta] = {
+    "_parallel": ArgumentMeta(
+        "Run this operation in batches of hosts.",
+        default=lambda config: config.PARALLEL,
+    ),
+    "_run_once": ArgumentMeta(
+        "Only execute this operation once, on the first host to see it.",
+        default=lambda config: False,
+    ),
+    "_serial": ArgumentMeta(
+        "Run this operation host by host, rather than in parallel.",
+        default=lambda config: False,
+    ),
 }
 
-# TODO: refactor these into classes so they can be typed properly, remove Any
-ALL_ARGUMENTS: Dict[str, Dict[str, Any]] = {
-    **auth_kwargs,
-    **shell_kwargs,
-    **meta_kwargs,
-    **execution_kwargs,
+
+class AllArguments(ConnectorArguments, MetaArguments, ExecutionArguments):
+    pass
+
+
+all_argument_meta: dict[str, ArgumentMeta] = {
+    **auth_argument_meta,
+    **shell_argument_meta,
+    **meta_argument_meta,
+    **execution_argument_meta,
 }
 
-OPERATION_KWARG_DOC: List[Tuple[str, Optional[str], Dict[str, Dict[str, Any]]]] = [
-    ("Privilege & user escalation", None, auth_kwargs),
-    ("Shell control & features", None, shell_kwargs),
-    ("Operation meta & callbacks", "Not available in facts.", meta_kwargs),
+
+OPERATION_KWARG_DOC: list[tuple[str, Optional[str], type, dict[str, ArgumentMeta]]] = [
+    ("Privilege & user escalation", None, ConnectorArguments, auth_argument_meta),
+    ("Shell control & features", None, ConnectorArguments, shell_argument_meta),
+    ("Operation meta & callbacks", "Not available in facts.", MetaArguments, meta_argument_meta),
     (
         "Execution strategy",
         "Not available in facts, value must be the same for all hosts.",
-        execution_kwargs,
+        ExecutionArguments,
+        execution_argument_meta,
     ),
 ]
 
 
-def _get_internal_key(key: str) -> str:
-    if key.startswith("_"):
-        return key[1:]
-    return key
+# Called ONCE to dedupe args that must be same for all calls of an op
+@memoize
+def get_execution_kwarg_keys() -> list[str]:
+    return list(ExecutionArguments.__annotations__.keys())
 
 
 @memoize
-def get_execution_kwarg_keys() -> List[Any]:
-    return [_get_internal_key(key) for key in execution_kwargs.keys()]
-
-
-@memoize
-def get_executor_kwarg_keys() -> List[Any]:
-    keys: Set[str] = set()
-    keys.update(auth_kwargs.keys(), shell_kwargs.keys())
-    return [_get_internal_key(key) for key in keys]
-
-
-@memoize
-def show_legacy_argument_warning(key, call_location):
-    logger.warning(
-        (
-            '{0}:\n\tGlobal arguments should be prefixed "_", '
-            "please us the `{1}` keyword argument in place of `{2}`."
-        ).format(call_location, "_{0}".format(key), key),
-    )
-
-
-@memoize
-def show_legacy_argument_host_data_warning(key):
-    logger.warning(
-        (
-            'Global arguments should be prefixed "_", '
-            "please us the `host.data._{0}` keyword argument in place of `host.data.{0}`."
-        ).format(key),
-    )
+def get_connector_argument_keys() -> list[str]:
+    return list(ConnectorArguments.__annotations__.keys())
 
 
 def pop_global_arguments(
-    kwargs: Dict[Any, Any],
+    kwargs: dict[str, Any],
     state: Optional["State"] = None,
     host: Optional["Host"] = None,
     keys_to_check=None,
@@ -284,47 +314,26 @@ def pop_global_arguments(
     global_kwargs = {}
     found_keys = []
 
-    for key, argument in ALL_ARGUMENTS.items():
-        internal_key = _get_internal_key(key)
-
-        if keys_to_check and internal_key not in keys_to_check:
+    for key, type_ in AllArguments.__annotations__.items():
+        if keys_to_check and key not in keys_to_check:
             continue
 
-        handler: Optional[Callable] = None
-        default: Optional[Callable] = None
+        argument_meta = all_argument_meta[key]
+        handler = argument_meta.handler
+        default: Any = argument_meta.default(config)
 
-        if isinstance(argument, dict):
-            handler = argument.get("handler")
-            default = argument.get("default")
-            if default:
-                default = default(config)
-
-        host_default = getattr(host.data, key, None)
-
-        # TODO: remove this additional check in v3
-        if host_default is None and internal_key != key:
-            host_default = getattr(host.data, internal_key, None)
-            if host_default is not None:
-                show_legacy_argument_host_data_warning(internal_key)
-
-        if host_default is not None:
+        host_default = getattr(host.data, key, default_sentinel)
+        if host_default is not default_sentinel:
             default = host_default
 
         if key in kwargs:
-            found_keys.append(internal_key)
+            found_keys.append(key)
             value = kwargs.pop(key)
-
-        # TODO: remove this additional check in v3
-        elif internal_key in kwargs:
-            show_legacy_argument_warning(internal_key, get_call_location(frame_offset=2))
-            found_keys.append(internal_key)
-            value = kwargs.pop(internal_key)
-
         else:
-            value = meta_kwargs.get(internal_key, default)
+            value = meta_kwargs.get(key, default)
 
-        if handler:
+        if handler is not default_sentinel:
             value = handler(config, value)
 
-        global_kwargs[internal_key] = value
+        global_kwargs[key] = value
     return global_kwargs, found_keys

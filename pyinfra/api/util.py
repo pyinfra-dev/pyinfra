@@ -15,7 +15,7 @@ from pyinfra import logger
 
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
-    from pyinfra.api.state import State
+    from pyinfra.api.state import State, StateOperationMeta
 
 # 64kb chunks
 BLOCKSIZE = 65536
@@ -216,11 +216,13 @@ def print_host_combined_output(host: "Host", combined_output_lines):
             )
 
 
-def log_operation_start(op_meta: Dict, op_types: Optional[List] = None, prefix: str = "--> "):
+def log_operation_start(
+    op_meta: "StateOperationMeta", op_types: Optional[List] = None, prefix: str = "--> "
+) -> None:
     op_types = op_types or []
-    if op_meta.global_kwargs["serial"]:
+    if op_meta.global_arguments["_serial"]:
         op_types.append("serial")
-    if op_meta.global_kwargs["run_once"]:
+    if op_meta.global_arguments["_run_once"]:
         op_types.append("run once")
 
     args = ""

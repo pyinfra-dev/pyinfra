@@ -1,7 +1,8 @@
 from contextlib import contextmanager
+from dataclasses import dataclass
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
-from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Iterator, Optional
 from uuid import uuid4
 
 from gevent.pool import Pool
@@ -14,6 +15,7 @@ from .exceptions import PyinfraError
 from .util import sha1_hash
 
 if TYPE_CHECKING:
+    from pyinfra.api.arguments import AllArguments
     from pyinfra.api.command import PyinfraCommand
     from pyinfra.api.host import Host
     from pyinfra.api.inventory import Inventory
@@ -80,21 +82,22 @@ class BaseStateCallback:
 
 
 class StateOperationMeta:
-    names: Set[str]
-    args: List[str]
-    op_order: Tuple[int]
-    global_kwargs: Dict
+    names: set[str]
+    args: list[str]
+    op_order: tuple[int]
+    global_arguments: dict
 
-    def __init__(self, op_order: Tuple[int]):
+    def __init__(self, op_order: tuple[int]):
+        self.op_order = op_order
         self.names = set()
         self.args = []
-        self.op_order = op_order
-        self.global_kwargs = {}
+        self.global_arguments = {}
 
 
+@dataclass
 class StateOperationHostData:
-    comand_generator: Iterator["PyinfraCommand"]
-    global_kwargs: Dict
+    command_generator: Iterator["PyinfraCommand"]
+    global_arguments: "AllArguments"
     operation_meta: "OperationMeta"
 
 
@@ -102,7 +105,7 @@ class StateHostMeta:
     ops = 0
     ops_change = 0
     ops_no_change = 0
-    op_hashes: Set[str]
+    op_hashes: set[str]
 
     def __init__(self):
         self.op_hashes = set()
@@ -189,40 +192,40 @@ class State:
         # Actually initialise the state object
         #
 
-        self.callback_handlers: List[BaseStateCallback] = []
+        self.callback_handlers: list[BaseStateCallback] = []
 
         # Setup greenlet pools
         self.pool = Pool(config.PARALLEL)
         self.fact_pool = Pool(config.PARALLEL)
 
         # Private keys
-        self.private_keys: Dict[str, PKey] = {}
+        self.private_keys: dict[str, PKey] = {}
 
         # Assign inventory/config
         self.inventory = inventory
         self.config = config
 
         # Hosts we've activated at any time
-        self.activated_hosts: Set["Host"] = set()
+        self.activated_hosts: set["Host"] = set()
         # Active hosts that *haven't* failed yet
-        self.active_hosts: Set["Host"] = set()
+        self.active_hosts: set["Host"] = set()
         # Hosts that have failed
-        self.failed_hosts: Set["Host"] = set()
+        self.failed_hosts: set["Host"] = set()
 
         # Limit hosts changes dynamically to limit operations to a subset of hosts
-        self.limit_hosts: List["Host"] = initial_limit
+        self.limit_hosts: list["Host"] = initial_limit
 
         # Op basics
-        self.op_meta: Dict[str, StateOperationMeta] = {}  # maps operation hash -> names/etc
+        self.op_meta: dict[str, StateOperationMeta] = {}  # maps operation hash -> names/etc
 
         # Op dict for each host
-        self.ops: Dict["Host", dict] = {host: {} for host in inventory}
+        self.ops: dict["Host", dict[str, StateOperationHostData]] = {host: {} for host in inventory}
 
         # Meta dict for each host
-        self.meta: Dict["Host", StateHostMeta] = {host: StateHostMeta() for host in inventory}
+        self.meta: dict["Host", StateHostMeta] = {host: StateHostMeta() for host in inventory}
 
         # Results dict for each host
-        self.results: Dict["Host", StateHostResults] = {
+        self.results: dict["Host", StateHostResults] = {
             host: StateHostResults() for host in inventory
         }
 
@@ -304,7 +307,7 @@ class State:
 
         return final_op_order
 
-    def get_op_meta(self, op_hash: str):
+    def get_op_meta(self, op_hash: str) -> StateOperationMeta:
         return self.op_meta[op_hash]
 
     def get_meta_for_host(self, host: "Host") -> StateHostMeta:
@@ -316,7 +319,7 @@ class State:
     def get_op_data_for_host(self, host: "Host", op_hash: str):
         return self.ops[host][op_hash]
 
-    def set_op_data_for_host(self, host: "Host", op_hash: str, op_data):
+    def set_op_data_for_host(self, host: "Host", op_hash: str, op_data: StateOperationHostData):
         self.ops[host][op_hash] = op_data
 
     def activate_host(self, host: "Host"):
