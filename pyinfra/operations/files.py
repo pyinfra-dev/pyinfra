@@ -885,7 +885,7 @@ def put(
 
         files.put(
             name="Upload a BytesIO object",
-            src=BytesIO("file contents"),
+            src=BytesIO("file contents".encode("utf-8")),
             dest="/etc/motd",
         )
     """
@@ -1052,7 +1052,7 @@ def template(src, dest, user=None, group=None, mode=None, create_remote_dir=True
         {% for entry in foo_list %}
             - "{{ entry }}"
         {% endfor %}
-        """)
+        """.encode("utf-8"))
 
         files.template(
             name="Create a templated file",
