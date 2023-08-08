@@ -8,7 +8,7 @@ import sys
 import traceback
 from datetime import timedelta
 from fnmatch import fnmatch
-from io import StringIO
+from io import BytesIO
 
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
@@ -884,8 +884,8 @@ def put(
         )
 
         files.put(
-            name="Upload a StringIO object",
-            src=StringIO("file contents"),
+            name="Upload a BytesIO object",
+            src=BytesIO("file contents"),
             dest="/etc/motd",
         )
     """
@@ -1043,7 +1043,7 @@ def template(src, dest, user=None, group=None, mode=None, create_remote_dir=True
             "entry 2"
         ]
 
-        template = StringIO("""
+        template = BytesIO("""
         name: "{{ foo_variable }}"
         dict_contents:
             str1: "{{ foo_dict.str1 }}"
@@ -1102,7 +1102,7 @@ def template(src, dest, user=None, group=None, mode=None, create_remote_dir=True
             ),
         )
 
-    output_file = StringIO(output)
+    output_file = BytesIO(output.encode("utf-8"))
     # Set the template attribute for nicer debugging
     output_file.template = src
 
