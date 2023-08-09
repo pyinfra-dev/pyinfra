@@ -86,7 +86,7 @@ def download(
     + md5sum: md5 hash to checksum the downloaded file against
     + headers: optional dictionary of headers to set for the HTTP request
     + insecure: disable SSL verification for the HTTP request
-    + proxy: simple HTTP only proxy through which we can download files, form `http://<yourproxy>:<port>`
+    + proxy: simple HTTP proxy through which we can download files, form `http://<yourproxy>:<port>`
 
     **Example:**
 
