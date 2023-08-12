@@ -862,7 +862,7 @@ def user_authorized_keys(
 
         if path.exists(try_path):
             with open(try_path, "r") as f:
-                return f.read()
+                return f.read().strip()
 
         return key
 
