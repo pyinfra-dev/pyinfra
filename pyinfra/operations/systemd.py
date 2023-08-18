@@ -85,7 +85,21 @@ def service(
         user_name=user_name,
     )
 
-    if "." not in service:
+    if not service.endswith(
+        (
+            ".service",
+            ".socket",
+            ".device",
+            ".mount",
+            ".automount",
+            ".swap",
+            ".target",
+            ".path",
+            ".timer",
+            ".slice",
+            ".scope",
+        )
+    ):
         service = "{0}.service".format(service)
 
     if daemon_reload:
