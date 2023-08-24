@@ -1037,6 +1037,8 @@ def user(
 
         if create_home:
             args.append("-m")
+        else:
+            args.append("-M")
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
