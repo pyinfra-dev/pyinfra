@@ -765,6 +765,7 @@ def group(group, present=True, system=False, gid=None):
     + group: name of the group to ensure
     + present: whether the group should be present or not
     + system: whether to create a system group
+    + gid: use a specific groupid number
 
     System users:
         System users don't exist on BSD, so the argument is ignored for BSD targets.
@@ -943,6 +944,7 @@ def user(
     + ensure_home: whether to ensure the ``home`` directory exists
     + create_home: whether to new user create home directories from the system skeleton
     + system: whether to create a system account
+    + uid: use a specific userid number
     + comment: the user GECOS comment
     + add_deploy_dir: any public_key filenames are relative to the deploy directory
     + unique: prevent creating users with duplicate UID
