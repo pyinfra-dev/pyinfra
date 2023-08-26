@@ -24,6 +24,8 @@ from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import memoize
 from pyinfra.progress import progress_spinner
 
+from .base import BaseConnector
+
 
 def _get_vagrant_ssh_config(queue, progress, target):
     logger.debug("Loading SSH config for %s", target)
@@ -128,46 +130,50 @@ def _make_name_data(host):
     return "@vagrant/{0}".format(host["Host"]), data, groups
 
 
-def make_names_data(limit=None):
-    vagrant_ssh_info = get_vagrant_config(limit)
+class VagrantInventoryConnector(BaseConnector):
+    @staticmethod
+    def make_names_data(limit=None):
+        vagrant_ssh_info = get_vagrant_config(limit)
 
-    logger.debug("Got Vagrant SSH info: \n%s", vagrant_ssh_info)
+        logger.debug("Got Vagrant SSH info: \n%s", vagrant_ssh_info)
 
-    hosts = []
-    current_host = None
+        hosts = []
+        current_host = None
 
-    for line in vagrant_ssh_info:
-        # Vagrant outputs an empty line between each host
-        if not line:
-            if current_host:
-                hosts.append(_make_name_data(current_host))
+        for line in vagrant_ssh_info:
+            # Vagrant outputs an empty line between each host
+            if not line:
+                if current_host:
+                    hosts.append(_make_name_data(current_host))
 
-            current_host = None
-            continue
+                current_host = None
+                continue
 
-        key, value = line.split(" ", 1)
+            key, value = line.split(" ", 1)
 
-        if key == "Host":
-            if current_host:
-                hosts.append(_make_name_data(current_host))
+            if key == "Host":
+                if current_host:
+                    hosts.append(_make_name_data(current_host))
 
-            # Set the new host
-            current_host = {
-                key: value,
-            }
+                # Set the new host
+                current_host = {
+                    key: value,
+                }
 
-        elif current_host:
-            current_host[key] = value
+            elif current_host:
+                current_host[key] = value
 
-        else:
-            logger.debug("Extra Vagrant SSH key/value (%s=%s)", key, value)
+            else:
+                logger.debug("Extra Vagrant SSH key/value (%s=%s)", key, value)
 
-    if current_host:
-        hosts.append(_make_name_data(current_host))
+        if current_host:
+            hosts.append(_make_name_data(current_host))
 
-    if not hosts:
-        if limit:
-            raise InventoryError("No running Vagrant instances matching `{0}` found!".format(limit))
-        raise InventoryError("No running Vagrant instances found!")
+        if not hosts:
+            if limit:
+                raise InventoryError(
+                    "No running Vagrant instances matching `{0}` found!".format(limit)
+                )
+            raise InventoryError("No running Vagrant instances found!")
 
-    return hosts
+        return hosts

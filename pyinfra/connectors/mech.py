@@ -24,6 +24,8 @@ from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import memoize
 from pyinfra.progress import progress_spinner
 
+from .base import BaseConnector
+
 
 def _get_mech_ssh_config(queue, progress, target):
     logger.debug("Loading SSH config for %s", target)
@@ -66,7 +68,6 @@ def get_mech_config(limit=None):
     targets = []
 
     for line in output:
-
         address = ""
 
         data = line.split()
@@ -144,43 +145,45 @@ def _make_name_data(host):
     return "@mech/{0}".format(host["Host"]), data, groups
 
 
-def make_names_data(limit=None):
-    mech_ssh_info = get_mech_config(limit)
+class MechInventoryConnector(BaseConnector):
+    @staticmethod
+    def make_names_data(limit=None):
+        mech_ssh_info = get_mech_config(limit)
 
-    logger.debug("Got Mech SSH info: \n%s", mech_ssh_info)
+        logger.debug("Got Mech SSH info: \n%s", mech_ssh_info)
 
-    hosts = []
-    current_host = None
+        hosts = []
+        current_host = None
 
-    for line in mech_ssh_info:
-        if not line:
-            if current_host:
-                hosts.append(_make_name_data(current_host))
+        for line in mech_ssh_info:
+            if not line:
+                if current_host:
+                    hosts.append(_make_name_data(current_host))
 
-            current_host = None
-            continue
+                current_host = None
+                continue
 
-        key, value = line.strip().split(" ", 1)
+            key, value = line.strip().split(" ", 1)
 
-        if key == "Host":
-            if current_host:
-                hosts.append(_make_name_data(current_host))
+            if key == "Host":
+                if current_host:
+                    hosts.append(_make_name_data(current_host))
 
-            # Set the new host
-            current_host = {
-                key: value,
-            }
+                # Set the new host
+                current_host = {
+                    key: value,
+                }
 
-        elif current_host:
-            current_host[key] = value
+            elif current_host:
+                current_host[key] = value
 
-        else:
-            logger.debug("Extra Mech SSH key/value (%s=%s)", key, value)
+            else:
+                logger.debug("Extra Mech SSH key/value (%s=%s)", key, value)
 
-    if current_host:
-        hosts.append(_make_name_data(current_host))
+        if current_host:
+            hosts.append(_make_name_data(current_host))
 
-    if not hosts:
-        raise InventoryError("No running Mech instances found!")
+        if not hosts:
+            raise InventoryError("No running Mech instances found!")
 
-    return hosts
+        return hosts

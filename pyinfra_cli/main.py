@@ -26,7 +26,6 @@ from .prints import (
     print_inventory,
     print_meta,
     print_results,
-    print_state_facts,
     print_state_operations,
     print_support_info,
 )
@@ -280,7 +279,7 @@ def _main(
     debug: bool,
     debug_facts: bool,
     debug_operations: bool,
-    support: bool = None,
+    support: bool = False,
 ):
     # Setup working directory
     #
@@ -363,9 +362,6 @@ def _main(
 
     # If --debug-facts or --debug-operations, print and exit
     if debug_facts or debug_operations:
-        if debug_facts:
-            print_state_facts(state)
-
         if debug_operations:
             print_state_operations(state)
 
@@ -400,7 +396,6 @@ def _setup_log_level(debug, quiet):
 
 
 def _validate_operations(operations, chdir):
-
     # Make a copy before we overwrite
     original_operations = operations
 
@@ -601,7 +596,6 @@ def _apply_inventory_limit(inventory, limit):
 # Operations Execution
 #
 def _handle_commands(state, config, command, original_operations, operations, quiet):
-
     if command is CliCommands.FACT:
         state, fact_data = _run_fact_operations(state, config, operations, quiet)
         print_facts(fact_data)

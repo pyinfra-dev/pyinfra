@@ -11,7 +11,7 @@ other host B while I operate on this host A).
 import re
 from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 import click
 import gevent
@@ -27,11 +27,11 @@ from pyinfra.api.util import (
     make_hash,
     print_host_combined_output,
 )
-from pyinfra.connectors.util import split_combined_output
+from pyinfra.connectors.util import CommandOutput
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
-from .arguments import get_executor_kwarg_keys
+from .arguments import get_connector_argument_keys
 
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
@@ -77,7 +77,7 @@ class FactBase(metaclass=FactNameMeta):
 
 
 class ShortFactBase(metaclass=FactNameMeta):
-    fact: Type[FactBase]
+    fact: type[FactBase]
 
     @staticmethod
     def process_data(data):
@@ -99,8 +99,8 @@ def _make_command(command_attribute, host_args):
 def _get_executor_kwargs(
     state: "State",
     host: "Host",
-    override_kwargs: Optional[Dict[str, Any]] = None,
-    override_kwarg_keys: Optional[List[str]] = None,
+    override_kwargs: Optional[dict[str, Any]] = None,
+    override_kwarg_keys: Optional[list[str]] = None,
 ):
     if override_kwargs is None:
         override_kwargs = {}
@@ -118,7 +118,7 @@ def _get_executor_kwargs(
     )
 
     return {
-        key: value for key, value in override_kwargs.items() if key in get_executor_kwarg_keys()
+        key: value for key, value in override_kwargs.items() if key in get_connector_argument_keys()
     }
 
 
@@ -136,7 +136,7 @@ def _handle_fact_kwargs(state, host, cls, args, kwargs):
         kwargs,
         state=state,
         host=host,
-        keys_to_check=get_executor_kwarg_keys(),
+        keys_to_check=get_connector_argument_keys(),
     )
 
     executor_kwargs = _get_executor_kwargs(
@@ -181,12 +181,12 @@ def get_facts(state: "State", *args, **kwargs):
 def get_fact(
     state: "State",
     host: "Host",
-    cls: Type[FactBase],
+    cls: type[FactBase],
     args: Optional[Any] = None,
     kwargs: Optional[Any] = None,
     ensure_hosts: Optional[Any] = None,
     apply_failed_hosts: bool = True,
-):
+) -> Any:
     if issubclass(cls, ShortFactBase):
         return get_short_facts(
             state,
@@ -212,12 +212,12 @@ def get_fact(
 def _get_fact(
     state: "State",
     host: "Host",
-    cls: Type[FactBase],
-    args: Optional[List] = None,
-    kwargs: Optional[Dict] = None,
+    cls: type[FactBase],
+    args: Optional[list] = None,
+    kwargs: Optional[dict] = None,
     ensure_hosts: Optional[Any] = None,
     apply_failed_hosts: bool = True,
-):
+) -> Any:
     fact = cls()
     name = fact.name
 
@@ -261,15 +261,13 @@ def _get_fact(
         )
 
     status = False
-    stdout = []
-    combined_output_lines = []
+    output = CommandOutput([])
 
     try:
-        status, combined_output_lines = host.run_shell_command(
+        status, output = host.run_shell_command(
             command,
             print_output=state.print_fact_output,
             print_input=state.print_fact_input,
-            return_combined_output=True,
             **executor_kwargs,
         )
     except (timeout_error, socket_error, SSHException) as e:
@@ -279,19 +277,19 @@ def _get_fact(
             timeout=executor_kwargs["timeout"],
         )
 
-    stdout, stderr = split_combined_output(combined_output_lines)
+    stdout_lines, stderr_lines = output.stdout_lines, output.stderr_lines
 
     data = fact.default()
 
     if status:
-        if stdout:
-            data = fact.process(stdout)
-    elif stderr:
+        if stdout_lines:
+            data = fact.process(stdout_lines)
+    elif stderr_lines:
         # If we have error output and that error is sudo or su stating the user
         # does not exist, do not fail but instead return the default fact value.
         # This allows for users that don't currently but may be created during
         # other operations.
-        first_line = stderr[0]
+        first_line = stderr_lines[0]
         if executor_kwargs["sudo_user"] and re.match(SUDO_REGEX, first_line):
             status = True
         if executor_kwargs["su_user"] and any(re.match(regex, first_line) for regex in SU_REGEXES):
@@ -311,7 +309,7 @@ def _get_fact(
             logger.debug(log_message)
     else:
         if not state.print_fact_output:
-            print_host_combined_output(host, combined_output_lines)
+            print_host_combined_output(host, output)
 
         log_error_or_warning(
             host,
@@ -337,7 +335,7 @@ def get_host_fact(
     state: "State",
     host: "Host",
     cls,
-    args: Optional[List] = None,
-    kwargs: Optional[Dict] = None,
-):
+    args: Optional[list] = None,
+    kwargs: Optional[dict] = None,
+) -> Any:
     return get_fact(state, host, cls, args=args, kwargs=kwargs)

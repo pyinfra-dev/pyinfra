@@ -6,7 +6,7 @@ import pyinfra
 from pyinfra import config, host, logger, state
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import get_file_path
-from pyinfra.connectors.util import run_local_process, split_combined_output
+from pyinfra.connectors.util import run_local_process
 from pyinfra.context import ctx_state
 
 
@@ -76,19 +76,18 @@ def shell(
         if print_input:
             click.echo("{0}>>> {1}".format(print_prefix, command), err=True)
 
-        return_code, combined_output = run_local_process(
+        return_code, output = run_local_process(
             command,
             print_output=print_output,
             print_prefix=print_prefix,
         )
-        stdout, stderr = split_combined_output(combined_output)
 
         if return_code > 0 and not ignore_errors:
             raise PyinfraError(
-                "Local command failed: {0}\n{1}".format(command, stderr),
+                "Local command failed: {0}\n{1}".format(command, output.stderr),
             )
 
-        all_stdout.extend(stdout)
+        all_stdout.extend(output.stdout_lines)
 
     if not splitlines:
         return "\n".join(all_stdout)

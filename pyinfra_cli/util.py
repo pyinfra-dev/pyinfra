@@ -5,7 +5,7 @@ from importlib import import_module
 from io import IOBase
 from os import path
 from pathlib import Path
-from types import FunctionType, ModuleType
+from types import CodeType, FunctionType, ModuleType
 from typing import TYPE_CHECKING, Callable
 
 import click
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from pyinfra.api.state import State
 
 # Cache for compiled Python deploy code
-PYTHON_CODES = {}
+PYTHON_CODES: dict[str, CodeType] = {}
 
 
 def is_subdir(child, parent):
@@ -45,9 +45,9 @@ def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = Fals
 
     if filename not in PYTHON_CODES:
         with open(filename, "r", encoding="utf-8") as f:
-            code = f.read()
+            code_str = f.read()
 
-        code = compile(code, filename, "exec")
+        code = compile(code_str, filename, "exec")
         PYTHON_CODES[filename] = code
 
     # Create some base attributes for our "module"

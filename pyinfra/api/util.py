@@ -16,6 +16,7 @@ from pyinfra import logger
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
     from pyinfra.api.state import State, StateOperationMeta
+    from pyinfra.connectors.util import CommandOutput
 
 # 64kb chunks
 BLOCKSIZE = 65536
@@ -184,7 +185,7 @@ def get_template(filename_or_io: str):
     return template
 
 
-def sha1_hash(string: str):
+def sha1_hash(string: str) -> str:
     """
     Return the SHA1 of the input string.
     """
@@ -194,26 +195,16 @@ def sha1_hash(string: str):
     return hasher.hexdigest()
 
 
-def format_exception(e):
-    return "{0}{1}".format(e.__class__.__name__, e.args)
+def format_exception(e: Exception) -> str:
+    return f"{e.__class__.__name__}{e.args}"
 
 
-def print_host_combined_output(host: "Host", combined_output_lines):
-    for type_, line in combined_output_lines:
-        if type_ == "stderr":
-            logger.error(
-                "{0}{1}".format(
-                    host.print_prefix,
-                    click.style(line, "red"),
-                ),
-            )
+def print_host_combined_output(host: "Host", output: "CommandOutput") -> None:
+    for line in output:
+        if line.buffer_name == "stderr":
+            logger.error(f"{host.print_prefix}{click.style(line.line, 'red')}")
         else:
-            logger.error(
-                "{0}{1}".format(
-                    host.print_prefix,
-                    line,
-                ),
-            )
+            logger.error(f"{host.print_prefix}{line.line}")
 
 
 def log_operation_start(
@@ -246,7 +237,7 @@ def log_operation_start(
 
 def log_error_or_warning(
     host: "Host", ignore_errors: bool, description: str = "", continue_on_error: bool = False
-):
+) -> None:
     log_func = logger.error
     log_color = "red"
     log_text = "Error: " if description else "Error"
@@ -269,7 +260,7 @@ def log_error_or_warning(
     )
 
 
-def log_host_command_error(host: "Host", e, timeout: int = 0):
+def log_host_command_error(host: "Host", e: Exception, timeout: int = 0) -> None:
     if isinstance(e, timeout_error):
         logger.error(
             "{0}{1}".format(

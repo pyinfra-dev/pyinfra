@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Iterator, List
+from typing import TYPE_CHECKING, Any, Iterator
 
 from .connectors import get_all_connectors, get_execution_connectors
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from pyinfra.api.state import State
 
 
-def extract_name_data(names: List[Any]):
+def extract_name_data(names: list[Any]):
     for name in names:
         data = {}
 
@@ -48,14 +48,14 @@ class Inventory:
         self.data = data
 
         # Create the actual host instances and groups
-        self.hosts = self.make_hosts_and_groups(names, groups)
+        self.make_hosts_and_groups(names, groups)
 
-    def make_hosts_and_groups(self, names, groups):
+    def make_hosts_and_groups(self, names, groups) -> None:
         all_connectors = get_all_connectors()
         execution_connectors = get_execution_connectors()
 
         # Map name -> data
-        name_to_data = defaultdict(dict)
+        name_to_data: dict[str, dict] = defaultdict(dict)
         # Map name -> group names
         name_to_group_names = defaultdict(list)
 
@@ -73,14 +73,14 @@ class Inventory:
         for name, data in extract_name_data(names):
             name_to_data[name].update(data)
 
-        # Now, use the above to fill self.host_data and populate names_executors
-        names_executors = []
+        # Now, use the above to fill self.host_data and populate names_connectors
+        names_connectors = []
 
         for name, _ in extract_name_data(names):
             host_data = name_to_data[name]
 
             # Default to executing commands with the ssh connector
-            executor = execution_connectors["ssh"]
+            connector_cls = execution_connectors["ssh"]
 
             if name[0] == "@":
                 connector_name = name[1:]
@@ -96,7 +96,7 @@ class Inventory:
 
                 # Execution connector? Simple, just set it for their host
                 if connector_name in execution_connectors:
-                    executor = execution_connectors[connector_name]
+                    connector_cls = execution_connectors[connector_name]
 
                 names_data = all_connectors[connector_name].make_names_data(arg_string)
                 connector_inventory_name = name
@@ -111,7 +111,7 @@ class Inventory:
 
                 # Assign the name/data/groups from the connector
                 self.host_data[sub_name] = sub_data
-                names_executors.append((sub_name, executor))
+                names_connectors.append((sub_name, connector_cls))
                 name_to_group_names[sub_name].extend(sub_groups)
 
                 # If we have a connector inventory name, copy any groups attached
@@ -124,10 +124,10 @@ class Inventory:
         # Now we can actually make Host instances
         hosts: dict[str, "Host"] = {}
 
-        for name, executor in names_executors:
+        for name, connector_cls in names_connectors:
             host_groups = name_to_group_names[name]
 
-            host = Host(name, inventory=self, groups=host_groups, executor=executor)
+            host = Host(name, inventory=self, groups=host_groups, connector_cls=connector_cls)
             hosts[name] = host
 
             # And push into any groups
@@ -135,7 +135,7 @@ class Inventory:
                 if host not in self.groups[group_name]:
                     self.groups[group_name].append(host)
 
-        return hosts
+        self.hosts = hosts
 
     def __len__(self) -> int:
         """

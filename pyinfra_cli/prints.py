@@ -50,12 +50,6 @@ def jsonify(data, *args, **kwargs):
     return json.dumps(data, *args, **kwargs)
 
 
-def print_state_facts(state: "State"):
-    click.echo(err=True)
-    click.echo("--> Facts:", err=True)
-    click.echo(jsonify(state.facts, indent=4, default=json_encode), err=True)
-
-
 def print_state_operations(state: "State"):
     state_ops = {host: ops for host, ops in state.ops.items() if state.is_host_in_limit(host)}
 

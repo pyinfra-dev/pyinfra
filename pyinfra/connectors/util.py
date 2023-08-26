@@ -1,15 +1,23 @@
 import shlex
+from dataclasses import dataclass
 from getpass import getpass
+from queue import Queue
 from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
+from typing import TYPE_CHECKING, Callable, Iterable, Optional, Union
 
 import click
 import gevent
-from gevent.queue import Queue
 
 from pyinfra import logger
 from pyinfra.api import MaskString, QuoteString, StringCommand
 from pyinfra.api.util import memoize
+
+if TYPE_CHECKING:
+    from pyinfra.api.arguments import ConnectorArguments
+    from pyinfra.api.host import Host
+    from pyinfra.api.state import State
+
 
 SUDO_ASKPASS_ENV_VAR = "PYINFRA_SUDO_PASSWORD"
 SUDO_ASKPASS_COMMAND = r"""
@@ -25,54 +33,22 @@ echo "$temp"
 )
 
 
-def read_buffer(type_, io, output_queue, print_output=False, print_func=None):
-    """
-    Reads a file-like buffer object into lines and optionally prints the output.
-    """
-
-    def _print(line):
-        if print_func:
-            line = print_func(line)
-
-        click.echo(line, err=True)
-
-    for line in io:
-        # Handle local Popen shells returning list of bytes, not strings
-        if not isinstance(line, str):
-            line = line.decode("utf-8")
-
-        line = line.rstrip("\n")
-        output_queue.put((type_, line))
-
-        if print_output:
-            _print(line)
-
-
-def execute_command_with_sudo_retry(host, command_kwargs, execute_command):
-    return_code, combined_output = execute_command()
-
-    if return_code != 0 and combined_output:
-        last_line = combined_output[-1][1]
-        if last_line.strip() == "sudo: a password is required":
-            command_kwargs["use_sudo_password"] = True  # ask for the password
-            return_code, combined_output = execute_command()
-
-    return return_code, combined_output
-
-
 def run_local_process(
-    command,
+    command: str,
     stdin=None,
-    timeout=None,
-    print_output=False,
+    timeout: Optional[int] = None,
+    print_output: bool = False,
     print_prefix=None,
-):
+) -> tuple[int, "CommandOutput"]:
     process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
 
     if stdin:
         write_stdin(stdin, process.stdin)
 
-    combined_output = read_buffers_into_queue(
+    assert process.stdout is not None
+    assert process.stderr is not None
+
+    combined_output = read_output_buffers(
         process.stdout,
         process.stderr,
         timeout=timeout,
@@ -91,14 +67,85 @@ def run_local_process(
     return process.returncode, combined_output
 
 
-def read_buffers_into_queue(
-    stdout_buffer,
-    stderr_buffer,
-    timeout,
-    print_output,
-    print_prefix,
-):
-    output_queue = Queue()
+# Command output buffer handling
+#
+
+
+@dataclass
+class OutputLine:
+    buffer_name: str
+    line: str
+
+
+@dataclass
+class CommandOutput:
+    combined_lines: list[OutputLine]
+
+    def __iter__(self):
+        yield from self.combined_lines
+
+    @property
+    def output_lines(self) -> list[str]:
+        return [line.line for line in self.combined_lines]
+
+    @property
+    def output(self) -> str:
+        return "\n".join(self.output_lines)
+
+    @property
+    def stdout_lines(self) -> list[str]:
+        return [line.line for line in self.combined_lines if line.buffer_name == "stdout"]
+
+    @property
+    def stdout(self) -> str:
+        return "\n".join(self.stdout_lines)
+
+    @property
+    def stderr_lines(self) -> list[str]:
+        return [line.line for line in self.combined_lines if line.buffer_name == "stderr"]
+
+    @property
+    def stderr(self) -> str:
+        return "\n".join(self.stderr_lines)
+
+
+def read_buffer(
+    name: str,
+    io: Iterable,
+    output_queue: Queue[OutputLine],
+    print_output=False,
+    print_func=None,
+) -> None:
+    """
+    Reads a file-like buffer object into lines and optionally prints the output.
+    """
+
+    def _print(line):
+        if print_func:
+            line = print_func(line)
+
+        click.echo(line, err=True)
+
+    for line in io:
+        # Handle local Popen shells returning list of bytes, not strings
+        if not isinstance(line, str):
+            line = line.decode("utf-8")
+
+        line = line.rstrip("\n")
+        output_queue.put(OutputLine(name, line))
+
+        if print_output:
+            _print(line)
+
+
+def read_output_buffers(
+    stdout_buffer: Iterable,
+    stderr_buffer: Iterable,
+    timeout: Optional[int],
+    print_output: bool,
+    print_prefix: str,
+) -> CommandOutput:
+    output_queue: Queue[OutputLine] = Queue()
 
     # Iterate through outputs to get an exit status and generate desired list
     # output, done in two greenlets so stdout isn't printed before stderr. Not
@@ -135,22 +182,27 @@ def read_buffers_into_queue(
 
         raise timeout_error()
 
-    return list(output_queue.queue)
+    return CommandOutput(list(output_queue.queue))
 
 
-def split_combined_output(combined_output):
-    stdout = []
-    stderr = []
+# Connector execution control
+#
 
-    for type_, line in combined_output:
-        if type_ == "stdout":
-            stdout.append(line)
-        elif type_ == "stderr":
-            stderr.append(line)
-        else:  # pragma: no cover
-            raise ValueError("Incorrect output line type: {0}".format(type_))
 
-    return stdout, stderr
+def execute_command_with_sudo_retry(
+    host: "Host",
+    command_arguments: "ConnectorArguments",
+    execute_command: Callable[..., tuple[int, CommandOutput]],
+) -> tuple[int, CommandOutput]:
+    return_code, output = execute_command()
+
+    if return_code != 0 and output:
+        last_line = output.combined_lines[-1].line
+        if last_line.strip() == "sudo: a password is required":
+            command_arguments["_use_sudo_password"] = True  # ask for the password
+            return_code, output = execute_command()
+
+    return return_code, output
 
 
 def write_stdin(stdin, buffer):
@@ -186,7 +238,7 @@ def _get_sudo_password(host, use_sudo_password):
     return shlex.quote(sudo_password)
 
 
-def remove_any_sudo_askpass_file(host):
+def remove_any_sudo_askpass_file(host) -> None:
     sudo_askpass_path = host.connector_data.get("sudo_askpass_path")
     if sudo_askpass_path:
         host.run_shell_command("rm -f {0}".format(sudo_askpass_path))
@@ -204,112 +256,133 @@ def _show_use_su_login_warning():
     )
 
 
-def make_unix_command_for_host(state, host, *command_args, **command_kwargs):
-    use_sudo_password = command_kwargs.pop("use_sudo_password", None)
-    if use_sudo_password:
-        command_kwargs["sudo_password"] = _get_sudo_password(host, use_sudo_password)
-        command_kwargs["sudo_askpass_path"] = host.connector_data.get("sudo_askpass_path")
+def extract_control_arguments(arguments: "ConnectorArguments") -> "ConnectorArguments":
+    control_arguments: "ConnectorArguments" = {}
 
-    return make_unix_command(*command_args, **command_kwargs)
+    if "_success_exit_codes" in arguments:
+        control_arguments["_success_exit_codes"] = arguments.pop("_success_exit_codes")
+    if "_timeout" in arguments:
+        control_arguments["_timeout"] = arguments.pop("_timeout")
+    if "_get_pty" in arguments:
+        control_arguments["_get_pty"] = arguments.pop("_get_pty")
+    if "_stdin" in arguments:
+        control_arguments["_stdin"] = arguments.pop("_stdin")
+
+    return control_arguments
+
+
+def make_unix_command_for_host(
+    state: "State",
+    host: "Host",
+    command: StringCommand,
+    **command_arguments,
+) -> StringCommand:
+    use_sudo_password = command_arguments.pop("_use_sudo_password", None)
+    if use_sudo_password:
+        command_arguments["_sudo_password"] = _get_sudo_password(host, use_sudo_password)
+        command_arguments["_sudo_askpass_path"] = host.connector_data.get("sudo_askpass_path")
+
+    return make_unix_command(command, **command_arguments)
+
+
+# Connector command generation
+#
 
 
 def make_unix_command(
-    command,
-    env=None,
-    chdir=None,
-    shell_executable="sh",
+    command: StringCommand,
+    _env=None,
+    _chdir=None,
+    _shell_executable="sh",
     # Su config
-    su_user=None,
-    use_su_login=False,
-    su_shell=None,
-    preserve_su_env=False,
+    _su_user=None,
+    _use_su_login=False,
+    _su_shell=None,
+    _preserve_su_env=False,
     # Sudo config
-    sudo=False,
-    sudo_user=None,
-    use_sudo_login=False,
-    sudo_password=False,
-    sudo_askpass_path=None,
-    preserve_sudo_env=False,
+    _sudo=False,
+    _sudo_user=None,
+    _use_sudo_login=False,
+    _sudo_password=False,
+    _sudo_askpass_path=None,
+    _preserve_sudo_env=False,
     # Doas config
-    doas=False,
-    doas_user=None,
-):
+    _doas=False,
+    _doas_user=None,
+) -> StringCommand:
     """
     Builds a shell command with various kwargs.
     """
 
-    if shell_executable is not None and not isinstance(shell_executable, str):
-        shell_executable = "sh"
+    if _shell_executable is not None and not isinstance(_shell_executable, str):
+        _shell_executable = "sh"
 
-    if isinstance(command, bytes):
-        command = command.decode("utf-8")
-
-    if env:
-        env_string = " ".join(['"{0}={1}"'.format(key, value) for key, value in env.items()])
+    if _env:
+        env_string = " ".join(['"{0}={1}"'.format(key, value) for key, value in _env.items()])
         command = StringCommand("export", env_string, "&&", command)
 
-    if chdir:
-        command = StringCommand("cd", chdir, "&&", command)
+    if _chdir:
+        command = StringCommand("cd", _chdir, "&&", command)
 
-    command_bits = []
+    command_bits: list[Union[str, StringCommand, QuoteString]] = []
 
-    if doas:
+    if _doas:
         command_bits.extend(["doas", "-n"])
 
-        if doas_user:
-            command_bits.extend(["-u", doas_user])
+        if _doas_user:
+            command_bits.extend(["-u", _doas_user])
 
-    if sudo_password and sudo_askpass_path:
+    if _sudo_password and _sudo_askpass_path:
         command_bits.extend(
             [
                 "env",
-                "SUDO_ASKPASS={0}".format(sudo_askpass_path),
-                MaskString("{0}={1}".format(SUDO_ASKPASS_ENV_VAR, sudo_password)),
+                "SUDO_ASKPASS={0}".format(_sudo_askpass_path),
+                MaskString("{0}={1}".format(SUDO_ASKPASS_ENV_VAR, _sudo_password)),
             ],
         )
 
-    if sudo:
+    if _sudo:
         command_bits.extend(["sudo", "-H"])
 
-        if sudo_password:
+        if _sudo_password:
             command_bits.extend(["-A", "-k"])  # use askpass, disable cache
         else:
             command_bits.append("-n")  # disable prompt/interactivity
 
-        if use_sudo_login:
+        if _use_sudo_login:
             command_bits.append("-i")
 
-        if preserve_sudo_env:
+        if _preserve_sudo_env:
             command_bits.append("-E")
 
-        if sudo_user:
-            command_bits.extend(("-u", sudo_user))
+        if _sudo_user:
+            command_bits.extend(("-u", _sudo_user))
 
-    if su_user:
+    if _su_user:
         command_bits.append("su")
 
-        if use_su_login:
+        if _use_su_login:
             _show_use_su_login_warning()
             command_bits.append("-l")
 
-        if preserve_su_env:
+        if _preserve_su_env:
             command_bits.append("-m")
 
-        if su_shell:
-            command_bits.extend(["-s", "`which {0}`".format(su_shell)])
+        if _su_shell:
+            command_bits.extend(["-s", "`which {0}`".format(_su_shell)])
 
-        command_bits.extend([su_user, "-c"])
+        command_bits.extend([_su_user, "-c"])
 
-        if shell_executable is not None:
+        if _shell_executable is not None:
             # Quote the whole shell -c 'command' as BSD `su` does not have a shell option
             command_bits.append(
-                QuoteString(StringCommand(shell_executable, "-c", QuoteString(command))),
+                QuoteString(StringCommand(_shell_executable, "-c", QuoteString(command))),
             )
         else:
             command_bits.append(QuoteString(StringCommand(command)))
     else:
-        if shell_executable is not None:
-            command_bits.extend([shell_executable, "-c", QuoteString(command)])
+        if _shell_executable is not None:
+            command_bits.extend([_shell_executable, "-c", QuoteString(command)])
         else:
             command_bits.extend([command])
 
