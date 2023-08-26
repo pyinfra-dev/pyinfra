@@ -36,7 +36,7 @@ def connect_all(state: "State"):
         # Raise any unexpected exception
         greenlet.get()
 
-        if host.connection:
+        if host.connected:
             state.activate_host(host)
         else:
             failed_hosts.add(host)

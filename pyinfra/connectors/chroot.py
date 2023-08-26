@@ -1,26 +1,23 @@
 import os
 from tempfile import mkstemp
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Unpack
 
 import click
 
 from pyinfra import local, logger
 from pyinfra.api import QuoteString, StringCommand
-from pyinfra.api.connectors import BaseConnectorMeta
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
-from .local import run_shell_command as run_local_shell_command
-from .util import make_unix_command_for_host
+from .base import BaseConnector
+from .local import LocalConnector
+from .util import extract_control_arguments, make_unix_command_for_host
 
 if TYPE_CHECKING:
+    from pyinfra.api.arguments import ConnectorArguments
     from pyinfra.api.host import Host
     from pyinfra.api.state import State
-
-
-class Meta(BaseConnectorMeta):
-    handles_execution = True
 
 
 @memoize
@@ -28,185 +25,176 @@ def show_warning():
     logger.warning("The @chroot connector is in beta!")
 
 
-def make_names_data(directory: Optional[str] = None):
-    if not directory:
-        raise InventoryError("No directory provided!")
+class ChrootConnector(BaseConnector):
+    handles_execution = True
 
-    show_warning()
+    local: LocalConnector
 
-    yield "@chroot/{0}".format(directory), {
-        "chroot_directory": "/{0}".format(directory.lstrip("/")),
-    }, ["@chroot"]
+    def __init__(self, state: "State", host: "Host"):
+        super().__init__(state, host)
+        self.local = LocalConnector(state, host)
 
+    @staticmethod
+    def make_names_data(directory: Optional[str] = None):
+        if not directory:
+            raise InventoryError("No directory provided!")
 
-def connect(state: "State", host: "Host"):
-    chroot_directory = host.data.chroot_directory
+        show_warning()
 
-    try:
-        with progress_spinner({"chroot run"}):
-            local.shell(
-                "chroot {0} ls".format(chroot_directory),
-                splitlines=True,
-            )
-    except PyinfraError as e:
-        raise ConnectError(e.args[0])
+        yield "@chroot/{0}".format(directory), {
+            "chroot_directory": "/{0}".format(directory.lstrip("/")),
+        }, ["@chroot"]
 
-    host.connector_data["chroot_directory"] = chroot_directory
-    return True
+    def connect(self):
+        self.local.connect()
 
+        chroot_directory = self.host.data.chroot_directory
 
-def run_shell_command(
-    state: "State",
-    host: "Host",
-    command,
-    get_pty: bool = False,
-    timeout=None,
-    stdin=None,
-    success_exit_codes=None,
-    print_output: bool = False,
-    print_input: bool = False,
-    return_combined_output: bool = False,
-    **command_kwargs,
-):
-    chroot_directory = host.connector_data["chroot_directory"]
+        try:
+            with progress_spinner({"chroot run"}):
+                local.shell(
+                    "chroot {0} ls".format(chroot_directory),
+                    splitlines=True,
+                )
+        except PyinfraError as e:
+            raise ConnectError(e.args[0])
 
-    command = make_unix_command_for_host(state, host, command, **command_kwargs)
-    command = QuoteString(command)
+        self.host.connector_data["chroot_directory"] = chroot_directory
+        return True
 
-    logger.debug("--> Running chroot command on (%s): %s", chroot_directory, command)
-
-    chroot_command = StringCommand(
-        "chroot",
-        chroot_directory,
-        "sh",
-        "-c",
+    def run_shell_command(
+        self,
         command,
-    )
+        print_output: bool = False,
+        print_input: bool = False,
+        **command_arguments: Unpack["ConnectorArguments"],
+    ):
+        local_arguments = extract_control_arguments(command_arguments)
 
-    return run_local_shell_command(
-        state,
-        host,
-        chroot_command,
-        timeout=timeout,
-        stdin=stdin,
-        success_exit_codes=success_exit_codes,
-        print_output=print_output,
-        print_input=print_input,
-        return_combined_output=return_combined_output,
-    )
+        chroot_directory = self.host.connector_data["chroot_directory"]
 
+        command = make_unix_command_for_host(self.state, self.host, command, **command_arguments)
+        command = QuoteString(command)
 
-def put_file(
-    state: "State",
-    host: "Host",
-    filename_or_io,
-    remote_filename,
-    remote_temp_filename=None,  # ignored
-    print_output: bool = False,
-    print_input: bool = False,
-    **kwargs,  # ignored (sudo/etc)
-):
+        logger.debug("--> Running chroot command on (%s): %s", chroot_directory, command)
 
-    _, temp_filename = mkstemp()
-
-    try:
-        # Load our file or IO object and write it to the temporary file
-        with get_file_io(filename_or_io) as file_io:
-            with open(temp_filename, "wb") as temp_f:
-                data = file_io.read()
-
-                if isinstance(data, str):
-                    data = data.encode()
-
-                temp_f.write(data)
-
-        chroot_directory = host.connector_data["chroot_directory"]
-
-        chroot_command = "cp {0} {1}/{2}".format(
-            temp_filename,
+        chroot_command = StringCommand(
+            "chroot",
             chroot_directory,
-            remote_filename,
+            "sh",
+            "-c",
+            command,
         )
 
-        status, _, stderr = run_local_shell_command(
-            state,
-            host,
+        return self.local.run_shell_command(
             chroot_command,
             print_output=print_output,
             print_input=print_input,
+            **local_arguments,
         )
-    finally:
-        os.remove(temp_filename)
 
-    if not status:
-        raise IOError("\n".join(stderr))
+    def put_file(
+        self,
+        filename_or_io,
+        remote_filename,
+        remote_temp_filename=None,  # ignored
+        print_output: bool = False,
+        print_input: bool = False,
+        **kwargs,  # ignored (sudo/etc)
+    ):
+        _, temp_filename = mkstemp()
 
-    if print_output:
-        click.echo(
-            "{0}file uploaded to chroot: {1}".format(
-                host.print_prefix,
+        try:
+            # Load our file or IO object and write it to the temporary file
+            with get_file_io(filename_or_io) as file_io:
+                with open(temp_filename, "wb") as temp_f:
+                    data = file_io.read()
+
+                    if isinstance(data, str):
+                        data = data.encode()
+
+                    temp_f.write(data)
+
+            chroot_directory = self.host.connector_data["chroot_directory"]
+
+            chroot_command = "cp {0} {1}/{2}".format(
+                temp_filename,
+                chroot_directory,
                 remote_filename,
-            ),
-            err=True,
-        )
+            )
 
-    return status
+            status, output = self.local.run_shell_command(
+                chroot_command,
+                print_output=print_output,
+                print_input=print_input,
+            )
+        finally:
+            os.remove(temp_filename)
 
+        if not status:
+            raise IOError(output.stderr)
 
-def get_file(
-    state: "State",
-    host: "Host",
-    remote_filename,
-    filename_or_io,
-    remote_temp_filename=None,  # ignored
-    print_output: bool = False,
-    print_input: bool = False,
-    **kwargs,  # ignored (sudo/etc)
-):
+        if print_output:
+            click.echo(
+                "{0}file uploaded to chroot: {1}".format(
+                    self.host.print_prefix,
+                    remote_filename,
+                ),
+                err=True,
+            )
 
-    _, temp_filename = mkstemp()
+        return status
 
-    try:
-        chroot_directory = host.connector_data["chroot_directory"]
-        chroot_command = "cp {0}/{1} {2}".format(
-            chroot_directory,
-            remote_filename,
-            temp_filename,
-        )
+    def get_file(
+        self,
+        remote_filename,
+        filename_or_io,
+        remote_temp_filename=None,  # ignored
+        print_output: bool = False,
+        print_input: bool = False,
+        **kwargs,  # ignored (sudo/etc)
+    ):
+        _, temp_filename = mkstemp()
 
-        status, _, stderr = run_local_shell_command(
-            state,
-            host,
-            chroot_command,
-            print_output=print_output,
-            print_input=print_input,
-        )
-
-        # Load the temporary file and write it to our file or IO object
-        with open(temp_filename, encoding="utf-8") as temp_f:
-            with get_file_io(filename_or_io, "wb") as file_io:
-                data = temp_f.read()
-                data_bytes: bytes
-
-                if isinstance(data, str):
-                    data_bytes = data.encode()
-                else:
-                    data_bytes = data
-
-                file_io.write(data_bytes)
-    finally:
-        os.remove(temp_filename)
-
-    if not status:
-        raise IOError("\n".join(stderr))
-
-    if print_output:
-        click.echo(
-            "{0}file downloaded from chroot: {1}".format(
-                host.print_prefix,
+        try:
+            chroot_directory = self.host.connector_data["chroot_directory"]
+            chroot_command = "cp {0}/{1} {2}".format(
+                chroot_directory,
                 remote_filename,
-            ),
-            err=True,
-        )
+                temp_filename,
+            )
 
-    return status
+            status, output = self.local.run_shell_command(
+                chroot_command,
+                print_output=print_output,
+                print_input=print_input,
+            )
+
+            # Load the temporary file and write it to our file or IO object
+            with open(temp_filename, encoding="utf-8") as temp_f:
+                with get_file_io(filename_or_io, "wb") as file_io:
+                    data = temp_f.read()
+                    data_bytes: bytes
+
+                    if isinstance(data, str):
+                        data_bytes = data.encode()
+                    else:
+                        data_bytes = data
+
+                    file_io.write(data_bytes)
+        finally:
+            os.remove(temp_filename)
+
+        if not status:
+            raise IOError(output.stderr)
+
+        if print_output:
+            click.echo(
+                "{0}file downloaded from chroot: {1}".format(
+                    self.host.print_prefix,
+                    remote_filename,
+                ),
+                err=True,
+            )
+
+        return status

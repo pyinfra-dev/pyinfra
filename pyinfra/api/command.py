@@ -1,20 +1,20 @@
 import shlex
 from inspect import getfullargspec
 from string import Formatter
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Union, Unpack
 
 import gevent
 
 from pyinfra.context import ctx_config, ctx_host
 
-from .arguments import get_executor_kwarg_keys
+from .arguments import ConnectorArguments
 
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
     from pyinfra.api.state import State
 
 
-def make_formatted_string_command(string: str, *args, **kwargs):
+def make_formatted_string_command(string: str, *args, **kwargs) -> "StringCommand":
     """
     Helper function that takes a shell command or script as a string, splits it
     using ``shlex.split`` and then formats each bit, returning a ``StringCommand``
@@ -50,39 +50,46 @@ class MaskString(str):
 
 
 class QuoteString:
-    def __init__(self, obj):
-        self.object = obj
+    obj: Union[str, "StringCommand"]
 
-    def __repr__(self):
-        return "QuoteString({0})".format(self.object)
+    def __init__(self, obj: Union[str, "StringCommand"]):
+        self.obj = obj
+
+    def __repr__(self) -> str:
+        return f"QuoteString({self.obj})"
 
 
 class PyinfraCommand:
-    def __init__(self, *args, **kwargs):
-        self.executor_kwargs = {
-            key: kwargs[key] for key in get_executor_kwarg_keys() if key in kwargs
-        }
+    connector_arguments: ConnectorArguments
 
-    def __eq__(self, other):
+    def __init__(self, **arguments: Unpack[ConnectorArguments]):
+        self.connector_arguments = arguments
+
+    def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__) and repr(self) == repr(other):
             return True
         return False
 
-    def execute(self, state: "State", host: "Host", executor_kwargs):
+    def execute(self, state: "State", host: "Host", connector_arguments: ConnectorArguments):
         raise NotImplementedError
 
 
 class StringCommand(PyinfraCommand):
-    def __init__(self, *bits, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        *bits,
+        _separator=" ",
+        **arguments: Unpack[ConnectorArguments],
+    ):
+        super().__init__(**arguments)
         self.bits = bits
-        self.separator = kwargs.pop("_separator", " ")
+        self.separator = _separator
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.get_masked_value()
 
-    def __repr__(self):
-        return "StringCommand({0})".format(self.get_masked_value())
+    def __repr__(self) -> str:
+        return f"StringCommand({self.get_masked_value()})"
 
     def _get_all_bits(self, bit_accessor):
         all_bits = []
@@ -91,7 +98,7 @@ class StringCommand(PyinfraCommand):
             quote = False
             if isinstance(bit, QuoteString):
                 quote = True
-                bit = bit.object
+                bit = bit.obj
 
             if isinstance(bit, StringCommand):
                 bit = bit_accessor(bit)
@@ -106,14 +113,14 @@ class StringCommand(PyinfraCommand):
 
         return all_bits
 
-    def get_raw_value(self):
+    def get_raw_value(self) -> str:
         return self.separator.join(
             self._get_all_bits(
                 lambda bit: bit.get_raw_value(),
             ),
         )
 
-    def get_masked_value(self):
+    def get_masked_value(self) -> str:
         return self.separator.join(
             [
                 "***" if isinstance(bit, MaskString) else bit
@@ -121,20 +128,25 @@ class StringCommand(PyinfraCommand):
             ],
         )
 
-    def execute(self, state: "State", host: "Host", executor_kwargs):
-        executor_kwargs.update(self.executor_kwargs)
+    def execute(self, state: "State", host: "Host", connector_arguments: ConnectorArguments):
+        connector_arguments.update(self.connector_arguments)
 
         return host.run_shell_command(
             self,
             print_output=state.print_output,
             print_input=state.print_input,
-            return_combined_output=True,
-            **executor_kwargs,
+            **connector_arguments,
         )
 
 
 class FileUploadCommand(PyinfraCommand):
-    def __init__(self, src: str, dest: str, remote_temp_filename=None, **kwargs):
+    def __init__(
+        self,
+        src: str,
+        dest: str,
+        remote_temp_filename=None,
+        **kwargs: Unpack[ConnectorArguments],
+    ):
         super().__init__(**kwargs)
         self.src = src
         self.dest = dest
@@ -143,8 +155,8 @@ class FileUploadCommand(PyinfraCommand):
     def __repr__(self):
         return "FileUploadCommand({0}, {1})".format(self.src, self.dest)
 
-    def execute(self, state: "State", host: "Host", executor_kwargs):
-        executor_kwargs.update(self.executor_kwargs)
+    def execute(self, state: "State", host: "Host", connector_arguments: ConnectorArguments):
+        connector_arguments.update(self.connector_arguments)
 
         return host.put_file(
             self.src,
@@ -152,12 +164,18 @@ class FileUploadCommand(PyinfraCommand):
             remote_temp_filename=self.remote_temp_filename,
             print_output=state.print_output,
             print_input=state.print_input,
-            **executor_kwargs,
+            **connector_arguments,
         )
 
 
 class FileDownloadCommand(PyinfraCommand):
-    def __init__(self, src: str, dest: str, remote_temp_filename=None, **kwargs):
+    def __init__(
+        self,
+        src: str,
+        dest: str,
+        remote_temp_filename=None,
+        **kwargs: Unpack[ConnectorArguments],
+    ):
         super().__init__(**kwargs)
         self.src = src
         self.dest = dest
@@ -166,8 +184,8 @@ class FileDownloadCommand(PyinfraCommand):
     def __repr__(self):
         return "FileDownloadCommand({0}, {1})".format(self.src, self.dest)
 
-    def execute(self, state: "State", host: "Host", executor_kwargs):
-        executor_kwargs.update(self.executor_kwargs)
+    def execute(self, state: "State", host: "Host", connector_arguments: ConnectorArguments):
+        connector_arguments.update(self.connector_arguments)
 
         return host.get_file(
             self.src,
@@ -175,12 +193,18 @@ class FileDownloadCommand(PyinfraCommand):
             remote_temp_filename=self.remote_temp_filename,
             print_output=state.print_output,
             print_input=state.print_input,
-            **executor_kwargs,
+            **connector_arguments,
         )
 
 
 class FunctionCommand(PyinfraCommand):
-    def __init__(self, function, args, func_kwargs, **kwargs):
+    def __init__(
+        self,
+        function: Callable,
+        args,
+        func_kwargs,
+        **kwargs: Unpack[ConnectorArguments],
+    ):
         super().__init__(**kwargs)
         self.function = function
         self.args = args
@@ -193,7 +217,7 @@ class FunctionCommand(PyinfraCommand):
             self.kwargs,
         )
 
-    def execute(self, state: "State", host: "Host", executor_kwargs):
+    def execute(self, state: "State", host: "Host", connector_arguments: ConnectorArguments):
         argspec = getfullargspec(self.function)
         if "state" in argspec.args and "host" in argspec.args:
             return self.function(state, host, *self.args, **self.kwargs)
@@ -208,7 +232,7 @@ class FunctionCommand(PyinfraCommand):
 
 
 class RsyncCommand(PyinfraCommand):
-    def __init__(self, src: str, dest: str, flags, **kwargs):
+    def __init__(self, src: str, dest: str, flags, **kwargs: Unpack[ConnectorArguments]):
         super().__init__(**kwargs)
         self.src = src
         self.dest = dest
@@ -217,12 +241,12 @@ class RsyncCommand(PyinfraCommand):
     def __repr__(self):
         return "RsyncCommand({0}, {1}, {2})".format(self.src, self.dest, self.flags)
 
-    def execute(self, state: "State", host: "Host", executor_kwargs):
+    def execute(self, state: "State", host: "Host", connector_arguments: ConnectorArguments):
         return host.rsync(
             self.src,
             self.dest,
             self.flags,
             print_output=state.print_output,
             print_input=state.print_input,
-            **executor_kwargs,
+            **connector_arguments,
         )
