@@ -23,6 +23,8 @@ from pyinfra import logger
 from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import memoize
 
+from .base import BaseConnector
+
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
 
@@ -37,18 +39,20 @@ def show_warning():
     logger.warning("The @ansible connector is in alpha!")
 
 
-def make_names_data(inventory_filename: Optional[str] = None):
-    show_warning()
+class AnsibleInventoryConnector(BaseConnector):
+    @staticmethod
+    def make_names_data(inventory_filename: Optional[str] = None):
+        show_warning()
 
-    if not inventory_filename:
-        raise InventoryError("No Ansible inventory filename provided!")
+        if not inventory_filename:
+            raise InventoryError("No Ansible inventory filename provided!")
 
-    if not path.exists(inventory_filename):
-        raise InventoryError(
-            ("Could not find Ansible inventory file: {0}").format(inventory_filename),
-        )
+        if not path.exists(inventory_filename):
+            raise InventoryError(
+                ("Could not find Ansible inventory file: {0}").format(inventory_filename),
+            )
 
-    return parse_inventory(inventory_filename)
+        return parse_inventory(inventory_filename)
 
 
 def parse_inventory(inventory_filename: str):

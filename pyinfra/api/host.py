@@ -1,9 +1,10 @@
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Generator, Optional, Union
 
 import click
 
 from pyinfra import logger
+from pyinfra.connectors.base import BaseConnector
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 
 from .connectors import get_execution_connector
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
     from pyinfra.api.state import State
 
 
-def extract_callable_datas(datas: List[Union[Callable[..., Any], Any]]) -> Generator[Any, Any, Any]:
+def extract_callable_datas(datas: list[Union[Callable[..., Any], Any]]) -> Generator[Any, Any, Any]:
     for data in datas:
         # Support for dynamic data, ie @deploy wrapped data defaults where
         # the data is stored on the state temporarily.
@@ -30,7 +31,7 @@ class HostData:
     Combines multiple AttrData's to search for attributes.
     """
 
-    override_datas: Dict[str, Any]
+    override_datas: dict[str, Any]
 
     def __init__(self, host: "Host", *datas):
         self.__dict__["host"] = host
@@ -81,13 +82,15 @@ class Host:
     data.
     """
 
-    connection = None
     state: "State"
+    connector_cls: type[BaseConnector]
+    connector: BaseConnector
+    connected: bool = False
 
     # Current context inside an @operation function (op gen stage)
     in_op: bool = False
     current_op_hash: Optional[str] = None
-    current_op_global_kwargs: Dict[str, Any]
+    current_op_global_kwargs: dict[str, Any]
 
     # Current context inside a @deploy function (op gen stage)
     in_deploy: bool = False
@@ -99,10 +102,10 @@ class Host:
     executing_op_hash = None
     nested_executing_op_hash = None
 
-    loop_position: List[int]
+    loop_position: list[int]
 
     # Arbitrary data dictionary connectors may use
-    connector_data: Dict[str, Any]
+    connector_data: dict[str, Any]
 
     def loop(self, iterable):
         self.loop_position.append(0)
@@ -116,11 +119,11 @@ class Host:
         name: str,
         inventory: "Inventory",
         groups,
-        executor=get_execution_connector("ssh"),
+        connector_cls=get_execution_connector("ssh"),
     ):
         self.inventory = inventory
         self.groups = groups
-        self.executor = executor
+        self.connector_cls = connector_cls
         self.name = name
 
         self.loop_position = []
@@ -130,7 +133,7 @@ class Host:
 
         # Append only list of operation hashes as called on this host, used to
         # generate a DAG to create the final operation order.
-        self.op_hash_order: List[str] = []
+        self.op_hash_order: list[str] = []
 
         # Create the (waterfall data: override, host, group, global)
         self.data = HostData(
@@ -143,15 +146,15 @@ class Host:
             self.get_deploy_data,
         )
 
+    def init(self, state: "State") -> None:
+        self.state = state
+        self.connector = self.connector_cls(state, self)
+
     def __str__(self):
         return "{0}".format(self.name)
 
     def __repr__(self):
         return "Host({0})".format(self.name)
-
-    @property
-    def connected(self) -> bool:
-        return self.connection is not None
 
     @property
     def host_data(self):
@@ -162,7 +165,7 @@ class Host:
         return self.inventory.get_groups_data(self.groups)
 
     @property
-    def print_prefix(self):
+    def print_prefix(self) -> str:
         if self.nested_executing_op_hash:
             return "{0}[{1}] {2} ".format(
                 click.style(""),  # reset
@@ -175,7 +178,7 @@ class Host:
             click.style(self.name, bold=True),
         )
 
-    def style_print_prefix(self, *args, **kwargs):
+    def style_print_prefix(self, *args, **kwargs) -> str:
         return "{0}[{1}] ".format(
             click.style(""),  # reset
             click.style(self.name, *args, **kwargs),
@@ -261,11 +264,11 @@ class Host:
         """
 
         self._check_state()
-        if not self.connection:
+        if not self.connected:
             self.state.trigger_callbacks("host_before_connect", self)
 
             try:
-                self.connection = self.executor.connect(self.state, self)
+                self.connector.connect()
             except ConnectError as e:
                 if show_errors:
                     log_message = "{0}{1}".format(
@@ -292,7 +295,7 @@ class Host:
                 logger.info(log_message)
                 self.state.trigger_callbacks("host_connect", self)
 
-        return self.connection
+        self.connected = True
 
     def disconnect(self):
         """
@@ -300,10 +303,10 @@ class Host:
         """
         self._check_state()
 
-        # Disconnect is an optional function for executors if needed
-        disconnect_func = getattr(self.executor, "disconnect", None)
+        # Disconnect is an optional function for connectors if needed
+        disconnect_func = getattr(self.connector, "disconnect", None)
         if disconnect_func:
-            return disconnect_func(self.state, self)
+            return disconnect_func()
 
         # TODO: consider whether this should be here!
         remove_any_sudo_askpass_file(self)
@@ -315,35 +318,35 @@ class Host:
         Low level method to execute a shell command on the host via it's configured connector.
         """
         self._check_state()
-        return self.executor.run_shell_command(self.state, self, *args, **kwargs)
+        return self.connector.run_shell_command(*args, **kwargs)
 
     def put_file(self, *args, **kwargs):
         """
         Low level method to upload a file to the host via it's configured connector.
         """
         self._check_state()
-        return self.executor.put_file(self.state, self, *args, **kwargs)
+        return self.connector.put_file(*args, **kwargs)
 
     def get_file(self, *args, **kwargs):
         """
         Low level method to download a file from the host via it's configured connector.
         """
         self._check_state()
-        return self.executor.get_file(self.state, self, *args, **kwargs)
+        return self.connector.get_file(*args, **kwargs)
 
-    # Rsync - optional executor specific ability
+    # Rsync - optional connector specific ability
 
     def check_can_rsync(self):
-        check_can_rsync_func = getattr(self.executor, "check_can_rsync", None)
+        check_can_rsync_func = getattr(self.connector, "check_can_rsync", None)
         if check_can_rsync_func:
             return check_can_rsync_func(self)
 
         raise NotImplementedError(
             "The {0} connector does not support rsync!".format(
-                self.executor.__name__,
+                self.connector.__name__,
             ),
         )
 
     def rsync(self, *args, **kwargs):
         self._check_state()
-        return self.executor.rsync(self.state, self, *args, **kwargs)
+        return self.connector.rsync(*args, **kwargs)
