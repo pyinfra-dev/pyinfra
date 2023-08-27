@@ -10,6 +10,6 @@
         }
     },
     "commands": [
-        "mysql -Be 'CREATE DATABASE somedb COLLATE utf8_bin CHARSET UTF-8'"
+        "mysql -Be 'CREATE DATABASE `somedb` COLLATE utf8_bin CHARSET UTF-8'"
     ]
 }
