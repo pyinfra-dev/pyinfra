@@ -3,7 +3,7 @@ Inventory & Data
 
 A ``pyinfra`` inventory provides hosts, groups and data. Host are the targets ``pyinfra`` will execute commands or state changes on (think a SSH daemon on a server, a Docker container or the local machine). Hosts can be attached to groups, and data can then be assigned to both the groups of hosts and individual hosts.
 
-By default ``pyinfra`` assumes hosts are SSH servers and the name of the host is used as the SSH hostname. Prefixing the name of the host with ``@<connector-name>`` is used to activate alternative connectors. See: :doc:`connectors`.
+By default ``pyinfra`` assumes hosts are SSH servers and the name of the host is used as the SSH hostname. Prefixing the name of the host with ``@<connector-name>/`` is used to activate alternative connectors. See: :doc:`connectors`.
 
 Inventory Files
 ---------------
