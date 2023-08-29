@@ -707,7 +707,7 @@ class HasGui(ShortFactBase[bool]):
         return len(data) > 0
 
 
-class Locales(FactBase):
+class Locales(FactBase[List[str]]):
     """
     Returns installed locales on the target host.
 
@@ -720,7 +720,7 @@ class Locales(FactBase):
     requires_command = "locale"
     default = list
 
-    def process(self, output):
+    def process(self, output) -> List[str]:
         # replace utf8 with UTF-8 to match names in /etc/locale.gen
         # return a list of enabled locales
         return [line.replace("utf8", "UTF-8") for line in output]

@@ -19,6 +19,7 @@ from typing import (
     Callable,
     Dict,
     Generic,
+    Iterable,
     List,
     Optional,
     Type,
@@ -83,7 +84,7 @@ class FactBase(Generic[T]):
         Set the default attribute to be a type (eg list/dict).
         """
 
-    def process(self, output) -> T:
+    def process(self, output: Iterable[str]) -> T:
         # NOTE: TypeVar does not support a default, so we have to cast this str -> T
         return cast(T, "\n".join(output))
 
