@@ -58,17 +58,10 @@ SU_REGEXES = (
 )
 
 
-class FactNameMeta(type):
-    def __init__(cls, name: str, bases, attrs, **kwargs):
-        super().__init__(name, bases, attrs, **kwargs)
-        module_name = cls.__module__.replace("pyinfra.facts.", "")
-        cls.name = f"{module_name}.{cls.__name__}"
-
-
 T = TypeVar("T")
 
 
-class FactBase(Generic[T], metaclass=FactNameMeta):
+class FactBase(Generic[T]):
     name: str
 
     abstract: bool = True
@@ -78,6 +71,11 @@ class FactBase(Generic[T], metaclass=FactNameMeta):
     requires_command: Optional[str] = None
 
     command: Union[str, Callable]
+
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        module_name = cls.__module__.replace("pyinfra.facts.", "")
+        cls.name = f"{module_name}.{cls.__name__}"
 
     @staticmethod
     def default() -> T:
@@ -93,8 +91,14 @@ class FactBase(Generic[T], metaclass=FactNameMeta):
         return {arg: self.process([output[i]]) for i, arg in enumerate(args)}
 
 
-class ShortFactBase(Generic[T], metaclass=FactNameMeta):
+class ShortFactBase(Generic[T]):
+    name: str
     fact: Type[FactBase]
+
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        module_name = cls.__module__.replace("pyinfra.facts.", "")
+        cls.name = f"{module_name}.{cls.__name__}"
 
     @staticmethod
     def process_data(data):
