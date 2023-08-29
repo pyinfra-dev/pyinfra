@@ -4,6 +4,7 @@ The files facts provide information about the filesystem and it's contents on th
 
 import re
 import stat
+import typing
 from datetime import datetime
 from typing import List, Literal, Optional, Tuple, TypedDict, Union
 
@@ -64,6 +65,13 @@ def _parse_mode(mode: str) -> int:
     return int(oct(out)[2:])
 
 
+def _parse_datetime(value: str) -> Optional[datetime]:
+    value = try_int(value)
+    if isinstance(value, int):
+        return datetime.utcfromtimestamp(value)
+    return None
+
+
 class FileDict(TypedDict):
     mode: int
     size: Union[int, str]
@@ -72,7 +80,7 @@ class FileDict(TypedDict):
     ctime: Optional[datetime]
     user: str
     group: str
-    link_target: Optional[str]
+    link_target: "typing.NotRequired[str]"
 
 
 class File(FactBase[Union[FileDict, Literal[False], None]]):
@@ -114,31 +122,18 @@ class File(FactBase[Union[FileDict, Literal[False], None]]):
         if not match:
             return None
 
-        data: FileDict = {}
-        path_type = None
+        mode = match.group(3)
+        path_type = FLAG_TO_TYPE[mode[0]]
 
-        for key, value in (
-            ("user", match.group(1)),
-            ("group", match.group(2)),
-            ("mode", match.group(3)),
-            ("atime", match.group(4)),
-            ("mtime", match.group(5)),
-            ("ctime", match.group(6)),
-            ("size", match.group(7)),
-        ):
-            if key == "mode":
-                path_type = FLAG_TO_TYPE[value[0]]
-                value = _parse_mode(value[1:])
-
-            elif key == "size":
-                value = try_int(value)
-
-            elif key in ("atime", "mtime", "ctime"):
-                value = try_int(value)
-                if isinstance(value, int):
-                    value = datetime.utcfromtimestamp(value)
-
-            data[key] = value
+        data: FileDict = {
+            "user": match.group(1),
+            "group": match.group(2),
+            "mode": _parse_mode(mode[1:]),
+            "atime": _parse_datetime(match.group(4)),
+            "mtime": _parse_datetime(match.group(5)),
+            "ctime": _parse_datetime(match.group(6)),
+            "size": try_int(match.group(7)),
+        }
 
         if path_type != self.type:
             return False

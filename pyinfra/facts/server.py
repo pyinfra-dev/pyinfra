@@ -104,13 +104,13 @@ class Arch(FactBase[str]):
     command = "uname -m"
 
 
-class Command(FactBase[List[str]]):
+class Command(FactBase[str]):
     """
     Returns the raw output lines of a given command.
     """
 
     @staticmethod
-    def command(command) -> List[str]:
+    def command(command):
         return command
 
 
@@ -120,7 +120,7 @@ class Which(FactBase[Optional[str]]):
     """
 
     @staticmethod
-    def command(command) -> Optional[str]:
+    def command(command):
         return "which {0} || true".format(command)
 
 

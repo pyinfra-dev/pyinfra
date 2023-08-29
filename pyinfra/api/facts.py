@@ -85,8 +85,7 @@ class FactBase(Generic[T], metaclass=FactNameMeta):
         Set the default attribute to be a type (eg list/dict).
         """
 
-    @staticmethod
-    def process(output) -> T:
+    def process(self, output) -> T:
         # NOTE: TypeVar does not support a default, so we have to cast this str -> T
         return cast(T, "\n".join(output))
 
