@@ -179,7 +179,7 @@ def cli(*args, **kwargs):
     pyinfra manages the state of one or more servers. It can be used for
     app/service deployment, config management and ad-hoc command execution.
 
-    Documentation: pyinfra.readthedocs.io
+    Documentation: docs.pyinfra.com
 
     # INVENTORY
 
