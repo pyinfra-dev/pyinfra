@@ -3,7 +3,12 @@ import re
 import shutil
 from datetime import datetime
 from tempfile import mkdtemp
-from typing import Dict, List, NewType, Optional, TypedDict, Union
+from typing import TYPE_CHECKING, Dict, List, NewType, Optional, Union
+
+if TYPE_CHECKING:
+    from typing import TypedDict
+else:
+    TypedDict = object
 
 from dateutil.parser import parse as parse_date
 from distro import distro

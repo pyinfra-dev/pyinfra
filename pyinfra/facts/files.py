@@ -6,7 +6,12 @@ import re
 import stat
 import typing
 from datetime import datetime
-from typing import List, Literal, Optional, Tuple, TypedDict, Union
+from typing import TYPE_CHECKING, List, Literal, Optional, Tuple, Union
+
+if TYPE_CHECKING:
+    from typing import TypedDict
+else:
+    TypedDict = object
 
 from pyinfra.api.command import QuoteString, make_formatted_string_command
 from pyinfra.api.facts import FactBase
