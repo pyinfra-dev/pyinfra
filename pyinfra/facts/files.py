@@ -6,7 +6,7 @@ import re
 import stat
 import typing
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from typing import TypedDict
@@ -88,7 +88,7 @@ class FileDict(TypedDict):
     link_target: "typing.NotRequired[str]"
 
 
-class File(FactBase[Union[FileDict, Literal[False], None]]):
+class File(FactBase[Union[FileDict, bool, None]]):
     """
     Returns information about a file on the remote system:
 
@@ -122,7 +122,7 @@ class File(FactBase[Union[FileDict, Literal[False], None]]):
             bsd_stat_command=BSD_STAT_COMMAND,
         )
 
-    def process(self, output) -> Union[FileDict, Literal[False], None]:
+    def process(self, output) -> Union[FileDict, bool, None]:
         match = re.match(STAT_REGEX, output[0])
         if not match:
             return None
