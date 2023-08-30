@@ -216,7 +216,13 @@ class Socket(File):
     type = "socket"
 
 
-class HashFileFactBase(FactBase[Optional[str]]):
+if TYPE_CHECKING:
+    FactBaseOptionalStr = FactBase[Optional[str]]
+else:
+    FactBaseOptionalStr = FactBase
+
+
+class HashFileFactBase(FactBaseOptionalStr):
     _raw_cmd: str
     _regexes: Tuple[str, str]
 
