@@ -189,7 +189,7 @@ def script(src, args=()):
 
 
 @operation(is_idempotent=False)
-def script_template(src, **data):
+def script_template(src, args=(), **data):
     """
     Generate, upload and execute a local script template on the remote host.
 
@@ -215,7 +215,7 @@ def script_template(src, **data):
     yield from files.template(src, temp_file, **data)
 
     yield chmod(temp_file, "+x")
-    yield temp_file
+    yield StringCommand(temp_file, *args)
 
 
 @operation
