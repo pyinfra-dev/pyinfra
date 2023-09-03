@@ -306,10 +306,10 @@ def mount(
 
     # Want mount but don't have?
     if mounted and not is_mounted:
-        yield "mount {0} {1} {2} {3}".format(
-            "-t {0}".format(fs_type) if fs_type else "",
-            "-o {0}".format(options_string) if options_string else "",
-            device if device else "",
+        yield "mount{0}{1}{2} {3}".format(
+            " -t {0}".format(fs_type) if fs_type else "",
+            " -o {0}".format(options_string) if options_string else "",
+            " {0}".format(device) if device else "",
             path,
         )
         # Should we update facts with fs_type, device, etc?
