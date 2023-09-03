@@ -312,7 +312,7 @@ def mount(
             device if device else "",
             path,
         )
-        # Should we update facts with fs_type, device, etc? 
+        # Should we update facts with fs_type, device, etc?
         mounts[path] = {"options": options}
 
     # Want no mount but mounted?
