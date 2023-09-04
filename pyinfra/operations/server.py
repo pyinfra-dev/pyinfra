@@ -22,6 +22,7 @@ from pyinfra.facts.server import (
     Locales,
     Mounts,
     Os,
+    LinuxName,
     Sysctl,
     Users,
     Which,
@@ -810,9 +811,14 @@ def group(group, present=True, system=False, gid=None):
 
         # Groups are often added by other operations (package installs), so check
         # for the group at runtime before adding.
-        yield "grep '^{0}:' /etc/group || groupadd {1}".format(
+        os = host.get_fact(Os)
+        group_add_command = "groupadd"
+        if os == "FreeBSD":
+            group_add_command = "pw groupadd"
+        yield "grep '^{0}:' /etc/group || {2} {1}".format(
             group,
             " ".join(args),
+            group_add_command
         )
         groups.append(group)
 
@@ -1042,7 +1048,13 @@ def user(
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
-        yield "grep '^{1}:' /etc/passwd || useradd {0} {1}".format(
+        os = host.get_fact(Os)
+        add_user_command = "useradd"
+        if os == "FreeBSD":
+            add_user_command = "pw user add"
+            user = f"-n {user}"
+        yield "grep '^{2}:' /etc/passwd || {0} {1} {2}".format(
+            add_user_command,
             " ".join(args),
             user,
         )
