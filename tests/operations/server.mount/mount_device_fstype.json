@@ -1,0 +1,13 @@
+{
+    "args": ["/data"],
+    "kwargs": {
+        "device": "/dev/sdc3",
+        "fs_type": "xfs"
+    },
+    "facts": {
+        "server.Mounts": {}
+    },
+    "commands": [
+        "mount -t xfs /dev/sdc3 /data"
+    ]
+}

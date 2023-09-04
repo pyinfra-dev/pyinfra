@@ -306,12 +306,16 @@ def mount(
 
     # Want mount but don't have?
     if mounted and not is_mounted:
-        yield "mount{0}{1}{2} {3}".format(
-            " -t {0}".format(fs_type) if fs_type else "",
-            " -o {0}".format(options_string) if options_string else "",
-            " {0}".format(device) if device else "",
-            path,
-        )
+        args = []
+        if fs_type:
+            args.extend(['-t', fs_type])
+        if options_string:
+            args.extend(['-o', options_string])
+        if device:
+            args.append(device)
+        args.append(path)
+
+        yield StringCommand('mount', *args)
         # Should we update facts with fs_type, device, etc?
         mounts[path] = {"options": options}
 
