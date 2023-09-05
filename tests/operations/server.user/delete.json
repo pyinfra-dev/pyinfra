@@ -4,6 +4,7 @@
         "present": false
     },
     "facts": {
+        "server.Os": "Linux",
         "server.Users": {
             "someuser": {
                 "home": "/home",

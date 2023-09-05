@@ -4,6 +4,7 @@
         "home": "homedir"
     },
     "facts": {
+        "server.Os": "Linux",
         "server.Users": {},
         "server.Groups": {},
         "files.Directory": {

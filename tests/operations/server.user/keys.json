@@ -5,6 +5,7 @@
         "public_keys": ["abc"]
     },
     "facts": {
+        "server.Os": "Linux",
         "server.Users": {
             "someuser": {
                 "home": "homedir",

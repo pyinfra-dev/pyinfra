@@ -6,7 +6,8 @@
     "facts": {
         "server.Groups": [
             "somegroup"
-        ]
+        ],
+        "server.Os": "Linux"
     },
     "commands": [
         "groupdel somegroup"

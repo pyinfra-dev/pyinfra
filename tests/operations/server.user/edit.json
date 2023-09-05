@@ -8,6 +8,7 @@
         "comment": "New Full Name"
     },
     "facts": {
+        "server.Os": "Linux",
         "server.Users": {
             "someuser": {
                 "comment": "Full Name",
