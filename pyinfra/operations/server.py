@@ -22,7 +22,6 @@ from pyinfra.facts.server import (
     Locales,
     Mounts,
     Os,
-    LinuxName,
     Sysctl,
     Users,
     Which,
@@ -821,7 +820,6 @@ def group(group, present=True, system=False, gid=None):
 
         # Groups are often added by other operations (package installs), so check
         # for the group at runtime before adding.
-        os = host.get_fact(Os)
         group_add_command = "groupadd"
         if os_type == "FreeBSD":
             group_add_command = "pw groupadd"
