@@ -1,0 +1,19 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "server.Os": "FreeBSD",
+        "server.Users": {
+            "someuser": {
+                "home": "/home",
+                "shell": "/bin/bash"
+            }
+        },
+        "server.Groups": {}
+    },
+    "commands": [
+        "pw userdel -n someuser"
+    ]
+}

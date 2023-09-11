@@ -1,0 +1,14 @@
+{
+    "args": ["somegroup"],
+    "kwargs": {
+        "gid" : 1000,
+        "system": true
+    },
+    "facts": {
+        "server.Groups": [],
+        "server.Os": "FreeBSD"
+    },
+    "commands": [
+        "grep '^somegroup:' /etc/group || pw groupadd -n somegroup -g 1000"
+    ]
+}

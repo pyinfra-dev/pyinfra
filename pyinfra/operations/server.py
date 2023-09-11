@@ -794,7 +794,7 @@ def group(group, present=True, system=False, gid=None):
     # Group exists but we don't want them?
     if not present and is_present:
         if os_type == "FreeBSD":
-            yield "pw groupdel {0}".format(group)
+            yield "pw groupdel -n {0}".format(group)
         else:
             yield "groupdel {0}".format(group)
         groups.remove(group)
