@@ -36,36 +36,36 @@ class TestDeploysApi(PatchSSHTestCase):
         # Ensure we have an op
         assert len(op_order) == 2
 
+        # Ensure run ops works
+        run_ops(state)
+
         first_op_hash = op_order[0]
-        assert state.op_meta[first_op_hash]["names"] == {"test_deploy | Server/Shell"}
-        assert state.ops[somehost][first_op_hash]["commands"] == [
+        assert state.op_meta[first_op_hash].names == {"test_deploy | Server/Shell"}
+        assert state.ops[somehost][first_op_hash].operation_meta.commands == [
             StringCommand("echo first command"),
         ]
-        assert state.ops[anotherhost][first_op_hash]["commands"] == [
+        assert state.ops[anotherhost][first_op_hash].operation_meta.commands == [
             StringCommand("echo first command"),
         ]
 
         second_op_hash = op_order[1]
-        assert state.op_meta[second_op_hash]["names"] == {"test_deploy | Server/Shell"}
-        assert state.ops[somehost][second_op_hash]["commands"] == [
+        assert state.op_meta[second_op_hash].names == {"test_deploy | Server/Shell"}
+        assert state.ops[somehost][second_op_hash].operation_meta.commands == [
             StringCommand("echo second command"),
         ]
-        assert state.ops[anotherhost][second_op_hash]["commands"] == [
+        assert state.ops[anotherhost][second_op_hash].operation_meta.commands == [
             StringCommand("echo second command"),
         ]
-
-        # Ensure run ops works
-        run_ops(state)
 
         # Ensure ops completed OK
-        assert state.results[somehost]["success_ops"] == 2
-        assert state.results[somehost]["ops"] == 2
-        assert state.results[anotherhost]["success_ops"] == 2
-        assert state.results[anotherhost]["ops"] == 2
+        assert state.results[somehost].success_ops == 2
+        assert state.results[somehost].ops == 2
+        assert state.results[anotherhost].success_ops == 2
+        assert state.results[anotherhost].ops == 2
 
         # And w/o errors
-        assert state.results[somehost]["error_ops"] == 0
-        assert state.results[anotherhost]["error_ops"] == 0
+        assert state.results[somehost].error_ops == 0
+        assert state.results[anotherhost].error_ops == 0
 
         # And with the different modes
         run_ops(state, serial=True)
@@ -104,22 +104,25 @@ class TestDeploysApi(PatchSSHTestCase):
         # Ensure we have an op
         assert len(op_order) == 3
 
+        # Ensure run ops works
+        run_ops(state)
+
         first_op_hash = op_order[0]
-        assert state.op_meta[first_op_hash]["names"] == {"test_deploy | Server/Shell"}
-        assert state.ops[somehost][first_op_hash]["commands"] == [
+        assert state.op_meta[first_op_hash].names == {"test_deploy | Server/Shell"}
+        assert state.ops[somehost][first_op_hash].operation_meta.commands == [
             StringCommand("echo first command"),
         ]
 
         second_op_hash = op_order[1]
-        assert state.op_meta[second_op_hash]["names"] == {
+        assert state.op_meta[second_op_hash].names == {
             "test_deploy | test_nested_deploy | Server/Shell",
         }
-        assert state.ops[somehost][second_op_hash]["commands"] == [
+        assert state.ops[somehost][second_op_hash].operation_meta.commands == [
             StringCommand("echo nested command"),
         ]
 
         third_op_hash = op_order[2]
-        assert state.op_meta[third_op_hash]["names"] == {"test_deploy | Server/Shell"}
-        assert state.ops[somehost][third_op_hash]["commands"] == [
+        assert state.op_meta[third_op_hash].names == {"test_deploy | Server/Shell"}
+        assert state.ops[somehost][third_op_hash].operation_meta.commands == [
             StringCommand("echo second command"),
         ]
