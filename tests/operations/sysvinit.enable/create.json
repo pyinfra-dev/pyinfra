@@ -12,7 +12,7 @@
                 "link_target": "/etc/init.d/nginx"
             },
             "path=/etc/rc6.d/K80nginx": {
-                "link_target": "../init.d/nginx"
+                "link_target": "/etc/init.d/nginx"
             }
         },
         "files.Directory": {

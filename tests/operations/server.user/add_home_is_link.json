@@ -15,6 +15,6 @@
         }
     },
     "commands": [
-        "grep '^someuser:' /etc/passwd || useradd -d homedir someuser"
+        "useradd -d homedir someuser"
     ]
 }

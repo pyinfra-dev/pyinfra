@@ -10,7 +10,10 @@
             "distribution": "hardy",
             "components": ["set:", "partner"],
             "options": {}
-        }]
+        }],
+        "files.FindInFile": {
+            "interpolate_variables=False, path=/etc/apt/sources.list, pattern=^.*deb http://archive\\.canonical\\.com/ubuntu hardy partner.*$": [""]
+        }
     },
     "commands": [
         "sed -i.a-timestamp 's/^.*deb http:\\/\\/archive\\.canonical\\.com\\/ubuntu hardy partner.*$//' /etc/apt/sources.list && rm -f /etc/apt/sources.list.a-timestamp"
