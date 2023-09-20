@@ -139,6 +139,10 @@ class State:
     # Whether we are executing operations (ie hosts are all ready)
     is_executing: bool = False
 
+    # Whether we should check for operation changes as part of the operation ordering phase, this
+    # allows us to guesstimate which ops will result in changes on which hosts.
+    check_for_changes: bool = True
+
     print_noop_info: bool = False  # print "[host] noop: reason for noop"
     print_fact_info: bool = False  # print "loaded fact X"
     print_input: bool = False
@@ -153,7 +157,11 @@ class State:
     current_op_file_number: int = 0
 
     def __init__(
-        self, inventory: Optional["Inventory"] = None, config: Optional["Config"] = None, **kwargs
+        self,
+        inventory: Optional["Inventory"] = None,
+        config: Optional["Config"] = None,
+        check_for_changes: bool = True,
+        **kwargs,
     ):
         """Initializes the state, the main Pyinfra
 
@@ -161,10 +169,17 @@ class State:
             inventory (Optional[Inventory], optional): The inventory. Defaults to None.
             config (Optional[Config], optional): The config object. Defaults to None.
         """
+        self.check_for_changes = check_for_changes
+
         if inventory:
             self.init(inventory, config, **kwargs)
 
-    def init(self, inventory: "Inventory", config: Optional["Config"], initial_limit=None):
+    def init(
+        self,
+        inventory: "Inventory",
+        config: Optional["Config"],
+        initial_limit=None,
+    ):
         # Config validation
         #
 
@@ -246,9 +261,8 @@ class State:
             "results": self.results,
         }
 
-    def should_diff(self):
-        # TODO: disable diffs if -y/--yes
-        return not self.is_executing
+    def should_check_for_changes(self):
+        return self.check_for_changes
 
     def add_callback_handler(self, handler):
         if not isinstance(handler, BaseStateCallback):

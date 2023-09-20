@@ -90,6 +90,7 @@ class Host:
 
     # Current context inside an @operation function (op gen stage)
     in_op: bool = False
+    in_callback_op: bool = False
     current_op_hash: Optional[str] = None
     current_op_global_arguments: "AllArguments"
 

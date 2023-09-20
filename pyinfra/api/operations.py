@@ -9,7 +9,7 @@ from paramiko import SSHException
 
 import pyinfra
 from pyinfra import logger
-from pyinfra.context import ctx_host
+from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
 from .arguments import ConnectorArguments, get_connector_argument_keys
@@ -113,9 +113,12 @@ def run_host_op(state: "State", host: "Host", op_hash):
     return_status = False
     did_error = False
     executed_commands = 0
+    commands = []
     all_combined_output_lines = []
 
     for command in op_data.command_generator():
+        commands.append(command)
+
         status = False
 
         connector_arguments = base_connector_arguments.copy()
@@ -207,6 +210,8 @@ def run_host_op(state: "State", host: "Host", op_hash):
         if ignore_errors:
             return_status = True
 
+    op_data.operation_meta.set_result(return_status)
+    op_data.operation_meta.set_commands(commands)
     op_data.operation_meta.set_combined_output_lines(all_combined_output_lines)
 
     if host.nested_executing_op_hash:
@@ -366,15 +371,14 @@ def run_ops(state: "State", serial: bool = False, no_wait: bool = False):
     # Flag state as deploy in process
     state.is_executing = True
 
-    # Run all ops, but server by server
-    if serial:
-        _run_serial_ops(state)
-
-    # Run all the ops on each server in parallel (not waiting at each operation)
-    elif no_wait:
-        _run_no_wait_ops(state)
-
-    # Default: run all ops in order, waiting at each for all servers to complete
-    else:
-        for op_hash in state.get_op_order():
-            _run_single_op(state, op_hash)
+    with ctx_state.use(state):
+        # Run all ops, but server by server
+        if serial:
+            _run_serial_ops(state)
+        # Run all the ops on each server in parallel (not waiting at each operation)
+        elif no_wait:
+            _run_no_wait_ops(state)
+        # Default: run all ops in order, waiting at each for all servers to complete
+        else:
+            for op_hash in state.get_op_order():
+                _run_single_op(state, op_hash)
