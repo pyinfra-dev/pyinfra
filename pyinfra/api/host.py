@@ -12,6 +12,7 @@ from .exceptions import ConnectError
 from .facts import get_host_fact
 
 if TYPE_CHECKING:
+    from pyinfra.api.arguments import AllArguments
     from pyinfra.api.inventory import Inventory
     from pyinfra.api.state import State
 
@@ -90,7 +91,7 @@ class Host:
     # Current context inside an @operation function (op gen stage)
     in_op: bool = False
     current_op_hash: Optional[str] = None
-    current_op_global_kwargs: dict[str, Any]
+    current_op_global_arguments: "AllArguments"
 
     # Current context inside a @deploy function (op gen stage)
     in_deploy: bool = False
@@ -129,7 +130,7 @@ class Host:
         self.loop_position = []
 
         self.connector_data = {}
-        self.current_op_global_kwargs = {}
+        self.current_op_global_arguments = {}
 
         # Append only list of operation hashes as called on this host, used to
         # generate a DAG to create the final operation order.

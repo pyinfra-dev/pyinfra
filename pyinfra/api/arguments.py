@@ -5,6 +5,7 @@ from typing import (
     Iterable,
     Mapping,
     Optional,
+    Tuple,
     TypedDict,
     TypeVar,
     Union,
@@ -282,7 +283,7 @@ def pop_global_arguments(
     state: Optional["State"] = None,
     host: Optional["Host"] = None,
     keys_to_check=None,
-):
+) -> Tuple[AllArguments, list[str]]:
     """
     Pop and return operation global keyword arguments, in preferred order:
 
@@ -311,8 +312,8 @@ def pop_global_arguments(
 
     meta_kwargs = host.current_deploy_kwargs or {}
 
-    global_kwargs = {}
-    found_keys = []
+    arguments: AllArguments = {}
+    found_keys: list[str] = []
 
     for key, type_ in AllArguments.__annotations__.items():
         if keys_to_check and key not in keys_to_check:
@@ -335,5 +336,6 @@ def pop_global_arguments(
         if handler is not default_sentinel:
             value = handler(config, value)
 
-        global_kwargs[key] = value
-    return global_kwargs, found_keys
+        # TODO: why is type failing here?
+        arguments[key] = value  # type: ignore
+    return arguments, found_keys
