@@ -7,7 +7,7 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 
 from functools import wraps
 from types import FunctionType
-from typing import Dict, Iterator, Set, Tuple
+from typing import Any, Iterator, Optional, Set, Tuple
 
 import pyinfra
 from pyinfra import context, logger
@@ -33,12 +33,15 @@ op_meta_default = object()
 
 class OperationMeta:
     combined_output_lines = None
+    commands: Optional[list[Any]] = None
+    changed: bool = False
+    success: Optional[bool] = None
 
     def __init__(self, hash=None, is_change=False):
         self.hash = hash
         self.changed = is_change
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Return Operation object as a string.
         """
@@ -47,6 +50,12 @@ class OperationMeta:
 
     def set_combined_output_lines(self, combined_output_lines):
         self.combined_output_lines = combined_output_lines
+
+    def set_commands(self, commands) -> None:
+        self.commands = commands
+
+    def set_result(self, success: bool) -> None:
+        self.success = success
 
     def _get_lines(self, types=("stdout", "stderr")):
         if self.combined_output_lines is None:
@@ -158,7 +167,7 @@ def operation(
 
         # If this op is being called inside another, just return here
         # (any unwanted/op-related kwargs removed above).
-        if host.in_op:
+        if host.in_op and not host.in_callback_op:
             if global_argument_keys:
                 _error_msg = "Nested operation called with global arguments: {0} ({1})".format(
                     global_argument_keys,
@@ -196,19 +205,25 @@ def operation(
 
         def command_generator() -> Iterator[PyinfraCommand]:
             host.in_op = True
+            # MY EYES, this is evil
+            host.in_callback_op = (
+                func.__name__ == "call" and func.__module__ == "pyinfra.operations.python"
+            )
             host.current_op_hash = op_hash
             host.current_op_global_arguments = global_arguments
 
-            for command in func(*args, **kwargs):
-                command = StringCommand(command.strip()) if isinstance(command, str) else command
-                yield command
-
-            host.in_op = False
-            host.current_op_hash = None
-            host.current_op_global_arguments = None
+            try:
+                for command in func(*args, **kwargs):
+                    if isinstance(command, str):
+                        command = StringCommand(command.strip())
+                    yield command
+            finally:
+                host.in_op = False
+                host.current_op_hash = None
+                host.current_op_global_arguments = None
 
         op_is_change = False
-        if state.should_diff():
+        if state.should_check_for_changes():
             for command in command_generator():
                 op_is_change = True
                 break

@@ -64,6 +64,13 @@ def _print_support(ctx, param, value):
     help="Don't execute operations on the target hosts.",
 )
 @click.option(
+    "-y",
+    "--yes",
+    is_flag=True,
+    default=False,
+    help="Execute operations immediately on hosts without prompt or checking for changes.",
+)
+@click.option(
     "--limit",
     help="Restrict the target hosts by name and group name.",
     multiple=True,
@@ -235,6 +242,7 @@ def cli(*args, **kwargs):
 
     finally:
         if ctx_state.isset() and state.initialised:
+            echo_msg("--> Disconnecting from hosts...")
             # Triggers any executor disconnect requirements
             disconnect_all(state)
 
@@ -272,6 +280,7 @@ def _main(
     group_data,
     config_filename: str,
     dry: bool,
+    yes: bool,
     limit: Iterable,
     no_wait: bool,
     serial: bool,
@@ -297,7 +306,7 @@ def _main(
 
     # Setup state, config & inventory
     #
-    state = _setup_state(verbosity, quiet)
+    state = _setup_state(verbosity, quiet, check_for_changes=not yes)
     config = Config()
     ctx_config.set(config)
 
@@ -357,8 +366,11 @@ def _main(
 
     # Print proposed changes, execute unless --dry, and exit
     #
-    echo_msg("--> Proposed changes:", quiet)
-    print_meta(state)
+    if yes:
+        echo_msg("--> Skipping change detection", quiet)
+    else:
+        echo_msg("--> Proposed changes:", quiet)
+        print_meta(state)
 
     # If --debug-facts or --debug-operations, print and exit
     if debug_facts or debug_operations:
@@ -370,12 +382,16 @@ def _main(
     if dry:
         _exit()
 
-    echo_msg(quiet=quiet)
-    echo_msg("--> Beginning operation run...", quiet)
+    if not yes:
+        click.echo(err=True)
+        if not click.confirm("--> Execute proposed changes?", default=True, err=True):
+            _exit()
+
+    echo_msg("--> Beginning operation run...", True)
 
     run_ops(state, serial=serial, no_wait=no_wait)
 
-    echo_msg("--> Results:", quiet)
+    echo_msg("--> Results:", True)
     print_results(state)
     _exit()
 
@@ -476,12 +492,12 @@ def _set_verbosity(state, verbosity, quiet):
     return state
 
 
-def _setup_state(verbosity, quiet):
+def _setup_state(verbosity, quiet, check_for_changes):
     cwd = getcwd()
     if cwd not in sys.path:  # ensure cwd is present in sys.path
         sys.path.append(cwd)
 
-    state = State()
+    state = State(check_for_changes=check_for_changes)
     state.cwd = cwd
     ctx_state.set(state)
 
@@ -501,7 +517,7 @@ def _set_config(
     fail_percent,
     quiet,
 ):
-    echo_msg("--> Loading config...", quiet)
+    echo_msg("--> Loading config...", True)
 
     # Load up any config.py from the filesystem
     config_filename = path.join(state.cwd, config_filename)
