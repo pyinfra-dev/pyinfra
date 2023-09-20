@@ -134,27 +134,37 @@ def parse_cli_arg(arg):
 
 
 def try_import_module_attribute(path, prefix=None):
-    mod_path, attr_name = path.rsplit(".", 1)
+    if ":" in path:
+        # Allow a.module.name:function syntax
+        mod_path, attr_name = path.rsplit(":", 1)
+    else:
+        # And also a.module.name.function
+        mod_path, attr_name = path.rsplit(".", 1)
+
+    possible_modules = [mod_path]
+    if prefix:
+        possible_modules.append(f"{prefix}.{mod_path}")
+
     module = None
 
-    if prefix:
-        full_path = f"{prefix}.{mod_path}"
+    for possible in possible_modules:
         try:
-            module = import_module(full_path)
-        except (ModuleNotFoundError, ImportError):
-            pass
-    else:
-        full_path = mod_path
+            # First use find_spec which checks if the possible module exists *without* importing
+            # it, thus any import errors it contains still get properly raised to the user.
+            spec = find_spec(possible)
+        except ModuleNotFoundError:
+            continue
+        else:
+            if spec is not None:
+                module = import_module(possible)
+                break
 
     if module is None:
-        try:
-            module = import_module(mod_path)
-        except (ModuleNotFoundError, ImportError):
-            raise CliError(f"No such module: {full_path}")
+        return
 
     attr = getattr(module, attr_name, None)
     if attr is None:
-        raise CliError(f"No such attribute in module {full_path}: {attr_name}")
+        raise CliError(f"No such attribute in module {mod_path}: {attr_name}")
 
     return attr
 
