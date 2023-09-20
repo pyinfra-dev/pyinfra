@@ -94,7 +94,7 @@ class DockerConnector(BaseConnector):
         )
 
     def connect(self):
-        self.local.conect()
+        self.local.connect()
 
         docker_container_id = self.host.data.get(DATA_KEYS.container_id)
         if docker_container_id:  # user can provide a docker_container_id

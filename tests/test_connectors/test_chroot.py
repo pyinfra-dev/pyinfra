@@ -63,11 +63,11 @@ class TestChrootConnector(TestCase):
         self.fake_popen_mock().returncode = 0
         out = host.run_shell_command(
             command,
-            stdin="hello",
-            get_pty=True,
+            _stdin="hello",
+            _get_pty=True,
             print_output=True,
         )
-        assert len(out) == 3
+        assert len(out) == 2
         assert out[0] is True
 
         command = make_unix_command(command).get_raw_value()
@@ -93,8 +93,8 @@ class TestChrootConnector(TestCase):
         command = "echo hoi"
         self.fake_popen_mock().returncode = 1
 
-        out = host.run_shell_command(command, success_exit_codes=[1])
-        assert len(out) == 3
+        out = host.run_shell_command(command, _success_exit_codes=[1])
+        assert len(out) == 2
         assert out[0] is True
 
     def test_run_shell_command_error(self):
@@ -108,7 +108,7 @@ class TestChrootConnector(TestCase):
         self.fake_popen_mock().returncode = 1
 
         out = host.run_shell_command(command)
-        assert len(out) == 3
+        assert len(out) == 2
         assert out[0] is False
 
     def test_put_file(self):

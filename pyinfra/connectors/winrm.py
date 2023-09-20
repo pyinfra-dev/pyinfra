@@ -110,18 +110,18 @@ class WinRMConnector(BaseConnector):
         Connect to a single host. Returns the winrm Session if successful.
         """
 
-        kwargs = _make_winrm_kwargs(state, host)
-        logger.debug("Connecting to: %s (%s)", host.name, kwargs)
+        kwargs = _make_winrm_kwargs(self.state, self.host)
+        logger.debug("Connecting to: %s (%s)", self.host.name, kwargs)
 
         # Hostname can be provided via winrm config (alias), data, or the hosts name
         hostname = kwargs.pop(
             "hostname",
-            host.data.get(DATA_KEYS.hostname, host.name),
+            self.host.data.get(DATA_KEYS.hostname, self.host.name),
         )
 
         try:
             # Create new session
-            host_and_port = "{}:{}".format(hostname, host.data.get(DATA_KEYS.port))
+            host_and_port = "{}:{}".format(hostname, self.host.data.get(DATA_KEYS.port))
             logger.debug("host_and_port: %s", host_and_port)
 
             session = PyinfraWinrmSession(
@@ -149,7 +149,7 @@ class WinRMConnector(BaseConnector):
                 "{0}={1}".format(key, value) for key, value in auth_kwargs.items()
             )
             logger.debug("%s", e)
-            _raise_connect_error(host, "Authentication error", auth_args)
+            _raise_connect_error(self.host, "Authentication error", auth_args)
 
     def run_shell_command(
         self,
@@ -183,17 +183,17 @@ class WinRMConnector(BaseConnector):
 
         command = make_win_command(command)
 
-        logger.debug("Running command on %s: %s", host.name, command)
+        logger.debug("Running command on %s: %s", self.host.name, command)
 
         if print_input:
-            click.echo("{0}>>> {1}".format(host.print_prefix, command), err=True)
+            click.echo("{0}>>> {1}".format(self.host.print_prefix, command), err=True)
 
         # get rid of leading/trailing quote
         tmp_command = command.strip("'")
 
         if print_output:
             click.echo(
-                "{0}>>> {1}".format(host.print_prefix, command),
+                "{0}>>> {1}".format(self.host.print_prefix, command),
                 err=True,
             )
 
@@ -203,9 +203,9 @@ class WinRMConnector(BaseConnector):
 
         # we use our own subclassed session that allows for env setting from open_shell.
         if shell_executable in ["cmd"]:
-            response = host.connection.run_cmd(tmp_command, env=env)
+            response = self.host.connection.run_cmd(tmp_command, env=env)
         else:
-            response = host.connection.run_ps(tmp_command, env=env)
+            response = self.host.connection.run_ps(tmp_command, env=env)
 
         return_code = response.status_code
         logger.debug("response:%s", response)
@@ -222,7 +222,7 @@ class WinRMConnector(BaseConnector):
 
         if print_output:
             click.echo(
-                "{0}>>> {1}".format(host.print_prefix, "\n".join(std_out)),
+                "{0}>>> {1}".format(self.host.print_prefix, "\n".join(std_out)),
                 err=True,
             )
 
@@ -245,7 +245,7 @@ class WinRMConnector(BaseConnector):
     ):
         raise PyinfraError("Not implemented")
 
-    def _put_file(state, host, filename_or_io, remote_location, chunk_size=2048):
+    def _put_file(self, filename_or_io, remote_location, chunk_size=2048):
         # this should work fine on smallish files, but there will be perf issues
         # on larger files both due to the full read, the base64 encoding, and
         # the latency when sending chunks
@@ -286,7 +286,7 @@ class WinRMConnector(BaseConnector):
 
         # Always use temp file here in case of failure
         temp_file = ntpath.join(
-            host.get_fact(TempDir),
+            self.host.get_fact(TempDir),
             "pyinfra-{0}".format(sha1_hash(remote_filename)),
         )
 
@@ -305,7 +305,7 @@ class WinRMConnector(BaseConnector):
 
         if print_output:
             click.echo(
-                "{0}file uploaded: {1}".format(host.print_prefix, remote_filename),
+                "{0}file uploaded: {1}".format(self.host.print_prefix, remote_filename),
                 err=True,
             )
 

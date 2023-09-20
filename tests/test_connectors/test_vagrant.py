@@ -3,7 +3,7 @@ from unittest import TestCase
 from unittest.mock import mock_open, patch
 
 from pyinfra.api.exceptions import InventoryError
-from pyinfra.connectors.vagrant import get_vagrant_options, make_names_data
+from pyinfra.connectors.vagrant import VagrantInventoryConnector, get_vagrant_options
 
 FAKE_VAGRANT_OPTIONS = {
     "groups": {
@@ -69,7 +69,7 @@ class TestVagrantConnector(TestCase):
     )
     @patch("pyinfra.connectors.vagrant.path.exists", lambda path: True)
     def test_make_names_data_with_options(self):
-        data = make_names_data()
+        data = VagrantInventoryConnector.make_names_data()
 
         assert data == [
             (
@@ -103,7 +103,7 @@ class TestVagrantConnector(TestCase):
         ]
 
     def test_make_names_data_with_limit(self):
-        data = make_names_data(limit=("ubuntu16",))
+        data = VagrantInventoryConnector.make_names_data(limit=("ubuntu16",))
 
         assert data == [
             (
@@ -120,4 +120,4 @@ class TestVagrantConnector(TestCase):
 
     def test_make_names_data_no_matches(self):
         with self.assertRaises(InventoryError):
-            make_names_data(limit="nope")
+            VagrantInventoryConnector.make_names_data(limit="nope")

@@ -2,7 +2,7 @@ from os import path
 from unittest import TestCase
 
 from pyinfra.api.exceptions import InventoryError
-from pyinfra.connectors.ansible import make_names_data
+from pyinfra.connectors.ansible import AnsibleInventoryConnector
 
 TEST_DATA = [
     ("mail.example.com", {}, ["all"]),
@@ -17,10 +17,10 @@ TEST_DATA = [
 class TestAnsibleConnector(TestCase):
     def test_make_names_data_no_file(self):
         with self.assertRaises(InventoryError):
-            make_names_data(inventory_filename="/not/a/file")
+            AnsibleInventoryConnector.make_names_data(inventory_filename="/not/a/file")
 
     def test_make_names_data_ini(self):
-        data = make_names_data(
+        data = AnsibleInventoryConnector.make_names_data(
             inventory_filename=path.join(
                 "tests",
                 "deploy",
@@ -40,7 +40,7 @@ class TestAnsibleConnector(TestCase):
         assert sorted(data) == sorted(test_data)
 
     def test_make_names_data_json(self):
-        data = make_names_data(
+        data = AnsibleInventoryConnector.make_names_data(
             inventory_filename=path.join(
                 "tests",
                 "deploy",
@@ -52,7 +52,7 @@ class TestAnsibleConnector(TestCase):
         assert sorted(data) == sorted(TEST_DATA)
 
     def test_make_names_data_yaml(self):
-        data = make_names_data(
+        data = AnsibleInventoryConnector.make_names_data(
             inventory_filename=path.join(
                 "tests",
                 "deploy",

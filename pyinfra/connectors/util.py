@@ -196,7 +196,7 @@ def execute_command_with_sudo_retry(
 ) -> tuple[int, CommandOutput]:
     return_code, output = execute_command()
 
-    if return_code != 0 and output:
+    if return_code != 0 and output and output.combined_lines:
         last_line = output.combined_lines[-1].line
         if last_line.strip() == "sudo: a password is required":
             command_arguments["_use_sudo_password"] = True  # ask for the password
@@ -219,10 +219,10 @@ def write_stdin(stdin, buffer):
     buffer.close()
 
 
-def _get_sudo_password(host, use_sudo_password):
+def _get_sudo_password(host: "Host", use_sudo_password) -> str:
     if not host.connector_data.get("sudo_askpass_path"):
-        _, stdout, _ = host.run_shell_command(SUDO_ASKPASS_COMMAND)
-        host.connector_data["sudo_askpass_path"] = shlex.quote(stdout[0])
+        _, output = host.run_shell_command(SUDO_ASKPASS_COMMAND)
+        host.connector_data["sudo_askpass_path"] = shlex.quote(output.stdout_lines[0])
 
     if use_sudo_password is True:
         sudo_password = host.connector_data.get("sudo_password")

@@ -83,7 +83,9 @@ class BaseConnector(abc.ABC):
     ) -> bool:
         ...
 
-    @abc.abstractmethod
+    def check_can_rsync(self):
+        raise NotImplementedError("This connector does not support rsync")
+
     def rsync(
         self,
         src: str,
@@ -93,4 +95,4 @@ class BaseConnector(abc.ABC):
         print_input: bool = False,
         **arguments: Unpack["ConnectorArguments"],
     ) -> bool:
-        ...
+        raise NotImplementedError("This connector does not support rsync")
