@@ -206,6 +206,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 parallel=None,
                 fail_percent=0,
                 dry=False,
+                yes=True,
                 limit=None,
                 no_wait=False,
                 serial=False,
