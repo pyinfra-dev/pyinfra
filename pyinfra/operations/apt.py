@@ -150,7 +150,6 @@ def repo(src, present=True, filename=None):
             filename,
             src,
             present=False,
-            assume_present=True,
             escape_regex_characters=True,
         )
     else:
