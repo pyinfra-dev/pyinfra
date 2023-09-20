@@ -85,7 +85,7 @@ class StateOperationMeta:
     names: set[str]
     args: list[str]
     op_order: tuple[int]
-    global_arguments: dict
+    global_arguments: "AllArguments"
 
     def __init__(self, op_order: tuple[int]):
         self.op_order = op_order
@@ -99,6 +99,7 @@ class StateOperationHostData:
     command_generator: Iterator["PyinfraCommand"]
     global_arguments: "AllArguments"
     operation_meta: "OperationMeta"
+    parent_op_hash: Optional[str] = None
 
 
 class StateHostMeta:

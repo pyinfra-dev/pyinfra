@@ -13,7 +13,7 @@ import pyinfra
 from pyinfra import context, logger
 from pyinfra.context import ctx_host, ctx_state
 
-from .arguments import get_execution_kwarg_keys, pop_global_arguments
+from .arguments import AllArguments, get_execution_kwarg_keys, pop_global_arguments
 from .command import PyinfraCommand, StringCommand
 from .exceptions import OperationValueError, PyinfraError
 from .host import Host
@@ -319,19 +319,19 @@ def _ensure_shared_op_meta(
     state: State,
     op_hash: str,
     op_order: Tuple[int],
-    global_arguments: Dict,
+    global_arguments: AllArguments,
     names: Set[str],
 ):
     op_meta = state.op_meta.setdefault(op_hash, StateOperationMeta(op_order))
 
     for key in get_execution_kwarg_keys():
-        global_value = global_arguments.pop(key)
+        global_value = global_arguments.pop(key)  # type: ignore[misc]
         op_meta_value = op_meta.global_arguments.get(key, op_meta_default)
 
         if op_meta_value is not op_meta_default and global_value != op_meta_value:
             raise OperationValueError("Cannot have different values for `{0}`.".format(key))
 
-        op_meta.global_arguments[key] = global_value
+        op_meta.global_arguments[key] = global_value  # type: ignore[literal-required]
 
     # Add any new names to the set
     op_meta.names.update(names)
@@ -347,7 +347,7 @@ def _execute_immediately(state, host, op_hash):
     )
     op_meta = state.get_op_meta(op_hash)
     op_data = state.get_op_data_for_host(host, op_hash)
-    op_data["parent_op_hash"] = host.executing_op_hash
+    op_data.parent_op_hash = host.executing_op_hash
     log_operation_start(op_meta, op_types=["nested"], prefix="")
     run_host_op(state, host, op_hash)
 

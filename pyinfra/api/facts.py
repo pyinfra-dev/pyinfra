@@ -108,7 +108,7 @@ def _get_executor_kwargs(
         override_kwarg_keys = []
 
     # Use the current operation global kwargs, or generate defaults
-    global_kwargs = host.current_op_global_kwargs
+    global_kwargs = host.current_op_global_arguments
     if not global_kwargs:
         global_kwargs, _ = pop_global_arguments({}, state, host)
 
@@ -237,14 +237,15 @@ def _get_fact(
             raise_exceptions=True,
         )
 
-    ignore_errors = (host.current_op_global_kwargs or {}).get(
-        "ignore_errors",
-        state.config.IGNORE_ERRORS,
+    ignore_errors = (
+        host.current_op_global_arguments["_ignore_errors"]
+        if host.in_op
+        else state.config.IGNORE_ERRORS
     )
 
     # Facts can override the shell (winrm powershell vs cmd support)
     if fact.shell_executable:
-        executor_kwargs["shell_executable"] = fact.shell_executable
+        executor_kwargs["_shell_executable"] = fact.shell_executable
 
     command = _make_command(fact.command, fact_kwargs)
     requires_command = _make_command(fact.requires_command, fact_kwargs)
@@ -274,7 +275,7 @@ def _get_fact(
         log_host_command_error(
             host,
             e,
-            timeout=executor_kwargs["timeout"],
+            timeout=executor_kwargs["_timeout"],
         )
 
     stdout_lines, stderr_lines = output.stdout_lines, output.stderr_lines
@@ -290,9 +291,9 @@ def _get_fact(
         # This allows for users that don't currently but may be created during
         # other operations.
         first_line = stderr_lines[0]
-        if executor_kwargs["sudo_user"] and re.match(SUDO_REGEX, first_line):
+        if executor_kwargs["_sudo_user"] and re.match(SUDO_REGEX, first_line):
             status = True
-        if executor_kwargs["su_user"] and any(re.match(regex, first_line) for regex in SU_REGEXES):
+        if executor_kwargs["_su_user"] and any(re.match(regex, first_line) for regex in SU_REGEXES):
             status = True
 
     if status:
