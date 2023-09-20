@@ -45,18 +45,17 @@ class TestLocalConnector(TestCase):
         command = "echo Šablony"
         self.fake_popen_mock().returncode = 0
 
-        out = host.run_shell_command(command, stdin="hello", print_output=True)
-        assert len(out) == 3
+        out = host.run_shell_command(command, _stdin="hello", print_output=True)
+        assert len(out) == 2
 
-        status, stdout, stderr = out
+        status, output = out
         assert status is True
         self.fake_popen_mock().stdin.write.assert_called_with(b"hello\n")
 
         combined_out = host.run_shell_command(
             command,
-            stdin="hello",
+            _stdin="hello",
             print_output=True,
-            return_combined_output=True,
         )
         assert len(combined_out) == 2
 
@@ -79,9 +78,9 @@ class TestLocalConnector(TestCase):
         self.fake_popen_mock().returncode = 0
 
         out = host.run_shell_command(command, print_output=True, print_input=True)
-        assert len(out) == 3
+        assert len(out) == 2
 
-        status, stdout, stderr = out
+        status, output = out
         assert status is True
 
         self.fake_popen_mock.assert_called_with(
@@ -105,8 +104,8 @@ class TestLocalConnector(TestCase):
         command = "echo hi"
         self.fake_popen_mock().returncode = 1
 
-        out = host.run_shell_command(command, success_exit_codes=[1])
-        assert len(out) == 3
+        out = host.run_shell_command(command, _success_exit_codes=[1])
+        assert len(out) == 2
         assert out[0] is True
 
     def test_run_shell_command_error(self):
@@ -118,7 +117,7 @@ class TestLocalConnector(TestCase):
         self.fake_popen_mock().returncode = 1
 
         out = host.run_shell_command(command)
-        assert len(out) == 3
+        assert len(out) == 2
         assert out[0] is False
 
     def test_put_file(self):
@@ -210,7 +209,7 @@ class TestLocalConnector(TestCase):
         command = "echo Šablony"
         self.fake_popen_mock().returncode = 0
 
-        host.run_shell_command(command, stdin=["hello", "abc"], print_output=True)
+        host.run_shell_command(command, _stdin=["hello", "abc"], print_output=True)
         self.fake_popen_mock().stdin.write.assert_has_calls(
             [
                 call(b"hello\n"),
@@ -226,7 +225,7 @@ class TestLocalConnector(TestCase):
         command = "echo Šablony"
         self.fake_popen_mock().returncode = 0
 
-        host.run_shell_command(command, stdin=StringIO("hello\nabc"), print_output=True)
+        host.run_shell_command(command, _stdin=StringIO("hello\nabc"), print_output=True)
         self.fake_popen_mock().stdin.write.assert_has_calls(
             [
                 call(b"hello\n"),

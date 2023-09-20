@@ -10,7 +10,6 @@ import pyinfra
 from pyinfra.api import Config, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import ConnectError, PyinfraError
-from pyinfra.connectors.ssh import _get_sftp_connection
 
 from ..util import make_inventory
 
@@ -28,7 +27,6 @@ class TestSSHConnector(TestCase):
     def setUp(self):
         self.fake_connect_patch = patch("pyinfra.connectors.ssh.SSHClient.connect")
         self.fake_connect_mock = self.fake_connect_patch.start()
-        _get_sftp_connection.cache = {}
 
     def tearDown(self):
         self.fake_connect_patch.stop()
@@ -58,8 +56,8 @@ class TestSSHConnector(TestCase):
 
         assert len(state.active_hosts) == 2
 
-    @patch("pyinfra.connectors.ssh.path.isfile", lambda *args, **kwargs: True)
-    @patch("pyinfra.connectors.ssh.RSAKey.from_private_key_file")
+    @patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True)
+    @patch("pyinfra.connectors.ssh_util.RSAKey.from_private_key_file")
     def test_connect_exceptions(self, fake_key_open):
         for exception_class in (
             AuthenticationException,
@@ -83,8 +81,8 @@ class TestSSHConnector(TestCase):
     def test_connect_with_rsa_ssh_key(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
-        with patch("pyinfra.connectors.ssh.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh.RSAKey.from_private_key_file",
+        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
+            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
         ) as fake_key_open:
             fake_key = MagicMock()
             fake_key_open.return_value = fake_key
@@ -128,8 +126,8 @@ class TestSSHConnector(TestCase):
             Config(),
         )
 
-        with patch("pyinfra.connectors.ssh.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh.RSAKey.from_private_key_file",
+        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
+            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
         ) as fake_key_open:
             fake_key = MagicMock()
 
@@ -150,11 +148,11 @@ class TestSSHConnector(TestCase):
     def test_connect_with_rsa_ssh_key_password_from_prompt(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
-        with patch("pyinfra.connectors.ssh.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh.getpass",
+        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
+            "pyinfra.connectors.ssh_util.getpass",
             lambda *args, **kwargs: "testpass",
         ), patch(
-            "pyinfra.connectors.ssh.RSAKey.from_private_key_file",
+            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
         ) as fake_key_open:
             fake_key = MagicMock()
 
@@ -177,8 +175,8 @@ class TestSSHConnector(TestCase):
     def test_connect_with_rsa_ssh_key_missing_password(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
-        with patch("pyinfra.connectors.ssh.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh.RSAKey.from_private_key_file",
+        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
+            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
         ) as fake_key_open:
             fake_key_open.side_effect = make_raise_exception_function(PasswordRequiredException)
 
@@ -203,17 +201,17 @@ class TestSSHConnector(TestCase):
         fake_fail_from_private_key_file = MagicMock()
         fake_fail_from_private_key_file.side_effect = make_raise_exception_function(SSHException)
 
-        with patch("pyinfra.connectors.ssh.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh.DSSKey.from_private_key_file",
+        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
+            "pyinfra.connectors.ssh_util.DSSKey.from_private_key_file",
             fake_fail_from_private_key_file,
         ), patch(
-            "pyinfra.connectors.ssh.ECDSAKey.from_private_key_file",
+            "pyinfra.connectors.ssh_util.ECDSAKey.from_private_key_file",
             fake_fail_from_private_key_file,
         ), patch(
-            "pyinfra.connectors.ssh.Ed25519Key.from_private_key_file",
+            "pyinfra.connectors.ssh_util.Ed25519Key.from_private_key_file",
             fake_fail_from_private_key_file,
         ), patch(
-            "pyinfra.connectors.ssh.RSAKey.from_private_key_file",
+            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
         ) as fake_key_open:
 
             def fake_key_open_fail(*args, **kwargs):
@@ -236,10 +234,10 @@ class TestSSHConnector(TestCase):
     def test_connect_with_dss_ssh_key(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
-        with patch("pyinfra.connectors.ssh.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh.RSAKey.from_private_key_file",
+        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
+            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
         ) as fake_rsa_key_open, patch(
-            "pyinfra.connectors.ssh.DSSKey.from_private_key_file",
+            "pyinfra.connectors.ssh_util.DSSKey.from_private_key_file",
         ) as fake_key_open:  # noqa
             fake_rsa_key_open.side_effect = make_raise_exception_function(SSHException)
 
@@ -283,10 +281,10 @@ class TestSSHConnector(TestCase):
             Config(),
         )
 
-        with patch("pyinfra.connectors.ssh.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh.RSAKey.from_private_key_file",
+        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
+            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
         ) as fake_rsa_key_open, patch(
-            "pyinfra.connectors.ssh.DSSKey.from_private_key_file",
+            "pyinfra.connectors.ssh_util.DSSKey.from_private_key_file",
         ) as fake_dss_key_open:  # noqa
 
             def fake_rsa_key_open_fail(*args, **kwargs):
@@ -362,18 +360,17 @@ class TestSSHConnector(TestCase):
         command = "echo Šablony"
         fake_stdout.channel.recv_exit_status.return_value = 0
 
-        out = host.run_shell_command(command, stdin="hello", print_output=True)
-        assert len(out) == 3
+        out = host.run_shell_command(command, _stdin="hello", print_output=True)
+        assert len(out) == 2
 
-        status, stdout, stderr = out
+        status, output = out
         assert status is True
         fake_stdin.write.assert_called_with(b"hello\n")
 
         combined_out = host.run_shell_command(
             command,
-            stdin="hello",
+            _stdin="hello",
             print_output=True,
-            return_combined_output=True,
         )
         assert len(combined_out) == 2
 
@@ -397,9 +394,9 @@ class TestSSHConnector(TestCase):
         fake_stdout.channel.recv_exit_status.return_value = 0
 
         out = host.run_shell_command(command, print_output=True, print_input=True)
-        assert len(out) == 3
+        assert len(out) == 2
 
-        status, stdout, stderr = out
+        status, output = out
         assert status is True
 
         fake_ssh.exec_command.assert_called_with(
@@ -428,8 +425,8 @@ class TestSSHConnector(TestCase):
         command = "echo hi"
         fake_stdout.channel.recv_exit_status.return_value = 1
 
-        out = host.run_shell_command(command, success_exit_codes=[1])
-        assert len(out) == 3
+        out = host.run_shell_command(command, _success_exit_codes=[1])
+        assert len(out) == 2
         assert out[0] is True
 
     @patch("pyinfra.connectors.ssh.SSHClient")
@@ -449,7 +446,7 @@ class TestSSHConnector(TestCase):
         fake_stdout.channel.recv_exit_status.return_value = 1
 
         out = host.run_shell_command(command)
-        assert len(out) == 3
+        assert len(out) == 2
         assert out[0] is False
 
     @patch("pyinfra.connectors.util.getpass")
@@ -475,10 +472,12 @@ class TestSSHConnector(TestCase):
         fake_stdout.__iter__.return_value = ["/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"]
         fake_stdout.channel.recv_exit_status.return_value = 0
 
-        out = host.run_shell_command(command, sudo=True, use_sudo_password=True, print_output=True)
-        assert len(out) == 3
+        out = host.run_shell_command(
+            command, _sudo=True, _use_sudo_password=True, print_output=True
+        )
+        assert len(out) == 2
 
-        status, stdout, stderr = out
+        status, output = out
         assert status is True
 
         fake_ssh.exec_command.assert_called_with(
@@ -524,10 +523,10 @@ class TestSSHConnector(TestCase):
         second_fake_stdout.channel.recv_exit_status.return_value = 0
         third_fake_stdout.channel.recv_exit_status.return_value = 0
 
-        out = host.run_shell_command(command, sudo=True, print_output=True)
-        assert len(out) == 3
+        out = host.run_shell_command(command, _sudo=True, print_output=True)
+        assert len(out) == 2
 
-        status, stdout, stderr = out
+        status, output = out
         assert status is True
 
         fake_ssh.exec_command.assert_any_call(("sudo -H -n sh -c 'echo Šablony'"), get_pty=False)
@@ -572,7 +571,7 @@ class TestSSHConnector(TestCase):
         fake_stdout.channel.recv_exit_status.side_effect = lambda: return_values.pop(0)
 
         out = host.run_shell_command(command)
-        assert len(out) == 3
+        assert len(out) == 2
         assert out[0] is True
         assert fake_get_sudo_password.called
         fake_ssh.exec_command.assert_called_with(
@@ -624,8 +623,8 @@ class TestSSHConnector(TestCase):
                 "not-a-file",
                 "not another file",
                 print_output=True,
-                sudo=True,
-                sudo_user="ubuntu",
+                _sudo=True,
+                _sudo_user="ubuntu",
             )
 
         assert status is True
@@ -675,8 +674,8 @@ class TestSSHConnector(TestCase):
                 "not-a-file",
                 "not another file",
                 print_output=True,
-                doas=True,
-                doas_user="ubuntu",
+                _doas=True,
+                _doas_user="ubuntu",
             )
 
         assert status is True
@@ -726,7 +725,7 @@ class TestSSHConnector(TestCase):
                 "not-a-file",
                 "not-another-file",
                 print_output=True,
-                su_user="centos",
+                _su_user="centos",
             )
 
         assert status is False
@@ -763,7 +762,7 @@ class TestSSHConnector(TestCase):
                 "not-a-file",
                 "not-another-file",
                 print_output=True,
-                su_user="centos",
+                _su_user="centos",
             )
 
         assert status is False
@@ -808,8 +807,8 @@ class TestSSHConnector(TestCase):
                 "not-a-file",
                 "not another file",
                 print_output=True,
-                sudo=True,
-                sudo_user="ubuntu",
+                _sudo=True,
+                _sudo_user="ubuntu",
                 remote_temp_filename="/a-different-tempfile",
             )
 
@@ -865,8 +864,8 @@ class TestSSHConnector(TestCase):
                 "not-a-file",
                 "not-another-file",
                 print_output=True,
-                sudo=True,
-                sudo_user="ubuntu",
+                _sudo=True,
+                _sudo_user="ubuntu",
             )
 
         assert status is True
@@ -876,7 +875,7 @@ class TestSSHConnector(TestCase):
                 call(
                     (
                         "sudo -H -n -u ubuntu sh -c 'cp not-a-file "
-                        "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r not-a-file'"  # noqa
+                        "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r /tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"  # noqa
                     ),
                     get_pty=False,
                 ),
@@ -910,8 +909,8 @@ class TestSSHConnector(TestCase):
             "not-a-file",
             "not-another-file",
             print_output=True,
-            sudo=True,
-            sudo_user="ubuntu",
+            _sudo=True,
+            _sudo_user="ubuntu",
         )
 
         assert status is False
@@ -921,7 +920,7 @@ class TestSSHConnector(TestCase):
                 call(
                     (
                         "sudo -H -n -u ubuntu sh -c 'cp not-a-file "
-                        "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r not-a-file'"  # noqa
+                        "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r /tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"  # noqa
                     ),
                     get_pty=False,
                 ),
@@ -946,8 +945,8 @@ class TestSSHConnector(TestCase):
                 "not-a-file",
                 "not-another-file",
                 print_output=True,
-                sudo=True,
-                sudo_user="ubuntu",
+                _sudo=True,
+                _sudo_user="ubuntu",
             )
 
         assert status is False
@@ -957,7 +956,7 @@ class TestSSHConnector(TestCase):
                 call(
                     (
                         "sudo -H -n -u ubuntu sh -c 'cp not-a-file "
-                        "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r not-a-file'"  # noqa
+                        "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r /tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"  # noqa
                     ),
                     get_pty=False,
                 ),
@@ -994,7 +993,7 @@ class TestSSHConnector(TestCase):
                 "not-a-file",
                 "not-another-file",
                 print_output=True,
-                su_user="centos",
+                _su_user="centos",
             )
 
         assert status is True
@@ -1005,7 +1004,7 @@ class TestSSHConnector(TestCase):
                     (
                         "su centos -c 'sh -c '\"'\"'cp not-a-file "
                         "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r "
-                        "not-a-file'\"'\"''"
+                        "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'\"'\"''"
                     ),
                     get_pty=False,
                 ),

@@ -3,7 +3,7 @@ from unittest import TestCase
 from unittest.mock import mock_open, patch
 
 from pyinfra.api.exceptions import InventoryError
-from pyinfra.connectors.mech import get_mech_options, make_names_data
+from pyinfra.connectors.mech import MechInventoryConnector, get_mech_options
 
 FAKE_MECH_OPTIONS = {
     "groups": {
@@ -79,7 +79,7 @@ class TestMechConnector(TestCase):
     )
     @patch("pyinfra.connectors.mech.path.exists", lambda path: True)
     def test_make_names_data_with_options(self):
-        data = make_names_data()
+        data = MechInventoryConnector.make_names_data()
 
         assert data == [
             (
@@ -106,7 +106,7 @@ class TestMechConnector(TestCase):
         ]
 
     def test_make_names_data_with_limit(self):
-        data = make_names_data(limit=("ubuntu16",))
+        data = MechInventoryConnector.make_names_data(limit=("ubuntu16",))
 
         assert data == [
             (
@@ -123,4 +123,4 @@ class TestMechConnector(TestCase):
 
     def test_make_names_data_no_matches(self):
         with self.assertRaises(InventoryError):
-            make_names_data(limit="nope")
+            MechInventoryConnector.make_names_data(limit="nope")

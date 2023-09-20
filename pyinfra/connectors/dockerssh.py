@@ -66,11 +66,11 @@ class DockerSSHConnector(BaseConnector):
             ["@dockerssh"],
         )
 
-    def connect(self):
+    def connect(self) -> None:
         self.ssh.connect()
 
         if "docker_container_id" in self.host.host_data:  # user can provide a docker_container_id
-            return self.host.connection
+            return
 
         try:
             with progress_spinner({"docker run"}):
@@ -91,13 +91,11 @@ class DockerSSHConnector(BaseConnector):
                 container_id = output.stdout_lines[-1]
 
         except PyinfraError as e:
-            self.host.connection = None  # fail connection
             raise ConnectError(e.args[0])
 
         self.host.host_data["docker_container_id"] = container_id
-        return self.host.connection
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         container_id = self.host.host_data["docker_container_id"][:12]
 
         with progress_spinner({"docker commit"}):

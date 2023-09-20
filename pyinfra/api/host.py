@@ -1,11 +1,11 @@
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Generator, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Generator, Optional, Tuple, Union
 
 import click
 
 from pyinfra import logger
 from pyinfra.connectors.base import BaseConnector
-from pyinfra.connectors.util import remove_any_sudo_askpass_file
+from pyinfra.connectors.util import CommandOutput, remove_any_sudo_askpass_file
 
 from .connectors import get_execution_connector
 from .exceptions import ConnectError
@@ -296,8 +296,7 @@ class Host:
 
                 logger.info(log_message)
                 self.state.trigger_callbacks("host_connect", self)
-
-        self.connected = True
+                self.connected = True
 
     def disconnect(self):
         """
@@ -315,21 +314,21 @@ class Host:
 
         self.state.trigger_callbacks("host_disconnect", self)
 
-    def run_shell_command(self, *args, **kwargs):
+    def run_shell_command(self, *args, **kwargs) -> Tuple[bool, CommandOutput]:
         """
         Low level method to execute a shell command on the host via it's configured connector.
         """
         self._check_state()
         return self.connector.run_shell_command(*args, **kwargs)
 
-    def put_file(self, *args, **kwargs):
+    def put_file(self, *args, **kwargs) -> bool:
         """
         Low level method to upload a file to the host via it's configured connector.
         """
         self._check_state()
         return self.connector.put_file(*args, **kwargs)
 
-    def get_file(self, *args, **kwargs):
+    def get_file(self, *args, **kwargs) -> bool:
         """
         Low level method to download a file from the host via it's configured connector.
         """
@@ -338,17 +337,10 @@ class Host:
 
     # Rsync - optional connector specific ability
 
-    def check_can_rsync(self):
-        check_can_rsync_func = getattr(self.connector, "check_can_rsync", None)
-        if check_can_rsync_func:
-            return check_can_rsync_func(self)
+    def check_can_rsync(self) -> None:
+        self._check_state()
+        return self.connector.check_can_rsync()
 
-        raise NotImplementedError(
-            "The {0} connector does not support rsync!".format(
-                self.connector.__name__,
-            ),
-        )
-
-    def rsync(self, *args, **kwargs):
+    def rsync(self, *args, **kwargs) -> bool:
         self._check_state()
         return self.connector.rsync(*args, **kwargs)

@@ -11,7 +11,7 @@ are identical:
 import shlex
 from distutils.spawn import find_executable
 from socket import error as socket_error, gaierror
-from typing import TYPE_CHECKING, Iterable, Optional, Tuple, Unpack
+from typing import TYPE_CHECKING, Any, Iterable, Optional, Tuple, Unpack
 
 import click
 from paramiko import AuthenticationException, BadHostKeyException, SFTPClient, SSHException
@@ -69,7 +69,7 @@ class SSHConnector(BaseConnector):
     def make_names_data(hostname):
         yield "@ssh/{0}".format(hostname), {DATA_KEYS.hostname: hostname}, []
 
-    def make_paramiko_kwargs(self):
+    def make_paramiko_kwargs(self) -> dict[str, Any]:
         kwargs = {
             "allow_agent": False,
             "look_for_keys": False,
@@ -116,22 +116,20 @@ class SSHConnector(BaseConnector):
 
         return kwargs
 
-    def connect(self):
+    def connect(self) -> None:
         """
         Connect to a single host. Returns the SSH client if successful. Stateless by
         design so can be run in parallel.
         """
 
-        kwargs = self._make_paramiko_kwargs()
+        kwargs = self.make_paramiko_kwargs()
         logger.debug("Connecting to: %s (%r)", self.host.name, kwargs)
-
         hostname = kwargs.pop("hostname")
 
-        try:
-            # Create new client & connect to the host
-            self.client = SSHClient()
-            self.client.connect(hostname, **kwargs)
+        self.client = SSHClient()
 
+        try:
+            self.client.connect(hostname, **kwargs)
         except AuthenticationException as e:
             auth_kwargs = {}
 
@@ -278,7 +276,7 @@ class SSHConnector(BaseConnector):
 
     def _get_file(self, remote_filename: str, filename_or_io):
         with get_file_io(filename_or_io, "wb") as file_io:
-            sftp = self.get_sftp_connection(self.host)
+            sftp = self.get_sftp_connection()
             sftp.getfo(remote_filename, file_io)
 
     def get_file(
@@ -289,7 +287,7 @@ class SSHConnector(BaseConnector):
         print_output: bool = False,
         print_input: bool = False,
         **arguments: Unpack["ConnectorArguments"],
-    ):
+    ) -> bool:
         """
         Download a file from the remote host using SFTP. Supports download files
         with sudo by copying to a temporary directory with read permissions,
@@ -304,7 +302,9 @@ class SSHConnector(BaseConnector):
             temp_file = remote_temp_filename or self.state.get_temp_filename(remote_filename)
 
             # Copy the file to the tempfile location and add read permissions
-            command = StringCommand("cp", remote_filename, temp_file, "&&", "chmod", "+r")
+            command = StringCommand(
+                "cp", remote_filename, temp_file, "&&", "chmod", "+r", temp_file
+            )
 
             copy_status, output = self.run_shell_command(
                 command,
@@ -373,7 +373,7 @@ class SSHConnector(BaseConnector):
         print_output: bool = False,
         print_input: bool = False,
         **arguments: Unpack["ConnectorArguments"],
-    ):
+    ) -> bool:
         """
         Upload file-ios to the specified host using SFTP. Supports uploading files
         with sudo by uploading to a temporary directory then moving & chowning.
