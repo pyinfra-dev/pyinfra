@@ -1,3 +1,5 @@
+import re
+import socket
 from collections import defaultdict
 from os import listdir, path
 from types import GeneratorType
@@ -85,10 +87,23 @@ def make_inventory(
     cwd: Optional[str] = None,
     group_data_directories=None,
 ):
-    # First, try loading the inventory as if it's a Python import function
-    try:
+    inventory_func = None
+
+    # (Un)fortunately the CLI is pretty flexible for inventory inputs; we support a single hostname,
+    # a Python module.function import or a Python file path. All of these are kind of similar, and
+    # we want error handling to be a good user experience.
+    # Thus, we'll check for everything but also drop a warning to the console if the inventory looks
+    # like either an import or hostname but neither works.
+    if re.match("[a-zA-Z0-9\\.]+[\\.:][a-zA-Z0-9]+", inventory):
+        # First, try loading the inventory as if it's a Python import function
         inventory_func = try_import_module_attribute(inventory)
-    except (CliError, ValueError):
+        if inventory_func is None:
+            try:
+                socket.gethostbyname(inventory)
+            except socket.gaierror:
+                logger.warning(f"{inventory} is neither a valid Python import or hostname.")
+
+    if inventory_func is None:
         # If not an import, load as if from the filesystem *or* comma separated list, which also
         # loads any all.py group data files (imported functions do not load group data).
         return make_inventory_from_files(inventory, override_data, cwd, group_data_directories)
