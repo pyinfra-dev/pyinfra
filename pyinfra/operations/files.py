@@ -1176,14 +1176,6 @@ def link(
             yield file_utils.chown(path, user, group, dereference=False)
 
     else:  # edit
-        # If we have an absolute path - prepend to any non-absolute values from the fact
-        # and/or the source.
-        if os.path.isabs(path):
-            link_dirname = os.path.dirname(path)
-
-            if not os.path.isabs(target):
-                target = os.path.normpath(unix_path_join(link_dirname, target))
-
         changed = False
 
         # If the target is wrong, remove & recreate the link
@@ -1221,7 +1213,6 @@ def file(
 
     + path: name/path of the remote file
     + present: whether the file should exist
-    + assume_present: whether to assume the file exists
     + user: user to own the files
     + group: group to own the files
     + mode: permissions of the files as an integer, eg: 755
@@ -1327,7 +1318,6 @@ def directory(
 
     + path: path of the remote folder
     + present: whether the folder should exist
-    + assume_present: whether to assume the directory exists
     + user: user to own the folder
     + group: group to own the folder
     + mode: permissions of the folder
