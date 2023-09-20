@@ -196,61 +196,78 @@ def print_rows(rows):
         func(line)
 
 
+def truncate(text, max_length):
+    if len(text) <= max_length:
+        return text
+
+    text = text[: max_length - 3]
+    return f"{text}..."
+
+
 def print_meta(state: "State"):
-    group_combinations = _get_group_combinations(state.inventory.iter_activated_hosts())
     rows: List[Tuple[Callable, Union[List[str], str]]] = []
 
-    for i, (groups, hosts) in enumerate(group_combinations.items(), 1):
-        if not hosts:
-            continue
+    for op_hash in state.get_op_order():
+        hosts_in_op = list()
+        name = list(state.op_meta[op_hash].names)[0]
+        for host in state.inventory.iter_activated_hosts():
+            if op_hash in state.ops[host]:
+                if state.ops[host][op_hash].operation_meta.changed:
+                    hosts_in_op.append(host.name)
 
-        if groups:
-            rows.append(
-                (
-                    logger.info,
-                    "Groups: {0}".format(
-                        click.style(" / ".join(groups), bold=True),
-                    ),
-                ),
+        # if not hosts_in_op:
+        #     continue
+
+        rows.append(
+            (
+                logger.info,
+                [
+                    "Operation: {0}".format(truncate(name, 32)),
+                    "Hosts: {0}".format(", ".join(sorted(hosts_in_op))),
+                ],
             )
-        else:
-            rows.append((logger.info, "Ungrouped:"))
-
-        for host in hosts:
-            meta = state.meta[host]
-
-            # Didn't connect to this host?
-            if host not in state.activated_hosts:
-                rows.append(
-                    (
-                        logger.info,
-                        [
-                            host.style_print_prefix("red", bold=True),
-                            click.style("No connection", "red"),
-                        ],
-                    ),
-                )
-                continue
-
-            rows.append(
-                (
-                    logger.info,
-                    [
-                        host.print_prefix,
-                        "Operations: {0}".format(meta.ops),
-                        "Change: {0}".format(meta.ops_change),
-                        "No change: {0}".format(meta.ops_no_change),
-                    ],
-                ),
-            )
-
-        if i != len(group_combinations):
-            rows.append((lambda m: click.echo(m, err=True), []))
+        )
 
     print_rows(rows)
 
 
 def print_results(state: "State"):
+    rows: List[Tuple[Callable, Union[List[str], str]]] = []
+
+    for op_hash in state.get_op_order():
+        hosts_in_op_success = list()
+        hosts_in_op_error = list()
+        hosts_in_op_no_attempt = list()
+        name = list(state.op_meta[op_hash].names)[0]
+        for host in state.inventory.iter_activated_hosts():
+            if op_hash not in state.ops[host]:
+                continue
+
+            result = state.ops[host][op_hash].operation_meta.success
+            if result is True:
+                hosts_in_op_success.append(host.name)
+            elif result is False:
+                hosts_in_op_error.append(host.name)
+            else:
+                hosts_in_op_no_attempt.append(host.name)
+
+        # if not hosts_in_op:
+        #     continue
+
+        row = ["Operation: {0}".format(truncate(name, 32))]
+        if hosts_in_op_success:
+            row.append("Success: {0}".format(", ".join(sorted(hosts_in_op_success))))
+        if hosts_in_op_error:
+            row.append("Error: {0}".format(", ".join(sorted(hosts_in_op_error))))
+        if hosts_in_op_no_attempt:
+            row.append("No attempt: {0}".format(", ".join(sorted(hosts_in_op_no_attempt))))
+
+        rows.append((logger.info, row))
+
+    print_rows(rows)
+
+
+def get_fucked(state: "State"):
     group_combinations = _get_group_combinations(state.inventory.iter_activated_hosts())
     rows: List[Tuple[Callable, Union[List[str], str]]] = []
 

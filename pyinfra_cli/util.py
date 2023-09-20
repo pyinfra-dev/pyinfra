@@ -2,11 +2,12 @@ import json
 import os
 from datetime import datetime
 from importlib import import_module
+from importlib.util import find_spec
 from io import IOBase
 from os import path
 from pathlib import Path
 from types import CodeType, FunctionType, ModuleType
-from typing import TYPE_CHECKING, Callable
+from typing import Callable
 
 import click
 import gevent
@@ -16,13 +17,17 @@ from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.host import HostData
 from pyinfra.api.operation import OperationMeta
+from pyinfra.api.state import (
+    State,
+    StateHostMeta,
+    StateHostResults,
+    StateOperationHostData,
+    StateOperationMeta,
+)
 from pyinfra.context import ctx_config, ctx_host
 from pyinfra.progress import progress_spinner
 
 from .exceptions import CliError, UnexpectedExternalError
-
-if TYPE_CHECKING:
-    from pyinfra.api.state import State
 
 # Cache for compiled Python deploy code
 PYTHON_CODES: dict[str, CodeType] = {}
@@ -75,7 +80,16 @@ def json_encode(obj):
     if isinstance(obj, PyinfraCommand):
         return repr(obj)
 
-    if isinstance(obj, OperationMeta):
+    if isinstance(
+        obj,
+        (
+            OperationMeta,
+            StateOperationMeta,
+            StateOperationHostData,
+            StateHostMeta,
+            StateHostResults,
+        ),
+    ):
         return repr(obj)
 
     # Python types
