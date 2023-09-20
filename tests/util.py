@@ -162,8 +162,9 @@ class FakeHost:
 
     # Current context inside an @operation function
     in_op = True
+    in_callback_op = False
     current_op_hash = None
-    current_op_global_kwargs = None
+    current_op_global_arguments = None
 
     # Current context inside a @deploy function
     in_deploy = True
@@ -208,7 +209,7 @@ class FakeHost:
             fact_ordered_keys = {_sort_kwargs_str(key): value for key, value in fact.items()}
             kwargs_str = _sort_kwargs_str(get_kwargs_str(kwargs))
             if kwargs_str not in fact:
-                logger.info("Possible missing fact key: {0}".format(kwargs_str))
+                print("Possible missing fact key: {0}".format(kwargs_str))
             return fact_ordered_keys.get(kwargs_str)
         return fact
 
