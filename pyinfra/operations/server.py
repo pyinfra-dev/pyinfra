@@ -276,10 +276,10 @@ def modprobe(module, present=True, force=False):
 @operation
 def mount(
     path,
-    device=None,
-    fs_type=None,
     mounted=True,
     options=None,
+    device=None,
+    fs_type=None,
     # TODO: do we want to manage fstab here?
     # update_fstab=False,
 ):
