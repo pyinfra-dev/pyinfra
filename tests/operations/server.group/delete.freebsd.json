@@ -7,9 +7,9 @@
         "server.Groups": [
             "somegroup"
         ],
-        "server.Os": "Linux"
+        "server.Os": "FreeBSD"
     },
     "commands": [
-        "groupdel somegroup"
+        "pw groupdel -n somegroup"
     ]
 }

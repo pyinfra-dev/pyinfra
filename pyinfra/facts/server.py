@@ -424,7 +424,8 @@ class Users(FactBase):
     command = """
         for i in `cat /etc/passwd | cut -d: -f1`; do
             ENTRY=`grep ^$i: /etc/passwd`;
-            LASTLOG=`lastlog -u $i | grep ^$i | tr -s ' '`;
+            LASTLOG_RAW=`(lastlog -u $i 2> /dev/null || lastlogin $i 2> /dev/null)`;
+            LASTLOG=`echo $LASTLOG_RAW | grep ^$i | tr -s ' '`;
             echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG";
         done
     """.strip()

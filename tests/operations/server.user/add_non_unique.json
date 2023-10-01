@@ -5,6 +5,7 @@
         "ensure_home": false
     },
     "facts": {
+        "server.Os": "Linux",
         "server.Users": {},
         "server.Groups": {}
     },

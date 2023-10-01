@@ -6,6 +6,7 @@
         "delete_keys": true
     },
     "facts": {
+        "server.Os": "Linux",
         "server.Users": {
             "someuser": {
                 "home": "homedir",
