@@ -278,8 +278,10 @@ def mount(
     path,
     mounted=True,
     options=None,
+    device=None,
+    fs_type=None,
     # TODO: do we want to manage fstab here?
-    # update_fstab=False, device=None, fs_type=None,
+    # update_fstab=False,
 ):
     """
     Manage mounted filesystems.
@@ -296,7 +298,6 @@ def mount(
         This operation does not attempt to modify the on disk fstab file - for
         that you should use the `files.line operation <./files.html#files-line>`_.
     """
-
     options = options or []
     options_string = ",".join(options)
 
@@ -305,10 +306,17 @@ def mount(
 
     # Want mount but don't have?
     if mounted and not is_mounted:
-        yield "mount{0} {1}".format(
-            " -o {0}".format(options_string) if options_string else "",
-            path,
-        )
+        args = []
+        if fs_type:
+            args.extend(["-t", fs_type])
+        if options_string:
+            args.extend(["-o", options_string])
+        if device:
+            args.append(device)
+        args.append(path)
+
+        yield StringCommand("mount", *args)
+        # Should we update facts with fs_type, device, etc?
         mounts[path] = {"options": options}
 
     # Want no mount but mounted?
