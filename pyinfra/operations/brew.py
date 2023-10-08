@@ -219,7 +219,6 @@ def tap(src=None, present=True, url=None):
 
     if already_tapped:
         yield "brew untap {0}".format(src)
-        taps.remove(src)
         return
 
     if not present:
@@ -232,5 +231,4 @@ def tap(src=None, present=True, url=None):
         cmd = " ".join([cmd, url])
 
     yield cmd
-    taps.append(src)
     return

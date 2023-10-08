@@ -419,11 +419,6 @@ def directory(
         #            yield chown(path, user, group, recursive=recursive)
         #
         # Somewhat bare fact, should flesh out more
-        host.create_fact(
-            Date,
-            kwargs={"path": path},
-            data={"type": "directory"},
-        )
 
     # It exists and we don't want it
     elif (assume_present or info) and not present:
@@ -536,16 +531,8 @@ def link(
         # if user or group:
         #    yield chown(path, user, group, dereference=False)
 
-        # host.create_fact(
-        #    WindowsLink,
-        #    kwargs={'name': path},
-        #    data={'link_target': target, 'group': group, 'user': user},
-        # )
-
     # It exists and we don't want it
     elif (assume_present or info) and not present:
         yield remove_cmd
-        # host.delete_fact(WindowsLink, kwargs={'name': path})
-
     else:
         host.noop("link {0} already exists and force=False".format(path))

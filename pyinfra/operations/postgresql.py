@@ -150,7 +150,6 @@ def role(
                 host=psql_host,
                 port=psql_port,
             )
-            roles.pop(role)
         else:
             host.noop("postgresql role {0} does not exist".format(role))
         return
@@ -183,11 +182,6 @@ def role(
             host=psql_host,
             port=psql_port,
         )
-        roles[role] = {
-            "super": superuser,
-            "createdb": createdb,
-            "createrole": createrole,
-        }
     else:
         host.noop("postgresql role {0} exists".format(role))
 
@@ -262,7 +256,6 @@ def database(
                 host=psql_host,
                 port=psql_port,
             )
-            current_databases.pop(database)
         else:
             host.noop("postgresql database {0} does not exist".format(database))
         return
@@ -290,14 +283,6 @@ def database(
             host=psql_host,
             port=psql_port,
         )
-        current_databases[database] = {
-            "template": template,
-            "encoding": encoding,
-            "lc_collate": lc_collate,
-            "lc_ctype": lc_ctype,
-            "tablespace": tablespace,
-            "connection_limit": connection_limit,
-        }
     else:
         host.noop("postgresql database {0} exists".format(database))
 
