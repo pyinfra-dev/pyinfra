@@ -192,11 +192,9 @@ def tap(src, present=True):
             host.noop("tap {0} already exists".format(src))
         else:
             yield "brew tap {0}".format(src)
-            taps.append(src)
 
     elif not present:
         if is_tapped:
             yield "brew untap {0}".format(src)
-            taps.remove(src)
         else:
             host.noop("tap {0} does not exist".format(src))

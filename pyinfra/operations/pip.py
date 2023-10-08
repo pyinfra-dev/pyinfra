@@ -72,12 +72,6 @@ def virtualenv(
             command.append(path)
 
             yield " ".join(command)
-
-            host.create_fact(
-                File,
-                kwargs={"path": activate_script_path},
-                data={"user": None, "group": None},
-            )
         else:
             host.noop("virtualenv {0} exists".format(path))
 

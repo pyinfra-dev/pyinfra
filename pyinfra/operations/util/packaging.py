@@ -149,20 +149,6 @@ def ensure_packages(
             " ".join([shlex.quote(pkg) for pkg in joined_packages]),
         )
 
-        for package in diff_packages:  # add/remove from current packages
-            pkg_name = _package_name(package)
-            version = "unknown"
-            if isinstance(package, list):
-                version = package[1]
-
-            if present:
-                current_packages[pkg_name] = [version]
-                current_packages.update(diff_expanded_packages.get(pkg_name, {}))
-            else:
-                current_packages.pop(pkg_name, None)
-                for name in diff_expanded_packages.get(pkg_name, {}):
-                    current_packages.pop(name, None)
-
     if latest and upgrade_command and upgrade_packages:
         yield "{0} {1}".format(
             upgrade_command,
@@ -199,8 +185,6 @@ def ensure_rpm(state, host, files, source, present, package_manager_command):
         # If we had info, always install
         if info:
             yield "rpm -i {0}".format(source)
-            host.create_fact(RpmPackage, kwargs={"name": info["name"]}, data=info)
-
         # This happens if we download the package mid-deploy, so we have no info
         # but also don't know if it's installed. So check at runtime, otherwise
         # the install will fail.
@@ -210,8 +194,6 @@ def ensure_rpm(state, host, files, source, present, package_manager_command):
     # Package exists but we don't want?
     elif exists and not present:
         yield "{0} remove -y {1}".format(package_manager_command, info["name"])
-        host.delete_fact(RpmPackage, kwargs={"name": info["name"]})
-
     else:
         host.noop(
             "rpm {0} is {1}".format(

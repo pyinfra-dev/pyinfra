@@ -45,7 +45,6 @@ def keyscan(hostname, force=False, port=22):
         pattern=hostname,
     )
 
-    did_keyscan = False
     keyscan_command = "ssh-keyscan -p {0} {1} >> {2}/.ssh/known_hosts".format(
         port,
         hostname,
@@ -54,22 +53,13 @@ def keyscan(hostname, force=False, port=22):
 
     if not hostname_present:
         yield keyscan_command
-        did_keyscan = True
 
     elif force:
         yield "ssh-keygen -R {0}".format(hostname)
         yield keyscan_command
-        did_keyscan = True
 
     else:
         host.noop("host key for {0} already exists".format(hostname))
-
-    if did_keyscan:
-        host.create_fact(
-            FindInFile,
-            kwargs={"path": "{0}/.ssh/known_hosts".format(homedir), "pattern": hostname},
-            data=["{0} unknown unknown".format(hostname)],
-        )
 
 
 @operation(is_idempotent=False)
@@ -221,9 +211,4 @@ def download(
         connection_target,
         filename,
         local_filename,
-    )
-    host.create_fact(
-        File,
-        kwargs={"path": local_filename},
-        data={"mode": None, "group": None, "user": user, "mtime": None},
     )

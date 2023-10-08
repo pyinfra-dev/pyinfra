@@ -162,21 +162,9 @@ def user(
                 host=mysql_host,
                 port=mysql_port,
             )
-            current_users.pop(user_host)
         else:
             host.noop("mysql user {0}@{1} does not exist".format(user, user_hostname))
         return
-
-    new_or_updated_user_fact = {
-        "ssl_type": "ANY" if require == "SSL" else require,
-        "ssl_cipher": require_cipher,
-        "x509_issuer": require_issuer,
-        "x509_subject": require_subject,
-        "max_user_connections": max_connections,
-        "max_questions": max_queries_per_hour,
-        "max_updates": max_updates_per_hour,
-        "max_connections": max_connections_per_hour,
-    }
 
     if present and not is_present:
         sql_bits = ['CREATE USER "{0}"@"{1}"'.format(user, user_hostname)]
@@ -223,8 +211,6 @@ def user(
             host=mysql_host,
             port=mysql_port,
         )
-
-        current_users[user_host] = new_or_updated_user_fact
 
     if present and is_present:
         current_user = current_users.get(user_host)
@@ -277,7 +263,6 @@ def user(
                 host=mysql_host,
                 port=mysql_port,
             )
-            current_user.update(new_or_updated_user_fact)
         else:
             host.noop("mysql user {0}@{1} exists".format(user, user_hostname))
 
@@ -359,7 +344,6 @@ def database(
                 host=mysql_host,
                 port=mysql_port,
             )
-            current_databases.pop(database)
         else:
             host.noop("mysql database {0} does not exist".format(database))
         return
@@ -381,10 +365,6 @@ def database(
             host=mysql_host,
             port=mysql_port,
         )
-        current_databases[database] = {
-            "collate": collate,
-            "charset": charset,
-        }
     else:
         host.noop("mysql database {0} exists".format(database))
 
@@ -503,9 +483,6 @@ def privileges(
     privileges_to_revoke = existing_privileges.difference(privileges)
     # Find / grant any privileges that we want but do not exist
     privileges_to_grant = privileges - existing_privileges
-
-    user_grants[database_table] -= privileges_to_revoke
-    user_grants[database_table].update(privileges_to_grant)
 
     if privileges_to_grant:
         # We will grant something on this table, no need to revoke "USAGE" as it will be overridden

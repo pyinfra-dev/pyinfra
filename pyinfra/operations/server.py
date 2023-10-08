@@ -253,14 +253,10 @@ def modprobe(module, present=True, force=False):
     # Module is loaded and we don't want it?
     if not present and present_mods:
         yield "modprobe{0} -r -a {1}".format(args, " ".join(present_mods))
-        for mod in present_mods:
-            modules.pop(mod)
 
     # Module isn't loaded and we want it?
     elif present and missing_mods:
         yield "modprobe{0} -a {1}".format(args, " ".join(missing_mods))
-        for mod in missing_mods:
-            modules[mod] = {}
 
     else:
         host.noop(
@@ -316,13 +312,10 @@ def mount(
         args.append(path)
 
         yield StringCommand("mount", *args)
-        # Should we update facts with fs_type, device, etc?
-        mounts[path] = {"options": options}
 
     # Want no mount but mounted?
     elif mounted is False and is_mounted:
         yield "umount {0}".format(path)
-        mounts.pop(path)
 
     # Want mount and is mounted! Check the options
     elif is_mounted and mounted and options:
@@ -330,7 +323,6 @@ def mount(
         needed_options = set(options) - set(mounted_options)
         if needed_options:
             yield "mount -o remount,{0} {1}".format(options_string, path)
-            mounts[path]["options"] = options
 
     else:
         host.noop(
@@ -373,7 +365,6 @@ def hostname(hostname, hostname_file=None):
     if host.get_fact(Which, command="hostnamectl"):
         if current_hostname != hostname:
             yield "hostnamectl set-hostname {0}".format(hostname)
-            host.create_fact(Hostname, data=hostname)
         else:
             host.noop("hostname is set")
         return
@@ -388,7 +379,6 @@ def hostname(hostname, hostname_file=None):
 
     if current_hostname != hostname:
         yield "hostname {0}".format(hostname)
-        host.create_fact(Hostname, data=hostname)
     else:
         host.noop("hostname is set")
 
@@ -436,7 +426,6 @@ def sysctl(
     existing_value = existing_sysctls.get(key)
     if not existing_value or existing_value != value:
         yield "sysctl {0}='{1}'".format(key, string_value)
-        existing_sysctls[key] = value
     else:
         host.noop("sysctl {0} is set to {1}".format(key, string_value))
 
@@ -742,20 +731,6 @@ def crontab(
 
         # Finally, use the tempfile to write a new crontab
         yield "crontab {0} {1}".format(" ".join(crontab_args), temp_filename)
-
-        # Update the crontab fact
-        if present:
-            crontab[command] = {
-                "special_time": special_time,
-                "minute": minute,
-                "hour": hour,
-                "month": month,
-                "day_of_week": day_of_week,
-                "day_of_month": day_of_month,
-                "comments": [cron_name] if cron_name else [],
-            }
-        else:
-            crontab.pop(command)
     else:
         host.noop(
             "crontab {0} {1}".format(
@@ -805,7 +780,6 @@ def group(group, present=True, system=False, gid=None):
             yield "pw groupdel -n {0}".format(group)
         else:
             yield "groupdel {0}".format(group)
-        groups.remove(group)
 
     # Group doesn't exist and we want it?
     elif present and not is_present:
@@ -831,8 +805,7 @@ def group(group, present=True, system=False, gid=None):
         group_add_command = "groupadd"
         if os_type == "FreeBSD":
             group_add_command = "pw groupadd"
-        yield "grep '^{0}:' /etc/group || {2} {1}".format(group, " ".join(args), group_add_command)
-        groups.append(group)
+        yield "{0} {1}".format(group_add_command, " ".join(args))
 
 
 @operation
@@ -1021,7 +994,6 @@ def user(
                 yield "pw userdel -n {0}".format(user)
             else:
                 yield "userdel {0}".format(user)
-            users.pop(user)
         return
 
     # User doesn't exist but we want them?
@@ -1066,28 +1038,20 @@ def user(
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
-
         add_user_command = "useradd"
         if os_type == "FreeBSD":
             add_user_command = "pw useradd"
-            yield "grep '^{2}:' /etc/passwd || {0} -n {2} {1}".format(
+            yield "{0} -n {2} {1}".format(
                 add_user_command,
                 " ".join(args),
                 user,
             )
         else:
-            yield "grep '^{2}:' /etc/passwd || {0} {1} {2}".format(
+            yield "{0} {1} {2}".format(
                 add_user_command,
                 " ".join(args),
                 user,
             )
-        users[user] = {
-            "comment": comment,
-            "home": home,
-            "shell": shell,
-            "group": group,
-            "groups": groups,
-        }
 
     # User exists and we want them, check home/shell/keys
     else:
