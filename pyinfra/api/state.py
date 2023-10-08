@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from contextlib import contextmanager
 from dataclasses import dataclass
 from graphlib import CycleError, TopologicalSorter
@@ -251,15 +253,6 @@ class State:
             host.init(self)
 
         self.initialised = True
-
-    def to_dict(self):
-        return {
-            "op_order": self.get_op_order(),
-            "ops": self.ops,
-            "facts": self.facts,
-            "meta": self.meta,
-            "results": self.results,
-        }
 
     def should_check_for_changes(self):
         return self.check_for_changes

@@ -437,24 +437,24 @@ def packages(
     if upgrade:
         yield from _upgrade()
 
-    install_command = ["install"]
+    install_command_args = ["install"]
     if no_recommends is True:
-        install_command.append("--no-install-recommends")
+        install_command_args.append("--no-install-recommends")
     if allow_downgrades:
-        install_command.append("--allow-downgrades")
+        install_command_args.append("--allow-downgrades")
 
-    upgrade_command = " ".join(install_command)
+    upgrade_command = " ".join(install_command_args)
 
     if extra_install_args:
-        install_command.append(extra_install_args)
+        install_command_args.append(extra_install_args)
 
-    install_command = " ".join(install_command)
+    install_command = " ".join(install_command_args)
 
-    uninstall_command = ["remove"]
+    uninstall_command_args = ["remove"]
     if extra_uninstall_args:
-        uninstall_command.append(extra_uninstall_args)
+        uninstall_command_args.append(extra_uninstall_args)
 
-    uninstall_command = " ".join(uninstall_command)
+    uninstall_command = " ".join(uninstall_command_args)
 
     # Compare/ensure packages are present/not
     yield from ensure_packages(

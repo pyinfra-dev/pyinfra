@@ -1,8 +1,9 @@
 import os
 from tempfile import mkstemp
-from typing import TYPE_CHECKING, Optional, Unpack
+from typing import TYPE_CHECKING, Optional
 
 import click
+from typing_extensions import Unpack
 
 from pyinfra import local, logger
 from pyinfra.api import QuoteString, StringCommand

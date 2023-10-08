@@ -48,7 +48,7 @@ class GpgFactBase(FactBase):
 
             elif current_subkey or current_key:
                 target = current_subkey or current_key
-
+                assert target is not None
                 if bits[0] == "fpr":
                     target["fingerprint"] = bits[9]  # fingerprint = field 10
                 elif bits[0] == "uid":

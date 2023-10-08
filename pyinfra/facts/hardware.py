@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 
 from pyinfra.api import FactBase, ShortFactBase
@@ -132,7 +134,7 @@ iproute2_regexes = [
 
 
 def _parse_regexes(regexes, lines):
-    data = {
+    data: dict[str, dict] = {
         "ipv4": {},
         "ipv6": {},
     }
@@ -244,6 +246,7 @@ class NetworkDevices(FactBase):
 
         # Handle any left over matches
         if matches:
+            assert handler is not None
             devices[matches.group(1)] = handler(line_buffer)
 
         return devices

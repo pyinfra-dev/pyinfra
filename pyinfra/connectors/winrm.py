@@ -203,9 +203,9 @@ class WinRMConnector(BaseConnector):
 
         # we use our own subclassed session that allows for env setting from open_shell.
         if shell_executable in ["cmd"]:
-            response = self.host.connection.run_cmd(tmp_command, env=env)
+            response = self.host.connection.run_cmd(tmp_command, env=env)  # type: ignore
         else:
-            response = self.host.connection.run_ps(tmp_command, env=env)
+            response = self.host.connection.run_ps(tmp_command, env=env)  # type: ignore
 
         return_code = response.status_code
         logger.debug("response:%s", response)

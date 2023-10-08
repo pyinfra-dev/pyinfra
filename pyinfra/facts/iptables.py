@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pyinfra.api import FactBase
 
 # Mapping for iptables code arguments to variable names
@@ -27,16 +29,16 @@ def parse_iptables_rule(line):
 
     bits = line.split()
 
-    definition = {}
+    definition: dict = {}
 
     key = None
-    args = []
+    args: list[str] = []
     not_arg = False
 
     def add_args():
         arg_string = " ".join(args)
 
-        if key in IPTABLES_ARGS:
+        if key and key in IPTABLES_ARGS:
             definition_key = "not_{0}".format(IPTABLES_ARGS[key]) if not_arg else IPTABLES_ARGS[key]
             definition[definition_key] = arg_string
         else:

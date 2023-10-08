@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import platform
 import re
@@ -155,22 +157,22 @@ def print_support_info():
 
 def print_rows(rows):
     # Go through the rows and work out all the widths in each column
-    column_widths = []
+    row_column_widths: list[list[int]] = []
 
     for _, columns in rows:
         if isinstance(columns, str):
             continue
 
         for i, column in enumerate(columns):
-            if i >= len(column_widths):
-                column_widths.append([])
+            if i >= len(row_column_widths):
+                row_column_widths.append([])
 
             # Length of the column (with ansi codes removed)
             width = len(_strip_ansi(column.strip()))
-            column_widths[i].append(width)
+            row_column_widths[i].append(width)
 
     # Get the max width of each column and add 4 padding spaces
-    column_widths = [max(widths) + 4 for widths in column_widths]
+    column_widths = [max(widths) + 4 for widths in row_column_widths]
 
     # Now print each column, keeping text justified to the widths above
     for func, columns in rows:

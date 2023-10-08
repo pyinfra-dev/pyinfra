@@ -258,7 +258,7 @@ def ensure_yum_repo(
 
     repo_lines.append("")
     repo = "\n".join(repo_lines)
-    repo = StringIO(repo)
+    repo_file = StringIO(repo)
 
     # Ensure this is the file on the server
-    yield from files.put(repo, filename)
+    yield from files.put(repo_file, filename)

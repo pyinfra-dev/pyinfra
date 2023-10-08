@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from collections import defaultdict
 
@@ -94,7 +96,7 @@ class SEPorts(FactBase):
         return "semanage port -ln"
 
     def process(self, output):
-        labels = defaultdict(dict)
+        labels: dict[str, dict] = defaultdict(dict)
         for line in output:
             m = SEPorts._regex.match(line)
             if m is None:  # something went wrong

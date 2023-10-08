@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 import json
+
+from pyinfra.api.facts import FactBase
 
 from .exceptions import CliError
 from .util import parse_cli_arg, try_import_module_attribute
@@ -32,7 +36,7 @@ def get_func_and_args(commands):
 
 
 def get_facts_and_args(commands):
-    facts = []
+    facts: list[FactBase] = []
 
     current_fact = None
 

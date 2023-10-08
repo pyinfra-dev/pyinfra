@@ -75,7 +75,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
     yield FunctionCommand(remove_any_askpass_file, (), {})
 
-    yield StringCommand("reboot", success_exit_codes=[0, -1])  # -1 being error/disconnected
+    yield StringCommand("reboot", _success_exit_codes=[0, -1])  # -1 being error/disconnected
 
     def wait_and_reconnect(state, host):  # pragma: no cover
         sleep(delay)

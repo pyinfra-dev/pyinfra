@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Iterator
 
@@ -38,8 +40,8 @@ class Inventory:
     def __init__(self, names_data, override_data=None, **groups):
         # Setup basics
         self.groups = defaultdict(list)  # lists of Host objects
-        self.host_data = defaultdict(dict)  # dict of name -> data
-        self.group_data = defaultdict(dict)  # dict of name -> data
+        self.host_data: dict[str, dict] = defaultdict(dict)  # dict of name -> data
+        self.group_data: dict[str, dict] = defaultdict(dict)  # dict of name -> data
         self.override_data = override_data or {}
 
         names, data = names_data
@@ -241,13 +243,3 @@ class Inventory:
             data.update(self.get_group_data(group))
 
         return data
-
-    def get_deploy_data(self):
-        """
-        Gets any default data attached to the current deploy, if any.
-        """
-
-        if self.state and self.state.deploy_data:
-            return self.state.deploy_data
-
-        return {}

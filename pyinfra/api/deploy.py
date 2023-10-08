@@ -8,26 +8,16 @@ from functools import wraps
 from typing import TYPE_CHECKING, Any, Callable, Union
 
 import pyinfra
-from pyinfra import context, logger
+from pyinfra import context
 from pyinfra.context import ctx_host, ctx_state
 
 from .arguments import pop_global_arguments
 from .exceptions import PyinfraError
 from .host import Host
-from .util import get_args_kwargs_spec, get_call_location, memoize
+from .util import get_call_location
 
 if TYPE_CHECKING:
     from pyinfra.api.state import State
-
-
-@memoize
-def show_state_host_arguments_warning(call_location):
-    logger.warning(
-        (
-            "{0}:\n\tLegacy deploy function detected! Deploys should no longer define "
-            "`state` and `host` arguments."
-        ).format(call_location),
-    )
 
 
 def add_deploy(state: "State", deploy_func: Callable[..., Any], *args, **kwargs):
@@ -79,30 +69,9 @@ def deploy(func_or_name: Union[Callable[..., Any], str], data_defaults=None, _ca
     # Actually decorate!
     func = func_or_name
 
-    # Check whether an operation is "legacy" - ie contains state=None, host=None kwargs
-    # TODO: remove this in v3
-    is_legacy = False
-    args, kwargs = get_args_kwargs_spec(func)
-    if all(key in kwargs and kwargs[key] is None for key in ("state", "host")):
-        show_state_host_arguments_warning(_call_location or get_call_location())
-        is_legacy = True
-    func.is_legacy = is_legacy  # type: ignore
-
     @wraps(func)
     def decorated_func(*args, **kwargs):
         deploy_kwargs, _ = pop_global_arguments(kwargs)
-
-        # If this is a legacy operation function (ie - state & host arg kwargs), ensure that state
-        # and host are included as kwargs.
-        if func.is_legacy:
-            if "state" not in kwargs:
-                kwargs["state"] = context.state
-            if "host" not in kwargs:
-                kwargs["host"] = context.host
-        # If not legacy, pop off any state/host kwargs that may come from legacy @deploy functions
-        else:
-            kwargs.pop("state", None)
-            kwargs.pop("host", None)
 
         # Name the deploy
         deploy_name = getattr(func, "deploy_name", func.__name__)

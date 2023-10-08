@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import traceback
 from itertools import product
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 import click
 import gevent
@@ -9,6 +11,7 @@ from paramiko import SSHException
 
 import pyinfra
 from pyinfra import logger
+from pyinfra.connectors.util import CommandOutput
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
@@ -34,7 +37,7 @@ def show_pre_or_post_condition_warning(condition_name):
     logger.warning("The `{0}` argument is in beta!".format(condition_name))
 
 
-def run_host_op(state: "State", host: "Host", op_hash):
+def run_host_op(state: "State", host: "Host", op_hash) -> Optional[bool]:
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
     if op_hash not in state.ops[host]:
@@ -61,7 +64,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
 
     def _run_shell_command(command, connector_arguments):
         status = False
-        combined_output_lines = []
+        combined_output_lines = CommandOutput([])
 
         try:
             status, combined_output_lines = command.execute(state, host, connector_arguments)
@@ -110,7 +113,7 @@ def run_host_op(state: "State", host: "Host", op_hash):
     else:
         host.nested_executing_op_hash = op_hash
 
-    return_status = False
+    return_status: Optional[bool] = False
     did_error = False
     executed_commands = 0
     commands = []

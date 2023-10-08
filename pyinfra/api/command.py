@@ -1,9 +1,10 @@
 import shlex
 from inspect import getfullargspec
 from string import Formatter
-from typing import TYPE_CHECKING, Callable, Union, Unpack
+from typing import TYPE_CHECKING, Callable, Union
 
 import gevent
+from typing_extensions import Unpack
 
 from pyinfra.context import ctx_config, ctx_host
 

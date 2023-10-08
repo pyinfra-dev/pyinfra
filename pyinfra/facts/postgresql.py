@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pyinfra.api import FactBase, MaskString, QuoteString, StringCommand
 from pyinfra.api.util import try_int
 
@@ -12,7 +14,7 @@ def make_psql_command(
     port=None,
     executable="psql",
 ):
-    target_bits = []
+    target_bits: list[str] = []
 
     if password:
         target_bits.append(MaskString('PGPASSWORD="{0}"'.format(password)))
@@ -45,6 +47,7 @@ def make_execute_psql_command(command, **psql_kwargs):
 class PostgresqlFactBase(FactBase):
     abstract = True
 
+    psql_command: str
     requires_command = "psql"
 
     def command(

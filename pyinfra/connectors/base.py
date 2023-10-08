@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import abc
 from dataclasses import dataclass
 from io import IOBase
-from typing import TYPE_CHECKING, Iterable, Iterator, Optional, Union, Unpack
+from typing import TYPE_CHECKING, Iterable, Iterator, Optional, Union
+
+from typing_extensions import Unpack
 
 if TYPE_CHECKING:
     from pyinfra.api.arguments import ConnectorArguments

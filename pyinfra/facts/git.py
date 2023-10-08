@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 
 from pyinfra.api.facts import FactBase
@@ -29,7 +31,7 @@ class GitConfig(FactBase):
 
     @staticmethod
     def process(output):
-        items = {}
+        items: dict[str, list[str]] = {}
 
         for line in output:
             key, value = line.split("=", 1)

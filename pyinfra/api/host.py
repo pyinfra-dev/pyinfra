@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Generator, Optional, Tuple, Union
 
@@ -92,7 +94,7 @@ class Host:
     in_op: bool = False
     in_callback_op: bool = False
     current_op_hash: Optional[str] = None
-    current_op_global_arguments: "AllArguments"
+    current_op_global_arguments: Optional["AllArguments"]
 
     # Current context inside a @deploy function (op gen stage)
     in_deploy: bool = False

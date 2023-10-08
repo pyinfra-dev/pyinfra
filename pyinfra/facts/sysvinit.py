@@ -1,4 +1,5 @@
 import re
+from typing import Optional
 
 from pyinfra.api import FactBase
 
@@ -35,19 +36,16 @@ class InitdStatus(FactBase):
         for line in output:
             matches = re.match(self.regex, line)
             if matches:
-                status = int(matches.group(2))
+                intstatus = int(matches.group(2))
+                status: Optional[bool] = None
 
                 # Exit code 0 = OK/running
-                if status == 0:
+                if intstatus == 0:
                     status = True
 
                 # Exit codes 1-3 = DOWN/not running
-                elif status < 4:
+                elif intstatus < 4:
                     status = False
-
-                # Exit codes 4+ = unknown
-                else:
-                    status = None
 
                 services[matches.group(1)] = status
 

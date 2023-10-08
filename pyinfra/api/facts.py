@@ -8,10 +8,12 @@ it's possible to call facts on hosts out of context (ie give me the IP of this
 other host B while I operate on this host A).
 """
 
+from __future__ import annotations
+
 import re
 from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Any, Callable, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Union
 
 import click
 import gevent
@@ -142,7 +144,7 @@ def _handle_fact_kwargs(state, host, cls, args, kwargs):
     executor_kwargs = _get_executor_kwargs(
         state,
         host,
-        override_kwargs=override_kwargs,
+        override_kwargs=override_kwargs,  # type: ignore[arg-type]
         override_kwarg_keys=override_kwarg_keys,
     )
 
@@ -239,7 +241,7 @@ def _get_fact(
 
     ignore_errors = (
         host.current_op_global_arguments["_ignore_errors"]
-        if host.in_op
+        if host.in_op and host.current_op_global_arguments
         else state.config.IGNORE_ERRORS
     )
 
@@ -336,7 +338,7 @@ def get_host_fact(
     state: "State",
     host: "Host",
     cls,
-    args: Optional[list] = None,
+    args: Optional[Iterable] = None,
     kwargs: Optional[dict] = None,
 ) -> Any:
     return get_fact(state, host, cls, args=args, kwargs=kwargs)
