@@ -1,6 +1,0 @@
-{
-    "arg": "systeminfo.exe",
-    "command": "where systeminfo.exe",
-    "output": ["C:\\Windows\\System32\\systeminfo.exe", ""],
-    "fact": "C:\\Windows\\System32\\systeminfo.exe"
-}

@@ -1,5 +1,0 @@
-{
-    "command": "systeminfo | findstr /c:\"System Type:\"",
-    "output": ["System Type:               x64-based PC", ""],
-    "fact": "x64-based PC"
-}

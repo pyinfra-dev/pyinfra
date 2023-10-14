@@ -1,6 +1,0 @@
-{
-    "arg": "some_non_existing_file",
-    "command": "where some_non_existing_file",
-    "output": [""],
-    "fact": ""
-}
