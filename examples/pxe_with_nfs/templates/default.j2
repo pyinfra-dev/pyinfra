@@ -1,9 +1,0 @@
-default vesamenu.c32
-
-MENU TITLE Boot Menu
-
-label ubuntu1804 install
-menu label ^ubuntu install
-menu default
-kernel ubuntu1804/vmlinuz
-append initrd=ubuntu1804/initrd boot=casper netboot=nfs nfsroot={{ pxe_server }}:/netboot/nfs/ubuntu1804/ ip=dhcp

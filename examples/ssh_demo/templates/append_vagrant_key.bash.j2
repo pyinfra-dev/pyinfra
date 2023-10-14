@@ -1,7 +1,0 @@
-#!/bin/bash
-grep vagrant@example.com /home/vagrant/.ssh/authorized_keys
-if [ $? -ne 0 ];
-then
-  cat /home/vagrant/.ssh/tmp_authorized_key >> /home/vagrant/.ssh/authorized_keys
-  rm /home/vagrant/.ssh/tmp_authorized_key
-fi
