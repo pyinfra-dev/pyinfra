@@ -9,6 +9,6 @@
         "server.Os": "FreeBSD"
     },
     "commands": [
-        "grep '^somegroup:' /etc/group || pw groupadd -n somegroup -g 1000"
+        "pw groupadd -n somegroup -g 1000"
     ]
 }

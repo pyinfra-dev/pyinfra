@@ -279,13 +279,13 @@ class TestOperationsApi(PatchSSHTestCase):
 
         assert (state.results[somehost].success_ops + state.results[anotherhost].success_ops) == 1
 
+    @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
     def test_rsync_op(self):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync"):
-            add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
 
         assert len(state.get_op_order()) == 1
 
@@ -303,13 +303,13 @@ class TestOperationsApi(PatchSSHTestCase):
             print_prefix=inventory.get_host("somehost").print_prefix,
         )
 
+    @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
     def test_rsync_op_with_strict_host_key_checking_disabled(self):
         inventory = make_inventory(hosts=(("somehost", {"ssh_strict_host_key_checking": "no"}),))
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync"):
-            add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
 
         assert len(state.get_op_order()) == 1
 
@@ -327,6 +327,7 @@ class TestOperationsApi(PatchSSHTestCase):
             print_prefix=inventory.get_host("somehost").print_prefix,
         )
 
+    @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
     def test_rsync_op_with_strict_host_key_checking_disabled_and_custom_config_file(self):
         inventory = make_inventory(
             hosts=(
@@ -342,8 +343,7 @@ class TestOperationsApi(PatchSSHTestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync"):
-            add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
 
         assert len(state.get_op_order()) == 1
 
@@ -362,6 +362,7 @@ class TestOperationsApi(PatchSSHTestCase):
             print_prefix=inventory.get_host("somehost").print_prefix,
         )
 
+    @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
     def test_rsync_op_with_sanitized_custom_config_file(self):
         inventory = make_inventory(
             hosts=(("somehost", {"ssh_config_file": "/home/me/ssh_test_config && echo hi"}),)
@@ -369,8 +370,7 @@ class TestOperationsApi(PatchSSHTestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync"):
-            add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
 
         assert len(state.get_op_order()) == 1
 
