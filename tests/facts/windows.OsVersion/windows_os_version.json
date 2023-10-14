@@ -1,5 +1,0 @@
-{
-    "command": "systeminfo | findstr /c:\"OS Version:\"",
-    "output": ["OS Version:                10.0.17763 N/A Build 17763", "BIOS Version:              Phoenix Technologies LTD 6.00, 7/29/2019", ""],
-    "fact": "10.0.17763 N/A Build 17763"
-}
