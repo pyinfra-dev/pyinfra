@@ -12,7 +12,7 @@ from . import files
 from .util.service import handle_service_control
 
 
-@operation
+@operation()
 def service(
     service,
     running=True,
@@ -53,7 +53,7 @@ def service(
     # there's no override file.
     if enabled is True:
         yield from files.file(
-            "/etc/init/{0}.override".format(service),
+            path="/etc/init/{0}.override".format(service),
             present=False,
         )
 

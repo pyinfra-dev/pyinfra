@@ -8,7 +8,7 @@ from pyinfra.api.exceptions import OperationError
 from pyinfra.facts.iptables import Ip6tablesChains, Ip6tablesRules, IptablesChains, IptablesRules
 
 
-@operation
+@operation()
 def chain(
     chain,
     present=True,
@@ -56,7 +56,7 @@ def chain(
                 yield "{0} -P {1} {2}".format(command, chain, policy)
 
 
-@operation
+@operation()
 def rule(
     chain,
     jump,

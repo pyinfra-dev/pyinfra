@@ -11,11 +11,11 @@ mypy pyinfra/api/operation.pyi
 # operation calls.
 
 for file in $(ls tests/typing/valid); do
-    mypy tests/typing/valid/$file > /dev/null || (echo "FAIL VALID $file" && exit 1)
+    mypy tests/typing/valid/$file || (echo "FAIL VALID $file" && exit 1)
     echo "OK VALID $file"
 done
 
 for file in $(ls tests/typing/invalid); do
-    mypy tests/typing/invalid/$file > /dev/null && (echo "FAIL INVALID $file" && exit 1)
+    mypy tests/typing/invalid/$file && (echo "FAIL INVALID $file" && exit 1)
     echo "OK INVALID $file"
 done

@@ -11,7 +11,7 @@ from pyinfra.facts.server import Arch, Os, OsVersion, Which
 from .util.packaging import ensure_packages
 
 
-@operation
+@operation()
 def packages(packages=None, present=True, pkg_path=None):
     """
     Install/remove/update pkg packages. This will use ``pkg ...`` where available

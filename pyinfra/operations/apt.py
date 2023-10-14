@@ -36,7 +36,7 @@ def noninteractive_apt(command, force=False):
     return " ".join(args)
 
 
-@operation
+@operation()
 def key(src=None, keyserver=None, keyid=None):
     """
     Add apt gpg keys with ``apt-key``.
@@ -102,7 +102,7 @@ def key(src=None, keyserver=None, keyid=None):
             )
 
 
-@operation
+@operation()
 def repo(src, present=True, filename=None):
     """
     Add/remove apt repositories.
@@ -139,16 +139,16 @@ def repo(src, present=True, filename=None):
     # Doesn't exist and we want it
     if not is_present and present:
         yield from files.line(
-            filename,
-            src,
+            path=filename,
+            line=src,
             escape_regex_characters=True,
         )
 
     # Exists and we don't want it
     elif is_present and not present:
         yield from files.line(
-            filename,
-            src,
+            path=filename,
+            line=src,
             present=False,
             escape_regex_characters=True,
         )
@@ -191,7 +191,7 @@ def ppa(src, present=True):
         yield 'apt-add-repository -y --remove "{0}"'.format(src)
 
 
-@operation
+@operation()
 def deb(src, present=True, force=False):
     """
     Add/remove ``.deb`` file packages.
@@ -227,7 +227,7 @@ def deb(src, present=True, force=False):
         temp_filename = state.get_temp_filename(src)
 
         # Ensure it's downloaded
-        yield from files.download(src, temp_filename)
+        yield from files.download(src=src, dest=temp_filename)
 
         # Override the source with the downloaded file
         src = temp_filename
@@ -368,7 +368,7 @@ def dist_upgrade():
     yield noninteractive_apt("dist-upgrade")
 
 
-@operation
+@operation()
 def packages(
     packages=None,
     present=True,

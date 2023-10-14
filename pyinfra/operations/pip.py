@@ -12,7 +12,7 @@ from . import files
 from .util.packaging import ensure_packages
 
 
-@operation
+@operation()
 def virtualenv(
     path,
     python=None,
@@ -79,7 +79,7 @@ def virtualenv(
 _virtualenv = virtualenv  # noqa
 
 
-@operation
+@operation()
 def venv(
     path,
     python=None,
@@ -115,7 +115,7 @@ def venv(
     )
 
 
-@operation
+@operation()
 def packages(
     packages=None,
     present=True,

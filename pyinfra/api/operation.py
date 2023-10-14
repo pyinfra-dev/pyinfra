@@ -112,11 +112,9 @@ def add_op(state: State, op_func, *args, **kwargs):
 
 
 def operation(
-    func=None,
     pipeline_facts=None,
     is_idempotent: bool = True,
     idempotent_notice=None,
-    frame_offset: int = 1,
 ):
     """
     Decorator that takes a simple module function and turn it into the internal
@@ -124,18 +122,16 @@ def operation(
     (sudo, (sudo|su)_user, env).
     """
 
-    # If not decorating, return function with config attached
-    if func is None:
+    def decorator(f):
+        f.pipeline_facts = pipeline_facts
+        f.is_idempotent = is_idempotent
+        f.idempotent_notice = idempotent_notice
+        return _wrap_operation(f)
 
-        def decorator(f):
-            f.pipeline_facts = pipeline_facts
-            f.is_idempotent = is_idempotent
-            f.idempotent_notice = idempotent_notice
-            return operation(f, frame_offset=2)
+    return decorator
 
-        return decorator
 
-    # Actually decorate!
+def _wrap_operation(func):
     @wraps(func)
     def decorated_func(*args, **kwargs):
         state = context.state

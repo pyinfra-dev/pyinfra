@@ -7,7 +7,7 @@ from pyinfra.api import operation
 from pyinfra.facts.snap import SnapPackage, SnapPackages
 
 
-@operation
+@operation()
 def package(
     packages=None,
     channel="latest/stable",

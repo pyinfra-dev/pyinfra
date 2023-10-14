@@ -338,7 +338,7 @@ def worktree(
             yield command
 
 
-@operation
+@operation()
 def bare_repo(
     path,
     user=None,

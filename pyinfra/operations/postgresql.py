@@ -51,7 +51,7 @@ def sql(
     )
 
 
-@operation
+@operation()
 def role(
     role,
     present=True,
@@ -160,7 +160,7 @@ def role(
         host.noop("postgresql role {0} exists".format(role))
 
 
-@operation
+@operation()
 def database(
     database,
     present=True,

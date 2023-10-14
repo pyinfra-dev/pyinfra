@@ -52,7 +52,7 @@ def sql(
     )
 
 
-@operation
+@operation()
 def user(
     user,
     present=True,
@@ -280,7 +280,7 @@ def user(
         )
 
 
-@operation
+@operation()
 def database(
     database,
     # Desired database settings
@@ -382,7 +382,7 @@ def database(
         )
 
 
-@operation
+@operation()
 def privileges(
     user,
     privileges,

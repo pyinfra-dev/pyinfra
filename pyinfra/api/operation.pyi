@@ -1,3 +1,4 @@
+import abc
 from typing import (
     Callable,
     Dict,
@@ -26,7 +27,7 @@ P = ParamSpec("P")
 
 Command = str | StringCommand | FileDownloadCommand | FileUploadCommand | FunctionCommand
 
-class OperationMeta:
+class OperationMeta(Generator, metaclass=abc.ABCMeta):
     changed: bool
     commands: List[str] | None
     hash: str | None
@@ -106,9 +107,8 @@ def add_op(
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> Dict[Host, OperationMeta]: ...
-@overload
-def operation(func: Callable[P, Generator[Command, None, None]]) -> Operation[P]: ...
-@overload
+
+# Operation decorator
 def operation(
     pipeline_facts=None,
     is_idempotent: bool = True,
