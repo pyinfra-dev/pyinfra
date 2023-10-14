@@ -1,9 +1,0 @@
-node 'agent.example.com' {
-    package { 'httpd':
-        ensure  => "installed",
-    }
-    service { 'httpd':
-        ensure => running,
-    enable => true
-    }
-}

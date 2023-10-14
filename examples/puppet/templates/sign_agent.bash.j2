@@ -1,6 +1,0 @@
-# see if the agent needs to be signed
-/opt/puppetlabs/bin/puppetserver ca list | grep agent.example.com
-if [ $? -eq 0 ]; then
-  # sign the agent
-  /opt/puppetlabs/bin/puppetserver ca sign --certname agent.example.com
-fi
