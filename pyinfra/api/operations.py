@@ -9,7 +9,6 @@ import click
 import gevent
 from paramiko import SSHException
 
-import pyinfra
 from pyinfra import logger
 from pyinfra.connectors.util import CommandOutput
 from pyinfra.context import ctx_host, ctx_state
@@ -213,7 +212,8 @@ def run_host_op(state: "State", host: "Host", op_hash) -> Optional[bool]:
         if ignore_errors:
             return_status = True
 
-    op_data.operation_meta.set_result(return_status)
+    if return_status is False or (return_status is True and executed_commands > 0):
+        op_data.operation_meta.set_result(return_status)
     op_data.operation_meta.set_commands(commands)
     op_data.operation_meta.set_combined_output_lines(all_combined_output_lines)
 
@@ -254,9 +254,6 @@ def _run_host_ops(state: "State", host: "Host", progress=None):
                     host,
                 ),
             )
-
-        if pyinfra.is_cli:
-            click.echo(err=True)
 
 
 def _run_serial_ops(state: "State"):
@@ -354,9 +351,6 @@ def _run_single_op(state: "State", op_hash: str):
 
     # Now all the batches/hosts are complete, fail any failures
     state.fail_hosts(failed_hosts)
-
-    if pyinfra.is_cli:
-        click.echo(err=True)
 
     state.trigger_callbacks("operation_end", op_hash)
 

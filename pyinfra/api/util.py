@@ -1,9 +1,9 @@
 from functools import wraps
 from hashlib import sha1
-from inspect import getframeinfo, getfullargspec, stack
+from inspect import getframeinfo, stack
 from os import getcwd, path, stat
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 import click
 from jinja2 import Environment, FileSystemLoader, StrictUndefined

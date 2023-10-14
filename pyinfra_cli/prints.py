@@ -206,26 +206,39 @@ def truncate(text, max_length):
     return f"{text}..."
 
 
+def pretty_op_name(op_meta):
+    name = list(op_meta.names)[0]
+
+    if op_meta.args:
+        name = "{0} ({1})".format(name, ", ".join(str(arg) for arg in op_meta.args))
+
+    return name
+
+
 def print_meta(state: "State"):
-    rows: List[Tuple[Callable, Union[List[str], str]]] = []
+    rows: List[Tuple[Callable, Union[List[str], str]]] = [
+        (logger.info, ["Operation", "Hosts"]),
+    ]
 
     for op_hash in state.get_op_order():
         hosts_in_op = list()
-        name = list(state.op_meta[op_hash].names)[0]
         for host in state.inventory.iter_activated_hosts():
             if op_hash in state.ops[host]:
                 if state.ops[host][op_hash].operation_meta.changed:
                     hosts_in_op.append(host.name)
 
-        # if not hosts_in_op:
-        #     continue
-
         rows.append(
             (
                 logger.info,
                 [
-                    "Operation: {0}".format(truncate(name, 32)),
-                    "Hosts: {0}".format(", ".join(sorted(hosts_in_op))),
+                    pretty_op_name(state.op_meta[op_hash]),
+                    "{0}/{1} ({2})".format(
+                        len(hosts_in_op),
+                        len(state.inventory),
+                        truncate(", ".join(sorted(hosts_in_op)), 48),
+                    )
+                    if hosts_in_op
+                    else "No hosts with changes at this time",
                 ],
             )
         )
@@ -234,16 +247,20 @@ def print_meta(state: "State"):
 
 
 def print_results(state: "State"):
-    rows: List[Tuple[Callable, Union[List[str], str]]] = []
+    rows: List[Tuple[Callable, Union[List[str], str]]] = [
+        (logger.info, ["Operation", "Hosts", "Success", "Error", "No Change"]),
+    ]
 
     for op_hash in state.get_op_order():
+        hosts_in_op = 0
         hosts_in_op_success = list()
         hosts_in_op_error = list()
         hosts_in_op_no_attempt = list()
-        name = list(state.op_meta[op_hash].names)[0]
         for host in state.inventory.iter_activated_hosts():
             if op_hash not in state.ops[host]:
                 continue
+
+            hosts_in_op += 1
 
             result = state.ops[host][op_hash].operation_meta.success
             if result is True:
@@ -256,13 +273,23 @@ def print_results(state: "State"):
         # if not hosts_in_op:
         #     continue
 
-        row = ["Operation: {0}".format(truncate(name, 32))]
+        row = [
+            pretty_op_name(state.op_meta[op_hash]),
+            str(hosts_in_op),
+        ]
+
         if hosts_in_op_success:
-            row.append("Success: {0}".format(", ".join(sorted(hosts_in_op_success))))
+            row.append(f"{len(hosts_in_op_success)}")
+        else:
+            row.append("-")
         if hosts_in_op_error:
-            row.append("Error: {0}".format(", ".join(sorted(hosts_in_op_error))))
+            row.append(f"{len(hosts_in_op_error)}")
+        else:
+            row.append("-")
         if hosts_in_op_no_attempt:
-            row.append("No attempt: {0}".format(", ".join(sorted(hosts_in_op_no_attempt))))
+            row.append(f"{len(hosts_in_op_no_attempt)}")
+        else:
+            row.append("-")
 
         rows.append((logger.info, row))
 

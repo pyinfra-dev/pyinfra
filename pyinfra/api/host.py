@@ -154,6 +154,10 @@ class Host:
         self.state = state
         self.connector = self.connector_cls(state, self)
 
+        longest_name_len = max([len(host.name) for host in self.inventory])
+        padding_diff = longest_name_len - len(self.name)
+        self.print_prefix_padding = "".join(" " for _ in range(0, padding_diff))
+
     def __str__(self):
         return "{0}".format(self.name)
 
@@ -171,21 +175,24 @@ class Host:
     @property
     def print_prefix(self) -> str:
         if self.nested_executing_op_hash:
-            return "{0}[{1}] {2} ".format(
+            return "{0}[{1}] {2}{3} ".format(
                 click.style(""),  # reset
                 click.style(self.name, bold=True),
                 click.style("nested", "blue"),
+                self.print_prefix_padding,
             )
 
-        return "{0}[{1}] ".format(
+        return "{0}[{1}]{2} ".format(
             click.style(""),  # reset
             click.style(self.name, bold=True),
+            self.print_prefix_padding,
         )
 
     def style_print_prefix(self, *args, **kwargs) -> str:
-        return "{0}[{1}] ".format(
+        return "{0}[{1}]{2} ".format(
             click.style(""),  # reset
             click.style(self.name, *args, **kwargs),
+            self.print_prefix_padding,
         )
 
     def get_deploy_data(self):

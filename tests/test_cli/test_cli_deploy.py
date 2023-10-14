@@ -75,6 +75,7 @@ class TestCliDeployState(PatchSSHTestCase):
             shuffle(hosts)
 
             result = run_cli(
+                "-y",
                 ",".join(hosts),
                 path.join("tests", "deploy", "deploy.py"),
                 f'--chdir={path.join("tests", "deploy")}',
@@ -104,6 +105,7 @@ class TestCliDeployState(PatchSSHTestCase):
             shuffle(hosts)
 
             result = run_cli(
+                "-y",
                 ",".join(hosts),
                 path.join("tests", "deploy", "deploy_random.py"),
                 f'--chdir={path.join("tests", "deploy")}',

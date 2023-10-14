@@ -12,7 +12,7 @@ DOCKER_IMAGE = (
 )
 
 PYINFRA_COMMAND = (
-    "pyinfra -v localhost "
+    "pyinfra -y -v localhost "
     "--ssh-port 2222 "
     "--ssh-user pyinfra "
     "--ssh-password password "

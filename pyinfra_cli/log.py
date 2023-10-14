@@ -15,6 +15,8 @@ class LogHandler(logging.Handler):
 
 
 class LogFormatter(logging.Formatter):
+    previous_was_header = True
+
     level_to_format = {
         logging.DEBUG: lambda s: click.style(s, "green"),
         logging.WARNING: lambda s: click.style(s, "yellow"),
@@ -39,12 +41,16 @@ class LogFormatter(logging.Formatter):
 
         # We only handle strings here
         if isinstance(message, str):
-            if "-->" not in message:
+            if "-->" in message:
+                if not self.previous_was_header:
+                    click.echo(err=True)
+            else:
                 message = "    {0}".format(message)
 
             if record.levelno in self.level_to_format:
                 message = self.level_to_format[record.levelno](message)
 
+            self.previous_was_header = "-->" in message
             return message
 
         # If not a string, pass to standard Formatter
