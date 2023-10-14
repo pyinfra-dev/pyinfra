@@ -101,6 +101,7 @@ jobs:
     needs:
       - lint
       - type-check
+      - type-check-operation-stub
       - unit-test
       - end-to-end-test
     runs-on: ubuntu-latest

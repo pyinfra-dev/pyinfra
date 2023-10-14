@@ -10,7 +10,7 @@ Operations can accept any arguments except ``name`` and those starting with ``_`
 
 .. code:: python
 
-    @operation
+    @operation()
     def my_operation(...):
         ...
 
@@ -58,7 +58,7 @@ remote file based on the ``present`` kwargs:
     from pyinfra.api import operation
     from pyinfra.facts.files import File
 
-    @operation
+    @operation()
     def file(name, present=True):
         '''
         Manage the state of files.
