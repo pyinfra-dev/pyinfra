@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
 from typing import TYPE_CHECKING, Iterator, Optional
-from uuid import uuid4
 
 from gevent.pool import Pool
 from paramiko import PKey
@@ -14,7 +13,6 @@ from pyinfra import logger
 
 from .config import Config
 from .exceptions import PyinfraError
-from .util import sha1_hash
 
 if TYPE_CHECKING:
     from pyinfra.api.arguments import AllArguments
@@ -392,16 +390,3 @@ class State:
         if not isinstance(limit_hosts, list):
             return True
         return host in limit_hosts
-
-    def get_temp_filename(self, hash_key: Optional[str] = None, hash_filename: bool = True):
-        """
-        Generate a temporary filename for this deploy.
-        """
-
-        if not hash_key:
-            hash_key = str(uuid4())
-
-        if hash_filename:
-            hash_key = sha1_hash(hash_key)
-
-        return "{0}/pyinfra-{1}".format(self.config.TEMP_DIR, hash_key)

@@ -164,7 +164,7 @@ class DockerSSHConnector(BaseConnector):
         """
 
         fd, local_temp_filename = mkstemp()
-        remote_temp_filename = remote_temp_filename or self.state.get_temp_filename(
+        remote_temp_filename = remote_temp_filename or self.host.get_temp_filename(
             local_temp_filename
         )
 
@@ -234,7 +234,7 @@ class DockerSSHConnector(BaseConnector):
         location and then reading that into our final file/IO object.
         """
 
-        remote_temp_filename = remote_temp_filename or self.state.get_temp_filename(remote_filename)
+        remote_temp_filename = remote_temp_filename or self.host.get_temp_filename(remote_filename)
 
         try:
             docker_id = self.host.host_data["docker_container_id"]

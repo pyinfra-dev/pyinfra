@@ -188,7 +188,7 @@ def script(src, args=()):
         )
     """
 
-    temp_file = state.get_temp_filename()
+    temp_file = host.get_temp_filename()
     yield from files.put(src=src, dest=temp_file)
 
     yield chmod(temp_file, "+x")
@@ -218,7 +218,7 @@ def script_template(src, args=(), **data):
         )
     """
 
-    temp_file = state.get_temp_filename("{0}{1}".format(src, data))
+    temp_file = host.get_temp_filename("{0}{1}".format(src, data))
     yield from files.template(src, temp_file, **data)
 
     yield chmod(temp_file, "+x")
@@ -659,7 +659,7 @@ def crontab(
     exists = existing_crontab is not None
 
     edit_commands = []
-    temp_filename = state.get_temp_filename()
+    temp_filename = host.get_temp_filename()
 
     if special_time:
         new_crontab_line = "{0} {1}".format(special_time, command)

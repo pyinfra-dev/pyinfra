@@ -13,8 +13,11 @@ class ConfigDefaults:
     FAIL_PERCENT = None
     # Seconds to timeout SSH connections
     CONNECT_TIMEOUT = 10
-    # Temporary directory (on the remote side) to use for caching any files/downloads
-    TEMP_DIR = "/tmp"
+    # Temporary directory (on the remote side) to use for caching any files/downloads, the default
+    # None value first tries to load the hosts' temporary directory configured via "TMPDIR" env
+    # variable, falling back to DEFAULT_TEMP_DIR if not set.
+    TEMP_DIR = None
+    DEFAULT_TEMP_DIR = "/tmp"
     # Gevent pool size (defaults to #of target hosts)
     PARALLEL = 0
     # Specify the required pyinfra version (using PEP 440 setuptools specifier)

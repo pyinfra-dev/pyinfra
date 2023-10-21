@@ -6,7 +6,7 @@ Eg: ``pyinfra -> inventory-host.net <-> another-host.net``
 
 import shlex
 
-from pyinfra import host, state
+from pyinfra import host
 from pyinfra.api import OperationError, operation
 from pyinfra.facts.files import File, FindInFile
 from pyinfra.facts.server import Home
@@ -136,7 +136,7 @@ def upload(
 
     else:
         # Otherwise - we need a temporary location for the file
-        temp_remote_filename = state.get_temp_filename()
+        temp_remote_filename = host.get_temp_filename()
 
         # scp it to the temporary location
         upload_cmd = "scp -P {0} {1} {2}:{3}".format(

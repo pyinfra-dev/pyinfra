@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Generator, Optional, Tuple, Union
+from uuid import uuid4
 
 import click
 
@@ -12,6 +13,7 @@ from pyinfra.connectors.util import CommandOutput, remove_any_sudo_askpass_file
 from .connectors import get_execution_connector
 from .exceptions import ConnectError
 from .facts import get_host_fact
+from .util import memoize, sha1_hash
 
 if TYPE_CHECKING:
     from pyinfra.api.arguments import AllArguments
@@ -252,6 +254,37 @@ class Host:
             old_deploy_kwargs,
             old_deploy_data,
         )
+
+    @memoize
+    def _get_temp_directory(self):
+        temp_directory = self.state.config.TEMP_DIR
+
+        if temp_directory is None:
+            # Unfortunate, but very hard to avoid, circular dependency, this method is memoized so
+            # performance isn't a concern.
+            from pyinfra.facts.server import TmpDir
+
+            temp_directory = self.get_fact(TmpDir)
+
+        if temp_directory is None:
+            temp_directory = self.state.config.DEFAULT_TEMP_DIR
+
+        return temp_directory
+
+    def get_temp_filename(self, hash_key: Optional[str] = None, hash_filename: bool = True):
+        """
+        Generate a temporary filename for this deploy.
+        """
+
+        temp_directory = self._get_temp_directory()
+
+        if not hash_key:
+            hash_key = str(uuid4())
+
+        if hash_filename:
+            hash_key = sha1_hash(hash_key)
+
+        return "{0}/pyinfra-{1}".format(temp_directory, hash_key)
 
     # Host facts
     #

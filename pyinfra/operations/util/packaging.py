@@ -162,7 +162,7 @@ def ensure_rpm(state, host, files, source, present, package_manager_command):
     # If source is a url
     if urlparse(source).scheme:
         # Generate a temp filename (with .rpm extension to please yum)
-        temp_filename = "{0}.rpm".format(state.get_temp_filename(source))
+        temp_filename = "{0}.rpm".format(host.get_temp_filename(source))
 
         # Ensure it's downloaded
         yield from files.download(source, temp_filename)

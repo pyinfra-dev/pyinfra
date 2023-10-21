@@ -183,6 +183,9 @@ class FakeHost:
     def noop(self, description):
         self.noop_description = description
 
+    def get_temp_filename(*args):
+        return "_tempfile_"
+
     @staticmethod
     def _get_fact_key(fact_cls):
         return "{0}.{1}".format(fact_cls.__module__.split(".")[-1], fact_cls.__name__)

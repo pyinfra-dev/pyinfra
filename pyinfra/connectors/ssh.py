@@ -303,7 +303,7 @@ class SSHConnector(BaseConnector):
 
         if _sudo or _su_user:
             # Get temp file location
-            temp_file = remote_temp_filename or self.state.get_temp_filename(remote_filename)
+            temp_file = remote_temp_filename or self.host.get_temp_filename(remote_filename)
 
             # Copy the file to the tempfile location and add read permissions
             command = StringCommand(
@@ -395,7 +395,7 @@ class SSHConnector(BaseConnector):
         # user connected, so upload to tmp and copy/chown w/sudo and/or su_user
         if _sudo or _doas or _su_user:
             # Get temp file location
-            temp_file = remote_temp_filename or self.state.get_temp_filename(remote_filename)
+            temp_file = remote_temp_filename or self.host.get_temp_filename(remote_filename)
             self._put_file(filename_or_io, temp_file)
 
             # Make sure our sudo/su user can access the file
