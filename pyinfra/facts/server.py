@@ -37,6 +37,14 @@ class Path(FactBase):
     command = "echo $PATH"
 
 
+class TmpDir(FactBase):
+    """
+    Returns the temporary directory of the current server, if configured.
+    """
+
+    command = "echo $TMPDIR"
+
+
 class Hostname(FactBase):
     """
     Returns the current hostname of the server.
