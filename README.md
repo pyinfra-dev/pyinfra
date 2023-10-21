@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-    <em>pyinfra automates infrastructure super fast at massive scale<br />ad-hoc command execution, service deployment, configuration management and more</em>
+    <em>pyinfra automates infrastructure using Python. It’s fast and scales from one server to thousands. Great for ad-hoc command execution, service deployment, configuration management and more.</em>
 </p>
 
 ---
@@ -19,9 +19,8 @@
 </p>
 
 <p align="center">
-    Chat (both bridged) &rArr;
-    <a href="https://matrix.to/#/#pyinfra:matrix.org"><strong><code>#pyinfra</code> on Matrix</strong></a> &bull;
-    <a href="https://discord.gg/w3XxuKw"><strong>Discord</strong></a>
+    Chat &rArr;
+    <a href="https://matrix.to/#/#pyinfra:matrix.org"><strong><code>#pyinfra</code> on Matrix</strong></a>
 </p>
 
 ---
@@ -30,21 +29,19 @@ Why pyinfra? Design features include:
 
 + 🚀 **Super fast** execution over thousands of hosts with predictable performance.
 + 🚨 **Instant debugging** with realtime stdin/stdout/stderr output (`-vvv`).
-+ 🔄 **Idempotent operations** that enable diffs and `--dry` runs before executing any changes.
-+ 📦 **Extendable** with _any_ Python package as configured & written in standard Python.
-+ 💻 **Agentless execution** against SSH/Docker/subprocess/WinRM hosts.
-+ 🔌 **Integrated** with Docker, Terraform, Vagrant/Mech & Ansible out of the box.
-
-When you run pyinfra you'll see something like ([non animated version](https://pyinfra.com/static/example_deploy.png)):
++ 🔄 **Idempotent operations** that enable diffs and dry runs before making changes.
++ 📦 **Extendable** with the entire Python package ecosystem.
++ 💻 **Agentless execution** against anything with shell access.
++ 🔌 **Integrated** with connectors for Docker, Terraform, Vagrant and more.
 
 <img width="100%" src="https://pyinfra.com/static/example_deploy.gif" />
 
 ## Quickstart
 
-Install pyinfra with [`pipx`](https://pipxproject.github.io/pipx/) (recommended) or `pip`:
+Install pyinfra with `pip`:
 
 ```
-pipx install pyinfra
+pip install pyinfra
 ```
 
 Now you can execute commands on hosts via SSH:
@@ -53,7 +50,7 @@ Now you can execute commands on hosts via SSH:
 pyinfra my-server.net exec -- echo "hello world"
 ```
 
-Or execute in Docker, on the local machine, and other [connectors](https://docs.pyinfra.com/page/connectors.html):
+Or target Docker containers, the local machine, and other [connectors](https://docs.pyinfra.com/page/connectors.html):
 
 ```sh
 pyinfra @docker/ubuntu exec -- echo "Hello world"
