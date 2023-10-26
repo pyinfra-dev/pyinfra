@@ -159,12 +159,13 @@ def casks(
 
 
 @operation
-def tap(src, present=True):
+def tap(src, present=True, url=None):
     """
     Add/remove brew taps.
 
     + src: the name of the tap
     + present: whether this tap should be present or not
+    + url: the url of the tap. See https://docs.brew.sh/Taps
 
     **Examples:**
 
@@ -173,6 +174,13 @@ def tap(src, present=True):
         brew.tap(
             name="Add a brew tap",
             src="includeos/includeos",
+        )
+
+        # nonstandard tap url
+        brew.tap(
+            src="kptdev/kpt",
+            # otherwise defaults to https://github.com/kptdev/homebrew-kpt
+            url="https://github.com/kptdev/kpt",
         )
 
         # Multiple taps
@@ -190,13 +198,19 @@ def tap(src, present=True):
     if present:
         if is_tapped:
             host.noop("tap {0} already exists".format(src))
-        else:
-            yield "brew tap {0}".format(src)
-            taps.append(src)
+            return
 
-    elif not present:
-        if is_tapped:
-            yield "brew untap {0}".format(src)
-            taps.remove(src)
-        else:
-            host.noop("tap {0} does not exist".format(src))
+        cmd = "brew tap {0}".format(src)
+
+        if url:
+            cmd = " ".join([cmd, url])
+
+        yield cmd
+        taps.append(src)
+        return
+
+    if is_tapped:
+        yield "brew untap {0}".format(src)
+        taps.remove(src)
+        return
+    host.noop("tap {0} does not exist".format(src))
