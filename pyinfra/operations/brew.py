@@ -195,22 +195,24 @@ def tap(src, present=True, url=None):
     taps = host.get_fact(BrewTaps)
     is_tapped = src in taps
 
-    if present:
-        if is_tapped:
+    if is_tapped:
+        if present:
             host.noop("tap {0} already exists".format(src))
             return
 
-        cmd = "brew tap {0}".format(src)
-
-        if url:
-            cmd = " ".join([cmd, url])
-
-        yield cmd
-        taps.append(src)
-        return
-
-    if is_tapped:
         yield "brew untap {0}".format(src)
         taps.remove(src)
         return
-    host.noop("tap {0} does not exist".format(src))
+
+    if not present:
+        host.noop("tap {0} does not exist".format(src))
+        return
+
+    cmd = "brew tap {0}".format(src)
+
+    if url is not None:
+        cmd = " ".join([cmd, url])
+
+    yield cmd
+    taps.append(src)
+    return
