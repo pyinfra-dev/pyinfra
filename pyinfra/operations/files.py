@@ -1614,6 +1614,7 @@ def block(
     line=None,
     backup=False,
     escape_regex_characters=False,
+    try_prevent_shell_expansion=False,
     before=False,
     after=False,
     marker=None,
@@ -1631,6 +1632,7 @@ def block(
     + line: regex before or after which the content should be added if it doesn't exist.
     + backup: whether to backup the file (see ``files.line``). Default False.
     + escape_regex_characters: whether to escape regex characters from the matching line
+    + try_prevent_shell_expansion: tries to prevent shell expanding by values like `$`
     + marker: the base string used to mark the text.  Default is ``# {mark} PYINFRA BLOCK``
     + begin: the value for ``{mark}`` in the marker before the content. Default is ``BEGIN``
     + end: the value for ``{mark}`` in the marker after the content. Default is ``END``
@@ -1647,12 +1649,15 @@ def block(
 
     Removal ignores ``content`` and ``line``
 
+    Preventing shell expansion works by wrapping the content in '`' before passing to `awk`.
+    WARNING: This will break if the content contains raw single quotes.
+
     **Examples:**
 
     .. code:: python
 
         # add entry to /etc/host
-        files.marked_block(
+        files.block(
             name="add IP address for red server",
             path="/etc/hosts",
             content="10.0.0.1 mars-one",
@@ -1661,7 +1666,7 @@ def block(
         )
 
         # have two entries in /etc/host
-        files.marked_block(
+        files.block(
             name="add IP address for red server",
             path="/etc/hosts",
             content="10.0.0.1 mars-one\\n10.0.0.2 mars-two",
@@ -1670,20 +1675,28 @@ def block(
         )
 
         # remove marked entry from /etc/hosts
-        files.marked_block(
+        files.block(
             name="remove all 10.* addresses from /etc/hosts",
             path="/etc/hosts",
             present=False
         )
 
         # add out of date warning to web page
-        files.marked_block(
+        files.block(
             name="add out of date warning to web page",
             path="/var/www/html/something.html",
             content= "<p>Warning: this page is out of date.</p>",
             regex=".*<body>.*",
             after=True
             marker="<!-- {mark} PYINFRA BLOCK -->",
+        )
+
+        # put complex alias into .zshrc
+        files.block(
+            path="/home/user/.zshrc",
+            content="eval $(thefuck -a)",
+            try_prevent_shell_expansion=True,
+            marker="## {mark} ALIASES ##"
         )
     """
 
@@ -1729,8 +1742,13 @@ def block(
                 raise ValueError("only one of 'before' or 'after' used when 'line` is specified")
         elif before != after:
             raise ValueError("'line' must be supplied or 'before' and 'after' must be equal")
+        if isinstance(content, str):
+            # convert string to list of lines
+            content = content.split("\n")
+        if try_prevent_shell_expansion and any("'" in line for line in content):
+            logger.warning("content contains single quotes, shell expansion prevention may fail")
 
-        the_block = "\n".join([mark_1, content, mark_2])
+        the_block = "\n".join([mark_1, *content, mark_2])
 
         if (current is None) or ((current == []) and (before == after)):
             # a) no file or b) file but no markers and we're adding at start or end. Both use 'cat'
@@ -1738,7 +1756,14 @@ def block(
             stdin = "- " if ((current == []) and before) else ""
             # here = hex(random.randint(0, 2147483647))
             here = "PYINFRAHERE"
-            cmd = StringCommand(f"cat {stdin}{redirect}", q_path, f"<<{here}\n{the_block}\n{here}")
+            cmd = StringCommand(
+                f"cat {stdin}{redirect}",
+                q_path,
+                f"<<{here}" \
+                    if not try_prevent_shell_expansion \
+                    else f"<<'{here}'",
+                f"\n{the_block}\n{here}"
+            )
         elif current == []:  # markers not found and have a pattern to match (not start or end)
             regex = adjust_regex(line, escape_regex_characters)
             print_before = "{ print }" if before else ""
@@ -1748,21 +1773,30 @@ def block(
                 f"{print_after} f!=1 && /{regex}/ {{ print x; f=1}} "
                 f"END {{if (f==0) print ARGV[2] }} {print_before}'"
             )
-            cmd = StringCommand(out_prep, prog, q_path, f'$"{the_block}"', "> $OUT &&", real_out)
+            cmd = StringCommand(
+                out_prep,
+                prog, q_path,
+                f'"{the_block}"' \
+                    if not try_prevent_shell_expansion \
+                    else f"'{the_block}'",
+                "> $OUT &&",
+                real_out
+            )
         else:
-            pieces = content.split("\n")
-            if (len(current) != len(pieces)) or (
-                not all(lines[0] == lines[1] for lines in zip(pieces, current))
+            if (len(current) != len(content)) or (
+                    not all(lines[0] == lines[1] for lines in zip(content, current))
             ):  # marked_block found but text is different
                 prog = (
                     'awk \'BEGIN {{f=1; x=ARGV[2]; ARGV[2]=""}}'
-                    f"/{mark_1}/ {{print; print x; f=0}} /{mark_2}/ {{print; f=1}} f'"
+                    f"/{mark_1}/ {{print; print x; f=0}} /{mark_2}/ {{print; f=1; next}} f'"
                 )
                 cmd = StringCommand(
                     out_prep,
                     prog,
                     q_path,
-                    '$"' + content + '"',
+                    '"' + "\n".join(content) + '"' \
+                        if not try_prevent_shell_expansion \
+                        else "'" + "\n".join(content) + "'",
                     "> $OUT &&",
                     real_out,
                 )
@@ -1774,7 +1808,7 @@ def block(
             host.create_fact(
                 Block,
                 kwargs={"path": path, "marker": marker, "begin": begin, "end": end},
-                data=content.split("\n"),
+                data=content,
             )
     else:  # remove the marked_block
         if content:
