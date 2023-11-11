@@ -1759,9 +1759,9 @@ def block(
             cmd = StringCommand(
                 f"cat {stdin}{redirect}",
                 q_path,
-                f"<<{here}" \
-                    if not try_prevent_shell_expansion \
-                    else f"<<'{here}'",
+                f"<<{here}"
+                if not try_prevent_shell_expansion
+                else f"<<'{here}'",
                 f"\n{the_block}\n{here}"
             )
         elif current == []:  # markers not found and have a pattern to match (not start or end)
@@ -1776,9 +1776,9 @@ def block(
             cmd = StringCommand(
                 out_prep,
                 prog, q_path,
-                f'"{the_block}"' \
-                    if not try_prevent_shell_expansion \
-                    else f"'{the_block}'",
+                f'"{the_block}"'
+                if not try_prevent_shell_expansion
+                else f"'{the_block}'",
                 "> $OUT &&",
                 real_out
             )
@@ -1794,9 +1794,9 @@ def block(
                     out_prep,
                     prog,
                     q_path,
-                    '"' + "\n".join(content) + '"' \
-                        if not try_prevent_shell_expansion \
-                        else "'" + "\n".join(content) + "'",
+                    '"' + "\n".join(content) + '"'
+                    if not try_prevent_shell_expansion
+                    else "'" + "\n".join(content) + "'",
                     "> $OUT &&",
                     real_out,
                 )
