@@ -20,7 +20,7 @@ using a package manager (apt, yum, etc), normally named: python-setuptools
 
 INSTALL_REQUIRES = (
     "gevent>=1.5",
-    "paramiko>=2.7,<3",  # 2.7 (2019) adds OpenSSH key format + Match SSH config
+    "paramiko>=2.7,<4",  # 2.7 (2019) adds OpenSSH key format + Match SSH config
     "click>2",
     "jinja2>2,<4",
     "python-dateutil>2,<3",
