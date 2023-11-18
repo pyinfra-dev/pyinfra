@@ -4,9 +4,11 @@
         "_tesTy.test:x:1004:1004::/home/_tesTy.test:/bin/ksh|_tesTy.test|_tesTy.test pyinfra|_tesTy.test pts/0 host-ip Sat Jun 12 13:43:42 -0600 2021",
         "test.testy:x:1003:1003:Testy,,,:/home/test.testy:/bin/ksh|test.testy||test.testy Fri Jun 11 22:26:04 -0600 2021",
         "noshell:x:1002:1002:noshell comment with spaces:/home/noshell:|noshell||noshell **Never logged in**",
-        "nohome:x:1002:1002:nohome comment::/bin/bash|nohome||**Never logged in**"
+        "nohome:x:1002:1002:nohome comment::/bin/bash|nohome||**Never logged in**",
+        "freebsd:*:1001:1001:FreeBSD:/home/freebsd:/bin/sh|freebsd|freebsd|freebsd pts/0 10.1.10.10 Thu Aug 31 05:37:58 2023",
+        "freebsdnologin:*:1001:1001:FreeBSD NoLogin:/home/freebsdnologin:/bin/sh|freebsdnologin|freebsdnologin|"
     ],
-    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ENTRY=`grep ^$i: /etc/passwd`;\n            LASTLOG=`lastlog -u $i | grep ^$i | tr -s ' '`;\n            echo \"$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG\";\n        done",
+    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ENTRY=`grep ^$i: /etc/passwd`;\n            LASTLOG_RAW=`(lastlog -u $i 2> /dev/null || lastlogin $i 2> /dev/null)`;\n            LASTLOG=`echo $LASTLOG_RAW | grep ^$i | tr -s ' '`;\n            echo \"$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG\";\n        done",
     "fact": {
         "root": {
             "home": "/root",
@@ -69,6 +71,28 @@
             "groups": [],
             "uid": 1002,
             "gid": 1002,
+            "lastlog": null,
+            "login_time": null
+        },
+        "freebsd": {
+            "home": "/home/freebsd",
+            "comment": "FreeBSD",
+            "shell": "/bin/sh",
+            "group": "freebsd",
+            "groups": [],
+            "uid": 1001,
+            "gid": 1001,
+            "lastlog": "Thu Aug 31 05:37:58 2023",
+            "login_time": "2023-08-31T05:37:58"
+        },
+        "freebsdnologin": {
+            "home": "/home/freebsdnologin",
+            "comment": "FreeBSD NoLogin",
+            "shell": "/bin/sh",
+            "group": "freebsdnologin",
+            "groups": [],
+            "uid": 1001,
+            "gid": 1001,
             "lastlog": null,
             "login_time": null
         }

@@ -278,8 +278,10 @@ def mount(
     path,
     mounted=True,
     options=None,
+    device=None,
+    fs_type=None,
     # TODO: do we want to manage fstab here?
-    # update_fstab=False, device=None, fs_type=None,
+    # update_fstab=False,
 ):
     """
     Manage mounted filesystems.
@@ -296,7 +298,6 @@ def mount(
         This operation does not attempt to modify the on disk fstab file - for
         that you should use the `files.line operation <./files.html#files-line>`_.
     """
-
     options = options or []
     options_string = ",".join(options)
 
@@ -305,10 +306,17 @@ def mount(
 
     # Want mount but don't have?
     if mounted and not is_mounted:
-        yield "mount{0} {1}".format(
-            " -o {0}".format(options_string) if options_string else "",
-            path,
-        )
+        args = []
+        if fs_type:
+            args.extend(["-t", fs_type])
+        if options_string:
+            args.extend(["-o", options_string])
+        if device:
+            args.append(device)
+        args.append(path)
+
+        yield StringCommand("mount", *args)
+        # Should we update facts with fs_type, device, etc?
         mounts[path] = {"options": options}
 
     # Want no mount but mounted?
@@ -788,11 +796,15 @@ def group(group, present=True, system=False, gid=None):
     """
 
     groups = host.get_fact(Groups)
+    os_type = host.get_fact(Os)
     is_present = group in groups
 
     # Group exists but we don't want them?
     if not present and is_present:
-        yield "groupdel {0}".format(group)
+        if os_type == "FreeBSD":
+            yield "pw groupdel -n {0}".format(group)
+        else:
+            yield "groupdel {0}".format(group)
         groups.remove(group)
 
     # Group doesn't exist and we want it?
@@ -803,17 +815,23 @@ def group(group, present=True, system=False, gid=None):
         if system and "BSD" not in host.get_fact(Os):
             args.append("-r")
 
-        args.append(group)
+        if os_type == "FreeBSD":
+            args.append("-n {0}".format(group))
+        else:
+            args.append(group)
 
         if gid:
-            args.append("--gid {0}".format(gid))
+            if os_type == "FreeBSD":
+                args.append("-g {0}".format(gid))
+            else:
+                args.append("--gid {0}".format(gid))
 
         # Groups are often added by other operations (package installs), so check
         # for the group at runtime before adding.
-        yield "grep '^{0}:' /etc/group || groupadd {1}".format(
-            group,
-            " ".join(args),
-        )
+        group_add_command = "groupadd"
+        if os_type == "FreeBSD":
+            group_add_command = "pw groupadd"
+        yield "grep '^{0}:' /etc/group || {2} {1}".format(group, " ".join(args), group_add_command)
         groups.append(group)
 
 
@@ -987,7 +1005,7 @@ def user(
     users = host.get_fact(Users)
     existing_groups = host.get_fact(Groups)
     existing_user = users.get(user)
-
+    os_type = host.get_fact(Os)
     if groups is None:
         groups = []
 
@@ -999,7 +1017,10 @@ def user(
     # User not wanted?
     if not present:
         if existing_user:
-            yield "userdel {0}".format(user)
+            if os_type == "FreeBSD":
+                yield "pw userdel -n {0}".format(user)
+            else:
+                yield "userdel {0}".format(user)
             users.pop(user)
         return
 
@@ -1029,7 +1050,10 @@ def user(
             args.append("-r")
 
         if uid:
-            args.append("--uid {0}".format(uid))
+            if os_type == "FreeBSD":
+                args.append("-u {0}".format(uid))
+            else:
+                args.append("--uid {0}".format(uid))
 
         if comment:
             args.append("-c '{0}'".format(comment))
@@ -1042,10 +1066,21 @@ def user(
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
-        yield "grep '^{1}:' /etc/passwd || useradd {0} {1}".format(
-            " ".join(args),
-            user,
-        )
+
+        add_user_command = "useradd"
+        if os_type == "FreeBSD":
+            add_user_command = "pw useradd"
+            yield "grep '^{2}:' /etc/passwd || {0} -n {2} {1}".format(
+                add_user_command,
+                " ".join(args),
+                user,
+            )
+        else:
+            yield "grep '^{2}:' /etc/passwd || {0} {1} {2}".format(
+                add_user_command,
+                " ".join(args),
+                user,
+            )
         users[user] = {
             "comment": comment,
             "home": home,
@@ -1079,7 +1114,10 @@ def user(
 
         # Need to mod the user?
         if args:
-            yield "usermod {0} {1}".format(" ".join(args), user)
+            if os_type == "FreeBSD":
+                yield "pw usermod -n {1} {0}".format(" ".join(args), user)
+            else:
+                yield "usermod {0} {1}".format(" ".join(args), user)
             if comment:
                 existing_user["comment"] = comment
             if home:

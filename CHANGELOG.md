@@ -1,3 +1,18 @@
+# v2.8
+
+Added:
+
++ Add `device` and `fs_type` arguments to `server.mount` operation (@chriskingio)
++ Add `args` argument to `server.script_template` operation (@chriskingio)
+
+Fixed:
+
++ Support FreeBSD in `server.user` & `server.group` operations (@wowi42)
++ Add missing `py.typed` flag to package
++ Fix lookup of systemd units containing `.` in the name (@cawo-odoo)
++ Strip newlines off public keys read from disk (@sysadmin75)
++ Properly escape database names in `mysql.database` operation (@tissieres)
+
 # v2.7
 
 Been a while since a release, so there's a bunch of great stuff in thise one!

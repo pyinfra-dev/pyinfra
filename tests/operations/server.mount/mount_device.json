@@ -1,0 +1,12 @@
+{
+    "args": ["/data"],
+    "kwargs": {
+        "device": "/dev/sdb1"
+    },
+    "facts": {
+        "server.Mounts": {}
+    },
+    "commands": [
+        "mount /dev/sdb1 /data"
+    ]
+}
