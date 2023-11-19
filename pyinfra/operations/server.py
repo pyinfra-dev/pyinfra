@@ -77,9 +77,6 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
     yield StringCommand("reboot", success_exit_codes=[0, -1])  # -1 being error/disconnected
 
-    # On certain systems /tmp is cleared on reboot, so sudo files are lost
-    host.connector_data["sudo_askpass_path"] = None
-
     def wait_and_reconnect(state, host):  # pragma: no cover
         sleep(delay)
         max_retries = round(reboot_timeout / interval)
@@ -101,6 +98,12 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
             retries += 1
 
     yield FunctionCommand(wait_and_reconnect, (), {})
+
+    # On certain systems sudo files are lost on reboot
+    def clean_sudo_info(state, host):
+        host.connector_data["sudo_askpass_path"] = None
+
+    yield FunctionCommand(clean_sudo_info, (), {})
 
 
 @operation(is_idempotent=False)
