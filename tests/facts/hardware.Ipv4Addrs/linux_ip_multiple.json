@@ -1,5 +1,5 @@
 {
-    "command": "ip addr show 2> /dev/null || ifconfig",
+    "command": "ip addr show 2> /dev/null || ifconfig -a",
     "output": [
         "2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000",
         "link/ether c6:c5:60:cd:73:f1 brd ff:ff:ff:ff:ff:ff",
