@@ -1,18 +1,16 @@
 {
-    "args": [["elasticquery==1.2", "pyinfra", "test==1.1"]],
+    "args": [["invoke", "copier"]],
     "kwargs": {
         "present": false
     },
     "facts": {
-        "pip.PipPackages": {
-            "pip=pip": {
-                "elasticquery": ["1.0"],
-                "pyinfra": [""],
-                "test": ["1.1"]
+        "pipx.PipxPackages": {
+            "copier": ["9.0.1"],
+            "invoke": ["2.2.0"]
             }
-        }
     },
     "commands": [
-        "pip uninstall --yes pyinfra test==1.1"
+        "pipx uninstall invoke",
+        "pipx uninstall copier"
     ]
 }

@@ -1,5 +1,5 @@
 {
-    "args": [["copier==9.0.1", "invoke"]],
+    "args": [],
     "facts": {
         "pipx.PipxEnvironment": {
             "PIPX_HOME": "/home/doodba/.local/pipx",

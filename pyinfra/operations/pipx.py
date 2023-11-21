@@ -3,9 +3,9 @@ Manage pipx (python) applications.
 """
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import OperationError, operation
+from pyinfra.facts.pipx import PipxEnvironment, PipxPackages
 from pyinfra.facts.server import Path
-from pyinfra.facts.pipx import PipxPackages, PipxEnvironment
 
 from .util.packaging import ensure_packages
 
@@ -29,7 +29,7 @@ def packages(
     + extra_install_args: additional arguments to the pipx install command
 
     Versions:
-        Package versions can be pinned like pipx: ``<pkg>==<version>``.
+        Package versions can be pinned like pip: ``<pkg>==<version>``.
 
     **Example:**
 
@@ -56,6 +56,9 @@ def packages(
     if packages:
         current_packages = host.get_fact(PipxPackages, pipx=pipx)
 
+        if current_packages is None:
+            raise OperationError("Unable to get pipx packages")
+
         # pipx support only one package name at a time
         for package in packages:
             yield from ensure_packages(
@@ -76,7 +79,6 @@ def upgrade_all(pipx="pipx"):
     """
     Upgrade all pipx packages.
     """
-
     yield f"{pipx} upgrade-all"
 
 
@@ -93,6 +95,6 @@ def ensure_path(pipx="pipx"):
 
     # If the pipx bin dir is already in the user's PATH, we're done
     if pipx_env["PIPX_BIN_DIR"] in path.split(":"):
-        return
+        host.noop("pipx bin dir is already in the PATH")
     else:
         yield f"{pipx} ensurepath"
