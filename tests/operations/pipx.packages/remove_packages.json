@@ -1,0 +1,18 @@
+{
+    "args": [["elasticquery==1.2", "pyinfra", "test==1.1"]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "pip.PipPackages": {
+            "pip=pip": {
+                "elasticquery": ["1.0"],
+                "pyinfra": [""],
+                "test": ["1.1"]
+            }
+        }
+    },
+    "commands": [
+        "pip uninstall --yes pyinfra test==1.1"
+    ]
+}

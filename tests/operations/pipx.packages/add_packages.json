@@ -1,0 +1,10 @@
+{
+    "args": ["copier==9.0.1", "invoke"],
+    "facts": {
+        "pipx.PipxPackages": {}
+        },
+    "commands": [
+        "pipx install --force copier==9.0.1",
+        "pipx install --force invoke"
+    ]
+}

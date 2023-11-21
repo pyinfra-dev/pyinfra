@@ -1,0 +1,7 @@
+{
+    "args": [],
+    "facts": {},
+    "commands": [
+        "pipx upgrade-all"
+    ]
+}
