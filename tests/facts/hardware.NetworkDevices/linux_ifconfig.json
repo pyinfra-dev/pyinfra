@@ -1,32 +1,83 @@
 {
-    "command": "ip addr show 2> /dev/null || ifconfig",
+    "command": "ip addr show 2> /dev/null || ifconfig -a",
     "output": [
-        "eth0      Link encap:Ethernet  HWaddr 14:DD:A9:D3:36:0B",
-        "inet addr:1.2.3.4  Bcast:1.2.3.4  Mask:255.255.255.255",
-        "inet6 addr: 2a01::01/64 Scope:Global",
-        "UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1",
-        "RX packets:5088726642662 errors:0 dropped:0 overruns:75824296 frame:0",
-        "TX packets:204488770319 errors:0 dropped:0 overruns:0 carrier:0",
-        "collisions:0 txqueuelen:1000",
-        "RX bytes:1110992903295696 (1010.4 TiB)  TX bytes:68385443441652 (62.1 TiB)",
-        "Memory:fa100000-fa17ffff",
-        "eth1      Link encap:Ethernet  HWaddr 14:DD:A9:D3:36:0B"
+        "enp1s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500",
+        "        inet 192.168.123.111  netmask 255.255.255.0  broadcast 192.168.123.255",
+        "        inet6 2a01:e0a:5c2:7450:b241:6fff:fe0a:cf22  prefixlen 64  scopeid 0x0<global>",
+        "        inet6 fe80::b241:6fff:fe0a:cf22  prefixlen 64  scopeid 0x20<link>",
+        "        ether b0:41:6f:0a:cf:22  txqueuelen 1000  (Ethernet)",
+        "        RX packets 52490  bytes 16827945 (16.0 MiB)",
+        "        RX errors 0  dropped 0  overruns 0  frame 0",
+        "        TX packets 21304  bytes 2948965 (2.8 MiB)",
+        "        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0",
+        "incusbr0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500",
+        "        inet 10.232.181.1  netmask 255.255.255.0  broadcast 0.0.0.0",
+        "        inet6 fe80::216:3eff:fe9c:8200  prefixlen 64  scopeid 0x20<link>",
+        "        inet6 fd42:5bce:bd73:eda6::1  prefixlen 64  scopeid 0x0<global>",
+        "        ether 00:16:3e:9c:82:00  txqueuelen 1000  (Ethernet)",
+        "        RX packets 2592  bytes 253292 (247.3 KiB)",
+        "        RX errors 0  dropped 0  overruns 0  frame 0",
+        "        TX packets 1289  bytes 185014 (180.6 KiB)",
+        "        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0",
+        "lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536",
+        "        inet 127.0.0.1  netmask 255.0.0.0",
+        "        inet6 ::1  prefixlen 128  scopeid 0x10<host>",
+        "        loop  txqueuelen 1000  (Local Loopback)",
+        "        RX packets 34  bytes 2816 (2.7 KiB)",
+        "        RX errors 0  dropped 0  overruns 0  frame 0",
+        "        TX packets 34  bytes 2816 (2.7 KiB)",
+        "        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0"
     ],
     "fact": {
-        "eth0": {
+        "enp1s0": {
+            "ether": "2a01:e0a:5c2:7450",
+            "mtu": 1500,
+            "state": "UP",
             "ipv4": {
-                "address": "1.2.3.4",
-                "broadcast": "1.2.3.4",
-                "netmask": "255.255.255.255"
+                "address": "192.168.123.111",
+                "mask_bits": 24,
+                "netmask": "255.255.255.0",
+                "broadcast": "192.168.123.255"
             },
             "ipv6": {
-                "address": "2a01::01",
-                "mask_bits": 64
+                "address": "2a01:e0a:5c2:7450:b241:6fff:fe0a:cf22",
+                "mask_bits": 64,
+                "additional_ips": [
+                    {
+                        "address": "fe80::b241:6fff:fe0a:cf22",
+                        "mask_bits": 64
+                    }
+                ]
             }
         },
-        "eth1": {
-            "ipv4": {},
-            "ipv6": {}
+        "incusbr0": {
+            "ether": "fe80::216:3eff:fe",
+            "mtu": 1500,
+            "state": "UP",
+            "ipv4": {
+                "address": "10.232.181.1",
+                "mask_bits": 24,
+                "netmask": "255.255.255.0",
+                "broadcast": "0.0.0.0"
+            },
+            "ipv6": {
+                "address": "fe80::216:3eff:fe9c:8200",
+                "mask_bits": 64,
+                "additional_ips": [
+                    {
+                        "address": "fd42:5bce:bd73:eda6::1",
+                        "mask_bits": 64
+                    }
+                ]
+            }
+        },
+        "lo": {
+            "mtu": 65536,
+            "state": "UP",
+            "ipv6": {
+                "address": "::1",
+                "mask_bits": 128
+            }
         }
     }
 }
