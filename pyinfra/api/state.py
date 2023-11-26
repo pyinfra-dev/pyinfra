@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass
+from enum import IntEnum
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
 from typing import TYPE_CHECKING, Iterator, Optional
@@ -81,6 +83,19 @@ class BaseStateCallback:
         pass
 
 
+class StateStage(IntEnum):
+    # Setup - collect inventory & data
+    Setup = 1
+    # Connect - connect to the inventory
+    Connect = 2
+    # Prepare - detect operation changes
+    Prepare = 3
+    # Execute - execute operations
+    Execute = 4
+    # Disconnect - disconnect from the inventory
+    Disconnect = 5
+
+
 class StateOperationMeta:
     names: set[str]
     args: list[str]
@@ -135,6 +150,11 @@ class State:
 
     # Main gevent pool
     pool: "Pool"
+
+    # Current stage this state is in
+    current_stage: StateStage = StateStage.Setup
+    # Warning counters by stage
+    stage_warnings: dict[StateStage, int] = defaultdict(int)
 
     # Whether we are executing operations (ie hosts are all ready)
     is_executing: bool = False
@@ -251,6 +271,17 @@ class State:
             host.init(self)
 
         self.initialised = True
+
+    def set_stage(self, stage: StateStage) -> None:
+        if stage < self.current_stage:
+            raise Exception("State stage cannot go backwards!")
+        self.current_stage = stage
+
+    def increment_warning_counter(self) -> None:
+        self.stage_warnings[self.current_stage] += 1
+
+    def get_warning_counter(self) -> int:
+        return self.stage_warnings[self.current_stage]
 
     def should_check_for_changes(self):
         return self.check_for_changes

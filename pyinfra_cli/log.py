@@ -2,7 +2,7 @@ import logging
 
 import click
 
-from pyinfra import logger
+from pyinfra import logger, state
 
 
 class LogHandler(logging.Handler):
@@ -41,6 +41,9 @@ class LogFormatter(logging.Formatter):
 
         # We only handle strings here
         if isinstance(message, str):
+            if record.levelno is logging.WARNING:
+                state.increment_warning_counter()
+
             if "-->" in message:
                 if not self.previous_was_header:
                     click.echo(err=True)
