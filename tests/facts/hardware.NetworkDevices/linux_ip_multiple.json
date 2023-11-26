@@ -1,5 +1,5 @@
 {
-    "command": "ip addr show 2> /dev/null || ifconfig",
+    "command": "ip addr show 2> /dev/null || ifconfig -a",
     "output": [
         "2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000",
         "link/ether c6:c5:60:cd:73:f1 brd ff:ff:ff:ff:ff:ff",
@@ -12,14 +12,19 @@
     ],
     "fact": {
         "eth0": {
+            "ether": "c6:c5:60:cd:73:f1",
+            "mtu": 1500,
+            "state": "UP",
             "ipv4": {
                 "address": "166.22.203.666",
-                "broadcast": "165.22.207.255",
                 "mask_bits": 20,
+                "netmask": "255.255.240.0",
+                "broadcast": "165.22.207.255",
                 "additional_ips": [{
                     "address": "10.18.0.10",
-                    "broadcast": "10.18.255.255",
-                    "mask_bits": 16
+                    "mask_bits": 16,
+                    "netmask": "255.255.0.0",
+                    "broadcast": "10.18.255.255"
                 }]
             },
             "ipv6": {
