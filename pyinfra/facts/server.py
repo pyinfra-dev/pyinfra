@@ -417,6 +417,7 @@ class Users(FactBase):
                 "uid": user_id,
                 "gid": main_user_group_id,
                 "lastlog": last_login_time,
+                "password": encrypted_password,
             },
         }
     """
@@ -426,7 +427,8 @@ class Users(FactBase):
             ENTRY=`grep ^$i: /etc/passwd`;
             LASTLOG_RAW=`(lastlog -u $i 2> /dev/null || lastlogin $i 2> /dev/null)`;
             LASTLOG=`echo $LASTLOG_RAW | grep ^$i | tr -s ' '`;
-            echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG";
+            PASSWORD=`grep ^$i: /etc/shadow | cut -d: -f2`;
+            echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD";
         done
     """.strip()
 
@@ -437,7 +439,7 @@ class Users(FactBase):
         rex = r"[A-Z][a-z]{2} [A-Z][a-z]{2} {1,2}\d+ .+$"
 
         for line in output:
-            entry, group, user_groups, lastlog = line.split("|")
+            entry, group, user_groups, lastlog, password = line.split("|")
 
             if entry:
                 # Parse out the comment/home/shell
@@ -470,6 +472,7 @@ class Users(FactBase):
                     "gid": int(entries[3]),
                     "lastlog": raw_login_time,
                     "login_time": login_time,
+                    "password": password,
                 }
 
         return users

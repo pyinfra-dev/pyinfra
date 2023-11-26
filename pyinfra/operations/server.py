@@ -947,6 +947,7 @@ def user(
     comment=None,
     add_deploy_dir=True,
     unique=True,
+    password=None,
 ):
     """
     Add/remove/update system users & their ssh `authorized_keys`.
@@ -966,6 +967,7 @@ def user(
     + comment: the user GECOS comment
     + add_deploy_dir: any public_key filenames are relative to the deploy directory
     + unique: prevent creating users with duplicate UID
+    + password: set the encrypted password for the user
 
     Home directory:
         When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
@@ -1064,6 +1066,9 @@ def user(
         if create_home:
             args.append("-m")
 
+        if password:
+            args.append("-p '{0}'".format(password))
+
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
 
@@ -1087,9 +1092,10 @@ def user(
             "shell": shell,
             "group": group,
             "groups": groups,
+            "password": password,
         }
 
-    # User exists and we want them, check home/shell/keys
+    # User exists and we want them, check home/shell/keys/password
     else:
         args = []
 
@@ -1112,6 +1118,9 @@ def user(
         if comment and existing_user["comment"] != comment:
             args.append("-c '{0}'".format(comment))
 
+        if password and existing_user["password"] != password:
+            args.append("-p '{0}'".format(password))
+
         # Need to mod the user?
         if args:
             if os_type == "FreeBSD":
@@ -1128,6 +1137,8 @@ def user(
                 existing_user["group"] = group
             if groups:
                 existing_user["groups"] = groups
+            if password:
+                existing_user["password"] = password
 
     # Ensure home directory ownership
     if ensure_home:
