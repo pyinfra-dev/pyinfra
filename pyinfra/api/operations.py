@@ -10,7 +10,7 @@ import gevent
 from paramiko import SSHException
 
 from pyinfra import logger
-from pyinfra.connectors.util import CommandOutput
+from pyinfra.connectors.util import CommandOutput, OutputLine
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
@@ -36,22 +36,65 @@ def show_pre_or_post_condition_warning(condition_name):
     logger.warning("The `{0}` argument is in beta!".format(condition_name))
 
 
-def run_host_op(state: "State", host: "Host", op_hash) -> Optional[bool]:
+def _run_shell_command(
+    state: "State",
+    host: "Host",
+    command: StringCommand,
+    connector_arguments: ConnectorArguments,
+    timeout: int,
+) -> tuple[bool, CommandOutput]:
+    status = False
+    combined_output_lines = CommandOutput([])
+
+    try:
+        status, combined_output_lines = command.execute(state, host, connector_arguments)
+    except (timeout_error, socket_error, SSHException) as e:
+        log_host_command_error(host, e, timeout=timeout)
+
+    # If we failed and have no already printed the stderr, print it
+    if status is False and not state.print_output:
+        print_host_combined_output(host, combined_output_lines)
+
+    return status, combined_output_lines
+
+
+# Run a single host operation
+#
+
+
+def run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
     if op_hash not in state.ops[host]:
         logger.info("{0}{1}".format(host.print_prefix, click.style("Skipped", "blue")))
         return True
 
+    op_meta = state.get_op_meta(op_hash)
+    logger.debug("Starting operation %r on %s", op_meta.names, host)
+
+    if host.executing_op_hash is None:
+        host.executing_op_hash = op_hash
+    else:
+        host.nested_executing_op_hash = op_hash
+
+    try:
+        return _run_host_op(state, host, op_hash)
+    finally:
+        if host.nested_executing_op_hash:
+            host.nested_executing_op_hash = None
+        else:
+            host.executing_op_hash = None
+
+
+def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
     op_data = state.get_op_data_for_host(host, op_hash)
     global_arguments = op_data.global_arguments
 
-    op_meta = state.get_op_meta(op_hash)
-
     ignore_errors = global_arguments["_ignore_errors"]
     continue_on_error = global_arguments["_continue_on_error"]
+    timeout = global_arguments["_timeout"]
 
-    logger.debug("Starting operation %r on %s", op_meta.names, host)
+    command_generator = op_data.command_generator()
 
     executor_kwarg_keys = get_connector_argument_keys()
     base_connector_arguments: ConnectorArguments = (
@@ -61,73 +104,18 @@ def run_host_op(state: "State", host: "Host", op_hash) -> Optional[bool]:
         )
     )
 
-    def _run_shell_command(command, connector_arguments):
-        status = False
-        combined_output_lines = CommandOutput([])
-
-        try:
-            status, combined_output_lines = command.execute(state, host, connector_arguments)
-        except (timeout_error, socket_error, SSHException) as e:
-            log_host_command_error(
-                host,
-                e,
-                timeout=global_arguments["_timeout"],
-            )
-
-        # If we failed and have no already printed the stderr, print it
-        if status is False and not state.print_output:
-            print_host_combined_output(host, combined_output_lines)
-
-        return status, combined_output_lines
-
-    def run_condition(condition_name: str) -> bool:
-        condition_value = global_arguments[condition_name]
-        if not condition_value:
-            return True
-
-        show_pre_or_post_condition_warning(condition_name)
-
-        _shell_command_status, _ = _run_shell_command(
-            StringCommand(condition_value),
-            base_connector_arguments,
-        )
-
-        if _shell_command_status:
-            return True
-
-        _log_msg = f"{condition_name} failed: {condition_value}"
-        log_error_or_warning(host, ignore_errors, description=_log_msg)
-
-        if ignore_errors:
-            return True
-
-        state.trigger_callbacks("operation_host_error", host, op_hash)
-        return False
-
-    if not run_condition("_precondition"):
-        return False
-
-    if host.executing_op_hash is None:
-        host.executing_op_hash = op_hash
-    else:
-        host.nested_executing_op_hash = op_hash
-
-    return_status: Optional[bool] = False
     did_error = False
     executed_commands = 0
     commands = []
-    all_combined_output_lines = []
+    all_combined_output_lines: list[OutputLine] = []
 
-    for command in op_data.command_generator():
+    for command in command_generator:
         commands.append(command)
 
         status = False
 
         connector_arguments = base_connector_arguments.copy()
         connector_arguments.update(command.connector_arguments)
-
-        # Now we attempt to execute the command
-        #
 
         if not isinstance(command, PyinfraCommand):
             raise TypeError("{0} is an invalid pyinfra command!".format(command))
@@ -144,36 +132,33 @@ def run_host_op(state: "State", host: "Host", op_hash) -> Optional[bool]:
                 logger.error(_error_log)
 
         elif isinstance(command, StringCommand):
-            status, combined_output_lines = _run_shell_command(command, connector_arguments)
+            status, combined_output_lines = _run_shell_command(
+                state, host, command, connector_arguments, timeout
+            )
             all_combined_output_lines.extend(combined_output_lines)
 
         else:
             try:
                 status = command.execute(state, host, connector_arguments)
             except (timeout_error, socket_error, SSHException, IOError) as e:
-                _timeout = global_arguments["_timeout"]
-                log_host_command_error(host, e, timeout=_timeout)
+                log_host_command_error(host, e, timeout=timeout)
 
         # Break the loop to trigger a failure
         if status is False:
+            did_error = True
             if continue_on_error is True:
-                did_error = True
                 continue
             break
 
         executed_commands += 1
 
-    # Commands didn't break, so count our successes & return True!
-    else:
-        if not run_condition("_postcondition"):
-            return False
+    # Handle results
+    #
 
-        if not did_error:
-            return_status = True
-
+    return_status = not did_error
     host_results = state.get_results_for_host(host)
 
-    if return_status is True:
+    if did_error is False:
         host_results.ops += 1
         host_results.success_ops += 1
 
@@ -181,7 +166,6 @@ def run_host_op(state: "State", host: "Host", op_hash) -> Optional[bool]:
         _click_log_status = click.style(_status_log, "green")
         logger.info("{0}{1}".format(host.print_prefix, _click_log_status))
 
-        # Trigger any success handler
         if global_arguments["_on_success"]:
             global_arguments["_on_success"](state, host, op_hash)
 
@@ -198,31 +182,29 @@ def run_host_op(state: "State", host: "Host", op_hash) -> Optional[bool]:
         _command_description = f"executed {executed_commands} commands"
         log_error_or_warning(host, ignore_errors, _command_description, continue_on_error)
 
-        # Always trigger any error handler
         if global_arguments["_on_error"]:
             global_arguments["_on_error"](state, host, op_hash)
 
         # Ignored, op "completes" w/ ignored error
         if ignore_errors:
             host_results.ops += 1
+            return_status = True
 
         # Unignored error -> False
         state.trigger_callbacks("operation_host_error", host, op_hash)
 
-        if ignore_errors:
-            return_status = True
-
+    # Only set result if we actually did something (failed or executed >0 commands)
     if return_status is False or (return_status is True and executed_commands > 0):
         op_data.operation_meta.set_result(return_status)
+
     op_data.operation_meta.set_commands(commands)
     op_data.operation_meta.set_combined_output_lines(all_combined_output_lines)
 
-    if host.nested_executing_op_hash:
-        host.nested_executing_op_hash = None
-    else:
-        host.executing_op_hash = None
-
     return return_status
+
+
+# Run all operations strategies
+#
 
 
 def _run_host_op_with_context(state: "State", host: "Host", op_hash: str):
