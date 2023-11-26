@@ -7,11 +7,12 @@
     "local_files": {
         "files": {
             "somefile.pub": "somekeydata",
-            "anotherfile.pub": "someotherkeydata"
+            "anotherfile.pub": "someotherkeydata\n"
         },
         "dirs": {}
     },
     "facts": {
+        "server.Os": "Linux",
         "server.Users": {
             "someuser": {
                 "home": "homedir",

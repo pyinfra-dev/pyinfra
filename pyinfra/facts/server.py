@@ -417,6 +417,7 @@ class Users(FactBase):
                 "uid": user_id,
                 "gid": main_user_group_id,
                 "lastlog": last_login_time,
+                "password": encrypted_password,
             },
         }
     """
@@ -424,8 +425,10 @@ class Users(FactBase):
     command = """
         for i in `cat /etc/passwd | cut -d: -f1`; do
             ENTRY=`grep ^$i: /etc/passwd`;
-            LASTLOG=`lastlog -u $i | grep ^$i | tr -s ' '`;
-            echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG";
+            LASTLOG_RAW=`(lastlog -u $i 2> /dev/null || lastlogin $i 2> /dev/null)`;
+            LASTLOG=`echo $LASTLOG_RAW | grep ^$i | tr -s ' '`;
+            PASSWORD=`grep ^$i: /etc/shadow | cut -d: -f2`;
+            echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD";
         done
     """.strip()
 
@@ -436,7 +439,7 @@ class Users(FactBase):
         rex = r"[A-Z][a-z]{2} [A-Z][a-z]{2} {1,2}\d+ .+$"
 
         for line in output:
-            entry, group, user_groups, lastlog = line.split("|")
+            entry, group, user_groups, lastlog, password = line.split("|")
 
             if entry:
                 # Parse out the comment/home/shell
@@ -469,6 +472,7 @@ class Users(FactBase):
                     "gid": int(entries[3]),
                     "lastlog": raw_login_time,
                     "login_time": login_time,
+                    "password": password,
                 }
 
         return users
@@ -676,3 +680,85 @@ class Locales(FactBase):
         # replace utf8 with UTF-8 to match names in /etc/locale.gen
         # return a list of enabled locales
         return [line.replace("utf8", "UTF-8") for line in output]
+
+
+class SecurityLimits(FactBase):
+    """
+    Returns a list of security limits on the target host.
+
+    .. code:: python
+
+        [
+            {
+                "domain": "*",
+                "limit_type": "soft",
+                "item": "nofile",
+                "value": "1048576"
+            },
+            {
+                "domain": "*",
+                "limit_type": "hard",
+                "item": "nofile",
+                "value": "1048576"
+            },
+            {
+                "domain": "root",
+                "limit_type": "soft",
+                "item": "nofile",
+                "value": "1048576"
+            },
+            {
+                "domain": "root",
+                "limit_type": "hard",
+                "item": "nofile",
+                "value": "1048576"
+            },
+            {
+                "domain": "*",
+                "limit_type": "soft",
+                "item": "memlock",
+                "value": "unlimited"
+            },
+            {
+                "domain": "*",
+                "limit_type": "hard",
+                "item": "memlock",
+                "value": "unlimited"
+            },
+            {
+                "domain": "root",
+                "limit_type": "soft",
+                "item": "memlock",
+                "value": "unlimited"
+            },
+            {
+                "domain": "root",
+                "limit_type": "hard",
+                "item": "memlock",
+                "value": "unlimited"
+            }
+        ]
+    """
+
+    command = "cat /etc/security/limits.conf"
+    default = list
+
+    def process(self, output):
+        limits = []
+
+        for line in output:
+            if line.startswith("#") or not len(line.strip()):
+                continue
+
+            domain, limit_type, item, value = line.split()
+
+            limits.append(
+                {
+                    "domain": domain,
+                    "limit_type": limit_type,
+                    "item": item,
+                    "value": value,
+                },
+            )
+
+        return limits

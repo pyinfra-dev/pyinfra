@@ -8,6 +8,7 @@
         "comment": "New Full Name"
     },
     "facts": {
+        "server.Os": "Linux",
         "server.Users": {
             "someuser": {
                 "comment": "Full Name",
@@ -16,7 +17,8 @@
                 "group": "nowt",
                 "groups": [
                     "group1", "group2"
-                ]
+                ],
+                "password": "$somepw$"
             }
         },
         "files.Directory": {
