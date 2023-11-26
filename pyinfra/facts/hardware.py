@@ -251,10 +251,8 @@ class NetworkDevices(FactBase):
                             "address": address,
                             "mask_bits": mask_bits,
                             "netmask": netmask,
-                        }
-                        | {"broadcast": broadcast}
-                        if broadcast
-                        else {}
+                            "broadcast": broadcast,
+                        },
                     )
                 device_info["ipv4"] = ipv4_info[0]
                 if len(ipv4_matches) > 1:
