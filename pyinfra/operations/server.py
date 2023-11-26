@@ -1230,3 +1230,40 @@ def locale(
         )
 
         yield "locale-gen"
+
+
+@operation
+def security_limit(
+    domain,
+    limit_type,
+    item,
+    value,
+):
+    """
+    Edit /etc/security/limits.conf configuration.
+
+    + domain: the domain (user, group, or wildcard) for the limit
+    + limit_type: the type of limit (hard or soft)
+    + item: the item to limit (e.g., nofile, nproc)
+    + value: the value for the limit
+
+    **Example:**
+
+    .. code:: python
+
+        security_limit(
+            name="Set nofile limit for all users",
+            domain='*',
+            limit_type='soft',
+            item='nofile',
+            value='1024',
+        )
+    """
+
+    line_format = f"{domain}\t{limit_type}\t{item}\t{value}"
+
+    yield from files.line(
+        path="/etc/security/limits.conf",
+        line=f"^{domain}[[:space:]]+{limit_type}[[:space:]]+{item}",
+        replace=line_format,
+    )

@@ -680,3 +680,85 @@ class Locales(FactBase):
         # replace utf8 with UTF-8 to match names in /etc/locale.gen
         # return a list of enabled locales
         return [line.replace("utf8", "UTF-8") for line in output]
+
+
+class SecurityLimits(FactBase):
+    """
+    Returns a list of security limits on the target host.
+
+    .. code:: python
+
+        [
+            {
+                "domain": "*",
+                "limit_type": "soft",
+                "item": "nofile",
+                "value": "1048576"
+            },
+            {
+                "domain": "*",
+                "limit_type": "hard",
+                "item": "nofile",
+                "value": "1048576"
+            },
+            {
+                "domain": "root",
+                "limit_type": "soft",
+                "item": "nofile",
+                "value": "1048576"
+            },
+            {
+                "domain": "root",
+                "limit_type": "hard",
+                "item": "nofile",
+                "value": "1048576"
+            },
+            {
+                "domain": "*",
+                "limit_type": "soft",
+                "item": "memlock",
+                "value": "unlimited"
+            },
+            {
+                "domain": "*",
+                "limit_type": "hard",
+                "item": "memlock",
+                "value": "unlimited"
+            },
+            {
+                "domain": "root",
+                "limit_type": "soft",
+                "item": "memlock",
+                "value": "unlimited"
+            },
+            {
+                "domain": "root",
+                "limit_type": "hard",
+                "item": "memlock",
+                "value": "unlimited"
+            }
+        ]
+    """
+
+    command = "cat /etc/security/limits.conf"
+    default = list
+
+    def process(self, output):
+        limits = []
+
+        for line in output:
+            if line.startswith("#") or not len(line.strip()):
+                continue
+
+            domain, limit_type, item, value = line.split()
+
+            limits.append(
+                {
+                    "domain": domain,
+                    "limit_type": limit_type,
+                    "item": item,
+                    "value": value,
+                },
+            )
+
+        return limits

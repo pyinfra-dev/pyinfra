@@ -48,18 +48,12 @@ config_defaults = {key: value for key, value in ConfigDefaults.__dict__.items() 
 def check_pyinfra_version(version: str):
     if not version:
         return
-
     running_version = parse_version(__version__)
-    required_versions = Requirement.parse(
-        "pyinfra{0}".format(version),
-    )
+    required_versions = Requirement.parse("pyinfra{0}".format(version))
 
-    if running_version not in required_versions:
+    if not required_versions.specifier.contains(running_version):
         raise PyinfraError(
-            ("pyinfra version requirement not met " "(requires {0}, running {1})").format(
-                version,
-                __version__,
-            ),
+            f"pyinfra version requirement not met (requires {version}, running {__version__})"
         )
 
 
