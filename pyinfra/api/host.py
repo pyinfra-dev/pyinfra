@@ -266,7 +266,7 @@ class Host:
 
             temp_directory = self.get_fact(TmpDir)
 
-        if temp_directory is None:
+        if not temp_directory:
             temp_directory = self.state.config.DEFAULT_TEMP_DIR
 
         return temp_directory
