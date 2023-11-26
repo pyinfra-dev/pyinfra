@@ -4,7 +4,9 @@
         "persist": true
     },
     "facts": {
-        "server.Sysctl": {},
+        "server.Sysctl": {
+            "keys=['kern.max-files']": {}
+        },
         "files.FindInFile": {
             "path=/etc/sysctl.conf, pattern=^.*kern.max-files[[:space:]]*=[[:space:]]*2000.*$, interpolate_variables=False": [],
             "path=/etc/sysctl.conf, pattern=^.*kern.max-files = 2000.*$, interpolate_variables=False": []

@@ -1,7 +1,9 @@
 {
     "args": ["kern.max-files", 2000],
     "facts": {
-        "server.Sysctl": {}
+        "server.Sysctl": {
+            "keys=['kern.max-files']": {}
+        }
     },
     "commands": [
         "sysctl kern.max-files='2000'"

@@ -293,8 +293,13 @@ class Sysctl(FactBase):
         }
     """
 
-    command = "sysctl -a"
     default = dict
+
+    @staticmethod
+    def command(keys=None):
+        if keys is None:
+            return "sysctl -a"
+        return f"sysctl {' '.join(keys)}"
 
     @staticmethod
     def process(output):

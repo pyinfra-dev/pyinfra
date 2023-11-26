@@ -428,9 +428,9 @@ def sysctl(
 
     value = [try_int(v) for v in value] if isinstance(value, list) else try_int(value)
 
-    existing_sysctls = host.get_fact(Sysctl)
-
+    existing_sysctls = host.get_fact(Sysctl, keys=[key])
     existing_value = existing_sysctls.get(key)
+
     if not existing_value or existing_value != value:
         yield "sysctl {0}='{1}'".format(key, string_value)
     else:
