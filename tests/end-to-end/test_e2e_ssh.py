@@ -131,36 +131,3 @@ def test_int_local_line_no_changes(helpers):
         f"{PYINFRA_COMMAND} files.line _testfile someline replace=anotherline",
         expected_lines=["localhost] No changes"],
     )
-
-
-@pytest.mark.end_to_end
-@pytest.mark.end_to_end_ssh
-def test_int_local_pre_post_conditions(helpers):
-    helpers.run_check_output(
-        (
-            f"{PYINFRA_COMMAND} server.shell uptime "
-            "_precondition='exit 0' "
-            "_postcondition='exit 0'"
-        ),
-        expected_lines=["localhost] Success"],
-    )
-
-
-@pytest.mark.end_to_end
-@pytest.mark.end_to_end_ssh
-def test_int_local_failed_precondition(helpers):
-    helpers.run_check_output(
-        f"{PYINFRA_COMMAND} server.shell uptime _precondition='exit 1'",
-        expected_lines=["localhost] Error: _precondition failed: exit 1"],
-        expected_exit_code=1,
-    )
-
-
-@pytest.mark.end_to_end
-@pytest.mark.end_to_end_ssh
-def test_int_local_failed_postcondition(helpers):
-    helpers.run_check_output(
-        f"{PYINFRA_COMMAND} server.shell uptime _postcondition='exit 1'",
-        expected_lines=["localhost] Error: _postcondition failed: exit 1"],
-        expected_exit_code=1,
-    )

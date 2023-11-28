@@ -158,8 +158,6 @@ class MetaArguments(TypedDict, total=False):
     name: str
     _ignore_errors: bool
     _continue_on_error: bool
-    _precondition: str
-    _postcondition: str
     _on_success: Callable[[State, "Host", str], None]
     _on_error: Callable[[State, "Host", str], None]
 
@@ -180,14 +178,6 @@ meta_argument_meta: dict[str, ArgumentMeta] = {
             "Only applies when ``_ignore_errors`` is true."
         ),
         default=lambda config: False,
-    ),
-    "_precondition": ArgumentMeta(
-        "Command to execute & check before the operation commands begin.",
-        default=lambda config: None,
-    ),
-    "_postcondition": ArgumentMeta(
-        "Command to execute & check after the operation commands complete.",
-        default=lambda config: None,
     ),
     # Lambda on the next two are to workaround a circular import
     "_on_success": ArgumentMeta(

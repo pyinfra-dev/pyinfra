@@ -107,39 +107,6 @@ def test_int_local_line_no_changes(helpers, temp_dir):
 
 @pytest.mark.end_to_end
 @pytest.mark.end_to_end_local
-def test_int_local_pre_post_conditions(helpers):
-    helpers.run_check_output(
-        (
-            "pyinfra -y -v @local server.shell uptime "
-            "_precondition='exit 0' "
-            "_postcondition='exit 0'"
-        ),
-        expected_lines=["@local] Success"],
-    )
-
-
-@pytest.mark.end_to_end
-@pytest.mark.end_to_end_local
-def test_int_local_failed_precondition(helpers):
-    helpers.run_check_output(
-        "pyinfra -y -v @local server.shell uptime _precondition='exit 1'",
-        expected_lines=["@local] Error: _precondition failed: exit 1"],
-        expected_exit_code=1,
-    )
-
-
-@pytest.mark.end_to_end
-@pytest.mark.end_to_end_local
-def test_int_local_failed_postcondition(helpers):
-    helpers.run_check_output(
-        "pyinfra -y -v @local server.shell uptime _postcondition='exit 1'",
-        expected_lines=["@local] Error: _postcondition failed: exit 1"],
-        expected_exit_code=1,
-    )
-
-
-@pytest.mark.end_to_end
-@pytest.mark.end_to_end_local
 def test_int_local_line_ensure_newline_true(helpers, tmp_path):
     path = tmp_path / "_testfile"
 

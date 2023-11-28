@@ -22,18 +22,12 @@ from .util import (
     log_error_or_warning,
     log_host_command_error,
     log_operation_start,
-    memoize,
     print_host_combined_output,
 )
 
 if TYPE_CHECKING:
     from .inventory import Host
     from .state import State
-
-
-@memoize
-def show_pre_or_post_condition_warning(condition_name):
-    logger.warning("The `{0}` argument is in beta!".format(condition_name))
 
 
 def _run_shell_command(
