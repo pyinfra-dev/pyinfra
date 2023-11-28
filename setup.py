@@ -123,7 +123,6 @@ if __name__ == "__main__":
                 "dockerssh = pyinfra.connectors.dockerssh:DockerSSHConnector",
                 # Inventory only connectors
                 "terraform = pyinfra.connectors.terraform:TerraformInventoryConnector",
-                "ansible = pyinfra.connectors.ansible:AnsibleInventoryConnector",
                 "mech = pyinfra.connectors.mech:MechInventoryConnector",
                 "vagrant = pyinfra.connectors.vagrant:VagrantInventoryConnector",
             ],
