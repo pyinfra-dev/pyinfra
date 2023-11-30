@@ -6,7 +6,8 @@
             "command": "reboot",
             "success_exit_codes": [0, -1]
         },
-        ["wait_and_reconnect", [], {}]
+        ["wait_and_reconnect", [], {}],
+        ["clean_sudo_info", [], {}]
     ],
     "idempotent": false
 }

@@ -1,14 +1,14 @@
 {
     "output": [
-        "root:x:0:0:root:/root:/bin/ks|wheel|wheel kmem sys tty operator staff guest|root pts/0 Sat Jun 5 12:03:23 -0600 2021",
-        "_tesTy.test:x:1004:1004::/home/_tesTy.test:/bin/ksh|_tesTy.test|_tesTy.test pyinfra|_tesTy.test pts/0 host-ip Sat Jun 12 13:43:42 -0600 2021",
-        "test.testy:x:1003:1003:Testy,,,:/home/test.testy:/bin/ksh|test.testy||test.testy Fri Jun 11 22:26:04 -0600 2021",
-        "noshell:x:1002:1002:noshell comment with spaces:/home/noshell:|noshell||noshell **Never logged in**",
-        "nohome:x:1002:1002:nohome comment::/bin/bash|nohome||**Never logged in**",
-        "freebsd:*:1001:1001:FreeBSD:/home/freebsd:/bin/sh|freebsd|freebsd|freebsd pts/0 10.1.10.10 Thu Aug 31 05:37:58 2023",
-        "freebsdnologin:*:1001:1001:FreeBSD NoLogin:/home/freebsdnologin:/bin/sh|freebsdnologin|freebsdnologin|"
+        "root:x:0:0:root:/root:/bin/ks|wheel|wheel kmem sys tty operator staff guest|root pts/0 Sat Jun 5 12:03:23 -0600 2021|$rootpw$",
+        "_tesTy.test:x:1004:1004::/home/_tesTy.test:/bin/ksh|_tesTy.test|_tesTy.test pyinfra|_tesTy.test pts/0 host-ip Sat Jun 12 13:43:42 -0600 2021|$testpw$",
+        "test.testy:x:1003:1003:Testy,,,:/home/test.testy:/bin/ksh|test.testy||test.testy Fri Jun 11 22:26:04 -0600 2021|$testpw$",
+        "noshell:x:1002:1002:noshell comment with spaces:/home/noshell:|noshell||noshell **Never logged in**|",
+        "nohome:x:1002:1002:nohome comment::/bin/bash|nohome||**Never logged in**|",
+        "freebsd:*:1001:1001:FreeBSD:/home/freebsd:/bin/sh|freebsd|freebsd|freebsd pts/0 10.1.10.10 Thu Aug 31 05:37:58 2023|$bsdpw$",
+        "freebsdnologin:*:1001:1001:FreeBSD NoLogin:/home/freebsdnologin:/bin/sh|freebsdnologin|freebsdnologin||"
     ],
-    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ENTRY=`grep ^$i: /etc/passwd`;\n            LASTLOG_RAW=`(lastlog -u $i 2> /dev/null || lastlogin $i 2> /dev/null)`;\n            LASTLOG=`echo $LASTLOG_RAW | grep ^$i | tr -s ' '`;\n            echo \"$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG\";\n        done",
+    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ENTRY=`grep ^$i: /etc/passwd`;\n            LASTLOG_RAW=`(lastlog -u $i 2> /dev/null || lastlogin $i 2> /dev/null)`;\n            LASTLOG=`echo $LASTLOG_RAW | grep ^$i | tr -s ' '`;\n            PASSWORD=`grep ^$i: /etc/shadow | cut -d: -f2`;\n            echo \"$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD\";\n        done",
     "fact": {
         "root": {
             "home": "/root",
@@ -26,7 +26,8 @@
             "uid": 0,
             "gid": 0,
             "lastlog": "Sat Jun 5 12:03:23 -0600 2021",
-            "login_time": "2021-06-05T12:03:23-06:00"
+            "login_time": "2021-06-05T12:03:23-06:00",
+            "password": "$rootpw$"
         },
         "_tesTy.test": {
             "home": "/home/_tesTy.test",
@@ -39,7 +40,8 @@
             "uid": 1004,
             "gid": 1004,
             "lastlog": "Sat Jun 12 13:43:42 -0600 2021",
-            "login_time": "2021-06-12T13:43:42-06:00"
+            "login_time": "2021-06-12T13:43:42-06:00",
+            "password": "$testpw$"
         },
         "test.testy": {
             "home": "/home/test.testy",
@@ -50,7 +52,8 @@
             "uid": 1003,
             "gid": 1003,
             "lastlog": "Fri Jun 11 22:26:04 -0600 2021",
-            "login_time": "2021-06-11T22:26:04-06:00"
+            "login_time": "2021-06-11T22:26:04-06:00",
+            "password": "$testpw$"
         },
         "noshell": {
             "home": "/home/noshell",
@@ -61,7 +64,8 @@
             "uid": 1002,
             "gid": 1002,
             "lastlog": null,
-            "login_time": null
+            "login_time": null,
+            "password": ""
         },
         "nohome": {
             "home": null,
@@ -72,7 +76,8 @@
             "uid": 1002,
             "gid": 1002,
             "lastlog": null,
-            "login_time": null
+            "login_time": null,
+            "password": ""
         },
         "freebsd": {
             "home": "/home/freebsd",
@@ -83,7 +88,8 @@
             "uid": 1001,
             "gid": 1001,
             "lastlog": "Thu Aug 31 05:37:58 2023",
-            "login_time": "2023-08-31T05:37:58"
+            "login_time": "2023-08-31T05:37:58",
+            "password": "$bsdpw$"
         },
         "freebsdnologin": {
             "home": "/home/freebsdnologin",
@@ -94,7 +100,8 @@
             "uid": 1001,
             "gid": 1001,
             "lastlog": null,
-            "login_time": null
+            "login_time": null,
+            "password": ""
         }
     }
 }

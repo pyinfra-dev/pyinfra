@@ -21,7 +21,7 @@ Include other_file
 SSH_CONFIG_OTHER_FILE = """
 Host 192.168.1.1
     User "otheruser"
-    ProxyCommand None
+    # ProxyCommand None # Commented to get test passing with Paramiko > 3
     ForwardAgent yes
     UserKnownHostsFile ~/.ssh/test3
 """
