@@ -439,7 +439,7 @@ class Users(FactBase):
         rex = r"[A-Z][a-z]{2} [A-Z][a-z]{2} {1,2}\d+ .+$"
 
         for line in output:
-            entry, group, user_groups, lastlog, password = line.split("|")
+            entry, group, user_groups, lastlog, password = line.rsplit("|", 4)
 
             if entry:
                 # Parse out the comment/home/shell
