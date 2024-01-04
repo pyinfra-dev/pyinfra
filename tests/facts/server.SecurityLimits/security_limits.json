@@ -1,0 +1,74 @@
+{
+    "command": "cat /etc/security/limits.conf",
+    "output": [
+        "# <domain>      <type>  <item>         <value>",
+        "#*               soft    core            ",
+        "#root            hard    core            10000",
+        "#*               hard    rss             1000",
+        "#@student        hard    nproc           2",
+        "#@faculty        soft    nproc           2",
+        "#@faculty        hard    nproc           5",
+        "#ftp             hard    nproc           ",
+        "#ftp             -       chroot          /ft",
+        "#@student        -       maxlogins       ",
+        "* soft nofile 104857",
+        "* hard nofile 104857",
+        "root soft nofile 104857",
+        "root hard nofile 104857",
+        "* soft memlock unlimite",
+        "* hard memlock unlimite",
+        "root soft memlock unlimite",
+        "root hard memlock unlimite"
+    ],
+    "fact": [
+        {
+            "domain": "*",
+            "limit_type": "soft",
+            "item": "nofile",
+            "value": "104857"
+        },
+        {
+            "domain": "*",
+            "limit_type": "hard",
+            "item": "nofile",
+            "value": "104857"
+        },
+        {
+            "domain": "root",
+            "limit_type": "soft",
+            "item": "nofile",
+            "value": "104857"
+        },
+        {
+            "domain": "root",
+            "limit_type": "hard",
+            "item": "nofile",
+            "value": "104857"
+        },
+        {
+            "domain": "*",
+            "limit_type": "soft",
+            "item": "memlock",
+            "value": "unlimite"
+        },
+        {
+            "domain": "*",
+            "limit_type": "hard",
+            "item": "memlock",
+            "value": "unlimite"
+        },
+        {
+            "domain": "root",
+            "limit_type": "soft",
+            "item": "memlock",
+            "value": "unlimite"
+        },
+        {
+            "domain": "root",
+            "limit_type": "hard",
+            "item": "memlock",
+            "value": "unlimite"
+        }
+    ]
+}
+

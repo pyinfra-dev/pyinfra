@@ -17,7 +17,8 @@
                 "group": "nowt",
                 "groups": [
                     "group1", "group2"
-                ]
+                ],
+                "password": "$somepw$"
             }
         },
         "files.Directory": {
