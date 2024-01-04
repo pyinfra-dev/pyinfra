@@ -1,0 +1,34 @@
+{
+    "command": "/bin/opkg list-upgradable",
+    "output": [
+        "",
+        "rpcd-mod-iwinfo - 2019-12-10-aaa08366-2 - 2020-05-26-67c8a3fd-1",
+        "luci-mod-network - git-20.115.52331-39a8290-1 - git-20.319.48994-50b7ab5-1",
+        "hostapd-common - 2019-08-08-ca8c2bd2-2 - 2019-08-08-ca8c2bd2-4",
+        "libuv1 - 1.34.2-1 - 1.40.0-1",
+        "xray123-123",
+        "wireless-regdb - 2019.06.03 - 2019.06.03-1"
+    ],
+    "fact": {
+        "rpcd-mod-iwinfo": [
+            "2019-12-10-aaa08366-2",
+            "2020-05-26-67c8a3fd-1"
+        ],
+        "luci-mod-network": [
+            "git-20.115.52331-39a8290-1",
+            "git-20.319.48994-50b7ab5-1"
+        ],
+        "hostapd-common": [
+            "2019-08-08-ca8c2bd2-2",
+            "2019-08-08-ca8c2bd2-4"
+        ],
+        "libuv1": [
+            "1.34.2-1",
+            "1.40.0-1"
+        ],
+        "wireless-regdb": [
+            "2019.06.03",
+            "2019.06.03-1"
+        ]
+    }
+}

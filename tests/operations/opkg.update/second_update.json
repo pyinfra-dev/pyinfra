@@ -1,0 +1,9 @@
+{
+    "args": [],
+    "facts": {
+        "opkg.Packages": {"$$updated$$": ["$$updated$$"]}
+    },
+    "commands": [
+    ],
+    "noop_description": "opkg packages already updated and not forced"
+}

@@ -1,0 +1,39 @@
+{
+    "command": "/bin/opkg list-installed",
+    "output": [
+        "urandom-seed - 1.0-1",
+        "urngd - 2020-01-21-c7f7b6b6-1",
+        "usign - 2019-08-06-5a52b379-1",
+        "wget - 1.20.3-4",
+        "wget-nossl - 1.20.3-4",
+        "wireless-regdb - 2019.06.03",
+        "wpad-basic - 2019-08-08-ca8c2bd2-2",
+        "zlib - 1.2.11-3"
+    ],
+    "fact": {
+        "urandom-seed": [
+            "1.0-1"
+        ],
+        "urngd": [
+            "2020-01-21-c7f7b6b6-1"
+        ],
+        "usign": [
+            "2019-08-06-5a52b379-1"
+        ],
+        "wget": [
+            "1.20.3-4"
+        ],
+        "wget-nossl": [
+            "1.20.3-4"
+        ],
+        "wireless-regdb": [
+            "2019.06.03"
+        ],
+        "wpad-basic": [
+            "2019-08-08-ca8c2bd2-2"
+        ],
+        "zlib": [
+            "1.2.11-3"
+        ]
+    }
+}

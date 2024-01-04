@@ -1,0 +1,10 @@
+{
+    "args": [],
+    "kwargs": {"force": true},
+    "facts": {
+        "opkg.Packages": {"$$updated$$": ["$$updated$$"]}
+    },
+    "commands": [
+         "opkg update > /dev/null 2>&1"
+   ]
+}
