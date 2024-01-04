@@ -1,0 +1,42 @@
+{
+    "command": "cat /etc/opkg.conf",
+    "output": [
+        "",
+        "# a comment",
+        "    # another comment",
+        "extra",
+        "dest root /",
+        "dest ram /tmp",
+        "lists_dir ext /var/opkg-lists",
+        "list_dir ext /var/foo/bar",
+        "list_dir zap /var/foo/bar",
+        "option",
+        "option overlay_root /overlay",
+        "option check_signature",
+        "option http_proxy http://username:password@proxy.example.org:8080/",
+        "option ftp_proxy http://username:password@proxy.example.org:2121/",
+        "arch all 1",
+        "arch noarch 2",
+        "arch brcm4716 200",
+        "arch brcm47xx 300  # generic has lower priority than specific",
+        "arch zzz"
+    ],
+    "fact": [
+        {
+            "root": "/",
+            "ram": "/tmp"
+        },
+        "/var/opkg-lists",
+        {
+            "overlay_root": "/overlay",
+            "check_signature": true,
+            "http_proxy": "http://username:password@proxy.example.org:8080/",
+            "ftp_proxy": "http://username:password@proxy.example.org:2121/"        },
+        {
+            "all": 1,
+            "noarch": 2,
+            "brcm4716": 200,
+            "brcm47xx": 300
+        }
+    ]
+}

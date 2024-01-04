@@ -1,0 +1,13 @@
+{
+    "args": ["curl"],
+    "kwargs": {
+        "present": false,
+        "update": false
+    },
+    "facts": {
+        "opkg.Packages": {"curl": ["7.66.0-2"]}
+    },
+    "commands": [
+        "opkg remove curl"
+    ]
+}
