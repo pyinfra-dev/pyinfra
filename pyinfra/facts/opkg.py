@@ -45,11 +45,21 @@ class Conf(FactBase):
 
     .. code:: python
 
-        dest root /
-        dest ram /tmp
-        lists_dir ext /var/opkg-lists
-        option overlay_root /overlay
-        option check_signature
+        ConfInfo(
+            paths = {
+                "root": "/",
+                "ram": "/tmp",
+            },
+            list_dir = "/opt/opkg-lists",
+            options = {
+                "overlay_root": "/overlay"
+            },
+            arch_cfg = {
+                "all": 1,
+                "noarch": 1,
+                "i386_pentium": 10
+            }
+        )
 
     """
 
