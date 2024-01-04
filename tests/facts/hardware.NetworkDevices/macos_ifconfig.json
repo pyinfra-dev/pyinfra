@@ -1,5 +1,5 @@
 {
-    "command": "ip addr show 2> /dev/null || ifconfig",
+    "command": "ip addr show 2> /dev/null || ifconfig -a",
     "output": [
         "en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500",
         "inet 1.2.3.4 netmask 0xffffff00 broadcast 255.255.255.255",
@@ -10,9 +10,12 @@
     ],
     "fact": {
         "en0": {
+            "mtu": 1500,
+            "state": "UP",
             "ipv4": {
                 "address": "1.2.3.4",
-                "netmask": "0xffffff00",
+                "mask_bits": 24,
+                "netmask": "255.255.255.0",
                 "broadcast": "255.255.255.255"
             },
             "ipv6": {
