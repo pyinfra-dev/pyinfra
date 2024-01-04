@@ -71,7 +71,7 @@ class Conf(FactBase):
     command = f"cat {conf_file}"
     default = lambda x: ConfInfo({}, "", {}, {})  # noqa:
 
-    def process(self, output: list[str]):
+    def process(self, output):
         dest, lists_dir, options, arch_cfg = {}, "", {}, {}
         for line in output:
             match = self.regex.match(line)
@@ -92,19 +92,19 @@ class Conf(FactBase):
 
 class Feeds(FactBase):
     """
-        Returns a dictionary containing the information for the distribution-provided and
-        custom opkg feeds:
+    Returns a dictionary containing the information for the distribution-provided and
+    custom opkg feeds:
 
-        .. code:: python
+    .. code:: python
 
-            {
-             'openwrt_base': FeedInfo(url='http://downloads ... /i386_pentium/base', fmt='src/gz', kind='distribution'),
-             'openwrt_core': FeedInfo(url='http://downloads ... /x86/geode/packages', fmt='src/gz', kind='distribution'),
-             'openwrt_luci': FeedInfo(url='http://downloads ... /i386_pentium/luci', fmt='src/gz', kind='distribution'),
-             'openwrt_packages': FeedInfo(url='http://downloads ... /i386_pentium/packages', fmt='src/gz', kind='distribution'),
-             'openwrt_routing': FeedInfo(url='http://downloads ... /i386_pentium/routing', fmt='src/gz', kind='distribution'),
-             'openwrt_telephony': FeedInfo(url='http://downloads ... /i386_pentium/telephony', fmt='src/gz', kind='distribution')
-            }
+        {
+         'openwrt_base': FeedInfo(url='http://downloads ... /i386_pentium/base', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_core': FeedInfo(url='http://downloads ... /x86/geode/packages', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_luci': FeedInfo(url='http://downloads ... /i386_pentium/luci', fmt='src/gz', kind='distribution'),# noqa: E501
+         'openwrt_packages': FeedInfo(url='http://downloads ... /i386_pentium/packages', fmt='src/gz', kind='distribution'),# noqa: E501
+         'openwrt_routing': FeedInfo(url='http://downloads ... /i386_pentium/routing', fmt='src/gz', kind='distribution'),# noqa: E501
+         'openwrt_telephony': FeedInfo(url='http://downloads ... /i386_pentium/telephony', fmt='src/gz', kind='distribution') # noqa: E501
+        }
     """
 
     regex = re.compile(
@@ -113,7 +113,7 @@ class Feeds(FactBase):
     command = "cat /etc/opkg/distfeeds.conf; echo CUSTOM; cat /etc/opkg/customfeeds.conf"
     default = dict
 
-    def process(self, output: list[str]):
+    def process(self, output):
         feeds, kind = {}, "distribution"
         for line in output:
             match = self.regex.match(line)
@@ -146,7 +146,7 @@ class InstallableArchitectures(FactBase):
     command = "/bin/opkg print-architecture"
     default = dict
 
-    def process(self, output: list[str]):
+    def process(self, output):
         arch_list = {}
         for line in output:
             match = self.regex.match(line)
@@ -175,7 +175,7 @@ class Packages(FactBase):
     regex = r"^([a-zA-Z0-9][\w\-\.]*)\s-\s([\w\-\.]+)"
     default = dict
 
-    def process(self, output: list[str]):
+    def process(self, output):
         return parse_packages(self.regex, sorted(output))
 
 
@@ -196,7 +196,7 @@ class UpgradeablePackages(FactBase):
     default = dict
     use_default_on_error = True
 
-    def process(self, output: list[str]):
+    def process(self, output):
         result = {}
         for line in output:
             match = self.regex.match(line)

@@ -1,8 +1,9 @@
 """
-    Manage packages on OpenWrt using opkg (see https://openwrt.org/docs/guide-user/additional-software/opkg)
+    Manage packages on OpenWrt using opkg
         + ``update`` - update local copy of package information
         + ``packages`` -  install and remove packages
 
+    see https://openwrt.org/docs/guide-user/additional-software/opkg
     OpenWrt recommends against upgrading all packages  thus there is no ``opkg.upgrade`` function
 """
 from __future__ import annotations
