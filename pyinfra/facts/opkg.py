@@ -8,10 +8,8 @@ Gather the information provided by ``opkg`` on OpenWrt systems:
 
     see https://openwrt.org/docs/guide-user/additional-software/opkg
 """
-from __future__ import annotations
-
 import re
-from typing import NamedTuple
+from typing import Dict, NamedTuple, Union
 
 from pyinfra import logger
 from pyinfra.api import FactBase
@@ -27,10 +25,12 @@ class PkgUpgradeInfo(NamedTuple):
 
 
 class ConfInfo(NamedTuple):
-    paths: dict[str, str]  # list of paths, e.g. {'root':'/', 'ram':'/tmp}
+    paths: Dict[str, str]  # list of paths, e.g. {'root':'/', 'ram':'/tmp}
     list_dir: str  # where package lists are stored, e.g. /var/opkg-lists
-    options: dict[str, str | bool]  # mapping from option to value, e.g. {'check_signature': True}
-    arch_cfg: dict[str, int]  # priorities for architectures
+    options: Dict[
+        str, Union[str, bool]
+    ]  # mapping from option to value, e.g. {'check_signature': True}
+    arch_cfg: Dict[str, int]  # priorities for architectures
 
 
 class FeedInfo(NamedTuple):

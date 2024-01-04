@@ -6,7 +6,7 @@
     see https://openwrt.org/docs/guide-user/additional-software/opkg
     OpenWrt recommends against upgrading all packages  thus there is no ``opkg.upgrade`` function
 """
-from __future__ import annotations
+from typing import List, Union
 
 from pyinfra import host
 from pyinfra.api import StringCommand, operation
@@ -38,7 +38,7 @@ _update = update
 
 @operation
 def packages(
-    packages: str | list[str] = "",
+    packages: Union[str, List[str]] = "",
     present: bool = True,
     latest: bool = False,
     update: bool = True,
