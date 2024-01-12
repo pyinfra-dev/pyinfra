@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import IntEnum
 from graphlib import CycleError, TopologicalSorter
@@ -299,16 +298,6 @@ class State:
         for handler in self.callback_handlers:
             func = getattr(handler, method_name)
             func(self, *args, **kwargs)
-
-    @contextmanager
-    def preserve_loop_order(self, items):
-        logger.warning(
-            (
-                "Using `state.preserve_loop_order` is not longer required for operations to be "
-                "executed in correct loop order and can be safely removed."
-            ),
-        )
-        yield lambda: items
 
     def get_op_order(self):
         ts: TopologicalSorter = TopologicalSorter()
