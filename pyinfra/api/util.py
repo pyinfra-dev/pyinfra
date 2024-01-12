@@ -1,6 +1,7 @@
 from functools import wraps
 from hashlib import sha1
 from inspect import getframeinfo, getfullargspec, stack
+from io import BytesIO, StringIO
 from os import getcwd, path, stat
 from socket import error as socket_error, timeout as timeout_error
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
@@ -364,6 +365,14 @@ class get_file_io:
                     filename_or_io,
                 ),
             )
+
+        # Convert any StringIO/BytesIO to the other to match the desired mode
+        if isinstance(filename_or_io, StringIO) and mode == "rb":
+            filename_or_io.seek(0)
+            filename_or_io = BytesIO(filename_or_io.read().encode())
+        if isinstance(filename_or_io, BytesIO) and mode == "r":
+            filename_or_io.seek(0)
+            filename_or_io = StringIO(filename_or_io.read().decode())
 
         self.filename_or_io = filename_or_io
         self.mode = mode
