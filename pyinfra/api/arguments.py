@@ -19,7 +19,6 @@ from typing_extensions import TypedDict
 from pyinfra import context
 from pyinfra.api.exceptions import ArgumentTypeError
 from pyinfra.api.state import State
-
 from pyinfra.api.util import raise_if_bad_type
 
 if TYPE_CHECKING:
@@ -170,6 +169,7 @@ class MetaArguments(TypedDict):
     name: str
     _ignore_errors: bool
     _continue_on_error: bool
+    _if: Callable[[], bool]
 
 
 meta_argument_meta: dict[str, ArgumentMeta] = {
@@ -189,6 +189,9 @@ meta_argument_meta: dict[str, ArgumentMeta] = {
         ),
         default=lambda _: False,
     ),
+    "_if": ArgumentMeta(
+        "Only run this operation if this function returns True",
+        default=lambda _: None,
     ),
 }
 
