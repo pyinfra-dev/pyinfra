@@ -13,6 +13,7 @@ from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import NoGroupError, PyinfraError
 from pyinfra.api.facts import get_facts
 from pyinfra.api.operations import run_ops
+from pyinfra.api.state import StateStage
 from pyinfra.api.util import get_kwargs_str
 from pyinfra.context import ctx_config, ctx_inventory, ctx_state
 from pyinfra.operations import server
@@ -294,7 +295,7 @@ def _main(
 
     # Setup state, config & inventory
     #
-    state = _setup_state(verbosity, quiet, check_for_changes=not yes)
+    state = _setup_state(verbosity, quiet, yes)
     config = Config()
     ctx_config.set(config)
 
@@ -310,7 +311,7 @@ def _main(
         parallel,
         shell_executable,
         fail_percent,
-        quiet,
+        yes,
     )
     override_data = _set_override_data(
         data,
@@ -320,6 +321,9 @@ def _main(
         ssh_port,
         ssh_password,
     )
+
+    if yes is False:
+        _set_fail_prompts(state, config)
 
     # Load up the inventory from the filesystem
     #
@@ -345,7 +349,11 @@ def _main(
     # Connect to the hosts & start handling the user commands
     #
     logger.info("--> Connecting to hosts...")
+    state.set_stage(StateStage.Connect)
     connect_all(state)
+
+    logger.info("--> Preparing operations...")
+    state.set_stage(StateStage.Prepare)
     can_diff, state, config = _handle_commands(
         state, config, command, original_operations, operations
     )
@@ -369,41 +377,64 @@ def _main(
     if dry:
         _exit()
 
-    if can_diff and not yes:
-        click.echo(err=True)
-        confirm_msg = "    Operations ready, press enter to execute..."
-        click.echo(confirm_msg, err=True, nl=False)
-        v = input()
-        if v:
-            click.echo(f"Unexpected user input: {v}", err=True)
-            _exit()
-        # Go up, clear the line, go up again - as if the confirmation statement was never here!
-        click.echo(
-            "\033[1A{0}\033[1A".format("".join(" " for _ in range(len(confirm_msg)))),
-            err=True,
-            nl=False,
-        )
+    if (
+        can_diff
+        and not yes
+        and not _do_confirm("Detected changes displayed above, skip this step with -y")
+    ):
+        _exit()
 
     logger.info("--> Beginning operation run...")
-
+    state.set_stage(StateStage.Execute)
     run_ops(state, serial=serial, no_wait=no_wait)
 
     logger.info("--> Results:")
+    state.set_stage(StateStage.Disconnect)
     print_results(state)
     _exit()
 
 
+def _do_confirm(msg: str) -> bool:
+    click.echo(err=True)
+    click.echo(f"    {msg}", err=True)
+    warning_count = state.get_warning_counter()
+    if warning_count > 0:
+        click.secho(
+            f"    {warning_count} warnings shown during change detection, see above",
+            fg="yellow",
+            err=True,
+        )
+    confirm_msg = "    Press enter to execute..."
+    click.echo(confirm_msg, err=True, nl=False)
+    v = input()
+    if v:
+        click.echo(f"    Unexpected user input: {v}", err=True)
+        return False
+    # Go up, clear the line, go up again - as if the confirmation statement was never here!
+    click.echo(
+        "\033[1A{0}\033[1A".format("".join(" " for _ in range(len(confirm_msg)))),
+        err=True,
+        nl=False,
+    )
+    click.echo(err=True)
+    return True
+
+
 # Setup
 #
-def _setup_log_level(debug):
+def _setup_log_level(debug, debug_all):
     if not debug and not sys.warnoptions:
         warnings.simplefilter("ignore")
 
     log_level = logging.INFO
-    if debug:
+    if debug or debug_all:
         log_level = logging.DEBUG
 
-    setup_logging(log_level)
+    other_log_level = None
+    if debug_all:
+        other_log_level = logging.DEBUG
+
+    setup_logging(log_level, other_log_level)
 
 
 def _validate_operations(operations, chdir):
@@ -487,12 +518,12 @@ def _set_verbosity(state, verbosity):
     return state
 
 
-def _setup_state(verbosity, quiet, check_for_changes):
+def _setup_state(verbosity, quiet, yes):
     cwd = getcwd()
     if cwd not in sys.path:  # ensure cwd is present in sys.path
         sys.path.append(cwd)
 
-    state = State(check_for_changes=check_for_changes)
+    state = State(check_for_changes=not yes)
     state.cwd = cwd
     ctx_state.set(state)
 
@@ -510,7 +541,7 @@ def _set_config(
     parallel,
     shell_executable,
     fail_percent,
-    quiet,
+    yes,
 ):
     logger.info("--> Loading config...")
 
@@ -575,6 +606,19 @@ def _set_override_data(
             override_data[key] = value
 
     return override_data
+
+
+def _set_fail_prompts(state: State, config: Config) -> None:
+    # Set fail percent to zero, meaning we'll raise an exception for any fail,
+    # and we can capture + prompt the user to continue/exit.
+    config.FAIL_PERCENT = 0
+
+    def should_raise_failed_hosts(state: State) -> bool:
+        if state.current_stage == StateStage.Connect:
+            return not _do_confirm("One of more hosts failed to connect, continue?")
+        return not _do_confirm("One of more hosts failed, continue?")
+
+    state.should_raise_failed_hosts = should_raise_failed_hosts
 
 
 def _apply_inventory_limit(inventory, limit):

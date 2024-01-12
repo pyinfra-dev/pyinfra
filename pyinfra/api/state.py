@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
-from typing import TYPE_CHECKING, Iterator, Optional
+from typing import TYPE_CHECKING, Callable, Iterator, Optional
 
 from gevent.pool import Pool
 from paramiko import PKey
@@ -175,6 +175,7 @@ class State:
     current_deploy_filename: Optional[str] = None
     current_exec_filename: Optional[str] = None
     current_op_file_number: int = 0
+    should_raise_failed_hosts: Optional[Callable[["State"], bool]] = None
 
     def __init__(
         self,
@@ -183,7 +184,8 @@ class State:
         check_for_changes: bool = True,
         **kwargs,
     ):
-        """Initializes the state, the main Pyinfra
+        """
+        Initializes the state, the main Pyinfra
 
         Args:
             inventory (Optional[Inventory], optional): The inventory. Defaults to None.
@@ -404,6 +406,9 @@ class State:
             percent_failed = (1 - len(active_hosts) / activated_count) * 100
 
             if percent_failed > self.config.FAIL_PERCENT:
+                if self.should_raise_failed_hosts and self.should_raise_failed_hosts(self) is False:
+                    return
+
                 raise PyinfraError(
                     "Over {0}% of hosts failed ({1}%)".format(
                         self.config.FAIL_PERCENT,

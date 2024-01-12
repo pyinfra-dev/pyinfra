@@ -135,7 +135,6 @@ class Host:
         self.loop_position = []
 
         self.connector_data = {}
-        self.current_op_global_arguments = {}
 
         # Append only list of operation hashes as called on this host, used to
         # generate a DAG to create the final operation order.
@@ -197,10 +196,16 @@ class Host:
             self.print_prefix_padding,
         )
 
+    def log(self, message, log_func=logger.info):
+        log_func(f"{self.print_prefix}{message}")
+
+    def log_styled(self, message, log_func=logger.info, **kwargs):
+        message_styled = click.style(message, **kwargs)
+        self.log(message_styled, log_func=log_func)
+
     def get_deploy_data(self):
         if self.current_deploy_data:
             return self.current_deploy_data
-
         return {}
 
     def noop(self, description):

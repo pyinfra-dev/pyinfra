@@ -221,23 +221,29 @@ def print_meta(state: "State"):
     ]
 
     for op_hash in state.get_op_order():
-        hosts_in_op = list()
+        hosts_in_op = []
+        hosts_maybe_in_op = []
         for host in state.inventory.iter_activated_hosts():
             if op_hash in state.ops[host]:
-                if state.ops[host][op_hash].operation_meta.changed:
-                    hosts_in_op.append(host.name)
+                op_data = state.get_op_data_for_host(host, op_hash)
+                if op_data.operation_meta._maybe_is_change:
+                    if op_data.global_arguments["_if"]:
+                        hosts_maybe_in_op.append(host.name)
+                    else:
+                        hosts_in_op.append(host.name)
 
         rows.append(
             (
                 logger.info,
                 [
                     pretty_op_name(state.op_meta[op_hash]),
-                    "{0}/{1} ({2})".format(
+                    "{0}{1}/{2} ({3})".format(
                         len(hosts_in_op),
+                        f"-{len(hosts_maybe_in_op)}" if hosts_maybe_in_op else "",
                         len(state.inventory),
-                        truncate(", ".join(sorted(hosts_in_op)), 48),
+                        truncate(", ".join(sorted(hosts_in_op + hosts_maybe_in_op)), 48),
                     )
-                    if hosts_in_op
+                    if hosts_in_op or hosts_maybe_in_op
                     else "No hosts with changes at this time",
                 ],
             )
@@ -253,16 +259,16 @@ def print_results(state: "State"):
 
     for op_hash in state.get_op_order():
         hosts_in_op = 0
-        hosts_in_op_success = list()
-        hosts_in_op_error = list()
-        hosts_in_op_no_attempt = list()
+        hosts_in_op_success: list[str] = []
+        hosts_in_op_error: list[str] = []
+        hosts_in_op_no_attempt: list[str] = []
         for host in state.inventory.iter_activated_hosts():
             if op_hash not in state.ops[host]:
                 continue
 
             hosts_in_op += 1
 
-            result = state.ops[host][op_hash].operation_meta.success
+            result = state.ops[host][op_hash].operation_meta.did_succeed()
             if result is True:
                 hosts_in_op_success.append(host.name)
             elif result is False:

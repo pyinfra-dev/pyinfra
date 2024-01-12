@@ -3,6 +3,7 @@ import logging
 import click
 
 from pyinfra import logger, state
+from pyinfra.context import ctx_state
 
 
 class LogHandler(logging.Handler):
@@ -41,7 +42,7 @@ class LogFormatter(logging.Formatter):
 
         # We only handle strings here
         if isinstance(message, str):
-            if record.levelno is logging.WARNING:
+            if ctx_state.isset() and record.levelno is logging.WARNING:
                 state.increment_warning_counter()
 
             if "-->" in message:
