@@ -41,21 +41,24 @@ class InventoryError(PyinfraError):
     """
 
 
-class NoConnectorError(PyinfraError, TypeError):
+class NoConnectorError(PyinfraError, ValueError):
     """
     Raised when a requested connector is missing.
     """
 
 
-class NoHostError(PyinfraError, TypeError):
+class NoHostError(PyinfraError, KeyError):
     """
     Raised when an inventory is missing a host.
     """
 
 
-class NoGroupError(PyinfraError, TypeError):
+class NoGroupError(PyinfraError, KeyError):
     """
-    Raise when an inventory is missing a group.
+    Raised when an inventory is missing a group.
+    """
+
+
 class ConnectorDataTypeError(PyinfraError, TypeError):
     """
     Raised when host connector data has invalid types.
