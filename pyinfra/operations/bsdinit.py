@@ -49,7 +49,7 @@ def service(
 
     # BSD init is simple, just add/remove <service>_enabled="YES"
     if isinstance(enabled, bool):
-        yield from files.line(
+        yield from files.line._inner(
             path="/etc/rc.conf.local",
             line="^{0}_enable=".format(service),
             replace='{0}_enable="YES"'.format(service),

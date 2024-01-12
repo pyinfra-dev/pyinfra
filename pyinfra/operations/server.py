@@ -8,7 +8,7 @@ from io import StringIO
 from itertools import filterfalse, tee
 from os import path
 from time import sleep
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from pyinfra import host, logger, state
 from pyinfra.api import FunctionCommand, OperationError, StringCommand, operation
@@ -46,6 +46,9 @@ from . import (
     zypper,
 )
 from .util.files import chmod, sed_replace
+
+if TYPE_CHECKING:
+    from pyinfra.api.arguments_typed import PyinfraOperation
 
 
 @operation(is_idempotent=False)
@@ -189,7 +192,7 @@ def script(src, args=()):
     """
 
     temp_file = host.get_temp_filename()
-    yield from files.put(src=src, dest=temp_file)
+    yield from files.put._inner(src=src, dest=temp_file)
 
     yield chmod(temp_file, "+x")
     yield StringCommand(temp_file, *args)
@@ -219,7 +222,7 @@ def script_template(src, args=(), **data):
     """
 
     temp_file = host.get_temp_filename("{0}{1}".format(src, data))
-    yield from files.template(src, temp_file, **data)
+    yield from files.template._inner(src, temp_file, **data)
 
     yield chmod(temp_file, "+x")
     yield StringCommand(temp_file, *args)
@@ -394,7 +397,7 @@ def hostname(hostname, hostname_file=None):
         file = StringIO("{0}\n".format(hostname))
 
         # And ensure it exists
-        yield from files.put(src=file, dest=hostname_file)
+        yield from files.put._inner(src=file, dest=hostname_file)
 
 
 @operation()
@@ -437,7 +440,7 @@ def sysctl(
         host.noop("sysctl {0} is set to {1}".format(key, string_value))
 
     if persist:
-        yield from files.line(
+        yield from files.line._inner(
             path=persist_file,
             line="{0}[[:space:]]*=[[:space:]]*{1}".format(key, string_value),
             replace="{0} = {1}".format(key, string_value),
@@ -455,7 +458,7 @@ def service(
 ):
     """
     Manage the state of services. This command checks for the presence of all the
-    Linux init systems ``pyinfra`` can handle and executes the relevant operation.
+    Linux init systems pyinfra can handle and executes the relevant operation.
 
     + service: name of the service to manage
     + running: whether the service should be running
@@ -475,7 +478,7 @@ def service(
         )
     """
 
-    service_operation: Callable
+    service_operation: "PyinfraOperation"
 
     if host.get_fact(Which, command="systemctl"):
         service_operation = systemd.service
@@ -503,7 +506,7 @@ def service(
             ("No init system found " "(no systemctl, initctl, /etc/init.d or /etc/rc.d found)"),
         )
 
-    yield from service_operation(
+    yield from service_operation._inner(
         service=service,
         running=running,
         restarted=restarted,
@@ -520,7 +523,7 @@ def packages(
 ):
     """
     Add or remove system packages. This command checks for the presence of all the
-    system package managers ``pyinfra`` can handle and executes the relevant operation.
+    system package managers pyinfra can handle and executes the relevant operation.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed
@@ -535,7 +538,7 @@ def packages(
         )
     """
 
-    package_operation: Callable
+    package_operation: "PyinfraOperation"
 
     # TODO: improve this - use LinuxDistribution fact + mapping with fallback below?
     # Here to be preferred on openSUSE which also provides aptitude
@@ -575,7 +578,7 @@ def packages(
             ),
         )
 
-    yield from package_operation(packages=packages, present=present)
+    yield from package_operation._inner(packages=packages, present=present)
 
 
 @operation()
@@ -838,7 +841,7 @@ def user_authorized_keys(
 
     Public keys:
         These can be provided as strings containing the public key or as a path to
-        a public key file which ``pyinfra`` will read.
+        a public key file which pyinfra will read.
 
     **Examples:**
 
@@ -850,6 +853,7 @@ def user_authorized_keys(
             public_keys=["ed25519..."],
         )
     """
+
     if not authorized_key_directory:
         authorized_key_directory = f"/home/{user}/.ssh/"
     if not authorized_key_filename:
@@ -867,14 +871,14 @@ def user_authorized_keys(
             with open(try_path, "r") as f:
                 return f.read().strip()
 
-        return key
+        return key.strip()
 
     public_keys = list(map(read_any_pub_key_file, public_keys))
 
     # Ensure .ssh directory
     # note that this always outputs commands unless the SSH user has access to the
     # authorized_keys file, ie the SSH user is the user defined in this function
-    yield from files.directory(
+    yield from files.directory._inner(
         path=authorized_key_directory,
         user=user,
         group=group or user,
@@ -892,7 +896,7 @@ def user_authorized_keys(
         )
 
         # And ensure it exists
-        yield from files.put(
+        yield from files.put._inner(
             src=keys_file,
             dest=authorized_key_file,
             user=user,
@@ -902,7 +906,7 @@ def user_authorized_keys(
 
     else:
         # Ensure authorized_keys exists
-        yield from files.file(
+        yield from files.file._inner(
             path=authorized_key_file,
             user=user,
             group=group or user,
@@ -911,7 +915,7 @@ def user_authorized_keys(
 
         # And every public key is present
         for key in public_keys:
-            yield from files.line(path=authorized_key_file, line=key, ensure_newline=True)
+            yield from files.line._inner(path=authorized_key_file, line=key, ensure_newline=True)
 
 
 @operation()
@@ -961,7 +965,7 @@ def user(
 
     Public keys:
         These can be provided as strings containing the public key or as a path to
-        a public key file which ``pyinfra`` will read.
+        a public key file which pyinfra will read.
 
     **Examples:**
 
@@ -1118,7 +1122,7 @@ def user(
 
     # Ensure home directory ownership
     if ensure_home:
-        yield from files.directory(
+        yield from files.directory._inner(
             path=home,
             user=user,
             group=group or user,
@@ -1128,7 +1132,7 @@ def user(
 
     # Add SSH keys
     if public_keys is not None:
-        yield from user_authorized_keys(
+        yield from user_authorized_keys._inner(
             user=user,
             public_keys=public_keys,
             group=group,
@@ -1189,7 +1193,7 @@ def locale(
     if not present and locale in locales:
         logger.debug(f"Removing locale {locale}")
 
-        yield from files.line(
+        yield from files.line._inner(
             path=locales_definitions_file, line=f"^{matching_line}$", replace=f"# {matching_line}"
         )
 
@@ -1199,7 +1203,7 @@ def locale(
     if present and locale not in locales:
         logger.debug(f"Adding locale {locale}")
 
-        yield from files.replace(
+        yield from files.replace._inner(
             path=locales_definitions_file,
             text=f"^{matching_line}$",
             replace=f"{matching_line}".replace("# ", ""),

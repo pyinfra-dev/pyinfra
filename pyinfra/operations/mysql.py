@@ -269,7 +269,7 @@ def user(
     # If we're here either the user exists or we just created them; either way
     # now we can check any privileges are set.
     if privileges:
-        yield from _privileges(
+        yield from _privileges._inner(
             user,
             privileges,
             user_hostname=user_hostname,
@@ -370,7 +370,7 @@ def database(
 
     # Ensure any user privileges for this database
     if user and user_privileges:
-        yield from privileges(
+        yield from privileges._inner(
             user,
             user_hostname=user_hostname,
             privileges=user_privileges,

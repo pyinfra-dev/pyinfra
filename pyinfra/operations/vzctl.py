@@ -46,8 +46,8 @@ def restart(ctid, force=False):
     + force: whether to force container start
     """
 
-    yield from stop(ctid)
-    yield from start(ctid, force=force)
+    yield from stop._inner(ctid)
+    yield from start._inner(ctid, force=force)
 
 
 @operation(is_idempotent=False)

@@ -96,7 +96,7 @@ class Host:
     in_op: bool = False
     in_callback_op: bool = False
     current_op_hash: Optional[str] = None
-    current_op_global_arguments: Optional["AllArguments"]
+    current_op_global_arguments: Optional["AllArguments"] = None
 
     # Current context inside a @deploy function (op gen stage)
     in_deploy: bool = False
@@ -105,8 +105,8 @@ class Host:
     current_deploy_data = None
 
     # Current context during operation execution
-    executing_op_hash = None
-    nested_executing_op_hash = None
+    executing_op_hash: Optional[str] = None
+    nested_executing_op_hash: Optional[str] = None
 
     loop_position: list[int]
 

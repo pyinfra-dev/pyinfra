@@ -52,7 +52,7 @@ def service(
     # Upstart jobs are setup w/runlevels etc in their config files, so here we just check
     # there's no override file.
     if enabled is True:
-        yield from files.file(
+        yield from files.file._inner(
             path="/etc/init/{0}.override".format(service),
             present=False,
         )
@@ -60,7 +60,7 @@ def service(
     # Set the override file to "manual" to disable automatic start
     elif enabled is False:
         file = StringIO("manual\n")
-        yield from files.put(
+        yield from files.put._inner(
             src=file,
             dest="/etc/init/{0}.override".format(service),
         )

@@ -28,7 +28,7 @@ def daemon_reload(user_mode=False, machine=None, user_name=None):
     yield "{0} daemon-reload".format(systemctl_cmd)
 
 
-_daemon_reload = daemon_reload  # noqa: E305
+_daemon_reload = daemon_reload._inner  # noqa: E305
 
 
 @operation()

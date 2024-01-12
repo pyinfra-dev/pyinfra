@@ -133,7 +133,7 @@ def enable(
 
     # Ensure all the new links exist
     for link in links:
-        yield from files.link(
+        yield from files.link._inner(
             path=link,
             target="/etc/init.d/{0}".format(service),
         )

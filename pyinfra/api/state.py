@@ -99,19 +99,19 @@ class StateStage(IntEnum):
 class StateOperationMeta:
     names: set[str]
     args: list[str]
-    op_order: tuple[int]
+    op_order: tuple[int, ...]
     global_arguments: "AllArguments"
 
-    def __init__(self, op_order: tuple[int]):
+    def __init__(self, op_order: tuple[int, ...]):
         self.op_order = op_order
         self.names = set()
         self.args = []
-        self.global_arguments = {}
+        self.global_arguments = {}  # type: ignore
 
 
 @dataclass
 class StateOperationHostData:
-    command_generator: Iterator["PyinfraCommand"]
+    command_generator: Callable[[], Iterator["PyinfraCommand"]]
     global_arguments: "AllArguments"
     operation_meta: "OperationMeta"
     parent_op_hash: Optional[str] = None

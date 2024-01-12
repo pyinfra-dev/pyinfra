@@ -17,9 +17,3 @@ check_untyped_defs = true
 ignore_missing_imports = true
 enable_incomplete_feature = "Unpack"
 files = "pyinfra,pyinfra_cli"
-exclude = [
-    # Exclude the stub operation file so the actual operation.py gets type checked
-    # by default with mypy. There are extra tests (see check-operation-stub-typing.sh)
-    # that cover this file specifically.
-    "operation.pyi",
-]

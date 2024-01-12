@@ -23,7 +23,7 @@ def upgrade(available: bool = False):
         yield "apk upgrade"
 
 
-_upgrade = upgrade  # noqa: E305
+_upgrade = upgrade._inner  # noqa: E305
 
 
 @operation(is_idempotent=False)
@@ -35,7 +35,7 @@ def update():
     yield "apk update"
 
 
-_update = update  # noqa: E305
+_update = update._inner  # noqa: E305
 
 
 @operation()

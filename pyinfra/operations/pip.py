@@ -46,7 +46,7 @@ def virtualenv(
 
     if present is False:
         if host.get_fact(File, path=activate_script_path):
-            yield from files.directory(path, present=False)
+            yield from files.directory._inner(path, present=False)
         else:
             host.noop("virtualenv {0} does not exist".format(path))
 
@@ -76,7 +76,7 @@ def virtualenv(
             host.noop("virtualenv {0} exists".format(path))
 
 
-_virtualenv = virtualenv  # noqa
+_virtualenv = virtualenv._inner  # noqa
 
 
 @operation()
@@ -105,7 +105,7 @@ def venv(
         )
     """
 
-    yield from virtualenv(
+    yield from _virtualenv(
         venv=True,
         path=path,
         python=python,

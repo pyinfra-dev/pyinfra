@@ -75,10 +75,10 @@ def packages(
     """
 
     if update:
-        yield from _update()
+        yield from _update._inner()
 
     if upgrade:
-        yield from _upgrade()
+        yield from _upgrade._inner()
 
     yield from ensure_packages(
         host,
@@ -143,7 +143,7 @@ def casks(
     """
 
     if upgrade:
-        yield from cask_upgrade()
+        yield from cask_upgrade._inner()
 
     args = cask_args(host)
 

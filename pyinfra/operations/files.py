@@ -629,7 +629,7 @@ def sync(
     if dest_link_info:
         dest_to_ensure = dest_link_info["link_target"]
 
-    yield from directory(
+    yield from directory._inner(
         path=dest_to_ensure,
         user=user,
         group=group,
@@ -638,7 +638,7 @@ def sync(
 
     # Ensure any remote dirnames
     for dir_path_curr, dir_mode_curr in ensure_dirnames:
-        yield from directory(
+        yield from directory._inner(
             path=unix_path_join(dest, dir_path_curr),
             user=user,
             group=group,
@@ -647,7 +647,7 @@ def sync(
 
     # Put each file combination
     for local_filename, remote_filename in put_files:
-        yield from put(
+        yield from put._inner(
             src=local_filename,
             dest=remote_filename,
             user=user,
@@ -667,7 +667,7 @@ def sync(
             if exclude and any(fnmatch(filename, match) for match in exclude):
                 continue
 
-            yield from file(path=filename, present=False)
+            yield from file._inner(path=filename, present=False)
 
 
 @memoize
@@ -705,7 +705,7 @@ def _create_remote_dir(state, host, remote_filename, user, group):
     # Always use POSIX style path as local might be Windows, remote always *nix
     remote_dirname = posixpath.dirname(remote_filename)
     if remote_dirname:
-        yield from directory(
+        yield from directory._inner(
             path=remote_dirname,
             user=user,
             group=group,
@@ -1055,7 +1055,7 @@ def template(src, dest, user=None, group=None, mode=None, create_remote_dir=True
     output_file.template = src  # type: ignore[attr-defined]
 
     # Pass to the put function
-    yield from put(
+    yield from put._inner(
         src=output_file,
         dest=dest,
         user=user,

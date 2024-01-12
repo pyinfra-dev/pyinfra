@@ -130,7 +130,7 @@ def update():
     yield "yum update -y"
 
 
-_update = update  # noqa: E305 (for use below where update is a kwarg)
+_update = update._inner  # noqa: E305 (for use below where update is a kwarg)
 
 
 @operation()

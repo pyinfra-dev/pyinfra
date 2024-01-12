@@ -187,8 +187,7 @@ meta_argument_meta: dict[str, ArgumentMeta] = {
             "Continue executing operation commands after error. "
             "Only applies when ``_ignore_errors`` is true."
         ),
-        default=lambda config: False,
-    ),
+        default=lambda _: False,
     ),
     ),
 }

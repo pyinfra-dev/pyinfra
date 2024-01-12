@@ -165,7 +165,7 @@ def ensure_rpm(state, host, files, source, present, package_manager_command):
         temp_filename = "{0}.rpm".format(host.get_temp_filename(source))
 
         # Ensure it's downloaded
-        yield from files.download(source, temp_filename)
+        yield from files.download._inner(source, temp_filename)
 
         # Override the source with the downloaded file
         source = temp_filename
@@ -229,13 +229,13 @@ def ensure_yum_repo(
 
     # If we don't want the repo, just remove any existing file
     if not present:
-        yield from files.file(filename, present=False)
+        yield from files.file._inner(filename, present=False)
         return
 
     # If we're a URL, download the repo if it doesn't exist
     if url:
         if not host.get_fact(File, path=filename):
-            yield from files.download(url, filename)
+            yield from files.download._inner(url, filename)
         return
 
     # Description defaults to name
@@ -261,4 +261,4 @@ def ensure_yum_repo(
     repo_file = StringIO(repo)
 
     # Ensure this is the file on the server
-    yield from files.put(repo_file, filename)
+    yield from files.put._inner(repo_file, filename)

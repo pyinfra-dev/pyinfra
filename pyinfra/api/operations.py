@@ -14,7 +14,7 @@ from pyinfra.connectors.util import CommandOutput, OutputLine
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
-from .arguments import ConnectorArguments, get_connector_argument_keys
+from .arguments import CONNECTOR_ARGUMENT_KEYS, ConnectorArguments
 from .command import FunctionCommand, PyinfraCommand, StringCommand
 from .exceptions import PyinfraError
 from .util import (
@@ -28,28 +28,6 @@ from .util import (
 if TYPE_CHECKING:
     from .inventory import Host
     from .state import State
-
-
-def _run_shell_command(
-    state: "State",
-    host: "Host",
-    command: StringCommand,
-    connector_arguments: ConnectorArguments,
-    timeout: int,
-) -> tuple[bool, CommandOutput]:
-    status = False
-    combined_output_lines = CommandOutput([])
-
-    try:
-        status, combined_output_lines = command.execute(state, host, connector_arguments)
-    except (timeout_error, socket_error, SSHException) as e:
-        log_host_command_error(host, e, timeout=timeout)
-
-    # If we failed and have no already printed the stderr, print it
-    if status is False and not state.print_output:
-        print_host_combined_output(host, combined_output_lines)
-
-    return status, combined_output_lines
 
 
 # Run a single host operation
@@ -86,11 +64,9 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
 
     ignore_errors = global_arguments["_ignore_errors"]
     continue_on_error = global_arguments["_continue_on_error"]
-    timeout = global_arguments["_timeout"]
+    timeout = global_arguments.get("_timeout", 0)
 
-    command_generator = op_data.command_generator()
-
-    executor_kwarg_keys = get_connector_argument_keys()
+    executor_kwarg_keys = CONNECTOR_ARGUMENT_KEYS
     base_connector_arguments: ConnectorArguments = (
         cast(  # https://github.com/python/mypy/issues/10371
             ConnectorArguments,
@@ -103,7 +79,7 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
     commands = []
     all_combined_output_lines: list[OutputLine] = []
 
-    for command in command_generator:
+    for command in op_data.command_generator():
         commands.append(command)
 
         status = False
@@ -117,19 +93,29 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
         if isinstance(command, FunctionCommand):
             try:
                 status = command.execute(state, host, connector_arguments)
-            except Exception as e:  # Custom functions could do anything, so expect anything!
-                _formatted_exc = format_exception(e)
-                _error_msg = "Unexpected error in Python callback: {0}".format(_formatted_exc)
-                _error_msg_styled = click.style(_error_msg, "red")
-                _error_log = "{0}{1}".format(host.print_prefix, _error_msg_styled)
+            except Exception as e:
+                # Custom functions could do anything, so expect anything!
                 logger.warning(traceback.format_exc())
-                logger.error(_error_log)
+                host.log_styled(
+                    f"Unexpected error in Python callback: {format_exception(e)}",
+                    fg="red",
+                    log_func=logger.warning,
+                )
 
         elif isinstance(command, StringCommand):
-            status, combined_output_lines = _run_shell_command(
-                state, host, command, connector_arguments, timeout
-            )
+            combined_output_lines = CommandOutput([])
+            try:
+                status, combined_output_lines = command.execute(
+                    state,
+                    host,
+                    connector_arguments,
+                )
+            except (timeout_error, socket_error, SSHException) as e:
+                log_host_command_error(host, e, timeout=timeout)
             all_combined_output_lines.extend(combined_output_lines)
+            # If we failed and have not already printed the stderr, print it
+            if status is False and not state.print_output:
+                print_host_combined_output(host, combined_output_lines)
 
         else:
             try:
@@ -149,7 +135,7 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
     # Handle results
     #
 
-    return_status = not did_error
+    op_success = return_status = not did_error
     host_results = state.get_results_for_host(host)
 
     if did_error is False:
@@ -181,12 +167,11 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
         # Unignored error -> False
         state.trigger_callbacks("operation_host_error", host, op_hash)
 
-    # Only set result if we actually did something (failed or executed >0 commands)
-    if return_status is False or (return_status is True and executed_commands > 0):
-        op_data.operation_meta.set_result(return_status)
-
-    op_data.operation_meta.set_commands(commands)
-    op_data.operation_meta.set_combined_output_lines(all_combined_output_lines)
+    op_data.operation_meta.set_complete(
+        op_success,
+        commands,
+        all_combined_output_lines,
+    )
 
     return return_status
 
@@ -293,10 +278,9 @@ def _run_single_op(state: "State", op_hash: str):
         batches = [list(state.inventory.iter_active_hosts())]
 
         # If parallel set break up the inventory into a series of batches
-        if op_meta.global_arguments["_parallel"]:
-            parallel = op_meta.global_arguments["_parallel"]
+        parallel = op_meta.global_arguments["_parallel"]
+        if parallel:
             hosts = list(state.inventory.iter_active_hosts())
-
             batches = [hosts[i : i + parallel] for i in range(0, len(hosts), parallel)]
 
         for batch in batches:

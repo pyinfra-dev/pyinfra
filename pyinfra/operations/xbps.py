@@ -18,7 +18,7 @@ def upgrade():
     yield "xbps-install -y -u"
 
 
-_upgrade = upgrade  # noqa: E305
+_upgrade = upgrade._inner  # noqa: E305
 
 
 @operation(is_idempotent=False)
@@ -30,7 +30,7 @@ def update():
     yield "xbps-install -S"
 
 
-_update = update  # noqa: E305
+_update = update._inner  # noqa: E305
 
 
 @operation()
