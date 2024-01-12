@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 
-from inspect import getfullargspec
+import sys
+from inspect import cleandoc, getdoc, getfullargspec
 from os import makedirs, path
+from typing import get_type_hints
 
-from docs.utils import title_line
 from pyinfra.api.connectors import get_all_connectors
+
+sys.path.append(".")
+from docs.utils import title_line  # noqa: E402
 
 
 def build_connectors_docs():
@@ -21,8 +25,10 @@ def build_connectors_docs():
         lines.append(title_line("-", full_title))
         lines.append("")
 
-        if connector.__doc__:
-            lines.append(connector.__doc__)
+        doc = getdoc(connector)
+        if doc:
+            lines.append(doc)
+            lines.append("")
 
         data_title = "Usage"
         lines.append(data_title)
@@ -36,36 +42,60 @@ def build_connectors_docs():
             names_argument_key = f"/{names_argument_key}"
         lines.append(
             f"""
-.. code:: python
+.. code:: shell
 
     pyinfra @{connector_name}{names_argument_key} ...
 """.strip(),
         )
         lines.append("")
 
-        data_keys = connector.Meta.DataKeys.__dict__
-
         data_key_lines = []
-        for key, description in data_keys.items():
+
+        for key, type_ in get_type_hints(connector.data_cls).items():
             if key.startswith("_"):
                 continue
-            data_key_lines.append(f"    {connector.Meta.keys_prefix}_{key}  # {description}")
-
+            meta = connector.data_meta[key]
+            default = "" if meta.default is None else f"``{meta.default}``"
+            data_key_lines.append(
+                f"""   * - ``{key}``
+     - {meta.description}
+     - ``{type_.__name__}``
+     - {default}
+"""
+            )
         if data_key_lines:
             data_title = "Available Data"
             lines.append(data_title)
             lines.append(title_line("~", data_title))
             lines.append("")
+            lines.append(
+                "The following keys can be set as host or group data to control "
+                "how this connector interacts with the target."
+            )
+            lines.append("")
 
             data_key_lines = "\n".join(data_key_lines)
             lines.append(
                 f"""
-.. code:: python
+.. list-table::
+   :header-rows: 1
+   :widths: 25 45 15 15
 
+   * - Key
+     - Description
+     - Type
+     - Default
 {data_key_lines}
     """.strip(),
             )
             lines.append("")
+
+        examples_doc = getattr(connector, "__examples_doc__", None)
+        if examples_doc:
+            lines.append("Examples")
+            lines.append(title_line("~", "Examples"))
+            lines.append("")
+            lines.append(cleandoc(examples_doc))
 
         module_filename = path.join(docs_dir, "connectors", f"{connector_name}.rst")
         print("--> Writing {0}".format(module_filename))

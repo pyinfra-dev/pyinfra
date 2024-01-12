@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 
+import sys
 from glob import glob
 from importlib import import_module
 from inspect import getfullargspec, getmembers, isclass
 from os import makedirs, path
 from types import FunctionType
 
-from docs.utils import format_doc_line, title_line
 from pyinfra.api.facts import FactBase
+
+sys.path.append(".")
+from docs.utils import format_doc_line, title_line  # noqa: E402
 
 MODULE_DEF_LINE_MAX = 90
 

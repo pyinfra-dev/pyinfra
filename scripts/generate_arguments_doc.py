@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 
+import sys
 from inspect import cleandoc
 from os import path
 from typing import get_type_hints
 
-from docs.utils import title_line
 from pyinfra.api import Config
 from pyinfra.api.arguments import AllArguments, __argument_docs__
 from pyinfra.api.host import Host
 from pyinfra.api.operation import OperationMeta
+
+sys.path.append(".")
+from docs.utils import title_line  # noqa: E402
 
 
 def build_arguments_doc():
