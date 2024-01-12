@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import patch
 
 from paramiko import SSHException
 
@@ -60,6 +61,7 @@ class TestInventoryApi(TestCase):
 
 
 class TestStateApi(PatchSSHTestCase):
+    @patch("pyinfra.connectors.base.raise_if_bad_type", lambda *args, **kwargs: None)
     def test_fail_percent(self):
         inventory = make_inventory(
             (

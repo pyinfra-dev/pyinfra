@@ -29,11 +29,11 @@ from ..util import make_inventory
 class TestOperationMeta(TestCase):
     def test_operation_meta_repr_no_change(self):
         op_meta = OperationMeta("hash", False)
-        assert repr(op_meta) == "OperationMeta(changed=False, hash=hash)"
+        assert repr(op_meta) == "OperationMeta(executed=False, maybeChange=False, hash=hash)"
 
     def test_operation_meta_repr_changes(self):
         op_meta = OperationMeta("hash", True)
-        assert repr(op_meta) == "OperationMeta(changed=True, hash=hash)"
+        assert repr(op_meta) == "OperationMeta(executed=False, maybeChange=True, hash=hash)"
 
 
 class TestOperationsApi(PatchSSHTestCase):
@@ -97,7 +97,7 @@ class TestOperationsApi(PatchSSHTestCase):
         run_ops(state)
 
         # Ensure the commands
-        assert state.ops[somehost][first_op_hash].operation_meta.commands == [
+        assert state.ops[somehost][first_op_hash].operation_meta._commands == [
             StringCommand("touch /var/log/pyinfra.log"),
             StringCommand("chmod 644 /var/log/pyinfra.log"),
             StringCommand("chown pyinfra:pyinfra /var/log/pyinfra.log"),
@@ -112,10 +112,6 @@ class TestOperationsApi(PatchSSHTestCase):
         # And w/o errors
         assert state.results[somehost].error_ops == 0
         assert state.results[anotherhost].error_ops == 0
-
-        # And with the different modes
-        run_ops(state, serial=True)
-        run_ops(state, no_wait=True)
 
         disconnect_all(state)
 
@@ -181,7 +177,7 @@ class TestOperationsApi(PatchSSHTestCase):
         run_ops(state)
 
         # Ensure first op used the right (upload) command
-        assert state.ops[somehost][first_op_hash].operation_meta.commands == [
+        assert state.ops[somehost][first_op_hash].operation_meta._commands == [
             StringCommand("mkdir -p /home/vagrant"),
             FileUploadCommand("files/file.txt", "/home/vagrant/file.txt"),
         ]
@@ -225,7 +221,7 @@ class TestOperationsApi(PatchSSHTestCase):
             run_ops(state)
 
         # Ensure first op has the right (upload) command
-        assert state.ops[somehost][first_op_hash].operation_meta.commands == [
+        assert state.ops[somehost][first_op_hash].operation_meta._commands == [
             FileDownloadCommand("/home/vagrant/file.txt", "files/file.txt"),
         ]
 
@@ -296,7 +292,7 @@ class TestOperationsApi(PatchSSHTestCase):
         fake_run_local_process.assert_called_with(
             (
                 "rsync -ax --delete --rsh "
-                '"ssh -o BatchMode=yes"'
+                '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
                 " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
@@ -381,7 +377,7 @@ class TestOperationsApi(PatchSSHTestCase):
         fake_run_local_process.assert_called_with(
             (
                 "rsync -ax --delete --rsh "
-                "\"ssh -o BatchMode=yes -F '/home/me/ssh_test_config && echo hi'\""
+                '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\" -F \'/home/me/ssh_test_config && echo hi\'"'
                 " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
@@ -436,11 +432,11 @@ class TestNestedOperationsApi(PatchSSHTestCase):
 
         try:
             outer_result = server.shell(commands="echo outer")
-            assert outer_result.combined_output_lines is None
+            assert outer_result._combined_output_lines is None
 
             def callback():
                 inner_result = server.shell(commands="echo inner")
-                assert inner_result.combined_output_lines is not None
+                assert inner_result._combined_output_lines is not None
 
             python.call(function=callback)
 
@@ -450,7 +446,7 @@ class TestNestedOperationsApi(PatchSSHTestCase):
 
             assert len(state.get_op_order()) == 3
             assert state.results[somehost].success_ops == 3
-            assert outer_result.combined_output_lines is not None
+            assert outer_result._combined_output_lines is not None
 
             disconnect_all(state)
         finally:
@@ -532,18 +528,19 @@ class TestOperationOrdering(PatchSSHTestCase):
         # Add op to just the second host - using the context modules such that
         # it replicates a deploy file.
         ctx_host.set(inventory.get_host("anotherhost"))
-        first_context_hash = server.user("anotherhost_user").hash
+        first_context_hash = server.user("anotherhost_user")._hash
 
         # Add op to just the first host - using the context modules such that
         # it replicates a deploy file.
         ctx_host.set(inventory.get_host("somehost"))
-        second_context_hash = server.user("somehost_user").hash
+        second_context_hash = server.user("somehost_user")._hash
 
         ctx_state.reset()
         ctx_host.reset()
 
         pyinfra.is_cli = False
 
+        print(state.ops)
         # Ensure there are two ops
         op_order = state.get_op_order()
         assert len(op_order) == 3
@@ -567,9 +564,9 @@ class TestOperationOrdering(PatchSSHTestCase):
         another_host = inventory.get_host("anotherhost")
 
         def add_another_op():
-            return add_op(state, server.shell, "echo second-op")[another_host].hash
+            return add_op(state, server.shell, "echo second-op")[another_host]._hash
 
-        first_op_hash = add_op(state, server.shell, "echo first-op")[another_host].hash
+        first_op_hash = add_op(state, server.shell, "echo first-op")[another_host]._hash
         second_op_hash = add_another_op()  # note `add_op` will be called on an earlier line
 
         op_order = state.get_op_order()

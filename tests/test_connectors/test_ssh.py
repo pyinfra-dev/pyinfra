@@ -102,10 +102,10 @@ class TestSSHConnector(TestCase):
                 pkey=fake_key,
                 timeout=10,
                 username="vagrant",
-                _pyinfra_ssh_forward_agent=None,
+                _pyinfra_ssh_forward_agent=False,
                 _pyinfra_ssh_config_file=None,
                 _pyinfra_ssh_known_hosts_file=None,
-                _pyinfra_ssh_strict_host_key_checking=None,
+                _pyinfra_ssh_strict_host_key_checking="accept-new",
                 _pyinfra_ssh_paramiko_connect_kwargs=None,
             )
 
@@ -257,10 +257,10 @@ class TestSSHConnector(TestCase):
                 pkey=fake_key,
                 timeout=10,
                 username="vagrant",
-                _pyinfra_ssh_forward_agent=None,
+                _pyinfra_ssh_forward_agent=False,
                 _pyinfra_ssh_config_file=None,
                 _pyinfra_ssh_known_hosts_file=None,
-                _pyinfra_ssh_strict_host_key_checking=None,
+                _pyinfra_ssh_strict_host_key_checking="accept-new",
                 _pyinfra_ssh_paramiko_connect_kwargs=None,
             )
 
@@ -316,10 +316,10 @@ class TestSSHConnector(TestCase):
                 pkey=fake_dss_key,
                 timeout=10,
                 username="vagrant",
-                _pyinfra_ssh_forward_agent=None,
+                _pyinfra_ssh_forward_agent=False,
                 _pyinfra_ssh_config_file=None,
                 _pyinfra_ssh_known_hosts_file=None,
-                _pyinfra_ssh_strict_host_key_checking=None,
+                _pyinfra_ssh_strict_host_key_checking="accept-new",
                 _pyinfra_ssh_paramiko_connect_kwargs=None,
             )
 
@@ -451,46 +451,6 @@ class TestSSHConnector(TestCase):
 
     @patch("pyinfra.connectors.util.getpass")
     @patch("pyinfra.connectors.ssh.SSHClient")
-    def test_run_shell_command_sudo_password_prompt(
-        self,
-        fake_ssh_client,
-        fake_getpass,
-    ):
-        fake_ssh = MagicMock()
-        fake_stdout = MagicMock()
-        fake_ssh.exec_command.return_value = MagicMock(), fake_stdout, MagicMock()
-
-        fake_ssh_client.return_value = fake_ssh
-        fake_getpass.return_value = "password"
-
-        inventory = make_inventory(hosts=("somehost",))
-        State(inventory, Config())
-        host = inventory.get_host("somehost")
-        host.connect()
-
-        command = "echo Šablony"
-        fake_stdout.__iter__.return_value = ["/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"]
-        fake_stdout.channel.recv_exit_status.return_value = 0
-
-        out = host.run_shell_command(
-            command, _sudo=True, _use_sudo_password=True, print_output=True
-        )
-        assert len(out) == 2
-
-        status, output = out
-        assert status is True
-
-        fake_ssh.exec_command.assert_called_with(
-            (
-                "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
-                "PYINFRA_SUDO_PASSWORD=password "
-                "sudo -H -A -k sh -c 'echo Šablony'"
-            ),
-            get_pty=False,
-        )
-
-    @patch("pyinfra.connectors.util.getpass")
-    @patch("pyinfra.connectors.ssh.SSHClient")
     def test_run_shell_command_sudo_password_automatic_prompt(
         self,
         fake_ssh_client,
@@ -544,13 +504,13 @@ class TestSSHConnector(TestCase):
     #
 
     @patch("pyinfra.connectors.ssh.SSHClient")
-    @patch("pyinfra.connectors.util._get_sudo_password")
+    @patch("pyinfra.connectors.util.getpass")
     def test_run_shell_command_retry_for_sudo_password(
         self,
-        fake_get_sudo_password,
+        fake_getpass,
         fake_ssh_client,
     ):
-        fake_get_sudo_password.return_value = "PASSWORD"
+        fake_getpass.return_value = "PASSWORD"
 
         fake_ssh = MagicMock()
         fake_stdin = MagicMock()
@@ -570,13 +530,13 @@ class TestSSHConnector(TestCase):
         return_values = [1, 0]  # return 0 on the second call
         fake_stdout.channel.recv_exit_status.side_effect = lambda: return_values.pop(0)
 
-        out = host.run_shell_command(command)
+        out = host.run_shell_command(command, _sudo=True)
         assert len(out) == 2
         assert out[0] is True
-        assert fake_get_sudo_password.called
+        assert fake_getpass.called
         fake_ssh.exec_command.assert_called_with(
             "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
-            "PYINFRA_SUDO_PASSWORD=PASSWORD sh -c 'echo hi'",
+            "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k sh -c 'echo hi'",
             get_pty=False,
         )
 

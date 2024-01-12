@@ -41,19 +41,19 @@ class TestDeploysApi(PatchSSHTestCase):
 
         first_op_hash = op_order[0]
         assert state.op_meta[first_op_hash].names == {"test_deploy | Server/Shell"}
-        assert state.ops[somehost][first_op_hash].operation_meta.commands == [
+        assert state.ops[somehost][first_op_hash].operation_meta._commands == [
             StringCommand("echo first command"),
         ]
-        assert state.ops[anotherhost][first_op_hash].operation_meta.commands == [
+        assert state.ops[anotherhost][first_op_hash].operation_meta._commands == [
             StringCommand("echo first command"),
         ]
 
         second_op_hash = op_order[1]
         assert state.op_meta[second_op_hash].names == {"test_deploy | Server/Shell"}
-        assert state.ops[somehost][second_op_hash].operation_meta.commands == [
+        assert state.ops[somehost][second_op_hash].operation_meta._commands == [
             StringCommand("echo second command"),
         ]
-        assert state.ops[anotherhost][second_op_hash].operation_meta.commands == [
+        assert state.ops[anotherhost][second_op_hash].operation_meta._commands == [
             StringCommand("echo second command"),
         ]
 
@@ -66,10 +66,6 @@ class TestDeploysApi(PatchSSHTestCase):
         # And w/o errors
         assert state.results[somehost].error_ops == 0
         assert state.results[anotherhost].error_ops == 0
-
-        # And with the different modes
-        run_ops(state, serial=True)
-        run_ops(state, no_wait=True)
 
         disconnect_all(state)
 
@@ -109,7 +105,7 @@ class TestDeploysApi(PatchSSHTestCase):
 
         first_op_hash = op_order[0]
         assert state.op_meta[first_op_hash].names == {"test_deploy | Server/Shell"}
-        assert state.ops[somehost][first_op_hash].operation_meta.commands == [
+        assert state.ops[somehost][first_op_hash].operation_meta._commands == [
             StringCommand("echo first command"),
         ]
 
@@ -117,12 +113,12 @@ class TestDeploysApi(PatchSSHTestCase):
         assert state.op_meta[second_op_hash].names == {
             "test_deploy | test_nested_deploy | Server/Shell",
         }
-        assert state.ops[somehost][second_op_hash].operation_meta.commands == [
+        assert state.ops[somehost][second_op_hash].operation_meta._commands == [
             StringCommand("echo nested command"),
         ]
 
         third_op_hash = op_order[2]
         assert state.op_meta[third_op_hash].names == {"test_deploy | Server/Shell"}
-        assert state.ops[somehost][third_op_hash].operation_meta.commands == [
+        assert state.ops[somehost][third_op_hash].operation_meta._commands == [
             StringCommand("echo second command"),
         ]

@@ -47,11 +47,11 @@ def run_docker_ssh_server(helpers):
 @pytest.mark.end_to_end_ssh
 def test_e2e_ssh_sudo_password(helpers):
     helpers.run_check_output(
-        f"{PYINFRA_COMMAND} server.shell echo _sudo=True _use_sudo_password=password",
+        f"{PYINFRA_COMMAND} server.shell echo _sudo=True _sudo_password=password",
         expected_lines=["localhost] Success"],
     )
     helpers.run_check_output(
-        f"{PYINFRA_COMMAND} server.shell echo _sudo=True _use_sudo_password=wrongpassword",
+        f"{PYINFRA_COMMAND} server.shell echo _sudo=True _sudo_password=wrongpassword",
         expected_lines=["localhost] Error"],
         expected_exit_code=1,
     )

@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from pyinfra.api import Config, State
-from pyinfra.api.arguments import get_connector_argument_keys, pop_global_arguments
+from pyinfra.api.arguments import CONNECTOR_ARGUMENT_KEYS, pop_global_arguments
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.facts import get_facts
@@ -17,7 +17,7 @@ def _get_executor_defaults(state, host):
     return {
         key: value
         for key, value in global_argument_defaults.items()
-        if key in get_connector_argument_keys()
+        if key in CONNECTOR_ARGUMENT_KEYS
     }
 
 
@@ -55,7 +55,6 @@ class TestFactsApi(PatchSSHTestCase):
         anotherhost.current_op_global_arguments = {
             "_sudo": True,
             "_sudo_user": "someuser",
-            "_use_sudo_password": True,
             "_su_user": "someuser",
             "_timeout": 10,
             "_env": {"HELLO": "WORLD"},

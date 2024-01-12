@@ -4,7 +4,7 @@ import warnings
 from importlib import import_module
 from os import listdir, path
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from pyinfra.api import FileDownloadCommand, FileUploadCommand, FunctionCommand, StringCommand
 from pyinfra.context import ctx_host, ctx_state
@@ -43,6 +43,8 @@ def parse_commands(commands):
             if hasattr(command.src, "read"):
                 command.src.seek(0)
                 data = command.src.read()
+                if isinstance(data, bytes):
+                    data = data.decode()
             else:
                 data = str(command.src)
             json_command = ["upload", data, str(command.dest)]
@@ -90,7 +92,6 @@ def make_operation_tests(arg):
     # Generate a test class
     @patch("pyinfra.operations.files.get_timestamp", lambda: "a-timestamp")
     @patch("pyinfra.operations.util.files.get_timestamp", lambda: "a-timestamp")
-    @patch("pyinfra.operations.python.getfullargspec", lambda x: MagicMock())
     class TestTests(TestCase, metaclass=JsonTest):
         jsontest_files = path.join("tests", "operations", arg)
         jsontest_prefix = "test_{0}_{1}_".format(module_name, op_name)
@@ -121,7 +122,7 @@ def make_operation_tests(arg):
                 with ctx_host.use(host):
                     with patch_files(test_data.get("local_files", {})):
                         try:
-                            output_commands = list(op._pyinfra_op(*args, **kwargs))
+                            output_commands = list(op._inner(*args, **kwargs))
                         except Exception as e:
                             if allowed_exception:
                                 allowed_exception_names = allowed_exception.get("names")

@@ -16,40 +16,40 @@ class TestOperationKwargs(TestCase):
 
     def test_get_from_host(self):
         config = Config(SUDO="config-value")
-        inventory = Inventory(([("somehost", {"_sudo": "host-value"})], {}))
+        inventory = Inventory(([("somehost", {"_sudo": True})], {}))
 
         state = State(config=config, inventory=inventory)
 
         kwargs, keys = pop_global_arguments({}, state=state, host=inventory.get_host("somehost"))
-        assert kwargs["_sudo"] == "host-value"
+        assert kwargs["_sudo"] == True
 
     def test_get_from_state_deploy_kwargs(self):
         config = Config(SUDO="config-value")
-        inventory = Inventory(([("somehost", {"_sudo": "host-value"})], {}))
+        inventory = Inventory(([("somehost", {"_sudo": False})], {}))
         somehost = inventory.get_host("somehost")
 
         state = State(config=config, inventory=inventory)
-        somehost.current_deploy_kwargs = {"_sudo": "deploy-kwarg-value"}
+        somehost.current_deploy_kwargs = {"_sudo": True}
 
         kwargs, keys = pop_global_arguments({}, state=state, host=somehost)
-        assert kwargs["_sudo"] == "deploy-kwarg-value"
+        assert kwargs["_sudo"] == True
 
     def test_get_from_kwargs(self):
         config = Config(SUDO="config-value")
-        inventory = Inventory(([("somehost", {"_sudo": "host-value"})], {}))
+        inventory = Inventory(([("somehost", {"_sudo": False})], {}))
         somehost = inventory.get_host("somehost")
 
         state = State(config=config, inventory=inventory)
         somehost.current_deploy_kwargs = {
-            "_sudo": "deploy-kwarg-value",
+            "_sudo": False,
             "_sudo_user": "deploy-kwarg-user",
         }
 
         kwargs, keys = pop_global_arguments(
-            {"_sudo": "kwarg-value"},
+            {"_sudo": True},
             state=state,
             host=somehost,
         )
-        assert kwargs["_sudo"] == "kwarg-value"
+        assert kwargs["_sudo"] == True
         assert kwargs["_sudo_user"] == "deploy-kwarg-user"
         assert "_sudo" in keys
