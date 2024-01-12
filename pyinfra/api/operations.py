@@ -160,9 +160,6 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
         _click_log_status = click.style(_status_log, "green")
         logger.info("{0}{1}".format(host.print_prefix, _click_log_status))
 
-        if global_arguments["_on_success"]:
-            global_arguments["_on_success"](state, host, op_hash)
-
         state.trigger_callbacks("operation_host_success", host, op_hash)
     else:
         if ignore_errors:
@@ -175,9 +172,6 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
 
         _command_description = f"executed {executed_commands} commands"
         log_error_or_warning(host, ignore_errors, _command_description, continue_on_error)
-
-        if global_arguments["_on_error"]:
-            global_arguments["_on_error"](state, host, op_hash)
 
         # Ignored, op "completes" w/ ignored error
         if ignore_errors:

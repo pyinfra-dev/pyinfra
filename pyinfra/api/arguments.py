@@ -170,8 +170,6 @@ class MetaArguments(TypedDict):
     name: str
     _ignore_errors: bool
     _continue_on_error: bool
-    _on_success: Callable[[State, "Host", str], None]
-    _on_error: Callable[[State, "Host", str], None]
 
 
 meta_argument_meta: dict[str, ArgumentMeta] = {
@@ -191,14 +189,7 @@ meta_argument_meta: dict[str, ArgumentMeta] = {
         ),
         default=lambda config: False,
     ),
-    # Lambda on the next two are to workaround a circular import
-    "_on_success": ArgumentMeta(
-        "Callback function to execute on success.",
-        default=lambda config: None,
     ),
-    "_on_error": ArgumentMeta(
-        "Callback function to execute on error.",
-        default=lambda config: None,
     ),
 }
 
