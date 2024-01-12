@@ -117,11 +117,10 @@ class ChrootConnector(BaseConnector):
                     temp_f.write(data)
 
             chroot_directory = self.host.connector_data["chroot_directory"]
-
-            chroot_command = "cp {0} {1}/{2}".format(
+            chroot_command = StringCommand(
+                "cp",
                 temp_filename,
-                chroot_directory,
-                remote_filename,
+                f"{chroot_directory}/{remote_filename}",
             )
 
             status, output = self.local.run_shell_command(
@@ -159,9 +158,9 @@ class ChrootConnector(BaseConnector):
 
         try:
             chroot_directory = self.host.connector_data["chroot_directory"]
-            chroot_command = "cp {0}/{1} {2}".format(
-                chroot_directory,
-                remote_filename,
+            chroot_command = StringCommand(
+                "cp",
+                f"{chroot_directory}/{remote_filename}",
                 temp_filename,
             )
 

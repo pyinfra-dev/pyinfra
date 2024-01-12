@@ -1,14 +1,3 @@
-"""
-Connect to hosts over SSH. This is the default connector and all targets default
-to this meaning you do not need to specify it - ie the following two commands
-are identical:
-
-.. code:: shell
-
-    pyinfra my-host.net ...
-    pyinfra @ssh/my-host.net ...
-"""
-
 from __future__ import annotations
 
 import shlex
@@ -18,14 +7,14 @@ from typing import TYPE_CHECKING, Any, Iterable, Optional, Tuple
 
 import click
 from paramiko import AuthenticationException, BadHostKeyException, SFTPClient, SSHException
-from typing_extensions import Unpack
+from typing_extensions import TypedDict, Unpack
 
 from pyinfra import logger
 from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError
 from pyinfra.api.util import get_file_io, memoize
 
-from .base import BaseConnector, make_keys
+from .base import BaseConnector, DataMeta
 from .ssh_util import get_private_key, raise_connect_error
 from .sshuserclient import SSHClient
 from .util import (
@@ -41,82 +30,144 @@ if TYPE_CHECKING:
     from pyinfra.api.arguments import ConnectorArguments
 
 
-class DataKeys:
-    hostname = "SSH hostname"
-    port = "SSH port"
+class ConnectorData(TypedDict):
+    ssh_hostname: str
+    ssh_port: int
+    ssh_user: str
+    ssh_password: str
+    ssh_key: str
+    ssh_key_password: str
 
-    user = "User to SSH as"
-    password = "Password to use for authentication"
-    key = "Key file to use for authentication"
-    key_password = "Key file password"
+    ssh_allow_agent: bool
+    ssh_look_for_keys: bool
+    ssh_forward_agent: bool
 
-    allow_agent = "Allow using SSH agent"
-    look_for_keys = "Allow looking up users keys"
+    ssh_config_file: str
+    ssh_known_hosts_file: str
+    ssh_strict_host_key_checking: str
 
-    forward_agent = "Enable SSH forward agent"
-    config_file = "Custom SSH config file"
-    known_hosts_file = "Custom SSH known hosts file"
-    strict_host_key_checking = "Override strict host keys check setting"
-
-    paramiko_connect_kwargs = (
-        "Override keyword arguments passed into paramiko's `SSHClient.connect`"
-    )
+    ssh_paramiko_connect_kwargs: dict
 
 
-DATA_KEYS = make_keys("ssh", DataKeys)
+connector_data_meta: dict[str, DataMeta] = {
+    "ssh_hostname": DataMeta("SSH hostname"),
+    "ssh_port": DataMeta("SSH port"),
+    "ssh_user": DataMeta("SSH user"),
+    "ssh_password": DataMeta("SSH password"),
+    "ssh_key": DataMeta("SSH key filename"),
+    "ssh_key_password": DataMeta("SSH key password"),
+    "ssh_allow_agent": DataMeta(
+        "Whether to use any active SSH agent",
+        True,
+    ),
+    "ssh_look_for_keys": DataMeta(
+        "Whether to look for private keys",
+        True,
+    ),
+    "ssh_forward_agent": DataMeta(
+        "Whether to enable SSH forward agent",
+        False,
+    ),
+    "ssh_config_file": DataMeta("SSH config filename"),
+    "ssh_known_hosts_file": DataMeta("SSH known_hosts filename"),
+    "ssh_strict_host_key_checking": DataMeta(
+        "SSH strict host key checking",
+        "accept-new",
+    ),
+    "ssh_paramiko_connect_kwargs": DataMeta(
+        "Override keyword arguments passed into Paramiko's ``SSHClient.connect``"
+    ),
+}
 
 
 class SSHConnector(BaseConnector):
+    """
+    Connect to hosts over SSH. This is the default connector and all targets default
+    to this meaning you do not need to specify it - ie the following two commands
+    are identical:
+
+    .. code:: shell
+
+        pyinfra my-host.net ...
+        pyinfra @ssh/my-host.net ...
+    """
+
+    __examples_doc__ = """
+    An inventory file (``inventory.py``) containing a single SSH target with SSH
+    forward agent enabled:
+
+    .. code:: python
+
+        hosts = [
+            ("my-host.net", {"ssh_forward_agent": True}),
+        ]
+
+    Multiple hosts sharing the same SSH username:
+
+    .. code:: python
+
+        hosts = (
+            [
+                "my-host-1.net",
+                "my-host-2.net",
+            ],
+            {
+                "ssh_username": "ssh-user",
+            },
+        )
+    """
+
     handles_execution = True
+
+    data_cls = ConnectorData
+    data_meta = connector_data_meta
+    data: ConnectorData
+
     client: Optional[SSHClient] = None
 
     def make_names_data(hostname):
-        yield "@ssh/{0}".format(hostname), {DATA_KEYS.hostname: hostname}, []
+        yield "@ssh/{0}".format(hostname), {"ssh_hostname": hostname}, []
 
     def make_paramiko_kwargs(self) -> dict[str, Any]:
         kwargs = {
             "allow_agent": False,
             "look_for_keys": False,
-            "hostname": self.host.data.get(DATA_KEYS.hostname, self.host.name),
+            "hostname": self.data["ssh_hostname"] or self.host.name,
             # Overrides of SSH config via pyinfra host data
-            "_pyinfra_ssh_forward_agent": self.host.data.get(DATA_KEYS.forward_agent),
-            "_pyinfra_ssh_config_file": self.host.data.get(DATA_KEYS.config_file),
-            "_pyinfra_ssh_known_hosts_file": self.host.data.get(DATA_KEYS.known_hosts_file),
-            "_pyinfra_ssh_strict_host_key_checking": self.host.data.get(
-                DATA_KEYS.strict_host_key_checking
-            ),
-            "_pyinfra_ssh_paramiko_connect_kwargs": self.host.data.get(
-                DATA_KEYS.paramiko_connect_kwargs
-            ),
+            "_pyinfra_ssh_forward_agent": self.data["ssh_forward_agent"],
+            "_pyinfra_ssh_config_file": self.data["ssh_config_file"],
+            "_pyinfra_ssh_known_hosts_file": self.data["ssh_known_hosts_file"],
+            "_pyinfra_ssh_strict_host_key_checking": self.data["ssh_strict_host_key_checking"],
+            "_pyinfra_ssh_paramiko_connect_kwargs": self.data["ssh_paramiko_connect_kwargs"],
         }
 
         for key, value in (
-            ("username", self.host.data.get(DATA_KEYS.user)),
-            ("port", int(self.host.data.get(DATA_KEYS.port, 0))),
+            ("username", self.data["ssh_user"]),
+            ("port", int(self.data["ssh_port"] or 0)),
             ("timeout", self.state.config.CONNECT_TIMEOUT),
         ):
             if value:
                 kwargs[key] = value
 
         # Password auth (boo!)
-        ssh_password = self.host.data.get(DATA_KEYS.password)
+        ssh_password = self.data["ssh_password"]
         if ssh_password:
             kwargs["password"] = ssh_password
 
         # Key auth!
-        ssh_key = self.host.data.get(DATA_KEYS.key)
+        ssh_key = self.data["ssh_key"]
         if ssh_key:
             kwargs["pkey"] = get_private_key(
                 self.state,
                 key_filename=ssh_key,
-                key_password=self.host.data.get(DATA_KEYS.key_password),
+                key_password=self.data["ssh_key_password"],
             )
 
         # No key or password, so let's have paramiko look for SSH agents and user keys
         # unless disabled by the user.
         else:
-            kwargs["allow_agent"] = self.host.data.get(DATA_KEYS.allow_agent, True)
-            kwargs["look_for_keys"] = self.host.data.get(DATA_KEYS.look_for_keys, True)
+            kwargs["allow_agent"] = self.data["ssh_allow_agent"]
+            kwargs["look_for_keys"] = self.data["ssh_look_for_keys"]
 
         return kwargs
 
@@ -127,8 +178,8 @@ class SSHConnector(BaseConnector):
         """
 
         kwargs = self.make_paramiko_kwargs()
-        logger.debug("Connecting to: %s (%r)", self.host.name, kwargs)
         hostname = kwargs.pop("hostname")
+        logger.debug("Connecting to: %s (%r)", hostname, kwargs)
 
         self.client = SSHClient()
 
@@ -143,7 +194,7 @@ class SSHConnector(BaseConnector):
                     continue
 
                 if key == "pkey" and value:
-                    auth_kwargs["key"] = self.host.data.get(DATA_KEYS.key)
+                    auth_kwargs["key"] = self.data["ssh_key"]
 
             auth_args = ", ".join(
                 "{0}={1}".format(key, value) for key, value in auth_kwargs.items()
@@ -358,6 +409,9 @@ class SSHConnector(BaseConnector):
         while attempts < 3:
             try:
                 with get_file_io(filename_or_io) as file_io:
+                    print("PUTFUCKINGFILE", file_io.read())
+                    print("FECK")
+                    file_io.seek(0)
                     sftp = self.get_sftp_connection()
                     sftp.putfo(file_io, remote_location)
                 return
@@ -459,12 +513,12 @@ class SSHConnector(BaseConnector):
         return True
 
     def check_can_rsync(self):
-        if self.host.data.get(DATA_KEYS.key_password):
+        if self.data["ssh_key_password"]:
             raise NotImplementedError(
                 "Rsync does not currently work with SSH keys needing passwords."
             )
 
-        if self.host.data.get(DATA_KEYS.password):
+        if self.data["ssh_password"]:
             raise NotImplementedError("Rsync does not currently work with SSH passwords.")
 
         if not find_executable("rsync"):
@@ -482,8 +536,8 @@ class SSHConnector(BaseConnector):
         _sudo = arguments.pop("_sudo", False)
         _sudo_user = arguments.pop("_sudo_user", False)
 
-        hostname = self.host.data.get(DATA_KEYS.hostname, self.host.name)
-        user = self.host.data.get(DATA_KEYS.user, "")
+        hostname = self.data["ssh_hostname"] or self.host.name
+        user = self.data["ssh_user"]
         if user:
             user = "{0}@".format(user)
 
@@ -491,27 +545,27 @@ class SSHConnector(BaseConnector):
         # To avoid asking for interactive input, specify BatchMode=yes
         ssh_flags.append("-o BatchMode=yes")
 
-        known_hosts_file = self.host.data.get(DATA_KEYS.known_hosts_file, "")
+        known_hosts_file = self.data["ssh_known_hosts_file"]
         if known_hosts_file:
             ssh_flags.append(
                 '-o \\"UserKnownHostsFile={0}\\"'.format(shlex.quote(known_hosts_file))
             )  # never trust users
 
-        strict_host_key_checking = self.host.data.get(DATA_KEYS.strict_host_key_checking, "")
+        strict_host_key_checking = self.data["ssh_strict_host_key_checking"]
         if strict_host_key_checking:
             ssh_flags.append(
                 '-o \\"StrictHostKeyChecking={0}\\"'.format(shlex.quote(strict_host_key_checking))
             )
 
-        ssh_config_file = self.host.data.get(DATA_KEYS.config_file, "")
+        ssh_config_file = self.data["ssh_config_file"]
         if ssh_config_file:
             ssh_flags.append("-F {0}".format(shlex.quote(ssh_config_file)))
 
-        port = self.host.data.get(DATA_KEYS.port)
+        port = self.data["ssh_port"]
         if port:
             ssh_flags.append("-p {0}".format(port))
 
-        ssh_key = self.host.data.get(DATA_KEYS.key)
+        ssh_key = self.data["ssh_key"]
         if ssh_key:
             ssh_flags.append("-i {0}".format(ssh_key))
 

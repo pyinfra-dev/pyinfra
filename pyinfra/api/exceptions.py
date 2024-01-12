@@ -56,4 +56,8 @@ class NoHostError(PyinfraError, TypeError):
 class NoGroupError(PyinfraError, TypeError):
     """
     Raise when an inventory is missing a group.
+class ConnectorDataTypeError(PyinfraError, TypeError):
     """
+    Raised when host connector data has invalid types.
+    """
+

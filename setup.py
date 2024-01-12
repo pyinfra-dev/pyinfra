@@ -27,6 +27,7 @@ INSTALL_REQUIRES = (
     "setuptools",
     "configparser",
     "pywinrm",
+    "typeguard",
     "distro>=1.6,<2",
     # Backport of graphlib used for DAG operation ordering
     'graphlib_backport ; python_version < "3.9"',

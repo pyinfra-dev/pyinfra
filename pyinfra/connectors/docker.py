@@ -1,26 +1,3 @@
-"""
-The ``@docker`` connector allows you to build Docker images, or modify running
-Docker containers, using ``pyinfra``. You can pass either an image name or
-existing container ID:
-
-+ Image - will create a container from the image, execute operations and save
-    into a new image
-+ Existing container ID - will simply execute operations against the container,
-    leaving it up afterwards
-
-
-.. code:: shell
-
-    # A Docker base image must be provided
-    pyinfra @docker/alpine:3.8 ...
-
-    # pyinfra can run on multiple Docker images in parallel
-    pyinfra @docker/alpine:3.8,@docker/ubuntu:bionic ...
-
-    # Execute against a running container
-    pyinfra @docker/2beb8c15a1b1 ...
-"""
-
 from __future__ import annotations
 
 import json
@@ -29,7 +6,7 @@ from tempfile import mkstemp
 from typing import TYPE_CHECKING
 
 import click
-from typing_extensions import Unpack
+from typing_extensions import TypedDict, Unpack
 
 from pyinfra import local, logger
 from pyinfra.api import QuoteString, StringCommand
@@ -37,7 +14,7 @@ from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io
 from pyinfra.progress import progress_spinner
 
-from .base import BaseConnector, make_keys
+from .base import BaseConnector, DataMeta
 from .local import LocalConnector
 from .util import CommandOutput, extract_control_arguments, make_unix_command_for_host
 
@@ -47,20 +24,23 @@ if TYPE_CHECKING:
     from pyinfra.api.state import State
 
 
-class DataKeys:
-    identifier = "ID of container or image to target"
-    container_id = "ID of container to target, overrides ``docker_identifier``"
+class ConnectorData(TypedDict, total=False):
+    docker_identifier: str
 
 
-DATA_KEYS = make_keys("docker", DataKeys)
+connector_data_meta: dict[str, DataMeta] = {
+    "docker_identifier": DataMeta("ID of container or image to start from"),
+}
 
 
-def _find_start_docker_container(container_id):
+def _find_start_docker_container(container_id) -> tuple[str, bool]:
     docker_info = local.shell("docker container inspect {0}".format(container_id))
     docker_info = json.loads(docker_info)[0]
     if docker_info["State"]["Running"] is False:
         logger.info("Starting stopped container: {0}".format(container_id))
         local.shell("docker container start {0}".format(container_id))
+        return container_id, False
+    return container_id, True
 
 
 def _start_docker_image(image_name):
@@ -76,10 +56,36 @@ def _start_docker_image(image_name):
 
 
 class DockerConnector(BaseConnector):
+    """
+    The docker connector allows you to build Docker images or modify running
+    Docker containers. You can pass either an image name or existing container ID:
+
+    + Image - will create a container from the image, execute operations and save into a new image
+    + Existing container ID - will simply execute operations against the container, leaving it up afterwards
+
+
+    .. code:: shell
+
+        # A Docker base image must be provided
+        pyinfra @docker/alpine:3.8 ...
+
+        # pyinfra can run on multiple Docker images in parallel
+        pyinfra @docker/alpine:3.8,@docker/ubuntu:bionic ...
+
+        # Execute against a running container
+        pyinfra @docker/2beb8c15a1b1 ...
+    """
+
     handles_execution = True
-    data_keys = DATA_KEYS
+
+    data_cls = ConnectorData
+    data_meta = connector_data_meta
+    data: ConnectorData
 
     local: LocalConnector
+
+    container_id: str
+    no_stop: bool = False
 
     def __init__(self, state: "State", host: "Host"):
         super().__init__(state, host)
@@ -92,37 +98,28 @@ class DockerConnector(BaseConnector):
 
         yield (
             "@docker/{0}".format(identifier),
-            {DATA_KEYS.identifier: identifier},
+            {"docker_identifier": identifier},
             ["@docker"],
         )
 
     def connect(self):
         self.local.connect()
 
-        docker_container_id = self.host.data.get(DATA_KEYS.container_id)
-        if docker_container_id:  # user can provide a docker_container_id
-            self.host.connector_data["docker_container_no_disconnect"] = True
-            self.host.connector_data["docker_container_id"] = docker_container_id
-            return True
-
-        docker_identifier = getattr(self.host.data, DATA_KEYS.identifier)
+        docker_identifier = self.data["docker_identifier"]
         with progress_spinner({"prepare docker container"}):
             try:
-                # Check if the provided @docker/X is an existing container ID
-                _find_start_docker_container(docker_identifier)
+                self.container_id, was_running = _find_start_docker_container(docker_identifier)
+                if was_running:
+                    self.no_stop = True
             except PyinfraError:
-                container_id = _start_docker_image(docker_identifier)
-            else:
-                container_id = docker_identifier
-                self.host.connector_data["docker_container_no_disconnect"] = True
+                self.container_id = _start_docker_image(docker_identifier)
 
-        self.host.connector_data["docker_container_id"] = container_id
         return True
 
     def disconnect(self):
-        container_id = self.host.connector_data["docker_container_id"]
+        container_id = self.container_id
 
-        if self.host.connector_data.get("docker_container_no_disconnect"):
+        if self.no_stop:
             logger.info(
                 "{0}docker build complete, container left running: {1}".format(
                     self.host.print_prefix,
@@ -157,7 +154,7 @@ class DockerConnector(BaseConnector):
     ) -> tuple[bool, CommandOutput]:
         local_arguments = extract_control_arguments(arguments)
 
-        container_id = self.host.connector_data["docker_container_id"]
+        container_id = self.container_id
 
         command = make_unix_command_for_host(self.state, self.host, command, **arguments)
         command = StringCommand(QuoteString(command))
@@ -207,11 +204,11 @@ class DockerConnector(BaseConnector):
 
                     temp_f.write(data)
 
-            docker_id = self.host.connector_data["docker_container_id"]
-            docker_command = "docker cp {0} {1}:{2}".format(
+            docker_command = StringCommand(
+                "docker",
+                "cp",
                 temp_filename,
-                docker_id,
-                remote_filename,
+                f"{self.container_id}:{remote_filename}",
             )
 
             status, output = self.local.run_shell_command(
@@ -254,10 +251,10 @@ class DockerConnector(BaseConnector):
         fd, temp_filename = mkstemp()
 
         try:
-            docker_id = self.host.connector_data["docker_container_id"]
-            docker_command = "docker cp {0}:{1} {2}".format(
-                docker_id,
-                remote_filename,
+            docker_command = StringCommand(
+                "docker",
+                "cp",
+                f"{self.container_id}:{remote_filename}",
                 temp_filename,
             )
 

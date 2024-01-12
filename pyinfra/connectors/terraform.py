@@ -1,37 +1,3 @@
-"""
-.. warning::
-    This connector is in alpha and may change in future releases.
-
-Generate one or more SSH hosts from a Terraform output variable. The variable
-must be a list of hostnames or IP addresses that ``pyinfra`` can connect to
-over SSH. Currently there is no support for specifying SSH user/pass/port/key
-from Terraform, these must be provided via ``pyinfra`` group data or ``--data``
-CLI flags.
-
-Output is fetched from a flattened JSON dictionary output from ``terraform output
--json``. For example the following object:
-
-.. code:: json
-
-    {
-      "server_group": {
-        "value": {
-          "server_group_node_ips": [
-            "1.2.3.4",
-            "1.2.3.5",
-            "1.2.3.6"
-          ]
-        }
-      }
-    }
-
-The IP list ``server_group_node_ips`` would be used like so:
-
-.. code:: python
-
-    pyinfra @terraform/server_group.value.server_group_node_ips ...
-"""
-
 import json
 
 from pyinfra import local, logger
@@ -61,6 +27,40 @@ def _flatten_dict(d: dict, parent_key: str = "", sep: str = "."):
 
 
 class TerraformInventoryConnector(BaseConnector):
+    """
+    .. warning::
+        This connector is in alpha and may change in future releases.
+
+    Generate one or more SSH hosts from a Terraform output variable. The variable
+    must be a list of hostnames or IP addresses that ``pyinfra`` can connect to
+    over SSH. Currently there is no support for specifying SSH user/pass/port/key
+    from Terraform, these must be provided via ``pyinfra`` group data or ``--data``
+    CLI flags.
+
+    Output is fetched from a flattened JSON dictionary output from ``terraform output
+    -json``. For example the following object:
+
+    .. code:: json
+
+        {
+          "server_group": {
+            "value": {
+              "server_group_node_ips": [
+                "1.2.3.4",
+                "1.2.3.5",
+                "1.2.3.6"
+              ]
+            }
+          }
+        }
+
+    The IP list ``server_group_node_ips`` would be used like so:
+
+    .. code:: python
+
+        pyinfra @terraform/server_group.value.server_group_node_ips ...
+    """
+
     @staticmethod
     def make_names_data(output_key=None):
         show_warning()

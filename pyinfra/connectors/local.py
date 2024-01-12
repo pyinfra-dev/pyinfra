@@ -1,7 +1,3 @@
-"""
-The ``@local`` connector executes changes on the local machine using subprocesses.
-"""
-
 import os
 from distutils.spawn import find_executable
 from tempfile import mkstemp
@@ -28,6 +24,10 @@ if TYPE_CHECKING:
 
 
 class LocalConnector(BaseConnector):
+    """
+    The ``@local`` connector executes changes on the local machine using subprocesses.
+    """
+
     handles_execution = True
 
     @staticmethod
@@ -39,7 +39,7 @@ class LocalConnector(BaseConnector):
 
     def run_shell_command(
         self,
-        command,
+        command: StringCommand,
         print_output: bool = False,
         print_input: bool = False,
         **arguments: Unpack["ConnectorArguments"],
@@ -48,17 +48,14 @@ class LocalConnector(BaseConnector):
         Execute a command on the local machine.
 
         Args:
-            state (``pyinfra.api.State`` object): state object for this command
-            host (``pyinfra.api.Host`` object): the target host
-            command (string): actual command to execute
-            sudo (boolean): whether to wrap the command with sudo
-            sudo_user (string): user to sudo to
-            env (dict): environment variables to set
-            timeout (int): timeout for this command to complete before erroring
+            command (StringCommand): actual command to execute
+            print_output (bool): whether to print command output
+            print_input (bool): whether to print command input
+            arguments: (ConnectorArguments): connector global arguments
 
         Returns:
-            tuple: (exit_code, stdout, stderr)
-            stdout and stderr are both lists of strings from each buffer.
+            tuple: (bool, CommandOutput)
+            Bool indicating success and CommandOutput with stdout/stderr lines.
         """
 
         arguments.pop("_get_pty", False)
@@ -108,6 +105,9 @@ class LocalConnector(BaseConnector):
         """
         Upload a local file or IO object by copying it to a temporary directory
         and then writing it to the upload location.
+
+        Returns:
+            bool: Indicating success or failure
         """
 
         _, temp_filename = mkstemp()
@@ -156,6 +156,9 @@ class LocalConnector(BaseConnector):
         """
         Download a local file by copying it to a temporary location and then writing
         it to our filename or IO object.
+
+        Returns:
+            bool: Indicating success or failure
         """
 
         _, temp_filename = mkstemp()
@@ -163,7 +166,7 @@ class LocalConnector(BaseConnector):
         try:
             # Copy the file using `cp` such that we support sudo/su
             status, output = self.run_shell_command(
-                "cp {0} {1}".format(remote_filename, temp_filename),
+                StringCommand("cp", remote_filename, temp_filename),
                 print_output=print_output,
                 print_input=print_input,
                 **arguments,
@@ -210,7 +213,7 @@ class LocalConnector(BaseConnector):
         **arguments,
     ) -> bool:
         status, output = self.run_shell_command(
-            "rsync {0} {1} {2}".format(" ".join(flags), src, dest),
+            StringCommand("rsync", " ".join(flags), src, dest),
             print_output=print_output,
             print_input=print_input,
             **arguments,

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import wraps
 from hashlib import sha1
 from inspect import getframeinfo, stack
@@ -9,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 import click
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from paramiko import SSHException
+from typeguard import TypeCheckError, check_type
 
 import pyinfra
 from pyinfra import logger
@@ -414,3 +417,15 @@ def get_path_permissions_mode(pathname: str):
 
     mode_octal = oct(stat(pathname).st_mode)
     return mode_octal[-3:]
+
+
+def raise_if_bad_type(
+    value: Any,
+    type_: Type,
+    exception: type[Exception],
+    message_prefix: str,
+):
+    try:
+        check_type(value, type_)
+    except TypeCheckError as e:
+        raise exception(f"{message_prefix}: {e}")
