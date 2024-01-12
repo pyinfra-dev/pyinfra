@@ -61,3 +61,8 @@ class ConnectorDataTypeError(PyinfraError, TypeError):
     Raised when host connector data has invalid types.
     """
 
+
+class ArgumentTypeError(PyinfraError, TypeError):
+    """
+    Raised when global arguments are passed with invalid types.
+    """

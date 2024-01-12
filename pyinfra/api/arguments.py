@@ -5,8 +5,10 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Optional, Tu
 from typing_extensions import TypedDict
 
 from pyinfra import context
+from pyinfra.api.exceptions import ArgumentTypeError
 from pyinfra.api.state import State
 
+from pyinfra.api.util import raise_if_bad_type
 from .util import memoize
 
 if TYPE_CHECKING:
@@ -311,6 +313,14 @@ def pop_global_arguments(
 
         if handler is not default_sentinel:
             value = handler(config, value)
+
+        if value != default:
+            raise_if_bad_type(
+                value,
+                type_,
+                ArgumentTypeError,
+                f"Invalid argument `{key}`:",
+            )
 
         # TODO: why is type failing here?
         arguments[key] = value  # type: ignore
