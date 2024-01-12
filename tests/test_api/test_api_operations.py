@@ -377,7 +377,8 @@ class TestOperationsApi(PatchSSHTestCase):
         fake_run_local_process.assert_called_with(
             (
                 "rsync -ax --delete --rsh "
-                '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\" -F \'/home/me/ssh_test_config && echo hi\'"'
+                '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\" '
+                "-F '/home/me/ssh_test_config && echo hi'\""
                 " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,

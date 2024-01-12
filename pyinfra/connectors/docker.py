@@ -61,7 +61,7 @@ class DockerConnector(BaseConnector):
     Docker containers. You can pass either an image name or existing container ID:
 
     + Image - will create a container from the image, execute operations and save into a new image
-    + Existing container ID - will simply execute operations against the container, leaving it up afterwards
+    + Existing container ID - will execute operations against the container, leaving it running
 
 
     .. code:: shell

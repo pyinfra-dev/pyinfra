@@ -14,7 +14,7 @@ from typing import Callable
 import click
 import gevent
 
-from pyinfra import host, logger, state
+from pyinfra import logger, state
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.host import HostData
