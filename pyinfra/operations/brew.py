@@ -2,6 +2,8 @@
 Manage brew packages on mac/OSX. See https://brew.sh/
 """
 
+import urllib
+
 from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.brew import BrewCasks, BrewPackages, BrewTaps, BrewVersion, new_cask_cli
@@ -159,12 +161,13 @@ def casks(
 
 
 @operation
-def tap(src, present=True):
+def tap(src=None, present=True, url=None):
     """
     Add/remove brew taps.
 
     + src: the name of the tap
     + present: whether this tap should be present or not
+    + url: the url of the tap. See https://docs.brew.sh/Taps
 
     **Examples:**
 
@@ -173,6 +176,19 @@ def tap(src, present=True):
         brew.tap(
             name="Add a brew tap",
             src="includeos/includeos",
+        )
+
+        # Just url is equivalent to
+        # `brew tap kptdev/kpt https://github.com/kptdev/kpt`
+        brew.tap(
+            url="https://github.com/kptdev/kpt",
+        )
+
+        # src and url is equivalent to
+        # `brew tap example/project https://github.example.com/project`
+        brew.tap(
+            src="example/project",
+            url="https://github.example.com/project",
         )
 
         # Multiple taps
@@ -184,19 +200,37 @@ def tap(src, present=True):
 
     """
 
+    if not (src or url):
+        host.noop("no tap was specified")
+        return
+
+    src = src or urllib.parse.urlparse(url).path.strip("/")
+
+    if len(src.split("/")) != 2:
+        host.noop("src '{0}' doesn't have two components.".format(src))
+        return
+
     taps = host.get_fact(BrewTaps)
-    is_tapped = src in taps
+    already_tapped = src in taps
 
-    if present:
-        if is_tapped:
-            host.noop("tap {0} already exists".format(src))
-        else:
-            yield "brew tap {0}".format(src)
-            taps.append(src)
+    if present and already_tapped:
+        host.noop("tap {0} already exists".format(src))
+        return
 
-    elif not present:
-        if is_tapped:
-            yield "brew untap {0}".format(src)
-            taps.remove(src)
-        else:
-            host.noop("tap {0} does not exist".format(src))
+    if already_tapped:
+        yield "brew untap {0}".format(src)
+        taps.remove(src)
+        return
+
+    if not present:
+        host.noop("tap {0} does not exist".format(src))
+        return
+
+    cmd = "brew tap {0}".format(src)
+
+    if url is not None:
+        cmd = " ".join([cmd, url])
+
+    yield cmd
+    taps.append(src)
+    return

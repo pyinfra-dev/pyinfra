@@ -1,0 +1,15 @@
+{
+    "args": [
+        "homebrew/cask"
+    ],
+    "kwargs": {
+        "url": "https://github.com/homebrew/cask"
+    },
+    "facts": {
+        "brew.BrewTaps": [
+            "homebrew/cask"
+        ]
+    },
+    "commands": [],
+    "noop_description": "tap homebrew/cask already exists"
+}
