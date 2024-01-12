@@ -138,11 +138,6 @@ def _print_support(ctx, param, value):
     help="SSH Private key password.",
 )
 @click.option("--ssh-password", "--password", "ssh_password", help="SSH password.")
-# WinRM connector args
-@click.option("--winrm-username", help="WINRM user to connect as.")
-@click.option("--winrm-password", help="WINRM password.")
-@click.option("--winrm-port", help="WINRM port to connect to.")
-@click.option("--winrm-transport", help="WINRM transport for use.")
 # Eager commands (pyinfra --support)
 @click.option(
     "--support",
@@ -256,10 +251,6 @@ def _main(
     ssh_key,
     ssh_key_password: str,
     ssh_password: str,
-    winrm_username: str,
-    winrm_password: str,
-    winrm_port,
-    winrm_transport,
     shell_executable,
     sudo: bool,
     sudo_user: str,
@@ -322,10 +313,6 @@ def _main(
         ssh_key_password,
         ssh_port,
         ssh_password,
-        winrm_username,
-        winrm_password,
-        winrm_port,
-        winrm_transport,
     )
 
     # Load up the inventory from the filesystem
@@ -562,10 +549,6 @@ def _set_override_data(
     ssh_key_password,
     ssh_port,
     ssh_password,
-    winrm_username,
-    winrm_password,
-    winrm_port,
-    winrm_transport,
 ):
     override_data = {}
 
@@ -581,10 +564,6 @@ def _set_override_data(
         ("ssh_key_password", ssh_key_password),
         ("ssh_port", ssh_port),
         ("ssh_password", ssh_password),
-        ("winrm_username", winrm_username),
-        ("winrm_password", winrm_password),
-        ("winrm_port", winrm_port),
-        ("winrm_transport", winrm_transport),
     ):
         if value:
             override_data[key] = value
