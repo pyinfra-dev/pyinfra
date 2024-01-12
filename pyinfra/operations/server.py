@@ -1212,7 +1212,7 @@ def locale(
         yield "locale-gen"
 
 
-@operation
+@operation()
 def security_limit(
     domain,
     limit_type,
@@ -1242,7 +1242,7 @@ def security_limit(
 
     line_format = f"{domain}\t{limit_type}\t{item}\t{value}"
 
-    yield from files.line(
+    yield from files.line._inner(
         path="/etc/security/limits.conf",
         line=f"^{domain}[[:space:]]+{limit_type}[[:space:]]+{item}",
         replace=line_format,
