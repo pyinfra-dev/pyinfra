@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
+from inspect import cleandoc
 from os import path
+from typing import get_type_hints
 
+from docs.utils import title_line
 from pyinfra.api import Config
-from pyinfra.api.arguments import OPERATION_KWARG_DOC
+from pyinfra.api.arguments import AllArguments, __argument_docs__
+from pyinfra.api.host import Host
+from pyinfra.api.operation import OperationMeta
 
 
 def build_arguments_doc():
@@ -14,35 +19,53 @@ def build_arguments_doc():
 
     lines = []
 
-    for category, note, kwarg_configs in OPERATION_KWARG_DOC:
-        lines.append("\n{0}".format(category))
-        lines.append("".join("~" for _ in range(len(category))))
+    # Extend locals with hidden (behind TYPE_CHECKING) imports in the arguments module
+    locals_ = locals()
+    locals_["Host"] = Host
+    locals_["OperationMeta"] = OperationMeta
+
+    all_arguments = get_type_hints(AllArguments)
+
+    for group_name, (arguments_meta, arguments_example_doc) in __argument_docs__.items():
+        lines.append("\n{0}".format(group_name))
+        lines.append(title_line("~", group_name))
         lines.append("")
 
-        if note:
-            note_block = f"""
-.. note::
-    {note}
+        lines.append(
+            """.. list-table::
+   :header-rows: 1
+   :widths: 25 45 15 15
+
+   * - Key
+     - Description
+     - Type
+     - Default"""
+        )
+
+        for key, meta in arguments_meta.items():
+            default = meta.default
+            if callable(default):
+                default = default(pyinfra_config)
+            default = "" if default is None else f"``{default}``"
+
+            type_ = all_arguments[key]
+            type_name = type_.__name__
+            if hasattr(type_, "__args__"):
+                type_args = ", ".join([arg.__name__ for arg in type_.__args__])
+                type_name = f"{type_name}[{type_args}]"
+
+            lines.append(
+                f"""   * - ``{key}``
+     - {meta.description}
+     - ``{type_name}``
+     - {default}
 """
-            lines.append(note_block)
+            )
 
-        for key, config in kwarg_configs.items():
-            description = config
-            if isinstance(config, dict):
-                description = config.get("description")
-                default = config.get("default")
-                if callable(default):
-                    default = default(pyinfra_config)
-                if default is not None:
-                    key = "{0}={1}".format(key, default)
-
-            block = f"""
-.. compound::
-    ``{key}``
-        {description}
-"""
-
-            lines.append(block)
+        if arguments_example_doc:
+            lines.append("**Examples:**")
+            lines.append("")
+            lines.append(cleandoc(arguments_example_doc))
 
     module_filename = path.join(docs_dir, "_deploy_globals.rst")
     print("--> Writing {0}".format(module_filename))

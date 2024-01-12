@@ -72,56 +72,56 @@ def generate_env(config: "Config", value: dict) -> dict:
 
 auth_argument_meta: dict[str, ArgumentMeta] = {
     "_sudo": ArgumentMeta(
-        "Execute/apply any changes with ``sudo``.",
+        "Execute/apply any changes with sudo.",
         default=lambda config: config.SUDO,
     ),
     "_sudo_user": ArgumentMeta(
-        "Execute/apply any changes with ``sudo`` as a non-root user.",
+        "Execute/apply any changes with sudo as a non-root user.",
         default=lambda config: config.SUDO_USER,
     ),
     "_use_sudo_login": ArgumentMeta(
-        "Execute ``sudo`` with a login shell.",
+        "Execute sudo with a login shell.",
         default=lambda config: config.USE_SUDO_LOGIN,
     ),
-    "_use_sudo_password": ArgumentMeta(
-        "Whether to use a password with ``sudo`` (will ask).",
-        default=lambda config: config.USE_SUDO_PASSWORD,
+    "_sudo_password": ArgumentMeta(
+        "Password to sudo with. If needed and not specified pyinfra will prompt for it.",
+        default=lambda config: config.SUDO_PASSWORD,
     ),
     "_preserve_sudo_env": ArgumentMeta(
-        "Preserve the shell environment when using ``sudo``.",
+        "Preserve the shell environment of the connecting user when using sudo.",
         default=lambda config: config.PRESERVE_SUDO_ENV,
     ),
     "_su_user": ArgumentMeta(
-        "Execute/apply any changes with this user using ``su``.",
+        "Execute/apply any changes with this user using su.",
         default=lambda config: config.SU_USER,
     ),
     "_use_su_login": ArgumentMeta(
-        "Execute ``su`` with a login shell.",
+        "Execute su with a login shell.",
         default=lambda config: config.USE_SU_LOGIN,
     ),
     "_preserve_su_env": ArgumentMeta(
-        "Preserve the shell environment when using ``su``.",
+        "Preserve the shell environment of the connecting user when using su.",
         default=lambda config: config.PRESERVE_SU_ENV,
     ),
     "_su_shell": ArgumentMeta(
-        "Use this shell (instead of user login shell) when using ``su``). "
-        "Only available under Linux, for use when using `su` with a user that "
-        "has nologin/similar as their login shell.",
+        "Use this shell (instead of user login shell) when using ``_su``). "
+        + "Only available under Linux, for use when using `su` with a user that "
+        + "has nologin/similar as their login shell.",
         default=lambda config: config.SU_SHELL,
     ),
     "_doas": ArgumentMeta(
-        "Execute/apply any changes with ``doas``.",
+        "Execute/apply any changes with doas.",
         default=lambda config: config.DOAS,
     ),
     "_doas_user": ArgumentMeta(
-        "Execute/apply any changes with ``doas`` as a non-root user.",
+        "Execute/apply any changes with doas as a non-root user.",
         default=lambda config: config.DOAS_USER,
     ),
 }
 
 shell_argument_meta: dict[str, ArgumentMeta] = {
     "_shell_executable": ArgumentMeta(
-        "The shell to use. Defaults to ``sh`` (Unix) or ``cmd`` (Windows).",
+        "The shell executable to use for executing commands.",
         default=lambda config: config.SHELL,
     ),
     "_chdir": ArgumentMeta(
@@ -232,19 +232,6 @@ all_argument_meta: dict[str, ArgumentMeta] = {
 }
 
 
-OPERATION_KWARG_DOC: list[tuple[str, Optional[str], type, dict[str, ArgumentMeta]]] = [
-    ("Privilege & user escalation", None, ConnectorArguments, auth_argument_meta),
-    ("Shell control & features", None, ConnectorArguments, shell_argument_meta),
-    ("Operation meta & callbacks", "Not available in facts.", MetaArguments, meta_argument_meta),
-    (
-        "Execution strategy",
-        "Not available in facts, value must be the same for all hosts.",
-        ExecutionArguments,
-        execution_argument_meta,
-    ),
-]
-
-
 # Called ONCE to dedupe args that must be same for all calls of an op
 @memoize
 def get_execution_kwarg_keys() -> list[str]:
@@ -254,6 +241,46 @@ def get_execution_kwarg_keys() -> list[str]:
 @memoize
 def get_connector_argument_keys() -> list[str]:
     return list(ConnectorArguments.__annotations__.keys())
+
+
+__argument_docs__ = {
+    "Privilege & user escalation": (
+        auth_argument_meta,
+        """
+        .. code:: python
+
+            # Execute a command with sudo
+            server.user(
+                name="Create pyinfra user using sudo",
+                user="pyinfra",
+                _sudo=True,
+            )
+
+            # Execute a command with a specific sudo password
+            server.user(
+                name="Create pyinfra user using sudo",
+                user="pyinfra",
+                _sudo=True,
+                _sudo_password="my-secret-password",
+            )
+        """,
+    ),
+    "Shell control & features": (
+        shell_argument_meta,
+        """
+        .. code:: python
+
+            # Execute from a specific directory
+            server.shell(
+                name="Bootstrap nginx params",
+                commands=["openssl dhparam -out dhparam.pem 4096"],
+                _chdir="/etc/ssl/certs",
+            )
+        """,
+    ),
+    "Operation meta & callbacks": (meta_argument_meta, ""),
+    "Execution strategy": (execution_argument_meta, ""),
+}
 
 
 def pop_global_arguments(
