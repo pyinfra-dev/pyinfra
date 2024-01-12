@@ -94,7 +94,7 @@ def make_inventory(
     # we want error handling to be a good user experience.
     # Thus, we'll check for everything but also drop a warning to the console if the inventory looks
     # like either an import or hostname but neither works.
-    if re.match("[a-zA-Z0-9\\.]+[\\.:][a-zA-Z0-9]+", inventory):
+    if re.match("[a-zA-Z0-9\\._]+[\\.:][a-zA-Z0-9_]+", inventory):
         # First, try loading the inventory as if it's a Python import function
         inventory_func = try_import_module_attribute(inventory, raise_for_no_module=False)
         if inventory_func is None:
