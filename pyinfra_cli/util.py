@@ -14,7 +14,7 @@ from typing import Callable
 import click
 import gevent
 
-from pyinfra import logger, state
+from pyinfra import host, logger, state
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.host import HostData
@@ -58,19 +58,20 @@ def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = Fals
         PYTHON_CODES[filename] = code
 
     # Create some base attributes for our "module"
-    data = {
-        "__file__": filename,
-    }
+    data = {"__file__": filename}
 
     # Execute the code with locals/globals going into the dict above
     try:
         exec(PYTHON_CODES[filename], data)
+    except PyinfraError:
+        # Raise pyinfra errors as-is
+        raise
     except Exception as e:
-        if isinstance(e, (PyinfraError, UnexpectedExternalError)):
-            raise
+        # Wrap & re-raise errors in user code so we highlight filename/etc
         raise UnexpectedExternalError(e, filename)
+    finally:
+        state.current_exec_filename = old_current_exec_filename
 
-    state.current_exec_filename = old_current_exec_filename
     return data
 
 

@@ -1,71 +1,103 @@
 import abc
 import sys
-from traceback import format_exception, format_tb
+from inspect import getframeinfo
+from traceback import format_exception, format_tb, walk_tb
+from types import TracebackType
 
 import click
 
-from pyinfra import host, logger, state
-from pyinfra.api.exceptions import PyinfraError
-from pyinfra.context import ctx_host
+from pyinfra import logger
+from pyinfra.api.exceptions import (
+    ArgumentTypeError,
+    ConnectorDataTypeError,
+    OperationError,
+    PyinfraError,
+)
+from pyinfra.api.util import PYINFRA_INSTALL_DIR
 
 
-class CliError(PyinfraError, click.ClickException):
-    def show(self):
+def get_frame_line_from_tb(tb: TracebackType):
+    frame_lines = list(walk_tb(tb))
+    frame_lines.reverse()
+    for frame, line in frame_lines:
+        info = getframeinfo(frame)
+        if info.filename.startswith(PYINFRA_INSTALL_DIR):
+            continue
+        return info
+
+
+class WrappedError(click.ClickException):
+    def __init__(self, e: Exception):
+        self.traceback = e.__traceback__
+        self.exception = e
+
+        # Pull message from the wrapped exception
+        message = getattr(e, "message", e.args[0])
+        if not isinstance(message, str):
+            message = repr(message)
+        self.message = message
+
+    def show(self, file=None):
         name = "unknown error"
 
-        if isinstance(self, PyinfraError):
+        if isinstance(self.exception, ConnectorDataTypeError):
+            name = "Connector data type error"
+        elif isinstance(self.exception, ArgumentTypeError):
+            name = "Argument type error"
+        elif isinstance(self.exception, OperationError):
+            name = "Operation error"
+        elif isinstance(self.exception, PyinfraError):
             name = "pyinfra error"
+        elif isinstance(self.exception, IOError):
+            name = "Local IO error"
 
-        elif isinstance(self, IOError):
-            name = "local IO error"
+        if self.traceback:
+            info = get_frame_line_from_tb(self.traceback)
+            assert info is not None
+            name = f"{name} in {info.filename} line {info.lineno}"
 
-        if ctx_host.isset():
-            # Get any operation meta + name
-            op_name = None
-            current_op_hash = host.current_op_hash
-            if current_op_hash:
-                current_op_meta = state.op_meta.get(current_op_hash)
-                if current_op_meta:
-                    op_name = ", ".join(current_op_meta.names)
+        logger.warning(
+            "--> {0}: {1}".format(
+                click.style(name, "red", bold=True),
+                self,
+            ),
+        )
 
-            sys.stderr.write(
-                "--> {0}{1}{2}: ".format(
-                    host.print_prefix,
-                    click.style(name, "red", bold=True),
-                    " (operation={0})".format(op_name) if op_name else "",
-                ),
-            )
-        else:
-            sys.stderr.write(
-                "--> {0}: ".format(click.style(name, "red", bold=True)),
-            )
 
-        logger.warning(self)
+class CliError(click.ClickException):
+    def show(self, file=None):
+        logger.warning(
+            "--> {0}: {1}".format(
+                click.style("pyinfra error", "red", bold=True),
+                self,
+            ),
+        )
 
 
 class UnexpectedMixin(abc.ABC):
-    e: Exception
+    exception: Exception
+    traceback: TracebackType
 
     def get_traceback_lines(self):
-        traceback = getattr(self.e, "_traceback")
+        traceback = getattr(self.exception, "_traceback")
         return format_tb(traceback)
 
     def get_traceback(self):
         return "".join(self.get_traceback_lines())
 
     def get_exception(self):
-        return "".join(format_exception(self.e.__class__, self.e, None))
+        return "".join(format_exception(self.exception.__class__, self.exception, None))
 
 
 class UnexpectedExternalError(click.ClickException, UnexpectedMixin):
     def __init__(self, e, filename):
         _, _, traceback = sys.exc_info()
         e._traceback = traceback
-        self.e = e
+        self.exception = e
         self.filename = filename
 
-    def show(self):
-        click.echo(
+    def show(self, file=None):
+        logger.warning(
             "--> {0}:\n".format(
                 click.style(
                     "An exception occurred in: {0}".format(self.filename),
@@ -73,9 +105,9 @@ class UnexpectedExternalError(click.ClickException, UnexpectedMixin):
                     bold=True,
                 ),
             ),
-            err=True,
         )
 
+        click.echo("Traceback (most recent call last):", err=True)
         click.echo(self.get_traceback(), err=True, nl=False)
         click.echo(self.get_exception(), err=True)
 
@@ -84,9 +116,9 @@ class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
     def __init__(self, e):
         _, _, traceback = sys.exc_info()
         e._traceback = traceback
-        self.e = e
+        self.exception = e
 
-    def show(self):
+    def show(self, file=None):
         click.echo(
             "--> {0}:\n".format(
                 click.style(
@@ -103,7 +135,7 @@ class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
 
         # Syntax errors contain the filename/line/etc, but other exceptions
         # don't, so print the *last* call to stderr.
-        if not isinstance(self.e, SyntaxError):
+        if not isinstance(self.exception, SyntaxError):
             sys.stderr.write(traceback_lines[-1])
 
         exception = self.get_exception()

@@ -18,7 +18,7 @@ from pyinfra.context import ctx_config, ctx_inventory, ctx_state
 from pyinfra.operations import server
 
 from .commands import get_facts_and_args, get_func_and_args
-from .exceptions import CliError, UnexpectedExternalError, UnexpectedInternalError
+from .exceptions import CliError, UnexpectedExternalError, UnexpectedInternalError, WrappedError
 from .inventory import make_inventory
 from .log import setup_logging
 from .prints import (
@@ -222,20 +222,11 @@ def cli(*args, **kwargs):
 
     try:
         _main(*args, **kwargs)
-
+    except (CliError, UnexpectedExternalError):
+        raise
     except PyinfraError as e:
-        # Re-raise any internal exceptions that aren't handled by click as
-        # CliErrors which are.
-        if not isinstance(e, click.ClickException):
-            message = getattr(e, "message", e.args[0])
-            raise CliError(message)
-
-        raise
-
-    except UnexpectedExternalError:
-        # Pass unexpected external exceptions through as-is
-        raise
-
+        # Re-raise "expected" pyinfra exceptions with our click exception wrapper
+        raise WrappedError(e)
     except Exception as e:
         # Re-raise any unexpected internal exceptions as UnexpectedInternalError
         raise UnexpectedInternalError(e)
