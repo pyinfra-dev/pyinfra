@@ -28,7 +28,7 @@ BLOCKSIZE = 65536
 TEMPLATES: Dict[Any, Any] = {}
 FILE_SHAS: Dict[Any, Any] = {}
 
-PYINFRA_API_DIR = path.dirname(__file__)
+PYINFRA_INSTALL_DIR = path.normpath(path.join(path.dirname(__file__), ".."))
 
 
 def get_file_path(state: "State", filename: str):
@@ -129,7 +129,7 @@ def get_operation_order_from_stack(state: "State"):
     for stack_item in stack_items[i:]:
         frame = getframeinfo(stack_item[0])
 
-        if frame.filename.startswith(PYINFRA_API_DIR):
+        if frame.filename.startswith(PYINFRA_INSTALL_DIR):
             continue
 
         line_numbers.append(frame.lineno)
