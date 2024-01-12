@@ -6,7 +6,7 @@ from inspect import getframeinfo, stack
 from io import BytesIO, StringIO
 from os import getcwd, path, stat
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+from typing import IO, TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
 
 import click
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
@@ -325,7 +325,11 @@ class get_file_io:
     will open and close filenames, and leave IO objects alone.
     """
 
-    close = False
+    filename_or_io: Union[str, IO[Any]]
+    mode: str
+
+    _close: bool = False
+    _file_io: IO[Any]
 
     def __init__(self, filename_or_io, mode="rb"):
         if not (
@@ -352,25 +356,20 @@ class get_file_io:
         self.mode = mode
 
     def __enter__(self):
-        # If we have a read attribute, just use the object as-is
-        if hasattr(self.filename_or_io, "read"):
-            file_io = self.filename_or_io
-
-        # Otherwise, assume a filename and open it up
-        else:
+        if isinstance(self.filename_or_io, str):
             file_io = open(self.filename_or_io, self.mode)
-
-            # Attach to self for closing on __exit__
-            self.file_io = file_io
-            self.close = True
+            self._file_io = file_io
+            self._close = True
+        else:
+            file_io = self.filename_or_io
 
         # Ensure we're at the start of the file
         file_io.seek(0)
         return file_io
 
     def __exit__(self, type, value, traceback):
-        if self.close:
-            self.file_io.close()
+        if self._close:
+            self._file_io.close()
 
     @property
     def cache_key(self):
