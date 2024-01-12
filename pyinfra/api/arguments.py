@@ -41,7 +41,7 @@ class ConnectorArguments(TypedDict, total=False):
     _sudo: bool
     _sudo_user: str
     _use_sudo_login: bool
-    _use_sudo_password: bool
+    _sudo_password: str
     _preserve_sudo_env: bool
     _su_user: str
     _use_su_login: bool

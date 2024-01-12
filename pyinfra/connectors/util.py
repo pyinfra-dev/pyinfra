@@ -201,7 +201,10 @@ def execute_command_with_sudo_retry(
     if return_code != 0 and output and output.combined_lines:
         last_line = output.combined_lines[-1].line
         if last_line.strip() == "sudo: a password is required":
-            command_arguments["_use_sudo_password"] = True  # ask for the password
+            # If we need a password, ask the user for it and attach to the host
+            # internal connector data for use when executing future commands.
+            sudo_password = getpass("{0}sudo password: ".format(host.print_prefix))
+            host.connector_data["prompted_sudo_password"] = sudo_password
             return_code, output = execute_command()
 
     return return_code, output
@@ -219,25 +222,6 @@ def write_stdin(stdin, buffer):
         line = line.encode()
         buffer.write(line)
     buffer.close()
-
-
-def _get_sudo_password(host: "Host", use_sudo_password) -> str:
-    if not host.connector_data.get("sudo_askpass_path"):
-        _, output = host.run_shell_command(SUDO_ASKPASS_COMMAND)
-        host.connector_data["sudo_askpass_path"] = shlex.quote(output.stdout_lines[0])
-
-    if use_sudo_password is True:
-        sudo_password = host.connector_data.get("sudo_password")
-        if not sudo_password:
-            sudo_password = getpass("{0}sudo password: ".format(host.print_prefix))
-            host.connector_data["sudo_password"] = sudo_password
-        sudo_password = sudo_password
-    elif callable(use_sudo_password):
-        sudo_password = use_sudo_password()
-    else:
-        sudo_password = use_sudo_password
-
-    return shlex.quote(sudo_password)
 
 
 def remove_any_sudo_askpass_file(host) -> None:
@@ -273,17 +257,33 @@ def extract_control_arguments(arguments: "ConnectorArguments") -> "ConnectorArgu
     return control_arguments
 
 
+def _ensure_sudo_askpass_set_for_host(host: "Host"):
+    if host.connector_data.get("sudo_askpass_path"):
+        return
+    _, output = host.run_shell_command(SUDO_ASKPASS_COMMAND)
+    host.connector_data["sudo_askpass_path"] = shlex.quote(output.stdout_lines[0])
+
+
 def make_unix_command_for_host(
     state: "State",
     host: "Host",
     command: StringCommand,
     **command_arguments,
 ) -> StringCommand:
-    use_sudo_password = command_arguments.pop("_use_sudo_password", None)
-    if use_sudo_password:
-        command_arguments["_sudo_password"] = _get_sudo_password(host, use_sudo_password)
-        command_arguments["_sudo_askpass_path"] = host.connector_data.get("sudo_askpass_path")
+    if not command_arguments.get("_sudo"):
+        # If no sudo, we've nothing to do here
+        return make_unix_command(command, **command_arguments)
 
+    # Ensure the sudo password is set from either the direct arguments or any
+    # connector data value.
+    sudo_password = command_arguments["_sudo_password"] = command_arguments.get(
+        "_sudo_password",
+        host.connector_data.get("prompted_sudo_password"),
+    )
+    if sudo_password:
+        # Ensure the askpass path is correctly set and passed through
+        _ensure_sudo_askpass_set_for_host(host)
+        command_arguments["_sudo_askpass_path"] = host.connector_data["sudo_askpass_path"]
     return make_unix_command(command, **command_arguments)
 
 
