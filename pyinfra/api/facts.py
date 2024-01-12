@@ -33,7 +33,7 @@ from pyinfra.connectors.util import CommandOutput
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
-from .arguments import get_connector_argument_keys
+from .arguments import CONNECTOR_ARGUMENT_KEYS
 
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
@@ -119,9 +119,7 @@ def _get_executor_kwargs(
         {key: value for key, value in global_kwargs.items() if key not in override_kwarg_keys},
     )
 
-    return {
-        key: value for key, value in override_kwargs.items() if key in get_connector_argument_keys()
-    }
+    return {key: value for key, value in override_kwargs.items() if key in CONNECTOR_ARGUMENT_KEYS}
 
 
 def _handle_fact_kwargs(state, host, cls, args, kwargs):
@@ -138,7 +136,7 @@ def _handle_fact_kwargs(state, host, cls, args, kwargs):
         kwargs,
         state=state,
         host=host,
-        keys_to_check=get_connector_argument_keys(),
+        keys_to_check=CONNECTOR_ARGUMENT_KEYS,
     )
 
     executor_kwargs = _get_executor_kwargs(

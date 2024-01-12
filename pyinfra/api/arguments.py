@@ -1,6 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Optional, Tuple, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    Mapping,
+    Optional,
+    TypeVar,
+    Union,
+    cast,
+    get_type_hints,
+)
 
 from typing_extensions import TypedDict
 
@@ -9,25 +21,21 @@ from pyinfra.api.exceptions import ArgumentTypeError
 from pyinfra.api.state import State
 
 from pyinfra.api.util import raise_if_bad_type
-from .util import memoize
 
 if TYPE_CHECKING:
     from pyinfra.api.config import Config
     from pyinfra.api.host import Host
 
-
 T = TypeVar("T")
-
-
 default_sentinel = object()
 
 
-class ArgumentMeta:
+class ArgumentMeta(Generic[T]):
     description: str
     default: Callable[["Config"], T]
-    handler: Callable[["Config", T], T]
+    handler: Optional[Callable[["Config", T], T]]
 
-    def __init__(self, description, default, handler=default_sentinel) -> None:
+    def __init__(self, description, default, handler=None) -> None:
         self.description = description
         self.default = default
         self.handler = handler
@@ -38,6 +46,8 @@ class ArgumentMeta:
 # API to read/write external systems.
 
 
+# Note: ConnectorArguments is specifically not total as it's used to type many
+# functions via Unpack and we don't want to specify every kwarg.
 class ConnectorArguments(TypedDict, total=False):
     # Auth arguments
     _sudo: bool
@@ -61,7 +71,7 @@ class ConnectorArguments(TypedDict, total=False):
     _success_exit_codes: Iterable[int]
     _timeout: int
     _get_pty: bool
-    _stdin: Union[str, list, tuple]
+    _stdin: Union[str, Iterable[str]]
 
 
 def generate_env(config: "Config", value: dict) -> dict:
@@ -126,28 +136,28 @@ shell_argument_meta: dict[str, ArgumentMeta] = {
     ),
     "_chdir": ArgumentMeta(
         "Directory to switch to before executing the command.",
-        default=lambda config: "",
+        default=lambda _: "",
     ),
     "_env": ArgumentMeta(
         "Dictionary of environment variables to set.",
-        default=lambda config: {},
+        default=lambda _: {},
         handler=generate_env,
     ),
     "_success_exit_codes": ArgumentMeta(
         "List of exit codes to consider a success.",
-        default=lambda config: [0],
+        default=lambda _: [0],
     ),
     "_timeout": ArgumentMeta(
         "Timeout for *each* command executed during the operation.",
-        default=lambda config: None,
+        default=lambda _: None,
     ),
     "_get_pty": ArgumentMeta(
         "Whether to get a pseudoTTY when executing any commands.",
-        default=lambda config: False,
+        default=lambda _: False,
     ),
     "_stdin": ArgumentMeta(
         "String or buffer to send to the stdin of any commands.",
-        default=lambda config: None,
+        default=lambda _: None,
     ),
 }
 
@@ -156,7 +166,7 @@ shell_argument_meta: dict[str, ArgumentMeta] = {
 # These provide/extend additional operation metadata
 
 
-class MetaArguments(TypedDict, total=False):
+class MetaArguments(TypedDict):
     name: str
     _ignore_errors: bool
     _continue_on_error: bool
@@ -168,7 +178,7 @@ meta_argument_meta: dict[str, ArgumentMeta] = {
     # NOTE: name is the only non-_-prefixed argument
     "name": ArgumentMeta(
         "Name of the operation.",
-        default=lambda config: None,
+        default=lambda _: None,
     ),
     "_ignore_errors": ArgumentMeta(
         "Ignore errors when executing the operation.",
@@ -198,7 +208,7 @@ meta_argument_meta: dict[str, ArgumentMeta] = {
 # over every target host for the same operation.
 
 
-class ExecutionArguments(TypedDict, total=False):
+class ExecutionArguments(TypedDict):
     _parallel: int
     _run_once: bool
     _serial: bool
@@ -211,11 +221,11 @@ execution_argument_meta: dict[str, ArgumentMeta] = {
     ),
     "_run_once": ArgumentMeta(
         "Only execute this operation once, on the first host to see it.",
-        default=lambda config: False,
+        default=lambda _: False,
     ),
     "_serial": ArgumentMeta(
         "Run this operation host by host, rather than in parallel.",
-        default=lambda config: False,
+        default=lambda _: False,
     ),
 }
 
@@ -231,17 +241,8 @@ all_argument_meta: dict[str, ArgumentMeta] = {
     **execution_argument_meta,
 }
 
-
-# Called ONCE to dedupe args that must be same for all calls of an op
-@memoize
-def get_execution_kwarg_keys() -> list[str]:
-    return list(ExecutionArguments.__annotations__.keys())
-
-
-@memoize
-def get_connector_argument_keys() -> list[str]:
-    return list(ConnectorArguments.__annotations__.keys())
-
+EXECUTION_KWARG_KEYS = list(ExecutionArguments.__annotations__.keys())
+CONNECTOR_ARGUMENT_KEYS = list(ConnectorArguments.__annotations__.keys())
 
 __argument_docs__ = {
     "Privilege & user escalation": (
@@ -288,7 +289,7 @@ def pop_global_arguments(
     state: Optional["State"] = None,
     host: Optional["Host"] = None,
     keys_to_check=None,
-) -> Tuple[AllArguments, list[str]]:
+) -> tuple[AllArguments, list[str]]:
     """
     Pop and return operation global keyword arguments, in preferred order:
 
@@ -296,16 +297,6 @@ def pop_global_arguments(
     + From any current @deploy context (deploy kwargs)
     + From the host data variables
     + From the config variables
-
-    Note this function is only called directly in the @operation & @deploy decorator
-    wrappers which the user should pass global arguments prefixed "_". This is to
-    avoid any clashes with operation and deploy functions both internal and third
-    party.
-
-    This is a bit strange because internally pyinfra uses non-_-prefixed arguments,
-    and this function is responsible for the translation between the two.
-
-    TODO: is this weird-ness acceptable? Is it worth updating internal use to _prefix?
     """
 
     state = state or context.state
@@ -317,10 +308,10 @@ def pop_global_arguments(
 
     meta_kwargs = host.current_deploy_kwargs or {}
 
-    arguments: AllArguments = {}
+    arguments: dict[str, Any] = {}
     found_keys: list[str] = []
 
-    for key, type_ in AllArguments.__annotations__.items():
+    for key, type_ in get_type_hints(AllArguments).items():
         if keys_to_check and key not in keys_to_check:
             continue
 
@@ -338,7 +329,7 @@ def pop_global_arguments(
         else:
             value = meta_kwargs.get(key, default)
 
-        if handler is not default_sentinel:
+        if handler:
             value = handler(config, value)
 
         if value != default:
@@ -351,4 +342,4 @@ def pop_global_arguments(
 
         # TODO: why is type failing here?
         arguments[key] = value  # type: ignore
-    return arguments, found_keys
+    return cast(AllArguments, arguments), found_keys
