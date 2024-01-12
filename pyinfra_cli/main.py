@@ -157,7 +157,13 @@ def _print_support(ctx, param, value):
     "--debug",
     is_flag=True,
     default=False,
-    help="Print debug info.",
+    help="Print debug logs from pyinfra.",
+)
+@click.option(
+    "--debug-all",
+    is_flag=True,
+    default=False,
+    help="Print debug logs from all packages including pyinfra.",
 )
 @click.option(
     "--debug-facts",
@@ -225,7 +231,6 @@ def cli(*args, **kwargs):
     except Exception as e:
         # Re-raise any unexpected internal exceptions as UnexpectedInternalError
         raise UnexpectedInternalError(e)
-
     finally:
         if ctx_state.isset() and state.initialised:
             logger.info("--> Disconnecting from hosts...")
@@ -268,6 +273,7 @@ def _main(
     serial: bool,
     quiet: bool,
     debug: bool,
+    debug_all: bool,
     debug_facts: bool,
     debug_operations: bool,
     support: bool = False,
@@ -279,7 +285,7 @@ def _main(
 
     # Setup logging & Bootstrap/Venv
     #
-    _setup_log_level(debug)
+    _setup_log_level(debug, debug_all)
     init_virtualenv()
 
     # Check operations are valid and setup commands

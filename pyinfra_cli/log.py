@@ -60,9 +60,13 @@ class LogFormatter(logging.Formatter):
         return super().format(record)
 
 
-def setup_logging(log_level):
+def setup_logging(log_level, other_log_level=None):
+    if other_log_level:
+        logging.basicConfig(level=other_log_level)
+
     logger.setLevel(log_level)
     handler = LogHandler()
     formatter = LogFormatter()
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+    logger.propagate = False
