@@ -1759,10 +1759,8 @@ def block(
             cmd = StringCommand(
                 f"cat {stdin}{redirect}",
                 q_path,
-                f"<<{here}"
-                if not try_prevent_shell_expansion
-                else f"<<'{here}'",
-                f"\n{the_block}\n{here}"
+                f"<<{here}" if not try_prevent_shell_expansion else f"<<'{here}'",
+                f"\n{the_block}\n{here}",
             )
         elif current == []:  # markers not found and have a pattern to match (not start or end)
             regex = adjust_regex(line, escape_regex_characters)
@@ -1775,16 +1773,15 @@ def block(
             )
             cmd = StringCommand(
                 out_prep,
-                prog, q_path,
-                f'"{the_block}"'
-                if not try_prevent_shell_expansion
-                else f"'{the_block}'",
+                prog,
+                q_path,
+                f'"{the_block}"' if not try_prevent_shell_expansion else f"'{the_block}'",
                 "> $OUT &&",
-                real_out
+                real_out,
             )
         else:
             if (len(current) != len(content)) or (
-                    not all(lines[0] == lines[1] for lines in zip(content, current))
+                not all(lines[0] == lines[1] for lines in zip(content, current))
             ):  # marked_block found but text is different
                 prog = (
                     'awk \'BEGIN {{f=1; x=ARGV[2]; ARGV[2]=""}}'
