@@ -9,7 +9,7 @@
         "server.Os": "Linux"
     },
     "commands": [
-        "grep '^someuser:' /etc/passwd || useradd -d /home/someuser -g someuser -M someuser",
+        "useradd -d /home/someuser -g someuser -M someuser",
         "mkdir -p /home/someuser",
         "chown someuser:someuser /home/someuser"
     ]

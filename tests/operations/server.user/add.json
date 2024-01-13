@@ -21,7 +21,7 @@
         "server.Os": "Linux"
     },
     "commands": [
-        "grep '^someuser:' /etc/passwd || useradd -d homedir -s shellbin -g mygroup -G secondary_group,another -r --uid 1000 -c 'Full Name' -m -p '$somecryptedpassword$' someuser",
+        "useradd -d homedir -s shellbin -g mygroup -G secondary_group,another -r --uid 1000 -c 'Full Name' -m -p '$somecryptedpassword$' someuser",
         "mkdir -p homedir",
         "chown someuser:mygroup homedir"
     ]
