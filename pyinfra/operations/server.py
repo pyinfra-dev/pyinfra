@@ -1071,6 +1071,8 @@ def user(
 
         if create_home:
             args.append("-m")
+        else:
+            args.append("-M")
 
         if password:
             args.append("-p '{0}'".format(password))
