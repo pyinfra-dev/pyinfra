@@ -9,6 +9,6 @@
         "server.Groups": {}
     },
     "commands": [
-        "grep '^someuser:' /etc/passwd || useradd -d /home/someuser -o someuser"
+        "grep '^someuser:' /etc/passwd || useradd -d /home/someuser -o -M someuser"
     ]
 }
