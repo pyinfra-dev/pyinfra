@@ -69,6 +69,7 @@ def download(
     md5sum=None,
     headers=None,
     insecure=False,
+    proxy=None,
 ):
     """
     Download files from remote locations using ``curl`` or ``wget``.
@@ -85,6 +86,7 @@ def download(
     + md5sum: md5 hash to checksum the downloaded file against
     + headers: optional dictionary of headers to set for the HTTP request
     + insecure: disable SSL verification for the HTTP request
+    + proxy: simple HTTP proxy through which we can download files, form `http://<yourproxy>:<port>`
 
     **Example:**
 
@@ -140,7 +142,14 @@ def download(
         temp_file = state.get_temp_filename(dest)
 
         curl_args = ["-sSLf"]
+
         wget_args = ["-q"]
+
+        if proxy:
+            curl_args.append(f"--proxy {proxy}")
+            wget_args.append("-e use_proxy=yes")
+            wget_args.append(f"-e http_proxy={proxy}")
+
         if insecure:
             curl_args.append("--insecure")
             wget_args.append("--no-check-certificate")
