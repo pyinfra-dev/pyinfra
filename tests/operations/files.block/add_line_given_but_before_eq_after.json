@@ -13,7 +13,7 @@
         }
     },
     "exception": {
-        "names": ["ValueError"],
+        "names": ["OperationValueError"],
         "message": "only one of 'before' or 'after' used when 'line` is specified"
     }
 }

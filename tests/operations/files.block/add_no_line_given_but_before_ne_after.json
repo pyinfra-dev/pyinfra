@@ -12,7 +12,7 @@
         }
     },
     "exception": {
-        "names": ["ValueError"],
+        "names": ["OperationValueError"],
         "message": "'line' must be supplied or 'before' and 'after' must be equal"
     }
 }

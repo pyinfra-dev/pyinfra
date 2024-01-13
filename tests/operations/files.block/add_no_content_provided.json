@@ -7,7 +7,7 @@
         }
     },
     "exception": {
-        "names": ["ValueError"],
+        "names": ["OperationValueError"],
         "message": "'content' must be supplied when 'present' == True"
     }
 }

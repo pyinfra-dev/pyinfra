@@ -19,6 +19,7 @@ from pyinfra.api import (
     FileUploadCommand,
     OperationError,
     OperationTypeError,
+    OperationValueError,
     QuoteString,
     RsyncCommand,
     StringCommand,
@@ -1736,12 +1737,16 @@ def block(
     cmd = None
     if present:
         if not content:
-            raise ValueError("'content' must be supplied when 'present' == True")
+            raise OperationValueError("'content' must be supplied when 'present' == True")
         if line:
             if before == after:
-                raise ValueError("only one of 'before' or 'after' used when 'line` is specified")
+                raise OperationValueError(
+                    "only one of 'before' or 'after' used when 'line` is specified"
+                )
         elif before != after:
-            raise ValueError("'line' must be supplied or 'before' and 'after' must be equal")
+            raise OperationValueError(
+                "'line' must be supplied or 'before' and 'after' must be equal"
+            )
         if isinstance(content, str):
             # convert string to list of lines
             content = content.split("\n")
