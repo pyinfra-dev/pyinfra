@@ -61,8 +61,6 @@ DOCS_REQUIRES = (
     "pyinfra-guzzle_sphinx_theme==0.14",
     "myst-parser==2.0.0",
     "sphinx==6.2.1",
-    # Pinned to fix: https://github.com/sphinx-doc/sphinx/issues/9727
-    "docutils==0.17.1",
 )
 
 DEV_REQUIRES = (
