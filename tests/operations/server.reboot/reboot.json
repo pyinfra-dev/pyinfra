@@ -4,7 +4,7 @@
         ["remove_any_askpass_file", [], {}],
         {
             "command": "reboot",
-            "success_exit_codes": [0, -1]
+            "_success_exit_codes": [0, -1]
         },
         ["wait_and_reconnect", [], {}],
         ["clean_sudo_info", [], {}]

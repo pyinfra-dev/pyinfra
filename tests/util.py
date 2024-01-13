@@ -10,8 +10,6 @@ from unittest.mock import patch
 from pyinfra.api import Config, Inventory
 from pyinfra.api.util import get_kwargs_str
 
-from . import logger
-
 
 def get_command_string(command):
     value = command.get_raw_value()

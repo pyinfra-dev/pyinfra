@@ -13,7 +13,7 @@ See example/postgresql.py for detailed example
 
 """
 
-from pyinfra import host, logger
+from pyinfra import host
 from pyinfra.api import MaskString, StringCommand, operation
 from pyinfra.facts.postgresql import (
     PostgresqlDatabases,
@@ -22,33 +22,8 @@ from pyinfra.facts.postgresql import (
     make_psql_command,
 )
 
-LEGACY_ARG_MAP = {
-    "postgresql_user": "psql_user",
-    "postgresql_password": "psql_password",
-    "postgresql_host": "psql_host",
-    "postgresql_port": "psql_port",
-}
-
-
-def _translate_legacy_args(func):
-    def decorated_func(*args, **kwargs):
-        for legacy_key, key in LEGACY_ARG_MAP.items():
-            if legacy_key in kwargs:
-                kwargs[key] = kwargs.pop(legacy_key)
-                logger.warning(
-                    (
-                        f"The `{legacy_key}` has been replaced "
-                        f"by `{key}` in `postgresql.*` operations."
-                    ),
-                )
-        return func(*args, **kwargs)
-
-    decorated_func._pyinfra_op = func
-    return decorated_func
-
 
 @operation(is_idempotent=False)
-@_translate_legacy_args
 def sql(
     sql,
     database=None,
@@ -77,7 +52,6 @@ def sql(
 
 
 @operation
-@_translate_legacy_args
 def role(
     role,
     present=True,
@@ -187,7 +161,6 @@ def role(
 
 
 @operation
-@_translate_legacy_args
 def database(
     database,
     present=True,
@@ -288,7 +261,6 @@ def database(
 
 
 @operation(is_idempotent=False)
-@_translate_legacy_args
 def dump(
     dest,
     database=None,
@@ -333,7 +305,6 @@ def dump(
 
 
 @operation(is_idempotent=False)
-@_translate_legacy_args
 def load(
     src,
     database=None,

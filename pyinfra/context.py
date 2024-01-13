@@ -5,6 +5,7 @@ are imported and used throughout pyinfra and end user deploy code (CLI mode).
 These variables always represent the current executing pyinfra context.
 """
 from contextlib import contextmanager
+from types import ModuleType
 from typing import TYPE_CHECKING
 
 from gevent.local import local
@@ -17,12 +18,12 @@ if TYPE_CHECKING:
 
 
 class container:
-    pass
+    module = None
 
 
 class ContextObject:
     _container_cls = container
-    _base_cls = None
+    _base_cls: ModuleType
 
     def __init__(self):
         self._container = self._container_cls()

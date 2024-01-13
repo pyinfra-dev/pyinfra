@@ -167,10 +167,10 @@ def packages(
         virtualenv = virtualenv.rstrip("/")
         pip = "{0}/bin/{1}".format(virtualenv, pip)
 
-    install_command = [pip, "install"]
+    install_command_args = [pip, "install"]
     if extra_install_args:
-        install_command.append(extra_install_args)
-    install_command = " ".join(install_command)
+        install_command_args.append(extra_install_args)
+    install_command = " ".join(install_command_args)
 
     uninstall_command = " ".join([pip, "uninstall", "--yes"])
 

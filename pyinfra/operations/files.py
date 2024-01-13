@@ -2,6 +2,8 @@
 The files operations handles filesystem state, file uploads and template generation.
 """
 
+from __future__ import annotations
+
 import os
 import posixpath
 import sys
@@ -9,6 +11,7 @@ import traceback
 from datetime import timedelta
 from fnmatch import fnmatch
 from io import StringIO
+from typing import Union
 
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
@@ -141,9 +144,8 @@ def download(
     if download:
         temp_file = state.get_temp_filename(dest)
 
-        curl_args = ["-sSLf"]
-
-        wget_args = ["-q"]
+        curl_args: list[Union[str, StringCommand]] = ["-sSLf"]
+        wget_args: list[Union[str, StringCommand]] = ["-q"]
 
         if proxy:
             curl_args.append(f"--proxy {proxy}")
@@ -1024,10 +1026,9 @@ def template(src, dest, user=None, group=None, mode=None, create_remote_dir=True
     try:
         output = get_template(src).render(data)
     except (TemplateRuntimeError, TemplateSyntaxError, UndefinedError) as e:
-        trace_frames = traceback.extract_tb(sys.exc_info()[2])
         trace_frames = [
             frame
-            for frame in trace_frames
+            for frame in traceback.extract_tb(sys.exc_info()[2])
             if frame[2] in ("template", "<module>", "top-level template code")
         ]  # thank you https://github.com/saltstack/salt/blob/master/salt/utils/templates.py
 
@@ -1051,7 +1052,7 @@ def template(src, dest, user=None, group=None, mode=None, create_remote_dir=True
 
     output_file = StringIO(output)
     # Set the template attribute for nicer debugging
-    output_file.template = src
+    output_file.template = src  # type: ignore[attr-defined]
 
     # Pass to the put function
     yield from put(
@@ -1553,7 +1554,7 @@ def block(
     # standard awk doesn't have an "in-place edit" option so we write to a tempfile and
     # if edits were successful move to dest i.e. we do: <out_prep> ... do some work ... <real_out>
     q_path = QuoteString(path)
-    out_prep = 'OUT="$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)" && '
+    out_prep = StringCommand('OUT="$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)" && ')
     if backup:
         out_prep = StringCommand(
             "cp",
@@ -1659,5 +1660,5 @@ def block(
         elif current == []:
             host.noop("no remove required: markers not found")
         else:
-            cmd = f"awk '/{mark_1}/,/{mark_2}/ {{next}} 1'"
+            cmd = StringCommand(f"awk '/{mark_1}/,/{mark_2}/ {{next}} 1'")
             yield StringCommand(out_prep, cmd, q_path, "> $OUT &&", real_out)

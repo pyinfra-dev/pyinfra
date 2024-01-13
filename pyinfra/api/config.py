@@ -1,5 +1,6 @@
 from os import path
 
+# TODO: move to importlib.resources
 from pkg_resources import Requirement, ResolutionError, parse_version, require
 
 from pyinfra import __version__, state
@@ -51,7 +52,7 @@ def check_pyinfra_version(version: str):
     running_version = parse_version(__version__)
     required_versions = Requirement.parse("pyinfra{0}".format(version))
 
-    if not required_versions.specifier.contains(running_version):
+    if running_version not in required_versions:  # type: ignore[operator]
         raise PyinfraError(
             f"pyinfra version requirement not met (requires {version}, running {__version__})"
         )
@@ -64,7 +65,7 @@ def check_require_packages(requirements_config):
     if isinstance(requirements_config, (list, tuple)):
         requirements = requirements_config
     else:
-        with open(path.join(state.cwd, requirements_config), encoding="utf-8") as f:
+        with open(path.join(state.cwd or "", requirements_config), encoding="utf-8") as f:
             requirements = [line.split("#egg=")[-1] for line in f.read().splitlines()]
 
     try:

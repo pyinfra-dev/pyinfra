@@ -41,28 +41,6 @@ def get_file_path(state: "State", filename: str):
     return path.join(relative_to, filename)
 
 
-def get_args_kwargs_spec(func: Callable[..., Any]) -> Tuple[List, Dict]:
-    args: List[Any] = []
-    kwargs: Dict[Any, Any] = {}
-
-    argspec = getfullargspec(func)
-    if not argspec.args:
-        return args, kwargs
-
-    if argspec.defaults:
-        kwargs = dict(
-            zip(
-                argspec.args[-len(argspec.defaults) :],
-                argspec.defaults,
-            ),
-        )
-        args = argspec.args[: -len(argspec.defaults)]
-    else:
-        args = argspec.args
-
-    return args, kwargs
-
-
 def get_kwargs_str(kwargs: Dict[Any, Any]):
     if not kwargs:
         return ""
@@ -86,14 +64,14 @@ def memoize(func: Callable[..., Any]):
     @wraps(func)
     def wrapper(*args, **kwargs):
         key = "{0}{1}".format(args, kwargs)
-        if key in wrapper.cache:
-            return wrapper.cache[key]
+        if key in wrapper.cache:  # type: ignore[attr-defined]
+            return wrapper.cache[key]  # type: ignore[attr-defined]
 
         value = func(*args, **kwargs)
-        wrapper.cache[key] = value
+        wrapper.cache[key] = value  # type: ignore[attr-defined]
         return value
 
-    wrapper.cache = {}  # type: ignore
+    wrapper.cache = {}  # type: ignore[attr-defined]
     return wrapper
 
 

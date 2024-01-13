@@ -294,6 +294,7 @@ class FindInFile(FactBase):
 class FindFilesBase(FactBase):
     abstract = True
     default = list
+    type_flag: str
 
     @staticmethod
     def process(output):
@@ -345,7 +346,6 @@ class Flags(FactBase):
         )
 
     def process(self, output):
-
         return [flag for flag in output[0].split(",") if len(flag) > 0] if len(output) == 1 else []
 
 
@@ -381,7 +381,6 @@ class Block(FactBase):
     default = list
 
     def command(self, path, marker=None, begin=None, end=None):
-
         self.path = path
         start = (marker or MARKER_DEFAULT).format(mark=begin or MARKER_BEGIN_DEFAULT)
         end = (marker or MARKER_DEFAULT).format(mark=end or MARKER_END_DEFAULT)

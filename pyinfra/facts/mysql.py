@@ -53,6 +53,7 @@ def make_execute_mysql_command(command, ignore_errors=False, **mysql_kwargs):
 class MysqlFactBase(FactBase):
     abstract = True
 
+    mysql_command: str
     requires_command = "mysql"
     ignore_errors = False
 

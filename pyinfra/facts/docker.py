@@ -6,6 +6,7 @@ from pyinfra.api import FactBase
 class DockerFactBase(FactBase):
     abstract = True
 
+    docker_type: str
     requires_command = "docker"
 
     def process(self, output):

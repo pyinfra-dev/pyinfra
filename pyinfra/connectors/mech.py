@@ -85,7 +85,7 @@ def get_mech_config(limit=None):
             targets.append(target)
 
     threads = []
-    config_queue = Queue()
+    config_queue = Queue()  # type: ignore
 
     with progress_spinner(targets) as progress:
         for target in targets:

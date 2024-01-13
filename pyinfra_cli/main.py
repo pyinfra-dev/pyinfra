@@ -520,7 +520,8 @@ def _set_config(
     echo_msg("--> Loading config...", True)
 
     # Load up any config.py from the filesystem
-    config_filename = path.join(state.cwd, config_filename)
+    if state.cwd:
+        config_filename = path.join(state.cwd, config_filename)
     if path.exists(config_filename):
         exec_file(config_filename)
 

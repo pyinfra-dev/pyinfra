@@ -21,12 +21,15 @@ existing container ID:
     pyinfra @docker/2beb8c15a1b1 ...
 """
 
+from __future__ import annotations
+
 import json
 import os
 from tempfile import mkstemp
-from typing import TYPE_CHECKING, Unpack
+from typing import TYPE_CHECKING
 
 import click
+from typing_extensions import Unpack
 
 from pyinfra import local, logger
 from pyinfra.api import QuoteString, StringCommand

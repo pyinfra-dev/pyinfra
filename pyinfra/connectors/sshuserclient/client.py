@@ -166,12 +166,14 @@ class SSHClient(ParamikoClient):
             forward_agent = _pyinfra_ssh_forward_agent
 
         if forward_agent:
-            # Enable SSH forwarding
-            session = self.get_transport().open_session()
+            transport = self.get_transport()
+            assert transport is not None, "No transport"
+            session = transport.open_session()
             AgentRequestHandler(session)
 
     def gateway(self, hostname, host_port, target, target_port):
         transport = self.get_transport()
+        assert transport is not None, "No transport"
         return transport.open_channel(
             "direct-tcpip",
             (target, target_port),
@@ -185,7 +187,7 @@ class SSHClient(ParamikoClient):
         ssh_config_file=None,
         strict_host_key_checking=None,
     ):
-        cfg = {"port": 22}
+        cfg: dict = {"port": 22}
         cfg.update(initial_cfg or {})
 
         forward_agent = False

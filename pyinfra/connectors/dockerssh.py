@@ -14,9 +14,10 @@ The ``@dockerssh`` connector allows you to run commands on Docker containers on 
 
 import os
 from tempfile import mkstemp
-from typing import TYPE_CHECKING, Unpack
+from typing import TYPE_CHECKING
 
 import click
+from typing_extensions import Unpack
 
 from pyinfra import logger
 from pyinfra.api import QuoteString, StringCommand

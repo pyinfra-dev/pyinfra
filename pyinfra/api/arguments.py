@@ -1,15 +1,8 @@
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Iterable,
-    Mapping,
-    Optional,
-    Tuple,
-    TypedDict,
-    TypeVar,
-    Union,
-)
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Optional, Tuple, TypeVar, Union
+
+from typing_extensions import TypedDict
 
 from pyinfra import context
 from pyinfra.api.state import State
@@ -32,7 +25,7 @@ class ArgumentMeta:
     default: Callable[["Config"], T]
     handler: Callable[["Config", T], T]
 
-    def __init__(self, description, default, handler=default_sentinel):
+    def __init__(self, description, default, handler=default_sentinel) -> None:
         self.description = description
         self.default = default
         self.handler = handler
@@ -69,16 +62,9 @@ class ConnectorArguments(TypedDict, total=False):
     _stdin: Union[str, list, tuple]
 
 
-def generate_env(config: "Config", value):
+def generate_env(config: "Config", value: dict) -> dict:
     env = config.ENV.copy()
-
-    # TODO: this is to protect against host.data.env being a string or similar,
-    # the introduction of using host.data.X for operation kwargs combined with
-    # `env` being a commonly defined data variable causes issues.
-    # The real fix here is the prefixed `_env` argument.
-    if value and isinstance(value, dict):
-        env.update(value)
-
+    env.update(value)
     return env
 
 

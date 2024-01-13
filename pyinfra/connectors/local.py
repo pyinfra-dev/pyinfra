@@ -5,9 +5,10 @@ The ``@local`` connector executes changes on the local machine using subprocesse
 import os
 from distutils.spawn import find_executable
 from tempfile import mkstemp
-from typing import TYPE_CHECKING, Tuple, Unpack
+from typing import TYPE_CHECKING, Tuple
 
 import click
+from typing_extensions import Unpack
 
 from pyinfra import logger
 from pyinfra.api.command import QuoteString, StringCommand
@@ -29,6 +30,7 @@ if TYPE_CHECKING:
 class LocalConnector(BaseConnector):
     handles_execution = True
 
+    @staticmethod
     def make_names_data(_=None):
         if _ is not None:
             raise InventoryError("Cannot have more than one @local")

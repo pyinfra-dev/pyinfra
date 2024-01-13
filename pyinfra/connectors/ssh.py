@@ -8,13 +8,17 @@ are identical:
     pyinfra my-host.net ...
     pyinfra @ssh/my-host.net ...
 """
+
+from __future__ import annotations
+
 import shlex
 from distutils.spawn import find_executable
 from socket import error as socket_error, gaierror
-from typing import TYPE_CHECKING, Any, Iterable, Optional, Tuple, Unpack
+from typing import TYPE_CHECKING, Any, Iterable, Optional, Tuple
 
 import click
 from paramiko import AuthenticationException, BadHostKeyException, SFTPClient, SSHException
+from typing_extensions import Unpack
 
 from pyinfra import logger
 from pyinfra.api.command import QuoteString, StringCommand
@@ -263,7 +267,7 @@ class SSHConnector(BaseConnector):
     def get_sftp_connection(self):
         assert self.client is not None
         transport = self.client.get_transport()
-
+        assert transport is not None, "No transport"
         try:
             return SFTPClient.from_transport(transport)
         except SSHException as e:
