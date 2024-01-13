@@ -16,13 +16,11 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
     "guzzle_sphinx_theme",
+    "myst_parser",
 ]
 autosectionlabel_prefix_document = True
 
 source_suffix = [".rst", ".md"]
-source_parsers = {
-    ".md": "recommonmark.parser.CommonMarkParser",
-}
 
 master_doc = "index"
 project = "pyinfra"

@@ -59,8 +59,8 @@ TEST_REQUIRES = ANSIBLE_REQUIRES + (
 
 DOCS_REQUIRES = (
     "pyinfra-guzzle_sphinx_theme==0.14",
-    "recommonmark==0.5.0",
-    "sphinx==2.2.1",
+    "myst-parser==2.0.0",
+    "sphinx==6.2.1",
     # Pinned to fix: https://github.com/sphinx-doc/sphinx/issues/9727
     "docutils==0.17.1",
 )
