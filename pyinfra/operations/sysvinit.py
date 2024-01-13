@@ -12,7 +12,7 @@ from . import files
 from .util.service import handle_service_control
 
 
-@operation
+@operation()
 def service(
     service,
     running=True,
@@ -93,7 +93,7 @@ def service(
                 yield "rm -f {0}".format(link)
 
 
-@operation
+@operation()
 def enable(
     service,
     start_priority=20,

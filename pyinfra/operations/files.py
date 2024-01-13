@@ -226,7 +226,7 @@ def download(
         host.noop("file {0} has already been downloaded".format(dest))
 
 
-@operation
+@operation()
 def line(
     path,
     line,
@@ -447,7 +447,7 @@ def line(
             host.noop('line "{0}" exists in {1}'.format(replace or line, path))
 
 
-@operation
+@operation()
 def replace(
     path,
     text=None,
@@ -630,7 +630,7 @@ def sync(
         dest_to_ensure = dest_link_info["link_target"]
 
     yield from directory(
-        dest_to_ensure,
+        path=dest_to_ensure,
         user=user,
         group=group,
         mode=dir_mode or get_path_permissions_mode(src),
@@ -639,7 +639,7 @@ def sync(
     # Ensure any remote dirnames
     for dir_path_curr, dir_mode_curr in ensure_dirnames:
         yield from directory(
-            unix_path_join(dest, dir_path_curr),
+            path=unix_path_join(dest, dir_path_curr),
             user=user,
             group=group,
             mode=dir_mode or dir_mode_curr,
@@ -648,8 +648,8 @@ def sync(
     # Put each file combination
     for local_filename, remote_filename in put_files:
         yield from put(
-            local_filename,
-            remote_filename,
+            src=local_filename,
+            dest=remote_filename,
             user=user,
             group=group,
             mode=mode or get_path_permissions_mode(local_filename),
@@ -667,7 +667,7 @@ def sync(
             if exclude and any(fnmatch(filename, match) for match in exclude):
                 continue
 
-            yield from file(filename, present=False)
+            yield from file(path=filename, present=False)
 
 
 @memoize
@@ -937,7 +937,7 @@ def put(
                 host.noop("file {0} is already uploaded".format(dest))
 
 
-@operation
+@operation()
 def template(src, dest, user=None, group=None, mode=None, create_remote_dir=True, **data):
     '''
     Generate a template using jinja2 and write it to the remote system.
@@ -1056,8 +1056,8 @@ def template(src, dest, user=None, group=None, mode=None, create_remote_dir=True
 
     # Pass to the put function
     yield from put(
-        output_file,
-        dest,
+        src=output_file,
+        dest=dest,
         user=user,
         group=group,
         mode=mode,

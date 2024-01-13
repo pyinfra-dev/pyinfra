@@ -9,7 +9,7 @@ from pyinfra.facts.npm import NpmPackages
 from .util.packaging import ensure_packages
 
 
-@operation
+@operation()
 def packages(packages=None, present=True, latest=False, directory=None):
     """
     Install/remove/update npm packages.

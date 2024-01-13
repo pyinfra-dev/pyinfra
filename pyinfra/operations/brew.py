@@ -35,7 +35,7 @@ def upgrade():
 _upgrade = upgrade  # noqa: E305
 
 
-@operation
+@operation()
 def packages(
     packages=None,
     present=True,
@@ -160,7 +160,7 @@ def casks(
     )
 
 
-@operation
+@operation()
 def tap(src=None, present=True, url=None):
     """
     Add/remove brew taps.

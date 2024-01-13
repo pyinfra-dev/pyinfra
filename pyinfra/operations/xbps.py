@@ -33,7 +33,7 @@ def update():
 _update = update  # noqa: E305
 
 
-@operation
+@operation()
 def packages(
     packages=None,
     present=True,

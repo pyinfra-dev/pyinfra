@@ -14,7 +14,7 @@ from pyinfra.facts.server import Home
 from . import files
 
 
-@operation
+@operation()
 def keyscan(hostname, force=False, port=22):
     """
     Check/add hosts to the ``~/.ssh/known_hosts`` file.
@@ -157,7 +157,7 @@ def upload(
         )
 
 
-@operation
+@operation()
 def download(
     hostname,
     filename,

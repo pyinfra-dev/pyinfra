@@ -31,7 +31,7 @@ def daemon_reload(user_mode=False, machine=None, user_name=None):
 _daemon_reload = daemon_reload  # noqa: E305
 
 
-@operation
+@operation()
 def service(
     service,
     running=True,

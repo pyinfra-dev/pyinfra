@@ -8,6 +8,7 @@ from io import StringIO
 from itertools import filterfalse, tee
 from os import path
 from time import sleep
+from typing import Callable
 
 from pyinfra import host, logger, state
 from pyinfra.api import FunctionCommand, OperationError, StringCommand, operation
@@ -188,7 +189,7 @@ def script(src, args=()):
     """
 
     temp_file = state.get_temp_filename()
-    yield from files.put(src, temp_file)
+    yield from files.put(src=src, dest=temp_file)
 
     yield chmod(temp_file, "+x")
     yield StringCommand(temp_file, *args)
@@ -224,7 +225,7 @@ def script_template(src, args=(), **data):
     yield StringCommand(temp_file, *args)
 
 
-@operation
+@operation()
 def modprobe(module, present=True, force=False):
     """
     Load/unload kernel modules.
@@ -275,7 +276,7 @@ def modprobe(module, present=True, force=False):
         )
 
 
-@operation
+@operation()
 def mount(
     path,
     mounted=True,
@@ -339,7 +340,7 @@ def mount(
         )
 
 
-@operation
+@operation()
 def hostname(hostname, hostname_file=None):
     """
     Set the system hostname using ``hostnamectl`` or ``hostname`` on older systems.
@@ -393,10 +394,10 @@ def hostname(hostname, hostname_file=None):
         file = StringIO("{0}\n".format(hostname))
 
         # And ensure it exists
-        yield from files.put(file, hostname_file)
+        yield from files.put(src=file, dest=hostname_file)
 
 
-@operation
+@operation()
 def sysctl(
     key,
     value,
@@ -443,7 +444,7 @@ def sysctl(
         )
 
 
-@operation
+@operation()
 def service(
     service,
     running=True,
@@ -474,6 +475,8 @@ def service(
         )
     """
 
+    service_operation: Callable
+
     if host.get_fact(Which, command="systemctl"):
         service_operation = systemd.service
 
@@ -501,7 +504,7 @@ def service(
         )
 
     yield from service_operation(
-        service,
+        service=service,
         running=running,
         restarted=restarted,
         reloaded=reloaded,
@@ -510,7 +513,7 @@ def service(
     )
 
 
-@operation
+@operation()
 def packages(
     packages,
     present=True,
@@ -531,6 +534,8 @@ def packages(
             packages=["vimpager", "vim"],
         )
     """
+
+    package_operation: Callable
 
     # TODO: improve this - use LinuxDistribution fact + mapping with fallback below?
     # Here to be preferred on openSUSE which also provides aptitude
@@ -573,7 +578,7 @@ def packages(
     yield from package_operation(packages=packages, present=present)
 
 
-@operation
+@operation()
 def crontab(
     command,
     present=True,
@@ -746,7 +751,7 @@ def crontab(
         )
 
 
-@operation
+@operation()
 def group(group, present=True, system=False, gid=None):
     """
     Add/remove system groups.
@@ -814,7 +819,7 @@ def group(group, present=True, system=False, gid=None):
         yield "{0} {1}".format(group_add_command, " ".join(args))
 
 
-@operation
+@operation()
 def user_authorized_keys(
     user,
     public_keys,
@@ -870,7 +875,7 @@ def user_authorized_keys(
     # note that this always outputs commands unless the SSH user has access to the
     # authorized_keys file, ie the SSH user is the user defined in this function
     yield from files.directory(
-        authorized_key_directory,
+        path=authorized_key_directory,
         user=user,
         group=group or user,
         mode=700,
@@ -909,7 +914,7 @@ def user_authorized_keys(
             yield from files.line(path=authorized_key_file, line=key, ensure_newline=True)
 
 
-@operation
+@operation()
 def user(
     user,
     present=True,
@@ -1114,7 +1119,7 @@ def user(
     # Ensure home directory ownership
     if ensure_home:
         yield from files.directory(
-            home,
+            path=home,
             user=user,
             group=group or user,
             # Don't fail if the home directory exists as a link
@@ -1124,8 +1129,8 @@ def user(
     # Add SSH keys
     if public_keys is not None:
         yield from user_authorized_keys(
-            user,
-            public_keys,
+            user=user,
+            public_keys=public_keys,
             group=group,
             delete_keys=delete_keys,
             authorized_key_directory="{0}/.ssh".format(home),
@@ -1133,7 +1138,7 @@ def user(
         )
 
 
-@operation
+@operation()
 def locale(
     locale,
     present=True,

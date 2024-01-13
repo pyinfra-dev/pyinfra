@@ -9,7 +9,7 @@ from pyinfra.facts.openrc import OpenrcEnabled, OpenrcStatus
 from .util.service import handle_service_control
 
 
-@operation
+@operation()
 def service(
     service,
     running=True,

@@ -9,7 +9,7 @@ from .yum import key as yum_key
 key = yum_key
 
 
-@operation
+@operation()
 def repo(
     src,
     baseurl=None,
@@ -71,7 +71,7 @@ def repo(
     )
 
 
-@operation
+@operation()
 def rpm(src, present=True):
     # NOTE: if updating this docstring also update `dnf.rpm`
     """
@@ -109,7 +109,7 @@ def update():
 _update = update  # noqa: E305 (for use below where update is a kwarg)
 
 
-@operation
+@operation()
 def packages(
     packages=None,
     present=True,

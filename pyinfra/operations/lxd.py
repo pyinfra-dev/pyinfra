@@ -15,7 +15,7 @@ def get_container_named(name, containers):
         return None
 
 
-@operation
+@operation()
 def container(
     id,
     present=True,

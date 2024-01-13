@@ -11,7 +11,7 @@ from . import files
 from .util.service import handle_service_control
 
 
-@operation
+@operation()
 def service(
     service,
     running=True,
@@ -50,8 +50,8 @@ def service(
     # BSD init is simple, just add/remove <service>_enabled="YES"
     if isinstance(enabled, bool):
         yield from files.line(
-            "/etc/rc.conf.local",
-            "^{0}_enable=".format(service),
+            path="/etc/rc.conf.local",
+            line="^{0}_enable=".format(service),
             replace='{0}_enable="YES"'.format(service),
             present=enabled,
         )
