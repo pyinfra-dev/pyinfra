@@ -49,6 +49,7 @@ class TestOperationCli(PatchSSHTestCase):
 
     def test_deploy_operation(self):
         result = run_cli(
+            "-y",
             path.join("tests", "deploy", "inventories", "inventory.py"),
             "server.shell",
             "echo hi",
@@ -57,6 +58,7 @@ class TestOperationCli(PatchSSHTestCase):
 
     def test_deploy_operation_with_all(self):
         result = run_cli(
+            "-y",
             path.join("tests", "deploy", "inventory_all.py"),
             "server.shell",
             "echo hi",
@@ -65,6 +67,7 @@ class TestOperationCli(PatchSSHTestCase):
 
     def test_deploy_operation_json_args(self):
         result = run_cli(
+            "-y",
             path.join("tests", "deploy", "inventory_all.py"),
             "server.shell",
             '[["echo hi"], {}]',

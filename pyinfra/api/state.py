@@ -280,7 +280,7 @@ class State:
         yield lambda: items
 
     def get_op_order(self):
-        ts = TopologicalSorter()
+        ts: TopologicalSorter = TopologicalSorter()
 
         for host in self.inventory:
             for i, op_hash in enumerate(host.op_hash_order):

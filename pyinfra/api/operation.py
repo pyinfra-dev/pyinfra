@@ -8,6 +8,7 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 from __future__ import annotations
 
 from functools import wraps
+from io import StringIO
 from types import FunctionType
 from typing import Any, Iterator, Optional, Set, Tuple
 
@@ -23,6 +24,7 @@ from .operations import run_host_op
 from .state import State, StateOperationHostData, StateOperationMeta
 from .util import (
     get_call_location,
+    get_file_sha1,
     get_operation_order_from_stack,
     log_operation_start,
     make_hash,
@@ -321,20 +323,22 @@ def _execute_immediately(state, host, op_hash):
     run_host_op(state, host, op_hash)
 
 
+def _get_arg_value(arg):
+    if isinstance(arg, FunctionType):
+        return arg.__name__
+    if isinstance(arg, StringIO):
+        return f"StringIO(hash={get_file_sha1(arg)})"
+    return arg
+
+
 def _attach_args(op_meta, args, kwargs):
     for arg in args:
-        if isinstance(arg, FunctionType):
-            arg = arg.__name__
-
         if arg not in op_meta.args:
-            op_meta.args.append(arg)
+            op_meta.args.append(str(_get_arg_value(arg)))
 
     # Attach keyword args
     for key, value in kwargs.items():
-        if isinstance(value, FunctionType):
-            value = value.__name__
-
-        arg = "=".join((str(key), str(value)))
+        arg = "=".join((str(key), str(_get_arg_value(value))))
         if arg not in op_meta.args:
             op_meta.args.append(arg)
 

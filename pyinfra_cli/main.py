@@ -43,7 +43,7 @@ def _print_support(ctx, param, value):
     if not value:
         return
 
-    click.echo("--> Support information:", err=True)
+    logger.info("--> Support information:")
     print_support_info()
     ctx.exit()
 
@@ -242,7 +242,7 @@ def cli(*args, **kwargs):
 
     finally:
         if ctx_state.isset() and state.initialised:
-            echo_msg("--> Disconnecting from hosts...")
+            logger.info("--> Disconnecting from hosts...")
             # Triggers any executor disconnect requirements
             disconnect_all(state)
 
@@ -297,7 +297,7 @@ def _main(
 
     # Setup logging & Bootstrap/Venv
     #
-    _setup_log_level(debug, quiet)
+    _setup_log_level(debug)
     init_virtualenv()
 
     # Check operations are valid and setup commands
@@ -339,7 +339,7 @@ def _main(
 
     # Load up the inventory from the filesystem
     #
-    echo_msg("--> Loading inventory...", quiet)
+    logger.info("--> Loading inventory...")
     inventory = make_inventory(
         inventory,
         cwd=state.cwd,
@@ -360,17 +360,20 @@ def _main(
 
     # Connect to the hosts & start handling the user commands
     #
-    echo_msg("--> Connecting to hosts...", quiet)
+    logger.info("--> Connecting to hosts...")
     connect_all(state)
-    state, config = _handle_commands(state, config, command, original_operations, operations, quiet)
+    can_diff, state, config = _handle_commands(
+        state, config, command, original_operations, operations
+    )
 
     # Print proposed changes, execute unless --dry, and exit
     #
-    if yes:
-        echo_msg("--> Skipping change detection", quiet)
-    else:
-        echo_msg("--> Proposed changes:", quiet)
-        print_meta(state)
+    if can_diff:
+        if yes:
+            logger.info("--> Skipping change detection")
+        else:
+            logger.info("--> Detected changes:")
+            print_meta(state)
 
     # If --debug-facts or --debug-operations, print and exit
     if debug_facts or debug_operations:
@@ -382,31 +385,39 @@ def _main(
     if dry:
         _exit()
 
-    if not yes:
+    if can_diff and not yes:
         click.echo(err=True)
-        if not click.confirm("--> Execute proposed changes?", default=True, err=True):
+        confirm_msg = "    Operations ready, press enter to execute..."
+        click.echo(confirm_msg, err=True, nl=False)
+        v = input()
+        if v:
+            click.echo(f"Unexpected user input: {v}", err=True)
             _exit()
+        # Go up, clear the line, go up again - as if the confirmation statement was never here!
+        click.echo(
+            "\033[1A{0}\033[1A".format("".join(" " for _ in range(len(confirm_msg)))),
+            err=True,
+            nl=False,
+        )
 
-    echo_msg("--> Beginning operation run...", True)
+    logger.info("--> Beginning operation run...")
 
     run_ops(state, serial=serial, no_wait=no_wait)
 
-    echo_msg("--> Results:", True)
+    logger.info("--> Results:")
     print_results(state)
     _exit()
 
 
 # Setup
 #
-def _setup_log_level(debug, quiet):
+def _setup_log_level(debug):
     if not debug and not sys.warnoptions:
         warnings.simplefilter("ignore")
 
     log_level = logging.INFO
     if debug:
         log_level = logging.DEBUG
-    elif quiet:
-        log_level = logging.WARNING
 
     setup_logging(log_level)
 
@@ -478,7 +489,7 @@ def _validate_operations(operations, chdir):
     return original_operations, operations, command, chdir
 
 
-def _set_verbosity(state, verbosity, quiet):
+def _set_verbosity(state, verbosity):
     if verbosity > 0:
         state.print_fact_info = True
         state.print_noop_info = True
@@ -501,7 +512,7 @@ def _setup_state(verbosity, quiet, check_for_changes):
     state.cwd = cwd
     ctx_state.set(state)
 
-    state = _set_verbosity(state, verbosity, quiet)
+    state = _set_verbosity(state, verbosity)
     return state
 
 
@@ -517,7 +528,7 @@ def _set_config(
     fail_percent,
     quiet,
 ):
-    echo_msg("--> Loading config...", True)
+    logger.info("--> Loading config...")
 
     # Load up any config.py from the filesystem
     if state.cwd:
@@ -612,26 +623,34 @@ def _apply_inventory_limit(inventory, limit):
 
 # Operations Execution
 #
-def _handle_commands(state, config, command, original_operations, operations, quiet):
+def _handle_commands(state, config, command, original_operations, operations):
     if command is CliCommands.FACT:
-        state, fact_data = _run_fact_operations(state, config, operations, quiet)
+        state, fact_data = _run_fact_operations(state, config, operations)
         print_facts(fact_data)
         _exit()
 
+    can_diff = True
+
     if command == CliCommands.SHELL:
-        state = _run_exec_operations(state, config, operations, quiet)
+        state = _prepare_exec_operations(state, config, operations)
+        can_diff = False
 
     elif command == CliCommands.DEPLOY_FILES:
-        state, config, operations = _run_deploy_operations(state, config, operations, quiet)
+        state, config, operations = _prepare_deploy_operations(state, config, operations)
 
     elif command == CliCommands.FUNC:
-        state, kwargs = _run_func_operations(state, config, operations, original_operations, quiet)
+        state, kwargs = _prepare_func_operations(
+            state,
+            config,
+            operations,
+            original_operations,
+        )
 
-    return state, config
+    return can_diff, state, config
 
 
-def _run_fact_operations(state, config, operations, quiet):
-    echo_msg("--> Gathering facts...", quiet)
+def _run_fact_operations(state, config, operations):
+    logger.info("--> Gathering facts...")
 
     state.print_fact_info = True
     fact_data = {}
@@ -659,7 +678,7 @@ def _run_fact_operations(state, config, operations, quiet):
     return state, fact_data
 
 
-def _run_exec_operations(state, config, operations, quiet):
+def _prepare_exec_operations(state, config, operations):
     state.print_output = True
     load_func(
         state,
@@ -669,8 +688,8 @@ def _run_exec_operations(state, config, operations, quiet):
     return state
 
 
-def _run_deploy_operations(state, config, operations, quiet):
-    echo_msg("--> Preparing Operations...", quiet)
+def _prepare_deploy_operations(state, config, operations):
+    logger.info("--> Preparing Operations...")
 
     # Number of "steps" to make = number of files * number of hosts
     for i, filename in enumerate(operations):
@@ -686,8 +705,8 @@ def _run_deploy_operations(state, config, operations, quiet):
     return state, config, operations
 
 
-def _run_func_operations(state, config, operations, original_operations, quiet):
-    echo_msg("--> Preparing operation...", quiet)
+def _prepare_func_operations(state, config, operations, original_operations):
+    logger.info("--> Preparing operation...")
 
     op, args = operations
     args, kwargs = args
@@ -695,12 +714,3 @@ def _run_func_operations(state, config, operations, original_operations, quiet):
     load_func(state, op, *args, **kwargs)
 
     return state, kwargs
-
-
-# Utils
-#
-def echo_msg(msg=None, quiet=None):
-    if not quiet:
-        click.echo(err=True)
-    if msg:
-        click.echo(msg, err=True)
