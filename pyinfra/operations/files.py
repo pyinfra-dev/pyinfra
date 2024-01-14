@@ -57,9 +57,7 @@ from .util import files as file_utils
 from .util.files import adjust_regex, ensure_mode_int, get_timestamp, sed_replace, unix_path_join
 
 
-@operation(
-    pipeline_facts={"file": "dest"},
-)
+@operation()
 def download(
     src,
     dest,
@@ -521,9 +519,7 @@ def replace(
         host.noop('string "{0}" does not exist in {1}'.format(text, path))
 
 
-@operation(
-    pipeline_facts={"find_files": "destination"},
-)
+@operation()
 def sync(
     src,
     dest,
@@ -718,10 +714,6 @@ def _create_remote_dir(state, host, remote_filename, user, group):
     # We don't (currently) cache the local state, so there's nothing we can
     # update to flag the local file as present.
     is_idempotent=False,
-    pipeline_facts={
-        "file": "src",
-        "sha1_file": "src",
-    },
 )
 def get(
     src,
@@ -782,12 +774,7 @@ def get(
             yield FileDownloadCommand(src, dest, remote_temp_filename=host.get_temp_filename(dest))
 
 
-@operation(
-    pipeline_facts={
-        "file": "dest",
-        "sha1_file": "dest",
-    },
-)
+@operation()
 def put(
     src,
     dest,
@@ -1087,9 +1074,7 @@ def _raise_or_remove_invalid_path(fs_type, path, force, force_backup, force_back
         raise OperationError("{0} exists and is not a {1}".format(path, fs_type))
 
 
-@operation(
-    pipeline_facts={"link": "path"},
-)
+@operation()
 def link(
     path,
     target=None,
@@ -1194,9 +1179,7 @@ def link(
             host.noop("link {0} already exists".format(path))
 
 
-@operation(
-    pipeline_facts={"file": "path"},
-)
+@operation()
 def file(
     path,
     present=True,
@@ -1298,9 +1281,7 @@ def file(
             host.noop("file {0} already exists".format(path))
 
 
-@operation(
-    pipeline_facts={"directory": "path"},
-)
+@operation()
 def directory(
     path,
     present=True,
@@ -1402,7 +1383,7 @@ def directory(
             host.noop("directory {0} already exists".format(path))
 
 
-@operation(pipeline_facts={"flags": "path"})
+@operation()
 def flags(path, flags=None, present=True):
     """
     Set/clear file flags.
@@ -1450,9 +1431,7 @@ def flags(path, flags=None, present=True):
             )
 
 
-@operation(
-    pipeline_facts={"file": "path"},
-)
+@operation()
 def block(
     path,
     content=None,

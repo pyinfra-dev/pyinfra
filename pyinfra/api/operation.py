@@ -12,12 +12,14 @@ from io import StringIO
 from types import FunctionType
 from typing import Any, Callable, Generator, Iterator, Optional, cast
 
+from typing_extensions import ParamSpec
+
 import pyinfra
 from pyinfra import context, logger
 from pyinfra.context import ctx_host, ctx_state
 
 from .arguments import EXECUTION_KWARG_KEYS, AllArguments, pop_global_arguments
-from .arguments_typed import P, PyinfraOperation
+from .arguments_typed import PyinfraOperation
 from .command import PyinfraCommand, StringCommand
 from .exceptions import OperationValueError, PyinfraError
 from .host import Host
@@ -155,8 +157,10 @@ def add_op(state: State, op_func, *args, **kwargs):
     return results
 
 
+P = ParamSpec("P")
+
+
 def operation(
-    pipeline_facts=None,
     is_idempotent: bool = True,
     idempotent_notice: Optional[str] = None,
     _set_in_op: bool = True,
@@ -168,9 +172,8 @@ def operation(
     """
 
     def decorator(f: Callable[P, Generator]) -> PyinfraOperation[P]:
-        f.pipeline_facts = pipeline_facts  # type: ignore[attr-defined]
-        f.is_idempotent = is_idempotent  # type: ignore
-        f.idempotent_notice = idempotent_notice  # type: ignore
+        f.is_idempotent = is_idempotent  # type: ignore[attr-defined]
+        f.idempotent_notice = idempotent_notice  # type: ignore[attr-defined]
         return _wrap_operation(f, _set_in_op=_set_in_op)
 
     return decorator

@@ -7,9 +7,7 @@ from pyinfra.facts.selinux import FileContext, FileContextMapping, SEBoolean, SE
 from pyinfra.facts.server import Which
 
 
-@operation(
-    pipeline_facts={"seboolean": "bool_name"},
-)
+@operation()
 def boolean(bool_name, value, persistent=False):
     """
     Set the specified SELinux boolean to the desired state.
@@ -45,9 +43,7 @@ def boolean(bool_name, value, persistent=False):
         host.noop(f"boolean '{bool_name}' already had the value '{value}'")
 
 
-@operation(
-    pipeline_facts={"filecontext": "path"},
-)
+@operation()
 def file_context(path, se_type):
     """
     Set the SELinux type for the specified path to the specified value.
@@ -73,9 +69,7 @@ def file_context(path, se_type):
         host.noop(f"file_context: '{path}' already had type '{se_type}'")
 
 
-@operation(
-    pipeline_facts={"filecontextmapping": "target"},
-)
+@operation()
 def file_context_mapping(target, se_type=None, present=True):
     """
     Set the SELinux file context mapping for paths matching the target.
@@ -115,9 +109,7 @@ def file_context_mapping(target, se_type=None, present=True):
             host.noop(f"no existing mapping for '{target}'")
 
 
-@operation(
-    pipeline_facts={"which": "sepolicy"},
-)
+@operation()
 def port(protocol, port_num, se_type=None, present=True):
     """
     Set the SELinux type for the specified protocol and port.

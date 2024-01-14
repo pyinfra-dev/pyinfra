@@ -13,9 +13,7 @@ from . import files, ssh
 from .util.files import chown, unix_path_join
 
 
-@operation(
-    pipeline_facts={"git_config": "repo"},
-)
+@operation()
 def config(key, value, multi_value=False, repo=None):
     """
     Manage git config for a repository or globally.
@@ -62,9 +60,7 @@ def config(key, value, multi_value=False, repo=None):
         host.noop("git config {0} is set to {1}".format(key, value))
 
 
-@operation(
-    pipeline_facts={"git_branch": "target"},
-)
+@operation()
 def repo(
     src,
     dest,

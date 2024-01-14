@@ -97,10 +97,7 @@ def cask_args(host):
     return ("", " --cask") if new_cask_cli(host.get_fact(BrewVersion)) else ("cask ", "")
 
 
-@operation(
-    is_idempotent=False,
-    pipeline_facts={"brew_version": ""},
-)
+@operation(is_idempotent=False)
 def cask_upgrade():
     """
     Upgrades all brew casks.
@@ -109,9 +106,7 @@ def cask_upgrade():
     yield "brew %supgrade%s" % cask_args(host)
 
 
-@operation(
-    pipeline_facts={"brew_version": ""},
-)
+@operation()
 def casks(
     casks=None,
     present=True,
