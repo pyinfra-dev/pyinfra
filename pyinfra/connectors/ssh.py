@@ -409,9 +409,6 @@ class SSHConnector(BaseConnector):
         while attempts < 3:
             try:
                 with get_file_io(filename_or_io) as file_io:
-                    print("PUTFUCKINGFILE", file_io.read())
-                    print("FECK")
-                    file_io.seek(0)
                     sftp = self.get_sftp_connection()
                     sftp.putfo(file_io, remote_location)
                 return
