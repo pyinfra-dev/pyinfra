@@ -15,7 +15,6 @@ from typing import Union
 
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
-import pyinfra
 from pyinfra import host, logger, state
 from pyinfra.api import (
     FileDownloadCommand,
@@ -697,7 +696,7 @@ def rsync(src, dest, flags=["-ax", "--delete"]):
     yield RsyncCommand(src, dest, flags)
 
 
-def _create_remote_dir(state, host, remote_filename, user, group):
+def _create_remote_dir(remote_filename, user, group):
     # Always use POSIX style path as local might be Windows, remote always *nix
     remote_dirname = posixpath.dirname(remote_filename)
     if remote_dirname:
@@ -873,7 +872,7 @@ def put(
         remote_file = host.get_fact(File, path=dest)
 
     if create_remote_dir:
-        yield from _create_remote_dir(state, host, dest, user, group)
+        yield from _create_remote_dir(dest, user, group)
 
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
@@ -1007,7 +1006,6 @@ def template(src, dest, user=None, group=None, mode=None, create_remote_dir=True
     data.setdefault("host", host)
     data.setdefault("state", state)
     data.setdefault("inventory", state.inventory)
-    data.setdefault("facts", pyinfra.facts)
 
     # Render and make file-like it's output
     try:
@@ -1142,7 +1140,6 @@ def link(
     if symbolic:
         add_args.append("-s")
 
-    add_cmd = StringCommand(" ".join(add_args), QuoteString(target), QuoteString(path))
     remove_cmd = StringCommand("rm", "-f", QuoteString(path))
 
     if not present:
@@ -1152,9 +1149,12 @@ def link(
             host.noop("link {link} does not exist")
         return
 
+    assert target is not None  # appease typing QuoteString below
+    add_cmd = StringCommand(" ".join(add_args), QuoteString(target), QuoteString(path))
+
     if info is None:  # create
         if create_remote_dir:
-            yield from _create_remote_dir(state, host, path, user, group)
+            yield from _create_remote_dir(path, user, group)
 
         yield add_cmd
 
@@ -1251,7 +1251,7 @@ def file(
 
     if info is None:  # create
         if create_remote_dir:
-            yield from _create_remote_dir(state, host, path, user, group)
+            yield from _create_remote_dir(path, user, group)
 
         yield StringCommand("touch", QuoteString(path))
 
