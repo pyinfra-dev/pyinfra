@@ -7,6 +7,6 @@
     },
     "facts": {"files.FindInFile": {}},
     "commands": [
-        "if [ -f /etc/security/limits.conf ]; then ( grep '^root[[:space:]]+hard[[:space:]]+memlock.*$' /etc/security/limits.conf && sed -i.a-timestamp 's/^root[[:space:]]+hard[[:space:]]+memlock.*$/root\thard\tmemlock\tunlimited/' /etc/security/limits.conf && rm -f /etc/security/limits.conf.a-timestamp ) 2> /dev/null || echo 'root\thard\tmemlock\tunlimited' >> /etc/security/limits.conf ; else echo 'root\thard\tmemlock\tunlimited' >> /etc/security/limits.conf ; fi"
+        "echo 'root\thard\tmemlock\tunlimited' >> /etc/security/limits.conf"
     ]
 }

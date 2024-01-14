@@ -381,48 +381,27 @@ def line(
 
     # No line and we want it, append it
     if not present_lines and present:
-        # If the file does not exist - it *might* be created, so we handle it
-        # dynamically with a little script.
-        if present_lines is None:
-            yield make_formatted_string_command(
-                """
-                    if [ -f '{target}' ]; then
-                        ( grep {match_line} '{target}' && \
-                        {sed_replace_command}) 2> /dev/null || \
-                        {echo_command} ;
-                    else
-                        {echo_command} ;
-                    fi
-                """,
-                target=QuoteString(path),
-                match_line=QuoteString(match_line),
-                echo_command=echo_command,
-                sed_replace_command=sed_replace_command,
+        # If we're doing replacement, only append if the *replacement* line
+        # does not exist (as we are appending the replacement).
+        if replace:
+            # Ensure replace explicitly matches a whole line
+            replace_line = replace
+            if not replace_line.startswith("^"):
+                replace_line = f"^{replace_line}"
+            if not replace_line.endswith("$"):
+                replace_line = f"{replace_line}$"
+
+            present_lines = host.get_fact(
+                FindInFile,
+                path=path,
+                pattern=replace_line,
+                interpolate_variables=interpolate_variables,
             )
 
-        # File exists but has no matching lines - append it.
+        if not present_lines:
+            yield echo_command
         else:
-            # If we're doing replacement, only append if the *replacement* line
-            # does not exist (as we are appending the replacement).
-            if replace:
-                # Ensure replace explicitly matches a whole line
-                replace_line = replace
-                if not replace_line.startswith("^"):
-                    replace_line = f"^{replace_line}"
-                if not replace_line.endswith("$"):
-                    replace_line = f"{replace_line}$"
-
-                present_lines = host.get_fact(
-                    FindInFile,
-                    path=path,
-                    pattern=replace_line,
-                    interpolate_variables=interpolate_variables,
-                )
-
-            if not present_lines:
-                yield echo_command
-            else:
-                host.noop('line "{0}" exists in {1}'.format(replace or line, path))
+            host.noop('line "{0}" exists in {1}'.format(replace or line, path))
 
     # Line(s) exists and we want to remove them, replace with nothing
     elif present_lines and not present:
