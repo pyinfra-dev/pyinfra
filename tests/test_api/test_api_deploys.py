@@ -24,7 +24,7 @@ class TestDeploysApi(PatchSSHTestCase):
 
         connect_all(state)
 
-        @deploy
+        @deploy()
         def test_deploy(state=None, host=None):
             server.shell(commands=["echo first command"])
             server.shell(commands=["echo second command"])
@@ -83,11 +83,11 @@ class TestDeploysApi(PatchSSHTestCase):
 
         connect_all(state)
 
-        @deploy
+        @deploy()
         def test_nested_deploy():
             server.shell(commands=["echo nested command"])
 
-        @deploy
+        @deploy()
         def test_deploy():
             server.shell(commands=["echo first command"])
             test_nested_deploy()
