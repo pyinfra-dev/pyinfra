@@ -35,9 +35,7 @@ INSTALL_REQUIRES = (
     'typing-extensions ; python_version < "3.11"',
 )
 
-ANSIBLE_REQUIRES = ("pyyaml",)  # extras for parsing Ansible inventory
-
-TEST_REQUIRES = ANSIBLE_REQUIRES + (
+TEST_REQUIRES = (
     # Unit testing
     "pytest==7.2.0",
     "coverage==6.5",
@@ -132,7 +130,6 @@ if __name__ == "__main__":
             "test": TEST_REQUIRES,
             "docs": DOCS_REQUIRES,
             "dev": DEV_REQUIRES,
-            "ansible": ANSIBLE_REQUIRES,
         },
         include_package_data=True,
         classifiers=[
