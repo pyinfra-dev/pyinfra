@@ -27,7 +27,7 @@ def make_github_release():
     changelog = "\n".join(changelog_lines).strip()
 
     response = requests.post(
-        "https://api.github.com/repos/fizzadar/pyinfra/releases",
+        "https://api.github.com/repos/pyinfra-dev/pyinfra/releases",
         json={
             "tag_name": tag,
             "body": changelog,
