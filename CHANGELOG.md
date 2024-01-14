@@ -1,3 +1,25 @@
+# v2.9
+
+Long overdue! Happy New Year all :)
+
+Added:
+
++ Add `server.security_limit` operation & `SecurityLimits` fact (@maisim)
++ Add `password` argument to `server.user` operation (@disser)
++ Add `url` argument to `brew.tap` operation (@znd4)
++ Add `proxy` argument to `files.download` operation (@themanifold)
++ Add mtu, state, mac to `NetworkDevices` fact (@maisim)
++ Enable/test paramiko v3 support (@pbsds)
+
+Fixed:
+
++ Fix `Users` fact when user description contains pipes (@julienlavergne)
++ Fix multiple bugs in `files.block` operation (@stone-w4tch3r)
++ Fix removal of sudo askpass file with `server.reboot` operation (@stone-w4tch3r)
++ Disable home creation explicitly in `server.user` (@julienlavergne)
++ Remove unused colorama dependency (@gdrosos)
++ Automatically convert string/bytes IO objects to the correct mode
+
 # v2.8
 
 Added:
