@@ -3,7 +3,7 @@ import re
 import shutil
 from datetime import datetime
 from tempfile import mkdtemp
-from typing import TYPE_CHECKING, Dict, List, NewType, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, NewType, NotRequired, Optional, Union
 
 if TYPE_CHECKING:
     from typing import TypedDict
@@ -365,13 +365,13 @@ CrontabCommand = NewType("CrontabCommand", int)
 
 
 class CrontabDict(TypedDict):
-    minute: Union[int, str]
-    hour: Union[int, str]
-    month: Union[int, str]
-    day_of_month: Union[int, str]
-    day_of_week: Union[int, str]
-    comments: Optional[str]
-    special_time: Optional[str]
+    minute: NotRequired[Union[int, str]]
+    hour: NotRequired[Union[int, str]]
+    month: NotRequired[Union[int, str]]
+    day_of_month: NotRequired[Union[int, str]]
+    day_of_week: NotRequired[Union[int, str]]
+    comments: Optional[list[str]]
+    special_time: NotRequired[str]
 
 
 class Crontab(FactBase[Dict[CrontabCommand, CrontabDict]]):

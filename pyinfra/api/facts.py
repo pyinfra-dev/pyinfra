@@ -84,6 +84,8 @@ class FactBase(Generic[T]):
         Set the default attribute to be a type (eg list/dict).
         """
 
+        return cast(T, None)
+
     def process(self, output: Iterable[str]) -> T:
         # NOTE: TypeVar does not support a default, so we have to cast this str -> T
         return cast(T, "\n".join(output))

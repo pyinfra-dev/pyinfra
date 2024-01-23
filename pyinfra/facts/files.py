@@ -8,10 +8,7 @@ import typing
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
-if TYPE_CHECKING:
-    from typing import TypedDict
-else:
-    TypedDict = object
+from typing_extensions import Literal, TypedDict
 
 from pyinfra.api.command import QuoteString, make_formatted_string_command
 from pyinfra.api.facts import FactBase
@@ -88,7 +85,7 @@ class FileDict(TypedDict):
     link_target: "typing.NotRequired[str]"
 
 
-class File(FactBase[Union[FileDict, bool, None]]):
+class File(FactBase[Union[FileDict, Literal[False], None]]):
     """
     Returns information about a file on the remote system:
 
@@ -122,7 +119,7 @@ class File(FactBase[Union[FileDict, bool, None]]):
             bsd_stat_command=BSD_STAT_COMMAND,
         )
 
-    def process(self, output) -> Union[FileDict, bool, None]:
+    def process(self, output) -> Union[FileDict, Literal[False], None]:
         match = re.match(STAT_REGEX, output[0])
         if not match:
             return None
