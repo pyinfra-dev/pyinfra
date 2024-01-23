@@ -1,6 +1,8 @@
+import sys
 from os import path
 from unittest import TestCase
 
+import pytest
 from click.testing import CliRunner
 
 from pyinfra.api import OperationError
@@ -71,6 +73,10 @@ class TestCliDeployExceptions(TestCase):
         assert result.exception.filename == "invalid_operation_arg.py"
         assert result.exception.exception.args[0] == "missing a required argument: 'commands'"
 
+    @pytest.mark.skipif(
+        sys.platform.startswith("win"),
+        reason="The operation is not compatible with Windows",
+    )
     def test_operation_error(self):
         result = self._run_cli(["@local"], "operation_error.py")
         assert isinstance(result.exception, WrappedError)
