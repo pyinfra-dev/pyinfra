@@ -4,7 +4,6 @@ The files facts provide information about the filesystem and it's contents on th
 
 import re
 import stat
-import typing
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
