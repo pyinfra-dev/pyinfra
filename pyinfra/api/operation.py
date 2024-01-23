@@ -8,6 +8,7 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 from __future__ import annotations
 
 from functools import wraps
+from inspect import signature
 from io import StringIO
 from types import FunctionType
 from typing import Any, Callable, Generator, Iterator, Optional, cast
@@ -248,6 +249,10 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
             for command in command_generator():
                 op_is_change = True
                 break
+        else:
+            # If not calling the op function to check for change we still want to ensure the args
+            # are valid, so use Signature.bind to trigger any TypeError.
+            signature(func).bind(*args, **kwargs)
 
         # Add host-specific operation data to state, this mutates state
         host_meta = state.get_meta_for_host(host)
