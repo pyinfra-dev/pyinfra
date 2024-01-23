@@ -1,4 +1,5 @@
 import re
+from typing import Dict
 
 from pyinfra.api import FactBase
 
@@ -35,7 +36,7 @@ def _make_systemctl_cmd(user_mode=False, machine=None, user_name=None):
     return systemctl_cmd
 
 
-class SystemdStatus(FactBase):
+class SystemdStatus(FactBase[Dict[str, bool]]):
     """
     Returns a dictionary map of systemd units to booleans indicating whether they are active.
 
@@ -67,8 +68,8 @@ class SystemdStatus(FactBase):
 
         return f"{fact_cmd} show --all --property Id --property {self.state_key} '*'"
 
-    def process(self, output):
-        services = {}
+    def process(self, output) -> Dict[str, bool]:
+        services: Dict[str, bool] = {}
 
         current_unit = None
         for line in output:

@@ -498,7 +498,7 @@ def service(
 
     # NOTE: important that we are not Linux here because /etc/rc.d will exist but checking it's
     # contents may trigger things (like a reboot: https://github.com/Fizzadar/pyinfra/issues/819)
-    elif host.get_fact(Os) != "Linux" and host.get_fact(Directory, path="/etc/rc.d"):
+    elif host.get_fact(Os) != "Linux" and bool(host.get_fact(Directory, path="/etc/rc.d")):
         service_operation = bsdinit.service
 
     else:
@@ -654,6 +654,8 @@ def crontab(
 
     if not existing_crontab and cron_name:  # find the crontab by name if provided
         for cmd, details in crontab.items():
+            if not details["comments"]:
+                continue
             if name_comment in details["comments"]:
                 existing_crontab = details
                 existing_crontab_match = cmd
@@ -710,6 +712,7 @@ def crontab(
 
     # We have the cron and it exists, do it's details? If not, replace the line
     elif present and exists:
+        assert existing_crontab is not None
         if any(
             (
                 special_time != existing_crontab.get("special_time"),

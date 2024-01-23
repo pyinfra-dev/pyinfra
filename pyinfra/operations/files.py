@@ -846,7 +846,7 @@ def put(
 
     remote_file = host.get_fact(File, path=dest)
 
-    if not remote_file and host.get_fact(Directory, path=dest):
+    if not remote_file and bool(host.get_fact(Directory, path=dest)):
         dest = unix_path_join(dest, os.path.basename(src))
         remote_file = host.get_fact(File, path=dest)
 

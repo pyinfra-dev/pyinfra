@@ -13,7 +13,18 @@ from __future__ import annotations
 import re
 from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import click
 import gevent
@@ -46,14 +57,10 @@ SU_REGEXES = (
 )
 
 
-class FactNameMeta(type):
-    def __init__(cls, name: str, bases, attrs, **kwargs):
-        super().__init__(name, bases, attrs, **kwargs)
-        module_name = cls.__module__.replace("pyinfra.facts.", "")
-        cls.name = f"{module_name}.{cls.__name__}"
+T = TypeVar("T")
 
 
-class FactBase(metaclass=FactNameMeta):
+class FactBase(Generic[T]):
     name: str
 
     abstract: bool = True
@@ -64,22 +71,35 @@ class FactBase(metaclass=FactNameMeta):
 
     command: Union[str, Callable]
 
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        module_name = cls.__module__.replace("pyinfra.facts.", "")
+        cls.name = f"{module_name}.{cls.__name__}"
+
     @staticmethod
-    def default():
+    def default() -> T:
         """
         Set the default attribute to be a type (eg list/dict).
         """
 
-    @staticmethod
-    def process(output):
-        return "\n".join(output)
+        return cast(T, None)
+
+    def process(self, output: Iterable[str]) -> T:
+        # NOTE: TypeVar does not support a default, so we have to cast this str -> T
+        return cast(T, "\n".join(output))
 
     def process_pipeline(self, args, output):
         return {arg: self.process([output[i]]) for i, arg in enumerate(args)}
 
 
-class ShortFactBase(metaclass=FactNameMeta):
-    fact: type[FactBase]
+class ShortFactBase(Generic[T]):
+    name: str
+    fact: Type[FactBase]
+
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        module_name = cls.__module__.replace("pyinfra.facts.", "")
+        cls.name = f"{module_name}.{cls.__name__}"
 
     @staticmethod
     def process_data(data):

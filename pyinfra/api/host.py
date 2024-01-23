@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Generator, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Generator, Optional, Type, TypeVar, Union, overload
 from uuid import uuid4
 
 import click
@@ -12,7 +12,7 @@ from pyinfra.connectors.util import CommandOutput, remove_any_sudo_askpass_file
 
 from .connectors import get_execution_connector
 from .exceptions import ConnectError
-from .facts import get_host_fact
+from .facts import FactBase, ShortFactBase, get_host_fact
 from .util import memoize, sha1_hash
 
 if TYPE_CHECKING:
@@ -294,6 +294,16 @@ class Host:
     # Host facts
     #
 
+    T = TypeVar("T")
+
+    @overload
+    def get_fact(self, name_or_cls: Type[FactBase[T]], *args, **kwargs) -> T:
+        ...
+
+    @overload
+    def get_fact(self, name_or_cls: Type[ShortFactBase[T]], *args, **kwargs) -> T:
+        ...
+
     def get_fact(self, name_or_cls, *args, **kwargs):
         """
         Get a fact for this host, reading from the cache if present.
@@ -361,7 +371,7 @@ class Host:
 
         self.state.trigger_callbacks("host_disconnect", self)
 
-    def run_shell_command(self, *args, **kwargs) -> Tuple[bool, CommandOutput]:
+    def run_shell_command(self, *args, **kwargs) -> tuple[bool, CommandOutput]:
         """
         Low level method to execute a shell command on the host via it's configured connector.
         """

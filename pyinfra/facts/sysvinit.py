@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from typing import Optional
 
@@ -7,7 +9,7 @@ from pyinfra.api import FactBase
 class InitdStatus(FactBase):
     """
     Low level check for every /etc/init.d/* script. Unfortunately many of these
-    mishehave and return exit status 0 while also displaying the help info/not
+    misbehave and return exit status 0 while also displaying the help info/not
     offering status support.
 
     Returns a dict of name -> status.
@@ -30,8 +32,8 @@ class InitdStatus(FactBase):
     regex = r"([a-zA-Z0-9\-]+)=([0-9]+)"
     default = dict
 
-    def process(self, output):
-        services = {}
+    def process(self, output) -> dict[str, Optional[bool]]:
+        services: dict[str, Optional[bool]] = {}
 
         for line in output:
             matches = re.match(self.regex, line)
