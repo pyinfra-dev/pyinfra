@@ -59,7 +59,7 @@ def setup(app):
     this_dir = path.dirname(path.realpath(__file__))
     scripts_dir = path.abspath(path.join(this_dir, "..", "scripts"))
 
-    for auto_docs_name in ("operations", "facts", "apidoc"):
+    for auto_docs_name in ("operations", "facts", "apidoc", "connectors"):
         auto_docs_path = path.join(this_dir, auto_docs_name)
         if path.exists(auto_docs_path):
             rmtree(auto_docs_path)

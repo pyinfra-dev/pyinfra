@@ -1,6 +1,6 @@
 # Packaging Deploys
 
-Operations in `pyinfra` execute low-level system tools (filesystem, systemd, package manager, etc). A **deploy** is a higher level abstraction, combining one or more operations together to setup and configure something (docker, certbot, nginx, etc).
+Operations in pyinfra execute low-level system tools (filesystem, systemd, package manager, etc). A **deploy** is a higher level abstraction, combining one or more operations together to setup and configure something (docker, certbot, nginx, etc).
 
 Deploys are usually defined by the user (see [Using Operations](../using-operations)). It is also possible to package deploys as Python modules making them reusable and shareable via [pypi](https://pypi.org/). These can then be imported into your own deploy code and utilised.
 

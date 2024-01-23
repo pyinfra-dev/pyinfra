@@ -1,6 +1,6 @@
 # Contributing
 
-🎉 Thank you for taking the time to contribute to `pyinfra`! 🎉
+🎉 Thank you for taking the time to contribute to pyinfra! 🎉
 
 Third party pull requests help expand pyinfra's functionality and are essential to it's continued growth. This guide should help get you started adding additional operations, facts and other functionality to pyinfra.
 

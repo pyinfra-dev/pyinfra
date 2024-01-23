@@ -1,13 +1,12 @@
 Using Operations
 ================
 
-Operations tell ``pyinfra`` what to do, for example the ``server.shell`` operation instructs ``pyinfra`` to execute a shell command. Most operations define state rather than actions - so instead of "start this service" you say "this service should be running" - ``pyinfra`` will only execute commands if needed.
+Operations tell pyinfra what to do, for example the ``server.shell`` operation instructs pyinfra to execute a shell command. Most operations define state rather than actions - so instead of "start this service" you say "this service should be running" - pyinfra will make changes if needed.
 
-For example, these operations will ensure that user ``pyinfra`` exists with home directory ``/home/pyinfra``, and that the ``/var/log/pyinfra.log`` file exists and is owned by that user:
+For example, these two operations will ensure that user ``pyinfra`` exists with home directory ``/home/pyinfra``, and that the ``/var/log/pyinfra.log`` file exists and is owned by that user:
 
 .. code:: python
 
-    # Import pyinfra modules, each containing operations to use
     from pyinfra.operations import server, files
 
     server.user(
@@ -32,10 +31,6 @@ Uses :doc:`operations/files` and :doc:`operations/server`. You can see all avail
 
     pyinfra @docker/ubuntu:20.04 deploy.py
 
-.. Important::
-    Operations that rely on one another (interdependency) must be treated with caution. See: `deploy limitations <deploy-process.html#limitations>`_.
-
-
 Global Arguments
 ----------------
 
@@ -55,7 +50,7 @@ Global arguments are covered in detail here: :doc:`arguments`. There is a set of
 The ``host`` Object
 -------------------
 
-``pyinfra`` provides a global ``host`` object that can be used to retrieve information and metadata about the current host target. At all times the ``host`` variable represents the current host context, so you can think about the deploy code executing on individual hosts at a time.
+pyinfra provides a global ``host`` object that can be used to retrieve information and metadata about the current host target. At all times the ``host`` variable represents the current host context, so you can think about the deploy code executing on individual hosts at a time.
 
 The ``host`` object has ``name`` and ``groups`` attributes which can be used to control operation flow:
 
@@ -69,11 +64,28 @@ The ``host`` object has ``name`` and ``groups`` attributes which can be used to 
     if "control-plane" in host.groups:
         ...
 
+Host & Group Data
+~~~~~~~~~~~~~~~~~
+
+Adding data to inventories is covered in detail here: :doc:`inventory-data`. Data can be accessed within operations using the ``host.data`` attribute:
+
+.. code:: python
+
+    from pyinfra import host
+    from pyinfra.operations import server
+
+    # Ensure the state of a user based on host/group data
+    server.user(
+        name="Setup the app user",
+        user=host.data.app_user,
+        home=host.data.app_dir,
+    )
+
 
 Host Facts
 ~~~~~~~~~~
 
-Facts allow you to use information about the target host to control and configure operations. A good example is switching between ``apt`` & ``yum`` depending on the Linux distribution. Facts are imported from ``pyinfra.facts.*`` and can be collected using ``host.get_fact(...)``:
+Facts allow you to use information about the target host to control and configure operations. A good example is switching between ``apt`` & ``yum`` depending on the Linux distribution. Facts are imported from ``pyinfra.facts.*`` and can be retreived using the ``host.get_fact`` function:
 
 .. code:: python
 
@@ -90,28 +102,14 @@ Facts allow you to use information about the target host to control and configur
 
 See :doc:`facts` for a full list of available facts and arguments.
 
-Host & Group Data
-~~~~~~~~~~~~~~~~~
-
-Adding data to inventories is covered in detail here: :doc:`inventory-data`. Data can be accessed within operations via the ``host.data`` attribute:
-
-.. code:: python
-
-    from pyinfra import host
-    from pyinfra.operations import server
-
-    # Ensure the state of a user based on host/group data
-    server.user(
-        name="Setup the app user",
-        user=host.data.app_user,
-        home=host.data.app_dir,
-    )
+.. Important::
+    Only use immutable facts in deploy code (installed OS, Arch, etc) unless you are absolutely sure they will not change. See: `using host facts <deploy-process.html#using-host-facts>`_.
 
 
 The ``inventory`` Object
 ------------------------
 
-Like ``host``, there is an ``inventory`` object that can be used to access the entire inventory of hosts. This is useful when you need facts or data from another host like the IP address of another node:
+Like ``host``, there is an ``inventory`` object that can be used to access the entire inventory of hosts. This is useful when you need facts or data from another host like the hostname of another server:
 
 .. code:: python
 
@@ -134,7 +132,7 @@ Like ``host``, there is an ``inventory`` object that can be used to access the e
 Operation Changes & Output
 --------------------------
 
-All operations return an operation meta object which provides information about the changes the operation *will* execute. The meta object provides ``changes`` (integer) and ``changed`` (boolean) attributes initially. This can be used to control subsequent operations:
+All operations return an operation meta object which provides information about the changes the operation *will* execute. This can be used to control other operations via the ``_if_changed`` argument:
 
 .. code:: python
 
@@ -145,14 +143,16 @@ All operations return an operation meta object which provides information about 
         user="myuser",
     )
 
-    # If we added a user above, do something extra
-    if create_user.changed:
-        server.shell( # add user to sudo, etc...
+    server.shell(
+        name="Bootstrap user",
+        command=["..."],
+        _if_changed=create_user,
+    )
 
 Operation Output
 ~~~~~~~~~~~~~~~~
 
-``pyinfra`` doesn't immediately execute normal operations meaning output is not available right away. It is possible to access this output at runtime by providing a callback function using the :ref:`operations:python.call` operation.
+pyinfra doesn't immediately execute operations meaning output is not available right away. It is possible to access this output at runtime by providing a callback function using the :ref:`operations:python.call` operation.
 
 .. code:: python
 
@@ -176,11 +176,7 @@ Operation Output
 Nested Operations
 -----------------
 
-.. important::
-
-    **Nested operations are currently in beta**. Nested operations should be kept to a minimum as they cannot be tracked as changes prior to execution.
-
-Nested operations are called during the execution phase within a callback function passed into a :ref:`operations:python.call`. Calling a nested operation generates and immediately executes it on the target machine. This is useful in complex scenarios where one operation output is required in another.
+Nested operations are called during the execution phase within a callback function passed into a :ref:`operations:python.call`. Calling a nested operation immediately executes it on the target machine. This is useful in complex scenarios where one operation output is required in another.
 
 Because nested operations are executed immediately, the output is always available right away:
 
@@ -233,7 +229,7 @@ Like ``host`` and ``inventory``, ``config`` can be used to set global defaults f
 Enforcing Requirements
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The config object can be used to enforce a ``pyinfra`` version or Python package requirements. This can either be defined as a requirements text file path or simply a list of requirements:
+The config object can be used to enforce a pyinfra version or Python package requirements. This can either be defined as a requirements text file path or simply a list of requirements:
 
 .. code:: python
 
@@ -251,7 +247,7 @@ The config object can be used to enforce a ``pyinfra`` version or Python package
 Examples
 --------
 
-A great way to learn more about writing ``pyinfra`` deploys is to see some in action. There's a number of resources for this:
+A great way to learn more about writing pyinfra deploys is to see some in action. There's a number of resources for this:
 
 - `the pyinfra examples folder on GitHub <https://github.com/Fizzadar/pyinfra/tree/2.x/examples>`_ - a general collection of all kinds of example deploy
 - :doc:`the example deploys in this documentation <./examples>` - these highlight specific common patterns

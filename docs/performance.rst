@@ -1,7 +1,7 @@
 Performance
 ===========
 
-``pyinfra`` was designed and built with performance in mind - the project was originally started due to frustrations with the performance of other agent-less deployment tools. Although ``pyinfra`` has grown way beyond it's initial scope, performance is regularly re-checked and must keep inline with the chart below:
+pyinfra was designed and built with performance in mind - the project was originally started due to frustrations with the performance of other agent-less deployment tools. Although pyinfra has grown way beyond it's initial scope, performance is regularly re-checked and must keep inline with the chart below:
 
 .. image:: static/performance.png
     :width: 100%

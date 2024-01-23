@@ -1,13 +1,13 @@
 Operations Index
 ================
 
-Operations are used to describe changes to make to systems in the inventory. Use them to define state and ``pyinfra`` will make any necessary changes to reach that state. All operations accept a set of :doc:`global arguments <arguments>` and are grouped as Python modules.
+Operations are used to describe changes to make to systems in the inventory. Use them to define state and pyinfra will make any necessary changes to reach that state. All operations accept a set of :doc:`global arguments <arguments>` and are grouped as Python modules.
 
 **Want a new operation?** Check out :doc:`the writing operations guide <./api/operations>`.
 
 .. raw:: html
 
-   <h3>Popular operations by category:</h3>
+   <h3>Popular operations by category</h3>
 
 .. admonition:: Basics
    :class: note inline
@@ -31,7 +31,7 @@ Operations are used to describe changes to make to systems in the inventory. Use
 
 .. raw:: html
 
-   <h3>All operations alphabetically:</h3>
+   <h3>All operations alphabetically</h3>
 
 .. raw:: html
 

@@ -1,9 +1,9 @@
 Inventory & Data
 ================
 
-A ``pyinfra`` inventory provides hosts, groups and data. Host are the targets ``pyinfra`` will execute commands or state changes on (think a SSH daemon on a server, a Docker container or the local machine). Hosts can be attached to groups, and data can then be assigned to both the groups of hosts and individual hosts.
+A pyinfra inventory provides hosts, groups and data. Host are the things pyinfra will make changes to (think a SSH daemon on a server, a Docker container or the local machine). Hosts can be attached to groups, and data can then be assigned to both the groups and individual hosts.
 
-By default ``pyinfra`` assumes hosts are SSH servers and the name of the host is used as the SSH hostname. Prefixing the name of the host with ``@<connector-name>/`` is used to activate alternative connectors. See: :doc:`connectors`.
+By default pyinfra assumes hosts are SSH servers and the name of the host is used as the SSH hostname. Prefixing the name of the host with ``@<connector-name>/`` is used to activate alternative connectors. See: :doc:`connectors`.
 
 Inventory Files
 ---------------
@@ -23,7 +23,7 @@ Inventory files contain groups of hosts. Groups are defined as a ``list``. For e
         "db-3.net",
     ]
 
-If you save this file as ``inventory.py``, you can then use it in when executing ``pyinfra``:
+If you save this file as ``inventory.py``, you can then use it in when executing pyinfra:
 
 .. code:: shell
 
@@ -35,7 +35,7 @@ If you save this file as ``inventory.py``, you can then use it in when executing
 Limiting inventory at runtime
 -----------------------------
 
-It is possible to limit the inventory at execution time using the ``--limit`` argument. This makes ``pyinfra`` only execute operations against targets matching the limit. Multiple limits can be provided and a limit may refer to a group or glob-style match against host names. A few examples:
+It is possible to limit the inventory at execution time using the ``--limit`` argument. This makes pyinfra only execute operations against targets matching the limit. Multiple limits can be provided and a limit may refer to a group or glob-style match against host names. A few examples:
 
 .. code:: shell
 
@@ -138,4 +138,4 @@ Data can also provide default values for :doc:`arguments`, for example:
 External Sources for Data
 -------------------------
 
-Because ``pyinfra`` is configured in Python, you can pull in data from pretty much anywhere just using other Python packages.
+Because pyinfra is configured in Python, you can pull in data from pretty much anywhere just using other Python packages.

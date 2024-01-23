@@ -1,7 +1,7 @@
 Facts Index
 ===========
 
-``pyinfra`` uses **facts** to determine the existing state of a remote server. Operations use this information to generate commands which alter the state. Facts are read-only and is populated at the beginning of the deploy.
+pyinfra uses **facts** to determine the existing state of a remote server. Operations use this information to generate commands which alter the state. Facts are read-only and is populated at the beginning of the deploy.
 
 Facts can be executed/tested via the command line:
 
@@ -33,7 +33,7 @@ You can leverage facts as part of :doc:`within operations <using-operations>` li
     if host.get_fact(LinuxName) == 'Ubuntu':
         apt.packages(...)
 
-**Want a new fact?** Check out :doc:`the writing facts guide <./api/facts>`.
+**Want a new fact?** Check out :doc:`the writing facts guide <./api/operations>`.
 
 Facts, like :doc:`operations <operations>`, are namespaced as different modules - shortcuts to each of these can be found in the sidebar.
 

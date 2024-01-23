@@ -2,10 +2,10 @@
 
 ## Pipx
 
-It is recommended to install ``pyinfra`` using [`pipx`](https://pipxproject.github.io/pipx/):
+It is recommended to install pyinfra using `pip`:
 
 ```sh
-pipx install pyinfra
+pip install pyinfra
 ```
 
 ## Windows

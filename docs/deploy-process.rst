@@ -1,166 +1,175 @@
-Deploy Execution
-================
+How pyinfra Works
+=================
 
-``pyinfra`` executes in two main phases: **fact gathering** and **executing operations**. This split is what enables ``pyinfra`` to execute dry runs (``--dry``) and output a "diff" of commands & files (``--debug-operations``) to update a servers state as defined.
+pyinfra executes in five of stages:
 
-**Fact gathering**:
-    During this phase information is collected from the remote servers and compared to the desired state defined by the user (ie a file of operations). This phase is **read only** and collects most of the information needed to execute the deploy.
+1. **Setup** phase, read the inventory / data
+2. **Connect** to the targets in the inventory
+3. **Prepare** by detecting changes and determining operation order
+4. **Execute** the changes on the targets
+5. **Disconnect** and cleanup
 
-**Executing operations**:
-    This phase takes the commands/files/etc generated during fact gathering and executes the commands, uploads the files to the remote system. At the end of the operations the remote state should reflect that defined by the users operations.
+Every time you run pyinfra it steps through each of these stages with the goal of updating the inventory to match the commands or state provided. Most of these stages are simple to reason about. The one exception to this is the **prepare**, or change detection, phase which is used to define the order operations are executed.
 
-This two phase deploy process enables ``pyinfra`` to do some really interesting things, however there are some limitations to consider.
-
-
-Detailed lifecycle of executing the ``pyinfra`` CLI
+How pyinfra Detects Changes & Orders Operations
 ---------------------------------------------------
 
-Setup & connect
-~~~~~~~~~~~~~~~
-
-+ Parse & validate CLI arguments, inventory file, group data files, commands
-+ Create ``Inventory``, ``Config`` and ``State`` objects
-
-  + Populate the inventory with ``Host`` objects for each host
-  + Load up any filesystem based config variables
-
-+ Connect to each target host from the inventory using the relevant connector
-
-Fact gathering / operation preparation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-+ Loop through each deploy file:
-
-  + Loop through each host and execute the file
-  + As operation functions are called, needed facts are fetched from hosts
-  + Commands output by operations are stored in the state
-
-Operation execution
-~~~~~~~~~~~~~~~~~~~
-
-+ Generate order of operations
-
-  + Uses line numbers in CLI mode (ie - works like the user would expect)
-  + Uses `add_op` call order in API mode
-
-+ Loop through each operation
-
-  + For each host, execute the commands specific for this (op, host) pair
-  + Collect results and trigger failure handling for any errors encountered
-  + Store the results in the state
-
-Completion
-~~~~~~~~~~
-
-+ Disconnect from all the target hosts
-+ Write out the results to the user
-
-
-Limitations
------------
-
-Interdependent operations
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The major disadvantage to separating the deploy into two phases comes into effect where operations rely on each other - i.e. the changes of one operation will affect a later operations facts. Consider the following example:
+Below we'll look at an in depth example that explains why the prepare / ordering stage is so critical. This example deploys a single database server and three webservers, here's the inventory:
 
 .. code:: python
 
-    from pyinfra.operations import apt, files
+    web_servers = ["web-01", "web-02", "web-03"]
+    db_server = ["db-01"]
 
-    apt.packages(
+And here's the deploy code:
+
+.. code:: python
+
+    from pyinfra import host, operations
+
+    operations.apt.packages(
+        name="Install base debugging packages",
+        packages=["htop", "iftop"],
+        update=True,
+        cache_time=3600,
+    )
+
+    if "db_server" in host.groups:
+        operations.apt.packages(
+            name="Install postgres server",
+            packages=["postgresql-server"],
+        )
+
+    if "web_servers" in host.groups:
+        operations.apt.packages(
+            name="Install nginx",
+            packages=["nginx"],
+        )
+
+The deploy code is written as if executing a single host. To execute it over multiple hosts requires pyinfra to run the code once for each host. We can't do this host by host or pyinfra would be really slow. But if we do it in parallel we can't ensure operations run in expected order.
+
+The aim is that each operation runs in order, stopping at the end of operation until all hosts have completed or failed it before moving onto the next. So operations are sequential but each individual operation is executed on all hosts in parallel, like so:
+
+.. code::
+
+    - run "Install base debugging packages" on all hosts in parallel (web-01, web-02, web-03, db-01)
+    - run "Install postgres server" on db-01
+    - run "Upload postgres pg_hba config" on db-01
+    - run "Install nginx" on web hosts in parallel (web-01, web-02, web-03)
+    - run "Upload nginx config" on web hosts in parallel (web-01, web-02, web-03)
+
+To make this possible we have to first execute the code to generate the order and then execute the actual operations. This is why deploy code is always executed before any changes are made.
+
+When does this matter?
+----------------------
+
+Using Host Facts
+~~~~~~~~~~~~~~~~
+
+.. Caution::
+    Only use immutable facts in deploy code (installed OS, Arch, etc) unless you are absolutely sure they will not change.
+
+Let's look at an example - the deploy code here is bad but highlights the ordering problems:
+
+.. code:: python
+
+    from pyinfra import facts, host, operations
+
+    operations.apt.packages(
         name="Install nginx",
         packages=["nginx"],
     )
 
-    files.link(
-        name="Remove default nginx site",
-        src="/etc/nginx/sites-enabled/default",
-        present=False,
-    )
+    if host.get_fact(facts.files.File, path="/etc/nginx/sites-enabled/default"):
+        operations.files.file(
+            name="Remove nginx default site",
+            path="/etc/nginx/sites-enabled/default",
+            present=False,
+        )
 
-This is problematic because the link, ``/etc/nginx/sites-enabled/default``, won't exist during the first phase as it is created by the previous ``apt.packages`` operation. This means, on first run, the second operation will do nothing, leaving the link in place. Re-running the deploy would correct this, but we can also provide hints to ``pyinfra`` in such cases, i.e.:
+The critical thing to remember is that when you execute ``pyinfra INVENTORY deploy.py`` the deploy code is run *before* the operations are actually executed. This enables pyinfra to figure out the correct order for operations (see below for a detailed explanation).
+
+The problem here is the conditional check:
 
 .. code:: python
 
-    from pyinfra.operations import apt, files
+    if host.get_fact(facts.files.File, path="/etc/nginx/sites-enabled/default"):
 
-    install_nginx = apt.packages(
+This gets executed *before* the ``apt.packages`` install, and evaluates to ``False``. But at execution time this would actually become ``True``. The solution is simple - rely on pyinfra's operations to describe the desired state and always call the second:
+
+.. code:: python
+
+    from pyinfra import facts, host, operations
+
+    operations.apt.packages(
         name="Install nginx",
         packages=["nginx"],
     )
 
-    files.link(
-        name="Remove default nginx site",
-        src="/etc/nginx/sites-enabled/default",
+    operations.files.file(
+        name="Remove nginx default site",
+        path="/etc/nginx/sites-enabled/default",
         present=False,
-        assume_present=install_nginx.changed,
     )
 
-The addition of ``assume_present`` will force ``pyinfra`` to remove the file without checking if it exists first.
+In this case when the ``files.file`` operation is executed pyinfra will check if the file is present and remove it if so, and do nothing if not.
 
-Dynamic operations
-~~~~~~~~~~~~~~~~~~
+Checking Operation Changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Sometimes it is impossible to know all the facts before executing operations. For example the unique identifier for the server that a package generates, which happens inside an operation. This requires reading this state (the identifier) from the server *during* the deploy.
+.. Caution::
+    Always use the ``_if_changed`` global argument when checking for previous operation changes.
 
-See the :doc:`./examples/dynamic_execution_deploy` example.
-
-Loops & Cycle Errors
-~~~~~~~~~~~~~~~~~~~~
-
-In CLI mode ``pyinfra`` uses a single DAG to determine the order in which operations are executed. While this is very effective and executing in an order users would expect, certain loops result in cycles within the DAG which raise an error. This can be fixed using the ``host.loop`` function as follows:
+Let's use a simple example as above with add a conditional reload based on the outcome of the ``files.file`` operation:
 
 .. code:: python
 
-    for i in host.loop(range(0, 2)):
-        server.shell(name="Do a thing", commands="ls")
+    from pyinfra import facts, host, operations
 
-Technical walk through
-++++++++++++++++++++++
+    operations.apt.packages(
+        name="Install nginx",
+        packages=["nginx"],
+    )
 
-In the below section we'll walk through an example of the problem described above by looking at operations that would generate a cycle and the resulting DAG, and then the fix. First up let's consider this example:
+    remove_default_site = operations.files.file(
+        name="Remove nginx default site",
+        path="/etc/nginx/sites-enabled/default",
+        present=False,
+    )
 
-.. code:: python
+    if remove_default_site.changed:
+        operation.server.service(
+            name="Reload nginx",
+            service="nginx",
+            reloaded=True,
+        )
 
-    for i in range(0, 2):
-        if i > 0 or (i == 0 and host.name == "@local"):
-            server.shell(name="A", ...)
-
-        server.shell(name="B", ...)
-
-This results in the following DAG order for each host - note that ``pyinfra`` does not know the loop position, so when an operation is seen twice on the same line, it just appends a number, like so:
-
-.. code:: shell
-
-    # @local: A -> B -> A-1 -> B-1
-    # Other:       B -> A   -> B-1
-
-The problem is that combining these two means A needs B and B needs A, causing a loop and raising an error. We can use the ``host.loop`` function to prevent this occurring by providing the loop position to ``pyinfra``:
+As above, the problem here is again the conditional check:
 
 .. code:: python
 
-    for i in host.loop(range(0, 2)):
-        if i > 0 or (i == 0 and host.name == "@local"):
-            server.shell(name="ls B", commands="ls")
+    if remove_default_site.changed:
 
-        server.shell(name="ls C", commands="ls")
+Since this gets executed before nginx is installed by ``apt.packages`` operation, the value of ``remove_default_site.changed`` at this stage is ``False`` but at execution time this would become ``True``, exactly like the fact example above. The solution here is to use the special ``_if_changed`` global argument to delay the check until execution time:
 
-Now the loop position is provided as a hint to ``pyinfra``, it can resolve the DAGs correctly:
+.. code:: python
 
-.. code:: shell
+    from pyinfra import facts, host, operations
 
-    # @local: 0A -> 0B -> 1A -> 1B
-    # Other:        0B -> 1A -> 1B
+    operations.apt.packages(
+        name="Install nginx",
+        packages=["nginx"],
+    )
 
+    remove_default_site = operations.files.file(
+        name="Remove nginx default site",
+        path="/etc/nginx/sites-enabled/default",
+        present=False,
+    )
 
-Deploy State
-------------
-
-At the center of a ``pyinfra`` deployment is a state object. This object holds the inventory of hosts and data, operations to execute and status of the execution.
-
-+ All hosts (or those matching the ``-limit``) are connected to and flagged as both **activated** and **active**.
-+ Deploy files and/or operations are loaded for every activated host, any additional hosts are connected to as required (to collect facts, for example).
-+ Proposed operations, along with the number of commands for each hosts, are shown to the user for every **activated** host. At this point if the ``--dry`` flag is passed, ``pyinfra`` stops.
-+ Operations begin to execute, when hosts fail they are flagged as no longer **active**, ``pyinfra`` checks **active** vs **activated** counts to determine if we break the ``FAIL_PERCENT``, and bail the whole deploy if so.
-+ Finally the resulting state is printing to the user for every **activated** host.
+    operations.server.service(
+        name="Reload nginx",
+        service="nginx",
+        reloaded=True,
+        _if_changed=remove_default_site,
+    )

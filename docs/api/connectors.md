@@ -1,114 +1,88 @@
 # Writing Connectors
 
-[Connectors](../connectors) enable `pyinfra` to directly integrate with other tools and systems. These do not require the other system to have any knowledge of `pyinfra`.
+[Connectors](../connectors) enable pyinfra to directly integrate with other tools and systems. Connectos are written as Python classes.
 
-Check out [the existing code](https://github.com/Fizzadar/pyinfra/tree/master/pyinfra/api/connectors). Be sure to add tests and documentation.
-
-All connectors must provide the `make_names_data` function:
+## Inventory Connector
 
 ```py
-def make_names_data(hostname=None):
-    '''
-    Generate list of hosts.
+class InventoryConnector(BaseConnector):
+    handles_execution = False
 
-    Args:
-        hostname (string): the string after the `@connector/` inventory name
+    @staticmethod
+    def make_names_data(_=None):
+        """
+        Generate inventory targets.
 
-    Yields:
-        tuple: (name, data, group_names)
-    '''
-
-    yield "name-of-host", {"key": "value"}, ["a-group", "another-group"]
+        Yields:
+            tuple: (name, data, groups)
+        """
+        yield "@local", {}, ["@local"]
 ```
 
-Furthermore, connectors that modify execution must provide the following functions:
+## Executing Connector
+
+A connector that implements execution requires a few more methods:
 
 ```py
-from .util import split_combined_output
+class LocalConnector(BaseConnector):
+    handles_execution = True
 
-EXECUTION_CONNECTOR = True  # flag this connector as defining execution
+    @staticmethod
+    def make_names_data(_=None):
+        ...  # see above
+ 
+    def run_shell_command(
+        self,
+        command: StringCommand,
+        print_output: bool = False,
+        print_input: bool = False,
+        **arguments: Unpack["ConnectorArguments"],
+    ) -> Tuple[bool, CommandOutput]:
+        """
+        Execute a command on the local machine.
 
+        Args:
+            command (StringCommand): actual command to execute
+            print_output (bool): whether to print command output
+            print_input (bool): whether to print command input
+            arguments: (ConnectorArguments): connector global arguments
 
-def connect(state, host):
-    '''
-    Connect to the target host.
+        Returns:
+            tuple: (bool, CommandOutput)
+            Bool indicating success and CommandOutput with stdout/stderr lines.
+        """
 
-    Args
-        state (``pyinfra.api.State`` object): state object for this command
-        host (``pyinfra.api.Host`` object): the target host:
+    def put_file(
+        self,
+        filename_or_io,
+        remote_filename,
+        remote_temp_filename=None,  # ignored
+        print_output: bool = False,
+        print_input: bool = False,
+        **arguments,
+    ) -> bool:
+        """
+        Upload a local file or IO object by copying it to a temporary directory
+        and then writing it to the upload location.
 
-    Returns:
-        status (boolean)
-    '''
+        Returns:
+            bool: indicating succes or failure.
+        """
 
-    return True
+    def get_file(
+        self,
+        remote_filename,
+        filename_or_io,
+        remote_temp_filename=None,  # ignored
+        print_output: bool = False,
+        print_input: bool = False,
+        **arguments,
+    ) -> bool:
+        """
+        Download a local file by copying it to a temporary location and then writing
+        it to our filename or IO object.
 
-
-def run_shell_command(
-    state, host, command,
-    get_pty=False,
-    timeout=None,
-    stdin=None,
-    success_exit_codes=None,
-    print_output=False,
-    print_input=False,
-    return_combined_output=False,
-    use_sudo_password=False,
-    **command_kwargs
-):
-    '''
-    Execute a (shell) command on the target host.
-
-    Args:
-        state (``pyinfra.api.State`` object): state object for this command
-        host (``pyinfra.api.Host`` object): the target host
-        command (string): actual command to execute
-
-    Returns:
-        tuple: (exit_code, stdout, stderr)
-        stdout and stderr are both lists of strings from each buffer.
-    '''
-
-    status = True
-    combined_output = [
-        ("stdout", "some standard output"),
-        ("stderr", "some standard error"),
-        ("stderr", "some more standard error"),
-    ]
-
-    if return_combined_output:
-        return status, combined_output
-
-    stdout, stderr = split_combined_output(combined_output)
-    return status, stdout, stderr
-
-
-def put_file(
-    state, host, filename_or_io, remote_filename,
-    print_output=False, print_input=False,
-    **command_kwargs
-):
-    '''
-    Upload a local file or IO object to the target host.
-
-    Returns:
-        status (boolean)
-    '''
-
-    return True
-
-
-def get_file(
-    state, host, remote_filename, filename_or_io,
-    print_output=False, print_input=False,
-    **command_kwargs
-):
-    '''
-    Download a remote file to a local file or IO object.
-
-    Returns:
-        status (boolean)
-    '''
-
-    return True
+        Returns:
+            bool: indicating success or failure.
+        """
 ```

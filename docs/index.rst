@@ -6,7 +6,7 @@
 pyinfra Documentation
 =========================
 
-Welcome to the ``pyinfra`` v2 documentation. If you're new to ``pyinfra`` you should start with the :doc:`getting-started` page.
+Welcome to the pyinfra v3 documentation. If you're new to pyinfra you should start with the :doc:`getting-started` page.
 
 
 Using pyinfra
@@ -14,7 +14,7 @@ Using pyinfra
 
 .. compound::
     :doc:`getting-started`
-        A quickstart guide introducing the basics of ``pyinfra``. Start here!
+        Start here! The quickest way to learn the basics of pyinfra and get started.
 
 .. compound::
     :doc:`using-operations`
@@ -30,11 +30,11 @@ Using pyinfra
 
 .. compound::
     :doc:`cli`
-        The ``pyinfra`` CLI is extremely powerful for ad hoc command execution and management.
+        The pyinfra CLI is extremely powerful for ad hoc command execution and management.
 
 .. compound::
     :doc:`faq`
-        Quick answers to the most commonly asked questions for using ``pyinfra``.
+        Quick answers to the most commonly asked questions for using pyinfra.
 
 
 Deploy Reference
@@ -54,31 +54,31 @@ Deploy Reference
 
 .. compound::
     :doc:`facts`
-        A list of all facts ``pyinfra`` can gather from hosts, e.g. ``server.Hostname``.
+        A list of all facts pyinfra can gather from hosts, e.g. ``server.Hostname``.
 
 
 How pyinfra Works
 -----------------
 
 .. compound::
+    :doc:`deploy-process`
+        Discover how pyinfra orders, diffs and executes operations against target hosts.
+
+.. compound::
     :doc:`api/deploys`
-        How to package, redistribute and share ``pyinfra`` deploys as Python packages.
+        How to package, redistribute and share pyinfra deploys as Python packages.
 
 .. compound::
     :doc:`api/connectors`
-        Learn how to write your own connectors for ``pyinfra``.
+        How to write your own connectors for pyinfra.
 
 .. compound::
     :doc:`api/operations`
-        Learn how to write your own operations for ``pyinfra``.
+        How to write your own facts & operations for pyinfra.
 
 .. compound::
-    :doc:`api/facts`
-        Learn how to write your own facts for ``pyinfra``.
-
-.. compound::
-    :doc:`deploy-process`
-        Learn how ``pyinfra`` executes operations against target hosts.
+    :doc:`api/index`
+        How to use the pyinfra API.
 
 
 .. toctree::
@@ -106,11 +106,11 @@ How pyinfra Works
     :hidden:
     :caption: How pyinfra Works
 
+    deploy-process
     api/deploys
     api/connectors
     api/operations
-    api/facts
-    deploy-process
+    api/index
 
 .. toctree::
     :hidden:
