@@ -53,8 +53,8 @@ class WrappedError(click.ClickException):
 
         if self.traceback:
             info = get_frame_line_from_tb(self.traceback)
-            assert info is not None
-            name = f"{name} in {info.filename} line {info.lineno}"
+            if info:
+                name = f"{name} in {info.filename} line {info.lineno}"
 
         logger.warning(
             "--> {0}: {1}".format(

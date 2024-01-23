@@ -1,7 +1,6 @@
 from os import path
 from unittest import TestCase
 
-from pyinfra.context import ctx_state
 from pyinfra_cli.main import _main
 
 from ..paramiko_util import PatchSSHTestCase
@@ -15,19 +14,6 @@ class TestCliEagerFlags(TestCase):
 
         result = run_cli("--help")
         assert result.exit_code == 0, result.stdout
-
-
-class TestDeployCli(PatchSSHTestCase):
-    def setUp(self):
-        ctx_state.reset()
-
-    def test_invalid_deploy(self):
-        result = run_cli(
-            "@local",
-            "not-a-file.py",
-        )
-        assert result.exit_code == 1, result.stdout
-        assert "No deploy file: not-a-file.py" in result.stdout
 
 
 class TestOperationCli(PatchSSHTestCase):
@@ -94,24 +80,6 @@ class TestFactCli(PatchSSHTestCase):
         )
         assert result.exit_code == 0, result.stdout
         assert '"somehost": null' in result.stdout
-
-    def test_invalid_fact_module(self):
-        result = run_cli(
-            path.join("tests", "test_cli", "deploy", "inventories", "inventory.py"),
-            "fact",
-            "not_a_module.NotAFact",
-        )
-        assert result.exit_code == 1, result.stdout
-        assert "No such module: pyinfra.facts.not_a_module" in result.stdout
-
-    def test_invalid_fact_class(self):
-        result = run_cli(
-            path.join("tests", "test_cli", "deploy", "inventories", "inventory.py"),
-            "fact",
-            "server.NotAFact",
-        )
-        assert result.exit_code == 1, result.stdout
-        assert "No such attribute in module pyinfra.facts.server: NotAFact" in result.stdout
 
 
 class TestExecCli(PatchSSHTestCase):

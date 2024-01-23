@@ -1,9 +1,14 @@
+from os import path
 from unittest import TestCase
 
 from click.testing import CliRunner
 
-from pyinfra_cli.exceptions import CliError
+from pyinfra.api import OperationError
+from pyinfra.api.exceptions import ArgumentTypeError
+from pyinfra_cli.exceptions import CliError, UnexpectedExternalError, WrappedError
 from pyinfra_cli.main import cli
+
+from .util import run_cli
 
 
 class TestCliExceptions(TestCase):
@@ -38,4 +43,38 @@ class TestCliExceptions(TestCase):
         self.assert_cli_exception(
             ["my-server.net", "fact", "server.NotAFact"],
             "No such attribute in module pyinfra.facts.server: NotAFact",
+        )
+
+
+class TestCliDeployExceptions(TestCase):
+    def _run_cli(self, hosts, filename):
+        return run_cli(
+            "-y",
+            ",".join(hosts),
+            path.join("tests", "test_cli", "deploy_fails", filename),
+            f'--chdir={path.join("tests", "test_cli", "deploy_fails")}',
+        )
+
+    def test_invalid_argument_type(self):
+        result = self._run_cli(["@local"], "invalid_argument_type.py")
+        assert isinstance(result.exception, WrappedError)
+        assert isinstance(result.exception.exception, ArgumentTypeError)
+        assert (
+            result.exception.exception.args[0]
+            == "Invalid argument `_sudo`:: None is not an instance of bool"
+        )
+
+    def test_invalid_operation_arg(self):
+        result = self._run_cli(["@local"], "invalid_operation_arg.py")
+        assert isinstance(result.exception, UnexpectedExternalError)
+        assert isinstance(result.exception.exception, TypeError)
+        assert result.exception.filename == "invalid_operation_arg.py"
+        assert result.exception.exception.args[0] == "missing a required argument: 'commands'"
+
+    def test_operation_error(self):
+        result = self._run_cli(["@local"], "operation_error.py")
+        assert isinstance(result.exception, WrappedError)
+        assert isinstance(result.exception.exception, OperationError)
+        assert (
+            result.exception.exception.args[0] == "operation_error.py exists and is not a directory"
         )

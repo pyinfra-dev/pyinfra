@@ -9,6 +9,14 @@ from .util import run_cli
 
 
 class TestCliDeployState(PatchSSHTestCase):
+    def _run_cli(self, hosts, filename):
+        return run_cli(
+            "-y",
+            ",".join(hosts),
+            path.join("tests", "test_cli", "deploy", filename),
+            f'--chdir={path.join("tests", "test_cli", "deploy")}',
+        )
+
     def _assert_op_data(self, correct_op_name_and_host_names):
         op_order = state.get_op_order()
 
@@ -74,12 +82,7 @@ class TestCliDeployState(PatchSSHTestCase):
             hosts = ["somehost", "anotherhost", "someotherhost"]
             shuffle(hosts)
 
-            result = run_cli(
-                "-y",
-                ",".join(hosts),
-                path.join("tests", "test_cli", "deploy", "deploy.py"),
-                f'--chdir={path.join("tests", "test_cli", "deploy")}',
-            )
+            result = self._run_cli(hosts, "deploy.py")
             assert result.exit_code == 0, result.stdout
 
             self._assert_op_data(correct_op_name_and_host_names)
@@ -104,12 +107,7 @@ class TestCliDeployState(PatchSSHTestCase):
             hosts = ["somehost", "anotherhost", "someotherhost"]
             shuffle(hosts)
 
-            result = run_cli(
-                "-y",
-                ",".join(hosts),
-                path.join("tests", "test_cli", "deploy", "deploy_random.py"),
-                f'--chdir={path.join("tests", "test_cli", "deploy")}',
-            )
+            result = self._run_cli(hosts, "deploy_random.py")
             assert result.exit_code == 0, result.stdout
 
             self._assert_op_data(correct_op_name_and_host_names)
