@@ -1,17 +1,15 @@
+from __future__ import annotations
+
 import os
 import re
 import shutil
 from datetime import datetime
 from tempfile import mkdtemp
-from typing import TYPE_CHECKING, Dict, List, NewType, NotRequired, Optional, Union
-
-if TYPE_CHECKING:
-    from typing import TypedDict
-else:
-    TypedDict = object
+from typing import Dict, List, NewType, Optional, Union
 
 from dateutil.parser import parse as parse_date
 from distro import distro
+from typing_extensions import NotRequired, TypedDict
 
 from pyinfra.api import FactBase, ShortFactBase
 from pyinfra.api.util import try_int
@@ -154,7 +152,7 @@ class MacosVersion(FactBase[str]):
 class MountsDict(TypedDict):
     device: str
     type: str
-    options: List[str]
+    options: list[str]
 
 
 class Mounts(FactBase[Dict[str, MountsDict]]):
@@ -179,8 +177,8 @@ class Mounts(FactBase[Dict[str, MountsDict]]):
     default = dict
 
     @staticmethod
-    def process(output) -> Dict[str, MountsDict]:
-        devices: Dict[str, MountsDict] = {}
+    def process(output) -> dict[str, MountsDict]:
+        devices: dict[str, MountsDict] = {}
 
         for line in output:
             is_map = False
@@ -351,8 +349,8 @@ class Groups(FactBase[List[str]]):
     default = list
 
     @staticmethod
-    def process(output) -> List[str]:
-        groups: List[str] = []
+    def process(output) -> list[str]:
+        groups: list[str] = []
 
         for line in output:
             if ":" in line:
@@ -406,7 +404,7 @@ class Crontab(FactBase[Dict[CrontabCommand, CrontabDict]]):
 
     @staticmethod
     def process(output):
-        crons: Dict[Command, CrontabDict] = {}
+        crons: dict[Command, CrontabDict] = {}
         current_comments = []
 
         for line in output:
@@ -689,7 +687,7 @@ class LinuxGui(FactBase[List[str]]):
         "/usr/bin/xfce4-session": "XFCE 4",
     }
 
-    def process(self, output) -> List[str]:
+    def process(self, output) -> list[str]:
         gui_names = []
 
         for line in output:
@@ -725,7 +723,7 @@ class Locales(FactBase[List[str]]):
     requires_command = "locale"
     default = list
 
-    def process(self, output) -> List[str]:
+    def process(self, output) -> list[str]:
         # replace utf8 with UTF-8 to match names in /etc/locale.gen
         # return a list of enabled locales
         return [line.replace("utf8", "UTF-8") for line in output]

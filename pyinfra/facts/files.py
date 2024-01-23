@@ -8,7 +8,7 @@ import typing
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
-from typing_extensions import Literal, TypedDict
+from typing_extensions import Literal, NotRequired, TypedDict
 
 from pyinfra.api.command import QuoteString, make_formatted_string_command
 from pyinfra.api.facts import FactBase
@@ -82,7 +82,7 @@ class FileDict(TypedDict):
     ctime: Optional[datetime]
     user: str
     group: str
-    link_target: "typing.NotRequired[str]"
+    link_target: NotRequired[str]
 
 
 class File(FactBase[Union[FileDict, Literal[False], None]]):
