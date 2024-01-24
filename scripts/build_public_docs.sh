@@ -2,22 +2,33 @@
 
 set -euo pipefail
 
+# Generates /en/next
+NEXT_BRANCH="3.x"
+# Generates /en/latest AND redirects /page -> /en/$NAME
+LATEST_BRANCH="2.x"
+
+
 BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
 TAG_NAME=$(git tag --points-at HEAD)
 
-if [ ! "${BRANCH_NAME}" = "2.x" ]; then
-    2>&1 echo "Not on 2.x branch, bailing!"
-    exit 1
+if [ "${BRANCH_NAME}" = "${NEXT_BRANCH}" ]; then
+    echo "Building next docs (${NEXT_BRANCH})"
+    env DOCS_VERSION=next sphinx-build -a docs/ docs/public/en/next/
 fi
 
-echo "Building latest docs (2.x branch HEAD)"
-env DOCS_VERSION=latest sphinx-build -a docs/ docs/public/en/latest/
+if [ "${BRANCH_NAME}" = "${LATEST_BRANCH}" ]; then
+    echo "Building latest docs (${LATEST_BRANCH})"
+    env DOCS_VERSION=latest sphinx-build -a docs/ docs/public/en/latest/
+fi
 
-if [ -n "${TAG_NAME}" ] && [[ "$TAG_NAME" =~ ^v2\.[0-9]+(\.[0-9]+)?$ ]]; then
-    echo "Building 2.x docs for tag: ${TAG_NAME}"
-    env DOCS_VERSION=2.x sphinx-build -a docs/ docs/public/en/2.x/
-    echo "Generating /page redirects"
-    env DOCS_VERSION=$DOCS_VERSION python scripts/generate_redirect_pages.py
+if [ -n "${TAG_NAME}" ] && [[ "$TAG_NAME" =~ ^v[0-9]\.[0-9]+(\.[0-9]+)?$ ]]; then
+    echo "Building ${BRANCH_NAME} docs for tag: ${TAG_NAME}"
+    env DOCS_VERSION=$BRANCH_NAME sphinx-build -a docs/ docs/public/en/$BRANCH_NAME/
+
+    if [ "${BRANCH_NAME}" = "${LATEST_BRANCH}" ]; then
+        echo "Generating /page redirects"
+        env DOCS_VERSION=$BRANCH_NAME python scripts/generate_redirect_pages.py
+    fi
 fi
 
 echo "Docs build complete"
