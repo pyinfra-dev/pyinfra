@@ -60,22 +60,22 @@ def build_operations_docs():
             lines.append("")
 
         operation_functions = [
-            (key, value._pyinfra_op)
+            (key, value._inner)
             for key, value in getmembers(module)
             if (
                 isinstance(value, FunctionType)
                 and value.__module__ == module.__name__
-                and getattr(value, "_pyinfra_op", False)
+                and getattr(value, "_inner", False)
                 and not value.__name__.startswith("_")
                 and not key.startswith("_")
             )
         ]
 
         for name, func in operation_functions:
-            decorated_func = getattr(func, "_pyinfra_op", None)
+            decorated_func = getattr(func, "_inner", None)
             while decorated_func:
                 func = decorated_func
-                decorated_func = getattr(func, "_pyinfra_op", None)
+                decorated_func = getattr(func, "_inner", None)
 
             lines.append(".. _operations:{0}.{1}:".format(module_name, name))
             lines.append("")
