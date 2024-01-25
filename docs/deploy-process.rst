@@ -118,7 +118,7 @@ Checking Operation Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. Caution::
-    Always use the ``_if_changed`` global argument when checking for previous operation changes.
+    Always use the ``_if`` global argument when checking for previous operation changes.
 
 Let's use a simple example as above with add a conditional reload based on the outcome of the ``files.file`` operation:
 
@@ -150,7 +150,7 @@ As above, the problem here is again the conditional check:
 
     if remove_default_site.changed:
 
-Since this gets executed before nginx is installed by ``apt.packages`` operation, the value of ``remove_default_site.changed`` at this stage is ``False`` but at execution time this would become ``True``, exactly like the fact example above. The solution here is to use the special ``_if_changed`` global argument to delay the check until execution time:
+Since this gets executed before nginx is installed by ``apt.packages`` operation, the value of ``remove_default_site.changed`` at this stage is ``False`` but at execution time this would become ``True``, exactly like the fact example above. The solution here is to use the ``_if`` global argument to delay the check until execution time:
 
 .. code:: python
 
@@ -171,5 +171,5 @@ Since this gets executed before nginx is installed by ``apt.packages`` operation
         name="Reload nginx",
         service="nginx",
         reloaded=True,
-        _if_changed=remove_default_site,
+        _if=remove_default_site.did_change,
     )

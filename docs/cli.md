@@ -115,10 +115,10 @@ For example, here we ensure that `nginx` is installed on the remote servers:
 
 ```sh
 # Ubuntu example
-pyinfra inventory.py apt.packages nginx sudo=true update=true
+pyinfra inventory.py apt.packages nginx update=true _sudo=true
 
 # Centos example
-pyinfra inventory2.py yum.packages nginx sudo=true
+pyinfra inventory2.py yum.packages nginx _sudo=true
 ```
 
 ### Example: managing services with ad-hoc pyinfra commands

@@ -132,7 +132,7 @@ Like ``host``, there is an ``inventory`` object that can be used to access the e
 Operation Changes & Output
 --------------------------
 
-All operations return an operation meta object which provides information about the changes the operation *will* execute. This can be used to control other operations via the ``_if_changed`` argument:
+All operations return an operation meta object which provides information about the changes the operation *will* execute. This can be used to control other operations via the ``_if`` argument:
 
 .. code:: python
 
@@ -146,7 +146,7 @@ All operations return an operation meta object which provides information about 
     server.shell(
         name="Bootstrap user",
         command=["..."],
-        _if_changed=create_user,
+        _if=create_user,
     )
 
 Operation Output

@@ -1,19 +1,3 @@
-"""
-The ``@vagrant`` connector reads the current Vagrant status and generates an
-inventory for any running VMs.
-
-.. code:: shell
-
-    # Run on all hosts
-    pyinfra @vagrant ...
-
-    # Run on a specific VM
-    pyinfra @vagrant/my-vm-name ...
-
-    # Run on multiple named VMs
-    pyinfra @vagrant/my-vm-name,@vagrant/another-vm-name ...
-"""
-
 import json
 from os import path
 from queue import Queue
@@ -131,6 +115,22 @@ def _make_name_data(host):
 
 
 class VagrantInventoryConnector(BaseConnector):
+    """
+    The ``@vagrant`` connector reads the current Vagrant status and generates an
+    inventory for any running VMs.
+
+    .. code:: shell
+
+        # Run on all hosts
+        pyinfra @vagrant ...
+
+        # Run on a specific VM
+        pyinfra @vagrant/my-vm-name ...
+
+        # Run on multiple named VMs
+        pyinfra @vagrant/my-vm-name,@vagrant/another-vm-name ...
+    """
+
     @staticmethod
     def make_names_data(limit=None):
         vagrant_ssh_info = get_vagrant_config(limit)

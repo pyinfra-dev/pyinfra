@@ -24,7 +24,7 @@ The currently executing host can be fetched from the ``host`` context variable. 
 How do I use sudo in an operation?
 ----------------------------------
 
-Sudo is controlled by one of the :doc:`arguments`, there are a number of additional arguments to control sudo execution:
+Sudo is controlled by one of the `privilege and user escalation arguments <arguments.html#privilege-user-escalation>`_, there are a number of additional arguments to control sudo execution:
 
 .. code:: python
 

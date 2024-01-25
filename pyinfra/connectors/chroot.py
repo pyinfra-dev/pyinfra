@@ -27,6 +27,10 @@ def show_warning():
 
 
 class ChrootConnector(BaseConnector):
+    """
+    The chroot connector allows you to execute operations within another root.
+    """
+
     handles_execution = True
 
     local: LocalConnector

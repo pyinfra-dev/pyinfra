@@ -276,11 +276,11 @@ def make_unix_command_for_host(
 
     # Ensure the sudo password is set from either the direct arguments or any
     # connector data value.
-    sudo_password = command_arguments["_sudo_password"] = command_arguments.get(
+    command_arguments["_sudo_password"] = command_arguments.get(
         "_sudo_password",
         host.connector_data.get("prompted_sudo_password"),
     )
-    if sudo_password:
+    if command_arguments["_sudo_password"]:
         # Ensure the askpass path is correctly set and passed through
         _ensure_sudo_askpass_set_for_host(host)
         command_arguments["_sudo_askpass_path"] = host.connector_data["sudo_askpass_path"]

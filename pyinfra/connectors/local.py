@@ -25,7 +25,14 @@ if TYPE_CHECKING:
 
 class LocalConnector(BaseConnector):
     """
-    The ``@local`` connector executes changes on the local machine using subprocesses.
+    The ``@local`` connector executes changes on the local machine using subprocesses. **This connector is only compatible with MacOS & Linux hosts**.
+
+    Examples:
+
+    .. code::
+
+        # Install nginx
+        pyinfra inventory.py apt.packages nginx update=true _sudo=true
     """
 
     handles_execution = True

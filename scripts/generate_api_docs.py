@@ -10,7 +10,9 @@ def generate_api_docs():
     docs_dir = path.abspath(path.join(this_dir, "..", "docs"))
     pyinfra_dir = path.abspath(path.join(this_dir, "..", "pyinfra"))
 
-    api_doc_command = ("sphinx-apidoc -e -M -f -o {0}/apidoc/ {1} {1}/facts {1}/operations").format(
+    api_doc_command = (
+        "sphinx-apidoc -e -M -f -o {0}/apidoc/ {1} {1}/facts {1}/operations {1}/connectors"
+    ).format(
         docs_dir,
         pyinfra_dir,
     )
