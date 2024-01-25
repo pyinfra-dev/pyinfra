@@ -96,7 +96,7 @@ def make_inventory(
     # like either an import or hostname but neither works.
     if re.match("[a-zA-Z0-9\\._]+[\\.:][a-zA-Z0-9_]+", inventory):
         # First, try loading the inventory as if it's a Python import function
-        inventory_func = try_import_module_attribute(inventory, raise_for_no_module=False)
+        inventory_func = try_import_module_attribute(inventory, raise_for_none=False)
         if inventory_func is None:
             try:
                 socket.gethostbyname(inventory)

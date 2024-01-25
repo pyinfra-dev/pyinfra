@@ -150,7 +150,7 @@ def parse_cli_arg(arg):
     return arg
 
 
-def try_import_module_attribute(path, prefix=None, raise_for_no_module=True):
+def try_import_module_attribute(path, prefix=None, raise_for_none=True):
     if ":" in path:
         # Allow a.module.name:function syntax
         mod_path, attr_name = path.rsplit(":", 1)
@@ -177,13 +177,15 @@ def try_import_module_attribute(path, prefix=None, raise_for_no_module=True):
                 break
 
     if module is None:
-        if raise_for_no_module:
+        if raise_for_none:
             raise CliError(f"No such module: {possible_modules[-1]}")
         return
 
     attr = getattr(module, attr_name, None)
     if attr is None:
-        raise CliError(f"No such attribute in module {possible_modules[-1]}: {attr_name}")
+        if raise_for_none:
+            raise CliError(f"No such attribute in module {possible_modules[-1]}: {attr_name}")
+        return
 
     return attr
 
