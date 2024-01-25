@@ -30,7 +30,8 @@ class DockerSSHConnector(BaseConnector):
     """
     **Note**: this connector is in beta!
 
-    The ``@dockerssh`` connector allows you to run commands on Docker containers on a remote machine.
+    The ``@dockerssh`` connector allows you to run commands on Docker containers \
+    on a remote machine.
 
     .. code:: shell
 

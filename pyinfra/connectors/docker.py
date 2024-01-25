@@ -60,8 +60,10 @@ class DockerConnector(BaseConnector):
     The docker connector allows you to build Docker images or modify running
     Docker containers. You can pass either an image name or existing container ID:
 
-    + Image - will create a new container from the image, execute operations against it, save into a new Docker image and remove the container
-    + Existing container ID - will execute operations against the running container, leaving it running
+    + Image - will create a new container from the image, execute operations \
+        against it, save into a new Docker image and remove the container
+    + Existing container ID - will execute operations against the running \
+        container, leaving it running
 
     .. code:: shell
 

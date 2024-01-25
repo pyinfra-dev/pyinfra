@@ -28,7 +28,8 @@ def _flatten_dict(d: dict, parent_key: str = "", sep: str = "."):
 
 class TerraformInventoryConnector(BaseConnector):
     """
-    Generate one or more SSH hosts from a Terraform output variable. The variable must be a list of hostnames or dictionaries.
+    Generate one or more SSH hosts from a Terraform output variable. The variable
+    must be a list of hostnames or dictionaries.
 
     Output is fetched from a flattened JSON dictionary output from ``terraform output
     -json``. For example the following object:

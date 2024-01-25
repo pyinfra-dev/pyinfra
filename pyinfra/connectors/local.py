@@ -25,7 +25,8 @@ if TYPE_CHECKING:
 
 class LocalConnector(BaseConnector):
     """
-    The ``@local`` connector executes changes on the local machine using subprocesses. **This connector is only compatible with MacOS & Linux hosts**.
+    The ``@local`` connector executes changes on the local machine using
+    subprocesses. **This connector is only compatible with MacOS & Linux hosts**.
 
     Examples:
 

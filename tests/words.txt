@@ -64,6 +64,7 @@ blocksize
 bsdinit
 build
 bytecode
+bytesio
 ccommands
 cd
 centos
@@ -92,9 +93,9 @@ cron
 crons
 crontab
 ctid
+ctime
 ctrl
 ctx
-ctime
 ctype
 curdir
 currentframe
@@ -341,6 +342,7 @@ ssl
 status
 stdlib
 stringify
+stringio
 su
 subclassed
 subclassing
