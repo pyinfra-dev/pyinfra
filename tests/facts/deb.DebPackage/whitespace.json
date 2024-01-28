@@ -1,0 +1,28 @@
+{
+    "arg": "/root/tivsm-api64.amd64.deb",
+    "output": [
+      " new Debian package, version 2.0.",
+      " size 73275616 bytes: control archive=1079 bytes.",
+      "     123 bytes,     5 lines      changelog",
+      "       2 bytes,     1 lines      compat",
+      "     336 bytes,     9 lines      control",
+      "     147 bytes,     4 lines      copyright",
+      "      14 bytes,     1 lines      install",
+      "     237 bytes,    10 lines   *  postinst             #!/bin/sh",
+      "     377 bytes,    20 lines   *  prerm                #!/bin/sh",
+      "     156 bytes,    11 lines   *  rules                #!/usr/bin/make",
+      " Version:\t\t8.1.21-0",
+      " Maintainer:\t\tIBM",
+      " Section:\t\tUtilities/Archiving",
+      " Homepage:\t\thttp://www.ibm.com/software/tivoli/products/storage-mgr/",
+      " Package:\t\ttivsm-api64",
+      " Architecture:\t\tamd64",
+      " Description:\t\tThis is the IBM Storage Protect Linux API",
+      " Pre-Depends:\t\tgskcrypt64 (>= 8.0-55.31),",
+      "                                   gskssl64   (>= 8.0-55.31)"
+    ],
+    "fact": {
+        "name": "tivsm-api64",
+        "version": "8.1.21-0"
+    }
+}
