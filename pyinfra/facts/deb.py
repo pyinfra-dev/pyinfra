@@ -48,8 +48,8 @@ class DebPackage(FactBase):
     """
 
     _regexes = {
-        "name": r"^Package: ({0})$".format(DEB_PACKAGE_NAME_REGEX),
-        "version": r"^Version: ({0})$".format(DEB_PACKAGE_VERSION_REGEX),
+        "name": r"^Package:\s+({0})$".format(DEB_PACKAGE_NAME_REGEX),
+        "version": r"^Version:\s+({0})$".format(DEB_PACKAGE_VERSION_REGEX),
     }
 
     requires_command = "dpkg"
