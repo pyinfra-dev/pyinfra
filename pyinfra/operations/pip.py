@@ -185,6 +185,11 @@ def packages(
     if packages:
         current_packages = host.get_fact(PipPackages, pip=pip)
 
+        # PEP-0426 states that Python packages should be compared using lowercase, so lowercase both
+        # the input packages and the fact packages before comparison.
+        packages = [pkg.lower() for pkg in packages]
+        current_packages = {pkg.lower(): versions for pkg, versions in current_packages.items()}
+
         yield from ensure_packages(
             host,
             packages,
