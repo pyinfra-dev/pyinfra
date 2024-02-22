@@ -235,7 +235,8 @@ def connect(state: "State", host: "Host"):
     retries = host.data.get(DATA_KEYS.connect_retries, 0)
 
     for tries_left in range(retries, -1, -1):
-        if con := _connect(state, host, tries_left):
+        con = _connect(state, host, tries_left)
+        if con:
             return con
 
 
