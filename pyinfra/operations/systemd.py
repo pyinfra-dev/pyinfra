@@ -3,7 +3,7 @@ Manage systemd services.
 """
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import StringCommand, operation
 from pyinfra.facts.systemd import SystemdEnabled, SystemdStatus, _make_systemctl_cmd
 
 from .util.service import handle_service_control
@@ -25,7 +25,7 @@ def daemon_reload(user_mode=False, machine=None, user_name=None):
         user_name=user_name,
     )
 
-    yield "{0} daemon-reload".format(systemctl_cmd)
+    yield StringCommand(systemctl_cmd, "daemon-reload")
 
 
 _daemon_reload = daemon_reload._inner  # noqa: E305
@@ -117,8 +117,9 @@ def service(
             user_mode=user_mode,
             machine=machine,
             user_name=user_name,
+            services=[service],
         ),
-        " ".join([systemctl_cmd, "{1}", "{0}"]),
+        " ".join([systemctl_cmd.get_raw_value(), "{1}", "{0}"]),
         running,
         restarted,
         reloaded,
@@ -131,6 +132,7 @@ def service(
             user_mode=user_mode,
             machine=machine,
             user_name=user_name,
+            services=[service],
         )
         is_enabled = systemd_enabled.get(service, False)
 

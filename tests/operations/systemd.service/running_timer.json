@@ -2,7 +2,7 @@
     "args": ["some-timer.timer"],
     "facts": {
         "systemd.SystemdStatus": {
-            "user_mode=False, machine=None, user_name=None": {
+            "user_mode=False, machine=None, user_name=None, services=['some-timer.timer']": {
                 "some-timer.timer": false
             }
         }

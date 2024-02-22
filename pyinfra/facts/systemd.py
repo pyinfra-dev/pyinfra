@@ -1,7 +1,7 @@
 import re
-from typing import Dict
+from typing import Dict, Iterable
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, FactTypeError, QuoteString, StringCommand
 
 # Valid unit names consist of a "name prefix" and a dot and a suffix specifying the unit type.
 # The "unit prefix" must consist of one or more valid characters
@@ -22,18 +22,16 @@ SYSTEMD_UNIT_NAME_REGEX = (
 
 def _make_systemctl_cmd(user_mode=False, machine=None, user_name=None):
     # base command for normal and user mode
-    systemctl_cmd = "systemctl --user" if user_mode else "systemctl"
+    systemctl_cmd = ["systemctl --user"] if user_mode else ["systemctl"]
 
     # add user and machine flag if given in args
     if machine is not None:
         if user_name is not None:
-            machine_opt = "--machine={1}@{0}".format(machine, user_name)
+            systemctl_cmd.append("--machine={1}@{0}".format(machine, user_name))
         else:
-            machine_opt = "--machine={0}".format(machine)
+            systemctl_cmd.append("--machine={0}".format(machine))
 
-        systemctl_cmd = "{0} {1}".format(systemctl_cmd, machine_opt)
-
-    return systemctl_cmd
+    return StringCommand(*systemctl_cmd)
 
 
 class SystemdStatus(FactBase[Dict[str, bool]]):
@@ -59,14 +57,32 @@ class SystemdStatus(FactBase[Dict[str, bool]]):
     state_key = "SubState"
     state_values = ["running", "waiting", "exited"]
 
-    def command(self, user_mode=False, machine=None, user_name=None):
+    def command(self, user_mode=False, machine=None, user_name=None, services=None):
         fact_cmd = _make_systemctl_cmd(
             user_mode=user_mode,
             machine=machine,
             user_name=user_name,
         )
 
-        return f"{fact_cmd} show --all --property Id --property {self.state_key} '*'"
+        if services is None:
+            service_strs = [QuoteString("*")]
+        elif isinstance(services, str):
+            service_strs = [QuoteString(services)]
+        elif isinstance(services, Iterable):
+            service_strs = [QuoteString(s) for s in services]
+        else:
+            raise FactTypeError(f"Invalid type passed for services argument: {type(services)}")
+
+        return StringCommand(
+            fact_cmd,
+            "show",
+            "--all",
+            "--property",
+            "Id",
+            "--property",
+            self.state_key,
+            *service_strs,
+        )
 
     def process(self, output) -> Dict[str, bool]:
         services: Dict[str, bool] = {}

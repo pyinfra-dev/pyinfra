@@ -8,12 +8,12 @@
     },
     "facts": {
         "systemd.SystemdStatus": {
-            "user_mode=True, machine=testmachine, user_name=testuser": {
+            "user_mode=True, machine=testmachine, user_name=testuser, services=['redis-server.service']": {
                 "redis-server.service": true
             }
         },
         "systemd.SystemdEnabled": {
-            "user_mode=True, machine=testmachine, user_name=testuser": {
+            "user_mode=True, machine=testmachine, user_name=testuser, services=['redis-server.service']": {
                 "redis-server.service": true
             }
         }
