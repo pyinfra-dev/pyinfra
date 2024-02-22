@@ -36,7 +36,7 @@ def get_func_and_args(commands):
 
 
 def get_facts_and_args(commands):
-    facts: list[FactBase] = []
+    facts: list[tuple[FactBase, tuple, dict]] = []
 
     current_fact = None
 
@@ -46,7 +46,7 @@ def get_facts_and_args(commands):
                 raise CliError("Invalid fact commands: `{0}`".format(commands))
 
             key, value = command.split("=", 1)
-            current_fact[2][key] = value
+            current_fact[2][key] = parse_cli_arg(value)
             continue
 
         if current_fact:
@@ -57,6 +57,7 @@ def get_facts_and_args(commands):
             raise CliError(f"Invalid fact: `{command}`, should be in the format `module.cls`")
 
         fact_cls = try_import_module_attribute(command, prefix="pyinfra.facts")
+        assert fact_cls is not None
         current_fact = (fact_cls, (), {})
 
     if current_fact:
