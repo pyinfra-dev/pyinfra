@@ -11,6 +11,9 @@ from .config import Config  # noqa: F401 # pragma: no cover
 from .deploy import deploy  # noqa: F401 # pragma: no cover
 from .exceptions import DeployError  # noqa: F401 # pragma: no cover
 from .exceptions import (  # noqa: F401
+    FactError,
+    FactTypeError,
+    FactValueError,
     InventoryError,
     OperationError,
     OperationTypeError,
