@@ -70,6 +70,8 @@ def _print_support(ctx, param, value):
     is_flag=True,
     default=False,
     help="Execute operations immediately on hosts without prompt or checking for changes.",
+    envvar="PYINFRA_YES",
+    show_envvar=True,
 )
 @click.option(
     "--limit",
