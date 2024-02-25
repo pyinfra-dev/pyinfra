@@ -1,3 +1,7 @@
+# v2.9.2
+
++ Fix documentation generation for versioned releases
+
 # v2.9.1
 
 + Add ability to retry SSH connections on failure (@fwiesel)
