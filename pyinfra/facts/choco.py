@@ -16,7 +16,7 @@ class ChocoPackages(FactBase):
         }
     """
 
-    command = "choco list --local-only"
+    command = "choco list"
     shell_executable = "ps"
 
     default = dict
