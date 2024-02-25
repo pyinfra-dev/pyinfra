@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from pyinfra.api.host import Host
     from pyinfra.api.state import State
 
-SUDO_REGEX = r"^sudo: unknown user:"
+SUDO_REGEX = r"^sudo: unknown user"
 SU_REGEXES = (
     r"^su: user .+ does not exist",
     r"^su: unknown login",
