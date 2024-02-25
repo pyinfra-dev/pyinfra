@@ -11,6 +11,9 @@ LATEST_BRANCH="2.x"
 BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
 TAG_NAME=$(git tag --points-at HEAD)
 
+echo "branch=${BRANCH_NAME}"
+echo "tag=${TAG_NAME}"
+
 if [ "${BRANCH_NAME}" = "${NEXT_BRANCH}" ]; then
     echo "Building next docs (${NEXT_BRANCH})"
     env DOCS_VERSION=next sphinx-build -a docs/ docs/public/en/next/
