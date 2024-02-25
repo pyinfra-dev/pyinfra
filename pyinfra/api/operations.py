@@ -14,7 +14,7 @@ from pyinfra.progress import progress_spinner
 
 from .arguments import get_executor_kwarg_keys
 from .command import FunctionCommand, PyinfraCommand, StringCommand
-from .exceptions import PyinfraError
+from .exceptions import NoMoreHostsError, PyinfraError
 from .util import (
     format_exception,
     log_error_or_warning,
@@ -115,7 +115,6 @@ def run_host_op(state: "State", host: "Host", op_hash):
     all_combined_output_lines = []
 
     for i, command in enumerate(op_data["commands"]):
-
         status = False
 
         executor_kwargs = base_executor_kwargs.copy()
@@ -130,6 +129,8 @@ def run_host_op(state: "State", host: "Host", op_hash):
         if isinstance(command, FunctionCommand):
             try:
                 status = command.execute(state, host, executor_kwargs)
+            except NoMoreHostsError:
+                status = False
             except Exception as e:  # Custom functions could do anything, so expect anything!
                 _formatted_exc = format_exception(e)
                 _error_msg = "Unexpected error in Python callback: {0}".format(_formatted_exc)

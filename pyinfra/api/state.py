@@ -10,7 +10,7 @@ from paramiko import PKey
 from pyinfra import logger
 
 from .config import Config
-from .exceptions import PyinfraError
+from .exceptions import NoMoreHostsError, PyinfraError
 from .util import sha1_hash
 
 if TYPE_CHECKING:
@@ -330,13 +330,13 @@ class State:
 
         # No hosts left!
         if not active_hosts:
-            raise PyinfraError("No hosts remaining!")
+            raise NoMoreHostsError("No hosts remaining!")
 
         if self.config.FAIL_PERCENT is not None:
             percent_failed = (1 - len(active_hosts) / activated_count) * 100
 
             if percent_failed > self.config.FAIL_PERCENT:
-                raise PyinfraError(
+                raise NoMoreHostsError(
                     "Over {0}% of hosts failed ({1}%)".format(
                         self.config.FAIL_PERCENT,
                         int(round(percent_failed)),

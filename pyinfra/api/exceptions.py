@@ -4,6 +4,12 @@ class PyinfraError(Exception):
     """
 
 
+class NoMoreHostsError(PyinfraError):
+    """
+    Exception raised when pyinfra runs out of hosts (they all failed).
+    """
+
+
 class ConnectError(PyinfraError):
     """
     Exception raised when connecting fails.
