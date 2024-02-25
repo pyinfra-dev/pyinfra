@@ -2,8 +2,8 @@
 
 Need a hand with using `pyinfra` or have some questions? You can find official `pyinfra` communities below:
 
++ Chat in [the `pyinfra` Matrix room](https://matrix.to/#/#pyinfra:matrix.org)
 + Ask questions on [Stack Overflow](https://stackoverflow.com/questions/tagged/pyinfra) (be sure to use the `pyinfra` tag!)
-+ Chat on [the `pyinfra` Discord](https://discord.gg/w3XxuKw)
 
 ### I think I've got a bug!
 
