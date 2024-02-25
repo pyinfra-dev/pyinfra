@@ -247,6 +247,9 @@ def show_legacy_argument_host_data_warning(key):
     )
 
 
+sentinel = object()
+
+
 def pop_global_arguments(
     kwargs: Dict[Any, Any],
     state: Optional["State"] = None,
@@ -299,15 +302,15 @@ def pop_global_arguments(
             if default:
                 default = default(config)
 
-        host_default = getattr(host.data, key, None)
+        host_default: Any = getattr(host.data, key, sentinel)
 
         # TODO: remove this additional check in v3
-        if host_default is None and internal_key != key:
-            host_default = getattr(host.data, internal_key, None)
-            if host_default is not None:
+        if host_default is sentinel and internal_key != key:
+            host_default = getattr(host.data, internal_key, sentinel)
+            if host_default is not sentinel:
                 show_legacy_argument_host_data_warning(internal_key)
 
-        if host_default is not None:
+        if host_default is not sentinel:
             default = host_default
 
         if key in kwargs:
