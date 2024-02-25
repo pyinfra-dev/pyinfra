@@ -1,5 +1,5 @@
 {
-    "command": "choco list --local-only",
+    "command": "choco list",
     "output": [
         "Chocolatey v0.10.15",
         "chocolatey 0.10.15",
