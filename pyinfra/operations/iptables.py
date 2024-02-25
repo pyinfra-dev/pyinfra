@@ -263,6 +263,9 @@ def rule(
         if source:
             args.extend(("-s", source))
 
+        if destination:
+            args.extend(("-d", destination))
+
         if in_interface:
             args.extend(("-i", in_interface))
 
@@ -274,6 +277,9 @@ def rule(
 
         if not_source:
             args.extend(("!", "-s", not_source))
+
+        if not_destination:
+            args.extend(("!", "-d", not_destination))
 
         if not_in_interface:
             args.extend(("!", "-i", not_in_interface))
