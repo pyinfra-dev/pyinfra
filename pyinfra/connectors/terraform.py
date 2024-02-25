@@ -72,7 +72,8 @@ def make_names_data(output_key=None):
 
     tf_output_value = tf_output.get(output_key)
     if tf_output_value is None:
-        raise InventoryError(f"No Terraform output with key: `{output_key}`")
+        keys = "\n".join(f"   - {k}" for k in tf_output.keys())
+        raise InventoryError(f"No Terraform output with key: `{output_key}`, valid keys:\n{keys}")
 
     if not isinstance(tf_output_value, list):
         raise InventoryError(
