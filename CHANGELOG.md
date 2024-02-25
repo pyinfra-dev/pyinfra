@@ -1,3 +1,16 @@
+# v2.9.1
+
++ Add ability to retry SSH connections on failure (@fwiesel)
++ Handle nested operation errors correctly like unnested operations
++ Display list of valid Terraform keys when no match
++ Fix tab aligned `dpkg` output parsing in `deb.DebPackages` fact (@martenlienen)
++ Fix support page chat link
++ Fix default argument checking when looking up arguments from host data
++ Fix duplicate traceback printing in callback operations
++ Fix use of removed `--local-only` flag in `choco.ChocoPackages` fact
++ Fix sudo no user regex when calling facts
++ Fix missing use of `destination` & `not_destination` args in `iptables.rule` operation
+
 # v2.9
 
 Long overdue! Happy New Year all :)
