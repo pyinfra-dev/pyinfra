@@ -1,0 +1,9 @@
+{
+    "args": [],
+    "facts": {},
+    "commands": [
+        "pipx upgrade-all"
+    ],
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "package upgrades are always executed"
+}

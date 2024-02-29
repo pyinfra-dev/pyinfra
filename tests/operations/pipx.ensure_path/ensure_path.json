@@ -1,0 +1,19 @@
+{
+    "args": [],
+    "facts": {
+        "pipx.PipxEnvironment": {
+            "PIPX_HOME": "/home/doodba/.local/pipx",
+            "PIPX_BIN_DIR": "/home/doodba/.local/bin",
+            "PIPX_SHARED_LIBS": "/home/doodba/.local/pipx/shared",
+            "PIPX_LOCAL_VENVS": "/home/doodba/.local/pipx/venvs",
+            "PIPX_LOG_DIR": "/home/doodba/.local/pipx/logs",
+            "PIPX_TRASH_DIR": "/home/doodba/.local/pipx/.trash",
+            "PIPX_VENV_CACHEDIR": "/home/doodba/.local/pipx/.cache"
+        },
+        "server.Path": "/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"
+
+    },
+    "commands": [
+        "pipx ensurepath"
+    ]
+}

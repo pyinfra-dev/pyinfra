@@ -1,0 +1,15 @@
+{
+    "args": [["pyinfra==1.1", "pytask", "test==1.1"]],
+    "kwargs": {
+        "extra_install_args": "--index-url https://pypi.org/"
+    },
+    "facts": {
+        "pipx.PipxPackages": {
+                "pyinfra": ["1.0"],
+                "test": ["1.1"]
+            }
+        },
+    "commands": [
+        "pip install --index-url https://pypi.org/ pyinfra==1.1 pytask"
+    ]
+}

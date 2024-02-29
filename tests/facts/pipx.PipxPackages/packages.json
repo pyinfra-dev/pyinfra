@@ -1,0 +1,12 @@
+{
+    "command": "pipx list --short",
+    "requires_command": "pipx",
+    "output": [
+        "copier 9.0.1",
+        "invoke 2.2.0"
+    ],
+    "fact": {
+        "copier": ["9.0.1"],
+        "invoke": ["2.2.0"]
+    }
+}

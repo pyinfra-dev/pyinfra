@@ -1,0 +1,16 @@
+{
+    "args": [["invoke", "copier"]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "pipx.PipxPackages": {
+            "copier": ["9.0.1"],
+            "invoke": ["2.2.0"]
+            }
+    },
+    "commands": [
+        "pipx uninstall invoke",
+        "pipx uninstall copier"
+    ]
+}
