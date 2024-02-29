@@ -1,0 +1,9 @@
+{
+    "args": ["", "", ""],
+    "facts": {
+        "opkg.Packages": {}
+    },
+    "commands": [],
+    "noop_description": "empty or invalid package list provided to opkg.packages",
+    "logs": "foo"
+}

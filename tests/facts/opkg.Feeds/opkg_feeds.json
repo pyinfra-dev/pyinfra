@@ -1,0 +1,51 @@
+{
+    "command": "cat /etc/opkg/distfeeds.conf; echo CUSTOM; cat /etc/opkg/customfeeds.conf",
+    "output": [
+        "",
+        "   # a different comment",
+        "aaa",
+        "src/gz",
+        "src/gz openwrt_core http://downloads.openwrt.org/releases/19.07.2/targets/x86/geode/packages",
+        "src/gz openwrt_base http://downloads.openwrt.org/releases/19.07.2/packages/i386_pentium/base",
+        "src/gz openwrt_luci http://downloads.openwrt.org/releases/19.07.2/packages/i386_pentium/luci",
+        "src/gz openwrt_packages http://downloads.openwrt.org/releases/19.07.2/packages/i386_pentium/packages",
+        "src/gz openwrt_routing http://downloads.openwrt.org/releases/19.07.2/packages/i386_pentium/routing",
+        "src/gz openwrt_telephony http://downloads.openwrt.org/releases/19.07.2/packages/i386_pentium/telephony",
+        "CUSTOM",
+        "# add your custom package feeds here",
+        "#",
+        "# src/gz example_feed_name http://www.example.com/path/to/files"
+    ],
+    "fact": {
+        "openwrt_core": [
+            "http://downloads.openwrt.org/releases/19.07.2/targets/x86/geode/packages",
+            "src/gz",
+            "distribution"
+        ],
+        "openwrt_base": [
+            "http://downloads.openwrt.org/releases/19.07.2/packages/i386_pentium/base",
+            "src/gz",
+            "distribution"
+        ],
+        "openwrt_luci": [
+            "http://downloads.openwrt.org/releases/19.07.2/packages/i386_pentium/luci",
+            "src/gz",
+            "distribution"
+        ],
+        "openwrt_packages": [
+            "http://downloads.openwrt.org/releases/19.07.2/packages/i386_pentium/packages",
+            "src/gz",
+            "distribution"
+        ],
+        "openwrt_routing": [
+            "http://downloads.openwrt.org/releases/19.07.2/packages/i386_pentium/routing",
+            "src/gz",
+            "distribution"
+        ],
+        "openwrt_telephony": [
+            "http://downloads.openwrt.org/releases/19.07.2/packages/i386_pentium/telephony",
+            "src/gz",
+            "distribution"
+        ]
+    }
+}

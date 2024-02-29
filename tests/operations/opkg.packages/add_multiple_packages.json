@@ -1,0 +1,12 @@
+{
+    "args":[["curl", "wget"]],
+    "kwargs": {
+        "update": false
+    },
+    "facts": {
+        "opkg.Packages": {}
+    },
+    "commands": [
+        "opkg install curl wget"
+    ]
+}

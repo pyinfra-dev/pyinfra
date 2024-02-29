@@ -1,0 +1,11 @@
+{
+    "args": ["curl=7.66.0-2"],
+    "facts": {
+        "opkg.Packages": {}
+    },
+    "commands": [ ],
+    "exception": {
+        "name":"ValueError",
+        "message": "opkg does not support version pinning but found for: 'curl'"
+    }
+}

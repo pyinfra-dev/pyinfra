@@ -162,6 +162,7 @@ graphlib
 greenlet
 greenlets
 groupname
+gz
 hacky
 hashability
 hklm
@@ -178,6 +179,7 @@ ignoretz
 ini
 initd
 initrd
+installable
 ip6tables
 ipdb
 iproute2
@@ -246,6 +248,7 @@ onerror
 openrc
 openstack
 openvz
+opkg
 osversion
 pacman
 paramiko
@@ -371,6 +374,7 @@ unignored
 unmount
 up
 up2
+upgradeable
 useradd
 utf16
 v

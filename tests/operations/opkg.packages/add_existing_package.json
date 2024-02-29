@@ -1,0 +1,12 @@
+{
+    "args": ["curl"],
+    "kwargs": {
+        "update": false
+    },
+    "facts": {
+        "opkg.Packages": {"curl": ["7.66.0-2"]}
+    },
+    "commands": [
+    ],
+    "noop_description": "package curl is installed (7.66.0-2)"
+}

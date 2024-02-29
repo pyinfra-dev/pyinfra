@@ -1,0 +1,13 @@
+{
+    "args": ["curl"],
+    "kwargs": {
+        "present": false,
+        "update": false
+    },
+    "facts": {
+        "opkg.Packages": {}
+    },
+    "commands": [
+    ],
+    "noop_description": "package curl is not installed"
+}
