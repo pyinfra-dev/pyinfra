@@ -1,7 +1,7 @@
 {
     "args": ["testuser"],
     "facts": {
-        "postgresql.PostgresqlRoles": {
+        "postgres.PostgresRoles": {
             "psql_host=None, psql_password=None, psql_port=None, psql_user=None": {
                 "testuser": {}
             }
