@@ -42,10 +42,10 @@ class OperationMeta:
 
     _combined_output_lines = None
     _commands: Optional[list[Any]] = None
-    _maybe_is_change: bool = False
+    _maybe_is_change: Optional[bool] = False
     _success: Optional[bool] = None
 
-    def __init__(self, hash, is_change=False):
+    def __init__(self, hash, is_change: Optional[bool]):
         self._hash = hash
         self._maybe_is_change = is_change
 
@@ -57,7 +57,7 @@ class OperationMeta:
         if self._commands is not None:
             return (
                 "OperationMeta(executed=True, "
-                f"changed={self.did_change()}, hash={self._hash}, commands={len(self._commands)})"
+                f"success={self.did_succeed}, hash={self._hash}, commands={len(self._commands)})"
             )
         return (
             "OperationMeta(executed=False, "
@@ -84,9 +84,16 @@ class OperationMeta:
         if not self.is_complete():
             raise RuntimeError("Cannot evaluate operation result before execution")
 
-    def did_change(self) -> bool:
-        self._raise_if_not_complete()
+    def _did_change(self) -> bool:
         return bool(self._success and len(self._commands or []) > 0)
+
+    @property
+    def did_change(self):
+        return context.host.when(self._did_change)
+
+    @property
+    def did_not_change(self):
+        return context.host.when(lambda: not self._did_change())
 
     def did_succeed(self) -> bool:
         self._raise_if_not_complete()
@@ -95,6 +102,21 @@ class OperationMeta:
     def did_error(self) -> bool:
         self._raise_if_not_complete()
         return self._success is False
+
+    # TODO: deprecated, remove in v4
+    @property
+    def changed(self) -> bool:
+        if self.is_complete():
+            return self._did_change()
+
+        if self._maybe_is_change is not None:
+            return self._maybe_is_change
+
+        op_data = context.state.get_op_data_for_host(context.host, self._hash)
+        cmd_gen = op_data.command_generator
+        for _ in cmd_gen():
+            return True
+        return False
 
     # Output lines
     def _get_lines(self, types=("stdout", "stderr")):
@@ -117,14 +139,6 @@ class OperationMeta:
     @property
     def stderr(self) -> str:
         return "\n".join(self.stderr_lines)
-
-    # TODO: deprecated, remove in v4
-    @property
-    def changed(self) -> int:
-        if not self.is_complete():
-            logger.warning("Checking changed before execution can give unexpected results")
-            return self._maybe_is_change
-        return self.did_change()
 
 
 def add_op(state: State, op_func, *args, **kwargs):
@@ -230,7 +244,7 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
                     break
 
             if has_run:
-                return OperationMeta(op_hash)
+                return OperationMeta(op_hash, is_change=False)
 
         # "Run" operation - here we make a generator that will yield out actual commands to execute
         # and, if we're diff-ing, we then iterate the generator now to determine if any changes
@@ -239,8 +253,8 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
         def command_generator() -> Iterator[PyinfraCommand]:
             # Check global _if_ argument function and do nothing if returns False
             if state.is_executing:
-                _if = global_arguments.get("_if")
-                if _if and _if() is False:
+                _ifs = global_arguments.get("_if")
+                if _ifs and not all(_if() for _if in _ifs):
                     return
 
             host.in_op = _set_in_op
@@ -257,9 +271,10 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
                 host.current_op_hash = None
                 host.current_op_global_arguments = None
 
-        op_is_change = False
+        op_is_change = None
         if state.should_check_for_changes():
-            for command in command_generator():
+            op_is_change = False
+            for _ in command_generator():
                 op_is_change = True
                 break
         else:

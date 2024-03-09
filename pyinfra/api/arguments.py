@@ -169,7 +169,7 @@ class MetaArguments(TypedDict):
     name: str
     _ignore_errors: bool
     _continue_on_error: bool
-    _if: Callable[[], bool]
+    _if: list[Callable[[], bool]]
 
 
 meta_argument_meta: dict[str, ArgumentMeta] = {
@@ -190,8 +190,8 @@ meta_argument_meta: dict[str, ArgumentMeta] = {
         default=lambda _: False,
     ),
     "_if": ArgumentMeta(
-        "Only run this operation if this function returns True",
-        default=lambda _: None,
+        "Only run this operation if these functions returns True",
+        default=lambda _: [],
     ),
 }
 
@@ -299,7 +299,7 @@ def pop_global_arguments(
     if context.ctx_config.isset():
         config = context.config
 
-    meta_kwargs = host.current_deploy_kwargs or {}
+    meta_kwargs: dict[str, Any] = cast(dict[str, Any], host.current_deploy_kwargs) or {}
 
     arguments: dict[str, Any] = {}
     found_keys: list[str] = []

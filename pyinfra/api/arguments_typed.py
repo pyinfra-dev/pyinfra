@@ -51,7 +51,7 @@ class PyinfraOperation(Generic[P], Protocol):
         name: Optional[str] = None,
         _ignore_errors: bool = False,
         _continue_on_error: bool = False,
-        _if: Optional[Callable[[], bool]] = None,
+        _if: Optional[list[Callable[[], bool]]] = None,
         #
         # ExecutionArguments
         #

@@ -1,7 +1,19 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Generator, Optional, Type, TypeVar, Union, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Generator,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    Unpack,
+    cast,
+    overload,
+)
 from uuid import uuid4
 
 import click
@@ -216,8 +228,25 @@ class Host:
         handler = logger.info if self.state.print_noop_info else logger.debug
         handler("{0}noop: {1}".format(self.print_prefix, description))
 
+    def when(self, condition: Callable[[], bool]):
+        return self.deploy(
+            "",
+            cast("AllArguments", {"_if": [condition]}),
+            {},
+            in_deploy=False,
+        )
+
+    def arguments(self, **arguments: Unpack["AllArguments"]):
+        return self.deploy("", arguments, {}, in_deploy=False)
+
     @contextmanager
-    def deploy(self, name: str, kwargs, data, in_deploy: bool = True):
+    def deploy(
+        self,
+        name: str,
+        kwargs: Optional["AllArguments"],
+        data: Optional[dict],
+        in_deploy: bool = True,
+    ):
         """
         Wraps a group of operations as a deploy, this should not be used
         directly, instead use ``pyinfra.api.deploy.deploy``.
@@ -233,6 +262,13 @@ class Host:
         old_deploy_kwargs = self.current_deploy_kwargs
         old_deploy_data = self.current_deploy_data
         self.in_deploy = in_deploy
+
+        # Combine any old _ifs with the new ones
+        if old_deploy_kwargs and kwargs:
+            old_ifs = old_deploy_kwargs["_if"]
+            new_ifs = kwargs["_if"]
+            if old_ifs and new_ifs:
+                kwargs["_if"] = old_ifs + new_ifs
 
         # Set the new values
         self.current_deploy_name = name

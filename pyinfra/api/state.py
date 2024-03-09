@@ -344,10 +344,19 @@ class State:
     def get_results_for_host(self, host: "Host") -> StateHostResults:
         return self.results[host]
 
-    def get_op_data_for_host(self, host: "Host", op_hash: str):
+    def get_op_data_for_host(
+        self,
+        host: "Host",
+        op_hash: str,
+    ) -> StateOperationHostData:
         return self.ops[host][op_hash]
 
-    def set_op_data_for_host(self, host: "Host", op_hash: str, op_data: StateOperationHostData):
+    def set_op_data_for_host(
+        self,
+        host: "Host",
+        op_hash: str,
+        op_data: StateOperationHostData,
+    ):
         self.ops[host][op_hash] = op_data
 
     def activate_host(self, host: "Host"):
