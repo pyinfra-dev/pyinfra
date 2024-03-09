@@ -217,7 +217,7 @@ def pretty_op_name(op_meta):
 
 def print_meta(state: "State"):
     rows: List[Tuple[Callable, Union[List[str], str]]] = [
-        (logger.info, ["Operation", "Hosts"]),
+        (logger.info, ["Operation", "Change", "Conditional Change"]),
     ]
 
     for op_hash in state.get_op_order():
@@ -237,14 +237,18 @@ def print_meta(state: "State"):
                 logger.info,
                 [
                     pretty_op_name(state.op_meta[op_hash]),
-                    "{0}{1}/{2} ({3})".format(
+                    "-"
+                    if len(hosts_in_op) == 0
+                    else "{0} ({1})".format(
                         len(hosts_in_op),
-                        f"-{len(hosts_maybe_in_op)}" if hosts_maybe_in_op else "",
-                        len(state.inventory),
-                        truncate(", ".join(sorted(hosts_in_op + hosts_maybe_in_op)), 48),
-                    )
-                    if hosts_in_op or hosts_maybe_in_op
-                    else "No hosts with changes at this time",
+                        truncate(", ".join(sorted(hosts_in_op)), 48),
+                    ),
+                    "-"
+                    if len(hosts_maybe_in_op) == 0
+                    else "{0} ({1})".format(
+                        len(hosts_maybe_in_op),
+                        truncate(", ".join(sorted(hosts_maybe_in_op)), 48),
+                    ),
                 ],
             )
         )
