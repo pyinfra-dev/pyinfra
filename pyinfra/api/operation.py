@@ -164,6 +164,8 @@ P = ParamSpec("P")
 def operation(
     is_idempotent: bool = True,
     idempotent_notice: Optional[str] = None,
+    is_deprecated: bool = False,
+    deprecated_for: Optional[str] = None,
     _set_in_op: bool = True,
 ) -> Callable[[Callable[P, Generator]], PyinfraOperation[P]]:
     """
@@ -175,6 +177,8 @@ def operation(
     def decorator(f: Callable[P, Generator]) -> PyinfraOperation[P]:
         f.is_idempotent = is_idempotent  # type: ignore[attr-defined]
         f.idempotent_notice = idempotent_notice  # type: ignore[attr-defined]
+        f.is_deprecated = is_deprecated  # type: ignore[attr-defined]
+        f.deprecated_for = deprecated_for  # type: ignore[attr-defined]
         return _wrap_operation(f, _set_in_op=_set_in_op)
 
     return decorator
@@ -191,6 +195,15 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
                 "Operation called within another operation, this is not allowed! Use the `_inner` "
                 + "function to call the underlying operation."
             )
+
+        if func.is_deprecated:  # type: ignore[attr-defined]
+            if func.deprecated_for:  # type: ignore[attr-defined]
+                logger.warning(
+                    f"The {get_operation_name_from_func(func)} operation is "
+                    + f"deprecated, please use: {func.deprecated_for}",  # type: ignore[attr-defined]
+                )
+            else:
+                logger.warning(f"The {get_operation_name_from_func(func)} operation is deprecated")
 
         # Configure operation
         #
@@ -279,6 +292,15 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
     return cast(PyinfraOperation[P], decorated_func)
 
 
+def get_operation_name_from_func(func):
+    if func.__module__:
+        module_bits = func.__module__.split(".")
+        module_name = module_bits[-1]
+        return "{0}.{1}".format(module_name, func.__name__)
+    else:
+        return func.__name__
+
+
 def generate_operation_name(func, host, kwargs, global_arguments):
     # Generate an operation name if needed (Module/Operation format)
     name = global_arguments.get("name")
@@ -287,14 +309,7 @@ def generate_operation_name(func, host, kwargs, global_arguments):
         names = {name}
     else:
         add_args = True
-
-        if func.__module__:
-            module_bits = func.__module__.split(".")
-            module_name = module_bits[-1]
-            name = "{0}/{1}".format(module_name.title(), func.__name__.title())
-        else:
-            name = func.__name__
-
+        name = get_operation_name_from_func(func)
         names = {name}
 
     if host.current_deploy_name:
