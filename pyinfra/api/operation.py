@@ -214,7 +214,7 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
             if func.deprecated_for:  # type: ignore[attr-defined]
                 logger.warning(
                     f"The {get_operation_name_from_func(func)} operation is "
-                    + f"deprecated, please use: {func.deprecated_for}",  # type: ignore[attr-defined]
+                    + f"deprecated, please use: {func.deprecated_for}",  # type: ignore[attr-defined] # noqa
                 )
             else:
                 logger.warning(f"The {get_operation_name_from_func(func)} operation is deprecated")

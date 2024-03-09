@@ -10,13 +10,13 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    Unpack,
     cast,
     overload,
 )
 from uuid import uuid4
 
 import click
+from typing_extensions import Unpack
 
 from pyinfra import logger
 from pyinfra.connectors.base import BaseConnector

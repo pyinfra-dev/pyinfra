@@ -127,6 +127,7 @@ e501
 ed25519
 endian
 entrypoint
+envvar
 epel
 excuted
 exe
@@ -343,6 +344,7 @@ status
 stdlib
 stringify
 stringio
+strs
 su
 subclassed
 subclassing
@@ -383,6 +385,7 @@ ufw
 uname
 unignored
 unmount
+unresposivehost
 up
 up2
 useradd

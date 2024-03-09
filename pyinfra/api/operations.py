@@ -67,11 +67,10 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
     timeout = global_arguments.get("_timeout", 0)
 
     executor_kwarg_keys = CONNECTOR_ARGUMENT_KEYS
-    base_connector_arguments: ConnectorArguments = (
-        cast(  # https://github.com/python/mypy/issues/10371
-            ConnectorArguments,
-            {key: global_arguments[key] for key in executor_kwarg_keys if key in global_arguments},
-        )
+    # See: https://github.com/python/mypy/issues/10371
+    base_connector_arguments: ConnectorArguments = cast(
+        ConnectorArguments,
+        {key: global_arguments[key] for key in executor_kwarg_keys if key in global_arguments},  # type: ignore[literal-required] # noqa
     )
 
     did_error = False

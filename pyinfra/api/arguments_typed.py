@@ -1,6 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generator, Generic, Iterable, Mapping, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Generator,
+    Generic,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Union,
+)
 
 from typing_extensions import ParamSpec, Protocol
 
@@ -51,7 +61,7 @@ class PyinfraOperation(Generic[P], Protocol):
         name: Optional[str] = None,
         _ignore_errors: bool = False,
         _continue_on_error: bool = False,
-        _if: Optional[list[Callable[[], bool]]] = None,
+        _if: Optional[List[Callable[[], bool]]] = None,
         #
         # ExecutionArguments
         #

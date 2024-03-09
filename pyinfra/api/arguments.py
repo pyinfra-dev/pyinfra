@@ -6,6 +6,7 @@ from typing import (
     Callable,
     Generic,
     Iterable,
+    List,
     Mapping,
     Optional,
     TypeVar,
@@ -169,7 +170,7 @@ class MetaArguments(TypedDict):
     name: str
     _ignore_errors: bool
     _continue_on_error: bool
-    _if: list[Callable[[], bool]]
+    _if: List[Callable[[], bool]]
 
 
 meta_argument_meta: dict[str, ArgumentMeta] = {
@@ -299,7 +300,7 @@ def pop_global_arguments(
     if context.ctx_config.isset():
         config = context.config
 
-    meta_kwargs: dict[str, Any] = cast(dict[str, Any], host.current_deploy_kwargs) or {}
+    meta_kwargs: dict[str, Any] = host.current_deploy_kwargs or {}  # type: ignore[assignment]
 
     arguments: dict[str, Any] = {}
     found_keys: list[str] = []
