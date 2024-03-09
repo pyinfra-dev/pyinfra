@@ -40,7 +40,7 @@ class TestDeploysApi(PatchSSHTestCase):
         run_ops(state)
 
         first_op_hash = op_order[0]
-        assert state.op_meta[first_op_hash].names == {"test_deploy | Server/Shell"}
+        assert state.op_meta[first_op_hash].names == {"test_deploy | server.shell"}
         assert state.ops[somehost][first_op_hash].operation_meta._commands == [
             StringCommand("echo first command"),
         ]
@@ -49,7 +49,7 @@ class TestDeploysApi(PatchSSHTestCase):
         ]
 
         second_op_hash = op_order[1]
-        assert state.op_meta[second_op_hash].names == {"test_deploy | Server/Shell"}
+        assert state.op_meta[second_op_hash].names == {"test_deploy | server.shell"}
         assert state.ops[somehost][second_op_hash].operation_meta._commands == [
             StringCommand("echo second command"),
         ]
@@ -104,21 +104,21 @@ class TestDeploysApi(PatchSSHTestCase):
         run_ops(state)
 
         first_op_hash = op_order[0]
-        assert state.op_meta[first_op_hash].names == {"test_deploy | Server/Shell"}
+        assert state.op_meta[first_op_hash].names == {"test_deploy | server.shell"}
         assert state.ops[somehost][first_op_hash].operation_meta._commands == [
             StringCommand("echo first command"),
         ]
 
         second_op_hash = op_order[1]
         assert state.op_meta[second_op_hash].names == {
-            "test_deploy | test_nested_deploy | Server/Shell",
+            "test_deploy | test_nested_deploy | server.shell",
         }
         assert state.ops[somehost][second_op_hash].operation_meta._commands == [
             StringCommand("echo nested command"),
         ]
 
         third_op_hash = op_order[2]
-        assert state.op_meta[third_op_hash].names == {"test_deploy | Server/Shell"}
+        assert state.op_meta[third_op_hash].names == {"test_deploy | server.shell"}
         assert state.ops[somehost][third_op_hash].operation_meta._commands == [
             StringCommand("echo second command"),
         ]

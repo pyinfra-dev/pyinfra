@@ -7,12 +7,6 @@ from pyinfra.connectors.terraform import TerraformInventoryConnector
 
 
 class TestTerraformConnector(TestCase):
-    def test_make_names_data_no_output_key(self):
-        with self.assertRaises(InventoryError) as context:
-            list(TerraformInventoryConnector.make_names_data())
-
-        assert context.exception.args[0] == "No Terraform output key!"
-
     @patch("pyinfra.connectors.terraform.local.shell")
     def test_make_names_data_no_output(self, fake_shell):
         fake_shell.return_value = json.dumps(

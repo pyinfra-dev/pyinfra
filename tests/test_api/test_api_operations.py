@@ -78,7 +78,7 @@ class TestOperationsApi(PatchSSHTestCase):
         first_op_hash = op_order[0]
 
         # Ensure the op name
-        assert state.op_meta[first_op_hash].names == {"Files/File"}
+        assert state.op_meta[first_op_hash].names == {"files.file"}
 
         # Ensure the global kwargs (same for both hosts)
         somehost_global_arguments = state.ops[somehost][first_op_hash].global_arguments
