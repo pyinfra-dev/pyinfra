@@ -15,12 +15,21 @@ class TestTerraformConnector(TestCase):
 
     @patch("pyinfra.connectors.terraform.local.shell")
     def test_make_names_data_no_output(self, fake_shell):
-        fake_shell.return_value = json.dumps({})
+        fake_shell.return_value = json.dumps(
+            {
+                "hello": {
+                    "world": [],
+                },
+            },
+        )
 
         with self.assertRaises(InventoryError) as context:
             list(TerraformInventoryConnector.make_names_data("output_key"))
 
-        assert context.exception.args[0] == "No Terraform output with key: `output_key`"
+        assert (
+            context.exception.args[0]
+            == "No Terraform output with key: `output_key`, valid keys:\n   - hello.world"
+        )
 
     @patch("pyinfra.connectors.terraform.local.shell")
     def test_make_names_data_invalid_output(self, fake_shell):

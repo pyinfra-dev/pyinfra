@@ -40,17 +40,17 @@ class ChrootConnector(BaseConnector):
         self.local = LocalConnector(state, host)
 
     @staticmethod
-    def make_names_data(directory: Optional[str] = None):
-        if not directory:
+    def make_names_data(name: Optional[str] = None):
+        if not name:
             raise InventoryError("No directory provided!")
 
         show_warning()
 
-        yield "@chroot/{0}".format(directory), {
-            "chroot_directory": "/{0}".format(directory.lstrip("/")),
+        yield "@chroot/{0}".format(name), {
+            "chroot_directory": "/{0}".format(name.lstrip("/")),
         }, ["@chroot"]
 
-    def connect(self):
+    def connect(self) -> None:
         self.local.connect()
 
         chroot_directory = self.host.data.chroot_directory
@@ -65,7 +65,6 @@ class ChrootConnector(BaseConnector):
             raise ConnectError(e.args[0])
 
         self.host.connector_data["chroot_directory"] = chroot_directory
-        return True
 
     def run_shell_command(
         self,

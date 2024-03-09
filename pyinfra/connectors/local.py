@@ -39,8 +39,8 @@ class LocalConnector(BaseConnector):
     handles_execution = True
 
     @staticmethod
-    def make_names_data(_=None):
-        if _ is not None:
+    def make_names_data(name=None):
+        if name is not None:
             raise InventoryError("Cannot have more than one @local")
 
         yield "@local", {}, ["@local"]
@@ -206,8 +206,7 @@ class LocalConnector(BaseConnector):
 
         return True
 
-    @staticmethod
-    def check_can_rsync(host):
+    def check_can_rsync(self):
         if not find_executable("rsync"):
             raise NotImplementedError("The `rsync` binary is not available on this system.")
 

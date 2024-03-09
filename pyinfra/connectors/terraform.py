@@ -78,21 +78,23 @@ class TerraformInventoryConnector(BaseConnector):
     """
 
     @staticmethod
-    def make_names_data(output_key=None):
+    def make_names_data(name=None):
         show_warning()
 
-        if not output_key:
-            raise InventoryError("No Terraform output key!")
+        if not name:
+            name = ""
 
         with progress_spinner({"fetch terraform output"}):
             tf_output_raw = local.shell("terraform output -json")
 
+        assert isinstance(tf_output_raw, str)
         tf_output = json.loads(tf_output_raw)
         tf_output = _flatten_dict(tf_output)
 
-        tf_output_value = tf_output.get(output_key)
+        tf_output_value = tf_output.get(name)
         if tf_output_value is None:
-            raise InventoryError(f"No Terraform output with key: `{output_key}`")
+            keys = "\n".join(f"   - {k}" for k in tf_output.keys())
+            raise InventoryError(f"No Terraform output with key: `{name}`, valid keys:\n{keys}")
 
         if not isinstance(tf_output_value, list):
             raise InventoryError(

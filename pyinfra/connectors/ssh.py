@@ -140,8 +140,9 @@ class SSHConnector(BaseConnector):
 
     client: Optional[SSHClient] = None
 
-    def make_names_data(hostname):
-        yield "@ssh/{0}".format(hostname), {"ssh_hostname": hostname}, []
+    @staticmethod
+    def make_names_data(name):
+        yield "@ssh/{0}".format(name), {"ssh_hostname": name}, []
 
     def make_paramiko_kwargs(self) -> dict[str, Any]:
         kwargs = {
@@ -476,16 +477,10 @@ class SSHConnector(BaseConnector):
             self._put_file(filename_or_io, temp_file)
 
             # Make sure our sudo/su user can access the file
-            if _su_user:
-                command = StringCommand("setfacl", "-m", "u:{0}:r".format(_su_user), temp_file)
-            elif _sudo_user:
-                command = StringCommand("setfacl", "-m", "u:{0}:r".format(_sudo_user), temp_file)
-            elif _doas_user:
-                command = StringCommand("setfacl", "-m", "u:{0}:r".format(_doas_user), temp_file)
-
-            if _su_user or _sudo_user or _doas_user:
+            other_user = _su_user or _sudo_user or _doas_user
+            if other_user:
                 status, output = self.run_shell_command(
-                    command,
+                    StringCommand("setfacl", "-m", f"u:{other_user}:r", temp_file),
                     print_output=print_output,
                     print_input=print_input,
                     **arguments,

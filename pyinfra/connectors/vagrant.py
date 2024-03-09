@@ -132,8 +132,8 @@ class VagrantInventoryConnector(BaseConnector):
     """
 
     @staticmethod
-    def make_names_data(limit=None):
-        vagrant_ssh_info = get_vagrant_config(limit)
+    def make_names_data(name=None):
+        vagrant_ssh_info = get_vagrant_config(name)
 
         logger.debug("Got Vagrant SSH info: \n%s", vagrant_ssh_info)
 
@@ -170,10 +170,11 @@ class VagrantInventoryConnector(BaseConnector):
             hosts.append(_make_name_data(current_host))
 
         if not hosts:
-            if limit:
+            if name:
                 raise InventoryError(
-                    "No running Vagrant instances matching `{0}` found!".format(limit)
+                    "No running Vagrant instances matching `{0}` found!".format(name)
                 )
             raise InventoryError("No running Vagrant instances found!")
 
-        return hosts
+        for host in hosts:
+            yield host

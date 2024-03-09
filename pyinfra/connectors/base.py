@@ -84,7 +84,7 @@ class BaseConnector(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def make_names_data(id: str) -> Iterator[tuple[str, dict, list[str]]]:
+    def make_names_data(name: str) -> Iterator[tuple[str, dict, list[str]]]:
         """
         Generates hosts/data/groups information for inventory. This allows a
         single connector reference to generate multiple target hosts.

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from pyinfra.api.state import State
 
 
-class ConnectorData(TypedDict, total=False):
+class ConnectorData(TypedDict):
     docker_identifier: str
 
 
@@ -35,6 +35,7 @@ connector_data_meta: dict[str, DataMeta] = {
 
 def _find_start_docker_container(container_id) -> tuple[str, bool]:
     docker_info = local.shell("docker container inspect {0}".format(container_id))
+    assert isinstance(docker_info, str)
     docker_info = json.loads(docker_info)[0]
     if docker_info["State"]["Running"] is False:
         logger.info("Starting stopped container: {0}".format(container_id))
@@ -93,17 +94,17 @@ class DockerConnector(BaseConnector):
         self.local = LocalConnector(state, host)
 
     @staticmethod
-    def make_names_data(identifier=None):
-        if not identifier:
+    def make_names_data(name=None):
+        if not name:
             raise InventoryError("No docker base ID provided!")
 
         yield (
-            "@docker/{0}".format(identifier),
-            {"docker_identifier": identifier},
+            "@docker/{0}".format(name),
+            {"docker_identifier": name},
             ["@docker"],
         )
 
-    def connect(self):
+    def connect(self) -> None:
         self.local.connect()
 
         docker_identifier = self.data["docker_identifier"]
@@ -114,8 +115,6 @@ class DockerConnector(BaseConnector):
                     self.no_stop = True
             except PyinfraError:
                 self.container_id = _start_docker_image(docker_identifier)
-
-        return True
 
     def disconnect(self):
         container_id = self.container_id

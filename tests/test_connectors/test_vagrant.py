@@ -69,7 +69,7 @@ class TestVagrantConnector(TestCase):
     )
     @patch("pyinfra.connectors.vagrant.path.exists", lambda path: True)
     def test_make_names_data_with_options(self):
-        data = VagrantInventoryConnector.make_names_data()
+        data = list(VagrantInventoryConnector.make_names_data())
 
         assert data == [
             (
@@ -103,7 +103,7 @@ class TestVagrantConnector(TestCase):
         ]
 
     def test_make_names_data_with_limit(self):
-        data = VagrantInventoryConnector.make_names_data(limit=("ubuntu16",))
+        data = list(VagrantInventoryConnector.make_names_data(name=("ubuntu16",)))
 
         assert data == [
             (
@@ -120,4 +120,4 @@ class TestVagrantConnector(TestCase):
 
     def test_make_names_data_no_matches(self):
         with self.assertRaises(InventoryError):
-            VagrantInventoryConnector.make_names_data(limit="nope")
+            list(VagrantInventoryConnector.make_names_data(name="nope"))

@@ -51,10 +51,10 @@ class DockerSSHConnector(BaseConnector):
         self.ssh = SSHConnector(state, host)
 
     @staticmethod
-    def make_names_data(host_image_str):
+    def make_names_data(name):
         try:
-            hostname, image = host_image_str.split(":", 1)
-        except (AttributeError, ValueError):  # failure to parse the host_image_str
+            hostname, image = name.split(":", 1)
+        except (AttributeError, ValueError):  # failure to parse the name
             raise InventoryError("No ssh host or docker base image provided!")
 
         if not image:
