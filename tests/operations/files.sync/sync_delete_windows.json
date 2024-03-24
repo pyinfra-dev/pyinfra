@@ -20,7 +20,14 @@
                         "files": {
                             "yet-another-file.txt": null
                         },
-                        "dirs": {}
+                        "dirs": {
+                            "evendeeper": {
+                                "files": {
+                                    "a-very-deep-file.txt": null
+                                },
+                                "dirs": {}
+                            }
+                        }
                     },
                     "__pycache__": {
                         "files": {
@@ -38,18 +45,21 @@
             "path=/home/somedir/anotherfile.txt": null,
             "path=/home/somedir/deleteme.txt": true,
             "path=/home/somedir/nodelete.pyc": true,
-            "path=/home/somedir/underthat/yet-another-file.txt": null
+            "path=/home/somedir/underthat/yet-another-file.txt": null,
+            "path=/home/somedir/underthat/evendeeper/a-very-deep-file.txt": null
         },
         "files.Directory": {
             "path=/home/somedir": null,
-            "path=/home/somedir/underthat": null
+            "path=/home/somedir/underthat": null,
+            "path=/home/somedir/underthat/evendeeper": null
         },
         "files.FindFiles": {
             "path=/home/somedir": [
                 "/home/somedir/deleteme.txt",
                 "/home/somedir/nodelete.pyc"
             ],
-            "path=/home/somedir/underthat": []
+            "path=/home/somedir/underthat": [],
+            "path=/home/somedir/underthat/evendeeper": []
         },
         "files.Link": {
             "path=/home/somedir": false
@@ -60,6 +70,8 @@
         "chmod 755 /home/somedir",
         "mkdir -p /home/somedir/underthat",
         "chmod 755 /home/somedir/underthat",
+        "mkdir -p /home/somedir/underthat/evendeeper",
+        "chmod 755 /home/somedir/underthat/evendeeper",
         ["upload", "\\somedir\\somefile.txt", "/home/somedir/somefile.txt"],
         "chmod 644 /home/somedir/somefile.txt",
         ["upload", "\\somedir\\anotherfile.txt", "/home/somedir/anotherfile.txt"],
@@ -70,6 +82,12 @@
             "/home/somedir/underthat/yet-another-file.txt"
         ],
         "chmod 644 /home/somedir/underthat/yet-another-file.txt",
+        [
+            "upload",
+            "\\somedir\\underthat\\evendeeper\\a-very-deep-file.txt",
+            "/home/somedir/underthat/evendeeper/a-very-deep-file.txt"
+        ],
+        "chmod 644 /home/somedir/underthat/evendeeper/a-very-deep-file.txt",
         "rm -f /home/somedir/deleteme.txt"
     ]
 }
