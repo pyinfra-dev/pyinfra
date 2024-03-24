@@ -11,6 +11,7 @@ import traceback
 from datetime import timedelta
 from fnmatch import fnmatch
 from io import StringIO
+from pathlib import Path
 from typing import Union
 
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
@@ -569,7 +570,7 @@ def sync(
     put_files = []
     ensure_dirnames = []
     for dirpath, dirnames, filenames in os.walk(src, topdown=True):
-        remote_dirpath = os.path.normpath(os.path.relpath(dirpath, src))
+        remote_dirpath = Path(os.path.normpath(os.path.relpath(dirpath, src))).as_posix()
 
         # Filter excluded dirs
         for child_dir in dirnames[:]:
