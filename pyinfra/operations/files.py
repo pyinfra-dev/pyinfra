@@ -268,7 +268,7 @@ def line(
         it will be append to the end of the file.
 
     Ensure new line:
-        This will ensure that the ``line`` being appended is always on a seperate new
+        This will ensure that the ``line`` being appended is always on a separate new
         line in case the file doesn't end with a newline character.
 
 

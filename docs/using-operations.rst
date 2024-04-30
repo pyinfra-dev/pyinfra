@@ -85,7 +85,7 @@ Adding data to inventories is covered in detail here: :doc:`inventory-data`. Dat
 Host Facts
 ~~~~~~~~~~
 
-Facts allow you to use information about the target host to control and configure operations. A good example is switching between ``apt`` & ``yum`` depending on the Linux distribution. Facts are imported from ``pyinfra.facts.*`` and can be retreived using the ``host.get_fact`` function:
+Facts allow you to use information about the target host to control and configure operations. A good example is switching between ``apt`` & ``yum`` depending on the Linux distribution. Facts are imported from ``pyinfra.facts.*`` and can be retrieved using the ``host.get_fact`` function:
 
 .. code:: python
 

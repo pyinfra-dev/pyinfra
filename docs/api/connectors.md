@@ -1,6 +1,6 @@
 # Writing Connectors
 
-[Connectors](../connectors) enable pyinfra to directly integrate with other tools and systems. Connectos are written as Python classes.
+[Connectors](../connectors) enable pyinfra to directly integrate with other tools and systems. Connectors are written as Python classes.
 
 ## Inventory Connector
 
@@ -66,7 +66,7 @@ class LocalConnector(BaseConnector):
         and then writing it to the upload location.
 
         Returns:
-            bool: indicating succes or failure.
+            bool: indicating success or failure.
         """
 
     def get_file(
