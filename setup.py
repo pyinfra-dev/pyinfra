@@ -29,10 +29,13 @@ INSTALL_REQUIRES = (
     "pywinrm",
     "typeguard",
     "distro>=1.6,<2",
+    "packaging>=16.1",
     # Backport of graphlib used for DAG operation ordering
     'graphlib_backport ; python_version < "3.9"',
     # Backport of typing for Unpack (added 3.11)
     'typing-extensions ; python_version < "3.11"',
+    # Backport of importlib.metadata for entry_points(group=...) (added 3.10)
+    'importlib_metadata>=3.6 ; python_version < "3.10"',
 )
 
 TEST_REQUIRES = (

@@ -1,8 +1,9 @@
 from os import path
 from typing import Optional
 
-# TODO: move to importlib.resources
-from pkg_resources import Requirement, ResolutionError, parse_version, require
+from pkg_resources import ResolutionError, require
+from packaging.specifiers import SpecifierSet
+from packaging.version import Version
 
 from pyinfra import __version__, state
 
@@ -53,10 +54,10 @@ config_defaults = {key: value for key, value in ConfigDefaults.__dict__.items() 
 def check_pyinfra_version(version: str):
     if not version:
         return
-    running_version = parse_version(__version__)
-    required_versions = Requirement.parse("pyinfra{0}".format(version))
+    running_version = Version(__version__)
+    required_versions = SpecifierSet(version)
 
-    if running_version not in required_versions:  # type: ignore[operator]
+    if running_version not in required_versions:
         raise PyinfraError(
             f"pyinfra version requirement not met (requires {version}, running {__version__})"
         )

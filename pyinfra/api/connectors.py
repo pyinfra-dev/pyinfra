@@ -1,4 +1,7 @@
-import pkg_resources
+try:
+    from importlib_metadata import entry_points
+except ImportError:
+    from importlib.metadata import entry_points
 
 
 def _load_connector(entrypoint):
@@ -8,7 +11,7 @@ def _load_connector(entrypoint):
 def get_all_connectors():
     return {
         entrypoint.name: _load_connector(entrypoint)
-        for entrypoint in pkg_resources.iter_entry_points("pyinfra.connectors")
+        for entrypoint in entry_points(group="pyinfra.connectors")
     }
 
 
