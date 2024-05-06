@@ -1,5 +1,5 @@
 import os
-from distutils.spawn import find_executable
+from shutil import which
 from tempfile import mkstemp
 from typing import TYPE_CHECKING, Tuple
 
@@ -207,7 +207,7 @@ class LocalConnector(BaseConnector):
         return True
 
     def check_can_rsync(self):
-        if not find_executable("rsync"):
+        if not which("rsync"):
             raise NotImplementedError("The `rsync` binary is not available on this system.")
 
     def rsync(

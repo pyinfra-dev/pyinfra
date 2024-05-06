@@ -390,7 +390,7 @@ class TestOperationsApi(PatchSSHTestCase):
         state = State(inventory, Config())
         connect_all(state)
 
-        with patch("pyinfra.connectors.ssh.find_executable", lambda x: None):
+        with patch("pyinfra.connectors.ssh.which", lambda x: None):
             with self.assertRaises(OperationError) as context:
                 add_op(state, files.rsync, "src", "dest")
 
