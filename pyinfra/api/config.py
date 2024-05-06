@@ -1,7 +1,12 @@
+try:
+    import importlib_metadata
+except ImportError:
+    import importlib.metadata as importlib_metadata
 from os import path
-from typing import Optional
+from typing import Iterable, Optional, Set
 
-from pkg_resources import ResolutionError, require
+from packaging.markers import Marker
+from packaging.requirements import Requirement
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
@@ -63,6 +68,104 @@ def check_pyinfra_version(version: str):
         )
 
 
+def _check_requirements(requirements: Iterable[str]) -> Set[Requirement]:
+    """
+    Check whether each of the given requirements and all their dependencies are
+    installed.
+
+    Or more precisely, this checks that each of the given *requirements* is
+    satisfied by some installed *distribution package*, and so on recursively
+    for each of the dependencies of those distribution packages. The terminology
+    here is as follows:
+
+    * A *distribution package* is essentially a thing that can be installed with
+      ``pip``, from an sdist or wheel or Git repo or so on.
+    * A *requirement* is the expectation that a distribution package satisfying
+      some constraint is installed.
+    * A *dependency* is a requirement specified by a distribution package (as
+      opposed to the requirements passed in to this function).
+
+    So what this function does is start from the given requirements, for each
+    one check that it is satisfied by some installed distribution package, and
+    if so recursively perform the same check on all the dependencies of that
+    distribution package. In short, it's traversing the graph of package
+    requirements. It stops whenever it finds a requirement that is not satisfied
+    (i.e. a required package that is not installed), or when it runs out of
+    requirements to check.
+
+    .. note::
+        This is basically equivalent to ``pkg_resources.require()`` except that
+        when ``require()`` succeeds, it will return the list of distribution
+        packages that satisfy the given requirements and their dependencies, and
+        when it fails, it will raise an exception. This function just returns
+        the requirements which were not satisfied instead.
+
+    :param requirements: The requirements to check for in the set of installed
+        packages (along with their dependencies).
+    :return: The set of requirements that were not satisfied, which will be
+        an empty set if all requirements (recursively) were satisfied.
+    """
+
+    # Based on pkg_resources.require() from setuptools. The implementation of
+    # hbutils.system.check_reqs() from the hbutils package was also helpful in
+    # clarifying what this is supposed to do.
+
+    reqs_to_check: Set[Requirement] = set(Requirement(r) for r in requirements)
+    reqs_satisfied: Set[Requirement] = set()
+    reqs_not_satisfied: Set[Requirement] = set()
+
+    while reqs_to_check:
+        req = reqs_to_check.pop()
+        assert req not in reqs_satisfied and req not in reqs_not_satisfied
+
+        # Check for an installed distribution package with the right name and version
+        try:
+            dist = importlib_metadata.distribution(req.name)
+        except importlib_metadata.PackageNotFoundError:
+            # No installed package with the right name
+            # This would raise a DistributionNotFound error from pkg_resources.require()
+            reqs_not_satisfied.add(req)
+            continue
+
+        if dist.version not in req.specifier:
+            # There is a distribution with the right name but wrong version
+            # This would raise a VersionConflict error from pkg_resources.require()
+            reqs_not_satisfied.add(req)
+            continue
+
+        reqs_satisfied.add(req)
+
+        # If the distribution package has dependencies of its own, go through
+        # those dependencies and for each one add it to the set to be checked if
+        # - it's unconditional (no marker)
+        # - or it's conditional and the condition is satisfied (the marker
+        #   evaluates to true) in the current environment
+        # Markers can check things like the Python version and system version
+        # etc., and/or they can check which extras of the distribution package
+        # were required. To facilitate checking extras we have to pass the extra
+        # in the environment when calling Marker.evaluate().
+        if dist.requires:
+            if req.extras:
+                extras_envs = [{"extra": extra} for extra in req.extras]
+
+                def evaluate_marker(marker: Marker) -> bool:
+                    return any(map(marker.evaluate, extras_envs))
+
+            else:
+
+                def evaluate_marker(marker: Marker) -> bool:
+                    return marker.evaluate()
+
+            for dist_req_str in dist.requires:
+                dist_req = Requirement(dist_req_str)
+                if dist_req in reqs_satisfied or dist_req in reqs_not_satisfied:
+                    continue
+                if (not dist_req.marker) or evaluate_marker(dist_req.marker):
+                    reqs_to_check.add(dist_req)
+
+    return reqs_not_satisfied
+
+
 def check_require_packages(requirements_config):
     if not requirements_config:
         return
@@ -73,14 +176,12 @@ def check_require_packages(requirements_config):
         with open(path.join(state.cwd or "", requirements_config), encoding="utf-8") as f:
             requirements = [line.split("#egg=")[-1] for line in f.read().splitlines()]
 
-    try:
-        require(requirements)
-    except ResolutionError as e:
+    requirements_not_met = _check_requirements(requirements)
+    if requirements_not_met:
         raise PyinfraError(
-            "Deploy requirements ({0}) not met: {1}".format(
-                requirements_config,
-                e,
-            ),
+            "Deploy requirements ({0}) not met: missing {1}".format(
+                requirements_config, ", ".join(str(r) for r in requirements_not_met)
+            )
         )
 
 
