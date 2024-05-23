@@ -1,7 +1,7 @@
 try:
     from importlib_metadata import entry_points
 except ImportError:
-    from importlib.metadata import entry_points
+    from importlib.metadata import entry_points  # type: ignore[assignment]
 
 
 def _load_connector(entrypoint):

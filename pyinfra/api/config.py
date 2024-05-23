@@ -1,7 +1,7 @@
 try:
     import importlib_metadata
 except ImportError:
-    import importlib.metadata as importlib_metadata
+    import importlib.metadata as importlib_metadata  # type: ignore[no-redef]
 from os import path
 from typing import Iterable, Optional, Set
 
