@@ -40,9 +40,9 @@ INSTALL_REQUIRES = (
 
 TEST_REQUIRES = (
     # Unit testing
-    "pytest==7.2.0",
-    "coverage==6.5",
-    "pytest-cov==4.0.0",
+    "pytest==8.2.1",
+    "coverage==7.5.1",
+    "pytest-cov==5.0.0",
     # Formatting & linting
     "black==22.3.0",
     "isort==5.10.1",
