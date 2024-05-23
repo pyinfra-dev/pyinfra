@@ -108,8 +108,7 @@ class BaseConnector(abc.ABC):
         print_output: bool,
         print_input: bool,
         **arguments: Unpack["ConnectorArguments"],
-    ) -> tuple[bool, "CommandOutput"]:
-        ...
+    ) -> tuple[bool, "CommandOutput"]: ...
 
     @abc.abstractmethod
     def put_file(
@@ -120,8 +119,7 @@ class BaseConnector(abc.ABC):
         print_output: bool = False,
         print_input: bool = False,
         **arguments: Unpack["ConnectorArguments"],
-    ) -> bool:
-        ...
+    ) -> bool: ...
 
     @abc.abstractmethod
     def get_file(
@@ -132,8 +130,7 @@ class BaseConnector(abc.ABC):
         print_output: bool = False,
         print_input: bool = False,
         **arguments: Unpack["ConnectorArguments"],
-    ) -> bool:
-        ...
+    ) -> bool: ...
 
     def check_can_rsync(self):
         raise NotImplementedError("This connector does not support rsync")

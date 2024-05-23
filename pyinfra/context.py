@@ -4,6 +4,7 @@ are imported and used throughout pyinfra and end user deploy code (CLI mode).
 
 These variables always represent the current executing pyinfra context.
 """
+
 from contextlib import contextmanager
 from types import ModuleType
 from typing import TYPE_CHECKING

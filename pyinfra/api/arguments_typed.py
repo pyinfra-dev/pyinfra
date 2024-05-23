@@ -77,5 +77,4 @@ class PyinfraOperation(Generic[P], Protocol):
         # op kwargs
         #
         **kwargs: P.kwargs,
-    ) -> "OperationMeta":
-        ...
+    ) -> "OperationMeta": ...

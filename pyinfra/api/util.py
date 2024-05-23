@@ -301,19 +301,27 @@ def make_hash(obj):
             if isinstance(obj, int)
             # Constants - the values can change between hosts but we should still
             # group them under the same operation hash.
-            else "_PYINFRA_CONSTANT"
-            if obj in (True, False, None)
-            # Plain strings
-            else obj
-            if isinstance(obj, str)
-            # Objects with __name__s
-            else obj.__name__
-            if hasattr(obj, "__name__")
-            # Objects with names
-            else obj.name
-            if hasattr(obj, "name")
-            # Repr anything else
-            else repr(obj)
+            else (
+                "_PYINFRA_CONSTANT"
+                if obj in (True, False, None)
+                # Plain strings
+                else (
+                    obj
+                    if isinstance(obj, str)
+                    # Objects with __name__s
+                    else (
+                        obj.__name__
+                        if hasattr(obj, "__name__")
+                        # Objects with names
+                        else (
+                            obj.name
+                            if hasattr(obj, "name")
+                            # Repr anything else
+                            else repr(obj)
+                        )
+                    )
+                )
+            )
         )
 
     return sha1_hash(hash_string)

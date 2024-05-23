@@ -1601,9 +1601,11 @@ def block(
                     out_prep,
                     prog,
                     q_path,
-                    '"' + "\n".join(content) + '"'
-                    if not try_prevent_shell_expansion
-                    else "'" + "\n".join(content) + "'",
+                    (
+                        '"' + "\n".join(content) + '"'
+                        if not try_prevent_shell_expansion
+                        else "'" + "\n".join(content) + "'"
+                    ),
                     "> $OUT &&",
                     real_out,
                 )

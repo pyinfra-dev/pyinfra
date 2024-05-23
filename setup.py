@@ -44,11 +44,11 @@ TEST_REQUIRES = (
     "coverage==7.5.1",
     "pytest-cov==5.0.0",
     # Formatting & linting
-    "black==22.3.0",
-    "isort==5.10.1",
-    "flake8==4.0.1",
-    "flake8-black==0.3.0",
-    "flake8-isort==4.1.1",
+    "black==24.4.2",
+    "isort==5.13.2",
+    "flake8==7.0.0",
+    "flake8-black==0.3.6",
+    "flake8-isort==6.1.1",
     # Typing
     "mypy",
     "types-cryptography",

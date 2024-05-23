@@ -33,7 +33,9 @@ if TYPE_CHECKING:
     from pyinfra.api.state import State
 
 
-def extract_callable_datas(datas: list[Union[Callable[..., Any], Any]]) -> Generator[Any, Any, Any]:
+def extract_callable_datas(
+    datas: list[Union[Callable[..., Any], Any]],
+) -> Generator[Any, Any, Any]:
     for data in datas:
         # Support for dynamic data, ie @deploy wrapped data defaults where
         # the data is stored on the state temporarily.
@@ -336,12 +338,10 @@ class Host:
     T = TypeVar("T")
 
     @overload
-    def get_fact(self, name_or_cls: Type[FactBase[T]], *args, **kwargs) -> T:
-        ...
+    def get_fact(self, name_or_cls: Type[FactBase[T]], *args, **kwargs) -> T: ...
 
     @overload
-    def get_fact(self, name_or_cls: Type[ShortFactBase[T]], *args, **kwargs) -> T:
-        ...
+    def get_fact(self, name_or_cls: Type[ShortFactBase[T]], *args, **kwargs) -> T: ...
 
     def get_fact(self, name_or_cls, *args, **kwargs):
         """

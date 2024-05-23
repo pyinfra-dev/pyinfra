@@ -1,6 +1,7 @@
 """
 Provides operations to set SELinux file contexts, booleans and port types.
 """
+
 from pyinfra import host
 from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.selinux import FileContext, FileContextMapping, SEBoolean, SEPort, SEPorts

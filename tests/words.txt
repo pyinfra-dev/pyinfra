@@ -127,6 +127,7 @@ e501
 ed25519
 endian
 entrypoint
+envs
 envvar
 epel
 excuted
@@ -171,6 +172,7 @@ greenlets
 groupname
 hacky
 hashability
+hbutils
 hklm
 homedir
 homepath
@@ -305,6 +307,7 @@ remote
 remoteforward
 repo
 repos
+reqs
 rfind
 rlimit
 rol
