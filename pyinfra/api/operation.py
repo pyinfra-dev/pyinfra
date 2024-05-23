@@ -263,10 +263,12 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
         # *would* be made based on the *current* remote state.
 
         def command_generator() -> Iterator[PyinfraCommand]:
-            # Check global _if_ argument function and do nothing if returns False
+            # Check global _if argument function and do nothing if returns False
             if state.is_executing:
                 _ifs = global_arguments.get("_if")
-                if _ifs and not all(_if() for _if in _ifs):
+                if isinstance(_ifs, list) and not all(_if() for _if in _ifs):
+                    return
+                elif callable(_ifs) and not _ifs():
                     return
 
             host.in_op = _set_in_op

@@ -170,7 +170,7 @@ class MetaArguments(TypedDict):
     name: str
     _ignore_errors: bool
     _continue_on_error: bool
-    _if: List[Callable[[], bool]]
+    _if: Union[List[Callable[[], bool]], Callable[[], bool], None]
 
 
 meta_argument_meta: dict[str, ArgumentMeta] = {
@@ -191,7 +191,7 @@ meta_argument_meta: dict[str, ArgumentMeta] = {
         default=lambda _: False,
     ),
     "_if": ArgumentMeta(
-        "Only run this operation if these functions returns True",
+        "Only run this operation if these functions return True",
         default=lambda _: [],
     ),
 }
