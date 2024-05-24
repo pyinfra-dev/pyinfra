@@ -1,4 +1,3 @@
-import re
 import socket
 from collections import defaultdict
 from os import listdir, path
@@ -81,32 +80,52 @@ def _get_any_tuple_first(item: Union[T, Tuple[T, Any]]) -> T:
     return item[0] if isinstance(item, tuple) else item
 
 
+def _resolves_to_host(maybe_host: str) -> bool:
+    """Check if a string resolves to a valid IP address."""
+    try:
+        # Use getaddrinfo to support IPv6 hosts
+        socket.getaddrinfo(maybe_host, port=None)
+        return True
+    except socket.gaierror:
+        return False
+
+
 def make_inventory(
     inventory: str,
     override_data=None,
     cwd: Optional[str] = None,
     group_data_directories=None,
 ):
-    inventory_func = None
-
-    # (Un)fortunately the CLI is pretty flexible for inventory inputs; we support a single hostname,
-    # a Python module.function import or a Python file path. All of these are kind of similar, and
-    # we want error handling to be a good user experience.
-    # Thus, we'll check for everything but also drop a warning to the console if the inventory looks
-    # like either an import or hostname but neither works.
-    if re.match("[a-zA-Z0-9\\._]+[\\.:][a-zA-Z0-9_]+", inventory):
-        # First, try loading the inventory as if it's a Python import function
+    # (Un)fortunately the CLI is pretty flexible for inventory inputs; we support inventory files, a
+    # single hostname, list of hosts, connectors, and python module.function or module:function
+    # imports.
+    #
+    # We check first for an inventory file, a list of hosts or anything with a connector, because
+    # (1) an inventory file is a common use case and (2) no other option can have a comma or an @
+    # symbol in them.
+    is_path_or_host_list_or_connector = (
+        path.exists(inventory) or "," in inventory or "@" in inventory
+    )
+    if not is_path_or_host_list_or_connector:
+        # Next, try loading the inventory from a python function. This happens before checking for a
+        # single-host inventory, so that your command does not stop working because somebody
+        # registered the domain `my.module.name`.
         inventory_func = try_import_module_attribute(inventory, raise_for_none=False)
-        if inventory_func is None:
-            try:
-                socket.gethostbyname(inventory)
-            except socket.gaierror:
-                logger.warning(f"{inventory} is neither a valid Python import or hostname.")
 
-    if inventory_func is None:
-        # If not an import, load as if from the filesystem *or* comma separated list, which also
-        # loads any all.py group data files (imported functions do not load group data).
+        # If the inventory does not refer to a module, we finally check if it refers to a reachable
+        # host
+        if inventory_func is None and _resolves_to_host(inventory):
+            is_path_or_host_list_or_connector = True
+
+    if is_path_or_host_list_or_connector:
+        # The inventory is either an inventory file or a (list of) hosts
         return make_inventory_from_files(inventory, override_data, cwd, group_data_directories)
+    elif inventory_func is None:
+        logger.warn(
+            f"{inventory} is neither an inventory file, a (list of) hosts or connectors "
+            "nor refers to a python module"
+        )
+        return Inventory.empty()
     else:
         return make_inventory_from_func(inventory_func, override_data)
 

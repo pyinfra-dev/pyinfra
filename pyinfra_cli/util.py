@@ -154,9 +154,11 @@ def try_import_module_attribute(path, prefix=None, raise_for_none=True):
     if ":" in path:
         # Allow a.module.name:function syntax
         mod_path, attr_name = path.rsplit(":", 1)
-    else:
+    elif "." in path:
         # And also a.module.name.function
         mod_path, attr_name = path.rsplit(".", 1)
+    else:
+        return None
 
     possible_modules = [mod_path]
     if prefix:

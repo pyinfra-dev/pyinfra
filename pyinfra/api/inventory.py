@@ -37,6 +37,10 @@ class Inventory:
 
     state: "State"
 
+    @staticmethod
+    def empty():
+        return Inventory(([], {}))
+
     def __init__(self, names_data, override_data=None, **groups):
         # Setup basics
         self.groups = defaultdict(list)  # lists of Host objects
