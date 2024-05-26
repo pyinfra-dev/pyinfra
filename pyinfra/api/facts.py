@@ -161,7 +161,6 @@ def _handle_fact_kwargs(state, host, cls, args, kwargs):
     fact_kwargs = {key: value for key, value in kwargs.items() if key not in global_kwargs}
 
     if args or fact_kwargs:
-        print(args, fact_kwargs)
         # Merges args & kwargs into a single kwargs dictionary
         fact_kwargs = getcallargs(cls().command, *args, **fact_kwargs)
 
