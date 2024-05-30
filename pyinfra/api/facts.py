@@ -10,6 +10,7 @@ other host B while I operate on this host A).
 
 from __future__ import annotations
 
+import inspect
 import re
 from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
@@ -32,7 +33,7 @@ from paramiko import SSHException
 
 from pyinfra import logger
 from pyinfra.api import StringCommand
-from pyinfra.api.arguments import pop_global_arguments
+from pyinfra.api.arguments import all_global_arguments, pop_global_arguments
 from pyinfra.api.util import (
     get_kwargs_str,
     log_error_or_warning,
@@ -75,6 +76,17 @@ class FactBase(Generic[T]):
         super().__init_subclass__()
         module_name = cls.__module__.replace("pyinfra.facts.", "")
         cls.name = f"{module_name}.{cls.__name__}"
+
+        # Check that fact's `command` method does not inadvertently take a global
+        # argument, most commonly `name`.
+        if hasattr(cls, "command") and callable(cls.command):
+            command_args = set(inspect.signature(cls.command).parameters.keys())
+            global_args = set([name for name, _ in all_global_arguments()])
+            command_global_args = command_args & global_args
+
+            if len(command_global_args) > 0:
+                names = ", ".join(command_global_args)
+                raise TypeError(f"{cls.name}'s arguments {names} are reserved for global arguments")
 
     @staticmethod
     def default() -> T:

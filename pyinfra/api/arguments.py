@@ -9,6 +9,7 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Type,
     TypeVar,
     Union,
     cast,
@@ -228,6 +229,11 @@ class AllArguments(ConnectorArguments, MetaArguments, ExecutionArguments):
     pass
 
 
+def all_global_arguments() -> List[tuple[str, Type]]:
+    """Return all global arguments and their types."""
+    return list(get_type_hints(AllArguments).items())
+
+
 all_argument_meta: dict[str, ArgumentMeta] = {
     **auth_argument_meta,
     **shell_argument_meta,
@@ -305,7 +311,7 @@ def pop_global_arguments(
     arguments: dict[str, Any] = {}
     found_keys: list[str] = []
 
-    for key, type_ in get_type_hints(AllArguments).items():
+    for key, type_ in all_global_arguments():
         if keys_to_check and key not in keys_to_check:
             continue
 
