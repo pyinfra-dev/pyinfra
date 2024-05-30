@@ -3,11 +3,11 @@
     "facts": {
         "rpm.RpmPackages": {},
         "rpm.RpmPackage": {
-            "name=something.rpm": {
+            "package=something.rpm": {
                 "name": "something",
                 "version": "abc"
             },
-            "name=something": null
+            "package=something": null
         }
     },
     "commands": [

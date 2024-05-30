@@ -1,4 +1,5 @@
 import re
+import shlex
 
 from pyinfra.api import FactBase
 
@@ -54,8 +55,10 @@ class DebPackage(FactBase):
 
     requires_command = "dpkg"
 
-    def command(self, name):
-        return "! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}".format(name)
+    def command(self, package):
+        return "! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}".format(
+            shlex.quote(package)
+        )
 
     def process(self, output):
         data = {}

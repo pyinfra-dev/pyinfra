@@ -1,6 +1,6 @@
 {
     "arg": "vim",
-    "command": "repoquery --queryformat \"%{NAME} %{VERSION}-%{RELEASE}\\n\" --whatprovides vim || true",
+    "command": "repoquery --queryformat '%{NAME} %{VERSION}-%{RELEASE}\\n' --whatprovides vim || true",
     "requires_command": "repoquery",
     "output": [
         "vim-enhanced 8.0.1763-15.el8"

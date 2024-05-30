@@ -171,12 +171,12 @@ def ensure_rpm(state, host, files, source, present, package_manager_command):
         source = temp_filename
 
     # Check for file .rpm information
-    info = host.get_fact(RpmPackage, name=source)
+    info = host.get_fact(RpmPackage, package=source)
     exists = False
 
     # We have info!
     if info:
-        current_package = host.get_fact(RpmPackage, name=info["name"])
+        current_package = host.get_fact(RpmPackage, package=info["name"])
         if current_package and current_package["version"] == info["version"]:
             exists = True
 

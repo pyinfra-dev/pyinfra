@@ -6,11 +6,11 @@
     "facts": {
         "rpm.RpmPackages": {},
         "rpm.RpmPackageProvides": {
-            "name=vim": [
+            "package=vim": [
                 ["vim-enhanced", "1.2.3"],
                 ["vim-enhanced", "2.3.4"]
             ],
-            "name=kernel": [
+            "package=kernel": [
                 ["kernel", "abc"],
                 ["kernel-core", "abc"]
             ]

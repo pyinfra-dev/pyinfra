@@ -14,9 +14,9 @@
             "vim-common": ["8.2.1081-1.fc32"]
         },
         "rpm.RpmPackageProvides": {
-            "name=git": null,
-            "name=vim-enhanced": null,
-            "name=vim-common": null
+            "package=git": null,
+            "package=vim-enhanced": null,
+            "package=vim-common": null
         }
     },
     "commands": [

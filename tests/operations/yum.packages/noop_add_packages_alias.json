@@ -7,7 +7,7 @@
             "vim-enhanced": ["1.2.3"]
         },
         "rpm.RpmPackageProvides": {
-            "name=vim": [["vim-enhanced", "1.2.3"]]
+            "package=vim": [["vim-enhanced", "1.2.3"]]
         }
     },
     "commands": [],

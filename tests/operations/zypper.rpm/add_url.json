@@ -6,7 +6,7 @@
             "path=_tempfile_.rpm": null
         },
         "rpm.RpmPackage": {
-            "name=_tempfile_.rpm": null
+            "package=_tempfile_.rpm": null
         },
         "server.Which": {
             "command=curl": "yes"

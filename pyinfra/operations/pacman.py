@@ -75,8 +75,5 @@ def packages(
         present,
         install_command="pacman --noconfirm -S",
         uninstall_command="pacman --noconfirm -R",
-        expand_package_fact=lambda package: host.get_fact(
-            PacmanUnpackGroup,
-            name=package,
-        ),
+        expand_package_fact=lambda package: host.get_fact(PacmanUnpackGroup, package=package),
     )

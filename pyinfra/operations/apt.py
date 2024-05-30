@@ -233,18 +233,14 @@ def deb(src, present=True, force=False):
         src = temp_filename
 
     # Check for file .deb information (if file is present)
-    info = host.get_fact(DebPackage, name=src)
+    info = host.get_fact(DebPackage, package=src)
     current_packages = host.get_fact(DebPackages)
 
     exists = False
 
     # We have deb info! Check against installed packages
-    if info:
-        if (
-            info["name"] in current_packages
-            and info.get("version") in current_packages[info["name"]]
-        ):
-            exists = True
+    if info and info.get("version") in current_packages.get(info.get("name"), {}):
+        exists = True
 
     # Package does not exist and we want?
     if present:

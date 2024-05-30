@@ -6,7 +6,7 @@
     "facts": {
         "rpm.RpmPackages": {},
         "rpm.RpmPackageProvides": {
-            "name=docker-ce": null
+            "package=docker-ce": null
         }
     },
     "commands": [

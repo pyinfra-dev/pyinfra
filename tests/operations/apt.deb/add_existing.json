@@ -6,7 +6,7 @@
             "path=_tempfile_": ""
         },
         "deb.DebPackage": {
-            "name=_tempfile_": {
+            "package=_tempfile_": {
                 "name": "test",
                 "version": 0
             }

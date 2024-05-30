@@ -5,7 +5,7 @@
             "vim-enhanced": ["abc"]
         },
         "rpm.RpmPackageProvides": {
-            "name=vim": [["vim-enhanced", "abc"]]
+            "package=vim": [["vim-enhanced", "abc"]]
         }
     },
     "commands": [],

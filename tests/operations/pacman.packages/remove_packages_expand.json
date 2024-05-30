@@ -5,9 +5,9 @@
     },
     "facts": {
         "pacman.PacmanUnpackGroup": {
-            "name=curl": ["curl"],
-            "name=i-dont-exist": [],
-            "name=xorg-fonts": ["xorg-font-util", "xorg-font-encodings"]
+            "package=curl": ["curl"],
+            "package=i-dont-exist": [],
+            "package=xorg-fonts": ["xorg-font-util", "xorg-font-encodings"]
         },
         "pacman.PacmanPackages": {
             "curl": ["1"],

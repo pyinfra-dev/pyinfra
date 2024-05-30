@@ -9,9 +9,9 @@
             "something": [""]
         },
         "rpm.RpmPackageProvides": {
-            "name=git": null,
-            "name=python-devel": null,
-            "name=something": null
+            "package=git": null,
+            "package=python-devel": null,
+            "package=something": null
         }
     },
     "commands": [

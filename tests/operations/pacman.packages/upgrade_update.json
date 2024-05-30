@@ -6,7 +6,7 @@
     },
     "facts": {
         "pacman.PacmanUnpackGroup": {
-            "name=curl": ["curl"]
+            "package=curl": ["curl"]
         },
         "pacman.PacmanPackages": {
             "curl": ["1"]

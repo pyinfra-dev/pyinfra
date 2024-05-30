@@ -2,7 +2,7 @@
     "args": [["xorg-fonts"]],
     "facts": {
         "pacman.PacmanUnpackGroup": {
-            "name=xorg-fonts": ["xorg-font-util", "xorg-font-encodings"]
+            "package=xorg-fonts": ["xorg-font-util", "xorg-font-encodings"]
         },
         "pacman.PacmanPackages": {}
     },
