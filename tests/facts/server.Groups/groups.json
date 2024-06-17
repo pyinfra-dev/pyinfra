@@ -1,5 +1,6 @@
 {
-    "command": "cat /etc/group",
+    "command": "getent group",
+    "requires_command": "getent",
     "output": [
         "lpadmin:x:114:vagrant",
         "sambashare:x:115:vagrant",
