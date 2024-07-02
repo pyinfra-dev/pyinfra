@@ -441,11 +441,13 @@ class Users(FactBase):
         }
     """
 
-    def command(self):
-        return """
+    def requires_command(self) -> str:
+        return "getent"
 
-        for i in `cat /etc/passwd | cut -d: -f1`; do
-            ENTRY=`grep ^$i: /etc/passwd`;
+    def command(self) -> str:
+        return """
+        for i in `getent passwd | cut -d: -f1`; do
+            ENTRY=`getent passwd | grep ^$i:`;
             LASTLOG_RAW=`(lastlog -u $i 2> /dev/null || lastlogin $i 2> /dev/null)`;
             LASTLOG=`echo $LASTLOG_RAW | grep ^$i | tr -s ' '`;
             PASSWORD=`grep ^$i: /etc/shadow | cut -d: -f2`;
