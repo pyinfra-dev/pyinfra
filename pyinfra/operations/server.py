@@ -568,7 +568,7 @@ def packages(
     elif host.get_fact(Which, command="pacman"):
         package_operation = pacman.packages
 
-    elif host.get_fact(Which, command="xbps"):
+    elif host.get_fact(Which, command="xbps-install") or host.get_fact(Which, command="xbps"):
         package_operation = xbps.packages
 
     elif host.get_fact(Which, command="yum"):
