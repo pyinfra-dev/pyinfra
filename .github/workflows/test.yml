@@ -57,7 +57,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install '.[test]'
       - run: pytest --cov --disable-warnings
-      - uses: codecov/codecov-action@v3
+      - name: Upload coverage report to codecov
+        if: ${{ matrix.os == 'ubuntu-20.04' && matrix.python-version == '3.12' }}
+        uses: codecov/codecov-action@v3
 
   # End-to-end tests
   #
