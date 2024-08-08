@@ -554,7 +554,7 @@ def dump(
         )
     """
 
-    yield "{0} > {1}".format(
+    commands_bits = [
         make_mysql_command(
             executable="mysqldump",
             database=database,
@@ -563,8 +563,11 @@ def dump(
             host=mysql_host,
             port=mysql_port,
         ),
-        dest,
-    )
+        ">",
+        QuoteString(dest),
+    ]
+
+    yield StringCommand(*commands_bits)
 
 
 @operation(is_idempotent=False)
