@@ -23,7 +23,7 @@ Third party pull requests help expand pyinfra's functionality and are essential 
 # python -m venv / pyenv virtualenv / virtualenv
 
 # Clone the repo
-git clone git@github.com:Fizzadar/pyinfra.git
+git clone git@github.com:pyinfra-dev/pyinfra.git
 
 # Install the package in editable mode with development requirements
 cd pyinfra
