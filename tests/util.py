@@ -16,7 +16,7 @@ def get_command_string(command):
     masked_value = command.get_masked_value()
     if value == masked_value:
         return value
-    return [value, masked_value]
+    return {"raw": value, "masked": masked_value}
 
 
 def make_inventory(hosts=("somehost", "anotherhost"), **kwargs):

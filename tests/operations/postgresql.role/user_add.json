@@ -10,9 +10,9 @@
         }
     },
     "commands": [
-        [
-            "psql -Ac 'CREATE ROLE \"testuser\" LOGIN CONNECTION LIMIT 15 PASSWORD '\"'\"'abc'\"'\"''",
-            "psql -Ac 'CREATE ROLE \"testuser\" LOGIN CONNECTION LIMIT 15 ***'"
-        ]
+        {
+            "raw": "psql -Ac 'CREATE ROLE \"testuser\" LOGIN CONNECTION LIMIT 15 PASSWORD '\"'\"'abc'\"'\"''",
+            "masked":"psql -Ac 'CREATE ROLE \"testuser\" LOGIN CONNECTION LIMIT 15 ***'"
+        }
     ]
 }

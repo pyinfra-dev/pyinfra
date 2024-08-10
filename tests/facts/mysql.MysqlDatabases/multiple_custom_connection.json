@@ -1,9 +1,9 @@
 {
     "arg": ["myuser", "mypassword", "myhost", "myport"],
-    "command": [
-        "mysql -u\"myuser\" -p\"mypassword\" -hmyhost -Pmyport -Be 'SELECT * FROM information_schema.SCHEMATA'",
-        "mysql -u\"myuser\" *** -hmyhost -Pmyport -Be 'SELECT * FROM information_schema.SCHEMATA'"
-    ],
+    "command": {
+        "raw": "mysql -u\"myuser\" -p\"mypassword\" -hmyhost -Pmyport -Be 'SELECT * FROM information_schema.SCHEMATA'",
+        "masked": "mysql -u\"myuser\" *** -hmyhost -Pmyport -Be 'SELECT * FROM information_schema.SCHEMATA'"
+    },
     "requires_command": "mysql",
     "output": [
         "CATALOG_NAME\tSCHEMA_NAME\tDEFAULT_CHARACTER_SET_NAME\tDEFAULT_COLLATION_NAME\tSQL_PATH",

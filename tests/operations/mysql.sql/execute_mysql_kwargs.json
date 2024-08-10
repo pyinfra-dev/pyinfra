@@ -7,10 +7,10 @@
         "mysql_port": 100
     },
     "commands": [
-        [
-            "mysql -u\"someuser\" -p\"somepass\" -h127.0.0.1 -P100 -Be 'SELECT 1'",
-            "mysql -u\"someuser\" *** -h127.0.0.1 -P100 -Be 'SELECT 1'"
-        ]
+        {
+            "raw": "mysql -u\"someuser\" -p\"somepass\" -h127.0.0.1 -P100 -Be 'SELECT 1'",
+            "masked": "mysql -u\"someuser\" *** -h127.0.0.1 -P100 -Be 'SELECT 1'"
+        }
     ],
     "idempotent": false
 }

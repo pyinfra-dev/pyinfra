@@ -6,7 +6,10 @@
         "mysql_password": "somepass"
     },
     "commands": [
-        "mysqldump somedb -u\"root\" *** > somefile"
+        {
+            "raw": "mysqldump somedb -u\"root\" -p\"somepass\" > somefile",
+            "masked": "mysqldump somedb -u\"root\" *** > somefile"
+        }
     ],
     "idempotent": false
 }

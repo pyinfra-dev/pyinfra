@@ -8,10 +8,10 @@
         "psql_port": 3306
     },
     "commands": [
-        [
-            "PGPASSWORD=\"somepass\" pg_dump -d somedb -U root -h localhost -p 3306 > somefile",
-            "*** pg_dump -d somedb -U root -h localhost -p 3306 > somefile"
-        ]
+        {
+            "raw": "PGPASSWORD=\"somepass\" pg_dump -d somedb -U root -h localhost -p 3306 > somefile",
+            "masked": "*** pg_dump -d somedb -U root -h localhost -p 3306 > somefile"
+        }
     ],
     "idempotent": false
 }

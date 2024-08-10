@@ -6,10 +6,10 @@
         "psql_password": "somepass"
     },
     "commands": [
-        [
-            "PGPASSWORD=\"somepass\" psql -d somedb -U root < somefile",
-            "*** psql -d somedb -U root < somefile"
-        ]
+        {
+            "raw": "PGPASSWORD=\"somepass\" psql -d somedb -U root < somefile",
+            "masked": "*** psql -d somedb -U root < somefile"
+        }
     ],
     "idempotent": false
 }
