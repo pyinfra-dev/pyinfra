@@ -89,7 +89,6 @@ def _resolves_to_host(maybe_host: str) -> bool:
         socket.getaddrinfo(maybe_host, port=None)
         return True
     except socket.gaierror:
-        logger.debug('Checking if "%s" is an SSH alias', maybe_host)
         alias = _get_ssh_alias(maybe_host)
         if not alias:
             return False
@@ -102,7 +101,13 @@ def _resolves_to_host(maybe_host: str) -> bool:
 
 
 def _get_ssh_alias(maybe_host: str) -> Optional[str]:
+    logger.debug('Checking if "%s" is an SSH alias', maybe_host)
+
     ssh_config = get_ssh_config()
+
+    if ssh_config is None:
+        logger.debug("Could not load SSH config")
+        return None
 
     options = ssh_config.lookup(maybe_host)
     alias = options.get("hostname")
