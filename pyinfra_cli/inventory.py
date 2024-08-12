@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
 
 from pyinfra import logger
 from pyinfra.api.inventory import Inventory
+from pyinfra.connectors.sshuserclient.client import get_ssh_config
 from pyinfra.context import ctx_inventory
 
 from .exceptions import CliError
@@ -88,7 +89,28 @@ def _resolves_to_host(maybe_host: str) -> bool:
         socket.getaddrinfo(maybe_host, port=None)
         return True
     except socket.gaierror:
-        return False
+        logger.debug('Checking if "%s" is an SSH alias', maybe_host)
+        alias = _get_ssh_alias(maybe_host)
+        if not alias:
+            return False
+
+        try:
+            socket.getaddrinfo(alias, port=None)
+            return True
+        except socket.gaierror:
+            return False
+
+
+def _get_ssh_alias(maybe_host: str) -> Optional[str]:
+    ssh_config = get_ssh_config()
+
+    options = ssh_config.lookup(maybe_host)
+    alias = options.get("hostname")
+
+    if alias is None or maybe_host == alias:
+        return None
+
+    return alias
 
 
 def make_inventory(
