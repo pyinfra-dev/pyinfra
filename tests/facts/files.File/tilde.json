@@ -1,0 +1,16 @@
+{
+    "arg": "~/.bashrc",
+    "command": "! (test -e ~/.bashrc || test -L ~/.bashrc ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' ~/.bashrc 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' ~/.bashrc )",
+    "output": [
+        "user=pyinfra group=pyinfra mode=-rw-r--r-- atime=1723483091 mtime=1722760187 ctime=1722760187 size=4310 '/home/pyinfra/.bashrc'"
+    ],
+    "fact": {
+        "user": "pyinfra",
+        "group": "pyinfra",
+        "mode": 644,
+        "atime": "2024-08-12T17:18:11",
+        "mtime": "2024-08-04T08:29:47",
+        "ctime": "2024-08-04T08:29:47",
+        "size": 4310
+    }
+}

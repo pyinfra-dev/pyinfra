@@ -5,6 +5,7 @@ The files facts provide information about the filesystem and it's contents on th
 from __future__ import annotations
 
 import re
+import shlex
 import stat
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
@@ -109,13 +110,19 @@ class File(FactBase[Union[FileDict, Literal[False], None]]):
     type = "file"
 
     def command(self, path):
+        if path.startswith("~/"):
+            # Do not quote leading tilde to ensure that it gets properly expanded by the shell
+            path = f'~/{shlex.quote(path.removeprefix("~/"))}'
+        else:
+            path = QuoteString(path)
+
         return make_formatted_string_command(
             (
                 # only stat if the path exists (file or symlink)
                 "! (test -e {0} || test -L {0} ) || "
                 "( {linux_stat_command} {0} 2> /dev/null || {bsd_stat_command} {0} )"
             ),
-            QuoteString(path),
+            path,
             linux_stat_command=LINUX_STAT_COMMAND,
             bsd_stat_command=BSD_STAT_COMMAND,
         )
