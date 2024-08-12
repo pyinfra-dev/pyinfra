@@ -112,7 +112,7 @@ class File(FactBase[Union[FileDict, Literal[False], None]]):
     def command(self, path):
         if path.startswith("~/"):
             # Do not quote leading tilde to ensure that it gets properly expanded by the shell
-            path = f'~/{shlex.quote(path.removeprefix("~/"))}'
+            path = f'~/{shlex.quote(path[2:])}'
         else:
             path = QuoteString(path)
 
