@@ -103,6 +103,7 @@ def _resolves_to_host(maybe_host: str) -> bool:
 def _get_ssh_alias(maybe_host: str) -> Optional[str]:
     logger.debug('Checking if "%s" is an SSH alias', maybe_host)
 
+    # Note this does not cover the case where `host.data.ssh_config_file` is used
     ssh_config = get_ssh_config()
 
     if ssh_config is None:
