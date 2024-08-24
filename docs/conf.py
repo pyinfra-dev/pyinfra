@@ -46,6 +46,8 @@ html_theme_options = {
     "primary_doc_version": "3.x",
 }
 
+myst_heading_anchors = 3
+
 templates_path = ["templates"]
 
 html_favicon = "static/logo_small.png"

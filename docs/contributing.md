@@ -7,7 +7,7 @@ Third party pull requests help expand pyinfra's functionality and are essential 
 ## Guides
 
 + [How to write operations](api/operations)
-+ [How to write facts](api/facts)
++ [How to write facts](api/operations.md#facts)
 + [How to write connectors](api/connectors)
 + [API reference](api/reference)
 
