@@ -46,7 +46,7 @@ By default pyinfra only prints high level information (this host connected, this
 
 ## Inventory
 
-When using pyinfra inventory can be provided directly via the command line or [defined in a file](./deploys.html#inventory). Both support the full range of [connectors](./connectors) and multiple hosts. Some CLI examples:
+When using pyinfra inventory can be provided directly via the command line or [defined in a file](./inventory-data). Both support the full range of [connectors](./connectors) and multiple hosts. Some CLI examples:
 
 ```sh
 # Load inventory hosts from a file

@@ -39,8 +39,8 @@ pyinfra aims to be compatible with all Unix-like operating systems and is curren
     * HardenedBSD 11
     * DragonflyBSD 5
 + OpenSUSE (leap15 + tumbleweed)
-+ macOS 10.15 (with [`@local` connector](connectors.html#local))
-+ Docker (with [`@docker` connector](connectors.html#docker))
++ macOS 10.15 (with [`@local` connector](./connectors/local))
++ Docker (with [`@docker` connector](./connectors/docker))
 
 In general, the only requirement on the remote side is shell access. POSIX commands are used where possible for facts and operations, so most of the ``server`` and ``files`` operations should work anywhere POSIX.
 

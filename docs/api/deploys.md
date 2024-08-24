@@ -34,7 +34,7 @@ install_mariadb()
 
 ## Global Arguments
 
-Deploys accept the same [global arguments as as operations](../deploys.html#global-arguments) and they apply to every operation call within that deploy. Taking the above example:
+Deploys accept the same [global arguments as operations](../arguments) and they apply to every operation call within that deploy. Taking the above example:
 
 
 ```py
