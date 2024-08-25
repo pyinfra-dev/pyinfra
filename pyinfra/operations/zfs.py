@@ -33,14 +33,14 @@ def dataset(
 
     .. code:: python
 
-    zfs.dataset(
-        "tank/srv",
-        mountpoint="/srv",
-        compression="lz4",
-        properties={"com.sun:auto_snapshot": "true"}
-    )
-    zfs.dataset("tank/vm-disks/db_srv_04", volume_size="32G") # creates a volume
-    zfs.dataset("tank/home@old_version", present=False)
+        zfs.dataset(
+            "tank/srv",
+            mountpoint="/srv",
+            compression="lz4",
+            properties={"com.sun:auto_snapshot": "true"}
+        )
+        zfs.dataset("tank/vm-disks/db_srv_04", volume_size="32G") # creates a volume
+        zfs.dataset("tank/home@old_version", present=False)
 
     """
 
@@ -99,7 +99,7 @@ def snapshot(snapshot_name, present=True, recursive=False, properties={}, **extr
 
     .. code:: python
 
-    zfs.snapshot("tank/home@weekly_backup")
+        zfs.snapshot("tank/home@weekly_backup")
 
     """
     properties.update(extra_props)
@@ -134,7 +134,7 @@ def volume(
 
     .. code:: python
 
-    zfs.volume("tank/vm-disks/db_srv_04", "32G")
+        zfs.volume("tank/vm-disks/db_srv_04", "32G")
 
     """
     properties.update(extra_props)
@@ -163,7 +163,7 @@ def filesystem(fs_name, present=True, recursive=False, properties={}, **extra_pr
 
     .. code:: python
 
-    zfs.filesystem("tank/vm-disks/db_srv_04", "32G")
+        zfs.filesystem("tank/vm-disks/db_srv_04", "32G")
 
     """
     properties.update(extra_props)

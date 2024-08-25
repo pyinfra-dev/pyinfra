@@ -109,6 +109,7 @@ class NetworkDevices(FactBase):
     ``ipv6_addresses`` facts for easier-to-use shortcuts to get device addresses.
 
     .. code:: python
+
         "enp1s0": {
             "ether": "12:34:56:78:9A:BC",
             "mtu": 1500,

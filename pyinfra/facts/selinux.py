@@ -85,6 +85,7 @@ class SEPorts(FactBase):
     Note: This fact requires root privileges.
 
     .. code:: python
+
         {
             "tcp": { 22: "ssh_port_t", ...},
             "udp": { ...}

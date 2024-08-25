@@ -256,7 +256,7 @@ def line(
         change bits of lines, see ``files.replace``.
 
     Regex line escaping:
-        If matching special characters (eg a crontab line containing *), remember to escape
+        If matching special characters (eg a crontab line containing ``*``), remember to escape
         it first using Python's ``re.escape``.
 
     Backup:
@@ -523,7 +523,7 @@ def sync(
     + mode: permissions of the files
     + dir_mode: permissions of the directories
     + delete: delete remote files not present locally
-    + exclude: string or list/tuple of strings to match & exclude files (eg *.pyc)
+    + exclude: string or list/tuple of strings to match & exclude files (eg ``*.pyc``)
     + exclude_dir: string or list/tuple of strings to match & exclude directories (eg node_modules)
     + add_deploy_dir: interpret src as relative to deploy directory instead of current directory
 
