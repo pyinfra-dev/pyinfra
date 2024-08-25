@@ -7,7 +7,7 @@ def title_line(char, string):
 
 def format_doc_line(line):
     # Bold the <arg>: part of each line
-    line = re.sub(r"\+ ([0-9a-z_\/]+)(.*)", r"+ **\1**\2", line)
+    line = re.sub(r"\+ ([0-9a-z_\/\*]+)(.*)", r"+ **\1**\2", line)
 
     # Strip the first 4 characters (first indent from docstring)
     return line[4:]
