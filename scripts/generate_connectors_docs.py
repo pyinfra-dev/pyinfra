@@ -36,6 +36,7 @@ def build_connectors_docs():
             lines.append(title_line("~", "Examples"))
             lines.append("")
             lines.append(cleandoc(examples_doc))
+            lines.append("")
         else:
             data_title = "Usage"
             lines.append(data_title)
