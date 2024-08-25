@@ -137,7 +137,7 @@ shell_argument_meta: dict[str, ArgumentMeta] = {
     ),
     "_chdir": ArgumentMeta(
         "Directory to switch to before executing the command.",
-        default=lambda _: "",
+        default=lambda _: None,
     ),
     "_env": ArgumentMeta(
         "Dictionary of environment variables to set.",
