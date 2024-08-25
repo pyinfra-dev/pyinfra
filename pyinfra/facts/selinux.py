@@ -58,7 +58,7 @@ class FileContext(FactBase):
 class FileContextMapping(FactBase):
     """
     Returns structured SELinux file context data for the specified target path prefix
-    using the same format as :ref:`selinux.FileContext`.  If there is no mapping, it returns ``{}``
+    using the same format as :ref:`facts:selinux.FileContext`.  If there is no mapping, it returns ``{}``
     Note: This fact requires root privileges.
     """
 
