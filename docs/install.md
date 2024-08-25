@@ -1,3 +1,8 @@
+---
+# Ignore warning about this page not being included in any toctree
+orphan: true
+---
+
 # Installation
 
 ## Pip
