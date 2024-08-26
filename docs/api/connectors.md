@@ -86,3 +86,14 @@ class LocalConnector(BaseConnector):
             bool: indicating success or failure.
         """
 ```
+
+## pyproject.toml
+
+In order for pyinfra to gain knowledge about your connector, you need to add the following snippet to your connector's `pyproject.toml`:
+
+```toml
+[project.entry-points.'pyinfra.connectors']
+# Key = Entry point name
+# Value = module_path:class_name
+custom = 'pyinfra_custom_connector.connector:LoggingConnector'
+```
