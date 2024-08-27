@@ -184,7 +184,7 @@ def worktree(
     + from_remote_branch: a 2-tuple ``(remote, branch)`` that identifies a remote branch
     + present: whether the working tree should exist
     + assume_repo_exists: whether to assume the main repo exists
-    + force: remove unclean working tree if should not exist
+    + force: whether to use ``--force`` when adding/removing worktrees
     + user: chown files to this user after
     + group: chown files to this group after
 
@@ -203,6 +203,14 @@ def worktree(
             repo="/usr/local/src/pyinfra/master",
             worktree="/usr/local/src/pyinfra/hotfix",
             commitish="4e091aa0"
+        )
+
+        git.worktree(
+            name="Create a worktree from the tag `4e091aa0`, even if already registered",
+            repo="/usr/local/src/pyinfra/master",
+            worktree="/usr/local/src/pyinfra/2.x",
+            commitish="2.x",
+            force=True
         )
 
         git.worktree(
@@ -294,6 +302,9 @@ def worktree(
             command_parts.append("-b {0}".format(new_branch))
         elif detached:
             command_parts.append("--detach")
+
+        if force:
+            command_parts.append("--force")
 
         command_parts.append(worktree)
 
