@@ -1,0 +1,18 @@
+{
+    "args": ["/home/myworktree"],
+    "kwargs": {
+        "pull": false
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/home/myworktree": {
+                "mode": 0
+            }
+        },
+        "git.GitTrackingBranch" : {
+            "repo=/home/myworktree": "origin/master"
+        }
+    },
+    "commands": [],
+    "noop_description": "Pull is disabled"
+}

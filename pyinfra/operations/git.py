@@ -251,6 +251,15 @@ def worktree(
         )
 
         git.worktree(
+            name="Idempotent worktree creation, never pulls",
+            repo="/usr/local/src/pyinfra/master",
+            worktree="/usr/local/src/pyinfra/hotfix",
+            new_branch="v1.0",
+            commitish="v1.0",
+            pull=False
+        )
+
+        git.worktree(
             name="Pull an existing worktree already linked to a tracking branch",
             repo="/usr/local/src/pyinfra/master",
             worktree="/usr/local/src/pyinfra/hotfix"
@@ -317,9 +326,12 @@ def worktree(
 
     # It exists and we still want it => pull/rebase it
     elif host.get_fact(Directory, path=worktree) and present:
+        if not pull:
+            host.noop("Pull is disabled")
+
         # pull the worktree only if it's already linked to a tracking branch or
         # if a remote branch is set
-        if host.get_fact(GitTrackingBranch, repo=worktree) or from_remote_branch:
+        elif host.get_fact(GitTrackingBranch, repo=worktree) or from_remote_branch:
             command = "cd {0} && git pull".format(worktree)
 
             if rebase:
