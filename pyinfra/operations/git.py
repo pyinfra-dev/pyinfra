@@ -25,15 +25,23 @@ def config(key: str, value: str, multi_value=False, repo: str | None = None):
     + multi_value: Add the value rather than set it for settings that can have multiple values
     + repo: specify the git repo path to edit local config (defaults to global)
 
-    **Example:**
+    **Examples:**
 
     .. code:: python
 
         git.config(
-            name="Ensure user name is set for a repo",
+            name="Always prune specified repo",
+            key="fetch.prune",
+            value="true",
+            repo="/usr/local/src/pyinfra",
+        )
+
+        git.config(
+            name="Ensure user name is set for all repos of specified user",
             key="user.name",
             value="Anon E. Mouse",
-            repo="/usr/local/src/pyinfra",
+            _sudo=True,
+            _sudo_user="anon"
         )
 
     """
