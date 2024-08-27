@@ -1,0 +1,13 @@
+{
+    "args": ["key", "value"],
+    "kwargs": {
+        "system": true
+    },
+    "facts": {
+        "git.GitConfig": {
+            "key": ["value"]
+        }
+    },
+    "commands": [],
+    "noop_description": "git config key is set to value"
+}
