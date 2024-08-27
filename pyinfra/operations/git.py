@@ -57,7 +57,7 @@ def config(key: str, value: str, multi_value=False, repo: str | None = None, sys
     existing_config = {}
 
     if not repo:
-        existing_config = host.get_fact(GitConfig)
+        existing_config = host.get_fact(GitConfig, system=system)
 
     # Only get the config if the repo exists at this stage
     elif host.get_fact(Directory, path=unix_path_join(repo, ".git")):
