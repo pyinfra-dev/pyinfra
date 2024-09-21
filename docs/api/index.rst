@@ -39,14 +39,14 @@ Basic Localhost Example
    connect_all(state)
 
    # Start adding operations
-   add_op(
+   result1 = add_op(
        state,
        server.user,
        user="pyinfra",
        home="/home/pyinfra",
        shell="/bin/bash",
    )
-   add_op(
+   result2 = add_op(
        state,
        server.shell,
        name="Run some shell commands",
@@ -55,6 +55,11 @@ Basic Localhost Example
 
    # And finally we run the ops
    run_ops(state)
+
+   # add_op returns an OperationMeta for each op, letting you access stdout, stderr, etc. after they run
+   host = state.hosts.inventory['@local']
+   print(result1.changed, result1[host].stdout, result1[host].stderr)
+   print(result2.changed, result2[host].stdout, result2[host].stderr)
 
    # We can also get facts for all the hosts
    # https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.facts.html
