@@ -5,7 +5,7 @@
     },
     "facts" :{
         "postgres.PostgresDatabases": {
-            "psql_host=None, psql_password=None, psql_port=None, psql_user=None": {
+            "psql_host=None, psql_password=None, psql_port=None, psql_user=None, psql_database=None": {
                 "somedb": {}
             }
         }
