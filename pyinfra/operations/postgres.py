@@ -182,7 +182,7 @@ def database(
     psql_password: str | None = None,
     psql_host: str | None = None,
     psql_port: int | None = None,
-    psql_database: int | None = None,
+    psql_database: str | None = None,
 ):
     """
     Add/remove PostgreSQL databases.
@@ -278,7 +278,7 @@ def dump(
     psql_password: str | None = None,
     psql_host: str | None = None,
     psql_port: int | None = None,
-    psql_database: int | None = None,
+    psql_database: str | None = None,
 ):
     """
     Dump a PostgreSQL database into a ``.sql`` file. Requires ``pg_dump``.
@@ -320,7 +320,7 @@ def load(
     psql_password: str | None = None,
     psql_host: str | None = None,
     psql_port: int | None = None,
-    psql_database: int | None = None,
+    psql_database: str | None = None,
 ):
     """
     Load ``.sql`` file into a database.
