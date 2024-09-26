@@ -236,7 +236,7 @@ def database(
                 password=psql_password,
                 host=psql_host,
                 port=psql_port,
-                database=psql_database
+                database=psql_database,
             )
         else:
             host.noop("postgresql database {0} does not exist".format(database))
