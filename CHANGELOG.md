@@ -1,3 +1,14 @@
+# v3.1.1
+
+- Improve errors with 2.x style `@decorator` (vs `@decorator()`) functions
+- Document adding custom connectors (@simonhammes)
+- Add basic API example to docs (@pirate)
+- Fix sphinx warnings (@simonhammes)
+- Fix force & pull arguments in `git.worktree` operation
+- Fix `server.reboot` reconnection (@wackou)
+- Fix chroot/local connector non-utf file gets (@evoldstad)
+- Fix `AptSources` fact to parse components in order & with digits (@rsfzi)
+
 # v3.1
 
 Here's pyinfra 3.1 - a release primarily driven by contributors new and old - a HUGE THANK YOU to all of you who dedicate time to work on pushing pyinfra forward. New stuff:

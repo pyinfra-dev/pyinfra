@@ -180,13 +180,13 @@ def try_import_module_attribute(path, prefix=None, raise_for_none=True):
 
     if module is None:
         if raise_for_none:
-            raise CliError(f"No such module: {possible_modules[-1]}")
+            raise CliError(f"No such module: {possible_modules[0]}")
         return
 
     attr = getattr(module, attr_name, None)
     if attr is None:
         if raise_for_none:
-            raise CliError(f"No such attribute in module {possible_modules[-1]}: {attr_name}")
+            raise CliError(f"No such attribute in module {possible_modules[0]}: {attr_name}")
         return
 
     return attr

@@ -264,6 +264,9 @@ class SSHConnector(BaseConnector):
                 f"Host key for {e.hostname} does not match.",
             )
 
+    def disconnect(self) -> None:
+        self.get_sftp_connection.cache.clear()
+
     def run_shell_command(
         self,
         command: StringCommand,

@@ -184,7 +184,7 @@ class LocalConnector(BaseConnector):
                 raise IOError(output.stderr)
 
             # Load our file or IO object and write it to the temporary file
-            with open(temp_filename, encoding="utf-8") as temp_f:
+            with open(temp_filename, "rb") as temp_f:
                 with get_file_io(filename_or_io, "wb") as file_io:
                     data_bytes: bytes
 

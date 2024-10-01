@@ -89,7 +89,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
         sleep(delay)
         max_retries = round(reboot_timeout / interval)
 
-        host.connection = None  # remove the connection object
+        host.disconnect()  # make sure we are properly disconnected
         retries = 0
 
         while True:

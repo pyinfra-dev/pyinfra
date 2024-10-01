@@ -60,6 +60,14 @@ def deploy(name: Optional[str] = None, data_defaults=None):
     and wraps any operations called inside with any deploy-wide kwargs/data.
     """
 
+    if name and not isinstance(name, str):
+        raise PyinfraError(
+            (
+                "The `deploy` decorator must be called, ie `@deploy()`, "
+                "see: https://docs.pyinfra.com/en/3.x/compatibility.html#upgrading-pyinfra-from-2-x-3-x"  # noqa
+            )
+        )
+
     def decorator(func: Callable[P, Any]) -> PyinfraOperation[P]:
         func.deploy_name = name or func.__name__  # type: ignore[attr-defined]
         if data_defaults:
