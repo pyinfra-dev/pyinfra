@@ -31,6 +31,24 @@ class StrictPolicy(MissingHostKeyPolicy):
         )
 
 
+def append_hostkey(client, hostname, key): 
+    """Append hostname to the clients host_keys_file"""
+
+    with HOST_KEYS_LOCK:
+        host_keys = client.get_host_keys()
+        host_keys.add(hostname, key.get_name(), key)
+        # The paramiko client saves host keys incorrectly whereas the host keys object does
+        # this correctly, so use that with the client filename variable.
+        # See: https://github.com/paramiko/paramiko/pull/1989
+        host_key_entry = host_keys.get(hostname).to_line()
+        if host_key_entry is None: 
+            raise SSHException(
+                "Append Hostkey: Failed to parse host {0}, could not append to hostfile".format(hostname),
+            )
+        with open(client._host_keys_filename, "a") as host_keys_file: 
+            host_keys_file.write(host_key_entry.to_line())
+
+
 class AcceptNewPolicy(MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
         logger.warning(
@@ -40,13 +58,8 @@ class AcceptNewPolicy(MissingHostKeyPolicy):
             ),
         )
 
-        with HOST_KEYS_LOCK:
-            host_keys = client.get_host_keys()
-            host_keys.add(hostname, key.get_name(), key)
-            # The paramiko client saves host keys incorrectly whereas the host keys object does
-            # this correctly, so use that with the client filename variable.
-            # See: https://github.com/paramiko/paramiko/pull/1989
-            host_keys.save(client._host_keys_filename)
+        append_hostkey(client, hostname, key)
+        logger.warning("Added host key for {0} to known_hosts".format(hostname))
 
 
 class AskPolicy(MissingHostKeyPolicy):
@@ -60,13 +73,7 @@ class AskPolicy(MissingHostKeyPolicy):
             raise SSHException(
                 "AskPolicy: No host key for {0} found in known_hosts".format(hostname),
             )
-        with HOST_KEYS_LOCK:
-            host_keys = client.get_host_keys()
-            host_keys.add(hostname, key.get_name(), key)
-            # The paramiko client saves host keys incorrectly whereas the host keys object does
-            # this correctly, so use that with the client filename variable.
-            # See: https://github.com/paramiko/paramiko/pull/1989
-            host_keys.save(client._host_keys_filename)
+        append_hostkey(client, hostname, key)
         logger.warning("Added host key for {0} to known_hosts".format(hostname))
         return
 
