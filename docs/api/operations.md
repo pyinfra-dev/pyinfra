@@ -43,6 +43,9 @@ Operations can also call other operations using ``yield from`` syntax:
 yield from files.file._inner(
     path="/some/file",
     ...,
+
+    # Only arguments for the operation itself are allowed, global arguments
+    # such as e.g. _sudo are not accepted.
 )
 ```
 
