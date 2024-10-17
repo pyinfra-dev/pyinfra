@@ -1,0 +1,22 @@
+{
+    "arg": "upgrade",
+    "command": "LC_ALL=C DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" upgrade --dry-run",
+    "requires_command": "apt-get",
+    "output": [
+        "NOTE: This is only a simulation!",
+        "apt-get needs root privileges for real execution.",
+        "Keep also in mind that locking is deactivated,",
+        "so don't depend on the relevance to the real current situation!",
+        "Reading package lists... Done",
+        "Building dependency tree... Done",
+        "Reading state information... Done",
+        "Calculating upgrade... Done",
+        "0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded."
+    ],
+    "fact": {
+        "upgraded": 0,
+        "newly_installed": 0,
+        "removed": 0,
+        "not_upgraded": 0
+    }
+}
