@@ -191,13 +191,25 @@ class FakeHost:
         return "{0}.{1}".format(fact_cls.__module__.split(".")[-1], fact_cls.__name__)
 
     @staticmethod
-    def _check_fact_args(fact_cls, kwargs):
+    def _check_fact_args(fact_cls, args, kwargs):
         # Check that the arguments we're going to use to fake a fact are all actual arguments in
         # the fact class, otherwise the test will hide a bug in the underlying operation.
-        real_args = getfullargspec(fact_cls.command)
+        real_args = getfullargspec(fact_cls.command).args
+        print(f"{fact_cls}.command {real_args=}")
+
+        # First, remove the 'self' argument, if it is used
+        # FIXME: Should the command method not generally be `@staticmethod` ?
+        if real_args[0] == 'self':
+            self_arg = real_args.pop(0)
+            assert self_arg == 'self', f"First argument for the `{fact_cls}.command` method is not 'self'"
+
+        # Then fill the positional arguments:
+        for arg in args:
+            real_args.pop(0)
+
         for key in kwargs.keys():
             assert (
-                key in real_args.args
+                key in real_args
             ), f"Argument {key} is not a real argument in the `{fact_cls}.command` method"
 
     def get_fact(self, fact_cls, *args, **kwargs):
@@ -205,7 +217,7 @@ class FakeHost:
         fact = getattr(self.fact, fact_key, None)
         if fact is None:
             raise KeyError("Missing test fact data: {0}".format(fact_key))
-        if kwargs:
+        if kwargs or args:
             self._check_fact_args(fact_cls, args, kwargs)
             fact_ordered_keys = {_sort_kwargs_str(key): value for key, value in fact.items()}
             kwargs_str = _sort_kwargs_str(get_kwargs_str(kwargs))
