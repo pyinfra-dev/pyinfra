@@ -1,0 +1,14 @@
+{
+    "arg": "plugdev",
+    "command": "getent group plugdev || true",
+    "requires_command": "getent",
+    "output": [
+        "plugdev:x:46:sysadmin,myuser,abc"
+    ],
+    "fact": {
+        "name": "plugdev",
+        "password": "x",
+        "gid": 46,
+        "user_list": ["sysadmin", "myuser", "abc"]
+    }
+}

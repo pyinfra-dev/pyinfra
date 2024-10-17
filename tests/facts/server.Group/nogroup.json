@@ -1,0 +1,7 @@
+{
+    "arg": "doesnotexist",
+    "command": "getent group doesnotexist || true",
+    "requires_command": "getent",
+    "output": [],
+    "fact": null
+}
