@@ -200,13 +200,13 @@ class FakeHost:
                 key in real_args.args
             ), f"Argument {key} is not a real argument in the `{fact_cls}.command` method"
 
-    def get_fact(self, fact_cls, **kwargs):
+    def get_fact(self, fact_cls, *args, **kwargs):
         fact_key = self._get_fact_key(fact_cls)
         fact = getattr(self.fact, fact_key, None)
         if fact is None:
             raise KeyError("Missing test fact data: {0}".format(fact_key))
         if kwargs:
-            self._check_fact_args(fact_cls, kwargs)
+            self._check_fact_args(fact_cls, args, kwargs)
             fact_ordered_keys = {_sort_kwargs_str(key): value for key, value in fact.items()}
             kwargs_str = _sort_kwargs_str(get_kwargs_str(kwargs))
             if kwargs_str not in fact:

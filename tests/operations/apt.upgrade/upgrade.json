@@ -1,5 +1,13 @@
 {
     "args": [],
+    "facts": {
+        "apt.SimulateOperationWillChange": {
+            "upgraded": 15,
+            "newly_installed": 0,
+            "removed": 0,
+           "not_upgraded": 0
+        }
+    },
     "commands": [
         "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" upgrade"
     ],
