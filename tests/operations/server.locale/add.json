@@ -4,7 +4,7 @@
     ],
     "facts": {
         "files.FindInFile": {
-            "path=/etc/locale.gen, pattern=^.*fr_FR.UTF-8[[:space:]]\\+.*$": [
+            "interpolate_variables=False, path=/etc/locale.gen, pattern=^.*fr_FR.UTF-8[[:space:]]\\+.*$": [
                 "# fr_FR.UTF-8 UTF-8"
             ],
             "interpolate_variables=False, path=/etc/locale.gen, pattern=^.*fr_FR.UTF-8[[:space:]]\\+.*": [
