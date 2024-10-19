@@ -4,12 +4,11 @@
         "upgrade": true
     },
     "facts": {
-        "deb.DebPackages": {}
+        "deb.DebPackages": {},
+        "apt.SimulateOperationWillChange": {}
     },
     "commands": [
         "apt-get update",
         "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" upgrade"
-    ],
-    "idempotent": false,
-    "disable_idempotent_warning_reason": "package upgrades are always executed"
+    ]
 }
