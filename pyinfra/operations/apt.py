@@ -30,7 +30,11 @@ APT_UPDATE_FILENAME = "/var/lib/apt/periodic/update-success-stamp"
 def _simulate_then_perform(command: str):
     changes = host.get_fact(SimulateOperationWillChange, command)
 
-    if (
+    if not changes:
+        # Simulating apt-get command failed, so the actual
+        # operation will probably fail too:
+        yield noninteractive_apt(command)
+    elif (
         changes["upgraded"] == 0
         and changes["newly_installed"] == 0
         and changes["removed"] == 0
