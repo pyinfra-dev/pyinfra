@@ -1,5 +1,6 @@
 import json
 import os
+import warnings
 from datetime import datetime
 from inspect import getcallargs, getfullargspec
 from io import open
@@ -217,7 +218,10 @@ class FakeHost:
             fact_ordered_keys = {_sort_kwargs_str(key): value for key, value in fact.items()}
             kwargs_str = _sort_kwargs_str(get_kwargs_str(kwargs))
             if kwargs_str not in fact:
-                print("Possible missing fact key: {0}".format(kwargs_str))
+                s = f"Possible missing entry '{kwargs_str}' for fact '{fact_key}', if the fact "
+                "is supposed to return None, set the entry to null in the JSON test file."
+                print(s)
+                warnings.warn(s)
             return fact_ordered_keys.get(kwargs_str)
         return fact
 
