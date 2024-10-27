@@ -1,5 +1,5 @@
 from os import path
-from typing import Any, Optional
+from typing import Optional
 
 import click
 
@@ -11,7 +11,7 @@ from pyinfra.connectors.util import run_local_process
 from pyinfra.context import ctx_state
 
 
-def include(filename: str, data: Optional[dict[str, Any]] = None):
+def include(filename: str, data: Optional[dict] = None):
     """
     Executes a local python file within the ``pyinfra.state.cwd``
     directory.
