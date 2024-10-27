@@ -227,6 +227,37 @@ Including files can be used to break out operations across multiple files. Files
     # Include & call all the operations in tasks/install_something.py
     local.include("tasks/install_something.py")
 
+Additional data can be passed across files via the ``data`` param to parameterize tasks and is available in ``host.data``. For example `tasks/create_user.py` could look like:
+
+.. code:: python
+
+    from getpass import getpass
+
+    from pyinfra import host
+    from pyinfra.operations import server
+
+    group = host.data.get("group")
+    user = host.data.get("user")
+
+    server.group(
+        name=f"Ensure {group} is present",
+        group=group,
+    )
+    server.user(
+        name=f"Ensure {user} is present",
+        user=user,
+        group=group,
+    )
+
+And and be called by other deploy scripts or tasks:
+
+.. code:: python
+
+    from pyinfra import local
+
+    for group, user in (("admin", "Bob"), ("admin", "Joe")):
+        local.include("tasks/create_user.py", data={"group": group, "user": user})
+
 See more in :doc:`examples: groups & roles <./examples/groups_roles>`.
 
 
