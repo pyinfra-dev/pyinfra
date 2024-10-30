@@ -16,8 +16,8 @@ jobs:
   lint:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: pip install '.[test]'
@@ -26,8 +26,8 @@ jobs:
   type-check:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: pip install '.[test]'
@@ -51,8 +51,8 @@ jobs:
             python-version: "3.11"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install '.[test]'
@@ -77,8 +77,8 @@ jobs:
             test-name: local
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: pip install '.[test]'
@@ -96,6 +96,6 @@ jobs:
       - end-to-end-test
     runs-on: ubuntu-latest
     steps:
-      - uses: matrix-org/done-action@v2
+      - uses: matrix-org/done-action@v3
         with:
           needs: ${{ toJSON(needs) }}
