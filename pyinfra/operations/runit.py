@@ -2,6 +2,8 @@
 Manage runit services.
 """
 
+from __future__ import annotations
+
 from typing import Optional
 
 from pyinfra import host
