@@ -150,10 +150,10 @@ def build_operations_docs():
                 value = arg
 
                 if arg in argspec.annotations:
-                    value += f': {argspec.annotations[arg]}'
+                    value += f": {argspec.annotations[arg]}"
 
                 if arg in defaults:
-                    value += f'={defaults[arg]}'
+                    value += f"={defaults[arg]}"
 
                 args.append(value)
 
