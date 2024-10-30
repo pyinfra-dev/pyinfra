@@ -44,7 +44,7 @@ TEST_REQUIRES = (
     "coverage==7.6.1",
     "pytest-cov==5.0.0",
     # Formatting & linting
-    "black==24.10.0",
+    "black==24.8.0",
     "isort==5.13.2",
     "flake8==7.1.1",
     "flake8-black==0.3.6",
