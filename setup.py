@@ -40,13 +40,13 @@ INSTALL_REQUIRES = (
 
 TEST_REQUIRES = (
     # Unit testing
-    "pytest==8.2.1",
-    "coverage==7.5.1",
-    "pytest-cov==5.0.0",
+    "pytest==8.3.3",
+    "coverage==7.6.4",
+    "pytest-cov==6.0.0",
     # Formatting & linting
-    "black==24.4.2",
+    "black==24.10.0",
     "isort==5.13.2",
-    "flake8==7.0.0",
+    "flake8==7.1.1",
     "flake8-black==0.3.6",
     "flake8-isort==6.1.1",
     # Typing
@@ -60,7 +60,7 @@ TEST_REQUIRES = (
 
 DOCS_REQUIRES = (
     "pyinfra-guzzle_sphinx_theme==0.16",
-    "myst-parser==2.0.0",
+    "myst-parser==3.0.1",
     "sphinx==6.2.1",
 )
 
