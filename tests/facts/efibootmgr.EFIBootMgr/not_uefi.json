@@ -1,8 +1,6 @@
 {
-    "command": "efibootmgr",
+    "command": "efibootmgr || true",
     "requires_command": "efibootmgr",
-    "output": [
-        "EFI variables are not supported on this system."
-    ],
+    "output": [],
     "fact": null
 }

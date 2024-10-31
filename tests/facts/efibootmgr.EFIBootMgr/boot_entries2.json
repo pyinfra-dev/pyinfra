@@ -1,5 +1,5 @@
 {
-    "command": "efibootmgr",
+    "command": "efibootmgr || true",
     "requires_command": "efibootmgr",
     "output": [
         "BootCurrent: 0000",

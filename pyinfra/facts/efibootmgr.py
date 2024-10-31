@@ -17,7 +17,7 @@ EFIBootMgrInfoDict = TypedDict(
 )
 
 
-class EFIBootMgr(FactBase[EFIBootMgrInfoDict]):
+class EFIBootMgr(FactBase[Optional[EFIBootMgrInfoDict]]):
     """
     Returns information about the UEFI boot variables:
 
@@ -41,9 +41,11 @@ class EFIBootMgr(FactBase[EFIBootMgrInfoDict]):
         return "efibootmgr"
 
     def command(self) -> str:
-        return "efibootmgr"
+        # FIXME: Use '|| true' to properly handle the case where
+        #        'efibootmgr' is run on a non-UEFI system
+        return "efibootmgr || true"
 
-    def process(self, output: Iterable[str]) -> EFIBootMgrInfoDict:
+    def process(self, output: Iterable[str]) -> Optional[EFIBootMgrInfoDict]:
         # This parsing code closely follows the printing code of efibootmgr
         # at <https://github.com/rhboot/efibootmgr/blob/main/src/efibootmgr.c#L2020-L2048>
 
@@ -58,6 +60,12 @@ class EFIBootMgr(FactBase[EFIBootMgrInfoDict]):
         output = iter(output)
 
         line: Optional[str] = next(output, None)
+
+        if line is None:
+            # efibootmgr run on a non-UEFI system, likely printed
+            # "EFI variables are not supported on this system."
+            # to stderr
+            return None
 
         # 1. Maybe have BootNext
         if line and line.startswith("BootNext: "):
