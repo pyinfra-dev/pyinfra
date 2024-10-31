@@ -1,0 +1,74 @@
+{
+  "command": "podman ps --format=json --all",
+  "requires_command": "podman",
+  "output": [
+    "[",
+    "  {",
+    "    \"AutoRemove\": true,",
+    "    \"Command\": [",
+    "      \"bash\"",
+    "    ],",
+    "    \"CreatedAt\": \"3 seconds ago\",",
+    "    \"Exited\": false,",
+    "    \"ExitedAt\": -62135596800,",
+    "    \"ExitCode\": 0,",
+    "    \"Id\": \"a0319f34c9948123e217e0d145f35ad4903517f96d7c096145169dc70ed6badf\",",
+    "    \"Image\": \"docker.io/library/debian:unstable\",",
+    "    \"ImageID\": \"e1234e51d050c2c0e7d2517cc5d6e6db6b91de08124e56246bdd8acd01f4af92\",",
+    "    \"IsInfra\": false,",
+    "    \"Labels\": null,",
+    "    \"Mounts\": [],",
+    "    \"Names\": [",
+    "      \"blissful_cerf\"",
+    "    ],",
+    "    \"Namespaces\": {",
+    "      ",
+    "    },",
+    "    \"Networks\": [],",
+    "    \"Pid\": 74195,",
+    "    \"Pod\": \"\",",
+    "    \"PodName\": \"\",",
+    "    \"Ports\": null,",
+    "    \"Size\": null,",
+    "    \"StartedAt\": 1730384087,",
+    "    \"State\": \"running\",",
+    "    \"Status\": \"Up 3 seconds ago\",",
+    "    \"Created\": 1730384086",
+    "  }",
+    "]"
+  ],
+  "fact": [
+    {
+      "AutoRemove": true,
+      "Command": [
+        "bash"
+      ],
+      "CreatedAt": "3 seconds ago",
+      "Exited": false,
+      "ExitedAt": -62135596800,
+      "ExitCode": 0,
+      "Id": "a0319f34c9948123e217e0d145f35ad4903517f96d7c096145169dc70ed6badf",
+      "Image": "docker.io/library/debian:unstable",
+      "ImageID": "e1234e51d050c2c0e7d2517cc5d6e6db6b91de08124e56246bdd8acd01f4af92",
+      "IsInfra": false,
+      "Labels": null,
+      "Mounts": [],
+      "Names": [
+        "blissful_cerf"
+      ],
+      "Namespaces": {
+
+      },
+      "Networks": [],
+      "Pid": 74195,
+      "Pod": "",
+      "PodName": "",
+      "Ports": null,
+      "Size": null,
+      "StartedAt": 1730384087,
+      "State": "running",
+      "Status": "Up 3 seconds ago",
+      "Created": 1730384086
+    }
+  ]
+}
