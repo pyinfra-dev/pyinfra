@@ -50,6 +50,16 @@ scripts/dev-test.sh
 
 Use `pytest` to run the unit tests, or `pytest --cov` to run with coverage. Pull requests are expected to be tested and not drop overall project coverage by >1%.
 
+To limit the pytests to a specific fact or operation:
+
+```sh
+# Only run fact tests for facts.efibootmgr.EFIBootMGR
+pytest tests/test_facts.py -k "efibootmgr.EFIBootMGR"
+
+# Only run operation tests for operations.selinux
+pytest tests/test_operations.py -k "selinux."
+```
+
 #### End to End Tests
 
 The end to end tests are also executed via `pytest` but not selected by default, options/usage:
