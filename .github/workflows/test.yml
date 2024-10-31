@@ -33,6 +33,13 @@ jobs:
       - run: pip install '.[test]'
       - run: mypy
 
+  spell-check:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check spelling
+        uses: crate-ci/typos@v1.26.8
+
   # Unit tests
   #
 

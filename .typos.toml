@@ -1,0 +1,18 @@
+[files]
+extend-exclude = [
+     "tests/words.txt",
+]
+
+[default]
+extend-ignore-re = [
+    "shell\\('uptim'\\)",
+    '"fpr:::::::::',
+    '== "fpr":',
+    "00740ba1",
+    "forr something in",
+    "unknown tag 'forr'",
+    "nd6 options=",
+]
+
+[default.extend-words]
+datas = "datas"
