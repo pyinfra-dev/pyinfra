@@ -1,0 +1,18 @@
+{
+    "command": "efibootmgr",
+    "requires_command": "efibootmgr",
+    "output": [
+        "BootCurrent: 0002",
+        "BootOrder: 0002",
+        "Boot0002* debian"
+    ],
+    "fact": {
+        "BootNext": null,
+        "BootCurrent": 2,
+        "Timeout": null,
+        "BootOrder": [2],
+        "Entries": {
+            "2": [true, "debian"]
+        }
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "command": "efibootmgr",
+    "requires_command": "efibootmgr",
+    "output": [
+        "BootNext: 0006",
+        "BootCurrent: 0006",
+        "Timeout: 2 seconds",
+        "BootOrder: 0006,0001,0002,0003,0007,0000",
+        "Boot0000* Diagnostic Program",
+        "Boot0001* Windows Boot Manager",
+        "Boot0002* UEFI: PXE IP4 Realtek PCIe GBE Family Controller",
+        "Boot0003* UEFI: PXE IP6 Realtek PCIe GBE Family Controller",
+        "Boot0006* debian",
+        "Boot0007* debian"
+    ],
+    "fact": {
+        "BootNext": 6,
+        "BootCurrent": 6,
+        "Timeout": 2,
+        "BootOrder": [6,1,2,3,7,0],
+        "Entries": {
+            "0": [true, "Diagnostic Program"],
+            "1": [true, "Windows Boot Manager"],
+            "2": [true, "UEFI: PXE IP4 Realtek PCIe GBE Family Controller"],
+            "3": [true, "UEFI: PXE IP6 Realtek PCIe GBE Family Controller"],
+            "6": [true, "debian"],
+            "7": [true, "debian"]
+        }
+    }
+}

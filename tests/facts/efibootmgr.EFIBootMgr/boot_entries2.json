@@ -1,0 +1,20 @@
+{
+    "command": "efibootmgr",
+    "requires_command": "efibootmgr",
+    "output": [
+        "BootCurrent: 0000",
+        "BootOrder: 0000,0003",
+        "Boot0000* debian",
+        "Boot0003* EFI Fixed Disk Boot Device 1"
+    ],
+    "fact": {
+        "BootNext": null,
+        "BootCurrent": 0,
+        "Timeout": null,
+        "BootOrder": [0,3],
+        "Entries": {
+            "0": [true, "debian"],
+            "3": [true, "EFI Fixed Disk Boot Device 1"]
+        }
+    }
+}
