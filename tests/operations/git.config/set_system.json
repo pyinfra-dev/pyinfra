@@ -4,7 +4,9 @@
         "system": true
     },
     "facts": {
-        "git.GitConfig": {}
+        "git.GitConfig": {
+            "repo=None, system=True": {}
+        }
     },
     "commands": [
         "git config --system key \"value\""
