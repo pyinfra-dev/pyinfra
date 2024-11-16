@@ -2,7 +2,11 @@
     "args": ["nginx"],
     "facts": {
         "server.Which": {
-            "command=sv": true
+            "command=sv": true,
+            "command=systemctl": false,
+            "command=rc-service": false,
+            "command=initctl": false,
+            "command=service": false
         },
         "runit.RunitManaged": {
             "service=nginx, svdir=/var/service": ["nginx"]

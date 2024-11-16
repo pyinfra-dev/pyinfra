@@ -9,10 +9,11 @@
     },
     "facts": {
         "files.File": {
-            "path=/home/some\\ file.txt": null
+            "path=/home/some file.txt": null
         },
         "files.Directory": {
-            "path=/home": true
+            "path=/home": true,
+            "path=/home/some file.txt": null
         }
     },
     "commands": [

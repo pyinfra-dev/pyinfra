@@ -8,7 +8,7 @@
             "tcp": {"22":  "ssh_port_t"}
         },
         "server.Which": {
-            "sepolicy": null
+            "command=sepolicy": null
         }
     },
     "commands": [],

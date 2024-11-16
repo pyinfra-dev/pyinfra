@@ -12,6 +12,9 @@
             "path=/etc/installurl": {
                 "size": 0
             }
+        },
+        "server.Which": {
+            "command=pkg": null
         }
     },
     "commands": [

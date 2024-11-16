@@ -8,7 +8,7 @@
     },
     "facts": {
         "files.Block": {
-            "path=/home/someone/something, marker=None, begin=None, end=None": []
+            "begin=None, end=None, marker=None, path=/home/someone/something": []
         }
     },
     "commands": [

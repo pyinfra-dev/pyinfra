@@ -6,7 +6,8 @@
     ]],
     "facts": {
         "server.Which": {
-            "command=apk": "/sbin/apk"
+            "command=apk": "/sbin/apk",
+            "command=zypper": null
         },
         "apk.ApkPackages": {
             "something": [""]

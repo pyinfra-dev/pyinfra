@@ -1,6 +1,5 @@
 import json
 import os
-import warnings
 from datetime import datetime
 from inspect import getcallargs, getfullargspec
 from io import open
@@ -206,7 +205,7 @@ class FakeHost:
         fact_key = self._get_fact_key(fact_cls)
         fact = getattr(self.fact, fact_key, None)
         if fact is None:
-            raise KeyError("Missing test fact data: {0}".format(fact_key))
+            raise KeyError(f"Missing test fact: {fact_key}")
 
         # This does the same thing that pyinfra.apit.facts._handle_fact_kwargs does
         if args or kwargs:
@@ -215,14 +214,10 @@ class FakeHost:
 
         if kwargs:
             self._check_fact_args(fact_cls, kwargs)
-            fact_ordered_keys = {_sort_kwargs_str(key): value for key, value in fact.items()}
-            kwargs_str = _sort_kwargs_str(get_kwargs_str(kwargs))
+            kwargs_str = get_kwargs_str(kwargs)
             if kwargs_str not in fact:
-                s = f"Possible missing entry '{kwargs_str}' for fact '{fact_key}', if the fact "
-                "is supposed to return None, set the entry to null in the JSON test file."
-                print(s)
-                warnings.warn(s)
-            return fact_ordered_keys.get(kwargs_str)
+                raise KeyError(f"Missing test fact key: {fact_key} -> {kwargs_str}")
+            return fact.get(kwargs_str)
         return fact
 
 

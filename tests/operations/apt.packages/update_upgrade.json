@@ -5,7 +5,9 @@
     },
     "facts": {
         "deb.DebPackages": {},
-        "apt.SimulateOperationWillChange": {}
+        "apt.SimulateOperationWillChange": {
+            "command=upgrade": {}
+        }
     },
     "commands": [
         "apt-get update",

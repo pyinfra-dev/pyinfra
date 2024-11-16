@@ -16,7 +16,8 @@
             "path=/home/somefile.txt": null
         },
         "files.Directory": {
-            "path=/home": null
+            "path=/home": null,
+            "path=/home/somefile.txt": null
         }
     },
     "commands": [
