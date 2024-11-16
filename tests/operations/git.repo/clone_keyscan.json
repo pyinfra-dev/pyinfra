@@ -15,9 +15,7 @@
             }
         },
         "files.FindInFile": {
-            "path=~/.ssh/known_hosts, interpolate_variables=False": {
-                "github.com": []
-            }
+            "interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=github.com": []
         }
     },
     "commands": [

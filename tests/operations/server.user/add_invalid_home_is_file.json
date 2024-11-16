@@ -10,7 +10,9 @@
         "files.Directory": {
             "path=homedir": false
         },
-        "files.Link": {}
+        "files.Link": {
+            "path=homedir": false
+        }
     },
     "exception": {
         "name": "OperationError",

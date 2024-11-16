@@ -10,7 +10,7 @@
             }
         },
         "server.Which": {
-            "sepolicy": null
+            "command=sepolicy": null
         }
     },
     "commands": [

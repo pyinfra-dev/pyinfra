@@ -5,7 +5,9 @@
         "server.Groups": [
             "someuser"
         ],
-        "files.Directory": {},
+        "files.Directory": {
+            "path=/home/someuser": null
+        },
         "server.Os": "Linux"
     },
     "commands": [

@@ -60,6 +60,7 @@
     },
     "facts": {
         "files.File": {
+            "path=/home/somedir": false,
             "path=/home/somedir/somefile.txt": null,
             "path=/home/somedir/build.log": null,
             "path=/home/somedir/local_ignore.pyc": null,
@@ -71,7 +72,9 @@
             "path=/home/somedir": {
                 "mode": 755
             },
-            "path=/home/somedir/underthat": null
+            "path=/home/somedir/underthat": null,
+            "path=/home/somedir/somefile.txt": null,
+            "path=/home/somedir/underthat/another_file.txt": null
         },
         "files.FindFiles": {
             "path=/home/somedir": [
@@ -80,7 +83,9 @@
             ],
             "path=/home/somedir/underthat": []
         },
-        "files.Link": {}
+        "files.Link": {
+            "path=/home/somedir": false
+        }
     },
     "commands": [
         "mkdir -p /home/somedir/underthat",

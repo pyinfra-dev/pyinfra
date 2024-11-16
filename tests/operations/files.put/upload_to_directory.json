@@ -13,6 +13,7 @@
     },
     "facts": {
         "files.File": {
+            "path=/home": false,
             "path=/home/somefile.txt": null
         },
         "files.Directory": {

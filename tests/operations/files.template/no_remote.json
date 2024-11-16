@@ -16,7 +16,8 @@
             "path=/home/somefile.txt.j2": null
         },
         "files.Directory": {
-            "path=/home": true
+            "path=/home": true,
+            "path=/home/somefile.txt.j2": null
         }
     },
     "commands": [

@@ -6,7 +6,7 @@
     },
     "facts": {
         "files.Block": {
-            "path=/home/someone/something, marker=None, begin=None, end=None": ["existing content"]
+            "begin=None, end=None, marker=None, path=/home/someone/something": ["existing content"]
         }
     },
     "commands": [

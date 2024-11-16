@@ -2,7 +2,7 @@
     "args": ["filename", "match", "replace"],
     "facts": {
         "files.FindInFile": {
-            "path=filename, pattern=match, interpolate_variables=False": []
+            "interpolate_variables=False, path=filename, pattern=match": []
         }
     },
     "commands": [],

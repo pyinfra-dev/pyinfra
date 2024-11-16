@@ -5,7 +5,7 @@
     ],
     "facts": {
         "apt.SimulateOperationWillChange": {
-
+            "command=dist-upgrade": {}
         }
     }
 }
