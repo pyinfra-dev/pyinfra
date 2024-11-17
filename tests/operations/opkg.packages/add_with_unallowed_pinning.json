@@ -1,7 +1,7 @@
 {
     "args": ["curl=7.66.0-2"],
     "facts": {
-        "opkg.Packages": {}
+        "opkg.OpkgPackages": {}
     },
     "commands": [ ],
     "exception": {

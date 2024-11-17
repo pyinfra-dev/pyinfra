@@ -6,37 +6,30 @@
     see https://openwrt.org/docs/guide-user/additional-software/opkg
     OpenWrt recommends against upgrading all packages  thus there is no ``opkg.upgrade`` function
 """
+
 from typing import List, Union
 
 from pyinfra import host
 from pyinfra.api import StringCommand, operation
-from pyinfra.facts.opkg import Packages
+from pyinfra.facts.opkg import OpkgPackages
 from pyinfra.operations.util.packaging import ensure_packages
 
 EQUALS = "="
-UPDATE_ENTRY = "$$updated$$"  # use $ as not allowed in package names (TODO - need reference)
 
 
 @operation(is_idempotent=False)
-def update(force: bool = False):
+def update():
     """
-    Update the local opkg information.  Unless force is set, will only run
-    once per host per invocation of pyinfra.
-
-    + force - refresh the package list even if already done
+    Update the local opkg information.
     """
 
-    if force or (UPDATE_ENTRY not in host.get_fact(Packages)):
-        host.get_fact(Packages).update({UPDATE_ENTRY: [UPDATE_ENTRY]})
-        yield StringCommand("opkg update > /dev/null 2>&1")
-    else:
-        host.noop("opkg packages already updated and not forced")
+    yield StringCommand("opkg update")
 
 
 _update = update
 
 
-@operation
+@operation()
 def packages(
     packages: Union[str, List[str]] = "",
     present: bool = True,
@@ -81,16 +74,15 @@ def packages(
         raise ValueError(f"opkg does not support version pinning but found for: '{have_equals}'")
 
     if update:
-        yield from _update()
+        yield from _update._inner()
 
     yield from ensure_packages(
         host,
         pkg_list,
-        host.get_fact(Packages),
+        host.get_fact(OpkgPackages),
         present,
         install_command="opkg install",
         upgrade_command="opkg upgrade",
         uninstall_command="opkg remove",
         latest=latest,
-        # lower=True, # FIXME - does ensure_packages always do this or ?
     )

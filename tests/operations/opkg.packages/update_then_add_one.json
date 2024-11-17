@@ -2,10 +2,10 @@
     "args": ["curl"],
     "kwargs": {"update": true},
     "facts": {
-        "opkg.Packages": {}
+        "opkg.OpkgPackages": {}
     },
     "commands": [
-        "opkg update > /dev/null 2>&1",
+        "opkg update",
         "opkg install curl"
     ]
 }

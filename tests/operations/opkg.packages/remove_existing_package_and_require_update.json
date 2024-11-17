@@ -5,10 +5,10 @@
         "update": true
     },
     "facts": {
-        "opkg.Packages": {"curl": ["7.66.0-2"]}
+        "opkg.OpkgPackages": {"curl": ["7.66.0-2"]}
     },
     "commands": [
-        "opkg update > /dev/null 2>&1",
+        "opkg update",
         "opkg remove curl"
     ]
 }

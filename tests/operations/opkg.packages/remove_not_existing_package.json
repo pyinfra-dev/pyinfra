@@ -5,7 +5,7 @@
         "update": false
     },
     "facts": {
-        "opkg.Packages": {}
+        "opkg.OpkgPackages": {}
     },
     "commands": [
     ],

@@ -8,6 +8,7 @@ Gather the information provided by ``opkg`` on OpenWrt systems:
 
     see https://openwrt.org/docs/guide-user/additional-software/opkg
 """
+
 import re
 from typing import Dict, NamedTuple, Union
 
@@ -15,16 +16,16 @@ from pyinfra import logger
 from pyinfra.api import FactBase
 from pyinfra.facts.util.packaging import parse_packages
 
-# TODO - change NamedTuple to dataclass but need to figure out how to get json serialization
+# TODO - change NamedTuple to dataclass Opkgbut need to figure out how to get json serialization
 #        to work without changing core code
 
 
-class PkgUpgradeInfo(NamedTuple):
+class OpkgPkgUpgradeInfo(NamedTuple):
     installed: str
     available: str
 
 
-class ConfInfo(NamedTuple):
+class OpkgConfInfo(NamedTuple):
     paths: Dict[str, str]  # list of paths, e.g. {'root':'/', 'ram':'/tmp}
     list_dir: str  # where package lists are stored, e.g. /var/opkg-lists
     options: Dict[
@@ -33,13 +34,13 @@ class ConfInfo(NamedTuple):
     arch_cfg: Dict[str, int]  # priorities for architectures
 
 
-class FeedInfo(NamedTuple):
+class OpkgFeedInfo(NamedTuple):
     url: str  # url for the feed
     fmt: str  # format of the feed, e.g. "src/gz"
     kind: str  # whether it comes from the 'distribution' or is 'custom'
 
 
-class Conf(FactBase):
+class OpkgConf(FactBase):
     """
     Returns a NamedTuple with the current configuration:
 
@@ -77,9 +78,13 @@ class Conf(FactBase):
                        """,
         re.X,
     )
-    conf_file = "/etc/opkg.conf"
-    command = f"cat {conf_file}"
-    default = lambda x: ConfInfo({}, "", {}, {})  # noqa:
+
+    @staticmethod
+    def default():
+        return OpkgConfInfo({}, "", {}, {})
+
+    def command(self) -> str:
+        return "cat /etc/opkg.conf"
 
     def process(self, output):
         dest, lists_dir, options, arch_cfg = {}, "", {}, {}
@@ -97,10 +102,10 @@ class Conf(FactBase):
             elif match.group("option") is not None:
                 options[match.group("option")] = match.group("value") or True
 
-        return ConfInfo(dest, lists_dir, options, arch_cfg)
+        return OpkgConfInfo(dest, lists_dir, options, arch_cfg)
 
 
-class Feeds(FactBase):
+class OpkgFeeds(FactBase):
     """
     Returns a dictionary containing the information for the distribution-provided and
     custom opkg feeds:
@@ -120,8 +125,10 @@ class Feeds(FactBase):
     regex = re.compile(
         r"^(CUSTOM)|(?:\s*(?P<fmt>[\w/]+)\s+(?P<name>[\w]+)\s+(?P<url>[\w./:]+))?(?:\s*#.*)?$"
     )
-    command = "cat /etc/opkg/distfeeds.conf; echo CUSTOM; cat /etc/opkg/customfeeds.conf"
     default = dict
+
+    def command(self) -> str:
+        return "cat /etc/opkg/distfeeds.conf; echo CUSTOM; cat /etc/opkg/customfeeds.conf"
 
     def process(self, output):
         feeds, kind = {}, "distribution"
@@ -133,12 +140,14 @@ class Feeds(FactBase):
             elif match.group(0) == "CUSTOM":
                 kind = "custom"
             elif match.group("name") is not None:
-                feeds[match.group("name")] = FeedInfo(match.group("url"), match.group("fmt"), kind)
+                feeds[match.group("name")] = OpkgFeedInfo(
+                    match.group("url"), match.group("fmt"), kind
+                )
 
         return feeds
 
 
-class InstallableArchitectures(FactBase):
+class OpkgInstallableArchitectures(FactBase):
     """
     Returns a dictionary containing the currently installable architectures for this system along
     with their priority:
@@ -153,8 +162,10 @@ class InstallableArchitectures(FactBase):
     """
 
     regex = re.compile(r"^(?:\s*arch\s+(?P<arch>[\w]+)\s+(?P<prio>\d+))?(\s*#.*)?$")
-    command = "/bin/opkg print-architecture"
     default = dict
+
+    def command(self) -> str:
+        return "/bin/opkg print-architecture"
 
     def process(self, output):
         arch_list = {}
@@ -169,7 +180,7 @@ class InstallableArchitectures(FactBase):
         return arch_list
 
 
-class Packages(FactBase):
+class OpkgPackages(FactBase):
     """
     Returns a dict of installed opkg packages:
 
@@ -181,15 +192,17 @@ class Packages(FactBase):
        }
     """
 
-    command = "/bin/opkg list-installed"
     regex = r"^([a-zA-Z0-9][\w\-\.]*)\s-\s([\w\-\.]+)"
     default = dict
+
+    def command(self) -> str:
+        return "/bin/opkg list-installed"
 
     def process(self, output):
         return parse_packages(self.regex, sorted(output))
 
 
-class UpgradeablePackages(FactBase):
+class OpkgUpgradeablePackages(FactBase):
     """
     Returns a dict of installed and upgradable opkg packages:
 
@@ -201,17 +214,19 @@ class UpgradeablePackages(FactBase):
         }
     """
 
-    command = "/bin/opkg list-upgradable"  # yes, really spelled that way
     regex = re.compile(r"^([a-zA-Z0-9][\w\-.]*)\s-\s([\w\-.]+)\s-\s([\w\-.]+)")
     default = dict
     use_default_on_error = True
+
+    def command(self) -> str:
+        return "/bin/opkg list-upgradable"  # yes, really spelled that way
 
     def process(self, output):
         result = {}
         for line in output:
             match = self.regex.match(line)
             if match and len(match.groups()) == 3:
-                result[match.group(1)] = PkgUpgradeInfo(match.group(2), match.group(3))
+                result[match.group(1)] = OpkgPkgUpgradeInfo(match.group(2), match.group(3))
             else:
                 logger.warning(f"Opkg: could not list-upgradable line '{line}'")
 
