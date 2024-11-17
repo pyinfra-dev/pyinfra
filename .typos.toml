@@ -1,6 +1,7 @@
 [files]
 extend-exclude = [
-     "tests/words.txt",
+    "tests/facts/apt.SimulateOperationWillChange/upgrade.json",
+    "tests/words.txt",
 ]
 
 [default]
