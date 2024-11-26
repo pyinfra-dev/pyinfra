@@ -276,6 +276,12 @@ class Sha256File(HashFileFactBase, digits=64, cmds=["sha256sum", "shasum -a 256"
     """
 
 
+class Sha384File(HashFileFactBase, digits=96, cmds=["sha384sum", "shasum -a 384"]):
+    """
+    Returns a SHA384 hash of a file, or ``None`` if the file does not exist.
+    """
+
+
 class Md5File(HashFileFactBase, digits=32, cmds=["md5sum", "md5"]):
     """
     Returns an MD5 hash of a file, or ``None`` if the file does not exist.

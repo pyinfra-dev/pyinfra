@@ -1,0 +1,8 @@
+{
+    "arg": "my () file && special_chars.txt",
+    "command": "test -e 'my () file && special_chars.txt' && ( sha384sum 'my () file && special_chars.txt' 2> /dev/null || shasum -a 384 'my () file && special_chars.txt' 2> /dev/null ) || true",
+    "output": [
+        "1dd2e448df7c4dc19848a37fdf25c86660b19d06a4cd6987ca2c4071f80e9dd3061e4b01ddb982dc56ed7a2ed2294699 my () file && special_chars.txt"
+    ],
+    "fact": "1dd2e448df7c4dc19848a37fdf25c86660b19d06a4cd6987ca2c4071f80e9dd3061e4b01ddb982dc56ed7a2ed2294699"
+}
