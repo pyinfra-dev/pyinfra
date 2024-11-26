@@ -51,6 +51,7 @@ from pyinfra.facts.files import (
     Md5File,
     Sha1File,
     Sha256File,
+    Sha384File,
 )
 from pyinfra.facts.server import Date, Which
 
@@ -67,6 +68,7 @@ def download(
     mode: str | None = None,
     cache_time: int | None = None,
     force=False,
+    sha384sum: str | None = None,
     sha256sum: str | None = None,
     sha1sum: str | None = None,
     md5sum: str | None = None,
@@ -84,6 +86,7 @@ def download(
     + mode: permissions of the files
     + cache_time: if the file exists already, re-download after this time (in seconds)
     + force: always download the file, even if it already exists
+    + sha384sum: sha384 hash to checksum the downloaded file against
     + sha256sum: sha256 hash to checksum the downloaded file against
     + sha1sum: sha1 hash to checksum the downloaded file against
     + md5sum: md5 hash to checksum the downloaded file against
@@ -133,6 +136,10 @@ def download(
 
         if sha256sum:
             if sha256sum != host.get_fact(Sha256File, path=dest):
+                download = True
+
+        if sha384sum:
+            if sha384sum != host.get_fact(Sha384File, path=dest):
                 download = True
 
         if md5sum:
@@ -209,6 +216,17 @@ def download(
                 QuoteString(dest),
                 sha256sum,
                 QuoteString("SHA256 did not match!"),
+            )
+
+        if sha384sum:
+            yield make_formatted_string_command(
+                (
+                    "(( sha384sum {0} 2> /dev/null || shasum -a 384 {0} ) "
+                    "| grep {1}) || ( echo {2} && exit 1 )"
+                ),
+                QuoteString(dest),
+                sha384sum,
+                QuoteString("SHA384 did not match!"),
             )
 
         if md5sum:
