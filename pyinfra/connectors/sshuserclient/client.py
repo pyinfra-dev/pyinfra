@@ -13,6 +13,7 @@ from paramiko import (
     SSHClient as ParamikoClient,
     SSHException,
 )
+from paramiko.hostkeys import HostKeyEntry
 from paramiko.agent import AgentRequestHandler
 
 from pyinfra import logger
@@ -35,12 +36,10 @@ def append_hostkey(client, hostname, key):
     """Append hostname to the clients host_keys_file"""
 
     with HOST_KEYS_LOCK:
-        host_keys = client.get_host_keys()
-        host_keys.add(hostname, key.get_name(), key)
         # The paramiko client saves host keys incorrectly whereas the host keys object does
         # this correctly, so use that with the client filename variable.
         # See: https://github.com/paramiko/paramiko/pull/1989
-        host_key_entry = host_keys.get(hostname).to_line()
+        host_key_entry = HostKeyEntry([hostname], key)
         if host_key_entry is None: 
             raise SSHException(
                 "Append Hostkey: Failed to parse host {0}, could not append to hostfile".format(hostname),
