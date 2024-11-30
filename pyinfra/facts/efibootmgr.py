@@ -69,22 +69,22 @@ class EFIBootMgr(FactBase[Optional[EFIBootMgrInfoDict]]):
 
         # 1. Maybe have BootNext
         if line and line.startswith("BootNext: "):
-            info["BootNext"] = int(line.removeprefix("BootNext: "), 16)
+            info["BootNext"] = int(line[len("BootNext: ") :], 16)
             line = next(output, None)
 
         # 2. Maybe have BootCurrent
         if line and line.startswith("BootCurrent: "):
-            info["BootCurrent"] = int(line.removeprefix("BootCurrent: "), 16)
+            info["BootCurrent"] = int(line[len("BootCurrent: ") :], 16)
             line = next(output, None)
 
         # 3. Maybe have Timeout
         if line and line.startswith("Timeout: "):
-            info["Timeout"] = int(line.removeprefix("Timeout: ").removesuffix(" seconds"))
+            info["Timeout"] = int(line[len("Timeout: ") : -len(" seconds")])
             line = next(output, None)
 
         # 4. `show_order`
         if line and line.startswith("BootOrder: "):
-            entries = line.removeprefix("BootOrder: ")
+            entries = line[len("BootOrder: ") :]
             info["BootOrder"] = list(map(lambda x: int(x, 16), entries.split(",")))
             line = next(output, None)
 
