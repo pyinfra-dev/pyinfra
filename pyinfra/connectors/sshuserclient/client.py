@@ -13,8 +13,8 @@ from paramiko import (
     SSHClient as ParamikoClient,
     SSHException,
 )
-from paramiko.hostkeys import HostKeyEntry
 from paramiko.agent import AgentRequestHandler
+from paramiko.hostkeys import HostKeyEntry
 
 from pyinfra import logger
 from pyinfra.api.util import memoize
@@ -32,7 +32,7 @@ class StrictPolicy(MissingHostKeyPolicy):
         )
 
 
-def append_hostkey(client, hostname, key): 
+def append_hostkey(client, hostname, key):
     """Append hostname to the clients host_keys_file"""
 
     with HOST_KEYS_LOCK:
@@ -40,12 +40,18 @@ def append_hostkey(client, hostname, key):
         # this correctly, so use that with the client filename variable.
         # See: https://github.com/paramiko/paramiko/pull/1989
         host_key_entry = HostKeyEntry([hostname], key)
-        if host_key_entry is None: 
+        if host_key_entry is None:
             raise SSHException(
-                "Append Hostkey: Failed to parse host {0}, could not append to hostfile".format(hostname),
+                "Append Hostkey: Failed to parse host {0}, could not append to hostfile".format(
+                    hostname
+                ),
             )
-        with open(client._host_keys_filename, "a") as host_keys_file: 
-            host_keys_file.write(host_key_entry.to_line())
+        with open(client._host_keys_filename, "a") as host_keys_file:
+            hk_entry = host_key_entry.to_line()
+            if hk_entry is None:
+                raise SSHException(f"Append Hostkey: Failed to append hostkey ({host_key_entry})")
+
+            host_keys_file.write(hk_entry)
 
 
 class AcceptNewPolicy(MissingHostKeyPolicy):
