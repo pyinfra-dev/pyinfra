@@ -174,12 +174,13 @@ def packages(
         install_command_args.append(extra_install_args)
     install_command = " ".join(install_command_args)
 
+    upgrade_command = "{0} --upgrade".format(install_command)
     uninstall_command = " ".join([pip, "uninstall", "--yes"])
 
     # (un)Install requirements
     if requirements is not None:
         if present:
-            yield "{0} -r {1}".format(install_command, requirements)
+            yield "{0} -r {1}".format(upgrade_command if latest else install_command, requirements)
         else:
             yield "{0} -r {1}".format(uninstall_command, requirements)
 
@@ -199,7 +200,7 @@ def packages(
             present,
             install_command=install_command,
             uninstall_command=uninstall_command,
-            upgrade_command="{0} --upgrade".format(install_command),
+            upgrade_command=upgrade_command,
             version_join="==",
             latest=latest,
         )

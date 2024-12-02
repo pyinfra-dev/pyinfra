@@ -281,6 +281,8 @@ def print_results(state: "State"):
         (logger.info, ["Operation", "Hosts", "Success", "Error", "No Change"]),
     ]
 
+    totals = {"hosts": 0, "success": 0, "error": 0, "no_change": 0}
+
     for op_hash in state.get_op_order():
         hosts_in_op = 0
         hosts_in_op_success: list[str] = []
@@ -306,19 +308,32 @@ def print_results(state: "State"):
             str(hosts_in_op),
         ]
 
+        totals["hosts"] += hosts_in_op
+
         if hosts_in_op_success:
-            row.append(f"{len(hosts_in_op_success)}")
+            num_hosts_in_op_success = len(hosts_in_op_success)
+            row.append(str(num_hosts_in_op_success))
+            totals["success"] += num_hosts_in_op_success
         else:
             row.append("-")
+
         if hosts_in_op_error:
-            row.append(f"{len(hosts_in_op_error)}")
+            num_hosts_in_op_error = len(hosts_in_op_error)
+            row.append(str(num_hosts_in_op_error))
+            totals["error"] += num_hosts_in_op_error
         else:
             row.append("-")
+
         if hosts_in_op_no_change:
-            row.append(f"{len(hosts_in_op_no_change)}")
+            num_hosts_in_op_no_change = len(hosts_in_op_no_change)
+            row.append(str(num_hosts_in_op_no_change))
+            totals["no_change"] += num_hosts_in_op_no_change
         else:
             row.append("-")
 
         rows.append((logger.info, row))
+
+    totals_row = ["Grand total"] + [str(i) if i else "-" for i in totals.values()]
+    rows.append((logger.info, totals_row))
 
     print_rows(rows)

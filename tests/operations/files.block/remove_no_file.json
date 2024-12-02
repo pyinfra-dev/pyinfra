@@ -4,7 +4,7 @@
     "kwargs": {"present": false},
     "facts": {
         "files.Block": {
-            "path=/home/someone/something, marker=None, begin=None, end=None": null
+            "begin=None, end=None, marker=None, path=/home/someone/something": null
         }
     },
     "commands": [],

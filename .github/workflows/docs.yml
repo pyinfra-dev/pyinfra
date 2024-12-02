@@ -14,20 +14,20 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Clone Source Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Fetch git tags
         run: git fetch --tags origin
 
       - name: Clone Generated Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
           repository: fizzadar/docs.pyinfra.com
           path: docs/public/
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
 
       - name: Install
         run: |

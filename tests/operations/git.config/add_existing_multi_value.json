@@ -5,7 +5,9 @@
     },
     "facts": {
         "git.GitConfig": {
-            "key": ["value"]
+            "repo=None, system=False": {
+                "key": ["value"]
+            }
         }
     },
     "commands": []

@@ -5,7 +5,7 @@
     },
     "facts": {
         "selinux.SEPort": {
-            "protocol=tcp, port=22": ""
+            "port=22, protocol=tcp": ""
         },
         "server.Which": {
             "command=sepolicy": "/usr/bin/sepolicy"

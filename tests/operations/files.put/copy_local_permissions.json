@@ -11,9 +11,11 @@
     },
     "facts": {
         "files.File": {
-            "path=/home/some\\ file.txt": null
+            "path=/somefile.txt": null,
+            "path=/somefile.txt/somefile.txt": null
         },
         "files.Directory": {
+            "path=/somefile.txt": false,
             "path=/": true
         }
     },

@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from inspect import getfullargspec
+from inspect import getcallargs, getfullargspec
 from io import open
 from os import listdir, path
 from pathlib import Path
@@ -194,24 +194,30 @@ class FakeHost:
     def _check_fact_args(fact_cls, kwargs):
         # Check that the arguments we're going to use to fake a fact are all actual arguments in
         # the fact class, otherwise the test will hide a bug in the underlying operation.
-        real_args = getfullargspec(fact_cls.command)
+        real_args = getfullargspec(fact_cls.command).args
+
         for key in kwargs.keys():
             assert (
-                key in real_args.args
+                key in real_args
             ), f"Argument {key} is not a real argument in the `{fact_cls}.command` method"
 
-    def get_fact(self, fact_cls, **kwargs):
+    def get_fact(self, fact_cls, *args, **kwargs):
         fact_key = self._get_fact_key(fact_cls)
         fact = getattr(self.fact, fact_key, None)
         if fact is None:
-            raise KeyError("Missing test fact data: {0}".format(fact_key))
+            raise KeyError(f"Missing test fact: {fact_key}")
+
+        # This does the same thing that pyinfra.apit.facts._handle_fact_kwargs does
+        if args or kwargs:
+            # Merges args & kwargs into a single kwargs dictionary
+            kwargs = getcallargs(fact_cls().command, *args, **kwargs)
+
         if kwargs:
             self._check_fact_args(fact_cls, kwargs)
-            fact_ordered_keys = {_sort_kwargs_str(key): value for key, value in fact.items()}
-            kwargs_str = _sort_kwargs_str(get_kwargs_str(kwargs))
+            kwargs_str = get_kwargs_str(kwargs)
             if kwargs_str not in fact:
-                print("Possible missing fact key: {0}".format(kwargs_str))
-            return fact_ordered_keys.get(kwargs_str)
+                raise KeyError(f"Missing test fact key: {fact_key} -> {kwargs_str}")
+            return fact.get(kwargs_str)
         return fact
 
 
@@ -241,7 +247,7 @@ class FakeFile:
                 return self._data.split()
             return ["_test_data_"]
 
-            return []
+        return []
 
     def seek(self, *args, **kwargs):
         pass

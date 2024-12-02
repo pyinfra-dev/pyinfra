@@ -5,14 +5,15 @@ import re
 import shutil
 from datetime import datetime
 from tempfile import mkdtemp
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 from dateutil.parser import parse as parse_date
 from distro import distro
-from typing_extensions import NotRequired, TypedDict
+from typing_extensions import TypedDict
 
 from pyinfra.api import FactBase, ShortFactBase
 from pyinfra.api.util import try_int
+from pyinfra.facts import crontab
 
 ISO_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 
@@ -307,6 +308,36 @@ class LsbRelease(FactBase):
         return items
 
 
+class OsRelease(FactBase):
+    """
+    Returns a dictionary of release information stored in ``/etc/os-release``.
+
+    .. code:: python
+
+        {
+          "name": "EndeavourOS",
+          "pretty_name": "EndeavourOS",
+          "id": "endeavouros",
+          "id_like": "arch",
+          "build_id": "2024.06.25",
+          ...
+        }
+    """
+
+    def command(self):
+        return "cat /etc/os-release"
+
+    def process(self, output):
+        items = {}
+
+        for line in output:
+            if "=" in line:
+                key, value = line.split("=", 1)
+                items[key.strip().lower()] = value.strip().strip('"')
+
+        return items
+
+
 class Sysctl(FactBase):
     """
     Returns a dictionary of sysctl settings and values.
@@ -377,75 +408,9 @@ class Groups(FactBase[List[str]]):
         return groups
 
 
-class CrontabDict(TypedDict):
-    minute: NotRequired[Union[int, str]]
-    hour: NotRequired[Union[int, str]]
-    month: NotRequired[Union[int, str]]
-    day_of_month: NotRequired[Union[int, str]]
-    day_of_week: NotRequired[Union[int, str]]
-    comments: Optional[list[str]]
-    special_time: NotRequired[str]
-
-
-class Crontab(FactBase[Dict[str, CrontabDict]]):
-    """
-    Returns a dictionary of cron command -> execution time.
-
-    .. code:: python
-
-        {
-            "/path/to/command": {
-                "minute": "*",
-                "hour": "*",
-                "month": "*",
-                "day_of_month": "*",
-                "day_of_week": "*",
-            },
-            "echo another command": {
-                "special_time": "@daily",
-            },
-        }
-    """
-
-    default = dict
-
-    def requires_command(self, user=None) -> str:
-        return "crontab"
-
-    def command(self, user=None):
-        if user:
-            return "crontab -l -u {0} || true".format(user)
-        return "crontab -l || true"
-
-    def process(self, output):
-        crons: dict[str, CrontabDict] = {}
-        current_comments = []
-
-        for line in output:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                current_comments.append(line)
-                continue
-
-            if line.startswith("@"):
-                special_time, command = line.split(None, 1)
-                crons[command] = {
-                    "special_time": special_time,
-                    "comments": current_comments,
-                }
-            else:
-                minute, hour, day_of_month, month, day_of_week, command = line.split(None, 5)
-                crons[command] = {
-                    "minute": try_int(minute),
-                    "hour": try_int(hour),
-                    "month": try_int(month),
-                    "day_of_month": try_int(day_of_month),
-                    "day_of_week": try_int(day_of_week),
-                    "comments": current_comments,
-                }
-
-            current_comments = []
-        return crons
+# for compatibility
+CrontabDict = crontab.CrontabDict
+Crontab = crontab.Crontab
 
 
 class Users(FactBase):

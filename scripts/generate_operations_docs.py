@@ -141,11 +141,21 @@ def build_operations_docs():
             )
 
             # Build args string
-            args = [
-                "{0}={1}".format(arg, defaults[arg]) if arg in defaults else arg
-                for arg in argspec.args
-                if arg not in ("state", "host") and not arg.startswith("_")
-            ]
+            args = []
+
+            for arg in argspec.args:
+                if arg in ("state", "host") or arg.startswith("_"):
+                    continue
+
+                value = arg
+
+                if arg in argspec.annotations:
+                    value += f": {argspec.annotations[arg]}"
+
+                if arg in defaults:
+                    value += f"={defaults[arg]}"
+
+                args.append(value)
 
             if len(", ".join(args)) <= MODULE_DEF_LINE_MAX:
                 args_string = ", ".join(args)

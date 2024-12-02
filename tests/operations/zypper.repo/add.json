@@ -10,7 +10,8 @@
             "path=/etc/zypp/repos.d/somerepo.repo": {}
         },
         "files.Directory": {
-            "path=/etc/zypp/repos.d": true
+            "path=/etc/zypp/repos.d": true,
+            "path=/etc/zypp/repos.d/somerepo.repo": null
         }
     },
     "commands": [[

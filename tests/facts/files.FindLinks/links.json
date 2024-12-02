@@ -4,5 +4,7 @@
     "output": [
         "mylink"
     ],
-    "fact": ["mylink"]
+    "fact": [
+        "mylink"
+    ]
 }

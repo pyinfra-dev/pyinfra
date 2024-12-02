@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from pyinfra.api.state import State
 
 
-def add_deploy(state: "State", deploy_func: Callable[..., Any], *args, **kwargs):
+def add_deploy(state: "State", deploy_func: Callable[..., Any], *args, **kwargs) -> None:
     """
     Prepare & add an deploy to pyinfra.state by executing it on all hosts.
 
@@ -54,7 +54,9 @@ def add_deploy(state: "State", deploy_func: Callable[..., Any], *args, **kwargs)
 P = ParamSpec("P")
 
 
-def deploy(name: Optional[str] = None, data_defaults=None):
+def deploy(
+    name: Optional[str] = None, data_defaults: Optional[dict] = None
+) -> Callable[[Callable[P, Any]], PyinfraOperation[P]]:
     """
     Decorator that takes a deploy function (normally from a pyinfra_* package)
     and wraps any operations called inside with any deploy-wide kwargs/data.

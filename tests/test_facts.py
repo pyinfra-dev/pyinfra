@@ -16,6 +16,9 @@ TestCase.maxDiff = None
 
 def _make_command(command_attribute, args):
     if callable(command_attribute):
+        if isinstance(args, dict):
+            return command_attribute(**args)
+
         if not isinstance(args, list):
             args = [args]
 

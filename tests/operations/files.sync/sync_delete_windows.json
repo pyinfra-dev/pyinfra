@@ -51,10 +51,14 @@
         "files.Directory": {
             "path=/home/somedir": null,
             "path=/home/somedir/underthat": null,
-            "path=/home/somedir/underthat/evendeeper": null
+            "path=/home/somedir/underthat/evendeeper": null,
+            "path=/home/somedir/somefile.txt": null,
+            "path=/home/somedir/anotherfile.txt": null,
+            "path=/home/somedir/underthat/yet-another-file.txt": null,
+            "path=/home/somedir/underthat/evendeeper/a-very-deep-file.txt": null
         },
         "files.FindFiles": {
-            "path=/home/somedir": [
+            "args=None, fname=None, iname=None, max_size=None, maxdepth=None, min_size=None, path=/home/somedir, quote_path=True, regex=None, size=None": [
                 "/home/somedir/deleteme.txt",
                 "/home/somedir/nodelete.pyc"
             ],

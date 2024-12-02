@@ -9,7 +9,13 @@ from urllib.parse import urlparse
 
 from pyinfra import host
 from pyinfra.api import OperationError, operation
-from pyinfra.facts.apt import AptKeys, AptSources, parse_apt_repo
+from pyinfra.facts.apt import (
+    AptKeys,
+    AptSources,
+    SimulateOperationWillChange,
+    noninteractive_apt,
+    parse_apt_repo,
+)
 from pyinfra.facts.deb import DebPackage, DebPackages
 from pyinfra.facts.files import File
 from pyinfra.facts.gpg import GpgKey
@@ -21,21 +27,22 @@ from .util.packaging import ensure_packages
 APT_UPDATE_FILENAME = "/var/lib/apt/periodic/update-success-stamp"
 
 
-def noninteractive_apt(command: str, force=False):
-    args = ["DEBIAN_FRONTEND=noninteractive apt-get -y"]
+def _simulate_then_perform(command: str):
+    changes = host.get_fact(SimulateOperationWillChange, command)
 
-    if force:
-        args.append("--force-yes")
-
-    args.extend(
-        (
-            '-o Dpkg::Options::="--force-confdef"',
-            '-o Dpkg::Options::="--force-confold"',
-            command,
-        ),
-    )
-
-    return " ".join(args)
+    if not changes:
+        # Simulating apt-get command failed, so the actual
+        # operation will probably fail too:
+        yield noninteractive_apt(command)
+    elif (
+        changes["upgraded"] == 0
+        and changes["newly_installed"] == 0
+        and changes["removed"] == 0
+        and changes["not_upgraded"] == 0
+    ):
+        host.noop(f"{command} skipped, no changes would be performed")
+    else:
+        yield noninteractive_apt(command)
 
 
 @operation()
@@ -321,7 +328,7 @@ def update(cache_time: int | None = None):
 _update = update  # noqa: E305
 
 
-@operation(is_idempotent=False)
+@operation()
 def upgrade(auto_remove: bool = False):
     """
     Upgrades all apt packages.
@@ -349,13 +356,13 @@ def upgrade(auto_remove: bool = False):
     if auto_remove:
         command.append("--autoremove")
 
-    yield noninteractive_apt(" ".join(command))
+    yield from _simulate_then_perform(" ".join(command))
 
 
 _upgrade = upgrade  # noqa: E305 (for use below where update is a kwarg)
 
 
-@operation(is_idempotent=False)
+@operation()
 def dist_upgrade():
     """
     Updates all apt packages, employing dist-upgrade.
@@ -369,7 +376,7 @@ def dist_upgrade():
         )
     """
 
-    yield noninteractive_apt("dist-upgrade")
+    yield from _simulate_then_perform("dist-upgrade")
 
 
 @operation()

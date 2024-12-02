@@ -6,7 +6,10 @@
         },
         "server.Which": {
             "command=systemctl": false,
-            "command=initctl": true
+            "command=initctl": true,
+            "command=rc-service": false,
+            "command=sv": false,
+            "command=service": false
         },
         "files.Directory": {
             "path=/etc/init.d": false,

@@ -47,6 +47,9 @@ elif host.name == "anotherhost":
 # Include the whole file again, but for all hosts
 local.include(path.join("tasks", "a_task.py"))
 
+# Include a deploy file, with custom specified data
+local.include(path.join("tasks", "b_task.py"), data={"keyword": "Important", "id": 1})
+
 # Execute the @deploy function
 my_deploy()
 

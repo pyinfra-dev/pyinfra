@@ -18,7 +18,8 @@
             }
         },
         "files.File": {
-            "path=/var/service/nginx/down": null
+            "path=/var/service/nginx/down": null,
+            "path=/etc/sv/nginx/down": null
         },
         "runit.RunitStatus": {
             "service=nginx, svdir=/var/service": {"nginx": true}

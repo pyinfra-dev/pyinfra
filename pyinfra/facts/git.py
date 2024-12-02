@@ -21,9 +21,10 @@ class GitBranch(GitFactBase):
 class GitConfig(GitFactBase):
     default = dict
 
-    def command(self, repo=None) -> str:
+    def command(self, repo=None, system=False) -> str:
         if repo is None:
-            return "git config --global -l || true"
+            level = "--system" if system else "--global"
+            return f"git config {level} -l || true"
 
         return "! test -d {0} || (cd {0} && git config --local -l)".format(repo)
 

@@ -9,15 +9,16 @@
             "command=apk": null,
             "command=apt": null,
             "command=brew": null,
+            "command=zypper": null,
             "command=dnf": "/sbin/dnf"
         },
         "rpm.RpmPackages": {
             "something": [""]
         },
         "rpm.RpmPackageProvides": {
-            "name=git": null,
-            "name=python-devel": null,
-            "name=something": null
+            "package=git": null,
+            "package=python-devel": null,
+            "package=something": null
         }
     },
     "commands": [

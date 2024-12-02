@@ -218,17 +218,19 @@ class Host:
             self.print_prefix_padding,
         )
 
-    def log(self, message, log_func=logger.info):
+    def log(self, message: str, log_func: Callable[[str], Any] = logger.info) -> None:
         log_func(f"{self.print_prefix}{message}")
 
-    def log_styled(self, message, log_func=logger.info, **kwargs):
+    def log_styled(
+        self, message: str, log_func: Callable[[str], Any] = logger.info, **kwargs
+    ) -> None:
         message_styled = click.style(message, **kwargs)
         self.log(message_styled, log_func=log_func)
 
     def get_deploy_data(self):
         return self.current_op_deploy_data or self.current_deploy_data or {}
 
-    def noop(self, description):
+    def noop(self, description: str) -> None:
         """
         Log a description for a noop operation.
         """

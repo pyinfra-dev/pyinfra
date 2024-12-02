@@ -8,7 +8,7 @@
     },
     "facts": {
         "files.Block": {
-            "path=/home/someone/something, marker=None, begin=None, end=None": ["previously was something else"]
+            "begin=None, end=None, marker=None, path=/home/someone/something": ["previously was something else"]
         }
     },
     "commands": [

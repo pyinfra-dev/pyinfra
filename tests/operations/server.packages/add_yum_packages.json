@@ -12,15 +12,17 @@
             "command=dnf": null,
             "command=pacman": null,
             "command=xbps": null,
+            "command=zypper": null,
+            "command=xbps-install": null,
             "command=yum": "/sbin/yum"
         },
         "rpm.RpmPackages": {
             "something": [""]
         },
         "rpm.RpmPackageProvides": {
-            "name=git": null,
-            "name=python-devel": null,
-            "name=something": null
+            "package=git": null,
+            "package=python-devel": null,
+            "package=something": null
         }
     },
     "commands": [

@@ -3,7 +3,10 @@
     "facts": {
         "server.Which": {
             "command=systemctl": false,
-            "command=initctl": false
+            "command=initctl": false,
+            "command=rc-service": false,
+            "command=sv": false,
+            "command=service": false
         },
         "files.Directory": {
             "path=/etc/init.d": false,

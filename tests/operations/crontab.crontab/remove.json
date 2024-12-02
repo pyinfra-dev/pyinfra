@@ -4,7 +4,7 @@
         "present": false
     },
     "facts": {
-        "server.Crontab": {
+        "crontab.Crontab": {
             "user=None": {
                 "this_is_a_command": {
                     "minute": "*",

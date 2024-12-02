@@ -11,7 +11,8 @@
             "path=/etc/init/redis-server.override": null
         },
         "files.Directory": {
-            "path=/etc/init": {"mode": 777}
+            "path=/etc/init": {"mode": 777},
+            "path=/etc/init/redis-server.override": null
         }
     },
     "commands": [

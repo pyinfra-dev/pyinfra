@@ -7,7 +7,9 @@
             "path=/etc/hostname": {}
         },
         "files.Directory": {
-            "path=/etc": true
+            "path=/etc": true,
+            "path=/etc/myname": false,
+            "path=/etc/hostname": false
         },
         "server.Which": {
             "command=hostnamectl": null

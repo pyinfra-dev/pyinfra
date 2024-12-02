@@ -8,6 +8,7 @@ All operations in this module take four optional arguments:
     + ``psql_password``: the password for the connecting user
     + ``psql_host``: the hostname of the server to connect to
     + ``psql_port``: the port of the server to connect to
+    + ``psql_database``: the database on the server to connect to
 
 See example/postgresql.py for detailed example
 
@@ -28,28 +29,27 @@ from pyinfra.facts.postgres import (
 @operation(is_idempotent=False)
 def sql(
     sql: str,
-    database: str | None = None,
     # Details for speaking to PostgreSQL via `psql` CLI
     psql_user: str | None = None,
     psql_password: str | None = None,
     psql_host: str | None = None,
     psql_port: int | None = None,
+    psql_database: str | None = None,
 ):
     """
     Execute arbitrary SQL against PostgreSQL.
 
     + sql: SQL command(s) to execute
-    + database: optional database to execute against
     + psql_*: global module arguments, see above
     """
 
     yield make_execute_psql_command(
         sql,
-        database=database,
         user=psql_user,
         password=psql_password,
         host=psql_host,
         port=psql_port,
+        database=psql_database,
     )
 
 
@@ -70,6 +70,7 @@ def role(
     psql_password: str | None = None,
     psql_host: str | None = None,
     psql_port: int | None = None,
+    psql_database: str | None = None,
 ):
     """
     Add/remove PostgreSQL roles.
@@ -112,6 +113,7 @@ def role(
         psql_password=psql_password,
         psql_host=psql_host,
         psql_port=psql_port,
+        psql_database=psql_database,
     )
 
     is_present = role in roles
@@ -125,6 +127,7 @@ def role(
                 password=psql_password,
                 host=psql_host,
                 port=psql_port,
+                database=psql_database,
             )
         else:
             host.noop("postgresql role {0} does not exist".format(role))
@@ -157,6 +160,7 @@ def role(
             password=psql_password,
             host=psql_host,
             port=psql_port,
+            database=psql_database,
         )
     else:
         host.noop("postgresql role {0} exists".format(role))
@@ -178,6 +182,7 @@ def database(
     psql_password: str | None = None,
     psql_host: str | None = None,
     psql_port: int | None = None,
+    psql_database: str | None = None,
 ):
     """
     Add/remove PostgreSQL databases.
@@ -218,6 +223,7 @@ def database(
         psql_password=psql_password,
         psql_host=psql_host,
         psql_port=psql_port,
+        psql_database=psql_database,
     )
 
     is_present = database in current_databases
@@ -230,6 +236,7 @@ def database(
                 password=psql_password,
                 host=psql_host,
                 port=psql_port,
+                database=psql_database,
             )
         else:
             host.noop("postgresql database {0} does not exist".format(database))
@@ -257,6 +264,7 @@ def database(
             password=psql_password,
             host=psql_host,
             port=psql_port,
+            database=psql_database,
         )
     else:
         host.noop("postgresql database {0} exists".format(database))
@@ -265,18 +273,17 @@ def database(
 @operation(is_idempotent=False)
 def dump(
     dest: str,
-    database: str | None = None,
     # Details for speaking to PostgreSQL via `psql` CLI
     psql_user: str | None = None,
     psql_password: str | None = None,
     psql_host: str | None = None,
     psql_port: int | None = None,
+    psql_database: str | None = None,
 ):
     """
     Dump a PostgreSQL database into a ``.sql`` file. Requires ``pg_dump``.
 
     + dest: name of the file to dump the SQL to
-    + database: name of the database to dump
     + psql_*: global module arguments, see above
 
     **Example:**
@@ -286,7 +293,6 @@ def dump(
         postgresql.dump(
             name="Dump the pyinfra_stuff database",
             dest="/tmp/pyinfra_stuff.dump",
-            database="pyinfra_stuff",
             sudo_user="postgres",
         )
 
@@ -295,11 +301,11 @@ def dump(
     yield StringCommand(
         make_psql_command(
             executable="pg_dump",
-            database=database,
             user=psql_user,
             password=psql_password,
             host=psql_host,
             port=psql_port,
+            database=psql_database,
         ),
         ">",
         QuoteString(dest),
@@ -309,18 +315,17 @@ def dump(
 @operation(is_idempotent=False)
 def load(
     src: str,
-    database: str | None = None,
     # Details for speaking to PostgreSQL via `psql` CLI
     psql_user: str | None = None,
     psql_password: str | None = None,
     psql_host: str | None = None,
     psql_port: int | None = None,
+    psql_database: str | None = None,
 ):
     """
     Load ``.sql`` file into a database.
 
     + src: the filename to read from
-    + database: name of the database to import into
     + psql_*: global module arguments, see above
 
     **Example:**
@@ -330,7 +335,6 @@ def load(
         postgresql.load(
             name="Import the pyinfra_stuff dump into pyinfra_stuff_copy",
             src="/tmp/pyinfra_stuff.dump",
-            database="pyinfra_stuff_copy",
             sudo_user="postgres",
         )
 
@@ -338,11 +342,11 @@ def load(
 
     yield StringCommand(
         make_psql_command(
-            database=database,
             user=psql_user,
             password=psql_password,
             host=psql_host,
             port=psql_port,
+            database=psql_database,
         ),
         "<",
         QuoteString(src),
