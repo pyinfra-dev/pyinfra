@@ -13,6 +13,7 @@ extend-ignore-re = [
     "forr something in",
     "unknown tag 'forr'",
     "nd6 options=",
+    "4Ue1", # Ignore false positive in test_sshuserclient.py (EXAMPLE_KEY_1)
 ]
 
 [default.extend-words]
