@@ -17,7 +17,8 @@
             "path=/home/somedir/yet () another {} file $$ __.txt": null
         },
         "files.Directory": {
-            "path=/home/somedir": null
+            "path=/home/somedir": null,
+            "path=/home/somedir/yet () another {} file $$ __.txt": null
         },
         "files.FindFiles": {
             "path=/home/somedir": []

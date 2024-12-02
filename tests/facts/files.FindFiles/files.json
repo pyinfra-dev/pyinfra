@@ -4,5 +4,7 @@
     "output": [
         "myfile"
     ],
-    "fact": ["myfile"]
+    "fact": [
+        "myfile"
+    ]
 }

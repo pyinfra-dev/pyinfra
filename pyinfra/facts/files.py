@@ -12,9 +12,11 @@ from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 from typing_extensions import Literal, NotRequired, TypedDict
 
+from pyinfra.api import StringCommand
 from pyinfra.api.command import QuoteString, make_formatted_string_command
 from pyinfra.api.facts import FactBase
 from pyinfra.api.util import try_int
+from pyinfra.facts.util.units import parse_size
 
 LINUX_STAT_COMMAND = "stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N'"
 BSD_STAT_COMMAND = "stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY'"
@@ -322,12 +324,91 @@ class FindFilesBase(FactBase):
     def process(self, output):
         return output
 
-    def command(self, path, quote_path=True):
-        return make_formatted_string_command(
-            "find {0} -type {type_flag} || true",
-            QuoteString(path) if quote_path else path,
-            type_flag=self.type_flag,
-        )
+    def command(
+        self,
+        path: str,
+        size: Optional[str | int] = None,
+        min_size: Optional[str | int] = None,
+        max_size: Optional[str | int] = None,
+        maxdepth: Optional[int] = None,
+        fname: Optional[str] = None,
+        iname: Optional[str] = None,
+        regex: Optional[str] = None,
+        args: Optional[List[str]] = None,
+        quote_path=True,
+    ):
+        """
+        @param path: the path to start the search from
+        @param size: exact size in bytes or human-readable format.
+                     GB means 1e9 bytes, GiB means 2^30 bytes
+        @param min_size: minimum size in bytes or human-readable format
+        @param max_size: maximum size in bytes or human-readable format
+        @param maxdepth: maximum depth to descend to
+        @param name: True if the last component of the pathname being examined matches pattern.
+                      Special shell pattern matching characters (“[”, “]”, “*”, and “?”)
+                      may be used as part of pattern.
+                      These characters may be matched explicitly
+                      by escaping them with a backslash (“\\”).
+
+        @param iname: Like -name, but the match is case insensitive.
+        @param regex: True if the whole path of the file matches pattern using regular expression.
+        @param args: additional arguments to pass to find
+        @param quote_path: if the path should be quoted
+        @return:
+        """
+        if args is None:
+            args = []
+
+        def maybe_quote(value):
+            return QuoteString(value) if quote_path else value
+
+        command = [
+            "find",
+            maybe_quote(path),
+            "-type",
+            self.type_flag,
+        ]
+
+        """
+        Why we need special handling for size:
+        https://unix.stackexchange.com/questions/275925/why-does-find-size-1g-not-find-any-files
+        In short, 'c' means bytes, without it, it means 512-byte blocks.
+        If we use any units other than 'c', it has a weird rounding behavior,
+        and is implementation-specific. So, we always use 'c'
+        """
+        if "-size" not in args:
+            if min_size is not None:
+                command.append("-size")
+                command.append("+{0}c".format(parse_size(min_size)))
+
+            if max_size is not None:
+                command.append("-size")
+                command.append("-{0}c".format(parse_size(max_size)))
+
+            if size is not None:
+                command.append("-size")
+                command.append("{0}c".format(size))
+
+        if maxdepth is not None and "-maxdepth" not in args:
+            command.append("-maxdepth")
+            command.append("{0}".format(maxdepth))
+
+        if fname is not None and "-fname" not in args:
+            command.append("-name")
+            command.append(maybe_quote(fname))
+
+        if iname is not None and "-iname" not in args:
+            command.append("-iname")
+            command.append(maybe_quote(iname))
+
+        if regex is not None and "-regex" not in args:
+            command.append("-regex")
+            command.append(maybe_quote(regex))
+
+        command.append("||")
+        command.append("true")
+
+        return StringCommand(*command)
 
 
 class FindFiles(FindFilesBase):

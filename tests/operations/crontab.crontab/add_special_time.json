@@ -4,7 +4,7 @@
         "special_time": "@reboot"
     },
     "facts": {
-        "server.Crontab": {
+        "crontab.Crontab": {
             "user=None": {}
         }
     },

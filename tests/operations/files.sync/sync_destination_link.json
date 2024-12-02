@@ -53,7 +53,10 @@
             "path=/home/some-actual-dir": {
                 "mode": 755
             },
-            "path=/home/somedir/underthat": null
+            "path=/home/somedir/underthat": null,
+            "path=/home/somedir/somefile.txt": null,
+            "path=/home/somedir/anotherfile.txt": null,
+            "path=/home/somedir/underthat/yet-another-file.txt": null
         },
         "files.FindFiles": {
             "path=/home/somedir": [

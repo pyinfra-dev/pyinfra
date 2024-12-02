@@ -8,7 +8,7 @@
     },
     "facts": {
         "files.Block": {
-            "path=/home/someone/something, marker=None, begin=None, end=None": ["the one true string"]
+            "begin=None, end=None, marker=None, path=/home/someone/something": ["the one true string"]
         }
     },
     "commands": [],

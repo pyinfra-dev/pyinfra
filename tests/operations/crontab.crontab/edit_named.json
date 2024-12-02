@@ -5,7 +5,7 @@
         "cron_name": "name of cron"
     },
     "facts": {
-        "server.Crontab": {
+        "crontab.Crontab": {
             "user=None": {
                 "command_to_change": {
                     "minute": "*",

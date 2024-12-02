@@ -30,9 +30,9 @@ def container(
     + networks: network list to attach on container
     + ports: port list to expose
     + volumes: volume list to map on container
-    + env_vars: environment varible list to inject on container
+    + env_vars: environment variable list to inject on container
     + pull_always: force image pull
-    + force: remove a contaner with same name and create a new one
+    + force: remove a container with same name and create a new one
     + present: whether the container should be up and running
     + start: start or stop the container
 
@@ -125,7 +125,7 @@ def image(image, present=True):
     Manage Docker images
 
     + image: Image and tag ex: nginx:alpine
-    + present: whether the Docker image should be exist
+    + present: whether the Docker image should exist
 
     **Examples:**
 
@@ -188,7 +188,7 @@ def volume(volume, driver="", labels=None, present=True):
     if present:
 
         if existent_volume:
-            host.noop("Volume alredy exist!")
+            host.noop("Volume already exists!")
             return
 
         yield handle_docker(
@@ -261,7 +261,7 @@ def network(
 
     if present:
         if existent_network:
-            host.noop("Alredy exist a network with {0} name!".format(network))
+            host.noop("Network {0} already exists!".format(network))
             return
 
         yield handle_docker(
@@ -284,7 +284,7 @@ def network(
 
     else:
         if existent_network is None:
-            host.noop("Ther is not network with {0} name!".format(network))
+            host.noop("Network {0} does not exist!".format(network))
             return
 
         yield handle_docker(

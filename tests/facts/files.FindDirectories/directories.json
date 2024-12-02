@@ -4,5 +4,7 @@
     "output": [
         "anotherdir"
     ],
-    "fact": ["anotherdir"]
+    "fact": [
+        "anotherdir"
+    ]
 }

@@ -1,4 +1,5 @@
 from os import path
+from typing import Optional
 
 import click
 
@@ -10,7 +11,7 @@ from pyinfra.connectors.util import run_local_process
 from pyinfra.context import ctx_state
 
 
-def include(filename: str):
+def include(filename: str, data: Optional[dict] = None):
     """
     Executes a local python file within the ``pyinfra.state.cwd``
     directory.
@@ -33,7 +34,7 @@ def include(filename: str):
 
         from pyinfra_cli.util import exec_file
 
-        with host.deploy(path.relpath(filename, state.cwd), None, None, in_deploy=False):
+        with host.deploy(path.relpath(filename, state.cwd), None, data, in_deploy=False):
             exec_file(filename)
 
         # One potential solution to the above is to add local as an actual

@@ -8,7 +8,7 @@
     },
     "facts": {
         "files.Directory": {
-            "path=testdir": null
+            "path=test dir": null
         }
     },
     "commands": [

@@ -1,11 +1,11 @@
 {
     "args": ["somefile"],
     "kwargs": {
-        "database": "somedb",
         "psql_user": "root",
         "psql_password": "somepass",
         "psql_host": "localhost",
-        "psql_port": 3306
+        "psql_port": 3306,
+        "psql_database": "somedb"
     },
     "commands": [
         {

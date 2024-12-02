@@ -5,7 +5,7 @@
     },
     "facts": {
         "git.GitConfig": {
-            "repo=/my/repo": {
+            "repo=/my/repo, system=False": {
                 "another_key": ["value"]
             }
         },

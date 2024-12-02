@@ -16,24 +16,40 @@ from .util.files import chown, unix_path_join
 
 
 @operation()
-def config(key: str, value: str, multi_value=False, repo: str | None = None):
+def config(key: str, value: str, multi_value=False, repo: str | None = None, system=False):
     """
-    Manage git config for a repository or globally.
+    Manage git config at repository, user or system level.
 
     + key: the key of the config to ensure
     + value: the value this key should have
     + multi_value: Add the value rather than set it for settings that can have multiple values
     + repo: specify the git repo path to edit local config (defaults to global)
+    + system: whether, when ``repo`` is unspecified, to work at system level (or default to global)
 
-    **Example:**
+    **Examples:**
 
     .. code:: python
 
         git.config(
-            name="Ensure user name is set for a repo",
+            name="Always prune specified repo",
+            key="fetch.prune",
+            value="true",
+            repo="/usr/local/src/pyinfra",
+        )
+
+        git.config(
+            name="Ensure user name is set for all repos of specified user",
             key="user.name",
             value="Anon E. Mouse",
-            repo="/usr/local/src/pyinfra",
+            _sudo=True,
+            _sudo_user="anon"
+        )
+
+        git.config(
+            name="Ensure same date format for all users",
+            key="log.date",
+            value="iso",
+            system=True
         )
 
     """
@@ -41,14 +57,14 @@ def config(key: str, value: str, multi_value=False, repo: str | None = None):
     existing_config = {}
 
     if not repo:
-        existing_config = host.get_fact(GitConfig)
+        existing_config = host.get_fact(GitConfig, system=system)
 
     # Only get the config if the repo exists at this stage
     elif host.get_fact(Directory, path=unix_path_join(repo, ".git")):
         existing_config = host.get_fact(GitConfig, repo=repo)
 
     if repo is None:
-        base_command = "git config --global"
+        base_command = "git config" + (" --system" if system else " --global")
     else:
         base_command = "cd {0} && git config --local".format(repo)
 

@@ -6,8 +6,9 @@
         "0 0 * * * apt install -fy",
         "@daily echo daily"
     ],
-    "fact":  {
-        "apt update": {
+    "fact": [
+        {
+            "command": "apt update",
             "minute": "*",
             "hour": "*",
             "month": "*",
@@ -15,7 +16,8 @@
             "day_of_week": "*",
             "comments": []
         },
-        "apt install -fy": {
+        {
+            "command": "apt install -fy",
             "minute": 0,
             "hour": 0,
             "month": "*",
@@ -23,9 +25,10 @@
             "day_of_week": "*",
             "comments": []
         },
-        "echo daily": {
+        {
+            "command": "echo daily",
             "special_time": "@daily",
             "comments": []
         }
-    }
+    ]
 }

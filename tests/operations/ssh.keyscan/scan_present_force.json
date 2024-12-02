@@ -11,7 +11,7 @@
             }
         },
         "files.FindInFile": {
-            "path=/home/pyinfra/.ssh/known_hosts, pattern=remote-host.net": [true]
+            "interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=remote-host.net": [true]
         }
     },
     "commands": [

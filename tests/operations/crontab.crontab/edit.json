@@ -5,7 +5,7 @@
         "day_of_week": [1, 2, "3"]
     },
     "facts": {
-        "server.Crontab": {
+        "crontab.Crontab": {
             "user=None": {
                 "this_is_a_command": {
                     "minute": "*",

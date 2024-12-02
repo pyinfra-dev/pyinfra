@@ -32,7 +32,7 @@
             }
         },
         "files.FindInFile": {
-            "path=homedir/.ssh/authorized_keys, pattern=^.*abc.*$, interpolate_variables=False": []
+            "interpolate_variables=False, path=homedir/.ssh/authorized_keys, pattern=^.*abc.*$": []
         },
         "server.Groups": {}
     },

@@ -26,13 +26,17 @@
         },
         "files.Directory": {
             "path=/home/somedir": null,
-            "path=/home/somedir/underthat": null
+            "path=/home/somedir/underthat": null,
+            "path=/home/somedir/somefile.txt": null,
+            "path=/home/somedir/underthat/another-file.txt": null
         },
         "files.FindFiles": {
             "path=/home/somedir": [],
             "path=/home/somedir/underthat": []
         },
-        "files.Link": {},
+        "files.Link": {
+            "path=/home/somedir": null
+        },
         "files.Sha1File": {
             "path=/home/somedir/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
         }

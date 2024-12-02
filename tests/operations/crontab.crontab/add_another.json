@@ -1,11 +1,15 @@
 {
     "args": ["this_is_a_command"],
     "facts": {
-        "server.Crontab": {
-            "user=None": {}
+        "crontab.Crontab": {
+            "user=None": {
+                "this_is_another_command": {}
+            }
         }
     },
     "commands": [
+        "crontab -l  > _tempfile_",
+        "echo '' >> _tempfile_",
         "echo '* * * * * this_is_a_command' >> _tempfile_",
         "crontab  _tempfile_"
     ]

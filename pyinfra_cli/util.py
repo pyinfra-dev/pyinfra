@@ -124,6 +124,9 @@ def json_encode(obj):
     if isinstance(obj, bytes):
         return obj.decode()
 
+    if hasattr(obj, "to_json"):
+        return obj.to_json()
+
     raise TypeError("Cannot serialize: {0} ({1})".format(type(obj), obj))
 
 

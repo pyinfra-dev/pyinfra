@@ -7,7 +7,15 @@
         "server.Which": {
             "command=systemctl": false,
             "command=initctl": false,
-            "command=service": true
+            "command=rc-service": false,
+            "command=sv": false,
+            "command=service": false
+        },
+        "files.Link": {
+            "path=/etc/init.d": false
+        },
+        "files.Directory": {
+            "path=/etc/init.d": true
         }
     },
     "commands": [

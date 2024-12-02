@@ -5,7 +5,6 @@ Linux/BSD.
 
 from __future__ import annotations
 
-import shlex
 from io import StringIO
 from itertools import filterfalse, tee
 from os import path
@@ -18,7 +17,6 @@ from pyinfra.api.util import try_int
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 from pyinfra.facts.files import Directory, FindInFile, Link
 from pyinfra.facts.server import (
-    Crontab,
     Groups,
     Home,
     Hostname,
@@ -30,6 +28,7 @@ from pyinfra.facts.server import (
     Users,
     Which,
 )
+from pyinfra.operations import crontab as crontab_
 
 from . import (
     apk,
@@ -49,7 +48,7 @@ from . import (
     yum,
     zypper,
 )
-from .util.files import chmod, sed_replace
+from .util.files import chmod
 
 if TYPE_CHECKING:
     from pyinfra.api.arguments_typed import PyinfraOperation
@@ -588,180 +587,7 @@ def packages(
     yield from package_operation._inner(packages=packages, present=present)
 
 
-@operation()
-def crontab(
-    command: str,
-    present=True,
-    user: str | None = None,
-    cron_name: str | None = None,
-    minute="*",
-    hour="*",
-    month="*",
-    day_of_week="*",
-    day_of_month="*",
-    special_time: str | None = None,
-    interpolate_variables=False,
-):
-    """
-    Add/remove/update crontab entries.
-
-    + command: the command for the cron
-    + present: whether this cron command should exist
-    + user: the user whose crontab to manage
-    + cron_name: name the cronjob so future changes to the command will overwrite
-    + minute: which minutes to execute the cron
-    + hour: which hours to execute the cron
-    + month: which months to execute the cron
-    + day_of_week: which day of the week to execute the cron
-    + day_of_month: which day of the month to execute the cron
-    + special_time: cron "nickname" time (@reboot, @daily, etc), overrides others
-    + interpolate_variables: whether to interpolate variables in ``command``
-
-    Cron commands:
-        Unless ``name`` is specified the command is used to identify crontab entries.
-        This means commands must be unique within a given users crontab. If you require
-        multiple identical commands, provide a different name argument for each.
-
-    Special times:
-        When provided, ``special_time`` will be used instead of any values passed in
-        for ``minute``/``hour``/``month``/``day_of_week``/``day_of_month``.
-
-    **Example:**
-
-    .. code:: python
-
-        # simple example for a crontab
-        server.crontab(
-            name="Backup /etc weekly",
-            command="/bin/tar cf /tmp/etc_bup.tar /etc",
-            name="backup_etc",
-            day_of_week=0,
-            hour=1,
-            minute=0,
-        )
-    """
-
-    def comma_sep(value):
-        if isinstance(value, (list, tuple)):
-            return ",".join("{0}".format(v) for v in value)
-        return value
-
-    minute = comma_sep(minute)
-    hour = comma_sep(hour)
-    month = comma_sep(month)
-    day_of_week = comma_sep(day_of_week)
-    day_of_month = comma_sep(day_of_month)
-
-    crontab = host.get_fact(Crontab, user=user)
-    name_comment = "# pyinfra-name={0}".format(cron_name)
-
-    existing_crontab = crontab.get(command)
-    existing_crontab_command = command
-    existing_crontab_match = command
-
-    if not existing_crontab and cron_name:  # find the crontab by name if provided
-        for cmd, details in crontab.items():
-            if not details["comments"]:
-                continue
-            if name_comment in details["comments"]:
-                existing_crontab = details
-                existing_crontab_match = cmd
-                existing_crontab_command = cmd
-
-    exists = existing_crontab is not None
-
-    edit_commands: list[str | StringCommand] = []
-    temp_filename = host.get_temp_filename()
-
-    if special_time:
-        new_crontab_line = "{0} {1}".format(special_time, command)
-    else:
-        new_crontab_line = "{minute} {hour} {day_of_month} {month} {day_of_week} {command}".format(
-            minute=minute,
-            hour=hour,
-            day_of_month=day_of_month,
-            month=month,
-            day_of_week=day_of_week,
-            command=command,
-        )
-
-    existing_crontab_match = ".*{0}.*".format(existing_crontab_match)
-
-    # Don't want the cron and it does exist? Remove the line
-    if not present and exists:
-        edit_commands.append(
-            sed_replace(
-                temp_filename,
-                existing_crontab_match,
-                "",
-                interpolate_variables=interpolate_variables,
-            ),
-        )
-
-    # Want the cron but it doesn't exist? Append the line
-    elif present and not exists:
-        if cron_name:
-            if crontab:  # append a blank line if cron entries already exist
-                edit_commands.append("echo '' >> {0}".format(temp_filename))
-            edit_commands.append(
-                "echo {0} >> {1}".format(
-                    shlex.quote(name_comment),
-                    temp_filename,
-                ),
-            )
-
-        edit_commands.append(
-            "echo {0} >> {1}".format(
-                shlex.quote(new_crontab_line),
-                temp_filename,
-            ),
-        )
-
-    # We have the cron and it exists, do it's details? If not, replace the line
-    elif present and exists:
-        assert existing_crontab is not None
-        if any(
-            (
-                special_time != existing_crontab.get("special_time"),
-                try_int(minute) != existing_crontab.get("minute"),
-                try_int(hour) != existing_crontab.get("hour"),
-                try_int(month) != existing_crontab.get("month"),
-                try_int(day_of_week) != existing_crontab.get("day_of_week"),
-                try_int(day_of_month) != existing_crontab.get("day_of_month"),
-                existing_crontab_command != command,
-            ),
-        ):
-            edit_commands.append(
-                sed_replace(
-                    temp_filename,
-                    existing_crontab_match,
-                    new_crontab_line,
-                    interpolate_variables=interpolate_variables,
-                ),
-            )
-
-    if edit_commands:
-        crontab_args = []
-        if user:
-            crontab_args.append("-u {0}".format(user))
-
-        # List the crontab into a temporary file if it exists
-        if crontab:
-            yield "crontab -l {0} > {1}".format(" ".join(crontab_args), temp_filename)
-
-        # Now yield any edits
-        for edit_command in edit_commands:
-            yield edit_command
-
-        # Finally, use the tempfile to write a new crontab
-        yield "crontab {0} {1}".format(" ".join(crontab_args), temp_filename)
-    else:
-        host.noop(
-            "crontab {0} {1}".format(
-                command,
-                "exists" if present else "does not exist",
-            ),
-        )
+crontab = crontab_.crontab
 
 
 @operation()

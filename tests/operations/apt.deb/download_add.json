@@ -6,7 +6,7 @@
             "path=_tempfile_": null
         },
         "deb.DebPackage": {
-            "name=_tempfile_": null
+            "package=_tempfile_": null
         },
         "deb.DebPackages": {},
         "server.Which": {

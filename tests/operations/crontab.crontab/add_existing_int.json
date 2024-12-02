@@ -1,11 +1,15 @@
 {
     "args": ["this_is_a_command"],
+    "kwargs": {
+        "minute": "0",
+        "hour": "0"
+    },
     "facts": {
-        "server.Crontab": {
+        "crontab.Crontab": {
             "user=None": {
                 "this_is_a_command": {
-                    "minute": "*",
-                    "hour": "*",
+                    "minute": 0,
+                    "hour": 0,
                     "month": "*",
                     "day_of_week": "*",
                     "day_of_month": "*"
