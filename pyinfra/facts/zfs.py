@@ -19,8 +19,7 @@ class Pools(FactBase):
     def command(self):
         return "zpool get -H all"
 
-    @staticmethod
-    def process(output):
+    def process(self, output):
         return _process_zfs_props_table(output)
 
 
@@ -28,30 +27,26 @@ class Datasets(FactBase):
     def command(self):
         return "zfs get -H all"
 
-    @staticmethod
-    def process(output):
+    def process(self, output):
         return _process_zfs_props_table(output)
 
 
 class Filesystems(ShortFactBase):
     fact = Datasets
 
-    @staticmethod
-    def process_data(data):
+    def process_data(self, data):
         return {name: props for name, props in data.items() if props.get("type") == "filesystem"}
 
 
 class Snapshots(ShortFactBase):
     fact = Datasets
 
-    @staticmethod
-    def process_data(data):
+    def process_data(self, data):
         return {name: props for name, props in data.items() if props.get("type") == "snapshot"}
 
 
 class Volumes(ShortFactBase):
     fact = Datasets
 
-    @staticmethod
-    def process_data(data):
+    def process_data(self, data):
         return {name: props for name, props in data.items() if props.get("type") == "volume"}

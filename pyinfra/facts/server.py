@@ -32,8 +32,7 @@ class Home(FactBase[Optional[str]]):
     Returns the home directory of the given user, or the current user if no user is given.
     """
 
-    @staticmethod
-    def command(user=""):
+    def command(self, user=""):
         return f"echo ~{user}"
 
 
@@ -124,8 +123,7 @@ class Command(FactBase[str]):
     Returns the raw output lines of a given command.
     """
 
-    @staticmethod
-    def command(command):
+    def command(self, command):
         return command
 
 
@@ -134,8 +132,7 @@ class Which(FactBase[Optional[str]]):
     Returns the path of a given command according to `command -v`, if available.
     """
 
-    @staticmethod
-    def command(command):
+    def command(self, command):
         return "command -v {0} || true".format(command)
 
 

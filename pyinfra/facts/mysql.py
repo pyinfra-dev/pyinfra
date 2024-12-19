@@ -214,8 +214,7 @@ class MysqlUserGrants(MysqlFactBase):
             mysql_port,
         )
 
-    @staticmethod
-    def process(output):
+    def process(self, output):
         database_table_privileges = defaultdict(set)
 
         for line in output:
