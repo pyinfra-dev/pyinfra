@@ -25,7 +25,6 @@ INSTALL_REQUIRES = (
     "jinja2>2,<4",
     "python-dateutil>2,<3",
     "setuptools",
-    "configparser",
     "pywinrm",
     "typeguard",
     "distro>=1.6,<2",
