@@ -1,6 +1,6 @@
 {
     "arg": "myfile",
-    "command": "test -e myfile && ( sha384sum myfile 2> /dev/null || shasum -a 384 myfile 2> /dev/null ) || true",
+    "command": "test -e myfile && ( sha384sum myfile 2> /dev/null || shasum -a 384 myfile 2> /dev/null || sha384 myfile 2> /dev/null ) || true",
     "output": [
         "SHA384 (myfile) = 1dd2e448df7c4dc19848a37fdf25c86660b19d06a4cd6987ca2c4071f80e9dd3061e4b01ddb982dc56ed7a2ed2294699"
     ],

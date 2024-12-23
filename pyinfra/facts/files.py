@@ -276,7 +276,7 @@ class Sha256File(HashFileFactBase, digits=64, cmds=["sha256sum", "shasum -a 256"
     """
 
 
-class Sha384File(HashFileFactBase, digits=96, cmds=["sha384sum", "shasum -a 384"]):
+class Sha384File(HashFileFactBase, digits=96, cmds=["sha384sum", "shasum -a 384", "sha384"]):
     """
     Returns a SHA384 hash of a file, or ``None`` if the file does not exist.
     """
