@@ -333,7 +333,7 @@ def upgrade(auto_remove: bool = False):
     """
     Upgrades all apt packages.
 
-    + autoremove: removes transitive dependencies that are no longer needed.
+    + auto_remove: removes transitive dependencies that are no longer needed.
 
     **Example:**
 
