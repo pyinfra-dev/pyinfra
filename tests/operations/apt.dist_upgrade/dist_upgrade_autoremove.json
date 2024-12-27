@@ -1,0 +1,16 @@
+{
+    "kwargs": {"auto_remove": true},
+    "facts": {
+        "apt.SimulateOperationWillChange": {
+            "command=dist-upgrade --autoremove": {
+                "upgraded": 10,
+                "newly_installed": 3,
+                "removed": 2,
+                "not_upgraded": 3
+            }
+        }
+    },
+    "commands": [
+        "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" dist-upgrade --autoremove"
+    ]
+}

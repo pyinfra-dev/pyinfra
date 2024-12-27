@@ -363,9 +363,11 @@ _upgrade = upgrade  # noqa: E305 (for use below where update is a kwarg)
 
 
 @operation()
-def dist_upgrade():
+def dist_upgrade(auto_remove: bool = False):
     """
     Updates all apt packages, employing dist-upgrade.
+
+    + auto_remove: removes transitive dependencies that are no longer needed.
 
     **Example:**
 
@@ -376,7 +378,12 @@ def dist_upgrade():
         )
     """
 
-    yield from _simulate_then_perform("dist-upgrade")
+    command = ["dist-upgrade"]
+
+    if auto_remove:
+        command.append("--autoremove")
+
+    yield from _simulate_then_perform(" ".join(command))
 
 
 @operation()
