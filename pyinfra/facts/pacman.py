@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import shlex
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
@@ -21,15 +23,18 @@ class PacmanUnpackGroup(FactBase):
         ]
     """
 
+    @override
     def requires_command(self, *args, **kwargs) -> str:
         return "pacman"
 
     default = list
 
+    @override
     def command(self, package):
         # Accept failure here (|| true) for invalid/unknown packages
         return 'pacman -S --print-format "%n" {0} || true'.format(shlex.quote(package))
 
+    @override
     def process(self, output):
         return output
 
@@ -45,13 +50,16 @@ class PacmanPackages(FactBase):
         }
     """
 
+    @override
     def command(self) -> str:
         return "pacman -Q"
 
+    @override
     def requires_command(self, *args, **kwargs) -> str:
         return "pacman"
 
     default = dict
 
+    @override
     def process(self, output):
         return parse_packages(PACMAN_REGEX, output)

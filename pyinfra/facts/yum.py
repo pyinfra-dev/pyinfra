@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 from .util import make_cat_files_command
@@ -23,16 +25,19 @@ class YumRepositories(FactBase):
         ]
     """
 
+    @override
     def command(self) -> str:
         return make_cat_files_command(
             "/etc/yum.conf",
             "/etc/yum.repos.d/*.repo",
         )
 
+    @override
     def requires_command(self) -> str:
         return "yum"
 
     default = list
 
+    @override
     def process(self, output):
         return parse_yum_repositories(output)

@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from typing import Dict, Iterable
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase, QuoteString, StringCommand
 
 # Valid unit names consist of a "name prefix" and a dot and a suffix specifying the unit type.
@@ -55,6 +57,7 @@ class SystemdStatus(FactBase[Dict[str, bool]]):
         }
     """
 
+    @override
     def requires_command(self, *args, **kwargs) -> str:
         return "systemctl"
 
@@ -63,6 +66,7 @@ class SystemdStatus(FactBase[Dict[str, bool]]):
     state_key = "SubState"
     state_values = ["running", "waiting", "exited", "listening"]
 
+    @override
     def command(
         self,
         user_mode: bool = False,
@@ -94,6 +98,7 @@ class SystemdStatus(FactBase[Dict[str, bool]]):
             *service_strs,
         )
 
+    @override
     def process(self, output) -> Dict[str, bool]:
         services: Dict[str, bool] = {}
 

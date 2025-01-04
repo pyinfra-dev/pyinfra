@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from typing_extensions import TypedDict
+from typing_extensions import TypedDict, override
 
 from pyinfra.api import FactBase
 
@@ -76,17 +76,20 @@ class AptSources(FactBase):
         ]
     """
 
+    @override
     def command(self) -> str:
         return make_cat_files_command(
             "/etc/apt/sources.list",
             "/etc/apt/sources.list.d/*.list",
         )
 
+    @override
     def requires_command(self) -> str:
         return "apt"  # if apt installed, above should exist
 
     default = list
 
+    @override
     def process(self, output):
         repos = []
 
@@ -113,9 +116,11 @@ class AptKeys(GpgFactBase):
     """
 
     # This requires both apt-key *and* apt-key itself requires gpg
+    @override
     def command(self) -> str:
         return "! command -v gpg || apt-key list --with-colons"
 
+    @override
     def requires_command(self) -> str:
         return "apt-key"
 
@@ -132,13 +137,16 @@ class SimulateOperationWillChange(FactBase[AptSimulationDict]):
     Simulate an 'apt-get' operation and try to detect if any changes would be performed.
     """
 
+    @override
     def command(self, command: str) -> str:
         # LC_ALL=C: Ensure the output is in english, as we want to parse it
         return "LC_ALL=C " + noninteractive_apt(f"{command} --dry-run")
 
+    @override
     def requires_command(self, command: str) -> str:
         return "apt-get"
 
+    @override
     def process(self, output) -> AptSimulationDict:
         # We are looking for a line similar to
         # "3 upgraded, 0 newly installed, 0 to remove and 0 not upgraded."

@@ -2,6 +2,8 @@
 Manage ZFS filesystems.
 """
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase, ShortFactBase
 
 
@@ -16,17 +18,21 @@ def _process_zfs_props_table(output):
 
 
 class Pools(FactBase):
-    def command(self):
+    @override
+    def command(self) -> str:
         return "zpool get -H all"
 
+    @override
     def process(self, output):
         return _process_zfs_props_table(output)
 
 
 class Datasets(FactBase):
-    def command(self):
+    @override
+    def command(self) -> str:
         return "zfs get -H all"
 
+    @override
     def process(self, output):
         return _process_zfs_props_table(output)
 
@@ -34,6 +40,7 @@ class Datasets(FactBase):
 class Filesystems(ShortFactBase):
     fact = Datasets
 
+    @override
     def process_data(self, data):
         return {name: props for name, props in data.items() if props.get("type") == "filesystem"}
 
@@ -41,6 +48,7 @@ class Filesystems(ShortFactBase):
 class Snapshots(ShortFactBase):
     fact = Datasets
 
+    @override
     def process_data(self, data):
         return {name: props for name, props in data.items() if props.get("type") == "snapshot"}
 
@@ -48,5 +56,6 @@ class Snapshots(ShortFactBase):
 class Volumes(ShortFactBase):
     fact = Datasets
 
+    @override
     def process_data(self, data):
         return {name: props for name, props in data.items() if props.get("type") == "volume"}

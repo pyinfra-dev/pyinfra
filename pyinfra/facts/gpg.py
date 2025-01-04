@@ -2,18 +2,22 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 
 class GpgFactBase(FactBase):
     abstract = True
 
+    @override
     def requires_command(self, *args, **kwargs) -> str:
         return "gpg"
 
     key_record_type = "pub"
     subkey_record_type = "sub"
 
+    @override
     def process(self, output):
         # For details on the field values see:
         # https://git.gnupg.org/cgi-bin/gitweb.cgi?p=gnupg.git;a=blob_plain;f=doc/DETAILS
@@ -88,6 +92,7 @@ class GpgKey(GpgFactBase):
         }
     """
 
+    @override
     def command(self, src):
         if urlparse(src).scheme:
             return ("(wget -O - {0} || curl -sSLf {0}) | gpg --with-colons").format(src)
@@ -109,6 +114,7 @@ class GpgKeys(GpgFactBase):
         }
     """
 
+    @override
     def command(self, keyring=None):
         if not keyring:
             return "gpg --list-keys --with-colons"
@@ -134,6 +140,7 @@ class GpgSecretKeys(GpgFactBase):
     key_record_type = "sec"
     subkey_record_type = "ssb"
 
+    @override
     def command(self, keyring=None):
         if not keyring:
             return "gpg --list-secret-keys --with-colons"

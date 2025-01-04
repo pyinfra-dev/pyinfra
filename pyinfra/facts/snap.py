@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import re
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 
 class SnapBaseFact(FactBase):
     abstract = True
 
+    @override
     def requires_command(self, *args, **kwargs) -> str:
         return "snap"
 
@@ -36,9 +39,11 @@ class SnapPackage(SnapBaseFact):
         "version": r"^installed:[ ]+([\w\d.-]+).*$",
     }
 
+    @override
     def command(self, package):
         return f"snap info {package}"
 
+    @override
     def process(self, output):
         data = {}
         for line in output:
@@ -67,9 +72,11 @@ class SnapPackages(SnapBaseFact):
 
     default = list
 
+    @override
     def command(self) -> str:
         return "snap list"
 
+    @override
     def process(self, output):
         # Discard header output line from snap list command
         # 'snap list' command example output lines:

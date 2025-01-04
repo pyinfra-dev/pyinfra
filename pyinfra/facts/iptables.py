@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 # Mapping for iptables code arguments to variable names
@@ -89,9 +91,11 @@ class IptablesRules(FactBase):
 
     default = list
 
+    @override
     def command(self, table="filter"):
         return "iptables-save -t {0}".format(table)
 
+    @override
     def process(self, output):
         rules = []
 
@@ -116,6 +120,7 @@ class Ip6tablesRules(IptablesRules):
         ]
     """
 
+    @override
     def command(self, table="filter"):
         return "ip6tables-save -t {0}".format(table)
 
@@ -133,9 +138,11 @@ class IptablesChains(FactBase):
 
     default = dict
 
+    @override
     def command(self, table="filter"):
         return "iptables-save -t {0}".format(table)
 
+    @override
     def process(self, output):
         chains = {}
 
@@ -160,5 +167,6 @@ class Ip6tablesChains(IptablesChains):
         }
     """
 
+    @override
     def command(self, table="filter"):
         return "ip6tables-save -t {0}".format(table)

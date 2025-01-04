@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase, MaskString, QuoteString, StringCommand
 from pyinfra.api.util import try_int
 
@@ -49,9 +51,11 @@ class PostgresFactBase(FactBase):
 
     psql_command: str
 
+    @override
     def requires_command(self, *args, **kwargs):
         return "psql"
 
+    @override
     def command(
         self,
         psql_user=None,
@@ -89,6 +93,7 @@ class PostgresRoles(PostgresFactBase):
     default = dict
     psql_command = "SELECT * FROM pg_catalog.pg_roles"
 
+    @override
     def process(self, output):
         # Remove the last line of the output (row count)
         output = output[:-1]
@@ -141,6 +146,7 @@ class PostgresDatabases(PostgresFactBase):
     default = dict
     psql_command = "SELECT pg_catalog.pg_encoding_to_char(encoding), * FROM pg_catalog.pg_database"
 
+    @override
     def process(self, output):
         # Remove the last line of the output (row count)
         output = output[:-1]
