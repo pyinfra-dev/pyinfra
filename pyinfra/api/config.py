@@ -2,6 +2,7 @@ try:
     import importlib_metadata
 except ImportError:
     import importlib.metadata as importlib_metadata  # type: ignore[no-redef]
+
 from os import path
 from typing import Iterable, Optional, Set
 
@@ -9,6 +10,7 @@ from packaging.markers import Marker
 from packaging.requirements import Requirement
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
+from typing_extensions import override
 
 from pyinfra import __version__, state
 
@@ -207,6 +209,7 @@ class Config(ConfigDefaults):
         for key, value in config.items():
             setattr(self, key, value)
 
+    @override
     def __setattr__(self, key, value):
         super().__setattr__(key, value)
 

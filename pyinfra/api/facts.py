@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, Optional, Ty
 import click
 import gevent
 from paramiko import SSHException
+from typing_extensions import override
 
 from pyinfra import logger
 from pyinfra.api import StringCommand
@@ -61,6 +62,7 @@ class FactBase(Generic[T]):
     def requires_command(self, *args, **kwargs) -> str | None:
         return None
 
+    @override
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
         module_name = cls.__module__.replace("pyinfra.facts.", "")
@@ -97,6 +99,7 @@ class ShortFactBase(Generic[T]):
     name: str
     fact: Type[FactBase]
 
+    @override
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
         module_name = cls.__module__.replace("pyinfra.facts.", "")
