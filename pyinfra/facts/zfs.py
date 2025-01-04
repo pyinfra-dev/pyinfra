@@ -23,6 +23,10 @@ class Pools(FactBase):
         return "zpool get -H all"
 
     @override
+    def requires_command(self) -> str:
+        return "zpool"
+
+    @override
     def process(self, output):
         return _process_zfs_props_table(output)
 
@@ -31,6 +35,10 @@ class Datasets(FactBase):
     @override
     def command(self) -> str:
         return "zfs get -H all"
+
+    @override
+    def requires_command(self) -> str:
+        return "zfs"
 
     @override
     def process(self, output):
