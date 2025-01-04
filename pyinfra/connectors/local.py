@@ -210,7 +210,7 @@ class LocalConnector(BaseConnector):
         return True
 
     @override
-    def check_can_rsync(self):
+    def check_can_rsync(self) -> None:
         if not which("rsync"):
             raise NotImplementedError("The `rsync` binary is not available on this system.")
 

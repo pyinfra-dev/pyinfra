@@ -129,7 +129,7 @@ class DockerConnector(BaseConnector):
                 self.container_id = _start_docker_image(docker_identifier)
 
     @override
-    def disconnect(self):
+    def disconnect(self) -> None:
         container_id = self.container_id
 
         if self.no_stop:

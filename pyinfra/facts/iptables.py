@@ -37,7 +37,7 @@ def parse_iptables_rule(line):
     args: list[str] = []
     not_arg = False
 
-    def add_args():
+    def add_args() -> None:
         arg_string = " ".join(args)
 
         if key and key in IPTABLES_ARGS:

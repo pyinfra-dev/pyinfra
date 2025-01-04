@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 @memoize
-def show_warning():
+def show_warning() -> None:
     logger.warning("The @chroot connector is in beta!")
 
 

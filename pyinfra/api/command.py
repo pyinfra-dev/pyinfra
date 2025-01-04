@@ -236,7 +236,7 @@ class FunctionCommand(PyinfraCommand):
         if "state" in argspec.args and "host" in argspec.args:
             return self.function(state, host, *self.args, **self.kwargs)
 
-        def execute_function():
+        def execute_function() -> None:
             with ctx_config.use(state.config.copy()):
                 with ctx_host.use(host):
                     self.function(*self.args, **self.kwargs)

@@ -543,7 +543,7 @@ class SSHConnector(BaseConnector):
         return True
 
     @override
-    def check_can_rsync(self):
+    def check_can_rsync(self) -> None:
         if self.data["ssh_key_password"]:
             raise NotImplementedError(
                 "Rsync does not currently work with SSH keys needing passwords."

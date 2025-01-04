@@ -665,7 +665,7 @@ def sync(
 
 
 @memoize
-def show_rsync_warning():
+def show_rsync_warning() -> None:
     logger.warning("The `files.rsync` operation is in alpha!")
 
 

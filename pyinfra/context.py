@@ -27,7 +27,7 @@ class ContextObject:
     _container_cls = container
     _base_cls: ModuleType
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._container = self._container_cls()
         self._container.module = None
 
@@ -96,7 +96,7 @@ class ContextManager:
     def set_base(self, module):
         self.context._base_cls = module
 
-    def reset(self):
+    def reset(self) -> None:
         self.context._container.module = None
 
     def isset(self):

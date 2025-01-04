@@ -361,7 +361,7 @@ class Host:
     # Connector proxy
     #
 
-    def _check_state(self):
+    def _check_state(self) -> None:
         if not self.state:
             raise TypeError("Cannot call this function with no state!")
 
@@ -403,7 +403,7 @@ class Host:
                 self.state.trigger_callbacks("host_connect", self)
                 self.connected = True
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """
         Disconnect from the host using it's configured connector.
         """

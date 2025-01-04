@@ -232,7 +232,7 @@ def remove_any_sudo_askpass_file(host) -> None:
 
 
 @memoize
-def _show_use_su_login_warning():
+def _show_use_su_login_warning() -> None:
     logger.warning(
         (
             "Using `use_su_login` may not work: "
