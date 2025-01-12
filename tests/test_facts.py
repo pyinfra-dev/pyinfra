@@ -8,7 +8,7 @@ from pyinfra.api import StringCommand
 from pyinfra.api.facts import ShortFactBase
 from pyinfra_cli.util import json_encode
 
-from .util import JsonTest, get_command_string
+from .util import YamlTest, get_command_string
 
 # show full diff on json
 TestCase.maxDiff = None
@@ -31,11 +31,11 @@ def make_fact_tests(folder_name):
     module = import_module("pyinfra.facts.{0}".format(module_name))
     fact = getattr(module, fact_name)()
 
-    class TestTests(TestCase, metaclass=JsonTest):
-        jsontest_files = path.join("tests", "facts", folder_name)
-        jsontest_prefix = "test_{0}_".format(fact.name)
+    class TestTests(TestCase, metaclass=YamlTest):
+        yaml_test_dir = path.join("tests", "facts", folder_name)
+        yaml_test_prefix = "test_{0}_".format(fact.name)
 
-        def jsontest_function(self, test_name, test_data, fact=fact):
+        def yaml_test_function(self, test_name, test_data, fact=fact):
             short_fact = None
 
             if isinstance(fact, ShortFactBase):
@@ -46,7 +46,9 @@ def make_fact_tests(folder_name):
             command = _make_command(fact.command, test_args)
 
             if "command" in test_data:
-                assert get_command_string(StringCommand(command)) == test_data["command"]
+                assert (
+                    get_command_string(StringCommand(command)) == test_data["command"]
+                )
             else:
                 warnings.warn(
                     'No command set for test: {0} (got "{1}")'.format(
