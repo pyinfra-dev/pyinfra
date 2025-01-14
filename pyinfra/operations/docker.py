@@ -298,7 +298,7 @@ def network(
 @operation(is_idempotent=False)
 def prune(
     all=False,
-    volume=False,
+    volumes=False,
     filter="",
 ):
     """
@@ -335,6 +335,6 @@ def prune(
         resource="system",
         command="prune",
         all=all,
-        volume=volume,
+        volumes=volumes,
         filter=filter,
     )
