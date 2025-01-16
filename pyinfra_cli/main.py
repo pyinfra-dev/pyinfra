@@ -49,7 +49,10 @@ def _print_support(ctx, param, value):
     ctx.exit()
 
 
-@click.command()
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument("inventory", nargs=1, type=click.Path(exists=False))
 @click.argument("operations", nargs=-1, required=True, type=click.Path(exists=False))
 @click.option(
