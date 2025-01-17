@@ -8,7 +8,7 @@ from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.docker import DockerContainer, DockerNetwork, DockerVolume
 
-from .util.docker import handle_docker
+from .util.docker import ContainerSpec, handle_docker
 
 
 @operation()
@@ -70,53 +70,57 @@ def container(
         )
     """
 
+    want_spec = ContainerSpec(
+        image,
+        ports or list(),
+        networks or list(),
+        volumes or list(),
+        env_vars or list(),
+        pull_always,
+    )
     existent_container = host.get_fact(DockerContainer, object_id=container)
 
-    if force:
-        if existent_container:
-            yield handle_docker(
-                resource="container",
-                command="remove",
-                container=container,
-            )
+    container_spec_changes = want_spec.diff_from_inspect(existent_container)
 
-    if present:
-        if not existent_container or force:
-            yield handle_docker(
-                resource="container",
-                command="create",
-                container=container,
-                image=image,
-                ports=ports,
-                networks=networks,
-                volumes=volumes,
-                env_vars=env_vars,
-                pull_always=pull_always,
-                present=present,
-                force=force,
-                start=start,
-            )
+    is_running = (
+        (existent_container[0]["State"]["Status"] == "running")
+        if existent_container and existent_container[0]
+        else False
+    )
+    recreating = existent_container and (force or container_spec_changes)
+    removing = existent_container and not present
 
-    if existent_container and start:
-        if existent_container[0]["State"]["Status"] != "running":
-            yield handle_docker(
-                resource="container",
-                command="start",
-                container=container,
-            )
+    do_remove = recreating or removing
+    do_create = (present and not existent_container) or recreating
+    do_start = start and (recreating or not is_running)
+    do_stop = not start and not removing and is_running
 
-    if existent_container and not start:
-        if existent_container[0]["State"]["Status"] == "running":
-            yield handle_docker(
-                resource="container",
-                command="stop",
-                container=container,
-            )
-
-    if existent_container and not present:
+    if do_remove:
         yield handle_docker(
             resource="container",
             command="remove",
+            container=container,
+        )
+
+    if do_create:
+        yield handle_docker(
+            resource="container",
+            command="create",
+            container=container,
+            spec=want_spec,
+        )
+
+    if do_start:
+        yield handle_docker(
+            resource="container",
+            command="start",
+            container=container,
+        )
+
+    if do_stop:
+        yield handle_docker(
+            resource="container",
+            command="stop",
             container=container,
         )
 
