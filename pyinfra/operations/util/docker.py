@@ -7,6 +7,7 @@ from pyinfra.api import OperationError
 @dataclasses.dataclass
 class ContainerSpec:
     image: str = ""
+    args: List[str] = dataclasses.field(default_factory=list)
     ports: List[str] = dataclasses.field(default_factory=list)
     networks: List[str] = dataclasses.field(default_factory=list)
     volumes: List[str] = dataclasses.field(default_factory=list)
@@ -31,6 +32,7 @@ class ContainerSpec:
             args.append("--pull always")
 
         args.append(self.image)
+        args.extend(self.args)
 
         return args
 

@@ -15,6 +15,7 @@ from .util.docker import ContainerSpec, handle_docker
 def container(
     container,
     image="",
+    args=None,
     ports=None,
     networks=None,
     volumes=None,
@@ -28,6 +29,7 @@ def container(
     Manage Docker containers
 
     + container: name to identify the container
+    + args: list of command-line args to supply to the image
     + image: container image and tag ex: nginx:alpine
     + networks: network list to attach on container
     + ports: port list to expose
@@ -72,6 +74,7 @@ def container(
 
     want_spec = ContainerSpec(
         image,
+        args or list(),
         ports or list(),
         networks or list(),
         volumes or list(),

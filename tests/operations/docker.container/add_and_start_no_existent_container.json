@@ -2,6 +2,11 @@
     "kwargs": {
         "container": "nginx",
         "image": "nginx:alpine",
+        "args": [
+            "nginx-debug",
+            "-g",
+            "'daemon off;'"
+        ],
         "ports": [
             "80:80"
         ],
@@ -14,7 +19,7 @@
         }
     },
     "commands": [
-        "docker container create --name nginx -p 80:80 nginx:alpine",
+        "docker container create --name nginx -p 80:80 nginx:alpine nginx-debug -g 'daemon off;'",
         "docker container start nginx"
     ]
 }
