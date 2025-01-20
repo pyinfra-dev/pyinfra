@@ -7,8 +7,21 @@
             "-g",
             "'daemon off;'"
         ],
+        "networks": [
+            "foo",
+            "bar"
+        ],
+        "volumes": [
+            "/host/a:/container/a",
+            "/host/b:/container/b"
+        ],
         "ports": [
-            "80:80"
+            "80:80",
+            "8081:8081"
+        ],
+        "env_vars": [
+            "ENV_A=foo",
+            "ENV_B=bar"
         ],
         "present": true,
         "start": true
@@ -19,7 +32,7 @@
         }
     },
     "commands": [
-        "docker container create --name nginx -p 80:80 nginx:alpine nginx-debug -g 'daemon off;'",
+        "docker container create --name nginx --label 'com.github.pyinfra.config-hash=72d37ab8f5ea3db48272d045bc10e211bbd628f2b4bab5c54d948b073313c9a3' --network bar --network foo -p 8081:8081 -p 80:80 -v /host/a:/container/a -v /host/b:/container/b -e ENV_A=foo -e ENV_B=bar nginx:alpine nginx-debug -g 'daemon off;'",
         "docker container start nginx"
     ]
 }

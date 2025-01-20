@@ -1,31 +1,49 @@
 import dataclasses
-from typing import Any, Dict, List
+import hashlib
+import json
+from typing import Any, List, Set
 
 from pyinfra.api import OperationError
+
+CONTAINER_CONFIG_HASH_LABEL = "com.github.pyinfra.config-hash"
+
+
+def _json_repr(obj: Any):
+    try:
+        return dataclasses.asdict(obj)
+    except TypeError:
+        pass
+
+    if isinstance(obj, set):
+        return sorted(obj)
+
+    # If there are other alternative types to try (e.g. dates) then do so here
+
+    raise TypeError(f"object {type(obj).__name__} not serializable")
 
 
 @dataclasses.dataclass
 class ContainerSpec:
     image: str = ""
     args: List[str] = dataclasses.field(default_factory=list)
-    ports: List[str] = dataclasses.field(default_factory=list)
-    networks: List[str] = dataclasses.field(default_factory=list)
+    ports: Set[str] = dataclasses.field(default_factory=set)
+    networks: Set[str] = dataclasses.field(default_factory=set)
     volumes: List[str] = dataclasses.field(default_factory=list)
-    env_vars: List[str] = dataclasses.field(default_factory=list)
+    env_vars: Set[str] = dataclasses.field(default_factory=set)
     pull_always: bool = False
 
     def container_create_args(self):
-        args = []
-        for network in self.networks:
+        args = [f"--label '{CONTAINER_CONFIG_HASH_LABEL}={self.config_hash()}'"]
+        for network in sorted(self.networks):
             args.append("--network {0}".format(network))
 
-        for port in self.ports:
+        for port in sorted(self.ports):
             args.append("-p {0}".format(port))
 
         for volume in self.volumes:
             args.append("-v {0}".format(volume))
 
-        for env_var in self.env_vars:
+        for env_var in sorted(self.env_vars):
             args.append("-e {0}".format(env_var))
 
         if self.pull_always:
@@ -36,13 +54,16 @@ class ContainerSpec:
 
         return args
 
-    def diff_from_inspect(self, inspect_dict: Dict[str, Any]) -> List[str]:
-        # TODO(@minor-fixes): Diff output of "docker inspect" against this spec
-        # to determine if the container needs to be recreated. Currently, this
-        # function will never recreate when attributes change, which is
-        # consistent with prior behavior.
-        del inspect_dict
-        return []
+    def config_hash(self) -> str:
+        serialized = json.dumps(
+            self,
+            default=_json_repr,
+            ensure_ascii=False,
+            sort_keys=True,
+            indent=None,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        return hashlib.sha256(serialized).hexdigest()
 
 
 def _create_container(**kwargs):

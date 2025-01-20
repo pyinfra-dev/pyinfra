@@ -3,9 +3,10 @@
         "container": "nginx",
         "image": "nginx:alpine",
         "ports": [
-            "80:80"
+            "80:8080"
         ],
-        "present": false
+        "present": true,
+        "force": false
     },
     "facts": {
         "docker.DockerContainer": {
@@ -241,6 +242,8 @@
         }
     },
     "commands": [
-        "docker container rm -f nginx"
+        "docker container rm -f nginx",
+        "docker container create --name nginx --label 'com.github.pyinfra.config-hash=5351e6b8b50baa96591b7df3e87758fbbea39c56e29722ab17c4988a23e2803d' -p 80:8080 nginx:alpine",
+        "docker container start nginx"
     ]
 }

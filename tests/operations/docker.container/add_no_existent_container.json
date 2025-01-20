@@ -10,10 +10,10 @@
     },
     "facts": {
         "docker.DockerContainer": {
-            "object_id=nginx": [] 
+            "object_id=nginx": []
         }
     },
     "commands": [
-        "docker container create --name nginx -p 80:80 nginx:alpine"
+        "docker container create --name nginx --label 'com.github.pyinfra.config-hash=927b8c9ed243674a1bc23d0d88d867973cb71f0363e3029187ccaab7c7e79f19' -p 80:80 nginx:alpine"
     ]
 }

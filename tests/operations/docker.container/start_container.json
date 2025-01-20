@@ -9,8 +9,7 @@
     },
     "facts": {
         "docker.DockerContainer": {
-        
-            "object_id=nginx" :[
+            "object_id=nginx": [
                 {
                     "Id": "9bb5a79e7c4da9ad38e7183aa7c943ee41dcbbab70e4832fe29b2788ab88d4b4",
                     "Created": "2024-05-26T22: 01: 24.10525839Z",
@@ -188,7 +187,8 @@
                         ],
                         "OnBuild": "None",
                         "Labels": {
-                            "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>"
+                            "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>",
+                            "com.github.pyinfra.config-hash": "927b8c9ed243674a1bc23d0d88d867973cb71f0363e3029187ccaab7c7e79f19"
                         },
                         "StopSignal": "SIGQUIT"
                     },

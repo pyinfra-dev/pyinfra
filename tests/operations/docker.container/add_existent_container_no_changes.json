@@ -5,7 +5,8 @@
         "ports": [
             "80:80"
         ],
-        "present": false
+        "present": true,
+        "force": false
     },
     "facts": {
         "docker.DockerContainer": {
@@ -188,7 +189,7 @@
                         "OnBuild": "None",
                         "Labels": {
                             "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>",
-                            "com.github.pyinfra.config-hash": "9be1c70576c6c4762c54bfce5fbd903638f9a68807453ce0549ad2e48b9a31f9"
+                            "com.github.pyinfra.config-hash": "927b8c9ed243674a1bc23d0d88d867973cb71f0363e3029187ccaab7c7e79f19"
                         },
                         "StopSignal": "SIGQUIT"
                     },
@@ -240,7 +241,6 @@
             ]
         }
     },
-    "commands": [
-        "docker container rm -f nginx"
-    ]
+    "commands": [],
+    "noop_description": "container configuration is already correct"
 }

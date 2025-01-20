@@ -188,7 +188,8 @@
                         ],
                         "OnBuild": "None",
                         "Labels": {
-                            "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>"
+                            "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>",
+                            "com.github.pyinfra.config-hash": "927b8c9ed243674a1bc23d0d88d867973cb71f0363e3029187ccaab7c7e79f19"
                         },
                         "StopSignal": "SIGQUIT"
                     },
@@ -242,7 +243,7 @@
     },
     "commands": [
         "docker container rm -f nginx",
-        "docker container create --name nginx -p 80:80 nginx:alpine",
+        "docker container create --name nginx --label 'com.github.pyinfra.config-hash=927b8c9ed243674a1bc23d0d88d867973cb71f0363e3029187ccaab7c7e79f19' -p 80:80 nginx:alpine",
         "docker container start nginx"
     ]
 }

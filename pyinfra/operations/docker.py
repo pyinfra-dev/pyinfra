@@ -4,11 +4,13 @@ the view of the current inventory host. See the :doc:`../connectors/docker` to u
 as inventory directly.
 """
 
+from typing import Any, Dict
+
 from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.docker import DockerContainer, DockerNetwork, DockerVolume
 
-from .util.docker import ContainerSpec, handle_docker
+from .util.docker import CONTAINER_CONFIG_HASH_LABEL, ContainerSpec, handle_docker
 
 
 @operation()
@@ -75,28 +77,36 @@ def container(
     want_spec = ContainerSpec(
         image,
         args or list(),
-        ports or list(),
-        networks or list(),
+        set(ports) if ports else set(),
+        set(networks) if networks else set(),
         volumes or list(),
-        env_vars or list(),
+        set(env_vars) if env_vars else set(),
         pull_always,
     )
-    existent_container = host.get_fact(DockerContainer, object_id=container)
 
-    container_spec_changes = want_spec.diff_from_inspect(existent_container)
-
-    is_running = (
-        (existent_container[0]["State"]["Status"] == "running")
-        if existent_container and existent_container[0]
-        else False
+    existent_container: Dict[str, Any] = next(
+        iter(host.get_fact(DockerContainer, object_id=container)), {}
     )
-    recreating = existent_container and (force or container_spec_changes)
+
+    old_hash = (
+        existent_container.get("Config", {})
+        .get("Labels", {})
+        .get(CONTAINER_CONFIG_HASH_LABEL, None)
+    )
+
+    container_spec_changed = old_hash != want_spec.config_hash()
+
+    is_running = existent_container.get("State", {}).get("Status", "") == "running"
+    recreating = existent_container and (force or container_spec_changed)
     removing = existent_container and not present
 
     do_remove = recreating or removing
-    do_create = (present and not existent_container) or recreating
-    do_start = start and (recreating or not is_running)
-    do_stop = not start and not removing and is_running
+    do_create = not removing and ((present and not existent_container) or recreating)
+    do_start = present and start and (recreating or not is_running)
+    do_stop = not start and not removing and is_running and not recreating
+
+    if not (do_remove or do_create or do_start or do_stop):
+        host.noop("container configuration is already correct")
 
     if do_remove:
         yield handle_docker(
