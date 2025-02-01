@@ -1,5 +1,5 @@
 from typing import Unpack
-from pyinfra.api import Config, Inventory, State
+from pyinfra.api import State
 from pyinfra.api.exceptions import InventoryError, ConnectError, PyinfraError
 from pyinfra.api.util import memoize, get_file_io
 from pyinfra.api.arguments import ConnectorArguments
