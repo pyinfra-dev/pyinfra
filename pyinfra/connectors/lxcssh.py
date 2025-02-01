@@ -1,14 +1,17 @@
-from typing import Unpack
-from pyinfra.api import State
+from typing import Unpack, TYPE_CHECKING
 from pyinfra.api.exceptions import InventoryError, ConnectError, PyinfraError
 from pyinfra.api.util import memoize, get_file_io
-from pyinfra.api.arguments import ConnectorArguments
 from pyinfra.api.command import StringCommand, QuoteString
 from pyinfra import logger
 from pyinfra.connectors.ssh import SSHConnector
 from pyinfra.connectors.base import BaseConnector
 from pyinfra.connectors.util import extract_control_arguments
 from pyinfra.progress import progress_spinner
+
+if TYPE_CHECKING:
+    from pyinfra.api.arguments import ConnectorArguments
+    from pyinfra.api.host import Host
+    from pyinfra.api.state import State
 
 
 @memoize
