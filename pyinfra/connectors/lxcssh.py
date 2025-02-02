@@ -1,15 +1,14 @@
 from typing import Unpack, TYPE_CHECKING
+from pyinfra import logger
 from pyinfra.api.exceptions import InventoryError, ConnectError, PyinfraError
 from pyinfra.api.util import memoize, get_file_io
 from pyinfra.api.command import StringCommand, QuoteString
-from pyinfra import logger
 from pyinfra.connectors.ssh import SSHConnector
 from pyinfra.connectors.base import BaseConnector
-from pyinfra.connectors.util import extract_control_arguments
-from pyinfra.progress import progress_spinner
+from pyinfra.api.arguments import pop_global_arguments, CONNECTOR_ARGUMENT_KEYS
 
 if TYPE_CHECKING:
-    from pyinfra.api.arguments import ConnectorArguments, pop_global_arguments, CONNECTOR_ARGUMENT_KEYS
+    from pyinfra.api.arguments import ConnectorArguments
     from pyinfra.api.host import Host
     from pyinfra.api.state import State
 
@@ -18,7 +17,7 @@ def show_warning():
     logger.warning("The @lxcssh connector is in alfa!")
 
 class LxcSSHConnector(BaseConnector):
-    """Connector for executing commands inside LXC (not lxd!) containers using SSH.
+    """Connector for executing commands inside LXC (not lxd) containers using SSH to host.
        Containers can be manageged by root (sudo needed) or other users.
        Inside the container execution is always as a root only.
     """
@@ -91,9 +90,8 @@ class LxcSSHConnector(BaseConnector):
         executor_kwargs = {key: value for key, value in global_kwargs.items() if key in CONNECTOR_ARGUMENT_KEYS}
 
         try:
-            with progress_spinner({f"Checking if container {self.host.data.lxc_container} is running"}):
-                command = StringCommand("lxc-info", "-n", self.host.data.lxc_container , "-s", "|", "grep", "RUNNING")
-                status, output  = self.ssh.run_shell_command(command,**executor_kwargs)
+            command = StringCommand("lxc-info", "-n", self.host.data.lxc_container , "-s", "|", "grep", "RUNNING")
+            status, output  = self.ssh.run_shell_command(command,**executor_kwargs)
         except PyinfraError as e:
             raise ConnectError(e.args[0])
         finally:
@@ -101,7 +99,7 @@ class LxcSSHConnector(BaseConnector):
             self.host.connector = self
 
         if not status:
-                raise ConnectError(f"LXC container {self.host.data.lxc_container} is not running")
+            raise ConnectError(f"LXC container {self.host.data.lxc_container} is not running")
 
         return True
 
@@ -119,8 +117,7 @@ class LxcSSHConnector(BaseConnector):
         return self.ssh.run_shell_command(lxc_cmd, **arguments)
 
 
-    def _get_container_pid(self, container_name,**arguments):
-        """Retrieve the PID of the LXC container."""
+    def _get_container_pid(self, container_name, **arguments):
         #find the PID of the container
         cmd = StringCommand("lxc-info", "-n", container_name , "-p", "|", "awk", "'{{print $2}}'")
         status, output = self.ssh.run_shell_command(cmd, **arguments)
@@ -173,5 +170,4 @@ class LxcSSHConnector(BaseConnector):
         self.host.connector = self.ssh
 
     def close(self, host):
-        """Close the SSH connection."""
         self.ssh.close(host)
