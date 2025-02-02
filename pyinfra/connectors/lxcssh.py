@@ -9,10 +9,9 @@ from pyinfra.connectors.util import extract_control_arguments
 from pyinfra.progress import progress_spinner
 
 if TYPE_CHECKING:
-    from pyinfra.api.arguments import ConnectorArguments
+    from pyinfra.api.arguments import ConnectorArguments, pop_global_arguments, CONNECTOR_ARGUMENT_KEYS
     from pyinfra.api.host import Host
     from pyinfra.api.state import State
-
 
 @memoize
 def show_warning():
@@ -22,6 +21,28 @@ class LxcSSHConnector(BaseConnector):
     """Connector for executing commands inside LXC (not lxd!) containers using SSH.
        Containers can be manageged by root (sudo needed) or other users.
        Inside the container execution is always as a root only.
+    """
+
+    __examples_doc__ = """
+    An inventory file (``inventory.py``) for conection to lxc container via lxc (not lxd):
+
+    .. code:: python
+
+        hosts = [
+            ("lxcssh/host_lxc:container_name"),
+        ]
+
+    pyinfra inventory.py deploy.py
+
+    .. code:: python
+
+        hosts = [
+            ("lxcssh/host_lxc:container_name", {"more ssh params here, or sudo relateing params"}),
+        ]
+
+    Another posibility:
+    * pyinfra @lxcssh/host_lxc.intranet:container_name exec hostname
+
     """
 
     has_copy = True
@@ -55,13 +76,24 @@ class LxcSSHConnector(BaseConnector):
         self.ssh.connect()
 
         #TODO hack because of the sudo_password_path setting which calls back the run_shell_command for creation of ask_sudo_password file
-        #     but wee need this file on the host, not inside the container, also who knows how the lxc-attach wrapping would work
+        #     but wee need this file on the host, not inside the container
         self.host.connector = self.ssh
+
+
+        #get us properly merged sudo params  (command line, host data etc..)
+        #inspiration from def _handle_fact_kwargs in facts.py 
+        ctx_kwargs = (self.host.current_op_global_arguments or {}).copy()
+        global_kwargs, _ = pop_global_arguments(
+            ctx_kwargs,
+            state=self.state,
+            host=self.host,
+        )
+        executor_kwargs = {key: value for key, value in global_kwargs.items() if key in CONNECTOR_ARGUMENT_KEYS}
+
         try:
-            with progress_spinner({"lxc-info run"}):
-                # Ensure the container is running
+            with progress_spinner({f"Checking if container {self.host.data.lxc_container} is running"}):
                 command = StringCommand("lxc-info", "-n", self.host.data.lxc_container , "-s", "|", "grep", "RUNNING")
-                status, output  = self.ssh.run_shell_command(command, _sudo=self.host.host_data["_sudo"], _sudo_password=self.host.host_data["_sudo_password"])
+                status, output  = self.ssh.run_shell_command(command,**executor_kwargs)
         except PyinfraError as e:
             raise ConnectError(e.args[0])
         finally:
@@ -82,18 +114,16 @@ class LxcSSHConnector(BaseConnector):
         """Run a command inside the LXC container.
            The command in container runs always as a root 
         """
-        local_arguments = self._extract_local_args_sudo(arguments)
         container_name = self.host.data.get("lxc_container")
         lxc_cmd =  StringCommand("lxc-attach", "-n", container_name, " -- ", "sh", "-c", QuoteString(command))
-        return self.ssh.run_shell_command(lxc_cmd, **local_arguments)
+        return self.ssh.run_shell_command(lxc_cmd, **arguments)
 
 
     def _get_container_pid(self, container_name,**arguments):
         """Retrieve the PID of the LXC container."""
-        local_arguments = self._extract_local_args_sudo(arguments)
         #find the PID of the container
         cmd = StringCommand("lxc-info", "-n", container_name , "-p", "|", "awk", "'{{print $2}}'")
-        status, output = self.ssh.run_shell_command(cmd, **local_arguments)
+        status, output = self.ssh.run_shell_command(cmd, **arguments)
         if not status:
             raise ConnectError(f"Failed to get PID for LXC container {container_name}")
         return output.stdout.strip()
@@ -117,18 +147,11 @@ class LxcSSHConnector(BaseConnector):
         ssh_status = self.ssh.put_file(filename_or_io, remote_temp_filename)
 
         # 2. move inside the docker container through /proc/{PID}/root
-        local_arguments = self._extract_local_args_sudo(kwargs)
+
         #TODO access rights might be different in the container?
         cmd = StringCommand("mv",  remote_temp_filename , f"/proc/{pid}/root{remote_filename}")
-        status, output = self.ssh.run_shell_command(cmd, **local_arguments)
+        status, output = self.ssh.run_shell_command(cmd, **kwargs)
         return status
-
-    def _extract_local_args_sudo(self, kwargs):
-        local_arguments = extract_control_arguments(kwargs)
-        local_arguments["_sudo"]=self.host.host_data["_sudo"]
-        local_arguments["_sudo_password"]=self.host.host_data["_sudo_password"]
-        return local_arguments
-
 
     def get_file(
         self,
@@ -142,8 +165,7 @@ class LxcSSHConnector(BaseConnector):
         """Retrieve a file from the LXC container using /proc/[pid]/root."""
         container_name = self.host.data.get("lxc_container")
         pid = self._get_container_pid( container_name)
-        local_arguments = self._extract_local_args_sudo(kwargs)
-        return self.ssh.get_file(f"/proc/{pid}/root{remote_filename}", filename_or_io, remote_temp_filename, print_output, print_input, **local_arguments)
+        return self.ssh.get_file(f"/proc/{pid}/root{remote_filename}", filename_or_io, remote_temp_filename, print_output, print_input, **kwargs)
 
 
     def disconnect(self):
