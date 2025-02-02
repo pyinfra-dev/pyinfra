@@ -84,16 +84,17 @@ class LxcSSHConnector(BaseConnector):
 
         # get us properly merged sudo params  (command line, host data etc..)
         # inspiration from def _handle_fact_kwargs in facts.py
-        # TODO noth sure if this is more correct
+        # TODO not sure if this is more correct
         # ctx_kwargs : dict[str, Any] = (self.host.current_op_global_arguments or {}).copy()
-        ctx_kwargs : dict[str, Any] = {}
+        ctx_kwargs: dict[str, Any] = {}
         global_kwargs, _ = pop_global_arguments(
             ctx_kwargs,
             state=self.state,
             host=self.host,
         )
-        executor_kwargs : dict[str, Any] = {
-            key: value for key, value in global_kwargs.items() if key in CONNECTOR_ARGUMENT_KEYS
+        executor_kwargs: dict[str, Any] = {
+            key: value for key, value in global_kwargs.items()
+            if key in CONNECTOR_ARGUMENT_KEYS
         }
 
         try:
