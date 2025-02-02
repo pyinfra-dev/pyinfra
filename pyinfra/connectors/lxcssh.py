@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from typing_extensions import Unpack
+
 from pyinfra import logger
 from pyinfra.api.arguments import CONNECTOR_ARGUMENT_KEYS, pop_global_arguments
 from pyinfra.api.command import QuoteString, StringCommand
@@ -9,7 +11,7 @@ from pyinfra.connectors.base import BaseConnector
 from pyinfra.connectors.ssh import SSHConnector
 
 if TYPE_CHECKING:
-    from typing import Any, Unpack
+    from typing import Any
 
     from pyinfra.api.arguments import ConnectorArguments
     from pyinfra.api.host import Host
