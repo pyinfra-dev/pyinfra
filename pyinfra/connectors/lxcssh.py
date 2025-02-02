@@ -26,7 +26,7 @@ class LxcSSHConnector(BaseConnector):
     """
 
     __examples_doc__ = """
-    An inventory file (``inventory.py``) for conection to lxc container via lxc (not lxd):
+    An inventory file (``inventory.py``) for connection to lxc container via lxc (not lxd):
 
     .. code:: python
 
@@ -42,7 +42,7 @@ class LxcSSHConnector(BaseConnector):
             ("lxcssh/host_lxc:container_name", {"more ssh params here, or sudo relateing params"}),
         ]
 
-    Another posibility:
+    Another possibility:
     * pyinfra @lxcssh/host_lxc.intranet:container_name exec hostname
 
     """
@@ -54,18 +54,18 @@ class LxcSSHConnector(BaseConnector):
     @staticmethod
     def make_names_data(name):
         try:
-            hostname, conatainer_name = name.split(":", 1)
+            hostname, container_name = name.split(":", 1)
         except (AttributeError, ValueError):  # failure to parse the name
             raise InventoryError("No ssh host or lxc base image provided!")
 
-        if not conatainer_name:
+        if not container_name:
             raise InventoryError("No container name provided!")
 
         show_warning()
 
         yield (
-            "@lxcssh/{0}:{1}".format(hostname, conatainer_name),
-            {"ssh_hostname": hostname, "lxc_container": conatainer_name},
+            "@lxcssh/{0}:{1}".format(hostname, container_name),
+            {"ssh_hostname": hostname, "lxc_container": container_name},
             ["@lxcssh"],
         )
 
@@ -206,7 +206,7 @@ class LxcSSHConnector(BaseConnector):
 
     def disconnect(self):
         # HACK - see above in def connect(self..), this part is because systems
-        #        deletes the sudo_ask_password file at the end of excecution
+        #        deletes the sudo_ask_password file at the end of the run
         self.host.connector = self.ssh
 
     def close(self, host):
