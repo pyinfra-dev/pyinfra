@@ -93,8 +93,7 @@ class LxcSSHConnector(BaseConnector):
             host=self.host,
         )
         executor_kwargs: dict[str, Any] = {
-            key: value for key, value in global_kwargs.items()
-            if key in CONNECTOR_ARGUMENT_KEYS
+            key: value for key, value in global_kwargs.items() if key in CONNECTOR_ARGUMENT_KEYS
         }
 
         try:
@@ -108,7 +107,8 @@ class LxcSSHConnector(BaseConnector):
                     "grep",
                     "RUNNING",
                 ),
-                False, False,
+                False,
+                False,
                 **executor_kwargs,
             )
         except PyinfraError as e:
@@ -118,9 +118,7 @@ class LxcSSHConnector(BaseConnector):
             self.host.connector = self
 
         if not status:
-            raise ConnectError(
-                f"LXC container {self.host.data.lxc_container} is not running"
-            )
+            raise ConnectError(f"LXC container {self.host.data.lxc_container} is not running")
 
         return True
 
@@ -142,9 +140,7 @@ class LxcSSHConnector(BaseConnector):
 
     def _get_container_pid(self, container_name, **arguments):
         # find the PID of the container
-        cmd = StringCommand(
-            "lxc-info", "-n", container_name, "-p", "|", "awk", "'{{print $2}}'"
-        )
+        cmd = StringCommand("lxc-info", "-n", container_name, "-p", "|", "awk", "'{{print $2}}'")
         status, output = self.ssh.run_shell_command(cmd, **arguments)
         if not status:
             raise ConnectError(f"Failed to get PID for LXC container {container_name}")
@@ -167,9 +163,7 @@ class LxcSSHConnector(BaseConnector):
         pid = self._get_container_pid(container_name, **kwargs)
 
         # 1. put the file on host via non sudo user
-        remote_temp_filename = remote_temp_filename or self.host.get_temp_filename(
-            remote_filename
-        )
+        remote_temp_filename = remote_temp_filename or self.host.get_temp_filename(remote_filename)
         res_putfile = self.ssh.put_file(filename_or_io, remote_temp_filename)
         if not res_putfile:
             raise ConnectError(
@@ -179,9 +173,7 @@ class LxcSSHConnector(BaseConnector):
         # 2. move inside the docker container through /proc/{PID}/root
 
         # TODO access rights might be different in the container?
-        cmd = StringCommand(
-            "mv", remote_temp_filename, f"/proc/{pid}/root{remote_filename}"
-        )
+        cmd = StringCommand("mv", remote_temp_filename, f"/proc/{pid}/root{remote_filename}")
         status, output = self.ssh.run_shell_command(cmd, **kwargs)
         return status
 
