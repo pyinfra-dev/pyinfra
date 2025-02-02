@@ -10,6 +10,7 @@ from pyinfra.connectors.ssh import SSHConnector
 
 if TYPE_CHECKING:
     from typing import Any, Unpack
+
     from pyinfra.api.arguments import ConnectorArguments
     from pyinfra.api.host import Host
     from pyinfra.api.state import State
