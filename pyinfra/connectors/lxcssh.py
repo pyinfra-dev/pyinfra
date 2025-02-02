@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Unpack
+from typing import TYPE_CHECKING
 
 from pyinfra import logger
 from pyinfra.api.arguments import CONNECTOR_ARGUMENT_KEYS, pop_global_arguments
@@ -9,6 +9,7 @@ from pyinfra.connectors.base import BaseConnector
 from pyinfra.connectors.ssh import SSHConnector
 
 if TYPE_CHECKING:
+    from typing import Any, Unpack
     from pyinfra.api.arguments import ConnectorArguments
     from pyinfra.api.host import Host
     from pyinfra.api.state import State
@@ -21,7 +22,7 @@ def show_warning():
 
 class LxcSSHConnector(BaseConnector):
     """Connector for executing commands inside LXC (not lxd) containers using SSH to host.
-    Containers can be manageged by root (sudo needed) or other users.
+    Containers can be managed by root (sudo needed) or other users.
     Inside the container execution is always as a root only.
     """
 
