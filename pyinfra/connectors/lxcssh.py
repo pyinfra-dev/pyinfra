@@ -91,8 +91,7 @@ class LxcSSHConnector(BaseConnector):
             host=self.host,
         )
         executor_kwargs = {
-            key: value
-            for key, value in global_kwargs.items()
+            key: value for key, value in global_kwargs.items()
             if key in CONNECTOR_ARGUMENT_KEYS
         }
 
@@ -107,6 +106,7 @@ class LxcSSHConnector(BaseConnector):
                     "grep",
                     "RUNNING",
                 ),
+                False, False,
                 **executor_kwargs,
             )
         except PyinfraError as e:
