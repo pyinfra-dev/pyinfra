@@ -80,7 +80,7 @@ class LxcSSHConnector(BaseConnector):
 
 
         #get us properly merged sudo params  (command line, host data etc..)
-        #inspiration from def _handle_fact_kwargs in facts.py 
+        #inspiration from def _handle_fact_kwargs in facts.py
         ctx_kwargs = (self.host.current_op_global_arguments or {}).copy()
         global_kwargs, _ = pop_global_arguments(
             ctx_kwargs,
@@ -110,7 +110,7 @@ class LxcSSHConnector(BaseConnector):
         **arguments: Unpack["ConnectorArguments"],
     ):
         """Run a command inside the LXC container.
-           The command in container runs always as a root 
+           The command in container runs always as a root
         """
         container_name = self.host.data.get("lxc_container")
         lxc_cmd =  StringCommand("lxc-attach", "-n", container_name, " -- ", "sh", "-c", QuoteString(command))
@@ -126,17 +126,17 @@ class LxcSSHConnector(BaseConnector):
         return output.stdout.strip()
 
 
-    def put_file(self, filename_or_io, remote_filename, 
-                 remote_temp_filename=None, 
-                 print_output: bool = False, 
-                 print_input: bool = False, 
+    def put_file(self, filename_or_io, remote_filename,
+                 remote_temp_filename=None,
+                 print_output: bool = False,
+                 print_input: bool = False,
                  **kwargs,  # ignored (sudo/etc)
     ):
         """Copy a file into the LXC container using /proc/[pid]/root."""
         container_name = self.host.data.get("lxc_container")
         if not container_name:
             raise ConnectError(f"No LXC container specified for {self.host}")
-        
+
         pid = self._get_container_pid(container_name, **kwargs)
 
         #1. put the file on host via non sudo user
