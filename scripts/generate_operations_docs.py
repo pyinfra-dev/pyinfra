@@ -158,7 +158,7 @@ def build_operations_docs():
                 args.append(value)
 
             # Add **kwargs to indicate global arguments
-            args.append('**kwargs')
+            args.append("**kwargs")
 
             if len(", ".join(args)) <= MODULE_DEF_LINE_MAX:
                 args_string = ", ".join(args)
@@ -203,7 +203,9 @@ def build_operations_docs():
                     ).strip(),
                 )
 
-            lines.append("Note:\n\tThis operation also inherits all :doc:`global arguments </arguments>`.")
+            lines.append(
+                "Note:\n\tThis operation also inherits all :doc:`global arguments </arguments>`."
+            )
             lines.append("")
             lines.append("")
 
