@@ -57,9 +57,9 @@ Basic Localhost Example
    run_ops(state)
 
    # add_op returns an OperationMeta for each op, letting you access stdout, stderr, etc. after they run
-   host = state.hosts.inventory['@local']
-   print(result1.changed, result1[host].stdout, result1[host].stderr)
-   print(result2.changed, result2[host].stdout, result2[host].stderr)
+   host = state.inventory.hosts['@local']
+   print(result1[host].did_change(), result1[host].stdout, result1[host].stderr)
+   print(result2[host].did_change(), result2[host].stdout, result2[host].stderr)
 
    # We can also get facts for all the hosts
    # https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.facts.html
