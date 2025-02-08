@@ -33,8 +33,7 @@ yield FunctionCommand(function, args_list, kwargs_dict)
 yield StringCommand("echo", "Shell!", _sudo=True)
 ```
 
-Operations can also call other operations using ``yield from`` syntax:
-
+Operations can also call other operations using ``yield from <operation>._inner`` syntax.
 ```py
 yield from files.file._inner(
     path="/some/file",
