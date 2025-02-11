@@ -1,0 +1,6 @@
+{
+    "arg" : "memcached_enable",
+    "command": "sysrc -in -- memcached_enable || true",
+    "output": [],
+    "fact": ""
+}

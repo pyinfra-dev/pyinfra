@@ -14,9 +14,9 @@ class ServiceScript(FactBase):
 
         return make_formatted_string_command(
             (
-                "for service in `service -j {0} -l {1}`; do "
+                "for service in `service -j {0} -l`; do "
                 'if [ {1} = \\"$service\\" ]; '
-                'then printf \\"%s\\\\n\\" \\"$service\\"; '
+                'then echo \\"$service\\"; '
                 "fi; "
                 "done"
             ),

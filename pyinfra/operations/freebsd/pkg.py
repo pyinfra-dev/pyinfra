@@ -107,7 +107,7 @@ def install(package: str, jail: Optional[str] = None, reponame: Optional[str] = 
         pkg.install("nginx")
     """
 
-    if host.get_fact(PkgPackage, package=package):
+    if host.get_fact(PkgPackage, package=package, jail=jail):
         host.noop(f"Package '{package}' already installed")
         return
 
@@ -143,7 +143,7 @@ def remove(package: str, jail: Optional[str] = None):
         pkg.remove("nginx")
     """
 
-    if not host.get_fact(PkgPackage, package=package):
+    if not host.get_fact(PkgPackage, package=package, jail=jail):
         host.noop(f"Package '{package}' cannot be found")
         return
 

@@ -85,7 +85,7 @@ def assert_commands(commands, wanted_commands):
 
 def make_operation_tests(arg):
     # Get the operation we're testing against
-    module_name, op_name = arg.split(".")
+    module_name, op_name = arg.rsplit(".", 1)
     module = import_module("pyinfra.operations.{0}".format(module_name))
     op = getattr(module, op_name)
 

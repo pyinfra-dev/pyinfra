@@ -1,0 +1,17 @@
+{
+    "kwargs" : {
+        "srvname" : "darkhttpd",
+        "srvstate" : "stopped"
+    },
+    "facts" : {
+        "freebsd.ServiceScript" : {
+            "jail=None, srvname=darkhttpd" : "darkhttpd"
+        },
+        "freebsd.ServiceStatus" : {
+            "jail=None, srvname=darkhttpd" : "running"
+        }
+    },
+    "commands" : [
+        "service darkhttpd stop"
+    ]
+}
