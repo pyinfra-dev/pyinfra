@@ -4,8 +4,6 @@ Manipulate system rc files.
 
 from __future__ import annotations
 
-from enum import Enum
-
 from typing_extensions import List, Optional, Union
 
 from pyinfra import host
