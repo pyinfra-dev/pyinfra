@@ -11,7 +11,6 @@ from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.api.exceptions import OperationValueError
 from pyinfra.facts.freebsd import Sysrc
 
-
 SYSRC_ADD: str = "add"
 SYSRC_SUB: str = "sub"
 SYSRC_SET: str = "set"

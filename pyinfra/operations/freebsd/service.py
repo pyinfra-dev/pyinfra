@@ -11,7 +11,6 @@ from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.api.exceptions import OperationValueError
 from pyinfra.facts.freebsd import ServiceScript, ServiceStatus
 
-
 SRV_STARTED: str = "started"
 SRV_STOPPED: str = "stopped"
 SRV_RESTARTED: str = "restarted"
