@@ -787,7 +787,7 @@ def user(
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
     + delete_keys: whether to remove any keys not specified in ``public_keys``
     + ensure_home: whether to ensure the ``home`` directory exists
-    + create_home: whether to new user create home directories from the system skeleton
+    + create_home: whether user create new user home directories from the system skeleton
     + system: whether to create a system account
     + uid: use a specific userid number
     + comment: the user GECOS comment
