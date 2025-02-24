@@ -41,7 +41,7 @@ class InventoryConnector(BaseConnector):
 
 To use the inventory connector call `pyinfra @[name of connector in pyinfra.connectors] [deployment script].py`
 
-The conector can also be run using `pyinfra @[name of connector in pyinfra.connectors]/[hostname] [deployment script].py`. If executed this way
+The connector can also be run using `pyinfra @[name of connector in pyinfra.connectors]/[hostname] [deployment script].py`. If executed this way
 (inventory/data requested for a single host), `make_names_data(_=None)` should be updated to `make_names_data(name)` and the `name == None` case
 handled in code separately from `name` being a valid string.
 
