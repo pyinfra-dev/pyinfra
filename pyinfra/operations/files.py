@@ -958,7 +958,7 @@ def template(
         a dict with arguments that will be passed as keyword args to the jinja2
         `Environment() <https://jinja.palletsprojects.com/en/3.0.x/api/#jinja2.Environment>`_.
 
-    The ``host``, ``state``, and ``inventory`` objects will be automatically passed to the template 
+    The ``host``, ``state``, and ``inventory`` objects will be automatically passed to the template
     if not set explicitly.
 
     Notes:
