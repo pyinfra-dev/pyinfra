@@ -958,6 +958,9 @@ def template(
         a dict with arguments that will be passed as keyword args to the jinja2
         `Environment() <https://jinja.palletsprojects.com/en/3.0.x/api/#jinja2.Environment>`_.
 
+    The ``host``, ``state``, and ``inventory`` objects will be automatically passed to the template 
+    if not set explicitly.
+
     Notes:
        Common convention is to store templates in a "templates" directory and
        have a filename suffix with '.j2' (for jinja2).
@@ -1014,6 +1017,21 @@ def template(
             foo_variable=foo_variable,
             foo_dict=foo_dict,
             foo_list=foo_list
+        )
+
+        # Example showing how to use host and inventory in a template file.
+        template = StringIO("""
+        name: "{{ host.name }}"
+        list_contents:
+        {% for entry in inventory.groups.my_servers %}
+            - "{{ entry }}"
+        {% endfor %}
+        """)
+
+        files.template(
+            name="Create a templated file",
+            src=template,
+            dest="/tmp/foo.yml"
         )
     '''
 
