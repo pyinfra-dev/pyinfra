@@ -21,7 +21,7 @@ class XbpsPackages(FactBase):
 
     default = dict
 
-    regex = r"^.. ([a-zA-Z0-9_\-\+]+)\-([0-9a-z_\.]+)"
+    regex = r"^.. ([a-zA-Z0-9_\-\+\.]+)\-([0-9a-z\.]+_[0-9]+)"
 
     def command(self):
         return "xbps-query -l"
