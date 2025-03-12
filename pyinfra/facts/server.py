@@ -569,7 +569,9 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
 
             for filename, content in parts.items():
                 with open(
-                    os.path.join(temp_etc_dir, os.path.basename(filename)), "w", encoding="utf-8"
+                    os.path.join(temp_etc_dir, os.path.basename(filename)),
+                    "w",
+                    encoding="utf-8",
                 ) as fp:
                     fp.write(content)
 
@@ -579,7 +581,9 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
                 include_uname=False,
             )
 
-            release_meta = {key.upper(): value for key, value in parsed.os_release_info().items()}
+            release_meta = {
+                key.upper(): value for key, value in parsed.os_release_info().items()
+            }
             # Distro 1.7+ adds this, breaking tests
             # TODO: fix this!
             release_meta.pop("RELEASE_CODENAME", None)
@@ -796,3 +800,52 @@ class SecurityLimits(FactBase):
             )
 
         return limits
+
+
+class RebootRequired(FactBase[bool]):
+    """
+    Returns a boolean indicating whether the system requires a reboot.
+
+    On Linux systems:
+    - Checks /var/run/reboot-required and /var/run/reboot-required.pkgs
+    - On Alpine Linux, compares installed kernel with running kernel
+
+    On FreeBSD systems:
+    - Compares running kernel version with installed kernel version
+    """
+
+    def command(self) -> str:
+        return """
+# Get OS type
+OS_TYPE=$(uname -s)
+
+if [ "$OS_TYPE" = "Linux" ]; then
+    # Check if it's Alpine Linux
+    if [ -f /etc/alpine-release ]; then
+        RUNNING_KERNEL=$(uname -r)
+        INSTALLED_KERNEL=$(ls -1 /lib/modules | sort -V | tail -n1)
+        if [ "$RUNNING_KERNEL" != "$INSTALLED_KERNEL" ]; then
+            echo "reboot_required"
+            exit 0
+        fi
+    else
+        # Check standard Linux reboot required files
+        if [ -f /var/run/reboot-required ] || [ -f /var/run/reboot-required.pkgs ]; then
+            echo "reboot_required"
+            exit 0
+        fi
+    fi
+elif [ "$OS_TYPE" = "FreeBSD" ]; then
+    RUNNING_VERSION=$(freebsd-version -r)
+    INSTALLED_VERSION=$(freebsd-version -k)
+    if [ "$RUNNING_VERSION" != "$INSTALLED_VERSION" ]; then
+        echo "reboot_required"
+        exit 0
+    fi
+fi
+
+echo "no_reboot_required"
+"""
+
+    def process(self, output) -> bool:
+        return list(output)[0].strip() == "reboot_required"
