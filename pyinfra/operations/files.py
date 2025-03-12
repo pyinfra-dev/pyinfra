@@ -1069,6 +1069,34 @@ def template(
     )
 
 
+@operation()
+def move(src: str, dest: str, overwrite=False):
+    """
+    Move remote file/directory/link into remote directory
+
+    + src: remote file/directory to move
+    + dest: remote directory to move `src` into
+    + overwrite: whether to overwrite dest, if present
+    """
+
+    if host.get_fact(File, src) is None:
+        raise OperationError("src {0} does not exist".format(src))
+
+    if not host.get_fact(Directory, dest):
+        raise OperationError("dest {0} is not an existing directory".format(dest))
+
+    full_dest_path = os.path.join(dest, os.path.basename(src))
+    if host.get_fact(File, full_dest_path) is not None:
+        if overwrite:
+            yield StringCommand("rm", "-rf", QuoteString(full_dest_path))
+        else:
+            raise OperationError(
+                "dest {0} already exists and `overwrite` is unset".format(full_dest_path)
+            )
+
+    yield StringCommand("mv", QuoteString(src), QuoteString(dest))
+
+
 def _validate_path(path):
     try:
         return os.fspath(path)
