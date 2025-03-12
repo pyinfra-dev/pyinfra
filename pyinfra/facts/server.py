@@ -581,9 +581,7 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
                 include_uname=False,
             )
 
-            release_meta = {
-                key.upper(): value for key, value in parsed.os_release_info().items()
-            }
+            release_meta = {key.upper(): value for key, value in parsed.os_release_info().items()}
             # Distro 1.7+ adds this, breaking tests
             # TODO: fix this!
             release_meta.pop("RELEASE_CODENAME", None)
