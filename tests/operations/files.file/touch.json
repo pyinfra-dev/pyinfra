@@ -1,18 +1,15 @@
 {
     "args": ["testfile"],
     "kwargs": {
-        "touch": true
+        "touch": false
     },
     "facts": {
         "files.File": {
-            "path=testfile": {
-                "mode": 600
-            }
+            "path=testfile": null
         }
     },
-    "commands": [
-        "touch testfile"
-    ],
-    "idempotent": false,
-    "disable_idempotent_warning_reason": "touch operations are always executed"
+    "exception": {
+        "name": "OperationError",
+        "message": "File testfile does not exist and `touch` is unset"
+    }
 }

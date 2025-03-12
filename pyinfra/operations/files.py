@@ -1204,7 +1204,7 @@ def file(
     user: str | None = None,
     group: str | None = None,
     mode: int | str | None = None,
-    touch=False,
+    touch=True,
     create_remote_dir=True,
     force=False,
     force_backup=True,
@@ -1268,6 +1268,9 @@ def file(
         return
 
     if info is None:  # create
+        if not touch:
+            raise OperationError("File {0} does not exist and `touch` is unset".format(path))
+
         if create_remote_dir:
             yield from _create_remote_dir(path, user, group)
 
@@ -1281,12 +1284,8 @@ def file(
     else:  # update
         changed = False
 
-        if touch:
-            changed = True
-            yield StringCommand("touch", QuoteString(path))
-
         # Check mode
-        if mode and (not info or info["mode"] != mode):
+        if mode and info["mode"] != mode:
             yield file_utils.chmod(path, mode)
             changed = True
 
