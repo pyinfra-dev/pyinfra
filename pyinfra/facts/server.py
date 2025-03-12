@@ -569,9 +569,7 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
 
             for filename, content in parts.items():
                 with open(
-                    os.path.join(temp_etc_dir, os.path.basename(filename)),
-                    "w",
-                    encoding="utf-8",
+                    os.path.join(temp_etc_dir, os.path.basename(filename)), "w", encoding="utf-8"
                 ) as fp:
                     fp.write(content)
 
