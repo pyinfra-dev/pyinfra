@@ -56,25 +56,25 @@ from pyinfra.api import operation
 from pyinfra.facts.files import File
 
 @operation()
-def file(name, present=True):
+def file(path, present=True):
     '''
     Manage the state of files.
 
-    + name: name/path of the remote file
+    + path: name/path of the remote file
     + present: whether the file should exist
     '''
 
-    info = host.get_fact(File, path=name)
+    info = host.get_fact(File, path=path)
 
     # Not a file?!
     if info is False:
-        raise OperationError("{0} exists and is not a file".format(name))
+        raise OperationError("{0} exists and is not a file".format(path))
 
     # Doesn't exist & we want it
     if info is None and present:
-        yield "touch {0}".format(name)
+        yield "touch {0}".format(path)
 
     # It exists and we don't want it
     elif info and not present:
-        yield "rm -f {0}".format(name)
+        yield "rm -f {0}".format(path)
 ```
