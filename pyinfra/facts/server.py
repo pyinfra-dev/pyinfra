@@ -206,34 +206,53 @@ class Mounts(FactBase[Dict[str, MountsDict]]):
 
     @override
     def command(self):
-        return "mount"
+        return "cat /proc/self/mountinfo"
 
     @override
     def process(self, output) -> dict[str, MountsDict]:
         devices: dict[str, MountsDict] = {}
 
+        def unescape_octal(match: re.Match) -> str:
+            s = match.group(0)[1:]  # skip the backslash
+            return chr(int(s, base=8))
+
+        def replace_octal(s: str) -> str:
+            """
+            Unescape strings encoded by linux's string_escape_mem with ESCAPE_OCTAL flag.
+            """
+            return re.sub(r"\\[0-7]{3}", unescape_octal, s)
+
         for line in output:
-            is_map = False
-            if line.startswith("map "):
-                line = line[4:]
-                is_map = True
+            # ignore mount ID, parent ID, major:minor, root
+            _, _, _, _, mount_point, mount_options, line = line.split(sep=" ", maxsplit=6)
 
-            device, _, path, other_bits = line.split(" ", 3)
+            # ignore optional tags "shared", "master", "propagate_from" and "unbindable"
+            while True:
+                optional, line = line.split(sep=" ", maxsplit=1)
+                if optional == "-":
+                    break
 
-            if is_map:
-                device = "map {0}".format(device)
+            fs_type, mount_source, super_options = line.split(sep=" ")
 
-            if other_bits.startswith("type"):
-                _, type_, options = other_bits.split(" ", 2)
-                options = options.strip("()").split(",")
-            else:
-                options = other_bits.strip("()").split(",")
-                type_ = options.pop(0)
+            mount_options = mount_options.split(sep=",")
 
-            devices[path] = {
-                "device": device,
-                "type": type_,
-                "options": [option.strip() for option in options],
+            # escaped: mount_point, mount_source, super_options
+            # these strings can contain characters encoded in octal, e.g. '\054' for ','
+            mount_point = replace_octal(mount_point)
+            mount_source = replace_octal(mount_source)
+
+            # mount_options will override ro/rw and can be different than the super block options
+            # filter them, so they don't appear twice
+            super_options = [
+                replace_octal(opt)
+                for opt in super_options.split(sep=",")
+                if opt not in ["ro", "rw"]
+            ]
+
+            devices[mount_point] = {
+                "device": mount_source,
+                "type": fs_type,
+                "options": mount_options + super_options,
             }
 
         return devices
