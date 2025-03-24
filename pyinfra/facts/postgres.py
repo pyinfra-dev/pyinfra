@@ -139,7 +139,7 @@ class PostgresDatabases(PostgresFactBase):
     """
 
     default = dict
-    psql_command = "SELECT pg_catalog.pg_encoding_to_char(encoding), *, pg_catalog.pg_get_userbyid(datdba) AS owner FROM pg_catalog.pg_database"
+    psql_command = "SELECT pg_catalog.pg_encoding_to_char(encoding), *, pg_catalog.pg_get_userbyid(datdba) AS owner FROM pg_catalog.pg_database"  # noqa: E501
 
     def process(self, output):
         # Remove the last line of the output (row count)
