@@ -6,7 +6,7 @@ from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
 
-PACMAN_REGEX = r"^([0-9a-zA-Z\-]+)\s([0-9\._+a-z\-]+)"
+PACMAN_REGEX = r"^([0-9a-zA-Z\-_]+)\s([0-9\._+a-z\-:]+)"
 
 
 class PacmanUnpackGroup(FactBase):
