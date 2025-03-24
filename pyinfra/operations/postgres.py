@@ -102,7 +102,7 @@ def role(
             password="somepassword",
             superuser=True,
             login=True,
-            sudo_user="postgres",
+            _sudo_user="postgres",
         )
 
     """
@@ -163,7 +163,33 @@ def role(
             database=psql_database,
         )
     else:
-        host.noop("postgresql role {0} exists".format(role))
+        sql_bits = ['ALTER ROLE "{0}"'.format(role)]
+
+        for key, value in (
+            ("LOGIN", login),
+            ("SUPERUSER", superuser),
+            ("INHERIT", inherit),
+            ("CREATEDB", createdb),
+            ("CREATEROLE", createrole),
+            ("REPLICATION", replication),
+        ):
+            if value:
+                sql_bits.append(key)
+
+        if connection_limit:
+            sql_bits.append("CONNECTION LIMIT {0}".format(connection_limit))
+
+        if password:
+            sql_bits.append(MaskString("PASSWORD '{0}'".format(password)))
+
+        yield make_execute_psql_command(
+            StringCommand(*sql_bits),
+            user=psql_user,
+            password=psql_password,
+            host=psql_host,
+            port=psql_port,
+            database=psql_database,
+        )
 
 
 @operation()
