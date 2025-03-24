@@ -771,7 +771,6 @@ def user(
     system=False,
     uid: int | None = None,
     comment: str | None = None,
-    add_deploy_dir=True,
     unique=True,
     password: str | None = None,
 ):
@@ -791,7 +790,6 @@ def user(
     + system: whether to create a system account
     + uid: use a specific userid number
     + comment: the user GECOS comment
-    + add_deploy_dir: any public_key filenames are relative to the deploy directory
     + unique: prevent creating users with duplicate UID
     + password: set the encrypted password for the user
 
