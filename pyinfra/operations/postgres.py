@@ -212,7 +212,7 @@ def database(
             database="pyinfra_stuff",
             owner="pyinfra",
             encoding="UTF8",
-            sudo_user="postgres",
+            _sudo_user="postgres",
         )
 
     """
@@ -267,7 +267,53 @@ def database(
             database=psql_database,
         )
     else:
-        host.noop("postgresql database {0} exists".format(database))
+        for key, value in (
+            ("TEMPLATE", template),
+            ("ENCODING", encoding),
+            ("LC_COLLATE", lc_collate),
+            ("LC_CTYPE", lc_ctype),
+        ):
+            if value:
+                host.noop(
+                    "postgresql database {0} already exists, skipping {1}".format(
+                        database, key
+                    )
+                )
+
+        sql_bits = []
+        if (
+            owner
+            and "owner" in current_databases[database]
+            and current_databases[database]["owner"] != owner
+        ):
+            sql_bits.append(
+                'ALTER DATABASE "{0}" OWNER TO "{1}";'.format(database, owner)
+            )
+        if tablespace:
+            sql_bits.append(
+                'ALTER DATABASE "{0}" SET TABLESPACE "{1}";'.format(
+                    database, tablespace
+                )
+            )
+        if (
+            connection_limit
+            and "connlimit" in current_databases[database]
+            and current_databases[database]["connlimit"] != connection_limit
+        ):
+            sql_bits.append(
+                'ALTER DATABASE "{0}" CONNECTION LIMIT {1};'.format(
+                    database, connection_limit
+                )
+            )
+        if len(sql_bits) > 0:
+            yield make_execute_psql_command(
+                StringCommand(*sql_bits),
+                user=psql_user,
+                password=psql_password,
+                host=psql_host,
+                port=psql_port,
+                database=psql_database,
+            )
 
 
 @operation(is_idempotent=False)

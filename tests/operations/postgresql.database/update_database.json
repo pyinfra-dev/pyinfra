@@ -1,12 +1,16 @@
 {
     "args": ["somedb"],
+    "kwargs": {
+        "owner": "someowner"
+    },
     "facts" :{
         "postgres.PostgresDatabases": {
             "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None": {
-                "somedb": {}
+                "somedb": { "owner": "someotherowner" }
             }
         }
     },
-    "commands": [],
-    "noop_description": "postgresql database somedb exists"
+    "commands": [
+        "psql -Ac 'ALTER DATABASE \"somedb\" OWNER TO \"someowner\";'"
+    ]
 }
