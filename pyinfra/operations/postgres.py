@@ -285,7 +285,11 @@ def database(
             and current_databases[database]["owner"] != owner
         ):
             sql_bits.append('ALTER DATABASE "{0}" OWNER TO "{1}";'.format(database, owner))
-        if tablespace:
+        if (
+            tablespace
+            and "tablespace" in current_databases[database]
+            and current_databases[database]["tablespace"] != tablespace
+        ):
             sql_bits.append(
                 'ALTER DATABASE "{0}" SET TABLESPACE "{1}";'.format(database, tablespace)
             )
