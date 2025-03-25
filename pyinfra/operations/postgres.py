@@ -274,9 +274,7 @@ def database(
         ):
             if value:
                 host.noop(
-                    "postgresql database {0} already exists, skipping {1}".format(
-                        database, key
-                    )
+                    "postgresql database {0} already exists, skipping {1}".format(database, key)
                 )
 
         sql_bits = []
@@ -285,18 +283,14 @@ def database(
             and "owner" in current_databases[database]
             and current_databases[database]["owner"] != owner
         ):
-            sql_bits.append(
-                'ALTER DATABASE "{0}" OWNER TO "{1}";'.format(database, owner)
-            )
+            sql_bits.append('ALTER DATABASE "{0}" OWNER TO "{1}";'.format(database, owner))
         if (
             tablespace
             and "tablespace" in current_databases[database]
             and current_databases[database]["tablespace"] != tablespace
         ):
             sql_bits.append(
-                'ALTER DATABASE "{0}" SET TABLESPACE "{1}";'.format(
-                    database, tablespace
-                )
+                'ALTER DATABASE "{0}" SET TABLESPACE "{1}";'.format(database, tablespace)
             )
         if (
             connection_limit
@@ -304,9 +298,7 @@ def database(
             and current_databases[database]["connlimit"] != connection_limit
         ):
             sql_bits.append(
-                'ALTER DATABASE "{0}" CONNECTION LIMIT {1};'.format(
-                    database, connection_limit
-                )
+                'ALTER DATABASE "{0}" CONNECTION LIMIT {1};'.format(database, connection_limit)
             )
         if len(sql_bits) > 0:
             yield make_execute_psql_command(
@@ -319,9 +311,7 @@ def database(
             )
         else:
             host.noop(
-                "postgresql database {0} already exists with the same parameters".format(
-                    database
-                )
+                "postgresql database {0} already exists with the same parameters".format(database)
             )
 
 
