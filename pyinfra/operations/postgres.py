@@ -306,6 +306,10 @@ def database(
                 port=psql_port,
                 database=psql_database,
             )
+        else:
+            host.noop(
+                "postgresql database {0} already exists with the same parameters".format(database)
+            )
 
 
 @operation(is_idempotent=False)
