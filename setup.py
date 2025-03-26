@@ -39,15 +39,15 @@ INSTALL_REQUIRES = (
 
 TEST_REQUIRES = (
     # Unit testing
-    "pytest==8.3.3",
-    "coverage==7.6.1",
-    "pytest-cov==5.0.0",
+    "pytest==8.3.5",
+    "coverage==7.7.1",
+    "pytest-cov==6.0.0",
     # Formatting & linting
-    "black==24.8.0",
-    "isort==5.13.2",
-    "flake8==7.1.1",
+    "black==25.1.0",
+    "isort==6.0.1",
+    "flake8==7.1.2",
     "flake8-black==0.3.6",
-    "flake8-isort==6.1.1",
+    "flake8-isort==6.1.2",
     # Typing
     "mypy",
     "types-cryptography",
@@ -59,8 +59,8 @@ TEST_REQUIRES = (
 
 DOCS_REQUIRES = (
     "pyinfra-guzzle_sphinx_theme==0.16",
-    "myst-parser==3.0.1",
-    "sphinx==6.2.1",
+    "myst-parser==4.0.1",
+    "sphinx==8.2.3",
 )
 
 DEV_REQUIRES = (
@@ -75,7 +75,7 @@ DEV_REQUIRES = (
         "ipdb",
         "ipdbplugin",
         # Lint spellchecking, dev only (don't fail CI)
-        "flake8-spellcheck==0.12.1",
+        "flake8-spellcheck==0.28.0",
         "redbaron",  # for generating type stubs
     )
 )
