@@ -7,7 +7,7 @@
     "compression": "lz4"
   },
   "facts": {
-    "zfs.Datasets": {}
+    "zfs.ZfsDatasets": {}
   },
   "commands": [
     "zfs create -V 5G -o compression=lz4 tank/myzvol"

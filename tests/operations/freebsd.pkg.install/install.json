@@ -1,0 +1,11 @@
+{
+    "args" : ["screen"],
+    "facts" : {
+        "freebsd.PkgPackage" : {
+            "jail=None, package=screen" : null
+        }
+    },
+    "commands" : [
+        "pkg install -y -- screen"
+    ]
+}

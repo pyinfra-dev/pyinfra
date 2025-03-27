@@ -4,7 +4,7 @@ Manage ZFS filesystems.
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.zfs import Datasets, Snapshots
+from pyinfra.facts.zfs import ZfsDatasets, ZfsSnapshots
 
 
 @operation()
@@ -48,7 +48,7 @@ def dataset(
 
     properties.update(extra_props)
 
-    datasets = host.get_fact(Datasets)
+    datasets = host.get_fact(ZfsDatasets)
 
     existing_dataset = datasets.get(dataset_name)
 
@@ -103,7 +103,7 @@ def snapshot(snapshot_name, present=True, recursive=False, properties={}, **extr
 
     """
     properties.update(extra_props)
-    snapshots = host.get_fact(Snapshots)
+    snapshots = host.get_fact(ZfsSnapshots)
 
     if snapshot_name in snapshots or not present:
         yield from dataset._inner(snapshot_name, present=present, properties=properties)

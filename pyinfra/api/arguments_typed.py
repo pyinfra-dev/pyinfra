@@ -32,11 +32,6 @@ class PyinfraOperation(Generic[P], Protocol):
     def __call__(
         self,
         #
-        # op args
-        # needs to be first
-        #
-        *args: P.args,
-        #
         # ConnectorArguments
         #
         # Auth
@@ -73,6 +68,10 @@ class PyinfraOperation(Generic[P], Protocol):
         _parallel: Optional[int] = None,
         _run_once: bool = False,
         _serial: bool = False,
+        #
+        # op args
+        #
+        *args: P.args,
         #
         # op kwargs
         #

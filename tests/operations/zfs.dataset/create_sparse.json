@@ -9,7 +9,7 @@
     "volume_size": "5G"
   },
   "facts": {
-    "zfs.Datasets": {}
+    "zfs.ZfsDatasets": {}
   },
   "commands": [
     "zfs create -V 5G -o compression=lz4 -s tank/myzvol"

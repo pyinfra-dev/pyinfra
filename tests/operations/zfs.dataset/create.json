@@ -10,7 +10,7 @@
     }
   },
   "facts": {
-    "zfs.Datasets": {}
+    "zfs.ZfsDatasets": {}
   },
   "commands": [
     "zfs create -o com.sun:auto_snapshot=true -o mountpoint=/home/james tank/home/james"

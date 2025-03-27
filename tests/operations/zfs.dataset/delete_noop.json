@@ -6,7 +6,7 @@
     "present": false
   },
   "facts": {
-    "zfs.Datasets": {}
+    "zfs.ZfsDatasets": {}
   },
   "commands": [],
   "noop_description": "tank/home/james is already absent"

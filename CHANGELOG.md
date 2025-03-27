@@ -1,3 +1,41 @@
+# v3.2
+
+Hello 2025! Here's pyinfra 3.2 - with another incredible round of contributions from the community, THANK YOU ALL. New stuff:
+
+- Add total counts to results summary (@NichtJens)
+- Enable passing extra data via `local.include` (@TimothyWillard)
+- Validate inventory files and display warnings for unexpected variables (@simonhammes)
+
+New operations/facts:
+
+- Add `pipx` operations (`packages`, `upgrade_all`, `ensure_path`) facts (`PipxPackages`, `PipxEnvironment`) and operations (@maisim)
+- Add `server.OsRelease` fact (@wowi42)
+- Add `podman.PodmanSystemInfo` and `podman.PodmanPs` facts (@bauen1)
+- Add many extra arguments (including generic args) to `files.FindFiles*` facts (@JakkuSakura)
+- Add `system` argument to `git.config` operation (@Pirols)
+- Add `psql_database` argument to postgres operations & facts (@hamishfagg)
+- Add `files.Sha384File` fact and `sha384sum` argument to `files.download` operation (@simonhammes)
+- Add `apt.SimulateOperationWillChange` fact (@bauen1)
+- Detect changes in `apt.upgrade` and `apt.dist_upgrade` operations (@bauen1)
+- Add `fibootmgr.EFIBootMgr` fact (@bauen1)
+- Add opkg facts and operations (@morrison12)
+
+Fixes:
+
+- Multiple fixes for `server.crontab` operation and facts (@JakkuSakura)
+- Correctly handle `latest` argument with requirements file in `pip.packages` operation (@amiraliakbari)
+- Fix regex used to parse installed apk packages (@simonhammes)
+- Fix SSH connector overwriting known hosts files (@vo452)
+
+Docs/internal tweaks:
+
+- Add type annotations for many more operations (@simonhammes)
+- Add typos CI checking to replace flake8-spellcheck (@simonhammes)
+- Bump CI actions and dependencies (@simonhammes)
+- Require JSON tests to include all arguments
+- Remove unused `configparser` dependency (@bkmgit)
+- Many small documentation fixes/tweaks
+
 # v3.1.1
 
 - Improve errors with 2.x style `@decorator` (vs `@decorator()`) functions

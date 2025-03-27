@@ -1,0 +1,10 @@
+{
+    "args" : ["screen"],
+    "facts" : {
+        "freebsd.PkgPackage" : {
+            "jail=None, package=screen" : null
+        }
+    },
+    "commands" : [],
+    "noop_description": "Package 'screen' cannot be found"
+}

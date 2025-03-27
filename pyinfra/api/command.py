@@ -8,7 +8,7 @@ from typing import IO, TYPE_CHECKING, Callable, Union
 import gevent
 from typing_extensions import Unpack, override
 
-from pyinfra.context import ctx_config, ctx_host
+from pyinfra.context import LocalContextObject, ctx_config, ctx_host
 
 from .arguments import ConnectorArguments
 
@@ -235,6 +235,12 @@ class FunctionCommand(PyinfraCommand):
         argspec = getfullargspec(self.function)
         if "state" in argspec.args and "host" in argspec.args:
             return self.function(state, host, *self.args, **self.kwargs)
+
+        # If we're already running inside a greenlet (ie a nested callback) just execute the func
+        # without any gevent.spawn which will break the local host object.
+        if isinstance(host, LocalContextObject):
+            self.function(*self.args, **self.kwargs)
+            return
 
         def execute_function() -> None:
             with ctx_config.use(state.config.copy()):

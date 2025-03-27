@@ -1,0 +1,17 @@
+{
+    "kwargs" : {
+        "srvname" : "beanstalkd",
+        "srvstate" : "reloaded"
+    },
+    "facts" : {
+        "freebsd.ServiceScript" : {
+            "jail=None, srvname=beanstalkd" : "beanstalkd"
+        },
+        "freebsd.ServiceStatus" : {
+            "jail=None, srvname=beanstalkd" : "running"
+        }
+    },
+    "commands" : [
+        "service beanstalkd reload"
+    ]
+}

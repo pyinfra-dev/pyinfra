@@ -8,7 +8,7 @@
         "freebsd:*:1001:1001:FreeBSD:/home/freebsd:/bin/sh|freebsd|freebsd|freebsd pts/0 10.1.10.10 Thu Aug 31 05:37:58 2023|$bsdpw$",
         "freebsdnologin:*:1001:1001:FreeBSD NoLogin:/home/freebsdnologin:/bin/sh|freebsdnologin|freebsdnologin||"
     ],
-    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ENTRY=`grep ^$i: /etc/passwd`;\n            LASTLOG_RAW=`(lastlog -u $i 2> /dev/null || lastlogin $i 2> /dev/null)`;\n            LASTLOG=`echo $LASTLOG_RAW | grep ^$i | tr -s ' '`;\n            PASSWORD=`grep ^$i: /etc/shadow | cut -d: -f2`;\n            echo \"$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD\";\n        done",
+    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ENTRY=`grep ^$i: /etc/passwd`;\n            LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | grep ^$i | tr -s ' ')`;\n            PASSWORD=`grep ^$i: /etc/shadow | cut -d: -f2`;\n            echo \"$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD\";\n        done",
     "fact": {
         "root": {
             "home": "/root",

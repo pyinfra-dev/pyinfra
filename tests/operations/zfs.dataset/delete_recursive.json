@@ -7,7 +7,7 @@
     "recursive": true
   },
   "facts": {
-    "zfs.Datasets": {
+    "zfs.ZfsDatasets": {
       "tank/home": {
         "mountpoint": "/home"
       },

@@ -11,7 +11,7 @@
     }
   },
   "facts": {
-    "zfs.Datasets": {
+    "zfs.ZfsDatasets": {
         "tank/home/james": {
             "compression": "zstd",
             "mountpoint": "/home/james",

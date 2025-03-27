@@ -7,7 +7,7 @@
     "compression": "lz4"
   },
   "facts": {
-    "zfs.Datasets": {
+    "zfs.ZfsDatasets": {
         "tank/home/james": {
             "compression": "lz4"
         }

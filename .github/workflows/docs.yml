@@ -12,6 +12,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-22.04
+    if: github.repository == 'pyinfra-dev/pyinfra'
     steps:
       - name: Clone Source Repository
         uses: actions/checkout@v4

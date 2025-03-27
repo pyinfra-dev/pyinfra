@@ -6,7 +6,7 @@
     "present": false
   },
   "facts": {
-    "zfs.Datasets": {
+    "zfs.ZfsDatasets": {
       "tank/home/james": {
         "mountpoint": "/home/james"
       }
