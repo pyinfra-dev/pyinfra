@@ -1,11 +1,12 @@
 import json
-import yaml
 import os
 from datetime import datetime
 from inspect import getcallargs, getfullargspec
 from os import path
 from pathlib import Path
 from unittest.mock import patch
+
+import yaml
 
 from pyinfra.api import Config, Inventory
 from pyinfra.api.util import get_kwargs_str

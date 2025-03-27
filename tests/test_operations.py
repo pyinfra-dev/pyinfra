@@ -6,23 +6,11 @@ from os import listdir, path
 from unittest import TestCase
 from unittest.mock import patch
 
-from pyinfra.api import (
-    FileDownloadCommand,
-    FileUploadCommand,
-    FunctionCommand,
-    StringCommand,
-)
+from pyinfra.api import FileDownloadCommand, FileUploadCommand, FunctionCommand, StringCommand
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra_cli.util import json_encode
 
-from .util import (
-    FakeState,
-    YamlTest,
-    create_host,
-    get_command_string,
-    parse_value,
-    patch_files,
-)
+from .util import FakeState, YamlTest, create_host, get_command_string, parse_value, patch_files
 
 PLATFORM_NAME = platform.system()
 
