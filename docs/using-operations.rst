@@ -207,6 +207,24 @@ pyinfra doesn't immediately execute operations, meaning output is not available 
     )
 
 
+There is also the possibility to use pyinfra's logging functionality which may be appropriate in certain situations.
+
+.. code:: python
+
+    from pyinfra import logger
+    def ufw_usable(function code here)
+    is_ufw_usable = ufw_usable()
+    logger.info('Checking output of ufw_usable: {}'.format(is_ufw_usable))
+
+
+Produces output similar to:
+    --> Preparing Operations...
+        Loading: deploy_create_users.py
+        Checking output of ufw_usable: None
+        [multitest.example.com] Ready: deploy_create_users.py
+
+
+
 Nested Operations
 -----------------
 
