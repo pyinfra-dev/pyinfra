@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from typing_extensions import Optional
+from typing_extensions import Optional, override
 
 from pyinfra.api import FactBase
-from pyinfra.api.command import QuoteString, make_formatted_string_command
+from pyinfra.api.command import QuoteString, StringCommand, make_formatted_string_command
 
 
 class ServiceScript(FactBase):
-    @staticmethod
-    def command(srvname: str, jail: Optional[str] = None):
+    @override
+    def command(self, srvname: str, jail: Optional[str] = None) -> StringCommand:
         if jail is None:
             jail = ""
 
@@ -26,8 +26,8 @@ class ServiceScript(FactBase):
 
 
 class ServiceStatus(FactBase):
-    @staticmethod
-    def command(srvname: str, jail: Optional[str] = None):
+    @override
+    def command(self, srvname: str, jail: Optional[str] = None) -> StringCommand:
         if jail is None:
             jail = ""
 
@@ -44,8 +44,8 @@ class ServiceStatus(FactBase):
 
 
 class Sysrc(FactBase):
-    @staticmethod
-    def command(parameter: str, jail: Optional[str] = None):
+    @override
+    def command(self, parameter: str, jail: Optional[str] = None) -> StringCommand:
         if jail is None:
             command = make_formatted_string_command(
                 ("sysrc -in -- {0} || true"), QuoteString(parameter)
@@ -59,8 +59,8 @@ class Sysrc(FactBase):
 
 
 class PkgPackage(FactBase):
-    @staticmethod
-    def command(package: str, jail: Optional[str] = None):
+    @override
+    def command(self, package: str, jail: Optional[str] = None) -> StringCommand:
         if jail is None:
             command = make_formatted_string_command(
                 ("pkg info -E -- {0} 2> /dev/null || true"), QuoteString(package)
