@@ -1,0 +1,15 @@
+{
+    "kwargs" : {
+        "parameter" : "memcached_enable",
+        "value" : "YES",
+        "command" : "set"
+    },
+    "facts" : {
+        "freebsd.Sysrc" : {
+            "jail=None, parameter=memcached_enable" : null
+        }
+    },
+    "commands" : [
+        "sysrc -i -- memcached_enable=YES"
+    ]
+}

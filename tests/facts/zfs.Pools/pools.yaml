@@ -1,0 +1,8 @@
+command: zpool get -H all
+output: |
+  tank	compression	lz4	-
+  tank	ashift	12	local
+fact:
+  tank:
+    compression: lz4
+    ashift: '12'

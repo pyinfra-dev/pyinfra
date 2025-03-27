@@ -1,0 +1,15 @@
+{
+    "args" : ["screen"],
+    "kwargs" : {
+        "jail" : "nginx",
+        "reponame" : "custom"
+    },
+    "facts" : {
+        "freebsd.PkgPackage" : {
+            "jail=nginx, package=screen" : null
+        }
+    },
+    "commands" : [
+        "pkg -j nginx install -y -r custom -- screen"
+    ]
+}

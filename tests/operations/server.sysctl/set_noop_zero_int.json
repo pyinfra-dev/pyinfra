@@ -1,0 +1,12 @@
+{
+    "args": ["kern.max-files", 0],
+    "facts": {
+        "server.Sysctl": {
+            "keys=['kern.max-files']": {
+                "kern.max-files": 0
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "sysctl kern.max-files is set to 0"
+}

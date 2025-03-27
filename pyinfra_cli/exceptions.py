@@ -5,6 +5,7 @@ from traceback import format_exception, format_tb, walk_tb
 from types import TracebackType
 
 import click
+from typing_extensions import override
 
 from pyinfra import logger
 from pyinfra.api.exceptions import (
@@ -37,6 +38,7 @@ class WrappedError(click.ClickException):
             message = repr(message)
         self.message = message
 
+    @override
     def show(self, file=None):
         name = "unknown error"
 
@@ -65,6 +67,7 @@ class WrappedError(click.ClickException):
 
 
 class CliError(click.ClickException):
+    @override
     def show(self, file=None):
         logger.warning(
             "--> {0}: {1}".format(
@@ -96,6 +99,7 @@ class UnexpectedExternalError(click.ClickException, UnexpectedMixin):
         self.exception = e
         self.filename = filename
 
+    @override
     def show(self, file=None):
         logger.warning(
             "--> {0}:\n".format(
@@ -118,6 +122,7 @@ class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
         e._traceback = traceback
         self.exception = e
 
+    @override
     def show(self, file=None):
         click.echo(
             "--> {0}:\n".format(

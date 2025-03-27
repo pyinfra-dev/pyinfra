@@ -1,0 +1,8 @@
+args:
+  - tank/home/james
+kwargs:
+  present: false
+facts:
+  zfs.ZfsDatasets: {}
+commands: []
+noop_description: tank/home/james is already absent

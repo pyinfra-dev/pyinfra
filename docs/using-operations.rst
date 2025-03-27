@@ -179,7 +179,7 @@ All operations return an operation meta object which provides information about 
     )
 
     # The functions `any_changed` and `all_changed` are provided for common use cases, e.g.
-    from pyinfra.operations.utils import any_changed, all_changed
+    from pyinfra.operations.util import any_changed, all_changed
     server.shell(commands=["..."], _if=any_changed(create_user, create_otheruser))
     server.shell(commands=["..."], _if=all_changed(create_user, create_otheruser))
 

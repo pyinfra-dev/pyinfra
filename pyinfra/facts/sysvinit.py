@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from typing import Optional
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 
@@ -18,6 +20,7 @@ class InitdStatus(FactBase):
         http://refspecs.linuxbase.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
     """
 
+    @override
     def command(self) -> str:
         return """
         for SERVICE in `ls /etc/init.d/`; do
@@ -33,6 +36,7 @@ class InitdStatus(FactBase):
     regex = r"([a-zA-Z0-9\-]+)=([0-9]+)"
     default = dict
 
+    @override
     def process(self, output) -> dict[str, Optional[bool]]:
         services: dict[str, Optional[bool]] = {}
 

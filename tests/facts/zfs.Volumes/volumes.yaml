@@ -1,0 +1,14 @@
+command: zfs get -H all
+output: |
+  tank	type	filesystem	-
+  tank	size	2.71T	-
+  tank	feature@encryption	enabled	local
+  tank	com.sun:auto_snapshot	true	-
+  tank/home	type	filesystem	-
+  tank/home	com.sun:auto_snapshot	true	inherited from tank
+  tank/home@old	type	snapshot	-
+  tank/home@old	encryption	off	default
+  tank/myvol	type	volume	-
+fact:
+  tank/myvol:
+    type: volume

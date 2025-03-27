@@ -1,0 +1,14 @@
+{
+    "command": "xbps-query -l",
+    "requires_command": "xbps-query",
+    "output": [
+        "ii python3-3.13.2_1                              Python programming language (3.13 series)",
+        "ii python3-jaraco.classes-3.4.0_2                Utility functions for Python class constructs (Python3)",
+        "ii python3-jaraco.context-6.0.1_2                Context managers by jaraco"
+    ],
+    "fact": {
+        "python3": ["3.13.2_1"],
+        "python3-jaraco.classes": ["3.4.0_2"],
+        "python3-jaraco.context": ["6.0.1_2"]
+    }
+}

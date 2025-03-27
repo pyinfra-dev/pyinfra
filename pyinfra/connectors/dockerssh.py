@@ -3,7 +3,7 @@ from tempfile import mkstemp
 from typing import TYPE_CHECKING
 
 import click
-from typing_extensions import Unpack
+from typing_extensions import Unpack, override
 
 from pyinfra import logger
 from pyinfra.api import QuoteString, StringCommand
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 @memoize
-def show_warning():
+def show_warning() -> None:
     logger.warning("The @dockerssh connector is in beta!")
 
 
@@ -68,6 +68,7 @@ class DockerSSHConnector(BaseConnector):
             ["@dockerssh"],
         )
 
+    @override
     def connect(self) -> None:
         self.ssh.connect()
 
@@ -97,6 +98,7 @@ class DockerSSHConnector(BaseConnector):
 
         self.host.host_data["docker_container_id"] = container_id
 
+    @override
     def disconnect(self) -> None:
         container_id = self.host.host_data["docker_container_id"][:12]
 
@@ -118,6 +120,7 @@ class DockerSSHConnector(BaseConnector):
             ),
         )
 
+    @override
     def run_shell_command(
         self,
         command,
@@ -150,6 +153,7 @@ class DockerSSHConnector(BaseConnector):
             **local_arguments,
         )
 
+    @override
     def put_file(
         self,
         filename_or_io,
@@ -221,6 +225,7 @@ class DockerSSHConnector(BaseConnector):
 
         return status
 
+    @override
     def get_file(
         self,
         remote_filename,

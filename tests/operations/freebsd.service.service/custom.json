@@ -1,0 +1,18 @@
+{
+    "kwargs" : {
+        "srvname" : "sopel",
+        "srvstate" : "custom",
+        "command" : "configure"
+    },
+    "facts" : {
+        "freebsd.ServiceScript" : {
+            "jail=None, srvname=sopel" : "sopel"
+        },
+        "freebsd.ServiceStatus" : {
+            "jail=None, srvname=sopel" : "running"
+        }
+    },
+    "commands" : [
+        "service sopel configure"
+    ]
+}

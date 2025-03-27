@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 
@@ -20,14 +22,17 @@ class OpenvzContainers(FactBase):
         }
     """
 
+    @override
     def command(self) -> str:
         return "vzlist -a -j"
 
+    @override
     def requires_command(self) -> str:
         return "vzlist"
 
     default = dict
 
+    @override
     def process(self, output):
         combined_json = "".join(output)
         vz_data = json.loads(combined_json)

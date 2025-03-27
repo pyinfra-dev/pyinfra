@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Optional, Tuple, TypedDict
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 BootEntry = Tuple[bool, str]
@@ -37,14 +39,17 @@ class EFIBootMgr(FactBase[Optional[EFIBootMgrInfoDict]]):
         }
     """
 
+    @override
     def requires_command(self, *args: Any, **kwargs: Any) -> str:
         return "efibootmgr"
 
+    @override
     def command(self) -> str:
         # FIXME: Use '|| true' to properly handle the case where
         #        'efibootmgr' is run on a non-UEFI system
         return "efibootmgr || true"
 
+    @override
     def process(self, output: Iterable[str]) -> Optional[EFIBootMgrInfoDict]:
         # This parsing code closely follows the printing code of efibootmgr
         # at <https://github.com/rhboot/efibootmgr/blob/main/src/efibootmgr.c#L2020-L2048>

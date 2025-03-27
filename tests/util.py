@@ -2,10 +2,11 @@ import json
 import os
 from datetime import datetime
 from inspect import getcallargs, getfullargspec
-from io import open
-from os import listdir, path
+from os import path
 from pathlib import Path
 from unittest.mock import patch
+
+import yaml
 
 from pyinfra.api import Config, Inventory
 from pyinfra.api.util import get_kwargs_str
@@ -382,32 +383,28 @@ def create_host(name=None, facts=None, data=None):
     return FakeHost(name, facts=real_facts, data=data)
 
 
-class JsonTest(type):
+class YamlTest(type):
     def __new__(cls, name, bases, attrs):
-        # Get the JSON files
-        files = listdir(attrs["jsontest_files"])
-        files = [f for f in files if f.endswith(".json")]
+        test_suffixes = {".yaml", ".yml", ".json"}
 
-        test_prefix = attrs.get("jsontest_prefix", "test_")
+        tests_dir = Path(attrs["yaml_test_dir"])
 
-        def gen_test(test_name, filename):
+        test_files = [f for f in tests_dir.iterdir() if f.suffix in test_suffixes]
+
+        test_prefix = attrs.get("yaml_test_prefix", "test_")
+
+        def gen_test(test_name, test_file):
             def test(self):
-                test_data = json.loads(
-                    open(
-                        path.join(attrs["jsontest_files"], filename),
-                        encoding="utf-8",
-                    ).read(),
-                )
-                self.jsontest_function(test_name, test_data)
+                test_data = yaml.safe_load(test_file.open(encoding="utf-8").read())
+                self.yaml_test_function(test_name, test_data)
 
             return test
 
-        # Loop them and create class methods to call the jsontest_function
-        for filename in files:
-            test_name = filename[:-5]
-
+        # Loop them and create class methods to call the yaml_test_function
+        for test_file in test_files:
+            test_name = test_file.stem
             # Attach the method
             method_name = "{0}{1}".format(test_prefix, test_name)
-            attrs[method_name] = gen_test(test_name, filename)
+            attrs[method_name] = gen_test(test_name, test_file)
 
         return type.__new__(cls, name, bases, attrs)

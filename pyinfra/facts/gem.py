@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
@@ -18,13 +20,16 @@ class GemPackages(FactBase):
         }
     """
 
+    @override
     def command(self) -> str:
         return "gem list --local"
 
+    @override
     def requires_command(self) -> str:
         return "gem"
 
     default = dict
 
+    @override
     def process(self, output):
         return parse_packages(GEM_REGEX, output)

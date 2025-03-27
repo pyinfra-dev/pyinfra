@@ -10,6 +10,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 from gevent.local import local
+from typing_extensions import override
 
 if TYPE_CHECKING:
     from pyinfra.api.config import Config
@@ -26,22 +27,25 @@ class ContextObject:
     _container_cls = container
     _base_cls: ModuleType
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._container = self._container_cls()
         self._container.module = None
 
     def _get_module(self):
         return self._container.module
 
+    @override
     def __repr__(self):
         return "ContextObject({0}):{1}".format(
             self._base_cls.__name__,
             repr(self._get_module()),
         )
 
+    @override
     def __str__(self):
         return str(self._get_module())
 
+    @override
     def __dir__(self):
         return dir(self._base_cls)
 
@@ -50,6 +54,7 @@ class ContextObject:
             return getattr(self._base_cls, key)
         return getattr(self._get_module(), key)
 
+    @override
     def __setattr__(self, key, value):
         if key in ("_container", "_base_cls"):
             return super().__setattr__(key, value)
@@ -65,9 +70,11 @@ class ContextObject:
     def __len__(self):
         return len(self._get_module())
 
+    @override
     def __eq__(self, other):
         return self._get_module() == other
 
+    @override
     def __hash__(self):
         return hash(self._get_module())
 
@@ -89,7 +96,7 @@ class ContextManager:
     def set_base(self, module):
         self.context._base_cls = module
 
-    def reset(self):
+    def reset(self) -> None:
         self.context._container.module = None
 
     def isset(self):

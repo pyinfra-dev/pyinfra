@@ -1,0 +1,17 @@
+{
+    "args": ["somedb"],
+    "kwargs": {
+        "owner": "someowner",
+        "tablespace": "someothertablespace"
+    },
+    "facts" :{
+        "postgres.PostgresDatabases": {
+            "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None": {
+                "somedb": { "owner": "someotherowner", "tablespace": "sometablespace" }
+            }
+        }
+    },
+    "commands": [
+        "psql -Ac 'ALTER DATABASE \"somedb\" OWNER TO \"someowner\"; ALTER DATABASE \"somedb\" SET TABLESPACE \"someothertablespace\";'"
+    ]
+}

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing_extensions import override
+
 from .sysvinit import InitdStatus
 
 
@@ -9,6 +11,7 @@ class RcdStatus(InitdStatus):
     BSD init scripts are well behaved and as such their output can be trusted.
     """
 
+    @override
     def command(self) -> str:
         return """
             for SERVICE in `find /etc/rc.d /usr/local/etc/rc.d -type f`; do

@@ -10,6 +10,7 @@ from os import environ, path
 import paramiko.config
 from gevent.subprocess import CalledProcessError, check_call
 from paramiko import SSHConfig as ParamikoSSHConfig
+from typing_extensions import override
 
 from pyinfra import logger
 
@@ -95,6 +96,7 @@ class SSHConfig(ParamikoSSHConfig):
     https://github.com/paramiko/paramiko/pull/1194
     """
 
+    @override
     def parse(self, file_obj):
         file_obj = _expand_include_statements(file_obj)
         return super().parse(file_obj)

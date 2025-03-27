@@ -1,0 +1,23 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["tmp/testfile", "tmp2"],
+    "facts": {
+        "files.File": {
+            "path=tmp/testfile": {
+                "mode": 600
+            },
+            "path=tmp2/testfile": {
+                "mode": 600
+            }
+        },
+        "files.Directory": {
+            "path=tmp2": {
+                "mode": 700
+            }
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "dest tmp2/testfile already exists and `overwrite` is unset"
+    }
+}

@@ -1,12 +1,12 @@
 {
-	"args": [[
+    "args": [[
         "git"
     ]],
     "kwargs": {
-		"present": false,
+        "present": false,
         "extra_uninstall_args": "--force"
     },
-	"facts": {
+    "facts": {
         "rpm.RpmPackages": {
             "git": [""]
         }

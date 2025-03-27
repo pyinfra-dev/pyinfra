@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase, MaskString, QuoteString, StringCommand
 from pyinfra.api.util import try_int
 
@@ -62,9 +64,11 @@ class MysqlFactBase(FactBase):
     mysql_command: str
     ignore_errors = False
 
+    @override
     def requires_command(self, *args, **kwargs) -> str:
         return "mysql"
 
+    @override
     def command(
         self,
         # Details for speaking to MySQL via `mysql` CLI via `mysql` CLI
@@ -100,6 +104,7 @@ class MysqlDatabases(MysqlFactBase):
     default = dict
     mysql_command = "SELECT * FROM information_schema.SCHEMATA"
 
+    @override
     def process(self, output):
         rows = parse_columns_and_rows(
             output,
@@ -136,6 +141,7 @@ class MysqlUsers(MysqlFactBase):
     default = dict
     mysql_command = "SELECT * FROM mysql.user"
 
+    @override
     def process(self, output):
         rows = parse_columns_and_rows(output, "\t")
 
@@ -195,6 +201,7 @@ class MysqlUserGrants(MysqlFactBase):
     # Ignore errors as SHOW GRANTS will error if the user does not exist
     ignore_errors = True
 
+    @override
     def command(  # type: ignore[override]
         self,
         user,
@@ -214,6 +221,7 @@ class MysqlUserGrants(MysqlFactBase):
             mysql_port,
         )
 
+    @override
     def process(self, output):
         database_table_privileges = defaultdict(set)
 

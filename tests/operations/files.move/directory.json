@@ -1,0 +1,19 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["tmp/testfile", "tmp2"],
+    "facts": {
+        "files.File": {
+            "path=tmp/testfile": false,
+            "path=tmp2/testfile": null
+        },
+        "files.Directory": {
+            "path=tmp/testfile": {
+                "mode": 700
+            },
+            "path=tmp2": {
+                "mode": 700
+            }
+        }
+    },
+    "commands": ["mv tmp/testfile tmp2"]
+}

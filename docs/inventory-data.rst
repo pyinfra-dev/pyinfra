@@ -140,6 +140,13 @@ Data can also provide default values for :doc:`arguments`, for example:
     _sudo = True
     _sudo_user = "pyinfra"
 
+This can be set during a deploy by updating `host.data`:
+
+.. code:: python
+
+  host.data._sudo_user = 'apache'
+
+
 External Sources for Data
 -------------------------
 

@@ -1,0 +1,8 @@
+{
+    "arg": "screen",
+    "command": "pkg info -E -- screen 2> /dev/null || true",
+    "output": [
+        "screen-4.9.1_5"
+    ],
+    "fact": "screen-4.9.1_5"
+}

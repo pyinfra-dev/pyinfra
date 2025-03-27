@@ -130,7 +130,7 @@ def print_facts(facts):
         print_fact(data)
 
 
-def print_support_info():
+def print_support_info() -> None:
     from importlib.metadata import PackageNotFoundError, requires, version
 
     from packaging.requirements import Requirement

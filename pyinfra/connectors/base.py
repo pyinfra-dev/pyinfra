@@ -132,7 +132,7 @@ class BaseConnector(abc.ABC):
         **arguments: Unpack["ConnectorArguments"],
     ) -> bool: ...
 
-    def check_can_rsync(self):
+    def check_can_rsync(self) -> None:
         raise NotImplementedError("This connector does not support rsync")
 
     def rsync(

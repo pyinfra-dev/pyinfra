@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Iterable, Optional, Tuple
 
 import click
 from paramiko import AuthenticationException, BadHostKeyException, SFTPClient, SSHException
-from typing_extensions import TypedDict, Unpack
+from typing_extensions import TypedDict, Unpack, override
 
 from pyinfra import logger
 from pyinfra.api.command import QuoteString, StringCommand
@@ -191,6 +191,7 @@ class SSHConnector(BaseConnector):
 
         return kwargs
 
+    @override
     def connect(self) -> None:
         retries = self.data["ssh_connect_retries"]
 
@@ -264,9 +265,11 @@ class SSHConnector(BaseConnector):
                 f"Host key for {e.hostname} does not match.",
             )
 
+    @override
     def disconnect(self) -> None:
         self.get_sftp_connection.cache.clear()
 
+    @override
     def run_shell_command(
         self,
         command: StringCommand,
@@ -368,6 +371,7 @@ class SSHConnector(BaseConnector):
             sftp = self.get_sftp_connection()
             sftp.getfo(remote_filename, file_io)
 
+    @override
     def get_file(
         self,
         remote_filename: str,
@@ -454,6 +458,7 @@ class SSHConnector(BaseConnector):
         if last_e is not None:
             raise last_e
 
+    @override
     def put_file(
         self,
         filename_or_io,
@@ -537,7 +542,8 @@ class SSHConnector(BaseConnector):
 
         return True
 
-    def check_can_rsync(self):
+    @override
+    def check_can_rsync(self) -> None:
         if self.data["ssh_key_password"]:
             raise NotImplementedError(
                 "Rsync does not currently work with SSH keys needing passwords."
@@ -549,6 +555,7 @@ class SSHConnector(BaseConnector):
         if not which("rsync"):
             raise NotImplementedError("The `rsync` binary is not available on this system.")
 
+    @override
     def rsync(
         self,
         src: str,
