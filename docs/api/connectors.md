@@ -45,27 +45,6 @@ The connector can also be run using `pyinfra @[name of connector in pyinfra.conn
 (inventory/data requested for a single host), `make_names_data(_=None)` should be updated to `make_names_data(name)` and the `name == None` case
 handled in code separately from `name` being a valid string.
 
-Its worth being aware up front that due to `make_names_data` being a `staticmethod` it has no automatic access to the parent classes attributes.
-To work around this - eg to configure an API connector - configuration will have to happen outside the function and be imported in. Two examples
-(`getattr` and a function) are provided below.
-
-```py
-def load_settings():
-  settings = {}
-  # logic here
-  return settings
-
-class InventoryConnector(BaseConnector):
-  api_instance = external.ApiClient()
-  ...
-
-  @staticmethod
-  def make_names_data(_=None)
-    api_client = getattr(InventoryConnector, 'api_instance')
-    api_settings = load_settings()
-    ...
-```
-
 ## Executing Connector
 
 A connector that implements execution requires a few more methods:
@@ -135,6 +114,71 @@ class LocalConnector(BaseConnector):
             bool: indicating success or failure.
         """
 ```
+
+## Where to make changes
+
+Connectors enable pyinfra to expand work done `in its 5 stages <deploy-process.html#how-pyinfra-works>`_ by providing methods which can be called at
+appropriate times.
+
+To hook in to to the various steps with the methods outlined below.
+```
+--> Loading config...
+--> Loading inventory...
+```
+`make_names_data` is used to supply inventory data about a host while at 'Loading inventory' stage.
+
+Its worth being aware up front that due to `make_names_data` being a `staticmethod` it has no automatic access to the parent classes attributes.
+To work around this - eg to configure an API connector - configuration will have to happen outside the function and be imported in. Two examples
+(`getattr` and a function) are provided below.
+
+```py
+def load_settings():
+  settings = {}
+  # logic here
+  return settings
+
+class InventoryConnector(BaseConnector):
+  api_instance = external.ApiClient()
+  ...
+
+  @staticmethod
+  def make_names_data(_=None)
+    api_client = getattr(InventoryConnector, 'api_instance')
+    api_settings = load_settings()
+    ...
+```
+
+```
+--> Connecting to hosts...
+    [pytest.example.com] Connected
+```
+`connect` can be used to check access to a host is possible. If the connection fails `ConnectError` should be raised with a message to display on
+screen.
+
+```
+--> Preparing operations...
+--> Preparing Operations...
+    Loading: deploy_create_users.py
+    [pytest.example.com] Ready: deploy_create_users.py
+
+--> Detected changes:
+[list of changes here]
+
+--> Beginning operation run...
+--> Starting operation: sshd_install.py | Install OpenSSH server
+    [pytest.example.com] No changes
+```
+
+`run_shell_command`, `put_file`, `get_file` and `rsync` can be used to change behaviour of pyinfra as it performs operations.
+
+```
+--> Results:
+    Operation                                                                                            Hosts   Success   Error   No Change
+--> Disconnecting from hosts...
+```
+
+`disconnect` can be used after all operations complete to clean up any connection/s remaining to the hosts being managed.
+
 
 ## pyproject.toml
 
