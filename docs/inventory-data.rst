@@ -33,6 +33,13 @@ If you save this file as ``inventory.py``, you can then use it when executing py
 
     All the hosts are added to a group with the name of the inventory file (eg any hosts defined in ``inventories/production.py`` belong to group ``production``).
 
+.. admonition:: inventories/
+    :class: note
+
+    Files in the ``inventories/`` directory are not automatically joined during inventory processesing, rather this directory is a convention when wanting
+    to store multiple related inventories. Code can be imported from files under ``inventories/`` in to the main ``inventory.py`` if desired.
+
+
 Host Data
 ~~~~~~~~~
 
