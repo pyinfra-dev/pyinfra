@@ -10,5 +10,6 @@
             }
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "git config key is set to value"
 }

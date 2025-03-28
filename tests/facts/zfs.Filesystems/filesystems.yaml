@@ -1,4 +1,5 @@
 command: zfs get -H all
+requires_command: zfs
 output: |
   tank	type	filesystem	-
   tank	size	2.71T	-

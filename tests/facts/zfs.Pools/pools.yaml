@@ -1,4 +1,5 @@
 command: zpool get -H all
+requires_command: zpool
 output: |
   tank	compression	lz4	-
   tank	ashift	12	local
