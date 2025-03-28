@@ -163,33 +163,45 @@ def role(
             database=psql_database,
         )
     else:
+        should_execute = False
         sql_bits = ['ALTER ROLE "{0}"'.format(role)]
-
-        for key, value in (
-            ("LOGIN", login),
-            ("SUPERUSER", superuser),
-            ("INHERIT", inherit),
-            ("CREATEDB", createdb),
-            ("CREATEROLE", createrole),
-            ("REPLICATION", replication),
+        if login and "login" in roles[role] and roles[role]["login"] != login:
+            sql_bits.append("LOGIN")
+            should_execute = True
+        if superuser and "superuser" in roles[role] and roles[role]["superuser"] != superuser:
+            sql_bits.append("SUPERUSER")
+            should_execute = True
+        if inherit and "inherit" in roles[role] and roles[role]["inherit"] != inherit:
+            sql_bits.append("INHERIT")
+            should_execute = True
+        if createdb and "createdb" in roles[role] and roles[role]["createdb"] != createdb:
+            sql_bits.append("CREATEDB")
+            should_execute = True
+        if createrole and "createrole" in roles[role] and roles[role]["createrole"] != createrole:
+            sql_bits.append("CREATEROLE")
+            should_execute = True
+        if (
+            connection_limit
+            and "connection_limit" in roles[role]
+            and roles[role]["connection_limit"] != connection_limit
         ):
-            if value:
-                sql_bits.append(key)
-
-        if connection_limit:
             sql_bits.append("CONNECTION LIMIT {0}".format(connection_limit))
-
+            should_execute = True
         if password:
             sql_bits.append(MaskString("PASSWORD '{0}'".format(password)))
+            should_execute = True
 
-        yield make_execute_psql_command(
-            StringCommand(*sql_bits),
-            user=psql_user,
-            password=psql_password,
-            host=psql_host,
-            port=psql_port,
-            database=psql_database,
-        )
+        if should_execute:
+            yield make_execute_psql_command(
+                StringCommand(*sql_bits),
+                user=psql_user,
+                password=psql_password,
+                host=psql_host,
+                port=psql_port,
+                database=psql_database,
+            )
+        else:
+            host.noop("postgresql role {0} exists and does not need updates".format(role))
 
 
 @operation()
