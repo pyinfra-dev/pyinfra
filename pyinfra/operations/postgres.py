@@ -56,14 +56,14 @@ def sql(
 @operation()
 def role(
     role: str,
-    present=True,
+    present: bool = True,
     password: str | None = None,
-    login=True,
-    superuser=False,
-    inherit=False,
-    createdb=False,
-    createrole=False,
-    replication=False,
+    login: bool = True,
+    superuser: bool = False,
+    inherit: bool = False,
+    createdb: bool = False,
+    createrole: bool = False,
+    replication: bool = False,
     connection_limit: int | None = None,
     # Details for speaking to PostgreSQL via `psql` CLI
     psql_user: str | None = None,
@@ -163,26 +163,28 @@ def role(
             database=psql_database,
         )
     else:
+        # Check if any attributes need updating
+        current_role = roles[role]
         should_execute = False
         sql_bits = ['ALTER ROLE "{0}"'.format(role)]
-        if login and "login" in roles[role] and roles[role]["login"] != login:
+        if login and "login" in current_role and current_role["login"] != login:
             sql_bits.append("LOGIN")
             should_execute = True
-        if superuser and "superuser" in roles[role] and roles[role]["superuser"] != superuser:
+        if superuser and "superuser" in current_role and current_role["superuser"] != superuser:
             sql_bits.append("SUPERUSER")
             should_execute = True
-        if inherit and "inherit" in roles[role] and roles[role]["inherit"] != inherit:
+        if inherit and "inherit" in current_role and current_role["inherit"] != inherit:
             sql_bits.append("INHERIT")
             should_execute = True
-        if createdb and "createdb" in roles[role] and roles[role]["createdb"] != createdb:
+        if createdb and "createdb" in current_role and current_role["createdb"] != createdb:
             sql_bits.append("CREATEDB")
             should_execute = True
-        if createrole and "createrole" in roles[role] and roles[role]["createrole"] != createrole:
+        if createrole and "createrole" in current_role and current_role["createrole"] != createrole:
             sql_bits.append("CREATEROLE")
             should_execute = True
         if (
             connection_limit
-            and "connection_limit" in roles[role]
+            and "connection_limit" in current_role
             and roles[role]["connection_limit"] != connection_limit
         ):
             sql_bits.append("CONNECTION LIMIT {0}".format(connection_limit))
