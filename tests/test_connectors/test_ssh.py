@@ -21,8 +21,6 @@ def make_raise_exception_function(cls, *args, **kwargs):
     return handler
 
 
-@patch("pyinfra.connectors.ssh.SSHClient.get_transport", MagicMock())
-@patch("pyinfra.connectors.ssh.open", mock_open(read_data="test!"), create=True)
 class TestSSHConnector(TestCase):
     def setUp(self):
         self.fake_connect_patch = patch("pyinfra.connectors.ssh.SSHClient.connect")
@@ -81,9 +79,12 @@ class TestSSHConnector(TestCase):
     def test_connect_with_rsa_ssh_key(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
-        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
-        ) as fake_key_open:
+        with (
+            patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            patch(
+                "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
+            ) as fake_key_open,
+        ):
             fake_key = MagicMock()
             fake_key_open.return_value = fake_key
 
@@ -121,14 +122,22 @@ class TestSSHConnector(TestCase):
     def test_connect_with_rsa_ssh_key_password(self):
         state = State(
             make_inventory(
-                hosts=(("somehost", {"ssh_key": "testkey", "ssh_key_password": "testpass"}),),
+                hosts=(
+                    (
+                        "somehost",
+                        {"ssh_key": "testkey", "ssh_key_password": "testpass"},
+                    ),
+                ),
             ),
             Config(),
         )
 
-        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
-        ) as fake_key_open:
+        with (
+            patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            patch(
+                "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
+            ) as fake_key_open,
+        ):
             fake_key = MagicMock()
 
             def fake_key_open_fail(*args, **kwargs):
@@ -148,12 +157,16 @@ class TestSSHConnector(TestCase):
     def test_connect_with_rsa_ssh_key_password_from_prompt(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
-        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh_util.getpass",
-            lambda *args, **kwargs: "testpass",
-        ), patch(
-            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
-        ) as fake_key_open:
+        with (
+            patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            patch(
+                "pyinfra.connectors.ssh_util.getpass",
+                lambda *args, **kwargs: "testpass",
+            ),
+            patch(
+                "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
+            ) as fake_key_open,
+        ):
             fake_key = MagicMock()
 
             def fake_key_open_fail(*args, **kwargs):
@@ -175,9 +188,12 @@ class TestSSHConnector(TestCase):
     def test_connect_with_rsa_ssh_key_missing_password(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
-        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
-        ) as fake_key_open:
+        with (
+            patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            patch(
+                "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
+            ) as fake_key_open,
+        ):
             fake_key_open.side_effect = make_raise_exception_function(PasswordRequiredException)
 
             fake_key = MagicMock()
@@ -193,7 +209,12 @@ class TestSSHConnector(TestCase):
     def test_connect_with_rsa_ssh_key_wrong_password(self):
         state = State(
             make_inventory(
-                hosts=(("somehost", {"ssh_key": "testkey", "ssh_key_password": "testpass"}),),
+                hosts=(
+                    (
+                        "somehost",
+                        {"ssh_key": "testkey", "ssh_key_password": "testpass"},
+                    ),
+                ),
             ),
             Config(),
         )
@@ -201,18 +222,24 @@ class TestSSHConnector(TestCase):
         fake_fail_from_private_key_file = MagicMock()
         fake_fail_from_private_key_file.side_effect = make_raise_exception_function(SSHException)
 
-        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh_util.DSSKey.from_private_key_file",
-            fake_fail_from_private_key_file,
-        ), patch(
-            "pyinfra.connectors.ssh_util.ECDSAKey.from_private_key_file",
-            fake_fail_from_private_key_file,
-        ), patch(
-            "pyinfra.connectors.ssh_util.Ed25519Key.from_private_key_file",
-            fake_fail_from_private_key_file,
-        ), patch(
-            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
-        ) as fake_key_open:
+        with (
+            patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            patch(
+                "pyinfra.connectors.ssh_util.DSSKey.from_private_key_file",
+                fake_fail_from_private_key_file,
+            ),
+            patch(
+                "pyinfra.connectors.ssh_util.ECDSAKey.from_private_key_file",
+                fake_fail_from_private_key_file,
+            ),
+            patch(
+                "pyinfra.connectors.ssh_util.Ed25519Key.from_private_key_file",
+                fake_fail_from_private_key_file,
+            ),
+            patch(
+                "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
+            ) as fake_key_open,
+        ):
 
             def fake_key_open_fail(*args, **kwargs):
                 if "password" not in kwargs:
@@ -234,11 +261,15 @@ class TestSSHConnector(TestCase):
     def test_connect_with_dss_ssh_key(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
-        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
-        ) as fake_rsa_key_open, patch(
-            "pyinfra.connectors.ssh_util.DSSKey.from_private_key_file",
-        ) as fake_key_open:  # noqa
+        with (
+            patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            patch(
+                "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
+            ) as fake_rsa_key_open,
+            patch(
+                "pyinfra.connectors.ssh_util.DSSKey.from_private_key_file",
+            ) as fake_key_open,
+        ):  # noqa
             fake_rsa_key_open.side_effect = make_raise_exception_function(SSHException)
 
             fake_key = MagicMock()
@@ -276,16 +307,25 @@ class TestSSHConnector(TestCase):
     def test_connect_with_dss_ssh_key_password(self):
         state = State(
             make_inventory(
-                hosts=(("somehost", {"ssh_key": "testkey", "ssh_key_password": "testpass"}),),
+                hosts=(
+                    (
+                        "somehost",
+                        {"ssh_key": "testkey", "ssh_key_password": "testpass"},
+                    ),
+                ),
             ),
             Config(),
         )
 
-        with patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True), patch(
-            "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
-        ) as fake_rsa_key_open, patch(
-            "pyinfra.connectors.ssh_util.DSSKey.from_private_key_file",
-        ) as fake_dss_key_open:  # noqa
+        with (
+            patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            patch(
+                "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
+            ) as fake_rsa_key_open,
+            patch(
+                "pyinfra.connectors.ssh_util.DSSKey.from_private_key_file",
+            ) as fake_dss_key_open,
+        ):  # noqa
 
             def fake_rsa_key_open_fail(*args, **kwargs):
                 if "password" not in kwargs:
@@ -626,7 +666,11 @@ class TestSSHConnector(TestCase):
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.return_value = 0
-        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+        fake_ssh_client().exec_command.return_value = (
+            MagicMock(),
+            stdout_mock,
+            MagicMock(),
+        )
 
         fake_open = mock_open(read_data="test!")
         with patch("pyinfra.api.util.open", fake_open, create=True):
@@ -677,7 +721,11 @@ class TestSSHConnector(TestCase):
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.return_value = 0
-        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+        fake_ssh_client().exec_command.return_value = (
+            MagicMock(),
+            stdout_mock,
+            MagicMock(),
+        )
 
         fake_open = mock_open(read_data="test!")
         with patch("pyinfra.api.util.open", fake_open, create=True):
@@ -728,7 +776,11 @@ class TestSSHConnector(TestCase):
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.return_value = 1
-        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+        fake_ssh_client().exec_command.return_value = (
+            MagicMock(),
+            stdout_mock,
+            MagicMock(),
+        )
 
         fake_open = mock_open(read_data="test!")
         with patch("pyinfra.api.util.open", fake_open, create=True):
@@ -765,7 +817,11 @@ class TestSSHConnector(TestCase):
         stdout_mock = MagicMock()
         exit_codes = [0, 1]
         stdout_mock.channel.recv_exit_status.side_effect = lambda: exit_codes.pop(0)
-        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+        fake_ssh_client().exec_command.return_value = (
+            MagicMock(),
+            stdout_mock,
+            MagicMock(),
+        )
 
         fake_open = mock_open(read_data="test!")
         with patch("pyinfra.api.util.open", fake_open, create=True):
@@ -810,7 +866,11 @@ class TestSSHConnector(TestCase):
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.return_value = 0
-        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+        fake_ssh_client().exec_command.return_value = (
+            MagicMock(),
+            stdout_mock,
+            MagicMock(),
+        )
 
         fake_open = mock_open(read_data="test!")
         with patch("pyinfra.api.util.open", fake_open, create=True):
@@ -826,7 +886,7 @@ class TestSSHConnector(TestCase):
         assert status is True
 
         fake_ssh_client().exec_command.assert_called_with(
-            ("sh -c 'rm -f " "/a-different-tempfile'"),
+            ("sh -c 'rm -f /a-different-tempfile'"),
             get_pty=False,
         )
 
@@ -867,7 +927,11 @@ class TestSSHConnector(TestCase):
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.return_value = 0
-        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+        fake_ssh_client().exec_command.return_value = (
+            MagicMock(),
+            stdout_mock,
+            MagicMock(),
+        )
 
         fake_open = mock_open(read_data="test!")
         with patch("pyinfra.api.util.open", fake_open, create=True):
@@ -914,7 +978,11 @@ class TestSSHConnector(TestCase):
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.return_value = 1
-        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+        fake_ssh_client().exec_command.return_value = (
+            MagicMock(),
+            stdout_mock,
+            MagicMock(),
+        )
 
         status = host.get_file(
             "not-a-file",
@@ -948,7 +1016,11 @@ class TestSSHConnector(TestCase):
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.side_effect = [0, 1]
-        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+        fake_ssh_client().exec_command.return_value = (
+            MagicMock(),
+            stdout_mock,
+            MagicMock(),
+        )
 
         fake_open = mock_open(read_data="test!")
         with patch("pyinfra.api.util.open", fake_open, create=True):
@@ -996,7 +1068,11 @@ class TestSSHConnector(TestCase):
 
         stdout_mock = MagicMock()
         stdout_mock.channel.recv_exit_status.return_value = 0
-        fake_ssh_client().exec_command.return_value = MagicMock(), stdout_mock, MagicMock()
+        fake_ssh_client().exec_command.return_value = (
+            MagicMock(),
+            stdout_mock,
+            MagicMock(),
+        )
 
         fake_open = mock_open(read_data="test!")
         with patch("pyinfra.api.util.open", fake_open, create=True):
