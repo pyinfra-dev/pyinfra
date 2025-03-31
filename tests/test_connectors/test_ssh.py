@@ -651,6 +651,10 @@ class TestSSHConnector(TestCase):
             )
 
         assert status is True
+
+        # Adding debug prints to understand the mock calls
+        print(fake_sftp_client.from_transport().putfo.mock_calls)
+
         fake_sftp_client.from_transport().putfo.assert_called_with(
             fake_open(),
             "not-another-file",
