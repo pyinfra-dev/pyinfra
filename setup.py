@@ -149,7 +149,6 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3.10",
             "Programming Language :: Python :: 3.11",
             "Programming Language :: Python :: 3.12",
-            "Programming Language :: Python :: 3.13",
             "Topic :: System :: Systems Administration",
             "Topic :: System :: Installation/Setup",
             "Topic :: Utilities",
