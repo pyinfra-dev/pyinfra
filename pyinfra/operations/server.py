@@ -764,6 +764,7 @@ def user(
     shell: str | None = None,
     group: str | None = None,
     groups: list[str] | None = None,
+    append=False,
     public_keys: str | list[str] | None = None,
     delete_keys=False,
     ensure_home=True,
@@ -783,6 +784,7 @@ def user(
     + shell: the users shell
     + group: the users primary group
     + groups: the users secondary groups
+    + append: whether to add `user` to `groups`, w/o losing membership of other groups
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
     + delete_keys: whether to remove any keys not specified in ``public_keys``
     + ensure_home: whether to ensure the ``home`` directory exists
@@ -929,6 +931,8 @@ def user(
 
         # Check secondary groups, if defined
         if groups and set(existing_user["groups"]) != set(groups):
+            if append:
+                args.append("-a")
             args.append("-G {0}".format(",".join(groups)))
 
         if comment and existing_user["comment"] != comment:
