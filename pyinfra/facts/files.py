@@ -1,5 +1,9 @@
 """
 The files facts provide information about the filesystem and it's contents on the target host.
+
+Facts need to be imported before use, eg
+
+from pyinfra.facts.files import File
 """
 
 from __future__ import annotations
@@ -10,7 +14,7 @@ import stat
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
-from typing_extensions import Literal, NotRequired, TypedDict
+from typing_extensions import Literal, NotRequired, TypedDict, override
 
 from pyinfra.api import StringCommand
 from pyinfra.api.command import QuoteString, make_formatted_string_command
@@ -111,6 +115,7 @@ class File(FactBase[Union[FileDict, Literal[False], None]]):
 
     type = "file"
 
+    @override
     def command(self, path):
         if path.startswith("~/"):
             # Do not quote leading tilde to ensure that it gets properly expanded by the shell
@@ -129,6 +134,7 @@ class File(FactBase[Union[FileDict, Literal[False], None]]):
             bsd_stat_command=BSD_STAT_COMMAND,
         )
 
+    @override
     def process(self, output) -> Union[FileDict, Literal[False], None]:
         match = re.match(STAT_REGEX, output[0])
         if not match:
@@ -233,6 +239,7 @@ class HashFileFactBase(FactBaseOptionalStr):
     _raw_cmd: str
     _regexes: Tuple[str, str]
 
+    @override
     def __init_subclass__(cls, digits: int, cmds: List[str], **kwargs) -> None:
         super().__init_subclass__(**kwargs)
 
@@ -249,10 +256,12 @@ class HashFileFactBase(FactBaseOptionalStr):
             r"^%s\s+\(%%s\)\s+=\s+([a-fA-F0-9]{%d})$" % (hash_name, digits),
         )
 
+    @override
     def command(self, path):
         self.path = path
         return make_formatted_string_command(self._raw_cmd, QuoteString(path))
 
+    @override
     def process(self, output) -> Optional[str]:
         output = output[0]
         escaped_path = re.escape(self.path)
@@ -294,6 +303,7 @@ class FindInFile(FactBase):
     lines if the file exists, and ``None`` if the file does not.
     """
 
+    @override
     def command(self, path, pattern, interpolate_variables=False):
         self.exists_flag = "__pyinfra_exists_{0}".format(path)
 
@@ -312,6 +322,7 @@ class FindInFile(FactBase):
             QuoteString(self.exists_flag),
         )
 
+    @override
     def process(self, output):
         # If output is the special string: no matches, so return an empty list;
         # this allows us to differentiate between no matches in an existing file
@@ -327,9 +338,11 @@ class FindFilesBase(FactBase):
     default = list
     type_flag: str
 
+    @override
     def process(self, output):
         return output
 
+    @override
     def command(
         self,
         path: str,
@@ -446,15 +459,18 @@ class Flags(FactBase):
     Returns a list of the file flags set for the specified file or directory.
     """
 
+    @override
     def requires_command(self, path) -> str:
         return "chflags"  # don't try to retrieve them if we can't set them
 
+    @override
     def command(self, path):
         return make_formatted_string_command(
             "! test -e {0} || stat -f %Sf {0}",
             QuoteString(path),
         )
 
+    @override
     def process(self, output):
         return [flag for flag in output[0].split(",") if len(flag) > 0] if len(output) == 1 else []
 
@@ -490,6 +506,7 @@ class Block(FactBase):
     # the list with a single empty string.
     default = list
 
+    @override
     def command(self, path, marker=None, begin=None, end=None):
         self.path = path
         start = (marker or MARKER_DEFAULT).format(mark=begin or MARKER_BEGIN_DEFAULT)
@@ -510,6 +527,7 @@ class Block(FactBase):
         )
         return cmd
 
+    @override
     def process(self, output):
         if output and (output[0] == f"{EXISTS}{self.path}"):
             return []

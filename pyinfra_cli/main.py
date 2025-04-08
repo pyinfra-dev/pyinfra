@@ -34,7 +34,7 @@ from .util import exec_file, load_deploy_file, load_func, parse_cli_arg
 from .virtualenv import init_virtualenv
 
 
-def _exit():
+def _exit() -> None:
     if ctx_state.isset() and state.failed_hosts:
         sys.exit(1)
     sys.exit(0)

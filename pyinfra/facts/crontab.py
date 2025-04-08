@@ -1,7 +1,7 @@
 import re
 from typing import Dict, List, Optional, TypedDict, Union
 
-from typing_extensions import NotRequired
+from typing_extensions import NotRequired, override
 
 from pyinfra.api import FactBase
 from pyinfra.api.util import try_int
@@ -70,6 +70,7 @@ class CrontabFile:
     def __getitem__(self, item) -> Optional[CrontabDict]:
         return self.get(item)
 
+    @override
     def __repr__(self):
         return f"CrontabResult({self.commands})"
 
@@ -91,6 +92,7 @@ class CrontabFile:
             )
         return "\n".join(lines)
 
+    @override
     def __str__(self):
         return "\n".join(self.format_item(item) for item in self.commands)
 
@@ -139,14 +141,17 @@ class Crontab(FactBase[CrontabFile]):
 
     default = CrontabFile
 
+    @override
     def requires_command(self, user=None) -> str:
         return "crontab"
 
+    @override
     def command(self, user=None):
         if user:
             return "crontab -l -u {0} || true".format(user)
         return "crontab -l || true"
 
+    @override
     def process(self, output):
         crons = CrontabFile()
         current_comments = []

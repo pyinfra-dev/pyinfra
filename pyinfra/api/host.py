@@ -17,7 +17,7 @@ from typing import (
 from uuid import uuid4
 
 import click
-from typing_extensions import Unpack
+from typing_extensions import Unpack, override
 
 from pyinfra import logger
 from pyinfra.connectors.base import BaseConnector
@@ -75,9 +75,11 @@ class HostData:
 
         raise AttributeError(f"Host `{self.host}` has no data `{key}`")
 
+    @override
     def __setattr__(self, key: str, value: Any):
         self.override_datas[key] = value
 
+    @override
     def __str__(self):
         return str(self.datas)
 
@@ -181,9 +183,11 @@ class Host:
         padding_diff = longest_name_len - len(self.name)
         self.print_prefix_padding = "".join(" " for _ in range(0, padding_diff))
 
+    @override
     def __str__(self):
         return "{0}".format(self.name)
 
+    @override
     def __repr__(self):
         return "Host({0})".format(self.name)
 
@@ -357,7 +361,7 @@ class Host:
     # Connector proxy
     #
 
-    def _check_state(self):
+    def _check_state(self) -> None:
         if not self.state:
             raise TypeError("Cannot call this function with no state!")
 
@@ -399,7 +403,7 @@ class Host:
                 self.state.trigger_callbacks("host_connect", self)
                 self.connected = True
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """
         Disconnect from the host using it's configured connector.
         """

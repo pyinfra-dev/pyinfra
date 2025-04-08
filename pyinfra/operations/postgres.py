@@ -199,9 +199,8 @@ def database(
     + psql_*: global module arguments, see above
 
     Updates:
-        pyinfra will not attempt to change existing databases - it will either
-        create or drop databases, but not alter them (if the db exists this
-        operation will make no changes).
+        pyinfra will change existing databases - but some parameters are not
+        changeable (template, encoding, lc_collate and lc_ctype).
 
     **Example:**
 
@@ -212,7 +211,7 @@ def database(
             database="pyinfra_stuff",
             owner="pyinfra",
             encoding="UTF8",
-            sudo_user="postgres",
+            _sudo_user="postgres",
         )
 
     """
@@ -267,7 +266,51 @@ def database(
             database=psql_database,
         )
     else:
-        host.noop("postgresql database {0} exists".format(database))
+        current_db = current_databases[database]
+
+        for key, value, current_value in (
+            ("TEMPLATE", template, current_db.get("istemplate")),
+            ("ENCODING", encoding, current_db.get("encoding")),
+            ("LC_COLLATE", lc_collate, None),
+            ("LC_CTYPE", lc_ctype, None),
+        ):
+            if value and (current_value is None or current_value != value):
+                host.noop(
+                    "postgresql database {0} already exists, skipping {1}".format(database, key)
+                )
+
+        sql_bits = []
+
+        if owner and "owner" in current_db and current_db["owner"] != owner:
+            sql_bits.append('ALTER DATABASE "{0}" OWNER TO "{1}";'.format(database, owner))
+
+        if tablespace and "tablespace" in current_db and current_db["tablespace"] != tablespace:
+            sql_bits.append(
+                'ALTER DATABASE "{0}" SET TABLESPACE "{1}";'.format(database, tablespace)
+            )
+
+        if (
+            connection_limit
+            and "connlimit" in current_db
+            and current_db["connlimit"] != connection_limit
+        ):
+            sql_bits.append(
+                'ALTER DATABASE "{0}" CONNECTION LIMIT {1};'.format(database, connection_limit)
+            )
+
+        if len(sql_bits) > 0:
+            yield make_execute_psql_command(
+                StringCommand(*sql_bits),
+                user=psql_user,
+                password=psql_password,
+                host=psql_host,
+                port=psql_port,
+                database=psql_database,
+            )
+        else:
+            host.noop(
+                "postgresql database {0} already exists with the same parameters".format(database)
+            )
 
 
 @operation(is_idempotent=False)

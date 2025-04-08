@@ -1,5 +1,7 @@
 {
     "arg": "/root/tivsm-api64.amd64.deb",
+    "command": "! test -e /root/tivsm-api64.amd64.deb && (dpkg -s /root/tivsm-api64.amd64.deb 2>/dev/null || true) || dpkg -I /root/tivsm-api64.amd64.deb",
+    "requires_command": "dpkg",
     "output": [
       " new Debian package, version 2.0.",
       " size 73275616 bytes: control archive=1079 bytes.",

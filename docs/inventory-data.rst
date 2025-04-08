@@ -33,6 +33,13 @@ If you save this file as ``inventory.py``, you can then use it when executing py
 
     All the hosts are added to a group with the name of the inventory file (eg any hosts defined in ``inventories/production.py`` belong to group ``production``).
 
+.. admonition:: inventories/
+    :class: note
+
+    Files in the ``inventories/`` directory are not automatically joined during inventory processesing, rather this directory is a convention when wanting
+    to store multiple related inventories. Code can be imported from files under ``inventories/`` in to the main ``inventory.py`` if desired.
+
+
 Host Data
 ~~~~~~~~~
 
@@ -139,6 +146,13 @@ Data can also provide default values for :doc:`arguments`, for example:
 
     _sudo = True
     _sudo_user = "pyinfra"
+
+This can be set during a deploy by updating `host.data`:
+
+.. code:: python
+
+  host.data._sudo_user = 'apache'
+
 
 External Sources for Data
 -------------------------

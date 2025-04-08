@@ -13,7 +13,7 @@ from io import StringIO
 from types import FunctionType
 from typing import TYPE_CHECKING, Any, Callable, Generator, Iterator, Optional, cast
 
-from typing_extensions import ParamSpec
+from typing_extensions import ParamSpec, override
 
 import pyinfra
 from pyinfra import context, logger
@@ -52,6 +52,7 @@ class OperationMeta:
         self._hash = hash
         self._maybe_is_change = is_change
 
+    @override
     def __repr__(self) -> str:
         """
         Return Operation object as a string.

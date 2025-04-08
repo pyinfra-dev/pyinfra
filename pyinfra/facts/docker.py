@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import json
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 
@@ -16,9 +18,11 @@ class DockerFactBase(FactBase):
 
     docker_type: str
 
+    @override
     def requires_command(self, *args, **kwargs) -> str:
         return "docker"
 
+    @override
     def process(self, output):
         output = "".join(output)
         return json.loads(output)
@@ -29,6 +33,7 @@ class DockerSystemInfo(DockerFactBase):
     Returns ``docker system info`` output in JSON format.
     """
 
+    @override
     def command(self) -> str:
         return 'docker system info --format="{{json .}}"'
 
@@ -42,6 +47,7 @@ class DockerContainers(DockerFactBase):
     Returns ``docker inspect`` output for all Docker containers.
     """
 
+    @override
     def command(self) -> str:
         return "docker container inspect `docker ps -qa`"
 
@@ -51,6 +57,7 @@ class DockerImages(DockerFactBase):
     Returns ``docker inspect`` output for all Docker images.
     """
 
+    @override
     def command(self) -> str:
         return "docker image inspect `docker images -q`"
 
@@ -60,6 +67,7 @@ class DockerNetworks(DockerFactBase):
     Returns ``docker inspect`` output for all Docker networks.
     """
 
+    @override
     def command(self) -> str:
         return "docker network inspect `docker network ls -q`"
 
@@ -69,6 +77,7 @@ class DockerNetworks(DockerFactBase):
 
 
 class DockerSingleMixin(DockerFactBase):
+    @override
     def command(self, object_id):
         return "docker {0} inspect {1} 2>&- || true".format(
             self.docker_type,
@@ -105,6 +114,7 @@ class DockerVolumes(DockerFactBase):
     Returns ``docker inspect`` output for all Docker volumes.
     """
 
+    @override
     def command(self) -> str:
         return "docker volume inspect `docker volume ls -q`"
 

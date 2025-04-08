@@ -1,10 +1,10 @@
 {
-    "command": "psql -Ac 'SELECT pg_catalog.pg_encoding_to_char(encoding), * FROM pg_catalog.pg_database'",
+    "command": "psql -Ac 'SELECT pg_catalog.pg_encoding_to_char(encoding), *, pg_catalog.pg_get_userbyid(datdba) AS owner FROM pg_catalog.pg_database'",
     "requires_command": "psql",
     "output": [
-        "pg_encoding_to_char|datname|datdba|encoding|datcollate|datctype|datistemplate|datallowconn|datconnlimit|datlastsysoid|datfrozenxid|datminmxid|dattablespace|datacl",
-"UTF8|postgres|10|6|en_US.UTF-8|en_US.UTF-8|f|t|-1|13052|548|1|1663|",
-"UTF8|pyinfra_stuff|16384|6|en_US.UTF-8|en_US.UTF-8|f|t|-1|13052|548|1|1663|",
+        "pg_encoding_to_char|datname|datdba|encoding|datcollate|datctype|datistemplate|datallowconn|datconnlimit|datlastsysoid|datfrozenxid|datminmxid|dattablespace|datacl|owner",
+"UTF8|postgres|10|6|en_US.UTF-8|en_US.UTF-8|f|t|-1|13052|548|1|1663||postgres",
+"UTF8|pyinfra_stuff|16384|6|en_US.UTF-8|en_US.UTF-8|f|t|-1|13052|548|1|1663||pyinfra",
         "(4 rows)"
     ],
     "fact": {
@@ -20,7 +20,8 @@
             "frozenxid": 548,
             "minmxid": 1,
             "tablespace": 1663,
-            "acl": null
+            "acl": null,
+            "owner": "postgres"
         },
         "pyinfra_stuff": {
             "dba": 16384,
@@ -34,7 +35,8 @@
             "frozenxid": 548,
             "minmxid": 1,
             "tablespace": 1663,
-            "acl": null
+            "acl": null,
+            "owner": "pyinfra"
         }
     }
 }

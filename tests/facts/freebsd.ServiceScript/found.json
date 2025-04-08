@@ -1,0 +1,8 @@
+{
+    "arg": "supervisord",
+    "command": "for service in `service -j '' -l`; do if [ supervisord = \"$service\" ]; then echo \"$service\"; fi; done",
+    "output": [
+        "supervisord"
+    ],
+    "fact": "supervisord"
+}

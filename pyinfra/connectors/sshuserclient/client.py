@@ -15,6 +15,7 @@ from paramiko import (
 )
 from paramiko.agent import AgentRequestHandler
 from paramiko.hostkeys import HostKeyEntry
+from typing_extensions import override
 
 from pyinfra import logger
 from pyinfra.api.util import memoize
@@ -25,6 +26,7 @@ HOST_KEYS_LOCK = BoundedSemaphore()
 
 
 class StrictPolicy(MissingHostKeyPolicy):
+    @override
     def missing_host_key(self, client, hostname, key):
         logger.error("No host key for {0} found in known_hosts".format(hostname))
         raise SSHException(
@@ -55,6 +57,7 @@ def append_hostkey(client, hostname, key):
 
 
 class AcceptNewPolicy(MissingHostKeyPolicy):
+    @override
     def missing_host_key(self, client, hostname, key):
         logger.warning(
             (
@@ -68,6 +71,7 @@ class AcceptNewPolicy(MissingHostKeyPolicy):
 
 
 class AskPolicy(MissingHostKeyPolicy):
+    @override
     def missing_host_key(self, client, hostname, key):
         should_continue = input(
             "No host key for {0} found in known_hosts, do you want to continue [y/n] ".format(
@@ -84,6 +88,7 @@ class AskPolicy(MissingHostKeyPolicy):
 
 
 class WarningPolicy(MissingHostKeyPolicy):
+    @override
     def missing_host_key(self, client, hostname, key):
         logger.warning("No host key for {0} found in known_hosts".format(hostname))
 
@@ -136,6 +141,7 @@ class SSHClient(ParamikoClient):
     original idea at http://bitprophet.org/blog/2012/11/05/gateway-solutions/.
     """
 
+    @override
     def connect(  # type: ignore[override]
         self,
         hostname,

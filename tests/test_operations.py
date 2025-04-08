@@ -10,7 +10,7 @@ from pyinfra.api import FileDownloadCommand, FileUploadCommand, FunctionCommand,
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra_cli.util import json_encode
 
-from .util import FakeState, JsonTest, create_host, get_command_string, parse_value, patch_files
+from .util import FakeState, YamlTest, create_host, get_command_string, parse_value, patch_files
 
 PLATFORM_NAME = platform.system()
 
@@ -85,23 +85,23 @@ def assert_commands(commands, wanted_commands):
 
 def make_operation_tests(arg):
     # Get the operation we're testing against
-    module_name, op_name = arg.split(".")
+    module_name, op_name = arg.rsplit(".", 1)
     module = import_module("pyinfra.operations.{0}".format(module_name))
     op = getattr(module, op_name)
 
     # Generate a test class
     @patch("pyinfra.operations.files.get_timestamp", lambda: "a-timestamp")
     @patch("pyinfra.operations.util.files.get_timestamp", lambda: "a-timestamp")
-    class TestTests(TestCase, metaclass=JsonTest):
-        jsontest_files = path.join("tests", "operations", arg)
-        jsontest_prefix = "test_{0}_{1}_".format(module_name, op_name)
+    class TestTests(TestCase, metaclass=YamlTest):
+        yaml_test_dir = path.join("tests", "operations", arg)
+        yaml_test_prefix = "test_{0}_{1}_".format(module_name, op_name)
 
         @classmethod
         def setUpClass(cls):
             # Create a global fake state that attach to context state
             cls.state = FakeState()
 
-        def jsontest_function(self, test_name, test_data):
+        def yaml_test_function(self, test_name, test_data):
             if (
                 "require_platform" in test_data
                 and PLATFORM_NAME not in test_data["require_platform"]

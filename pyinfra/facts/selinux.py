@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 FIELDS = ["user", "role", "type", "level"]  # order is significant, do not change
@@ -14,14 +16,17 @@ class SEBoolean(FactBase):
     If ``boolean`` does not exist, ``SEBoolean`` returns the empty string.
     """
 
+    @override
     def requires_command(self, boolean) -> str:
         return "getsebool"
 
     default = str
 
+    @override
     def command(self, boolean):
         return "getsebool {0}".format(boolean)
 
+    @override
     def process(self, output):
         components = output[0].split(" --> ")
         return components[1]
@@ -42,9 +47,11 @@ class FileContext(FactBase):
         }
     """
 
+    @override
     def command(self, path):
         return "stat -c %C {0} || exit 0".format(path)
 
+    @override
     def process(self, output):
         context = {}
         components = output[0].split(":")
@@ -65,12 +72,15 @@ class FileContextMapping(FactBase):
 
     default = dict
 
+    @override
     def requires_command(self, target) -> str:
         return "semanage"
 
+    @override
     def command(self, target):
         return "set -o pipefail && semanage fcontext -n -l | (grep '^{0}' || true)".format(target)
 
+    @override
     def process(self, output):
         # example output: /etc       all files          system_u:object_r:etc_t:s0 # noqa: SC100
         # but lines at end that won't match: /etc/systemd/system = /usr/lib/systemd/system
@@ -97,12 +107,15 @@ class SEPorts(FactBase):
     # example output: amqp_port_t                    tcp      15672, 5671-5672  # noqa: SC100
     _regex = re.compile(r"^([\w_]+)\s+(\w+)\s+([\w\-,\s]+)$")
 
+    @override
     def requires_command(self) -> str:
         return "semanage"
 
+    @override
     def command(self):
         return "semanage port -ln"
 
+    @override
     def process(self, output):
         labels: dict[str, dict] = defaultdict(dict)
         for line in output:
@@ -132,12 +145,15 @@ class SEPort(FactBase):
 
     default = str
 
+    @override
     def requires_command(self, protocol, port) -> str:
         return "sepolicy"
 
+    @override
     def command(self, protocol, port):
         return "(sepolicy network -p {0} 2>/dev/null || true) | grep {1}".format(port, protocol)
 
+    @override
     def process(self, output):
         # if type set, first line is specific and second is generic type for port range
         # each rows in the format "22: tcp ssh_port_t 22"

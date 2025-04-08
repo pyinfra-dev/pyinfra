@@ -1,12 +1,14 @@
 import logging
 
 import click
+from typing_extensions import override
 
 from pyinfra import logger, state
 from pyinfra.context import ctx_state
 
 
 class LogHandler(logging.Handler):
+    @override
     def emit(self, record):
         try:
             message = self.format(record)
@@ -25,6 +27,7 @@ class LogFormatter(logging.Formatter):
         logging.CRITICAL: lambda s: click.style(s, "red", bold=True),
     }
 
+    @override
     def format(self, record):
         message = record.msg
 

@@ -2,7 +2,7 @@
     "kwargs": {
         "path": "/some/virtualenv",
         "python": "python3",
-	"venv": true
+    "venv": true
     },
     "facts": {
         "files.File": {

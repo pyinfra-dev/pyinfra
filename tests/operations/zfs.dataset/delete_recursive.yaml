@@ -1,0 +1,13 @@
+args:
+  - tank/home
+kwargs:
+  present: false
+  recursive: true
+facts:
+  zfs.ZfsDatasets:
+    tank/home:
+      mountpoint: /home
+    tank/home/james:
+      mountpoint: /home/james
+commands:
+  - zfs destroy -r tank/home

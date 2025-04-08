@@ -1,0 +1,18 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["tmp/testfile", "tmp2"],
+    "facts": {
+        "files.File": {
+            "path=tmp/testfile": null
+        },
+        "files.Directory": {
+            "path=tmp2": {
+                "mode": 700
+            }
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "src tmp/testfile does not exist"
+    }
+}

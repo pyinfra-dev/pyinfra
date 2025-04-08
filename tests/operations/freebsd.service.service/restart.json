@@ -1,0 +1,17 @@
+{
+    "kwargs" : {
+        "srvname" : "nginx",
+        "srvstate" : "restarted"
+    },
+    "facts" : {
+        "freebsd.ServiceScript" : {
+            "jail=None, srvname=nginx" : "nginx"
+        },
+        "freebsd.ServiceStatus" : {
+            "jail=None, srvname=nginx" : "running"
+        }
+    },
+    "commands" : [
+        "service nginx restart"
+    ]
+}

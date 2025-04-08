@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 import shlex
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
@@ -16,9 +18,11 @@ class DebArch(FactBase):
     Returns the architecture string used in apt repository sources, eg ``amd64``.
     """
 
+    @override
     def command(self) -> str:
         return "dpkg --print-architecture"
 
+    @override
     def requires_command(self) -> str:
         return "dpkg"
 
@@ -34,9 +38,11 @@ class DebPackages(FactBase):
         }
     """
 
+    @override
     def command(self) -> str:
         return "dpkg -l"
 
+    @override
     def requires_command(self) -> str:
         return "dpkg"
 
@@ -47,6 +53,7 @@ class DebPackages(FactBase):
         DEB_PACKAGE_VERSION_REGEX,
     )
 
+    @override
     def process(self, output):
         return parse_packages(self.regex, output)
 
@@ -61,14 +68,17 @@ class DebPackage(FactBase):
         "version": r"^Version:\s+({0})$".format(DEB_PACKAGE_VERSION_REGEX),
     }
 
+    @override
     def requires_command(self, package) -> str:
         return "dpkg"
 
+    @override
     def command(self, package):
         return "! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}".format(
             shlex.quote(package)
         )
 
+    @override
     def process(self, output):
         data = {}
 

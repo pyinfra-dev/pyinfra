@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import re
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 
 class FlatpakBaseFact(FactBase):
     abstract = True
 
+    @override
     def requires_command(self, *args, **kwargs) -> str:
         return "flatpak"
 
@@ -32,9 +35,11 @@ class FlatpakPackage(FlatpakBaseFact):
         "version": r"^[ ]+Version:[ ]+([\w\d.-]+).*$",
     }
 
+    @override
     def command(self, package):
         return f"flatpak info {package}"
 
+    @override
     def process(self, output):
         data = {}
         for line in output:
@@ -63,8 +68,10 @@ class FlatpakPackages(FlatpakBaseFact):
 
     default = list
 
+    @override
     def command(self):
         return "flatpak list --columns=application"
 
+    @override
     def process(self, output):
         return [flatpak for flatpak in output[1:]]

@@ -33,3 +33,6 @@ git_branch = 'master'
 env = 'staging'
 git_branch = 'develop'
 ```
+
+For more information on inventory files, see :doc:`inventory-data`.
+

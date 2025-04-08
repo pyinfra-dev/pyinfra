@@ -1,0 +1,6 @@
+{
+    "arg": "not-found-service",
+    "command": "for service in `service -j '' -l`; do if [ not-found-service = \"$service\" ]; then echo \"$service\"; fi; done",
+    "output": [],
+    "fact": ""
+}

@@ -9,7 +9,7 @@ from .base import BaseConnector
 
 
 @memoize
-def show_warning():
+def show_warning() -> None:
     logger.warning("The @terraform connector is in beta!")
 
 

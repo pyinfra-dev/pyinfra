@@ -1,5 +1,7 @@
 import re
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
@@ -35,12 +37,15 @@ class PipxPackages(FactBase):
 
     default = dict
 
+    @override
     def requires_command(self) -> str:
         return "pipx"
 
+    @override
     def command(self) -> str:
         return "pipx list --short"
 
+    @override
     def process(self, output):
         return parse_packages(PIPX_REGEX, output)
 
@@ -64,11 +69,14 @@ class PipxEnvironment(FactBase):
 
     default = dict
 
+    @override
     def requires_command(self) -> str:
         return "pipx"
 
+    @override
     def command(self) -> str:
         return "pipx environment"
 
+    @override
     def process(self, output):
         return parse_environment(output)

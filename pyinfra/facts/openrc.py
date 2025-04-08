@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import re
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 
@@ -20,12 +22,15 @@ class OpenrcStatus(FactBase):
         r"\s+\]"
     )
 
+    @override
     def requires_command(self, runlevel="default") -> str:
         return "rc-status"
 
+    @override
     def command(self, runlevel="default"):
         return "rc-status {0}".format(runlevel)
 
+    @override
     def process(self, output):
         services = {}
 
@@ -44,13 +49,16 @@ class OpenrcEnabled(FactBase):
 
     default = dict
 
+    @override
     def requires_command(self, runlevel="default") -> str:
         return "rc-update"
 
+    @override
     def command(self, runlevel="default"):
         self.runlevel = runlevel
         return "rc-update show -v"
 
+    @override
     def process(self, output):
         services = {}
 

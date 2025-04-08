@@ -12,6 +12,8 @@ Gather the information provided by ``opkg`` on OpenWrt systems:
 import re
 from typing import Dict, NamedTuple, Union
 
+from typing_extensions import override
+
 from pyinfra import logger
 from pyinfra.api import FactBase
 from pyinfra.facts.util.packaging import parse_packages
@@ -83,9 +85,11 @@ class OpkgConf(FactBase):
     def default():
         return OpkgConfInfo({}, "", {}, {})
 
+    @override
     def command(self) -> str:
         return "cat /etc/opkg.conf"
 
+    @override
     def process(self, output):
         dest, lists_dir, options, arch_cfg = {}, "", {}, {}
         for line in output:
@@ -127,9 +131,11 @@ class OpkgFeeds(FactBase):
     )
     default = dict
 
+    @override
     def command(self) -> str:
         return "cat /etc/opkg/distfeeds.conf; echo CUSTOM; cat /etc/opkg/customfeeds.conf"
 
+    @override
     def process(self, output):
         feeds, kind = {}, "distribution"
         for line in output:
@@ -164,9 +170,11 @@ class OpkgInstallableArchitectures(FactBase):
     regex = re.compile(r"^(?:\s*arch\s+(?P<arch>[\w]+)\s+(?P<prio>\d+))?(\s*#.*)?$")
     default = dict
 
+    @override
     def command(self) -> str:
         return "/bin/opkg print-architecture"
 
+    @override
     def process(self, output):
         arch_list = {}
         for line in output:
@@ -195,9 +203,11 @@ class OpkgPackages(FactBase):
     regex = r"^([a-zA-Z0-9][\w\-\.]*)\s-\s([\w\-\.]+)"
     default = dict
 
+    @override
     def command(self) -> str:
         return "/bin/opkg list-installed"
 
+    @override
     def process(self, output):
         return parse_packages(self.regex, sorted(output))
 
@@ -218,9 +228,11 @@ class OpkgUpgradeablePackages(FactBase):
     default = dict
     use_default_on_error = True
 
+    @override
     def command(self) -> str:
         return "/bin/opkg list-upgradable"  # yes, really spelled that way
 
+    @override
     def process(self, output):
         result = {}
         for line in output:

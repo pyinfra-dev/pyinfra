@@ -1,0 +1,14 @@
+{
+    "args" : ["screen"],
+    "kwargs" : {
+        "reponame" : "custom"
+    },
+    "facts" : {
+        "freebsd.PkgPackage" : {
+            "jail=None, package=screen" : null
+        }
+    },
+    "commands" : [
+        "pkg install -y -r custom -- screen"
+    ]
+}

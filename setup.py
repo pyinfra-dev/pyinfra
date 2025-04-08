@@ -39,15 +39,16 @@ INSTALL_REQUIRES = (
 
 TEST_REQUIRES = (
     # Unit testing
-    "pytest==8.3.3",
-    "coverage==7.6.1",
-    "pytest-cov==5.0.0",
+    "pytest==8.3.5",
+    "coverage==7.7.1",
+    "pytest-cov==6.0.0",
     # Formatting & linting
-    "black==24.8.0",
-    "isort==5.13.2",
-    "flake8==7.1.1",
+    "black==25.1.0",
+    "isort==6.0.1",
+    "flake8==7.1.2",
     "flake8-black==0.3.6",
-    "flake8-isort==6.1.1",
+    "flake8-isort==6.1.2",
+    "pyyaml==6.0.2",
     # Typing
     "mypy",
     "types-cryptography",
@@ -58,9 +59,9 @@ TEST_REQUIRES = (
 )
 
 DOCS_REQUIRES = (
-    "pyinfra-guzzle_sphinx_theme==0.16",
-    "myst-parser==3.0.1",
-    "sphinx==6.2.1",
+    "pyinfra-guzzle_sphinx_theme==0.17",
+    "myst-parser==4.0.1",
+    "sphinx==8.2.3",
 )
 
 DEV_REQUIRES = (
@@ -75,7 +76,7 @@ DEV_REQUIRES = (
         "ipdb",
         "ipdbplugin",
         # Lint spellchecking, dev only (don't fail CI)
-        "flake8-spellcheck==0.12.1",
+        "flake8-spellcheck==0.28.0",
         "redbaron",  # for generating type stubs
     )
 )
@@ -127,7 +128,7 @@ if __name__ == "__main__":
                 "vagrant = pyinfra.connectors.vagrant:VagrantInventoryConnector",
             ],
         },
-        python_requires=">=3.8",
+        python_requires=">=3.9",
         install_requires=INSTALL_REQUIRES,
         extras_require={
             "test": TEST_REQUIRES,
@@ -144,7 +145,6 @@ if __name__ == "__main__":
             "License :: OSI Approved :: MIT License",
             "Operating System :: OS Independent",
             "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: 3.10",
             "Programming Language :: Python :: 3.11",

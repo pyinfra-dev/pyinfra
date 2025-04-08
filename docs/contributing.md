@@ -72,7 +72,12 @@ pytest -m end_to_end_ssh
 pytest -m end_to_end_docker
 ```
 
-## Generate Documentation
+## Documentation
+
+Documentation changes should be made in the [https://github.com/pyinfra-dev/pyinfa](pyinfra git repository) - the repository `docs.pyinfra.com` should
+not be changed, it contains build artifacts.
+
+### Generate Documentation
 
 To generate:
 

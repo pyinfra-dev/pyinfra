@@ -1,4 +1,7 @@
-def make_cat_files_command(*filenames):
+from typing import Iterable
+
+
+def make_cat_files_command(*filenames: Iterable[str]) -> str:
     commands = []
 
     for filename in filenames:
