@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 from .util import make_cat_files_command
@@ -23,15 +25,18 @@ class ZypperRepositories(FactBase):
         ]
     """
 
+    @override
     def command(self) -> str:
         return make_cat_files_command(
             "/etc/zypp/repos.d/*.repo",
         )
 
+    @override
     def requires_command(self) -> str:
         return "zypper"
 
     default = list
 
+    @override
     def process(self, output):
         return parse_zypper_repositories(output)

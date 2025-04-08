@@ -1,0 +1,5 @@
+{
+    "commands" : [
+        "PAGER=cat freebsd-update --not-running-from-cron fetch install"
+    ]
+}

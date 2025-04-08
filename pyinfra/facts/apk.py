@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
@@ -20,13 +22,16 @@ class ApkPackages(FactBase):
         }
     """
 
+    @override
     def command(self) -> str:
         return "apk list --installed"
 
+    @override
     def requires_command(self) -> str:
         return "apk"
 
     default = dict
 
+    @override
     def process(self, output):
         return parse_packages(APK_REGEX, output)

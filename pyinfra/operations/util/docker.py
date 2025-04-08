@@ -1,38 +1,60 @@
+import dataclasses
+from typing import Any, Dict, List
+
 from pyinfra.api import OperationError
 
 
+@dataclasses.dataclass
+class ContainerSpec:
+    image: str = ""
+    ports: List[str] = dataclasses.field(default_factory=list)
+    networks: List[str] = dataclasses.field(default_factory=list)
+    volumes: List[str] = dataclasses.field(default_factory=list)
+    env_vars: List[str] = dataclasses.field(default_factory=list)
+    pull_always: bool = False
+
+    def container_create_args(self):
+        args = []
+        for network in self.networks:
+            args.append("--network {0}".format(network))
+
+        for port in self.ports:
+            args.append("-p {0}".format(port))
+
+        for volume in self.volumes:
+            args.append("-v {0}".format(volume))
+
+        for env_var in self.env_vars:
+            args.append("-e {0}".format(env_var))
+
+        if self.pull_always:
+            args.append("--pull always")
+
+        args.append(self.image)
+
+        return args
+
+    def diff_from_inspect(self, inspect_dict: Dict[str, Any]) -> List[str]:
+        # TODO(@minor-fixes): Diff output of "docker inspect" against this spec
+        # to determine if the container needs to be recreated. Currently, this
+        # function will never recreate when attributes change, which is
+        # consistent with prior behavior.
+        del inspect_dict
+        return []
+
+
 def _create_container(**kwargs):
-    command = []
+    if "spec" not in kwargs:
+        raise OperationError("missing 1 required argument: 'spec'")
 
-    networks = kwargs["networks"] if kwargs["networks"] else []
-    ports = kwargs["ports"] if kwargs["ports"] else []
-    volumes = kwargs["volumes"] if kwargs["volumes"] else []
-    env_vars = kwargs["env_vars"] if kwargs["env_vars"] else []
+    spec = kwargs["spec"]
 
-    if kwargs["image"] == "":
-        raise OperationError("missing 1 required argument: 'image'")
+    if not spec.image:
+        raise OperationError("Docker image not specified")
 
-    command.append("docker container create --name {0}".format(kwargs["container"]))
-
-    for network in networks:
-        command.append("--network {0}".format(network))
-
-    for port in ports:
-        command.append("-p {0}".format(port))
-
-    for volume in volumes:
-        command.append("-v {0}".format(volume))
-
-    for env_var in env_vars:
-        command.append("-e {0}".format(env_var))
-
-    if kwargs["pull_always"]:
-        command.append("--pull always")
-
-    command.append(kwargs["image"])
-
-    if kwargs["start"]:
-        command.append("; {0}".format(_start_container(container=kwargs["container"])))
+    command = [
+        "docker container create --name {0}".format(kwargs["container"])
+    ] + spec.container_create_args()
 
     return " ".join(command)
 

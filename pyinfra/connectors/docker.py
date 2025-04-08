@@ -6,7 +6,7 @@ from tempfile import mkstemp
 from typing import TYPE_CHECKING
 
 import click
-from typing_extensions import TypedDict, Unpack
+from typing_extensions import TypedDict, Unpack, override
 
 from pyinfra import local, logger
 from pyinfra.api import QuoteString, StringCommand
@@ -115,6 +115,7 @@ class DockerConnector(BaseConnector):
             ["@docker"],
         )
 
+    @override
     def connect(self) -> None:
         self.local.connect()
 
@@ -127,7 +128,8 @@ class DockerConnector(BaseConnector):
             except PyinfraError:
                 self.container_id = _start_docker_image(docker_identifier)
 
-    def disconnect(self):
+    @override
+    def disconnect(self) -> None:
         container_id = self.container_id
 
         if self.no_stop:
@@ -156,6 +158,7 @@ class DockerConnector(BaseConnector):
             ),
         )
 
+    @override
     def run_shell_command(
         self,
         command: StringCommand,
@@ -188,6 +191,7 @@ class DockerConnector(BaseConnector):
             **local_arguments,
         )
 
+    @override
     def put_file(
         self,
         filename_or_io,
@@ -245,6 +249,7 @@ class DockerConnector(BaseConnector):
 
         return status
 
+    @override
     def get_file(
         self,
         remote_filename,

@@ -14,31 +14,31 @@ jobs:
   #
 
   lint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
       - run: pip install '.[test]'
       - run: flake8
 
   type-check:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
       - run: pip install '.[test]'
       - run: mypy
 
   spell-check:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Check spelling
-        uses: crate-ci/typos@v1.26.8
+        uses: crate-ci/typos@v1.30.3
 
   # Unit tests
   #
@@ -49,13 +49,8 @@ jobs:
       - type-check
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-latest]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-        include:
-          - os: macos-13
-            python-version: "3.11"
-          - os: windows-2022
-            python-version: "3.11"
+        os: [ubuntu-22.04, ubuntu-24.04, macos-13, macos-14, macos-15,windows-2022, windows-2025]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -65,8 +60,8 @@ jobs:
       - run: pip install '.[test]'
       - run: pytest --cov --disable-warnings
       - name: Upload coverage report to codecov
-        if: ${{ matrix.os == 'ubuntu-20.04' && matrix.python-version == '3.12' }}
-        uses: codecov/codecov-action@v3
+        if: ${{ matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.12' }}
+        uses: codecov/codecov-action@v5
 
   # End-to-end tests
   #
@@ -77,17 +72,25 @@ jobs:
       - type-check
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-latest]
+        os: [ubuntu-22.04, ubuntu-24.04]
         test-name: [local, ssh, docker]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
         include:
-          - os: macos-latest
+          - os: macos-13
             test-name: local
+            python-version: "3.12"
+          - os: macos-14
+            test-name: local
+            python-version: "3.12"
+          - os: macos-15
+            test-name: local
+            python-version: "3.12"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
       - run: pip install '.[test]'
       - run: pytest -m end_to_end_${{ matrix.test-name }}
 

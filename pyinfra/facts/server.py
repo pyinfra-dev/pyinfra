@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 
 from dateutil.parser import parse as parse_date
 from distro import distro
-from typing_extensions import TypedDict
+from typing_extensions import TypedDict, override
 
 from pyinfra.api import FactBase, ShortFactBase
 from pyinfra.api.util import try_int
@@ -23,6 +23,7 @@ class User(FactBase):
     Returns the name of the current user.
     """
 
+    @override
     def command(self):
         return "echo $USER"
 
@@ -32,6 +33,7 @@ class Home(FactBase[Optional[str]]):
     Returns the home directory of the given user, or the current user if no user is given.
     """
 
+    @override
     def command(self, user=""):
         return f"echo ~{user}"
 
@@ -41,6 +43,7 @@ class Path(FactBase):
     Returns the path environment variable of the current user.
     """
 
+    @override
     def command(self):
         return "echo $PATH"
 
@@ -50,6 +53,7 @@ class TmpDir(FactBase):
     Returns the temporary directory of the current server, if configured.
     """
 
+    @override
     def command(self):
         return "echo $TMPDIR"
 
@@ -59,6 +63,7 @@ class Hostname(FactBase):
     Returns the current hostname of the server.
     """
 
+    @override
     def command(self):
         return "uname -n"
 
@@ -68,6 +73,7 @@ class Kernel(FactBase):
     Returns the kernel name according to ``uname``.
     """
 
+    @override
     def command(self):
         return "uname -s"
 
@@ -77,6 +83,7 @@ class KernelVersion(FactBase):
     Returns the kernel version according to ``uname``.
     """
 
+    @override
     def command(self):
         return "uname -r"
 
@@ -90,6 +97,7 @@ class Os(FactBase[str]):
         This fact is deprecated/renamed, please use the ``server.Kernel`` fact.
     """
 
+    @override
     def command(self):
         return "uname -s"
 
@@ -103,6 +111,7 @@ class OsVersion(FactBase[str]):
         This fact is deprecated/renamed, please use the ``server.KernelVersion`` fact.
     """
 
+    @override
     def command(self):
         return "uname -r"
 
@@ -114,6 +123,7 @@ class Arch(FactBase[str]):
 
     # ``uname -p`` is not portable and returns ``unknown`` on Debian.
     # ``uname -m`` works on most Linux and BSD systems.
+    @override
     def command(self):
         return "uname -m"
 
@@ -123,6 +133,7 @@ class Command(FactBase[str]):
     Returns the raw output lines of a given command.
     """
 
+    @override
     def command(self, command):
         return command
 
@@ -132,6 +143,7 @@ class Which(FactBase[Optional[str]]):
     Returns the path of a given command according to `command -v`, if available.
     """
 
+    @override
     def command(self, command):
         return "command -v {0} || true".format(command)
 
@@ -143,9 +155,11 @@ class Date(FactBase[datetime]):
 
     default = datetime.now
 
+    @override
     def command(self):
         return f"date +'{ISO_DATE_FORMAT}'"
 
+    @override
     def process(self, output) -> datetime:
         return datetime.strptime(list(output)[0], ISO_DATE_FORMAT)
 
@@ -155,9 +169,11 @@ class MacosVersion(FactBase[str]):
     Returns the installed MacOS version.
     """
 
+    @override
     def requires_command(self) -> str:
         return "sw_vers"
 
+    @override
     def command(self):
         return "sw_vers -productVersion"
 
@@ -188,9 +204,11 @@ class Mounts(FactBase[Dict[str, MountsDict]]):
 
     default = dict
 
+    @override
     def command(self):
         return "mount"
 
+    @override
     def process(self, output) -> dict[str, MountsDict]:
         devices: dict[str, MountsDict] = {}
 
@@ -236,11 +254,13 @@ class KernelModules(FactBase):
         }
     """
 
+    @override
     def command(self):
         return "! test -f /proc/modules || cat /proc/modules"
 
     default = dict
 
+    @override
     def process(self, output):
         modules = {}
 
@@ -277,12 +297,15 @@ class LsbRelease(FactBase):
         }
     """
 
+    @override
     def command(self):
         return "lsb_release -ca"
 
+    @override
     def requires_command(self):
         return "lsb_release"
 
+    @override
     def process(self, output):
         items = {}
 
@@ -321,9 +344,11 @@ class OsRelease(FactBase):
         }
     """
 
+    @override
     def command(self):
         return "cat /etc/os-release"
 
+    @override
     def process(self, output):
         items = {}
 
@@ -352,11 +377,13 @@ class Sysctl(FactBase):
 
     default = dict
 
+    @override
     def command(self, keys=None):
         if keys is None:
             return "sysctl -a"
         return f"sysctl {' '.join(keys)}"
 
+    @override
     def process(self, output):
         sysctls = {}
 
@@ -390,11 +417,13 @@ class Groups(FactBase[List[str]]):
     Returns a list of groups on the system.
     """
 
+    @override
     def command(self):
         return "cat /etc/group"
 
     default = list
 
+    @override
     def process(self, output) -> list[str]:
         groups: list[str] = []
 
@@ -434,6 +463,7 @@ class Users(FactBase):
         }
     """
 
+    @override
     def command(self):
         return """
 
@@ -447,6 +477,7 @@ class Users(FactBase):
 
     default = dict
 
+    @override
     def process(self, output):
         users = {}
         rex = r"[A-Z][a-z]{2} [A-Z][a-z]{2} {1,2}\d+ .+$"
@@ -518,6 +549,7 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
         }
     """
 
+    @override
     def command(self) -> str:
         return (
             "cd /etc/ && for file in $(ls -pdL *-release | grep -v /); "
@@ -536,6 +568,7 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
         "debian": "Debian",
     }
 
+    @override
     @staticmethod
     def default() -> LinuxDistributionDict:
         return {
@@ -545,6 +578,7 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
             "release_meta": {},
         }
 
+    @override
     def process(self, output) -> LinuxDistributionDict:
         parts = {}
         for part in "\n".join(output).strip().split("---"):
@@ -607,6 +641,7 @@ class LinuxName(ShortFactBase[str]):
 
     fact = LinuxDistribution
 
+    @override
     def process_data(self, data) -> str:
         return data["name"]
 
@@ -626,18 +661,22 @@ class Selinux(FactBase[SelinuxDict]):
         }
     """
 
+    @override
     def command(self):
         return "sestatus"
 
+    @override
     def requires_command(self) -> str:
         return "sestatus"
 
+    @override
     @staticmethod
     def default() -> SelinuxDict:
         return {
             "mode": None,
         }
 
+    @override
     def process(self, output) -> SelinuxDict:
         selinux_info = self.default()
 
@@ -656,6 +695,7 @@ class LinuxGui(FactBase[List[str]]):
     Returns a list of available Linux GUIs.
     """
 
+    @override
     def command(self):
         return "ls /usr/bin/*session || true"
 
@@ -669,6 +709,7 @@ class LinuxGui(FactBase[List[str]]):
         "/usr/bin/xfce4-session": "XFCE 4",
     }
 
+    @override
     def process(self, output) -> list[str]:
         gui_names = []
 
@@ -687,6 +728,7 @@ class HasGui(ShortFactBase[bool]):
 
     fact = LinuxGui
 
+    @override
     def process_data(self, data) -> bool:
         return len(data) > 0
 
@@ -700,14 +742,17 @@ class Locales(FactBase[List[str]]):
         ["C.UTF-8", "en_US.UTF-8"]
     """
 
+    @override
     def command(self) -> str:
         return "locale -a"
 
+    @override
     def requires_command(self) -> str:
         return "locale"
 
     default = list
 
+    @override
     def process(self, output) -> list[str]:
         # replace utf8 with UTF-8 to match names in /etc/locale.gen
         # return a list of enabled locales
@@ -772,11 +817,13 @@ class SecurityLimits(FactBase):
         ]
     """
 
+    @override
     def command(self):
         return "cat /etc/security/limits.conf"
 
     default = list
 
+    @override
     def process(self, output):
         limits = []
 

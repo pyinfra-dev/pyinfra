@@ -665,7 +665,7 @@ def sync(
 
 
 @memoize
-def show_rsync_warning():
+def show_rsync_warning() -> None:
     logger.warning("The `files.rsync` operation is in alpha!")
 
 
@@ -958,6 +958,9 @@ def template(
         a dict with arguments that will be passed as keyword args to the jinja2
         `Environment() <https://jinja.palletsprojects.com/en/3.0.x/api/#jinja2.Environment>`_.
 
+    The ``host``, ``state``, and ``inventory`` objects will be automatically passed to the template
+    if not set explicitly.
+
     Notes:
        Common convention is to store templates in a "templates" directory and
        have a filename suffix with '.j2' (for jinja2).
@@ -1015,6 +1018,21 @@ def template(
             foo_dict=foo_dict,
             foo_list=foo_list
         )
+
+        # Example showing how to use host and inventory in a template file.
+        template = StringIO("""
+        name: "{{ host.name }}"
+        list_contents:
+        {% for entry in inventory.groups.my_servers %}
+            - "{{ entry }}"
+        {% endfor %}
+        """)
+
+        files.template(
+            name="Create a templated file",
+            src=template,
+            dest="/tmp/foo.yml"
+        )
     '''
 
     if not hasattr(src, "read") and state.cwd:
@@ -1067,6 +1085,34 @@ def template(
         add_deploy_dir=False,
         create_remote_dir=create_remote_dir,
     )
+
+
+@operation()
+def move(src: str, dest: str, overwrite=False):
+    """
+    Move remote file/directory/link into remote directory
+
+    + src: remote file/directory to move
+    + dest: remote directory to move `src` into
+    + overwrite: whether to overwrite dest, if present
+    """
+
+    if host.get_fact(File, src) is None:
+        raise OperationError("src {0} does not exist".format(src))
+
+    if not host.get_fact(Directory, dest):
+        raise OperationError("dest {0} is not an existing directory".format(dest))
+
+    full_dest_path = os.path.join(dest, os.path.basename(src))
+    if host.get_fact(File, full_dest_path) is not None:
+        if overwrite:
+            yield StringCommand("rm", "-rf", QuoteString(full_dest_path))
+        else:
+            raise OperationError(
+                "dest {0} already exists and `overwrite` is unset".format(full_dest_path)
+            )
+
+    yield StringCommand("mv", QuoteString(src), QuoteString(dest))
 
 
 def _validate_path(path):

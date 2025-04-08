@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
@@ -18,13 +20,16 @@ class PkginPackages(FactBase):
         }
     """
 
+    @override
     def command(self) -> str:
         return "pkgin list"
 
+    @override
     def requires_command(self) -> str:
         return "pkgin"
 
     default = dict
 
+    @override
     def process(self, output):
         return parse_packages(PKGIN_REGEX, output)

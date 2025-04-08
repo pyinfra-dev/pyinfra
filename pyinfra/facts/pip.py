@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
@@ -21,13 +23,16 @@ class PipPackages(FactBase):
     default = dict
     pip_command = "pip"
 
+    @override
     def requires_command(self, pip=None):
         return pip or self.pip_command
 
+    @override
     def command(self, pip=None):
         pip = pip or self.pip_command
         return "{0} freeze --all".format(pip)
 
+    @override
     def process(self, output):
         return parse_packages(PIP_REGEX, output)
 

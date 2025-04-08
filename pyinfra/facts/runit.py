@@ -1,3 +1,5 @@
+from typing_extensions import override
+
 from pyinfra.api import FactBase
 
 
@@ -20,9 +22,11 @@ class RunitStatus(FactBase):
 
     default = dict
 
+    @override
     def requires_command(self, *args, **kwargs) -> str:
         return "sv"
 
+    @override
     def command(self, service=None, svdir="/var/service") -> str:
         if service is None:
             return (
@@ -32,6 +36,7 @@ class RunitStatus(FactBase):
         else:
             return 'SVDIR="{0}" sv status "{1}"'.format(svdir, service)
 
+    @override
     def process(self, output):
         services = {}
         for line in output:
@@ -60,11 +65,13 @@ class RunitManaged(FactBase):
 
     default = set
 
+    @override
     def command(self, service=None, svdir="/var/service"):
         if service is None:
             return 'cd "{0}" && find -mindepth 1 -maxdepth 1 -type l -printf "%f\n"'.format(svdir)
         else:
             return 'cd "{0}" && test -h "{1}" && echo "{1}" || true'.format(svdir, service)
 
+    @override
     def process(self, output):
         return set(output)

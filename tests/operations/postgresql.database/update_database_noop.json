@@ -1,0 +1,15 @@
+{
+    "args": ["somedb"],
+    "kwargs": {
+        "owner": "someowner"
+    },
+    "facts" :{
+        "postgres.PostgresDatabases": {
+            "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None": {
+                "somedb": { "owner": "someowner" }
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "postgresql database somedb already exists with the same parameters"
+}

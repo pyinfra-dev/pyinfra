@@ -122,7 +122,7 @@ class StateHostMeta:
     ops_no_change = 0
     op_hashes: set[str]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.op_hashes = set()
 
 

@@ -3,7 +3,7 @@ from tempfile import mkstemp
 from typing import TYPE_CHECKING, Optional
 
 import click
-from typing_extensions import Unpack
+from typing_extensions import Unpack, override
 
 from pyinfra import local, logger
 from pyinfra.api import QuoteString, StringCommand
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 @memoize
-def show_warning():
+def show_warning() -> None:
     logger.warning("The @chroot connector is in beta!")
 
 
@@ -39,6 +39,7 @@ class ChrootConnector(BaseConnector):
         super().__init__(state, host)
         self.local = LocalConnector(state, host)
 
+    @override
     @staticmethod
     def make_names_data(name: Optional[str] = None):
         if not name:
@@ -50,6 +51,7 @@ class ChrootConnector(BaseConnector):
             "chroot_directory": "/{0}".format(name.lstrip("/")),
         }, ["@chroot"]
 
+    @override
     def connect(self) -> None:
         self.local.connect()
 
@@ -66,6 +68,7 @@ class ChrootConnector(BaseConnector):
 
         self.host.connector_data["chroot_directory"] = chroot_directory
 
+    @override
     def run_shell_command(
         self,
         command,
@@ -97,6 +100,7 @@ class ChrootConnector(BaseConnector):
             **local_arguments,
         )
 
+    @override
     def put_file(
         self,
         filename_or_io,
@@ -148,6 +152,7 @@ class ChrootConnector(BaseConnector):
 
         return status
 
+    @override
     def get_file(
         self,
         remote_filename,

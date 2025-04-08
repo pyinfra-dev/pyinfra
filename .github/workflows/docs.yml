@@ -11,7 +11,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: github.repository == 'pyinfra-dev/pyinfra'
     steps:
       - name: Clone Source Repository

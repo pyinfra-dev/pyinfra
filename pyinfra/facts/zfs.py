@@ -2,6 +2,8 @@
 Gather information about ZFS filesystems.
 """
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase, ShortFactBase
 
 
@@ -16,17 +18,29 @@ def _process_zfs_props_table(output):
 
 
 class ZfsPools(FactBase):
-    def command(self):
+    @override
+    def command(self) -> str:
         return "zpool get -H all"
 
+    @override
+    def requires_command(self) -> str:
+        return "zpool"
+
+    @override
     def process(self, output):
         return _process_zfs_props_table(output)
 
 
 class ZfsDatasets(FactBase):
-    def command(self):
+    @override
+    def command(self) -> str:
         return "zfs get -H all"
 
+    @override
+    def requires_command(self) -> str:
+        return "zfs"
+
+    @override
     def process(self, output):
         return _process_zfs_props_table(output)
 
@@ -34,6 +48,7 @@ class ZfsDatasets(FactBase):
 class ZfsFilesystems(ShortFactBase):
     fact = ZfsDatasets
 
+    @override
     def process_data(self, data):
         return {name: props for name, props in data.items() if props.get("type") == "filesystem"}
 
@@ -41,6 +56,7 @@ class ZfsFilesystems(ShortFactBase):
 class ZfsSnapshots(ShortFactBase):
     fact = ZfsDatasets
 
+    @override
     def process_data(self, data):
         return {name: props for name, props in data.items() if props.get("type") == "snapshot"}
 
@@ -48,6 +64,7 @@ class ZfsSnapshots(ShortFactBase):
 class ZfsVolumes(ShortFactBase):
     fact = ZfsDatasets
 
+    @override
     def process_data(self, data):
         return {name: props for name, props in data.items() if props.get("type") == "volume"}
 

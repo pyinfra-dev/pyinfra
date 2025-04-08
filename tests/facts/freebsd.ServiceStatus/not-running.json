@@ -1,0 +1,6 @@
+{
+    "arg": "nginx",
+    "command": "service -j '' nginx status > /dev/null 2>&1; if [ $? -eq 0 ]; then echo running; fi",
+    "output": [],
+    "fact": ""
+}

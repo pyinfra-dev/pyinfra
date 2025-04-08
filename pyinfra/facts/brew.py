@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import re
 
+from typing_extensions import override
+
 from pyinfra import logger
 from pyinfra.api import FactBase
 
@@ -37,9 +39,11 @@ class BrewVersion(FactBase):
 
     """
 
+    @override
     def command(self) -> str:
         return "brew --version"
 
+    @override
     def requires_command(self) -> str:
         return "brew"
 
@@ -47,6 +51,7 @@ class BrewVersion(FactBase):
     def default():
         return [0, 0, 0]
 
+    @override
     def process(self, output):
         out = list(output)[0]
         m = VERSION_MATCHER.match(out)
@@ -67,14 +72,17 @@ class BrewPackages(FactBase):
         }
     """
 
+    @override
     def command(self) -> str:
         return "brew list --versions"
 
+    @override
     def requires_command(self) -> str:
         return "brew"
 
     default = dict
 
+    @override
     def process(self, output):
         return parse_packages(BREW_REGEX, output)
 
@@ -90,12 +98,14 @@ class BrewCasks(BrewPackages):
         }
     """
 
+    @override
     def command(self) -> str:
         return (
             r'if brew --version | grep -q -e "Homebrew\ +(1\.|2\.[0-5]).*" 1>/dev/null;'
             r"then brew cask list --versions; else brew list --cask --versions; fi"
         )
 
+    @override
     def requires_command(self) -> str:
         return "brew"
 
@@ -105,13 +115,16 @@ class BrewTaps(FactBase):
     Returns a list of brew taps.
     """
 
+    @override
     def command(self) -> str:
         return "brew tap"
 
+    @override
     def requires_command(self) -> str:
         return "brew"
 
     default = list
 
+    @override
     def process(self, output):
         return output

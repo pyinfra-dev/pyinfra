@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import re
 
+from typing_extensions import override
+
 from pyinfra.api import FactBase, ShortFactBase
 
 
@@ -10,9 +12,11 @@ class Cpus(FactBase[int]):
     Returns the number of CPUs on this server.
     """
 
+    @override
     def command(self) -> str:
         return "getconf NPROCESSORS_ONLN 2> /dev/null || getconf _NPROCESSORS_ONLN"
 
+    @override
     def process(self, output):
         try:
             return int(list(output)[0])
@@ -25,12 +29,15 @@ class Memory(FactBase):
     Returns the memory installed in this server, in MB.
     """
 
+    @override
     def requires_command(self) -> str:
         return "vmstat"
 
+    @override
     def command(self) -> str:
         return "vmstat -s"
 
+    @override
     def process(self, output):
         data = {}
 
@@ -80,9 +87,11 @@ class BlockDevices(FactBase):
     regex = r"([a-zA-Z0-9\/\-_]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]{1,3})%\s+([a-zA-Z\/0-9\-_]+)"  # noqa: E501
     default = dict
 
+    @override
     def command(self) -> str:
         return "df"
 
+    @override
     def process(self, output):
         devices = {}
 
@@ -177,11 +186,13 @@ class NetworkDevices(FactBase):
 
     default = dict
 
+    @override
     def command(self) -> str:
         return "ip addr show 2> /dev/null || ifconfig -a"
 
     # Definition of valid interface names for Linux:
     # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/net/core/dev.c?h=v5.1.3#n1020
+    @override
     def process(self, output):
         def mask(value):
             try:
@@ -318,6 +329,7 @@ class Ipv4Addrs(ShortFactBase):
     fact = NetworkDevices
     ip_type = "ipv4"
 
+    @override
     def process_data(self, data):
         host_to_ips = {}
 
@@ -379,6 +391,7 @@ class Ipv4Addresses(ShortFactBase):
     fact = NetworkDevices
     ip_type = "ipv4"
 
+    @override
     def process_data(self, data):
         addresses = {}
 

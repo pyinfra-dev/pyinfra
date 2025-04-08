@@ -1,0 +1,15 @@
+{
+    "kwargs" : {
+        "parameter" : "kld_list",
+        "value" : "radeonkms",
+        "command" : "add"
+    },
+    "facts" : {
+        "freebsd.Sysrc" : {
+            "jail=None, parameter=kld_list" : null
+        }
+    },
+    "commands" : [
+        "sysrc -i -- kld_list+=radeonkms"
+    ]
+}

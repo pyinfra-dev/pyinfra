@@ -179,7 +179,7 @@ All operations return an operation meta object which provides information about 
     )
 
     # The functions `any_changed` and `all_changed` are provided for common use cases, e.g.
-    from pyinfra.operations.utils import any_changed, all_changed
+    from pyinfra.operations.util import any_changed, all_changed
     server.shell(commands=["..."], _if=any_changed(create_user, create_otheruser))
     server.shell(commands=["..."], _if=all_changed(create_user, create_otheruser))
 
@@ -205,6 +205,24 @@ pyinfra doesn't immediately execute operations, meaning output is not available 
         name="Execute callback function",
         function=callback,
     )
+
+
+There is also the possibility to use pyinfra's logging functionality which may be appropriate in certain situations.
+
+.. code:: python
+
+    from pyinfra import logger
+    def ufw_usable(function code here)
+    is_ufw_usable = ufw_usable()
+    logger.info('Checking output of ufw_usable: {}'.format(is_ufw_usable))
+
+
+Produces output similar to:
+    --> Preparing Operations...
+        Loading: deploy_create_users.py
+        Checking output of ufw_usable: None
+        [multitest.example.com] Ready: deploy_create_users.py
+
 
 
 Nested Operations

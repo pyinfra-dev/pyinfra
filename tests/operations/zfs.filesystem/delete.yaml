@@ -1,0 +1,10 @@
+args:
+  - tank/home/james
+kwargs:
+  present: false
+facts:
+  zfs.ZfsDatasets:
+    tank/home/james:
+      mountpoint: /home/james
+commands:
+  - zfs destroy  tank/home/james

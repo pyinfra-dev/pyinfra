@@ -1,0 +1,13 @@
+{
+    "args" : ["screen"],
+    "kwargs" : {
+        "jail" : "nginx"
+    },
+    "facts" : {
+        "freebsd.PkgPackage" : {
+            "jail=nginx, package=screen" : null
+        }
+    },
+    "commands" : [],
+    "noop_description": "Package 'screen' cannot be found"
+}

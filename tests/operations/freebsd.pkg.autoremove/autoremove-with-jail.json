@@ -1,0 +1,8 @@
+{
+    "kwargs" : {
+        "jail" : "nginx"
+    },
+    "commands" : [
+        "pkg -j nginx autoremove -y"
+    ]
+}

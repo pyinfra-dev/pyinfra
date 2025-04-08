@@ -16,4 +16,5 @@ include_trailing_comma = true
 check_untyped_defs = true
 ignore_missing_imports = true
 enable_incomplete_feature = "Unpack"
+enable_error_code = "explicit-override"
 files = "pyinfra,pyinfra_cli"
