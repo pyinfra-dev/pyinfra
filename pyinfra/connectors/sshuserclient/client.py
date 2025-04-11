@@ -183,6 +183,13 @@ class SSHClient(ParamikoClient):
         if _pyinfra_ssh_forward_agent is not None:
             forward_agent = _pyinfra_ssh_forward_agent
 
+        keep_alive = config.get("keep_alive")
+
+        if keep_alive:
+            transport = self.get_transport()
+            assert transport is not None, "No transport"
+            transport.set_keepalive(keep_alive)
+
         if forward_agent:
             transport = self.get_transport()
             assert transport is not None, "No transport"
@@ -239,6 +246,9 @@ class SSHClient(ParamikoClient):
 
         if "port" in host_config:
             cfg["port"] = int(host_config["port"])
+
+        if "serveraliveinterval" in host_config:
+            cfg["keep_alive"] = int(host_config["serveraliveinterval"])
 
         if "proxycommand" in host_config:
             cfg["sock"] = ProxyCommand(host_config["proxycommand"])
