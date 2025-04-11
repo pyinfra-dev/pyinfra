@@ -24,7 +24,9 @@
       "                                   gskssl64   (>= 8.0-55.31)"
     ],
     "fact": {
+        "version": "8.1.21-0",
         "name": "tivsm-api64",
-        "version": "8.1.21-0"
+        "architecture": "amd64",
+        "description": "This is the IBM Storage Protect Linux API"
     }
 }

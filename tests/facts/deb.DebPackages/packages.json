@@ -9,10 +9,40 @@
         "ii  x11-xkb-utils 7.7+1 amd64 X11 XKB utilitie"
     ],
     "fact": {
-        "w3m": ["0.5.3-15"],
-        "wget": ["1.15-1ubuntu1.14.04."],
-        "whiptail": ["0.52.15-2ubuntu5"],
-        "x11-common": ["1:7.7+1ubuntu8.1"],
-        "x11-xkb-utils": ["7.7+1"]
+        "w3m": {
+            "desired": "Install",
+            "status": "Installed",
+            "version": "0.5.3-15",
+            "architecture": "amd64",
+            "description": "WWW browsable pager with excellent tables/frames support"
+        },
+        "wget": {
+            "desired": "Install",
+            "status": "Installed",
+            "version": "1.15-1ubuntu1.14.04.",
+            "architecture": "amd64",
+            "description": "retrieves files from the web"
+        },
+        "whiptail": {
+            "desired": "Install",
+            "status": "Installed",
+            "version": "0.52.15-2ubuntu5",
+            "architecture": "amd64",
+            "description": "Displays user-friendly dialog oxes from shell scripts"
+        },
+        "x11-common": {
+            "desired": "Install",
+            "status": "Installed",
+            "version": "1:7.7+1ubuntu8.1",
+            "architecture": "all",
+            "description": "X Window System (X.Org) infrastructure"
+        },
+        "x11-xkb-utils": {
+            "desired": "Install",
+            "status": "Installed",
+            "version": "7.7+1",
+            "architecture": "amd64",
+            "description": "X11 XKB utilitie"
+        }
     }
 }

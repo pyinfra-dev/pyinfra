@@ -7,8 +7,26 @@
         "hi  wireguard 1.0.20200513-1~18.04.2 all fast, modern, secure kernel VPN tunnel (metapackage)"
     ],
     "fact": {
-        "matrix-synapse-py3": ["1.37.1+bionic1"],
-        "miniflux": ["2.0.31"],
-        "wireguard": ["1.0.20200513-1~18.04.2"]
+        "matrix-synapse-py3": {
+            "desired": "Hold",
+            "status": "Installed",
+            "version": "1.37.1+bionic1",
+            "architecture": "amd64",
+            "description": "Open federated Instant Messaging and VoIP server"
+        },
+        "miniflux": {
+            "desired": "Hold",
+            "status": "Installed",
+            "version": "2.0.31",
+            "architecture": "amd64",
+            "description": "Minimalist Feed Reader"
+        },
+        "wireguard": {
+            "desired": "Hold",
+            "status": "Installed",
+            "version": "1.0.20200513-1~18.04.2",
+            "architecture": "all",
+            "description": "fast, modern, secure kernel VPN tunnel (metapackage)"
+        }
     }
 }
