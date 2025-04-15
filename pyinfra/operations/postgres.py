@@ -249,8 +249,8 @@ def database(
             ("OWNER", '"{0}"'.format(owner) if owner else owner),
             ("TEMPLATE", template),
             ("ENCODING", encoding),
-            ("LC_COLLATE", lc_collate),
-            ("LC_CTYPE", lc_ctype),
+            ("LC_COLLATE", "'{0}'".format(lc_collate) if lc_collate else lc_collate),
+            ("LC_CTYPE", "'{0}'".format(lc_ctype) if lc_ctype else lc_ctype),
             ("TABLESPACE", tablespace),
             ("CONNECTION LIMIT", connection_limit),
         ):
