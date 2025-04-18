@@ -258,7 +258,7 @@ class Mounts(FactBase[Dict[str, MountsDict]]):
         return devices
 
 
-class Port(FactBase[Tuple[str, int]]):
+class Port(FactBase[Tuple[str, int] | Tuple[None, None]]):
     """
     Returns the process occuping a port and its PID
     """
@@ -267,13 +267,11 @@ class Port(FactBase[Tuple[str, int]]):
         return f"ss -lptnH 'src :{port}'"
 
     @override
-    def process(self, output: Iterable[str]) -> Tuple[str, int]:
-        proc, pid = "", 0
+    def process(self, output: Iterable[str]) -> Tuple[str, int] | Tuple[None, None]:
         for line in output:
-            proc = line.split('"')[1]
-            pid = int(line.split("pid=")[1].split(",")[0])
-            break
-        return (proc, pid)
+            proc, pid = line.split('"')[1], int(line.split("pid=")[1].split(",")[0])
+            return (proc, pid)
+        return None, None
 
 
 class KernelModules(FactBase):
