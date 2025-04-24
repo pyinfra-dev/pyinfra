@@ -56,14 +56,14 @@ def sql(
 @operation()
 def role(
     role: str,
-    present=True,
+    present: bool = True,
     password: str | None = None,
-    login=True,
-    superuser=False,
-    inherit=False,
-    createdb=False,
-    createrole=False,
-    replication=False,
+    login: bool = True,
+    superuser: bool = False,
+    inherit: bool = False,
+    createdb: bool = False,
+    createrole: bool = False,
+    replication: bool = False,
     connection_limit: int | None = None,
     # Details for speaking to PostgreSQL via `psql` CLI
     psql_user: str | None = None,
@@ -102,7 +102,7 @@ def role(
             password="somepassword",
             superuser=True,
             login=True,
-            sudo_user="postgres",
+            _sudo_user="postgres",
         )
 
     """
@@ -163,7 +163,47 @@ def role(
             database=psql_database,
         )
     else:
-        host.noop("postgresql role {0} exists".format(role))
+        # Check if any attributes need updating
+        current_role = roles[role]
+        should_execute = False
+        sql_bits = ['ALTER ROLE "{0}"'.format(role)]
+        if login and "login" in current_role and current_role["login"] != login:
+            sql_bits.append("LOGIN")
+            should_execute = True
+        if superuser and "superuser" in current_role and current_role["superuser"] != superuser:
+            sql_bits.append("SUPERUSER")
+            should_execute = True
+        if inherit and "inherit" in current_role and current_role["inherit"] != inherit:
+            sql_bits.append("INHERIT")
+            should_execute = True
+        if createdb and "createdb" in current_role and current_role["createdb"] != createdb:
+            sql_bits.append("CREATEDB")
+            should_execute = True
+        if createrole and "createrole" in current_role and current_role["createrole"] != createrole:
+            sql_bits.append("CREATEROLE")
+            should_execute = True
+        if (
+            connection_limit
+            and "connection_limit" in current_role
+            and roles[role]["connection_limit"] != connection_limit
+        ):
+            sql_bits.append("CONNECTION LIMIT {0}".format(connection_limit))
+            should_execute = True
+        if password:
+            sql_bits.append(MaskString("PASSWORD '{0}'".format(password)))
+            should_execute = True
+
+        if should_execute:
+            yield make_execute_psql_command(
+                StringCommand(*sql_bits),
+                user=psql_user,
+                password=psql_password,
+                host=psql_host,
+                port=psql_port,
+                database=psql_database,
+            )
+        else:
+            host.noop("postgresql role {0} exists and does not need updates".format(role))
 
 
 @operation()
@@ -249,8 +289,8 @@ def database(
             ("OWNER", '"{0}"'.format(owner) if owner else owner),
             ("TEMPLATE", template),
             ("ENCODING", encoding),
-            ("LC_COLLATE", lc_collate),
-            ("LC_CTYPE", lc_ctype),
+            ("LC_COLLATE", "'{0}'".format(lc_collate) if lc_collate else lc_collate),
+            ("LC_CTYPE", "'{0}'".format(lc_ctype) if lc_ctype else lc_ctype),
             ("TABLESPACE", tablespace),
             ("CONNECTION LIMIT", connection_limit),
         ):

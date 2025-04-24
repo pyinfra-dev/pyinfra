@@ -198,14 +198,18 @@ def execute_command_with_sudo_retry(
 ) -> tuple[int, CommandOutput]:
     return_code, output = execute_command()
 
+    # If we failed look for a sudo password prompt line and re-submit using the sudo password. Look
+    # at all lines here in case anything else gets printed, eg in:
+    # https://github.com/pyinfra-dev/pyinfra/issues/1292
     if return_code != 0 and output and output.combined_lines:
-        last_line = output.combined_lines[-1].line
-        if last_line.strip() == "sudo: a password is required":
-            # If we need a password, ask the user for it and attach to the host
-            # internal connector data for use when executing future commands.
-            sudo_password = getpass("{0}sudo password: ".format(host.print_prefix))
-            host.connector_data["prompted_sudo_password"] = sudo_password
-            return_code, output = execute_command()
+        for line in reversed(output.combined_lines):
+            if line.line.strip() == "sudo: a password is required":
+                # If we need a password, ask the user for it and attach to the host
+                # internal connector data for use when executing future commands.
+                sudo_password = getpass("{0}sudo password: ".format(host.print_prefix))
+                host.connector_data["prompted_sudo_password"] = sudo_password
+                return_code, output = execute_command()
+                break
 
     return return_code, output
 
@@ -304,7 +308,7 @@ def make_unix_command(
     _sudo=False,
     _sudo_user=None,
     _use_sudo_login=False,
-    _sudo_password=False,
+    _sudo_password="",
     _sudo_askpass_path=None,
     _preserve_sudo_env=False,
     # Doas config

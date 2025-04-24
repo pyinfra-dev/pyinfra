@@ -350,7 +350,6 @@ def _main(
     state.set_stage(StateStage.Connect)
     connect_all(state)
 
-    logger.info("--> Preparing operations...")
     state.set_stage(StateStage.Prepare)
     can_diff, state, config = _handle_commands(
         state, config, command, original_operations, operations
@@ -651,6 +650,7 @@ def _apply_inventory_limit(inventory, limit):
 #
 def _handle_commands(state, config, command, original_operations, operations):
     if command is CliCommands.FACT:
+        logger.info("--> Gathering facts...")
         state, fact_data = _run_fact_operations(state, config, operations)
         print_facts(fact_data)
         _exit()
@@ -658,13 +658,16 @@ def _handle_commands(state, config, command, original_operations, operations):
     can_diff = True
 
     if command == CliCommands.SHELL:
+        logger.info("--> Preparing exec operation...")
         state = _prepare_exec_operations(state, config, operations)
         can_diff = False
 
     elif command == CliCommands.DEPLOY_FILES:
+        logger.info("--> Preparing operation files...")
         state, config, operations = _prepare_deploy_operations(state, config, operations)
 
     elif command == CliCommands.FUNC:
+        logger.info("--> Preparing operation func...")
         state, kwargs = _prepare_func_operations(
             state,
             config,
@@ -676,8 +679,6 @@ def _handle_commands(state, config, command, original_operations, operations):
 
 
 def _run_fact_operations(state, config, operations):
-    logger.info("--> Gathering facts...")
-
     state.print_fact_info = True
     fact_data = {}
 
@@ -715,7 +716,6 @@ def _prepare_exec_operations(state, config, operations):
 
 
 def _prepare_deploy_operations(state, config, operations):
-    logger.info("--> Preparing Operations...")
 
     # Number of "steps" to make = number of files * number of hosts
     for i, filename in enumerate(operations):
@@ -732,8 +732,6 @@ def _prepare_deploy_operations(state, config, operations):
 
 
 def _prepare_func_operations(state, config, operations, original_operations):
-    logger.info("--> Preparing operation...")
-
     op, args = operations
     args, kwargs = args
 

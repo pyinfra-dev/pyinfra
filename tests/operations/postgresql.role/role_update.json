@@ -1,0 +1,23 @@
+{
+    "args": ["testuser"],
+    "kwargs": {
+        "connection_limit": 15,
+        "password": "abc"
+    },
+    "facts": {
+        "postgres.PostgresRoles": {
+            "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None": {
+                "testuser": {
+                    "connection_limit": 10
+                }
+            }
+        }
+    },
+    "commands": [
+        {
+            "raw": "psql -Ac 'ALTER ROLE \"testuser\" CONNECTION LIMIT 15 PASSWORD '\"'\"'abc'\"'\"''",
+            "masked":"psql -Ac 'ALTER ROLE \"testuser\" CONNECTION LIMIT 15 ***'"
+        }
+    ]
+
+}

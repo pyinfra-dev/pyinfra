@@ -86,14 +86,13 @@ class BaseConnector(abc.ABC):
     @abc.abstractmethod
     def make_names_data(name: str) -> Iterator[tuple[str, dict, list[str]]]:
         """
-        Generates hosts/data/groups information for inventory. This allows a
-        single connector reference to generate multiple target hosts.
+        Generate inventory targets. This is a staticmethod because each yield will become a new host
+        object with a new (ie not this) instance of the connector.
         """
-        ...
 
     def connect(self) -> None:
         """
-        Connect this connector instance.
+        Connect this connector instance. Should raise ConnectError exceptions to indicate failure.
         """
 
     def disconnect(self) -> None:
@@ -108,7 +107,20 @@ class BaseConnector(abc.ABC):
         print_output: bool,
         print_input: bool,
         **arguments: Unpack["ConnectorArguments"],
-    ) -> tuple[bool, "CommandOutput"]: ...
+    ) -> tuple[bool, "CommandOutput"]:
+        """
+        Execute a command.
+
+        Args:
+            command (StringCommand): actual command to execute
+            print_output (bool): whether to print command output
+            print_input (bool): whether to print command input
+            arguments: (ConnectorArguments): connector global arguments
+
+        Returns:
+            tuple: (bool, CommandOutput)
+            Bool indicating success and CommandOutput with stdout/stderr lines.
+        """
 
     @abc.abstractmethod
     def put_file(
@@ -119,7 +131,14 @@ class BaseConnector(abc.ABC):
         print_output: bool = False,
         print_input: bool = False,
         **arguments: Unpack["ConnectorArguments"],
-    ) -> bool: ...
+    ) -> bool:
+        """
+        Upload a local file or IO object by copying it to a temporary directory
+        and then writing it to the upload location.
+
+        Returns:
+            bool: indicating success or failure.
+        """
 
     @abc.abstractmethod
     def get_file(
@@ -130,7 +149,14 @@ class BaseConnector(abc.ABC):
         print_output: bool = False,
         print_input: bool = False,
         **arguments: Unpack["ConnectorArguments"],
-    ) -> bool: ...
+    ) -> bool:
+        """
+        Download a local file by copying it to a temporary location and then writing
+        it to our filename or IO object.
+
+        Returns:
+            bool: indicating success or failure.
+        """
 
     def check_can_rsync(self) -> None:
         raise NotImplementedError("This connector does not support rsync")

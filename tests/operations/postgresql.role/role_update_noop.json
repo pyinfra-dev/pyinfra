@@ -1,0 +1,19 @@
+{
+    "args": ["testuser"],
+    "kwargs": {
+        "superuser": true,
+        "inherit": true
+    },
+    "facts": {
+        "postgres.PostgresRoles": {
+            "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None": {
+                "testuser": {
+                    "superuser": true,
+                    "inherit": true
+                }
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "postgresql role testuser exists and does not need updates"
+}

@@ -6,7 +6,7 @@ from unittest import TestCase, mock
 from paramiko import AuthenticationException, PasswordRequiredException, SSHException
 
 import pyinfra
-from pyinfra.api import Config, MaskString, State, StringCommand
+from pyinfra.api import Config, Host, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 
@@ -850,11 +850,13 @@ class TestSSHConnector(TestCase):
     def test_put_file_su_user_fail_copy(self, fake_sftp_client, fake_ssh_client):
         inventory = make_inventory(hosts=("anotherhost",))
         State(inventory, Config())
+
         host = inventory.get_host("anotherhost")
+        assert isinstance(host, Host)
         host.connect()
 
         stdout_mock = mock.MagicMock()
-        exit_codes = [0, 1]
+        exit_codes = [0, 0, 1]
         stdout_mock.channel.recv_exit_status.side_effect = lambda: exit_codes.pop(0)
         fake_ssh_client().exec_command.return_value = (
             mock.MagicMock(),
@@ -865,7 +867,7 @@ class TestSSHConnector(TestCase):
         fake_open = mock.mock_open(read_data="test!")
         with mock.patch("pyinfra.api.util.open", fake_open, create=True):
             status = host.put_file(
-                "not-a-file",
+                fake_open(),
                 "not-another-file",
                 print_output=True,
                 _su_user="centos",
@@ -881,7 +883,7 @@ class TestSSHConnector(TestCase):
             get_pty=False,
         )
 
-        fake_ssh_client().exec_command.assert_called_with(
+        fake_ssh_client().exec_command.assert_any_call(
             (
                 "su centos -c 'sh -c '\"'\"'cp "
                 "/tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487 "
