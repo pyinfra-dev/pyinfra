@@ -7,35 +7,28 @@ orphan: true
 
 ## Prerequisites
 
-Successful installation requires a Python 3 environment. Starting with pyinfra 3.2, pyinfra supports Python 3.9, 3.10, 3.11, and 3.12.
+### Python Version Requirements
 
-Officially supported installation methods include pip and uv. Both tools provide a streamlined workflow for installing pyinfra and managing dependencies.
-
-While there have been successes with using other tools like poetry or pip-tools, they do not share the same workflow as pip or uv - especially when it comes to constraint vs. requirements management. Installing via Poetry or pip-tools is not currently supported.
-
-This guide will help you quickly set up pyinfra using pip or uv, a fast and modern tool for managing Python environments and dependencies. uv makes the installation process easy and provides a smooth setup experience.
-
-Before installing pyinfra, ensure you have **Python** installed: pyinfra requires Python 3.9 or later. You can download Python from the [official website](https://www.python.org/downloads/).
-
-## Bad Practices
-
-- **Avoid System-Wide Installation**: Installing pyinfra system-wide (using `sudo pip install pyinfra`) can lead to conflicts with other Python packages and system tools.
-- **Do Not Mix Projects**: Avoid installing pyinfra in a virtual environment that is shared with other projects to prevent dependency conflicts.
-
-
-## Installation Methods
-
-### Using Pip
-
-It is recommended to install pyinfra using `pip`. To avoid potential conflicts with system packages, it is best practice to install pyinfra in a virtual environment.
-
-1. Ensure `pip` is installed and up-to-date. You can upgrade `pip` using the following command:
+- Python 3.9 or later is required
+- pyinfra 3.2+ supports Python 3.9, 3.10, 3.11, and 3.12
+- You can check your Python version with:
 
   ```sh
-  python -m pip install --upgrade pip
+  python --version
   ```
 
-2. **Create a Virtual Environment**: Creating a virtual environment ensures that pyinfra and its dependencies are isolated from other projects and system packages.
+### System Requirements
+
+- A Unix-like operating system (Linux, macOS) or Windows
+- Shell access to target systems
+- For Windows users: Administrator privileges for installation
+- For development: A C++ compiler may be required for some Python packages
+
+## Installation Method
+
+### Using pip (Recommended)
+
+#### Create a Virtual Environment (Best Practice)
 
    ```sh
    # Create a virtual environment
@@ -44,93 +37,92 @@ It is recommended to install pyinfra using `pip`. To avoid potential conflicts w
    # Activate the virtual environment
    # On macOS/Linux
    source env/bin/activate
-   ```
-
-3. **Install pyinfra**: Once the virtual environment is activated, install pyinfra using `pip`.
-
-   ```sh
-   pip install pyinfra
-   ```
-
-4. **Verify Installation**: Check the installed version of pyinfra to ensure it was installed correctly.
-
-   ```sh
-   pyinfra --version
-   ```
-
-5. **Keep Dependencies Up-to-Date**: Regularly update pyinfra and its dependencies to benefit from the latest features and security patches.
-
-   ```sh
-   pip install --upgrade pyinfra
-   ```
-
-### Using uv
-
-It is recommended to install pyinfra using `uv`. To avoid potential conflicts with system packages, it is best practice to install pyinfra in a virtual environment.
-
-1. **Install pyinfra**: Once the virtual environment is activated, install pyinfra using `pip`.
-
-   ```sh
-   uv pip install pyinfra
-   ```
-
-2. **Verify Installation**: Check the installed version of pyinfra to ensure it was installed correctly.
-
-   ```sh
-   pyinfra --version
-   ```
-
-3. **Keep Dependencies Up-to-Date**: Regularly update pyinfra and its dependencies to benefit from the latest features and security patches.
-
-   ```sh
-   uv pip install --upgrade pyinfra
-   ```
-
-### Windows-Specific Instructions
-
-Tested on Windows Server 2019 with Python 3.9.
-
-#### Prerequisites
-
-1. **Download and Install Python**:
-   - Download Python from the [official website](https://www.python.org/downloads/windows/).
-   - Install Python as Administrator and ensure the **Add Python to PATH** option is selected.
-
-2. **C++ Compiler (Optional)**: If you need to build any Python packages on Windows, you may need a C++ compiler. One possible solution is to install Visual Studio Community Edition.
-
-   - Download [Visual Studio Community Edition](https://visualstudio.microsoft.com/downloads/).
-   - Install Visual Studio as Administrator and select the "Desktop development with C++" option. Ensure at least the following options are selected:
-     - "MSVC v142..."
-     - "Windows 10 SDK..."
-     - "C++ CMake tools for Windows"
-     - "C++ ATL for latest..."
-     - "C++/CLI support for v142..."
-     - "C++ Modules for v142..."
-
-#### Installation Steps
-
-1. **Create a Virtual Environment**:
-
-   ```sh
-   python -m venv env
-   ```
-
-2. **Activate the Virtual Environment**:
-
-   ```sh
+   # On Windows
    env\Scripts\activate
    ```
 
-3. **Install pyinfra**:
+#### Install pyinfra
 
    ```sh
    pip install pyinfra
    ```
 
-4. **Verify Installation**:
+#### Verify Installation
 
    ```sh
    pyinfra --version
    ```
 
-By following these best practices and instructions, you can ensure a smooth and conflict-free installation of pyinfra.
+## Platform-Specific Instructions
+
+### Windows Installation
+
+#### Install Python
+
+- Download from [Python's official website](https://www.python.org/downloads/windows/)
+- Run installer as Administrator
+- Check "Add Python to PATH" during installation
+
+#### Optional: Install C++ Compiler
+
+- Download [Visual Studio Community Edition](https://visualstudio.microsoft.com/downloads/)
+- Select "Desktop development with C++" workload
+- Required components:
+  - MSVC v142...
+  - Windows 10 SDK...
+  - C++ CMake tools for Windows
+  - C++ ATL for latest...
+  - C++/CLI support for v142...
+  - C++ Modules for v142...
+
+#### Install pyinfra
+
+   ```sh
+   python -m venv env
+   env\Scripts\activate
+   pip install pyinfra
+   ```
+
+## Best Practices
+
+### Do's
+
+- ✅ Use virtual environments for isolation
+- ✅ Keep pyinfra and dependencies up-to-date
+- ✅ Use the latest Python version supported
+- ✅ Install as a regular user (not root/sudo)
+
+### Don'ts
+
+- ❌ Avoid system-wide installation
+- ❌ Don't mix pyinfra with other projects in the same virtual environment
+- ❌ Don't use unsupported package managers (poetry, pip-tools)
+
+## Troubleshooting
+
+### Common Issues
+
+#### Permission Errors
+
+- Ensure you're not using sudo for installation
+- Check virtual environment permissions
+- Verify Python installation directory permissions
+
+#### Python Version Issues
+
+- Verify Python version meets requirements
+- Consider using pyenv or similar version manager
+
+#### Virtual Environment Issues
+
+- Ensure virtual environment is properly activated
+- Check PATH environment variable
+- Verify Python interpreter location
+
+## Updating pyinfra
+
+To update to the latest version:
+
+```sh
+pip install --upgrade pyinfra
+```
