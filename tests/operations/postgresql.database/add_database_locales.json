@@ -1,0 +1,16 @@
+{
+    "args": ["somedb"],
+    "kwargs": {
+        "encoding": "utf8",
+        "lc_collate": "C",
+        "lc_ctype": "C"
+    },
+    "facts" :{
+        "postgres.PostgresDatabases": {
+            "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None": {}
+        }
+    },
+    "commands": [
+        "psql -Ac 'CREATE DATABASE \"somedb\" ENCODING utf8 LC_COLLATE '\"'\"'C'\"'\"' LC_CTYPE '\"'\"'C'\"'\"''"
+    ]
+}

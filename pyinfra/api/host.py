@@ -149,8 +149,10 @@ class Host:
         name: str,
         inventory: "Inventory",
         groups,
-        connector_cls=get_execution_connector("ssh"),
+        connector_cls=None,
     ):
+        if connector_cls is None:
+            connector_cls = get_execution_connector("ssh")
         self.inventory = inventory
         self.groups = groups
         self.connector_cls = connector_cls
