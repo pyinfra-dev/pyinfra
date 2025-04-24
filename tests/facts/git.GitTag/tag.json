@@ -1,0 +1,13 @@
+{
+    "arg": "myrepo",
+    "command": "! test -d myrepo || (cd myrepo && git tag)",
+    "requires_command": "git",
+    "output": [
+        "v1.0.0",
+        "v1.0.1"
+    ],
+    "fact": [
+        "v1.0.0",
+        "v1.0.1"
+    ]
+}

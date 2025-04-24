@@ -12,6 +12,10 @@
         },
         "git.GitBranch": {
             "repo=/home/myrepo": "master"
+        },
+        "git.GitTag": {
+            "repo=/home/myrepo": [
+            ]
         }
     },
     "commands": [
