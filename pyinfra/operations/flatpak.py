@@ -12,12 +12,14 @@ from pyinfra.facts.flatpak import FlatpakPackages
 @operation()
 def packages(
     packages: str | list[str] | None = None,
+    remote: str | None = None,
     present=True,
 ):
     """
     Install/remove a flatpak package
 
     + packages: List of packages
+    + remote: Source to install the application or runtime from
     + present: whether the package should be installed
 
     **Examples:**
@@ -28,6 +30,13 @@ def packages(
         flatpak.package(
             name="Install vlc",
             packages="org.videolan.VLC",
+        )
+
+        # Install vlc flatpak from flathub
+        flatpak.package(
+            name="Install vlc",
+            packages="org.videolan.VLC",
+            remote="flathub",
         )
 
         # Install multiple flatpaks
@@ -55,6 +64,12 @@ def packages(
     install_packages = []
     remove_packages = []
 
+    if remote is None:
+        remote = ""
+    else:
+        # ensure we have a space between the remote and packages
+        remote = remote.strip() + " "
+
     for package in packages:
         # it's installed
         if package in flatpak_packages:
@@ -73,7 +88,7 @@ def packages(
                 host.noop(f"flatpak package {package} is not installed")
 
     if install_packages:
-        yield " ".join(["flatpak", "install", "--noninteractive"] + install_packages)
+        yield f"flatpak install --noninteractive {remote}{' '.join(install_packages)}"
 
     if remove_packages:
-        yield " ".join(["flatpak", "uninstall", "--noninteractive"] + remove_packages)
+        yield f"flatpak uninstall --noninteractive {' '.join(remove_packages)}"
