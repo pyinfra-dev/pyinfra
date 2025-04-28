@@ -1,3 +1,57 @@
+# v3.3
+
+Second release of 2025: loads of adds, fixes and documentation improvements. A huge THANK YOU to all contributors. Slightly changed format for the change list based on commit messages which should speed up releases:
+
+New operations & arguments:
+
+- operations/freebsd: add FreeBSD operations & facts (@DtxdF)
+- operations/files.move: new operation (@Pirols)
+- operations/server.user: enable adding user to secondary groups (Pirols)
+- operations/postgres: enhance role management by adding `ALTER ROLE` support (@wowi42)
+- operations/postgres: enable modifying existing postgres databases (@wowi42)
+- operations/docker.container: refactor to support container recreation (@minor-fixes)
+
+Operation/fact fixes:
+
+- operations/postgres: fix quoting of locale parameters (@xvello)
+- operations/server: remove leftover deprecated parameter (@wowi42)
+- operations/pacmen: update PACMAN_REGEX to support additional characters (@wowi42)
+- operations/server.sysctl: handle 0 integer values correctly (@lemmi)
+- operations/apt: dist-upgrade also supports --autoremove (@bauen1)
+- operations/apt: fix parameter name in docs (@bauen1)
+- operations/server: fix: lastlog is always null (@ingstem)
+- operations/docker: Fixed a typo with the volumes parameter to docker.prune operation (@mpilone)
+- facts/xbps.XbpsPackages: allow . in package names (@lemmi)
+
+Connectors, CLI:
+
+- connectors: improve detection of sudo password needed
+- connectors/ssh: add support for `ServerAliveInterval` (@chipot)
+- cli: enable -h as shorthand for --help (@NichtJens)
+
+Docs:
+
+- docs: Add a section explaining connector flow (@goetzk)
+- docs: Add inventory processing note and reference it (@goetzk)
+- docs: Add example of logging to using operations docs (@goetzk)
+- docs: fix wrong example operation using forbidden argument 'name' (@robertmx)
+- docs: Add a note to the docs about using `_inner` when calling operations from other operations (@CSDUMMI)
+- docs: Document host, state, inventory in files.template (@mpilone)
+- docs: Minor adjustments to wording help docs and help (@goetzk)
+- docs: expand connectors documentation (@goetzk)
+- docs: correct import path for any_changed, all_changed (@lemmi)
+- docs: Add note re: global arguments to operations (@simonhammes)
+
+Internal/meta:
+
+- refactor: update opkg documentation and add requires_command to ZFS and Git tests (@wowi42)
+- Update testing and development dependencies in setup.py (@wowi42)
+- tests: Load test specs with PyYAML instead of json (@taliaferro)
+- typing: Require explicit override decorator (@bauen1)
+- api: don't execute callbacks within a greenlet if we're already in one
+- ci: Github Actions support for python 3.12 (@wowi42)
+- ci: Prevent docs job from running on forks (@simonhammes)
+
 # v3.2
 
 Hello 2025! Here's pyinfra 3.2 - with another incredible round of contributions from the community, THANK YOU ALL. New stuff:
