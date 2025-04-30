@@ -49,7 +49,9 @@ class DockerContainers(DockerFactBase):
 
     @override
     def command(self) -> str:
-        return 'container_ids=$(docker ps -qa) && [ -n "$container_ids" ] && docker container inspect $container_ids || echo "[]"'
+        return """
+        ids=$(docker ps -qa) && [ -n "$ids" ] && docker container inspect $ids || echo "[]"
+        """.strip()
 
 
 class DockerImages(DockerFactBase):
@@ -59,7 +61,9 @@ class DockerImages(DockerFactBase):
 
     @override
     def command(self) -> str:
-        return 'image_ids=$(docker images -q) && [ -n "$image_ids" ] && docker image inspect $image_ids || echo "[]"'
+        return """
+        ids=$(docker images -q) && [ -n "$ids" ] && docker image inspect $ids || echo "[]"
+        """.strip()
 
 
 class DockerNetworks(DockerFactBase):

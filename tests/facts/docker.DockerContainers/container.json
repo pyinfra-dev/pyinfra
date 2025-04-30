@@ -1,9 +1,7 @@
 {
-    "command": "container_ids=$(docker ps -qa) && [ -n \"$container_ids\" ] && docker container inspect $container_ids || echo \"[]\"",
+    "command": "ids=$(docker ps -qa) && [ -n \"$ids\" ] && docker container inspect $ids || echo \"[]\"",
     "requires_command": "docker",
-    "output": [
-        "{\"hello\": \"world\"}"
-    ],
+    "output": ["{\"hello\": \"world\"}"],
     "fact": {
         "hello": "world"
     }
