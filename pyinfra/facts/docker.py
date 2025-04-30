@@ -49,7 +49,7 @@ class DockerContainers(DockerFactBase):
 
     @override
     def command(self) -> str:
-        return ('container_ids=$(docker ps -qa) && [ -n "$container_ids" ] && docker container inspect $container_ids || echo "[]"')
+        return 'container_ids=$(docker ps -qa) && [ -n "$container_ids" ] && docker container inspect $container_ids || echo "[]"'
 
 
 class DockerImages(DockerFactBase):
