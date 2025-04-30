@@ -1,5 +1,5 @@
 {
-    "command": "docker container inspect `docker ps -qa`",
+    "command": "container_ids=$(docker ps -qa) && [ -n \"$container_ids\" ] && docker container inspect $container_ids || echo \"[]\"",
     "requires_command": "docker",
     "output": [
         "{\"hello\": \"world\"}"

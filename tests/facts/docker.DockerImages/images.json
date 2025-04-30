@@ -1,0 +1,8 @@
+{
+    "command": "image_ids=$(docker images -q) && [ -n \"$image_ids\" ] && docker image inspect $image_ids || echo \"[]\"",
+    "requires_command": "docker",
+    "output": ["{\"hello\": \"world\"}"],
+    "fact": {
+        "hello": "world"
+    }
+}
