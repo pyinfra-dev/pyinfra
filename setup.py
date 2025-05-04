@@ -122,6 +122,7 @@ if __name__ == "__main__":
             "pyinfra.connectors": [
                 "chroot = pyinfra.connectors.chroot:ChrootConnector",
                 "docker = pyinfra.connectors.docker:DockerConnector",
+                "podman = pyinfra.connectors.docker:PodmanConnector",
                 "local = pyinfra.connectors.local:LocalConnector",
                 "ssh = pyinfra.connectors.ssh:SSHConnector",
                 "dockerssh = pyinfra.connectors.dockerssh:DockerSSHConnector",
