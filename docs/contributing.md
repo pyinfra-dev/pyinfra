@@ -74,7 +74,7 @@ pytest -m end_to_end_docker
 
 ## Documentation
 
-Documentation changes should be made in the [https://github.com/pyinfra-dev/pyinfa](pyinfra git repository) - the repository `docs.pyinfra.com` should
+Documentation changes should be made in the [pyinfra git repository](https://github.com/pyinfra-dev/pyinfa) - the repository `docs.pyinfra.com` should
 not be changed, it contains build artifacts.
 
 ### Generate Documentation
