@@ -5,31 +5,124 @@ orphan: true
 
 # Installation
 
-## Pip
+## Prerequisites
 
-It is recommended to install pyinfra using `pip`:
+### Python Version Requirements
+
+- Python 3.9 or later is required
+- pyinfra 3.2+ supports Python 3.9, 3.10, 3.11, and 3.12
+- You can check your Python version with:
+
+  ```sh
+  python --version
+  ```
+
+### System Requirements
+
+- A Unix-like operating system (Linux, macOS) or Windows
+- Shell access to target systems
+- For Windows users: Administrator privileges for installation
+- For development: A C++ compiler may be required for some Python packages
+
+## Installation Method
+
+### Using pip (Recommended)
+
+#### Create a Virtual Environment (Best Practice)
+
+   ```sh
+   # Create a virtual environment
+   python -m venv env
+
+   # Activate the virtual environment
+   # On macOS/Linux
+   source env/bin/activate
+   # On Windows
+   env\Scripts\activate
+   ```
+
+#### Install pyinfra
+
+   ```sh
+   pip install pyinfra
+   ```
+
+#### Verify Installation
+
+   ```sh
+   pyinfra --version
+   ```
+
+## Platform-Specific Instructions
+
+### Windows Installation
+
+#### Install Python
+
+- Download from [Python's official website](https://www.python.org/downloads/windows/)
+- Run installer as Administrator
+- Check "Add Python to PATH" during installation
+
+#### Optional: Install C++ Compiler
+
+- Download [Visual Studio Community Edition](https://visualstudio.microsoft.com/downloads/)
+- Select "Desktop development with C++" workload
+- Required components:
+  - MSVC v142...
+  - Windows 10 SDK...
+  - C++ CMake tools for Windows
+  - C++ ATL for latest...
+  - C++/CLI support for v142...
+  - C++ Modules for v142...
+
+#### Install pyinfra
+
+   ```sh
+   python -m venv env
+   env\Scripts\activate
+   pip install pyinfra
+   ```
+
+## Best Practices
+
+### Do's
+
+- ✅ Use virtual environments for isolation
+- ✅ Keep pyinfra and dependencies up-to-date
+- ✅ Use the latest Python version supported
+- ✅ Install as a regular user (not root/sudo)
+
+### Don'ts
+
+- ❌ Avoid system-wide installation
+- ❌ Don't mix pyinfra with other projects in the same virtual environment
+- ❌ Don't use unsupported package managers (poetry, pip-tools)
+
+## Troubleshooting
+
+### Common Issues
+
+#### Permission Errors
+
+- Ensure you're not using sudo for installation
+- Check virtual environment permissions
+- Verify Python installation directory permissions
+
+#### Python Version Issues
+
+- Verify Python version meets requirements
+- Consider using pyenv or similar version manager
+
+#### Virtual Environment Issues
+
+- Ensure virtual environment is properly activated
+- Check PATH environment variable
+- Verify Python interpreter location
+
+## Updating pyinfra
+
+To update to the latest version:
 
 ```sh
-pip install pyinfra
+pip install --upgrade pyinfra
 ```
-
-## Windows
-
-Tested on WindowsServer2019 with python 3.7.
-
-+ Download Python https://www.python.org/downloads/windows/
-  (ex: python-3.7.6-amd64.exe). Install as Administrator and
-  ensure the **Add Python to PATH** option is selected.)
-
-If you need to build any python packages on Windows, perhaps because one of the **pip** packages above fails, you may need a c++ compiler. One possible solution is below.
-
-+ Download Visual Studio Community Edition https://visualstudio.microsoft.com/downloads/ and
-  install Visual Studio as Administrator. Select the "Desktop development with C++" option and
-  ensure at least these options are selected:
-
-    + "MSVC v142..."
-    + "Windows 10 SDK..."
-    + "C++ cmake tools for windows"
-    + "C++ ATL for latest..."
-    + "C++/cli support for v142..."
-    + "C++ Modules for v142..."

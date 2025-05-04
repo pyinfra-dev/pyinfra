@@ -1,3 +1,8 @@
+# v3.3.1
+
+- connectors/ssh: fix extra `keep_alive` key passing through to paramiko `connect` call (@chipot)
+- docs: refine installation guide with updated Python requirements and best practices (@wowi42)
+
 # v3.3
 
 Second release of 2025: loads of adds, fixes and documentation improvements. A huge THANK YOU to all contributors. Slightly changed format for the change list based on commit messages which should speed up releases:

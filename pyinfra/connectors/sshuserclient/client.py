@@ -158,6 +158,7 @@ class SSHClient(ParamikoClient):
             forward_agent,
             missing_host_key_policy,
             host_keys_file,
+            keep_alive,
         ) = self.parse_config(
             hostname,
             kwargs,
@@ -182,8 +183,6 @@ class SSHClient(ParamikoClient):
 
         if _pyinfra_ssh_forward_agent is not None:
             forward_agent = _pyinfra_ssh_forward_agent
-
-        keep_alive = config.get("keep_alive")
 
         if keep_alive:
             transport = self.get_transport()
@@ -215,13 +214,14 @@ class SSHClient(ParamikoClient):
         cfg: dict = {"port": 22}
         cfg.update(initial_cfg or {})
 
+        keep_alive = 0
         forward_agent = False
         missing_host_key_policy = get_missing_host_key_policy(strict_host_key_checking)
         host_keys_file = path.expanduser("~/.ssh/known_hosts")  # OpenSSH default
 
         ssh_config = get_ssh_config(ssh_config_file)
         if not ssh_config:
-            return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_file
+            return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_file, keep_alive
 
         host_config = ssh_config.lookup(hostname)
         forward_agent = host_config.get("forwardagent") == "yes"
@@ -248,7 +248,7 @@ class SSHClient(ParamikoClient):
             cfg["port"] = int(host_config["port"])
 
         if "serveraliveinterval" in host_config:
-            cfg["keep_alive"] = int(host_config["serveraliveinterval"])
+            keep_alive = int(host_config["serveraliveinterval"])
 
         if "proxycommand" in host_config:
             cfg["sock"] = ProxyCommand(host_config["proxycommand"])
@@ -275,7 +275,7 @@ class SSHClient(ParamikoClient):
                 sock = c.gateway(hostname, cfg["port"], target, target_config["port"])
             cfg["sock"] = sock
 
-        return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_file
+        return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_file, keep_alive
 
     @staticmethod
     def derive_shorthand(ssh_config, host_string):
