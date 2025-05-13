@@ -38,6 +38,8 @@ INSTALL_REQUIRES = (
 )
 
 TEST_REQUIRES = (
+    # Must have click 8.2 since they changed CliRunner for tests
+    "click>=8.2",
     # Unit testing
     "pytest==8.3.5",
     "coverage==7.7.1",
