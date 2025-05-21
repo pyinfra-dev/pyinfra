@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import os
+import platform
 import re
 import shutil
 from datetime import datetime
@@ -206,11 +208,29 @@ class Mounts(FactBase[Dict[str, MountsDict]]):
 
     @override
     def command(self):
-        return "mount"
+        if platform.system() == "FreeBSD":
+            return "mount -p --libxo json"
+        else:
+            return "mount"
 
     @override
     def process(self, output) -> dict[str, MountsDict]:
         devices: dict[str, MountsDict] = {}
+
+        if platform.system() == "FreeBSD":
+            full_output = "\n".join(output)
+            json_output = json.loads(full_output)
+            mount_fstab = json_output["mount"]["fstab"]
+
+            for entry in mount_fstab:
+                path = entry["mntpoint"]
+                type_ = entry["fstype"]
+                device = entry["device"]
+                options = [option.strip() for option in entry["opts"].split(",")]
+
+                devices[path] = {"device": device, "type": type_, "options": options}
+
+            return devices
 
         for line in output:
             is_map = False
