@@ -263,6 +263,7 @@ class Port(FactBase[Tuple[str, int] | Tuple[None, None]]):
     Returns the process occuping a port and its PID
     """
 
+    @override
     def command(self, port: int) -> str:
         return f"ss -lptnH 'src :{port}'"
 
