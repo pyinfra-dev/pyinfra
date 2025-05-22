@@ -341,8 +341,8 @@ def mount(
                 device = mounts[path]["device"]
 
                 yield "mount -o update,{options} -t {fs_type} {device} {path}".format(
-                          options=options_string, fs_type=fs_type, device=device, path=path
-                      )
+                    options=options_string, fs_type=fs_type, device=device, path=path
+                )
             else:
                 yield "mount -o remount,{0} {1}".format(options_string, path)
 
