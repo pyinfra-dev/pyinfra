@@ -5,7 +5,7 @@ import re
 import shutil
 from datetime import datetime
 from tempfile import mkdtemp
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Iterable
 
 from dateutil.parser import parse as parse_date
 from distro import distro
@@ -264,8 +264,9 @@ class Port(FactBase[Tuple[str, int]]):
     """
 
     def command(self, port: int) -> str:
-        return f"ss -lptn 'src :{port}'"
+        return f"ss -lptnH 'src :{port}'"
 
+    @override
     def process(self, output: [str]) -> (str, int):
         if len(output) == 1:
             return None

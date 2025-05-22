@@ -1,9 +1,7 @@
 {
-  "command": "ss -lptn 'src :53'",
+  "command": "ss -lptnH 'src :53'",
   "arg": 53,
   "requires_command": "ss",
-  "output": [
-    "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess"
-  ],
-  "fact": null
+  "output": [],
+  "fact": [null, null]
 }
