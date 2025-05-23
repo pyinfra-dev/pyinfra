@@ -1,0 +1,14 @@
+{
+  "command": "ss -lptnH 'src :443'",
+  "arg": 443,
+  "requires_command": "ss",
+  "output": [
+    "LISTEN 0      511          0.0.0.0:443       0.0.0.0:*    users:((\"nginx\",pid=3759498,fd=3),(\"nginx\",pid=3759496,fd=3),(\"nginx\",pid=3759495,fd=3),(\"nginx\",pid=3759494,fd=3),(\"nginx\",pid=3759493,fd=3),(\"nginx\",pid=3759492,fd=3),(\"nginx\",pid=3759491,fd=3),(\"nginx\",pid=3759490,fd=3),(\"nginx\",pid=2274336,fd=3))",
+    "LISTEN 0      511             [::]:443          [::]:*    users:((\"nginx\",pid=3759498,fd=4),(\"nginx\",pid=3759496,fd=4),(\"nginx\",pid=3759495,fd=4),(\"nginx\",pid=3759494,fd=4),(\"nginx\",pid=3759493,fd=4),(\"nginx\",pid=3759492,fd=4),(\"nginx\",pid=3759491,fd=4),(\"nginx\",pid=3759490,fd=4),(\"nginx\",pid=2274336,fd=4))"
+  ],
+  "fact": [
+    "nginx",
+    3759498
+  ]
+}
+

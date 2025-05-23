@@ -1,39 +1,44 @@
 {
-    "command": "mount",
+    "command": "cat /proc/self/mountinfo",
     "output": [
-        "/dev/sda1 on /boot type ext2 (rw,relatime,block_validity,barrier,user_xattr,acl)",
-        "/dev/disk1s4 on /private/var/vm (apfs, local, noexec, journaled, noatime, nobrowse)",
-        "map thing on / type something ()"
+        "2 1 0:26 / / ro,noatime - ext4 /dev/sdb1 rw",
+        "33 29 8:1 / /boot rw,relatime - vfat /dev/sda1 rw,lazytime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,utf8,errors=remount-ro",
+        "408 35 0:352 / /mnt/overlay/overlay,dir\\040with\\040spaces\\040and\\040\\134backslashes ro,relatime shared:27 - overlay none ro,lowerdir=lower\\054dir,upperdir=upper\\054dir,workdir=work\\054dir"
     ],
     "fact": {
+        "/": {
+            "device": "/dev/sdb1",
+            "type": "ext4",
+            "options": [
+                "ro",
+                "noatime"
+            ]
+        },
         "/boot": {
             "device": "/dev/sda1",
-            "type": "ext2",
+            "type": "vfat",
             "options": [
                 "rw",
                 "relatime",
-                "block_validity",
-                "barrier",
-                "user_xattr",
-                "acl"
+                "lazytime",
+                "fmask=0022",
+                "dmask=0022",
+                "codepage=437",
+                "iocharset=iso8859-1",
+                "shortname=mixed",
+                "utf8",
+                "errors=remount-ro"
             ]
         },
-        "/private/var/vm": {
-            "device": "/dev/disk1s4",
-            "type": "apfs",
+        "/mnt/overlay/overlay,dir with spaces and \\backslashes": {
+            "device": "none",
+            "type": "overlay",
             "options": [
-                "local",
-                "noexec",
-                "journaled",
-                "noatime",
-                "nobrowse"
-            ]
-        },
-        "/": {
-            "device": "map thing",
-            "type": "something",
-            "options": [
-                ""
+                "ro",
+                "relatime",
+                "lowerdir=lower,dir",
+                "upperdir=upper,dir",
+                "workdir=work,dir"
             ]
         }
     }
