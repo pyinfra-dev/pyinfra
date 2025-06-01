@@ -425,7 +425,7 @@ def get_path_permissions_mode(pathname: str):
     """
 
     mode_octal = oct(stat(pathname).st_mode)
-    return mode_octal[-3:]
+    return int(mode_octal[-3:])
 
 
 def raise_if_bad_type(
