@@ -1,0 +1,12 @@
+{
+  "command": "ss -lptnH 'src :10025'",
+  "arg": 10025,
+  "requires_command": "ss",
+  "output": [
+    "LISTEN 0      100        127.0.0.1:10025      0.0.0.0:*    users:((\"smtpd\",pid=3927036,fd=6),(\"master\",pid=1997758,fd=97))"
+  ],
+  "fact": [
+    "smtpd",
+    3927036
+  ]
+}
