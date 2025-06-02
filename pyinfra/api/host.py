@@ -328,12 +328,18 @@ class Host:
 
         return temp_directory
 
-    def get_temp_filename(self, hash_key: Optional[str] = None, hash_filename: bool = True):
+    def get_temp_filename(
+        self,
+        hash_key: Optional[str] = None,
+        hash_filename: bool = True,
+        *,
+        temp_directory: Optional[str] = None,
+    ):
         """
         Generate a temporary filename for this deploy.
         """
 
-        temp_directory = self._get_temp_directory()
+        temp_directory = temp_directory or self._get_temp_directory()
 
         if not hash_key:
             hash_key = str(uuid4())

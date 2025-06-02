@@ -75,6 +75,7 @@ def download(
     headers: dict[str, str] | None = None,
     insecure=False,
     proxy: str | None = None,
+    temp_dir: str | Path | None = None,
 ):
     """
     Download files from remote locations using ``curl`` or ``wget``.
@@ -93,6 +94,7 @@ def download(
     + headers: optional dictionary of headers to set for the HTTP request
     + insecure: disable SSL verification for the HTTP request
     + proxy: simple HTTP proxy through which we can download files, form `http://<yourproxy>:<port>`
+    + temp_dir: use this custom temporary directory during the download
 
     **Example:**
 
@@ -148,7 +150,9 @@ def download(
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
-        temp_file = host.get_temp_filename(dest)
+        temp_file = host.get_temp_filename(
+            dest, temp_directory=str(temp_dir) if temp_dir is not None else None
+        )
 
         curl_args: list[Union[str, StringCommand]] = ["-sSLf"]
         wget_args: list[Union[str, StringCommand]] = ["-q"]
