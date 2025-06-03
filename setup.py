@@ -123,6 +123,8 @@ if __name__ == "__main__":
                 "local = pyinfra.connectors.local:LocalConnector",
                 "ssh = pyinfra.connectors.ssh:SSHConnector",
                 "dockerssh = pyinfra.connectors.dockerssh:DockerSSHConnector",
+                "incus = pyinfra.connectors.incus:IncusConnector",
+                "lxc = pyinfra.connectors.incus:LXCConnector",
                 # Inventory only connectors
                 "terraform = pyinfra.connectors.terraform:TerraformInventoryConnector",
                 "vagrant = pyinfra.connectors.vagrant:VagrantInventoryConnector",
