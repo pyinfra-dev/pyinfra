@@ -74,7 +74,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
         test-name: [local, ssh, docker]
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
         include:
           - os: macos-13
             test-name: local

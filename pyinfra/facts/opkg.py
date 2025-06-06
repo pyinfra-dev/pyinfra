@@ -81,6 +81,7 @@ class OpkgConf(FactBase):
         re.X,
     )
 
+    @override
     @staticmethod
     def default():
         return OpkgConfInfo({}, "", {}, {})

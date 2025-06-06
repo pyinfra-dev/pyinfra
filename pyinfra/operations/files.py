@@ -805,7 +805,9 @@ def put(
 
     ``mode``:
         When set to ``True`` the permissions of the local file are applied to the
-        remote file after the upload is complete.
+        remote file after the upload is complete.  If set to an octal value with
+        digits for at least user, group, and other, either as an ``int`` or
+        ``str``, those permissions will be used.
 
     ``create_remote_dir``:
         If the remote directory does not exist it will be created using the same
@@ -815,6 +817,11 @@ def put(
     Note:
         This operation is not suitable for large files as it may involve copying
         the file before uploading it.
+
+        Currently, if the mode argument is anything other than a ``bool`` or a full
+        octal permission set and the remote file exists, the operation will always
+        behave as if the remote file does not match the specified permissions and
+        requires a change.
 
     **Examples:**
 

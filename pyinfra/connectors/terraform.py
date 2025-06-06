@@ -1,5 +1,7 @@
 import json
 
+from typing_extensions import override
+
 from pyinfra import local, logger
 from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import memoize
@@ -76,6 +78,7 @@ class TerraformInventoryConnector(BaseConnector):
 
     """
 
+    @override
     @staticmethod
     def make_names_data(name=None):
         show_warning()

@@ -104,6 +104,7 @@ class DockerConnector(BaseConnector):
         super().__init__(state, host)
         self.local = LocalConnector(state, host)
 
+    @override
     @staticmethod
     def make_names_data(name=None):
         if not name:

@@ -47,6 +47,7 @@ class BrewVersion(FactBase):
     def requires_command(self) -> str:
         return "brew"
 
+    @override
     @staticmethod
     def default():
         return [0, 0, 0]

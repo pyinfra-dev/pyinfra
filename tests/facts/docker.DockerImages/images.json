@@ -1,5 +1,5 @@
 {
-    "command": "ids=$(docker ps -qa) && [ -n \"$ids\" ] && docker container inspect $ids || echo \"[]\"",
+    "command": "ids=$(docker images -q) && [ -n \"$ids\" ] && docker image inspect $ids || echo \"[]\"",
     "requires_command": "docker",
     "output": ["{\"hello\": \"world\"}"],
     "fact": {
