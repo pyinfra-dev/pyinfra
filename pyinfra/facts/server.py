@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import os
+import platform
 import re
 import shutil
 from datetime import datetime
@@ -206,7 +208,10 @@ class Mounts(FactBase[Dict[str, MountsDict]]):
 
     @override
     def command(self):
-        return "cat /proc/self/mountinfo"
+        if platform.system() == "FreeBSD":
+            return "mount -p --libxo json"
+        else:
+            return "cat /proc/self/mountinfo"
 
     @override
     def process(self, output) -> dict[str, MountsDict]:
@@ -221,6 +226,21 @@ class Mounts(FactBase[Dict[str, MountsDict]]):
             Unescape strings encoded by linux's string_escape_mem with ESCAPE_OCTAL flag.
             """
             return re.sub(r"\\[0-7]{3}", unescape_octal, s)
+
+        if platform.system() == "FreeBSD":
+            full_output = "\n".join(output)
+            json_output = json.loads(full_output)
+            mount_fstab = json_output["mount"]["fstab"]
+
+            for entry in mount_fstab:
+                path = entry["mntpoint"]
+                type_ = entry["fstype"]
+                device = entry["device"]
+                options = [option.strip() for option in entry["opts"].split(",")]
+
+                devices[path] = {"device": device, "type": type_, "options": options}
+
+            return devices
 
         for line in output:
             # ignore mount ID, parent ID, major:minor, root
