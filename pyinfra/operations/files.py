@@ -8,7 +8,7 @@ import os
 import posixpath
 import sys
 import traceback
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from fnmatch import fnmatch
 from io import StringIO
 from pathlib import Path
@@ -778,6 +778,56 @@ def get(
             yield FileDownloadCommand(src, dest, remote_temp_filename=host.get_temp_filename(dest))
 
 
+def _canonicalize_timespec(field, local_file, timespec):
+    assert field == "atime" or field == "mtime"
+    if isinstance(timespec, datetime):
+        if not timespec.tzinfo:
+            # specify remote host timezone
+            timespec_with_tz = timespec.replace(tzinfo=host.get_fact(Date).tzinfo)
+            return timespec_with_tz
+        else:
+            return timespec
+    elif isinstance(timespec, bool) and timespec:
+        lf_stat = os.stat(local_file)
+        if field == "atime":
+            return datetime.fromtimestamp(lf_stat.st_atime, tz=timezone.utc)
+        else:
+            return datetime.fromtimestamp(lf_stat.st_mtime, tz=timezone.utc)
+    else:
+        try:
+            isodatetime = datetime.fromisoformat(timespec)
+            if not isodatetime.tzinfo:
+                return isodatetime.replace(tzinfo=host.get_fact(Date).tzinfo)
+            else:
+                return isodatetime
+        except ValueError:
+            try:
+                timestamp = float(timespec)
+                return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+            except ValueError:
+                # verify there is a remote file matching path in timesrc
+                ref_file = host.get_fact(File, path=timespec)
+                if ref_file:
+                    if field == "atime":
+                        assert ref_file["atime"] is not None
+                        return ref_file["atime"].replace(tzinfo=timezone.utc)
+                    else:
+                        assert ref_file["mtime"] is not None
+                        return ref_file["mtime"].replace(tzinfo=timezone.utc)
+                else:
+                    ValueError("Bad argument for `timesspec`: {0}".format(timespec))
+
+
+# returns True for a visible difference in the second field between the datetime values
+#   in the ref's TZ
+def _times_differ_in_s(ref, cand):
+    assert ref.tzinfo and cand.tzinfo
+    cand_in_ref_tz = cand.astimezone(ref.tzinfo)
+    return (abs((cand_in_ref_tz - ref).total_seconds()) >= 1.0) or (
+        ref.second != cand_in_ref_tz.second
+    )
+
+
 @operation()
 def put(
     src: str | IO[Any],
@@ -789,6 +839,8 @@ def put(
     create_remote_dir=True,
     force=False,
     assume_exists=False,
+    atime: datetime | float | int | str | bool | None = None,
+    mtime: datetime | float | int | str | bool | None = None,
 ):
     """
     Upload a local file, or file-like object, to the remote system.
@@ -802,6 +854,9 @@ def put(
     + create_remote_dir: create the remote directory if it doesn't exist
     + force: always upload the file, even if the remote copy matches
     + assume_exists: whether to assume the local file exists
+    + atime: value of atime the file should have, use ``True`` to match the local file
+    + mtime: value of atime the file should have, use ``True`` to match the local file
+    + timesrc: the source of the time value if atime or mtime are ``True``
 
     ``dest``:
         If this is a directory that already exists on the remote side, the local
@@ -818,7 +873,21 @@ def put(
         user & group as passed to ``files.put``. The mode will *not* be copied over,
         if this is required call ``files.directory`` separately.
 
-    Note:
+    ``atime`` and ``mtime``:
+        When set to values other than ``False`` or ``None``, the respective metadata
+        fields on the remote file will updated accordingly.  Timestamp values are
+        considered equivalent if the difference is less than one second and they have
+        the identical number in the seconds field.  If set to ``True`` the local
+        file is the source of the value.  Otherwise, these values can be provided as
+        ``datetime`` objects, POSIX timestamps, or strings that can be parsed into
+        either of these date and time specifications.  They can also be reference file
+        paths on the remote host, as with the ``-r`` argument to ``touch``.  If a
+        ``datetime`` argument has no ``tzinfo`` value (i.e., it is naive), it is
+        assumed to be in the remote host's local timezone.  There is no shortcut for
+        setting both ``atime` and ``mtime`` values with a single time specification,
+        unlike the native ``touch`` command.
+
+    Notes:
         This operation is not suitable for large files as it may involve copying
         the file before uploading it.
 
@@ -826,6 +895,12 @@ def put(
         octal permission set and the remote file exists, the operation will always
         behave as if the remote file does not match the specified permissions and
         requires a change.
+
+        If the ``atime`` argument is set for a given file, unless the remote
+        filesystem is mounted ``noatime`` or ``relatime``, multiple runs of this
+        operation will trigger the change detection for that file, since the act of
+        reading and checksumming the file will cause the host OS to update the file's
+        ``atime``.
 
     **Examples:**
 
@@ -902,12 +977,20 @@ def put(
         if mode:
             yield file_utils.chmod(dest, mode)
 
-    # File exists, check sum and check user/group/mode if supplied
+        # do mtime before atime to ensure atime setting isn't undone by mtime setting
+        if mtime:
+            yield file_utils.touch(dest, "mtime", _canonicalize_timespec("mtime", src, mtime))
+
+        if atime:
+            yield file_utils.touch(dest, "atime", _canonicalize_timespec("atime", src, atime))
+
+    # File exists, check sum and check user/group/mode/atime/mtime if supplied
     else:
         remote_sum = host.get_fact(Sha1File, path=dest)
 
         # Check sha1sum, upload if needed
         if local_sum != remote_sum:
+
             yield FileUploadCommand(
                 local_file,
                 dest,
@@ -919,6 +1002,12 @@ def put(
 
             if mode:
                 yield file_utils.chmod(dest, mode)
+
+            if mtime:
+                yield file_utils.touch(dest, "mtime", _canonicalize_timespec("mtime", src, mtime))
+
+            if atime:
+                yield file_utils.touch(dest, "atime", _canonicalize_timespec("atime", src, atime))
 
         else:
             changed = False
@@ -932,6 +1021,26 @@ def put(
             if (user and remote_file["user"] != user) or (group and remote_file["group"] != group):
                 yield file_utils.chown(dest, user, group)
                 changed = True
+
+            # Check mtime
+            if mtime:
+                canonical_mtime = _canonicalize_timespec("mtime", src, mtime)
+                assert remote_file["mtime"] is not None
+                if _times_differ_in_s(
+                    canonical_mtime, remote_file["mtime"].replace(tzinfo=timezone.utc)
+                ):
+                    yield file_utils.touch(dest, "mtime", canonical_mtime)
+                    changed = True
+
+            # Check atime
+            if atime:
+                canonical_atime = _canonicalize_timespec("atime", src, atime)
+                assert remote_file["atime"] is not None
+                if _times_differ_in_s(
+                    canonical_atime, remote_file["atime"].replace(tzinfo=timezone.utc)
+                ):
+                    yield file_utils.touch(dest, "atime", canonical_atime)
+                    changed = True
 
             if not changed:
                 host.noop("file {0} is already uploaded".format(dest))
