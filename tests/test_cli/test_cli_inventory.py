@@ -80,7 +80,7 @@ class TestCliInventory(PatchSSHTestCase):
         assert result.exit_code == 0, result.stdout
         assert (
             'Ignoring variable "_hosts" in inventory file since it starts with a leading underscore'
-            in result.stdout
+            in result.stderr
         )
         assert inventory.hosts == {}
 
@@ -97,9 +97,9 @@ class TestCliInventory(PatchSSHTestCase):
         )
 
         assert result.exit_code == 0, result.stdout
-        assert 'Ignoring variable "dict_hosts" in inventory file' in result.stdout, result.stdout
+        assert 'Ignoring variable "dict_hosts" in inventory file' in result.stderr, result.stdout
         assert (
-            'Ignoring variable "generator_hosts" in inventory file' in result.stdout
+            'Ignoring variable "generator_hosts" in inventory file' in result.stderr
         ), result.stdout
         assert inventory.hosts == {}
 
@@ -115,5 +115,5 @@ class TestCliInventory(PatchSSHTestCase):
         )
 
         assert result.exit_code == 0, result.stdout
-        assert 'Ignoring host group "issue_662"' in result.stdout, result.stdout
+        assert 'Ignoring host group "issue_662"' in result.stderr, result.stdout
         assert inventory.hosts == {}

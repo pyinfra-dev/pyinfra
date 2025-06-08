@@ -9,7 +9,7 @@ import re
 from pyinfra import host
 from pyinfra.api import OperationError, operation
 from pyinfra.facts.files import Directory, File
-from pyinfra.facts.git import GitBranch, GitConfig, GitTrackingBranch
+from pyinfra.facts.git import GitBranch, GitConfig, GitTag, GitTrackingBranch
 
 from . import files, ssh
 from .util.files import chown, unix_path_join
@@ -144,10 +144,14 @@ def repo(
             git_commands.append("clone {0} .".format(src))
     # Ensuring existing repo
     else:
+        is_tag = False
         if branch and host.get_fact(GitBranch, repo=dest) != branch:
             git_commands.append("fetch")  # fetch to ensure we have the branch locally
             git_commands.append("checkout {0}".format(branch))
-        if pull:
+        if branch and branch in host.get_fact(GitTag, repo=dest):
+            git_commands.append("checkout {0}".format(branch))
+            is_tag = True
+        if pull and not is_tag:
             if rebase:
                 git_commands.append("pull --rebase")
             else:

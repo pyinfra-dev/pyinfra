@@ -69,7 +69,7 @@ class TestFactCli(PatchSSHTestCase):
             "server.Os",
         )
         assert result.exit_code == 0, result.stdout
-        assert '"somehost": null' in result.stdout
+        assert '"somehost": null' in result.stderr
 
     def test_get_fact_with_kwargs(self):
         result = run_cli(
@@ -79,7 +79,7 @@ class TestFactCli(PatchSSHTestCase):
             "path=.",
         )
         assert result.exit_code == 0, result.stdout
-        assert '"somehost": null' in result.stdout
+        assert '"somehost": null' in result.stderr
 
 
 class TestExecCli(PatchSSHTestCase):

@@ -23,6 +23,16 @@ class GitBranch(GitFactBase):
         return re.sub(r"(heads|tags)/", r"", "\n".join(output))
 
 
+class GitTag(GitFactBase):
+    @override
+    def command(self, repo) -> str:
+        return "! test -d {0} || (cd {0} && git tag)".format(repo)
+
+    @override
+    def process(self, output):
+        return output
+
+
 class GitConfig(GitFactBase):
     default = dict
 

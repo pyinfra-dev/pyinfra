@@ -38,6 +38,7 @@ class LocalConnector(BaseConnector):
 
     handles_execution = True
 
+    @override
     @staticmethod
     def make_names_data(name=None):
         if name is not None:

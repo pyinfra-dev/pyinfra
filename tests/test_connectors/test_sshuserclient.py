@@ -78,8 +78,10 @@ class TestSSHUserConfigMissing(TestCase):
     def test_load_ssh_config_no_exist(self):
         client = SSHClient()
 
-        _, config, forward_agent, missing_host_key_policy, host_keys_file = client.parse_config(
-            "127.0.0.1",
+        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive = (
+            client.parse_config(
+                "127.0.0.1",
+            )
         )
 
         assert config.get("port") == 22
@@ -126,8 +128,10 @@ class TestSSHUserConfig(TestCase):
     def test_load_ssh_config(self):
         client = SSHClient()
 
-        _, config, forward_agent, missing_host_key_policy, host_keys_file = client.parse_config(
-            "127.0.0.1",
+        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive = (
+            client.parse_config(
+                "127.0.0.1",
+            )
         )
 
         assert config.get("key_filename") == ["/id_rsa", "/id_rsa2"]
@@ -144,6 +148,7 @@ class TestSSHUserConfig(TestCase):
             forward_agent,
             missing_host_key_policy,
             host_keys_file,
+            keep_alive,
         ) = client.parse_config("192.168.1.1")
 
         assert other_config.get("username") == "otheruser"
@@ -198,7 +203,7 @@ class TestSSHUserConfig(TestCase):
         client = SSHClient()
 
         # Load the SSH config with ProxyJump configured
-        _, config, forward_agent, _, _ = client.parse_config(
+        _, config, forward_agent, _, _, _ = client.parse_config(
             "192.168.1.2",
             {"port": 1022},
             ssh_config_file="other_file",

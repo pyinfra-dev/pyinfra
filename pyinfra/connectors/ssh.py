@@ -144,6 +144,7 @@ class SSHConnector(BaseConnector):
 
     client: Optional[SSHClient] = None
 
+    @override
     @staticmethod
     def make_names_data(name):
         yield "@ssh/{0}".format(name), {"ssh_hostname": name}, []

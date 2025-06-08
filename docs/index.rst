@@ -120,4 +120,5 @@ How pyinfra Works
     contributing
     compatibility
     performance
+    changes
     api/reference

@@ -8,8 +8,8 @@ Third party pull requests help expand pyinfra's functionality and are essential 
 
 + [How to write operations](api/operations)
 + [How to write facts](api/facts)
-+ [How to write connectors](api/connectors)
-+ [API reference](api/reference)
++ [How to write connectors](api/connectors) - note that new connectors **will not be merged to pyinfra**, instead they should be provided as a separate installable package. PR's that link to these packages in the docs very welcome.
++ Low level [API reference](api/reference) - this is pyinfra's internal APIs and does not come with the same compatibility guarantees as facts & operations - ie expect breaking changes on non-major versions.
 
 ## Branches
 
@@ -37,6 +37,10 @@ Code style is enforced via Black, isort and flake8. Types are checked with mypy 
 ```sh
 scripts/dev-lint.sh
 ```
+
+### Commit Messages
+
+Please try to use consistent commit messages, look at the [recent history](https://github.com/pyinfra-dev/pyinfra/commits/) for examples. PRs that follow this will be rebased, PRs that do not will be squashed.
 
 ### Tests
 
@@ -74,7 +78,7 @@ pytest -m end_to_end_docker
 
 ## Documentation
 
-Documentation changes should be made in the [https://github.com/pyinfra-dev/pyinfa](pyinfra git repository) - the repository `docs.pyinfra.com` should
+Documentation changes should be made in the [pyinfra git repository](https://github.com/pyinfra-dev/pyinfa) - the repository `docs.pyinfra.com` should
 not be changed, it contains build artifacts.
 
 ### Generate Documentation

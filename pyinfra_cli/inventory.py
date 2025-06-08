@@ -172,7 +172,7 @@ def make_inventory(
         # The inventory is either an inventory file or a (list of) hosts
         return make_inventory_from_files(inventory, override_data, cwd, group_data_directories)
     elif inventory_func is None:
-        logger.warn(
+        logger.warning(
             f"{inventory} is neither an inventory file, a (list of) hosts or connectors "
             "nor refers to a python module"
         )

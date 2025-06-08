@@ -1,0 +1,7 @@
+{
+  "command": "ss -lptnH 'src :53'",
+  "arg": 53,
+  "requires_command": "ss",
+  "output": [],
+  "fact": [null, null]
+}

@@ -1,0 +1,29 @@
+{
+    "args": ["somefile.txt", "/home/somefile.txt"],
+    "kwargs": {
+        "mode": true
+    },
+    "local_files": {
+        "files": {
+            "somefile.txt": {
+                "mode": 644
+            }
+        },
+        "dirs": {}
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/somefile.txt": {
+                "mode": 644
+            }
+        },
+        "files.Directory": {
+            "path=/home": true
+        },
+        "files.Sha1File": {
+            "path=/home/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
+        }
+    },
+    "commands": [],
+    "noop_description": "file /home/somefile.txt is already uploaded"
+}
