@@ -939,10 +939,13 @@ def user(
             args.append("-g {0}".format(group))
 
         # Check secondary groups, if defined
-        if groups and set(existing_user["groups"]) != set(groups):
+        if groups:
             if append:
-                args.append("-a")
-            args.append("-G {0}".format(",".join(groups)))
+                if not set(groups).issubset(existing_user["groups"]):
+                    args.append("-a")
+                    args.append("-G {0}".format(",".join(groups)))
+            elif set(existing_user["groups"]) != set(groups):
+                args.append("-G {0}".format(",".join(groups)))
 
         if comment and existing_user["comment"] != comment:
             args.append("-c '{0}'".format(comment))
@@ -965,7 +968,10 @@ def user(
             if group:
                 existing_user["group"] = group
             if groups:
-                existing_user["groups"] = groups
+                if append:
+                    existing_user["groups"] += groups
+                else:
+                    existing_user["groups"] = groups
             if password:
                 existing_user["password"] = password
 
