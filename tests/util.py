@@ -67,7 +67,7 @@ def parse_value(value):
 
     if isinstance(value, str):
         if value.startswith("datetime:"):
-            return datetime.strptime(value[9:], "%Y-%m-%dT%H:%M:%S")
+            return datetime.fromisoformat(value[9:])
         if value.startswith("path:"):
             return Path(value[5:])
         return value
