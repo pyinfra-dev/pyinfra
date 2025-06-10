@@ -27,7 +27,7 @@ BSD_STAT_COMMAND = "stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime
 
 STAT_REGEX = (
     r"user=(.*) group=(.*) mode=(.*) "
-    r"atime=([0-9]*) mtime=([0-9]*) ctime=([0-9]*) "
+    r"atime=(-?[0-9]*) mtime=(-?[0-9]*) ctime=(-?[0-9]*) "
     r"size=([0-9]*) (.*)"
 )
 
