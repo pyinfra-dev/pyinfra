@@ -83,16 +83,32 @@ class IncusConnector(BaseConnector):
 
     @classmethod
     @override
-    def make_names_data(cls, name: str) -> Iterator[tuple[str, dict, list[str]]]:
-        logger.warning(f"No {cls.cmd} base ID provided! targeting local server")
+    def make_names_data(cls, name: str=None) -> Iterator[tuple[str, dict, list[str]]]:
+        """
+        :param name: ``[<remote>:]<instance>``
 
-        remote_instance = name.partition("/")[-1] if "/" in name else name
+        ===========  ================================================
+        None         All instances on local connexion
+        ===========  ================================================
+        example      Look for instance `example` on local connexion
+        example:     All instances on the remote named `example`
+        example:foo  Look for instance `foo` on remote named `example`
+        ===========  ================================================
+        """
+        command = [cls.cmd, "list --all-projects -c nc -f json"]
+        if name is None:
+            logger.warning(f"No {cls.cmd} base ID provided! targeting local server")
+            remote_instance = ""
+        else:
+            remote_instance = name.partition("/")[-1] if "/" in name else name
+            command += [remote_instance]
+
         remote, instance = remote_instance.rpartition(":")[::2]
         if remote:
             remote += ":"
 
         with progress_spinner({f"{cls.cmd} list"}):
-            output = local.shell(f"{cls.cmd} list --all-projects -c nc -f json {remote_instance}")
+            output = local.shell(" ".join(command))
             progress_spinner(f"{cls.cmd} list")
 
         for row in json.loads(output):
