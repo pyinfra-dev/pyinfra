@@ -1,0 +1,37 @@
+{
+    "args": ["somefile.txt", "/home/somefile.txt"],
+    "kwargs": {
+        "atime": "/var/timeref.blob",
+        "mtime": "/var/timeref.blob",
+    },
+    "local_files": {
+        "files": {
+            "somefile.txt": null
+        },
+        "dirs": {}
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/somefile.txt": {
+                "mode": 500,
+                "atime": "datetime:2020-07-15T09:19:27",
+                "mtime": "datetime:2002-09-15T10:11:12"
+            },
+            "path=/var/timeref.blob": {
+                "mode": 644,
+                "atime": "datetime:1991-04-15T18:18:27",
+                "mtime": "datetime:2002-09-15T10:11:12"
+            },
+        },
+        "files.Directory": {
+            "path=/home": true,
+            "path=/var": true
+        },
+        "files.Sha1File": {
+            "path=/home/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
+        }
+    },
+    "commands": [
+        "touch -a -d 1991-04-15T18:18:27Z /home/somefile.txt",
+    ]
+}
