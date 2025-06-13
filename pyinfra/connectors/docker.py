@@ -348,6 +348,7 @@ class PodmanConnector(DockerConnector):
         super().__init__(state, host)
         self.docker_cmd = "podman"
 
+    @override
     @staticmethod
     def make_names_data(name=None):
         if not name:
