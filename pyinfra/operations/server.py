@@ -5,6 +5,7 @@ Linux/BSD.
 
 from __future__ import annotations
 
+import platform
 from io import StringIO
 from itertools import filterfalse, tee
 from os import path
@@ -335,7 +336,15 @@ def mount(
         mounted_options = mounts[path]["options"]
         needed_options = set(options) - set(mounted_options)
         if needed_options:
-            yield "mount -o remount,{0} {1}".format(options_string, path)
+            if platform.system() == "FreeBSD":
+                fs_type = mounts[path]["type"]
+                device = mounts[path]["device"]
+
+                yield "mount -o update,{options} -t {fs_type} {device} {path}".format(
+                    options=options_string, fs_type=fs_type, device=device, path=path
+                )
+            else:
+                yield "mount -o remount,{0} {1}".format(options_string, path)
 
     else:
         host.noop(

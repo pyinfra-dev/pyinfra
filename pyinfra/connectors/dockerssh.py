@@ -50,6 +50,7 @@ class DockerSSHConnector(BaseConnector):
         super().__init__(state, host)
         self.ssh = SSHConnector(state, host)
 
+    @override
     @staticmethod
     def make_names_data(name):
         try:

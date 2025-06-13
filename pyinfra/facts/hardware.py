@@ -46,7 +46,7 @@ class Memory(FactBase):
             value, key = line.split(" ", 1)
 
             try:
-                value = int(value)
+                value = float(value)
             except ValueError:
                 continue
 

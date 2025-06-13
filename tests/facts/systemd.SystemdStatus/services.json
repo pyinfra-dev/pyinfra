@@ -12,12 +12,16 @@
         "SubState=dead",
         "",
         "Id=ebtables.timer",
-        "SubState=exited"
+        "SubState=exited",
+        "",
+        "Id=mnt-foo.mount",
+        "SubState=mounted"
     ],
     "fact":  {
         "lvm2-activation.service": false,
         "lvm2-lvmetad.service": true,
         "lvm2-lvmpolld.service": false,
-        "ebtables.timer": true
+        "ebtables.timer": true,
+        "mnt-foo.mount": true
     }
 }
