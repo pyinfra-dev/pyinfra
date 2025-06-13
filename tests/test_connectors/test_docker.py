@@ -13,7 +13,7 @@ from ..util import make_inventory
 
 class TestContainerConnector(TestCase):
     # we use this class as a template to prevent the decorators from being invoked twice on
-    # the podman test class (since it needs to overide fake_docker_shell)
+    # the podman test class (since it needs to override fake_docker_shell)
     __test__ = False  # this class should not be tested.
     cli_cmd = "docker"
     connector_name = "docker"
