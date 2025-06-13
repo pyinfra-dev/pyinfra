@@ -208,7 +208,7 @@ class DockerConnector(BaseConnector):
         **kwargs,  # ignored (sudo/etc)
     ) -> bool:
         """
-        Upload a file/IO object to the target Docker container by copying it to a
+        Upload a file/IO object to the target container by copying it to a
         temporary location and then uploading it into the container using ``docker cp``.
         """
 
@@ -266,7 +266,7 @@ class DockerConnector(BaseConnector):
         **kwargs,  # ignored (sudo/etc)
     ) -> bool:
         """
-        Download a file from the target Docker container by copying it to a temporary
+        Download a file from the target container by copying it to a temporary
         location and then reading that into our final file/IO object.
         """
 
@@ -347,17 +347,6 @@ class PodmanConnector(DockerConnector):
         super().__init__(state, host)
         self.docker_cmd = "podman"
 
-        # Manually overwrite the docstrings from the docker class,
-        # since we can't use string formatting set these.
-        # self.put_file.__doc__ = """
-        # Upload a file/IO object to the target Podman container by copying it to a
-        # temporary location and then uploading it into the container using ``podman cp``.
-        # """
-        # self.get_file.__doc__ = """
-        # Download a file from the target Podman container by copying it to a temporary
-        # location and then reading that into our final file/IO object.
-        # """
-
     @staticmethod
     def make_names_data(name=None):
         if not name:
@@ -381,35 +370,12 @@ class PodmanConnector(DockerConnector):
         **kwargs,  # ignored (sudo/etc)
     ) -> bool:
         """
-        Upload a file/IO object to the target Podman container by copying it to a
+        Upload a file/IO object to the target container by copying it to a
         temporary location and then uploading it into the container using ``podman cp``.
         """
         return super().put_file(
             filename_or_io,
             remote_filename,
-            remote_temp_filename,  # ignored
-            print_output,
-            print_input,
-            **kwargs,  # ignored (sudo/etc)
-        )
-
-    @override
-    def get_file(
-        self,
-        remote_filename,
-        filename_or_io,
-        remote_temp_filename=None,  # ignored
-        print_output=False,
-        print_input=False,
-        **kwargs,  # ignored (sudo/etc)
-    ) -> bool:
-        """
-        Download a file from the target Podman container by copying it to a temporary
-        location and then reading that into our final file/IO object.
-        """
-        return super().get_file(
-            remote_filename,
-            filename_or_io,
             remote_temp_filename,  # ignored
             print_output,
             print_input,
