@@ -343,6 +343,7 @@ class PodmanConnector(DockerConnector):
     a remote host over SSH each time. This gives you a fast, local-first devloop to iterate on when
     writing deploys, operations or facts.
     """
+
     docker_cmd = "podman"
 
     @override
