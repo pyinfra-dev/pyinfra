@@ -1548,12 +1548,12 @@ def block(
         "2>/dev/null || stat -f %Lp",
         q_path,
         ") $OUT && ",
-        '(chown $(stat -c "%U:%G"',
+        '(chown $(stat -c "%u:%g"',
         q_path,
-        "2>/dev/null) $OUT || ",
-        'chown -n $(stat -f "%u:%g"',
+        "2>/dev/null || ",
+        'stat -f "%u:%g"',
         q_path,
-        ') $OUT)  && mv "$OUT"',
+        '2>/dev/null ) $OUT) && mv "$OUT"',
         q_path,
     )
 
