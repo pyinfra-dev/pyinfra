@@ -56,7 +56,14 @@ from pyinfra.facts.files import (
 from pyinfra.facts.server import Date, Which
 
 from .util import files as file_utils
-from .util.files import adjust_regex, ensure_mode_int, get_timestamp, sed_replace, unix_path_join
+from .util.files import (
+    adjust_regex,
+    ensure_mode_int,
+    get_timestamp,
+    sed_delete,
+    sed_replace,
+    unix_path_join,
+)
 
 
 @operation()
@@ -427,9 +434,9 @@ def line(
         else:
             host.noop('line "{0}" exists in {1}'.format(replace or line, path))
 
-    # Line(s) exists and we want to remove them, replace with nothing
+    # Line(s) exists and we want to remove them
     elif present_lines and not present:
-        yield sed_replace(
+        yield sed_delete(
             path,
             match_line,
             "",
