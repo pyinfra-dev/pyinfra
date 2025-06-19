@@ -6,7 +6,7 @@ from pyinfra import host
 from pyinfra.api import StringCommand, operation
 from pyinfra.api.util import try_int
 from pyinfra.facts.crontab import Crontab, CrontabFile
-from pyinfra.operations.util.files import sed_replace
+from pyinfra.operations.util.files import sed_delete, sed_replace
 
 
 @operation()
@@ -111,7 +111,7 @@ def crontab(
     # Don't want the cron and it does exist? Remove the line
     if not present and exists:
         edit_commands.append(
-            sed_replace(
+            sed_delete(
                 temp_filename,
                 existing_crontab_match,
                 "",
