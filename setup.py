@@ -24,7 +24,6 @@ INSTALL_REQUIRES = (
     "click>2",
     "jinja2>2,<4",
     "python-dateutil>2,<3",
-    "setuptools",
     "pywinrm",
     "typeguard",
     "distro>=1.6,<2",
@@ -55,7 +54,6 @@ TEST_REQUIRES = (
     "types-paramiko",
     "types-python-dateutil",
     "types-PyYAML",
-    "types-setuptools",
 )
 
 DOCS_REQUIRES = (
