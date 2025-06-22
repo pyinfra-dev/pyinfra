@@ -32,9 +32,9 @@ from pyinfra.api.command import make_formatted_string_command
 from pyinfra.api.util import (
     get_call_location,
     get_file_io,
+    get_file_md5,
     get_file_sha1,
     get_file_sha256,
-    get_file_md5,
     get_path_permissions_mode,
     get_template,
     memoize,
