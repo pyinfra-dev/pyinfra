@@ -33,6 +33,8 @@ from pyinfra.api.util import (
     get_call_location,
     get_file_io,
     get_file_sha1,
+    get_file_sha256,
+    get_file_md5,
     get_path_permissions_mode,
     get_template,
     memoize,
@@ -789,11 +791,21 @@ def get(
 
     # Remote file exists - check if it matches our local
     else:
-        local_sum = get_file_sha1(dest)
-        remote_sum = host.get_fact(Sha1File, path=src)
+        sum_match = False
+        for fact, get_sum in [
+            # md5 is most common, so check it first
+            (Md5File, get_file_md5),
+            (Sha1File, get_file_sha1),
+            (Sha256File, get_file_sha256),
+        ]:
+            remote_sum = host.get_fact(fact, path=src)
+            if remote_sum:
+                local_sum = get_sum(dest)
+                sum_match = local_sum == remote_sum
+                break
 
         # Check sha1sum, upload if needed
-        if local_sum != remote_sum:
+        if not sum_match:
             yield FileDownloadCommand(src, dest, remote_temp_filename=host.get_temp_filename(dest))
 
 
@@ -867,7 +879,7 @@ def put(
     # Upload IO objects as-is
     if hasattr(src, "read"):
         local_file = src
-        local_sum = get_file_sha1(src)
+        local_sum_path = src
 
     # Assume string filename
     else:
@@ -879,9 +891,9 @@ def put(
         local_file = src
 
         if os.path.isfile(local_file):
-            local_sum = get_file_sha1(local_file)
+            local_sum_path = local_file
         elif assume_exists:
-            local_sum = None
+            local_sum_path = None
         else:
             raise IOError("No such file: {0}".format(local_file))
 
@@ -923,10 +935,20 @@ def put(
 
     # File exists, check sum and check user/group/mode if supplied
     else:
-        remote_sum = host.get_fact(Sha1File, path=dest)
+        sum_match = False
+        for fact, get_sum in [
+            # md5 is most common, so check it first
+            (Md5File, get_file_md5),
+            (Sha1File, get_file_sha1),
+            (Sha256File, get_file_sha256),
+        ]:
+            remote_sum = host.get_fact(fact, path=dest)
+            if remote_sum:
+                local_sum = get_sum(local_sum_path)
+                sum_match = local_sum == remote_sum
+                break
 
-        # Check sha1sum, upload if needed
-        if local_sum != remote_sum:
+        if not sum_match:
             yield FileUploadCommand(
                 local_file,
                 dest,

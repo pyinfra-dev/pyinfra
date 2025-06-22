@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from functools import wraps
-from hashlib import sha1, sha256
+from hashlib import md5, sha1, sha256
 from inspect import getframeinfo, stack
 from io import BytesIO, StringIO
 from os import getcwd, path, stat
@@ -390,21 +390,27 @@ class get_file_io:
             return self.filename_or_io
 
 
-def get_file_sha1(filename_or_io):
+def get_file_md5(filename_or_io: str | IO):
+    return _get_file_digest(filename_or_io, md5())
+
+
+def get_file_sha1(filename_or_io: str | IO):
     return _get_file_digest(filename_or_io, sha1())
 
 
-def get_file_sha256(filename_or_io):
+def get_file_sha256(filename_or_io: str | IO):
     return _get_file_digest(filename_or_io, sha256())
 
 
 def _get_file_digest(filename_or_io: str | IO, hasher: hashlib._Hash):
     """
-    Calculates the SHA1 of a file or file object using a buffer to handle larger files.
+    Calculates the hash of a file or file object using a buffer to handle larger files.
     """
 
     file_data = get_file_io(filename_or_io)
     cache_key = file_data.cache_key
+    if cache_key:
+        cache_key = f"{cache_key}_{hasher.name}"
 
     if cache_key and cache_key in FILE_SHAS:
         return FILE_SHAS[cache_key]
