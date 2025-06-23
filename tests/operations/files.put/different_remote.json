@@ -22,7 +22,7 @@
         "files.Directory": {
             "path=/home": true
         },
-        "files.Sha1File": {
+        "files.Md5File": {
             "path=/home/somefile.txt": "nowt"
         }
     },

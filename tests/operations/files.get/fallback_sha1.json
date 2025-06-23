@@ -13,6 +13,9 @@
             }
         },
         "files.Md5File": {
+            "path=/home/somefile.txt": null
+        },
+        "files.Sha1File": {
             "path=/home/somefile.txt": "abc"
         }
     },

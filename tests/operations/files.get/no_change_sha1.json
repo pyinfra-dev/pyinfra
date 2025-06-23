@@ -13,10 +13,12 @@
             }
         },
         "files.Md5File": {
-            "path=/home/somefile.txt": "abc"
+            "path=/home/somefile.txt": null
+        },
+        "files.Sha1File": {
+            "path=/home/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
         }
     },
-    "commands": [
-        ["download", "/home/somefile.txt", "/somefile.txt"]
-    ]
+    "commands": [],
+    "noop_description": "file /somefile.txt has already been downloaded"
 }

@@ -22,8 +22,8 @@
         "files.Directory": {
             "path=/home": true
         },
-        "files.Sha1File": {
-            "path=/home/some file.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
+        "files.Md5File": {
+            "path=/home/some file.txt": "c3b126f16dda9ffd0b50f131275d69a9"
         }
     },
     "commands": [

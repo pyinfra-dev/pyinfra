@@ -1,10 +1,5 @@
 {
     "args": ["somefile.txt", "/home/somefile.txt"],
-    "kwargs": {
-        "user": "another-testuser",
-        "group": "another-testgroup",
-        "mode": 644
-    },
     "local_files": {
         "files": {
             "somefile.txt": null
@@ -14,20 +9,20 @@
     "facts": {
         "files.File": {
             "path=/home/somefile.txt": {
-                "mode": 500,
-                "user": "testuser",
-                "group": "testgroup"
+                "mode": 500
             }
         },
         "files.Directory": {
             "path=/home": true
         },
         "files.Md5File": {
-            "path=/home/somefile.txt": "c3b126f16dda9ffd0b50f131275d69a9"
+            "path=/home/somefile.txt": null
+        },
+        "files.Sha1File": {
+            "path=/home/somefile.txt": "nowt"
         }
     },
     "commands": [
-        "chmod 644 /home/somefile.txt",
-        "chown another-testuser:another-testgroup /home/somefile.txt"
+        ["upload", "/somefile.txt", "/home/somefile.txt"]
     ]
 }

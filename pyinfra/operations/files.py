@@ -804,9 +804,11 @@ def get(
                 sum_match = local_sum == remote_sum
                 break
 
-        # Check sha1sum, upload if needed
+        # Check hash sum, download if needed
         if not sum_match:
             yield FileDownloadCommand(src, dest, remote_temp_filename=host.get_temp_filename(dest))
+        else:
+            host.noop("file {0} has already been downloaded".format(dest))
 
 
 @operation()
