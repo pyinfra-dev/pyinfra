@@ -1,0 +1,15 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "unique": false,
+        "ensure_home": false
+    },
+    "facts": {
+        "server.Os": "FreeBSD",
+        "server.Users": {},
+        "server.Groups": {}
+    },
+    "commands": [
+        "pw useradd -n someuser -d /home/someuser -o"
+    ]
+}

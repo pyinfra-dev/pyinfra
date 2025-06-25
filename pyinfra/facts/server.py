@@ -526,10 +526,10 @@ class Users(FactBase):
         for i in `cat /etc/passwd | cut -d: -f1`; do
             ENTRY=`grep ^$i: /etc/passwd`;
             LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | grep ^$i | tr -s ' ')`;
-            PASSWORD=`grep ^$i: /etc/shadow | cut -d: -f2`;
+            PASSWORD=`(grep ^$i: /etc/shadow || grep ^$i: /etc/master.passwd) 2> /dev/null | cut -d: -f2`;
             echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD";
         done
-    """.strip()
+    """.strip() # noqa
 
     default = dict
 

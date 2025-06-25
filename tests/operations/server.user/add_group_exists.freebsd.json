@@ -1,0 +1,18 @@
+{
+    "args": ["someuser"],
+    "facts": {
+        "server.Users": {},
+        "server.Groups": [
+            "someuser"
+        ],
+        "files.Directory": {
+            "path=/home/someuser": null
+        },
+        "server.Os": "FreeBSD"
+    },
+    "commands": [
+        "pw useradd -n someuser -d /home/someuser -g someuser",
+        "mkdir -p /home/someuser",
+        "chown someuser:someuser /home/someuser"
+    ]
+}

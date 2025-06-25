@@ -12,15 +12,15 @@
         "password": "$somecryptedpassword$"
     },
     "facts": {
-        "server.Os": "Linux",
+        "server.Os": "FreeBSD",
         "server.Users": {},
         "server.Groups": {},
         "files.Directory": {
             "path=homedir": null
-        },
+        }
     },
     "commands": [
-        "useradd -d homedir -s shellbin -g mygroup -G secondary_group,another -r --uid 1000 -c 'Full Name' -m -p '$somecryptedpassword$' someuser",
+        "echo '$somecryptedpassword$' | pw useradd -n someuser -H 0 -d homedir -s shellbin -g mygroup -G secondary_group,another -u 1000 -c 'Full Name' -m",
         "mkdir -p homedir",
         "chown someuser:mygroup homedir"
     ]

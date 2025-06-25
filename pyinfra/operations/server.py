@@ -899,22 +899,29 @@ def user(
 
         if create_home:
             args.append("-m")
-        else:
+        elif os_type != "FreeBSD":
             args.append("-M")
 
-        if password:
+        if password and os_type != "FreeBSD":
             args.append("-p '{0}'".format(password))
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
         add_user_command = "useradd"
+
         if os_type == "FreeBSD":
             add_user_command = "pw useradd"
-            yield "{0} -n {2} {1}".format(
-                add_user_command,
-                " ".join(args),
-                user,
-            )
+
+            if password:
+                yield "echo '{3}' | {0} -n {2} -H 0 {1}".format(
+                    add_user_command, " ".join(args), user, password
+                )
+            else:
+                yield "{0} -n {2} {1}".format(
+                    add_user_command,
+                    " ".join(args),
+                    user,
+                )
         else:
             yield "{0} {1} {2}".format(
                 add_user_command,
@@ -951,7 +958,10 @@ def user(
             args.append("-c '{0}'".format(comment))
 
         if password and existing_user["password"] != password:
-            args.append("-p '{0}'".format(password))
+            if os_type == "FreeBSD":
+                yield "echo '{0}' | pw usermod -n {1} -H 0".format(password, user)
+            else:
+                args.append("-p '{0}'".format(password))
 
         # Need to mod the user?
         if args:
