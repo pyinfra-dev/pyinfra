@@ -1,0 +1,16 @@
+{
+    "arg": "/",
+    "command": "! (test -e / || test -L / ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' / 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' / || ls -ld / )",
+    "output": [
+        "drwxr-xr-x    1 root     root           416 Jan  1  1970 /"
+    ],
+    "fact": {
+        "group": "root",
+        "user": "root",
+        "mode": 755,
+        "atime": null,
+        "mtime": "1970-01-01T00:00:00",
+        "ctime": null,
+        "size": 416
+    }
+}

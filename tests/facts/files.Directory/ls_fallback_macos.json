@@ -1,0 +1,16 @@
+{
+    "arg": ".",
+    "command": "! (test -e . || test -L . ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' . 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' . || ls -ld . )",
+    "output": [
+        "drwxr-xr-x@ 12 xonic staff 408 22 Jun 19:00 ."
+    ],
+    "fact": {
+        "group": "staff",
+        "user": "xonic",
+        "mode": 755,
+        "atime": null,
+        "mtime": "2025-06-22T19:00:00",
+        "ctime": null,
+        "size": 408
+    }
+}
