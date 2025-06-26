@@ -35,7 +35,9 @@ STAT_REGEX = (
 # ls -ld output: permissions links user group size month day year/time path
 # Supports attribute markers: . (SELinux), @ (extended attrs), + (ACL)
 # Handles both "MMM DD" and "DD MMM" date formats
-LS_REGEX = r"^([dlbcsp-][-rwxstST]{9}[.@+]?)\s+\d+\s+(\S+)\s+(\S+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$"
+LS_REGEX = (
+    r"^([dlbcsp-][-rwxstST]{9}[.@+]?)\s+\d+\s+(\S+)\s+(\S+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$"
+)
 
 FLAG_TO_TYPE = {
     "b": "block",
@@ -96,28 +98,39 @@ def _parse_ls_timestamp(month: str, day: str, year_or_time: str) -> Optional[dat
     try:
         # Month abbreviation to number mapping
         month_map = {
-            'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
-            'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+            "Jan": 1,
+            "Feb": 2,
+            "Mar": 3,
+            "Apr": 4,
+            "May": 5,
+            "Jun": 6,
+            "Jul": 7,
+            "Aug": 8,
+            "Sep": 9,
+            "Oct": 10,
+            "Nov": 11,
+            "Dec": 12,
         }
-        
+
         month_num = month_map.get(month)
         if month_num is None:
             return None
-            
+
         day_num = int(day)
-        
+
         # Check if year_or_time is a year (4 digits) or time (HH:MM)
-        if ':' in year_or_time:
+        if ":" in year_or_time:
             # It's a time, assume current year
             import time
+
             current_year = time.gmtime().tm_year
-            hour, minute = map(int, year_or_time.split(':'))
+            hour, minute = map(int, year_or_time.split(":"))
             return datetime(current_year, month_num, day_num, hour, minute)
         else:
             # It's a year
             year_num = int(year_or_time)
             return datetime(year_num, month_num, day_num)
-            
+
     except (ValueError, TypeError):
         return None
 
@@ -130,7 +143,7 @@ def _parse_ls_output(output: str) -> Optional[tuple[FileDict, str]]:
     match = re.match(LS_REGEX, output.strip())
     if not match:
         return None
-    
+
     permissions = match.group(1)
     user = match.group(2)
     group = match.group(3)
@@ -139,7 +152,7 @@ def _parse_ls_output(output: str) -> Optional[tuple[FileDict, str]]:
     date_part2 = match.group(6)
     year_or_time = match.group(7)
     path = match.group(8)
-    
+
     # Determine if it's "MMM DD" or "DD MMM" format
     if date_part1.isdigit():
         # "DD MMM" format (e.g., "22 Jun")
@@ -149,18 +162,18 @@ def _parse_ls_output(output: str) -> Optional[tuple[FileDict, str]]:
         # "MMM DD" format (e.g., "Jun 22")
         month = date_part1
         day = date_part2
-    
+
     # Extract file type from first character of permissions
     path_type = FLAG_TO_TYPE[permissions[0]]
-    
+
     # Parse mode (skip first character which is file type, and any trailing attribute markers)
     # Remove trailing attribute markers (.@+) if present
     mode_str = permissions[1:10]  # Take exactly 9 characters after file type
     mode = _parse_mode(mode_str)
-    
+
     # Parse timestamp - ls shows modification time
     mtime = _parse_ls_timestamp(month, day, year_or_time)
-    
+
     data: FileDict = {
         "user": user,
         "group": group,
@@ -170,12 +183,12 @@ def _parse_ls_output(output: str) -> Optional[tuple[FileDict, str]]:
         "ctime": None,  # ls doesn't provide ctime
         "size": try_int(size),
     }
-    
+
     # Handle symbolic links
     if path_type == "link" and " -> " in path:
         filename, target = path.split(" -> ", 1)
         data["link_target"] = target.strip("'").lstrip("`")
-    
+
     return data, path_type
 
 
@@ -224,7 +237,8 @@ class File(FactBase[Union[FileDict, Literal[False], None]]):
             (
                 # only stat if the path exists (file or symlink)
                 "! (test -e {0} || test -L {0} ) || "
-                "( {linux_stat_command} {0} 2> /dev/null || {bsd_stat_command} {0} || {ls_command} {0} )"
+                "( {linux_stat_command} {0} 2> /dev/null || "
+                "{bsd_stat_command} {0} || {ls_command} {0} )"
             ),
             path,
             linux_stat_command=LINUX_STAT_COMMAND,
@@ -259,17 +273,17 @@ class File(FactBase[Union[FileDict, Literal[False], None]]):
                 data["link_target"] = target.strip("'").lstrip("`")
 
             return data
-        
+
         # Try to parse as ls output
         ls_result = _parse_ls_output(output[0])
         if ls_result is not None:
             data, path_type = ls_result
-            
+
             if path_type != self.type:
                 return False
-                
+
             return data
-        
+
         return None
 
 
