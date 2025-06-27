@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import difflib
 import re
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Callable
+from typing import Callable, Generator
+
+import click
 
 from pyinfra.api import QuoteString, StringCommand
 
@@ -207,3 +210,34 @@ def adjust_regex(line: str, escape_regex_characters: bool) -> str:
         match_line = "{0}.*$".format(match_line)
 
     return match_line
+
+
+def generate_color_diff(
+    current_lines: list[str], desired_lines: list[str]
+) -> Generator[str, None, None]:
+    def _format_range_unified(start: int, stop: int) -> str:
+        beginning = start + 1  # lines start numbering with one
+        length = stop - start
+        if length == 1:
+            return "{}".format(beginning)
+        if not length:
+            beginning -= 1  # empty ranges begin at line just before the range
+        return "{},{}".format(beginning, length)
+
+    for group in difflib.SequenceMatcher(None, current_lines, desired_lines).get_grouped_opcodes(2):
+        first, last = group[0], group[-1]
+        file1_range = _format_range_unified(first[1], last[2])
+        file2_range = _format_range_unified(first[3], last[4])
+        yield "@@ -{} +{} @@".format(file1_range, file2_range)
+
+        for tag, i1, i2, j1, j2 in group:
+            if tag == "equal":
+                for line in current_lines[i1:i2]:
+                    yield "  " + line.rstrip()
+                continue
+            if tag in {"replace", "delete"}:
+                for line in current_lines[i1:i2]:
+                    yield click.style("- " + line.rstrip(), "red")
+            if tag in {"replace", "insert"}:
+                for line in desired_lines[j1:j2]:
+                    yield click.style("+ " + line.rstrip(), "green")

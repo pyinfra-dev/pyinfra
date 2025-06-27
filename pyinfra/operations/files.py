@@ -10,10 +10,11 @@ import sys
 import traceback
 from datetime import datetime, timedelta, timezone
 from fnmatch import fnmatch
-from io import StringIO
+from io import BytesIO, StringIO
 from pathlib import Path
 from typing import IO, Any, Union
 
+import click
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
 from pyinfra import host, logger, state
@@ -62,6 +63,7 @@ from .util.files import (
     MetadataTimeField,
     adjust_regex,
     ensure_mode_int,
+    generate_color_diff,
     get_timestamp,
     sed_delete,
     sed_replace,
@@ -1030,6 +1032,20 @@ def put(
     # File exists, check sum and check user/group/mode/atime/mtime if supplied
     else:
         if not _file_equal(local_sum_path, dest):
+            current_contents = BytesIO()
+
+            # Generate diff when contents change
+            host.get_file(dest, current_contents)
+            current_lines = current_contents.getvalue().decode("utf-8").splitlines(keepends=True)
+            logger.info(f"\n    Will modify {click.style(dest, bold=True)}")
+
+            with get_file_io(src, "r") as f:
+                desired_lines = f.readlines()
+
+            for line in generate_color_diff(current_lines, desired_lines):
+                logger.info(f"  {line}")
+            logger.info("")
+
             yield FileUploadCommand(
                 local_file,
                 dest,

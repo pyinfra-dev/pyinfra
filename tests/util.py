@@ -190,6 +190,16 @@ class FakeHost:
     def get_temp_filename(*args, **kwargs):
         return "_tempfile_"
 
+    def get_file(
+        self,
+        remote_filename,
+        filename_or_io,
+        remote_temp_filename=None,
+        print_output=False,
+        *arguments,
+    ):
+        return True
+
     @staticmethod
     def _get_fact_key(fact_cls):
         return "{0}.{1}".format(fact_cls.__module__.split(".")[-1], fact_cls.__name__)
