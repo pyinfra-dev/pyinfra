@@ -1,6 +1,6 @@
 {
     "arg": "/home/pyinfra/fil-@_e.txt",
-    "command": "! (test -e /home/pyinfra/fil-@_e.txt || test -L /home/pyinfra/fil-@_e.txt ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /home/pyinfra/fil-@_e.txt 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /home/pyinfra/fil-@_e.txt )",
+    "command": "! (test -e /home/pyinfra/fil-@_e.txt || test -L /home/pyinfra/fil-@_e.txt ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /home/pyinfra/fil-@_e.txt 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /home/pyinfra/fil-@_e.txt || ls -ld /home/pyinfra/fil-@_e.txt )",
     "output": [
         "not-gonna-match"
     ],

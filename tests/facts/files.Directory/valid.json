@@ -1,6 +1,6 @@
 {
     "arg": "/home/pyinfra/myd@-_ir",
-    "command": "! (test -e /home/pyinfra/myd@-_ir || test -L /home/pyinfra/myd@-_ir ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /home/pyinfra/myd@-_ir 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /home/pyinfra/myd@-_ir )",
+    "command": "! (test -e /home/pyinfra/myd@-_ir || test -L /home/pyinfra/myd@-_ir ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /home/pyinfra/myd@-_ir 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /home/pyinfra/myd@-_ir || ls -ld /home/pyinfra/myd@-_ir )",
     "output": [
         "user=pyinfra group=pyinfra mode=drw-r--r-- atime=1594804583 mtime=1594804583 ctime=0 size=0 '/home/pyinfra/myd@-_ir'"
     ],
