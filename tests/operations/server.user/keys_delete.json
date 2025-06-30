@@ -35,10 +35,10 @@
         "find_in_file": {
             "path=homedir/.ssh/authorized_keys, pattern=^.*abc.*$": []
         },
-        "files.Md5File": {
+        "files.Sha1File": {
             "path=homedir/.ssh/authorized_keys": null
         },
-        "files.Sha1File": {
+        "files.Md5File": {
             "path=homedir/.ssh/authorized_keys": null
         },
         "files.Sha256File": {

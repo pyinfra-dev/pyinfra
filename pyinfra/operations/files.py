@@ -735,6 +735,21 @@ def _create_remote_dir(remote_filename, user, group):
         )
 
 
+def _file_equal(local_path: str | IO[Any] | None, remote_path: str) -> bool:
+    if local_path is None:
+        return False
+    for fact, get_sum in [
+        (Sha1File, get_file_sha1),
+        (Md5File, get_file_md5),
+        (Sha256File, get_file_sha256),
+    ]:
+        remote_sum = host.get_fact(fact, path=remote_path)
+        if remote_sum:
+            local_sum = get_sum(local_path)
+            return local_sum == remote_sum
+    return False
+
+
 @operation(
     # We don't (currently) cache the local state, so there's nothing we can
     # update to flag the local file as present.
@@ -791,21 +806,8 @@ def get(
 
     # Remote file exists - check if it matches our local
     else:
-        sum_match = False
-        for fact, get_sum in [
-            # md5 is most common, so check it first
-            (Md5File, get_file_md5),
-            (Sha1File, get_file_sha1),
-            (Sha256File, get_file_sha256),
-        ]:
-            remote_sum = host.get_fact(fact, path=src)
-            if remote_sum:
-                local_sum = get_sum(dest)
-                sum_match = local_sum == remote_sum
-                break
-
         # Check hash sum, download if needed
-        if not sum_match:
+        if not _file_equal(dest, src):
             yield FileDownloadCommand(src, dest, remote_temp_filename=host.get_temp_filename(dest))
         else:
             host.noop("file {0} has already been downloaded".format(dest))
@@ -937,20 +939,7 @@ def put(
 
     # File exists, check sum and check user/group/mode if supplied
     else:
-        sum_match = False
-        for fact, get_sum in [
-            # md5 is most common, so check it first
-            (Md5File, get_file_md5),
-            (Sha1File, get_file_sha1),
-            (Sha256File, get_file_sha256),
-        ]:
-            remote_sum = host.get_fact(fact, path=dest)
-            if remote_sum:
-                local_sum = get_sum(local_sum_path)
-                sum_match = local_sum == remote_sum
-                break
-
-        if not sum_match:
+        if not _file_equal(local_sum_path, dest):
             yield FileUploadCommand(
                 local_file,
                 dest,
