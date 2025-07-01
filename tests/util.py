@@ -184,7 +184,7 @@ class FakeHost:
     def noop(self, description):
         self.noop_description = description
 
-    def get_temp_filename(*args):
+    def get_temp_filename(*args, **kwargs):
         return "_tempfile_"
 
     @staticmethod

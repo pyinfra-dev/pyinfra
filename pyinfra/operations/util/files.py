@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
+from typing import Callable
 
 from pyinfra.api import QuoteString, StringCommand
 
@@ -32,6 +33,34 @@ def get_timestamp() -> str:
     return datetime.now().strftime("%y%m%d%H%M")
 
 
+_sed_ignore_case = re.compile("[iI]")
+
+
+def _sed_delete_builder(line: str, replace: str, flags: str, interpolate_variables: bool) -> str:
+    return (
+        '"/{0}/{1}d"' if interpolate_variables else  # fmt: skip
+        "'/{0}/{1}d'"
+    ).format(line, "I" if _sed_ignore_case.search(flags) else "")
+
+
+def sed_delete(
+    filename: str,
+    line: str,
+    replace: str,
+    flags: list[str] | None = None,
+    backup=False,
+    interpolate_variables=False,
+) -> StringCommand:
+    return _sed_command(**locals(), sed_script_builder=_sed_delete_builder)
+
+
+def _sed_replace_builder(line: str, replace: str, flags: str, interpolate_variables: bool) -> str:
+    return (
+        '"s/{0}/{1}/{2}"' if interpolate_variables else  # fmt: skip
+        "'s/{0}/{1}/{2}'"
+    ).format(line, replace, flags)
+
+
 def sed_replace(
     filename: str,
     line: str,
@@ -39,6 +68,20 @@ def sed_replace(
     flags: list[str] | None = None,
     backup=False,
     interpolate_variables=False,
+) -> StringCommand:
+    return _sed_command(**locals(), sed_script_builder=_sed_replace_builder)
+
+
+def _sed_command(
+    filename: str,
+    line: str,
+    replace: str,
+    flags: list[str] | None = None,
+    backup=False,
+    interpolate_variables=False,
+    # Python requires a default value here, so use _sed_replace_builder for
+    # backwards compatibility.
+    sed_script_builder: Callable[[str, str, str, bool], str] = _sed_replace_builder,
 ) -> StringCommand:
     flags_str = "".join(flags) if flags else ""
 
@@ -51,15 +94,13 @@ def sed_replace(
     if interpolate_variables:
         line = line.replace('"', '\\"')
         replace = replace.replace('"', '\\"')
-        sed_script_formatter = '"s/{0}/{1}/{2}"'
     else:
         # Single quotes cannot contain other single quotes, even when escaped , so turn
         # each ' into '"'"' (end string, double quote the single quote, (re)start string)
         line = line.replace("'", "'\"'\"'")
         replace = replace.replace("'", "'\"'\"'")
-        sed_script_formatter = "'s/{0}/{1}/{2}'"
 
-    sed_script = sed_script_formatter.format(line, replace, flags_str)
+    sed_script = sed_script_builder(line, replace, flags_str, interpolate_variables)
 
     sed_command = StringCommand(
         "sed",

@@ -13,6 +13,6 @@
         }
     },
     "commands": [
-        "OUT=\"$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)\" &&  awk 'BEGIN {x=ARGV[2]; ARGV[2]=\"\"}  f!=1 && /^.*before this \\*.*$/ { print x; f=1} END {if (f==0) print ARGV[2] } { print }' /home/someone/something \"# BEGIN PYINFRA BLOCK\nplease add this\n# END PYINFRA BLOCK\" > $OUT && chmod $(stat -c %a /home/someone/something 2>/dev/null || stat -f %Lp /home/someone/something ) $OUT &&  (chown $(stat -c \"%U:%G\" /home/someone/something 2>/dev/null) $OUT ||  chown -n $(stat -f \"%u:%g\" /home/someone/something ) $OUT)  && mv \"$OUT\" /home/someone/something"
+        "OUT=\"$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)\" &&  awk 'BEGIN {x=ARGV[2]; ARGV[2]=\"\"}  f!=1 && /^.*before this \\*.*$/ { print x; f=1} END {if (f==0) print ARGV[2] } { print }' /home/someone/something \"# BEGIN PYINFRA BLOCK\nplease add this\n# END PYINFRA BLOCK\" > $OUT && chmod $(stat -c %a /home/someone/something 2>/dev/null || stat -f %Lp /home/someone/something ) $OUT &&  (chown $(stat -c \"%u:%g\" /home/someone/something 2>/dev/null ||  stat -f \"%u:%g\" /home/someone/something 2>/dev/null ) $OUT) && mv \"$OUT\" /home/someone/something"
     ]
 }

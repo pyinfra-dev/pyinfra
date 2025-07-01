@@ -56,7 +56,14 @@ from pyinfra.facts.files import (
 from pyinfra.facts.server import Date, Which
 
 from .util import files as file_utils
-from .util.files import adjust_regex, ensure_mode_int, get_timestamp, sed_replace, unix_path_join
+from .util.files import (
+    adjust_regex,
+    ensure_mode_int,
+    get_timestamp,
+    sed_delete,
+    sed_replace,
+    unix_path_join,
+)
 
 
 @operation()
@@ -75,6 +82,7 @@ def download(
     headers: dict[str, str] | None = None,
     insecure=False,
     proxy: str | None = None,
+    temp_dir: str | Path | None = None,
 ):
     """
     Download files from remote locations using ``curl`` or ``wget``.
@@ -93,6 +101,7 @@ def download(
     + headers: optional dictionary of headers to set for the HTTP request
     + insecure: disable SSL verification for the HTTP request
     + proxy: simple HTTP proxy through which we can download files, form `http://<yourproxy>:<port>`
+    + temp_dir: use this custom temporary directory during the download
 
     **Example:**
 
@@ -148,7 +157,9 @@ def download(
 
     # If we download, always do user/group/mode as SSH user may be different
     if download:
-        temp_file = host.get_temp_filename(dest)
+        temp_file = host.get_temp_filename(
+            dest, temp_directory=str(temp_dir) if temp_dir is not None else None
+        )
 
         curl_args: list[Union[str, StringCommand]] = ["-sSLf"]
         wget_args: list[Union[str, StringCommand]] = ["-q"]
@@ -423,9 +434,9 @@ def line(
         else:
             host.noop('line "{0}" exists in {1}'.format(replace or line, path))
 
-    # Line(s) exists and we want to remove them, replace with nothing
+    # Line(s) exists and we want to remove them
     elif present_lines and not present:
-        yield sed_replace(
+        yield sed_delete(
             path,
             match_line,
             "",
@@ -1619,12 +1630,12 @@ def block(
         "2>/dev/null || stat -f %Lp",
         q_path,
         ") $OUT && ",
-        '(chown $(stat -c "%U:%G"',
+        '(chown $(stat -c "%u:%g"',
         q_path,
-        "2>/dev/null) $OUT || ",
-        'chown -n $(stat -f "%u:%g"',
+        "2>/dev/null || ",
+        'stat -f "%u:%g"',
         q_path,
-        ') $OUT)  && mv "$OUT"',
+        '2>/dev/null ) $OUT) && mv "$OUT"',
         q_path,
     )
 

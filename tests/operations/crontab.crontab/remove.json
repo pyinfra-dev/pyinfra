@@ -19,7 +19,7 @@
     },
     "commands": [
         "crontab -l  > _tempfile_",
-        "sed -i.a-timestamp 's/.*this_is_a_command.*//' _tempfile_ && rm -f _tempfile_.a-timestamp",
+        "sed -i.a-timestamp '/.*this_is_a_command.*/d' _tempfile_ && rm -f _tempfile_.a-timestamp",
         "crontab  _tempfile_"
     ]
 }

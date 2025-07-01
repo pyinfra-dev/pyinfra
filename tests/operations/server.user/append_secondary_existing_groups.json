@@ -1,0 +1,35 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "group": "somegroup",
+        "groups": [
+            "group1", "group2"
+        ],
+        "append": true
+    },
+    "facts": {
+        "server.Os": "Linux",
+        "server.Users": {
+            "someuser": {
+                "home": "/home/someuser",
+                "group": "somegroup",
+                "groups": [
+                    "group1", "group2", "group3"
+                ]
+            }
+        },
+        "files.Directory": {
+            "path=/home/someuser": {
+                "user": "someuser",
+                "group": "somegroup"
+            },
+            "path=/home/someotheruser": {
+                "user": "someuser",
+                "group": "somegroup"
+            }
+        },
+        "server.Groups": {}
+    },
+    "commands": [
+    ]
+}
