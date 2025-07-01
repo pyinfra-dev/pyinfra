@@ -912,7 +912,7 @@ class RebootRequired(FactBase[bool]):
     On FreeBSD systems:
     - Compares running kernel version with installed kernel version
     """
-
+    @override
     def command(self) -> str:
         return """
 # Get OS type
@@ -945,6 +945,6 @@ fi
 
 echo "no_reboot_required"
 """
-
+    @override
     def process(self, output) -> bool:
         return list(output)[0].strip() == "reboot_required"
