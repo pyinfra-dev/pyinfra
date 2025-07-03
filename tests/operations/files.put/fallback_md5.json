@@ -20,7 +20,10 @@
         },
         "files.Md5File": {
             "path=/home/somefile.txt": "nowt"
-        }
+        },
+        "files.FileContents": {
+            "path=/home/somefile.txt": null 
+        },
     },
     "commands": [
         ["upload", "/somefile.txt", "/home/somefile.txt"]

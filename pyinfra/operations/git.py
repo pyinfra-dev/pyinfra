@@ -148,7 +148,7 @@ def repo(
         if branch and host.get_fact(GitBranch, repo=dest) != branch:
             git_commands.append("fetch")  # fetch to ensure we have the branch locally
             git_commands.append("checkout {0}".format(branch))
-        if branch and branch in host.get_fact(GitTag, repo=dest):
+        if branch and branch in (host.get_fact(GitTag, repo=dest) or []):
             git_commands.append("checkout {0}".format(branch))
             is_tag = True
         if pull and not is_tag:
