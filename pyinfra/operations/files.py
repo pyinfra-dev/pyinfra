@@ -83,6 +83,8 @@ def download(
     insecure=False,
     proxy: str | None = None,
     temp_dir: str | Path | None = None,
+    extra_curl_args: dict[str, str] | None = None,
+    extra_wget_args: dict[str, str] | None = None,
 ):
     """
     Download files from remote locations using ``curl`` or ``wget``.
@@ -102,6 +104,8 @@ def download(
     + insecure: disable SSL verification for the HTTP request
     + proxy: simple HTTP proxy through which we can download files, form `http://<yourproxy>:<port>`
     + temp_dir: use this custom temporary directory during the download
+    + extra_curl_args: optional dictionary with custom arguments for curl
+    + extra_wget_args: optional dictionary with custom arguments for wget
 
     **Example:**
 
@@ -163,6 +167,14 @@ def download(
 
         curl_args: list[Union[str, StringCommand]] = ["-sSLf"]
         wget_args: list[Union[str, StringCommand]] = ["-q"]
+
+        if extra_curl_args:
+            for key, value in extra_curl_args.items():
+                curl_args.append(StringCommand(key, QuoteString(value)))
+
+        if extra_wget_args:
+            for key, value in extra_wget_args.items():
+                wget_args.append(StringCommand(key, QuoteString(value)))
 
         if proxy:
             curl_args.append(f"--proxy {proxy}")
