@@ -10,7 +10,7 @@ import sys
 import traceback
 from datetime import datetime, timedelta, timezone
 from fnmatch import fnmatch
-from io import BytesIO, StringIO
+from io import StringIO
 from pathlib import Path
 from typing import IO, Any, Union
 
@@ -47,6 +47,7 @@ from pyinfra.facts.files import (
     Block,
     Directory,
     File,
+    FileContents,
     FindFiles,
     FindInFile,
     Flags,
@@ -1032,11 +1033,13 @@ def put(
     # File exists, check sum and check user/group/mode/atime/mtime if supplied
     else:
         if not _file_equal(local_sum_path, dest):
-            current_contents = BytesIO()
-
             # Generate diff when contents change
-            host.get_file(dest, current_contents)
-            current_lines = current_contents.getvalue().decode("utf-8").splitlines(keepends=True)
+            current_contents = host.get_fact(FileContents, path=dest)
+            if current_contents:
+                current_lines = [line + "\n" for line in current_contents]
+            else:
+                current_lines = []
+
             logger.info(f"\n    Will modify {click.style(dest, bold=True)}")
 
             with get_file_io(src, "r") as f:

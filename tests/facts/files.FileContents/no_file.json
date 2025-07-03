@@ -1,0 +1,6 @@
+{
+    "arg": ["test"],
+    "command": "cat test",
+    "output": null,
+    "fact": null
+}

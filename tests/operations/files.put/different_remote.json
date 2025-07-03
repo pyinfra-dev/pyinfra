@@ -24,6 +24,9 @@
         },
         "files.Sha1File": {
             "path=/home/somefile.txt": "nowt"
+        },
+        "files.FileContents": {
+            "path=/home/somefile.txt": []
         }
     },
     "commands": [

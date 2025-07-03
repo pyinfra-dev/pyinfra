@@ -657,3 +657,18 @@ class Block(FactBase):
         if output and (output[0] == f"{MISSING}{self.path}"):
             return None
         return output
+
+
+class FileContents(FactBase):
+    """
+    Returns the contents of a file as a list of lines. Works with both sha1sum and sha1. Returns
+    ``None`` if the file doest not exist.
+    """
+
+    @override
+    def command(self, path):
+        return make_formatted_string_command("cat {0}", QuoteString(path))
+
+    @override
+    def process(self, output):
+        return output
