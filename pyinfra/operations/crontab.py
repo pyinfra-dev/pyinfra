@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import shlex
 
-from pyinfra import host
-from pyinfra.api import StringCommand, operation
+from pyinfra import logger
+from pyinfra.api.command import StringCommand
+from pyinfra.api.operation import operation
 from pyinfra.api.util import try_int
+from pyinfra.context import host
 from pyinfra.facts.crontab import Crontab, CrontabFile
 from pyinfra.operations.util.files import sed_delete, sed_replace
-
-from pyinfra import logger
 
 
 @operation()
