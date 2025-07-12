@@ -1,0 +1,20 @@
+{
+    "args": ["nginx"],
+    "kwargs": {
+        "enabled": false
+    },
+    "facts": {
+        "openrc.OpenrcStatus": {
+            "runlevel=default": {
+                "nginx": true
+            }
+        },
+        "openrc.OpenrcEnabled": {
+            "runlevel=default": {
+                "nginx": false
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "service nginx is disabled"
+}
