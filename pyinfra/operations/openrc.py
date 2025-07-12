@@ -50,14 +50,14 @@ def service(
 
         if enabled is True:
             if not is_enabled:
-                yield "rc-update add {0}".format(service)
+                yield "rc-update add {0} {1}".format(service, runlevel)
                 openrc_enabled[service] = True
             else:
                 host.noop("service {0} is enabled".format(service))
 
         if enabled is False:
             if is_enabled:
-                yield "rc-update del {0}".format(service)
+                yield "rc-update del {0} {1}".format(service, runlevel)
                 openrc_enabled[service] = False
             else:
                 host.noop("service {0} is disabled".format(service))

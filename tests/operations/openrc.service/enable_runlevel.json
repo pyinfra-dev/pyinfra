@@ -1,0 +1,22 @@
+{
+    "args": ["nftables"],
+    "kwargs": {
+        "runlevel": "boot",
+        "enabled": true
+    },
+    "facts": {
+        "openrc.OpenrcStatus": {
+            "runlevel=boot": {
+                "nftables": true
+            }
+        },
+        "openrc.OpenrcEnabled": {
+            "runlevel=boot": {
+                "nftables": false
+            }
+        }
+    },
+    "commands": [
+        "rc-update add nftables boot"
+    ]
+}

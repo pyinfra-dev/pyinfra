@@ -16,6 +16,6 @@
         }
     },
     "commands": [
-        "rc-update add nginx"
+        "rc-update add nginx default"
     ]
 }
