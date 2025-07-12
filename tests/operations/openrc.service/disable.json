@@ -16,6 +16,6 @@
         }
     },
     "commands": [
-        "rc-update del nginx"
+        "rc-update del nginx default"
     ]
 }
