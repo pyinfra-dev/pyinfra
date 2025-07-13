@@ -856,7 +856,6 @@ def put(
     + assume_exists: whether to assume the local file exists
     + atime: value of atime the file should have, use ``True`` to match the local file
     + mtime: value of atime the file should have, use ``True`` to match the local file
-    + timesrc: the source of the time value if atime or mtime are ``True``
 
     ``dest``:
         If this is a directory that already exists on the remote side, the local
