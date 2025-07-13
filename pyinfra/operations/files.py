@@ -56,7 +56,14 @@ from pyinfra.facts.files import (
 from pyinfra.facts.server import Date, Which
 
 from .util import files as file_utils
-from .util.files import adjust_regex, ensure_mode_int, get_timestamp, sed_replace, unix_path_join
+from .util.files import (
+    MetadataTimeField,
+    adjust_regex,
+    ensure_mode_int,
+    get_timestamp,
+    sed_replace,
+    unix_path_join,
+)
 
 
 @operation()
@@ -778,8 +785,7 @@ def get(
             yield FileDownloadCommand(src, dest, remote_temp_filename=host.get_temp_filename(dest))
 
 
-def _canonicalize_timespec(field, local_file, timespec):
-    assert field == "atime" or field == "mtime"
+def _canonicalize_timespec(field: MetadataTimeField, local_file, timespec):
     if isinstance(timespec, datetime):
         if not timespec.tzinfo:
             # specify remote host timezone
@@ -808,7 +814,7 @@ def _canonicalize_timespec(field, local_file, timespec):
                 # verify there is a remote file matching path in timesrc
                 ref_file = host.get_fact(File, path=timespec)
                 if ref_file:
-                    if field == "atime":
+                    if field is MetadataTimeField.ATIME:
                         assert ref_file["atime"] is not None
                         return ref_file["atime"].replace(tzinfo=timezone.utc)
                     else:
@@ -978,10 +984,18 @@ def put(
 
         # do mtime before atime to ensure atime setting isn't undone by mtime setting
         if mtime:
-            yield file_utils.touch(dest, "mtime", _canonicalize_timespec("mtime", src, mtime))
+            yield file_utils.touch(
+                dest,
+                MetadataTimeField.MTIME,
+                _canonicalize_timespec(MetadataTimeField.MTIME, src, mtime),
+            )
 
         if atime:
-            yield file_utils.touch(dest, "atime", _canonicalize_timespec("atime", src, atime))
+            yield file_utils.touch(
+                dest,
+                MetadataTimeField.ATIME,
+                _canonicalize_timespec(MetadataTimeField.ATIME, src, atime),
+            )
 
     # File exists, check sum and check user/group/mode/atime/mtime if supplied
     else:
@@ -1003,10 +1017,18 @@ def put(
                 yield file_utils.chmod(dest, mode)
 
             if mtime:
-                yield file_utils.touch(dest, "mtime", _canonicalize_timespec("mtime", src, mtime))
+                yield file_utils.touch(
+                    dest,
+                    MetadataTimeField.MTIME,
+                    _canonicalize_timespec(MetadataTimeField.MTIME, src, mtime),
+                )
 
             if atime:
-                yield file_utils.touch(dest, "atime", _canonicalize_timespec("atime", src, atime))
+                yield file_utils.touch(
+                    dest,
+                    MetadataTimeField.ATIME,
+                    _canonicalize_timespec(MetadataTimeField.ATIME, src, atime),
+                )
 
         else:
             changed = False
@@ -1023,22 +1045,22 @@ def put(
 
             # Check mtime
             if mtime:
-                canonical_mtime = _canonicalize_timespec("mtime", src, mtime)
+                canonical_mtime = _canonicalize_timespec(MetadataTimeField.MTIME, src, mtime)
                 assert remote_file["mtime"] is not None
                 if _times_differ_in_s(
                     canonical_mtime, remote_file["mtime"].replace(tzinfo=timezone.utc)
                 ):
-                    yield file_utils.touch(dest, "mtime", canonical_mtime)
+                    yield file_utils.touch(dest, MetadataTimeField.MTIME, canonical_mtime)
                     changed = True
 
             # Check atime
             if atime:
-                canonical_atime = _canonicalize_timespec("atime", src, atime)
+                canonical_atime = _canonicalize_timespec(MetadataTimeField.ATIME, src, atime)
                 assert remote_file["atime"] is not None
                 if _times_differ_in_s(
                     canonical_atime, remote_file["atime"].replace(tzinfo=timezone.utc)
                 ):
-                    yield file_utils.touch(dest, "atime", canonical_atime)
+                    yield file_utils.touch(dest, MetadataTimeField.ATIME, canonical_atime)
                     changed = True
 
             if not changed:

@@ -2,8 +2,14 @@ from __future__ import annotations
 
 import re
 from datetime import datetime, timezone
+from enum import Enum
 
 from pyinfra.api import QuoteString, StringCommand
+
+
+class MetadataTimeField(Enum):
+    ATIME = "atime"
+    MTIME = "mtime"
 
 
 def unix_path_join(*parts) -> str:
@@ -120,18 +126,16 @@ def chown(
 #   aware datetimes
 def touch(
     target: str,
-    atime_or_mtime: str,
+    timefield: MetadataTimeField,
     timesrc: datetime,
     dereference=True,
 ) -> StringCommand:
     args = ["touch"]
 
-    if atime_or_mtime == "atime":
+    if timefield is MetadataTimeField.ATIME:
         args.append("-a")
-    elif atime_or_mtime == "mtime":
-        args.append("-m")
     else:
-        ValueError("Bad argument `atime_or_mtime`: {0}".format(atime_or_mtime))
+        args.append("-m")
 
     if not dereference:
         args.append("-h")
