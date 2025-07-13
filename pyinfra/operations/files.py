@@ -794,11 +794,12 @@ def _canonicalize_timespec(field: MetadataTimeField, local_file, timespec):
         else:
             return timespec
     elif isinstance(timespec, bool) and timespec:
-        lf_stat = os.stat(local_file)
-        if field == "atime":
-            return datetime.fromtimestamp(lf_stat.st_atime, tz=timezone.utc)
-        else:
-            return datetime.fromtimestamp(lf_stat.st_mtime, tz=timezone.utc)
+        lf_ts = (
+            os.stat(local_file).st_atime
+            if field is MetadataTimeField.ATIME
+            else os.stat(local_file).st_mtime
+        )
+        return datetime.fromtimestamp(lf_ts, tz=timezone.utc)
     else:
         try:
             isodatetime = datetime.fromisoformat(timespec)
