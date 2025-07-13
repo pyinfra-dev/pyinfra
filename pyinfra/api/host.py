@@ -25,7 +25,7 @@ from pyinfra.connectors.util import CommandOutput, remove_any_sudo_askpass_file
 
 from .connectors import get_execution_connector
 from .exceptions import ConnectError
-from .facts import FactBase, ShortFactBase, get_host_fact
+from .facts import FactBase, ShortFactBase, get_fact
 from .util import memoize, sha1_hash
 
 if TYPE_CHECKING:
@@ -364,7 +364,7 @@ class Host:
         """
         Get a fact for this host, reading from the cache if present.
         """
-        return get_host_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
+        return get_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
 
     # Connector proxy
     #

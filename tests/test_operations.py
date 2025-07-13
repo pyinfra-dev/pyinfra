@@ -111,7 +111,7 @@ def make_operation_tests(arg):
             op_test_name = "{0}/{1}.json".format(arg, test_name)
 
             # Create a host with this tests facts and attach to context host
-            host = create_host(facts=test_data.get("facts", {}))
+            host = create_host(self.state, facts=test_data.get("facts", {}))
 
             allowed_exception = test_data.get("exception")
 

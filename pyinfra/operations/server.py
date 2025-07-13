@@ -5,7 +5,6 @@ Linux/BSD.
 
 from __future__ import annotations
 
-import platform
 from io import StringIO
 from itertools import filterfalse, tee
 from os import path
@@ -21,6 +20,7 @@ from pyinfra.facts.server import (
     Groups,
     Home,
     Hostname,
+    Kernel,
     KernelModules,
     Locales,
     Mounts,
@@ -336,7 +336,7 @@ def mount(
         mounted_options = mounts[path]["options"]
         needed_options = set(options) - set(mounted_options)
         if needed_options:
-            if platform.system() == "FreeBSD":
+            if host.get_fact(Kernel).strip() == "FreeBSD":
                 fs_type = mounts[path]["type"]
                 device = mounts[path]["device"]
 
@@ -899,22 +899,29 @@ def user(
 
         if create_home:
             args.append("-m")
-        else:
+        elif os_type != "FreeBSD":
             args.append("-M")
 
-        if password:
+        if password and os_type != "FreeBSD":
             args.append("-p '{0}'".format(password))
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
         add_user_command = "useradd"
+
         if os_type == "FreeBSD":
             add_user_command = "pw useradd"
-            yield "{0} -n {2} {1}".format(
-                add_user_command,
-                " ".join(args),
-                user,
-            )
+
+            if password:
+                yield "echo '{3}' | {0} -n {2} -H 0 {1}".format(
+                    add_user_command, " ".join(args), user, password
+                )
+            else:
+                yield "{0} -n {2} {1}".format(
+                    add_user_command,
+                    " ".join(args),
+                    user,
+                )
         else:
             yield "{0} {1} {2}".format(
                 add_user_command,
@@ -939,16 +946,22 @@ def user(
             args.append("-g {0}".format(group))
 
         # Check secondary groups, if defined
-        if groups and set(existing_user["groups"]) != set(groups):
+        if groups:
             if append:
-                args.append("-a")
-            args.append("-G {0}".format(",".join(groups)))
+                if not set(groups).issubset(existing_user["groups"]):
+                    args.append("-a")
+                    args.append("-G {0}".format(",".join(groups)))
+            elif set(existing_user["groups"]) != set(groups):
+                args.append("-G {0}".format(",".join(groups)))
 
         if comment and existing_user["comment"] != comment:
             args.append("-c '{0}'".format(comment))
 
         if password and existing_user["password"] != password:
-            args.append("-p '{0}'".format(password))
+            if os_type == "FreeBSD":
+                yield "echo '{0}' | pw usermod -n {1} -H 0".format(password, user)
+            else:
+                args.append("-p '{0}'".format(password))
 
         # Need to mod the user?
         if args:
@@ -956,18 +969,6 @@ def user(
                 yield "pw usermod -n {1} {0}".format(" ".join(args), user)
             else:
                 yield "usermod {0} {1}".format(" ".join(args), user)
-            if comment:
-                existing_user["comment"] = comment
-            if home:
-                existing_user["home"] = home
-            if shell:
-                existing_user["shell"] = shell
-            if group:
-                existing_user["group"] = group
-            if groups:
-                existing_user["groups"] = groups
-            if password:
-                existing_user["password"] = password
 
     # Ensure home directory ownership
     if ensure_home and home:

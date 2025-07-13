@@ -32,7 +32,9 @@ from pyinfra.api.command import make_formatted_string_command
 from pyinfra.api.util import (
     get_call_location,
     get_file_io,
+    get_file_md5,
     get_file_sha1,
+    get_file_sha256,
     get_path_permissions_mode,
     get_template,
     memoize,
@@ -56,7 +58,14 @@ from pyinfra.facts.files import (
 from pyinfra.facts.server import Date, Which
 
 from .util import files as file_utils
-from .util.files import adjust_regex, ensure_mode_int, get_timestamp, sed_replace, unix_path_join
+from .util.files import (
+    adjust_regex,
+    ensure_mode_int,
+    get_timestamp,
+    sed_delete,
+    sed_replace,
+    unix_path_join,
+)
 
 
 @operation()
@@ -76,6 +85,8 @@ def download(
     insecure=False,
     proxy: str | None = None,
     temp_dir: str | Path | None = None,
+    extra_curl_args: dict[str, str] | None = None,
+    extra_wget_args: dict[str, str] | None = None,
 ):
     """
     Download files from remote locations using ``curl`` or ``wget``.
@@ -95,6 +106,8 @@ def download(
     + insecure: disable SSL verification for the HTTP request
     + proxy: simple HTTP proxy through which we can download files, form `http://<yourproxy>:<port>`
     + temp_dir: use this custom temporary directory during the download
+    + extra_curl_args: optional dictionary with custom arguments for curl
+    + extra_wget_args: optional dictionary with custom arguments for wget
 
     **Example:**
 
@@ -156,6 +169,14 @@ def download(
 
         curl_args: list[Union[str, StringCommand]] = ["-sSLf"]
         wget_args: list[Union[str, StringCommand]] = ["-q"]
+
+        if extra_curl_args:
+            for key, value in extra_curl_args.items():
+                curl_args.append(StringCommand(key, QuoteString(value)))
+
+        if extra_wget_args:
+            for key, value in extra_wget_args.items():
+                wget_args.append(StringCommand(key, QuoteString(value)))
 
         if proxy:
             curl_args.append(f"--proxy {proxy}")
@@ -427,9 +448,9 @@ def line(
         else:
             host.noop('line "{0}" exists in {1}'.format(replace or line, path))
 
-    # Line(s) exists and we want to remove them, replace with nothing
+    # Line(s) exists and we want to remove them
     elif present_lines and not present:
-        yield sed_replace(
+        yield sed_delete(
             path,
             match_line,
             "",
@@ -714,6 +735,21 @@ def _create_remote_dir(remote_filename, user, group):
         )
 
 
+def _file_equal(local_path: str | IO[Any] | None, remote_path: str) -> bool:
+    if local_path is None:
+        return False
+    for fact, get_sum in [
+        (Sha1File, get_file_sha1),
+        (Md5File, get_file_md5),
+        (Sha256File, get_file_sha256),
+    ]:
+        remote_sum = host.get_fact(fact, path=remote_path)
+        if remote_sum:
+            local_sum = get_sum(local_path)
+            return local_sum == remote_sum
+    return False
+
+
 @operation(
     # We don't (currently) cache the local state, so there's nothing we can
     # update to flag the local file as present.
@@ -770,12 +806,11 @@ def get(
 
     # Remote file exists - check if it matches our local
     else:
-        local_sum = get_file_sha1(dest)
-        remote_sum = host.get_fact(Sha1File, path=src)
-
-        # Check sha1sum, upload if needed
-        if local_sum != remote_sum:
+        # Check hash sum, download if needed
+        if not _file_equal(dest, src):
             yield FileDownloadCommand(src, dest, remote_temp_filename=host.get_temp_filename(dest))
+        else:
+            host.noop("file {0} has already been downloaded".format(dest))
 
 
 @operation()
@@ -848,7 +883,7 @@ def put(
     # Upload IO objects as-is
     if hasattr(src, "read"):
         local_file = src
-        local_sum = get_file_sha1(src)
+        local_sum_path = src
 
     # Assume string filename
     else:
@@ -860,9 +895,9 @@ def put(
         local_file = src
 
         if os.path.isfile(local_file):
-            local_sum = get_file_sha1(local_file)
+            local_sum_path = local_file
         elif assume_exists:
-            local_sum = None
+            local_sum_path = None
         else:
             raise IOError("No such file: {0}".format(local_file))
 
@@ -904,10 +939,7 @@ def put(
 
     # File exists, check sum and check user/group/mode if supplied
     else:
-        remote_sum = host.get_fact(Sha1File, path=dest)
-
-        # Check sha1sum, upload if needed
-        if local_sum != remote_sum:
+        if not _file_equal(local_sum_path, dest):
             yield FileUploadCommand(
                 local_file,
                 dest,
@@ -1623,12 +1655,12 @@ def block(
         "2>/dev/null || stat -f %Lp",
         q_path,
         ") $OUT && ",
-        '(chown $(stat -c "%U:%G"',
+        '(chown $(stat -c "%u:%g"',
         q_path,
-        "2>/dev/null) $OUT || ",
-        'chown -n $(stat -f "%u:%g"',
+        "2>/dev/null || ",
+        'stat -f "%u:%g"',
         q_path,
-        ') $OUT)  && mv "$OUT"',
+        '2>/dev/null ) $OUT) && mv "$OUT"',
         q_path,
     )
 

@@ -1,3 +1,34 @@
+# v3.4
+
+Much delayed 3.4, great collection of additions and improvements. Huge THANK YOU to all contributors as always. New features:
+
+- Add @podman connector (@Griffoen)
+
+New and updated operations/facts:
+
+- operations/docker.network: add support for aux addresses (@DonDebonair)
+- operations/files: try multiple hash functions in `files.get` + `files.put` (@mrkbac)
+- operations/files.download: add `temp_dir` argument (@scy)
+- operations/files.download: add `extra_curl_args` and `extra_wget_args` arguments (@jgelens)
+- operations/flatpak: add remote support (@Griffoen)
+- operations/git + facts/git: add `GitTag` fact and support tag checkout (@wowi42)
+- operations/server.mount: add support for FreeBSD mounts (@DtxdF)
+- facts/server: add `server.Port` fact to find process listening on port (@missytake)
+
+Operation/fact fixes:
+
+- operations/docker: handle case where no docker containers/etc exist (@wowi42)
+- operations/files + operations/crontab: fix deletion of lines when `present=False` (@bad)
+- operations/files.block: avoid use of non-POSIX `chown -n`
+- operations/files.put: fix copying of local file mode (@vram0gh2)
+- operations/server.user: fix appending of user groups (@aaron-riact)
+- facts/server.Mounts: fix whitespace and escaped character parsing (@lemmi)
+- facts/systemd: treat mounted units as active
+
+Internal/meta:
+
+- remove unnecessary setuptools runtime dependency (@karlicoss)
+
 # v3.3.1
 
 - connectors/ssh: fix extra `keep_alive` key passing through to paramiko `connect` call (@chipot)

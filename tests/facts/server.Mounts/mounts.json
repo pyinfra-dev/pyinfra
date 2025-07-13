@@ -5,6 +5,9 @@
         "33 29 8:1 / /boot rw,relatime - vfat /dev/sda1 rw,lazytime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,utf8,errors=remount-ro",
         "408 35 0:352 / /mnt/overlay/overlay,dir\\040with\\040spaces\\040and\\040\\134backslashes ro,relatime shared:27 - overlay none ro,lowerdir=lower\\054dir,upperdir=upper\\054dir,workdir=work\\054dir"
     ],
+    "facts": {
+        "server.Kernel": "Linux"
+    },
     "fact": {
         "/": {
             "device": "/dev/sdb1",

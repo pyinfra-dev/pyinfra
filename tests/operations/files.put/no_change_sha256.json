@@ -1,0 +1,28 @@
+{
+    "args": ["somefile.txt", "/home/somefile.txt"],
+    "local_files": {
+        "files": {
+            "somefile.txt": null
+        },
+        "dirs": {}
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/somefile.txt": true
+        },
+        "files.Directory": {
+            "path=/home": true
+        },
+        "files.Md5File": {
+            "path=/home/somefile.txt": null
+        },
+        "files.Sha1File": {
+            "path=/home/somefile.txt": null
+        },
+        "files.Sha256File": {
+            "path=/home/somefile.txt": "2bdc474bf9ce50fa98fe0bc0e3a1d6e8ce591174564a43e6596c4cc072fdef34"
+        }
+    },
+    "commands": [],
+    "noop_description": "file /home/somefile.txt is already uploaded"
+}

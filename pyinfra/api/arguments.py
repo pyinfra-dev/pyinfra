@@ -18,14 +18,12 @@ from typing import (
 
 from typing_extensions import TypedDict
 
-from pyinfra import context
 from pyinfra.api.exceptions import ArgumentTypeError
-from pyinfra.api.state import State
 from pyinfra.api.util import raise_if_bad_type
+from pyinfra.context import ctx_config
 
 if TYPE_CHECKING:
-    from pyinfra.api.config import Config
-    from pyinfra.api.host import Host
+    from pyinfra.api import Config, Host, State
 
 T = TypeVar("T")
 default_sentinel = object()
@@ -292,10 +290,9 @@ __argument_docs__ = {
 
 
 def pop_global_arguments(
+    state: "State",
+    host: "Host",
     kwargs: dict[str, Any],
-    state: Optional["State"] = None,
-    host: Optional["Host"] = None,
-    keys_to_check=None,
 ) -> tuple[AllArguments, list[str]]:
     """
     Pop and return operation global keyword arguments, in preferred order:
@@ -306,22 +303,17 @@ def pop_global_arguments(
     + From the config variables
     """
 
-    state = state or context.state
-    host = host or context.host
-
     config = state.config
-    if context.ctx_config.isset():
-        config = context.config
+    if ctx_config.isset():
+        config = config
 
-    meta_kwargs: dict[str, Any] = host.current_deploy_kwargs or {}  # type: ignore[assignment]
+    cdkwargs = host.current_deploy_kwargs
+    meta_kwargs: dict[str, Any] = cdkwargs or {}  # type: ignore[assignment]
 
     arguments: dict[str, Any] = {}
     found_keys: list[str] = []
 
     for key, type_ in all_global_arguments():
-        if keys_to_check and key not in keys_to_check:
-            continue
-
         argument_meta = all_argument_meta[key]
         handler = argument_meta.handler
         default: Any = argument_meta.default(config)

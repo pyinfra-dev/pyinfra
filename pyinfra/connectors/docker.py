@@ -33,29 +33,6 @@ connector_data_meta: dict[str, DataMeta] = {
 }
 
 
-def _find_start_docker_container(container_id) -> tuple[str, bool]:
-    docker_info = local.shell("docker container inspect {0}".format(container_id))
-    assert isinstance(docker_info, str)
-    docker_info = json.loads(docker_info)[0]
-    if docker_info["State"]["Running"] is False:
-        logger.info("Starting stopped container: {0}".format(container_id))
-        local.shell("docker container start {0}".format(container_id))
-        return container_id, False
-    return container_id, True
-
-
-def _start_docker_image(image_name):
-    try:
-        return local.shell(
-            "docker run -d {0} tail -f /dev/null".format(image_name),
-            splitlines=True,
-        )[
-            -1
-        ]  # last line is the container ID
-    except PyinfraError as e:
-        raise ConnectError(e.args[0])
-
-
 class DockerConnector(BaseConnector):
     """
     The Docker connector allows you to use pyinfra to create new Docker images or modify running
@@ -89,6 +66,9 @@ class DockerConnector(BaseConnector):
     writing deploys, operations or facts.
     """
 
+    # enable the use of other docker cli compatible tools like podman
+    docker_cmd = "docker"
+
     handles_execution = True
 
     data_cls = ConnectorData
@@ -111,23 +91,47 @@ class DockerConnector(BaseConnector):
             raise InventoryError("No docker base ID provided!")
 
         yield (
-            "@docker/{0}".format(name),
+            f"@docker/{name}",
             {"docker_identifier": name},
             ["@docker"],
         )
+
+    # 2 helper functions
+    def _find_start_docker_container(self, container_id) -> tuple[str, bool]:
+        docker_info = local.shell(f"{self.docker_cmd} container inspect {container_id}")
+        assert isinstance(docker_info, str)
+        docker_info = json.loads(docker_info)[0]
+        if docker_info["State"]["Running"] is False:
+            logger.info(f"Starting stopped container: {container_id}")
+            local.shell(f"{self.docker_cmd} container start {container_id}")
+            return container_id, False
+        return container_id, True
+
+    def _start_docker_image(self, image_name):
+        try:
+            return local.shell(
+                f"{self.docker_cmd} run -d {image_name} tail -f /dev/null",
+                splitlines=True,
+            )[
+                -1
+            ]  # last line is the container ID
+        except PyinfraError as e:
+            raise ConnectError(e.args[0])
 
     @override
     def connect(self) -> None:
         self.local.connect()
 
         docker_identifier = self.data["docker_identifier"]
-        with progress_spinner({"prepare docker container"}):
+        with progress_spinner({f"prepare {self.docker_cmd} container"}):
             try:
-                self.container_id, was_running = _find_start_docker_container(docker_identifier)
+                self.container_id, was_running = self._find_start_docker_container(
+                    docker_identifier
+                )
                 if was_running:
                     self.no_stop = True
             except PyinfraError:
-                self.container_id = _start_docker_image(docker_identifier)
+                self.container_id = self._start_docker_image(docker_identifier)
 
     @override
     def disconnect(self) -> None:
@@ -135,26 +139,28 @@ class DockerConnector(BaseConnector):
 
         if self.no_stop:
             logger.info(
-                "{0}docker build complete, container left running: {1}".format(
+                "{0}{1} build complete, container left running: {2}".format(
                     self.host.print_prefix,
+                    self.docker_cmd,
                     click.style(container_id, bold=True),
                 ),
             )
             return
 
-        with progress_spinner({"docker commit"}):
-            image_id = local.shell("docker commit {0}".format(container_id), splitlines=True)[-1][
+        with progress_spinner({f"{self.docker_cmd} commit"}):
+            image_id = local.shell(f"{self.docker_cmd} commit {container_id}", splitlines=True)[-1][
                 7:19
             ]  # last line is the image ID, get sha256:[XXXXXXXXXX]...
 
-        with progress_spinner({"docker rm"}):
+        with progress_spinner({f"{self.docker_cmd} rm"}):
             local.shell(
-                "docker rm -f {0}".format(container_id),
+                f"{self.docker_cmd} rm -f {container_id}",
             )
 
         logger.info(
-            "{0}docker build complete, image ID: {1}".format(
+            "{0}{1} build complete, image ID: {2}".format(
                 self.host.print_prefix,
+                self.docker_cmd,
                 click.style(image_id, bold=True),
             ),
         )
@@ -176,7 +182,7 @@ class DockerConnector(BaseConnector):
 
         docker_flags = "-it" if local_arguments.get("_get_pty") else "-i"
         docker_command = StringCommand(
-            "docker",
+            self.docker_cmd,
             "exec",
             docker_flags,
             container_id,
@@ -203,7 +209,7 @@ class DockerConnector(BaseConnector):
         **kwargs,  # ignored (sudo/etc)
     ) -> bool:
         """
-        Upload a file/IO object to the target Docker container by copying it to a
+        Upload a file/IO object to the target container by copying it to a
         temporary location and then uploading it into the container using ``docker cp``.
         """
 
@@ -221,7 +227,7 @@ class DockerConnector(BaseConnector):
                     temp_f.write(data)
 
             docker_command = StringCommand(
-                "docker",
+                self.docker_cmd,
                 "cp",
                 temp_filename,
                 f"{self.container_id}:{remote_filename}",
@@ -261,7 +267,7 @@ class DockerConnector(BaseConnector):
         **kwargs,  # ignored (sudo/etc)
     ) -> bool:
         """
-        Download a file from the target Docker container by copying it to a temporary
+        Download a file from the target container by copying it to a temporary
         location and then reading that into our final file/IO object.
         """
 
@@ -269,7 +275,7 @@ class DockerConnector(BaseConnector):
 
         try:
             docker_command = StringCommand(
-                "docker",
+                self.docker_cmd,
                 "cp",
                 f"{self.container_id}:{remote_filename}",
                 temp_filename,
@@ -303,3 +309,75 @@ class DockerConnector(BaseConnector):
             )
 
         return status
+
+
+class PodmanConnector(DockerConnector):
+    """
+    The Podman connector allows you to use pyinfra to create new Podman images or modify running
+    Podman containers.
+
+    .. note::
+
+        The Podman connector allows pyinfra to target Podman containers as inventory and is
+        unrelated to the :doc:`../operations/docker` & :doc:`../facts/docker`.
+
+    You can pass either an image name or existing container ID:
+
+    + Image - will create a new container from the image, execute operations against it, save into \
+        a new Podman image and remove the container
+    + Existing container ID - will execute operations against the running container, leaving it \
+        running
+
+    .. code:: shell
+
+        # A Podman base image must be provided
+        pyinfra @podman/alpine:3.8 ...
+
+        # pyinfra can run on multiple Docker images in parallel
+        pyinfra @podman/alpine:3.8,@podman/ubuntu:bionic ...
+
+        # Execute against a running container
+        pyinfra @podman/2beb8c15a1b1 ...
+
+    The Podman connector is great for testing pyinfra operations locally, rather than connecting to
+    a remote host over SSH each time. This gives you a fast, local-first devloop to iterate on when
+    writing deploys, operations or facts.
+    """
+
+    docker_cmd = "podman"
+
+    @override
+    @staticmethod
+    def make_names_data(name=None):
+        if not name:
+            raise InventoryError("No podman base ID provided!")
+
+        yield (
+            f"@podman/{name}",
+            {"docker_identifier": name},
+            ["@podman"],
+        )
+
+    # Duplicate function definition to swap the docstring.
+    @override
+    def put_file(
+        self,
+        filename_or_io,
+        remote_filename,
+        remote_temp_filename=None,  # ignored
+        print_output=False,
+        print_input=False,
+        **kwargs,  # ignored (sudo/etc)
+    ) -> bool:
+        """
+        Upload a file/IO object to the target container by copying it to a
+        temporary location and then uploading it into the container using ``podman cp``.
+        """
+        return super().put_file(
+            filename_or_io,
+            remote_filename,
+            remote_temp_filename,  # ignored
+            print_output,
+            print_input,
+            **kwargs,  # ignored (sudo/etc)
+        )

@@ -1,0 +1,21 @@
+{
+    "kwargs": {
+        "network": "nginx",
+        "driver": "macvlan",
+        "gateway": "192.168.1.1",
+        "ip_range": "192.168.1.192/27",
+        "subnet": "192.168.1.1/24",
+        "aux_addresses": {
+            "host": "192.168.1.223"
+        },
+        "present": true
+    },
+    "facts": {
+        "docker.DockerNetwork": {
+            "object_id=nginx": []
+        }
+    },
+    "commands": [
+        "docker network create nginx -d macvlan --gateway 192.168.1.1 --ip-range 192.168.1.192/27 --subnet 192.168.1.1/24 --aux-address 'host=192.168.1.223'"
+    ]
+}

@@ -232,7 +232,7 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
         # Configure operation
         #
         # Get the meta kwargs (globals that apply to all hosts)
-        global_arguments, global_argument_keys = pop_global_arguments(kwargs)
+        global_arguments, global_argument_keys = pop_global_arguments(state, host, kwargs)
 
         names, add_args = generate_operation_name(func, host, kwargs, global_arguments)
         op_order, op_hash = solve_operation_consistency(names, state, host)

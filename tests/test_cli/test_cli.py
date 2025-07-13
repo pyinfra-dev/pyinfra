@@ -10,10 +10,10 @@ from .util import run_cli
 class TestCliEagerFlags(TestCase):
     def test_print_help(self):
         result = run_cli("--version")
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
 
         result = run_cli("--help")
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
 
 
 class TestOperationCli(PatchSSHTestCase):
@@ -22,7 +22,7 @@ class TestOperationCli(PatchSSHTestCase):
             path.join("tests", "test_cli", "deploy", "inventories", "inventory.py"),
             "not_a_module.shell",
         )
-        assert result.exit_code == 1, result.stdout
+        assert result.exit_code == 1, result.stderr
         assert "No such module: not_a_module"
 
     def test_invalid_operation_function(self):
@@ -30,7 +30,7 @@ class TestOperationCli(PatchSSHTestCase):
             path.join("tests", "test_cli", "deploy", "inventories", "inventory.py"),
             "server.not_an_operation",
         )
-        assert result.exit_code == 1, result.stdout
+        assert result.exit_code == 1, result.stderr
         assert "No such operation: server.not_an_operation"
 
     def test_deploy_operation(self):
@@ -40,7 +40,7 @@ class TestOperationCli(PatchSSHTestCase):
             "server.shell",
             "echo hi",
         )
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
 
     def test_deploy_operation_with_all(self):
         result = run_cli(
@@ -49,7 +49,7 @@ class TestOperationCli(PatchSSHTestCase):
             "server.shell",
             "echo hi",
         )
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
 
     def test_deploy_operation_json_args(self):
         result = run_cli(
@@ -58,7 +58,7 @@ class TestOperationCli(PatchSSHTestCase):
             "server.shell",
             '[["echo hi"], {}]',
         )
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
 
 
 class TestFactCli(PatchSSHTestCase):
@@ -68,7 +68,7 @@ class TestFactCli(PatchSSHTestCase):
             "fact",
             "server.Os",
         )
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
         assert '"somehost": null' in result.stderr
 
     def test_get_fact_with_kwargs(self):
@@ -78,7 +78,7 @@ class TestFactCli(PatchSSHTestCase):
             "files.File",
             "path=.",
         )
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
         assert '"somehost": null' in result.stderr
 
 
@@ -90,7 +90,7 @@ class TestExecCli(PatchSSHTestCase):
             "--",
             "echo hi",
         )
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
 
     def test_exec_command_with_options(self):
         result = run_cli(
@@ -108,7 +108,7 @@ class TestExecCli(PatchSSHTestCase):
             "--",
             "echo hi",
         )
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
 
     def test_exec_command_with_serial(self):
         result = run_cli(
@@ -118,7 +118,7 @@ class TestExecCli(PatchSSHTestCase):
             "--",
             "echo hi",
         )
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
 
     def test_exec_command_with_no_wait(self):
         result = run_cli(
@@ -128,7 +128,7 @@ class TestExecCli(PatchSSHTestCase):
             "--",
             "echo hi",
         )
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
 
     def test_exec_command_with_debug_operations(self):
         result = run_cli(
@@ -138,7 +138,7 @@ class TestExecCli(PatchSSHTestCase):
             "--",
             "echo hi",
         )
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
 
     def test_exec_command_with_debug_facts(self):
         result = run_cli(
@@ -148,7 +148,7 @@ class TestExecCli(PatchSSHTestCase):
             "--",
             "echo hi",
         )
-        assert result.exit_code == 0, result.stdout
+        assert result.exit_code == 0, result.stderr
 
 
 class TestDirectMainExecution(PatchSSHTestCase):
