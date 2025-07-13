@@ -861,7 +861,7 @@ def put(
     + force: always upload the file, even if the remote copy matches
     + assume_exists: whether to assume the local file exists
     + atime: value of atime the file should have, use ``True`` to match the local file
-    + mtime: value of atime the file should have, use ``True`` to match the local file
+    + mtime: value of mtime the file should have, use ``True`` to match the local file
 
     ``dest``:
         If this is a directory that already exists on the remote side, the local
