@@ -132,6 +132,18 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     default=False,
     help="Run operations in serial, host by host.",
 )
+@click.option(
+    "--retry",
+    type=int,
+    default=0,
+    help="Number of times to retry failed operations.",
+)
+@click.option(
+    "--retry-delay",
+    type=int,
+    default=5,
+    help="Delay in seconds between retry attempts.",
+)
 # SSH connector args
 # TODO: remove the non-ssh-prefixed variants
 @click.option("--ssh-user", "--user", "ssh_user", help="SSH user to connect as.")
@@ -271,6 +283,8 @@ def _main(
     limit: Iterable,
     no_wait: bool,
     serial: bool,
+    retry: int,
+    retry_delay: int,
     debug: bool,
     debug_all: bool,
     debug_facts: bool,
@@ -310,6 +324,8 @@ def _main(
         shell_executable,
         fail_percent,
         yes,
+        retry,
+        retry_delay,
     )
     override_data = _set_override_data(
         data,
@@ -549,6 +565,8 @@ def _set_config(
     shell_executable,
     fail_percent,
     yes,
+    retry,
+    retry_delay,
 ):
     logger.info("--> Loading config...")
 
@@ -582,6 +600,12 @@ def _set_config(
 
     if fail_percent is not None:
         config.FAIL_PERCENT = fail_percent
+
+    if retry is not None:
+        config.RETRY = retry
+
+    if retry_delay is not None:
+        config.RETRY_DELAY = retry_delay
 
     return config
 
@@ -709,10 +733,13 @@ def _run_fact_operations(state, config, operations):
 
 def _prepare_exec_operations(state, config, operations):
     state.print_output = True
+    # Pass the retry settings from config to the shell operation
     load_func(
         state,
         server.shell,
         " ".join(operations),
+        _retries=config.RETRY,
+        _retry_delay=config.RETRY_DELAY,
     )
     return state
 
