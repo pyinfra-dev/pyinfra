@@ -19,6 +19,7 @@ from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.operation import OperationMeta, add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.state import StateOperationMeta
+from pyinfra.connectors.util import CommandOutput, OutputLine
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.operations import files, python, server
 
@@ -574,6 +575,353 @@ class TestOperationOrdering(PatchSSHTestCase):
 
         assert op_order[0] == first_op_hash
         assert op_order[1] == second_op_hash
+
+
+class TestOperationRetry(PatchSSHTestCase):
+    """
+    Tests for the retry functionality in operations.
+    """
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
+    def test_basic_retry_behavior(self, fake_run_command):
+        """
+        Test that operations retry the correct number of times on failure.
+        """
+        # Create inventory with just one host to simplify testing
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        connect_all(state)
+
+        # Add operation with retry settings
+        add_op(
+            state,
+            server.shell,
+            'echo "testing retries"',
+            _retries=2,
+            _retry_delay=0.1,  # Use small delay for tests
+        )
+
+        # Track how many times run_shell_command was called
+        call_count = 0
+
+        # First call fails, second succeeds
+        def side_effect(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                # First call fails
+                fake_channel = FakeChannel(1)
+                return (False, FakeBuffer("", fake_channel))
+            else:
+                # Second call succeeds
+                fake_channel = FakeChannel(0)
+                return (True, FakeBuffer("success", fake_channel))
+
+        fake_run_command.side_effect = side_effect
+
+        # Run the operation
+        run_ops(state)
+
+        # Check that run_shell_command was called twice (original + 1 retry)
+        self.assertEqual(call_count, 2)
+
+        # Verify results
+        somehost = inventory.get_host("somehost")
+
+        # Operation should be successful (because the retry succeeded)
+        self.assertEqual(state.results[somehost].success_ops, 1)
+        self.assertEqual(state.results[somehost].error_ops, 0)
+
+        # Get the operation hash
+        op_hash = state.get_op_order()[0]
+
+        # Check retry info in OperationMeta
+        op_meta = state.ops[somehost][op_hash].operation_meta
+        self.assertEqual(op_meta.retry_attempts, 1)
+        self.assertEqual(op_meta.max_retries, 2)
+        self.assertTrue(op_meta.was_retried)
+        self.assertTrue(op_meta.retry_succeeded)
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
+    def test_retry_max_attempts_failure(self, fake_run_command):
+        """
+        Test that operations stop retrying after max attempts and report failure.
+        """
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        connect_all(state)
+
+        # Add operation with retry settings
+        add_op(
+            state,
+            server.shell,
+            'echo "testing max retries"',
+            _retries=2,
+            _retry_delay=0.1,
+        )
+
+        # Make all attempts fail
+        fake_channel = FakeChannel(1)
+        fake_run_command.return_value = (False, FakeBuffer("", fake_channel))
+
+        # This should fail after all retries
+        with self.assertRaises(PyinfraError) as e:
+            run_ops(state)
+
+        self.assertEqual(e.exception.args[0], "No hosts remaining!")
+
+        # Check that run_shell_command was called the right number of times (1 original + 2 retries)
+        self.assertEqual(fake_run_command.call_count, 3)
+
+        somehost = inventory.get_host("somehost")
+
+        # Operation should be marked as error
+        self.assertEqual(state.results[somehost].success_ops, 0)
+        self.assertEqual(state.results[somehost].error_ops, 1)
+
+        # Get the operation hash
+        op_hash = state.get_op_order()[0]
+
+        # Check retry info
+        op_meta = state.ops[somehost][op_hash].operation_meta
+        self.assertEqual(op_meta.retry_attempts, 2)
+        self.assertEqual(op_meta.max_retries, 2)
+        self.assertTrue(op_meta.was_retried)
+        self.assertFalse(op_meta.retry_succeeded)
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
+    @patch("time.sleep")
+    def test_retry_until_condition(self, fake_sleep, fake_run_command):
+        """
+        Test that operations retry based on the retry_until callable condition.
+        """
+        # Setup inventory and state using the utility function
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        connect_all(state)
+
+        # Create a counter to track retry_until calls
+        call_counter = [0]
+
+        # Create a retry_until function that returns True (retry) for first two calls
+        def retry_until_func(output_data):
+            call_counter[0] += 1
+            return call_counter[0] < 3  # Retry twice, then stop
+
+        # Add operation with retry_until
+        add_op(
+            state,
+            server.shell,
+            'echo "test retry_until"',
+            _retries=3,
+            _retry_delay=0.1,
+            _retry_until=retry_until_func,
+        )
+
+        # Set up fake command execution - always succeed but with proper output format
+        # Use the existing FakeBuffer/FakeChannel from test utils
+
+        # First two calls trigger retry_until, third doesn't
+        def command_side_effect(*args, **kwargs):
+            # Create proper CommandOutput for the retry_until function to process
+            lines = [OutputLine("stdout", "test output"), OutputLine("stderr", "no errors")]
+            return True, CommandOutput(lines)
+
+        fake_run_command.side_effect = command_side_effect
+
+        # Run the operations
+        run_ops(state)
+
+        # The command should be called 3 times total (initial + 2 retries)
+        self.assertEqual(fake_run_command.call_count, 3)
+
+        # The retry_until function should be called 3 times
+        self.assertEqual(call_counter[0], 3)
+
+        # Get the operation metadata to check retry info
+        somehost = inventory.get_host("somehost")
+        op_hash = state.get_op_order()[0]
+        op_meta = state.ops[somehost][op_hash].operation_meta
+
+        # Check retry metadata
+        self.assertEqual(op_meta.retry_attempts, 2)
+        self.assertEqual(op_meta.max_retries, 3)
+        self.assertTrue(op_meta.was_retried)
+        self.assertTrue(op_meta.retry_succeeded)
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
+    @patch("time.sleep")
+    def test_retry_delay(self, fake_sleep, fake_run_command):
+        """
+        Test that retry delay is properly applied between attempts.
+        """
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        connect_all(state)
+
+        retry_delay = 5
+
+        # Add operation with retry settings
+        add_op(
+            state,
+            server.shell,
+            'echo "testing retry delay"',
+            _retries=2,
+            _retry_delay=retry_delay,
+        )
+
+        # Make first call fail, second succeed
+        call_count = 0
+
+        def side_effect(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                fake_channel = FakeChannel(1)
+                return (False, FakeBuffer("", fake_channel))
+            else:
+                fake_channel = FakeChannel(0)
+                return (True, FakeBuffer("", fake_channel))
+
+        fake_run_command.side_effect = side_effect
+
+        # Run the operation
+        run_ops(state)
+
+        # Check that sleep was called with the correct delay
+        fake_sleep.assert_called_once_with(retry_delay)
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
+    @patch("time.sleep")
+    def test_retry_until_with_error_handling(self, fake_sleep, fake_run_command):
+        """
+        Test that operations handle errors in retry_until functions gracefully.
+        """
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        connect_all(state)
+
+        # Create a retry_until function that raises an exception
+        def failing_retry_until_func(output_data):
+            raise ValueError("Test error in retry_until function")
+
+        # Add operation with failing retry_until
+        add_op(
+            state,
+            server.shell,
+            'echo "test failing retry_until"',
+            _retries=2,
+            _retry_delay=0.1,
+            _retry_until=failing_retry_until_func,
+        )
+
+        # Set up fake command execution
+
+        def command_side_effect(*args, **kwargs):
+            lines = [OutputLine("stdout", "test output"), OutputLine("stderr", "no errors")]
+            return True, CommandOutput(lines)
+
+        fake_run_command.side_effect = command_side_effect
+
+        # Run the operations - should succeed despite retry_until error
+        run_ops(state)
+
+        # The command should be called only once (no retries due to error)
+        self.assertEqual(fake_run_command.call_count, 1)
+
+        # Verify operation completed successfully
+        somehost = inventory.get_host("somehost")
+        self.assertEqual(state.results[somehost].success_ops, 1)
+        self.assertEqual(state.results[somehost].error_ops, 0)
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
+    @patch("time.sleep")
+    def test_retry_until_with_complex_output_parsing(self, fake_sleep, fake_run_command):
+        """
+        Test retry_until with complex output parsing scenarios.
+        """
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        connect_all(state)
+
+        # Track what output we've seen
+        outputs_seen = []
+
+        def complex_retry_until_func(output_data):
+            # Store the output data for verification
+            outputs_seen.append(output_data)
+
+            # Check for specific patterns in stdout
+            stdout_text = " ".join(output_data["stdout_lines"])
+
+            # Continue retrying until we see "READY" in stdout
+            return "READY" not in stdout_text
+
+        # Add operation with complex retry_until
+        add_op(
+            state,
+            server.shell,
+            'echo "service status check"',
+            _retries=3,
+            _retry_delay=0.1,
+            _retry_until=complex_retry_until_func,
+        )
+
+        # Set up fake command execution with changing output
+
+        call_count = 0
+
+        def command_side_effect(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+
+            if call_count == 1:
+                lines = [
+                    OutputLine("stdout", "Service starting..."),
+                    OutputLine("stderr", "Loading config"),
+                ]
+            elif call_count == 2:
+                lines = [
+                    OutputLine("stdout", "Service initializing..."),
+                    OutputLine("stderr", "Connecting to database"),
+                ]
+            else:  # call_count == 3
+                lines = [
+                    OutputLine("stdout", "Service READY"),
+                    OutputLine("stderr", "All systems operational"),
+                ]
+
+            return True, CommandOutput(lines)
+
+        fake_run_command.side_effect = command_side_effect
+
+        # Run the operations
+        run_ops(state)
+
+        # The command should be called 3 times
+        self.assertEqual(fake_run_command.call_count, 3)
+
+        # Verify retry_until was called 3 times with correct data
+        self.assertEqual(len(outputs_seen), 3)
+
+        # Check the output data structure
+        for output_data in outputs_seen:
+            self.assertIn("stdout_lines", output_data)
+            self.assertIn("stderr_lines", output_data)
+            self.assertIn("commands", output_data)
+            self.assertIn("executed_commands", output_data)
+            self.assertIn("host", output_data)
+            self.assertIn("operation", output_data)
+
+        # Verify operation metadata
+        somehost = inventory.get_host("somehost")
+        op_hash = state.get_op_order()[0]
+        op_meta = state.ops[somehost][op_hash].operation_meta
+
+        self.assertEqual(op_meta.retry_attempts, 2)
+        self.assertEqual(op_meta.max_retries, 3)
+        self.assertTrue(op_meta.was_retried)
+        self.assertTrue(op_meta.retry_succeeded)
 
 
 this_filename = path.join("tests", "test_api", "test_api_operations.py")
