@@ -49,6 +49,45 @@ Global arguments are covered in detail here: :doc:`arguments`. There is a set of
         _sudo_user="pyinfra",
     )
 
+Retry Functionality
+-------------------
+
+Operations can be configured to retry automatically on failure using retry arguments:
+
+.. code:: python
+
+    from pyinfra.operations import server
+
+    # Retry a flaky command up to 3 times with default 5 second delay
+    server.shell(
+        name="Download file with retries",
+        commands=["curl -o /tmp/file.tar.gz https://example.com/file.tar.gz"],
+        _retries=3,
+    )
+
+    # Retry with custom delay between attempts
+    server.shell(
+        name="Check service status with retries",
+        commands=["systemctl is-active myservice"],
+        _retries=2,
+        _retry_delay=10,  # 10 second delay between retries
+    )
+
+    # Use custom retry condition to control when to retry
+    def retry_on_network_error(output_data):
+        # Retry if stderr contains network-related errors
+        for line in output_data["stderr_lines"]:
+            if any(keyword in line.lower() for keyword in ["network", "timeout", "connection"]):
+                return True
+        return False
+
+    server.shell(
+        name="Network operation with conditional retry",
+        commands=["wget https://example.com/large-file.zip"],
+        _retries=5,
+        _retry_until=retry_on_network_error,
+    )
+
 
 The ``host`` Object
 -------------------
