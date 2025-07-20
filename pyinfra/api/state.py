@@ -70,11 +70,19 @@ class BaseStateCallback:
         pass
 
     @staticmethod
-    def operation_host_success(state: "State", host: "Host", op_hash):
+    def operation_host_success(state: "State", host: "Host", op_hash, retry_count: int = 0):
         pass
 
     @staticmethod
-    def operation_host_error(state: "State", host: "Host", op_hash):
+    def operation_host_error(
+        state: "State", host: "Host", op_hash, retry_count: int = 0, max_retries: int = 0
+    ):
+        pass
+
+    @staticmethod
+    def operation_host_retry(
+        state: "State", host: "Host", op_hash, retry_num: int, max_retries: int
+    ):
         pass
 
     @staticmethod
