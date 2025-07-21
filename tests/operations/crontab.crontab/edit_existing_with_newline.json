@@ -1,0 +1,26 @@
+{
+    "args": ["command_to_be"],
+    "kwargs": {
+        "month": 1,
+        "cron_name": "name of cron"
+    },
+    "facts": {
+        "crontab.Crontab": {
+            "user=None": {
+                "command_to_be": {
+                    "minute": "*",
+                    "hour": "*",
+                    "month": "*",
+                    "day_of_week": "*",
+                    "day_of_month": "*",
+                    "comments": []
+                }
+            }
+        }
+    },
+    "commands": [
+        "crontab -l  > _tempfile_",
+        "sed -i.a-timestamp 's/.*command_to_be.*/# pyinfra-name=name of cron\\n* * * 1 * command_to_be/' _tempfile_ && rm -f _tempfile_.a-timestamp",
+        "crontab  _tempfile_"
+    ]
+}
