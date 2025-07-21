@@ -157,7 +157,7 @@ def crontab(
             ),
         ):
             if not exists_name and cron_name:
-                new_crontab_line = f"{name_comment}\n{new_crontab_line}"
+                new_crontab_line = f"{name_comment}\\n{new_crontab_line}"
             edit_commands.append(
                 sed_replace(
                     temp_filename,
