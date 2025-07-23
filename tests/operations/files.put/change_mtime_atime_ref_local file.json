@@ -2,16 +2,16 @@
     "args": ["somefile.txt", "/home/somefile.txt"],
     "kwargs": {
         "atime": true,
-        "mtime": true,
+        "mtime": true
     },
     "local_files": {
         "files": {
             "somefile.txt": {
                 "mode": 644,
-                "ctime": "datetime:1997-04-21T18:06:55.982Z",
-                "atime": "datetime:2020-06-20T22:09:17",
-                "mtime": "datetime:2000-05-01T00:01:00Z"
-            },
+                "ctime": "datetime:1997-04-21T18:06:55.982+00:00",
+                "atime": "datetime:2020-06-20T22:09:17+00:00",
+                "mtime": "datetime:2000-05-01T00:01:00+00:00"
+            }
         },
         "dirs": {}
     },
@@ -32,6 +32,6 @@
     },
     "commands": [
         "touch -m -d 2000-05-01T00:01:00Z /home/somefile.txt",
-        "touch -a -d 2020-06-20T22:09:17Z /home/somefile.txt",
+        "touch -a -d 2020-06-20T22:09:17Z /home/somefile.txt"
     ]
 }
