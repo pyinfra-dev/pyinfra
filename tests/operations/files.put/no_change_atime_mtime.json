@@ -1,7 +1,7 @@
 {
     "args": ["somefile.txt", "/home/somefile.txt"],
     "kwargs": {
-        "atime": "datetime:2020-02-20T20:20:20+00:00",
+        "atime": "datetime:2020-02-20T20:20:20",
         "mtime": true
     },
     "local_files": {
@@ -9,13 +9,21 @@
             "somefile.txt": {
                 "mode": 644,
                 "ctime": "datetime:1997-04-21T18:06:55.982+00:00",
-                "atime": "datetime:2020-06-20T22:09:17",
+                "atime": "datetime:2020-06-20T22:09:17+00:00",
+                "mtime": "datetime:2000-05-01T00:01:00+00:00"
+            },
+            "/somefile.txt": {
+                "TODO": "this (dupe /somefile.txt fake file) is required for windows CI to pass, fixme",
+                "mode": 644,
+                "ctime": "datetime:1997-04-21T18:06:55.982+00:00",
+                "atime": "datetime:2020-06-20T22:09:17+00:00",
                 "mtime": "datetime:2000-05-01T00:01:00+00:00"
             }
         },
         "dirs": {}
     },
     "facts": {
+        "server.Date": "datetime:2015-01-01T00:00:00+00:00",
         "files.File": {
             "path=/home/somefile.txt": {
                 "mode": 640,
