@@ -117,6 +117,7 @@ def _remove_volume(**kwargs):
 
 def _create_network(**kwargs):
     command = []
+    aux_addresses = kwargs["aux_addresses"] if kwargs["aux_addresses"] else {}
     opts = kwargs["opts"] if kwargs["opts"] else []
     ipam_opts = kwargs["ipam_opts"] if kwargs["ipam_opts"] else []
     labels = kwargs["labels"] if kwargs["labels"] else []
@@ -145,6 +146,9 @@ def _create_network(**kwargs):
 
     if kwargs["attachable"]:
         command.append("--attachable")
+
+    for host, address in aux_addresses.items():
+        command.append("--aux-address '{0}={1}'".format(host, address))
 
     for opt in opts:
         command.append("--opt {0}".format(opt))

@@ -1,0 +1,24 @@
+{
+    "args": ["/home/somefile.txt", "somefile.txt"],
+    "local_files": {
+        "files": {
+            "somefile.txt": null
+        },
+        "dirs": {}
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/somefile.txt": {
+                "mode": 500
+            }
+        },
+        "files.Sha1File": {
+            "path=/home/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
+        },
+        "files.Md5File": {
+            "path=/home/somefile.txt": null
+        }
+    },
+    "commands": [],
+    "noop_description": "file /somefile.txt has already been downloaded"
+}

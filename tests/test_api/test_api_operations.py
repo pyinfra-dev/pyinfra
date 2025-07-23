@@ -426,32 +426,31 @@ class TestNestedOperationsApi(PatchSSHTestCase):
 
         somehost = inventory.get_host("somehost")
 
-        ctx_state.set(state)
-        ctx_host.set(somehost)
-
         pyinfra.is_cli = True
 
-        try:
-            outer_result = server.shell(commands="echo outer")
-            assert outer_result._combined_output is None
+        with ctx_state.use(state):
+            with ctx_host.use(somehost):
+                try:
+                    outer_result = server.shell(commands="echo outer")
+                    assert outer_result._combined_output is None
 
-            def callback():
-                inner_result = server.shell(commands="echo inner")
-                assert inner_result._combined_output is not None
+                    def callback():
+                        inner_result = server.shell(commands="echo inner")
+                        assert inner_result._combined_output is not None
 
-            python.call(function=callback)
+                    python.call(function=callback)
 
-            assert len(state.get_op_order()) == 2
+                    assert len(state.get_op_order()) == 2
 
-            run_ops(state)
+                    run_ops(state)
 
-            assert len(state.get_op_order()) == 3
-            assert state.results[somehost].success_ops == 3
-            assert outer_result._combined_output is not None
+                    assert len(state.get_op_order()) == 3
+                    assert state.results[somehost].success_ops == 3
+                    assert outer_result._combined_output is not None
 
-            disconnect_all(state)
-        finally:
-            pyinfra.is_cli = False
+                    disconnect_all(state)
+                finally:
+                    pyinfra.is_cli = False
 
 
 class TestOperationFailures(PatchSSHTestCase):
@@ -519,40 +518,40 @@ class TestOperationOrdering(PatchSSHTestCase):
         state.current_deploy_filename = __file__
 
         pyinfra.is_cli = True
-        ctx_state.set(state)
 
-        # Add op to both hosts
-        for name in ("anotherhost", "somehost"):
-            ctx_host.set(inventory.get_host(name))
-            server.shell("echo hi")  # note this is called twice but on *the same line*
+        with ctx_state.use(state):
+            # Add op to both hosts
+            for name in ("anotherhost", "somehost"):
+                with ctx_host.use(inventory.get_host(name)):
+                    server.shell("echo hi")  # note this is called twice but on *the same line*
 
-        # Add op to just the second host - using the context modules such that
-        # it replicates a deploy file.
-        ctx_host.set(inventory.get_host("anotherhost"))
-        first_context_hash = server.user("anotherhost_user")._hash
+            # Add op to just the second host - using the context modules such that
+            # it replicates a deploy file.
+            ctx_host.set(inventory.get_host("anotherhost"))
+            first_context_hash = server.user("anotherhost_user")._hash
 
-        # Add op to just the first host - using the context modules such that
-        # it replicates a deploy file.
-        ctx_host.set(inventory.get_host("somehost"))
-        second_context_hash = server.user("somehost_user")._hash
+            # Add op to just the first host - using the context modules such that
+            # it replicates a deploy file.
+            ctx_host.set(inventory.get_host("somehost"))
+            second_context_hash = server.user("somehost_user")._hash
 
-        ctx_state.reset()
-        ctx_host.reset()
+            ctx_state.reset()
+            ctx_host.reset()
 
-        pyinfra.is_cli = False
+            pyinfra.is_cli = False
 
-        print(state.ops)
-        # Ensure there are two ops
-        op_order = state.get_op_order()
-        assert len(op_order) == 3
+            print(state.ops)
+            # Ensure there are two ops
+            op_order = state.get_op_order()
+            assert len(op_order) == 3
 
-        # And that the two ops above were called in the expected order
-        assert op_order[1] == first_context_hash
-        assert op_order[2] == second_context_hash
+            # And that the two ops above were called in the expected order
+            assert op_order[1] == first_context_hash
+            assert op_order[2] == second_context_hash
 
-        # Ensure somehost has two ops and anotherhost only has the one
-        assert len(state.ops[inventory.get_host("somehost")]) == 2
-        assert len(state.ops[inventory.get_host("anotherhost")]) == 2
+            # Ensure somehost has two ops and anotherhost only has the one
+            assert len(state.ops[inventory.get_host("somehost")]) == 2
+            assert len(state.ops[inventory.get_host("anotherhost")]) == 2
 
     # In API mode, pyinfra *overrides* the line numbers such that whenever an
     # operation or deploy is added it is simply appended. This makes sense as

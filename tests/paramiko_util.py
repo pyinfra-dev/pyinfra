@@ -60,6 +60,9 @@ class FakeBuffer:
 
 
 class FakeSSHClient:
+    def close(self):
+        pass
+
     def load_system_host_keys(self):
         pass
 
@@ -89,6 +92,9 @@ class FakeSFTPClient:
     @classmethod
     def from_transport(cls, transport):
         return cls()
+
+    def close(self):
+        pass
 
     def putfo(self, file_io, remote_location):
         pass

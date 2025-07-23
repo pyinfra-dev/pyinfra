@@ -6,9 +6,10 @@ from unittest import TestCase
 
 from pyinfra.api import StringCommand
 from pyinfra.api.facts import ShortFactBase
+from pyinfra.context import ctx_host, ctx_state
 from pyinfra_cli.util import json_encode
 
-from .util import YamlTest, get_command_string
+from .util import FakeState, YamlTest, create_host, get_command_string
 
 # show full diff on json
 TestCase.maxDiff = None
@@ -35,7 +36,18 @@ def make_fact_tests(folder_name):
         yaml_test_dir = path.join("tests", "facts", folder_name)
         yaml_test_prefix = "test_{0}_".format(fact.name)
 
+        @classmethod
+        def setUpClass(cls):
+            # Create a global fake state that attach to context state
+            cls.state = FakeState()
+
         def yaml_test_function(self, test_name, test_data, fact=fact):
+            host = create_host(self.state, facts=test_data.get("facts", {}))
+            with ctx_state.use(self.state):
+                with ctx_host.use(host):
+                    self._test_fn(test_name, test_data, fact)
+
+        def _test_fn(self, test_name, test_data, fact):
             short_fact = None
 
             if isinstance(fact, ShortFactBase):

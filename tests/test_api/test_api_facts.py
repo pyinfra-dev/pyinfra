@@ -1,11 +1,13 @@
+from typing import cast
 from unittest.mock import MagicMock, patch
 
 from pyinfra.api import Config, State
-from pyinfra.api.arguments import CONNECTOR_ARGUMENT_KEYS, pop_global_arguments
+from pyinfra.api.arguments import CONNECTOR_ARGUMENT_KEYS, AllArguments, pop_global_arguments
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.facts import get_facts
 from pyinfra.connectors.util import CommandOutput, OutputLine
+from pyinfra.context import ctx_host, ctx_state
 from pyinfra.facts.server import Arch, Command
 
 from ..paramiko_util import PatchSSHTestCase
@@ -13,7 +15,9 @@ from ..util import make_inventory
 
 
 def _get_executor_defaults(state, host):
-    global_argument_defaults, _ = pop_global_arguments({}, state=state, host=host)
+    with ctx_state.use(state):
+        with ctx_host.use(host):
+            global_argument_defaults, _ = pop_global_arguments(state, host, {})
     return {
         key: value
         for key, value in global_argument_defaults.items()
@@ -52,13 +56,16 @@ class TestFactsApi(PatchSSHTestCase):
         anotherhost = inventory.get_host("anotherhost")
 
         connect_all(state)
-        anotherhost.current_op_global_arguments = {
-            "_sudo": True,
-            "_sudo_user": "someuser",
-            "_su_user": "someuser",
-            "_timeout": 10,
-            "_env": {"HELLO": "WORLD"},
-        }
+        anotherhost.current_op_global_arguments = cast(
+            AllArguments,
+            {
+                "_sudo": True,
+                "_sudo_user": "someuser",
+                "_su_user": "someuser",
+                "_timeout": 10,
+                "_env": {"HELLO": "WORLD"},
+            },
+        )
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
             fake_run_command.return_value = True, CommandOutput(
@@ -109,9 +116,12 @@ class TestFactsApi(PatchSSHTestCase):
 
         connect_all(state)
         anotherhost.in_op = True
-        anotherhost.current_op_global_arguments = {
-            "_ignore_errors": True,
-        }
+        anotherhost.current_op_global_arguments = cast(
+            AllArguments,
+            {
+                "_ignore_errors": True,
+            },
+        )
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
             fake_run_command.return_value = False, MagicMock()
@@ -188,9 +198,12 @@ class TestFactsApi(PatchSSHTestCase):
         anotherhost.data._sudo_user = "this-should-be-overridden"
         anotherhost.data._su_user = "this-should-be-overridden"
 
-        anotherhost.current_op_global_arguments = {
-            "_su_user": "override-su-user",
-        }
+        anotherhost.current_op_global_arguments = cast(
+            AllArguments,
+            {
+                "_su_user": "override-su-user",
+            },
+        )
 
         connect_all(state)
 

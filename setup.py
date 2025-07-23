@@ -24,7 +24,6 @@ INSTALL_REQUIRES = (
     "click>2",
     "jinja2>2,<4",
     "python-dateutil>2,<3",
-    "setuptools",
     "pywinrm",
     "typeguard",
     "distro>=1.6,<2",
@@ -38,10 +37,13 @@ INSTALL_REQUIRES = (
 )
 
 TEST_REQUIRES = (
+    # Must have click 8.2 since they changed CliRunner for tests
+    "click>=8.2",
     # Unit testing
     "pytest==8.3.5",
     "coverage==7.7.1",
     "pytest-cov==6.0.0",
+    "pytest-testinfra==10.2.2",
     # Formatting & linting
     "black==25.1.0",
     "isort==6.0.1",
@@ -55,7 +57,6 @@ TEST_REQUIRES = (
     "types-paramiko",
     "types-python-dateutil",
     "types-PyYAML",
-    "types-setuptools",
 )
 
 DOCS_REQUIRES = (
@@ -120,6 +121,7 @@ if __name__ == "__main__":
             "pyinfra.connectors": [
                 "chroot = pyinfra.connectors.chroot:ChrootConnector",
                 "docker = pyinfra.connectors.docker:DockerConnector",
+                "podman = pyinfra.connectors.docker:PodmanConnector",
                 "local = pyinfra.connectors.local:LocalConnector",
                 "ssh = pyinfra.connectors.ssh:SSHConnector",
                 "dockerssh = pyinfra.connectors.dockerssh:DockerSSHConnector",

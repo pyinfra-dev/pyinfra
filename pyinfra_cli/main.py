@@ -515,10 +515,12 @@ def _set_verbosity(state, verbosity):
         state.print_noop_info = True
 
     if verbosity > 1:
-        state.print_input = state.print_fact_input = True
+        state.print_input = True
+        state.print_fact_input = True
 
     if verbosity > 2:
-        state.print_output = state.print_fact_output = True
+        state.print_output = True
+        state.print_fact_output = True
 
     return state
 

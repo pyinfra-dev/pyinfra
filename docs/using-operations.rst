@@ -109,7 +109,7 @@ See :doc:`facts` for a full list of available facts and arguments.
     Only use immutable facts in deploy code (installed OS, Arch, etc) unless you are absolutely sure they will not change. See: `using host facts <deploy-process.html#using-host-facts>`_.
 
 Fact Errors
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 When facts fail due to an error the host will be marked as failed just as it would when an operation fails. This can be avoided by passing the ``_ignore_errors`` argument:
 
@@ -141,8 +141,8 @@ Like ``host``, there is an ``inventory`` object that can be used to access the e
     )
 
 
-Operation Changes & Output
---------------------------
+Change Detection
+----------------
 
 All operations return an operation meta object which provides information about the changes the operation *will* execute. This can be used to control other operations via the ``_if`` argument:
 
@@ -150,20 +150,14 @@ All operations return an operation meta object which provides information about 
 
     from pyinfra.operations import server
 
-    create_user = server.user(
-        name="Create user myuser",
-        user="myuser",
-    )
-
-    create_otheruser = server.user(
-        name="Create user otheruser",
-        user="otheruser",
-    )
+    create_user = server.user(...)
+    create_otheruser = server.user(...)
 
     server.shell(
         name="Bootstrap myuser",
         commands=["..."],
-        _if=create_user.did_change,
+        # Only execute this operation if the first user create executed any changes
+        _if=create_user.did_change,  # also: did_not_change, did_succeed, did_error
     )
 
     # A list can be provided to run an operation if **all** functions return true
@@ -183,10 +177,10 @@ All operations return an operation meta object which provides information about 
     server.shell(commands=["..."], _if=any_changed(create_user, create_otheruser))
     server.shell(commands=["..."], _if=all_changed(create_user, create_otheruser))
 
-Operation Output
-~~~~~~~~~~~~~~~~
+Output & Callbacks
+------------------
 
-pyinfra doesn't immediately execute operations, meaning output is not available right away. It is possible to access this output at runtime by providing a callback function using the :ref:`operations:python.call` operation.
+pyinfra doesn't immediately execute operations, meaning output is not available right away. It is possible to access this output at runtime by providing a callback function using the :ref:`operations:python.call` operation. Callback functions may also call other operations which will be immediately executed. Why/how this works `is described here <deploy-process.html#how-pyinfra-detects-changes-orders-operations>`_.
 
 .. code:: python
 
@@ -218,40 +212,17 @@ There is also the possibility to use pyinfra's logging functionality which may b
 
 
 Produces output similar to:
+
+.. code::
+
     --> Preparing Operations...
         Loading: deploy_create_users.py
         Checking output of ufw_usable: None
         [multitest.example.com] Ready: deploy_create_users.py
 
 
-
-Nested Operations
------------------
-
-Nested operations are called during the execution phase within a callback function passed into a :ref:`operations:python.call`. Calling a nested operation immediately executes it on the target machine. This is useful in complex scenarios where one operation output is required in another.
-
-Because nested operations are executed immediately, the output is always available right away:
-
-.. code:: python
-
-    from pyinfra import logger
-    from pyinfra.operations import python, server
-
-    def callback():
-        result = server.shell(
-            commands=["echo output"],
-        )
-
-        logger.info(f"Got result: {result.stdout}")
-
-    python.call(
-        name="Execute callback function",
-        function=callback,
-    )
-
-
-Include Multiple Files
-----------------------
+Include Files
+-------------
 
 Including files can be used to break out operations across multiple files. Files can be included using ``local.include``.
 

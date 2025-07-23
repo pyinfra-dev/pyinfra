@@ -13,6 +13,6 @@
         }
     },
     "commands": [
-        "cp /home/someone/something /home/someone/something.a-timestamp && OUT=\"$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)\" &&  awk 'BEGIN {{f=1; x=ARGV[2]; ARGV[2]=\"\"}}/# BEGIN PYINFRA BLOCK/ {print; print x; f=0} /# END PYINFRA BLOCK/ {print; f=1; next} f' /home/someone/something \"should be this\" > $OUT && chmod $(stat -c %a /home/someone/something 2>/dev/null || stat -f %Lp /home/someone/something ) $OUT &&  (chown $(stat -c \"%U:%G\" /home/someone/something 2>/dev/null) $OUT ||  chown -n $(stat -f \"%u:%g\" /home/someone/something ) $OUT)  && mv \"$OUT\" /home/someone/something"
+        "cp /home/someone/something /home/someone/something.a-timestamp && OUT=\"$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)\" &&  awk 'BEGIN {{f=1; x=ARGV[2]; ARGV[2]=\"\"}}/# BEGIN PYINFRA BLOCK/ {print; print x; f=0} /# END PYINFRA BLOCK/ {print; f=1; next} f' /home/someone/something \"should be this\" > $OUT && chmod $(stat -c %a /home/someone/something 2>/dev/null || stat -f %Lp /home/someone/something ) $OUT &&  (chown $(stat -c \"%u:%g\" /home/someone/something 2>/dev/null ||  stat -f \"%u:%g\" /home/someone/something 2>/dev/null ) $OUT) && mv \"$OUT\" /home/someone/something"
     ]
 }

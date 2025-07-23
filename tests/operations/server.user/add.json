@@ -18,7 +18,6 @@
         "files.Directory": {
             "path=homedir": null
         },
-        "server.Os": "Linux"
     },
     "commands": [
         "useradd -d homedir -s shellbin -g mygroup -G secondary_group,another -r --uid 1000 -c 'Full Name' -m -p '$somecryptedpassword$' someuser",

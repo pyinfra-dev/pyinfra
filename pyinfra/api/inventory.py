@@ -36,6 +36,7 @@ class Inventory:
     """
 
     state: "State"
+    groups: dict[str, list[Host]]
 
     @staticmethod
     def empty():
@@ -181,7 +182,7 @@ class Inventory:
         """
         return len(self.state.activated_hosts)
 
-    def get_host(self, name: str, default=NoHostError):
+    def get_host(self, name: str, default=NoHostError) -> Host:
         """
         Get a single host by name.
         """
@@ -192,9 +193,10 @@ class Inventory:
         if default is NoHostError:
             raise NoHostError("No such host: {0}".format(name))
 
+        # TODO: remove default here?
         return default
 
-    def get_group(self, name: str, default=NoGroupError):
+    def get_group(self, name: str, default=NoGroupError) -> list[Host]:
         """
         Get a list of hosts belonging to a group.
         """
@@ -205,6 +207,7 @@ class Inventory:
         if default is NoGroupError:
             raise NoGroupError("No such group: {0}".format(name))
 
+        # TODO: remove default here?
         return default
 
     def get_data(self):

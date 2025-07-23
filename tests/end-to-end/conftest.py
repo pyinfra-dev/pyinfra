@@ -1,7 +1,9 @@
 import re
 import subprocess
+from typing import Callable
 
 import pytest
+import testinfra.host
 
 
 class Helpers:
@@ -37,6 +39,28 @@ class Helpers:
             assert re.search(line, stderr, re.MULTILINE), 'Line "{0}" not found in output!'.format(
                 line,
             )
+
+    @staticmethod
+    def run_container_test_host(
+        container: str,
+        cmd: str,
+        callback: Callable[[testinfra.host.Host], None],
+    ) -> None:
+        stdout, _ = Helpers.run(
+            f"docker run -d {container} tail -f /dev/null",
+        )
+        cid = stdout.strip()
+
+        try:
+            Helpers.run_check_output(
+                f"pyinfra -y @docker/{cid} {cmd}",
+                expected_lines=["docker build complete"],
+            )
+
+            host = testinfra.get_host(f"docker://{cid}")
+            callback(host)
+        finally:
+            Helpers.run(f"docker rm -f {cid}")
 
 
 @pytest.fixture(scope="module")

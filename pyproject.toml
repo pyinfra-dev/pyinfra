@@ -1,3 +1,21 @@
+[project]
+name = "pyinfra"
+# delegate handling of these to setup.py/setup.cfg
+dynamic = [
+    "authors",
+    "classifiers",
+    "dependencies",
+    "description",
+    "entry-points",
+    "license",
+    "optional-dependencies",
+    "readme",
+    "requires-python",
+    "scripts",
+    "urls",
+    "version",
+]
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"

@@ -59,16 +59,22 @@ class ContextObject:
         if key in ("_container", "_base_cls"):
             return super().__setattr__(key, value)
 
-        if self._get_module() is None:
+        mod = self._get_module()
+        if mod is None:
             raise TypeError("Cannot assign to context base module")
-
-        return setattr(self._get_module(), key, value)
+        return setattr(mod, key, value)
 
     def __iter__(self):
-        return iter(self._get_module())
+        mod = self._get_module()
+        if mod is None:
+            raise ValueError("Context not set")
+        return iter(mod)
 
     def __len__(self):
-        return len(self._get_module())
+        mod = self._get_module()
+        if mod is None:
+            raise ValueError("Context not set")
+        return len(mod)
 
     @override
     def __eq__(self, other):
@@ -105,6 +111,9 @@ class ContextManager:
     @contextmanager
     def use(self, module):
         old_module = self.get()
+        if old_module is module:
+            yield  # if we're double-setting, nothing to do
+            return
         self.set(module)
         yield
         self.set(old_module)
