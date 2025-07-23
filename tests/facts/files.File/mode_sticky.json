@@ -1,6 +1,6 @@
 {
     "arg": "file.txt",
-    "command": "! (test -e file.txt || test -L file.txt ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' file.txt 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' file.txt )",
+    "command": "! (test -e file.txt || test -L file.txt ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' file.txt 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' file.txt || ls -ld file.txt )",
     "output": [
         "user=pyinfra group=pyinfra mode=-rw-r--r-T atime=0 mtime=0 ctime=0 size=8 'file.txt'"
     ],

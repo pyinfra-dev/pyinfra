@@ -1,0 +1,16 @@
+{
+    "arg": "/tmp/recent_file",
+    "command": "! (test -e /tmp/recent_file || test -L /tmp/recent_file ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /tmp/recent_file 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /tmp/recent_file || ls -ld /tmp/recent_file )",
+    "output": [
+        "-rw-r--r--    1 user     user           1024 Jun 26 14:30 /tmp/recent_file"
+    ],
+    "fact": {
+        "group": "user",
+        "user": "user",
+        "mode": 644,
+        "atime": null,
+        "mtime": "2025-06-26T14:30:00",
+        "ctime": null,
+        "size": 1024
+    }
+}
