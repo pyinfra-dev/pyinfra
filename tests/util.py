@@ -360,7 +360,7 @@ class patch_files:
         else:
             raise IOError("No such file or directory: {0}".format(pathname))
 
-        default_timeval = datetime.fromisoformat("2008-08-09T13:21:44Z").timestamp()
+        default_timeval = datetime.fromisoformat("2008-08-09T13:21:44").timestamp()
         defaults = dict(
             mode=default_mode, ino=64321, dev=64556, nlink=1, uid=1001, gid=1001, size=10240
         )
