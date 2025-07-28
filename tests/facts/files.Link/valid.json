@@ -1,6 +1,6 @@
 {
     "arg": "/home/pyinfra/my@-_link",
-    "command": "! (test -e /home/pyinfra/my@-_link || test -L /home/pyinfra/my@-_link ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /home/pyinfra/my@-_link 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /home/pyinfra/my@-_link )",
+    "command": "! (test -e /home/pyinfra/my@-_link || test -L /home/pyinfra/my@-_link ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /home/pyinfra/my@-_link 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /home/pyinfra/my@-_link || ls -ld /home/pyinfra/my@-_link )",
     "output": [
         "user=pyinfra group=pyinfra mode=lrwxrwxrwx atime=1594804774 mtime=1594804770 ctime=0 size=6 '/home/pyinfra/my@-_link' -> 'my_f@-ile.txt'"
     ],

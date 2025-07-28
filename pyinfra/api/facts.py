@@ -31,14 +31,12 @@ from pyinfra.api.util import (
     print_host_combined_output,
 )
 from pyinfra.connectors.util import CommandOutput
-from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
 from .arguments import CONNECTOR_ARGUMENT_KEYS
 
 if TYPE_CHECKING:
-    from pyinfra.api.host import Host
-    from pyinfra.api.state import State
+    from pyinfra.api import Host, State
 
 SUDO_REGEX = r"^sudo: unknown user"
 SU_REGEXES = (
@@ -121,21 +119,19 @@ def _make_command(command_attribute, host_args):
     return command_attribute
 
 
-def _handle_fact_kwargs(state, host, cls, args, kwargs):
+def _handle_fact_kwargs(state: "State", host: "Host", cls, args, kwargs):
     args = args or []
     kwargs = kwargs or {}
 
     # Start with a (shallow) copy of current operation kwargs if any
-    ctx_kwargs = (host.current_op_global_arguments or {}).copy()
+    ctx_kwargs: dict[str, Any] = (
+        cast(dict[str, Any], host.current_op_global_arguments) or {}
+    ).copy()
     # Update with the input kwargs (overrides)
     ctx_kwargs.update(kwargs)
 
     # Pop executor kwargs, pass remaining
-    global_kwargs, _ = pop_global_arguments(
-        ctx_kwargs,
-        state=state,
-        host=host,
-    )
+    global_kwargs, _ = pop_global_arguments(state, host, cast(dict[str, Any], ctx_kwargs))
 
     fact_kwargs = {key: value for key, value in kwargs.items() if key not in global_kwargs}
 
@@ -146,14 +142,12 @@ def _handle_fact_kwargs(state, host, cls, args, kwargs):
     return fact_kwargs, global_kwargs
 
 
-def get_facts(state: "State", *args, **kwargs):
-    def get_fact_with_context(state, host, *args, **kwargs):
-        with ctx_state.use(state):
-            with ctx_host.use(host):
-                return get_fact(state, host, *args, **kwargs)
+def get_facts(state, *args, **kwargs):
+    def get_host_fact(host, *args, **kwargs):
+        return get_fact(state, host, *args, **kwargs)
 
     greenlet_to_host = {
-        state.pool.spawn(get_fact_with_context, state, host, *args, **kwargs): host
+        state.pool.spawn(get_host_fact, host, *args, **kwargs): host
         for host in state.inventory.iter_active_hosts()
     }
 
@@ -311,13 +305,3 @@ def _get_fact(
         state.fail_hosts({host})
 
     return data
-
-
-def get_host_fact(
-    state: "State",
-    host: "Host",
-    cls,
-    args: Optional[Iterable] = None,
-    kwargs: Optional[dict] = None,
-) -> Any:
-    return get_fact(state, host, cls, args=args, kwargs=kwargs)

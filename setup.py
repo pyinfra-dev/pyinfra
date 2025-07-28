@@ -43,6 +43,7 @@ TEST_REQUIRES = (
     "pytest==8.3.5",
     "coverage==7.7.1",
     "pytest-cov==6.0.0",
+    "pytest-testinfra==10.2.2",
     # Formatting & linting
     "black==25.1.0",
     "isort==6.0.1",

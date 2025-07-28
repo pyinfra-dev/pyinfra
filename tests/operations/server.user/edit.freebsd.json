@@ -1,0 +1,39 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "shell": "/bin/false",
+        "group": "somegroup",
+        "groups": ["group1", "group2", "group3"],
+        "home": "/home/someotheruser",
+        "comment": "New Full Name"
+    },
+    "facts": {
+        "server.Os": "FreeBSD",
+        "server.Users": {
+            "someuser": {
+                "comment": "Full Name",
+                "home": "/home/someuser",
+                "shell": "/bin/bash",
+                "group": "nowt",
+                "groups": [
+                    "group1", "group2"
+                ],
+                "password": "$somepw$"
+            }
+        },
+        "files.Directory": {
+            "path=/home/someuser": {
+                "user": "someuser",
+                "group": "somegroup"
+            },
+            "path=/home/someotheruser": {
+                "user": "someuser",
+                "group": "somegroup"
+            }
+        },
+        "server.Groups": {}
+    },
+    "commands": [
+        "pw usermod -n someuser -d /home/someotheruser -s /bin/false -g somegroup -G group1,group2,group3 -c 'New Full Name'"
+    ]
+}

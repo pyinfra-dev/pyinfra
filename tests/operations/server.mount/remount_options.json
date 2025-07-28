@@ -4,6 +4,7 @@
         "options": ["rw", "noatime"]
     },
     "facts": {
+        "server.Kernel": "Linux",
         "server.Mounts": {
             "/data": {
                 "options": ["rw"]

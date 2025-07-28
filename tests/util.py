@@ -171,7 +171,8 @@ class FakeHost:
     current_deploy_kwargs = None
     current_deploy_data = None
 
-    def __init__(self, name, facts, data):
+    def __init__(self, state, name, facts, data):
+        self.state = state
         self.name = name
         self.fact = FakeFacts(facts)
         self.data = data
@@ -368,7 +369,7 @@ class patch_files:
                 yield recursive_return
 
 
-def create_host(name=None, facts=None, data=None):
+def create_host(state, name=None, facts=None, data=None):
     """
     Creates a FakeHost object with attached fact data.
     """
@@ -380,7 +381,7 @@ def create_host(name=None, facts=None, data=None):
     for name, fact_data in facts.items():
         real_facts[name] = fact_data
 
-    return FakeHost(name, facts=real_facts, data=data)
+    return FakeHost(state, name, facts=real_facts, data=data)
 
 
 class YamlTest(type):

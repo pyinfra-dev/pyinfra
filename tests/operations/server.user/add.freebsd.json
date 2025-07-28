@@ -1,0 +1,27 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "home": "homedir",
+        "shell": "shellbin",
+        "group": "mygroup",
+        "groups": ["secondary_group", "another"],
+        "uid" : 1000,
+        "system": true,
+        "comment": "Full Name",
+        "create_home": true,
+        "password": "$somecryptedpassword$"
+    },
+    "facts": {
+        "server.Os": "FreeBSD",
+        "server.Users": {},
+        "server.Groups": {},
+        "files.Directory": {
+            "path=homedir": null
+        }
+    },
+    "commands": [
+        "echo '$somecryptedpassword$' | pw useradd -n someuser -H 0 -d homedir -s shellbin -g mygroup -G secondary_group,another -u 1000 -c 'Full Name' -m",
+        "mkdir -p homedir",
+        "chown someuser:mygroup homedir"
+    ]
+}

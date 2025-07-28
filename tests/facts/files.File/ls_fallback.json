@@ -1,0 +1,16 @@
+{
+    "arg": "/etc/hosts",
+    "command": "! (test -e /etc/hosts || test -L /etc/hosts ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /etc/hosts 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /etc/hosts || ls -ld /etc/hosts )",
+    "output": [
+        "-rw-r--r--    1 root     root           127 Jan  1  1970 /etc/hosts"
+    ],
+    "fact": {
+        "group": "root",
+        "user": "root",
+        "mode": 644,
+        "atime": null,
+        "mtime": "1970-01-01T00:00:00",
+        "ctime": null,
+        "size": 127
+    }
+}

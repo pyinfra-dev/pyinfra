@@ -1,0 +1,23 @@
+{
+    "args": ["http://myfile"],
+    "kwargs": {
+        "dest": "/home/myfile",
+        "extra_wget_args": {
+            "--user": "abc:def"
+        }
+    },
+    "facts": {
+        "server.Date": "datetime:2015-01-01T00:00:00",
+        "files.File": {
+            "path=/home/myfile": null
+        },
+        "server.Which": {
+            "command=curl": null,
+            "command=wget": "yes"
+        }
+    },
+    "commands": [
+        "wget -q --user abc:def http://myfile -O _tempfile_ || ( rm -f _tempfile_ ; exit 1 )",
+        "mv _tempfile_ /home/myfile"
+    ]
+}

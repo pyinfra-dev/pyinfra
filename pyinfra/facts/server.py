@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-import platform
 import re
 import shutil
 from datetime import datetime
@@ -13,6 +12,7 @@ from dateutil.parser import parse as parse_date
 from distro import distro
 from typing_extensions import TypedDict, override
 
+from pyinfra import host
 from pyinfra.api import FactBase, ShortFactBase
 from pyinfra.api.util import try_int
 from pyinfra.facts import crontab
@@ -207,8 +207,10 @@ class Mounts(FactBase[Dict[str, MountsDict]]):
     default = dict
 
     @override
-    def command(self):
-        if platform.system() == "FreeBSD":
+    def command(self) -> str:
+        self._kernel = host.get_fact(Kernel)
+
+        if self._kernel.strip() == "FreeBSD":
             return "mount -p --libxo json"
         else:
             return "cat /proc/self/mountinfo"
@@ -227,7 +229,7 @@ class Mounts(FactBase[Dict[str, MountsDict]]):
             """
             return re.sub(r"\\[0-7]{3}", unescape_octal, s)
 
-        if platform.system() == "FreeBSD":
+        if self._kernel == "FreeBSD":
             full_output = "\n".join(output)
             json_output = json.loads(full_output)
             mount_fstab = json_output["mount"]["fstab"]
@@ -526,10 +528,10 @@ class Users(FactBase):
         for i in `cat /etc/passwd | cut -d: -f1`; do
             ENTRY=`grep ^$i: /etc/passwd`;
             LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | grep ^$i | tr -s ' ')`;
-            PASSWORD=`grep ^$i: /etc/shadow | cut -d: -f2`;
+            PASSWORD=`(grep ^$i: /etc/shadow || grep ^$i: /etc/master.passwd) 2> /dev/null | cut -d: -f2`;
             echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD";
         done
-    """.strip()
+    """.strip()  # noqa
 
     default = dict
 

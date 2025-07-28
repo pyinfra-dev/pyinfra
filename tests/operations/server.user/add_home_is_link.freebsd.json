@@ -1,0 +1,20 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "home": "homedir"
+    },
+    "facts": {
+        "server.Os": "FreeBSD",
+        "server.Users": {},
+        "server.Groups": {},
+        "files.Directory": {
+            "path=homedir": false
+        },
+        "files.Link": {
+            "path=homedir": true
+        }
+    },
+    "commands": [
+        "pw useradd -n someuser -d homedir"
+    ]
+}

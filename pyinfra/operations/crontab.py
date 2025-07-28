@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import shlex
 
-from pyinfra import host
-from pyinfra.api import StringCommand, operation
+from pyinfra import logger
+from pyinfra.api.command import StringCommand
+from pyinfra.api.operation import operation
 from pyinfra.api.util import try_int
+from pyinfra.context import host
 from pyinfra.facts.crontab import Crontab, CrontabFile
 from pyinfra.operations.util.files import sed_delete, sed_replace
 
@@ -121,7 +123,7 @@ def crontab(
 
     # Want the cron but it doesn't exist? Append the line
     elif present and not exists:
-        print("present", present, "exists", exists)
+        logger.debug(f"present: {present}, exists: {exists}")
         if ctb:  # append a blank line if cron entries already exist
             edit_commands.append("echo '' >> {0}".format(temp_filename))
         if cron_name:

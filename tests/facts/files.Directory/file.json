@@ -1,6 +1,6 @@
 {
     "arg": "/path/to/a/file",
-    "command": "! (test -e /path/to/a/file || test -L /path/to/a/file ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /path/to/a/file 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /path/to/a/file )",
+    "command": "! (test -e /path/to/a/file || test -L /path/to/a/file ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /path/to/a/file 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /path/to/a/file || ls -ld /path/to/a/file )",
     "output": [
         "user=pyinfra group=pyinfra mode=-rwxrwxrwx atime=1594804767 mtime=1594804767 ctime=0 size=8 '/path/to/a/file'"
     ],

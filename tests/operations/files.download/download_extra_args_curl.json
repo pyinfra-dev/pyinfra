@@ -1,0 +1,22 @@
+{
+    "args": ["http://myfile"],
+    "kwargs": {
+        "dest": "/home/myfile",
+        "extra_curl_args": {
+            "--user": "abc:def"
+        }
+    },
+    "facts": {
+        "server.Date": "datetime:2015-01-01T00:00:00",
+        "files.File": {
+            "path=/home/myfile": null
+        },
+        "server.Which": {
+            "command=curl": "yes"
+        }
+    },
+    "commands": [
+        "curl -sSLf --user abc:def http://myfile -o _tempfile_",
+        "mv _tempfile_ /home/myfile"
+    ]
+}

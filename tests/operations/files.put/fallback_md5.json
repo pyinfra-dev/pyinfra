@@ -1,0 +1,28 @@
+{
+    "args": ["somefile.txt", "/home/somefile.txt"],
+    "local_files": {
+        "files": {
+            "somefile.txt": null
+        },
+        "dirs": {}
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/somefile.txt": {
+                "mode": 500
+            }
+        },
+        "files.Directory": {
+            "path=/home": true
+        },
+        "files.Sha1File": {
+            "path=/home/somefile.txt": null
+        },
+        "files.Md5File": {
+            "path=/home/somefile.txt": "nowt"
+        }
+    },
+    "commands": [
+        ["upload", "/somefile.txt", "/home/somefile.txt"]
+    ]
+}
