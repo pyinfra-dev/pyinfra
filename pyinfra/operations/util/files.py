@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import datetime, timezone
+from enum import Enum
 from typing import Callable
 
 from pyinfra.api import QuoteString, StringCommand
+
+
+class MetadataTimeField(Enum):
+    ATIME = "atime"
+    MTIME = "mtime"
 
 
 def unix_path_join(*parts) -> str:
@@ -154,6 +160,34 @@ def chown(
         args.append("-h")
 
     return StringCommand(" ".join(args), user_group, QuoteString(target))
+
+
+# like the touch command, but only supports setting one field at a time, and expects any
+#   reference times to have been read from the reference file metadata and turned into
+#   aware datetimes
+def touch(
+    target: str,
+    timefield: MetadataTimeField,
+    timesrc: datetime,
+    dereference=True,
+) -> StringCommand:
+    args = ["touch"]
+
+    if timefield is MetadataTimeField.ATIME:
+        args.append("-a")
+    else:
+        args.append("-m")
+
+    if not dereference:
+        args.append("-h")
+
+    # don't reinvent the wheel; use isoformat()
+    timestr = timesrc.astimezone(timezone.utc).isoformat()
+    # but replace the ISO format TZ offset with "Z" for BSD
+    timestr = timestr.replace("+00:00", "Z")
+    args.extend(["-d", timestr])
+
+    return StringCommand(" ".join(args), QuoteString(target))
 
 
 def adjust_regex(line: str, escape_regex_characters: bool) -> str:
