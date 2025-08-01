@@ -53,6 +53,7 @@ class ConfigDefaults:
     IGNORE_ERRORS: bool = False
     # Shell to use to execute commands
     SHELL: str = "sh"
+    DIFF: bool = False
 
 
 config_defaults = {key: value for key, value in ConfigDefaults.__dict__.items() if key.isupper()}

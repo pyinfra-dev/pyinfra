@@ -188,5 +188,6 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 debug_all=False,
                 debug_operations=False,
                 config_filename="config.py",
+                diff=True,
             )
             assert e.args == (0,)

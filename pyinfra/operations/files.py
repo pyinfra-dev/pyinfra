@@ -1033,21 +1033,22 @@ def put(
     # File exists, check sum and check user/group/mode/atime/mtime if supplied
     else:
         if not _file_equal(local_sum_path, dest):
-            # Generate diff when contents change
-            current_contents = host.get_fact(FileContents, path=dest)
-            if current_contents:
-                current_lines = [line + "\n" for line in current_contents]
-            else:
-                current_lines = []
+            if state.config.DIFF:
+                # Generate diff when contents change
+                current_contents = host.get_fact(FileContents, path=dest)
+                if current_contents:
+                    current_lines = [line + "\n" for line in current_contents]
+                else:
+                    current_lines = []
 
-            logger.info(f"\n    Will modify {click.style(dest, bold=True)}")
+                logger.info(f"\n    Will modify {click.style(dest, bold=True)}")
 
-            with get_file_io(src, "r") as f:
-                desired_lines = f.readlines()
+                with get_file_io(src, "r") as f:
+                    desired_lines = f.readlines()
 
-            for line in generate_color_diff(current_lines, desired_lines):
-                logger.info(f"  {line}")
-            logger.info("")
+                for line in generate_color_diff(current_lines, desired_lines):
+                    logger.info(f"  {line}")
+                logger.info("")
 
             yield FileUploadCommand(
                 local_file,
