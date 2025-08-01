@@ -245,6 +245,7 @@ def network(
     + ipam_driver: IP Address Management Driver
     + subnet: Subnet in CIDR format that represents a network segment
     + scope: Control the network's scope
+    + aux_addresses: named aux addresses for the network
     + opts: Set driver specific options
     + ipam_opts: Set IPAM driver specific options
     + labels: Label list to attach in the network
