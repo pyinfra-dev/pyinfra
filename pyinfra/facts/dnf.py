@@ -16,11 +16,15 @@ class DnfRepositories(FactBase):
 
         [
             {
-                "name": "CentOS-$releasever - Apps",
-                "baseurl": "http://mirror.centos.org/$contentdir/$releasever/Apps/$basearch/os/",
-                "gpgcheck": "1",
+                "repoid": "baseos",
+                "name": "AlmaLinux $releasever - BaseOS",
+                "mirrorlist": "https://mirrors.almalinux.org/mirrorlist/$releasever/baseos",
                 "enabled": "1",
-                "gpgkey": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial",
+                "gpgcheck": "1",
+                "countme": "1",
+                "gpgkey": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-9",
+                "metadata_expire": "86400",
+                "enabled_metadata": "1"
             },
         ]
     """
