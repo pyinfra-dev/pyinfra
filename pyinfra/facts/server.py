@@ -949,5 +949,6 @@ fi
 echo "no_reboot_required"
 """
     @override
+    @override
     def process(self, output) -> bool:
         return list(output)[0].strip() == "reboot_required"
