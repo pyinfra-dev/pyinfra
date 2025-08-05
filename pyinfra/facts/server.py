@@ -915,6 +915,7 @@ class RebootRequired(FactBase[bool]):
     - Compares running kernel version with installed kernel version
     """
     @override
+    @override
     def command(self) -> str:
         return """
 # Get OS type
