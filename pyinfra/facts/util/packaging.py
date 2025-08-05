@@ -32,6 +32,7 @@ def _parse_yum_or_zypper_repositories(output):
                 repos.append(current_repo)
                 current_repo = {}
 
+            current_repo["repoid"] = line[1:-1]
             current_repo["name"] = line[1:-1]
 
         if current_repo and "=" in line:
