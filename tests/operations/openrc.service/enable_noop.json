@@ -1,7 +1,7 @@
 {
     "args": ["nginx"],
     "kwargs": {
-        "enabled": false
+        "enabled": true
     },
     "facts": {
         "openrc.OpenrcStatus": {
@@ -15,7 +15,6 @@
             }
         }
     },
-    "commands": [
-        "rc-update del nginx default"
-    ]
+    "commands": [],
+    "noop_description": "service nginx is enabled"
 }

@@ -1,0 +1,37 @@
+{
+    "args": ["somefile.txt", "/home/somefile.txt"],
+    "kwargs": {
+        "atime": false,
+        "mtime": "2022-11-17T20:45:00",
+    },
+    "local_files": {
+        "files": {
+            "somefile.txt": {
+                "mode": 644,
+                "ctime": "datetime:1997-04-21T18:06:55.982Z",
+                "atime": "datetime:2020-06-20T22:09:17",
+                "mtime": "datetime:2000-05-01T00:01:00Z"
+            },
+        },
+        "dirs": {}
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/somefile.txt": {
+                "mode": 500,
+                "atime": "datetime:2020-07-15T09:19:27",
+                "mtime": "datetime:2020-07-15T09:19:27"
+            }
+        },
+        "files.Directory": {
+            "path=/home": true
+        },
+        "files.Sha1File": {
+            "path=/home/somefile.txt": "ac2cd59a622114712b5b21081763c54bf0caacb8"
+        },
+        "server.Date": "datetime:2017-03-03T10:07:37-06:00"
+    },
+    "commands": [
+        "touch -m -d 2022-11-18T02:45:00Z /home/somefile.txt",
+    ]
+}

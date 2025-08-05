@@ -28,7 +28,7 @@ LS_COMMAND = "ls -ld"
 
 STAT_REGEX = (
     r"user=(.*) group=(.*) mode=(.*) "
-    r"atime=([0-9]*) mtime=([0-9]*) ctime=([0-9]*) "
+    r"atime=(-?[0-9]*) mtime=(-?[0-9]*) ctime=(-?[0-9]*) "
     r"size=([0-9]*) (.*)"
 )
 

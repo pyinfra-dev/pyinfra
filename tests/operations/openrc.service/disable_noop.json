@@ -11,11 +11,10 @@
         },
         "openrc.OpenrcEnabled": {
             "runlevel=default": {
-                "nginx": true
+                "nginx": false
             }
         }
     },
-    "commands": [
-        "rc-update del nginx default"
-    ]
+    "commands": [],
+    "noop_description": "service nginx is disabled"
 }

@@ -1,6 +1,8 @@
+import copy
 import json
 import os
-from datetime import datetime
+import re
+from datetime import datetime, timezone
 from inspect import getcallargs, getfullargspec
 from os import path
 from pathlib import Path
@@ -65,7 +67,7 @@ def parse_value(value):
 
     if isinstance(value, str):
         if value.startswith("datetime:"):
-            return datetime.strptime(value[9:], "%Y-%m-%dT%H:%M:%S")
+            return datetime.fromisoformat(value[9:])
         if value.startswith("path:"):
             return Path(value[5:])
         return value
@@ -309,6 +311,7 @@ class patch_files:
             patch("pyinfra.operations.files.os.path.isfile", self.isfile),
             patch("pyinfra.operations.files.os.path.isdir", self.isdir),
             patch("pyinfra.operations.files.os.walk", self.walk),
+            patch("pyinfra.operations.files.os.stat", self.stat),
             patch("pyinfra.operations.files.os.makedirs", lambda path: True),
             patch("pyinfra.api.util.stat", self.stat),
             # Builtin patches
@@ -343,14 +346,98 @@ class patch_files:
         return normalized_path in self._directories
 
     def stat(self, pathname):
+        try:
+            fileinfo = copy.deepcopy(self._files_data[pathname])
+            if not fileinfo:
+                fileinfo = dict()
+        except KeyError:
+            fileinfo = dict()
+
         if self.isfile(pathname):
-            mode_int = 33188  # 644 file
+            default_mode = 33188  # 644 file
         elif self.isdir(pathname):
-            mode_int = 16877  # 755 directory
+            default_mode = 16877  # 755 directory
         else:
             raise IOError("No such file or directory: {0}".format(pathname))
 
-        return os.stat_result((mode_int, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        default_timeval = datetime.fromisoformat("2008-08-09T13:21:44").timestamp()
+        defaults = dict(
+            mode=default_mode, ino=64321, dev=64556, nlink=1, uid=1001, gid=1001, size=10240
+        )
+
+        if "mode" in fileinfo.keys():
+            if isinstance(fileinfo["mode"], str):
+                perms = int(fileinfo["mode"], 8)
+            else:
+                # this assumes the mode was provided as an integer whose digits are really octal
+                perms = int(str(fileinfo["mode"]), 8)
+
+            if self.isfile(pathname):
+                fileinfo["mode"] = 0o100000 + perms
+            else:
+                fileinfo["mode"] = 0o40000 + perms
+        else:
+            fileinfo["mode"] = defaults["mode"]
+
+        for field in ["dev", "nlink", "uid", "gid", "size"]:
+            if field in fileinfo.keys():
+                if isinstance(fileinfo[field], str):
+                    fileinfo[field] = int(fileinfo[field])
+            else:
+                fileinfo[field] = defaults[field]
+
+        # support both "ino" and "inode" as keys for st_ino
+        if "ino" in fileinfo.keys():
+            if isinstance(fileinfo["ino"], str):
+                fileinfo["ino"] = int(fileinfo["ino"])
+        elif "inode" in fileinfo.keys():
+            if isinstance(fileinfo["inode"], str):
+                fileinfo["ino"] = int(fileinfo["inode"])
+            else:
+                fileinfo["ino"] = fileinfo["inode"]
+        else:
+            fileinfo["ino"] = defaults["ino"]
+
+        for timefield in ["atime", "mtime", "ctime"]:
+            if timefield in fileinfo.keys():
+                if not isinstance(fileinfo[timefield], (int, float, str)):
+                    raise TypeError("Parameter {0} must have type float, int or str", timefield)
+
+                if isinstance(fileinfo[timefield], str):
+                    if fileinfo[timefield].startswith("datetime:"):
+                        timestr = fileinfo[timefield].removeprefix("datetime:")
+                        dt = datetime.fromisoformat(timestr.strip())
+                        if not dt.tzinfo:
+                            dt = dt.replace(tzinfo=timezone.utc)
+                        fileinfo[timefield] = dt.timestamp()
+                    elif re.match("^-?[0-9]+$", fileinfo[timefield].strip()):
+                        fileinfo[timefield] = int(fileinfo[timefield].strip())
+                    elif re.match("^-?[0-9]+(\\.[0-9]*)?$", fileinfo[timefield].strip()):
+                        fileinfo[timefield] = float(fileinfo[timefield].strip())
+                    else:
+                        raise ValueError(
+                            "Invalid argument: {0} for {1}", fileinfo[timefield], timefield
+                        )
+            else:
+                fileinfo[timefield] = default_timeval
+
+        return os.stat_result(
+            tuple(
+                fileinfo[field]
+                for field in [
+                    "mode",
+                    "ino",
+                    "dev",
+                    "nlink",
+                    "uid",
+                    "gid",
+                    "size",
+                    "atime",
+                    "mtime",
+                    "ctime",
+                ]
+            )
+        )
 
     def walk(self, dirname, topdown=True, onerror=None, followlinks=False):
         if not self.isdir(dirname):
