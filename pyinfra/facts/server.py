@@ -661,7 +661,9 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
 
             for filename, content in parts.items():
                 with open(
-                    os.path.join(temp_etc_dir, os.path.basename(filename)), "w", encoding="utf-8"
+                    os.path.join(temp_etc_dir, os.path.basename(filename)),
+                    "w",
+                    encoding="utf-8",
                 ) as fp:
                     fp.write(content)
 
@@ -916,12 +918,10 @@ class RebootRequired(FactBase[bool]):
     """
 
     @override
-    @override
     def command(self) -> str:
         return """
 # Get OS type
 OS_TYPE=$(uname -s)
-
 if [ "$OS_TYPE" = "Linux" ]; then
     # Check if it's Alpine Linux
     if [ -f /etc/alpine-release ]; then
@@ -946,11 +946,9 @@ elif [ "$OS_TYPE" = "FreeBSD" ]; then
         exit 0
     fi
 fi
-
 echo "no_reboot_required"
 """
 
-    @override
     @override
     def process(self, output) -> bool:
         return list(output)[0].strip() == "reboot_required"
