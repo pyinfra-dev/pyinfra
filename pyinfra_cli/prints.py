@@ -149,8 +149,12 @@ def print_support_info() -> None:
     click.echo("      Machine: {0}".format(platform.uname()[4]), err=True)
     click.echo("    pyinfra: v{0}".format(__version__), err=True)
 
+    seen_reqs: set[str] = set()
     for requirement_string in sorted(requires("pyinfra") or []):
         requirement = Requirement(requirement_string)
+        if requirement.name in seen_reqs:
+            continue
+        seen_reqs.add(requirement.name)
         try:
             click.echo(
                 "      {0}: v{1}".format(requirement.name, version(requirement.name)),
