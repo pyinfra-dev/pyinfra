@@ -54,7 +54,7 @@ TEST_REQUIRES = (
     # Typing
     "mypy",
     "types-cryptography",
-    "types-paramiko",
+    "types-paramiko<4",
     "types-python-dateutil",
     "types-PyYAML",
 )
