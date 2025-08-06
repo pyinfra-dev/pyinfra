@@ -1718,7 +1718,7 @@ def block(
             path="/etc/hosts",
             content="10.0.0.1 mars-one",
             before=True,
-            regex=".*localhost",
+            line=".*localhost",
         )
 
         # have two entries in /etc/host
@@ -1727,7 +1727,7 @@ def block(
             path="/etc/hosts",
             content="10.0.0.1 mars-one\\n10.0.0.2 mars-two",
             before=True,
-            regex=".*localhost",
+            line=".*localhost",
         )
 
         # remove marked entry from /etc/hosts
@@ -1742,7 +1742,7 @@ def block(
             name="add out of date warning to web page",
             path="/var/www/html/something.html",
             content= "<p>Warning: this page is out of date.</p>",
-            regex=".*<body>.*",
+            line=".*<body>.*",
             after=True
             marker="<!-- {mark} PYINFRA BLOCK -->",
         )
