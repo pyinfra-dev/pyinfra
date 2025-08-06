@@ -153,8 +153,12 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
             elif retry_until and not did_error:
                 try:
                     output_data = {
-                        "stdout_lines": [line.line for line in all_output_lines if line.buffer_name == "stdout"],
-                        "stderr_lines": [line.line for line in all_output_lines if line.buffer_name == "stderr"],
+                        "stdout_lines": [
+                            line.line for line in all_output_lines if line.buffer_name == "stdout"
+                        ],
+                        "stderr_lines": [
+                            line.line for line in all_output_lines if line.buffer_name == "stderr"
+                        ],
                         "commands": [str(command) for command in commands],
                         "executed_commands": executed_commands,
                         "host": host.name,
@@ -162,13 +166,21 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
                     }
                     should_retry = retry_until(output_data)
                 except Exception as e:
-                    host.log_styled(f"Error in retry_until function: {format_exception(e)}", fg="red", log_func=logger.warning)
+                    host.log_styled(
+                        f"Error in retry_until function: {format_exception(e)}",
+                        fg="red",
+                        log_func=logger.warning,
+                    )
 
         if should_retry:
             retry_attempt += 1
             state.trigger_callbacks("operation_host_retry", host, op_hash, retry_attempt, retries)
             op_name = ", ".join(state.get_op_meta(op_hash).names) or "Operation"
-            host.log_styled(f"Retrying {op_name} (attempt {retry_attempt}/{retries}) after {retry_delay}s...", fg="yellow", log_func=logger.info)
+            host.log_styled(
+                f"Retrying {op_name} (attempt {retry_attempt}/{retries}) after {retry_delay}s...",
+                fg="yellow",
+                log_func=logger.info,
+            )
             time.sleep(retry_delay)
             continue
 
@@ -201,7 +213,9 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
 
         _command_description = f"executed {executed_commands} commands"
         if retry_attempt > 0:
-            _command_description = f"{_command_description} (failed after {retry_attempt}/{retries} retries)"
+            _command_description = (
+                f"{_command_description} (failed after {retry_attempt}/{retries} retries)"
+            )
 
         log_error_or_warning(host, ignore_errors, _command_description, continue_on_error)
 
