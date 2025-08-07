@@ -1789,6 +1789,7 @@ def block(
     )
 
     current = host.get_fact(Block, path=path, marker=marker, begin=begin, end=end)
+    # None means file didn't exist, empty list means marker was not found
     cmd = None
     if present:
         if not content:
@@ -1830,7 +1831,7 @@ def block(
             prog = (
                 'awk \'BEGIN {x=ARGV[2]; ARGV[2]=""} '
                 f"{print_after} f!=1 && /{regex}/ {{ print x; f=1}} "
-                f"END {{if (f==0) print ARGV[2] }} {print_before}'"
+                f"END {{if (f==0) print x }} {print_before}'"
             )
             cmd = StringCommand(
                 out_prep,
