@@ -1739,6 +1739,9 @@ def block(
         will either be  prepended to the file (if both ``before`` and ``after``
         are ``True``) or appended to the file (if both are ``False``).
 
+    If the file is created, it is created with the default umask; otherwise the umask is preserved
+    as is the owner.
+
     Removal ignores ``content`` and ``line``
 
     Preventing shell expansion works by wrapping the content in '`' before passing to `awk`.
@@ -1797,11 +1800,39 @@ def block(
     mark_1 = (marker or MARKER_DEFAULT).format(mark=begin or MARKER_BEGIN_DEFAULT)
     mark_2 = (marker or MARKER_DEFAULT).format(mark=end or MARKER_END_DEFAULT)
 
+    current = host.get_fact(Block, path=path, marker=marker, begin=begin, end=end)
+    cmd = None
+
     # standard awk doesn't have an "in-place edit" option so we write to a tempfile and
     # if edits were successful move to dest i.e. we do: <out_prep> ... do some work ... <real_out>
     q_path = QuoteString(path)
-    out_prep = StringCommand('OUT="$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)" && ')
-    if backup:
+    mode_get = (
+        ""
+        if current is None
+        else (
+            'MODE="$(stat -c %a',
+            q_path,
+            "2>/dev/null || stat -f %Lp",
+            q_path,
+            '2>/dev/null)" &&',
+        )
+    )
+    out_prep = StringCommand(
+        'OUT="$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)" && ',
+        *mode_get,
+        'OWNER="$(stat -c "%u:%g"',
+        q_path,
+        '2>/dev/null || stat -f "%u:%g"',
+        q_path,
+        '2>/dev/null || echo $(id -un):$(id -gn))" &&',
+    )
+
+    mode_change = "" if current is None else ' && chmod "$MODE"'
+    real_out = StringCommand(
+        ' && mv "$OUT"', q_path, ' && chown "$OWNER"', q_path, mode_change, q_path
+    )
+
+    if backup and (current is not None):  # can't back up something that doesn't exist
         out_prep = StringCommand(
             "cp",
             q_path,
@@ -1809,20 +1840,6 @@ def block(
             "&&",
             out_prep,
         )
-    real_out = StringCommand(
-        "chmod $(stat -c %a",
-        q_path,
-        "2>/dev/null || stat -f %Lp",
-        q_path,
-        ") $OUT && ",
-        '(chown $(stat -c "%u:%g"',
-        q_path,
-        "2>/dev/null || ",
-        'stat -f "%u:%g"',
-        q_path,
-        '2>/dev/null ) $OUT) && mv "$OUT"',
-        q_path,
-    )
 
     current = host.get_fact(Block, path=path, marker=marker, begin=begin, end=end)
     # None means file didn't exist, empty list means marker was not found
@@ -1842,25 +1859,36 @@ def block(
         if isinstance(content, str):
             # convert string to list of lines
             content = content.split("\n")
-        if try_prevent_shell_expansion and any("'" in line for line in content):
-            logger.warning("content contains single quotes, shell expansion prevention may fail")
 
         the_block = "\n".join([mark_1, *content, mark_2])
+        if try_prevent_shell_expansion:
+            the_block = f"'{the_block}'"
+            if any("'" in line for line in content):
+                logger.warning(
+                    "content contains single quotes, shell expansion prevention may fail"
+                )
+        else:
+            the_block = f'"{the_block}"'
 
         if (current is None) or ((current == []) and (before == after)):
-            # a) no file or b) file but no markers and we're adding at start or end. Both use 'cat'
-            redirect = ">" if (current is None) else ">>"
-            stdin = "- " if ((current == []) and before) else ""
-            # here = hex(random.randint(0, 2147483647))
+            # a) no file or b) file but no markers and we're adding at start or end.
+            # here = hex(random.randint(0, 2147483647)) # not used as not testable
             here = "PYINFRAHERE"
+            original = q_path if current is not None else QuoteString("/dev/null")
             cmd = StringCommand(
-                f"cat {stdin}{redirect}",
-                q_path,
-                f"<<{here}" if not try_prevent_shell_expansion else f"<<'{here}'",
-                f"\n{the_block}\n{here}",
+                out_prep,
+                "(",
+                "awk '{{print}}'",
+                original if not before else " - ",
+                original if before else " - ",
+                '> "$OUT"',
+                f"<<{here}\n{the_block[1:-1]}\n{here}\n",
+                ")",
+                real_out,
             )
         elif current == []:  # markers not found and have a pattern to match (not start or end)
-            assert isinstance(line, str)
+            if not isinstance(line, str):
+                raise OperationTypeError("'line' must be a regex or a string")
             regex = adjust_regex(line, escape_regex_characters)
             print_before = "{ print }" if before else ""
             print_after = "{ print }" if after else ""
@@ -1873,13 +1901,13 @@ def block(
                 out_prep,
                 prog,
                 q_path,
-                f'"{the_block}"' if not try_prevent_shell_expansion else f"'{the_block}'",
-                "> $OUT &&",
+                the_block,
+                '> "$OUT"',
                 real_out,
             )
         else:
             if (len(current) != len(content)) or (
-                not all(lines[0] == lines[1] for lines in zip(content, current))
+                not all(lines[0] == lines[1] for lines in zip(content, current, strict=True))
             ):  # marked_block found but text is different
                 prog = (
                     'awk \'BEGIN {{f=1; x=ARGV[2]; ARGV[2]=""}}'
@@ -1894,7 +1922,7 @@ def block(
                         if not try_prevent_shell_expansion
                         else "'" + "\n".join(content) + "'"
                     ),
-                    "> $OUT &&",
+                    '> "$OUT"',
                     real_out,
                 )
             else:
@@ -1911,4 +1939,4 @@ def block(
             host.noop("no remove required: markers not found")
         else:
             cmd = StringCommand(f"awk '/{mark_1}/,/{mark_2}/ {{next}} 1'")
-            yield StringCommand(out_prep, cmd, q_path, "> $OUT &&", real_out)
+            yield StringCommand(out_prep, cmd, q_path, "> $OUT", real_out)
