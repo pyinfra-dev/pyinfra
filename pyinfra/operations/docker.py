@@ -4,6 +4,8 @@ the view of the current inventory host. See the :doc:`../connectors/docker` to u
 as inventory directly.
 """
 
+from __future__ import annotations
+
 from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.docker import DockerContainer, DockerNetwork, DockerPlugin, DockerVolume
@@ -13,16 +15,16 @@ from .util.docker import ContainerSpec, handle_docker
 
 @operation()
 def container(
-        container,
-        image="",
-        ports=None,
-        networks=None,
-        volumes=None,
-        env_vars=None,
-        pull_always=False,
-        present=True,
-        force=False,
-        start=True,
+    container: str,
+    image: str = "",
+    ports: list[str] | None = None,
+    networks: list[str] | None = None,
+    volumes: list[str] | None = None,
+    env_vars: list[str] | None = None,
+    pull_always: bool = False,
+    present: bool = True,
+    force: bool = False,
+    start: bool = True,
 ):
     """
     Manage Docker containers
@@ -168,7 +170,7 @@ def image(image, present=True):
 
 
 @operation()
-def volume(volume, driver="", labels=None, present=True):
+def volume(volume: str, driver: str = "", labels: list[str] | None = None, present: bool = True):
     """
     Manage Docker volumes
 
@@ -220,20 +222,20 @@ def volume(volume, driver="", labels=None, present=True):
 
 @operation()
 def network(
-        network,
-        driver="",
-        gateway="",
-        ip_range="",
-        ipam_driver="",
-        subnet="",
-        scope="",
-        aux_addresses=None,
-        opts=None,
-        ipam_opts=None,
-        labels=None,
-        ingress=False,
-        attachable=False,
-        present=True,
+    network: str,
+    driver: str = "",
+    gateway: str = "",
+    ip_range: str = "",
+    ipam_driver: str = "",
+    subnet: str = "",
+    scope: str = "",
+    aux_addresses: dict[str, str] | None = None,
+    opts: list[str] | None = None,
+    ipam_opts: list[str] | None = None,
+    labels: list[str] | None = None,
+    ingress: bool = False,
+    attachable: bool = False,
+    present: bool = True,
 ):
     """
     Manage docker networks
@@ -304,9 +306,9 @@ def network(
 
 @operation(is_idempotent=False)
 def prune(
-    all=False,
-    volumes=False,
-    filter="",
+    all: bool = False,
+    volumes: bool = False,
+    filter: str = "",
 ):
     """
     Execute a docker system prune.

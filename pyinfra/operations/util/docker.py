@@ -203,7 +203,8 @@ def _set_plugin_options(**kwargs):
         command.append("{0}={1}".format(option, value))
     return " ".join(command)
 
-def handle_docker(resource, command, **kwargs):
+
+def handle_docker(resource: str, command: str, **kwargs):
     container_commands = {
         "create": _create_container,
         "remove": _remove_container,
