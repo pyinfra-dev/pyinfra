@@ -3,19 +3,77 @@ from __future__ import annotations
 import shlex
 from collections import defaultdict
 from io import StringIO
-from typing import Callable
+from typing import Callable, NamedTuple, cast
 from urllib.parse import urlparse
 
-from pyinfra.api import Host, State
+from packaging.requirements import InvalidRequirement, Requirement
+
+from pyinfra import logger
+from pyinfra.api import Host, OperationValueError, State
 from pyinfra.facts.files import File
 from pyinfra.facts.rpm import RpmPackage
 from pyinfra.operations import files
 
 
-def _package_name(package: list[str] | str) -> str:
-    if isinstance(package, list):
-        return package[0]
-    return package
+class PkgInfo(NamedTuple):
+    name: str
+    version: str
+    operator: str
+    url: str
+    """
+    The key packaging information needed: version, operator and url are optional.
+    """
+
+    @property
+    def lkup_name(self) -> str | list[str]:
+        return self.name if self.version == "" else [self.name, self.version]
+
+    @property
+    def has_version(self) -> bool:
+        return self.version != ""
+
+    @property
+    def inst_vers(self) -> str:
+        return (
+            self.url
+            if self.url != ""
+            else (
+                self.operator.join([self.name, self.version]) if self.version != "" else self.name
+            )
+        )
+
+    @classmethod
+    def from_possible_pair(cls, s: str, join: str | None) -> PkgInfo:
+        if join is not None:
+            pieces = s.rsplit(join, 1)
+            return cls(pieces[0], pieces[1] if len(pieces) > 1 else "", join, "")
+        else:
+            return cls(s, "", "", "")
+
+
+def pkg_info_using_pep_508(s: str) -> PkgInfo | None:
+    """
+    Separate out the useful parts (name, url, opreator, version) of a PEP-508 dependency.
+    Note: only one specifier is allowed.
+    PEP-0426 states that Python packages should be compared using lowercase, so name is lower-cased
+    """
+    result = None
+    try:
+        reqt = Requirement(s)
+    except InvalidRequirement as e:
+        logger.warning(f"ignoring invalid requirement: {e}")
+    else:
+        if (len(reqt.specifier) > 0) and ((len(reqt.specifier) > 1)):
+            logger.warning(f"ignoring invalid/unsupported requirement: {s}")
+        else:
+            spec = next(iter(reqt.specifier), None)
+            result = PkgInfo(
+                reqt.name.lower(),
+                spec.version if spec is not None else "",
+                spec.operator if spec is not None else "",
+                reqt.url or "",
+            )
+    return result
 
 
 def _has_package(
@@ -57,7 +115,7 @@ def _has_package(
 
 def ensure_packages(
     host: Host,
-    packages_to_ensure: str | list[str] | None,
+    packages_to_ensure: str | list[str] | list[PkgInfo] | None,
     current_packages: dict[str, set[str]],
     present: bool,
     install_command: str,
@@ -70,22 +128,22 @@ def ensure_packages(
     """
     Handles this common scenario:
 
-    + We have a list of packages(/versions) to ensure
+    + We have a list of packages(/versions/urls) to ensure
     + We have a map of existing package -> versions
     + We have the common command bits (install, uninstall, version "joiner")
     + Outputs commands to ensure our desired packages/versions
     + Optionally upgrades packages w/o specified version when present
 
     Args:
-        packages_to_ensure (list): list of packages or package/versions
-        current_packages (fact): fact returning dict of package names -> version
+        packages_to_ensure (list): list of packages or package/versions or (package, version, url)s
+        current_packages (fact): dict of package names -> version
         present (bool): whether packages should exist or not
         install_command (str): command to prefix to list of packages to install
         uninstall_command (str): as above for uninstalling packages
         latest (bool): whether to upgrade installed packages when present
         upgrade_command (str): as above for upgrading
         version_join (str): the package manager specific "joiner", ie ``=`` for \
-            ``<apt_pkg>=<version>``
+            ``<apt_pkg>=<version>``.  Not allowed if (pkg, ver, url) tuples are provided.
         expand_package_fact: fact returning packages providing a capability \
             (ie ``yum whatprovides``)
     """
@@ -95,12 +153,15 @@ def ensure_packages(
     if isinstance(packages_to_ensure, str):
         packages_to_ensure = [packages_to_ensure]
 
-    packages: list[str | list[str]] = packages_to_ensure  # type: ignore[assignment]
-
-    if version_join:
+    packages: list[PkgInfo] = []
+    if isinstance(packages_to_ensure[0], PkgInfo):
+        packages = cast(list[PkgInfo], packages_to_ensure)
+        if version_join is not None:
+            raise OperationValueError("cannot specify version_join when providing PkgInfo")
+    else:
         packages = [
-            package[0] if len(package) == 1 else package
-            for package in [package.rsplit(version_join, 1) for package in packages]  # type: ignore[union-attr] # noqa
+            PkgInfo.from_possible_pair(package, version_join)
+            for package in cast(list[str], packages_to_ensure)
         ]
 
     diff_packages = []
@@ -111,65 +172,41 @@ def ensure_packages(
     if present is True:
         for package in packages:
             has_package, expanded_packages = _has_package(
-                package,
-                current_packages,
-                expand_package_fact,
+                package.lkup_name, current_packages, expand_package_fact
             )
 
             if not has_package:
-                diff_packages.append(package)
-                diff_expanded_packages[_package_name(package)] = expanded_packages
+                diff_packages.append(package.inst_vers)
+                diff_expanded_packages[package.name] = expanded_packages
             else:
                 # Present packages w/o version specified - for upgrade if latest
-                if isinstance(package, str):
-                    upgrade_packages.append(package)
+                if not package.has_version:  # don't try to upgrade if a specific version requested
+                    upgrade_packages.append(package.inst_vers)
 
                 if not latest:
-                    pkg_name = _package_name(package)
-                    if pkg_name in current_packages:
-                        host.noop(
-                            "package {0} is installed ({1})".format(
-                                package,
-                                ", ".join(current_packages[pkg_name]),
-                            ),
-                        )
+                    if (pkg := package.name) in current_packages:
+                        host.noop(f"package {pkg} is installed ({','.join(current_packages[pkg])})")
                     else:
-                        host.noop("package {0} is installed".format(package))
+                        host.noop(f"package {package.name} is installed")
 
     if present is False:
         for package in packages:
-            # String version, just check if existing
             has_package, expanded_packages = _has_package(
-                package,
-                current_packages,
-                expand_package_fact,
-                match_any=True,
+                package.lkup_name, current_packages, expand_package_fact, match_any=True
             )
 
             if has_package:
-                diff_packages.append(package)
-                diff_expanded_packages[_package_name(package)] = expanded_packages
+                diff_packages.append(package.inst_vers)
+                diff_expanded_packages[package.name] = expanded_packages
             else:
-                host.noop("package {0} is not installed".format(package))
+                host.noop(f"package {package.name} is not installed")
 
     if diff_packages:
         command = install_command if present else uninstall_command
-
-        joined_packages = [
-            version_join.join(package) if isinstance(package, list) else package  # type: ignore[union-attr] # noqa
-            for package in diff_packages
-        ]
-
-        yield "{0} {1}".format(
-            command,
-            " ".join([shlex.quote(pkg) for pkg in joined_packages]),
-        )
+        yield f"{command} {' '.join([shlex.quote(pkg) for pkg in diff_packages])}"
 
     if latest and upgrade_command and upgrade_packages:
-        yield "{0} {1}".format(
-            upgrade_command,
-            " ".join([shlex.quote(pkg) for pkg in upgrade_packages]),
-        )
+        yield f"{upgrade_command} {' '.join([shlex.quote(pkg) for pkg in upgrade_packages])}"
 
 
 def ensure_rpm(state: State, host: Host, source: str, present: bool, package_manager_command: str):
