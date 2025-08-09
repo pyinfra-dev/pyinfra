@@ -17,7 +17,7 @@ def packages(
     packages: Optional[Union[str, list[str]]] = None,
     present=True,
     latest=False,
-    extra_args: str | None = None,
+    extra_args: Optional[str] = None,
 ):
     """
     Install/remove/update pipx packages.
