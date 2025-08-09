@@ -47,24 +47,29 @@ class PkgInfo(NamedTuple):
         if join is not None:
             pieces = s.rsplit(join, 1)
             return cls(pieces[0], pieces[1] if len(pieces) > 1 else "", join, "")
-        else:
-            return cls(s, "", "", "")
+
+        return cls(s, "", "", "")
 
 
 def pkg_info_using_pep_508(s: str) -> PkgInfo | None:
     """
-    Separate out the useful parts (name, url, opreator, version) of a PEP-508 dependency.
+    Separate out the useful parts (name, url, operator, version) of a PEP-508 dependency.
     Note: only one specifier is allowed.
     PEP-0426 states that Python packages should be compared using lowercase, so name is lower-cased
+    For backwards compatibility, invalid requirements are assumed to be package names with a
+    warning that this will change in the next major release
     """
-    result = None
+    result = PkgInfo(s, "", "", "")
+    pep_508 = "PEP 508 non-compliant "
+    treatment = "requirement treated as package name"
+    will_change = "4.x will make this an error"
     try:
         reqt = Requirement(s)
     except InvalidRequirement as e:
-        logger.warning(f"ignoring invalid requirement: {e}")
+        logger.warning(f"{pep_508} :{e}\n{will_change}")
     else:
-        if (len(reqt.specifier) > 0) and ((len(reqt.specifier) > 1)):
-            logger.warning(f"ignoring invalid/unsupported requirement: {s}")
+        if (len(reqt.specifier) > 0) and (len(reqt.specifier) > 1):
+            logger.warning(f"{pep_508}/unsupported specifier ({s}) {treatment}\n{will_change}")
         else:
             spec = next(iter(reqt.specifier), None)
             result = PkgInfo(
@@ -120,7 +125,7 @@ def ensure_packages(
     present: bool,
     install_command: str,
     uninstall_command: str,
-    latest=False,
+    latest: bool = False,
     upgrade_command: str | None = None,
     version_join: str | None = None,
     expand_package_fact: Callable[[str], list[str | list[str]]] | None = None,
@@ -135,8 +140,8 @@ def ensure_packages(
     + Optionally upgrades packages w/o specified version when present
 
     Args:
-        packages_to_ensure (list): list of packages or package/versions or (package, version, url)s
-        current_packages (fact): dict of package names -> version
+        packages_to_ensure (list): list of packages or package/versions or PkgInfo's
+        current_packages (dict): dict of package names -> version
         present (bool): whether packages should exist or not
         install_command (str): command to prefix to list of packages to install
         uninstall_command (str): as above for uninstalling packages
@@ -155,13 +160,13 @@ def ensure_packages(
 
     packages: list[PkgInfo] = []
     if isinstance(packages_to_ensure[0], PkgInfo):
-        packages = cast(list[PkgInfo], packages_to_ensure)
+        packages = cast("list[PkgInfo]", packages_to_ensure)
         if version_join is not None:
-            raise OperationValueError("cannot specify version_join when providing PkgInfo")
+            raise OperationValueError("cannot specify version_join and provide list[PkgInfo]")
     else:
         packages = [
             PkgInfo.from_possible_pair(package, version_join)
-            for package in cast(list[str], packages_to_ensure)
+            for package in cast("list[str]", packages_to_ensure)
         ]
 
     diff_packages = []
