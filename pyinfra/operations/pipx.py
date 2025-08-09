@@ -2,6 +2,8 @@
 Manage pipx (python) applications.
 """
 
+from typing import Optional, Union
+
 from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.pipx import PipxEnvironment, PipxPackages
@@ -12,7 +14,7 @@ from .util.packaging import ensure_packages, pkg_info_using_pep_508
 
 @operation()
 def packages(
-    packages: str | list[str] | None = None,
+    packages: Optional[Union[str, list[str]]] = None,
     present=True,
     latest=False,
     extra_args: str | None = None,
