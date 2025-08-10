@@ -50,35 +50,36 @@ class PkgInfo(NamedTuple):
 
         return cls(s, "", "", "")
 
-
-def pkg_info_using_pep_508(s: str) -> PkgInfo | None:
-    """
-    Separate out the useful parts (name, url, operator, version) of a PEP-508 dependency.
-    Note: only one specifier is allowed.
-    PEP-0426 states that Python packages should be compared using lowercase, so name is lower-cased
-    For backwards compatibility, invalid requirements are assumed to be package names with a
-    warning that this will change in the next major release
-    """
-    result = PkgInfo(s, "", "", "")
-    pep_508 = "PEP 508 non-compliant "
-    treatment = "requirement treated as package name"
-    will_change = "4.x will make this an error"
-    try:
-        reqt = Requirement(s)
-    except InvalidRequirement as e:
-        logger.warning(f"{pep_508} :{e}\n{will_change}")
-    else:
-        if (len(reqt.specifier) > 0) and (len(reqt.specifier) > 1):
-            logger.warning(f"{pep_508}/unsupported specifier ({s}) {treatment}\n{will_change}")
+    @classmethod
+    def from_pep508(cls, s: str) -> PkgInfo | None:
+        """
+        Separate out the useful parts (name, url, operator, version) of a PEP-508 dependency.
+        Note: only one specifier is allowed.
+        PEP-0426 states that Python packages should be compared using lowercase; thus
+        the name is lower-cased
+        For backwards compatibility, invalid requirements are assumed to be package names with a
+        warning that this will change in the next major release
+        """
+        pep_508 = "PEP 508 non-compliant "
+        treatment = "requirement treated as package name"
+        will_change = "4.x will make this an error"  # pip and pipx already throw away None's
+        try:
+            reqt = Requirement(s)
+        except InvalidRequirement as e:
+            logger.warning(f"{pep_508} :{e}\n{will_change}")
+            return cls(s, "", "", "")
         else:
-            spec = next(iter(reqt.specifier), None)
-            result = PkgInfo(
-                reqt.name.lower(),
-                spec.version if spec is not None else "",
-                spec.operator if spec is not None else "",
-                reqt.url or "",
-            )
-    return result
+            if (len(reqt.specifier) > 0) and (len(reqt.specifier) > 1):
+                logger.warning(f"{pep_508}/unsupported specifier ({s}) {treatment}\n{will_change}")
+                return cls(s, "", "", "")
+            else:
+                spec = next(iter(reqt.specifier), None)
+                return cls(
+                    reqt.name.lower(),
+                    spec.version if spec is not None else "",
+                    spec.operator if spec is not None else "",
+                    reqt.url or "",
+                )
 
 
 def _has_package(

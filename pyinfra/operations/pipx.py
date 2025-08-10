@@ -9,7 +9,7 @@ from pyinfra.api import operation
 from pyinfra.facts.pipx import PipxEnvironment, PipxPackages
 from pyinfra.facts.server import Path
 
-from .util.packaging import ensure_packages, pkg_info_using_pep_508
+from .util.packaging import PkgInfo, ensure_packages
 
 
 @operation()
@@ -53,7 +53,7 @@ def packages(
     upgrade_command = "pipx upgrade"
 
     # PEP-0426 states that Python packages should be compared using lowercase, so lowercase the
-    # current packages.  pkg_info_using_pep_508 takes care of it for the package names
+    # current packages.  PkgInfo.from_pep508 takes care of it for the package names
     current_packages = {
         pkg.lower(): version for pkg, version in host.get_fact(PipxPackages).items()
     }
@@ -62,8 +62,8 @@ def packages(
 
     # pipx support only one package name at a time
     for package in packages:
-        if (pkg_info := pkg_info_using_pep_508(package)) is None:
-            continue  # pkg_info_using_pep_508 logged a warning
+        if (pkg_info := PkgInfo.from_pep508(package)) is None:
+            continue  # from_pep508 logged a warning
         yield from ensure_packages(
             host,
             [pkg_info],
