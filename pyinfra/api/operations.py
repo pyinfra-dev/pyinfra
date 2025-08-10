@@ -82,7 +82,7 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
     retry_attempt = 0
     did_error = False
     executed_commands = 0
-    commands = []
+    commands: list[PyinfraCommand] = []
     all_output_lines: list[OutputLine] = []
 
     # Retry loop
