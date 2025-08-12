@@ -556,11 +556,8 @@ def _set_config(
     if state.cwd:
         config_filename = path.join(state.cwd, config_filename)
     if path.exists(config_filename):
-        exec_file(config_filename)
-
-    # Lock the current config, this allows us to restore this version after
-    # executing deploy files that may alter them.
-    config.lock_current_state()
+        values = exec_file(config_filename)
+        config.update(values)
 
     # Arg based config overrides
     if sudo:
@@ -582,6 +579,10 @@ def _set_config(
 
     if fail_percent is not None:
         config.FAIL_PERCENT = fail_percent
+
+    # Lock the current config, this allows us to restore this version after
+    # executing deploy files that may alter them.
+    config.lock_current_state()
 
     return config
 

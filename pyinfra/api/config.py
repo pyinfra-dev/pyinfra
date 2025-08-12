@@ -232,3 +232,8 @@ class Config(ConfigDefaults):
 
     def copy(self) -> "Config":
         return Config(**dict(self.get_current_state()))
+
+    def update(self, values: dict) -> None:
+        for key, value in values.items():
+            if key in ConfigDefaults.__dict__:
+                setattr(self, key, value)
