@@ -1803,7 +1803,7 @@ def block(
     current = host.get_fact(Block, path=path, marker=marker, begin=begin, end=end)
     cmd = None
 
-    tmp_dir = host.get_temp_directory()
+    tmp_dir = host.get_temp_dir_config()
 
     # standard awk doesn't have an "in-place edit" option so we write to a tempfile and
     # if edits were successful move to dest i.e. we do: <out_prep> ... do some work ... <real_out>

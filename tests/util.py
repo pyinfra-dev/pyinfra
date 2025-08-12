@@ -198,7 +198,7 @@ class FakeHost:
     ):
         return True
 
-    def get_temp_directory(*args, **kwargs):
+    def get_temp_dir_config(*args, **kwargs):
         return "_tempdir_"
 
     @staticmethod
