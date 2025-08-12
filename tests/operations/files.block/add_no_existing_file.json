@@ -1,6 +1,11 @@
 {
-    "require_platform": ["Darwin", "Linux"],
-    "args": ["/home/someone/something"],
+    "require_platform": [
+        "Darwin",
+        "Linux"
+    ],
+    "args": [
+        "/home/someone/something"
+    ],
     "kwargs": {
         "content": "please add this",
         "line": "after this",
@@ -12,6 +17,6 @@
         }
     },
     "commands": [
-        "OUT=\"$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)\" &&  OWNER=\"$(stat -c \"%u:%g\" /home/someone/something 2>/dev/null || stat -f \"%u:%g\" /home/someone/something 2>/dev/null || echo $(id -un):$(id -gn))\" && ( awk '{{print}}' /dev/null  -  > \"$OUT\" <<PYINFRAHERE\n# BEGIN PYINFRA BLOCK\nplease add this\n# END PYINFRA BLOCK\nPYINFRAHERE\n )  && mv \"$OUT\" /home/someone/something  && chown \"$OWNER\" /home/someone/something  /home/someone/something"
+        "OUT=\"$(TMPDIR=_tempdir_ mktemp -t pyinfra.XXXXXX)\" &&  OWNER=\"$(stat -c \"%u:%g\" /home/someone/something 2>/dev/null || stat -f \"%u:%g\" /home/someone/something 2>/dev/null || echo $(id -un):$(id -gn))\" && ( awk '{{print}}' /dev/null  -  > \"$OUT\" <<PYINFRAHERE\n# BEGIN PYINFRA BLOCK\nplease add this\n# END PYINFRA BLOCK\nPYINFRAHERE\n )  && mv \"$OUT\" /home/someone/something  && chown \"$OWNER\" /home/someone/something  /home/someone/something"
     ]
 }

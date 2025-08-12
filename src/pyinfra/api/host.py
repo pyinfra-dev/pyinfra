@@ -313,7 +313,7 @@ class Host:
         )
 
     @memoize
-    def _get_temp_directory(self):
+    def get_temp_directory(self):
         temp_directory = self.state.config.TEMP_DIR
 
         if temp_directory is None:
@@ -339,7 +339,7 @@ class Host:
         Generate a temporary filename for this deploy.
         """
 
-        temp_directory = temp_directory or self._get_temp_directory()
+        temp_directory = temp_directory or self.get_temp_directory()
 
         if not hash_key:
             hash_key = str(uuid4())

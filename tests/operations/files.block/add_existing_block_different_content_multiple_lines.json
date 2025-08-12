@@ -1,17 +1,28 @@
 {
-    "require_platform": ["Darwin", "Linux"],
-    "args": ["/home/someone/something"],
+    "require_platform": [
+        "Darwin",
+        "Linux"
+    ],
+    "args": [
+        "/home/someone/something"
+    ],
     "kwargs": {
-        "content": ["should be this", "and this", "and even this"],
+        "content": [
+            "should be this",
+            "and this",
+            "and even this"
+        ],
         "line": "before this",
         "before": true
     },
     "facts": {
         "files.Block": {
-            "begin=None, end=None, marker=None, path=/home/someone/something": ["previously was something else"]
+            "begin=None, end=None, marker=None, path=/home/someone/something": [
+                "previously was something else"
+            ]
         }
     },
     "commands": [
-        "OUT=\"$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)\" &&  MODE=\"$(stat -c %a /home/someone/something 2>/dev/null || stat -f %Lp /home/someone/something 2>/dev/null)\" && OWNER=\"$(stat -c \"%u:%g\" /home/someone/something 2>/dev/null || stat -f \"%u:%g\" /home/someone/something 2>/dev/null || echo $(id -un):$(id -gn))\" && awk 'BEGIN {{f=1; x=ARGV[2]; ARGV[2]=\"\"}}/# BEGIN PYINFRA BLOCK/ {print; print x; f=0} /# END PYINFRA BLOCK/ {print; f=1; next} f' /home/someone/something \"should be this\nand this\nand even this\" > \"$OUT\"  && mv \"$OUT\" /home/someone/something  && chown \"$OWNER\" /home/someone/something  && chmod \"$MODE\" /home/someone/something"
+        "OUT=\"$(TMPDIR=_tempdir_ mktemp -t pyinfra.XXXXXX)\" &&  MODE=\"$(stat -c %a /home/someone/something 2>/dev/null || stat -f %Lp /home/someone/something 2>/dev/null)\" && OWNER=\"$(stat -c \"%u:%g\" /home/someone/something 2>/dev/null || stat -f \"%u:%g\" /home/someone/something 2>/dev/null || echo $(id -un):$(id -gn))\" && awk 'BEGIN {{f=1; x=ARGV[2]; ARGV[2]=\"\"}}/# BEGIN PYINFRA BLOCK/ {print; print x; f=0} /# END PYINFRA BLOCK/ {print; f=1; next} f' /home/someone/something \"should be this\nand this\nand even this\" > \"$OUT\"  && mv \"$OUT\" /home/someone/something  && chown \"$OWNER\" /home/someone/something  && chmod \"$MODE\" /home/someone/something"
     ]
 }
