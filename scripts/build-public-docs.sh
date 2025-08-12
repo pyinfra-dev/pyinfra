@@ -26,11 +26,11 @@ fi
 
 if [ -n "${TAG_NAME}" ] && [[ "$TAG_NAME" =~ ^v[0-9]\.[0-9]+([\.a-z0-9]+)?$ ]]; then
     echo "Building ${BRANCH_NAME} docs for tag: ${TAG_NAME}"
-    env DOCS_VERSION=$BRANCH_NAME sphinx-build -a docs/ docs/public/en/$BRANCH_NAME/
+    env DOCS_VERSION="$BRANCH_NAME" sphinx-build -a docs/ docs/public/en/"$BRANCH_NAME"/
 
     if [ "${BRANCH_NAME}" = "${LATEST_BRANCH}" ]; then
         echo "Generating /page redirects"
-        env DOCS_VERSION=$BRANCH_NAME python scripts/generate_redirect_pages.py
+        env DOCS_VERSION="$BRANCH_NAME" python scripts/generate_redirect_pages.py
     fi
 fi
 

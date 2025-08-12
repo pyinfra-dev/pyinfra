@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-VERSION=`python setup.py --version`
-MAJOR_BRANCH="`python setup.py --version | cut -d'.' -f1`.x"
+VERSION=$(python setup.py --version)
+MAJOR_BRANCH="$(python setup.py --version | cut -d'.' -f1).x"
 
 echo "# Releasing pyinfra v${VERSION} (branch ${MAJOR_BRANCH})"
 
