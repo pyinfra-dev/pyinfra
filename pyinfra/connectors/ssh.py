@@ -517,6 +517,11 @@ class SSHConnector(BaseConnector):
                 logger.error("File upload error: {0}".format(output.stderr))
                 return False
 
+            rm_arguments = arguments.copy()
+            # _chdir is the only one of the global arguments that could require _sudo to succeed
+            # and _sudo isn't present in arguments as removed above
+            rm_arguments.pop("_chdir", False)
+
             # Delete the temporary file now that we've successfully copied it
             command = StringCommand("rm", "-f", temp_file)
 
