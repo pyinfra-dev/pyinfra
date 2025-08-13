@@ -46,5 +46,22 @@ def connect_all(state: "State"):
 
 
 def disconnect_all(state: "State"):
-    for host in state.activated_hosts:  # only hosts we connected to please!
-        host.disconnect()  # normally a noop
+    """
+    Disconnect from all of the configured servers in parallel. Reads/writes state.inventory.
+
+    Args:
+        state (``pyinfra.api.State`` obj): the state containing an inventory to connect to
+    """
+    greenlet_to_host = {
+        state.pool.spawn(host.disconnect): host
+        for host in state.activated_hosts  # only hosts we connected to please!
+    }
+
+    with progress_spinner(greenlet_to_host.values()) as progress:
+        for greenlet in gevent.iwait(greenlet_to_host.keys()):
+            host = greenlet_to_host[greenlet]
+            progress(host)
+
+    for greenlet, host in greenlet_to_host.items():
+        # Raise any unexpected exception
+        greenlet.get()
