@@ -85,7 +85,9 @@ def crontab(
         ctb = ctb0
     name_comment = "# pyinfra-name={0}".format(cron_name)
 
-    existing_crontab = ctb.get_command(command=[command if cron_name is None else None], name=cron_name)
+    existing_crontab = ctb.get_command(
+        command=command if cron_name is None else None, name=cron_name
+    )
     existing_crontab_command = existing_crontab["command"] if existing_crontab else command
     existing_crontab_match = existing_crontab["command"] if existing_crontab else command
 
