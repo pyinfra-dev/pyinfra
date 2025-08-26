@@ -529,7 +529,7 @@ class SSHConnector(BaseConnector):
                 command,
                 print_output=print_output,
                 print_input=print_input,
-                **arguments,
+                **rm_arguments,
             )
 
             if status is False:
