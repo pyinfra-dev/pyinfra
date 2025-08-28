@@ -10,6 +10,7 @@
     ],
     "fact": [
         {
+            "repoid": "somerepo",
             "name": "somerepo",
             "baseurl": "abc"
         }

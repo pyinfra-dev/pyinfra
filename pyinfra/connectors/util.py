@@ -314,6 +314,10 @@ def make_unix_command(
     # Doas config
     _doas=False,
     _doas_user=None,
+    # Retry config (ignored in command generation but passed through)
+    _retries=0,
+    _retry_delay=0,
+    _retry_until=None,
 ) -> StringCommand:
     """
     Builds a shell command with various kwargs.

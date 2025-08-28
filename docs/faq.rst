@@ -49,3 +49,32 @@ Use the LINK ``files.file``, ``files.directory`` or ``files.link`` operations to
         group="pyinfra",
         mode=644,
     )
+
+How do I handle unreliable operations or network issues?
+--------------------------------------------------------
+
+Use the `retry behavior arguments <arguments.html#retry-behavior>`_ to automatically retry failed operations. This is especially useful for network operations or services that may be temporarily unavailable:
+
+.. code:: python
+
+    # Retry a network operation up to 3 times
+    server.shell(
+        name="Download file with retries",
+        commands=["wget https://example.com/file.zip"],
+        _retries=3,
+        _retry_delay=5,  # wait 5 seconds between retries
+    )
+
+    # Use custom retry logic for specific error conditions
+    def should_retry_download(output_data):
+        # Retry only on temporary network errors, not permanent failures
+        stderr_text = " ".join(output_data["stderr_lines"]).lower()
+        temporary_errors = ["timeout", "connection refused", "temporary failure"]
+        return any(error in stderr_text for error in temporary_errors)
+
+    server.shell(
+        name="Download with smart retry logic",
+        commands=["wget https://example.com/large-file.zip"],
+        _retries=3,
+        _retry_until=should_retry_download,
+    )

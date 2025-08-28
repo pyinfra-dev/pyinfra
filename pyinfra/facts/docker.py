@@ -76,6 +76,28 @@ class DockerNetworks(DockerFactBase):
         return "docker network inspect `docker network ls -q`"
 
 
+class DockerVolumes(DockerFactBase):
+    """
+    Returns ``docker inspect`` output for all Docker volumes.
+    """
+
+    @override
+    def command(self) -> str:
+        return "docker volume inspect `docker volume ls -q`"
+
+
+class DockerPlugins(DockerFactBase):
+    """
+    Returns ``docker plugin inspect`` output for all Docker plugins.
+    """
+
+    @override
+    def command(self) -> str:
+        return """
+        ids=$(docker plugin ls -q) && [ -n "$ids" ] && docker plugin inspect $ids || echo "[]"
+        """.strip()
+
+
 # Single Docker objects
 #
 
@@ -113,19 +135,17 @@ class DockerNetwork(DockerSingleMixin):
     docker_type = "network"
 
 
-class DockerVolumes(DockerFactBase):
-    """
-    Returns ``docker inspect`` output for all Docker volumes.
-    """
-
-    @override
-    def command(self) -> str:
-        return "docker volume inspect `docker volume ls -q`"
-
-
 class DockerVolume(DockerSingleMixin):
     """
     Returns ``docker inspect`` output for a single Docker container.
     """
 
     docker_type = "volume"
+
+
+class DockerPlugin(DockerSingleMixin):
+    """
+    Returns ``docker plugin inspect`` output for a single Docker plugin.
+    """
+
+    docker_type = "plugin"

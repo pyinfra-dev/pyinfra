@@ -1,0 +1,20 @@
+{
+    "kwargs": {
+        "plugin": "my-plugin",
+        "enabled": false
+    },
+    "facts": {
+        "docker.DockerPlugin": {
+            "object_id=my-plugin": [
+                {
+                    "Name": "my-plugin:latest",
+                    "Enabled": true,
+                    "Id": "1234567890abcdef"
+                }
+            ]
+        }
+    },
+    "commands": [
+        "docker plugin disable my-plugin"
+    ]
+}

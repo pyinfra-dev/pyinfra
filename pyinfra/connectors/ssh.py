@@ -5,7 +5,7 @@ from random import uniform
 from shutil import which
 from socket import error as socket_error, gaierror
 from time import sleep
-from typing import TYPE_CHECKING, Any, Iterable, Optional, Tuple
+from typing import IO, TYPE_CHECKING, Any, Iterable, Optional, Protocol, Tuple
 
 import click
 from paramiko import AuthenticationException, BadHostKeyException, SFTPClient, SSHException
@@ -17,6 +17,7 @@ from pyinfra.api.exceptions import ConnectError
 from pyinfra.api.util import get_file_io, memoize
 
 from .base import BaseConnector, DataMeta
+from .scp import SCPClient
 from .ssh_util import get_private_key, raise_connect_error
 from .sshuserclient import SSHClient
 from .util import (
@@ -53,6 +54,7 @@ class ConnectorData(TypedDict):
     ssh_connect_retries: int
     ssh_connect_retry_min_delay: float
     ssh_connect_retry_max_delay: float
+    ssh_file_transfer_protocol: str
 
 
 connector_data_meta: dict[str, DataMeta] = {
@@ -92,7 +94,25 @@ connector_data_meta: dict[str, DataMeta] = {
         "Upper bound for random delay between retries",
         0.5,
     ),
+    "ssh_file_transfer_protocol": DataMeta(
+        "Protocol to use for file transfers. Can be ``sftp`` or ``scp``.",
+        "sftp",
+    ),
 }
+
+
+class FileTransferClient(Protocol):
+    def getfo(self, remote_filename: str, fl: IO) -> Any | None:
+        """
+        Get a file from the remote host, writing to the provided file-like object.
+        """
+        ...
+
+    def putfo(self, fl: IO, remote_filename: str) -> Any | None:
+        """
+        Put a file to the remote host, reading from the provided file-like object.
+        """
+        ...
 
 
 class SSHConnector(BaseConnector):
@@ -268,7 +288,7 @@ class SSHConnector(BaseConnector):
 
     @override
     def disconnect(self) -> None:
-        self.get_sftp_connection.cache.clear()
+        self.get_file_transfer_connection.cache.clear()
 
     @override
     def run_shell_command(
@@ -353,13 +373,25 @@ class SSHConnector(BaseConnector):
         return status, combined_output
 
     @memoize
-    def get_sftp_connection(self):
+    def get_file_transfer_connection(self) -> FileTransferClient | None:
         assert self.client is not None
         transport = self.client.get_transport()
         assert transport is not None, "No transport"
         try:
-            return SFTPClient.from_transport(transport)
+            if self.data["ssh_file_transfer_protocol"] == "sftp":
+                logger.debug("Using SFTP for file transfer")
+                return SFTPClient.from_transport(transport)
+            elif self.data["ssh_file_transfer_protocol"] == "scp":
+                logger.debug("Using SCP for file transfer")
+                return SCPClient(transport)
+            else:
+                raise ConnectError(
+                    "Unsupported file transfer protocol: {0}".format(
+                        self.data["ssh_file_transfer_protocol"],
+                    ),
+                )
         except SSHException as e:
+
             raise ConnectError(
                 (
                     "Unable to establish SFTP connection. Check that the SFTP subsystem "
@@ -367,9 +399,9 @@ class SSHConnector(BaseConnector):
                 ).format(self.host),
             ) from e
 
-    def _get_file(self, remote_filename: str, filename_or_io):
+    def _get_file(self, remote_filename: str, filename_or_io: str | IO):
         with get_file_io(filename_or_io, "wb") as file_io:
-            sftp = self.get_sftp_connection()
+            sftp = self.get_file_transfer_connection()
             sftp.getfo(remote_filename, file_io)
 
     @override
@@ -448,7 +480,7 @@ class SSHConnector(BaseConnector):
         while attempts < 3:
             try:
                 with get_file_io(filename_or_io) as file_io:
-                    sftp = self.get_sftp_connection()
+                    sftp = self.get_file_transfer_connection()
                     sftp.putfo(file_io, remote_location)
                 return
             except OSError as e:

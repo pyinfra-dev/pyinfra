@@ -47,6 +47,9 @@ class OperationMeta:
     _commands: Optional[list[Any]] = None
     _maybe_is_change: Optional[bool] = None
     _success: Optional[bool] = None
+    _retry_attempts: int = 0
+    _max_retries: int = 0
+    _retry_succeeded: Optional[bool] = None
 
     def __init__(self, hash, is_change: Optional[bool]):
         self._hash = hash
@@ -59,9 +62,17 @@ class OperationMeta:
         """
 
         if self._commands is not None:
+            retry_info = ""
+            if self._retry_attempts > 0:
+                retry_result = "succeeded" if self._retry_succeeded else "failed"
+                retry_info = (
+                    f", retries={self._retry_attempts}/{self._max_retries} ({retry_result})"
+                )
+
             return (
                 "OperationMeta(executed=True, "
-                f"success={self.did_succeed()}, hash={self._hash}, commands={len(self._commands)})"
+                f"success={self.did_succeed()}, hash={self._hash}, "
+                f"commands={len(self._commands)}{retry_info})"
             )
         return (
             "OperationMeta(executed=False, "
@@ -74,12 +85,20 @@ class OperationMeta:
         success: bool,
         commands: list[Any],
         combined_output: "CommandOutput",
+        retry_attempts: int = 0,
+        max_retries: int = 0,
     ) -> None:
         if self.is_complete():
             raise RuntimeError("Cannot complete an already complete operation")
         self._success = success
         self._commands = commands
         self._combined_output = combined_output
+        self._retry_attempts = retry_attempts
+        self._max_retries = max_retries
+
+        # Determine if operation succeeded after retries
+        if retry_attempts > 0:
+            self._retry_succeeded = success
 
     def is_complete(self) -> bool:
         return self._success is not None
@@ -149,6 +168,40 @@ class OperationMeta:
     @property
     def stderr(self) -> str:
         return "\n".join(self.stderr_lines)
+
+    @property
+    def retry_attempts(self) -> int:
+        return self._retry_attempts
+
+    @property
+    def max_retries(self) -> int:
+        return self._max_retries
+
+    @property
+    def was_retried(self) -> bool:
+        """
+        Returns whether this operation was retried at least once.
+        """
+        return self._retry_attempts > 0
+
+    @property
+    def retry_succeeded(self) -> Optional[bool]:
+        """
+        Returns whether this operation succeeded after retries.
+        Returns None if the operation was not retried.
+        """
+        return self._retry_succeeded
+
+    def get_retry_info(self) -> dict[str, Any]:
+        """
+        Returns a dictionary with all retry-related information.
+        """
+        return {
+            "retry_attempts": self._retry_attempts,
+            "max_retries": self._max_retries,
+            "was_retried": self.was_retried,
+            "retry_succeeded": self._retry_succeeded,
+        }
 
 
 def add_op(state: State, op_func, *args, **kwargs):

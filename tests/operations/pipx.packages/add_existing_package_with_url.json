@@ -1,0 +1,9 @@
+{
+    "args": ["copier @ git@github.com:copier-org/copier.git@v9.9.0"],
+    "facts": {
+        "pipx.PipxPackages": {"copier": ["9.9.0"]}
+        },
+    "commands": [
+    ],
+    "noop_description": "package copier is installed (9.9.0)"
+}

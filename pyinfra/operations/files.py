@@ -1738,7 +1738,7 @@ def block(
             path="/etc/hosts",
             content="10.0.0.1 mars-one",
             before=True,
-            regex=".*localhost",
+            line=".*localhost",
         )
 
         # have two entries in /etc/host
@@ -1747,7 +1747,7 @@ def block(
             path="/etc/hosts",
             content="10.0.0.1 mars-one\\n10.0.0.2 mars-two",
             before=True,
-            regex=".*localhost",
+            line=".*localhost",
         )
 
         # remove marked entry from /etc/hosts
@@ -1762,7 +1762,7 @@ def block(
             name="add out of date warning to web page",
             path="/var/www/html/something.html",
             content= "<p>Warning: this page is out of date.</p>",
-            regex=".*<body>.*",
+            line=".*<body>.*",
             after=True
             marker="<!-- {mark} PYINFRA BLOCK -->",
         )
@@ -1809,6 +1809,7 @@ def block(
     )
 
     current = host.get_fact(Block, path=path, marker=marker, begin=begin, end=end)
+    # None means file didn't exist, empty list means marker was not found
     cmd = None
     if present:
         if not content:
@@ -1850,7 +1851,7 @@ def block(
             prog = (
                 'awk \'BEGIN {x=ARGV[2]; ARGV[2]=""} '
                 f"{print_after} f!=1 && /{regex}/ {{ print x; f=1}} "
-                f"END {{if (f==0) print ARGV[2] }} {print_before}'"
+                f"END {{if (f==0) print x }} {print_before}'"
             )
             cmd = StringCommand(
                 out_prep,

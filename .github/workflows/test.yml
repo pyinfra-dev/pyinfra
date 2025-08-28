@@ -40,6 +40,22 @@ jobs:
       - name: Check spelling
         uses: crate-ci/typos@v1.30.3
 
+  # Test instal works on untestable Python versions. This came about because click decided to drop
+  # Python 3.9 support before EOL, so 3.9 was dropped from the unit test matrix. Still need to test
+  # that pyinfra can be built on 3.9.
+  build-legacy-versions:
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install '.'
+      - run: pyinfra --help
+
   # Unit tests
   #
 

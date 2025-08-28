@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 import traceback
 from itertools import product
 from socket import error as socket_error, timeout as timeout_error
@@ -66,6 +67,11 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
     continue_on_error = global_arguments["_continue_on_error"]
     timeout = global_arguments.get("_timeout", 0)
 
+    # Extract retry arguments
+    retries = global_arguments.get("_retries", 0)
+    retry_delay = global_arguments.get("_retry_delay", 5)
+    retry_until = global_arguments.get("_retry_until", None)
+
     executor_kwarg_keys = CONNECTOR_ARGUMENT_KEYS
     # See: https://github.com/python/mypy/issues/10371
     base_connector_arguments: ConnectorArguments = cast(
@@ -73,67 +79,114 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
         {key: global_arguments[key] for key in executor_kwarg_keys if key in global_arguments},  # type: ignore[literal-required] # noqa
     )
 
+    retry_attempt = 0
     did_error = False
     executed_commands = 0
-    commands = []
+    commands: list[PyinfraCommand] = []
     all_output_lines: list[OutputLine] = []
 
-    for command in op_data.command_generator():
-        commands.append(command)
+    # Retry loop
+    while retry_attempt <= retries:
+        did_error = False
+        executed_commands = 0
+        commands = []
+        all_output_lines = []
 
-        status = False
+        for command in op_data.command_generator():
+            commands.append(command)
+            status = False
+            connector_arguments = base_connector_arguments.copy()
+            connector_arguments.update(command.connector_arguments)
 
-        connector_arguments = base_connector_arguments.copy()
-        connector_arguments.update(command.connector_arguments)
+            if not isinstance(command, PyinfraCommand):
+                raise TypeError("{0} is an invalid pyinfra command!".format(command))
 
-        if not isinstance(command, PyinfraCommand):
-            raise TypeError("{0} is an invalid pyinfra command!".format(command))
+            if isinstance(command, FunctionCommand):
+                try:
+                    status = command.execute(state, host, connector_arguments)
+                except Exception as e:
+                    # Custom functions could do anything, so expect anything!
+                    logger.warning(traceback.format_exc())
+                    host.log_styled(
+                        f"Unexpected error in Python callback: {format_exception(e)}",
+                        fg="red",
+                        log_func=logger.warning,
+                    )
 
-        if isinstance(command, FunctionCommand):
-            try:
-                status = command.execute(state, host, connector_arguments)
-            except Exception as e:
-                # Custom functions could do anything, so expect anything!
-                logger.warning(traceback.format_exc())
-                host.log_styled(
-                    f"Unexpected error in Python callback: {format_exception(e)}",
-                    fg="red",
-                    log_func=logger.warning,
-                )
+            elif isinstance(command, StringCommand):
+                output_lines = CommandOutput([])
+                try:
+                    status, output_lines = command.execute(
+                        state,
+                        host,
+                        connector_arguments,
+                    )
+                except (timeout_error, socket_error, SSHException) as e:
+                    log_host_command_error(host, e, timeout=timeout)
+                all_output_lines.extend(output_lines)
+                # If we failed and have not already printed the stderr, print it
+                if status is False and not state.print_output:
+                    print_host_combined_output(host, output_lines)
 
-        elif isinstance(command, StringCommand):
-            output_lines = CommandOutput([])
-            try:
-                status, output_lines = command.execute(
-                    state,
-                    host,
-                    connector_arguments,
-                )
-            except (timeout_error, socket_error, SSHException) as e:
-                log_host_command_error(host, e, timeout=timeout)
-            all_output_lines.extend(output_lines)
-            # If we failed and have not already printed the stderr, print it
-            if status is False and not state.print_output:
-                print_host_combined_output(host, output_lines)
+            else:
+                try:
+                    status = command.execute(state, host, connector_arguments)
+                except (timeout_error, socket_error, SSHException, IOError) as e:
+                    log_host_command_error(host, e, timeout=timeout)
 
-        else:
-            try:
-                status = command.execute(state, host, connector_arguments)
-            except (timeout_error, socket_error, SSHException, IOError) as e:
-                log_host_command_error(host, e, timeout=timeout)
+            # Break the loop to trigger a failure
+            if status is False:
+                did_error = True
+                if continue_on_error is True:
+                    continue
+                break
 
-        # Break the loop to trigger a failure
-        if status is False:
-            did_error = True
-            if continue_on_error is True:
-                continue
-            break
+            executed_commands += 1
 
-        executed_commands += 1
+        # Check if we should retry
+        should_retry = False
+        if retry_attempt < retries:
+            # Retry on error
+            if did_error:
+                should_retry = True
+            # Retry on condition if no error
+            elif retry_until and not did_error:
+                try:
+                    output_data = {
+                        "stdout_lines": [
+                            line.line for line in all_output_lines if line.buffer_name == "stdout"
+                        ],
+                        "stderr_lines": [
+                            line.line for line in all_output_lines if line.buffer_name == "stderr"
+                        ],
+                        "commands": [str(command) for command in commands],
+                        "executed_commands": executed_commands,
+                        "host": host.name,
+                        "operation": ", ".join(state.get_op_meta(op_hash).names) or "Operation",
+                    }
+                    should_retry = retry_until(output_data)
+                except Exception as e:
+                    host.log_styled(
+                        f"Error in retry_until function: {format_exception(e)}",
+                        fg="red",
+                        log_func=logger.warning,
+                    )
+
+        if should_retry:
+            retry_attempt += 1
+            state.trigger_callbacks("operation_host_retry", host, op_hash, retry_attempt, retries)
+            op_name = ", ".join(state.get_op_meta(op_hash).names) or "Operation"
+            host.log_styled(
+                f"Retrying {op_name} (attempt {retry_attempt}/{retries}) after {retry_delay}s...",
+                fg="yellow",
+                log_func=logger.info,
+            )
+            time.sleep(retry_delay)
+            continue
+
+        break
 
     # Handle results
-    #
-
     op_success = return_status = not did_error
     host_results = state.get_results_for_host(host)
 
@@ -142,10 +195,13 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
         host_results.success_ops += 1
 
         _status_log = "Success" if executed_commands > 0 else "No changes"
+        if retry_attempt > 0:
+            _status_log = f"{_status_log} on retry {retry_attempt}"
+
         _click_log_status = click.style(_status_log, "green")
         logger.info("{0}{1}".format(host.print_prefix, _click_log_status))
 
-        state.trigger_callbacks("operation_host_success", host, op_hash)
+        state.trigger_callbacks("operation_host_success", host, op_hash, retry_attempt)
     else:
         if ignore_errors:
             host_results.ignored_error_ops += 1
@@ -156,6 +212,11 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
             host_results.partial_ops += 1
 
         _command_description = f"executed {executed_commands} commands"
+        if retry_attempt > 0:
+            _command_description = (
+                f"{_command_description} (failed after {retry_attempt}/{retries} retries)"
+            )
+
         log_error_or_warning(host, ignore_errors, _command_description, continue_on_error)
 
         # Ignored, op "completes" w/ ignored error
@@ -164,12 +225,14 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
             return_status = True
 
         # Unignored error -> False
-        state.trigger_callbacks("operation_host_error", host, op_hash)
+        state.trigger_callbacks("operation_host_error", host, op_hash, retry_attempt, retries)
 
     op_data.operation_meta.set_complete(
         op_success,
         commands,
         CommandOutput(all_output_lines),
+        retry_attempts=retry_attempt,
+        max_retries=retries,
     )
 
     return return_status

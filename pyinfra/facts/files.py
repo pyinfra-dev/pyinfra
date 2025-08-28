@@ -643,10 +643,13 @@ class Block(FactBase):
             QuoteString(f"{EXISTS}{path}"),
             QuoteString(f"{MISSING}{path}"),
         )
-        # m_f_s_c inserts blanks in unfortunate places, e.g. after first slash
-        cmd = make_formatted_string_command(
-            f"awk \\'/{end}/{{{{f=0}}}} f; /{start}/{{{{f=1}}}}\\' {{0}} || {backstop}",
+
+        cmd = StringCommand(
+            f"awk '/{end}/{{ f=0}} f; /{start}/{{ f=1}} ' ",
             QuoteString(path),
+            " || ",
+            backstop,
+            _separator="",
         )
         return cmd
 

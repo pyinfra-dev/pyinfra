@@ -53,7 +53,12 @@ class ConfigDefaults:
     IGNORE_ERRORS: bool = False
     # Shell to use to execute commands
     SHELL: str = "sh"
+    # Whether to display full diffs for files
     DIFF: bool = False
+    # Number of times to retry failed operations
+    RETRY: int = 0
+    # Delay in seconds between retry attempts
+    RETRY_DELAY: int = 5
 
 
 config_defaults = {key: value for key, value in ConfigDefaults.__dict__.items() if key.isupper()}

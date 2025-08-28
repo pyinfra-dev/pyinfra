@@ -1,0 +1,13 @@
+{
+    "kwargs": {
+        "plugin": "username/my-awesome-plugin:latest"
+    },
+    "facts": {
+        "docker.DockerPlugin": {
+            "object_id=username/my-awesome-plugin:latest": []
+        }
+    },
+    "commands": [
+        "docker plugin install username/my-awesome-plugin:latest --grant-all-permissions"
+    ]
+}

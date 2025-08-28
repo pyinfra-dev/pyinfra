@@ -165,7 +165,46 @@ def _remove_network(**kwargs):
     return "docker network rm {0}".format(kwargs["network"])
 
 
-def handle_docker(resource, command, **kwargs):
+def _install_plugin(**kwargs):
+    command = ["docker plugin install {0} --grant-all-permissions".format(kwargs["plugin"])]
+
+    plugin_options = kwargs["plugin_options"] if kwargs["plugin_options"] else {}
+
+    if kwargs["alias"]:
+        command.append("--alias {0}".format(kwargs["alias"]))
+
+    if not kwargs["enabled"]:
+        command.append("--disable")
+
+    for option, value in plugin_options.items():
+        command.append("{0}={1}".format(option, value))
+
+    return " ".join(command)
+
+
+def _remove_plugin(**kwargs):
+    return "docker plugin rm -f {0}".format(kwargs["plugin"])
+
+
+def _enable_plugin(**kwargs):
+    return "docker plugin enable {0}".format(kwargs["plugin"])
+
+
+def _disable_plugin(**kwargs):
+    return "docker plugin disable {0}".format(kwargs["plugin"])
+
+
+def _set_plugin_options(**kwargs):
+    command = ["docker plugin set {0}".format(kwargs["plugin"])]
+    existent_options = kwargs.get("existing_options", {})
+    required_options = kwargs.get("required_options", {})
+    options_to_set = existent_options | required_options
+    for option, value in options_to_set.items():
+        command.append("{0}={1}".format(option, value))
+    return " ".join(command)
+
+
+def handle_docker(resource: str, command: str, **kwargs):
     container_commands = {
         "create": _create_container,
         "remove": _remove_container,
@@ -192,12 +231,21 @@ def handle_docker(resource, command, **kwargs):
         "prune": _prune_command,
     }
 
+    plugin_commands = {
+        "install": _install_plugin,
+        "remove": _remove_plugin,
+        "enable": _enable_plugin,
+        "disable": _disable_plugin,
+        "set": _set_plugin_options,
+    }
+
     docker_commands = {
         "container": container_commands,
         "image": image_commands,
         "volume": volume_commands,
         "network": network_commands,
         "system": system_commands,
+        "plugin": plugin_commands,
     }
 
     return docker_commands[resource][command](**kwargs)

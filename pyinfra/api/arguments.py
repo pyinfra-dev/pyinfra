@@ -72,6 +72,11 @@ class ConnectorArguments(TypedDict, total=False):
     _get_pty: bool
     _stdin: Union[str, Iterable[str]]
 
+    # Retry arguments
+    _retries: int
+    _retry_delay: Union[int, float]
+    _retry_until: Optional[Callable[[dict], bool]]
+
 
 def generate_env(config: "Config", value: dict) -> dict:
     env = config.ENV.copy()
@@ -232,11 +237,28 @@ def all_global_arguments() -> List[tuple[str, Type]]:
     return list(get_type_hints(AllArguments).items())
 
 
+# Create a dictionary for retry arguments
+retry_argument_meta: dict[str, ArgumentMeta] = {
+    "_retries": ArgumentMeta(
+        "Number of times to retry failed operations.",
+        default=lambda config: config.RETRY,
+    ),
+    "_retry_delay": ArgumentMeta(
+        "Delay in seconds between retry attempts.",
+        default=lambda config: config.RETRY_DELAY,
+    ),
+    "_retry_until": ArgumentMeta(
+        "Callable taking output data that returns True to continue retrying.",
+        default=lambda config: None,
+    ),
+}
+
 all_argument_meta: dict[str, ArgumentMeta] = {
     **auth_argument_meta,
     **shell_argument_meta,
     **meta_argument_meta,
     **execution_argument_meta,
+    **retry_argument_meta,  # Add retry arguments
 }
 
 EXECUTION_KWARG_KEYS = list(ExecutionArguments.__annotations__.keys())
@@ -286,6 +308,45 @@ __argument_docs__ = {
     ),
     "Operation meta & callbacks": (meta_argument_meta, "", ""),
     "Execution strategy": (execution_argument_meta, "", ""),
+    "Retry behavior": (
+        retry_argument_meta,
+        """
+        Retry arguments allow you to automatically retry operations that fail. You can specify
+        how many times to retry, the delay between retries, and optionally a condition
+        function to determine when to stop retrying.
+        """,
+        """
+        .. code:: python
+
+            # Retry a command up to 3 times with the default 5 second delay
+            server.shell(
+                name="Run flaky command with retries",
+                commands=["flaky_command"],
+                _retries=3,
+            )
+            # Retry with a custom delay
+            server.shell(
+                name="Run flaky command with custom delay",
+                commands=["flaky_command"],
+                _retries=2,
+                _retry_delay=10,  # 10 second delay between retries
+            )
+            # Retry with a custom condition
+            def retry_on_specific_error(output_data):
+                # Retry if stderr contains "temporary failure"
+                for line in output_data["stderr_lines"]:
+                    if "temporary failure" in line.lower():
+                        return True
+                return False
+
+            server.shell(
+                name="Run command with conditional retry",
+                commands=["flaky_command"],
+                _retries=5,
+                _retry_until=retry_on_specific_error,
+            )
+        """,
+    ),
 }
 
 

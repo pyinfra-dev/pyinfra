@@ -11,7 +11,7 @@ from pyinfra.facts.files import File
 from pyinfra.facts.pip import PipPackages
 
 from . import files
-from .util.packaging import ensure_packages
+from .util.packaging import PkgInfo, ensure_packages
 
 
 @operation()
@@ -186,21 +186,20 @@ def packages(
 
     # Handle passed in packages
     if packages:
+        if isinstance(packages, str):
+            packages = [packages]
+        # PEP-0426 states that Python packages should be compared using lowercase, so lowercase the
+        # current packages. PkgInfo.from_pep508 takes care of the package name
         current_packages = host.get_fact(PipPackages, pip=pip)
-
-        # PEP-0426 states that Python packages should be compared using lowercase, so lowercase both
-        # the input packages and the fact packages before comparison.
-        packages = [pkg.lower() for pkg in packages]
         current_packages = {pkg.lower(): versions for pkg, versions in current_packages.items()}
 
         yield from ensure_packages(
             host,
-            packages,
+            list(filter(None, (PkgInfo.from_pep508(package) for package in packages))),
             current_packages,
             present,
             install_command=install_command,
             uninstall_command=uninstall_command,
             upgrade_command=upgrade_command,
-            version_join="==",
             latest=latest,
         )

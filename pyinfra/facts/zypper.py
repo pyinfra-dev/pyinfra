@@ -16,11 +16,11 @@ class ZypperRepositories(FactBase):
 
         [
             {
+                "repoid": "repo-oss",
                 "name": "Main Repository",
                 "enabled": "1",
-                "autorefresh": "0",
-                "baseurl": "http://download.opensuse.org/distribution/leap/$releasever/repo/oss/",
-                "type": "rpm-md",
+                "autorefresh": "1",
+                "baseurl": "http://download.opensuse.org/distribution/leap/$releasever/repo/oss/"
             },
         ]
     """

@@ -4,25 +4,27 @@ the view of the current inventory host. See the :doc:`../connectors/docker` to u
 as inventory directly.
 """
 
+from __future__ import annotations
+
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.docker import DockerContainer, DockerNetwork, DockerVolume
+from pyinfra.facts.docker import DockerContainer, DockerNetwork, DockerPlugin, DockerVolume
 
 from .util.docker import ContainerSpec, handle_docker
 
 
 @operation()
 def container(
-    container,
-    image="",
-    ports=None,
-    networks=None,
-    volumes=None,
-    env_vars=None,
-    pull_always=False,
-    present=True,
-    force=False,
-    start=True,
+    container: str,
+    image: str = "",
+    ports: list[str] | None = None,
+    networks: list[str] | None = None,
+    volumes: list[str] | None = None,
+    env_vars: list[str] | None = None,
+    pull_always: bool = False,
+    present: bool = True,
+    force: bool = False,
+    start: bool = True,
 ):
     """
     Manage Docker containers
@@ -168,7 +170,7 @@ def image(image, present=True):
 
 
 @operation()
-def volume(volume, driver="", labels=None, present=True):
+def volume(volume: str, driver: str = "", labels: list[str] | None = None, present: bool = True):
     """
     Manage Docker volumes
 
@@ -220,20 +222,20 @@ def volume(volume, driver="", labels=None, present=True):
 
 @operation()
 def network(
-    network,
-    driver="",
-    gateway="",
-    ip_range="",
-    ipam_driver="",
-    subnet="",
-    scope="",
-    aux_addresses=None,
-    opts=None,
-    ipam_opts=None,
-    labels=None,
-    ingress=False,
-    attachable=False,
-    present=True,
+    network: str,
+    driver: str = "",
+    gateway: str = "",
+    ip_range: str = "",
+    ipam_driver: str = "",
+    subnet: str = "",
+    scope: str = "",
+    aux_addresses: dict[str, str] | None = None,
+    opts: list[str] | None = None,
+    ipam_opts: list[str] | None = None,
+    labels: list[str] | None = None,
+    ingress: bool = False,
+    attachable: bool = False,
+    present: bool = True,
 ):
     """
     Manage docker networks
@@ -245,6 +247,7 @@ def network(
     + ipam_driver: IP Address Management Driver
     + subnet: Subnet in CIDR format that represents a network segment
     + scope: Control the network's scope
+    + aux_addresses: named aux addresses for the network
     + opts: Set driver specific options
     + ipam_opts: Set IPAM driver specific options
     + labels: Label list to attach in the network
@@ -303,9 +306,9 @@ def network(
 
 @operation(is_idempotent=False)
 def prune(
-    all=False,
-    volumes=False,
-    filter="",
+    all: bool = False,
+    volumes: bool = False,
+    filter: str = "",
 ):
     """
     Execute a docker system prune.
@@ -344,3 +347,101 @@ def prune(
         volumes=volumes,
         filter=filter,
     )
+
+
+@operation()
+def plugin(
+    plugin: str,
+    alias: str | None = None,
+    present: bool = True,
+    enabled: bool = True,
+    plugin_options: dict[str, str] | None = None,
+):
+    """
+    Manage Docker plugins
+
+    + plugin: Plugin name
+    + alias: Alias for the plugin (optional)
+    + present: Whether the plugin should be installed
+    + enabled: Whether the plugin should be enabled
+    + plugin_options: Options to pass to the plugin
+
+    **Examples:**
+
+    .. code:: python
+
+        # Install and enable a Docker plugin
+        docker.plugin(
+            name="Install and enable a Docker plugin",
+            plugin="username/my-awesome-plugin:latest",
+            alias="my-plugin",
+            present=True,
+            enabled=True,
+            plugin_options={"option1": "value1", "option2": "value2"},
+        )
+    """
+    plugin_name = alias if alias else plugin
+    existent_plugin = host.get_fact(DockerPlugin, object_id=plugin_name)
+    if existent_plugin:
+        existent_plugin = existent_plugin[0]
+
+    if present:
+        if existent_plugin:
+            plugin_options_different = (
+                plugin_options and existent_plugin["Settings"]["Env"] != plugin_options
+            )
+            if plugin_options_different:
+                # Update options on existing plugin
+                if existent_plugin["Enabled"]:
+                    yield handle_docker(
+                        resource="plugin",
+                        command="disable",
+                        plugin=plugin_name,
+                    )
+                yield handle_docker(
+                    resource="plugin",
+                    command="set",
+                    plugin=plugin_name,
+                    enabled=enabled,
+                    existent_options=existent_plugin["Settings"]["Env"],
+                    required_options=plugin_options,
+                )
+                if enabled:
+                    yield handle_docker(
+                        resource="plugin",
+                        command="enable",
+                        plugin=plugin_name,
+                    )
+            else:
+                # Options are the same, check if enabled state is different
+                if existent_plugin["Enabled"] == enabled:
+                    host.noop(
+                        f"Plugin '{plugin_name}' is already installed with the same options "
+                        f"and {'enabled' if enabled else 'disabled'}."
+                    )
+                    return
+                else:
+                    command = "enable" if enabled else "disable"
+                    yield handle_docker(
+                        resource="plugin",
+                        command=command,
+                        plugin=plugin_name,
+                    )
+        else:
+            yield handle_docker(
+                resource="plugin",
+                command="install",
+                plugin=plugin,
+                alias=alias,
+                enabled=enabled,
+                plugin_options=plugin_options,
+            )
+    else:
+        if not existent_plugin:
+            host.noop(f"Plugin '{plugin_name}' is not installed.")
+            return
+        yield handle_docker(
+            resource="plugin",
+            command="remove",
+            plugin=plugin_name,
+        )
