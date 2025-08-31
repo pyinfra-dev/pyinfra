@@ -1,11 +1,13 @@
 {
     "command": "sysctl -a",
     "output": [
+        "net.ipv4.tcp_adv_win_scale = -2",
         "vm.nr_hugepages_mempolicy = 0",
         "nope what",
         "vm.nr_overcommit_hugepages = 0"
     ],
     "fact": {
+        "net.ipv4.tcp_adv_win_scale": -2,
         "vm.nr_hugepages_mempolicy": 0,
         "vm.nr_overcommit_hugepages": 0
     }

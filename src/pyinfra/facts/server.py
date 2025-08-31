@@ -459,7 +459,7 @@ class Sysctl(FactBase):
                 key = key.strip()
                 values = values.strip()
 
-                if re.match(r"^[a-zA-Z0-9_\.\s]+$", values):
+                if re.match(r"^[a-zA-Z0-9_\-\.\s]+$", values):
                     values = [try_int(item.strip()) for item in values.split()]
 
                     if len(values) == 1:
