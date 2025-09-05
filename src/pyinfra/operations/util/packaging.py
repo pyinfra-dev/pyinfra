@@ -20,6 +20,7 @@ class PkgInfo(NamedTuple):
     version: str
     operator: str
     url: str
+    inst_vers_template: str = "{name}{operator}{version}"
     """
     The key packaging information needed: version, operator and url are optional.
     """
@@ -34,13 +35,27 @@ class PkgInfo(NamedTuple):
 
     @property
     def inst_vers(self) -> str:
-        return (
-            self.url
-            if self.url != ""
-            else (
-                self.operator.join([self.name, self.version]) if self.version != "" else self.name
+        """String that represents how a program can be installed.
+
+        - If self.url exists, then url is always returned.
+        - If self.version exists, then inst_vers_template is used
+        to create the string. The default template is '{name}{operator}{version}'.
+        - Otherwise, self.name is returned.
+
+        Note, the result string will be quoted, so input is shell safe.
+        """
+
+        if self.url:
+            return shlex.quote(self.url)
+
+        if self.version:
+            # assumes if version exists, then name and operator do
+            return self.inst_vers_template.format(
+                name=shlex.quote(self.name),
+                operator=shlex.quote(self.operator),
+                version=shlex.quote(self.version),
             )
-        )
+        return shlex.quote(self.name)
 
     @classmethod
     def from_possible_pair(cls, s: str, join: str | None) -> PkgInfo:
@@ -194,7 +209,6 @@ def ensure_packages(
                         host.noop(f"package {pkg} is installed ({','.join(current_packages[pkg])})")
                     else:
                         host.noop(f"package {package.name} is installed")
-
     if present is False:
         for package in packages:
             has_package, expanded_packages = _has_package(
@@ -209,10 +223,10 @@ def ensure_packages(
 
     if diff_packages:
         command = install_command if present else uninstall_command
-        yield f"{command} {' '.join([shlex.quote(pkg) for pkg in diff_packages])}"
+        yield f"{command} {' '.join([pkg for pkg in diff_packages])}"
 
     if latest and upgrade_command and upgrade_packages:
-        yield f"{upgrade_command} {' '.join([shlex.quote(pkg) for pkg in upgrade_packages])}"
+        yield f"{upgrade_command} {' '.join([pkg for pkg in upgrade_packages])}"
 
 
 def ensure_rpm(state: State, host: Host, source: str, present: bool, package_manager_command: str):
