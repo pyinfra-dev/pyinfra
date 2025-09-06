@@ -1312,6 +1312,28 @@ def move(src: str, dest: str, overwrite=False):
     yield StringCommand("mv", QuoteString(src), QuoteString(dest))
 
 
+@operation()
+def copy(src: str, dest: str, overwrite=False):
+    if not host.get_fact(File, src):
+        raise OperationError(f"src {src} does not exist")
+
+    if not host.get_fact(Directory, dest):
+        raise OperationError(f"dest {dest} is not an existing directory")
+
+    dest_file_path = os.path.join(dest, os.path.basename(src))
+    dest_file_exists = host.get_fact(File, dest_file_path)
+
+    if dest_file_exists and not overwrite:
+        raise OperationError(
+            f"dest {dest_file_path} already exists and `overwrite` is unset"
+        )
+
+    cp_cmd = ["cp"]
+    if overwrite:
+        cp_cmd.append("-f")
+    yield StringCommand(*cp_cmd, QuoteString(src), QuoteString(dest))
+
+
 def _validate_path(path):
     try:
         return os.fspath(path)

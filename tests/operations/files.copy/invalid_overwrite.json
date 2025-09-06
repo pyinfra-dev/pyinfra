@@ -1,0 +1,20 @@
+{
+    "kwargs": {
+        "src": "/tmp/src_dir/file",
+        "dest": "/tmp/dest_dir",
+        "overwrite": false
+    },
+    "facts": {
+        "files.File": {
+            "path=/tmp/src_dir/file": true,
+            "path=/tmp/dest_dir/file": true
+        },
+        "files.Directory": {
+            "path=/tmp/dest_dir": true
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "dest /tmp/dest_dir/file already exists and `overwrite` is unset"
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "kwargs": {
+        "src": "/tmp/src_dir/file",
+        "dest": "/tmp/dest_dir",
+        "overwrite": true
+    },
+    "facts": {
+        "files.File": {
+            "path=/tmp/src_dir/file": true,
+            "path=/tmp/dest_dir/file": true
+        },
+        "files.Directory": {
+            "path=/tmp/dest_dir": true
+        }
+    },
+    "commands": ["cp -f /tmp/src_dir/file /tmp/dest_dir"]
+}
