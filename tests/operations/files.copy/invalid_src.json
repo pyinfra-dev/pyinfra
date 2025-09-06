@@ -10,7 +10,8 @@
             "path=/tmp/dest_dir/file": null
         },
         "files.Directory": {
-            "path=/tmp/dest_dir": true
+            "path=/tmp/dest_dir": true,
+            "path=/tmp/src_dir/file": null
         }
     },
     "exception": {

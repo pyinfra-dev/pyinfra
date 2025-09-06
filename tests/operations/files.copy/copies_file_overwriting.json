@@ -10,8 +10,9 @@
             "path=/tmp/dest_dir/file": true
         },
         "files.Directory": {
-            "path=/tmp/dest_dir": true
+            "path=/tmp/dest_dir": true,
+            "path=/tmp/src_dir/file": null
         }
     },
-    "commands": ["cp -f /tmp/src_dir/file /tmp/dest_dir"]
+    "commands": ["cp -r -f /tmp/src_dir/file /tmp/dest_dir"]
 }

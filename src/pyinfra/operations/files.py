@@ -1314,7 +1314,8 @@ def move(src: str, dest: str, overwrite=False):
 
 @operation()
 def copy(src: str, dest: str, overwrite=False):
-    if not host.get_fact(File, src):
+    src_is_dir = host.get_fact(Directory, src)
+    if not host.get_fact(File, src) and not src_is_dir:
         raise OperationError(f"src {src} does not exist")
 
     if not host.get_fact(Directory, dest):
@@ -1322,15 +1323,14 @@ def copy(src: str, dest: str, overwrite=False):
 
     dest_file_path = os.path.join(dest, os.path.basename(src))
     dest_file_exists = host.get_fact(File, dest_file_path)
-
     if dest_file_exists and not overwrite:
-        raise OperationError(
-            f"dest {dest_file_path} already exists and `overwrite` is unset"
-        )
+        raise OperationError(f"dest {dest_file_path} already exists and `overwrite` is unset")
 
-    cp_cmd = ["cp"]
+    cp_cmd = ["cp -r"]
+
     if overwrite:
         cp_cmd.append("-f")
+
     yield StringCommand(*cp_cmd, QuoteString(src), QuoteString(dest))
 
 
