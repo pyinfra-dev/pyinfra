@@ -1,7 +1,7 @@
 from os import path
 from unittest import TestCase
 
-from pyinfra_cli.main import _main
+from pyinfra_cli.cli import _main
 
 from ..paramiko_util import PatchSSHTestCase
 from .util import run_cli

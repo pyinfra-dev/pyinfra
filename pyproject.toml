@@ -1,24 +1,111 @@
 [project]
 name = "pyinfra"
-# delegate handling of these to setup.py/setup.cfg
 dynamic = [
-    "authors",
-    "classifiers",
-    "dependencies",
-    "description",
-    "entry-points",
-    "license",
-    "optional-dependencies",
-    "readme",
-    "requires-python",
-    "scripts",
-    "urls",
     "version",
 ]
+description = "pyinfra automates/provisions/manages/deploys infrastructure."
+readme = "README.md"
+authors = [
+    { name = "Nick / Fizzadar", email = "pointlessrambler@gmail.com" },
+]
+license = "MIT"
+license-files = ["LICENSE.md"]
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "gevent>=1.5",
+    "paramiko>=2.7,<4", # 2.7 (2019) adds OpenSSH key format + Match SSH config
+    "click>2",
+    "jinja2>3,<4",
+    "python-dateutil>2,<3",
+    "typeguard>=4,<5",
+    "distro>=1.6,<2",
+    "packaging>=16.1",
+    "typing-extensions; python_version < '3.11'", # Backport of typing for Unpack (added 3.11)
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Information Technology",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Systems Administration",
+    "Topic :: System :: Installation/Setup",
+    "Topic :: Utilities",
+]
+
+[project.urls]
+homepage = "https://pyinfra.com"
+documentation = "https://docs.pyinfra.com"
+repository = "https://github.com/pyinfra-dev/pyinfra"
+
+[dependency-groups]
+test = [
+    "click>=8.2",
+    "pytest>=8.3.5,<9",
+    "coverage>=7.7.1,<8",
+    "pytest-cov>=7.0.0,<8",
+    "pytest-testinfra>=10.2.2,<11",
+    "black>=25.1.0,<26",
+    "isort>=6.0.1,<7",
+    "flake8>=7.1.2,<8",
+    "flake8-black>=0.3.6,<0.4",
+    "flake8-isort==6.1.2,<7",
+    "pyyaml>=6.0.2,<7",
+    "mypy==1.17.1",
+    "types-cryptography>=3.3.23.2,<4",
+    "types-paramiko>=2.7,<4",
+    "types-python-dateutil>2,<3",
+    "types-PyYAML>6,<7",
+]
+
+docs = [
+    "pyinfra-guzzle_sphinx_theme>=0.17; python_version >= '3.13'",
+    "myst-parser>=4.0.1,<5; python_version >= '3.13'",
+    "sphinx==8.2.3; python_version >= '3.13'",
+]
+
+# dev includes test + docs + extra dev-only tools
+dev = [
+    {"include-group" = "test" },
+    {"include-group" = "docs" },
+    # dev debugging
+    "ipython",
+    "ipdb",
+    "ipdbplugin",
+    # dev-only lint extras
+    "flake8-spellcheck==0.28.0",
+    "redbaron",
+]
+
+[project.scripts]
+pyinfra = "pyinfra_cli.main:main"
+
+[project.entry-points."pyinfra.connectors"]
+chroot = "pyinfra.connectors.chroot:ChrootConnector"
+docker = "pyinfra.connectors.docker:DockerConnector"
+podman = "pyinfra.connectors.docker:PodmanConnector"
+local = "pyinfra.connectors.local:LocalConnector"
+ssh = "pyinfra.connectors.ssh:SSHConnector"
+dockerssh = "pyinfra.connectors.dockerssh:DockerSSHConnector"
+# Inventory only connectors
+terraform = "pyinfra.connectors.terraform:TerraformInventoryConnector"
+vagrant = "pyinfra.connectors.vagrant:VagrantInventoryConnector"
 
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyinfra", "src/pyinfra_cli"]
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
 
 [tool.black]
 line-length = 100
@@ -35,4 +122,24 @@ check_untyped_defs = true
 ignore_missing_imports = true
 enable_incomplete_feature = "Unpack"
 enable_error_code = "explicit-override"
-files = "pyinfra,pyinfra_cli"
+files = "src/pyinfra,src/pyinfra_cli"
+
+[tool.pytest.ini_options]
+# Skip end-to-end tests by default
+addopts = "-m'not end_to_end'"
+markers = [
+    "end_to_end",
+    "end_to_end_docker",
+    "end_to_end_podman",
+    "end_to_end_local",
+    "end_to_end_ssh"
+]
+
+[tool.coverage.run]
+concurrency = ["gevent"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+precision = 1
+include = ["src/pyinfra/*", "src/pyinfra_cli/*"]

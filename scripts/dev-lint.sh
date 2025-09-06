@@ -3,12 +3,12 @@
 set -euo pipefail
 
 echo "Execute black..."
-black ./
+uv run black ./
 
 echo "Execute flake8..."
-flake8
+uv run flake8
 
 echo "Execute mypy..."
-mypy
+uv run mypy
 
 echo "Linting complete!"

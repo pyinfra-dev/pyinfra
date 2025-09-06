@@ -18,16 +18,19 @@ Third party pull requests help expand pyinfra's functionality and are essential 
 
 ## Dev Setup
 
+First, install [uv](https://docs.astral.sh/uv/).
+
+Then, set up a development environment:
+
 ```sh
-# Create a virtualenv with your tool of choice
-# python -m venv / pyenv virtualenv / virtualenv
+# There is no need to create a virtualenv, uv will do that for you
 
 # Clone the repo
 git clone git@github.com:pyinfra-dev/pyinfra.git
 
 # Install the package in editable mode with development requirements
 cd pyinfra
-pip install -e '.[dev]'
+uv sync
 ```
 
 ### Code Style & Type Checking
@@ -54,10 +57,10 @@ To limit the pytests to a specific fact or operation:
 
 ```sh
 # Only run fact tests for facts.efibootmgr.EFIBootMGR
-pytest tests/test_facts.py -k "efibootmgr.EFIBootMGR"
+uv run pytest tests/test_facts.py -k "efibootmgr.EFIBootMGR"
 
 # Only run operation tests for operations.selinux
-pytest tests/test_operations.py -k "selinux."
+uv run pytest tests/test_operations.py -k "selinux."
 ```
 
 #### End to End Tests
@@ -69,11 +72,11 @@ The end to end tests are also executed via `pytest` but not selected by default,
 scripts/dev-test-e2e.sh
 
 # Run local e2e tests (works on Linux / MacOS, no Windows yet)
-pytest -m end_to_end_local
+uv run pytest -m end_to_end_local
 
 # Run Docker and SSH e2e tests (Linux / MacOS with Docker installed)
-pytest -m end_to_end_ssh
-pytest -m end_to_end_docker
+uv run pytest -m end_to_end_ssh
+uv run pytest -m end_to_end_docker
 ```
 
 ## Documentation

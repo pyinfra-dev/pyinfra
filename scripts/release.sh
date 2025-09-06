@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-VERSION=`python setup.py --version`
-MAJOR_BRANCH="`python setup.py --version | cut -d'.' -f1`.x"
+VERSION=`uv run python scripts/generate_next_version.py`
+MAJOR_BRANCH="`uv run python scripts/generate_next_version.py | cut -d'.' -f1`.x"
 
 echo "# Releasing pyinfra v${VERSION} (branch ${MAJOR_BRANCH})"
 
@@ -17,11 +17,11 @@ git push --atomic origin "${MAJOR_BRANCH}" "v$VERSION"
 echo "Clear existing build/dist..."
 rm -rf build/* dist/*
 echo "Build source and wheel packages..."
-python setup.py sdist bdist_wheel
-echo "Upload w/Twine..."
-twine upload dist/*
+uv build
+echo "Publishing to PyPI..."
+uv publish
 
 echo "Making GitHub release..."
-python scripts/make_github_release.py
+uv run python scripts/make_github_release.py
 
 echo "# All done!"

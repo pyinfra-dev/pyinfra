@@ -16,48 +16,33 @@ jobs:
   lint:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - run: pip install '.[test]'
-      - run: flake8
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - run: uv sync --group test --no-default-groups
+      - run: uv run flake8
 
   type-check:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - run: pip install '.[test]'
-      - run: mypy
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - run: uv sync --group test --no-default-groups
+      - run: uv run mypy
 
   spell-check:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check spelling
         uses: crate-ci/typos@v1.30.3
-
-  # Test instal works on untestable Python versions. This came about because click decided to drop
-  # Python 3.9 support before EOL, so 3.9 was dropped from the unit test matrix. Still need to test
-  # that pyinfra can be built on 3.9.
-  build-legacy-versions:
-    strategy:
-      matrix:
-        python-version: ["3.9"]
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - run: pip install '.'
-      - run: pyinfra --help
-
-  # Unit tests
-  #
 
   unit-test:
     needs:
@@ -66,17 +51,19 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04, macos-13, macos-14, macos-15,windows-2022, windows-2025]
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install '.[test]'
-      - run: pytest --cov --disable-warnings
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - run: uv sync --group test --no-default-groups --python=${{ matrix.python-version }}
+      - run: uv run pytest --cov --disable-warnings
       - name: Upload coverage report to codecov
-        if: ${{ matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.12' }}
+        if: ${{ matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' }}
         uses: codecov/codecov-action@v5
 
   # End-to-end tests
@@ -90,28 +77,29 @@ jobs:
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
         test-name: [local, ssh, docker, podman]
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
         include:
           - os: macos-13
             test-name: local
-            python-version: "3.12"
+            python-version: "3.13"
           - os: macos-14
             test-name: local
-            python-version: "3.12"
+            python-version: "3.13"
           - os: macos-15
             test-name: local
-            python-version: "3.12"
+            python-version: "3.13"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install '.[test]'
-      - run: pytest -m end_to_end_${{ matrix.test-name }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - run: uv sync --group test --no-default-groups --python=${{ matrix.python-version }}
+      - run: uv run pytest -m end_to_end_${{ matrix.test-name }}
 
   # Finally, single jon to check if all completed, for use in protected branch
-  #
 
   tests-done:
     if: ${{ always() }}

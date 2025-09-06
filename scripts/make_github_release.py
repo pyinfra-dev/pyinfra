@@ -1,8 +1,9 @@
 import os
+from pathlib import Path
 
 import requests
 
-from setup import get_version_from_changelog
+from .generate_next_version import get_version_from_changelog
 
 GITHUB_API_TOKEN = os.environ["GITHUB_API_TOKEN"]
 
@@ -11,7 +12,9 @@ def make_github_release():
     version = get_version_from_changelog()
     tag = f"v{version}"
 
-    with open("CHANGELOG.md", "r", encoding="utf-8") as f:
+    changelog_path = Path(__file__).parent.parent / "CHANGELOG.md"
+
+    with open(changelog_path, "r", encoding="utf-8") as f:
         changelog_data = f.read()
 
     changelog_lines = []

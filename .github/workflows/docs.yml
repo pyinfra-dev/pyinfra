@@ -15,16 +15,16 @@ jobs:
     if: github.repository == 'pyinfra-dev/pyinfra'
     steps:
       - name: Clone Source Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Fetch git tags
         run: git fetch --tags origin
 
       - name: Clone Generated Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
-          repository: fizzadar/docs.pyinfra.com
+          repository: pyinfra-dev/docs.pyinfra.com
           path: docs/public/
 
       - name: Set up Python
@@ -32,8 +32,8 @@ jobs:
 
       - name: Install
         run: |
-          pip install '.[docs]'
-          pip install 'jinja2<3.1'
+          uv sync --group docs --no-default-groups
+          uv pip install 'jinja2<3.1'
 
       - name: Generate documentation
         run: scripts/build-public-docs.sh
