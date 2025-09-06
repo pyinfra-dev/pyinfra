@@ -1314,6 +1314,13 @@ def move(src: str, dest: str, overwrite=False):
 
 @operation()
 def copy(src: str, dest: str, overwrite=False):
+    """
+    Copy remote file/directory/link into remote directory
+
+    + src: remote file/directory to copy
+    + dest: remote directory to copy `src` into
+    + overwrite: whether to overwrite dest, if present
+    """
     src_is_dir = host.get_fact(Directory, src)
     if not host.get_fact(File, src) and not src_is_dir:
         raise OperationError(f"src {src} does not exist")
