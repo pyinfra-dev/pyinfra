@@ -15,12 +15,16 @@ from pyinfra.facts.rpm import RpmPackage
 from pyinfra.operations import files
 
 
+def default_inst_vers_format_fn(name: str, operator: str, version: str):
+    return "{name}{operator}{version}".format(name=name, operator=operator, version=version)
+
+
 class PkgInfo(NamedTuple):
     name: str
     version: str
     operator: str
     url: str
-    inst_vers_template: str = "{name}{operator}{version}"
+    inst_vers_format_fn: Callable = default_inst_vers_format_fn
     """
     The key packaging information needed: version, operator and url are optional.
     """
@@ -38,7 +42,7 @@ class PkgInfo(NamedTuple):
         """String that represents how a program can be installed.
 
         - If self.url exists, then url is always returned.
-        - If self.version exists, then inst_vers_template is used
+        - If self.version exists, then inst_vers_format_fn is used
         to create the string. The default template is '{name}{operator}{version}'.
         - Otherwise, self.name is returned.
 
@@ -49,12 +53,7 @@ class PkgInfo(NamedTuple):
             return shlex.quote(self.url)
 
         if self.version:
-            # assumes if version exists, then name and operator do
-            return self.inst_vers_template.format(
-                name=shlex.quote(self.name),
-                operator=shlex.quote(self.operator),
-                version=shlex.quote(self.version),
-            )
+            return shlex.quote(self.inst_vers_format_fn(self.name, self.operator, self.version))
         return shlex.quote(self.name)
 
     @classmethod
