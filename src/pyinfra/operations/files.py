@@ -1569,6 +1569,12 @@ def directory(
     + force_backup: set to ``False`` to remove any existing non-file when ``force=True``
     + force_backup_dir: directory to move any backup to when ``force=True``
 
+    ``recursive``:
+        Mode is only applied recursively if the base directory mode does not match
+        the specified value.  User and group are both applied recursively if the
+        base directory does not match either one; otherwise they are unchanged for
+        the whole tree.
+
     **Examples:**
 
     .. code:: python
