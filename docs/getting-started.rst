@@ -1,11 +1,11 @@
 Getting Started
 ===============
 
-This guide should help describe the basics of deploying stuff with pyinfra. Start by installing pyinfra with ``pip`` (see :doc:`full install instructions <./install>`):
+This guide should help describe the basics of deploying stuff with pyinfra. Start by installing pyinfra with `uv <https://docs.astral.sh/uv/>`_ (see :doc:`full install instructions <./install>`):
 
 .. code:: bash
 
-    pip install pyinfra
+    uv tool install pyinfra
 
 To do something with pyinfra you need two things:
 

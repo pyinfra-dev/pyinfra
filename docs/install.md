@@ -26,7 +26,49 @@ orphan: true
 
 ## Installation Method
 
-### Using pip (Recommended)
+### Using uv (Recommended)
+
+First install [uv](https://docs.astral.sh/uv/getting-started/installation/) if you haven't already.
+
+Now you can install pyinfra as a tool, or add it to your project's dependencies.
+
+#### Installing pyinfra as a tool
+
+   ```sh
+   # install pyinfra
+   uv tool install pyinfra
+   
+   # verify installation
+   pyinfra --version
+   ```
+
+#### Adding pyinfra to your project dependencies
+
+   ```sh
+   # add pyinfra to your project dependencies
+   uv add pyinfra
+   
+   # verify installation
+   uv run pyinfra --version
+   ```
+
+### Using pipx
+
+First install [pipx](https://pipx.pypa.io/stable/installation/) if you haven't already.
+
+#### Install pyinfra
+
+   ```sh
+   pipx install pyinfra
+   ```
+
+#### Verify Installation
+
+   ```sh
+   pyinfra --version
+   ```
+
+### Using pip
 
 #### Create a Virtual Environment (Best Practice)
 
