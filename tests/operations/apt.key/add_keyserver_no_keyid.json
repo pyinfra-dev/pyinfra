@@ -3,7 +3,10 @@
         "keyserver": "key-server.net"
     },
     "facts": {
-        "apt.AptKeys": {}
+        "apt.AptKeys": {},
+        "files.Directory": {
+            "path=/etc/apt/keyrings": null
+        }
     },
     "exception": {
         "name": "OperationError",

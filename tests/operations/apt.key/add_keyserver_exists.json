@@ -7,6 +7,9 @@
         "apt.AptKeys": {
             "abc": {},
             "def": {}
+        },
+        "files.Directory": {
+            "path=/etc/apt/keyrings": null
         }
     },
     "commands": [],

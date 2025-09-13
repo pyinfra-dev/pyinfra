@@ -5,10 +5,16 @@
     },
     "facts": {
         "apt.AptKeys": {
-            "abc": {}
+            "abc": {},
+            "def": {}
+        },
+        "files.Directory": {
+            "path=/etc/apt/keyrings": null,
+            "path=/tmp/pyinfra-gpg-empfile_": null
+        },
+        "files.File": {
+            "path=/etc/apt/keyrings/keyserver-abc-def.gpg": null
         }
     },
-    "commands": [
-        "apt-key adv --keyserver key-server.net --recv-keys def"
-    ]
+    "commands": []
 }

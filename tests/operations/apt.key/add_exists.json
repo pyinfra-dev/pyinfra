@@ -8,6 +8,9 @@
             "src=mykey": {
                 "abc": {}
             }
+        },
+        "files.Directory": {
+            "path=/etc/apt/keyrings": null
         }
     },
     "commands": [],

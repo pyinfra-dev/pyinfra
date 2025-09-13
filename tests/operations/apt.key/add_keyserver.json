@@ -4,9 +4,24 @@
         "keyid": "abc"
     },
     "facts": {
-        "apt.AptKeys": {}
+        "apt.AptKeys": {},
+        "files.Directory": {
+            "path=/etc/apt/keyrings": null,
+            "path=/tmp/pyinfra-gpg-empfile_": null
+        },
+        "files.File": {
+            "path=/etc/apt/keyrings/keyserver-abc.gpg": null
+        }
     },
     "commands": [
-        "apt-key adv --keyserver key-server.net --recv-keys abc"
+        "mkdir -p /etc/apt/keyrings",
+        "chmod 755 /etc/apt/keyrings",
+        "mkdir -p /tmp/pyinfra-gpg-empfile_",
+        "chmod 700 /tmp/pyinfra-gpg-empfile_",
+        "export GNUPGHOME=\"/tmp/pyinfra-gpg-empfile_\" && gpg --batch --keyserver \"key-server.net\" --recv-keys abc",
+        "export GNUPGHOME=\"/tmp/pyinfra-gpg-empfile_\" && gpg --batch --export abc | gpg --batch --dearmor -o \"/etc/apt/keyrings/keyserver-abc.gpg\"",
+        "mkdir -p /etc/apt/keyrings",
+        "touch /etc/apt/keyrings/keyserver-abc.gpg",
+        "chmod 644 /etc/apt/keyrings/keyserver-abc.gpg"
     ]
 }
