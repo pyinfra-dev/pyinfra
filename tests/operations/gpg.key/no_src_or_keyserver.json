@@ -5,7 +5,7 @@
     },
     "exception": {
         "names": ["OperationError"],
-        "message": "Either `src` or `keyserver` must be provided"
+        "message": "Either `src` or `keyserver` must be provided for installation"
     },
     "facts": {}
 }

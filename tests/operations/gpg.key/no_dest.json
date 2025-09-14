@@ -6,6 +6,6 @@
     "facts": {},
     "exception": {
         "names": ["OperationError"],
-        "message": "`dest` must be provided"
+        "message": "`dest` must be provided for installation"
     }
 }

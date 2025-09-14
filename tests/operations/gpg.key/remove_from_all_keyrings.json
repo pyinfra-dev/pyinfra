@@ -1,0 +1,15 @@
+{
+    "kwargs": {
+        "keyid": "0xCOMPROMISED123",
+        "present": false
+    },
+    "facts": {},
+    "commands": [
+        "for keyring in /etc/apt/trusted.gpg.d/*.gpg; do [ -e \"$keyring\" ] && gpg --batch --no-default-keyring --keyring \"$keyring\" --delete-keys 0xCOMPROMISED123 2>/dev/null || true; done",
+        "for keyring in /etc/apt/trusted.gpg.d/*.gpg; do [ -e \"$keyring\" ] && ! gpg --batch --no-default-keyring --keyring \"$keyring\" --list-keys 2>/dev/null | grep -q \"pub\" && rm -f \"$keyring\" || true; done",
+        "for keyring in /etc/apt/keyrings/*.gpg; do [ -e \"$keyring\" ] && gpg --batch --no-default-keyring --keyring \"$keyring\" --delete-keys 0xCOMPROMISED123 2>/dev/null || true; done",
+        "for keyring in /etc/apt/keyrings/*.gpg; do [ -e \"$keyring\" ] && ! gpg --batch --no-default-keyring --keyring \"$keyring\" --list-keys 2>/dev/null | grep -q \"pub\" && rm -f \"$keyring\" || true; done",
+        "for keyring in /usr/share/keyrings/*.gpg; do [ -e \"$keyring\" ] && gpg --batch --no-default-keyring --keyring \"$keyring\" --delete-keys 0xCOMPROMISED123 2>/dev/null || true; done",
+        "for keyring in /usr/share/keyrings/*.gpg; do [ -e \"$keyring\" ] && ! gpg --batch --no-default-keyring --keyring \"$keyring\" --list-keys 2>/dev/null | grep -q \"pub\" && rm -f \"$keyring\" || true; done"
+    ]
+}

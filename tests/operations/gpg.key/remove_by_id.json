@@ -1,0 +1,16 @@
+{
+    "kwargs": {
+        "dest": "/etc/apt/keyrings/vendor.gpg",
+        "keyid": "0xABCDEF12",
+        "present": false
+    },
+    "facts": {
+        "files.File": {
+            "path=/etc/apt/keyrings/vendor.gpg": {"mode": 644}
+        }
+    },
+    "commands": [
+        "gpg --batch --no-default-keyring --keyring \"/etc/apt/keyrings/vendor.gpg\" --delete-keys 0xABCDEF12 2>/dev/null || true",
+        "if ! gpg --batch --no-default-keyring --keyring \"/etc/apt/keyrings/vendor.gpg\" --list-keys 2>/dev/null | grep -q \"pub\"; then rm -f \"/etc/apt/keyrings/vendor.gpg\"; fi"
+    ]
+}
