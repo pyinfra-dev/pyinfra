@@ -16,5 +16,6 @@
             "path=/etc/apt/keyrings/keyserver-abc-def.gpg": null
         }
     },
-    "commands": []
+    "commands": [],
+    "noop_description": "Keys abc, def are already available in the apt keychain"
 }

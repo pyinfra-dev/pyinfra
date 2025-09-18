@@ -1,5 +1,6 @@
 {
     "command": "for f in   /etc/apt/trusted.gpg   /etc/apt/trusted.gpg.d/*.gpg /etc/apt/trusted.gpg.d/*.asc   /etc/apt/keyrings/*.gpg /etc/apt/keyrings/*.asc   /usr/share/keyrings/*.gpg /usr/share/keyrings/*.asc ; do   [ -e \"$f\" ] || continue;   case \"$f\" in     *.asc)       gpg --batch --show-keys --with-colons --keyid-format LONG \"$f\"       ;;     *)       gpg --batch --no-default-keyring --keyring \"$f\"           --list-keys --with-colons --keyid-format LONG       ;;   esac; done",
+    "requires_command": "gpg",
     "output": [
         "tru:t:1:1601454628:0:3:1:5",
         "pub:-:4096:1:3B4FE6ACC0B21F32:1336770936:::-:::scSC::::::23::0:",
