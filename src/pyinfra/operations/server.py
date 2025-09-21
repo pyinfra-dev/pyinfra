@@ -518,7 +518,7 @@ def service(
 
     else:
         raise OperationError(
-            ("No init system found " "(no systemctl, initctl, /etc/init.d or /etc/rc.d found)"),
+            ("No init system found (no systemctl, initctl, /etc/init.d or /etc/rc.d found)"),
         )
 
     yield from service_operation._inner(

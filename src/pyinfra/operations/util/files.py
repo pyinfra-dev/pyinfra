@@ -47,8 +47,10 @@ _sed_ignore_case = re.compile("[iI]")
 
 def _sed_delete_builder(line: str, replace: str, flags: str, interpolate_variables: bool) -> str:
     return (
-        '"/{0}/{1}d"' if interpolate_variables else  # fmt: skip
-        "'/{0}/{1}d'"
+        '"/{0}/{1}d"'
+        if interpolate_variables
+        # fmt: skip
+        else "'/{0}/{1}d'"
     ).format(line, "I" if _sed_ignore_case.search(flags) else "")
 
 
@@ -65,8 +67,10 @@ def sed_delete(
 
 def _sed_replace_builder(line: str, replace: str, flags: str, interpolate_variables: bool) -> str:
     return (
-        '"s/{0}/{1}/{2}"' if interpolate_variables else  # fmt: skip
-        "'s/{0}/{1}/{2}'"
+        '"s/{0}/{1}/{2}"'
+        if interpolate_variables
+        # fmt: skip
+        else "'s/{0}/{1}/{2}'"
     ).format(line, replace, flags)
 
 

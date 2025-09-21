@@ -47,9 +47,13 @@ class ChrootConnector(BaseConnector):
 
         show_warning()
 
-        yield "@chroot/{0}".format(name), {
-            "chroot_directory": "/{0}".format(name.lstrip("/")),
-        }, ["@chroot"]
+        yield (
+            "@chroot/{0}".format(name),
+            {
+                "chroot_directory": "/{0}".format(name.lstrip("/")),
+            },
+            ["@chroot"],
+        )
 
     @override
     def connect(self) -> None:
