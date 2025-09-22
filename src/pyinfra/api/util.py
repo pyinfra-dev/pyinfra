@@ -220,7 +220,7 @@ def log_operation_start(
 
 
 def log_error_or_warning(
-    host: "Host", ignore_errors: bool, description: str = "", continue_on_error: bool = False
+    host: "Host", ignore_errors: bool, description: str = "", continue_on_error: bool = False, exception: Exception | None = None
 ) -> None:
     log_func = logger.error
     log_color = "red"
@@ -234,6 +234,15 @@ def log_error_or_warning(
         )
         if description:
             log_text = f"{log_text}: "
+
+    if exception:
+        exc_text = "{0}: {1}".format(type(exception).__name__, exception)
+        log_func(
+            "{0}{1}".format(
+                host.print_prefix,
+                click.style(exc_text, log_color),
+            ),
+        )
 
     log_func(
         "{0}{1}{2}".format(
