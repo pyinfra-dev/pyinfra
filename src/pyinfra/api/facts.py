@@ -275,8 +275,10 @@ def _get_fact(
                 log_error_or_warning(
                     host,
                     global_kwargs["_ignore_errors"],
-                    description=("could not process fact: {0} {1}").format(name, get_kwargs_str(fact_kwargs)),
-                    exception=e
+                    description=("could not process fact: {0} {1}").format(
+                        name, get_kwargs_str(fact_kwargs)
+                    ),
+                    exception=e,
                 )
 
                 # Check we've not failed

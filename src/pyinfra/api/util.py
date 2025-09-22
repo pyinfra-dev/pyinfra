@@ -220,7 +220,11 @@ def log_operation_start(
 
 
 def log_error_or_warning(
-    host: "Host", ignore_errors: bool, description: str = "", continue_on_error: bool = False, exception: Exception | None = None
+    host: "Host",
+    ignore_errors: bool,
+    description: str = "",
+    continue_on_error: bool = False,
+    exception: Exception | None = None,
 ) -> None:
     log_func = logger.error
     log_color = "red"
