@@ -35,26 +35,53 @@ You can leverage facts within :doc:`operations <using-operations>` like this:
 
 **Want a new fact?** Check out :doc:`the writing facts guide <./api/operations>`.
 
-Facts, like :doc:`operations <operations>`, are namespaced as different modules - shortcuts to each of these can be found in the sidebar.
-
 .. raw:: html
 
-   <style type="text/css">
-      #facts-index .toctree-wrapper > ul {
-         padding: 0;
-      }
-      #facts-index .toctree-wrapper > ul > li {
-         padding: 0;
-         list-style: none;
-         margin: 20px 0;
-      }
-      #facts-index .toctree-wrapper > ul > li > ul > li {
-         display: inline-block;
-      }
-   </style>
+        <div class="container my-4">
+          <!-- Dropdown Filter -->
+          <div class="mb-4">
+            <label for="tag-dropdown" class="form-label">Filter by Tag:</label>
+            <select class="form-select" id="tag-dropdown">
+	      <option value="All">All</option>
+{% for tag in tags %}
+              <option value="{{ tag.title_case }}">{{ tag.title_case }}</option>
+{% endfor %}
+            </select>
+          </div>
 
-.. toctree::
-   :maxdepth: 2
-   :glob:
+          <!-- Cards Grid -->
+          <div class="row" id="card-container">
+{% for plugin in fact_plugins %}
+            <div class="col-md-4 mb-4 card-item">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h5 class="card-title">
+                    <a href="{{ docs_language }}/{{ docs_version }}/facts/{{ plugin.name }}.html">
+                      {{ plugin.name }}
+                    </a>
+                  <p class="card-text">{{ plugin.description }}</p>
+{% for tag in plugin.tags %}
+                  <span class="badge bg-secondary">{{ tag.title_case }}</span>
+{% endfor %}
+                </div>
+              </div>
+            </div>
+{% endfor %}
+          </div>
+        </div>
+        <script>
+          document.getElementById('tag-dropdown').addEventListener('change', function () {
+            const selectedTag = this.value;
+            const cards = document.querySelectorAll('.card-item');
 
-   facts/*
+            cards.forEach(card => {
+              const tags = Array.from(card.querySelectorAll('.badge')).map(badge => badge.textContent.trim());
+
+              if (selectedTag === 'All' || tags.includes(selectedTag)) {
+                card.style.display = 'block';
+              } else {
+                card.style.display = 'none';
+              }
+            });
+          });
+        </script>

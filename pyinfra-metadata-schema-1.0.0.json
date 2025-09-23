@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "pyinfra-metadata Configuration",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "pyinfra": {
+      "type": "object",
+      "properties": {
+        "plugins": {
+          "type": "object",
+          "minProperties": 1,
+          "patternProperties": {
+            "^.*$": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "operation",
+                    "fact",
+                    "connector"
+                  ]
+                },
+                "path": {
+                  "type": "string"
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "path",
+                "tags"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }},
+      "required": [
+        "plugins"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": ["pyinfra"]
+}

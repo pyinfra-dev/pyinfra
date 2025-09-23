@@ -12,7 +12,7 @@ Operations are used to describe changes to make to systems in the inventory. Use
           <div class="mb-4">
             <label for="tag-dropdown" class="form-label">Filter by Tag:</label>
             <select class="form-select" id="tag-dropdown">
-	      <option value="All">All</option>
+	      <option value="all">all</option>
 {% for tag in tags %}
               <option value="{{ tag.title_case }}">{{ tag.title_case }}</option>
 {% endfor %}
@@ -21,15 +21,11 @@ Operations are used to describe changes to make to systems in the inventory. Use
 
           <!-- Cards Grid -->
           <div class="row" id="card-container">
-{% for plugin in operation_plugins %}
+{% for plugin in plugins %}
             <div class="col-md-4 mb-4 card-item">
               <div class="card h-100">
                 <div class="card-body">
-                  <h5 class="card-title">
-                    <a href="{{ docs_language }}/{{ docs_version }}/operations/{{ plugin.name }}.html">
-                      {{ plugin.name }}
-                    </a>
-                  </h5>
+                  <h5 class="card-title">{{ plugin.name }}</h5>
                   <p class="card-text">{{ plugin.description }}</p>
 {% for tag in plugin.tags %}
                   <span class="badge bg-secondary">{{ tag.title_case }}</span>
@@ -48,7 +44,7 @@ Operations are used to describe changes to make to systems in the inventory. Use
             cards.forEach(card => {
               const tags = Array.from(card.querySelectorAll('.badge')).map(badge => badge.textContent.trim());
 
-              if (selectedTag === 'All' || tags.includes(selectedTag)) {
+              if (selectedTag === 'all' || tags.includes(selectedTag)) {
                 card.style.display = 'block';
               } else {
                 card.style.display = 'none';
