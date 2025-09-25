@@ -398,7 +398,7 @@ class HashFileFactBase(FactBaseOptionalStr):
 class Sha1File(HashFileFactBase, digits=40, cmds=["sha1sum", "shasum", "sha1"]):
     """
     Returns a SHA1 hash of a file. Works with both sha1sum and sha1. Returns
-    ``None`` if the file doest not exist.
+    ``None`` if the file does not exist.
     """
 
 
@@ -664,14 +664,16 @@ class Block(FactBase):
 
 class FileContents(FactBase):
     """
-    Returns the contents of a file as a list of lines. Works with both sha1sum and sha1. Returns
-    ``None`` if the file doest not exist.
+    Returns the contents of a file as a list of lines. Returns
+    ``None`` if the file does not exist.
     """
 
     @override
     def command(self, path):
-        return make_formatted_string_command("cat {0}", QuoteString(path))
+        return make_formatted_string_command("test -e {0} && cat {0} || true", QuoteString(path))
 
     @override
     def process(self, output):
+        if not output:
+            return None
         return output
