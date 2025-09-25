@@ -31,5 +31,6 @@
         "server.Groups": {}
     },
     "commands": [
-    ]
+    ],
+    "noop_description": "directory /home/someuser already exists"
 }

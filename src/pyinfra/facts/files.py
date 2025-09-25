@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 import shlex
 import stat
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 from typing_extensions import Literal, NotRequired, TypedDict, override
@@ -86,7 +86,7 @@ def _parse_mode(mode: str) -> int:
 def _parse_datetime(value: str) -> Optional[datetime]:
     value = try_int(value)
     if isinstance(value, int):
-        return datetime.utcfromtimestamp(value)
+        return datetime.fromtimestamp(value, timezone.utc).replace(tzinfo=None)
     return None
 
 
