@@ -1,0 +1,25 @@
+{
+    "args": ["someuser"],
+    "facts": {
+        "server.Os": "Linux",
+        "server.Users": {
+            "someuser": {
+                "home": "/home/someuser",
+                "shell": "/bin/bash",
+                "group": "someuser",
+                "groups": [],
+                "comment": "",
+                "password": ""
+            }
+        },
+        "server.Groups": ["someuser"],
+        "files.Directory": {
+            "path=/home/someuser": {
+                "user": "someuser",
+                "group": "someuser"
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "directory /home/someuser already exists"
+}

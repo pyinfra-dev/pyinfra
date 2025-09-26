@@ -35,7 +35,8 @@ uv sync
 
 ### Code Style & Type Checking
 
-Code style is enforced via Black, isort and flake8. Types are checked with mypy currently, and pyright is recommended for local development though currently optional. There is a script to run the linting & type-checking:
+Code style is enforced via [ruff](https://docs.astral.sh/ruff/). Types are checked with mypy currently, and pyright is 
+recommended for local development though currently optional. There is a script to run the linting & type-checking:
 
 ```sh
 scripts/dev-lint.sh

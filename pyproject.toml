@@ -51,17 +51,13 @@ test = [
     "coverage>=7.7.1,<8",
     "pytest-cov>=7.0.0,<8",
     "pytest-testinfra>=10.2.2,<11",
-    "black>=25.1.0,<26",
-    "isort>=6.0.1,<7",
-    "flake8>=7.1.2,<8",
-    "flake8-black>=0.3.6,<0.4",
-    "flake8-isort==6.1.2,<7",
     "pyyaml>=6.0.2,<7",
     "mypy==1.17.1",
     "types-cryptography>=3.3.23.2,<4",
     "types-paramiko>=2.7,<4",
     "types-python-dateutil>2,<3",
     "types-PyYAML>6,<7",
+    "ruff>=0.13.1",
     "pyinfra-testgen==0.1.1",
 ]
 
@@ -80,7 +76,7 @@ dev = [
     "ipdb",
     "ipdbplugin",
     # dev-only lint extras
-    "flake8-spellcheck==0.28.0",
+    "typos>=1.36.2",
     "redbaron",
 ]
 
@@ -108,15 +104,11 @@ packages = ["src/pyinfra", "src/pyinfra_cli"]
 [tool.hatch.version]
 source = "uv-dynamic-versioning"
 
-[tool.black]
+[tool.ruff]
 line-length = 100
-target-version = ["py38"]
 
-[tool.isort]
-profile = "black"
-line_length = 100
-combine_as_imports = true
-include_trailing_comma = true
+[tool.ruff.lint.isort]
+combine-as-imports = true
 
 [tool.mypy]
 check_untyped_defs = true

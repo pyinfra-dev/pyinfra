@@ -22,8 +22,10 @@ jobs:
           python-version: "3.13"
       - name: Install uv
         uses: astral-sh/setup-uv@v6
-      - run: uv sync --group test --no-default-groups
-      - run: uv run flake8
+      - uses: astral-sh/ruff-action@v3
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: "format --check"
 
   type-check:
     runs-on: ubuntu-24.04
