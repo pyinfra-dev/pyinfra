@@ -461,7 +461,7 @@ def privileges(
 
     def handle_privileges(action, target, privileges_to_apply, with_statement=None):
         command = (
-            "{action} {privileges} " "ON {database}.{table} " '{target} "{user}"@"{user_hostname}"'
+            '{action} {privileges} ON {database}.{table} {target} "{user}"@"{user_hostname}"'
         ).format(
             privileges=", ".join(sorted(privileges_to_apply)),
             action=action,

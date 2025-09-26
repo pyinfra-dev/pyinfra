@@ -275,7 +275,7 @@ class SSHConnector(BaseConnector):
 
             logger.warning("WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!")
             logger.warning(
-                ("Someone could be eavesdropping on you right now " "(man-in-the-middle attack)!"),
+                ("Someone could be eavesdropping on you right now (man-in-the-middle attack)!"),
             )
             logger.warning("If this is expected, you can remove the bad key using:")
             logger.warning(f"    ssh-keygen -R {remove_entry}")
@@ -391,7 +391,6 @@ class SSHConnector(BaseConnector):
                     ),
                 )
         except SSHException as e:
-
             raise ConnectError(
                 (
                     "Unable to establish SFTP connection. Check that the SFTP subsystem "

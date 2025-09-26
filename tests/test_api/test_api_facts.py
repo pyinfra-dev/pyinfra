@@ -35,8 +35,9 @@ class TestFactsApi(PatchSSHTestCase):
         connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-            fake_run_command.return_value = True, CommandOutput(
-                [OutputLine("stdout", "some-output")]
+            fake_run_command.return_value = (
+                True,
+                CommandOutput([OutputLine("stdout", "some-output")]),
             )
             fact_data = get_facts(state, Command, ("yes",))
 
@@ -68,8 +69,9 @@ class TestFactsApi(PatchSSHTestCase):
         )
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-            fake_run_command.return_value = True, CommandOutput(
-                [OutputLine("stdout", "some-output")]
+            fake_run_command.return_value = (
+                True,
+                CommandOutput([OutputLine("stdout", "some-output")]),
             )
             fact_data = get_facts(state, Command, ("yes",))
 
@@ -145,8 +147,9 @@ class TestFactsApi(PatchSSHTestCase):
         connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-            fake_run_command.return_value = MagicMock(), CommandOutput(
-                [OutputLine("stdout", "some-output")]
+            fake_run_command.return_value = (
+                MagicMock(),
+                CommandOutput([OutputLine("stdout", "some-output")]),
             )
             fact_data = get_facts(state, Command, ("yes",), {"_sudo": True})
 
@@ -172,8 +175,9 @@ class TestFactsApi(PatchSSHTestCase):
         connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-            fake_run_command.return_value = True, CommandOutput(
-                [OutputLine("stdout", "some-output")]
+            fake_run_command.return_value = (
+                True,
+                CommandOutput([OutputLine("stdout", "some-output")]),
             )
             fact_data = get_facts(state, Command, ("yes",))
 
@@ -208,8 +212,9 @@ class TestFactsApi(PatchSSHTestCase):
         connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-            fake_run_command.return_value = True, CommandOutput(
-                [OutputLine("stdout", "some-output")]
+            fake_run_command.return_value = (
+                True,
+                CommandOutput([OutputLine("stdout", "some-output")]),
             )
             fact_data = get_facts(
                 state,
@@ -242,8 +247,9 @@ class TestFactsApi(PatchSSHTestCase):
         defaults = _get_executor_defaults(state, host_1)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-            fake_run_command.return_value = MagicMock(), CommandOutput(
-                [OutputLine("stdout", "some-output")]
+            fake_run_command.return_value = (
+                MagicMock(),
+                CommandOutput([OutputLine("stdout", "some-output")]),
             )
             fact_data = get_facts(state, Arch)
 
@@ -267,8 +273,9 @@ class TestHostFactsApi(PatchSSHTestCase):
         defaults = _get_executor_defaults(state, host_1)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-            fake_run_command.return_value = MagicMock(), CommandOutput(
-                [OutputLine("stdout", "some-output")]
+            fake_run_command.return_value = (
+                MagicMock(),
+                CommandOutput([OutputLine("stdout", "some-output")]),
             )
             fact_data = host_1.get_fact(Command, command="echo hello world")
 
@@ -291,8 +298,9 @@ class TestHostFactsApi(PatchSSHTestCase):
         defaults["_sudo"] = True
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-            fake_run_command.return_value = MagicMock(), CommandOutput(
-                [OutputLine("stdout", "some-output")]
+            fake_run_command.return_value = (
+                MagicMock(),
+                CommandOutput([OutputLine("stdout", "some-output")]),
             )
             fact_data = host_1.get_fact(Command, command="echo hello world", _sudo=True)
 
@@ -315,8 +323,9 @@ class TestHostFactsApi(PatchSSHTestCase):
         defaults["_sudo"] = True
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-            fake_run_command.return_value = MagicMock(), CommandOutput(
-                [OutputLine("stdout", "some-output")]
+            fake_run_command.return_value = (
+                MagicMock(),
+                CommandOutput([OutputLine("stdout", "some-output")]),
             )
             fact_data = host_1.get_fact(Arch, _sudo=True)
 
