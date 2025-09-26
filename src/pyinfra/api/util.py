@@ -110,7 +110,6 @@ def get_caller_frameinfo(frame_offset: int = 0):
 
 
 def get_operation_order_from_stack(state: "State"):
-
     stack_items = list(reversed(stack()))
 
     i = 0

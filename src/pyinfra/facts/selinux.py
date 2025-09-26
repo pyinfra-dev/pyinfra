@@ -82,7 +82,7 @@ class FileContextMapping(FactBase):
 
     @override
     def process(self, output):
-        # example output: /etc       all files          system_u:object_r:etc_t:s0 # noqa: SC100
+        # example output: /etc       all files          system_u:object_r:etc_t:s0
         # but lines at end that won't match: /etc/systemd/system = /usr/lib/systemd/system
         if len(output) != 1:
             return self.default()
@@ -104,7 +104,7 @@ class SEPorts(FactBase):
     """
 
     default = dict
-    # example output: amqp_port_t                    tcp      15672, 5671-5672  # noqa: SC100
+    # example output: amqp_port_t                    tcp      15672, 5671-5672
     _regex = re.compile(r"^([\w_]+)\s+(\w+)\s+([\w\-,\s]+)$")
 
     @override

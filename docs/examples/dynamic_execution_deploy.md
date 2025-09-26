@@ -18,12 +18,12 @@ apt.packages(
 )
 
 def authorize_server(state, host):
-    # Run a command on the server and collect status, stderr and stdout
-    status, stdout, stderr = host.run_shell_command('cat /var/lib/zerotier-one/identity.public')
+    # Run a command on the server and collect status and command output
+    status, output = host.run_shell_command('cat /var/lib/zerotier-one/identity.public')
     assert status is True  # ensure the command executed OK
 
-    # First line of output is the identity
-    server_id = stdout[0]
+    # First line of stdout is the identity
+    server_id = output.stdout_lines[0]
 
     # Authorize via the ZeroTier API
     response = requests.post('https://my.zerotier.com/.../{0}'.format(server_id))

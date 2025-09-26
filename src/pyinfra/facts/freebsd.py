@@ -32,12 +32,7 @@ class ServiceStatus(FactBase):
             jail = ""
 
         return make_formatted_string_command(
-            (
-                "service -j {0} {1} status > /dev/null 2>&1; "
-                "if [ $? -eq 0 ]; then "
-                "echo running; "
-                "fi"
-            ),
+            ("service -j {0} {1} status > /dev/null 2>&1; if [ $? -eq 0 ]; then echo running; fi"),
             QuoteString(jail),
             QuoteString(srvname),
         )

@@ -203,7 +203,7 @@ class TestSSHConnector(TestCase):
                 connect_all(state)
 
             assert e.exception.args[0] == (
-                "Private key file (testkey) is encrypted, set ssh_key_password " "to use this key"
+                "Private key file (testkey) is encrypted, set ssh_key_password to use this key"
             )
 
     def test_connect_with_rsa_ssh_key_wrong_password(self):
@@ -838,10 +838,7 @@ class TestSSHConnector(TestCase):
         assert status is False
 
         fake_ssh_client().exec_command.assert_called_with(
-            (
-                "sh -c 'setfacl -m u:centos:r "
-                "/tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487'"
-            ),
+            ("sh -c 'setfacl -m u:centos:r /tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487'"),
             get_pty=False,
         )
 
@@ -883,10 +880,7 @@ class TestSSHConnector(TestCase):
         assert status is False
 
         fake_ssh_client().exec_command.assert_any_call(
-            (
-                "sh -c 'setfacl -m u:centos:r "
-                "/tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487'"
-            ),
+            ("sh -c 'setfacl -m u:centos:r /tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487'"),
             get_pty=False,
         )
 

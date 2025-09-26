@@ -46,10 +46,10 @@ class TestOperationGlobalArguments(TestCase):
         for op_module, op_func in iter_operations():
             argspec = getfullargspec(op_func._pyinfra_op)
             for arg in argspec.args:
-                assert (
-                    arg not in global_arg_keys
-                ), "`{0}` argument found in {1}.{2} operation function".format(
-                    arg,
-                    op_module.__name__,
-                    op_func.__name__,
+                assert arg not in global_arg_keys, (
+                    "`{0}` argument found in {1}.{2} operation function".format(
+                        arg,
+                        op_module.__name__,
+                        op_func.__name__,
+                    )
                 )

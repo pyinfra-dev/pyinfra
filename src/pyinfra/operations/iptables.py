@@ -186,7 +186,7 @@ def rule(
     # --log-prefix is only supported with jump=LOG
     if log_prefix and jump != "LOG":
         raise OperationError(
-            "iptables only supports log_prefix with the LOG jump " "(jump={0})".format(jump),
+            "iptables only supports log_prefix with the LOG jump (jump={0})".format(jump),
         )
 
     definition = {
