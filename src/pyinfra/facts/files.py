@@ -675,5 +675,5 @@ class FileContents(FactBase):
     @override
     def process(self, output):
         if not output:
-            return None
+            return self.default()
         return output
