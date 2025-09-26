@@ -54,7 +54,7 @@ class TestCliDeployExceptions(TestCase):
             "-y",
             ",".join(hosts),
             path.join("tests", "test_cli", "deploy_fails", filename),
-            f'--chdir={path.join("tests", "test_cli", "deploy_fails")}',
+            f"--chdir={path.join('tests', 'test_cli', 'deploy_fails')}",
         )
 
     def test_invalid_argument_type(self):

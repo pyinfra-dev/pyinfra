@@ -21,8 +21,7 @@ class TestTerraformConnector(TestCase):
             list(TerraformInventoryConnector.make_names_data("output_key"))
 
         assert context.exception.args[0] == (
-            "No Terraform output with key: `output_key`, "
-            "valid keys:\n   - hello\n   - hello.world"
+            "No Terraform output with key: `output_key`, valid keys:\n   - hello\n   - hello.world"
         )
 
     @patch("pyinfra.connectors.terraform.local.shell")

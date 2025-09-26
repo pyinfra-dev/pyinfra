@@ -17,7 +17,7 @@ class TestCliInventory(PatchSSHTestCase):
             "-y",
             ",".join(hosts),
             path.join("tests", "test_cli", "deploy", "deploy.py"),
-            f'--chdir={path.join("tests", "test_cli", "deploy")}',
+            f"--chdir={path.join('tests', 'test_cli', 'deploy')}",
         )
         assert result.exit_code == 0, result.stdout
 
@@ -34,7 +34,7 @@ class TestCliInventory(PatchSSHTestCase):
         result = run_cli(
             "-y",
             ",".join(hosts),
-            f'--group-data={path.join("tests", "test_cli", "deploy", "group_data")}',
+            f"--group-data={path.join('tests', 'test_cli', 'deploy', 'group_data')}",
             "exec",
             "uptime",
         )
@@ -98,9 +98,9 @@ class TestCliInventory(PatchSSHTestCase):
 
         assert result.exit_code == 0, result.stdout
         assert 'Ignoring variable "dict_hosts" in inventory file' in result.stderr, result.stdout
-        assert (
-            'Ignoring variable "generator_hosts" in inventory file' in result.stderr
-        ), result.stdout
+        assert 'Ignoring variable "generator_hosts" in inventory file' in result.stderr, (
+            result.stdout
+        )
         assert inventory.hosts == {}
 
     def test_host_groups_may_only_contain_strings_or_tuples(self):

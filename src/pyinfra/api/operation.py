@@ -75,8 +75,7 @@ class OperationMeta:
                 f"commands={len(self._commands)}{retry_info})"
             )
         return (
-            "OperationMeta(executed=False, "
-            f"maybeChange={self._maybe_is_change}, hash={self._hash})"
+            f"OperationMeta(executed=False, maybeChange={self._maybe_is_change}, hash={self._hash})"
         )
 
     # Completion & status checks

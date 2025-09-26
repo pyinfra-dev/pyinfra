@@ -209,9 +209,9 @@ class FakeHost:
         real_args = getfullargspec(fact_cls.command).args
 
         for key in kwargs.keys():
-            assert (
-                key in real_args
-            ), f"Argument {key} is not a real argument in the `{fact_cls}.command` method"
+            assert key in real_args, (
+                f"Argument {key} is not a real argument in the `{fact_cls}.command` method"
+            )
 
     def get_fact(self, fact_cls, *args, **kwargs):
         fact_key = self._get_fact_key(fact_cls)
