@@ -20,6 +20,7 @@ dependencies = [
     "typeguard>=4,<5",
     "distro>=1.6,<2",
     "packaging>=16.1",
+    "wcwidth>=0.2.0", # For proper CJK character width calculation in CLI tables
     "typing-extensions; python_version < '3.11'", # Backport of typing for Unpack (added 3.11)
 ]
 classifiers = [
