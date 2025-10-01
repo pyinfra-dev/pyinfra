@@ -30,7 +30,7 @@ class NpmPackages(FactBase):
     @override
     def command(self, directory=None):
         if directory:
-            return ("cd {0} && npm list -g --depth=0").format(directory)
+            return ("! test -d {0} || (cd {0} && npm list -g --depth=0)").format(directory)
         return "npm list -g --depth=0"
 
     @override
