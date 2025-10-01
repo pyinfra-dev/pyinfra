@@ -145,9 +145,15 @@ def download(
         if cache_time:
             # Time on files is not tz-aware, and will be the same tz as the server's time,
             # so we can safely remove the tzinfo from the Date fact before comparison.
-            ctime = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
-            if info["mtime"] and info["mtime"] < ctime:
-                download = True
+            try:
+                ctime = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
+                if info["mtime"] and info["mtime"] < ctime:
+                    download = True
+            except OverflowError:
+                # If cache_time is too large for timedelta (>999999999 seconds), skip the
+                # cache time check. This allows users to effectively disable re-downloading
+                # by using very large cache_time values without causing a crash.
+                pass
 
         if sha1sum:
             if sha1sum != host.get_fact(Sha1File, path=dest):
