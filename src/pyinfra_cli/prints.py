@@ -7,6 +7,7 @@ import sys
 from typing import TYPE_CHECKING, Callable, Dict, Iterator, List, Tuple, Union
 
 import click
+import wcwidth
 
 from pyinfra import __version__, logger
 from pyinfra.api.host import Host
@@ -22,6 +23,25 @@ ANSI_RE = re.compile(r"\033\[((?:\d|;)*)([a-zA-Z])")
 
 def _strip_ansi(value):
     return ANSI_RE.sub("", value)
+
+
+def _display_width(value):
+    """
+    Calculate the display width of a string, accounting for wide characters (CJK).
+
+    This strips ANSI codes and uses wcwidth to properly measure characters that
+    take 2 display columns (Chinese, Japanese, Korean characters).
+
+    Args:
+        value: The string to measure
+
+    Returns:
+        The display width in terminal columns
+    """
+    stripped = _strip_ansi(value)
+    width = wcwidth.wcswidth(stripped)
+    # wcwidth returns -1 for strings with control characters, fallback to len()
+    return width if width >= 0 else len(stripped)
 
 
 def _get_group_combinations(inventory: Iterator[Host]):
@@ -187,8 +207,8 @@ def print_rows(rows):
             if i >= len(row_column_widths):
                 row_column_widths.append([])
 
-            # Length of the column (with ansi codes removed)
-            width = len(_strip_ansi(column.strip()))
+            # Display width of the column (accounting for wide chars like CJK)
+            width = _display_width(column.strip())
             row_column_widths[i].append(width)
 
     # Get the max width of each column and add 4 padding spaces
@@ -202,9 +222,10 @@ def print_rows(rows):
             justified = []
 
             for i, column in enumerate(columns):
-                stripped = _strip_ansi(column)
                 desired_width = column_widths[i]
-                padding = desired_width - len(stripped)
+                # Calculate padding based on display width, not character count
+                current_width = _display_width(column)
+                padding = desired_width - current_width
 
                 justified.append(
                     "{0}{1}".format(

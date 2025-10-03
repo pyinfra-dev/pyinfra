@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.10, <4.0"
 resolution-markers = [
     "python_full_version >= '3.14' and platform_python_implementation != 'PyPy'",
@@ -1032,6 +1032,7 @@ dependencies = [
     { name = "python-dateutil" },
     { name = "typeguard" },
     { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "wcwidth" },
 ]
 
 [package.dev-dependencies]
@@ -1091,6 +1092,7 @@ requires-dist = [
     { name = "python-dateutil", specifier = ">2,<3" },
     { name = "typeguard", specifier = ">=4,<5" },
     { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "wcwidth", specifier = ">=0.2.0" },
 ]
 
 [package.metadata.requires-dev]
