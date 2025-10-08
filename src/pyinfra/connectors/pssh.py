@@ -5,7 +5,7 @@ import tempfile
 from random import uniform
 from socket import error as socket_error, gaierror
 from time import sleep
-from typing import IO, TYPE_CHECKING, Any, Iterable, Optional, Tuple
+from typing import IO, TYPE_CHECKING, Any, Optional, Tuple
 
 import click
 from pssh.clients import SSHClient
@@ -15,16 +15,14 @@ from typing_extensions import TypedDict, Unpack, override
 from pyinfra import logger
 from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError
-from pyinfra.api.util import get_file_io, memoize
 
 from .base import BaseConnector, DataMeta
-from .ssh_util import get_private_key, raise_connect_error
+from .ssh_util import raise_connect_error
 from .util import (
     CommandOutput,
     OutputLine,
     execute_command_with_sudo_retry,
     make_unix_command_for_host,
-    write_stdin,
 )
 
 if TYPE_CHECKING:
@@ -246,11 +244,11 @@ class PSSHConnector(BaseConnector):
                 try:
                     for line in host_out.stdout:
                         if isinstance(line, bytes):
-                            line = line.decode('utf-8', errors='replace')
-                        stdout_lines.append(line.rstrip('\n'))
+                            line = line.decode("utf-8", errors="replace")
+                        stdout_lines.append(line.rstrip("\n"))
                         if print_output:
                             click.echo(
-                                "{0}{1}".format(self.host.print_prefix, line.rstrip('\n')),
+                                "{0}{1}".format(self.host.print_prefix, line.rstrip("\n")),
                                 err=True,
                             )
                 except Timeout:
@@ -261,11 +259,11 @@ class PSSHConnector(BaseConnector):
                 try:
                     for line in host_out.stderr:
                         if isinstance(line, bytes):
-                            line = line.decode('utf-8', errors='replace')
-                        stderr_lines.append(line.rstrip('\n'))
+                            line = line.decode("utf-8", errors="replace")
+                        stderr_lines.append(line.rstrip("\n"))
                         if print_output:
                             click.echo(
-                                "{0}{1}".format(self.host.print_prefix, line.rstrip('\n')),
+                                "{0}{1}".format(self.host.print_prefix, line.rstrip("\n")),
                                 err=True,
                             )
                 except Timeout:
@@ -383,7 +381,7 @@ class PSSHConnector(BaseConnector):
 
                 try:
                     self.client.copy_remote_file(remote_filename, tmp_path)
-                    with open(tmp_path, 'rb') as src:
+                    with open(tmp_path, "rb") as src:
                         filename_or_io.write(src.read())
                 finally:
                     if os.path.exists(tmp_path):

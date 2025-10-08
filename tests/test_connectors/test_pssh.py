@@ -5,8 +5,7 @@ from unittest import TestCase, mock
 
 from pssh.exceptions import AuthenticationException, ConnectionErrorException, SessionError, Timeout
 
-import pyinfra
-from pyinfra.api import Config, Host, MaskString, State, StringCommand
+from pyinfra.api import Config, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.context import ctx_state
