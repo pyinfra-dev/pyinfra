@@ -919,6 +919,20 @@ wheels = [
 ]
 
 [[package]]
+name = "parallel-ssh"
+version = "2.14.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "gevent" },
+    { name = "ssh-python" },
+    { name = "ssh2-python" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e0/98/bab96a11d57ef276fa24e297358383337bcf6a310e7df63482be6e8389a6/parallel_ssh-2.14.0.tar.gz", hash = "sha256:e4d21a02feb4cfebf58692448d71c0cd14799c40881c5bd6d75aa7d1da4fd0d5", size = 71375, upload-time = "2025-02-02T18:37:38.952Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/79/64/93cded9759f4acd21c85ea07ac93874fc63cf59611b05c6b273375ed6682/parallel_ssh-2.14.0-py3-none-any.whl", hash = "sha256:acfda90abe3de6d80fc8df1ac3b2a435911d49a5293282efc2d3d306f60e6093", size = 86181, upload-time = "2025-02-02T18:37:36.831Z" },
+]
+
+[[package]]
 name = "paramiko"
 version = "3.5.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1028,6 +1042,7 @@ dependencies = [
     { name = "gevent" },
     { name = "jinja2" },
     { name = "packaging" },
+    { name = "parallel-ssh" },
     { name = "paramiko" },
     { name = "python-dateutil" },
     { name = "typeguard" },
@@ -1087,6 +1102,7 @@ requires-dist = [
     { name = "gevent", specifier = ">=1.5" },
     { name = "jinja2", specifier = ">3,<4" },
     { name = "packaging", specifier = ">=16.1" },
+    { name = "parallel-ssh", specifier = ">=2.0,<3" },
     { name = "paramiko", specifier = ">=2.7,<4" },
     { name = "python-dateutil", specifier = ">2,<3" },
     { name = "typeguard", specifier = ">=4,<5" },
@@ -1476,6 +1492,56 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/3b/44/6716b257b0aa6bfd51a1b31665d1c205fb12cb5ad56de752dfa15657de2f/sphinxcontrib_serializinghtml-2.0.0.tar.gz", hash = "sha256:e9d912827f872c029017a53f0ef2180b327c3f7fd23c87229f7a8e8b70031d4d", size = 16080, upload-time = "2024-07-29T01:10:09.332Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/52/a7/d2782e4e3f77c8450f727ba74a8f12756d5ba823d81b941f1b04da9d033a/sphinxcontrib_serializinghtml-2.0.0-py3-none-any.whl", hash = "sha256:6e2cb0eef194e10c27ec0023bfeb25badbbb5868244cf5bc5bdc04e4464bf331", size = 92072, upload-time = "2024-07-29T01:10:08.203Z" },
+]
+
+[[package]]
+name = "ssh-python"
+version = "1.1.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/01/40/99f1e26261e0e6b3470342e559f5f122c8e925f8d744514d686004bc5748/ssh_python-1.1.1.tar.gz", hash = "sha256:be44618803fcaa1c2cd0298b3fb5f3064220a8b3dd36670ac0cc08efc7ae2aaf", size = 2025560, upload-time = "2025-01-23T02:27:07.72Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/81/cc/540db8bb5656963ede4e86a0c005e57a3fbb1ac7b729b2deb27d847a0f35/ssh_python-1.1.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:04947e80759ebb9475b70ff43de81b344111a4e512f78b83fcc388f115774a29", size = 3731268, upload-time = "2025-01-23T02:27:37.979Z" },
+    { url = "https://files.pythonhosted.org/packages/bf/e2/4d326648462ee7d64d045c6235a8741df2d54675beae495da90060a07ad2/ssh_python-1.1.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ffb90164ff530be46b12662ae41da40878ec76798edd249a8f2ee20604e5a5d6", size = 3417107, upload-time = "2025-01-23T02:26:51.1Z" },
+    { url = "https://files.pythonhosted.org/packages/c6/95/0cb6a33a3b1cb946d53cfaca72d5ff7b0422fc89c382d72a9d532f6ef556/ssh_python-1.1.1-cp310-cp310-win_amd64.whl", hash = "sha256:67f7de18101a964083cea68f9efb440fa93a87d567b5ad22cb2ed0290711407f", size = 3801411, upload-time = "2025-01-23T02:36:01.002Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/9d/8a1e281945bb43cd6aa531c4cc5a903fa715f89cca7459f9d7b06c402893/ssh_python-1.1.1-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:111b675b9d48e1482683b7e7347b5d0ccffacf41d07fa4e77917022997c117cd", size = 1724504, upload-time = "2025-01-23T02:26:48.445Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/a7/51e6f48742cfd27dbac916d867a6746224f5e6c059f82db9aba33889d24d/ssh_python-1.1.1-cp311-cp311-macosx_13_0_arm64.whl", hash = "sha256:cb85749e34907b1335572f39f8cdfb8fb29065dca86736cae7b6cf2f43bb2ec3", size = 2178115, upload-time = "2025-01-23T02:28:09.314Z" },
+    { url = "https://files.pythonhosted.org/packages/36/0a/ec48481e94df59d2565ce9e203198b9e2bfca97257badf27a0cb9d4897cf/ssh_python-1.1.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5256ae39786763bd2720d40b6821eeae6587a31a2806eafd55d2969294b5eaff", size = 3715100, upload-time = "2025-01-23T02:27:39.99Z" },
+    { url = "https://files.pythonhosted.org/packages/92/8d/c97216d559ea42fe404982fe9e2131dde0be5e84b6a9a051b12d5cd74017/ssh_python-1.1.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:741a2c189c05e8051498ac27dcd7fe9ee4c3270e3741e2514e8be0b6be1f381d", size = 3395472, upload-time = "2025-01-23T02:26:52.662Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/69/3d18db2c6ecfad12ab391fe97d681330988ee983d8b63d4cf6199fb7181e/ssh_python-1.1.1-cp311-cp311-win_amd64.whl", hash = "sha256:70151a8ad33ba789913d417ac0cb5503a3bc2d51de81cf87d91eeecf50d7497d", size = 3801811, upload-time = "2025-01-23T02:36:02.522Z" },
+    { url = "https://files.pythonhosted.org/packages/cc/9d/bb460526c8e96187077856d6f73c673136a84c74dfd68c551a072c646a3c/ssh_python-1.1.1-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:e9bf86fc7a8269f417664fd5eb6246fa1d07f435bf6807e2c670bd90a9ac865a", size = 2800391, upload-time = "2025-01-23T02:24:44.319Z" },
+    { url = "https://files.pythonhosted.org/packages/82/53/fd91cace8af0030146e9f4f64233ea6a557154b57f9c7ed1f463ede575d5/ssh_python-1.1.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cccb363e245052ec02359310e78627158a379443ce5148750b25f805c59dfbfa", size = 3739239, upload-time = "2025-01-23T02:27:42.458Z" },
+    { url = "https://files.pythonhosted.org/packages/af/af/0fb3253045a06c66eca5454eaea432e56f3759416ba5554d239a08d9018d/ssh_python-1.1.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b44ed8a663b0d06223c3ffbe8ed54fa2d147d0574dbc94d11f601e4c309641df", size = 3421681, upload-time = "2025-01-23T02:26:54.379Z" },
+    { url = "https://files.pythonhosted.org/packages/be/e5/0aa27472a88da140aef96b80eb85fb690decc380a77de122abeef7021142/ssh_python-1.1.1-cp312-cp312-win_amd64.whl", hash = "sha256:0cd5bb334e983449c0e2ccd896fdb965bd42fe8c2a0e93ec34cec8603718b2fc", size = 3803504, upload-time = "2025-01-23T02:36:04.593Z" },
+    { url = "https://files.pythonhosted.org/packages/6e/ff/c1eaf21f3f0dccc07492a617e85333a24d40218fb844a701ba93c8a62907/ssh_python-1.1.1-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c71ca71c740305300ecc43ad2eb93666c6dc261427fbfa24c207cd8e46576ec8", size = 3725653, upload-time = "2025-01-23T02:27:43.889Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/5a/9d33d94b30c9e9e231222b02681ef88572acb98949e8304cc45e23b21e0b/ssh_python-1.1.1-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fe34b160179d926fd8924bd1abb9dda66d6920623b49c603a8743aaa8e2fff17", size = 3405663, upload-time = "2025-01-23T02:26:56Z" },
+    { url = "https://files.pythonhosted.org/packages/27/98/66462ecae26f0b15e986be9cac44aa24d4d7f72c210716c61f820894d2fa/ssh_python-1.1.1-cp313-cp313-win_amd64.whl", hash = "sha256:fdb756a7ca1db520e212d22a07a455dcbb96a4e5790f6c5f0a1d85b55ed7d93b", size = 3791568, upload-time = "2025-01-23T02:36:06.788Z" },
+    { url = "https://files.pythonhosted.org/packages/22/2f/7cf9ed3aa21290c5923ddfd5f8a23895d97507430f37fc50e99f75af8eef/ssh_python-1.1.1-pp310-pypy310_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7be6dd112eaf5a651c3751100ec8fb78743fa56eb784943ce640a6230916d888", size = 3651474, upload-time = "2025-01-23T02:27:54.586Z" },
+    { url = "https://files.pythonhosted.org/packages/13/c3/377f725ac2f798e6b96cb8c2a721b3a05e21c4096a996d48d6f604c83c85/ssh_python-1.1.1-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:50debaa0dfd0534816ac381abea40f11b87567b019bee82c46692a763ceffbd2", size = 3335098, upload-time = "2025-01-23T02:27:05.59Z" },
+]
+
+[[package]]
+name = "ssh2-python"
+version = "1.1.2.post1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9b/14/7b1072447ffa15d1e1b099611ecd8e985f2dfa62b2ad436dee303a141f6a/ssh2_python-1.1.2.post1.tar.gz", hash = "sha256:c39b9f11fd0e2a7422480aa61b8787c444b26a402907c9e2798767763763bb7c", size = 2132633, upload-time = "2025-01-23T03:19:03.681Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/84/76/b395cca37dde897bc1e0ab7aadc98de181ace9ac19aaf236d6148c05ba03/ssh2_python-1.1.2.post1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5fa9a4633bfe3e59bb6ae9c491c1fae22ee409807ad253b06b190ab7be43466f", size = 4890980, upload-time = "2025-01-23T03:18:40.195Z" },
+    { url = "https://files.pythonhosted.org/packages/aa/71/470cd75e2aaa56a06107f1d1079d2fb572dadf4156200b8fd4fe832e43f0/ssh2_python-1.1.2.post1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ffb00c332571a1d643f47efcad46e4559adf30ff76e0d8cad7fa4f50e01bf31e", size = 4538004, upload-time = "2025-01-23T03:18:54.402Z" },
+    { url = "https://files.pythonhosted.org/packages/92/56/b3b9473020f99f3df0e5e0e92cef8abef08a273493eea44b9d771099d246/ssh2_python-1.1.2.post1-cp310-cp310-win_amd64.whl", hash = "sha256:b1012086f8f48a215f9d646799da352431ec5ac246f284d1c00d30a45ebcdf7b", size = 4222731, upload-time = "2025-01-23T03:13:06.7Z" },
+    { url = "https://files.pythonhosted.org/packages/c4/f0/fa5de562be7130375c445561074aed6f5b214c6c45ef7f1f61a13625c2cf/ssh2_python-1.1.2.post1-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:52efc9a017016d35a3bb3c45ef292bfcf2e4c7f73866fc3b39be7e41ac14d440", size = 1844981, upload-time = "2025-01-23T03:09:35.18Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/fd/eb973a72c5c3664f0d47f83de96746e10e03fc10b9df05510d8c19d63f5f/ssh2_python-1.1.2.post1-cp311-cp311-macosx_13_0_arm64.whl", hash = "sha256:e388d573324254d73d410a44549cdbacb4b7fa970a421132f1d8e8ca01d42967", size = 2326239, upload-time = "2025-01-23T03:07:36.183Z" },
+    { url = "https://files.pythonhosted.org/packages/1d/de/4ea6ff0d2f48a118875a11d8af98d644d6556062e3518e24ca05fae84991/ssh2_python-1.1.2.post1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:725aafe3f6423c44e33d63e38c0f0990b259664404c6b859cd19c93203bfaa3e", size = 4975617, upload-time = "2025-01-23T03:18:42.272Z" },
+    { url = "https://files.pythonhosted.org/packages/09/0a/cd7f9b4ff2ca0539ac4c900e1d00160e97b00b77078f9a9ddb36847f0231/ssh2_python-1.1.2.post1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d821b1b556afa0d27b82de79f4a88e11dc627689dc274ca9b846c8aa79253ab5", size = 4619186, upload-time = "2025-01-23T03:18:59.293Z" },
+    { url = "https://files.pythonhosted.org/packages/ce/2b/a8478bf90c35d86a85dd5e13e188cea2c81fddfbc3efb16a2fec37d6bee9/ssh2_python-1.1.2.post1-cp311-cp311-win_amd64.whl", hash = "sha256:9e4aaeab5ade22324522314c6992f1a07e1d30fb109c2d3eb4eac6a15df501f3", size = 4223589, upload-time = "2025-01-23T03:13:08.366Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/15/91daac3eda23220ee323364bcf93dd8972a74870597d45b6fced78c1e66e/ssh2_python-1.1.2.post1-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:3892d56a340df0dbc4f57d2debb7e17a5b93b171af27b2b71d4b3351304863ff", size = 3049981, upload-time = "2025-01-23T03:11:56.087Z" },
+    { url = "https://files.pythonhosted.org/packages/11/13/aef295d9ef0eba407864173c21f0c1961099265495721df843405e1f5bf8/ssh2_python-1.1.2.post1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:139520fd2f12cf16cbc46ccc966af06d44864fc750f31f2da0d1aafffd163057", size = 5146630, upload-time = "2025-01-23T03:18:44.631Z" },
+    { url = "https://files.pythonhosted.org/packages/78/d5/2e3105d3d6dcc23f99fb3a96dadefdf0f2edbb770489bd14c92250d07c2c/ssh2_python-1.1.2.post1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:19b8c83a1e923e5b4fac591cba86a09c42ffa5d0ba21456ad911f43936001e24", size = 4801706, upload-time = "2025-01-23T03:19:02.286Z" },
+    { url = "https://files.pythonhosted.org/packages/20/33/cd685009f12243d76fe4a5249a17f5a3229989d3163c44a344007e1e36b3/ssh2_python-1.1.2.post1-cp312-cp312-win_amd64.whl", hash = "sha256:84694163693310aac0482ab131d1743b5459dfe0de26201dc20e2e6e31168bc0", size = 4221651, upload-time = "2025-01-23T03:13:10.665Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/ab/0c8a64ede32a78e97dd575290a4561dd84da4e0cafc27406db4f93b368dd/ssh2_python-1.1.2.post1-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a3be981b8b814fcb0fbbcb1a01cd309405509a084469bd7158d67d7c13fbc273", size = 5063791, upload-time = "2025-01-23T03:18:47.129Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/47/a85134c2afc1aa675fdea20c310730f684ddd9f343c5e8211e53cd3e8d4e/ssh2_python-1.1.2.post1-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9b193f7b83f0ac62e49cc096e1eb6087a409097a71b5805ef6b588463cfd741c", size = 4719238, upload-time = "2025-01-23T03:19:05.006Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/3b/12db397a7935d743b4b4c51ab7be9bc5289c3466e2eba6acd5f5bc00afa6/ssh2_python-1.1.2.post1-cp313-cp313-win_amd64.whl", hash = "sha256:431a549ee28a5cefd6facd1eec7a47e1125fb34b05628b2092eeb7799755e470", size = 4210838, upload-time = "2025-01-23T03:13:12.869Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/f0/06db27d8b59a9b589065feb6a73603164cd65a0f01cf9febe343699f8025/ssh2_python-1.1.2.post1-pp310-pypy310_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:83aa52be4ced1102ca879a2c8a8c5663661fec9751f721ee8bfeddcd11a49e9f", size = 3320277, upload-time = "2025-01-23T03:19:00.723Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/ff/aba8dcd4d96d030feb5d28f0feff5aa60b95a832725d617f72900d251d2e/ssh2_python-1.1.2.post1-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:93ba3b5cb8763552118afafddd613dd0e62119313e1a799d0748dab0d3c512f9", size = 2965281, upload-time = "2025-01-23T03:19:18.824Z" },
 ]
 
 [[package]]

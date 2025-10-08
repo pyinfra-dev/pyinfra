@@ -14,6 +14,7 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
     "gevent>=1.5",
     "paramiko>=2.7,<4", # 2.7 (2019) adds OpenSSH key format + Match SSH config
+    "parallel-ssh>=2.0,<3",
     "click>2",
     "jinja2>3,<4",
     "python-dateutil>2,<3",
@@ -89,6 +90,7 @@ docker = "pyinfra.connectors.docker:DockerConnector"
 podman = "pyinfra.connectors.docker:PodmanConnector"
 local = "pyinfra.connectors.local:LocalConnector"
 ssh = "pyinfra.connectors.ssh:SSHConnector"
+pssh = "pyinfra.connectors.pssh:PSSHConnector"
 dockerssh = "pyinfra.connectors.dockerssh:DockerSSHConnector"
 # Inventory only connectors
 terraform = "pyinfra.connectors.terraform:TerraformInventoryConnector"
