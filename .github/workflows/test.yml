@@ -50,10 +50,19 @@ jobs:
     needs:
       - lint
       - type-check
+      - spell-check
     strategy:
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04, macos-13, macos-14, macos-15,windows-2022, windows-2025]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        os: [macos-26, macos-15, macos-14, windows-2025, windows-2022, ubuntu-24.04, ubuntu-22.04]
+        # Test every OS vs. Python 3.13, and only one for 3.1[012]
+        python-version: ["3.13"]
+        include:
+          - os: ubuntu-24.04
+            python-version: "3.12"
+          - os: ubuntu-24.04
+            python-version: "3.11"
+          - os: ubuntu-24.04
+            python-version: "3.10"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -75,27 +84,24 @@ jobs:
     needs:
       - lint
       - type-check
+      - spell-check
     strategy:
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
         test-name: [local, ssh, docker, podman]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
         include:
-          - os: macos-13
-            test-name: local
-            python-version: "3.13"
           - os: macos-14
             test-name: local
-            python-version: "3.13"
           - os: macos-15
             test-name: local
-            python-version: "3.13"
+          - os: macos-26
+            test-name: local
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.13"
       - name: Install uv
         uses: astral-sh/setup-uv@v6
       - run: uv sync --group test --no-default-groups --python=${{ matrix.python-version }}
@@ -108,6 +114,7 @@ jobs:
     needs:
       - lint
       - type-check
+      - spell-check
       - unit-test
       - end-to-end-test
     runs-on: ubuntu-latest
