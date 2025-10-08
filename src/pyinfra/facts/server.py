@@ -58,7 +58,7 @@ class TmpDir(FactBase):
     1. TMPDIR (if set and accessible)
     2. TMP (if set and accessible)
     3. TEMP (if set and accessible)
-    4. Falls back to /tmp
+    4. Falls back to empty string
     """
 
     @override
@@ -71,7 +71,7 @@ elif [ -n "$TMP" ] && [ -d "$TMP" ] && [ -w "$TMP" ]; then
 elif [ -n "$TEMP" ] && [ -d "$TEMP" ] && [ -w "$TEMP" ]; then
     echo "$TEMP"
 else
-    echo "/tmp"
+    echo ""
 fi
         """.strip()
 
