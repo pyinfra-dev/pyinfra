@@ -8,7 +8,7 @@ MAJOR_BRANCH="`uv run python scripts/generate_next_version.py | cut -d'.' -f1`.x
 echo "# Releasing pyinfra v${VERSION} (branch ${MAJOR_BRANCH})"
 
 echo "# Running tests..."
-pytest
+uv run pytest
 
 echo "# Git tag & push..."
 git tag -a "v$VERSION" -m "v$VERSION"

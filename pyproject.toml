@@ -120,6 +120,8 @@ files = "src/pyinfra,src/pyinfra_cli"
 [tool.pytest.ini_options]
 # Skip end-to-end tests by default
 addopts = "-m'not end_to_end'"
+# Ignore TestGenerator from testgen package to avoid collection warnings
+python_classes = "Test* !TestGenerator"
 markers = [
     "end_to_end",
     "end_to_end_docker",

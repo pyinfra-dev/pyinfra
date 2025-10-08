@@ -1,3 +1,39 @@
+# v3.5.2
+
+- fix operation & fact docs generation
+
+# v3.5.1
+
+Patch release with a bunch of great fixes. But notably want to call out two major changes for anyone working on the pyinfra code itself (huge thank you Daan for implementing these):
+
+- feat: use ruff for linting and formatting (@DonDebonair)
+- feat: use uv for project and dependency management (@DonDebonair)
+
+Core fixes:
+
+- api: correctly set context state+host when calling `get_facts` 
+- cli: catch exceptions when testing inventory/operation imports 
+- cli: fix/remove datetime timezone warnings (@wowi42)
+- operations/files.block: correct behaviour when markers/block not found and no line provided (@morrison12)
+- operations.util.packaging: extend PkgInfo for winget (@rod7760)
+- facts/server: support negative value in sysctl (@imlonghao)
+
+Docs:
+
+- docs: fix dynamic execution example (@wowi42)
+- docs: Specify how the recursive argument to directory() works (@cliffmccarthy)
+- docs: change recommended installation methods (@DonDebonair)
+- docs: update writing connectors 
+
+Tests:
+
+- op.server.user tests: add exists_noop.json for user existence checks (fix warning) (@maisim)
+- op.server.user tests: add noop_description (fix warning) (@maisim)
+- fix: add missing command field in test (@maisim)
+- tests: clear the host sftp memoization cache before setting up the mock (@wowi42)
+- tests: export testgen class to a new package/repo 
+- tests: fix missing stage sets on state 
+
 # v3.5
 
 New release with some really awesome new features, brought to you by the fantastic contributions of the community. New stuff:

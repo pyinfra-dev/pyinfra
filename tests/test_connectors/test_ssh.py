@@ -1173,6 +1173,9 @@ class TestSSHConnector(TestCase):
         host = inventory.get_host("anotherhost")
         host.connect()
 
+        # Clear the memoization cache to ensure the exception gets raised
+        host.connector.get_file_transfer_connection.cache.clear()
+
         fake_sftp_client.from_transport.side_effect = make_raise_exception_function(SSHException)
 
         fake_open = mock.mock_open(read_data="test!")
