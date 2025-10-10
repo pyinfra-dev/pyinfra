@@ -61,3 +61,20 @@ asyncio.run(run_all_hosts())
 `AsyncHostContext` scopes the helper to a single host (specified by name or by a
 `Host` instance) but otherwise behaves the same. Both helpers accept a
 `hosts=` override when you need to target a subset of hosts for a specific call.
+
+## Async deploy scripts
+
+CLI deploy files can now expose an async entrypoint:
+
+```python
+from pyinfra.operations import server
+
+
+async def run():
+    await server.shell(name="Install package", commands="pacman -S --needed --noconfirm jq")
+    await server.shell(name="Verify package", commands="jq --version")
+```
+
+When `run` is defined as `async def`, pyinfra executes it automatically during
+deploy loading, and each `await`ed operation keeps normal deploy ordering and
+host targeting semantics.

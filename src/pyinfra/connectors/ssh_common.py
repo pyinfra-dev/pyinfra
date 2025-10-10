@@ -137,7 +137,7 @@ def _normalise_stdin(stdin: Any) -> Optional[str]:
 
 
 class _SFTPWrapper:
-    def __init__(self, connector: "SSHConnector") -> None:
+    def __init__(self, connector: "SSHCommonConnector") -> None:
         self._connector = connector
 
     def getfo(self, remote_filename: str, fl: IO) -> None:
@@ -155,7 +155,7 @@ class _SFTPWrapper:
 
 
 class _SCPWrapper:
-    def __init__(self, connector: "SSHConnector") -> None:
+    def __init__(self, connector: "SSHCommonConnector") -> None:
         self._connector = connector
 
     def getfo(self, remote_filename: str, fl: IO) -> None:
@@ -174,7 +174,7 @@ class _SCPWrapper:
         self._connector.host._run_async(self._connector._async_scp_upload(remote_filename, data))
 
 
-class SSHConnector(BaseConnector):
+class SSHCommonConnector(BaseConnector):
     handles_execution = True
 
     data_cls = ConnectorData
@@ -185,12 +185,71 @@ class SSHConnector(BaseConnector):
         super().__init__(state, host)
         self._connection: asyncssh.SSHClientConnection | None = None
         self._sftp_client: asyncssh.SFTPClient | None = None
+        self._use_ssh_cli: bool = False
         self._known_hosts_file: str | None = None
         self._strict_host_key_checking: str = (
             self.data["ssh_strict_host_key_checking"] or "accept-new"
         )
         self._transfer_protocol = (self.data.get("ssh_file_transfer_protocol") or "sftp").lower()
         self._strict_setting: str = self._strict_host_key_checking.lower()
+
+    def _build_ssh_cli_args(self, *, allocate_tty: bool = False) -> tuple[str, list[str]]:
+        hostname = self.data["ssh_hostname"] or self.host.name
+        user = self.data["ssh_user"]
+        target = f"{user}@{hostname}" if user else hostname
+
+        args = ["ssh", "-o", "BatchMode=yes"]
+        if allocate_tty:
+            args.append("-tt")
+
+        strict_setting = (self._strict_host_key_checking or "accept-new").lower()
+        args.extend(["-o", f"StrictHostKeyChecking={strict_setting}"])
+
+        if self._known_hosts_file:
+            args.extend(["-o", f"UserKnownHostsFile={self._known_hosts_file}"])
+
+        ssh_config_file = self.data["ssh_config_file"]
+        if ssh_config_file:
+            args.extend(["-F", ssh_config_file])
+
+        port = self.data["ssh_port"]
+        if port:
+            args.extend(["-p", str(port)])
+
+        ssh_key = self.data["ssh_key"]
+        if ssh_key:
+            args.extend(["-i", ssh_key])
+
+        if self.data["ssh_forward_agent"]:
+            args.append("-A")
+
+        return target, args
+
+    def _build_scp_cli_args(self) -> tuple[str, list[str]]:
+        hostname = self.data["ssh_hostname"] or self.host.name
+        user = self.data["ssh_user"]
+        target = f"{user}@{hostname}" if user else hostname
+
+        args = ["scp", "-o", "BatchMode=yes"]
+        strict_setting = (self._strict_host_key_checking or "accept-new").lower()
+        args.extend(["-o", f"StrictHostKeyChecking={strict_setting}"])
+
+        if self._known_hosts_file:
+            args.extend(["-o", f"UserKnownHostsFile={self._known_hosts_file}"])
+
+        ssh_config_file = self.data["ssh_config_file"]
+        if ssh_config_file:
+            args.extend(["-F", ssh_config_file])
+
+        port = self.data["ssh_port"]
+        if port:
+            args.extend(["-P", str(port)])
+
+        ssh_key = self.data["ssh_key"]
+        if ssh_key:
+            args.extend(["-i", ssh_key])
+
+        return target, args
 
     @override
     @staticmethod
@@ -216,10 +275,8 @@ class SSHConnector(BaseConnector):
         ssh_key_password = self.data["ssh_key_password"]
 
         if ssh_key:
-            key, certs = self._load_private_key(ssh_key, ssh_key_password)
+            key, _certs = self._load_private_key(ssh_key, ssh_key_password)
             kwargs["client_keys"] = [key]
-            if certs:
-                kwargs.setdefault("client_certs", []).extend(certs)
         elif not self.data["ssh_look_for_keys"]:
             kwargs["client_keys"] = []
 
@@ -490,18 +547,29 @@ class SSHConnector(BaseConnector):
 
     @override
     async def connect(self) -> None:
-        hostname = self.data["ssh_hostname"] or self.host.name
         if self._transfer_protocol not in {"sftp", "scp"}:
             raise ConnectError(f"Unsupported file transfer protocol: {self._transfer_protocol}")
+        hostname = self.data["ssh_hostname"] or self.host.name
         strict_setting = (self.data["ssh_strict_host_key_checking"] or "accept-new").lower()
         self._strict_setting = strict_setting
+
+        if self._use_ssh_cli:
+            target, ssh_args = self._build_ssh_cli_args()
+            command = " ".join([*(shlex.quote(arg) for arg in ssh_args), shlex.quote(target), "true"])
+            return_code, output = await run_local_process_async(command)
+            if return_code != 0:
+                raise ConnectError(f"SSH CLI connect check failed for {target}: {output.stderr}")
+            return
+
         hostname, kwargs = self._build_connect_kwargs(hostname, strict_setting)
         logger.debug("Connecting to: %s (%r)", hostname, kwargs)
 
         try:
             self._connection = await self._async_connect(hostname, kwargs, strict_setting)
-        except (asyncssh.Error, OSError) as exc:
-            raise ConnectError(f"SSH error connecting to {hostname}: {exc}")
+        except (asyncssh.Error, OSError, TypeError) as exc:
+            raise ConnectError(
+                f"SSH error connecting to {hostname}: {type(exc).__name__}: {exc}"
+            )
 
     async def _async_connect(
         self,
@@ -629,6 +697,9 @@ class SSHConnector(BaseConnector):
 
     @override
     async def disconnect(self) -> None:
+        if self._use_ssh_cli:
+            return
+
         if self._sftp_client:
             self._sftp_client.exit()
             self._sftp_client = None
@@ -677,14 +748,24 @@ class SSHConnector(BaseConnector):
             stdin_normalised = _normalise_stdin(stdin_value)
 
             try:
-                exit_status, combined_output = await self._async_run_command(
-                    actual_command,
-                    stdin_normalised,
-                    get_pty,
-                    timeout,
-                    print_output,
-                    self.host.print_prefix,
-                )
+                if self._use_ssh_cli:
+                    exit_status, combined_output = await self._async_run_command_cli(
+                        actual_command,
+                        stdin_normalised,
+                        get_pty,
+                        timeout,
+                        print_output,
+                        self.host.print_prefix,
+                    )
+                else:
+                    exit_status, combined_output = await self._async_run_command(
+                        actual_command,
+                        stdin_normalised,
+                        get_pty,
+                        timeout,
+                        print_output,
+                        self.host.print_prefix,
+                    )
             except asyncio.TimeoutError as exc:
                 raise timeout_error() from exc
 
@@ -756,6 +837,30 @@ class SSHConnector(BaseConnector):
 
         return exit_status, CommandOutput(combined_lines)
 
+    async def _async_run_command_cli(
+        self,
+        command: str,
+        stdin_value: Optional[str],
+        get_pty: bool,
+        timeout: Optional[int],
+        print_output: bool,
+        print_prefix: str,
+    ) -> tuple[int, CommandOutput]:
+        target, ssh_args = self._build_ssh_cli_args(allocate_tty=get_pty)
+        command_parts = [
+            *(shlex.quote(arg) for arg in ssh_args),
+            shlex.quote(target),
+            shlex.quote(command),
+        ]
+        ssh_command = " ".join(command_parts)
+        return await run_local_process_async(
+            ssh_command,
+            stdin=stdin_value,
+            timeout=timeout,
+            print_output=print_output,
+            print_prefix=print_prefix,
+        )
+
     # File transfer helpers
 
     async def _ensure_sftp(self) -> asyncssh.SFTPClient:
@@ -765,24 +870,41 @@ class SSHConnector(BaseConnector):
         return self._sftp_client
 
     async def _async_read_file(self, remote_filename: str) -> bytes:
+        if self._use_ssh_cli:
+            return await self._async_scp_download(remote_filename)
         sftp = await self._ensure_sftp()
         async with sftp.open(remote_filename, "rb") as remote_file:
             return await remote_file.read()
 
     async def _async_write_file(self, remote_filename: str, data: bytes) -> None:
+        if self._use_ssh_cli:
+            await self._async_scp_upload(remote_filename, data)
+            return
         sftp = await self._ensure_sftp()
         async with sftp.open(remote_filename, "wb") as remote_file:
             await remote_file.write(data)
 
     async def _async_scp_upload(self, remote_filename: str, data: bytes) -> None:
-        assert self._connection is not None, "SSH connection not initialised"
-
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
             temp_file.write(data)
             temp_file.flush()
             temp_path = temp_file.name
 
         try:
+            if self._use_ssh_cli:
+                target, scp_args = self._build_scp_cli_args()
+                command_parts = [
+                    *(shlex.quote(arg) for arg in scp_args),
+                    shlex.quote(temp_path),
+                    shlex.quote(f"{target}:{remote_filename}"),
+                ]
+                command = " ".join(command_parts)
+                return_code, output = await run_local_process_async(command)
+                if return_code != 0:
+                    raise ConnectError(f"SCP upload failed: {output.stderr}")
+                return
+
+            assert self._connection is not None, "SSH connection not initialised"
             await asyncssh.scp(temp_path, (self._connection, remote_filename))
         finally:
             try:
@@ -791,11 +913,33 @@ class SSHConnector(BaseConnector):
                 pass
 
     async def _async_scp_download(self, remote_filename: str) -> bytes:
-        assert self._connection is not None, "SSH connection not initialised"
+        if self._use_ssh_cli:
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                temp_path = temp_file.name
+
+            try:
+                target, scp_args = self._build_scp_cli_args()
+                command_parts = [
+                    *(shlex.quote(arg) for arg in scp_args),
+                    shlex.quote(f"{target}:{remote_filename}"),
+                    shlex.quote(temp_path),
+                ]
+                command = " ".join(command_parts)
+                return_code, output = await run_local_process_async(command)
+                if return_code != 0:
+                    raise ConnectError(f"SCP download failed: {output.stderr}")
+                with open(temp_path, "rb") as temp_read:
+                    return temp_read.read()
+            finally:
+                try:
+                    os.unlink(temp_path)
+                except FileNotFoundError:
+                    pass
 
         basename = os.path.basename(remote_filename.rstrip("/")) or "pyinfra-download"
         with tempfile.TemporaryDirectory() as temp_dir:
             local_path = os.path.join(temp_dir, basename)
+            assert self._connection is not None, "SSH connection not initialised"
             await asyncssh.scp((self._connection, remote_filename), local_path)
             with open(local_path, "rb") as local_file:
                 return local_file.read()

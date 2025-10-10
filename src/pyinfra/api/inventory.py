@@ -3,7 +3,11 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Iterator
 
-from .connectors import get_all_connectors, get_execution_connectors
+from .connectors import (
+    get_all_connectors,
+    get_default_ssh_connector_name,
+    get_execution_connectors,
+)
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
 from .host import Host
 
@@ -61,6 +65,16 @@ class Inventory:
         all_connectors = get_all_connectors()
         execution_connectors = get_execution_connectors()
 
+        default_connector_name = get_default_ssh_connector_name(execution_connectors)
+        if default_connector_name not in execution_connectors:
+            available = ", ".join(sorted(execution_connectors.keys()))
+            raise NoConnectorError(
+                "Invalid PYINFRA_SSH_CONNECTOR: {0} (available: {1})".format(
+                    default_connector_name,
+                    available,
+                ),
+            )
+
         # Map name -> data
         name_to_data: dict[str, dict] = defaultdict(dict)
         # Map name -> group names
@@ -86,8 +100,8 @@ class Inventory:
         for name, _ in extract_name_data(names):
             host_data = name_to_data[name]
 
-            # Default to executing commands with the ssh connector
-            connector_cls = execution_connectors["ssh"]
+            # Default to executing commands with the configured connector
+            connector_cls = execution_connectors[default_connector_name]
 
             if name[0] == "@":
                 connector_name = name[1:]

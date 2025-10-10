@@ -102,6 +102,8 @@ class FakeSSHClient:
 
 @pytest.fixture
 def fake_asyncssh(monkeypatch):
+    monkeypatch.setenv("PYINFRA_SSH_CONNECTOR", "async-ssh")
+
     connections: Dict[str, FakeSSHClient] = {}
 
     async def _connect(hostname: str, **kwargs):  # noqa: ANN001 - match asyncssh

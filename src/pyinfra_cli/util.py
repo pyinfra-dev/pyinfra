@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from datetime import datetime
+from inspect import iscoroutine, iscoroutinefunction
 from importlib import import_module
 from importlib.util import find_spec
 from io import IOBase
@@ -66,6 +67,17 @@ def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = Fals
     # Execute the code with locals/globals going into the dict above
     try:
         exec(PYTHON_CODES[filename], data)
+
+        if is_deploy_code:
+            run = data.get("run")
+            if callable(run):
+                if iscoroutinefunction(run):
+                    coroutine = run()
+                    if not iscoroutine(coroutine):
+                        raise TypeError("`run` must return a coroutine when defined as async")
+                    asyncio.run(coroutine)
+                else:
+                    run()
     except PyinfraError:
         # Raise pyinfra errors as-is
         raise
@@ -275,7 +287,7 @@ def _parallel_load_hosts(state: "State", callback: Callable, name: str) -> None:
 
 def load_deploy_file(state: "State", filename):
     state.current_deploy_filename = filename
-    _parallel_load_hosts(state, lambda: exec_file(filename), filename)
+    _parallel_load_hosts(state, lambda: exec_file(filename, is_deploy_code=True), filename)
 
 
 def load_func(state: "State", op_func, *args, **kwargs):

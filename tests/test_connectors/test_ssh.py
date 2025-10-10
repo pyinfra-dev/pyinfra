@@ -4,11 +4,17 @@ import os
 from typing import Dict
 
 import asyncssh
+import pytest
 
 from pyinfra.api import Config, State, StringCommand
 from pyinfra.api.connect import connect_all, disconnect_all
 
 from ..util import make_inventory
+
+
+@pytest.fixture(autouse=True)
+def _force_async_ssh_connector(monkeypatch):
+    monkeypatch.setenv("PYINFRA_SSH_CONNECTOR", "async-ssh")
 
 
 def test_connect_all_activates_hosts(fake_asyncssh):

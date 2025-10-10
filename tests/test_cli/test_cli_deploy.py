@@ -68,6 +68,18 @@ EXPECTED_RANDOM_OPS = [
 ]
 
 
+EXPECTED_ASYNC_OPS = [
+    ("Async main operation", True),
+    ("Async second operation", True),
+]
+
+
+EXPECTED_SYNC_RUN_OPS = [
+    ("Sync run main operation", True),
+    ("Sync run second operation", True),
+]
+
+
 def _patch_sync_executor(monkeypatch):
     async def _run_in_executor_sync(self, func, *args, **kwargs):
         bound_self = getattr(func, "__self__", None)
@@ -192,6 +204,66 @@ def test_random_deploy_is_consistent(tmp_path, fake_asyncssh, monkeypatch):
             state = ctx_state.get()
             assert state is not None
             _assert_operation_execution(EXPECTED_RANDOM_OPS, state)
+
+            assert set(fake_asyncssh.keys()) == set(hosts)
+            for connection in fake_asyncssh.values():
+                assert connection.commands_run
+        finally:
+            ctx_state.reset()
+            ctx_inventory.reset()
+
+
+def test_async_run_deploy_is_consistent(tmp_path, fake_asyncssh, monkeypatch):
+    _patch_sync_executor(monkeypatch)
+    hosts = ["somehost", "anotherhost", "someotherhost"]
+
+    for iteration in range(3):
+        fake_asyncssh.clear()
+
+        try:
+            shuffled_hosts = hosts.copy()
+            shuffle(shuffled_hosts)
+            inventory_file = _write_inventory_file(
+                tmp_path / f"async_inventory_{iteration}.py",
+                shuffled_hosts,
+            )
+
+            result = _run_cli(inventory_file, "deploy_async.py")
+            assert result.exit_code == 0, result.stdout
+
+            state = ctx_state.get()
+            assert state is not None
+            _assert_operation_execution(EXPECTED_ASYNC_OPS, state)
+
+            assert set(fake_asyncssh.keys()) == set(hosts)
+            for connection in fake_asyncssh.values():
+                assert connection.commands_run
+        finally:
+            ctx_state.reset()
+            ctx_inventory.reset()
+
+
+def test_sync_run_deploy_is_consistent(tmp_path, fake_asyncssh, monkeypatch):
+    _patch_sync_executor(monkeypatch)
+    hosts = ["somehost", "anotherhost", "someotherhost"]
+
+    for iteration in range(3):
+        fake_asyncssh.clear()
+
+        try:
+            shuffled_hosts = hosts.copy()
+            shuffle(shuffled_hosts)
+            inventory_file = _write_inventory_file(
+                tmp_path / f"sync_run_inventory_{iteration}.py",
+                shuffled_hosts,
+            )
+
+            result = _run_cli(inventory_file, "deploy_sync_run.py")
+            assert result.exit_code == 0, result.stdout
+
+            state = ctx_state.get()
+            assert state is not None
+            _assert_operation_execution(EXPECTED_SYNC_RUN_OPS, state)
 
             assert set(fake_asyncssh.keys()) == set(hosts)
             for connection in fake_asyncssh.values():

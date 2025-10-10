@@ -13,7 +13,7 @@ from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
 from .base import BaseConnector
-from .ssh import SSHConnector
+from .asyncssh import AsyncSSHConnector
 from .util import async_make_unix_command_for_host, extract_control_arguments
 
 if TYPE_CHECKING:
@@ -45,11 +45,11 @@ class DockerSSHConnector(BaseConnector):
 
     handles_execution = True
 
-    ssh: SSHConnector
+    ssh: AsyncSSHConnector
 
     def __init__(self, state: "State", host: "Host"):
         super().__init__(state, host)
-        self.ssh = SSHConnector(state, host)
+        self.ssh = AsyncSSHConnector(state, host)
 
     @override
     @staticmethod

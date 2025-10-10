@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 from contextlib import contextmanager
 from copy import copy
 from logging import Logger, getLogger
@@ -24,7 +25,7 @@ from typing_extensions import Unpack, override
 from pyinfra.connectors.base import BaseConnector
 from pyinfra.connectors.util import CommandOutput, remove_any_sudo_askpass_file_async
 
-from .connectors import get_execution_connector
+from .connectors import get_default_ssh_connector_name, get_execution_connector
 from .exceptions import ConnectError
 from .facts import FactBase, ShortFactBase, get_fact as _load_fact
 from .util import memoize, sha1_hash
@@ -36,6 +37,9 @@ if TYPE_CHECKING:
 
 
 LOGGER: Logger = getLogger("pyinfra")
+
+
+_THREAD_LOCAL = threading.local()
 
 
 def extract_callable_datas(
@@ -156,7 +160,7 @@ class Host:
         connector_cls=None,
     ):
         if connector_cls is None:
-            connector_cls = get_execution_connector("ssh")
+            connector_cls = get_execution_connector(get_default_ssh_connector_name())
         self.inventory = inventory
         self.groups = groups
         self.connector_cls = connector_cls
@@ -394,7 +398,11 @@ class Host:
         try:
             asyncio.get_running_loop()
         except RuntimeError:
-            return asyncio.run(coro)
+            loop = getattr(_THREAD_LOCAL, "loop", None)
+            if loop is None or loop.is_closed():
+                loop = asyncio.new_event_loop()
+                _THREAD_LOCAL.loop = loop
+            return loop.run_until_complete(coro)
         raise RuntimeError(
             "Cannot call synchronous host method while an event loop is running in this thread. "
             "Use the corresponding async method instead.",

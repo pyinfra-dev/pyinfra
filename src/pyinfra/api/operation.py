@@ -77,6 +77,12 @@ class OperationMeta:
         self._hash = hash
         self._maybe_is_change = is_change
 
+    def __await__(self):
+        async def _as_awaitable() -> OperationMeta:
+            return self
+
+        return _as_awaitable().__await__()
+
     @override
     def __repr__(self) -> str:
         """
