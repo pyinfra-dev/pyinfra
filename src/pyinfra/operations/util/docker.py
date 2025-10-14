@@ -1,16 +1,168 @@
-import dataclasses
-from typing import Any, Dict, List
+from dataclasses import dataclass, field
+from typing import Any
 
 from pyinfra.api import OperationError
 
 
-@dataclasses.dataclass
+@dataclass
+class ImageReference:
+    """Represents a parsed Docker image reference."""
+
+    repository: str
+    namespace: str | None = None
+    tag: str | None = None
+    digest: str | None = None
+    registry_host: str | None = None
+    registry_port: int | None = None
+
+    @property
+    def registry(self) -> str | None:
+        """Get the full registry address (host:port)."""
+        if not self.registry_host:
+            return None
+        if self.registry_port:
+            return f"{self.registry_host}:{self.registry_port}"
+        return self.registry_host
+
+    @property
+    def name(self) -> str:
+        """Get the full image name without tag or digest."""
+        parts = []
+        if self.registry:
+            parts.append(self.registry)
+        if self.namespace:
+            parts.append(self.namespace)
+        parts.append(self.repository)
+        return "/".join(parts)
+
+    @property
+    def full_reference(self) -> str:
+        """Get the complete image reference string."""
+        ref = self.name
+        if self.tag:
+            ref += f":{self.tag}"
+        if self.digest:
+            ref += f"@{self.digest}"
+        return ref
+
+
+def parse_registry(registry: str) -> tuple[str, int | None]:
+    """
+    Parse a registry string into host and port components.
+
+    Args:
+        registry: String like "registry.io:5000" or "registry.io"
+
+    Returns:
+        tuple: (host, port) where port is None if not specified
+
+    Raises:
+        ValueError: If port is specified but not a valid integer
+    """
+    if ":" in registry:
+        host, port_str = registry.rsplit(":", 1)
+        if port_str:  # Only try to parse if port_str is not empty
+            try:
+                port = int(port_str)
+                if port < 0 or port > 65535:
+                    raise ValueError(
+                        f"Invalid port number: {port}. Port must be between 0 and 65535"
+                    )
+                return host, port
+            except ValueError as e:
+                if "invalid literal" in str(e):
+                    raise ValueError(
+                        f"Invalid port in registry '{registry}': '{port_str}' is not a valid port number"
+                    )
+                raise  # Re-raise port range error
+        else:
+            # Empty port (e.g., "registry.io:")
+            raise ValueError(f"Invalid registry format '{registry}': port cannot be empty")
+    else:
+        return registry, None
+
+
+def parse_image_reference(image: str) -> ImageReference:
+    """
+    Parse a Docker image reference into components.
+
+    Format: [HOST[:PORT]/]NAMESPACE/REPOSITORY[:TAG][@DIGEST]
+
+    Raises:
+        ValueError: If the image reference is empty or invalid
+    """
+    if not image or not image.strip():
+        raise ValueError("Image reference cannot be empty")
+
+    original = image.strip()
+    registry_host = None
+    registry_port = None
+    namespace = None
+    repository = None
+    tag = None
+    digest = None
+
+    # Extract digest first (format: name@digest)
+    if "@" in original:
+        original, digest = original.rsplit("@", 1)
+
+    # Extract tag (format: name:tag)
+    if ":" in original:
+        parts = original.split(":")
+        if len(parts) >= 2:
+            potential_tag = parts[-1]
+            # Tag cannot contain '/' - if it does, the colon is part of the registry, separating host and port
+            if "/" not in potential_tag:
+                original = ":".join(parts[:-1])
+                tag = potential_tag
+
+    # Split by '/' to separate registry/namespace/repository
+    parts = original.split("/")
+
+    if len(parts) == 1:
+        # Just repository name (e.g., "nginx")
+        repository = parts[0]
+    elif len(parts) == 2:
+        # Could be namespace/repository or registry/repository
+        if "." in parts[0] or ":" in parts[0]:
+            # Likely a registry (registry.io:5000/repo or registry.io/repo)
+            registry_host, registry_port = parse_registry(parts[0])
+            repository = parts[1]
+        else:
+            # Likely namespace/repository
+            namespace = parts[0]
+            repository = parts[1]
+    elif len(parts) >= 3:
+        # registry/namespace/repository or registry/nested/namespace/repository
+        registry_host, registry_port = parse_registry(parts[0])
+        namespace = "/".join(parts[1:-1])
+        repository = parts[-1]
+
+    # Validate that we found a repository
+    if not repository:
+        raise ValueError(f"Invalid image reference: no repository found in '{image}'")
+
+    # Default tag to 'latest' if neither tag nor digest specified. This is Docker's default behavior.
+    if tag is None and digest is None:
+        tag = "latest"
+
+    return ImageReference(
+        repository=repository,
+        namespace=namespace,
+        tag=tag,
+        digest=digest,
+        registry_host=registry_host,
+        registry_port=registry_port,
+    )
+
+
+@dataclass
 class ContainerSpec:
     image: str = ""
-    ports: List[str] = dataclasses.field(default_factory=list)
-    networks: List[str] = dataclasses.field(default_factory=list)
-    volumes: List[str] = dataclasses.field(default_factory=list)
-    env_vars: List[str] = dataclasses.field(default_factory=list)
+    ports: list[str] = field(default_factory=list)
+    networks: list[str] = field(default_factory=list)
+    volumes: list[str] = field(default_factory=list)
+    env_vars: list[str] = field(default_factory=list)
     pull_always: bool = False
 
     def container_create_args(self):
@@ -34,7 +186,7 @@ class ContainerSpec:
 
         return args
 
-    def diff_from_inspect(self, inspect_dict: Dict[str, Any]) -> List[str]:
+    def diff_from_inspect(self, inspect_dict: dict[str, Any]) -> list[str]:
         # TODO(@minor-fixes): Diff output of "docker inspect" against this spec
         # to determine if the container needs to be recreated. Currently, this
         # function will never recreate when attributes change, which is
