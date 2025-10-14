@@ -57,5 +57,5 @@ if [[ -z "${TAG_NAME}" ]] && [[ "${BRANCH_NAME}" != "${LATEST_BRANCH}" && "${BRA
     build_docs "$BRANCH_NAME" "build/docs"
     echo "Docs built to build/docs/"
     echo "You can open build/docs/index.html or run:"
-    echo " python3 -m http.server build/docs"
+    echo " python3 -m http.server -d build/docs"
 fi

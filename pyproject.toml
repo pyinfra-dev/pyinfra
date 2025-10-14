@@ -20,6 +20,7 @@ dependencies = [
     "typeguard>=4,<5",
     "distro>=1.6,<2",
     "packaging>=16.1",
+    "pydantic>=2.11,<3",
     "typing-extensions; python_version < '3.11'", # Backport of typing for Unpack (added 3.11)
 ]
 classifiers = [

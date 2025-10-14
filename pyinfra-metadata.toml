@@ -7,73 +7,73 @@
 name = "apk"
 path = "src/pyinfra/operations/apk.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."apk-facts"]
 name = "apk"
 path = "src/pyinfra/facts/apk.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."apt-ops"]
 name = "apt"
 path = "src/pyinfra/operations/apt.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."apt-facts"]
 name = "apt"
 path = "src/pyinfra/facts/apt.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."brew-ops"]
 name = "brew"
 path = "src/pyinfra/operations/brew.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."brew-facts"]
 name = "brew"
 path = "src/pyinfra/facts/brew.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."choco-ops"]
 name = "choco"
 path = "src/pyinfra/operations/choco.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."choco-facts"]
 name = "choco"
 path = "src/pyinfra/facts/choco.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."dnf-ops"]
 name = "dnf"
 path = "src/pyinfra/operations/dnf.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."dnf-facts"]
 name = "dnf"
 path = "src/pyinfra/facts/dnf.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."flatpak-ops"]
 name = "flatpak"
 path = "src/pyinfra/operations/flatpak.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."flatpak-facts"]
 name = "flatpak"
 path = "src/pyinfra/facts/flatpak.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."freebsd-facts"]
 name = "freebsd"
@@ -85,49 +85,49 @@ tags = ["package-manager"]
 name = "opkg"
 path = "src/pyinfra/operations/opkg.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."opkg-facts"]
 name = "opkg"
 path = "src/pyinfra/facts/opkg.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."pacman-ops"]
 name = "pacman"
 path = "src/pyinfra/operations/pacman.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."pacman-facts"]
 name = "pacman"
 path = "src/pyinfra/facts/pacman.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."pkg-ops"]
 name = "pkg"
 path = "src/pyinfra/operations/pkg.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."pkg-facts"]
 name = "pkg"
 path = "src/pyinfra/facts/pkg.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."pkgin-ops"]
 name = "pkgin"
 path = "src/pyinfra/operations/pkgin.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."pkgin-facts"]
 name = "pkgin"
 path = "src/pyinfra/facts/pkgin.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."podman-facts"]
 name = "podman"
@@ -139,49 +139,49 @@ tags = ["containers"]
 name = "snap"
 path = "src/pyinfra/operations/snap.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."snap-facts"]
 name = "snap"
 path = "src/pyinfra/facts/snap.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."xbps-ops"]
 name = "xbps"
 path = "src/pyinfra/operations/xbps.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."xbps-facts"]
 name = "xbps"
 path = "src/pyinfra/facts/xbps.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."yum-ops"]
 name = "yum"
 path = "src/pyinfra/operations/yum.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."yum-facts"]
 name = "yum"
 path = "src/pyinfra/facts/yum.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."zypper-ops"]
 name = "zypper"
 path = "src/pyinfra/operations/zypper.py"
 type = "operation"
-tags = ["package-manager", "system-ops"]
+tags = ["package-manager", "system"]
 
 [pyinfra.plugins."zypper-facts"]
 name = "zypper"
 path = "src/pyinfra/facts/zypper.py"
 type = "fact"
-tags = ["package-manager", "system-facts"]
+tags = ["package-manager", "system"]
 
 # Language Package Managers
 [pyinfra.plugins."pip-ops"]
@@ -273,7 +273,7 @@ tags = ["service-management"]
 name = "launchd"
 path = "src/pyinfra/facts/launchd.py"
 type = "fact"
-tags = ["service-management", "system-facts"]
+tags = ["service-management", "system"]
 
 [pyinfra.plugins."systemd-ops"]
 name = "systemd"
@@ -285,7 +285,7 @@ tags = ["service-management"]
 name = "systemd"
 path = "src/pyinfra/facts/systemd.py"
 type = "fact"
-tags = ["service-management", "system-facts"]
+tags = ["service-management", "system"]
 
 [pyinfra.plugins."sysvinit-ops"]
 name = "sysvinit"
@@ -297,7 +297,7 @@ tags = ["service-management"]
 name = "sysvinit"
 path = "src/pyinfra/facts/sysvinit.py"
 type = "fact"
-tags = ["service-management", "system-facts"]
+tags = ["service-management", "system"]
 
 [pyinfra.plugins."upstart-ops"]
 name = "upstart"
@@ -309,7 +309,7 @@ tags = ["service-management"]
 name = "upstart"
 path = "src/pyinfra/facts/upstart.py"
 type = "fact"
-tags = ["service-management", "system-facts"]
+tags = ["service-management", "system"]
 
 [pyinfra.plugins."bsdinit-ops"]
 name = "bsdinit"
@@ -321,7 +321,7 @@ tags = ["service-management"]
 name = "bsdinit"
 path = "src/pyinfra/facts/bsdinit.py"
 type = "fact"
-tags = ["service-management", "system-facts"]
+tags = ["service-management", "system"]
 
 [pyinfra.plugins."openrc-ops"]
 name = "openrc"
@@ -333,7 +333,7 @@ tags = ["service-management"]
 name = "openrc"
 path = "src/pyinfra/facts/openrc.py"
 type = "fact"
-tags = ["service-management", "system-facts"]
+tags = ["service-management", "system"]
 
 [pyinfra.plugins."rpm-facts"]
 name = "rpm"
@@ -351,7 +351,7 @@ tags = ["service-management"]
 name = "runit"
 path = "src/pyinfra/facts/runit.py"
 type = "fact"
-tags = ["service-management", "system-facts"]
+tags = ["service-management", "system"]
 
 # Containers
 [pyinfra.plugins."docker-ops"]
@@ -364,7 +364,7 @@ tags = ["containers"]
 name = "docker"
 path = "src/pyinfra/facts/docker.py"
 type = "fact"
-tags = ["containers", "system-facts"]
+tags = ["containers", "system"]
 
 [pyinfra.plugins."lxd-ops"]
 name = "lxd"
@@ -376,7 +376,7 @@ tags = ["containers"]
 name = "lxd"
 path = "src/pyinfra/facts/lxd.py"
 type = "fact"
-tags = ["containers", "system-facts"]
+tags = ["containers", "system"]
 
 [pyinfra.plugins."vzctl-ops"]
 name = "vzctl"
@@ -388,7 +388,7 @@ tags = ["containers"]
 name = "vzctl"
 path = "src/pyinfra/facts/vzctl.py"
 type = "fact"
-tags = ["containers", "system-facts"]
+tags = ["containers", "system"]
 
 # Config Management
 [pyinfra.plugins."puppet-ops"]
@@ -414,7 +414,7 @@ tags = ["security"]
 name = "iptables"
 path = "src/pyinfra/facts/iptables.py"
 type = "fact"
-tags = ["security", "system-facts"]
+tags = ["security", "system"]
 
 [pyinfra.plugins."selinux-ops"]
 name = "selinux"
@@ -426,13 +426,13 @@ tags = ["security"]
 name = "selinux"
 path = "src/pyinfra/facts/selinux.py"
 type = "fact"
-tags = ["security", "system-facts"]
+tags = ["security", "system"]
 
 [pyinfra.plugins."efibootmgr-facts"]
 name = "efibootmgr"
 path = "src/pyinfra/facts/efibootmgr.py"
 type = "fact"
-tags = ["boot", "system-facts"]
+tags = ["boot", "system"]
 
 # Databases
 [pyinfra.plugins."mysql-ops"]
@@ -445,7 +445,7 @@ tags = ["database"]
 name = "mysql"
 path = "src/pyinfra/facts/mysql.py"
 type = "fact"
-tags = ["database", "system-facts"]
+tags = ["database", "system"]
 
 [pyinfra.plugins."postgres-ops"]
 name = "postgres"
@@ -457,7 +457,7 @@ tags = ["database"]
 name = "postgres"
 path = "src/pyinfra/facts/postgres.py"
 type = "fact"
-tags = ["database", "system-facts"]
+tags = ["database", "system"]
 
 [pyinfra.plugins."postgresql-ops"]
 name = "postgresql"
@@ -469,7 +469,7 @@ tags = ["database"]
 name = "postgresql"
 path = "src/pyinfra/facts/postgresql.py"
 type = "fact"
-tags = ["database", "system-facts"]
+tags = ["database", "system"]
 
 # Storage
 [pyinfra.plugins."zfs-ops"]
@@ -482,7 +482,7 @@ tags = ["storage"]
 name = "zfs"
 path = "src/pyinfra/facts/zfs.py"
 type = "fact"
-tags = ["storage", "system-facts"]
+tags = ["storage", "system"]
 
 # General System
 [pyinfra.plugins."server-ops"]
@@ -495,13 +495,13 @@ tags = ["system"]
 name = "server"
 path = "src/pyinfra/facts/server.py"
 type = "fact"
-tags = ["system", "system-facts"]
+tags = ["system"]
 
 [pyinfra.plugins."hardware-facts"]
 name = "hardware"
 path = "src/pyinfra/facts/hardware.py"
 type = "fact"
-tags = ["system", "system-facts"]
+tags = ["system"]
 
 [pyinfra.plugins."files-ops"]
 name = "files"
@@ -513,7 +513,7 @@ tags = ["system"]
 name = "files"
 path = "src/pyinfra/facts/files.py"
 type = "fact"
-tags = ["system", "system-facts"]
+tags = ["system"]
 
 [pyinfra.plugins."crontab-ops"]
 name = "crontab"
@@ -525,7 +525,7 @@ tags = ["system"]
 name = "crontab"
 path = "src/pyinfra/facts/crontab.py"
 type = "fact"
-tags = ["system", "system-facts"]
+tags = ["system"]
 
 [pyinfra.plugins."deb-facts"]
 name = "deb"

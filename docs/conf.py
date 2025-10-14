@@ -1,5 +1,3 @@
-import os
-import sys
 from datetime import date
 from os import environ, mkdir, path
 from shutil import rmtree
@@ -7,9 +5,7 @@ from shutil import rmtree
 import guzzle_sphinx_theme
 
 from pyinfra import __version__, local
-
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-import metadata  # noqa # this is a local module
+from pyinfra.api import metadata
 
 copyright = "Nick Barrett {0} — pyinfra v{1}".format(
     date.today().year,
@@ -64,14 +60,17 @@ exclude_patterns = [
 
 def rstjinja(app, docname, source):
     """
-    Render our pages as a jinja template for fancy templating goodness.
+    Render certain pages as a jinja templates.
     """
     # this should only be run when building html
     if app.builder.format != "html":
         return
-    src = source[0]
-    rendered = app.builder.templates.render_string(src, app.config.html_context)
-    source[0] = rendered
+    # We currently only render docs/operations.rst
+    # and docs/facts.rst as jinja2 templates
+    if docname in ["operations", "facts"]:
+        src = source[0]
+        rendered = app.builder.templates.render_string(src, app.config.html_context)
+        source[0] = rendered
 
 
 def setup(app):
