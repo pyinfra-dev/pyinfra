@@ -10,7 +10,7 @@ from socket import error as socket_error, timeout as timeout_error
 from typing import IO, TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
 
 import click
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from jinja2 import Environment, FileSystemLoader, StrictUndefined, Template
 from paramiko import SSHException
 from typeguard import TypeCheckError, check_type
 
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 BLOCKSIZE = 65536
 
 # Caches
-TEMPLATES: Dict[Any, Any] = {}
+TEMPLATES: Dict[str, Template] = {}
 FILE_SHAS: Dict[Any, Any] = {}
 
 PYINFRA_INSTALL_DIR = path.normpath(path.join(path.dirname(__file__), ".."))
@@ -139,7 +139,9 @@ def get_operation_order_from_stack(state: "State"):
     return line_numbers
 
 
-def get_template(filename_or_io: str | IO, jinja_env_kwargs: dict[str, Any] | None = None):
+def get_template(
+    filename_or_io: str | IO, jinja_env_kwargs: dict[str, Any] | None = None
+) -> Template:
     """
     Gets a jinja2 ``Template`` object for the input filename or string, with caching
     based on the filename of the template, or the SHA1 of the input string.
@@ -155,10 +157,11 @@ def get_template(filename_or_io: str | IO, jinja_env_kwargs: dict[str, Any] | No
     with file_data as file_io:
         template_string = file_io.read()
 
+    default_loader = FileSystemLoader(getcwd())
     template = Environment(
         undefined=StrictUndefined,
         keep_trailing_newline=True,
-        loader=FileSystemLoader(getcwd()),
+        loader=jinja_env_kwargs.pop("loader", default_loader),
         **jinja_env_kwargs,
     ).from_string(template_string)
 
