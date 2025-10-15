@@ -1,6 +1,6 @@
 {
     "arg": "somedir",
-    "command": "cd somedir && npm list -g --depth=0",
+    "command": "! test -d somedir || (cd somedir && npm list -g --depth=0)",
     "requires_command": "npm",
     "output": [
         "├── pydash@3.48",
