@@ -1,0 +1,29 @@
+{
+    "args": [],
+    "kwargs": {
+        "src": "https://example.com/key.asc",
+        "dest": "/etc/apt/keyrings/test.gpg"
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/etc/apt/keyrings": null
+        },
+        "files.File": {
+            "path=/etc/apt/keyrings/test.gpg": null,
+            "path=_tempfile_": null
+        },
+        "server.Which": {
+            "command=curl": "/usr/bin/curl"
+        }
+    },
+    "commands": [
+        "mkdir -p /etc/apt/keyrings",
+        "chmod 755 /etc/apt/keyrings",
+        "curl -sSLf https://example.com/key.asc -o _tempfile_",
+        "mv _tempfile_ _tempfile_",
+        "if grep -q \"BEGIN PGP PUBLIC KEY BLOCK\" \"_tempfile_\"; then gpg --batch --dearmor -o \"/etc/apt/keyrings/test.gpg\" \"_tempfile_\"; else cp \"_tempfile_\" \"/etc/apt/keyrings/test.gpg\"; fi",
+        "mkdir -p /etc/apt/keyrings",
+        "touch /etc/apt/keyrings/test.gpg",
+        "chmod 644 /etc/apt/keyrings/test.gpg"
+    ]
+}

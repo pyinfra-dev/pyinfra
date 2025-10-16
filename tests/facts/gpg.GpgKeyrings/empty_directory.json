@@ -1,0 +1,7 @@
+{
+    "command": "for keyring in $(find \"/empty/directory\" -type f \\( -name '*.gpg' -o -name '*.asc' -o -name '*.kbx' \\) 2>/dev/null); do echo \"KEYRING:$keyring\"; if [[ \"$keyring\" == *.asc ]]; then gpg --with-colons \"$keyring\" 2>/dev/null || true; else gpg --list-keys --with-colons --keyring \"$keyring\" --no-default-keyring 2>/dev/null || true; fi; done",
+    "requires_command": "gpg",
+    "arg": ["/empty/directory"],
+    "output": [],
+    "fact": {}
+}

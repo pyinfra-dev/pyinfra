@@ -1,0 +1,10 @@
+{
+    "kwargs": {
+        "present": false
+    },
+    "exception": {
+        "names": ["OperationError"],
+        "message": "For removal, either `dest` or both `keyid` and `working_dirs` must be provided"
+    },
+    "facts": {}
+}

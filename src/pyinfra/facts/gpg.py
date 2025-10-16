@@ -148,3 +148,71 @@ class GpgSecretKeys(GpgFactBase):
         return ("gpg --list-secret-keys --with-colons --keyring {0} --no-default-keyring").format(
             keyring,
         )
+
+
+class GpgKeyrings(GpgFactBase):
+    """
+    Returns information on all GPG keyrings found in specified directories.
+
+    .. code:: python
+
+        {
+            "/etc/apt/keyrings/docker.gpg": {
+                "format": "gpg",
+                "keys": {...}  # Same format as GpgKeys fact
+            }
+        }
+    """
+
+    @override
+    def command(self, directories):
+        if isinstance(directories, str):
+            directories = [directories]
+
+        search_locations = " ".join(f'"{d}"' for d in directories)
+
+        # Generate a command that finds keyrings and lists their keys
+        # We'll use a shell script that outputs keyring path followed by key info
+        return (
+            f"for keyring in $(find {search_locations} -type f \\( -name '*.gpg' "
+            f"-o -name '*.asc' -o -name '*.kbx' \\) 2>/dev/null); do "
+            f'echo "KEYRING:$keyring"; '
+            f'if [[ "$keyring" == *.asc ]]; then '
+            f'gpg --with-colons "$keyring" 2>/dev/null || true; '
+            f"else "
+            f'gpg --list-keys --with-colons --keyring "$keyring" --no-default-keyring 2>/dev/null || true; '  # noqa: E501
+            f"fi; done"
+        )
+
+    @override
+    def process(self, output):
+        keyrings = {}
+        current_keyring = None
+        current_output: list[str] = []
+
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+
+            if line.startswith("KEYRING:"):
+                # Process previous keyring if exists
+                if current_keyring and current_output:
+                    keyring_format = current_keyring.split(".")[-1].lower()
+                    keys = super().process(current_output)
+                    keyrings[current_keyring] = {"format": keyring_format, "keys": keys}
+
+                # Start new keyring
+                current_keyring = line[8:]  # Remove "KEYRING:" prefix
+                current_output = []
+            else:
+                # Accumulate GPG output for current keyring
+                current_output.append(line)
+
+        # Process final keyring
+        if current_keyring and current_output:
+            keyring_format = current_keyring.split(".")[-1].lower()
+            keys = super().process(current_output)
+            keyrings[current_keyring] = {"format": keyring_format, "keys": keys}
+
+        return keyrings

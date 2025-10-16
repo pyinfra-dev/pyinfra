@@ -1,0 +1,26 @@
+{
+    "command": "for keyring in $(find \"/custom/keyring/path\" -type f \\( -name '*.gpg' -o -name '*.asc' -o -name '*.kbx' \\) 2>/dev/null); do echo \"KEYRING:$keyring\"; if [[ \"$keyring\" == *.asc ]]; then gpg --with-colons \"$keyring\" 2>/dev/null || true; else gpg --list-keys --with-colons --keyring \"$keyring\" --no-default-keyring 2>/dev/null || true; fi; done",
+    "requires_command": "gpg",
+    "arg": ["/custom/keyring/path"],
+    "output": [
+        "KEYRING:/custom/keyring/path/custom.asc",
+        "pub:-:4096:1:9A3B3C4D5E6F7890:1622505600:::-:::scSC::::::23::0:",
+        "fpr:::::::::1234567890ABCDEF1234567890ABCDEF12345678:",
+        "uid:-::::1622505600::::Custom Key <custom@example.com>::::::::::0:"
+    ],
+    "fact": {
+        "/custom/keyring/path/custom.asc": {
+            "format": "asc",
+            "keys": {
+                "9A3B3C4D5E6F7890": {
+                    "validity": "-",
+                    "length": 4096,
+                    "subkeys": {},
+                    "fingerprint": "1234567890ABCDEF1234567890ABCDEF12345678",
+                    "uid_hash": "",
+                    "uid": "Custom Key <custom@example.com>"
+                }
+            }
+        }
+    }
+}
