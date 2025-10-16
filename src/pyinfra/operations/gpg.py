@@ -12,6 +12,177 @@ from pyinfra.facts.gpg import GpgKeyrings
 from . import files
 
 
+def _install_key_from_src(src: str, dest: str, dearmor: bool, mode: str):
+    """Install a GPG key from a file or URL."""
+    if urlparse(src).scheme in ("http", "https"):
+        # Remote source: download first, then process
+        temp_file = host.get_temp_filename(src)
+
+        yield from files.download._inner(
+            src=src,
+            dest=temp_file,
+        )
+
+        # Install the key and clean up temp file
+        yield from _install_key_file(temp_file, dest, dearmor, mode)
+
+        # Clean up temp file using pyinfra
+        yield from files.file._inner(
+            path=temp_file,
+            present=False,
+        )
+    else:
+        # Local file: install directly
+        yield from _install_key_file(src, dest, dearmor, mode)
+
+
+def _install_key_from_keyserver(keyserver: str, keyid: str | list[str], dest: str, mode: str):
+    """Install GPG keys from a keyserver."""
+    if isinstance(keyid, str):
+        keyid = [keyid]
+
+    joined = " ".join(keyid)
+
+    # Create temporary GPG home directory
+    temp_dir = f"/tmp/pyinfra-gpg-{host.get_temp_filename('')[-8:]}"
+
+    yield from files.directory._inner(
+        path=temp_dir,
+        mode="0700",  # GPG directories should be more restrictive
+        present=True,
+    )
+
+    # Export GNUPGHOME and fetch keys
+    yield f'export GNUPGHOME="{temp_dir}" && gpg --batch --keyserver "{keyserver}" --recv-keys {joined}'  # noqa: E501
+
+    # Export keys to destination - always use direct binary export
+    # gpg --export produces binary format by default, no dearmoring needed
+    yield (f'export GNUPGHOME="{temp_dir}" && gpg --batch --export {joined} > "{dest}"')
+
+    # Clean up temporary directory
+    yield from files.directory._inner(
+        path=temp_dir,
+        present=False,
+    )
+
+    # Set proper permissions
+    yield from files.file._inner(
+        path=dest,
+        mode=mode,
+        present=True,
+    )
+
+
+def _remove_key_from_keyrings(keyid: str | list[str], working_dirs: list[str]):
+    """Remove specific keys from all keyrings in specified directories."""
+    if isinstance(keyid, str):
+        keyid = [keyid]
+
+    # Use the GpgKeyrings fact to find all keyrings in specified directories
+    keyrings_info = host.get_fact(GpgKeyrings, directories=working_dirs)
+
+    for keyring_path, keyring_data in keyrings_info.items():
+        # Get the keys from the GpgKeyrings fact data
+        keys_in_keyring = keyring_data.get("keys", {})
+
+        # Check if any of the target keys exist in this keyring
+        keys_to_remove = []
+        for kid in keyid:
+            # Handle different key ID formats (short, long, with/without 0x prefix)
+            clean_key = kid.replace("0x", "").replace("0X", "").upper()
+
+            # Check for exact match or if the key ID is a suffix/prefix of any key
+            # in the keyring
+            for existing_key_id in keys_in_keyring.keys():
+                if (
+                    clean_key == existing_key_id.upper()
+                    or existing_key_id.upper().endswith(clean_key)
+                    or existing_key_id.upper().startswith(clean_key)
+                ):
+                    keys_to_remove.append(existing_key_id)
+
+        if keys_to_remove:
+            # Remove the entire keyring file if any target keys are found
+            # This is the safest approach for keyring management
+            yield from files.file._inner(
+                path=keyring_path,
+                present=False,
+            )
+
+
+def _remove_key_from_keyring(keyid: str | list[str], dest: str):
+    """Remove specific keys from a specific keyring file."""
+    if isinstance(keyid, str):
+        keyid = [keyid]
+
+    # Check if the destination keyring exists and contains the target keys
+    keyrings_info = host.get_fact(GpgKeyrings, directories=[str(PurePosixPath(dest).parent)])
+
+    if dest in keyrings_info:
+        keyring_data = keyrings_info[dest]
+        keys_in_keyring = keyring_data.get("keys", {})
+
+        # Check if any of the target keys exist in this keyring
+        keys_found = False
+        for kid in keyid:
+            clean_key = kid.replace("0x", "").replace("0X", "").upper()
+            for existing_key_id in keys_in_keyring.keys():
+                # Check for exact match, suffix (short key ID), or prefix match
+                if (
+                    clean_key == existing_key_id.upper()
+                    or existing_key_id.upper().endswith(clean_key)
+                    or existing_key_id.upper().startswith(clean_key)
+                ):
+                    keys_found = True
+                    break
+            if keys_found:
+                break
+
+        if keys_found:
+            # Remove the entire keyring file - safest approach for keyring management
+            yield from files.file._inner(
+                path=dest,
+                present=False,
+            )
+
+
+def _remove_keyring_file(dest: str):
+    """Remove an entire keyring file."""
+    yield from files.file._inner(
+        path=dest,
+        present=False,
+    )
+
+
+def _validate_installation_params(
+    src: str | None, keyserver: str | None, keyid: str | list[str] | None, dest: str | None
+):
+    """Validate parameters for key installation."""
+    if not src and not keyserver:
+        raise OperationError("Either `src` or `keyserver` must be provided for installation")
+
+    if keyserver and not keyid:
+        raise OperationError("`keyid` must be provided with `keyserver`")
+
+    if keyid and not keyserver and not src:
+        raise OperationError(
+            "When using `keyid` for installation, either `keyserver` or `src` must be provided"
+        )
+
+    if dest is None:
+        raise OperationError("`dest` must be provided for installation")
+
+
+def _validate_removal_params(
+    dest: str | None, keyid: str | list[str] | None, working_dirs: list[str] | None
+):
+    """Validate parameters for key removal."""
+    if not dest and not (keyid and working_dirs):
+        raise OperationError(
+            "For removal, either `dest` or both `keyid` and `working_dirs` must be provided"
+        )
+
+
 @operation()
 def key(
     src: str | None = None,
@@ -75,128 +246,38 @@ def key(
         )
     """
 
-    # Validate parameters based on operation type
-    if present is True:
-        # For installation, dest is required
-        if not dest:
-            raise OperationError("`dest` must be provided for installation")
-    elif present is False:
-        # For removal, either dest or (keyid and working_dirs) must be provided
-        if not dest and not (keyid and working_dirs):
-            raise OperationError(
-                "For removal, either `dest` or both `keyid` and `working_dirs` must be provided"
-            )
-
-    # For removal, handle different scenarios
+    # Handle removal operations
     if present is False:
+        _validate_removal_params(dest, keyid, working_dirs)
+
         if not dest and keyid:
             # Remove key(s) from all keyrings found in specified directories
-            if isinstance(keyid, str):
-                keyid = [keyid]
-
             if not working_dirs:
                 raise OperationError(
                     "`working_dirs` must be provided when removing keys without `dest`"
                 )
-
-            # Use the GpgKeyrings fact to find all keyrings in specified directories
-            keyrings_info = host.get_fact(GpgKeyrings, directories=working_dirs)
-
-            for keyring_path, keyring_data in keyrings_info.items():
-                # Get the keys from the GpgKeyrings fact data
-                keys_in_keyring = keyring_data.get("keys", {})
-
-                # Check if any of the target keys exist in this keyring
-                keys_to_remove = []
-                for kid in keyid:
-                    # Handle different key ID formats (short, long, with/without 0x prefix)
-                    clean_key = kid.replace("0x", "").replace("0X", "").upper()
-
-                    # Check for exact match or if the key ID is a suffix/prefix of any key
-                    # in the keyring
-                    for existing_key_id in keys_in_keyring.keys():
-                        if (
-                            clean_key == existing_key_id.upper()
-                            or existing_key_id.upper().endswith(clean_key)
-                            or existing_key_id.upper().startswith(clean_key)
-                        ):
-                            keys_to_remove.append(existing_key_id)
-
-                if keys_to_remove:
-                    # Remove the entire keyring file if any target keys are found
-                    # This is the safest approach for keyring management
-                    yield from files.file._inner(
-                        path=keyring_path,
-                        present=False,
-                    )
-
-            return
+            yield from _remove_key_from_keyrings(keyid, working_dirs)
 
         elif dest and keyid:
             # Remove specific key(s) from a specific keyring file
-            if isinstance(keyid, str):
-                keyid = [keyid]
-
-            # Check if the destination keyring exists and contains the target keys
-            keyrings_info = host.get_fact(
-                GpgKeyrings, directories=[str(PurePosixPath(dest).parent)]
-            )
-
-            if dest in keyrings_info:
-                keyring_data = keyrings_info[dest]
-                keys_in_keyring = keyring_data.get("keys", {})
-
-                # Check if any of the target keys exist in this keyring
-                keys_found = False
-                for kid in keyid:
-                    clean_key = kid.replace("0x", "").replace("0X", "").upper()
-                    for existing_key_id in keys_in_keyring.keys():
-                        # Check for exact match, suffix (short key ID), or prefix match
-                        if (
-                            clean_key == existing_key_id.upper()
-                            or existing_key_id.upper().endswith(clean_key)
-                            or existing_key_id.upper().startswith(clean_key)
-                        ):
-                            keys_found = True
-                            break
-                    if keys_found:
-                        break
-
-                if keys_found:
-                    # Remove the entire keyring file - safest approach for keyring management
-                    yield from files.file._inner(
-                        path=dest,
-                        present=False,
-                    )
-            return
+            yield from _remove_key_from_keyring(keyid, dest)
 
         elif dest and not keyid:
             # Remove entire keyring file
-            yield from files.file._inner(
-                path=dest,
-                present=False,
-            )
-            return
+            yield from _remove_keyring_file(dest)
 
         else:
             raise OperationError("Invalid parameters for removal operation")
 
-    # For installation, validate required parameters
-    if not src and not keyserver:
-        raise OperationError("Either `src` or `keyserver` must be provided for installation")
+        return
 
-    if keyserver and not keyid:
-        raise OperationError("`keyid` must be provided with `keyserver`")
+    # Handle installation operations
+    _validate_installation_params(src, keyserver, keyid, dest)
 
-    if keyid and not keyserver and not src:
-        raise OperationError(
-            "When using `keyid` for installation, either `keyserver` or `src` must be provided"
-        )
+    # After validation, we know dest is not None for installation
+    assert dest is not None, "dest should not be None after validation"
 
-    # For installation (present=True), ensure destination directory exists
-    if dest is None:
-        raise OperationError("dest is required for installation")
-
+    # Ensure destination directory exists
     dest_dir = str(PurePosixPath(dest).parent)
     yield from files.directory._inner(
         path=dest_dir,
@@ -204,67 +285,14 @@ def key(
         present=True,
     )
 
-    # --- src branch: install a key from URL or local file ---
+    # Install from source (file or URL)
     if src:
-        if urlparse(src).scheme in ("http", "https"):
-            # Remote source: download first, then process
-            temp_file = host.get_temp_filename(src)
+        yield from _install_key_from_src(src, dest, dearmor, mode)
 
-            yield from files.download._inner(
-                src=src,
-                dest=temp_file,
-            )
-
-            # Install the key and clean up temp file
-            yield from _install_key_file(temp_file, dest, dearmor, mode)
-
-            # Clean up temp file using pyinfra
-            yield from files.file._inner(
-                path=temp_file,
-                present=False,
-            )
-        else:
-            # Local file: install directly
-            yield from _install_key_file(src, dest, dearmor, mode)
-
-    # --- keyserver branch: fetch keys by ID ---
+    # Install from keyserver
     if keyserver:
-        if keyid is None:
-            raise OperationError("`keyid` must be provided with `keyserver`")
-
-        if isinstance(keyid, str):
-            keyid = [keyid]
-
-        joined = " ".join(keyid)
-
-        # Create temporary GPG home directory
-        temp_dir = f"/tmp/pyinfra-gpg-{host.get_temp_filename('')[-8:]}"
-
-        yield from files.directory._inner(
-            path=temp_dir,
-            mode="0700",  # GPG directories should be more restrictive
-            present=True,
-        )
-
-        # Export GNUPGHOME and fetch keys
-        yield f'export GNUPGHOME="{temp_dir}" && gpg --batch --keyserver "{keyserver}" --recv-keys {joined}'  # noqa: E501
-
-        # Export keys to destination - always use direct binary export
-        # gpg --export produces binary format by default, no dearmoring needed
-        yield (f'export GNUPGHOME="{temp_dir}" && gpg --batch --export {joined} > "{dest}"')
-
-        # Clean up temporary directory
-        yield from files.directory._inner(
-            path=temp_dir,
-            present=False,
-        )
-
-        # Set proper permissions
-        yield from files.file._inner(
-            path=dest,
-            mode=mode,
-            present=True,
-        )
+        assert keyid is not None, "keyid should not be None after validation"
+        yield from _install_key_from_keyserver(keyserver, keyid, dest, mode)
 
 
 @operation()
