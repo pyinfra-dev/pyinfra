@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from pyinfra import host
 from pyinfra.api import OperationError, operation
 from pyinfra.facts.gpg import GpgKeyrings
+from pyinfra.facts import files as file_facts
 
 from . import files
 
@@ -276,6 +277,64 @@ def key(
 
     # After validation, we know dest is not None for installation
     assert dest is not None, "dest should not be None after validation"
+
+    # Check if key already exists (for idempotence)
+    if keyid:
+        # If we have keyid(s), check if they exist in the destination keyring
+        try:
+            dest_dir = str(PurePosixPath(dest).parent)
+            keyring_fact = host.get_fact(GpgKeyrings, [dest_dir])
+
+            # keyring_fact contains keyring paths as keys
+            # Check if our destination keyring exists in the fact
+            keyring_info = keyring_fact.get(dest)
+
+            if keyring_info:
+                existing_keys = keyring_info["keys"]
+                keyids_to_check = keyid if isinstance(keyid, list) else [keyid]
+
+                # Check if all requested keys already exist
+                all_keys_exist = True
+                for kid in keyids_to_check:
+                    # Remove 0x prefix if present for comparison
+                    clean_keyid = kid.replace("0x", "").replace("0X", "").upper()
+                    key_exists = any(
+                        clean_keyid in existing_key_id.upper()
+                        or existing_key_id.upper().endswith(clean_keyid)
+                        for existing_key_id in existing_keys.keys()
+                    )
+                    if not key_exists:
+                        all_keys_exist = False
+                        break
+
+                if all_keys_exist:
+                    # All keys already exist, ensure file permissions are correct
+                    yield from files.file._inner(
+                        path=dest,
+                        mode=mode,
+                        present=True,
+                    )
+                    host.noop(f"GPG keys {keyid} already exist in {dest}")
+                    return
+        except (KeyError, AttributeError):
+            # Fact not available or incomplete, proceed with installation
+            pass
+    else:
+        # If no keyid specified, check if destination file exists (for file/URL sources)
+        try:
+            file_fact = host.get_fact(file_facts.File, dest)
+            if file_fact:
+                # File exists, ensure permissions are correct
+                yield from files.file._inner(
+                    path=dest,
+                    mode=mode,
+                    present=True,
+                )
+                host.noop(f"GPG keyring {dest} already exists")
+                return
+        except (KeyError, AttributeError):
+            # Fact not available, proceed with installation
+            pass
 
     # Ensure destination directory exists
     dest_dir = str(PurePosixPath(dest).parent)
