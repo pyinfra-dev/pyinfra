@@ -10,6 +10,7 @@ from pyinfra.api import Config, Host, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.context import ctx_state
+from pyinfra.connectors import ssh
 
 from ..util import make_inventory
 
@@ -118,6 +119,94 @@ class TestSSHConnector(TestCase):
         second_state.private_keys = state.private_keys
 
         connect_all(second_state)
+
+    def test_retry_paramiko_agent_keys_single_key(self):
+        connector = ssh.SSHConnector.__new__(ssh.SSHConnector)
+        connector.client = mock.Mock()
+
+        attempts = []
+        connect_outcomes = [None]
+
+        def make_client():
+            client = mock.Mock()
+
+            def fake_connect(hostname, **kwargs):
+                attempts.append(dict(kwargs))
+                outcome = connect_outcomes.pop(0)
+                if isinstance(outcome, Exception):
+                    raise outcome
+
+            client.connect.side_effect = fake_connect
+            client.close = mock.Mock()
+            return client
+
+        with (
+            mock.patch("pyinfra.connectors.ssh.Agent") as fake_agent,
+            mock.patch("pyinfra.connectors.ssh.SSHClient", side_effect=make_client),
+        ):
+            fake_agent.return_value.get_keys.return_value = ["key-one"]
+
+            result = connector._retry_paramiko_agent_keys(
+                "host",
+                {"allow_agent": True},
+                SSHException("No existing session"),
+            )
+
+        self.assertTrue(result)
+        self.assertEqual(
+            attempts,
+            [
+                {"allow_agent": False, "pkey": "key-one"},
+            ],
+        )
+
+    def test_retry_paramiko_agent_keys_returns_false_without_keys(self):
+        connector = ssh.SSHConnector.__new__(ssh.SSHConnector)
+        connector.client = mock.Mock()
+
+        with mock.patch("pyinfra.connectors.ssh.Agent") as fake_agent:
+            fake_agent.return_value.get_keys.return_value = []
+
+            result = connector._retry_paramiko_agent_keys(
+                "host",
+                {"allow_agent": True},
+                SSHException("No existing session"),
+            )
+
+        self.assertFalse(result)
+
+    @mock.patch("pyinfra.connectors.ssh.Agent")
+    def test_connect_retries_agent_keys_after_paramiko_failure(self, fake_agent):
+        key_one = mock.Mock(name="agent-key-1")
+        key_two = mock.Mock(name="agent-key-2")
+        fake_agent.return_value.get_keys.return_value = [key_one, key_two]
+
+        connect_calls = []
+
+        def fake_connect(hostname, **kwargs):
+            connect_calls.append((hostname, dict(kwargs)))
+            if len(connect_calls) == 1:
+                raise SSHException("No existing session")
+
+        self.fake_connect_mock.side_effect = fake_connect
+
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+
+        connect_all(state)
+
+        self.assertEqual(len(state.active_hosts), 1)
+        self.assertEqual(len(connect_calls), 2)
+
+        first_hostname, first_kwargs = connect_calls[0]
+        self.assertEqual(first_hostname, "somehost")
+        self.assertTrue(first_kwargs.get("allow_agent"))
+        self.assertNotIn("pkey", first_kwargs)
+
+        second_hostname, second_kwargs = connect_calls[1]
+        self.assertEqual(second_hostname, "somehost")
+        self.assertFalse(second_kwargs.get("allow_agent"))
+        self.assertIs(second_kwargs.get("pkey"), key_two)
 
     def test_connect_with_rsa_ssh_key_password(self):
         state = State(
