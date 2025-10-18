@@ -321,10 +321,11 @@ class SSHConnector(BaseConnector):
         attempt_keys = agent_keys[1:] if len(agent_keys) > 1 else agent_keys
 
         for agent_key in attempt_keys:
-            try:
-                self.client.close()
-            except Exception:
-                pass
+            if self.client is not None:
+                try:
+                    self.client.close()
+                except Exception:
+                    pass
 
             self.client = SSHClient()
 
