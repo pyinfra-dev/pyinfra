@@ -4,11 +4,13 @@ Manage apt packages and repositories.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 from pyinfra import host
-from pyinfra.api import OperationError, operation
+from pyinfra.api import operation
+from pyinfra.api.exceptions import OperationError
 from pyinfra.facts.apt import (
     AptKeys,
     AptSources,
@@ -18,10 +20,10 @@ from pyinfra.facts.apt import (
 )
 from pyinfra.facts.deb import DebPackage, DebPackages
 from pyinfra.facts.files import File
-from pyinfra.facts.gpg import GpgKey
+from pyinfra.facts.gpg import GpgKey, GpgKeyrings
 from pyinfra.facts.server import Date
+from pyinfra.operations import files, gpg
 
-from . import files
 from .util.packaging import ensure_packages
 
 APT_UPDATE_FILENAME = "/var/lib/apt/periodic/update-success-stamp"
@@ -45,22 +47,111 @@ def _simulate_then_perform(command: str):
         yield noninteractive_apt(command)
 
 
-@operation()
-def key(src: str | None = None, keyserver: str | None = None, keyid: str | list[str] | None = None):
+def _sanitize_apt_keyring_name(name: str) -> str:
     """
-    Add apt gpg keys with ``apt-key``.
+    Produce a filesystem-friendly name from an URL host/basename or a local filename.
+    """
+    name = name.strip().lower()
+    name = re.sub(r"[^\w.-]+", "_", name)
+    name = re.sub(r"_+", "_", name).strip("_.")
+    return name or "apt-keyring"
 
-    + src: filename or URL
-    + keyserver: URL of keyserver to fetch key from
-    + keyid: key ID or list of key IDs when using keyserver
 
-    keyserver/id:
-        These must be provided together.
+def _derive_dest_from_src_and_keyids(
+    src: str | None, keyids: list[str] | None, dest: str | None
+) -> str:
+    """
+    Compute a stable destination path in /etc/apt/keyrings/.
+    Priority:
+      1) explicit dest if provided
+      2) from src (URL host + basename, or local basename)
+      3) from keyids (joined)
+      4) fallback "apt-keyring.gpg"
+    """
+    if dest:
+        # Ensure it ends with .gpg and is absolute under /etc/apt/keyrings
+        if not dest.endswith(".gpg"):
+            dest += ".gpg"
+        if not dest.startswith("/"):
+            dest = f"/etc/apt/keyrings/{dest}"
+        return dest
+
+    base = None
+    if src:
+        parsed = urlparse(src)
+        if parsed.scheme and parsed.netloc:
+            host_name = _sanitize_apt_keyring_name(parsed.netloc.replace(":", "_"))
+            bn = _sanitize_apt_keyring_name(
+                (parsed.path.rsplit("/", 1)[-1] or "key").replace(".asc", "").replace(".gpg", "")
+            )
+            base = f"{host_name}-{bn}"
+        else:
+            bn = _sanitize_apt_keyring_name(
+                src.rsplit("/", 1)[-1].replace(".asc", "").replace(".gpg", "")
+            )
+            base = bn or "key"
+    elif keyids:
+        base = "keyserver-" + _sanitize_apt_keyring_name("-".join(keyids))
+    else:
+        base = "apt-keyring"
+
+    return f"/etc/apt/keyrings/{base}.gpg"
+
+
+def _get_apt_keys_comprehensive() -> dict[str, str]:
+    """
+    Get all GPG keys available in APT directories using the GpgKeyrings fact.
+    This provides more comprehensive coverage than AptKeys fact.
+    Falls back gracefully if GpgKeyrings data is not available.
+
+    Returns:
+        dict: Key ID -> keyring file path mapping
+    """
+    try:
+        apt_directories = ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
+        keyrings_info = host.get_fact(GpgKeyrings, directories=apt_directories)
+
+        all_keys = {}
+        for keyring_path, keyring_data in keyrings_info.items():
+            keys = keyring_data.get("keys", {})
+            for key_id in keys.keys():
+                all_keys[key_id] = keyring_path
+
+        return all_keys
+    except (KeyError, AttributeError):
+        # Fallback to empty dict if GpgKeyrings fact is not available (e.g., in tests)
+        return {}
+
+
+@operation()
+def key(
+    src: str | None = None,
+    keyserver: str | None = None,
+    keyid: str | list[str] | None = None,
+    dest: str | None = None,
+    present: bool = True,
+):
+    """
+    Add or remove apt GPG keys using modern keyring management.
+
+    This operation manages GPG keys for APT repos without using the deprecated apt-key command.
+    Keys are stored in /etc/apt/keyrings/ and can be referenced in source lists via signed-by=.
+
+    Args:
+        src: filename or URL to a key (ASCII .asc or binary .gpg)
+        keyserver: keyserver URL for fetching keys by ID
+        keyid: key ID or list of key IDs (required with keyserver, optional for removal)
+        dest: optional keyring path ('.gpg' will be enforced, defaults under /etc/apt/keyrings)
+        present: whether the key should be present (True) or absent (False)
+
+    Behavior:
+        - Installation: Idempotent via AptKeys - if key IDs are already present, nothing changes
+        - Removal: Uses GpgKeyrings fact to find and remove keys from APT directories
+        - If src is ASCII (.asc), it will be dearmored; if binary (.gpg), it's copied as-is
+        - Keyserver flow uses temporary GNUPGHOME, then exports to destination keyring
 
     .. warning::
-        ``apt-key`` is deprecated in Debian, it is recommended NOT to use this
-        operation and instead follow the instructions here:
-
+        ``apt-key`` is deprecated in Debian. This operation follows modern keyring management:
         https://wiki.debian.org/DebianRepository/UseThirdParty
 
     **Examples:**
@@ -69,53 +160,94 @@ def key(src: str | None = None, keyserver: str | None = None, keyid: str | list[
 
         from pyinfra.operations import apt
         # Note: If using URL, wget is assumed to be installed.
+
         apt.key(
-            name="Add the Docker apt gpg key",
-            src="https://download.docker.com/linux/ubuntu/gpg",
+            name="Add Docker apt GPG key",
+            src="https://download.docker.com/linux/debian/gpg",
+            dest="docker.gpg",
         )
 
         apt.key(
-            name="Install VirtualBox key",
-            src="https://www.virtualbox.org/download/oracle_vbox_2016.asc",
+            name="Remove specific keyring file",
+            dest="old-vendor.gpg",
+            present=False,
+        )
+
+        apt.key(
+            name="Remove key by ID from all APT keyrings",
+            keyid="0xCOMPROMISED123",
+            present=False,
+        )
+
+        apt.key(
+            name="Fetch keys from keyserver",
+            keyserver="hkps://keyserver.ubuntu.com",
+            keyid=["0xD88E42B4", "0x7EA0A9C3"],
+            dest="vendor-archive.gpg",
         )
     """
 
+    # Handle removal operations using the GPG infrastructure
+    if present is False:
+        # Use the GPG operation for removal, but restrict to APT directories
+        apt_working_dirs = ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
+        yield from gpg.key._inner(
+            dest=dest,
+            keyid=keyid,
+            present=False,
+            working_dirs=apt_working_dirs,
+        )
+        return
+
+    # Installation logic (existing code)
+    # Get comprehensive view of all keys in APT directories
+    existing_keys_comprehensive = _get_apt_keys_comprehensive()
+    # Also get the legacy AptKeys fact for compatibility
     existing_keys = host.get_fact(AptKeys)
 
+    # Combine both sources of key information for complete coverage
+    all_available_keys = set(existing_keys_comprehensive.keys()) | set(existing_keys.keys())
+
+    # Check idempotency for src branch
     if src:
-        key_data = host.get_fact(GpgKey, src=src)
-        if key_data:
-            keyid = list(key_data.keys())
+        key_data = host.get_fact(GpgKey, src=src)  # Parses the key(s) from src to extract key IDs
+        keyids_from_src = list(key_data.keys()) if key_data else []
 
-        if not keyid or not all(kid in existing_keys for kid in keyid):
-            # If URL, wget the key to stdout and pipe into apt-key, because the "adv"
-            # apt-key passes to gpg which doesn't always support https!
-            if urlparse(src).scheme:
-                yield "(wget -O - {0} || curl -sSLf {0}) | apt-key add -".format(src)
-            else:
-                yield "apt-key add {0}".format(src)
-        else:
-            host.noop("All keys from {0} are already available in the apt keychain".format(src))
+        # If we don't know the IDs (eg. unreachable URL), we cannot determine idempotency
+        # -> try to install.
+        # Otherwise, skip if all key IDs are already present.
+        if keyids_from_src and all(kid in all_available_keys for kid in keyids_from_src):
+            host.noop(f"All keys from {src} are already available in the apt keychain")
+            return
 
-    if keyserver:
+        dest_path = _derive_dest_from_src_and_keyids(src, keyids_from_src or None, dest)
+
+    # Check idempotency for keyserver branch
+    elif keyserver:
         if not keyid:
             raise OperationError("`keyid` must be provided with `keyserver`")
 
         if isinstance(keyid, str):
             keyid = [keyid]
 
-        needed_keys = sorted(set(keyid) - set(existing_keys.keys()))
-        if needed_keys:
-            yield "apt-key adv --keyserver {0} --recv-keys {1}".format(
-                keyserver,
-                " ".join(needed_keys),
-            )
-        else:
-            host.noop(
-                "Keys {0} are already available in the apt keychain".format(
-                    ", ".join(keyid),
-                ),
-            )
+        needed_keys = sorted(set(keyid) - all_available_keys)
+        if not needed_keys:
+            host.noop(f"Keys {', '.join(keyid)} are already available in the apt keychain")
+            return
+
+        dest_path = _derive_dest_from_src_and_keyids(None, needed_keys, dest)
+        # Only install the needed keys
+        keyid = needed_keys
+
+    # Use the generic GPG operation to install the key
+    yield from gpg.key._inner(
+        src=src,
+        dest=dest_path,
+        keyserver=keyserver,
+        keyid=keyid,
+        dearmor=True,
+        mode="0644",
+    )
 
 
 @operation()

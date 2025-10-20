@@ -8,7 +8,7 @@ from typing_extensions import TypedDict, override
 
 from pyinfra.api import FactBase
 
-from .gpg import GpgFactBase
+from .gpg import GpgKeyrings
 
 
 @dataclass(frozen=True)
@@ -370,9 +370,14 @@ class AptSources(FactBase):
         return repos
 
 
-class AptKeys(GpgFactBase):
+class AptKeys(GpgKeyrings):
     """
-    Returns information on GPG keys apt has in its keychain:
+    Returns information on GPG keys available to APT.
+
+    This fact reuses the GpgKeyrings infrastructure to search APT's modern keyring
+    directories instead of using the deprecated apt-key command. It provides
+    compatibility with the old AptKeys interface while leveraging the modern
+    GPG infrastructure.
 
     .. code:: python
 
@@ -384,14 +389,26 @@ class AptKeys(GpgFactBase):
         }
     """
 
-    # This requires both apt-key *and* apt-key itself requires gpg
     @override
-    def command(self) -> str:
-        return "! command -v gpg || apt-key list --with-colons"
+    def command(self, directories=None) -> str:
+        # Default to APT-specific directories if none specified
+        if directories is None:
+            directories = ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
+
+        return super().command(directories)
 
     @override
-    def requires_command(self) -> str:
-        return "apt-key"
+    def process(self, output):
+        # Get the full keyring structure from parent
+        keyrings_data = super().process(output)
+
+        # Flatten to match traditional AptKeys format (just key_id -> key_details)
+        flattened_keys = {}
+        for keyring_path, keyring_info in keyrings_data.items():
+            if "keys" in keyring_info:
+                flattened_keys.update(keyring_info["keys"])
+
+        return flattened_keys
 
 
 class AptSimulationDict(TypedDict):
