@@ -18,7 +18,7 @@ MODULE_DEF_LINE_MAX = 90
 def build_operations_docs():
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, "..", "docs"))
-    operations_dir = path.join(this_dir, "..", "pyinfra", "operations", "*.py")
+    operations_dir = path.join(this_dir, "..", "src", "pyinfra", "operations", "*.py")
 
     makedirs(path.join(docs_dir, "operations"), exist_ok=True)
 

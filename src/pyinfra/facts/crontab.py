@@ -125,15 +125,15 @@ class Crontab(FactBase[CrontabFile]):
         # or CrontabFile.to_json()
         [
             {
-               command: "/path/to/command",
-               minute: "*",
-               hour: "*",
-               month: "*",
-               day_of_month: "*",
-               day_of_week: "*",
+                "command": "/path/to/command",
+                "minute": "*",
+                "hour": "*",
+                "month": "*",
+                "day_of_month": "*",
+                "day_of_week": "*",
             },
             {
-                "command": "echo another command
+                "command": "echo another command",
                 "special_time": "@daily",
             }
         ]

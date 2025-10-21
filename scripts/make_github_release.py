@@ -3,7 +3,7 @@ from pathlib import Path
 
 import requests
 
-from .generate_next_version import get_version_from_changelog
+from scripts.generate_next_version import get_version_from_changelog
 
 GITHUB_API_TOKEN = os.environ["GITHUB_API_TOKEN"]
 

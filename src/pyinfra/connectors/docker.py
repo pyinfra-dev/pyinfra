@@ -112,9 +112,7 @@ class DockerConnector(BaseConnector):
             return local.shell(
                 f"{self.docker_cmd} run -d {image_name} tail -f /dev/null",
                 splitlines=True,
-            )[
-                -1
-            ]  # last line is the container ID
+            )[-1]  # last line is the container ID
         except PyinfraError as e:
             raise ConnectError(e.args[0])
 

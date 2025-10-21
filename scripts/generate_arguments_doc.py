@@ -40,6 +40,7 @@ def build_arguments_doc():
 
         if arguments_title_doc:
             lines.append(cleandoc(arguments_title_doc))
+            lines.append("")
 
         lines.append(
             """.. list-table::

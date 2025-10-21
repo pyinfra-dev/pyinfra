@@ -757,7 +757,6 @@ def _prepare_exec_operations(state, config, operations):
 
 
 def _prepare_deploy_operations(state, config, operations):
-
     # Number of "steps" to make = number of files * number of hosts
     for i, filename in enumerate(operations):
         _log_styled_msg = click.style(filename, bold=True)

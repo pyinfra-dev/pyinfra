@@ -1,2 +1,5 @@
 # Run black & isort on everything
 2d4792eba3233c77a298d86e9638434688e3a1c5
+
+# 2025-09-25 Run ruff on everything
+b1dc723d92d8804b559956c97ca720c3837053c9

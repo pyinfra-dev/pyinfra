@@ -16,7 +16,7 @@ from docs.utils import format_doc_line, title_line  # noqa: E402
 def build_facts_docs():
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, "..", "docs"))
-    facts_dir = path.join(this_dir, "..", "pyinfra", "facts", "*.py")
+    facts_dir = path.join(this_dir, "..", "src", "pyinfra", "facts", "*.py")
 
     makedirs(path.join(docs_dir, "facts"), exist_ok=True)
 

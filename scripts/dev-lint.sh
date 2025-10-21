@@ -2,11 +2,11 @@
 
 set -euo pipefail
 
-echo "Execute black..."
-uv run black ./
+echo "Execute ruff format..."
+uv run ruff format
 
-echo "Execute flake8..."
-uv run flake8
+echo "Execute ruff check..."
+uv run ruff check
 
 echo "Execute mypy..."
 uv run mypy

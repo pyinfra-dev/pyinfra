@@ -260,10 +260,7 @@ def download(
 
         if md5sum:
             yield make_formatted_string_command(
-                (
-                    "(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1}) "
-                    "|| ( echo {2} && exit 1 )"
-                ),
+                ("(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1}) || ( echo {2} && exit 1 )"),
                 QuoteString(dest),
                 md5sum,
                 QuoteString("MD5 did not match!"),
@@ -1694,7 +1691,7 @@ def flags(path: str, flags: list[str] | None = None, present=True):
             yield StringCommand("chflags", new_flags, QuoteString(path))
         else:
             host.noop(
-                f'\'{path}\' already has \'{",".join(flags)}\' {"set" if present else "clear"}',
+                f"'{path}' already has '{','.join(flags)}' {'set' if present else 'clear'}",
             )
 
 
