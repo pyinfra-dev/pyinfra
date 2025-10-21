@@ -240,7 +240,8 @@ def log_error_or_warning(
             log_text = f"{log_text}: "
 
     if exception:
-        exc_text = "{0}: {1}".format(type(exception).__name__, exception)
+        exc = exception.__cause__ or exception
+        exc_text = "{0}: {1}".format(type(exc).__name__, exc)
         log_func(
             "{0}{1}".format(
                 host.print_prefix,
