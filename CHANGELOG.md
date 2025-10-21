@@ -1,3 +1,7 @@
+# v3.5.3
+
+- another release to fix different doc generation issues 🫠
+
 # v3.5.2
 
 - fix operation & fact docs generation

@@ -52,12 +52,28 @@ class Path(FactBase):
 
 class TmpDir(FactBase):
     """
-    Returns the temporary directory of the current server, if configured.
+    Returns the temporary directory of the current server.
+
+    According to POSIX standards, checks environment variables in this order:
+    1. TMPDIR (if set and accessible)
+    2. TMP (if set and accessible)
+    3. TEMP (if set and accessible)
+    4. Falls back to empty string
     """
 
     @override
     def command(self):
-        return "echo $TMPDIR"
+        return """
+if [ -n "$TMPDIR" ] && [ -d "$TMPDIR" ] && [ -w "$TMPDIR" ]; then
+    echo "$TMPDIR"
+elif [ -n "$TMP" ] && [ -d "$TMP" ] && [ -w "$TMP" ]; then
+    echo "$TMP"
+elif [ -n "$TEMP" ] && [ -d "$TEMP" ] && [ -w "$TEMP" ]; then
+    echo "$TEMP"
+else
+    echo ""
+fi
+        """.strip()
 
 
 class Hostname(FactBase):
