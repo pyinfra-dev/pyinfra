@@ -56,3 +56,10 @@ Operations are used to describe changes to make to systems in the inventory. Use
             });
           });
         </script>
+
+.. toctree::
+   :maxdepth: 2
+   :glob:
+   :hidden:
+
+   operations/*

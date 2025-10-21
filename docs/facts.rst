@@ -85,3 +85,10 @@ You can leverage facts within :doc:`operations <using-operations>` like this:
             });
           });
         </script>
+
+.. toctree::
+   :maxdepth: 2
+   :glob:
+   :hidden:
+
+   facts/*
