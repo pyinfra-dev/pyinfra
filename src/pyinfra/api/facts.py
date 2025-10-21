@@ -22,8 +22,9 @@ from paramiko import SSHException
 from typing_extensions import override
 
 from pyinfra import logger
-from pyinfra.api import StringCommand, FactProcessError
+from pyinfra.api import StringCommand
 from pyinfra.api.arguments import all_global_arguments, pop_global_arguments
+from pyinfra.api.exceptions import FactProcessError
 from pyinfra.api.util import (
     get_kwargs_str,
     log_error_or_warning,
