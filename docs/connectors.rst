@@ -1,6 +1,14 @@
 Connectors Index
 ================
 
+.. raw:: html
+
+  <nav class="under-title-tabs">
+    See also:
+    <a href="operations.html">Operations Index</a>
+    <a href="facts.html">Facts Index</a>
+  </nav>
+
 Connectors enable pyinfra to integrate with other tools out of the box. Connectors can do one of three things:
 
 + Implement how commands are executed (``@ssh``, ``@local``)

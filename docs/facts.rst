@@ -1,6 +1,14 @@
 Facts Index
 ===========
 
+.. raw:: html
+
+  <nav class="under-title-tabs">
+    See also:
+    <a href="operations.html">Operations Index</a>
+    <a href="connectors.html">Connectors Index</a>
+  </nav>
+
 pyinfra uses **facts** to determine the existing state of a remote server. Operations use this information to generate commands which alter the state. Facts are read-only and are populated at the beginning of the deploy.
 
 Facts can be executed/tested via the command line:

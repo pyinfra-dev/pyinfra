@@ -1,6 +1,14 @@
 Operations Index
 ================
 
+.. raw:: html
+
+  <nav class="under-title-tabs">
+    See also:
+    <a href="facts.html">Facts Index</a>
+    <a href="connectors.html">Connectors Index</a>
+  </nav>
+
 Operations are used to describe changes to make to systems in the inventory. Use them to define state and pyinfra will make any necessary changes to reach that state. All operations accept a set of :doc:`global arguments <arguments>` and are grouped as Python modules.
 
 **Want a new operation?** Check out :doc:`the writing operations guide <./api/operations>`.
