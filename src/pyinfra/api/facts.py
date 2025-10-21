@@ -22,7 +22,7 @@ from paramiko import SSHException
 from typing_extensions import override
 
 from pyinfra import logger
-from pyinfra.api import StringCommand
+from pyinfra.api import StringCommand, FactProcessError
 from pyinfra.api.arguments import all_global_arguments, pop_global_arguments
 from pyinfra.api.util import (
     get_kwargs_str,
@@ -271,7 +271,7 @@ def _get_fact(
         if stdout_lines:
             try:
                 data = fact.process(stdout_lines)
-            except Exception as e:
+            except FactProcessError as e:
                 log_error_or_warning(
                     host,
                     global_kwargs["_ignore_errors"],
