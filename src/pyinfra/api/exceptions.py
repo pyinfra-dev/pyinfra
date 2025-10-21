@@ -28,6 +28,10 @@ class FactValueError(FactError, ValueError):
     Exception raised when a fact is passed invalid argument values.
     """
 
+class FactProcessError(FactError, RuntimeError):
+    """
+    Exception raised when the data gathered for a fact cannot be processed.
+    """
 
 class OperationError(PyinfraError):
     """

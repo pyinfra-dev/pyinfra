@@ -14,6 +14,7 @@ from .exceptions import (  # noqa: F401
     FactError,
     FactTypeError,
     FactValueError,
+    FactProcessError,
     InventoryError,
     OperationError,
     OperationTypeError,
