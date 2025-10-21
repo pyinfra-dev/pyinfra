@@ -84,8 +84,8 @@ def setup(app):
         metadata_text = file.read()
     plugins = metadata.parse_plugins(metadata_text)
 
-    operation_plugins = [p for p in plugins if p.type == "operation"]
-    fact_plugins = [p for p in plugins if p.type == "fact"]
+    operation_plugins = sorted([p for p in plugins if p.type == "operation"], key=lambda p: p.name)
+    fact_plugins = sorted([p for p in plugins if p.type == "fact"], key=lambda p: p.name)
     html_context = {
         "operation_plugins": operation_plugins,
         "fact_plugins": fact_plugins,
