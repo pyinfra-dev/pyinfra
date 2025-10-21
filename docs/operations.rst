@@ -26,7 +26,7 @@ Operations are used to describe changes to make to systems in the inventory. Use
               <div class="card h-100">
                 <div class="card-body">
                   <h5 class="card-title">
-                    <a href="{{ docs_language }}/{{ docs_version }}/operations/{{ plugin.name }}.html">
+                    <a href="./operations/{{ plugin.name }}.html">
                       {{ plugin.name }}
                     </a>
                   </h5>

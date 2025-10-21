@@ -56,7 +56,7 @@ You can leverage facts within :doc:`operations <using-operations>` like this:
               <div class="card h-100">
                 <div class="card-body">
                   <h5 class="card-title">
-                    <a href="{{ docs_language }}/{{ docs_version }}/facts/{{ plugin.name }}.html">
+                    <a href="./facts/{{ plugin.name }}.html">
                       {{ plugin.name }}
                     </a>
                   <p class="card-text">{{ plugin.description }}</p>
