@@ -28,7 +28,7 @@ SUDO_ASKPASS_COMMAND = r"""
 temp=$(mktemp "${{TMPDIR:={0}}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
 cat >"$temp"<<'__EOF__'
 #!/bin/sh
-printf '%s\n' "${0}"
+printf '%s\n' "${1}"
 __EOF__
 chmod 755 "$temp"
 echo "$temp"
