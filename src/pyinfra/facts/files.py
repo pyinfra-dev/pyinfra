@@ -664,8 +664,7 @@ class Block(FactBase):
 
 class FileContents(FactBase):
     """
-    Returns the contents of a file as a list of lines. Works with both sha1sum and sha1. Returns
-    ``None`` if the file doest not exist.
+    Returns the contents of a file as a list of lines. Returns ``None`` if the file does not exist.
     """
 
     @override
