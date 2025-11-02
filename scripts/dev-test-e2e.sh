@@ -3,12 +3,12 @@
 set -euo pipefail
 
 echo "Execute local end to end tests..."
-pytest -m end_to_end_local
+uv run pytest -m end_to_end_local
 
 echo "Execute SSH end to end tests..."
-pytest -m end_to_end_ssh
+uv run pytest -m end_to_end_ssh
 
 echo "Execute Docker end to end tests..."
-pytest -m end_to_end_docker
+uv run pytest -m end_to_end_docker
 
 echo "Tests complete!"

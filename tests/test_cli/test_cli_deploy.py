@@ -14,7 +14,7 @@ class TestCliDeployState(PatchSSHTestCase):
             "-y",
             ",".join(hosts),
             path.join("tests", "test_cli", "deploy", filename),
-            f'--chdir={path.join("tests", "test_cli", "deploy")}',
+            f"--chdir={path.join('tests', 'test_cli', 'deploy')}",
         )
 
     def _assert_op_data(self, correct_op_name_and_host_names):

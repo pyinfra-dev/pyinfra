@@ -1,0 +1,5 @@
+{
+    "command": "if [ -n \"$TMPDIR\" ] && [ -d \"$TMPDIR\" ] && [ -w \"$TMPDIR\" ]; then\n    echo \"$TMPDIR\"\nelif [ -n \"$TMP\" ] && [ -d \"$TMP\" ] && [ -w \"$TMP\" ]; then\n    echo \"$TMP\"\nelif [ -n \"$TEMP\" ] && [ -d \"$TEMP\" ] && [ -w \"$TEMP\" ]; then\n    echo \"$TEMP\"\nelse\n    echo \"\"\nfi",
+    "output": ["/usr/tmp"],
+    "fact": "/usr/tmp"
+}

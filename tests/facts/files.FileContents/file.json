@@ -1,0 +1,6 @@
+{
+    "arg": "myfile",
+    "command": "cat myfile",
+    "output": ["line1", "line2"],
+    "fact": ["line1", "line2"]
+}

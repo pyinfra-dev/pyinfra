@@ -2,6 +2,7 @@ from pyinfra.api import Config, State, StringCommand
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.deploy import add_deploy, deploy
 from pyinfra.api.operations import run_ops
+from pyinfra.api.state import StateStage
 from pyinfra.operations import server
 
 from ..paramiko_util import PatchSSHTestCase
@@ -15,6 +16,7 @@ class TestDeploysApi(PatchSSHTestCase):
         anotherhost = inventory.get_host("anotherhost")
 
         state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
 
         # Enable printing on this test to catch any exceptions in the formatting
         state.print_output = True
@@ -74,6 +76,7 @@ class TestDeploysApi(PatchSSHTestCase):
         somehost = inventory.get_host("somehost")
 
         state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
 
         # Enable printing on this test to catch any exceptions in the formatting
         state.print_output = True

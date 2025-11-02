@@ -1,0 +1,406 @@
+from __future__ import annotations
+
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+    get_type_hints,
+)
+
+from typing_extensions import TypedDict
+
+from pyinfra.api.exceptions import ArgumentTypeError
+from pyinfra.api.util import raise_if_bad_type
+from pyinfra.context import ctx_config
+
+if TYPE_CHECKING:
+    from pyinfra.api import Config, Host, State
+
+T = TypeVar("T")
+default_sentinel = object()
+
+
+class ArgumentMeta(Generic[T]):
+    description: str
+    default: Callable[["Config"], T]
+    handler: Optional[Callable[["Config", T], T]]
+
+    def __init__(self, description, default, handler=None) -> None:
+        self.description = description
+        self.default = default
+        self.handler = handler
+
+
+# Connector arguments
+# These are arguments passed to the various connectors that provide the underlying
+# API to read/write external systems.
+
+
+# Note: ConnectorArguments is specifically not total as it's used to type many
+# functions via Unpack and we don't want to specify every kwarg.
+class ConnectorArguments(TypedDict, total=False):
+    # Auth arguments
+    _sudo: bool
+    _sudo_user: str
+    _use_sudo_login: bool
+    _sudo_password: str
+    _preserve_sudo_env: bool
+    _su_user: str
+    _use_su_login: bool
+    _preserve_su_env: bool
+    _su_shell: str
+    _doas: bool
+    _doas_user: str
+
+    # Shell arguments
+    _shell_executable: str
+    _chdir: str
+    _env: Mapping[str, str]
+
+    # Connector control (outside of command generation)
+    _success_exit_codes: Iterable[int]
+    _timeout: int
+    _get_pty: bool
+    _stdin: Union[str, Iterable[str]]
+
+    # Retry arguments
+    _retries: int
+    _retry_delay: Union[int, float]
+    _retry_until: Optional[Callable[[dict], bool]]
+
+
+def generate_env(config: "Config", value: dict) -> dict:
+    env = config.ENV.copy()
+    env.update(value)
+    return env
+
+
+auth_argument_meta: dict[str, ArgumentMeta] = {
+    "_sudo": ArgumentMeta(
+        "Execute/apply any changes with sudo.",
+        default=lambda config: config.SUDO,
+    ),
+    "_sudo_user": ArgumentMeta(
+        "Execute/apply any changes with sudo as a non-root user.",
+        default=lambda config: config.SUDO_USER,
+    ),
+    "_use_sudo_login": ArgumentMeta(
+        "Execute sudo with a login shell.",
+        default=lambda config: config.USE_SUDO_LOGIN,
+    ),
+    "_sudo_password": ArgumentMeta(
+        "Password to sudo with. If needed and not specified pyinfra will prompt for it.",
+        default=lambda config: config.SUDO_PASSWORD,
+    ),
+    "_preserve_sudo_env": ArgumentMeta(
+        "Preserve the shell environment of the connecting user when using sudo.",
+        default=lambda config: config.PRESERVE_SUDO_ENV,
+    ),
+    "_su_user": ArgumentMeta(
+        "Execute/apply any changes with this user using su.",
+        default=lambda config: config.SU_USER,
+    ),
+    "_use_su_login": ArgumentMeta(
+        "Execute su with a login shell.",
+        default=lambda config: config.USE_SU_LOGIN,
+    ),
+    "_preserve_su_env": ArgumentMeta(
+        "Preserve the shell environment of the connecting user when using su.",
+        default=lambda config: config.PRESERVE_SU_ENV,
+    ),
+    "_su_shell": ArgumentMeta(
+        "Use this shell (instead of user login shell) when using ``_su``). "
+        + "Only available under Linux, for use when using `su` with a user that "
+        + "has nologin/similar as their login shell.",
+        default=lambda config: config.SU_SHELL,
+    ),
+    "_doas": ArgumentMeta(
+        "Execute/apply any changes with doas.",
+        default=lambda config: config.DOAS,
+    ),
+    "_doas_user": ArgumentMeta(
+        "Execute/apply any changes with doas as a non-root user.",
+        default=lambda config: config.DOAS_USER,
+    ),
+}
+
+shell_argument_meta: dict[str, ArgumentMeta] = {
+    "_shell_executable": ArgumentMeta(
+        "The shell executable to use for executing commands.",
+        default=lambda config: config.SHELL,
+    ),
+    "_chdir": ArgumentMeta(
+        "Directory to switch to before executing the command.",
+        default=lambda _: None,
+    ),
+    "_env": ArgumentMeta(
+        "Dictionary of environment variables to set.",
+        default=lambda _: {},
+        handler=generate_env,
+    ),
+    "_success_exit_codes": ArgumentMeta(
+        "List of exit codes to consider a success.",
+        default=lambda _: [0],
+    ),
+    "_timeout": ArgumentMeta(
+        "Timeout for *each* command executed during the operation.",
+        default=lambda _: None,
+    ),
+    "_get_pty": ArgumentMeta(
+        "Whether to get a pseudoTTY when executing any commands.",
+        default=lambda _: False,
+    ),
+    "_stdin": ArgumentMeta(
+        "String or buffer to send to the stdin of any commands.",
+        default=lambda _: None,
+    ),
+}
+
+
+# Meta arguments
+# These provide/extend additional operation metadata
+
+
+class MetaArguments(TypedDict):
+    name: str
+    _ignore_errors: bool
+    _continue_on_error: bool
+    _if: Union[List[Callable[[], bool]], Callable[[], bool], None]
+
+
+meta_argument_meta: dict[str, ArgumentMeta] = {
+    # NOTE: name is the only non-_-prefixed argument
+    "name": ArgumentMeta(
+        "Name of the operation.",
+        default=lambda _: None,
+    ),
+    "_ignore_errors": ArgumentMeta(
+        "Ignore errors when executing the operation.",
+        default=lambda config: config.IGNORE_ERRORS,
+    ),
+    "_continue_on_error": ArgumentMeta(
+        (
+            "Continue executing operation commands after error. "
+            "Only applies when ``_ignore_errors`` is true."
+        ),
+        default=lambda _: False,
+    ),
+    "_if": ArgumentMeta(
+        "Only run this operation if these functions return True",
+        default=lambda _: [],
+    ),
+}
+
+
+# Execution arguments
+# These alter how pyinfra is to execute an operation. Notably these must all have the same value
+# over every target host for the same operation.
+
+
+class ExecutionArguments(TypedDict):
+    _parallel: int
+    _run_once: bool
+    _serial: bool
+
+
+execution_argument_meta: dict[str, ArgumentMeta] = {
+    "_parallel": ArgumentMeta(
+        "Run this operation in batches of hosts.",
+        default=lambda config: config.PARALLEL,
+    ),
+    "_run_once": ArgumentMeta(
+        "Only execute this operation once, on the first host to see it.",
+        default=lambda _: False,
+    ),
+    "_serial": ArgumentMeta(
+        "Run this operation host by host, rather than in parallel.",
+        default=lambda _: False,
+    ),
+}
+
+
+class AllArguments(ConnectorArguments, MetaArguments, ExecutionArguments):
+    pass
+
+
+def all_global_arguments() -> List[tuple[str, Type]]:
+    """Return all global arguments and their types."""
+    return list(get_type_hints(AllArguments).items())
+
+
+# Create a dictionary for retry arguments
+retry_argument_meta: dict[str, ArgumentMeta] = {
+    "_retries": ArgumentMeta(
+        "Number of times to retry failed operations.",
+        default=lambda config: config.RETRY,
+    ),
+    "_retry_delay": ArgumentMeta(
+        "Delay in seconds between retry attempts.",
+        default=lambda config: config.RETRY_DELAY,
+    ),
+    "_retry_until": ArgumentMeta(
+        "Callable taking output data that returns True to continue retrying.",
+        default=lambda config: None,
+    ),
+}
+
+all_argument_meta: dict[str, ArgumentMeta] = {
+    **auth_argument_meta,
+    **shell_argument_meta,
+    **meta_argument_meta,
+    **execution_argument_meta,
+    **retry_argument_meta,  # Add retry arguments
+}
+
+EXECUTION_KWARG_KEYS = list(ExecutionArguments.__annotations__.keys())
+CONNECTOR_ARGUMENT_KEYS = list(ConnectorArguments.__annotations__.keys())
+
+__argument_docs__ = {
+    "Privilege & user escalation": (
+        auth_argument_meta,
+        """
+        .. caution::
+            When combining privilege escalation arguments it is important to know the order they
+            are applied: ``doas`` -> ``sudo`` -> ``su``. For example
+            ``_sudo=True,_su_user="pyinfra"`` yields a command like ``sudo su pyinfra..``.
+        """,
+        """
+        .. code:: python
+
+            # Execute a command with sudo
+            server.user(
+                name="Create pyinfra user using sudo",
+                user="pyinfra",
+                _sudo=True,
+            )
+
+            # Execute a command with a specific sudo password
+            server.user(
+                name="Create pyinfra user using sudo",
+                user="pyinfra",
+                _sudo=True,
+                _sudo_password="my-secret-password",
+            )
+        """,
+    ),
+    "Shell control & features": (
+        shell_argument_meta,
+        "",
+        """
+        .. code:: python
+
+            # Execute from a specific directory
+            server.shell(
+                name="Bootstrap nginx params",
+                commands=["openssl dhparam -out dhparam.pem 4096"],
+                _chdir="/etc/ssl/certs",
+            )
+        """,
+    ),
+    "Operation meta & callbacks": (meta_argument_meta, "", ""),
+    "Execution strategy": (execution_argument_meta, "", ""),
+    "Retry behavior": (
+        retry_argument_meta,
+        """
+        Retry arguments allow you to automatically retry operations that fail. You can specify
+        how many times to retry, the delay between retries, and optionally a condition
+        function to determine when to stop retrying.
+        """,
+        """
+        .. code:: python
+
+            # Retry a command up to 3 times with the default 5 second delay
+            server.shell(
+                name="Run flaky command with retries",
+                commands=["flaky_command"],
+                _retries=3,
+            )
+            # Retry with a custom delay
+            server.shell(
+                name="Run flaky command with custom delay",
+                commands=["flaky_command"],
+                _retries=2,
+                _retry_delay=10,  # 10 second delay between retries
+            )
+            # Retry with a custom condition
+            def retry_on_specific_error(output_data):
+                # Retry if stderr contains "temporary failure"
+                for line in output_data["stderr_lines"]:
+                    if "temporary failure" in line.lower():
+                        return True
+                return False
+
+            server.shell(
+                name="Run command with conditional retry",
+                commands=["flaky_command"],
+                _retries=5,
+                _retry_until=retry_on_specific_error,
+            )
+        """,
+    ),
+}
+
+
+def pop_global_arguments(
+    state: "State",
+    host: "Host",
+    kwargs: dict[str, Any],
+) -> tuple[AllArguments, list[str]]:
+    """
+    Pop and return operation global keyword arguments, in preferred order:
+
+    + From the current context (a direct @operator or @deploy function being called)
+    + From any current @deploy context (deploy kwargs)
+    + From the host data variables
+    + From the config variables
+    """
+
+    config = state.config
+    if ctx_config.isset():
+        config = ctx_config.get()
+        assert config is not None
+
+    cdkwargs = host.current_deploy_kwargs
+    meta_kwargs: dict[str, Any] = cdkwargs or {}  # type: ignore[assignment]
+
+    arguments: dict[str, Any] = {}
+    found_keys: list[str] = []
+
+    for key, type_ in all_global_arguments():
+        argument_meta = all_argument_meta[key]
+        handler = argument_meta.handler
+        default: Any = argument_meta.default(config)
+
+        host_default = getattr(host.data, key, default_sentinel)
+        if host_default is not default_sentinel:
+            default = host_default
+
+        if key in kwargs:
+            found_keys.append(key)
+            value = kwargs.pop(key)
+        else:
+            value = meta_kwargs.get(key, default)
+
+        if handler:
+            value = handler(config, value)
+
+        if value != default:
+            raise_if_bad_type(
+                value,
+                type_,
+                ArgumentTypeError,
+                f"Invalid argument `{key}`:",
+            )
+
+        # TODO: why is type failing here?
+        arguments[key] = value  # type: ignore
+    return cast(AllArguments, arguments), found_keys

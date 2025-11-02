@@ -1,0 +1,8 @@
+{
+    "command": "ids=$(docker plugin ls -q) && [ -n \"$ids\" ] && docker plugin inspect $ids || echo \"[]\"",
+    "requires_command": "docker",
+    "output": ["{\"hello\": \"world\"}"],
+    "fact": {
+        "hello": "world"
+    }
+}

@@ -1,5 +1,7 @@
 # Dynamic Execution during Deploy
 
+**Note:** this example is out of date (the code is valid, but there's better ways to do it), please see [using operations: operation output & callbacks](/using-operations).
+
 pyinfra is designed around the idea of defining the end-state _before_ executing any changes on the remote server. Generally this works well but sometimes you need the output of one command to feed into another. This can be achieved by executing Python functions mid-deploy.
 
 In this example we install a service (ZeroTier) that generates a random ID for the remote host. We then use this ID to authenticate the server with the ZeroTier API.
@@ -16,12 +18,12 @@ apt.packages(
 )
 
 def authorize_server(state, host):
-    # Run a command on the server and collect status, stderr and stdout
-    status, stdout, stderr = host.run_shell_command('cat /var/lib/zerotier-one/identity.public')
+    # Run a command on the server and collect status and command output
+    status, output = host.run_shell_command('cat /var/lib/zerotier-one/identity.public')
     assert status is True  # ensure the command executed OK
 
-    # First line of output is the identity
-    server_id = stdout[0]
+    # First line of stdout is the identity
+    server_id = output.stdout_lines[0]
 
     # Authorize via the ZeroTier API
     response = requests.post('https://my.zerotier.com/.../{0}'.format(server_id))

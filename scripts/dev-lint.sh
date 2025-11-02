@@ -2,13 +2,13 @@
 
 set -euo pipefail
 
-echo "Execute black..."
-black ./
+echo "Execute ruff format..."
+uv run ruff format
 
-echo "Execute flake8..."
-flake8
+echo "Execute ruff check..."
+uv run ruff check
 
 echo "Execute mypy..."
-mypy
+uv run mypy
 
 echo "Linting complete!"

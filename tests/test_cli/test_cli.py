@@ -1,7 +1,7 @@
 from os import path
 from unittest import TestCase
 
-from pyinfra_cli.main import _main
+from pyinfra_cli.cli import _main
 
 from ..paramiko_util import PatchSSHTestCase
 from .util import run_cli
@@ -188,5 +188,8 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 debug_all=False,
                 debug_operations=False,
                 config_filename="config.py",
+                diff=True,
+                retry=0,
+                retry_delay=5,
             )
             assert e.args == (0,)

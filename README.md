@@ -36,10 +36,10 @@ Why pyinfra? Design features include:
 
 ## Quickstart
 
-Install pyinfra with `pip`:
+Install pyinfra with [`uv`](https://docs.astral.sh/uv/):
 
 ```
-pip install pyinfra
+uv tool install pyinfra
 ```
 
 Now you can execute commands on hosts via SSH:

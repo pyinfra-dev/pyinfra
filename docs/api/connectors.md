@@ -50,13 +50,11 @@ handled in code separately from `name` being a valid string.
 A connector that implements execution requires a few more methods:
 
 ```py
-class LocalConnector(BaseConnector):
+class MyConnector(BaseConnector):
     handles_execution = True
 
     @staticmethod
     def make_names_data(_=None):
-        # Unlike InventoryConnector above, this connector can only return one host each invocation of make_names_data().
-
         ...  # see above
  
     def run_shell_command(
@@ -112,6 +110,19 @@ class LocalConnector(BaseConnector):
 
         Returns:
             bool: indicating success or failure.
+        """
+
+
+    # The following two optional methods can be used to hook into the connect/disconnect steps:
+    def connect(self) -> None:
+        """
+        Connect this connector instance. Should raise pyinfra.api.exceptions.ConnectError exceptions
+        to indicate failure.
+        """
+
+    def disconnect(self) -> None:
+        """
+        Disconnect this connector instance, should never fail.
         """
 ```
 

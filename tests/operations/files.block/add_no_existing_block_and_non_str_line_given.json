@@ -1,0 +1,18 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["/home/someone/something"],
+    "kwargs": {
+        "content": "please add this",
+        "after": true,
+        "line": 12
+    },
+    "facts": {
+        "files.Block": {
+            "begin=None, end=None, marker=None, path=/home/someone/something": []
+        }
+    },
+    "exception": {
+        "names": ["OperationTypeError"],
+        "message": "'line' must be a regex or a string"
+    }
+}

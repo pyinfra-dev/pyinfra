@@ -1,0 +1,9 @@
+{
+    "args": [null],
+    "facts": {
+        "pipx.PipxPackages": {"copier": ["9.9.0"]}
+        },
+    "commands": [
+    ],
+    "noop_description": "no package list provided to pipx.packages"
+}

@@ -43,6 +43,21 @@ By default pyinfra only prints high level information (this host connected, this
 + `-vv`: as above plus print shell input to the remote host
 + `-vvv` as above plus print shell output from the remote host
 
+### Retry Options
+
+pyinfra supports automatic retry of failed operations via CLI options:
+
++ `--retry N`: Retry failed operations up to N times (default: 0)
++ `--retry-delay N`: Wait N seconds between retry attempts (default: 5)
+
+```sh
+# Retry failed operations up to 3 times with default 5 second delay
+pyinfra inventory.py deploy.py --retry 3
+
+# Retry with custom delay
+pyinfra inventory.py deploy.py --retry 2 --retry-delay 10
+```
+
 
 ## Inventory
 

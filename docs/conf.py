@@ -5,6 +5,7 @@ from shutil import rmtree
 import guzzle_sphinx_theme
 
 from pyinfra import __version__, local
+from pyinfra.api import metadata
 
 copyright = "Nick Barrett {0} — pyinfra v{1}".format(
     date.today().year,
@@ -57,9 +58,42 @@ exclude_patterns = [
 ]
 
 
+def rstjinja(app, docname, source):
+    """
+    Render certain pages as a jinja templates.
+    """
+    # this should only be run when building html
+    if app.builder.format != "html":
+        return
+    # We currently only render docs/operations.rst
+    # and docs/facts.rst as jinja2 templates
+    if docname in ["operations", "facts"]:
+        src = source[0]
+        rendered = app.builder.templates.render_string(src, app.config.html_context)
+        source[0] = rendered
+
+
 def setup(app):
+    app.connect("source-read", rstjinja)
     this_dir = path.dirname(path.realpath(__file__))
     scripts_dir = path.abspath(path.join(this_dir, "..", "scripts"))
+    metadata_file = path.abspath(path.join(this_dir, "..", "pyinfra-metadata.toml"))
+    if not path.exists(metadata_file):
+        raise ValueError("No pyinfra-metadata.toml in project root")
+    with open(metadata_file, "r") as file:
+        metadata_text = file.read()
+    plugins = metadata.parse_plugins(metadata_text)
+
+    operation_plugins = sorted([p for p in plugins if p.type == "operation"], key=lambda p: p.name)
+    fact_plugins = sorted([p for p in plugins if p.type == "fact"], key=lambda p: p.name)
+    html_context = {
+        "operation_plugins": operation_plugins,
+        "fact_plugins": fact_plugins,
+        "tags": metadata.ALLOWED_TAGS,
+        "docs_language": language,
+        "docs_version": version,
+    }
+    app.config.html_context = html_context
 
     for auto_docs_name in ("operations", "facts", "apidoc", "connectors"):
         auto_docs_path = path.join(this_dir, auto_docs_name)

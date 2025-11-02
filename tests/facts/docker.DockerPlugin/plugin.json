@@ -1,0 +1,11 @@
+{
+    "arg": "myid",
+    "command": "docker plugin inspect myid 2>&- || true",
+    "requires_command": "docker",
+    "output": [
+        "{\"hello\": \"world\"}"
+    ],
+    "fact": {
+        "hello": "world"
+    }
+}

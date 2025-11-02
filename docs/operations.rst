@@ -1,56 +1,73 @@
 Operations Index
 ================
 
+.. raw:: html
+
+  <nav class="under-title-tabs">
+    See also:
+    <a href="facts.html">Facts Index</a>
+    <a href="connectors.html">Connectors Index</a>
+  </nav>
+
 Operations are used to describe changes to make to systems in the inventory. Use them to define state and pyinfra will make any necessary changes to reach that state. All operations accept a set of :doc:`global arguments <arguments>` and are grouped as Python modules.
 
 **Want a new operation?** Check out :doc:`the writing operations guide <./api/operations>`.
 
 .. raw:: html
 
-   <h3>Popular operations by category</h3>
+        <div class="container my-4">
+          <!-- Dropdown Filter -->
+          <div class="mb-4">
+            <label for="tag-dropdown" class="form-label">Filter by Tag:</label>
+            <select class="form-select" id="tag-dropdown">
+	      <option value="All">All</option>
+{% for tag in tags %}
+              <option value="{{ tag.title_case }}">{{ tag.title_case }}</option>
+{% endfor %}
+            </select>
+          </div>
 
-.. admonition:: Basics
-   :class: note inline
+          <!-- Cards Grid -->
+          <div class="row" id="card-container">
+{% for plugin in operation_plugins %}
+            <div class="col-md-4 mb-4 card-item">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h5 class="card-title">
+                    <a href="./operations/{{ plugin.name }}.html">
+                      {{ plugin.name }}
+                    </a>
+                  </h5>
+                  <p class="card-text">{{ plugin.description }}</p>
+{% for tag in plugin.tags %}
+                  <span class="badge bg-secondary">{{ tag.title_case }}</span>
+{% endfor %}
+                </div>
+              </div>
+            </div>
+{% endfor %}
+          </div>
+        </div>
+        <script>
+          document.getElementById('tag-dropdown').addEventListener('change', function () {
+            const selectedTag = this.value;
+            const cards = document.querySelectorAll('.card-item');
 
-   :doc:`operations/files`, :doc:`operations/server`, :doc:`operations/git`, :doc:`operations/systemd`
+            cards.forEach(card => {
+              const tags = Array.from(card.querySelectorAll('.badge')).map(badge => badge.textContent.trim());
 
-.. admonition:: System Packages
-   :class: note inline
-
-   :doc:`operations/apt`, :doc:`operations/apk`, :doc:`operations/brew`, :doc:`operations/dnf`, :doc:`operations/yum`
-
-.. admonition:: Language Packages
-   :class: note inline
-
-   :doc:`operations/gem`, :doc:`operations/npm`, :doc:`operations/pip`
-
-.. admonition:: Databases
-   :class: note inline
-
-   :doc:`operations/postgresql`, :doc:`operations/mysql`
-
-.. raw:: html
-
-   <h3>All operations alphabetically</h3>
-
-.. raw:: html
-
-   <style type="text/css">
-      #operations-index .toctree-wrapper > ul {
-         padding: 0;
-      }
-      #operations-index .toctree-wrapper > ul > li {
-         padding: 0;
-         list-style: none;
-         margin: 20px 0;
-      }
-      #operations-index .toctree-wrapper > ul > li > ul > li {
-         display: inline-block;
-      }
-   </style>
+              if (selectedTag === 'All' || tags.includes(selectedTag)) {
+                card.style.display = 'block';
+              } else {
+                card.style.display = 'none';
+              }
+            });
+          });
+        </script>
 
 .. toctree::
    :maxdepth: 2
    :glob:
+   :hidden:
 
    operations/*

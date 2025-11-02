@@ -1,0 +1,31 @@
+{
+    "kwargs": {
+        "plugin": "my-plugin",
+        "plugin_options": {
+            "MY_VAR1": "value1",
+            "MY_VAR2": "value3"
+        }
+    },
+    "facts": {
+        "docker.DockerPlugin": {
+            "object_id=my-plugin": [
+                {
+                    "Name": "my-plugin:latest",
+                    "Enabled": true,
+                    "Id": "1234567890abcdef",
+                    "Settings": {
+                        "Env": {
+                            "MY_VAR1": "value1",
+                            "MY_VAR2": "value2"
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "commands": [
+        "docker plugin disable my-plugin",
+        "docker plugin set my-plugin MY_VAR1=value1 MY_VAR2=value3",
+        "docker plugin enable my-plugin"
+    ]
+}

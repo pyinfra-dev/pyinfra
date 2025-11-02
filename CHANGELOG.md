@@ -1,3 +1,73 @@
+# v3.5.3
+
+- another release to fix different doc generation issues 🫠
+
+# v3.5.2
+
+- fix operation & fact docs generation
+
+# v3.5.1
+
+Patch release with a bunch of great fixes. But notably want to call out two major changes for anyone working on the pyinfra code itself (huge thank you Daan for implementing these):
+
+- feat: use ruff for linting and formatting (@DonDebonair)
+- feat: use uv for project and dependency management (@DonDebonair)
+
+Core fixes:
+
+- api: correctly set context state+host when calling `get_facts` 
+- cli: catch exceptions when testing inventory/operation imports 
+- cli: fix/remove datetime timezone warnings (@wowi42)
+- operations/files.block: correct behaviour when markers/block not found and no line provided (@morrison12)
+- operations.util.packaging: extend PkgInfo for winget (@rod7760)
+- facts/server: support negative value in sysctl (@imlonghao)
+
+Docs:
+
+- docs: fix dynamic execution example (@wowi42)
+- docs: Specify how the recursive argument to directory() works (@cliffmccarthy)
+- docs: change recommended installation methods (@DonDebonair)
+- docs: update writing connectors 
+
+Tests:
+
+- op.server.user tests: add exists_noop.json for user existence checks (fix warning) (@maisim)
+- op.server.user tests: add noop_description (fix warning) (@maisim)
+- fix: add missing command field in test (@maisim)
+- tests: clear the host sftp memoization cache before setting up the mock (@wowi42)
+- tests: export testgen class to a new package/repo 
+- tests: fix missing stage sets on state 
+
+# v3.5
+
+New release with some really awesome new features, brought to you by the fantastic contributions of the community. New stuff:
+
+- add `--diff` argument to show file diffs for potential file changes (@jgelens)
+- add `_retries`, `_retry_delay` and `_retry_until` global arguments (@shohamd4)
+- parallelize disconnecting from hosts (@gwelch-contegix)
+- enable using SCP instead of SFTP for SSH file transfers (@DonDebonair)
+
+New and updated operations/facts:
+- facts/server: add `RebootRequired` fact (@wowi42)
+- operations/pip: support PEP-508 package versions (@morrison12)
+- operations+facts/docker: add Docker plugin support (@DonDebonair)
+- operations/files.put: add `atime` and `mtime` arguments (@vram0gh2)
+- operations/openrc: support runlevel when enabling services (@sengo4hd)
+- facts/yum+dnf+zypper: return `repoid` in repository facts
+
+Operation/fact fixes:
+
+- facts/files.File: add ls fallback support (@mrkbac)
+- operations/openrc: add missing noop messages (@sengo4hd)
+- operations/server.crontab: fix newline when replacing existing values (@Nananas)
+- operations/files.block: fix examples doc (@morrison12)
+- operations/files.block: fix case where file exists but line is missing (@morrison12)
+- operations/files.block: improve handling of special characters in marker lines (@morrison12)
+
+Internal/meta:
+
+- documentation link fix (@sengo4hd)
+
 # v3.4.1
 
 - fix config context when getting operation arguments

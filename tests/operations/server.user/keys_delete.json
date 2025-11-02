@@ -44,6 +44,9 @@
         "files.Sha256File": {
             "path=homedir/.ssh/authorized_keys": null
         },
+        "files.FileContents": {
+            "path=homedir/.ssh/authorized_keys": null 
+        },
         "server.Groups": {}
     },
     "commands": [
