@@ -198,6 +198,9 @@ class FakeHost:
     ):
         return True
 
+    def get_temp_dir_config(*args, **kwargs):
+        return "_tempdir_"
+
     @staticmethod
     def _get_fact_key(fact_cls):
         return "{0}.{1}".format(fact_cls.__module__.split(".")[-1], fact_cls.__name__)

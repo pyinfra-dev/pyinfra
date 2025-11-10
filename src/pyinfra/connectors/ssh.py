@@ -9,6 +9,7 @@ from typing import IO, TYPE_CHECKING, Any, Iterable, Optional, Protocol, Tuple
 
 import click
 from paramiko import AuthenticationException, BadHostKeyException, SFTPClient, SSHException
+from paramiko.agent import Agent
 from typing_extensions import TypedDict, Unpack, override
 
 from pyinfra import logger
@@ -286,9 +287,63 @@ class SSHConnector(BaseConnector):
                 f"Host key for {e.hostname} does not match.",
             )
 
+        except SSHException as e:
+            if self._retry_paramiko_agent_keys(hostname, kwargs, e):
+                return
+            raise
+
     @override
     def disconnect(self) -> None:
         self.get_file_transfer_connection.cache.clear()
+
+    def _retry_paramiko_agent_keys(
+        self,
+        hostname: str,
+        kwargs: dict[str, Any],
+        error: SSHException,
+    ) -> bool:
+        # Workaround for Paramiko multi-key bug (paramiko/paramiko#1390).
+        if "no existing session" not in str(error).lower():
+            return False
+
+        if not kwargs.get("allow_agent"):
+            return False
+
+        try:
+            agent_keys = list(Agent().get_keys())
+        except Exception:
+            return False
+
+        if not agent_keys:
+            return False
+
+        # Skip the first agent key, since Paramiko already attempted it
+        attempt_keys = agent_keys[1:] if len(agent_keys) > 1 else agent_keys
+
+        for agent_key in attempt_keys:
+            if self.client is not None:
+                try:
+                    self.client.close()
+                except Exception:
+                    pass
+
+            self.client = SSHClient()
+
+            single_key_kwargs = dict(kwargs)
+            single_key_kwargs["allow_agent"] = False
+            single_key_kwargs["pkey"] = agent_key
+
+            try:
+                self.client.connect(hostname, **single_key_kwargs)
+                return True
+            except AuthenticationException:
+                continue
+            except SSHException as retry_error:
+                if "no existing session" in str(retry_error).lower():
+                    continue
+                raise retry_error
+
+        return False
 
     @override
     def run_shell_command(

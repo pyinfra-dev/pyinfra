@@ -1156,11 +1156,14 @@ def template(
     if not set explicitly.
 
     Notes:
-       Common convention is to store templates in a "templates" directory and
-       have a filename suffix with '.j2' (for jinja2).
+        Common convention is to store templates in a "templates" directory and
+        have a filename suffix with '.j2' (for jinja2).
 
-       For information on the template syntax, see
-       `the jinja2 docs <https://jinja.palletsprojects.com>`_.
+        The default template lookup directory (used with jinjas ``extends``, ``import`` and
+        ``include`` statements) is the current working directory.
+
+        For information on the template syntax, see
+        `the jinja2 docs <https://jinja.palletsprojects.com>`_.
 
     **Examples:**
 
@@ -1800,6 +1803,8 @@ def block(
     current = host.get_fact(Block, path=path, marker=marker, begin=begin, end=end)
     cmd = None
 
+    tmp_dir = host.get_temp_dir_config()
+
     # standard awk doesn't have an "in-place edit" option so we write to a tempfile and
     # if edits were successful move to dest i.e. we do: <out_prep> ... do some work ... <real_out>
     q_path = QuoteString(path)
@@ -1815,7 +1820,7 @@ def block(
         )
     )
     out_prep = StringCommand(
-        'OUT="$(TMPDIR=/tmp mktemp -t pyinfra.XXXXXX)" && ',
+        f'OUT="$(TMPDIR={tmp_dir} mktemp -t pyinfra.XXXXXX)" && ',
         *mode_get,
         'OWNER="$(stat -c "%u:%g"',
         q_path,

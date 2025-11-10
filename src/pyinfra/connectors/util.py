@@ -22,17 +22,17 @@ if TYPE_CHECKING:
 
 
 SUDO_ASKPASS_ENV_VAR = "PYINFRA_SUDO_PASSWORD"
+
+
 SUDO_ASKPASS_COMMAND = r"""
-temp=$(mktemp "${{TMPDIR:=/tmp}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
+temp=$(mktemp "${{TMPDIR:={0}}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
 cat >"$temp"<<'__EOF__'
 #!/bin/sh
-printf '%s\n' "${0}"
+printf '%s\n' "${1}"
 __EOF__
 chmod 755 "$temp"
 echo "$temp"
-""".format(
-    SUDO_ASKPASS_ENV_VAR,
-)
+"""
 
 
 def run_local_process(
@@ -264,7 +264,9 @@ def extract_control_arguments(arguments: "ConnectorArguments") -> "ConnectorArgu
 def _ensure_sudo_askpass_set_for_host(host: "Host"):
     if host.connector_data.get("sudo_askpass_path"):
         return
-    _, output = host.run_shell_command(SUDO_ASKPASS_COMMAND)
+    _, output = host.run_shell_command(
+        SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SUDO_ASKPASS_ENV_VAR)
+    )
     host.connector_data["sudo_askpass_path"] = shlex.quote(output.stdout_lines[0])
 
 

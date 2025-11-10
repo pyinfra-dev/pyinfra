@@ -1,0 +1,550 @@
+"$schema" = "./pyinfra-metadata-schema-1.0.0.json"
+
+[pyinfra.plugins]
+
+# System Package Managers
+[pyinfra.plugins."apk-ops"]
+name = "apk"
+path = "src/pyinfra/operations/apk.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."apk-facts"]
+name = "apk"
+path = "src/pyinfra/facts/apk.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."apt-ops"]
+name = "apt"
+path = "src/pyinfra/operations/apt.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."apt-facts"]
+name = "apt"
+path = "src/pyinfra/facts/apt.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."brew-ops"]
+name = "brew"
+path = "src/pyinfra/operations/brew.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."brew-facts"]
+name = "brew"
+path = "src/pyinfra/facts/brew.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."choco-ops"]
+name = "choco"
+path = "src/pyinfra/operations/choco.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."choco-facts"]
+name = "choco"
+path = "src/pyinfra/facts/choco.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."dnf-ops"]
+name = "dnf"
+path = "src/pyinfra/operations/dnf.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."dnf-facts"]
+name = "dnf"
+path = "src/pyinfra/facts/dnf.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."flatpak-ops"]
+name = "flatpak"
+path = "src/pyinfra/operations/flatpak.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."flatpak-facts"]
+name = "flatpak"
+path = "src/pyinfra/facts/flatpak.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."freebsd-facts"]
+name = "freebsd"
+path = "src/pyinfra/facts/freebsd.py"
+type = "fact"
+tags = ["package-manager"]
+
+[pyinfra.plugins."opkg-ops"]
+name = "opkg"
+path = "src/pyinfra/operations/opkg.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."opkg-facts"]
+name = "opkg"
+path = "src/pyinfra/facts/opkg.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."pacman-ops"]
+name = "pacman"
+path = "src/pyinfra/operations/pacman.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."pacman-facts"]
+name = "pacman"
+path = "src/pyinfra/facts/pacman.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."pkg-ops"]
+name = "pkg"
+path = "src/pyinfra/operations/pkg.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."pkg-facts"]
+name = "pkg"
+path = "src/pyinfra/facts/pkg.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."pkgin-ops"]
+name = "pkgin"
+path = "src/pyinfra/operations/pkgin.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."pkgin-facts"]
+name = "pkgin"
+path = "src/pyinfra/facts/pkgin.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."podman-facts"]
+name = "podman"
+path = "src/pyinfra/facts/podman.py"
+type = "fact"
+tags = ["containers"]
+
+[pyinfra.plugins."snap-ops"]
+name = "snap"
+path = "src/pyinfra/operations/snap.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."snap-facts"]
+name = "snap"
+path = "src/pyinfra/facts/snap.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."xbps-ops"]
+name = "xbps"
+path = "src/pyinfra/operations/xbps.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."xbps-facts"]
+name = "xbps"
+path = "src/pyinfra/facts/xbps.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."yum-ops"]
+name = "yum"
+path = "src/pyinfra/operations/yum.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."yum-facts"]
+name = "yum"
+path = "src/pyinfra/facts/yum.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."zypper-ops"]
+name = "zypper"
+path = "src/pyinfra/operations/zypper.py"
+type = "operation"
+tags = ["package-manager", "system"]
+
+[pyinfra.plugins."zypper-facts"]
+name = "zypper"
+path = "src/pyinfra/facts/zypper.py"
+type = "fact"
+tags = ["package-manager", "system"]
+
+# Language Package Managers
+[pyinfra.plugins."pip-ops"]
+name = "pip"
+path = "src/pyinfra/operations/pip.py"
+type = "operation"
+tags = ["package-manager", "python"]
+
+[pyinfra.plugins."pip-facts"]
+name = "pip"
+path = "src/pyinfra/facts/pip.py"
+type = "fact"
+tags = ["package-manager", "python"]
+
+[pyinfra.plugins."pipx-ops"]
+name = "pipx"
+path = "src/pyinfra/operations/pipx.py"
+type = "operation"
+tags = ["package-manager", "python"]
+
+[pyinfra.plugins."pipx-facts"]
+name = "pipx"
+path = "src/pyinfra/facts/pipx.py"
+type = "fact"
+tags = ["package-manager", "python"]
+
+[pyinfra.plugins."cargo-ops"]
+name = "cargo"
+path = "src/pyinfra/operations/cargo.py"
+type = "operation"
+tags = ["package-manager", "rust"]
+
+[pyinfra.plugins."cargo-facts"]
+name = "cargo"
+path = "src/pyinfra/facts/cargo.py"
+type = "fact"
+tags = ["package-manager", "rust"]
+
+[pyinfra.plugins."gem-ops"]
+name = "gem"
+path = "src/pyinfra/operations/gem.py"
+type = "operation"
+tags = ["package-manager", "ruby"]
+
+[pyinfra.plugins."gem-facts"]
+name = "gem"
+path = "src/pyinfra/facts/gem.py"
+type = "fact"
+tags = ["package-manager", "ruby"]
+
+[pyinfra.plugins."git-ops"]
+name = "git"
+path = "src/pyinfra/operations/git.py"
+type = "operation"
+tags = ["version-control-system"]
+
+[pyinfra.plugins."git-facts"]
+name = "git"
+path = "src/pyinfra/facts/git.py"
+type = "fact"
+tags = ["version-control-system"]
+
+[pyinfra.plugins."gpg"]
+name = "gpg"
+path = "src/pyinfra/facts/gpg.py"
+type = "fact"
+tags = ["security"]
+
+[pyinfra.plugins."npm-ops"]
+name = "npm"
+path = "src/pyinfra/operations/npm.py"
+type = "operation"
+tags = ["package-manager", "javascript"]
+
+[pyinfra.plugins."npm-facts"]
+name = "npm"
+path = "src/pyinfra/facts/npm.py"
+type = "fact"
+tags = ["package-manager", "javascript"]
+
+# Service Management
+[pyinfra.plugins."launchd-ops"]
+name = "launchd"
+path = "src/pyinfra/operations/launchd.py"
+type = "operation"
+tags = ["service-management"]
+
+[pyinfra.plugins."launchd-facts"]
+name = "launchd"
+path = "src/pyinfra/facts/launchd.py"
+type = "fact"
+tags = ["service-management", "system"]
+
+[pyinfra.plugins."systemd-ops"]
+name = "systemd"
+path = "src/pyinfra/operations/systemd.py"
+type = "operation"
+tags = ["service-management"]
+
+[pyinfra.plugins."systemd-facts"]
+name = "systemd"
+path = "src/pyinfra/facts/systemd.py"
+type = "fact"
+tags = ["service-management", "system"]
+
+[pyinfra.plugins."sysvinit-ops"]
+name = "sysvinit"
+path = "src/pyinfra/operations/sysvinit.py"
+type = "operation"
+tags = ["service-management"]
+
+[pyinfra.plugins."sysvinit-facts"]
+name = "sysvinit"
+path = "src/pyinfra/facts/sysvinit.py"
+type = "fact"
+tags = ["service-management", "system"]
+
+[pyinfra.plugins."upstart-ops"]
+name = "upstart"
+path = "src/pyinfra/operations/upstart.py"
+type = "operation"
+tags = ["service-management"]
+
+[pyinfra.plugins."upstart-facts"]
+name = "upstart"
+path = "src/pyinfra/facts/upstart.py"
+type = "fact"
+tags = ["service-management", "system"]
+
+[pyinfra.plugins."bsdinit-ops"]
+name = "bsdinit"
+path = "src/pyinfra/operations/bsdinit.py"
+type = "operation"
+tags = ["service-management"]
+
+[pyinfra.plugins."bsdinit-facts"]
+name = "bsdinit"
+path = "src/pyinfra/facts/bsdinit.py"
+type = "fact"
+tags = ["service-management", "system"]
+
+[pyinfra.plugins."openrc-ops"]
+name = "openrc"
+path = "src/pyinfra/operations/openrc.py"
+type = "operation"
+tags = ["service-management"]
+
+[pyinfra.plugins."openrc-facts"]
+name = "openrc"
+path = "src/pyinfra/facts/openrc.py"
+type = "fact"
+tags = ["service-management", "system"]
+
+[pyinfra.plugins."rpm-facts"]
+name = "rpm"
+path = "src/pyinfra/facts/rpm.py"
+type = "fact"
+tags = ["package-manager"]
+
+[pyinfra.plugins."runit-ops"]
+name = "runit"
+path = "src/pyinfra/operations/runit.py"
+type = "operation"
+tags = ["service-management"]
+
+[pyinfra.plugins."runit-facts"]
+name = "runit"
+path = "src/pyinfra/facts/runit.py"
+type = "fact"
+tags = ["service-management", "system"]
+
+# Containers
+[pyinfra.plugins."docker-ops"]
+name = "docker"
+path = "src/pyinfra/operations/docker.py"
+type = "operation"
+tags = ["containers"]
+
+[pyinfra.plugins."docker-facts"]
+name = "docker"
+path = "src/pyinfra/facts/docker.py"
+type = "fact"
+tags = ["containers", "system"]
+
+[pyinfra.plugins."lxd-ops"]
+name = "lxd"
+path = "src/pyinfra/operations/lxd.py"
+type = "operation"
+tags = ["containers"]
+
+[pyinfra.plugins."lxd-facts"]
+name = "lxd"
+path = "src/pyinfra/facts/lxd.py"
+type = "fact"
+tags = ["containers", "system"]
+
+[pyinfra.plugins."vzctl-ops"]
+name = "vzctl"
+path = "src/pyinfra/operations/vzctl.py"
+type = "operation"
+tags = ["containers"]
+
+[pyinfra.plugins."vzctl-facts"]
+name = "vzctl"
+path = "src/pyinfra/facts/vzctl.py"
+type = "fact"
+tags = ["containers", "system"]
+
+# Config Management
+[pyinfra.plugins."puppet-ops"]
+name = "puppet"
+path = "src/pyinfra/operations/puppet.py"
+type = "operation"
+tags = ["configuration-management"]
+
+[pyinfra.plugins."puppet-facts"]
+name = "puppet"
+path = "src/pyinfra/facts/puppet.py"
+type = "fact"
+tags = ["configuration-management"]
+
+# Security & System Extras
+[pyinfra.plugins."iptables-ops"]
+name = "iptables"
+path = "src/pyinfra/operations/iptables.py"
+type = "operation"
+tags = ["security"]
+
+[pyinfra.plugins."iptables-facts"]
+name = "iptables"
+path = "src/pyinfra/facts/iptables.py"
+type = "fact"
+tags = ["security", "system"]
+
+[pyinfra.plugins."selinux-ops"]
+name = "selinux"
+path = "src/pyinfra/operations/selinux.py"
+type = "operation"
+tags = ["security"]
+
+[pyinfra.plugins."selinux-facts"]
+name = "selinux"
+path = "src/pyinfra/facts/selinux.py"
+type = "fact"
+tags = ["security", "system"]
+
+[pyinfra.plugins."efibootmgr-facts"]
+name = "efibootmgr"
+path = "src/pyinfra/facts/efibootmgr.py"
+type = "fact"
+tags = ["boot", "system"]
+
+# Databases
+[pyinfra.plugins."mysql-ops"]
+name = "mysql"
+path = "src/pyinfra/operations/mysql.py"
+type = "operation"
+tags = ["database"]
+
+[pyinfra.plugins."mysql-facts"]
+name = "mysql"
+path = "src/pyinfra/facts/mysql.py"
+type = "fact"
+tags = ["database", "system"]
+
+[pyinfra.plugins."postgres-ops"]
+name = "postgres"
+path = "src/pyinfra/operations/postgres.py"
+type = "operation"
+tags = ["database"]
+
+[pyinfra.plugins."postgres-facts"]
+name = "postgres"
+path = "src/pyinfra/facts/postgres.py"
+type = "fact"
+tags = ["database", "system"]
+
+[pyinfra.plugins."postgresql-ops"]
+name = "postgresql"
+path = "src/pyinfra/operations/postgresql.py"
+type = "operation"
+tags = ["database"]
+
+[pyinfra.plugins."postgresql-facts"]
+name = "postgresql"
+path = "src/pyinfra/facts/postgresql.py"
+type = "fact"
+tags = ["database", "system"]
+
+# Storage
+[pyinfra.plugins."zfs-ops"]
+name = "zfs"
+path = "src/pyinfra/operations/zfs.py"
+type = "operation"
+tags = ["storage"]
+
+[pyinfra.plugins."zfs-facts"]
+name = "zfs"
+path = "src/pyinfra/facts/zfs.py"
+type = "fact"
+tags = ["storage", "system"]
+
+# General System
+[pyinfra.plugins."server-ops"]
+name = "server"
+path = "src/pyinfra/operations/server.py"
+type = "operation"
+tags = ["system"]
+
+[pyinfra.plugins."server-facts"]
+name = "server"
+path = "src/pyinfra/facts/server.py"
+type = "fact"
+tags = ["system"]
+
+[pyinfra.plugins."hardware-facts"]
+name = "hardware"
+path = "src/pyinfra/facts/hardware.py"
+type = "fact"
+tags = ["system"]
+
+[pyinfra.plugins."files-ops"]
+name = "files"
+path = "src/pyinfra/operations/files.py"
+type = "operation"
+tags = ["system"]
+
+[pyinfra.plugins."files-facts"]
+name = "files"
+path = "src/pyinfra/facts/files.py"
+type = "fact"
+tags = ["system"]
+
+[pyinfra.plugins."crontab-ops"]
+name = "crontab"
+path = "src/pyinfra/operations/crontab.py"
+type = "operation"
+tags = ["system"]
+
+[pyinfra.plugins."crontab-facts"]
+name = "crontab"
+path = "src/pyinfra/facts/crontab.py"
+type = "fact"
+tags = ["system"]
+
+[pyinfra.plugins."deb-facts"]
+name = "deb"
+path = "src/pyinfra/facts/deb.py"
+type = "fact"
+tags = ["package-manager"]
+
+#17d14
+#31d27
+#34d29
+#
+[pyinfra.plugins."ssh-ops"]
+name = "ssh"
+path = "src/pyinfra/operations/ssh.py"
+type = "operation"
+tags = ["system"]
+
+[pyinfra.plugins."python-ops"]
+name = "python"
+path = "src/pyinfra/operations/python.py"
+type = "operation"
+tags = ["system"]

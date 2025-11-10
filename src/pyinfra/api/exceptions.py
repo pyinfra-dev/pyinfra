@@ -29,6 +29,12 @@ class FactValueError(FactError, ValueError):
     """
 
 
+class FactProcessError(FactError, RuntimeError):
+    """
+    Exception raised when the data gathered for a fact cannot be processed.
+    """
+
+
 class OperationError(PyinfraError):
     """
     Exception raised during fact gathering staging if an operation is unable to

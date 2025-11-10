@@ -24,6 +24,7 @@ from typing_extensions import override
 from pyinfra import logger
 from pyinfra.api import StringCommand
 from pyinfra.api.arguments import all_global_arguments, pop_global_arguments
+from pyinfra.api.exceptions import FactProcessError
 from pyinfra.api.util import (
     get_kwargs_str,
     log_error_or_warning,
@@ -269,7 +270,22 @@ def _get_fact(
 
     if status:
         if stdout_lines:
-            data = fact.process(stdout_lines)
+            try:
+                data = fact.process(stdout_lines)
+            except FactProcessError as e:
+                log_error_or_warning(
+                    host,
+                    global_kwargs["_ignore_errors"],
+                    description=("could not process fact: {0} {1}").format(
+                        name, get_kwargs_str(fact_kwargs)
+                    ),
+                    exception=e,
+                )
+
+                # Check we've not failed
+                if apply_failed_hosts and not global_kwargs["_ignore_errors"]:
+                    state.fail_hosts({host})
+
     elif stderr_lines:
         # If we have error output and that error is sudo or su stating the user
         # does not exist, do not fail but instead return the default fact value.

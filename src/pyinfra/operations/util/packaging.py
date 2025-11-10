@@ -172,6 +172,8 @@ def ensure_packages(
         return
     if isinstance(packages_to_ensure, str):
         packages_to_ensure = [packages_to_ensure]
+    if len(packages_to_ensure) == 0:
+        return
 
     packages: list[PkgInfo] = []
     if isinstance(packages_to_ensure[0], PkgInfo):

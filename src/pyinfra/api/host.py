@@ -328,6 +328,9 @@ class Host:
 
         return temp_directory
 
+    def get_temp_dir_config(self):
+        return self.state.config.TEMP_DIR or self.state.config.DEFAULT_TEMP_DIR
+
     def get_temp_filename(
         self,
         hash_key: Optional[str] = None,
