@@ -1,0 +1,13 @@
+{
+    "args": ["mypy==1.17.1"],
+    "kwargs": {
+        "present": true,
+        "extra_args": ["--no-cache"]
+    },
+    "facts": {
+        "uv.UvTools": {}
+    },
+    "commands": [
+        "uv tool install --no-progress --no-cache mypy==1.17.1"
+    ]
+}

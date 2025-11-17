@@ -1,0 +1,10 @@
+{
+    "args": [],
+    "kwargs": {},
+    "facts": {
+        "uv.UvToolDir": "/home/someone/.local/bin",
+        "server.Path": "/somewhere/special:/home/someone/.local/bin:/usr/local/sbin:/usr/local/bin"
+    },
+    "commands": [],
+    "noop_description": "uv bin dir is already in the PATH"
+}

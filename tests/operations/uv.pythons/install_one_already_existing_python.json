@@ -1,0 +1,16 @@
+{
+    "args": ["3.12.12"],
+    "kwargs": {
+        "present": true
+    },
+    "facts": {
+        "uv.UvInstalledPythonsByVersion": {
+            "is_managed=True": {
+                "3.12.12": ["cpython-3.12.12-macos-aarch64-none"]
+            }
+        }
+    },
+    "commands": [
+    ],
+    "noop_description": "package 3.12.12 is installed (cpython-3.12.12-macos-aarch64-none)"
+}

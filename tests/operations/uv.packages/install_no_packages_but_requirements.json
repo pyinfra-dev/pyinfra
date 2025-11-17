@@ -1,0 +1,14 @@
+{
+    "args": [null],
+    "kwargs": {
+        "requirements": "x.txt",
+        "present": true,
+        "latest": true,
+        "extra_args": ["--foo", "--bar"]
+    },
+    "facts": {
+    },
+    "commands": [
+        "uv pip install --upgrade --no-progress --foo --bar -r x.txt"
+    ]
+}
