@@ -3,7 +3,9 @@
 import json
 from collections.abc import Iterable
 from operator import itemgetter
-from typing import cast, override
+from typing import cast
+
+from typing_extensions import override
 
 from pyinfra import logger
 from pyinfra.api import StringCommand
@@ -63,8 +65,8 @@ class UvPipPackages(FactBase[PackageVersionDict]):
 
 class UvAvailablePythonsByImplementation(FactBase[PackageVersionDict]):
     """
-    Provides the implementation(s) of python available for installation along with the versions(s) of
-    the implementation(s).
+    Provides the implementation(s) of python available for installation along with the versions(s)
+    of the implementation(s).
 
         + is_managed: if set, only list python implementations managed by `uv`. Default True
 
@@ -102,8 +104,8 @@ class UvAvailablePythonsByImplementation(FactBase[PackageVersionDict]):
 
 class UvAvailablePythonsByVersion(UvAvailablePythonsByImplementation):
     """
-    Provides the version(s) of python available for installation along with the implementation(s) of
-    the version(s).
+    Provides the version(s) of python available for installation along with the implementation(s)
+    of the version(s).
 
         + is_managed: if set, only list python implementations managed by `uv`. Default True
 
