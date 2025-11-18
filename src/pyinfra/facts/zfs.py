@@ -20,7 +20,7 @@ def _process_zfs_props_table(output):
 class ZfsPools(FactBase):
     @override
     def command(self) -> str:
-        return "zpool get -H all"
+        return "zpool get -Hp all"
 
     @override
     def requires_command(self) -> str:
@@ -34,7 +34,7 @@ class ZfsPools(FactBase):
 class ZfsDatasets(FactBase):
     @override
     def command(self) -> str:
-        return "zfs get -H all"
+        return "zfs get -Hp all"
 
     @override
     def requires_command(self) -> str:

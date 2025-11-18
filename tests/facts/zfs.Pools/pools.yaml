@@ -1,4 +1,4 @@
-command: zpool get -H all
+command: zpool get -Hp all
 requires_command: zpool
 output: |
   tank	compression	lz4	-
