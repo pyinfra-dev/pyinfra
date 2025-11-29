@@ -2,6 +2,7 @@ import logging
 import sys
 import warnings
 from fnmatch import fnmatch
+from getpass import getpass
 from os import chdir as os_chdir, getcwd, path
 from typing import Iterable, List, Tuple, Union
 
@@ -81,6 +82,12 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     help="Execute operations immediately on hosts without prompt or checking for changes.",
     envvar="PYINFRA_YES",
     show_envvar=True,
+)
+@click.option(
+    "--same-sudo-password",
+    is_flag=True,
+    default=False,
+    help="All hosts have the same sudo password, so ask only once.",
 )
 @click.option(
     "--limit",
@@ -274,6 +281,7 @@ def _main(
     ssh_key,
     ssh_key_password: str,
     ssh_password: str,
+    same_sudo_password: bool,
     shell_executable,
     sudo: bool,
     sudo_user: str,
@@ -343,6 +351,9 @@ def _main(
         ssh_port,
         ssh_password,
     )
+
+    if same_sudo_password:
+        config.SUDO_PASSWORD = getpass("sudo password: ")
 
     if yes is False:
         _set_fail_prompts(state, config)
