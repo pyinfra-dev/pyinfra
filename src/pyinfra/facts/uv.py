@@ -255,7 +255,7 @@ class UvTools(FactBase[PackageVersionDict]):
             if line.startswith("- "):
                 continue  # skip the names of the commands that have been added
             if len(pieces := line.split(" ")) > 1:
-                result[pieces[0]] = {pieces[1]}
+                result[pieces[0]] = {pieces[1].removeprefix("v")}
             else:
                 logger.warning(f"ignoring unexpected output from {self.command()}: {line}")
         return result

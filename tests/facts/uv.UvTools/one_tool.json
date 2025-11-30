@@ -6,6 +6,6 @@
         "- pyinfra"
     ],
     "fact": {
-        "pyinfra": ["v3.5.1"]
+        "pyinfra": ["3.5.1"]
     }
 }
