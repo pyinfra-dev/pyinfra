@@ -44,11 +44,14 @@ def run_local_process(
 ) -> tuple[int, "CommandOutput"]:
     process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
 
-    if stdin:
-        write_stdin(stdin, process.stdin)
-
     assert process.stdout is not None
     assert process.stderr is not None
+    assert process.stdin is not None
+
+    # Write any stdin and then close it
+    if stdin:
+        write_stdin(stdin, process.stdin)
+    process.stdin.close()
 
     combined_output = read_output_buffers(
         process.stdout,
