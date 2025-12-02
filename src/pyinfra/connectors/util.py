@@ -320,6 +320,8 @@ def make_unix_command(
     _retries=0,
     _retry_delay=0,
     _retry_until=None,
+    # Temp dir config (ignored in command generation, used for temp file path generation)
+    _temp_dir=None,
 ) -> StringCommand:
     """
     Builds a shell command with various kwargs.
