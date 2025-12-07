@@ -42,6 +42,7 @@ def repo(
 
     .. code:: python
 
+        from pyinfra.operations import zypper
         # Download a repository file
         zypper.repo(
             name="Install container virtualization repo via URL",

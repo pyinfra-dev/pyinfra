@@ -25,9 +25,12 @@ def key(src: str):
 
     .. code:: python
 
+        from pyinfra import host
+        from pyinfra.operations import dnf
+        from pyinfra.facts.server import LinuxDistribution
         linux_id = host.get_fact(LinuxDistribution)["release_meta"].get("ID")
         dnf.key(
-            name="Add the Docker CentOS gpg key",
+            name="Add the Docker gpg key",
             src=f"https://download.docker.com/linux/{linux_id}/gpg",
         )
 

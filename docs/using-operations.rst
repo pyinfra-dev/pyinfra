@@ -24,7 +24,6 @@ For example, these two operations will ensure that user ``pyinfra`` exists with 
         user="pyinfra",
         group="pyinfra",
         mode="644",
-        _sudo=True,
     )
 
 
@@ -127,20 +126,38 @@ Adding data to inventories is covered in detail here: :doc:`inventory-data`. Dat
 Host Facts
 ~~~~~~~~~~
 
-Facts allow you to use information about the target host to control and configure operations. A good example is switching between ``apt`` & ``yum`` depending on the Linux distribution. Facts are imported from ``pyinfra.facts.*`` and can be retrieved using the ``host.get_fact`` function:
+Facts allow you to use information about the target host to control and configure operations. A good example is switching between ``apt`` & ``yum`` depending on the Linux distribution. You can get a fact like this:
+
+.. code:: bash
+
+    pyinfra inventory.py fact server.LinuxName
+
+Facts are imported from ``pyinfra.facts.*`` and can be retrieved using the ``host.get_fact`` function. If you save this in a file called `nano.py`:
 
 .. code:: python
 
     from pyinfra import host
     from pyinfra.facts.server import LinuxName
-    from pyinfra.operations import yum
+    from pyinfra.operations import yum, apt
 
-    if host.get_fact(LinuxName) == "CentOS":
+    if host.get_fact(LinuxName) == "Fedora":
         yum.packages(
             name="Install nano via yum",
             packages=["nano"],
             _sudo=True
         )
+    if host.get_fact(LinuxName) == "Ubuntu":
+        apt.packages(
+            name="Install nano via apt",
+            packages=["nano"],
+            update=True,
+            _sudo=True
+        )
+
+.. code:: bash
+
+    pyinfra inventory.py nano.py
+
 
 See :doc:`facts` for a full list of available facts and arguments.
 
@@ -322,24 +339,35 @@ Like ``host`` and ``inventory``, ``config`` can be used to set global defaults f
 Enforcing Requirements
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The config object can be used to enforce a pyinfra version or Python package requirements. This can either be defined as a requirements text file path or simply a list of requirements:
+The config object can be used to enforce a pyinfra version or Python package requirements. This can either be defined as a requirements text file path or simply a list of requirements. For example, if you create a `requirements.py` file with:
 
 .. code:: python
 
     # Require a certain pyinfra version
-    config.REQUIRE_PYINFRA_VERSION = "~=1.1"
+    config.REQUIRE_PYINFRA_VERSION = "~=3.0"
 
     # Require certain packages
-    config.REQUIRE_PACKAGES = "requirements.txt"  # path relative to the current working directory
+    config.REQUIRE_PACKAGES = "requirements.txt"  # path is relative to the current working directory
     config.REQUIRE_PACKAGES = [
-        "pyinfra~=1.1",
-        "pyinfra-docker~=1.0",
+        "pyinfra~=3.0",
     ]
+
+And create a `requirements.txt` file with something like this:
+
+.. code:: bash
+
+    pyinfra
+
+Then modify the `nano.py` above to include these lines:
+.. code:: python
+
+    from pyinfra import local
+    local.include("requirements.py")
 
 
 Examples
 --------
 
-A great way to learn more about writing pyinfra deploys is to see some in action. There's a number of resources for this:
+A great way to learn more about writing pyinfra deploys is to see some in action. Check out:
 
 - `the pyinfra examples repository on GitHub <https://github.com/pyinfra-dev/pyinfra-examples>`_

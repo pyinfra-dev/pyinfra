@@ -54,6 +54,7 @@ def crontab(
 
     .. code:: python
 
+        from pyinfra.operations import crontab
         # simple example for a crontab
         crontab.crontab(
             name="Backup /etc weekly",

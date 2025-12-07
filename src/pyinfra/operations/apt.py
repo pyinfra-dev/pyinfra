@@ -67,6 +67,7 @@ def key(src: str | None = None, keyserver: str | None = None, keyid: str | list[
 
     .. code:: python
 
+        from pyinfra.operations import apt
         # Note: If using URL, wget is assumed to be installed.
         apt.key(
             name="Add the Docker apt gpg key",

@@ -35,6 +35,7 @@ def packages(packages: str | list[str] | None = None, present=True, pkg_path: st
 
     .. code:: python
 
+        from pyinfra.operations import pkg
         pkg.packages(
             name="Install Vim and Vim Addon Manager",
             packages=["vim-addon-manager", "vim"],

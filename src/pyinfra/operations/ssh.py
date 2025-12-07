@@ -28,6 +28,7 @@ def keyscan(hostname: str, force=False, port=22):
 
     .. code:: python
 
+        from pyinfra.operations import ssh
         ssh.keyscan(
             name="Set add server two to known_hosts on one",
             hostname="two.example.com",

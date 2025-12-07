@@ -1,5 +1,5 @@
 """
-Manage apk packages.
+Manage apk packages. (Alpine Linux)
 """
 
 from __future__ import annotations
@@ -64,6 +64,7 @@ def packages(
 
     .. code:: python
 
+        from pyinfra.operations import apk
         # Update package list and install packages
         apk.packages(
             name="Install Asterisk and Vim",

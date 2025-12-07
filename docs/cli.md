@@ -77,7 +77,7 @@ pyinfra @local ...
 pyinfra my-server.net,@local ...
 
 # Execute against a Docker container
-pyinfra @docker/centos:8 ...
+pyinfra @docker/fedora:43 ...
 ```
 
 ### Limit
@@ -132,7 +132,7 @@ For example, here we ensure that `nginx` is installed on the remote servers:
 # Ubuntu example
 pyinfra inventory.py apt.packages nginx update=true _sudo=true
 
-# Centos example
+# Fedora example
 pyinfra inventory2.py yum.packages nginx _sudo=true
 ```
 

@@ -54,6 +54,7 @@ def packages(
 
     .. code:: python
 
+        from pyinfra.operations import xbps
         xbps.packages(
             name="Install Vim and Vim Pager",
             packages=["vimpager", "vim"],

@@ -101,6 +101,7 @@ def user(
 
     .. code:: python
 
+        from pyinfra.operations import mysql
         mysql.user(
             name="Create the pyinfra@localhost MySQL user",
             user="pyinfra",

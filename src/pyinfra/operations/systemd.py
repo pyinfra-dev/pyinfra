@@ -66,6 +66,7 @@ def service(
 
     .. code:: python
 
+        from pyinfra.operations import systemd
         systemd.service(
             name="Restart and enable the dnsmasq service",
             service="dnsmasq.service",

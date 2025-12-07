@@ -117,6 +117,7 @@ def download(
 
     .. code:: python
 
+        from pyinfra.operations import files
         files.download(
             name="Download the Docker repo file",
             src="https://download.docker.com/linux/centos/docker-ce.repo",
@@ -1789,7 +1790,7 @@ def block(
         # put complex alias into .zshrc
         files.block(
             path="/home/user/.zshrc",
-            content="eval $(thefuck -a)",
+            content="eval $(thef -a)",
             try_prevent_shell_expansion=True,
             marker="## {mark} ALIASES ##"
         )

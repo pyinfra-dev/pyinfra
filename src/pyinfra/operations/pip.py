@@ -36,6 +36,7 @@ def virtualenv(
 
     .. code:: python
 
+        from pyinfra.operations import pip
         pip.virtualenv(
             name="Create a virtualenv",
             path="/usr/local/bin/venv",

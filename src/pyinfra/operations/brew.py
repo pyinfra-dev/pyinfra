@@ -61,6 +61,7 @@ def packages(
 
     .. code:: python
 
+        from pyinfra.operations import brew
         # Update package list and install packages
         brew.packages(
             name='Install Vim and vimpager',

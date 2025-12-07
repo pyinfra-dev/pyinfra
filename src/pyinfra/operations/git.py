@@ -30,6 +30,7 @@ def config(key: str, value: str, multi_value=False, repo: str | None = None, sys
 
     .. code:: python
 
+        from pyinfra.operations import git
         git.config(
             name="Always prune specified repo",
             key="fetch.prune",

@@ -20,6 +20,7 @@ The currently executing host can be fetched from the ``host`` context variable. 
     # Get the actual current hostname from the host
     from pyinfra.facts.server import Hostname
     hostname = host.get_fact(Hostname)
+    print(f"hostname:{hostname}")
 
 How do I use sudo in an operation?
 ----------------------------------
@@ -28,6 +29,7 @@ Sudo is controlled by one of the `privilege and user escalation arguments <argum
 
 .. code:: python
 
+    from pyinfra.operations import apt
     apt.packages(
         packages=["iftop"],
         _sudo=True,
@@ -43,6 +45,7 @@ Use the LINK ``files.file``, ``files.directory`` or ``files.link`` operations to
 
 .. code:: python
 
+    from pyinfra.operations import files
     files.file(
         path="/etc/default/elasticsearch",
         user="pyinfra",
@@ -57,6 +60,7 @@ Use the `retry behavior arguments <arguments.html#retry-behavior>`_ to automatic
 
 .. code:: python
 
+    from pyinfra.operations import server
     # Retry a network operation up to 3 times
     server.shell(
         name="Download file with retries",
