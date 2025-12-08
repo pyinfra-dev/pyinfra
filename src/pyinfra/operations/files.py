@@ -1331,7 +1331,11 @@ def copy(src: str, dest: str, overwrite=False):
     dest_file_path = os.path.join(dest, os.path.basename(src))
     dest_file_exists = host.get_fact(File, dest_file_path)
     if dest_file_exists and not overwrite:
-        raise OperationError(f"dest {dest_file_path} already exists and `overwrite` is unset")
+        if _file_equal(src, dest_file_path):
+            host.noop(f"{dest_file_path} already exists")
+            return
+        else:
+            raise OperationError(f"{dest_file_path} already exists and is different than src")
 
     cp_cmd = ["cp -r"]
 
