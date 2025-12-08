@@ -4,11 +4,6 @@
         "dest": "/tmp/dest_dir",
         "overwrite": false
     },
-    "local_files": {
-        "files": {
-            "/tmp/src_dir/file": "some content"
-        }
-    },
     "facts": {
         "files.File": {
             "path=/tmp/src_dir/file": true,

@@ -751,6 +751,15 @@ def _file_equal(local_path: str | IO[Any] | None, remote_path: str) -> bool:
     return False
 
 
+def _remote_file_equal(remote_path_a: str, remote_path_b: str) -> bool:
+    for fact in [Sha1File, Md5File, Sha256File]:
+        sum_a = host.get_fact(fact, path=remote_path_a)
+        sum_b = host.get_fact(fact, path=remote_path_b)
+        if sum_a and sum_b:
+            return sum_a == sum_b
+    return False
+
+
 @operation(
     # We don't (currently) cache the local state, so there's nothing we can
     # update to flag the local file as present.
@@ -1331,7 +1340,7 @@ def copy(src: str, dest: str, overwrite=False):
     dest_file_path = os.path.join(dest, os.path.basename(src))
     dest_file_exists = host.get_fact(File, dest_file_path)
     if dest_file_exists and not overwrite:
-        if _file_equal(src, dest_file_path):
+        if _remote_file_equal(src, dest_file_path):
             host.noop(f"{dest_file_path} already exists")
             return
         else:

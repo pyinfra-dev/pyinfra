@@ -14,8 +14,8 @@
             "path=/tmp/src_dir/file": null
         },
         "files.Sha1File": {
-            "path=/tmp/src_dir/file": "94e66df8cd09d410c62d9e0dc59d3a884e458e05",
-            "path=/tmp/dest_dir/file": "94e66df8cd09d410c62d9e0dc59d3a884e458e05"
+            "path=/tmp/src_dir/file": "abc",
+            "path=/tmp/dest_dir/file": "abc"
         }
     },
     "commands": [],
