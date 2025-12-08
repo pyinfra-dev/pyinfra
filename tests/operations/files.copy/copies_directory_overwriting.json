@@ -1,4 +1,5 @@
 {
+    "require_platform": ["Darwin", "Linux"],
     "kwargs": {
         "src": "/tmp/src_dir",
         "dest": "/tmp/dest_dir",
@@ -7,7 +8,6 @@
     "facts": {
         "files.File": {
             "path=/tmp/src_dir/file": true,
-
             "path=/tmp/src_dir": null,
             "path=/tmp/dest_dir/src_dir": null,
             "path=/tmp/dest_dir/src_dir/file": null
