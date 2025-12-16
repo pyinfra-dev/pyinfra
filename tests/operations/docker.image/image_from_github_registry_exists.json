@@ -1,0 +1,26 @@
+{
+    "kwargs": {
+        "image": "ghcr.io/owner/repo:v2.0",
+        "present": true,
+        "force": false
+    },
+    "facts": {
+        "docker.DockerImage": {
+            "object_id=ghcr.io/owner/repo:v2.0": [
+                {
+                    "Id": "sha256:e784f4560448b14a66f55c26e1b4dad2c2877cc73d001b7cd0b18e24a700a070",
+                    "RepoTags": [
+                        "ghcr.io/owner/repo:v2.0"
+                    ],
+                    "RepoDigests": [
+                        "ghcr.io/owner/repo@sha256:abcd1234"
+                    ],
+                    "Created": "2024-05-26T22:01:24.10525839Z",
+                    "Size": 41390752
+                }
+            ]
+        }
+    },
+    "commands": [],
+    "noop_description": "Image with tag v2.0 already exists!"
+}

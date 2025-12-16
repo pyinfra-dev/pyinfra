@@ -4,7 +4,7 @@ Manage apt packages and repositories.
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 from pyinfra import host
@@ -309,12 +309,19 @@ def update(cache_time: int | None = None):
         # Ubuntu provides this handy file
         cache_info = host.get_fact(File, path=APT_UPDATE_FILENAME)
 
-        # Time on files is not tz-aware, and will be the same tz as the server's time,
-        # so we can safely remove the tzinfo from the Date fact before comparison.
-        host_cache_time = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
-        if cache_info and cache_info["mtime"] and cache_info["mtime"] > host_cache_time:
-            host.noop("apt is already up to date")
-            return
+        if cache_info and cache_info["mtime"]:
+            # The fact Date contains the date of the server in its timezone.
+            # cache_info["mtime"] ignores the timezone and consider the timestamp as UTC.
+            # So let's do the same here for the server current Date : ignore the
+            # timezone and consider it as UTC to have correct comparison with
+            # cache_info["mtime].
+            host_utc_current_time = datetime.fromtimestamp(
+                host.get_fact(Date).timestamp(), timezone.utc
+            ).replace(tzinfo=None)
+            host_cache_time = host_utc_current_time - timedelta(seconds=cache_time)
+            if cache_info["mtime"] > host_cache_time:
+                host.noop("apt is already up to date")
+                return
 
     yield "apt-get update"
 

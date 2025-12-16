@@ -8,9 +8,15 @@ from __future__ import annotations
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.docker import DockerContainer, DockerNetwork, DockerPlugin, DockerVolume
+from pyinfra.facts.docker import (
+    DockerContainer,
+    DockerImage,
+    DockerNetwork,
+    DockerPlugin,
+    DockerVolume,
+)
 
-from .util.docker import ContainerSpec, handle_docker
+from .util.docker import ContainerSpec, handle_docker, parse_image_reference
 
 
 @operation()
@@ -127,13 +133,14 @@ def container(
         )
 
 
-@operation(is_idempotent=False)
-def image(image, present=True):
+@operation()
+def image(image: str, present: bool = True, force: bool = False):
     """
     Manage Docker images
 
     + image: Image and tag ex: nginx:alpine
     + present: whether the Docker image should exist
+    + force: always pull the image if present is True
 
     **Examples:**
 
@@ -153,20 +160,55 @@ def image(image, present=True):
             present=False,
         )
     """
-
+    image_info = parse_image_reference(image)
     if present:
-        yield handle_docker(
-            resource="image",
-            command="pull",
-            image=image,
-        )
-
+        if force:
+            # always pull the image if force is True
+            yield handle_docker(
+                resource="image",
+                command="pull",
+                image=image,
+            )
+            return
+        else:
+            existent_image = host.get_fact(DockerImage, object_id=image)
+            if image_info.digest:
+                # If a digest is specified, we must ensure the exact image is present
+                if existent_image:
+                    host.noop(f"Image with digest {image_info.digest} already exists!")
+                else:
+                    yield handle_docker(
+                        resource="image",
+                        command="pull",
+                        image=image,
+                    )
+            elif image_info.tag == "latest" or not image_info.tag:
+                # If the tag is 'latest' or not specified, always pull to ensure freshness
+                yield handle_docker(
+                    resource="image",
+                    command="pull",
+                    image=image,
+                )
+            else:
+                # For other tags, check if the image exists
+                if existent_image:
+                    host.noop(f"Image with tag {image_info.tag} already exists!")
+                else:
+                    yield handle_docker(
+                        resource="image",
+                        command="pull",
+                        image=image,
+                    )
     else:
-        yield handle_docker(
-            resource="image",
-            command="remove",
-            image=image,
-        )
+        existent_image = host.get_fact(DockerImage, object_id=image)
+        if existent_image:
+            yield handle_docker(
+                resource="image",
+                command="remove",
+                image=image,
+            )
+        else:
+            host.noop("There is no {0} image!".format(image))
 
 
 @operation()
