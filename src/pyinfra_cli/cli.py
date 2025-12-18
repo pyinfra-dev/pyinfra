@@ -84,12 +84,6 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     show_envvar=True,
 )
 @click.option(
-    "--same-sudo-password",
-    is_flag=True,
-    default=False,
-    help="All hosts have the same sudo password, so ask only once.",
-)
-@click.option(
     "--limit",
     help="Restrict the target hosts by name and group name.",
     multiple=True,
@@ -123,6 +117,12 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     help="Whether to execute operations with sudo.",
 )
 @click.option("--sudo-user", help="Which user to sudo when sudoing.")
+@click.option(
+    "--same-sudo-password",
+    is_flag=True,
+    default=False,
+    help="All hosts have the same sudo password, so ask only once.",
+)
 @click.option(
     "--use-sudo-password",
     is_flag=True,
@@ -334,6 +334,7 @@ def _main(
         sudo,
         sudo_user,
         use_sudo_password,
+        same_sudo_password,
         su_user,
         parallel,
         shell_executable,
@@ -351,9 +352,6 @@ def _main(
         ssh_port,
         ssh_password,
     )
-
-    if same_sudo_password:
-        config.SUDO_PASSWORD = getpass("sudo password: ")
 
     if yes is False:
         _set_fail_prompts(state, config)
@@ -579,6 +577,7 @@ def _set_config(
     sudo,
     sudo_user,
     use_sudo_password,
+    same_sudo_password,
     su_user,
     parallel,
     shell_executable,
@@ -608,6 +607,9 @@ def _set_config(
 
     if use_sudo_password:
         config.USE_SUDO_PASSWORD = use_sudo_password
+
+    if same_sudo_password:
+        config.SUDO_PASSWORD = getpass("sudo password: ")
 
     if su_user:
         config.SU_USER = su_user
