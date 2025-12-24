@@ -1,0 +1,19 @@
+{
+    "kwargs": {
+        "container": "nginx",
+        "image": "nginx:alpine",
+        "labels": [
+            "eg_key=eg_val"
+        ],
+        "present": "true",
+        "start": false
+    },
+    "facts": {
+        "docker.DockerContainer": {
+            "object_id=nginx": []
+        }
+    },
+    "commands": [
+        "docker container create --name nginx --label eg_key=eg_val nginx:alpine"
+    ]
+}

@@ -77,7 +77,9 @@ def parse_registry(registry: str) -> tuple[str, int | None]:
                 raise  # Re-raise port range error
         else:
             # Empty port (e.g., "registry.io:")
-            raise ValueError(f"Invalid registry format '{registry}': port cannot be empty")
+            raise ValueError(
+                f"Invalid registry format '{registry}': port cannot be empty"
+            )
     else:
         return registry, None
 
@@ -163,6 +165,7 @@ class ContainerSpec:
     networks: list[str] = field(default_factory=list)
     volumes: list[str] = field(default_factory=list)
     env_vars: list[str] = field(default_factory=list)
+    labels: list[str] = field(default_factory=list)
     pull_always: bool = False
 
     def container_create_args(self):
@@ -178,6 +181,9 @@ class ContainerSpec:
 
         for env_var in self.env_vars:
             args.append("-e {0}".format(env_var))
+
+        for label in self.labels:
+            args.append("--label {0}".format(label))
 
         if self.pull_always:
             args.append("--pull always")
@@ -318,7 +324,9 @@ def _remove_network(**kwargs):
 
 
 def _install_plugin(**kwargs):
-    command = ["docker plugin install {0} --grant-all-permissions".format(kwargs["plugin"])]
+    command = [
+        "docker plugin install {0} --grant-all-permissions".format(kwargs["plugin"])
+    ]
 
     plugin_options = kwargs["plugin_options"] if kwargs["plugin_options"] else {}
 
