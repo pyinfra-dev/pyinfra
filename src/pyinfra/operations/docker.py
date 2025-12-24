@@ -216,9 +216,7 @@ def image(image: str, present: bool = True, force: bool = False):
 
 
 @operation()
-def volume(
-    volume: str, driver: str = "", labels: list[str] | None = None, present: bool = True
-):
+def volume(volume: str, driver: str = "", labels: list[str] | None = None, present: bool = True):
     """
     Manage Docker volumes
 

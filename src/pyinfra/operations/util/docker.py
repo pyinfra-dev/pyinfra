@@ -77,9 +77,7 @@ def parse_registry(registry: str) -> tuple[str, int | None]:
                 raise  # Re-raise port range error
         else:
             # Empty port (e.g., "registry.io:")
-            raise ValueError(
-                f"Invalid registry format '{registry}': port cannot be empty"
-            )
+            raise ValueError(f"Invalid registry format '{registry}': port cannot be empty")
     else:
         return registry, None
 
@@ -324,9 +322,7 @@ def _remove_network(**kwargs):
 
 
 def _install_plugin(**kwargs):
-    command = [
-        "docker plugin install {0} --grant-all-permissions".format(kwargs["plugin"])
-    ]
+    command = ["docker plugin install {0} --grant-all-permissions".format(kwargs["plugin"])]
 
     plugin_options = kwargs["plugin_options"] if kwargs["plugin_options"] else {}
 
