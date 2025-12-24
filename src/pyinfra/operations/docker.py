@@ -52,6 +52,7 @@ def container(
 
     .. code:: python
 
+        from pyinfra.operations import docker
         # Run a container
         docker.container(
             name="Deploy Nginx container",

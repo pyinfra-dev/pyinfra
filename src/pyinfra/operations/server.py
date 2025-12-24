@@ -68,6 +68,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
     .. code:: python
 
+        from pyinfra.operations import server
         server.reboot(
             name="Reboot the server and wait to reconnect",
             delay=60,

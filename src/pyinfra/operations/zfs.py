@@ -33,6 +33,7 @@ def dataset(
 
     .. code:: python
 
+        from pyinfra.operations import zfs
         zfs.dataset(
             "tank/srv",
             mountpoint="/srv",

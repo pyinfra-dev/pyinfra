@@ -96,6 +96,7 @@ def role(
 
     .. code:: python
 
+        from pyinfra.operations import postgresql
         postgresql.role(
             name="Create the pyinfra PostgreSQL role",
             role="pyinfra",

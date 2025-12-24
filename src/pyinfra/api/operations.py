@@ -194,11 +194,11 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
         host_results.ops += 1
         host_results.success_ops += 1
 
-        _status_log = "Success" if executed_commands > 0 else "No changes"
+        _status_text = "Success" if executed_commands > 0 else "No changes"
         if retry_attempt > 0:
-            _status_log = f"{_status_log} on retry {retry_attempt}"
+            _status_text = f"{_status_text} on retry {retry_attempt}"
 
-        _click_log_status = click.style(_status_log, "green")
+        _click_log_status = click.style(_status_text, "green" if executed_commands > 0 else "cyan")
         logger.info("{0}{1}".format(host.print_prefix, _click_log_status))
 
         state.trigger_callbacks("operation_host_success", host, op_hash, retry_attempt)

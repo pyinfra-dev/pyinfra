@@ -26,6 +26,7 @@ def packages(
 
     .. code:: python
 
+        from pyinfra.operations import flatpak
         # Install vlc flatpak
         flatpak.package(
             name="Install vlc",

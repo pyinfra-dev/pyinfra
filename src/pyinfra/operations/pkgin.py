@@ -56,6 +56,7 @@ def packages(
 
     .. code:: python
 
+        from pyinfra.operations import pkgin
         # Update package list and install packages
         pkgin.packages(
             name="Install tmux and Vim",

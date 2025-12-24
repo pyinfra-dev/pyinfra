@@ -118,6 +118,7 @@ def rule(
 
     .. code:: python
 
+        from pyinfra.operations import iptables
         iptables.rule(
             name="Block SSH traffic",
             chain="INPUT",

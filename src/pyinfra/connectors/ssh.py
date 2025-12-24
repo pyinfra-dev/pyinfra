@@ -397,8 +397,10 @@ class SSHConnector(BaseConnector):
                 get_pty=_get_pty,
             )
 
+            # Write any stdin and then close it
             if _stdin:
                 write_stdin(_stdin, stdin_buffer)
+            stdin_buffer.close()
 
             combined_output = read_output_buffers(
                 stdout_buffer,

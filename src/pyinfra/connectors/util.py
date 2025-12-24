@@ -44,11 +44,14 @@ def run_local_process(
 ) -> tuple[int, "CommandOutput"]:
     process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
 
-    if stdin:
-        write_stdin(stdin, process.stdin)
-
     assert process.stdout is not None
     assert process.stderr is not None
+    assert process.stdin is not None
+
+    # Write any stdin and then close it
+    if stdin:
+        write_stdin(stdin, process.stdin)
+    process.stdin.close()
 
     combined_output = read_output_buffers(
         process.stdout,
@@ -320,6 +323,8 @@ def make_unix_command(
     _retries=0,
     _retry_delay=0,
     _retry_until=None,
+    # Temp dir config (ignored in command generation, used for temp file path generation)
+    _temp_dir=None,
 ) -> StringCommand:
     """
     Builds a shell command with various kwargs.

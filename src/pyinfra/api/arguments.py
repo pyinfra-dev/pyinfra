@@ -77,6 +77,9 @@ class ConnectorArguments(TypedDict, total=False):
     _retry_delay: Union[int, float]
     _retry_until: Optional[Callable[[dict], bool]]
 
+    # Temp directory argument
+    _temp_dir: str
+
 
 def generate_env(config: "Config", value: dict) -> dict:
     env = config.ENV.copy()
@@ -162,6 +165,10 @@ shell_argument_meta: dict[str, ArgumentMeta] = {
     "_stdin": ArgumentMeta(
         "String or buffer to send to the stdin of any commands.",
         default=lambda _: None,
+    ),
+    "_temp_dir": ArgumentMeta(
+        "Temporary directory on the remote host for file operations.",
+        default=lambda config: config.TEMP_DIR,
     ),
 }
 
