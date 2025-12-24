@@ -42,7 +42,7 @@ def container(
     + ports: port list to expose
     + volumes: volume list to map on container
     + env_vars: environment variable list to inject on container
-    + labels: Label list to attach in the volume
+    + labels: Label list to attach to the container
     + pull_always: force image pull
     + force: remove a container with same name and create a new one
     + present: whether the container should be up and running
