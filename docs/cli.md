@@ -37,7 +37,7 @@ pyinfra INVENTORY debug-inventory
 
 ### Verbosity
 
-By default pyinfra only prints high level information (this host connected, this operation started), this can be increased as follows:
+By default, pyinfra only prints high level information (this host connected, this operation started), this can be increased as follows:
 
 + `-v`: print out facts collected as well as noop information (package X already installed)
 + `-vv`: as above plus print shell input to the remote host

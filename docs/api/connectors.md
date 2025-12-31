@@ -18,6 +18,8 @@ In the example below `make_names_data` is yielding a hostname, data, groups tupl
 could be stored and processed in any data structure.
 
 ```py
+from pyinfra.connectors.base import BaseConnector
+
 class InventoryConnector(BaseConnector):
     handles_execution = False
 
@@ -32,11 +34,11 @@ class InventoryConnector(BaseConnector):
         # connect to api/parse files/process data here, resulting in a list of tuples;
         gathered_hosts = [
             ('@local', {}, ['@local']),
-            ('foundhost', {'ip': 198.51.100.4}, ['remote', 'example'])
-            ]
+            ('foundhost', {'ip': '198.51.100.4'}, ['remote', 'example'])
+        ]
 
         for loop_host in gathered_hosts:
-          yield gathered_hosts[0], gathered_hosts[1], gathered_hosts[2]
+          yield loop_host[0], loop_host[1], loop_host[2]
 ```
 
 To use the inventory connector call `pyinfra @[name of connector in pyinfra.connectors] [deployment script].py`
@@ -128,10 +130,10 @@ class MyConnector(BaseConnector):
 
 ## Where to make changes
 
-Connectors enable pyinfra to expand work done `in its 5 stages <deploy-process.html#how-pyinfra-works>`_ by providing methods which can be called at
+Connectors enable pyinfra to expand work done [in its 5 stages](../deploy-process) by providing methods which can be called at
 appropriate times.
 
-To hook in to to the various steps with the methods outlined below.
+To hook in to the various steps with the methods outlined below.
 ```
 --> Loading config...
 --> Loading inventory...
@@ -139,7 +141,7 @@ To hook in to to the various steps with the methods outlined below.
 `make_names_data` is used to supply inventory data about a host while at 'Loading inventory' stage.
 
 Its worth being aware up front that due to `make_names_data` being a `staticmethod` it has no automatic access to the parent classes attributes.
-To work around this - eg to configure an API connector - configuration will have to happen outside the function and be imported in. Two examples
+To work around this - e.g. to configure an API connector - configuration will have to happen outside the function and be imported in. Two examples
 (`getattr` and a function) are provided below.
 
 ```py
@@ -153,7 +155,7 @@ class InventoryConnector(BaseConnector):
   ...
 
   @staticmethod
-  def make_names_data(_=None)
+  def make_names_data(_=None):
     api_client = getattr(InventoryConnector, 'api_instance')
     api_settings = load_settings()
     ...

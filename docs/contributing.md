@@ -64,9 +64,9 @@ uv run pytest tests/test_facts.py -k "efibootmgr.EFIBootMGR"
 uv run pytest tests/test_operations.py -k "selinux."
 ```
 
-#### End to End Tests
+#### End-to-End Tests
 
-The end to end tests are also executed via `pytest` but not selected by default, options/usage:
+The end-to-end tests are also executed via `pytest` but not selected by default, options/usage:
 
 ```sh
 # Run all the e2e tests (local, SSH, Docker)

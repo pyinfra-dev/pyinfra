@@ -132,7 +132,7 @@ Facts allow you to use information about the target host to control and configur
 
     pyinfra inventory.py fact server.LinuxName
 
-Facts are imported from ``pyinfra.facts.*`` and can be retrieved using the ``host.get_fact`` function. If you save this in a file called `nano.py`:
+Facts are imported from ``pyinfra.facts.*`` and can be retrieved using the ``host.get_fact`` function. If you save this in a file called :file:`{nano}.py`:
 
 .. code:: python
 
@@ -162,7 +162,7 @@ Facts are imported from ``pyinfra.facts.*`` and can be retrieved using the ``hos
 See :doc:`facts` for a full list of available facts and arguments.
 
 .. Important::
-    Only use immutable facts in deploy code (installed OS, Arch, etc) unless you are absolutely sure they will not change. See: `using host facts <deploy-process.html#using-host-facts>`_.
+    Only use immutable facts in deploy code (installed OS, Arch, etc) unless you are absolutely sure they will not change. See: :ref:`using host facts <deploy-process#using-host-facts>`_.
 
 Fact Errors
 ^^^^^^^^^^^
@@ -236,7 +236,8 @@ All operations return an operation meta object which provides information about 
 Output & Callbacks
 ------------------
 
-pyinfra doesn't immediately execute operations, meaning output is not available right away. It is possible to access this output at runtime by providing a callback function using the :ref:`operations:python.call` operation. Callback functions may also call other operations which will be immediately executed. Why/how this works `is described here <deploy-process.html#how-pyinfra-detects-changes-orders-operations>`_.
+pyinfra doesn't immediately execute operations, meaning output is not available right away. It is possible to access this output at runtime by providing a callback function using the :ref:`operations:python.call` operation. Callback functions may also call other operations which will be immediately executed.
+Why/how this works :ref:`is described here <deploy-process#how-pyinfra-detects-changes-orders-operations>`_.
 
 .. code:: python
 
@@ -289,7 +290,7 @@ Including files can be used to break out operations across multiple files. Files
     # Include & call all the operations in tasks/install_something.py
     local.include("tasks/install_something.py")
 
-Additional data can be passed across files via the ``data`` param to parameterize tasks and is available in ``host.data``. For example `tasks/create_user.py` could look like:
+Additional data can be passed across files via the ``data`` param to parameterize tasks and is available in ``host.data``. For example :file:`tasks/{create_user}.py` could look like:
 
 .. code:: python
 
@@ -339,7 +340,8 @@ Like ``host`` and ``inventory``, ``config`` can be used to set global defaults f
 Enforcing Requirements
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The config object can be used to enforce a pyinfra version or Python package requirements. This can either be defined as a requirements text file path or simply a list of requirements. For example, if you create a `requirements.py` file with:
+The config object can be used to enforce a pyinfra version or Python package requirements. This can either be defined as a requirements text file path or simply a list of requirements.
+For example, if you create a :file:`{requirements}.py` file with:
 
 .. code:: python
 
@@ -352,13 +354,14 @@ The config object can be used to enforce a pyinfra version or Python package req
         "pyinfra~=3.0",
     ]
 
-And create a `requirements.txt` file with something like this:
+And create a :file:`requirements.txt` file with something like this:
 
 .. code:: bash
 
     pyinfra
 
-Then modify the `nano.py` above to include these lines:
+Then modify the :file:`{nano}.py` above to include these lines:
+
 .. code:: python
 
     from pyinfra import local
