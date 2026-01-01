@@ -180,12 +180,56 @@ class TestContainerConnector(TestCase):
         with self.assertRaises(IOError):
             host.get_file("not-a-file", "not-another-file", print_output=True)
 
+    def test_docker_platform(self):
+        inventory = make_inventory(
+            hosts=((f"@{self.connector_name}/not-an-image", {"docker_platform": "linux/amd64"}),),
+        )
+        State(inventory, Config())
+
+        host = inventory.get_host(f"@{self.connector_name}/not-an-image")
+        assert host.data.docker_platform == "linux/amd64"
+
+    def test_docker_architecture(self):
+        inventory = make_inventory(
+            hosts=((f"@{self.connector_name}/not-an-image", {"docker_architecture": "arm64"}),),
+        )
+        State(inventory, Config())
+
+        host = inventory.get_host(f"@{self.connector_name}/not-an-image")
+        assert host.data.docker_architecture == "arm64"
+
+    def test_connect_with_docker_platform(self):
+        inventory = make_inventory(
+            hosts=((f"@{self.connector_name}/not-an-image", {"docker_platform": "linux/amd64"}),),
+        )
+        state = State(inventory, Config())
+        host = inventory.get_host(f"@{self.connector_name}/not-an-image")
+        host.connect(reason=True)
+        assert len(state.active_hosts) == 0
+        host.disconnect()
+
+    def test_connect_with_docker_architecture(self):
+        inventory = make_inventory(
+            hosts=((f"@{self.connector_name}/not-an-image", {"docker_architecture": "arm64"}),),
+        )
+        state = State(inventory, Config())
+        host = inventory.get_host(f"@{self.connector_name}/not-an-image")
+        host.connect(reason=True)
+        assert len(state.active_hosts) == 0
+        host.disconnect()
+
 
 # Reuse the container testing code for docker and podman
 
 
 def fake_docker_shell(command, splitlines=None):
     if command == "docker run -d not-an-image tail -f /dev/null":
+        return ["containerid"]
+
+    if command == "docker run -d --platform linux/amd64 not-an-image tail -f /dev/null":
+        return ["containerid"]
+
+    if command == "docker run -d --arch arm64 not-an-image tail -f /dev/null":
         return ["containerid"]
 
     if command == "docker commit containerid":
@@ -211,6 +255,12 @@ class TestDocker2Connector(TestContainerConnector):
 
 def fake_podman_shell(command, splitlines=None):
     if command == "podman run -d not-an-image tail -f /dev/null":
+        return ["containerid"]
+
+    if command == "podman run -d --platform linux/amd64 not-an-image tail -f /dev/null":
+        return ["containerid"]
+
+    if command == "podman run -d --arch arm64 not-an-image tail -f /dev/null":
         return ["containerid"]
 
     if command == "podman commit containerid":
