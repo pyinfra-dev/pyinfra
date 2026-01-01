@@ -35,7 +35,7 @@ uv sync
 
 ### Code Style & Type Checking
 
-Code style is enforced via [ruff](https://docs.astral.sh/ruff/). Types are checked with mypy currently, and pyright is 
+Code style is enforced via [ruff](https://docs.astral.sh/ruff/). Types are checked with mypy currently, and pyright is
 recommended for local development though currently optional. There is a script to run the linting & type-checking:
 
 ```sh
@@ -96,5 +96,5 @@ scripts/build-public-docs.sh
 To view ([localhost:8000](http://localhost:8000)):
 
 ```sh
-python -m http.server -d docs/public/en/latest/
+uv run -m http.server -d docs/public/en/latest/
 ```
