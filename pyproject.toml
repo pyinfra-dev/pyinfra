@@ -78,7 +78,7 @@ dev = [
     "ipdbplugin",
     # dev-only lint extras
     "typos>=1.36.2",
-    "redbaron",
+    "freezegun>=1.5.5",
 ]
 
 [project.scripts]

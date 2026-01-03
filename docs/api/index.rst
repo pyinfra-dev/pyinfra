@@ -3,7 +3,7 @@ Using the API
 
 In addition to :doc:`the pyinfra CLI <../cli>`, pyinfra provides a full Python API. As of ``v3`` this API can be considered mostly stable. See the :doc:`./reference`.
 
-You can also reference `pyinfra's own main.py <https://github.com/pyinfra-dev/pyinfra/blob/3.x/pyinfra_cli/main.py>`_, and the `pyinfra API source code <https://github.com/pyinfra-dev/pyinfra/tree/3.x/pyinfra/api>`_.
+You can also reference `pyinfra's own main.py <https://github.com/pyinfra-dev/pyinfra/blob/3.x/src/pyinfra_cli/main.py>`_, and the `pyinfra API source code <https://github.com/pyinfra-dev/pyinfra/tree/3.x/src/pyinfra/api>`_.
 
 Full Example
 ------------
