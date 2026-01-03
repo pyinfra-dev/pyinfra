@@ -756,6 +756,15 @@ def _file_equal(local_path: str | IO[Any] | None, remote_path: str) -> bool:
     return False
 
 
+def _remote_file_equal(remote_path_a: str, remote_path_b: str) -> bool:
+    for fact in [Sha1File, Md5File, Sha256File]:
+        sum_a = host.get_fact(fact, path=remote_path_a)
+        sum_b = host.get_fact(fact, path=remote_path_b)
+        if sum_a and sum_b:
+            return sum_a == sum_b
+    return False
+
+
 @operation(
     # We don't (currently) cache the local state, so there's nothing we can
     # update to flag the local file as present.
@@ -1333,6 +1342,39 @@ def move(src: str, dest: str, overwrite=False):
             )
 
     yield StringCommand("mv", QuoteString(src), QuoteString(dest))
+
+
+@operation()
+def copy(src: str, dest: str, overwrite=False):
+    """
+    Copy remote file/directory/link into remote directory
+
+    + src: remote file/directory to copy
+    + dest: remote directory to copy `src` into
+    + overwrite: whether to overwrite dest, if present
+    """
+    src_is_dir = host.get_fact(Directory, src)
+    if not host.get_fact(File, src) and not src_is_dir:
+        raise OperationError(f"src {src} does not exist")
+
+    if not host.get_fact(Directory, dest):
+        raise OperationError(f"dest {dest} is not an existing directory")
+
+    dest_file_path = os.path.join(dest, os.path.basename(src))
+    dest_file_exists = host.get_fact(File, dest_file_path)
+    if dest_file_exists and not overwrite:
+        if _remote_file_equal(src, dest_file_path):
+            host.noop(f"{dest_file_path} already exists")
+            return
+        else:
+            raise OperationError(f"{dest_file_path} already exists and is different than src")
+
+    cp_cmd = ["cp -r"]
+
+    if overwrite:
+        cp_cmd.append("-f")
+
+    yield StringCommand(*cp_cmd, QuoteString(src), QuoteString(dest))
 
 
 def _validate_path(path):

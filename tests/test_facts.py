@@ -4,6 +4,7 @@ from importlib import import_module
 from os import listdir, path
 from unittest import TestCase
 
+from freezegun import freeze_time
 from testgen import TestGenerator
 
 from pyinfra.api import StringCommand
@@ -89,7 +90,8 @@ def make_fact_tests(folder_name):
             if isinstance(command_output, str):
                 command_output = command_output.splitlines()
 
-            data = fact.process(command_output)
+            # Freeze the date so any facts that use the "current" year will used 2025
+            data = freeze_time("2025-01-01")(fact.process)(command_output)
             if short_fact:
                 data = short_fact.process_data(data)
 

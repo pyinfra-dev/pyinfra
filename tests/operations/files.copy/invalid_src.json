@@ -1,0 +1,21 @@
+{
+    "kwargs": {
+        "src": "/tmp/src_dir/file",
+        "dest": "/tmp/dest_dir",
+        "overwrite": false
+    },
+    "facts": {
+        "files.File": {
+            "path=/tmp/src_dir/file": null,
+            "path=/tmp/dest_dir/file": null
+        },
+        "files.Directory": {
+            "path=/tmp/dest_dir": true,
+            "path=/tmp/src_dir/file": null
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "src /tmp/src_dir/file does not exist"
+    }
+}
