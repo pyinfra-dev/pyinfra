@@ -32,6 +32,8 @@ def container(
     present: bool = True,
     force: bool = False,
     start: bool = True,
+    restart_policy: str | None = None,
+    auto_remove: bool = False,
 ):
     """
     Manage Docker containers
@@ -47,6 +49,8 @@ def container(
     + force: remove a container with same name and create a new one
     + present: whether the container should be up and running
     + start: start or stop the container
+    + restart_policy: restart policy to apply when a container exits
+    + auto_remove: automatically remove the container and its associated anonymous volumes when it exits
 
     **Examples:**
 
@@ -64,6 +68,8 @@ def container(
             networks=["proxy", "services"],
             volumes=["nginx_data:/usr/share/nginx/html"],
             pull_always=True,
+            restart_policy="unless-stopped",
+            auto_remove=True,
         )
 
         # Stop a container
@@ -89,6 +95,8 @@ def container(
         env_vars or list(),
         labels or list(),
         pull_always,
+        restart_policy,
+        auto_remove,
     )
     existent_container = host.get_fact(DockerContainer, object_id=container)
 

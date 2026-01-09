@@ -165,6 +165,8 @@ class ContainerSpec:
     env_vars: list[str] = field(default_factory=list)
     labels: list[str] = field(default_factory=list)
     pull_always: bool = False
+    restart_policy: str | None = None
+    auto_remove: bool = False
 
     def container_create_args(self):
         args = []
@@ -185,6 +187,12 @@ class ContainerSpec:
 
         if self.pull_always:
             args.append("--pull always")
+
+        if self.restart_policy:
+            args.append("--restart {0}".format(self.restart_policy))
+
+        if self.auto_remove:
+            args.append("--rm")
 
         args.append(self.image)
 
