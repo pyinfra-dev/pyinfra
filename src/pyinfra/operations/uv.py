@@ -172,7 +172,7 @@ def tools(
     extras = " ".join(extra_args or []) if not isinstance(extra_args, str) else extra_args
     install_command = f"{UV_CMD} tool install --no-progress {extras}"
     uninstall_command = f"{UV_CMD} tool uninstall --no-progress {extras}"
-    upgrade_command = f"{install_command} --upgrade --no-progress {extras}"
+    upgrade_command = f"{UV_CMD} tool install --upgrade --no-progress {extras}"
 
     already_installed = {pkg.lower(): version for pkg, version in host.get_fact(UvTools).items()}
 
