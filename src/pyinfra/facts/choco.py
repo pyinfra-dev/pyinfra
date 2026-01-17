@@ -24,8 +24,6 @@ class ChocoPackages(FactBase):
     def command(self) -> str:
         return "choco list"
 
-    shell_executable = "ps"
-
     default = dict
 
     @override
