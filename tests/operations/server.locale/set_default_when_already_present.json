@@ -2,6 +2,7 @@
     "args": [
         "fr_FR.UTF-8"
     ],
+    "kwargs": {"is_default": true},
     "facts": {
         "files.File": {
             "path=/etc/locale.gen": {
@@ -12,23 +13,23 @@
             "command=locale-gen": "/usr/sbin/locale-gen"
         },
         "files.FindInFile": {
-            "extended_regex=False, interpolate_variables=False, path=/etc/locale.gen, pattern=^#* *fr_FR\\.UTF\\-8 UTF\\-8$": [
-                "# fr_FR.UTF-8 UTF-8"
+            "extended_regex=False, interpolate_variables=False, path=/etc/locale.conf, pattern=^.*LANG=.*.*$": [
+                "LANG=en_US.UTF-8"
             ]
         },
         "server.Locales": [
             "C",
             "C.UTF-8",
+            "fr_FR.UTF-8",
             "en_US.utf8",
             "POSIX"
         ]
     },
     "commands": [
-        "sed -i.a-timestamp 's/^#* *fr_FR\\.UTF\\-8 UTF\\-8$/fr_FR.UTF-8 UTF-8/' /etc/locale.gen && rm -f /etc/locale.gen.a-timestamp",
-        "locale-gen"
+        "sed -i.a-timestamp 's/^.*LANG=.*.*$/LANG=fr_FR.UTF-8/' /etc/locale.conf && rm -f /etc/locale.conf.a-timestamp"
     ],
     "second_output_commands": [
-        "locale-gen"
+        "sed -i.a-timestamp 's/^.*LANG=.*.*$/LANG=fr_FR.UTF-8/' /etc/locale.conf && rm -f /etc/locale.conf.a-timestamp"
     ],
     "idempotent": false,
     "disable_idempotent_warning_reason": "localgen is always executed"

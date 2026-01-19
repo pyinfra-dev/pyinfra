@@ -1,0 +1,9 @@
+{
+    "args": [
+        "123-bad"
+    ],
+    "exception": {
+        "name": "OperationError",
+        "message": "Invalid locale name '123-bad': expected <lang>[_<TERRITORY>][.<charset>][@<modifier>] (e.g. 'en_US.UTF-8', 'de_DE@euro', 'C.UTF-8')"
+    }
+}

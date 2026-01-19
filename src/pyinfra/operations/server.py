@@ -5,6 +5,7 @@ Linux/BSD.
 
 from __future__ import annotations
 
+import re
 from io import StringIO
 from itertools import filterfalse, tee
 from os import path
@@ -15,7 +16,7 @@ from pyinfra import host, logger, state
 from pyinfra.api import FunctionCommand, OperationError, QuoteString, StringCommand, operation
 from pyinfra.api.util import try_int
 from pyinfra.connectors.util import clear_askpass_cache, remove_any_sudo_askpass_file
-from pyinfra.facts.files import Directory, FileContents, FindInFile, Link
+from pyinfra.facts.files import Directory, File, FileContents, Link
 from pyinfra.facts.server import (
     AuthorizedKeys,
     EtcHosts,
@@ -34,7 +35,6 @@ from pyinfra.facts.server import (
     Which,
 )
 from pyinfra.operations import crontab as crontab_
-
 from . import (
     apk,
     apt,
@@ -1234,16 +1234,36 @@ def user(
         )
 
 
+# Matches a POSIX locale name: <lang>[_<TERRITORY>][.<charset>][@<modifier>]
+# Examples: ``C``, ``C.UTF-8``, ``en_US.UTF-8``, ``de_DE@euro``, ``de_DE.UTF-8@euro``
+_LOCALE_NAME_RE = re.compile(
+    r"^[A-Za-z]+"  # language (e.g. en, fr, C, POSIX)
+    r"(?:_[A-Za-z]+)?"  # optional territory (e.g. _US)
+    r"(?:\.[A-Za-z0-9-]+)?"  # optional charset (e.g. .UTF-8)
+    r"(?:@[A-Za-z0-9]+)?$"  # optional modifier (e.g. @euro)
+)
+
+
 @operation()
 def locale(
     locale: str,
-    present=True,
+    present: bool = True,
+    is_default: bool = False,
 ):
     """
-    Enable/Disable locale.
+    Enable/Disable a locale via ``/etc/locale.gen`` and ``locale-gen``.
 
-    + locale: name of the locale to enable/disable
+    + locale: name of the locale to enable/disable. Accepts either the locale
+      name alone (``"en_US.UTF-8"``) or the full ``locale.gen`` entry with an
+      explicit charset suffix (``"en_US.UTF-8 UTF-8"``). When the suffix is
+      omitted, the charset is derived from the locale name (``en_US.UTF-8`` →
+      ``UTF-8``) or defaults to ``UTF-8``.
     + present: whether this locale should be present or not
+    + is_default: whether to set this locale as the system default in
+      ``/etc/locale.conf``
+
+    Currently only supports systems providing ``locale-gen`` (Debian, Ubuntu,
+    Arch). Raises ``OperationError`` on other distributions.
 
     **Examples:**
 
@@ -1256,52 +1276,107 @@ def locale(
         )
 
         server.locale(
-            name="Ensure en_GB.UTF-8 locale is present",
+            name="Ensure en_GB.UTF-8 locale is present and default",
             locale="en_GB.UTF-8",
+            is_default=True,
         )
 
+        # Explicit charset (useful when the name does not embed it)
+        server.locale(
+            name="Ensure de_DE@euro locale with ISO-8859-15 charset",
+            locale="de_DE@euro ISO-8859-15",
+        )
     """
+
+    if not present and is_default:
+        raise OperationError("Setting a locale as not present requires is_default=False")
+
+    # Accept both "fr_FR.UTF-8" and "fr_FR.UTF-8 UTF-8" forms. The first token
+    # is the locale name (matched against the Locales fact, which uses
+    # `locale -a` output and contains no charset suffix). The second token is
+    # the charset required by /etc/locale.gen entries; derive it from the name
+    # when omitted.
+    parts = locale.split(maxsplit=1)
+    locale_name = parts[0]
+    if not _LOCALE_NAME_RE.match(locale_name):
+        raise OperationError(
+            f"Invalid locale name {locale_name!r}: expected "
+            "<lang>[_<TERRITORY>][.<charset>][@<modifier>] "
+            "(e.g. 'en_US.UTF-8', 'de_DE@euro', 'C.UTF-8')"
+        )
+    if len(parts) > 1:
+        charset = parts[1]
+    elif "." in locale_name:
+        charset = locale_name.split(".", 1)[1]
+    else:
+        charset = "UTF-8"
+    locale_entry = f"{locale_name} {charset}"
 
     locales = host.get_fact(Locales)
 
     logger.debug(f"Enabled locales: {locales}")
 
     locales_definitions_file = "/etc/locale.gen"
+    default_locale_file = "/etc/locale.conf"
+    locale_gen_exists = host.get_fact(File, path=locales_definitions_file)
 
-    # Find the matching line in /etc/locale.gen
-    matching_lines = host.get_fact(
-        FindInFile, path=locales_definitions_file, pattern=rf"^.*{locale}[[:space:]]\+.*$"
-    )
+    if present and locale_name in locales and not is_default:
+        host.noop(f"Locale {locale_name} already enabled")
+        return
 
-    if not matching_lines:
-        raise OperationError(f"Locale {locale} not found in {locales_definitions_file}")
+    if not present and locale_name not in locales:
+        host.noop(f"Locale {locale_name} already disabled")
+        return
 
-    if len(matching_lines) > 1:
-        raise OperationError(f"Multiple locales matches for {locale} in {locales_definitions_file}")
+    if locale_gen_exists:
+        has_locale_gen = host.get_fact(Which, command="locale-gen")
+    else:
+        has_locale_gen = None
 
-    matching_line = matching_lines[0]
+    if locale_gen_exists and has_locale_gen:
+        # Remove locale
+        if not present and locale_name in locales:
+            logger.debug(f"Removing locale {locale_name}")
 
-    # Remove locale
-    if not present and locale in locales:
-        logger.debug(f"Removing locale {locale}")
+            yield from files.line._inner(
+                path=locales_definitions_file,
+                line=rf"^{re.escape(locale_name)} {re.escape(charset)}$",
+                present=False,
+            )
 
-        yield from files.line._inner(
-            path=locales_definitions_file, line=f"^{matching_line}$", replace=f"# {matching_line}"
-        )
+            yield "locale-gen"
 
-        yield "locale-gen"
+        # Add locale
+        if present and locale_name not in locales:
+            logger.debug(f"Adding locale {locale_name}")
 
-    # Add locale
-    if present and locale not in locales:
-        logger.debug(f"Adding locale {locale}")
+            yield from files.line._inner(
+                path=locales_definitions_file,
+                line=rf"^#* *{re.escape(locale_name)} {re.escape(charset)}$",
+                replace=locale_entry,
+                present=True,
+            )
 
-        yield from files.replace._inner(
-            path=locales_definitions_file,
-            text=f"^{matching_line}$",
-            replace=f"{matching_line}".replace("# ", ""),
-        )
+            if is_default:
+                yield from files.line._inner(
+                    line="LANG=.*",
+                    replace=f"LANG={locale_name}",
+                    path=default_locale_file,
+                )
 
-        yield "locale-gen"
+            yield "locale-gen"
+
+        # Set as default when locale already present (no locale-gen needed)
+        elif present and is_default:
+            yield from files.line._inner(
+                line="LANG=.*",
+                replace=f"LANG={locale_name}",
+                path=default_locale_file,
+            )
+
+        return
+
+    raise OperationError("Locale management requires locale-gen on this system.")
 
 
 @operation(is_idempotent=False)

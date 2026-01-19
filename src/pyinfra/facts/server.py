@@ -1090,11 +1090,11 @@ class Locales(FactBase[list[str]]):
 
     @override
     def command(self) -> str:
-        return "locale -a"
-
-    @override
-    def requires_command(self) -> str:
-        return "locale"
+        return (
+            "(command -v locale >/dev/null && locale -a) "
+            "|| (command -v localectl >/dev/null && localectl list-locales) "
+            "|| true"
+        )
 
     default = list
 

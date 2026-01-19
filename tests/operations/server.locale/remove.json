@@ -2,28 +2,33 @@
     "args": [
         "fr_FR.UTF-8"
     ],
+    "kwargs": {
+        "present": false
+    },
     "facts": {
+        "files.File": {
+            "path=/etc/locale.gen": {
+                "mode": 644
+            }
+        },
+        "server.Which": {
+            "command=locale-gen": "/usr/sbin/locale-gen"
+        },
         "files.FindInFile": {
-            "extended_regex=False, interpolate_variables=False, path=/etc/locale.gen, pattern=^.*fr_FR.UTF-8[[:space:]]\\+.*$": [
-                "# fr_FR.UTF-8 UTF-8"
-            ],
-            "extended_regex=False, interpolate_variables=False, path=/etc/locale.gen, pattern=^.*fr_FR.UTF-8[[:space:]]\\+.*": [
-                "# fr_FR.UTF-8 UTF-8"
-            ],
-            "extended_regex=False, interpolate_variables=False, path=/etc/locale.gen, pattern=^# fr_FR.UTF-8 UTF-8$": [
-                "# fr_FR.UTF-8 UTF-8"
+            "extended_regex=False, interpolate_variables=False, path=/etc/locale.gen, pattern=^fr_FR\\.UTF\\-8 UTF\\-8$": [
+                "fr_FR.UTF-8 UTF-8"
             ]
         },
         "server.Locales": [
             "C",
             "C.UTF-8",
-            "fr_FR.utf8",
+            "fr_FR.UTF-8",
             "en_US.utf8",
             "POSIX"
         ]
     },
     "commands": [
-        "sed -i.a-timestamp 's/^# fr_FR.UTF-8 UTF-8$/fr_FR.UTF-8 UTF-8/' /etc/locale.gen && rm -f /etc/locale.gen.a-timestamp",
+        "sed -i.a-timestamp '/^fr_FR\\.UTF\\-8 UTF\\-8$/d' /etc/locale.gen && rm -f /etc/locale.gen.a-timestamp",
         "locale-gen"
     ],
     "second_output_commands": [
