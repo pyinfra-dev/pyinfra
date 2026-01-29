@@ -1,0 +1,6 @@
+{
+    "arg": "emptyfile",
+    "command": "( test -e emptyfile && cat emptyfile ) || echo __pyinfra_missing_emptyfile",
+    "output": [],
+    "fact": []
+}

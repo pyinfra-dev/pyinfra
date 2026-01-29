@@ -1,6 +1,6 @@
 {
     "arg": "myfile",
-    "command": "cat myfile",
+    "command": "( test -e myfile && cat myfile ) || echo __pyinfra_missing_myfile",
     "output": ["line1", "line2"],
     "fact": ["line1", "line2"]
 }

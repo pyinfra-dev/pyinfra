@@ -664,13 +664,21 @@ class Block(FactBase):
 
 class FileContents(FactBase):
     """
-    Returns the contents of a file as a list of lines. Returns ``None`` if the file does not exist.
+    Returns the contents of a file as a list of lines, or ``None`` if the file does not exist.
     """
 
     @override
     def command(self, path):
-        return make_formatted_string_command("cat {0}", QuoteString(path))
+        self.missing_flag = "{0}{1}".format(MISSING, path)
+        return make_formatted_string_command(
+            "( test -e {0} && cat {0} ) || echo {1}",
+            QuoteString(path),
+            QuoteString(self.missing_flag),
+        )
 
     @override
     def process(self, output):
+        # If output is the missing flag, the file doesn't exist
+        if output and output[0] == self.missing_flag:
+            return None
         return output
