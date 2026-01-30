@@ -255,7 +255,7 @@ class SSHConnector(BaseConnector):
             auth_kwargs = {}
 
             for key, value in kwargs.items():
-                if key in ("username", "password"):
+                if key in ("username"):
                     auth_kwargs[key] = value
                     continue
 
