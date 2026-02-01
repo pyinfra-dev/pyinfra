@@ -547,6 +547,8 @@ class FindFilesBase(FactBase):
             command.append("-regex")
             command.append(maybe_quote(regex))
 
+        command.extend(args)
+
         command.append("||")
         command.append("true")
 
