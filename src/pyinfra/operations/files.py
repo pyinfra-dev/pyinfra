@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import posixpath
+import re
 import sys
 import traceback
 from datetime import datetime, timedelta, timezone
@@ -456,6 +457,11 @@ def line(
 
     # Line(s) exists and we want to remove them
     elif present_lines and not present:
+        if state.config.DIFF:
+            host.log(f"Will Remove lines in {click.style(path, bold=True)}", logger.info)
+            for line in generate_color_diff(present_lines, []):
+                logger.info("  %s", line)
+            logger.info("")
         yield sed_delete(
             path,
             match_line,
@@ -469,6 +475,11 @@ def line(
     elif present_lines and present:
         # If any of lines are different, sed replace them
         if replace and any(line != replace for line in present_lines):
+            if state.config.DIFF:
+                host.log(f"Will replace lines in {click.style(path, bold=True)}", logger.info)
+                new_lines = [re.sub(match_line, replace, line) for line in present_lines]
+                for line in generate_color_diff(present_lines, new_lines):
+                    logger.info("  %s", line)
             yield sed_replace_command
         else:
             host.noop('line "{0}" exists in {1}'.format(replace or line, path))
@@ -1035,11 +1046,14 @@ def put(
         if state.config.DIFF:
             host.log(f"Will create {click.style(dest, bold=True)}", logger.info)
 
-            with get_file_io(src, "r") as f:
-                desired_lines = f.readlines()
+            try:
+                with get_file_io(src, "r") as f:
+                    desired_lines = f.readlines()
 
-            for line in generate_color_diff([], desired_lines):
-                logger.info(f"  {line}")
+                for line in generate_color_diff([], desired_lines):
+                    logger.info("  %s", line)
+            except UnicodeDecodeError:
+                logger.info("Binary file uploaded")
             logger.info("")
 
         yield FileUploadCommand(
@@ -1086,7 +1100,7 @@ def put(
                     desired_lines = f.readlines()
 
                 for line in generate_color_diff(current_lines, desired_lines):
-                    logger.info(f"  {line}")
+                    logger.info("  %s", line)
                 logger.info("")
 
             yield FileUploadCommand(
@@ -1120,11 +1134,27 @@ def put(
 
             # Check mode
             if mode and remote_file["mode"] != mode:
+                if state.config.DIFF:
+                    logger.info("mode %s", click.style(remote_file["mode"], "red"))
+                    logger.info("mode %s", click.style(mode, "green"))
                 yield file_utils.chmod(dest, mode)
                 changed = True
 
             # Check user/group
             if (user and remote_file["user"] != user) or (group and remote_file["group"] != group):
+                if state.config.DIFF:
+                    old_status = [remote_file["user"], remote_file["group"]]
+                    new_status = [user, group]
+                    if remote_file["user"] != user:
+                        old_status[0] = click.style(remote_file["user"], "red")
+                        new_status[0] = click.style(user, "green")
+                    if remote_file["group"] != group:
+                        old_status[1] = click.style(remote_file["group"], "red")
+                        new_status[1] = click.style(group, "green")
+
+                    logger.info("chown %s:%s", *old_status)
+                    logger.info("chown %s:%s", *new_status)
+
                 yield file_utils.chown(dest, user, group)
                 changed = True
 
@@ -1135,6 +1165,10 @@ def put(
                 if _times_differ_in_s(
                     canonical_mtime, remote_file["mtime"].replace(tzinfo=timezone.utc)
                 ):
+                    if state.config.DIFF:
+                        logger.info("mtime %s", click.style(remote_file["mtime"], "red"))
+                        logger.info("mtime %s", click.style(canonical_mtime, "green"))
+
                     yield file_utils.touch(dest, MetadataTimeField.MTIME, canonical_mtime)
                     changed = True
 
@@ -1145,6 +1179,10 @@ def put(
                 if _times_differ_in_s(
                     canonical_atime, remote_file["atime"].replace(tzinfo=timezone.utc)
                 ):
+                    if state.config.DIFF:
+                        logger.info("atime %s", click.style(remote_file["atime"], "red"))
+                        logger.info("atime %s", click.style(canonical_atime, "green"))
+
                     yield file_utils.touch(dest, MetadataTimeField.ATIME, canonical_atime)
                     changed = True
 
