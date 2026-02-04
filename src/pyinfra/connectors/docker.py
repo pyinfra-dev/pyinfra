@@ -68,6 +68,10 @@ class DockerConnector(BaseConnector):
     The Docker connector is great for testing pyinfra operations locally, rather than connecting to
     a remote host over SSH each time. This gives you a fast, local-first devloop to iterate on when
     writing deploys, operations or facts.
+
+    .. note::
+
+        For running Docker containers on remote hosts, see the :doc:`dockerssh` connector.
     """
 
     # enable the use of other docker cli compatible tools like podman
@@ -364,6 +368,10 @@ class PodmanConnector(DockerConnector):
     The Podman connector is great for testing pyinfra operations locally, rather than connecting to
     a remote host over SSH each time. This gives you a fast, local-first devloop to iterate on when
     writing deploys, operations or facts.
+
+    .. note::
+
+        For running Podman containers on remote hosts, see the :doc:`podmanssh` connector.
     """
 
     docker_cmd = "podman"
