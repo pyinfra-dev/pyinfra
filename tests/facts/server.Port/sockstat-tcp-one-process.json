@@ -1,0 +1,15 @@
+{
+  "command": "sockstat -l -p 80 -P tcp",
+  "arg": {"port": 80, "protocol": "tcp"},
+  "facts": {
+    "server.Kernel": "FreeBSD"
+  },
+  "output": [
+    "USER     COMMAND    PID   FD PROTO  LOCAL ADDRESS         FOREIGN ADDRESS",
+    "www      nginx      1234  3  tcp4   *:80                  *:*"
+  ],
+  "fact": [
+    "nginx",
+    1234
+  ]
+}

@@ -1,6 +1,6 @@
 {
-  "command": "ss -lptnH 'src :53'",
-  "arg": 53,
+  "command": "ss -lpunH 'src :53'",
+  "arg": {"port": 53, "protocol": "udp"},
   "facts": {
     "server.Kernel": "Linux",
     "server.Which": {

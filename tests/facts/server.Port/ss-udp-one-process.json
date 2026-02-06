@@ -1,0 +1,17 @@
+{
+  "command": "ss -lpunH 'src :53'",
+  "arg": {"port": 53, "protocol": "udp"},
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": "/usr/sbin/ss"
+    }
+  },
+  "output": [
+    "UNCONN 0      0          0.0.0.0:53        0.0.0.0:*    users:((\"named\",pid=1234,fd=512))"
+  ],
+  "fact": [
+    "named",
+    1234
+  ]
+}
