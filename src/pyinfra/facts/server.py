@@ -340,18 +340,14 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
             return self._process_sockstat(output)
         return None, None
 
-    def _process_ss(
-        self, output: Iterable[str]
-    ) -> Union[Tuple[str, int], Tuple[None, None]]:
+    def _process_ss(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
         for line in output:
             proc = line.split('"')[1]
             pid = int(line.split("pid=")[1].split(",")[0])
             return (proc, pid)
         return None, None
 
-    def _process_netstat(
-        self, output: Iterable[str]
-    ) -> Union[Tuple[str, int], Tuple[None, None]]:
+    def _process_netstat(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
         for line in output:
             line = line.strip()
             if not line:
@@ -363,9 +359,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
                 return (proc, int(pid_str))
         return None, None
 
-    def _process_sockstat(
-        self, output: Iterable[str]
-    ) -> Union[Tuple[str, int], Tuple[None, None]]:
+    def _process_sockstat(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
         for line in output:
             line = line.strip()
             if not line or line.startswith("USER"):
@@ -989,7 +983,7 @@ class RebootRequired(FactBase[bool]):
     Returns a boolean indicating whether the system requires a reboot.
 
     On Linux systems:
-    
+
     - Checks /var/run/reboot-required and /var/run/reboot-required.pkgs
     - On Alpine Linux, compares installed kernel with running kernel
 
