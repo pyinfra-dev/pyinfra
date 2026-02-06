@@ -1,0 +1,11 @@
+{
+  "command": "netstat -tulnp 2>/dev/null | tail -n +3",
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": null
+    }
+  },
+  "output": [],
+  "fact": []
+}

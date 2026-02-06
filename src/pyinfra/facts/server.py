@@ -370,6 +370,166 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
         return None, None
 
 
+class PortsDict(TypedDict):
+    protocol: str
+    port: int
+    address: str
+    process: str
+    pid: int
+
+
+class Ports(FactBase[List[PortsDict]]):
+    """
+    Returns a list of all listening TCP and UDP ports with process info.
+
+    Uses ``ss`` on Linux (with ``netstat`` fallback) and ``sockstat`` on FreeBSD.
+
+    .. code:: python
+
+        host.get_fact(Ports)
+        # [{"protocol": "tcp", "port": 80, "address": "0.0.0.0", "process": "nginx", "pid": 1234}, ...]
+    """
+
+    default = list
+
+    @override
+    def command(self) -> str:
+        self._kernel = host.get_fact(Kernel)
+
+        if self._kernel.strip() == "FreeBSD":
+            self._tool = "sockstat"
+            return "sockstat -l -P tcp,udp"
+
+        # Linux - prefer ss, fall back to netstat
+        self._has_ss = host.get_fact(Which, "ss")
+        if self._has_ss:
+            self._tool = "ss"
+            return "ss -lptunH"
+        else:
+            self._tool = "netstat"
+            return "netstat -tulnp 2>/dev/null | tail -n +3"
+
+    @override
+    def process(self, output: Iterable[str]) -> List[PortsDict]:
+        if self._tool == "ss":
+            return self._process_ss(output)
+        elif self._tool == "netstat":
+            return self._process_netstat(output)
+        elif self._tool == "sockstat":
+            return self._process_sockstat(output)
+        return []
+
+    def _process_ss(self, output: Iterable[str]) -> List[PortsDict]:
+        results: List[PortsDict] = []
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split()
+            if len(parts) < 5:
+                continue
+            state = parts[0]
+            protocol = "tcp" if state in ("LISTEN",) else "udp"
+            local = parts[3]
+            # Parse address:port - handle IPv6 brackets
+            if local.startswith("["):
+                # [::]:port or [::1]:port
+                bracket_end = local.index("]")
+                address = local[: bracket_end + 1]
+                port = int(local[bracket_end + 2 :])
+            elif local.count(":") > 1:
+                # IPv6 without brackets like *:port - last colon separates port
+                address = local[: local.rfind(":")]
+                port = int(local[local.rfind(":") + 1 :])
+            else:
+                address, port_str = local.rsplit(":", 1)
+                address = address
+                port = int(port_str)
+            # Extract process and pid from users:(("name",pid=N,...))
+            process = ""
+            pid = 0
+            if '"' in line:
+                process = line.split('"')[1]
+            if "pid=" in line:
+                pid = int(line.split("pid=")[1].split(",")[0].split(")")[0])
+            results.append(
+                PortsDict(
+                    protocol=protocol,
+                    port=port,
+                    address=address,
+                    process=process,
+                    pid=pid,
+                )
+            )
+        return results
+
+    def _process_netstat(self, output: Iterable[str]) -> List[PortsDict]:
+        results: List[PortsDict] = []
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split()
+            if len(parts) < 4:
+                continue
+            proto = parts[0]
+            protocol = "udp" if proto.startswith("udp") else "tcp"
+            local = parts[3]
+            if local.count(":") > 1:
+                address = local[: local.rfind(":")]
+                port = int(local[local.rfind(":") + 1 :])
+            else:
+                address, port_str = local.rsplit(":", 1)
+                port = int(port_str)
+            process = ""
+            pid = 0
+            pid_prog = parts[-1]
+            if "/" in pid_prog:
+                pid_str, process = pid_prog.split("/", 1)
+                pid = int(pid_str)
+            results.append(
+                PortsDict(
+                    protocol=protocol,
+                    port=port,
+                    address=address,
+                    process=process,
+                    pid=pid,
+                )
+            )
+        return results
+
+    def _process_sockstat(self, output: Iterable[str]) -> List[PortsDict]:
+        results: List[PortsDict] = []
+        for line in output:
+            line = line.strip()
+            if not line or line.startswith("USER"):
+                continue
+            parts = line.split()
+            if len(parts) < 6:
+                continue
+            process = parts[1]
+            pid = int(parts[2])
+            proto_raw = parts[4]
+            protocol = "udp" if "udp" in proto_raw else "tcp"
+            local = parts[5]
+            if local.count(":") > 1:
+                address = local[: local.rfind(":")]
+                port = int(local[local.rfind(":") + 1 :])
+            else:
+                address, port_str = local.rsplit(":", 1)
+                port = int(port_str)
+            results.append(
+                PortsDict(
+                    protocol=protocol,
+                    port=port,
+                    address=address,
+                    process=process,
+                    pid=pid,
+                )
+            )
+        return results
+
+
 class KernelModules(FactBase):
     """
     Returns a dictionary of kernel module name -> info.

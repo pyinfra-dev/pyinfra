@@ -1,0 +1,19 @@
+{
+  "command": "netstat -tulnp 2>/dev/null | tail -n +3",
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": null
+    }
+  },
+  "output": [
+    "tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      1234/nginx",
+    "tcp        0      0 0.0.0.0:443             0.0.0.0:*               LISTEN      1234/nginx",
+    "udp        0      0 0.0.0.0:53              0.0.0.0:*                           5678/named"
+  ],
+  "fact": [
+    {"protocol": "tcp", "port": 80, "address": "0.0.0.0", "process": "nginx", "pid": 1234},
+    {"protocol": "tcp", "port": 443, "address": "0.0.0.0", "process": "nginx", "pid": 1234},
+    {"protocol": "udp", "port": 53, "address": "0.0.0.0", "process": "named", "pid": 5678}
+  ]
+}

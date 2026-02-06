@@ -1,0 +1,11 @@
+{
+  "command": "ss -lptunH",
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": "/usr/sbin/ss"
+    }
+  },
+  "output": [],
+  "fact": []
+}
