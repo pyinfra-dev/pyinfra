@@ -426,25 +426,16 @@ class Ports(FactBase[List[PortsDict]]):
             if not line:
                 continue
             parts = line.split()
-            if len(parts) < 5:
+            # ss -lptunH outputs: proto state recv-q send-q local peer [users]
+            if len(parts) < 6:
                 continue
-            state = parts[0]
-            protocol = "tcp" if state in ("LISTEN",) else "udp"
-            local = parts[3]
-            # Parse address:port - handle IPv6 brackets
-            if local.startswith("["):
-                # [::]:port or [::1]:port
-                bracket_end = local.index("]")
-                address = local[: bracket_end + 1]
-                port = int(local[bracket_end + 2 :])
-            elif local.count(":") > 1:
-                # IPv6 without brackets like *:port - last colon separates port
-                address = local[: local.rfind(":")]
-                port = int(local[local.rfind(":") + 1 :])
-            else:
-                address, port_str = local.rsplit(":", 1)
-                address = address
-                port = int(port_str)
+            protocol = "udp" if parts[0].startswith("udp") else "tcp"
+            local = parts[4]
+            # Parse address:port - last colon always separates the port
+            # Handles: 0.0.0.0:port, *:port, [::]:port,
+            # 127.0.0.53%lo:port, [fe80::1]%iface:port
+            address = local[: local.rfind(":")]
+            port = int(local[local.rfind(":") + 1 :])
             # Extract process and pid from users:(("name",pid=N,...))
             process = ""
             pid = 0

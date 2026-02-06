@@ -1,0 +1,23 @@
+{
+  "command": "ss -lptunH",
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": "/usr/sbin/ss"
+    }
+  },
+  "output": [
+    "tcp LISTEN 0      128        0.0.0.0:22        0.0.0.0:*",
+    "tcp LISTEN 0      128           [::]:22           [::]:*",
+    "udp UNCONN 0      0     127.0.0.53%lo:53        0.0.0.0:*",
+    "udp UNCONN 0      0              *:22000            *:*",
+    "udp UNCONN 0      0  [fe80::20e:c6ff:feea:f66a]%enp10s0u8:546  [::]:*"
+  ],
+  "fact": [
+    {"protocol": "tcp", "port": 22, "address": "0.0.0.0", "process": "", "pid": 0},
+    {"protocol": "tcp", "port": 22, "address": "[::]", "process": "", "pid": 0},
+    {"protocol": "udp", "port": 53, "address": "127.0.0.53%lo", "process": "", "pid": 0},
+    {"protocol": "udp", "port": 22000, "address": "*", "process": "", "pid": 0},
+    {"protocol": "udp", "port": 546, "address": "[fe80::20e:c6ff:feea:f66a]%enp10s0u8", "process": "", "pid": 0}
+  ]
+}

@@ -7,9 +7,9 @@
     }
   },
   "output": [
-    "LISTEN 0      128        0.0.0.0:80        0.0.0.0:*    users:((\"nginx\",pid=1234,fd=6))",
-    "LISTEN 0      128        0.0.0.0:443       0.0.0.0:*    users:((\"nginx\",pid=1234,fd=7))",
-    "UNCONN 0      0          0.0.0.0:53        0.0.0.0:*    users:((\"named\",pid=5678,fd=512))"
+    "tcp LISTEN 0      128        0.0.0.0:80        0.0.0.0:*    users:((\"nginx\",pid=1234,fd=6))",
+    "tcp LISTEN 0      128        0.0.0.0:443       0.0.0.0:*    users:((\"nginx\",pid=1234,fd=7))",
+    "udp UNCONN 0      0          0.0.0.0:53        0.0.0.0:*    users:((\"named\",pid=5678,fd=512))"
   ],
   "fact": [
     {"protocol": "tcp", "port": 80, "address": "0.0.0.0", "process": "nginx", "pid": 1234},
