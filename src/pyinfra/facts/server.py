@@ -342,6 +342,8 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
 
     def _process_ss(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
         for line in output:
+            if '"' not in line or "pid=" not in line:
+                continue
             proc = line.split('"')[1]
             pid = int(line.split("pid=")[1].split(",")[0])
             return (proc, pid)

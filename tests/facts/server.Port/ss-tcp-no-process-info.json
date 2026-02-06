@@ -1,0 +1,15 @@
+{
+  "command": "ss -lptnH 'src :22'",
+  "arg": 22,
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": "/usr/sbin/ss"
+    }
+  },
+  "output": [
+    "LISTEN 0      128          0.0.0.0:22        0.0.0.0:*",
+    "LISTEN 0      128             [::]:22           [::]:*"
+  ],
+  "fact": [null, null]
+}
