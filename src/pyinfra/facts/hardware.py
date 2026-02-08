@@ -35,7 +35,7 @@ class Memory(FactBase):
 
     @override
     def command(self) -> str:
-        return "vmstat -s"
+        return "LANG=C vmstat -s"
 
     @override
     def process(self, output):
