@@ -7,6 +7,7 @@ from queue import Queue
 from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, Callable, Iterable, Optional, Union
+from uuid import uuid4
 
 import click
 import gevent
@@ -22,13 +23,20 @@ if TYPE_CHECKING:
 
 
 SUDO_ASKPASS_ENV_VAR = "PYINFRA_SUDO_PASSWORD"
+SUDO_ASKPASS_ONCE_ENV_VAR = "PYINFRA_SUDO_ASKPASS_ONCE_PATH"
 
 
 SUDO_ASKPASS_COMMAND = r"""
 temp=$(mktemp "${{TMPDIR:={0}}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
 cat >"$temp"<<'__EOF__'
 #!/bin/sh
-printf '%s\n' "${1}"
+if [ -n "${{{2}}}" ]; then
+    if [ -e "${{{2}}}" ]; then
+        exit 1
+    fi
+    : > "${{{2}}}"
+fi
+printf '%s\n' "${{{1}}}"
 __EOF__
 chmod 755 "$temp"
 echo "$temp"
@@ -112,6 +120,21 @@ class CommandOutput:
     @property
     def stderr(self) -> str:
         return "\n".join(self.stderr_lines)
+
+
+def output_indicates_sudo_password_failure(output: CommandOutput) -> bool:
+    if not output or not output.combined_lines:
+        return False
+    for line in output.combined_lines:
+        message = line.line.strip()
+        if not message:
+            continue
+        normalized = message.lower()
+        if normalized == "sorry, try again.":
+            return True
+        if normalized.startswith("sudo:") and "incorrect password attempt" in normalized:
+            return True
+    return False
 
 
 def read_buffer(
@@ -214,6 +237,11 @@ def execute_command_with_sudo_retry(
                 return_code, output = execute_command()
                 break
 
+    if return_code != 0 and command_arguments.get("_sudo"):
+        if output_indicates_sudo_password_failure(output):
+            if host.connector_data.get("prompted_sudo_password"):
+                host.connector_data["prompted_sudo_password"] = None
+
     return return_code, output
 
 
@@ -236,6 +264,12 @@ def remove_any_sudo_askpass_file(host) -> None:
     if sudo_askpass_path:
         host.run_shell_command("rm -f {0}".format(sudo_askpass_path))
         host.connector_data["sudo_askpass_path"] = None
+
+    sudo_askpass_once_paths = host.connector_data.get("sudo_askpass_once_paths")
+    if sudo_askpass_once_paths:
+        for path in sudo_askpass_once_paths:
+            host.run_shell_command("rm -f {0}".format(shlex.quote(path)))
+        host.connector_data["sudo_askpass_once_paths"] = set()
 
 
 @memoize
@@ -268,9 +302,23 @@ def _ensure_sudo_askpass_set_for_host(host: "Host"):
     if host.connector_data.get("sudo_askpass_path"):
         return
     _, output = host.run_shell_command(
-        SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SUDO_ASKPASS_ENV_VAR)
+        SUDO_ASKPASS_COMMAND.format(
+            host.get_temp_dir_config(),
+            SUDO_ASKPASS_ENV_VAR,
+            SUDO_ASKPASS_ONCE_ENV_VAR,
+        )
     )
     host.connector_data["sudo_askpass_path"] = shlex.quote(output.stdout_lines[0])
+
+
+def _build_sudo_askpass_once_path(host: "Host") -> str:
+    temp_dir = host.get_temp_dir_config()
+    return "{0}/pyinfra-sudo-askpass-once-{1}".format(temp_dir, uuid4().hex)
+
+
+def _track_sudo_askpass_once_path(host: "Host", path: str) -> None:
+    sudo_askpass_once_paths = host.connector_data.setdefault("sudo_askpass_once_paths", set())
+    sudo_askpass_once_paths.add(path)
 
 
 def make_unix_command_for_host(
@@ -292,6 +340,10 @@ def make_unix_command_for_host(
         # Ensure the askpass path is correctly set and passed through
         _ensure_sudo_askpass_set_for_host(host)
         command_arguments["_sudo_askpass_path"] = host.connector_data["sudo_askpass_path"]
+        if not command_arguments.get("_sudo_askpass_attempt_path"):
+            attempt_path = _build_sudo_askpass_once_path(host)
+            command_arguments["_sudo_askpass_attempt_path"] = attempt_path
+            _track_sudo_askpass_once_path(host, attempt_path)
     return make_unix_command(command, **command_arguments)
 
 
@@ -315,6 +367,7 @@ def make_unix_command(
     _use_sudo_login=False,
     _sudo_password="",
     _sudo_askpass_path=None,
+    _sudo_askpass_attempt_path=None,
     _preserve_sudo_env=False,
     # Doas config
     _doas=False,
@@ -356,6 +409,13 @@ def make_unix_command(
                 MaskString("{0}={1}".format(SUDO_ASKPASS_ENV_VAR, shlex.quote(_sudo_password))),
             ],
         )
+        if _sudo_askpass_attempt_path:
+            command_bits.append(
+                "{0}={1}".format(
+                    SUDO_ASKPASS_ONCE_ENV_VAR,
+                    shlex.quote(_sudo_askpass_attempt_path),
+                )
+            )
 
     if _sudo:
         command_bits.extend(["sudo", "-H"])

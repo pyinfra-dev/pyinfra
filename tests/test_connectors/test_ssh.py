@@ -590,12 +590,14 @@ class TestSSHConnector(TestCase):
         assert len(out) == 2
         assert out[0] is False
 
+    @mock.patch("pyinfra.connectors.util.uuid4")
     @mock.patch("pyinfra.connectors.util.getpass")
     @mock.patch("pyinfra.connectors.ssh.SSHClient")
     def test_run_shell_command_sudo_password_automatic_prompt(
         self,
         fake_ssh_client,
         fake_getpass,
+        fake_uuid4,
     ):
         fake_ssh = mock.MagicMock()
         first_fake_stdout = mock.MagicMock()
@@ -625,6 +627,7 @@ class TestSSHConnector(TestCase):
 
         fake_ssh_client.return_value = fake_ssh
         fake_getpass.return_value = "password"
+        fake_uuid4.return_value.hex = "deadbeef"
 
         inventory = make_inventory(hosts=("somehost",))
         State(inventory, Config())
@@ -648,17 +651,20 @@ class TestSSHConnector(TestCase):
             (
                 "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
                 "PYINFRA_SUDO_PASSWORD=password "
+                "PYINFRA_SUDO_ASKPASS_ONCE_PATH=/tmp/pyinfra-sudo-askpass-once-deadbeef "
                 "sudo -H -A -k sh -c 'echo Šablony'"
             ),
             get_pty=False,
         )
 
+    @mock.patch("pyinfra.connectors.util.uuid4")
     @mock.patch("pyinfra.connectors.util.getpass")
     @mock.patch("pyinfra.connectors.ssh.SSHClient")
     def test_run_shell_command_sudo_password_automatic_prompt_with_special_chars_in_password(
         self,
         fake_ssh_client,
         fake_getpass,
+        fake_uuid4,
     ):
         fake_ssh = mock.MagicMock()
         first_fake_stdout = mock.MagicMock()
@@ -688,6 +694,7 @@ class TestSSHConnector(TestCase):
 
         fake_ssh_client.return_value = fake_ssh
         fake_getpass.return_value = "p@ss'word';"
+        fake_uuid4.return_value.hex = "deadbeef"
 
         inventory = make_inventory(hosts=("somehost",))
         State(inventory, Config())
@@ -711,6 +718,7 @@ class TestSSHConnector(TestCase):
             (
                 "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
                 """PYINFRA_SUDO_PASSWORD='p@ss'"'"'word'"'"';' """
+                "PYINFRA_SUDO_ASKPASS_ONCE_PATH=/tmp/pyinfra-sudo-askpass-once-deadbeef "
                 "sudo -H -A -k sh -c 'echo Šablony'"
             ),
             get_pty=False,
@@ -719,14 +727,17 @@ class TestSSHConnector(TestCase):
     # SSH file put/get tests
     #
 
+    @mock.patch("pyinfra.connectors.util.uuid4")
     @mock.patch("pyinfra.connectors.ssh.SSHClient")
     @mock.patch("pyinfra.connectors.util.getpass")
     def test_run_shell_command_retry_for_sudo_password(
         self,
         fake_getpass,
         fake_ssh_client,
+        fake_uuid4,
     ):
         fake_getpass.return_value = "PASSWORD"
+        fake_uuid4.return_value.hex = "deadbeef"
 
         fake_ssh = mock.MagicMock()
         fake_stdin = mock.MagicMock()
@@ -752,7 +763,9 @@ class TestSSHConnector(TestCase):
         assert fake_getpass.called
         fake_ssh.exec_command.assert_called_with(
             "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
-            "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k sh -c 'echo hi'",
+            "PYINFRA_SUDO_PASSWORD=PASSWORD "
+            "PYINFRA_SUDO_ASKPASS_ONCE_PATH=/tmp/pyinfra-sudo-askpass-once-deadbeef "
+            "sudo -H -A -k sh -c 'echo hi'",
             get_pty=False,
         )
 

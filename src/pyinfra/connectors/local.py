@@ -16,6 +16,7 @@ from .util import (
     CommandOutput,
     execute_command_with_sudo_retry,
     make_unix_command_for_host,
+    output_indicates_sudo_password_failure,
     run_local_process,
 )
 
@@ -95,6 +96,7 @@ class LocalConnector(BaseConnector):
             arguments,
             execute_command,
         )
+        self._log_sudo_auth_failure(arguments, combined_output)
 
         if _success_exit_codes:
             status = return_code in _success_exit_codes
@@ -102,6 +104,21 @@ class LocalConnector(BaseConnector):
             status = return_code == 0
 
         return status, combined_output
+
+    def _log_sudo_auth_failure(
+        self,
+        arguments: "ConnectorArguments",
+        output: CommandOutput,
+    ) -> None:
+        """
+        Log sudo auth failures to aid debugging when cached credentials are cleared.
+        """
+        if not arguments.get("_sudo"):
+            return
+        if output_indicates_sudo_password_failure(output):
+            logger.debug(
+                "Sudo authentication failed on localhost; cached password cleared",
+            )
 
     @override
     def put_file(
