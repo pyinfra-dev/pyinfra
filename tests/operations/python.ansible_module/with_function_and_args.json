@@ -1,0 +1,20 @@
+{
+    "args": ["files/aptclean.py", "aptclean", ["arg1"], {"hello": "world"}],
+    "kwargs": {
+        "add_deploy_dir": false
+    },
+    "commands": [
+        [
+            "_execute_ansible_module",
+            [
+                "files/aptclean.py",
+                "aptclean",
+                ["arg1"],
+                {"hello": "world"},
+                false
+            ],
+            {}
+        ]
+    ],
+    "idempotent": false
+}

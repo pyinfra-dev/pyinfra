@@ -1,0 +1,17 @@
+{
+    "args": ["files/aptclean.py"],
+    "commands": [
+        [
+            "_execute_ansible_module",
+            [
+                "files/aptclean.py",
+                "main",
+                [],
+                {},
+                true
+            ],
+            {}
+        ]
+    ],
+    "idempotent": false
+}
