@@ -8,6 +8,6 @@
         }
     },
     "commands": [
-        "systemctl start logrotate.timer"
+        "systemctl start logrotate.timer && systemctl is-active --quiet logrotate.timer"
     ]
 }

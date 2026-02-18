@@ -13,6 +13,6 @@
         }
     },
     "commands": [
-        "systemctl --user --machine=testuser@testmachine start redis-server.service"
+        "systemctl --user --machine=testuser@testmachine start redis-server.service && systemctl --user --machine=testuser@testmachine is-active --quiet redis-server.service"
     ]
 }

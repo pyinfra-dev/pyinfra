@@ -12,6 +12,6 @@
         }
     },
     "commands": [
-        "systemctl --machine=testmachine start redis-server.service"
+        "systemctl --machine=testmachine start redis-server.service && systemctl --machine=testmachine is-active --quiet redis-server.service"
     ]
 }

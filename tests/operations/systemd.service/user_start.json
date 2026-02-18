@@ -11,6 +11,6 @@
         }
     },
     "commands": [
-        "systemctl --user start redis-server.service"
+        "systemctl --user start redis-server.service && systemctl --user is-active --quiet redis-server.service"
     ]
 }

@@ -28,7 +28,6 @@ def daemon_reload(user_mode=False, machine: str | None = None, user_name: str | 
         machine=machine,
         user_name=user_name,
     )
-
     yield StringCommand(systemctl_cmd, "daemon-reload")
 
 
@@ -89,6 +88,9 @@ def service(
         machine=machine,
         user_name=user_name,
     )
+    status_check_cmd = "{0} is-active --quiet {{service}}".format(
+        systemctl_cmd.get_raw_value()
+    )
 
     if not service.endswith(
         (
@@ -129,6 +131,7 @@ def service(
         restarted,
         reloaded,
         command,
+        status_command=status_check_cmd,
     )
 
     if isinstance(enabled, bool):
