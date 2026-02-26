@@ -90,6 +90,7 @@ docker = "pyinfra.connectors.docker:DockerConnector"
 podman = "pyinfra.connectors.docker:PodmanConnector"
 local = "pyinfra.connectors.local:LocalConnector"
 ssh = "pyinfra.connectors.ssh:SSHConnector"
+kubectl = "pyinfra.connectors.kubectl:KubectlConnector"
 dockerssh = "pyinfra.connectors.dockerssh:DockerSSHConnector"
 # Inventory only connectors
 terraform = "pyinfra.connectors.terraform:TerraformInventoryConnector"
