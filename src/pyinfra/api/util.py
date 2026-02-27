@@ -219,8 +219,16 @@ def log_operation_start(
 
 
 def log_error_or_warning(
-    host: "Host", ignore_errors: bool, description: str = "", continue_on_error: bool = False
+    host: "Host",
+    ignore_errors: bool,
+    description: str = "",
+    continue_on_error: bool = False,
+    exception: Exception | None = None,
 ) -> None:
+    if exception is not None:
+        exception_string = format_exception(exception)
+        description = f"{description} ({exception_string})" if description else exception_string
+
     log_func = logger.error
     log_color = "red"
     log_text = "Error: " if description else "Error"

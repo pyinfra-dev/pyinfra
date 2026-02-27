@@ -555,7 +555,9 @@ class SSHCommonConnector(BaseConnector):
 
         if self._use_ssh_cli:
             target, ssh_args = self._build_ssh_cli_args()
-            command = " ".join([*(shlex.quote(arg) for arg in ssh_args), shlex.quote(target), "true"])
+            command = " ".join(
+                [*(shlex.quote(arg) for arg in ssh_args), shlex.quote(target), "true"]
+            )
             return_code, output = await run_local_process_async(command)
             if return_code != 0:
                 raise ConnectError(f"SSH CLI connect check failed for {target}: {output.stderr}")
@@ -567,9 +569,7 @@ class SSHCommonConnector(BaseConnector):
         try:
             self._connection = await self._async_connect(hostname, kwargs, strict_setting)
         except (asyncssh.Error, OSError, TypeError) as exc:
-            raise ConnectError(
-                f"SSH error connecting to {hostname}: {type(exc).__name__}: {exc}"
-            )
+            raise ConnectError(f"SSH error connecting to {hostname}: {type(exc).__name__}: {exc}")
 
     async def _async_connect(
         self,

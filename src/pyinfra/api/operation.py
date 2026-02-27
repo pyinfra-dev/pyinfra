@@ -42,6 +42,8 @@ _current_async_context: ContextVar[Any | None] = ContextVar(
     "pyinfra_current_async_context",
     default=None,
 )
+
+
 def push_async_context(ctx: Any) -> Token:
     return _current_async_context.set(ctx)
 
