@@ -19,7 +19,7 @@ pyinfra works on anywhere that runs Python - Mac, Linux & Windows are all suppor
 
 #### PyCharm
 
-To debug pyinfra within PyCharm, you need to [explicitly enable support for Gevent](https://blog.jetbrains.com/pycharm/2012/08/gevent-debug-support/).
+When debugging pyinfra within PyCharm, enable [asyncio debug support](https://www.jetbrains.com/help/pycharm/debugging-asynchronous-code.html) to inspect tasks and breakpoints inside the event loop.
 
 
 ## Remote Systems
@@ -43,6 +43,13 @@ pyinfra aims to be compatible with all Unix-like operating systems and is curren
 + Docker (with [`@docker` connector](./connectors/docker))
 
 In general, the only requirement on the remote side is shell access. POSIX commands are used where possible for facts and operations, so most of the ``server`` and ``files`` operations should work anywhere POSIX.
+
+
+## Upgrading pyinfra from ``3.x`` -> ``4.x``
+
+- Core execution now uses Python ``asyncio`` instead of gevent. The synchronous helpers remain, but custom tooling which previously interacted with gevent greenlets may need to switch to the new async APIs.
+- SSH connectivity is powered by AsyncSSH. Paramiko-specific connection kwargs such as ``ssh_paramiko_connect_kwargs`` are no longer supported.
+- The legacy ``@scp`` and ``@sshuserclient`` connectors have been removed. Their behaviour is covered by the updated ``@ssh`` connector which uses AsyncSSH’s SFTP implementation.
 
 
 ## Upgrading pyinfra from ``2.x`` -> ``3.x``

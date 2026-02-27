@@ -1,6 +1,13 @@
-# v3.5.3
+# v4.0
 
-- another release to fix different doc generation issues 🫠
+Major release bringing asyncio + AsyncSSH across the codebase.
+
+- core: replace the gevent runtime with asyncio-powered execution helpers and staged context handling
+- ssh: migrate the SSH connector to AsyncSSH (agent forwarding, retries, SFTP) while keeping sync wrappers (`connect_all`, `run_ops`, etc.)
+- connectors: fold the legacy Paramiko connectors (``@scp``/``@sshuserclient``) into the upgraded AsyncSSH connector
+- api: add an ``AsyncContext`` helper for running operations/facts concurrently with correct state management and new tests/docs
+- cli: harden async host loading, progress handling, and exception reporting when importing inventories/operations
+- docs: update references to the 4.x branch and add upgrade guidance from 3.x -> 4.x
 
 # v3.5.2
 
@@ -304,7 +311,7 @@ v3 of pyinfra includes for the first time a (mostly) typed internal API with pro
 
 - Add new `_if` global argument to control operation execution at runtime
 - Add `--debug-all` flag to set debug logging for all packages
-- Retry SSH connections on failure (configurable, see [SSH connector](https://docs.pyinfra.com/en/3.x/connectors/ssh.html#available-data)) (@fwiesel)
+- Retry SSH connections on failure (configurable, see [SSH connector](https://docs.pyinfra.com/en/4.x/connectors/ssh.html#available-data)) (@fwiesel)
 - Documentation typo fixes (@szepeviktor, @sudoBash418)
 - Fix handling of binary files in Docker connector (@matthijskooijman)
 - Add `will_change` attribute and `did_change` context manager to `OperationMeta`

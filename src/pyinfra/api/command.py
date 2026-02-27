@@ -5,7 +5,6 @@ from inspect import getfullargspec
 from string import Formatter
 from typing import IO, TYPE_CHECKING, Callable, Union
 
-import gevent
 from typing_extensions import Unpack, override
 
 from pyinfra.context import LocalContextObject, ctx_config, ctx_host
@@ -236,8 +235,8 @@ class FunctionCommand(PyinfraCommand):
         if "state" in argspec.args and "host" in argspec.args:
             return self.function(state, host, *self.args, **self.kwargs)
 
-        # If we're already running inside a greenlet (ie a nested callback) just execute the func
-        # without any gevent.spawn which will break the local host object.
+        # If we're already running inside a nested callback just execute the function directly to
+        # avoid resetting the local host context.
         if isinstance(host, LocalContextObject):
             self.function(*self.args, **self.kwargs)
             return
@@ -247,8 +246,7 @@ class FunctionCommand(PyinfraCommand):
                 with ctx_host.use(host):
                     self.function(*self.args, **self.kwargs)
 
-        greenlet = gevent.spawn(execute_function)
-        return greenlet.get()
+        return execute_function()
 
 
 class RsyncCommand(PyinfraCommand):

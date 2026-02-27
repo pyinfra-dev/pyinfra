@@ -15,8 +15,10 @@ from pyinfra.context import ctx_host, ctx_state
 
 from .arguments import pop_global_arguments
 from .arguments_typed import PyinfraOperation
+from .operation import get_async_context
 from .exceptions import PyinfraError
 from .host import Host
+from .state import StateStage
 from .util import get_call_location
 
 if TYPE_CHECKING:
@@ -40,6 +42,9 @@ def add_deploy(state: "State", deploy_func: Callable[..., Any], *args, **kwargs)
                 "`add_deploy` should not be called when pyinfra is executing in CLI mode! ({0})"
             ).format(get_call_location()),
         )
+
+    if state.current_stage < StateStage.Prepare:
+        state.set_stage(StateStage.Prepare)
 
     hosts = kwargs.pop("host", state.inventory.iter_active_hosts())
     if isinstance(hosts, Host):
@@ -66,7 +71,7 @@ def deploy(
         raise PyinfraError(
             (
                 "The `deploy` decorator must be called, ie `@deploy()`, "
-                "see: https://docs.pyinfra.com/en/3.x/compatibility.html#upgrading-pyinfra-from-2-x-3-x"  # noqa
+                "see: https://docs.pyinfra.com/en/4.x/compatibility.html#upgrading-pyinfra-from-2-x-3-x"  # noqa
             )
         )
 
@@ -82,6 +87,10 @@ def deploy(
 def _wrap_deploy(func: Callable[P, Any]) -> PyinfraOperation[P]:
     @wraps(func)
     def decorated_func(*args: P.args, **kwargs: P.kwargs) -> Any:
+        async_context = get_async_context()
+        if async_context is not None:
+            return async_context._call_wrapped_deploy(decorated_func, args, kwargs)
+
         deploy_kwargs, _ = pop_global_arguments(context.state, context.host, kwargs)
 
         deploy_data = getattr(func, "deploy_data", None)

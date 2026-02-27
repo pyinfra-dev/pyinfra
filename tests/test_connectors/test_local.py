@@ -1,9 +1,9 @@
 # encoding: utf-8
 
+from asyncio.subprocess import PIPE
 from io import StringIO
-from subprocess import PIPE
 from unittest import TestCase
-from unittest.mock import MagicMock, call, mock_open, patch
+from unittest.mock import AsyncMock, MagicMock, call, mock_open, patch
 
 from pyinfra.api import Config, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
@@ -18,11 +18,20 @@ from ..util import make_inventory
 @patch("pyinfra.api.util.open", mock_open(read_data="test!"), create=True)
 class TestLocalConnector(TestCase):
     def setUp(self):
-        self.fake_popen_patch = patch("pyinfra.connectors.util.Popen")
-        self.fake_popen_mock = self.fake_popen_patch.start()
+        self.process_mock = MagicMock()
+        self.process_mock.communicate = AsyncMock(return_value=(b"", b""))
+        self.process_mock.kill = MagicMock()
+        self.process_mock.returncode = 0
+
+        self.create_subprocess_patch = patch(
+            "pyinfra.connectors.util.asyncio.create_subprocess_shell",
+            new_callable=AsyncMock,
+        )
+        self.create_subprocess_mock = self.create_subprocess_patch.start()
+        self.create_subprocess_mock.return_value = self.process_mock
 
     def tearDown(self):
-        self.fake_popen_patch.stop()
+        self.create_subprocess_patch.stop()
 
     def test_connect_all(self):
         inventory = make_inventory(hosts=("@local",))
@@ -43,14 +52,15 @@ class TestLocalConnector(TestCase):
         host = inventory.get_host("@local")
 
         command = "echo Šablony"
-        self.fake_popen_mock().returncode = 0
+        self.process_mock.returncode = 0
+        self.process_mock.communicate.return_value = ("Šablony\n".encode("utf-8"), b"")
 
         out = host.run_shell_command(command, _stdin="hello", print_output=True)
         assert len(out) == 2
 
         status, output = out
         assert status is True
-        self.fake_popen_mock().stdin.write.assert_called_with(b"hello\n")
+        assert self.process_mock.communicate.await_args_list[0] == call(b"hello\n")
 
         combined_out = host.run_shell_command(
             command,
@@ -60,9 +70,8 @@ class TestLocalConnector(TestCase):
         assert len(combined_out) == 2
 
         shell_command = make_unix_command(command).get_raw_value()
-        self.fake_popen_mock.assert_called_with(
+        assert self.create_subprocess_mock.await_args_list[-1] == call(
             shell_command,
-            shell=True,
             stdout=PIPE,
             stderr=PIPE,
             stdin=PIPE,
@@ -75,7 +84,8 @@ class TestLocalConnector(TestCase):
         host = inventory.get_host("@local")
 
         command = StringCommand("echo", MaskString("top-secret-stuff"))
-        self.fake_popen_mock().returncode = 0
+        self.process_mock.returncode = 0
+        self.process_mock.communicate.return_value = (b"top-secret-stuff\n", b"")
 
         out = host.run_shell_command(command, print_output=True, print_input=True)
         assert len(out) == 2
@@ -83,9 +93,8 @@ class TestLocalConnector(TestCase):
         status, output = out
         assert status is True
 
-        self.fake_popen_mock.assert_called_with(
+        assert self.create_subprocess_mock.await_args_list[-1] == call(
             "sh -c 'echo top-secret-stuff'",
-            shell=True,
             stdout=PIPE,
             stderr=PIPE,
             stdin=PIPE,
@@ -102,7 +111,7 @@ class TestLocalConnector(TestCase):
         host = inventory.get_host("@local")
 
         command = "echo hi"
-        self.fake_popen_mock().returncode = 1
+        self.process_mock.returncode = 1
 
         out = host.run_shell_command(command, _success_exit_codes=[1])
         assert len(out) == 2
@@ -114,7 +123,7 @@ class TestLocalConnector(TestCase):
         host = inventory.get_host("@local")
 
         command = "echo hi"
-        self.fake_popen_mock().returncode = 1
+        self.process_mock.returncode = 1
 
         out = host.run_shell_command(command)
         assert len(out) == 2
@@ -126,14 +135,13 @@ class TestLocalConnector(TestCase):
 
         host = inventory.get_host("@local")
 
-        fake_process = MagicMock(returncode=0)
-        self.fake_popen_mock.return_value = fake_process
+        self.process_mock.returncode = 0
+        self.process_mock.communicate.return_value = (b"", b"")
 
         host.put_file("not-a-file", "not-another-file", print_output=True)
 
-        self.fake_popen_mock.assert_called_with(
+        assert self.create_subprocess_mock.await_args_list[-1] == call(
             "sh -c 'cp __tempfile__ not-another-file'",
-            shell=True,
             stdout=PIPE,
             stderr=PIPE,
             stdin=PIPE,
@@ -145,14 +153,13 @@ class TestLocalConnector(TestCase):
 
         host = inventory.get_host("@local")
 
-        fake_process = MagicMock(returncode=0)
-        self.fake_popen_mock.return_value = fake_process
+        self.process_mock.returncode = 0
+        self.process_mock.communicate.return_value = (b"", b"")
 
         host.put_file("not-a-file", "not another file with spaces", print_output=True)
 
-        self.fake_popen_mock.assert_called_with(
+        assert self.create_subprocess_mock.await_args_list[-1] == call(
             "sh -c 'cp __tempfile__ '\"'\"'not another file with spaces'\"'\"''",
-            shell=True,
             stdout=PIPE,
             stderr=PIPE,
             stdin=PIPE,
@@ -164,8 +171,8 @@ class TestLocalConnector(TestCase):
 
         host = inventory.get_host("@local")
 
-        fake_process = MagicMock(returncode=1)
-        self.fake_popen_mock.return_value = fake_process
+        self.process_mock.returncode = 1
+        self.process_mock.communicate.return_value = (b"", b"cp error\n")
 
         with self.assertRaises(IOError):
             host.put_file("not-a-file", "not-another-file", print_output=True)
@@ -176,14 +183,13 @@ class TestLocalConnector(TestCase):
 
         host = inventory.get_host("@local")
 
-        fake_process = MagicMock(returncode=0)
-        self.fake_popen_mock.return_value = fake_process
+        self.process_mock.returncode = 0
+        self.process_mock.communicate.return_value = (b"", b"")
 
         host.get_file("not-a-file", "not-another-file", print_output=True)
 
-        self.fake_popen_mock.assert_called_with(
+        assert self.create_subprocess_mock.await_args_list[-1] == call(
             "sh -c 'cp not-a-file __tempfile__'",
-            shell=True,
             stdout=PIPE,
             stderr=PIPE,
             stdin=PIPE,
@@ -195,8 +201,8 @@ class TestLocalConnector(TestCase):
 
         host = inventory.get_host("@local")
 
-        fake_process = MagicMock(returncode=1)
-        self.fake_popen_mock.return_value = fake_process
+        self.process_mock.returncode = 1
+        self.process_mock.communicate.return_value = (b"", b"cp error\n")
 
         with self.assertRaises(IOError):
             host.get_file("not-a-file", "not-another-file", print_output=True)
@@ -207,15 +213,11 @@ class TestLocalConnector(TestCase):
         host = inventory.get_host("@local")
 
         command = "echo Šablony"
-        self.fake_popen_mock().returncode = 0
+        self.process_mock.returncode = 0
+        self.process_mock.communicate.return_value = ("Šablony\n".encode("utf-8"), b"")
 
         host.run_shell_command(command, _stdin=["hello", "abc"], print_output=True)
-        self.fake_popen_mock().stdin.write.assert_has_calls(
-            [
-                call(b"hello\n"),
-                call(b"abc\n"),
-            ],
-        )
+        assert self.process_mock.communicate.await_args_list[-1] == call(b"hello\nabc\n")
 
     def test_write_stdin_io_object(self):
         inventory = make_inventory(hosts=("@local",))
@@ -223,12 +225,8 @@ class TestLocalConnector(TestCase):
         host = inventory.get_host("@local")
 
         command = "echo Šablony"
-        self.fake_popen_mock().returncode = 0
+        self.process_mock.returncode = 0
+        self.process_mock.communicate.return_value = ("Šablony\n".encode("utf-8"), b"")
 
         host.run_shell_command(command, _stdin=StringIO("hello\nabc"), print_output=True)
-        self.fake_popen_mock().stdin.write.assert_has_calls(
-            [
-                call(b"hello\n"),
-                call(b"abc\n"),
-            ],
-        )
+        assert self.process_mock.communicate.await_args_list[-1] == call(b"hello\nabc\n")

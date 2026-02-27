@@ -10,8 +10,8 @@ from socket import error as socket_error, timeout as timeout_error
 from typing import IO, TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
 
 import click
-from jinja2 import Environment, FileSystemLoader, StrictUndefined, Template
-from paramiko import SSHException
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
+import asyncssh
 from typeguard import TypeCheckError, check_type
 
 import pyinfra
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 BLOCKSIZE = 65536
 
 # Caches
-TEMPLATES: Dict[str, Template] = {}
+TEMPLATES: Dict[Any, Any] = {}
 FILE_SHAS: Dict[Any, Any] = {}
 
 PYINFRA_INSTALL_DIR = path.normpath(path.join(path.dirname(__file__), ".."))
@@ -139,9 +139,7 @@ def get_operation_order_from_stack(state: "State"):
     return line_numbers
 
 
-def get_template(
-    filename_or_io: str | IO, jinja_env_kwargs: dict[str, Any] | None = None
-) -> Template:
+def get_template(filename_or_io: str | IO, jinja_env_kwargs: dict[str, Any] | None = None):
     """
     Gets a jinja2 ``Template`` object for the input filename or string, with caching
     based on the filename of the template, or the SHA1 of the input string.
@@ -157,11 +155,10 @@ def get_template(
     with file_data as file_io:
         template_string = file_io.read()
 
-    default_loader = FileSystemLoader(getcwd())
     template = Environment(
         undefined=StrictUndefined,
         keep_trailing_newline=True,
-        loader=jinja_env_kwargs.pop("loader", default_loader),
+        loader=FileSystemLoader(getcwd()),
         **jinja_env_kwargs,
     ).from_string(template_string)
 
@@ -222,11 +219,7 @@ def log_operation_start(
 
 
 def log_error_or_warning(
-    host: "Host",
-    ignore_errors: bool,
-    description: str = "",
-    continue_on_error: bool = False,
-    exception: Exception | None = None,
+    host: "Host", ignore_errors: bool, description: str = "", continue_on_error: bool = False
 ) -> None:
     log_func = logger.error
     log_color = "red"
@@ -240,16 +233,6 @@ def log_error_or_warning(
         )
         if description:
             log_text = f"{log_text}: "
-
-    if exception:
-        exc = exception.__cause__ or exception
-        exc_text = "{0}: {1}".format(type(exc).__name__, exc)
-        log_func(
-            "{0}{1}".format(
-                host.print_prefix,
-                click.style(exc_text, log_color),
-            ),
-        )
 
     log_func(
         "{0}{1}{2}".format(
@@ -274,7 +257,7 @@ def log_host_command_error(host: "Host", e: Exception, timeout: int | None = 0) 
             ),
         )
 
-    elif isinstance(e, (socket_error, SSHException)):
+    elif isinstance(e, (socket_error, asyncssh.Error)):
         logger.error(
             "{0}{1}".format(
                 host.print_prefix,

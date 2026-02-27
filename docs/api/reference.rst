@@ -13,7 +13,7 @@ The pyinfra API is designed to be used as follows:
 3. Now that's done, we execute it:
     - ``pyinfra.api.operations.run_ops``
 
-Currently the best example of this in action is in `pyinfra's own main.py <https://github.com/pyinfra-dev/pyinfra/blob/3.x/pyinfra_cli/main.py>`_.
+Currently the best example of this in action is in `pyinfra's own main.py <https://github.com/pyinfra-dev/pyinfra/blob/4.x/pyinfra_cli/main.py>`_.
 
 .. toctree::
     :caption: Core API

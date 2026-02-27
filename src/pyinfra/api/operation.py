@@ -7,6 +7,7 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 
 from __future__ import annotations
 
+from contextvars import ContextVar, Token
 from functools import wraps
 from inspect import signature
 from io import StringIO
@@ -35,6 +36,27 @@ from .util import (
 )
 
 op_meta_default = object()
+
+
+_current_async_context: ContextVar[Any | None] = ContextVar(
+    "pyinfra_current_async_context",
+    default=None,
+)
+def push_async_context(ctx: Any) -> Token:
+    return _current_async_context.set(ctx)
+
+
+def reset_async_context(token: Token) -> None:
+    _current_async_context.reset(token)
+
+
+def suspend_async_context() -> Token:
+    return _current_async_context.set(None)
+
+
+def get_async_context() -> Any | None:
+    return _current_async_context.get()
+
 
 if TYPE_CHECKING:
     from pyinfra.connectors.util import CommandOutput
@@ -221,6 +243,9 @@ def add_op(state: State, op_func, *args, **kwargs):
             ),
         )
 
+    if state.current_stage < StateStage.Prepare:
+        state.set_stage(StateStage.Prepare)
+
     hosts = kwargs.pop("host", state.inventory.iter_active_hosts())
     if isinstance(hosts, Host):
         hosts = [hosts]
@@ -263,6 +288,10 @@ def operation(
 def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> PyinfraOperation[P]:
     @wraps(func)
     def decorated_func(*args: P.args, **kwargs: P.kwargs) -> OperationMeta:
+        async_context = get_async_context()
+        if async_context is not None:
+            return async_context._call_wrapped_operation(decorated_func, args, kwargs)
+
         state = context.state
         host = context.host
 

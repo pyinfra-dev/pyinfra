@@ -9,10 +9,10 @@ from io import IOBase
 from os import path
 from pathlib import Path
 from types import CodeType, FunctionType, ModuleType
-from typing import Callable
+from typing import Any, Callable, TYPE_CHECKING
 
+import asyncio
 import click
-import gevent
 
 from pyinfra import logger, state
 from pyinfra.api.command import PyinfraCommand
@@ -26,13 +26,16 @@ from pyinfra.api.state import (
     StateOperationHostData,
     StateOperationMeta,
 )
-from pyinfra.context import ctx_config, ctx_host
+from pyinfra.context import ctx_config, ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
 from .exceptions import CliError, UnexpectedExternalError
 
 # Cache for compiled Python deploy code
 PYTHON_CODES: dict[str, CodeType] = {}
+
+if TYPE_CHECKING:
+    from pyinfra.api.host import Host
 
 
 def is_subdir(child, parent):
@@ -201,33 +204,73 @@ def try_import_module_attribute(path, prefix=None, raise_for_none=True):
     return attr
 
 
-def _parallel_load_hosts(state: "State", callback: Callable, name: str):
+async def _parallel_load_hosts_async(state: "State", callback: Callable, name: str) -> None:
     def load_file(local_host):
         try:
-            with ctx_config.use(state.config.copy()):
-                with ctx_host.use(local_host):
-                    callback()
-                    logger.info(
-                        "{0}{1} {2}".format(
-                            local_host.print_prefix,
-                            click.style("Ready:", "green"),
-                            click.style(name, bold=True),
-                        ),
-                    )
-        except Exception as e:
+            with ctx_state.use(state):
+                with ctx_config.use(state.config.copy()):
+                    with ctx_host.use(local_host):
+                        callback()
+                        logger.info(
+                            "{0}{1} {2}".format(
+                                local_host.print_prefix,
+                                click.style("Ready:", "green"),
+                                click.style(name, bold=True),
+                            ),
+                        )
+        except Exception as e:  # noqa: BLE001
             return e
+        return None
 
-    greenlet_to_host = {
-        state.pool.spawn(load_file, host): host for host in state.inventory.iter_active_hosts()
-    }
+    hosts = list(state.inventory.iter_active_hosts())
 
-    with progress_spinner(greenlet_to_host.values()) as progress:
-        for greenlet in gevent.iwait(greenlet_to_host.keys()):
-            host = greenlet_to_host[greenlet]
-            result = greenlet.get()
-            if isinstance(result, Exception):
-                raise result
-            progress(host)
+    if not hosts:
+        return
+
+    task_to_host = [
+        (
+            asyncio.create_task(state.run_in_executor(load_file, host)),
+            host,
+        )
+        for host in hosts
+    ]
+
+    with progress_spinner(hosts) as progress:
+
+        def _make_progress_callback(target_host: "Host") -> Callable[[asyncio.Future[Any]], None]:
+            def _callback(_task: asyncio.Future[Any]) -> None:
+                progress(target_host)
+
+            return _callback
+
+        for task, host in task_to_host:
+            task.add_done_callback(_make_progress_callback(host))
+
+        results = await asyncio.gather(
+            *(task for task, _ in task_to_host),
+            return_exceptions=True,
+        )
+
+    exceptions: list[Exception] = []
+
+    for (_task, _host), result in zip(task_to_host, results, strict=True):
+        if isinstance(result, Exception):
+            exceptions.append(result)
+
+    if exceptions:
+        raise exceptions[0]
+
+
+def _parallel_load_hosts(state: "State", callback: Callable, name: str) -> None:
+    try:
+        asyncio.run(_parallel_load_hosts_async(state, callback, name))
+    except RuntimeError as exc:
+        if "already running" in str(exc):
+            raise RuntimeError(
+                "Parallel host loading cannot run while an asyncio loop is active. "
+                "Use the async helper instead.",
+            ) from exc
+        raise
 
 
 def load_deploy_file(state: "State", filename):

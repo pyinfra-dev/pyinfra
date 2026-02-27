@@ -2,21 +2,26 @@ from __future__ import annotations
 
 import json
 import os
+from io import IOBase
 from tempfile import mkstemp
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, IO, Union, Any, cast
 
 import click
 from typing_extensions import TypedDict, Unpack, override
 
-from pyinfra import local, logger
+from pyinfra import logger
 from pyinfra.api import QuoteString, StringCommand
-from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
+from pyinfra.api.exceptions import ConnectError, InventoryError
 from pyinfra.api.util import get_file_io
 from pyinfra.progress import progress_spinner
 
 from .base import BaseConnector, DataMeta
 from .local import LocalConnector
-from .util import CommandOutput, extract_control_arguments, make_unix_command_for_host
+from .util import (
+    CommandOutput,
+    async_make_unix_command_for_host,
+    extract_control_arguments,
+)
 
 if TYPE_CHECKING:
     from pyinfra.api.arguments import ConnectorArguments
@@ -97,42 +102,68 @@ class DockerConnector(BaseConnector):
         )
 
     # 2 helper functions
-    def _find_start_docker_container(self, container_id) -> tuple[str, bool]:
-        docker_info = local.shell(f"{self.docker_cmd} container inspect {container_id}")
-        assert isinstance(docker_info, str)
-        docker_info = json.loads(docker_info)[0]
-        if docker_info["State"]["Running"] is False:
+    async def _find_start_docker_container(self, container_id: str) -> tuple[str, bool]:
+        status, output = await self.local.run_shell_command(
+            StringCommand(self.docker_cmd, "container", "inspect", container_id),
+        )
+
+        if not status:
+            raise ConnectError(output.stderr)
+
+        try:
+            docker_info = json.loads(output.stdout)[0]
+        except (json.JSONDecodeError, IndexError) as exc:
+            raise ConnectError(f"Failed to parse {self.docker_cmd} inspect output") from exc
+
+        if not docker_info["State"].get("Running"):
             logger.info(f"Starting stopped container: {container_id}")
-            local.shell(f"{self.docker_cmd} container start {container_id}")
+            start_status, start_output = await self.local.run_shell_command(
+                StringCommand(self.docker_cmd, "container", "start", container_id),
+            )
+            if not start_status:
+                raise ConnectError(start_output.stderr)
             return container_id, False
+
         return container_id, True
 
-    def _start_docker_image(self, image_name):
-        try:
-            return local.shell(
-                f"{self.docker_cmd} run -d {image_name} tail -f /dev/null",
-                splitlines=True,
-            )[-1]  # last line is the container ID
-        except PyinfraError as e:
-            raise ConnectError(e.args[0])
+    async def _start_docker_image(self, image_name: str) -> str:
+        status, output = await self.local.run_shell_command(
+            StringCommand(
+                self.docker_cmd,
+                "run",
+                "-d",
+                image_name,
+                "tail",
+                "-f",
+                "/dev/null",
+            ),
+        )
+
+        if not status:
+            raise ConnectError(output.stderr)
+
+        if not output.stdout_lines:
+            raise ConnectError(f"No container ID returned by {self.docker_cmd} run")
+
+        return output.stdout_lines[-1]
 
     @override
-    def connect(self) -> None:
-        self.local.connect()
+    async def connect(self) -> None:
+        await self.local.connect()
 
         docker_identifier = self.data["docker_identifier"]
         with progress_spinner({f"prepare {self.docker_cmd} container"}):
             try:
-                self.container_id, was_running = self._find_start_docker_container(
+                self.container_id, was_running = await self._find_start_docker_container(
                     docker_identifier
                 )
                 if was_running:
                     self.no_stop = True
-            except PyinfraError:
-                self.container_id = self._start_docker_image(docker_identifier)
+            except ConnectError:
+                self.container_id = await self._start_docker_image(docker_identifier)
 
     @override
-    def disconnect(self) -> None:
+    async def disconnect(self) -> None:
         container_id = self.container_id
 
         if self.no_stop:
@@ -146,14 +177,22 @@ class DockerConnector(BaseConnector):
             return
 
         with progress_spinner({f"{self.docker_cmd} commit"}):
-            image_id = local.shell(f"{self.docker_cmd} commit {container_id}", splitlines=True)[-1][
-                7:19
-            ]  # last line is the image ID, get sha256:[XXXXXXXXXX]...
+            status, output = await self.local.run_shell_command(
+                StringCommand(self.docker_cmd, "commit", container_id),
+            )
+            if not status:
+                raise ConnectError(output.stderr)
+            if not output.stdout_lines:
+                raise ConnectError("No image ID returned by commit")
+
+            image_id = output.stdout_lines[-1][7:19]
 
         with progress_spinner({f"{self.docker_cmd} rm"}):
-            local.shell(
-                f"{self.docker_cmd} rm -f {container_id}",
+            status, output = await self.local.run_shell_command(
+                StringCommand(self.docker_cmd, "rm", "-f", container_id),
             )
+            if not status:
+                raise ConnectError(output.stderr)
 
         logger.info(
             "{0}{1} build complete, image ID: {2}".format(
@@ -164,7 +203,7 @@ class DockerConnector(BaseConnector):
         )
 
     @override
-    def run_shell_command(
+    async def run_shell_command(
         self,
         command: StringCommand,
         print_output: bool = False,
@@ -175,7 +214,12 @@ class DockerConnector(BaseConnector):
 
         container_id = self.container_id
 
-        command = make_unix_command_for_host(self.state, self.host, command, **arguments)
+        command = await async_make_unix_command_for_host(
+            self.state,
+            self.host,
+            command,
+            **arguments,
+        )
         command = StringCommand(QuoteString(command))
 
         docker_flags = "-it" if local_arguments.get("_get_pty") else "-i"
@@ -189,7 +233,7 @@ class DockerConnector(BaseConnector):
             command,
         )
 
-        return self.local.run_shell_command(
+        return await self.local.run_shell_command(
             docker_command,
             print_output=print_output,
             print_input=print_input,
@@ -197,14 +241,14 @@ class DockerConnector(BaseConnector):
         )
 
     @override
-    def put_file(
+    async def put_file(
         self,
-        filename_or_io,
-        remote_filename,
-        remote_temp_filename=None,  # ignored
-        print_output=False,
-        print_input=False,
-        **kwargs,  # ignored (sudo/etc)
+        filename_or_io: Union[str, IOBase],
+        remote_filename: str,
+        remote_temp_filename: str | None = None,  # ignored
+        print_output: bool = False,
+        print_input: bool = False,
+        **arguments: Unpack["ConnectorArguments"],  # ignored (sudo/etc)
     ) -> bool:
         """
         Upload a file/IO object to the target container by copying it to a
@@ -215,7 +259,7 @@ class DockerConnector(BaseConnector):
 
         try:
             # Load our file or IO object and write it to the temporary file
-            with get_file_io(filename_or_io) as file_io:
+            with get_file_io(cast(Union[str, IO[Any]], filename_or_io)) as file_io:
                 with open(temp_filename, "wb") as temp_f:
                     data = file_io.read()
 
@@ -231,7 +275,7 @@ class DockerConnector(BaseConnector):
                 f"{self.container_id}:{remote_filename}",
             )
 
-            status, output = self.local.run_shell_command(
+            status, output = await self.local.run_shell_command(
                 docker_command,
                 print_output=print_output,
                 print_input=print_input,
@@ -255,14 +299,14 @@ class DockerConnector(BaseConnector):
         return status
 
     @override
-    def get_file(
+    async def get_file(
         self,
-        remote_filename,
-        filename_or_io,
-        remote_temp_filename=None,  # ignored
-        print_output=False,
-        print_input=False,
-        **kwargs,  # ignored (sudo/etc)
+        remote_filename: str,
+        filename_or_io: Union[str, IOBase],
+        remote_temp_filename: str | None = None,  # ignored
+        print_output: bool = False,
+        print_input: bool = False,
+        **arguments: Unpack["ConnectorArguments"],  # ignored (sudo/etc)
     ) -> bool:
         """
         Download a file from the target container by copying it to a temporary
@@ -279,7 +323,7 @@ class DockerConnector(BaseConnector):
                 temp_filename,
             )
 
-            status, output = self.local.run_shell_command(
+            status, output = await self.local.run_shell_command(
                 docker_command,
                 print_output=print_output,
                 print_input=print_input,
@@ -287,7 +331,7 @@ class DockerConnector(BaseConnector):
 
             # Load the temporary file and write it to our file or IO object
             with open(temp_filename, "rb") as temp_f:
-                with get_file_io(filename_or_io, "wb") as file_io:
+                with get_file_io(cast(Union[str, IO[Any]], filename_or_io), "wb") as file_io:
                     data = temp_f.read()
                     file_io.write(data)
         finally:
@@ -358,7 +402,7 @@ class PodmanConnector(DockerConnector):
 
     # Duplicate function definition to swap the docstring.
     @override
-    def put_file(
+    async def put_file(
         self,
         filename_or_io,
         remote_filename,
@@ -371,7 +415,7 @@ class PodmanConnector(DockerConnector):
         Upload a file/IO object to the target container by copying it to a
         temporary location and then uploading it into the container using ``podman cp``.
         """
-        return super().put_file(
+        return await super().put_file(
             filename_or_io,
             remote_filename,
             remote_temp_filename,  # ignored

@@ -16,6 +16,8 @@ from .context import config, host, init_base_classes, inventory, state  # noqa
 # Setup package level version
 from .version import __version__  # noqa
 
+from .async_context import AsyncContext as AsyncContext, AsyncHostContext as AsyncHostContext  # noqa: E402,F401
+
 # Initialise base classes - this sets the context modules to point at the underlying
 # class objects (Host, etc), which makes ipython/etc work as expected.
 init_base_classes()

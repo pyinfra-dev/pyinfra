@@ -1,9 +1,15 @@
 Using the API
 =============
 
-In addition to :doc:`the pyinfra CLI <../cli>`, pyinfra provides a full Python API. As of ``v3`` this API can be considered mostly stable. See the :doc:`./reference`.
+In addition to :doc:`the pyinfra CLI <../cli>`, pyinfra provides a full Python API. As of ``v4`` this API can be considered mostly stable. See the :doc:`./reference`.
 
-You can also reference `pyinfra's own main.py <https://github.com/pyinfra-dev/pyinfra/blob/3.x/pyinfra_cli/main.py>`_, and the `pyinfra API source code <https://github.com/pyinfra-dev/pyinfra/tree/3.x/pyinfra/api>`_.
+You can also reference `pyinfra's own main.py <https://github.com/pyinfra-dev/pyinfra/blob/4.x/pyinfra_cli/main.py>`_, and the `pyinfra API source code <https://github.com/pyinfra-dev/pyinfra/tree/4.x/pyinfra/api>`_.
+
+Context Helpers
+---------------
+
+Async and sync helpers for running individual operations and facts are
+documented in :doc:`./context`.
 
 Full Example
 ------------
@@ -24,15 +30,15 @@ Basic Localhost Example
    from pyinfra.operations import server
 
    # Define your inventory (@local means execute on localhost using subprocess)
-   # https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.inventory.html
+   # https://docs.pyinfra.com/en/4.x/apidoc/pyinfra.api.inventory.html
    inventory = Inventory((["@local"], {}))
 
    # Define any config you need
-   # https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.config.html
+   # https://docs.pyinfra.com/en/4.x/apidoc/pyinfra.api.config.html
    config = Config(SUDO=True)
 
    # Set up the state object
-   # https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.state.html
+   # https://docs.pyinfra.com/en/4.x/apidoc/pyinfra.api.state.html
    state = State(inventory=inventory, config=config)
 
    # Connect to all the hosts
@@ -62,5 +68,5 @@ Basic Localhost Example
    print(result2.changed, result2[host].stdout, result2[host].stderr)
 
    # We can also get facts for all the hosts
-   # https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.facts.html
+   # https://docs.pyinfra.com/en/4.x/apidoc/pyinfra.api.facts.html
    print(get_facts(state, Os))

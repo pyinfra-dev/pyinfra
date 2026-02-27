@@ -1,14 +1,14 @@
 from __future__ import annotations
 
+import asyncio
+import contextvars
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from enum import IntEnum
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
-from typing import TYPE_CHECKING, Callable, Iterator, Optional
-
-from gevent.pool import Pool
-from paramiko import PKey
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Optional, TypeVar
 
 from pyinfra import logger
 
@@ -21,6 +21,9 @@ if TYPE_CHECKING:
     from pyinfra.api.host import Host
     from pyinfra.api.inventory import Inventory
     from pyinfra.api.operation import OperationMeta
+
+
+T = TypeVar("T")
 
 
 # Work out the max parallel we can achieve with the open files limit of the user/process,
@@ -155,8 +158,8 @@ class State:
     # A pyinfra.api.Config
     config: "Config"
 
-    # Main gevent pool
-    pool: "Pool"
+    # Main executor used for parallel work
+    executor: ThreadPoolExecutor | None = None
 
     # Current stage this state is in
     current_stage: StateStage = StateStage.Setup
@@ -239,12 +242,13 @@ class State:
 
         self.callback_handlers: list[BaseStateCallback] = []
 
-        # Setup greenlet pools
-        self.pool = Pool(config.PARALLEL)
-        self.fact_pool = Pool(config.PARALLEL)
+        # Setup executor for running work in parallel
+        max_workers = config.PARALLEL or min(len(inventory), MAX_PARALLEL) or 1
+        self.executor = ThreadPoolExecutor(max_workers=max_workers)
 
-        # Private keys
-        self.private_keys: dict[str, PKey] = {}
+        # Cached private keys (asyncssh key objects) and any associated certificates
+        self.private_keys: dict[str, Any] = {}
+        self.private_key_certs: dict[str, list[Any]] = {}
 
         # Assign inventory/config
         self.inventory = inventory
@@ -280,6 +284,23 @@ class State:
             host.init(self)
 
         self.initialised = True
+
+    async def run_in_executor(self, func: Callable[..., T], *args, **kwargs) -> T:
+        if self.executor is None:
+            raise RuntimeError("State executor not initialised")
+
+        loop = asyncio.get_running_loop()
+        context = contextvars.copy_context()
+
+        def _call_with_context() -> T:
+            return context.run(func, *args, **kwargs)
+
+        return await loop.run_in_executor(self.executor, _call_with_context)
+
+    def shutdown_executor(self, wait: bool = True) -> None:
+        if self.executor is not None:
+            self.executor.shutdown(wait=wait)
+            self.executor = None
 
     def set_stage(self, stage: StateStage) -> None:
         if stage < self.current_stage:

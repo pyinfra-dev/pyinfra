@@ -16,9 +16,9 @@ from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
 from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, Optional, Type, TypeVar, cast
 
+import asyncio
 import click
-import gevent
-from paramiko import SSHException
+import asyncssh
 from typing_extensions import override
 
 from pyinfra import logger
@@ -144,26 +144,67 @@ def _handle_fact_kwargs(state: "State", host: "Host", cls, args, kwargs):
     return fact_kwargs, global_kwargs
 
 
-def get_facts(state, *args, **kwargs):
+async def get_facts_async(state, *args, **kwargs):
     def get_host_fact(host, *args, **kwargs):
-        with ctx_host.use(host):
-            return get_fact(state, host, *args, **kwargs)
+        with ctx_state.use(state):
+            with ctx_host.use(host):
+                return get_fact(state, host, *args, **kwargs)
 
-    with ctx_state.use(state):
-        greenlet_to_host = {
-            state.pool.spawn(get_host_fact, host, *args, **kwargs): host
-            for host in state.inventory.iter_active_hosts()
-        }
+    hosts = list(state.inventory.iter_active_hosts())
+    results: dict["Host", Any] = {}
 
-    results = {}
+    if not hosts:
+        return results
 
-    with progress_spinner(greenlet_to_host.values()) as progress:
-        for greenlet in gevent.iwait(greenlet_to_host.keys()):
-            host = greenlet_to_host[greenlet]
-            results[host] = greenlet.get()
-            progress(host)
+    task_to_host = [
+        (
+            asyncio.create_task(state.run_in_executor(get_host_fact, host, *args, **kwargs)),
+            host,
+        )
+        for host in hosts
+    ]
+
+    with progress_spinner(hosts) as progress:
+
+        def _make_progress_callback(target_host: "Host") -> Callable[[asyncio.Future[Any]], None]:
+            def _callback(_task: asyncio.Future[Any]) -> None:
+                progress(target_host)
+
+            return _callback
+
+        for task, host in task_to_host:
+            task.add_done_callback(_make_progress_callback(host))
+
+        task_results: list[BaseException | Any] = await asyncio.gather(
+            *(task for task, _ in task_to_host),
+            return_exceptions=True,
+        )
+
+    first_exception: BaseException | None = None
+
+    for (_task, host), result in zip(task_to_host, task_results, strict=True):
+        if isinstance(result, BaseException):
+            if first_exception is None:
+                first_exception = result
+        else:
+            results[host] = result
+
+    if first_exception is not None:
+        raise first_exception
 
     return results
+
+
+def get_facts(state, *args, **kwargs):
+    try:
+        return asyncio.run(get_facts_async(state, *args, **kwargs))
+    except RuntimeError as exc:
+        if "already running" in str(exc):
+            raise RuntimeError(
+                "get_facts cannot be called while an asyncio event loop is running. "
+                "Use get_facts_async instead.",
+            ) from exc
+        raise
 
 
 def get_fact(
@@ -257,7 +298,7 @@ def _get_fact(
             print_input=state.print_fact_input,
             **executor_kwargs,
         )
-    except (timeout_error, socket_error, SSHException) as e:
+    except (timeout_error, socket_error, asyncssh.Error) as e:
         log_host_command_error(
             host,
             e,

@@ -1,6 +1,7 @@
 import os
+from io import IOBase
 from tempfile import mkstemp
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, IO, Union, cast
 
 import click
 from typing_extensions import Unpack, override
@@ -13,7 +14,7 @@ from pyinfra.progress import progress_spinner
 
 from .base import BaseConnector
 from .ssh import SSHConnector
-from .util import extract_control_arguments, make_unix_command_for_host
+from .util import async_make_unix_command_for_host, extract_control_arguments
 
 if TYPE_CHECKING:
     from pyinfra.api.arguments import ConnectorArguments
@@ -70,8 +71,8 @@ class DockerSSHConnector(BaseConnector):
         )
 
     @override
-    def connect(self) -> None:
-        self.ssh.connect()
+    async def connect(self) -> None:
+        await self.ssh.connect()
 
         if "docker_container_id" in self.host.host_data:  # user can provide a docker_container_id
             return
@@ -79,7 +80,7 @@ class DockerSSHConnector(BaseConnector):
         try:
             with progress_spinner({"docker run"}):
                 # last line is the container ID
-                status, output = self.ssh.run_shell_command(
+                status, output = await self.ssh.run_shell_command(
                     StringCommand(
                         "docker",
                         "run",
@@ -100,17 +101,19 @@ class DockerSSHConnector(BaseConnector):
         self.host.host_data["docker_container_id"] = container_id
 
     @override
-    def disconnect(self) -> None:
+    async def disconnect(self) -> None:
         container_id = self.host.host_data["docker_container_id"][:12]
 
         with progress_spinner({"docker commit"}):
-            _, output = self.ssh.run_shell_command(StringCommand("docker", "commit", container_id))
+            _, output = await self.ssh.run_shell_command(
+                StringCommand("docker", "commit", container_id)
+            )
 
             # Last line is the image ID, get sha256:[XXXXXXXXXX]...
             image_id = output.stdout_lines[-1][7:19]
 
         with progress_spinner({"docker rm"}):
-            self.ssh.run_shell_command(
+            await self.ssh.run_shell_command(
                 StringCommand("docker", "rm", "-f", container_id),
             )
 
@@ -122,7 +125,7 @@ class DockerSSHConnector(BaseConnector):
         )
 
     @override
-    def run_shell_command(
+    async def run_shell_command(
         self,
         command,
         print_output: bool = False,
@@ -133,7 +136,12 @@ class DockerSSHConnector(BaseConnector):
 
         container_id = self.host.host_data["docker_container_id"]
 
-        command = make_unix_command_for_host(self.state, self.host, command, **arguments)
+        command = await async_make_unix_command_for_host(
+            self.state,
+            self.host,
+            command,
+            **arguments,
+        )
         command = QuoteString(command)
 
         docker_flags = "-it" if local_arguments.get("_get_pty") else "-i"
@@ -147,7 +155,7 @@ class DockerSSHConnector(BaseConnector):
             command,
         )
 
-        return self.ssh.run_shell_command(
+        return await self.ssh.run_shell_command(
             docker_command,
             print_output=print_output,
             print_input=print_input,
@@ -155,15 +163,15 @@ class DockerSSHConnector(BaseConnector):
         )
 
     @override
-    def put_file(
+    async def put_file(
         self,
-        filename_or_io,
-        remote_filename,
-        remote_temp_filename=None,
+        filename_or_io: Union[str, IOBase],
+        remote_filename: str,
+        remote_temp_filename: str | None = None,
         print_output: bool = False,
         print_input: bool = False,
-        **kwargs,  # ignored (sudo/etc)
-    ):
+        **arguments: Unpack["ConnectorArguments"],  # ignored (sudo/etc)
+    ) -> bool:
         """
         Upload a file/IO object to the target Docker container by copying it to a
         temporary location and then uploading it into the container using ``docker cp``.
@@ -175,7 +183,7 @@ class DockerSSHConnector(BaseConnector):
         )
 
         # Load our file or IO object and write it to the temporary file
-        with get_file_io(filename_or_io) as file_io:
+        with get_file_io(cast(Union[str, IO[Any]], filename_or_io)) as file_io:
             with open(local_temp_filename, "wb") as temp_f:
                 data = file_io.read()
 
@@ -185,7 +193,7 @@ class DockerSSHConnector(BaseConnector):
                 temp_f.write(data)
 
         # upload file to remote server
-        ssh_status = self.ssh.put_file(local_temp_filename, remote_temp_filename)
+        ssh_status = await self.ssh.put_file(local_temp_filename, remote_temp_filename)
         if not ssh_status:
             raise IOError("Failed to copy file over ssh")
 
@@ -198,7 +206,7 @@ class DockerSSHConnector(BaseConnector):
                 f"{docker_id}:{remote_filename}",
             )
 
-            status, output = self.ssh.run_shell_command(
+            status, output = await self.ssh.run_shell_command(
                 docker_command,
                 print_output=print_output,
                 print_input=print_input,
@@ -206,7 +214,7 @@ class DockerSSHConnector(BaseConnector):
         finally:
             os.close(fd)
             os.remove(local_temp_filename)
-            self.remote_remove(
+            await self.remote_remove(
                 local_temp_filename,
                 print_output=print_output,
                 print_input=print_input,
@@ -227,15 +235,15 @@ class DockerSSHConnector(BaseConnector):
         return status
 
     @override
-    def get_file(
+    async def get_file(
         self,
-        remote_filename,
-        filename_or_io,
-        remote_temp_filename=None,
+        remote_filename: str,
+        filename_or_io: Union[str, IOBase],
+        remote_temp_filename: str | None = None,
         print_output: bool = False,
         print_input: bool = False,
-        **kwargs,  # ignored (sudo/etc)
-    ):
+        **arguments: Unpack["ConnectorArguments"],  # ignored (sudo/etc)
+    ) -> bool:
         """
         Download a file from the target Docker container by copying it to a temporary
         location and then reading that into our final file/IO object.
@@ -252,15 +260,15 @@ class DockerSSHConnector(BaseConnector):
                 remote_temp_filename,
             )
 
-            status, output = self.ssh.run_shell_command(
+            status, output = await self.ssh.run_shell_command(
                 docker_command,
                 print_output=print_output,
                 print_input=print_input,
             )
 
-            ssh_status = self.ssh.get_file(remote_temp_filename, filename_or_io)
+            ssh_status = await self.ssh.get_file(remote_temp_filename, filename_or_io)
         finally:
-            self.remote_remove(
+            await self.remote_remove(
                 remote_temp_filename,
                 print_output=print_output,
                 print_input=print_input,
@@ -283,11 +291,11 @@ class DockerSSHConnector(BaseConnector):
 
         return status
 
-    def remote_remove(self, filename, print_output: bool = False, print_input: bool = False):
+    async def remote_remove(self, filename, print_output: bool = False, print_input: bool = False):
         """
         Deletes a file on a remote machine over ssh.
         """
-        remove_status, output = self.ssh.run_shell_command(
+        remove_status, output = await self.ssh.run_shell_command(
             StringCommand("rm", "-f", filename),
             print_output=print_output,
             print_input=print_input,

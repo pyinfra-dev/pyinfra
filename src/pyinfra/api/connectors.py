@@ -9,10 +9,42 @@ def _load_connector(entrypoint):
 
 
 def get_all_connectors():
-    return {
+    discovered = {
         entrypoint.name: _load_connector(entrypoint)
         for entrypoint in entry_points(group="pyinfra.connectors")
     }
+
+    if "ssh" not in discovered:
+        from pyinfra.connectors.ssh import SSHConnector
+
+        discovered["ssh"] = SSHConnector
+
+    if "local" not in discovered:
+        from pyinfra.connectors.local import LocalConnector
+
+        discovered["local"] = LocalConnector
+
+    if "docker" not in discovered:
+        from pyinfra.connectors.docker import DockerConnector
+
+        discovered["docker"] = DockerConnector
+
+    if "podman" not in discovered:
+        from pyinfra.connectors.docker import PodmanConnector
+
+        discovered["podman"] = PodmanConnector
+
+    if "dockerssh" not in discovered:
+        from pyinfra.connectors.dockerssh import DockerSSHConnector
+
+        discovered["dockerssh"] = DockerSSHConnector
+
+    if "chroot" not in discovered:
+        from pyinfra.connectors.chroot import ChrootConnector
+
+        discovered["chroot"] = ChrootConnector
+
+    return discovered
 
 
 def get_execution_connectors():

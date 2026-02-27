@@ -165,7 +165,6 @@ getitem
 getpeername
 getrlimit
 getsockname
-gevent
 gid
 gpg
 gpgcheck
@@ -271,7 +270,6 @@ openvz
 opkg
 osversion
 pacman
-paramiko
 paramspec
 pardir
 pathlib
