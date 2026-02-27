@@ -15,4 +15,4 @@ class SSHCLIConnector(SSHCommonConnector):
 
     def __init__(self, state, host):
         super().__init__(state, host)
-        self._use_ssh_cli = True
+        self._use_ssh_cli = not bool(self.data.get("ssh_password"))

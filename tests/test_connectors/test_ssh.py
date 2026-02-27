@@ -183,6 +183,38 @@ def test_private_key_certificates_are_loaded(tmp_path):
     assert len(kwargs["client_certs"]) == 1
 
 
+def test_ssh_cli_uses_known_hosts_file(monkeypatch):
+    monkeypatch.setenv("PYINFRA_SSH_CONNECTOR", "ssh-cli")
+
+    inventory = make_inventory(
+        override_data={
+            "ssh_known_hosts_file": "/dev/null",
+            "ssh_strict_host_key_checking": "no",
+        }
+    )
+
+    _state = State(inventory, Config())
+    host = inventory.get_host("somehost")
+    connector = host.connector
+
+    _target, args = connector._build_ssh_cli_args()
+
+    assert "UserKnownHostsFile=/dev/null" in args
+    assert "StrictHostKeyChecking=no" in args
+
+
+def test_ssh_cli_falls_back_to_asyncssh_with_password(monkeypatch):
+    monkeypatch.setenv("PYINFRA_SSH_CONNECTOR", "ssh-cli")
+
+    inventory = make_inventory(override_data={"ssh_password": "password"})
+
+    _state = State(inventory, Config())
+    host = inventory.get_host("somehost")
+    connector = host.connector
+
+    assert connector._use_ssh_cli is False
+
+
 def test_default_ssh_config_is_loaded(fake_asyncssh, tmp_path, monkeypatch):
     home = tmp_path / "home"
     config_dir = home / ".ssh"

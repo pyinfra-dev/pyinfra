@@ -85,11 +85,11 @@ def get_default_ssh_connector_name(execution_connectors=None) -> str:
     if connector_name:
         return connector_name.strip().lstrip("@")
 
-    if "ssh-cli" in execution_connectors and is_ssh_cli_available():
-        return "ssh-cli"
-
     if "async-ssh" in execution_connectors:
         return "async-ssh"
+
+    if "ssh-cli" in execution_connectors and is_ssh_cli_available():
+        return "ssh-cli"
 
     if "ssh" in execution_connectors:
         return "ssh"

@@ -136,6 +136,17 @@ def _normalise_stdin(stdin: Any) -> Optional[str]:
     return str(stdin)
 
 
+_known_hosts_file_locks: dict[str, asyncio.Lock] = {}
+
+
+def _get_known_hosts_file_lock(path: str) -> asyncio.Lock:
+    lock = _known_hosts_file_locks.get(path)
+    if lock is None:
+        lock = asyncio.Lock()
+        _known_hosts_file_locks[path] = lock
+    return lock
+
+
 class _SFTPWrapper:
     def __init__(self, connector: "SSHCommonConnector") -> None:
         self._connector = connector
@@ -205,8 +216,9 @@ class SSHCommonConnector(BaseConnector):
         strict_setting = (self._strict_host_key_checking or "accept-new").lower()
         args.extend(["-o", f"StrictHostKeyChecking={strict_setting}"])
 
-        if self._known_hosts_file:
-            args.extend(["-o", f"UserKnownHostsFile={self._known_hosts_file}"])
+        known_hosts_file = self._resolve_known_hosts_file()
+        if known_hosts_file:
+            args.extend(["-o", f"UserKnownHostsFile={known_hosts_file}"])
 
         ssh_config_file = self.data["ssh_config_file"]
         if ssh_config_file:
@@ -234,8 +246,9 @@ class SSHCommonConnector(BaseConnector):
         strict_setting = (self._strict_host_key_checking or "accept-new").lower()
         args.extend(["-o", f"StrictHostKeyChecking={strict_setting}"])
 
-        if self._known_hosts_file:
-            args.extend(["-o", f"UserKnownHostsFile={self._known_hosts_file}"])
+        known_hosts_file = self._resolve_known_hosts_file()
+        if known_hosts_file:
+            args.extend(["-o", f"UserKnownHostsFile={known_hosts_file}"])
 
         ssh_config_file = self.data["ssh_config_file"]
         if ssh_config_file:
@@ -275,8 +288,10 @@ class SSHCommonConnector(BaseConnector):
         ssh_key_password = self.data["ssh_key_password"]
 
         if ssh_key:
-            key, _certs = self._load_private_key(ssh_key, ssh_key_password)
+            key, certs = self._load_private_key(ssh_key, ssh_key_password)
             kwargs["client_keys"] = [key]
+            if certs:
+                kwargs["client_certs"] = certs
         elif not self.data["ssh_look_for_keys"]:
             kwargs["client_keys"] = []
 
@@ -314,15 +329,7 @@ class SSHCommonConnector(BaseConnector):
                         parsed_configs[0] if len(parsed_configs) == 1 else parsed_configs
                     )
 
-        known_hosts_data = self.data.get("ssh_known_hosts_file") or None
-        if known_hosts_data:
-            known_hosts_path = _expand_user_path(known_hosts_data)
-            if known_hosts_path is None:
-                known_hosts_path = known_hosts_data
-        else:
-            known_hosts_path = _expand_user_path("~/.ssh/known_hosts")
-
-        self._known_hosts_file = known_hosts_path if known_hosts_path else None
+        self._known_hosts_file = self._resolve_known_hosts_file()
 
         if strict_setting in {"no", "off"}:
             kwargs["known_hosts"] = None
@@ -342,6 +349,14 @@ class SSHCommonConnector(BaseConnector):
             kwargs.pop("port")
 
         return hostname, kwargs
+
+    def _resolve_known_hosts_file(self) -> str | None:
+        known_hosts_data = self.data.get("ssh_known_hosts_file") or None
+        if known_hosts_data:
+            known_hosts_path = _expand_user_path(known_hosts_data)
+            return known_hosts_path or known_hosts_data
+
+        return _expand_user_path("~/.ssh/known_hosts")
 
     def _convert_paramiko_kwargs(
         self,
@@ -617,11 +632,23 @@ class SSHCommonConnector(BaseConnector):
         if directory:
             os.makedirs(directory, exist_ok=True)
 
-        try:
-            with open(self._known_hosts_file, "a", encoding="utf-8") as known_hosts:
-                known_hosts.write(line)
-        except OSError as exc:
-            logger.warning("Failed to write host key for %s: %s", entry_host, exc)
+        lock = _get_known_hosts_file_lock(self._known_hosts_file)
+        async with lock:
+            try:
+                existing_lines: set[str] = set()
+                if os.path.exists(self._known_hosts_file):
+                    with open(self._known_hosts_file, encoding="utf-8") as known_hosts:
+                        existing_lines = {
+                            existing.strip() for existing in known_hosts if existing.strip()
+                        }
+
+                if line.strip() in existing_lines:
+                    return
+
+                with open(self._known_hosts_file, "a", encoding="utf-8") as known_hosts:
+                    known_hosts.write(line)
+            except OSError as exc:
+                logger.warning("Failed to write host key for %s: %s", entry_host, exc)
 
     def _load_known_host_keys(self, hostname: str, port: Optional[int]) -> list[asyncssh.SSHKey]:
         if not self._known_hosts_file:
@@ -632,7 +659,7 @@ class SSHCommonConnector(BaseConnector):
 
         try:
             known_hosts = asyncssh.read_known_hosts(self._known_hosts_file)
-        except (OSError, asyncssh.Error) as exc:
+        except (OSError, asyncssh.Error, ValueError) as exc:
             logger.warning("Failed to read known_hosts file %s: %s", self._known_hosts_file, exc)
             return []
 

@@ -75,13 +75,13 @@ class TestInventoryApi(TestCase):
         hosthost.data.somethingelse = {"hello": "world"}
         assert hosthost.data.somethingelse == {"hello": "world"}
 
-    def test_default_connector_prefers_ssh_cli(self):
+    def test_default_connector_prefers_asyncssh(self):
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("PYINFRA_SSH_CONNECTOR", None)
             with patch("pyinfra.api.connectors.is_ssh_cli_available", return_value=True):
                 inventory = Inventory((["somehost"], {}))
 
-        assert inventory.get_host("somehost").connector_cls.__name__ == "SSHCLIConnector"
+        assert inventory.get_host("somehost").connector_cls.__name__ == "AsyncSSHConnector"
 
     def test_default_connector_falls_back_to_asyncssh(self):
         with patch.dict(os.environ, {}, clear=False):
