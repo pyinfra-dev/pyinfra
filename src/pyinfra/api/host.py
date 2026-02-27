@@ -462,11 +462,11 @@ class Host:
     async def disconnect_async(self) -> None:
         self._check_state()
 
+        await remove_any_sudo_askpass_file_async(self)
+
         disconnect_func = getattr(self.connector, "disconnect", None)
         if disconnect_func:
             await disconnect_func()
-
-        await remove_any_sudo_askpass_file_async(self)
 
         self.state.trigger_callbacks("host_disconnect", self)
         self.connected = False

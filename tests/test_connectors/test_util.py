@@ -2,8 +2,16 @@
 
 from unittest import TestCase
 
+import asyncio
+
 from pyinfra.api import Config, State
-from pyinfra.connectors.util import make_unix_command, make_unix_command_for_host
+from pyinfra.connectors.util import (
+    CommandOutput,
+    OutputLine,
+    async_make_unix_command_for_host,
+    make_unix_command,
+    make_unix_command_for_host,
+)
 
 from ..util import make_inventory
 
@@ -99,6 +107,30 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             "'bash -c '\"'\"'cd /opt/somedir && export \"key=value\" "  # shell and export bit
             "&& echo hi'\"'\"''"  # command bit
         )
+
+    def test_async_sudo_password_sets_askpass(self):
+        state = State(make_inventory(), Config())
+        host = state.inventory.get_host("somehost")
+
+        async def fake_run_shell_command_async(*_args, **_kwargs):
+            return True, CommandOutput([OutputLine("stdout", "/tmp/pyinfra-askpass")])
+
+        host.run_shell_command_async = fake_run_shell_command_async
+
+        command = asyncio.run(
+            async_make_unix_command_for_host(
+                state,
+                host,
+                "uptime",
+                _sudo=True,
+                _sudo_password="password",
+            )
+        )
+
+        raw = command.get_raw_value()
+        assert "SUDO_ASKPASS=/tmp/pyinfra-askpass" in raw
+        assert "PYINFRA_SUDO_PASSWORD=password" in raw
+        assert "sudo -H -A -k" in raw
 
     def test_command_exists_su_config_only(self):
         """

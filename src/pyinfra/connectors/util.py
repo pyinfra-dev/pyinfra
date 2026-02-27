@@ -353,16 +353,28 @@ def extract_control_arguments(arguments: "ConnectorArguments") -> "ConnectorArgu
 def _ensure_sudo_askpass_set_for_host(host: "Host"):
     if host.connector_data.get("sudo_askpass_path"):
         return
-    _, output = host.run_shell_command(
+
+    status, output = host.run_shell_command(
         SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SUDO_ASKPASS_ENV_VAR)
     )
+
+    if status is False or not output.stdout_lines or not output.stdout_lines[0]:
+        raise RuntimeError("Failed to create sudo askpass helper")
+
     host.connector_data["sudo_askpass_path"] = shlex.quote(output.stdout_lines[0])
 
 
 async def _ensure_sudo_askpass_set_for_host_async(host: "Host") -> None:
     if host.connector_data.get("sudo_askpass_path"):
         return
-    _, output = await host.run_shell_command_async(SUDO_ASKPASS_COMMAND)
+
+    status, output = await host.run_shell_command_async(
+        SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SUDO_ASKPASS_ENV_VAR)
+    )
+
+    if status is False or not output.stdout_lines or not output.stdout_lines[0]:
+        raise RuntimeError("Failed to create sudo askpass helper")
+
     host.connector_data["sudo_askpass_path"] = shlex.quote(output.stdout_lines[0])
 
 
