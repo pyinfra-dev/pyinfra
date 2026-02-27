@@ -90,18 +90,14 @@ class BaseConnector(abc.ABC):
         object with a new (ie not this) instance of the connector.
         """
 
-    def connect(self) -> None:
-        """
-        Connect this connector instance. Should raise ConnectError exceptions to indicate failure.
-        """
+    async def connect(self) -> None:
+        """Connect this connector instance. Override if work is required."""
 
-    def disconnect(self) -> None:
-        """
-        Disconnect this connector instance.
-        """
+    async def disconnect(self) -> None:
+        """Disconnect this connector instance. Override if cleanup is required."""
 
     @abc.abstractmethod
-    def run_shell_command(
+    async def run_shell_command(
         self,
         command: "StringCommand",
         print_output: bool,
@@ -123,7 +119,7 @@ class BaseConnector(abc.ABC):
         """
 
     @abc.abstractmethod
-    def put_file(
+    async def put_file(
         self,
         filename_or_io: Union[str, IOBase],
         remote_filename: str,
@@ -141,7 +137,7 @@ class BaseConnector(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_file(
+    async def get_file(
         self,
         remote_filename: str,
         filename_or_io: Union[str, IOBase],
@@ -161,7 +157,7 @@ class BaseConnector(abc.ABC):
     def check_can_rsync(self) -> None:
         raise NotImplementedError("This connector does not support rsync")
 
-    def rsync(
+    async def rsync(
         self,
         src: str,
         dest: str,

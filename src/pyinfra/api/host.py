@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import asyncio
+import threading
 from contextlib import contextmanager
 from copy import copy
+from logging import Logger, getLogger
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -19,19 +22,24 @@ from uuid import uuid4
 import click
 from typing_extensions import Unpack, override
 
-from pyinfra import logger
 from pyinfra.connectors.base import BaseConnector
-from pyinfra.connectors.util import CommandOutput, remove_any_sudo_askpass_file
+from pyinfra.connectors.util import CommandOutput, remove_any_sudo_askpass_file_async
 
-from .connectors import get_execution_connector
+from .connectors import get_default_ssh_connector_name, get_execution_connector
 from .exceptions import ConnectError
-from .facts import FactBase, ShortFactBase, get_fact
+from .facts import FactBase, ShortFactBase, get_fact as _load_fact
 from .util import memoize, sha1_hash
 
 if TYPE_CHECKING:
     from pyinfra.api.arguments import AllArguments
     from pyinfra.api.inventory import Inventory
     from pyinfra.api.state import State
+
+
+LOGGER: Logger = getLogger("pyinfra")
+
+
+_THREAD_LOCAL = threading.local()
 
 
 def extract_callable_datas(
@@ -152,7 +160,7 @@ class Host:
         connector_cls=None,
     ):
         if connector_cls is None:
-            connector_cls = get_execution_connector("ssh")
+            connector_cls = get_execution_connector(get_default_ssh_connector_name())
         self.inventory = inventory
         self.groups = groups
         self.connector_cls = connector_cls
@@ -224,11 +232,12 @@ class Host:
             self.print_prefix_padding,
         )
 
-    def log(self, message: str, log_func: Callable[[str], Any] = logger.info) -> None:
-        log_func(f"{self.print_prefix}{message}")
+    def log(self, message: str, log_func: Optional[Callable[[str], Any]] = None) -> None:
+        log_callable: Callable[[str], Any] = log_func or LOGGER.info
+        log_callable(f"{self.print_prefix}{message}")
 
     def log_styled(
-        self, message: str, log_func: Callable[[str], Any] = logger.info, **kwargs
+        self, message: str, log_func: Optional[Callable[[str], Any]] = None, **kwargs
     ) -> None:
         message_styled = click.style(message, **kwargs)
         self.log(message_styled, log_func=log_func)
@@ -241,7 +250,7 @@ class Host:
         Log a description for a noop operation.
         """
 
-        handler = logger.info if self.state.print_noop_info else logger.debug
+        handler = LOGGER.info if self.state.print_noop_info else LOGGER.debug
         handler("{0}noop: {1}".format(self.print_prefix, description))
 
     def when(self, condition: Callable[[], bool]):
@@ -281,16 +290,19 @@ class Host:
 
         # Combine any old _ifs with the new ones
         if old_deploy_kwargs and kwargs:
-            old_ifs = old_deploy_kwargs["_if"]
-            new_ifs = kwargs["_if"]
-            if old_ifs and new_ifs:
-                kwargs["_if"] = old_ifs + new_ifs
+            old_if_value = old_deploy_kwargs.get("_if")
+            new_if_value = kwargs.get("_if")
+            if old_if_value and new_if_value:
+                old_if_iter = old_if_value if isinstance(old_if_value, list) else [old_if_value]
+                new_if_iter = new_if_value if isinstance(new_if_value, list) else [new_if_value]
+                combined = [*old_if_iter, *new_if_iter]
+                kwargs["_if"] = combined
 
         # Set the new values
         self.current_deploy_name = name
         self.current_deploy_kwargs = kwargs
         self.current_deploy_data = data
-        logger.debug(
+        LOGGER.debug(
             "Starting deploy %s (args=%r, data=%r)",
             name,
             kwargs,
@@ -305,7 +317,7 @@ class Host:
         self.current_deploy_kwargs = old_deploy_kwargs
         self.current_deploy_data = old_deploy_data
 
-        logger.debug(
+        LOGGER.debug(
             "Reset deploy to %s (args=%r, data=%r)",
             old_deploy_name,
             old_deploy_kwargs,
@@ -367,7 +379,13 @@ class Host:
         """
         Get a fact for this host, reading from the cache if present.
         """
-        return get_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
+        from pyinfra.api.operation import get_async_context
+
+        async_context = get_async_context()
+        if async_context is not None:
+            return async_context._call_wrapped_fact(self, name_or_cls, args, kwargs)
+
+        return _load_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
 
     # Connector proxy
     #
@@ -376,24 +394,45 @@ class Host:
         if not self.state:
             raise TypeError("Cannot call this function with no state!")
 
+    def _run_async(self, coro):
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            loop = getattr(_THREAD_LOCAL, "loop", None)
+            if loop is None or loop.is_closed():
+                loop = asyncio.new_event_loop()
+                _THREAD_LOCAL.loop = loop
+            return loop.run_until_complete(coro)
+        raise RuntimeError(
+            "Cannot call synchronous host method while an event loop is running in this thread. "
+            "Use the corresponding async method instead.",
+        )
+
     def connect(self, reason=None, show_errors: bool = True, raise_exceptions: bool = False):
         """
         Connect to the host using it's configured connector.
         """
+        return self._run_async(self.connect_async(reason, show_errors, raise_exceptions))
 
+    async def connect_async(
+        self,
+        reason=None,
+        show_errors: bool = True,
+        raise_exceptions: bool = False,
+    ) -> None:
         self._check_state()
         if not self.connected:
             self.state.trigger_callbacks("host_before_connect", self)
 
             try:
-                self.connector.connect()
+                await self.connector.connect()
             except ConnectError as e:
                 if show_errors:
                     log_message = "{0}{1}".format(
                         self.print_prefix,
                         click.style(e.args[0], "red"),
                     )
-                    logger.error(log_message)
+                    LOGGER.error(log_message)
 
                 self.state.trigger_callbacks("host_connect_error", self, e)
 
@@ -410,7 +449,7 @@ class Host:
                         " ({0})".format(reason),
                     )
 
-                logger.info(log_message)
+                LOGGER.info(log_message)
                 self.state.trigger_callbacks("host_connect", self)
                 self.connected = True
 
@@ -418,39 +457,51 @@ class Host:
         """
         Disconnect from the host using it's configured connector.
         """
+        self._run_async(self.disconnect_async())
+
+    async def disconnect_async(self) -> None:
         self._check_state()
 
-        # Disconnect is an optional function for connectors if needed
+        await remove_any_sudo_askpass_file_async(self)
+
         disconnect_func = getattr(self.connector, "disconnect", None)
         if disconnect_func:
-            disconnect_func()
-
-        # TODO: consider whether this should be here!
-        remove_any_sudo_askpass_file(self)
+            await disconnect_func()
 
         self.state.trigger_callbacks("host_disconnect", self)
         self.connected = False
+        if hasattr(self.state, "active_hosts"):
+            self.state.active_hosts.discard(self)
 
     def run_shell_command(self, *args, **kwargs) -> tuple[bool, CommandOutput]:
         """
         Low level method to execute a shell command on the host via it's configured connector.
         """
+        return self._run_async(self.run_shell_command_async(*args, **kwargs))
+
+    async def run_shell_command_async(self, *args, **kwargs) -> tuple[bool, CommandOutput]:
         self._check_state()
-        return self.connector.run_shell_command(*args, **kwargs)
+        return await self.connector.run_shell_command(*args, **kwargs)
 
     def put_file(self, *args, **kwargs) -> bool:
         """
         Low level method to upload a file to the host via it's configured connector.
         """
+        return self._run_async(self.put_file_async(*args, **kwargs))
+
+    async def put_file_async(self, *args, **kwargs) -> bool:
         self._check_state()
-        return self.connector.put_file(*args, **kwargs)
+        return await self.connector.put_file(*args, **kwargs)
 
     def get_file(self, *args, **kwargs) -> bool:
         """
         Low level method to download a file from the host via it's configured connector.
         """
+        return self._run_async(self.get_file_async(*args, **kwargs))
+
+    async def get_file_async(self, *args, **kwargs) -> bool:
         self._check_state()
-        return self.connector.get_file(*args, **kwargs)
+        return await self.connector.get_file(*args, **kwargs)
 
     # Rsync - optional connector specific ability
 
@@ -460,4 +511,8 @@ class Host:
 
     def rsync(self, *args, **kwargs) -> bool:
         self._check_state()
-        return self.connector.rsync(*args, **kwargs)
+        return self._run_async(self.rsync_async(*args, **kwargs))
+
+    async def rsync_async(self, *args, **kwargs) -> bool:
+        self._check_state()
+        return await self.connector.rsync(*args, **kwargs)

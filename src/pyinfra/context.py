@@ -6,10 +6,10 @@ These variables always represent the current executing pyinfra context.
 """
 
 from contextlib import contextmanager
+from contextvars import ContextVar
 from types import ModuleType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Type, cast
 
-from gevent.local import local
 from typing_extensions import override
 
 if TYPE_CHECKING:
@@ -19,12 +19,26 @@ if TYPE_CHECKING:
     from pyinfra.api.state import State
 
 
-class container:
+class _Container:
     module = None
 
 
+class _ContextVarContainer:
+    def __init__(self) -> None:
+        # Unique name for debugging / clarity
+        self._var: ContextVar[Any] = ContextVar(f"pyinfra_ctx_{id(self)}", default=None)
+
+    @property
+    def module(self) -> Any:
+        return self._var.get()
+
+    @module.setter
+    def module(self, value: Any) -> None:
+        self._var.set(value)
+
+
 class ContextObject:
-    _container_cls = container
+    _container_cls: Type[Any] = _Container
     _base_cls: ModuleType
 
     def __init__(self) -> None:
@@ -86,30 +100,30 @@ class ContextObject:
 
 
 class LocalContextObject(ContextObject):
-    _container_cls = local
+    _container_cls = _ContextVarContainer
 
 
 class ContextManager:
-    def __init__(self, key, context_cls):
+    def __init__(self, key: str, context_cls: Type[ContextObject]):
         self.context = context_cls()
 
-    def get(self):
+    def get(self) -> Any:
         return getattr(self.context._container, "module", None)
 
-    def set(self, module):
+    def set(self, module: Any) -> None:
         self.context._container.module = module
 
-    def set_base(self, module):
+    def set_base(self, module: Any) -> None:
         self.context._base_cls = module
 
     def reset(self) -> None:
         self.context._container.module = None
 
-    def isset(self):
+    def isset(self) -> bool:
         return self.get() is not None
 
     @contextmanager
-    def use(self, module):
+    def use(self, module: Any):
         old_module = self.get()
         if old_module is module:
             yield  # if we're double-setting, nothing to do
@@ -119,21 +133,21 @@ class ContextManager:
         self.set(old_module)
 
 
-ctx_state = ContextManager("state", ContextObject)
-state: "State" = ctx_state.context
+ctx_state = ContextManager("state", LocalContextObject)
+state = cast("State", ctx_state.context)
 
-ctx_inventory = ContextManager("inventory", ContextObject)
-inventory: "Inventory" = ctx_inventory.context
+ctx_inventory = ContextManager("inventory", LocalContextObject)
+inventory = cast("Inventory", ctx_inventory.context)
 
 # Config can be modified mid-deploy, so we use a local object here which
 # is based on a copy of the state config.
 ctx_config = ContextManager("config", LocalContextObject)
-config: "Config" = ctx_config.context
+config = cast("Config", ctx_config.context)
 
 # Hosts are prepared in parallel each in a greenlet, so we use a local to
 # point at different host objects in each greenlet.
 ctx_host = ContextManager("host", LocalContextObject)
-host: "Host" = ctx_host.context
+host = cast("Host", ctx_host.context)
 
 
 def init_base_classes() -> None:

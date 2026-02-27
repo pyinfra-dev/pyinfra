@@ -1,11 +1,13 @@
 import socket
 from collections import defaultdict
 from os import listdir, path
+from functools import lru_cache
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
+
+import asyncssh
 
 from pyinfra import logger
 from pyinfra.api.inventory import Inventory
-from pyinfra.connectors.sshuserclient.client import get_ssh_config
 from pyinfra.context import ctx_inventory
 
 from .exceptions import CliError
@@ -122,7 +124,7 @@ def _get_ssh_alias(maybe_host: str) -> Optional[str]:
     logger.debug('Checking if "%s" is an SSH alias', maybe_host)
 
     # Note this does not cover the case where `host.data.ssh_config_file` is used
-    ssh_config = get_ssh_config()
+    ssh_config = _load_default_ssh_config()
 
     if ssh_config is None:
         logger.debug("Could not load SSH config")
@@ -341,3 +343,21 @@ def make_inventory_from_files(
         groups[name] = ([], data)
 
     return Inventory(groups.pop("all"), override_data=override_data, **groups)
+
+
+@lru_cache(maxsize=1)
+def _load_default_ssh_config():
+    config_path = path.expanduser("~/.ssh/config")
+    if not path.exists(config_path):
+        return None
+
+    read_config = getattr(asyncssh, "read_ssh_config", None)
+    if read_config is None:
+        logger.debug("asyncssh.read_ssh_config is unavailable")
+        return None
+
+    try:
+        return read_config(config_path)
+    except (OSError, asyncssh.Error) as exc:
+        logger.debug("Failed to load SSH config at %s: %s", config_path, exc)
+        return None

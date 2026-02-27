@@ -1,19 +1,24 @@
 import os
+from io import IOBase
 from tempfile import mkstemp
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, IO, Optional, Union, cast
 
 import click
 from typing_extensions import Unpack, override
 
-from pyinfra import local, logger
+from pyinfra import logger
 from pyinfra.api import QuoteString, StringCommand
-from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
+from pyinfra.api.exceptions import ConnectError, InventoryError
 from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
 from .base import BaseConnector
 from .local import LocalConnector
-from .util import extract_control_arguments, make_unix_command_for_host
+from .util import (
+    CommandOutput,
+    async_make_unix_command_for_host,
+    extract_control_arguments,
+)
 
 if TYPE_CHECKING:
     from pyinfra.api.arguments import ConnectorArguments
@@ -56,48 +61,55 @@ class ChrootConnector(BaseConnector):
         )
 
     @override
-    def connect(self) -> None:
-        self.local.connect()
+    async def connect(self) -> None:
+        await self.local.connect()
 
         chroot_directory = self.host.data.chroot_directory
 
         try:
             with progress_spinner({"chroot run"}):
-                local.shell(
-                    "chroot {0} ls".format(chroot_directory),
-                    splitlines=True,
+                status, output = await self.local.run_shell_command(
+                    StringCommand("chroot", chroot_directory, "ls"),
                 )
-        except PyinfraError as e:
-            raise ConnectError(e.args[0])
+        except Exception as exc:
+            raise ConnectError(str(exc)) from exc
+
+        if not status:
+            raise ConnectError(output.stderr)
 
         self.host.connector_data["chroot_directory"] = chroot_directory
 
     @override
-    def run_shell_command(
+    async def run_shell_command(
         self,
-        command,
+        command: StringCommand,
         print_output: bool = False,
         print_input: bool = False,
         **command_arguments: Unpack["ConnectorArguments"],
-    ):
+    ) -> tuple[bool, CommandOutput]:
         local_arguments = extract_control_arguments(command_arguments)
 
         chroot_directory = self.host.connector_data["chroot_directory"]
 
-        command = make_unix_command_for_host(self.state, self.host, command, **command_arguments)
-        command = QuoteString(command)
+        unix_command = await async_make_unix_command_for_host(
+            self.state,
+            self.host,
+            command,
+            **command_arguments,
+        )
+        quoted_command = QuoteString(unix_command)
 
-        logger.debug("--> Running chroot command on (%s): %s", chroot_directory, command)
+        logger.debug("--> Running chroot command on (%s): %s", chroot_directory, quoted_command)
 
         chroot_command = StringCommand(
             "chroot",
             chroot_directory,
             "sh",
             "-c",
-            command,
+            quoted_command,
         )
 
-        return self.local.run_shell_command(
+        return await self.local.run_shell_command(
             chroot_command,
             print_output=print_output,
             print_input=print_input,
@@ -105,20 +117,20 @@ class ChrootConnector(BaseConnector):
         )
 
     @override
-    def put_file(
+    async def put_file(
         self,
-        filename_or_io,
-        remote_filename,
-        remote_temp_filename=None,  # ignored
+        filename_or_io: Union[str, IOBase],
+        remote_filename: str,
+        remote_temp_filename: str | None = None,  # ignored
         print_output: bool = False,
         print_input: bool = False,
-        **kwargs,  # ignored (sudo/etc)
-    ):
+        **arguments: Unpack["ConnectorArguments"],  # ignored (sudo/etc)
+    ) -> bool:
         _, temp_filename = mkstemp()
 
         try:
             # Load our file or IO object and write it to the temporary file
-            with get_file_io(filename_or_io) as file_io:
+            with get_file_io(cast(Union[str, IO[Any]], filename_or_io)) as file_io:
                 with open(temp_filename, "wb") as temp_f:
                     data = file_io.read()
 
@@ -134,7 +146,7 @@ class ChrootConnector(BaseConnector):
                 f"{chroot_directory}/{remote_filename}",
             )
 
-            status, output = self.local.run_shell_command(
+            status, output = await self.local.run_shell_command(
                 chroot_command,
                 print_output=print_output,
                 print_input=print_input,
@@ -157,15 +169,15 @@ class ChrootConnector(BaseConnector):
         return status
 
     @override
-    def get_file(
+    async def get_file(
         self,
-        remote_filename,
-        filename_or_io,
-        remote_temp_filename=None,  # ignored
+        remote_filename: str,
+        filename_or_io: Union[str, IOBase],
+        remote_temp_filename: str | None = None,  # ignored
         print_output: bool = False,
         print_input: bool = False,
-        **kwargs,  # ignored (sudo/etc)
-    ):
+        **arguments: Unpack["ConnectorArguments"],  # ignored (sudo/etc)
+    ) -> bool:
         _, temp_filename = mkstemp()
 
         try:
@@ -176,7 +188,7 @@ class ChrootConnector(BaseConnector):
                 temp_filename,
             )
 
-            status, output = self.local.run_shell_command(
+            status, output = await self.local.run_shell_command(
                 chroot_command,
                 print_output=print_output,
                 print_input=print_input,
@@ -184,7 +196,7 @@ class ChrootConnector(BaseConnector):
 
             # Load the temporary file and write it to our file or IO object
             with open(temp_filename, "rb") as temp_f:
-                with get_file_io(filename_or_io, "wb") as file_io:
+                with get_file_io(cast(Union[str, IO[Any]], filename_or_io), "wb") as file_io:
                     data = temp_f.read()
                     data_bytes: bytes
 

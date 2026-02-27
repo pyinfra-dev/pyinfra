@@ -120,12 +120,20 @@ def _parse_ls_timestamp(month: str, day: str, year_or_time: str) -> Optional[dat
 
         # Check if year_or_time is a year (4 digits) or time (HH:MM)
         if ":" in year_or_time:
-            # It's a time, assume current year
-            import time
-
-            current_year = time.gmtime().tm_year
+            # It's a time, infer year from current date. For timestamps that would
+            # otherwise be in the future, assume previous year (matches ls behavior
+            # around year boundaries).
+            now = datetime.now()
             hour, minute = map(int, year_or_time.split(":"))
-            return datetime(current_year, month_num, day_num, hour, minute)
+            timestamp = datetime(now.year, month_num, day_num, hour, minute)
+
+            if timestamp > now:
+                try:
+                    timestamp = timestamp.replace(year=timestamp.year - 1)
+                except ValueError:
+                    timestamp = timestamp.replace(year=timestamp.year - 1, day=28)
+
+            return timestamp
         else:
             # It's a year
             year_num = int(year_or_time)

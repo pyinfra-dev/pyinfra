@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+import asyncio
 import shlex
 from dataclasses import dataclass
 from getpass import getpass
 from queue import Queue
+from threading import Thread
 from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, Callable, Iterable, Optional, Union
 
 import click
-import gevent
 
 from pyinfra import logger
 from pyinfra.api import MaskString, QuoteString, StringCommand
@@ -67,6 +68,63 @@ def run_local_process(
     process.stderr.close()
 
     return process.returncode, combined_output
+
+
+async def run_local_process_async(
+    command: str,
+    stdin=None,
+    timeout: Optional[int] = None,
+    print_output: bool = False,
+    print_prefix: str = "",
+) -> tuple[int, "CommandOutput"]:
+    if stdin and hasattr(stdin, "readlines"):
+        stdin = stdin.readlines()
+    if stdin and not isinstance(stdin, (list, tuple)):
+        stdin = [stdin]
+
+    input_data: Optional[bytes] = None
+    if stdin:
+        input_str = "".join((line if line.endswith("\n") else f"{line}\n") for line in stdin)
+        input_data = input_str.encode()
+
+    process = await asyncio.create_subprocess_shell(
+        command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        stdin=asyncio.subprocess.PIPE,
+    )
+
+    try:
+        stdout_data, stderr_data = await asyncio.wait_for(
+            process.communicate(input_data),
+            timeout,
+        )
+    except asyncio.TimeoutError:
+        process.kill()
+        await process.communicate()
+        raise timeout_error()
+
+    combined_lines: list[OutputLine] = []
+
+    def _append_output(buffer_name: str, data: bytes) -> None:
+        text = data.decode() if isinstance(data, bytes) else data
+        for line in text.splitlines():
+            if print_output:
+                if buffer_name == "stderr":
+                    click.echo(f"{print_prefix}{click.style(line, 'red')}", err=True)
+                else:
+                    click.echo(f"{print_prefix}{line}", err=True)
+            combined_lines.append(OutputLine(buffer_name, line))
+
+    if stdout_data:
+        _append_output("stdout", stdout_data)
+    if stderr_data:
+        _append_output("stderr", stderr_data)
+
+    return_code = process.returncode
+    assert return_code is not None
+
+    return return_code, CommandOutput(combined_lines)
 
 
 # Command output buffer handling
@@ -149,39 +207,41 @@ def read_output_buffers(
 ) -> CommandOutput:
     output_queue: Queue[OutputLine] = Queue()
 
-    # Iterate through outputs to get an exit status and generate desired list
-    # output, done in two greenlets so stdout isn't printed before stderr. Not
-    # attached to state.pool to avoid blocking it with 2x n-hosts greenlets.
-    stdout_reader = gevent.spawn(
-        read_buffer,
-        "stdout",
-        stdout_buffer,
-        output_queue,
-        print_output=print_output,
-        print_func=lambda line: "{0}{1}".format(print_prefix, line),
-    )
-    stderr_reader = gevent.spawn(
-        read_buffer,
-        "stderr",
-        stderr_buffer,
-        output_queue,
-        print_output=print_output,
-        print_func=lambda line: "{0}{1}".format(
-            print_prefix,
-            click.style(line, "red"),
+    stdout_reader = Thread(
+        target=read_buffer,
+        args=(
+            "stdout",
+            stdout_buffer,
+            output_queue,
         ),
+        kwargs={
+            "print_output": print_output,
+            "print_func": lambda line: f"{print_prefix}{line}",
+        },
+        daemon=True,
     )
 
-    # Wait on output, with our timeout (or None)
-    greenlets = gevent.wait((stdout_reader, stderr_reader), timeout=timeout)
+    stderr_reader = Thread(
+        target=read_buffer,
+        args=(
+            "stderr",
+            stderr_buffer,
+            output_queue,
+        ),
+        kwargs={
+            "print_output": print_output,
+            "print_func": lambda line: f"{print_prefix}{click.style(line, 'red')}",
+        },
+        daemon=True,
+    )
 
-    # Timeout doesn't raise an exception, but gevent.wait returns the greenlets
-    # which did complete. So if both haven't completed, we kill them and fail
-    # with a timeout.
-    if len(greenlets) != 2:
-        stdout_reader.kill()
-        stderr_reader.kill()
+    stdout_reader.start()
+    stderr_reader.start()
 
+    stdout_reader.join(timeout)
+    stderr_reader.join(timeout)
+
+    if stdout_reader.is_alive() or stderr_reader.is_alive():
         raise timeout_error()
 
     return CommandOutput(list(output_queue.queue))
@@ -214,6 +274,27 @@ def execute_command_with_sudo_retry(
     return return_code, output
 
 
+async def execute_command_with_sudo_retry_async(
+    host: "Host",
+    command_arguments: "ConnectorArguments",
+    execute_command,
+) -> tuple[int, CommandOutput]:
+    return_code, output = await execute_command()
+
+    if return_code != 0 and output and output.combined_lines:
+        for line in reversed(output.combined_lines):
+            if line.line.strip() == "sudo: a password is required":
+                sudo_password = await asyncio.to_thread(
+                    getpass,
+                    "{0}sudo password: ".format(host.print_prefix),
+                )
+                host.connector_data["prompted_sudo_password"] = sudo_password
+                return_code, output = await execute_command()
+                break
+
+    return return_code, output
+
+
 def write_stdin(stdin, buffer):
     if hasattr(stdin, "readlines"):
         stdin = stdin.readlines()
@@ -233,6 +314,14 @@ def remove_any_sudo_askpass_file(host) -> None:
     if sudo_askpass_path:
         host.run_shell_command("rm -f {0}".format(sudo_askpass_path))
         host.connector_data["sudo_askpass_path"] = None
+
+
+async def remove_any_sudo_askpass_file_async(host) -> None:
+    sudo_askpass_path = host.connector_data.get("sudo_askpass_path")
+    if not sudo_askpass_path:
+        return
+    await host.run_shell_command_async(StringCommand("rm", "-f", sudo_askpass_path))
+    host.connector_data["sudo_askpass_path"] = None
 
 
 @memoize
@@ -264,9 +353,28 @@ def extract_control_arguments(arguments: "ConnectorArguments") -> "ConnectorArgu
 def _ensure_sudo_askpass_set_for_host(host: "Host"):
     if host.connector_data.get("sudo_askpass_path"):
         return
-    _, output = host.run_shell_command(
+
+    status, output = host.run_shell_command(
         SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SUDO_ASKPASS_ENV_VAR)
     )
+
+    if status is False or not output.stdout_lines or not output.stdout_lines[0]:
+        raise RuntimeError("Failed to create sudo askpass helper")
+
+    host.connector_data["sudo_askpass_path"] = shlex.quote(output.stdout_lines[0])
+
+
+async def _ensure_sudo_askpass_set_for_host_async(host: "Host") -> None:
+    if host.connector_data.get("sudo_askpass_path"):
+        return
+
+    status, output = await host.run_shell_command_async(
+        SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SUDO_ASKPASS_ENV_VAR)
+    )
+
+    if status is False or not output.stdout_lines or not output.stdout_lines[0]:
+        raise RuntimeError("Failed to create sudo askpass helper")
+
     host.connector_data["sudo_askpass_path"] = shlex.quote(output.stdout_lines[0])
 
 
@@ -288,6 +396,24 @@ def make_unix_command_for_host(
     if command_arguments["_sudo_password"]:
         # Ensure the askpass path is correctly set and passed through
         _ensure_sudo_askpass_set_for_host(host)
+        command_arguments["_sudo_askpass_path"] = host.connector_data["sudo_askpass_path"]
+    return make_unix_command(command, **command_arguments)
+
+
+async def async_make_unix_command_for_host(
+    state: "State",
+    host: "Host",
+    command: StringCommand,
+    **command_arguments,
+) -> StringCommand:
+    if not command_arguments.get("_sudo"):
+        return make_unix_command(command, **command_arguments)
+
+    if "_sudo_password" not in command_arguments or not command_arguments["_sudo_password"]:
+        command_arguments["_sudo_password"] = host.connector_data.get("prompted_sudo_password")
+
+    if command_arguments["_sudo_password"]:
+        await _ensure_sudo_askpass_set_for_host_async(host)
         command_arguments["_sudo_askpass_path"] = host.connector_data["sudo_askpass_path"]
     return make_unix_command(command, **command_arguments)
 

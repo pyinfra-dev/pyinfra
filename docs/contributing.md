@@ -13,7 +13,7 @@ Third party pull requests help expand pyinfra's functionality and are essential 
 
 ## Branches
 
-+ There is a branch per major version, ie `3.x`, that tracks the latest release of that version
++ There is a branch per major version, ie `4.x`, that tracks the latest release of that version
 + Changes should generally be based off the latest major branch, unless fixing an old version
 
 ## Dev Setup
