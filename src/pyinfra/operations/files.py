@@ -982,6 +982,9 @@ def put(
         )
     """
 
+    # Expand tilde (~) in dest path to user home directory
+    dest = os.path.expanduser(dest)
+
     # Upload IO objects as-is
     if hasattr(src, "read"):
         local_file = src
