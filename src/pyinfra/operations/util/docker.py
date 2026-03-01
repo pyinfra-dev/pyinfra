@@ -163,6 +163,7 @@ class ContainerSpec:
     networks: list[str] = field(default_factory=list)
     volumes: list[str] = field(default_factory=list)
     env_vars: list[str] = field(default_factory=list)
+    env_files: list[str] = field(default_factory=list)
     labels: list[str] = field(default_factory=list)
     pull_always: bool = False
     restart_policy: str | None = None
@@ -181,6 +182,9 @@ class ContainerSpec:
 
         for env_var in self.env_vars:
             args.append("-e {0}".format(env_var))
+
+        for env_file in self.env_files:
+            args.append("--env-file {0}".format(env_file))
 
         for label in self.labels:
             args.append("--label {0}".format(label))
