@@ -1,0 +1,7 @@
+{
+    "arg": "/nonexistent",
+    "command": "! test -d /nonexistent || (cd /nonexistent && npm list -g --depth=0)",
+    "requires_command": "npm",
+    "output": [],
+    "fact": {}
+}
