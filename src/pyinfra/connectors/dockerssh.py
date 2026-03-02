@@ -33,6 +33,10 @@ class DockerSSHConnector(BaseConnector):
     The ``@dockerssh`` connector allows you to run commands on Docker containers \
     on a remote machine.
 
+    .. note::
+
+        For running Podman containers on remote hosts, see the :doc:`podmanssh` connector.
+
     .. code:: shell
 
         # A Docker base image must be provided
@@ -43,6 +47,8 @@ class DockerSSHConnector(BaseConnector):
     """
 
     handles_execution = True
+    # enable the use of other docker cli compatible tools like podman
+    docker_cmd = "docker"
 
     ssh: SSHConnector
 
@@ -77,11 +83,11 @@ class DockerSSHConnector(BaseConnector):
             return
 
         try:
-            with progress_spinner({"docker run"}):
+            with progress_spinner({f"{self.docker_cmd} run"}):
                 # last line is the container ID
                 status, output = self.ssh.run_shell_command(
                     StringCommand(
-                        "docker",
+                        self.docker_cmd,
                         "run",
                         "-d",
                         self.host.data.docker_image,
@@ -103,20 +109,23 @@ class DockerSSHConnector(BaseConnector):
     def disconnect(self) -> None:
         container_id = self.host.host_data["docker_container_id"][:12]
 
-        with progress_spinner({"docker commit"}):
-            _, output = self.ssh.run_shell_command(StringCommand("docker", "commit", container_id))
+        with progress_spinner({f"{self.docker_cmd} commit"}):
+            _, output = self.ssh.run_shell_command(
+                StringCommand(self.docker_cmd, "commit", container_id)
+            )
 
             # Last line is the image ID, get sha256:[XXXXXXXXXX]...
             image_id = output.stdout_lines[-1][7:19]
 
-        with progress_spinner({"docker rm"}):
+        with progress_spinner({f"{self.docker_cmd} rm"}):
             self.ssh.run_shell_command(
-                StringCommand("docker", "rm", "-f", container_id),
+                StringCommand(self.docker_cmd, "rm", "-f", container_id),
             )
 
         logger.info(
-            "{0}docker build complete, image ID: {1}".format(
+            "{0}{1} build complete, image ID: {2}".format(
                 self.host.print_prefix,
+                self.docker_cmd,
                 click.style(image_id, bold=True),
             ),
         )
@@ -138,7 +147,7 @@ class DockerSSHConnector(BaseConnector):
 
         docker_flags = "-it" if local_arguments.get("_get_pty") else "-i"
         docker_command = StringCommand(
-            "docker",
+            self.docker_cmd,
             "exec",
             docker_flags,
             container_id,
@@ -192,7 +201,7 @@ class DockerSSHConnector(BaseConnector):
         try:
             docker_id = self.host.host_data["docker_container_id"]
             docker_command = StringCommand(
-                "docker",
+                self.docker_cmd,
                 "cp",
                 remote_temp_filename,
                 f"{docker_id}:{remote_filename}",
@@ -246,7 +255,7 @@ class DockerSSHConnector(BaseConnector):
         try:
             docker_id = self.host.host_data["docker_container_id"]
             docker_command = StringCommand(
-                "docker",
+                self.docker_cmd,
                 "cp",
                 f"{docker_id}:{remote_filename}",
                 remote_temp_filename,
@@ -295,3 +304,73 @@ class DockerSSHConnector(BaseConnector):
 
         if not remove_status:
             raise IOError(output.stderr)
+
+
+@memoize
+def show_warning_podman() -> None:
+    logger.warning("The @podmanssh connector is in beta!")
+
+
+class PodmanSSHConnector(DockerSSHConnector):
+    """
+    **Note**: this connector is in beta!
+
+    The ``@podmanssh`` connector allows you to run commands on Podman containers
+    on a remote machine over SSH. This is useful when you need to manage containers
+    running on remote hosts where Podman is installed instead of Docker.
+
+    .. note::
+
+        This connector requires SSH access to the remote host and Podman to be installed
+        on the target machine. It operates similarly to ``@dockerssh`` but uses the
+        ``podman`` command instead of ``docker``.
+
+    + **Remote container creation**: Creates a new container from the specified image on the remote host
+    + **Command execution**: Runs operations inside the container via ``podman exec``
+    + **File operations**: Supports uploading/downloading files to/from containers via ``podman cp``
+    + **Container cleanup**: Automatically commits and removes containers when operations complete
+
+    .. code:: shell
+
+        # A Podman base image must be provided
+        pyinfra @podmanssh/remotehost:alpine:3.8 ...
+
+        # Run operations on multiple remote Podman containers in parallel
+        pyinfra @podmanssh/web1:nginx:latest,@podmanssh/web2:nginx:latest deploy.py
+
+        # Use with specific SSH connection settings
+        pyinfra @podmanssh/production-server:alpine:3.18 --sudo --port 2222 operations/
+
+    **Comparison with other connectors:**
+
+    + Use ``@podman`` for local Podman containers
+    + Use ``@dockerssh`` for remote Docker containers
+    + Use ``@podmanssh`` for remote Podman containers (this connector)
+
+    The Podman SSH connector is particularly useful in environments where:
+
+    + Docker is not available but Podman is installed
+    + Rootless containers are preferred for security
+    + You need OCI-compliant container operations on remote hosts
+    """
+
+    docker_cmd = "podman"
+
+    @override
+    @staticmethod
+    def make_names_data(name):
+        try:
+            hostname, image = name.split(":", 1)
+        except (AttributeError, ValueError):  # failure to parse the name
+            raise InventoryError("No ssh host or podman base image provided!")
+
+        if not image:
+            raise InventoryError("No podman base image provided!")
+
+        show_warning_podman()
+
+        yield (
+            "@podmanssh/{0}:{1}".format(hostname, image),
+            {"ssh_hostname": hostname, "docker_image": image},
+            ["@podmanssh"],
+        )
