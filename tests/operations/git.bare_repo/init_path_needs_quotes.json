@@ -1,0 +1,17 @@
+{
+    "args": ["/home/my repo; whoami"],
+    "kwargs": {
+        "present": "True"
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/home/my repo; whoami": {}
+        },
+        "files.File": {
+            "path=/home/my repo; whoami/HEAD": null
+        }
+    },
+    "commands": [
+        "git init --bare '/home/my repo; whoami'"
+    ]
+}
