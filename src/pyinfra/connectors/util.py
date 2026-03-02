@@ -401,9 +401,7 @@ def make_unix_command(
             command_bits.extend(
                 [
                     "env",
-                    MaskString(
-                        "{0}={1}".format(SU_ASKPASS_ENV_VAR, shlex.quote(_su_password))
-                    ),
+                    MaskString("{0}={1}".format(SU_ASKPASS_ENV_VAR, shlex.quote(_su_password))),
                     _su_askpass_path,
                     "|",
                 ],
