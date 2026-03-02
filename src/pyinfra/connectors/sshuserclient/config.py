@@ -48,7 +48,7 @@ paramiko.config.invoke = FakeInvoke  # type: ignore
 
 
 def _strip_inline_comment(line):
-    """Strip inline comments from SSH config lines, respecting quoted strings."""
+    """Strip inline comments from SSH config lines, respecting quoted strings"""
     in_quote = False
     quote_char = None
     for i, char in enumerate(line):
