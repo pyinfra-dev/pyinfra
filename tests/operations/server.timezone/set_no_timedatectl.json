@@ -1,0 +1,11 @@
+{
+    "args": ["Europe/Amsterdam"],
+    "facts": {
+        "server.Timezone": "UTC",
+        "server.Which": {"command=timedatectl": null}
+    },
+    "commands": [
+        "ln -sf /usr/share/zoneinfo/Europe/Amsterdam /etc/localtime",
+        "echo Europe/Amsterdam > /etc/timezone"
+    ]
+}

@@ -1,0 +1,10 @@
+{
+    "args": ["Europe/Amsterdam"],
+    "facts": {
+        "server.Timezone": "UTC",
+        "server.Which": {"command=timedatectl": "/usr/bin/timedatectl"}
+    },
+    "commands": [
+        "timedatectl set-timezone Europe/Amsterdam"
+    ]
+}

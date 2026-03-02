@@ -26,6 +26,7 @@ from pyinfra.facts.server import (
     Mounts,
     Os,
     Sysctl,
+    Timezone,
     Users,
     Which,
 )
@@ -411,6 +412,39 @@ def hostname(hostname: str, hostname_file: str | None = None):
 
         # And ensure it exists
         yield from files.put._inner(src=file, dest=hostname_file)
+
+
+@operation()
+def timezone(timezone: str):
+    """
+    Set the system timezone.
+
+    Uses ``timedatectl`` when available (systemd systems), otherwise falls back to
+    symlinking ``/etc/localtime`` directly.
+
+    + timezone: the timezone to set (e.g. ``Europe/Amsterdam``, ``UTC``)
+
+    **Example:**
+
+    .. code:: python
+
+        server.timezone(
+            name="Set the timezone to Europe/Amsterdam",
+            timezone="Europe/Amsterdam",
+        )
+    """
+
+    current_timezone = host.get_fact(Timezone)
+
+    if current_timezone == timezone:
+        host.noop("timezone is set")
+        return
+
+    if host.get_fact(Which, command="timedatectl"):
+        yield "timedatectl set-timezone {0}".format(timezone)
+    else:
+        yield "ln -sf /usr/share/zoneinfo/{0} /etc/localtime".format(timezone)
+        yield "echo {0} > /etc/timezone".format(timezone)
 
 
 @operation()

@@ -156,6 +156,20 @@ class Command(FactBase[str]):
         return command
 
 
+class Timezone(FactBase[str]):
+    """
+    Returns the current system timezone (e.g. ``Europe/Amsterdam``).
+    """
+
+    @override
+    def command(self) -> str:
+        return "readlink -f /etc/localtime | sed 's|.*/zoneinfo/||'"
+
+    @override
+    def process(self, output: list[str]) -> str:
+        return output[0]
+
+
 class Which(FactBase[Optional[str]]):
     """
     Returns the path of a given command according to `command -v`, if available.
