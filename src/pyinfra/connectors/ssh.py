@@ -560,13 +560,17 @@ class SSHConnector(BaseConnector):
         with sudo by uploading to a temporary directory then moving & chowning.
         """
 
-        original_arguments = arguments.copy()
+        noauth_arguments = arguments.copy()
 
-        _sudo = arguments.pop("_sudo", False)
-        _sudo_user = arguments.pop("_sudo_user", False)
-        _doas = arguments.pop("_doas", False)
-        _doas_user = arguments.pop("_doas_user", False)
-        _su_user = arguments.pop("_su_user", None)
+        _sudo = noauth_arguments.pop("_sudo", False)
+        _sudo_user = noauth_arguments.pop("_sudo_user", False)
+        _doas = noauth_arguments.pop("_doas", False)
+        _doas_user = noauth_arguments.pop("_doas_user", False)
+        _su_user = noauth_arguments.pop("_su_user", None)
+
+        # _chdir is the only one of the global arguments that could require _sudo to succeed
+        # and _sudo isn't present in arguments as removed above
+        noauth_arguments.pop("_chdir", False)
 
         # sudo/su are a little more complicated, as you can only sftp with the SSH
         # user connected, so upload to tmp and copy/chown w/sudo and/or su_user
@@ -582,7 +586,7 @@ class SSHConnector(BaseConnector):
                     StringCommand("setfacl", "-m", f"u:{other_user}:r", temp_file),
                     print_output=print_output,
                     print_input=print_input,
-                    **arguments,
+                    **noauth_arguments,
                 )
 
                 if status is False:
@@ -596,26 +600,19 @@ class SSHConnector(BaseConnector):
                 command,
                 print_output=print_output,
                 print_input=print_input,
-                **original_arguments,
+                **arguments,
             )
 
             if status is False:
                 logger.error("File upload error: {0}".format(output.stderr))
                 return False
 
-            rm_arguments = arguments.copy()
-            # _chdir is the only one of the global arguments that could require _sudo to succeed
-            # and _sudo isn't present in arguments as removed above
-            rm_arguments.pop("_chdir", False)
-
             # Delete the temporary file now that we've successfully copied it
-            command = StringCommand("rm", "-f", temp_file)
-
             status, output = self.run_shell_command(
-                command,
+                StringCommand("rm", "-f", temp_file),
                 print_output=print_output,
                 print_input=print_input,
-                **rm_arguments,
+                **noauth_arguments,
             )
 
             if status is False:
