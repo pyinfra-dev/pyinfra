@@ -1,0 +1,6 @@
+{
+    "command": "LANG=C lscpu",
+    "requires_command": "lscpu",
+    "output": null,
+    "fact": null
+}
