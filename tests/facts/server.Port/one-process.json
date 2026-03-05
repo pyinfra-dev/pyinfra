@@ -1,5 +1,5 @@
 {
-  "command": "ss -lptnH 'src :10025'",
+  "command": "ss -lptn | grep ':10025 ' || true",
   "arg": 10025,
   "facts": {
     "server.Kernel": "Linux",

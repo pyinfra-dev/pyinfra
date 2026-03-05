@@ -338,7 +338,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
         if self._has_ss:
             self._tool = "ss"
             proto_flag = "t" if protocol == "tcp" else "u"
-            return f"ss -lp{proto_flag}nH 'src :{port}'"
+            return f"ss -lp{proto_flag}n | grep ':{port} ' || true"
         else:
             self._tool = "netstat"
             proto_flag = "t" if protocol == "tcp" else "u"

@@ -1,5 +1,5 @@
 {
-  "command": "ss -lpunH 'src :53'",
+  "command": "ss -lpun | grep ':53 ' || true",
   "arg": {"port": 53, "protocol": "udp"},
   "facts": {
     "server.Kernel": "Linux",
