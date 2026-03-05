@@ -1079,16 +1079,29 @@ class Processes(FactBase["Dict[int, ProcessDict]"]):
         self._kernel = host.get_fact(Kernel)
         is_bsd = self._kernel.strip() in ("FreeBSD", "Darwin")
 
-        fields = "pid,user,stat,%cpu,%mem,comm,args"
+        # BusyBox ps (Alpine) only supports limited columns.
+        # Detect by checking if busybox exists on the system.
+        if not is_bsd:
+            self._is_busybox = bool(host.get_fact(Which, "busybox"))
+        else:
+            self._is_busybox = False
+
+        if not self._is_busybox:
+            fields = "pid,user,stat,%cpu,%mem,comm,args"
+        else:
+            # BusyBox ps: only pid, user/uid, vsz, stat, args are reliable
+            fields = "pid,user,vsz,stat,args"
+
         if pid is not None:
-            self._has_header = True
+            if self._is_busybox:
+                return f"LANG=C ps -o {fields} | awk 'NR==1 || $1=={pid}'"
             return f"LANG=C ps -p {pid} -o {fields}"
 
         if is_bsd:
-            self._has_header = True
             return f"LANG=C ps -eo {fields}"
+        elif self._is_busybox:
+            return f"LANG=C ps -o {fields}"
         else:
-            self._has_header = False
             return f"LANG=C ps -eo {fields} --no-headers"
 
     @override
@@ -1099,27 +1112,44 @@ class Processes(FactBase["Dict[int, ProcessDict]"]):
             line = line.strip()
             if not line:
                 continue
-            if self._has_header and line.startswith("PID"):
+            if line.startswith("PID"):
                 continue
 
-            parts = line.split(None, 6)
-            if len(parts) < 6:
-                continue
-
-            try:
-                pid = int(parts[0])
-            except ValueError:
-                continue
-
-            args = parts[6] if len(parts) > 6 else parts[5]
-
-            processes[pid] = {
-                "user": parts[1],
-                "state": parts[2],
-                "cpu_percent": float(parts[3]),
-                "mem_percent": float(parts[4]),
-                "command": parts[5],
-                "args": args,
-            }
+            if not self._is_busybox:
+                parts = line.split(None, 6)
+                if len(parts) < 6:
+                    continue
+                try:
+                    pid = int(parts[0])
+                except ValueError:
+                    continue
+                args = parts[6] if len(parts) > 6 else parts[5]
+                processes[pid] = {
+                    "user": parts[1],
+                    "state": parts[2],
+                    "cpu_percent": float(parts[3]),
+                    "mem_percent": float(parts[4]),
+                    "command": parts[5],
+                    "args": args,
+                }
+            else:
+                # BusyBox format: pid, user, vsz, stat, args
+                parts = line.split(None, 4)
+                if len(parts) < 5:
+                    continue
+                try:
+                    pid = int(parts[0])
+                except ValueError:
+                    continue
+                args = parts[4]
+                command = args.split()[0].rsplit("/", 1)[-1] if args else ""
+                processes[pid] = {
+                    "user": parts[1],
+                    "state": parts[3],
+                    "cpu_percent": 0.0,
+                    "mem_percent": 0.0,
+                    "command": command,
+                    "args": args,
+                }
 
         return processes
