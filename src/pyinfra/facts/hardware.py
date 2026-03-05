@@ -60,6 +60,19 @@ class Memory(FactBase):
             bytes_per_page = data.get("bytes per page")
             pages_managed = data.get("pages managed")
 
+            # FreeBSD doesn't report "pages managed", sum page categories instead
+            if not pages_managed:
+                page_keys = (
+                    "pages active",
+                    "pages inactive",
+                    "pages wired down",
+                    "pages free",
+                    "pages in the laundry queue",
+                )
+                page_counts = [data.get(k, 0) for k in page_keys]
+                if any(page_counts):
+                    pages_managed = sum(page_counts)
+
             if bytes_per_page and pages_managed:
                 total_memory = (pages_managed * bytes_per_page) / 1024
 
