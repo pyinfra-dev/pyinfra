@@ -1,5 +1,6 @@
 {
     "command": "cat /etc/opkg.conf",
+    "requires_command": "opkg",
     "output": [
         "",
         "# a comment",

@@ -1,5 +1,6 @@
 {
     "command": "cat /etc/opkg/distfeeds.conf; echo CUSTOM; cat /etc/opkg/customfeeds.conf",
+    "requires_command": "opkg",
     "output": [
         "",
         "   # a different comment",

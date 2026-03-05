@@ -1,5 +1,6 @@
 {
-    "command": "/bin/opkg print-architecture",
+    "command": "opkg print-architecture",
+    "requires_command": "opkg",
     "output": [
         "",
         "# a comment to start",
