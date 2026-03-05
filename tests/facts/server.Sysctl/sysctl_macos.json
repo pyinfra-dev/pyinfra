@@ -1,5 +1,5 @@
 {
-    "command": "sysctl -a",
+    "command": "sysctl -a 2>/dev/null || true",
     "output": [
         "security.mac.sysvmsg_enforce: 1",
         "security.mac.sysvsem_enforce: 1",

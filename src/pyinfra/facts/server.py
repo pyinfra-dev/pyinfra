@@ -527,8 +527,8 @@ class Sysctl(FactBase):
     @override
     def command(self, keys=None):
         if keys is None:
-            return "sysctl -a"
-        return f"sysctl {' '.join(keys)}"
+            return "sysctl -a 2>/dev/null || true"
+        return f"sysctl {' '.join(keys)} 2>/dev/null || true"
 
     @override
     def process(self, output):
