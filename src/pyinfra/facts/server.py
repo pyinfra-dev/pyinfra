@@ -210,6 +210,15 @@ class MacosVersion(FactBase[str]):
         return "sw_vers -productVersion"
 
 
+class ProcessDict(TypedDict):
+    user: str
+    state: str
+    cpu_percent: float
+    mem_percent: float
+    command: str
+    args: str
+
+
 class MountsDict(TypedDict):
     device: str
     type: str
@@ -1043,3 +1052,74 @@ echo "no_reboot_required"
     @override
     def process(self, output) -> bool:
         return list(output)[0].strip() == "reboot_required"
+
+
+class Processes(FactBase["Dict[int, ProcessDict]"]):
+    """
+    Returns a dictionary of running processes keyed by PID.
+
+    .. code:: python
+
+        {
+            1: {
+                "user": "root",
+                "state": "Ss",
+                "cpu_percent": 0.0,
+                "mem_percent": 0.1,
+                "command": "init",
+                "args": "/sbin/init",
+            },
+        }
+    """
+
+    default = dict
+
+    @override
+    def command(self, pid: int | None = None) -> str:
+        self._kernel = host.get_fact(Kernel)
+        is_bsd = self._kernel.strip() in ("FreeBSD", "Darwin")
+
+        fields = "pid,user,stat,%cpu,%mem,comm,args"
+        if pid is not None:
+            self._has_header = True
+            return f"LANG=C ps -p {pid} -o {fields}"
+
+        if is_bsd:
+            self._has_header = True
+            return f"LANG=C ps -eo {fields}"
+        else:
+            self._has_header = False
+            return f"LANG=C ps -eo {fields} --no-headers"
+
+    @override
+    def process(self, output: Iterable[str]) -> dict[int, ProcessDict]:
+        processes: dict[int, ProcessDict] = {}
+
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+            if self._has_header and line.startswith("PID"):
+                continue
+
+            parts = line.split(None, 6)
+            if len(parts) < 6:
+                continue
+
+            try:
+                pid = int(parts[0])
+            except ValueError:
+                continue
+
+            args = parts[6] if len(parts) > 6 else parts[5]
+
+            processes[pid] = {
+                "user": parts[1],
+                "state": parts[2],
+                "cpu_percent": float(parts[3]),
+                "mem_percent": float(parts[4]),
+                "command": parts[5],
+                "args": args,
+            }
+
+        return processes

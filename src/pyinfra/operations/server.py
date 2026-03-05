@@ -1097,6 +1097,28 @@ def locale(
         yield "locale-gen"
 
 
+@operation(is_idempotent=False)
+def kill(pid: int, signal: str = "TERM"):
+    """
+    Kill a running process.
+
+    + pid: PID of the process to kill
+    + signal: signal to send (default ``TERM``)
+
+    **Example:**
+
+    .. code:: python
+
+        server.kill(
+            name="Kill process 1234",
+            pid=1234,
+            signal="KILL",
+        )
+    """
+
+    yield "kill -{0} {1}".format(signal, pid)
+
+
 @operation()
 def security_limit(
     domain: str,
