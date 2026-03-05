@@ -1,5 +1,6 @@
 {
     "command": "choco --version",
+    "requires_command": "choco",
     "output": ["0.10.15", ""],
     "fact": "0.10.15"
 }

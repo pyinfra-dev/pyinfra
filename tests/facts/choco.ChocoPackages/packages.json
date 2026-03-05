@@ -1,5 +1,6 @@
 {
     "command": "choco list",
+    "requires_command": "choco",
     "output": [
         "Chocolatey v0.10.15",
         "chocolatey 0.10.15",
