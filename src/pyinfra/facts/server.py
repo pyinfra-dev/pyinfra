@@ -369,10 +369,12 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
             if not line:
                 continue
             parts = line.split()
-            pid_prog = parts[-1]
-            if "/" in pid_prog:
-                pid_str, proc = pid_prog.split("/", 1)
-                return (proc, int(pid_str))
+            for part in parts:
+                if "/" in part:
+                    pid_str, proc = part.split("/", 1)
+                    if pid_str.isdigit():
+                        return (proc, int(pid_str))
+                    break
         return None, None
 
     def _process_sockstat(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
