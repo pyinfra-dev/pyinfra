@@ -1,0 +1,20 @@
+{
+    "kwargs": {
+        "container": "nginx",
+        "image": "nginx:alpine",
+        "present": "true",
+        "start": false,
+        "dns": [
+            "1.1.1.1",
+            "2.2.2.2"
+        ]
+    },
+    "facts": {
+        "docker.DockerContainer": {
+            "object_id=nginx": []
+        }
+    },
+    "commands": [
+        "docker container create --name nginx --dns 1.1.1.1 --dns 2.2.2.2 nginx:alpine"
+    ]
+}
