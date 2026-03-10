@@ -45,7 +45,7 @@ def _install_key_from_keyserver(keyserver: str, keyid: str | list[str], dest: st
     joined = " ".join(keyid)
 
     # Create temporary GPG home directory
-    temp_dir = f"/tmp/pyinfra-gpg-{host.get_temp_filename('')[-8:]}"
+    temp_dir = host.get_temp_filename(f"gpg-keyserver-{joined}")
 
     yield from files.directory._inner(
         path=temp_dir,

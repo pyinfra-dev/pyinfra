@@ -12,7 +12,7 @@
                 "user": "root",
                 "group": "root"
             },
-            "path=/tmp/pyinfra-gpg-empfile_": null
+            "path=_tempfile_": null
         },
         "files.File": {
             "path=/etc/apt/keyrings/vendor.gpg": {
