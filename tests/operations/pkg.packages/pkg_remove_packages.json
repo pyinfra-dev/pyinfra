@@ -1,5 +1,7 @@
 {
-    "args": ["py-pip"],
+    "args": [
+        "py-pip"
+    ],
     "kwargs": {
         "present": false
     },
@@ -12,7 +14,9 @@
         },
         "server.Which": {
             "command=pkg": "/bin/pkg"
-        }
+        },
+        "pkg.PkgUpgradeablePackages": {},
+        "pkg.PkgLockedPackages": []
     },
     "commands": [
         "pkg delete -y py-pip"

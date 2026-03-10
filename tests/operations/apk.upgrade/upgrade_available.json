@@ -3,8 +3,12 @@
     "kwargs": {
         "available": true
     },
+    "facts": {
+        "apk.ApkUpgradeablePackages": {
+            "vim": "9.0.2-r0"
+        }
+    },
     "commands": [
         "apk upgrade --available"
-    ],
-    "idempotent": false
+    ]
 }

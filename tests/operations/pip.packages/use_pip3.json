@@ -6,6 +6,9 @@
     "facts": {
         "pip.PipPackages": {
             "pip=pip3": {}
+        },
+        "pip.PipOutdatedPackages": {
+            "pip=pip3": {}
         }
     },
     "commands": [

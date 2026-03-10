@@ -1,0 +1,11 @@
+{
+    "facts": {
+        "pkg.PkgUpgradeablePackages": {
+            "nginx": "1.26.0",
+            "curl": "8.8.0"
+        }
+    },
+    "commands": [
+        "pkg upgrade -y"
+    ]
+}

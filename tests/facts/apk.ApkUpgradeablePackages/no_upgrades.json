@@ -1,0 +1,6 @@
+{
+    "command": "apk version -v -l '<'",
+    "requires_command": "apk",
+    "output": [],
+    "fact": {}
+}

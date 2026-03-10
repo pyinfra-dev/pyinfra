@@ -9,6 +9,9 @@
                 "pyinfra": ["1.0"],
                 "test": ["1.1"]
             }
+        },
+        "pip.PipOutdatedPackages": {
+            "pip=pip": {}
         }
     },
     "commands": [

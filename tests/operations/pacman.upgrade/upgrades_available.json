@@ -1,0 +1,11 @@
+{
+    "facts": {
+        "pacman.PacmanUpgradeablePackages": {
+            "vim": "9.1",
+            "linux": "6.2"
+        }
+    },
+    "commands": [
+        "pacman --noconfirm -Su"
+    ]
+}

@@ -8,9 +8,11 @@ from __future__ import annotations
 from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.files import File
-from pyinfra.facts.pip import PipPackages
+from pyinfra.facts.pip import PipOutdatedPackages, PipPackages
 
 from . import files
+from pyinfra.facts.util.packages import build_package_map
+
 from .util.packaging import PkgInfo, ensure_packages
 
 
@@ -191,8 +193,10 @@ def packages(
             packages = [packages]
         # PEP-0426 states that Python packages should be compared using lowercase, so lowercase the
         # current packages. PkgInfo.from_pep508 takes care of the package name
-        current_packages = host.get_fact(PipPackages, pip=pip)
-        current_packages = {pkg.lower(): versions for pkg, versions in current_packages.items()}
+        installed_packages = host.get_fact(PipPackages, pip=pip)
+        installed_packages = {pkg.lower(): versions for pkg, versions in installed_packages.items()}
+        outdated_packages = host.get_fact(PipOutdatedPackages, pip=pip)
+        current_packages = build_package_map(installed_packages, outdated_packages)
 
         yield from ensure_packages(
             host,

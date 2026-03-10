@@ -7,20 +7,63 @@ from __future__ import annotations
 from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.files import File
-from pyinfra.facts.pkg import PkgPackages
+from pyinfra.facts.pkg import PkgLockedPackages, PkgPackages, PkgUpgradeablePackages
 from pyinfra.facts.server import Arch, Os, OsVersion, Which
+from pyinfra.facts.util.packages import build_package_map
 
 from .util.packaging import ensure_packages
 
 
 @operation()
-def packages(packages: str | list[str] | None = None, present=True, pkg_path: str | None = None):
+def upgrade():
+    """
+    Upgrades all FreeBSD pkg packages.
+
+    This operation is idempotent: it checks for available upgrades first
+    and only runs ``pkg upgrade -y`` when upgradeable packages exist.
+    """
+
+    upgradeable = host.get_fact(PkgUpgradeablePackages)
+    if not upgradeable:
+        host.noop("all packages are up to date")
+        return
+
+    yield "pkg upgrade -y"
+
+
+_upgrade = upgrade._inner  # noqa: E305
+
+
+@operation(is_idempotent=False)
+def update():
+    """
+    Updates the FreeBSD pkg repository catalog.
+    """
+
+    yield "pkg update"
+
+
+_update = update._inner  # noqa: E305
+
+
+@operation()
+def packages(
+    packages: str | list[str] | None = None,
+    present=True,
+    update=False,
+    upgrade=False,
+    latest=False,
+    pkg_path: str | None = None,
+):
     """
     Install/remove/update pkg packages. This will use ``pkg ...`` where available
     (FreeBSD) and the ``pkg_*`` variants elsewhere.
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed
+    + update: run ``pkg update`` before installing packages (FreeBSD only)
+    + upgrade: run ``pkg upgrade -y`` before installing packages (FreeBSD only)
+    + latest: whether to upgrade packages without a specified version (FreeBSD only)
     + pkg_path: the PKG_PATH environment variable to set
 
     pkg_path:
@@ -53,19 +96,39 @@ def packages(packages: str | list[str] | None = None, present=True, pkg_path: st
                 arch=host.get_fact(Arch),
             )
 
-    # FreeBSD used "pkg ..." and OpenBSD uses "pkg_[add|delete]"
+    if update:
+        yield from _update()
+
+    if upgrade:
+        yield from _upgrade()
+
+    # FreeBSD uses "pkg ..." and OpenBSD uses "pkg_[add|delete]"
     is_pkg = host.get_fact(Which, command="pkg")
     install_command = "pkg install -y" if is_pkg else "pkg_add"
     uninstall_command = "pkg delete -y" if is_pkg else "pkg_delete"
+    upgrade_command = "pkg upgrade -y" if is_pkg else None
 
     if pkg_path:
         install_command = "PKG_PATH={0} {1}".format(pkg_path, install_command)
 
+    installed = host.get_fact(PkgPackages)
+
+    if is_pkg:
+        # FreeBSD — we have upgradeable/locked facts
+        upgradeable = host.get_fact(PkgUpgradeablePackages)
+        locked = host.get_fact(PkgLockedPackages)
+        current_packages = build_package_map(installed, upgradeable, set(locked))
+    else:
+        # OpenBSD — no upgradeable/locked facts, use old format
+        current_packages = installed
+
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(PkgPackages),
+        current_packages,
         present,
         install_command=install_command,
         uninstall_command=uninstall_command,
+        upgrade_command=upgrade_command,
+        latest=latest,
     )

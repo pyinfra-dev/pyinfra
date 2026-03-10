@@ -10,6 +10,9 @@
                 "react": [""],
                 "test": ["1.1"]
             }
+        },
+        "npm.NpmOutdatedPackages": {
+            "directory=None": {}
         }
     },
     "commands": [

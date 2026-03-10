@@ -1,10 +1,16 @@
 {
-    "args":[["curl", "wget"]],
+    "args": [
+        [
+            "curl",
+            "wget"
+        ]
+    ],
     "kwargs": {
         "update": false
     },
     "facts": {
-        "opkg.OpkgPackages": {}
+        "opkg.OpkgPackages": {},
+        "opkg.OpkgUpgradeablePackages": {}
     },
     "commands": [
         "opkg install curl wget"

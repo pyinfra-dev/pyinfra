@@ -1,0 +1,12 @@
+{
+    "command": "xbps-install -Mun 2>/dev/null || true",
+    "requires_command": "xbps-install",
+    "output": [
+        "bash-5.2.15_1 update x86_64 https://repo-default.voidlinux.org/current 1234KB",
+        "curl-8.4.0_1 update x86_64 https://repo-default.voidlinux.org/current 567KB"
+    ],
+    "fact": {
+        "bash": "5.2.15_1",
+        "curl": "8.4.0_1"
+    }
+}

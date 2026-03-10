@@ -9,7 +9,9 @@
         "deb.DebPackages": {
             "something": ["0.9"],
             "another": ["1.1"]
-        }
+        },
+        "deb.DebUpgradeablePackages": {},
+        "deb.DebHeldPackages": []
     },
     "commands": [
         "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" install git python-pip something=1.0"

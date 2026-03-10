@@ -6,7 +6,9 @@
     "facts": {
         "apk.ApkPackages": {
             "curl": "1"
-        }
+        },
+        "apk.ApkUpgradeablePackages": {},
+        "apk.ApkHeldPackages": []
     },
     "commands": [
         "apk del curl"

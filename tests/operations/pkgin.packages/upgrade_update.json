@@ -1,13 +1,18 @@
 {
-    "args": ["curl"],
+    "args": [
+        "curl"
+    ],
     "kwargs": {
         "update": true,
         "upgrade": true
     },
     "facts": {
         "pkgin.PkginPackages": {
-            "curl": ["1"]
-        }
+            "curl": [
+                "1"
+            ]
+        },
+        "pkgin.PkginUpgradeablePackages": {}
     },
     "commands": [
         "pkgin -y update",

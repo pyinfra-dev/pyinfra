@@ -8,6 +8,8 @@ from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.cargo import CargoPackages
 
+from pyinfra.facts.util.packages import build_package_map
+
 from .util.packaging import ensure_packages
 
 
@@ -24,7 +26,8 @@ def packages(packages: str | list[str] | None = None, present=True, latest=False
         Package versions can be pinned like cargo: ``<pkg>@<version>``.
     """
 
-    current_packages = host.get_fact(CargoPackages)
+    installed_packages = host.get_fact(CargoPackages)
+    current_packages = build_package_map(installed_packages)
 
     install_command = "cargo install"
 

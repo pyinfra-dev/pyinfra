@@ -1,0 +1,14 @@
+{
+    "command": "yum check-update -q 2>/dev/null; true",
+    "requires_command": "yum",
+    "output": [
+        "vim-enhanced.x86_64            2:8.0.1763-19.el7_9        updates",
+        "curl.x86_64                    7.29.0-59.el7_9.2          updates",
+        "openssl-libs.x86_64            1:1.0.2k-26.el7_9          updates"
+    ],
+    "fact": {
+        "vim-enhanced": "2:8.0.1763-19.el7_9",
+        "curl": "7.29.0-59.el7_9.2",
+        "openssl-libs": "1:1.0.2k-26.el7_9"
+    }
+}

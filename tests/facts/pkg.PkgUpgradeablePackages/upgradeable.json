@@ -1,0 +1,14 @@
+{
+    "command": "pkg version -vRL= 2>/dev/null || true",
+    "requires_command": "pkg",
+    "output": [
+        "curl-8.1.2                         <   needs updating (remote has 8.4.0)",
+        "nginx-1.24.0_1,3                   <   needs updating (remote has 1.25.3)",
+        "python39-3.9.17                    <   needs updating (remote has 3.9.18)"
+    ],
+    "fact": {
+        "curl": "8.4.0",
+        "nginx": "1.25.3",
+        "python39": "3.9.18"
+    }
+}

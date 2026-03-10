@@ -1,0 +1,6 @@
+{
+    "command": "dpkg --get-selections | grep 'hold$' || true",
+    "requires_command": "dpkg",
+    "output": [],
+    "fact": []
+}

@@ -1,0 +1,13 @@
+{
+    "command": "yum versionlock list 2>/dev/null || true",
+    "requires_command": "yum",
+    "output": [
+        "Loaded plugins: versionlock",
+        "0:vim-enhanced-8.0.1763-19.el7_9.*",
+        "0:kernel-3.10.0-1160.el7.*"
+    ],
+    "fact": [
+        "vim-enhanced",
+        "kernel"
+    ]
+}

@@ -5,9 +5,10 @@
     },
     "facts": {
         "deb.DebPackages": {},
-        "apt.SimulateOperationWillChange": {
-            "command=upgrade": {}
-        }
+        "deb.DebUpgradeablePackages": {
+            "vim": "2:9.0.1-r1"
+        },
+        "deb.DebHeldPackages": []
     },
     "commands": [
         "apt-get update",

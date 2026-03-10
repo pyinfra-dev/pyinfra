@@ -1,18 +1,24 @@
 {
-    "args": [[
-        "git",
-        "python-devel",
-        "something"
-    ]],
+    "args": [
+        [
+            "git",
+            "python-devel",
+            "something"
+        ]
+    ],
     "facts": {
         "rpm.RpmPackages": {
-            "something": [""]
+            "something": [
+                ""
+            ]
         },
         "rpm.RpmPackageProvides": {
             "package=git": null,
             "package=python-devel": null,
             "package=something": null
-        }
+        },
+        "dnf.DnfUpgradeablePackages": {},
+        "dnf.DnfHeldPackages": []
     },
     "commands": [
         "dnf install -y git python-devel"

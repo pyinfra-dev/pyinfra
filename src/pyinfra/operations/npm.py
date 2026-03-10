@@ -6,7 +6,9 @@ from __future__ import annotations
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.npm import NpmPackages
+from pyinfra.facts.npm import NpmOutdatedPackages, NpmPackages
+
+from pyinfra.facts.util.packages import build_package_map
 
 from .util.packaging import ensure_packages
 
@@ -30,7 +32,9 @@ def packages(
         Package versions can be pinned like npm: ``<pkg>@<version>``.
     """
 
-    current_packages = host.get_fact(NpmPackages, directory=directory)
+    installed_packages = host.get_fact(NpmPackages, directory=directory)
+    outdated_packages = host.get_fact(NpmOutdatedPackages, directory=directory)
+    current_packages = build_package_map(installed_packages, outdated_packages)
 
     install_command = (
         "npm install -g" if directory is None else "cd {0} && npm install".format(directory)

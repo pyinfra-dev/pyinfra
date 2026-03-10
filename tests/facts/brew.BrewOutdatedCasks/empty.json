@@ -1,0 +1,6 @@
+{
+    "command": "brew outdated --cask --verbose 2>/dev/null || true",
+    "requires_command": "brew",
+    "output": [],
+    "fact": {}
+}

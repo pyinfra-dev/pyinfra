@@ -1,0 +1,6 @@
+{
+    "command": "xbps-install -Mun 2>/dev/null || true",
+    "requires_command": "xbps-install",
+    "output": [],
+    "fact": {}
+}

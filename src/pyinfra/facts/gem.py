@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from typing_extensions import override
 
 from pyinfra.api import FactBase
@@ -33,3 +35,36 @@ class GemPackages(FactBase):
     @override
     def process(self, output):
         return parse_packages(GEM_REGEX, output)
+
+
+class GemOutdatedPackages(FactBase):
+    """
+    Returns a dict of outdated gem packages and their latest available versions:
+
+    .. code:: python
+
+        {
+            "package_name": "latest_version",
+        }
+    """
+
+    default = dict
+    use_default_on_error = True
+
+    @override
+    def command(self) -> str:
+        return "gem outdated 2>/dev/null || true"
+
+    @override
+    def requires_command(self) -> str:
+        return "gem"
+
+    @override
+    def process(self, output):
+        packages: dict[str, str] = {}
+        for line in output:
+            # Format: package_name (installed < available)
+            match = re.match(r"^(\S+)\s+\(\S+\s+<\s+(\S+)\)$", line)
+            if match:
+                packages[match.group(1)] = match.group(2)
+        return packages

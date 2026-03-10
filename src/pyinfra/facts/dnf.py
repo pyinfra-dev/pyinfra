@@ -1,11 +1,92 @@
 from __future__ import annotations
 
+import re
+
 from typing_extensions import override
 
 from pyinfra.api import FactBase
 
 from .util import make_cat_files_command
 from .util.packaging import parse_yum_repositories
+
+
+class DnfUpgradeablePackages(FactBase):
+    """
+    Returns a dict of upgradeable dnf packages and their available versions:
+
+    .. code:: python
+
+        {
+            "package_name": "available_version",
+        }
+    """
+
+    default = dict
+    use_default_on_error = True
+
+    @override
+    def command(self) -> str:
+        return "dnf check-update -q 2>/dev/null; true"
+
+    @override
+    def requires_command(self) -> str:
+        return "dnf"
+
+    @override
+    def process(self, output):
+        result: dict[str, str] = {}
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split()
+            if len(parts) >= 2:
+                # Package name may have .arch suffix (e.g., vim.x86_64)
+                name = re.sub(r"\.\w+$", "", parts[0])
+                version = parts[1]
+                result[name] = version
+        return result
+
+
+class DnfHeldPackages(FactBase):
+    """
+    Returns a list of held (version-locked) dnf packages:
+
+    .. code:: python
+
+        [
+            "package_name",
+        ]
+    """
+
+    default = list
+    use_default_on_error = True
+
+    @override
+    def command(self) -> str:
+        return "dnf versionlock list 2>/dev/null || true"
+
+    @override
+    def requires_command(self) -> str:
+        return "dnf"
+
+    @override
+    def process(self, output):
+        result: list[str] = []
+        for line in output:
+            line = line.strip()
+            if not line or line.startswith("Last metadata") or line.startswith("Loaded plugins"):
+                continue
+            # versionlock lines can be like "0:vim-enhanced-8.0.1763-1.el7.*"
+            # or just "package-name-version.arch"
+            # Extract the package name (strip epoch, version, release, arch)
+            match = re.match(r"^(?:\d+:)?([a-zA-Z0-9][a-zA-Z0-9._+-]*?)-\d+", line)
+            if match:
+                result.append(match.group(1))
+            elif line and not line.startswith(" "):
+                # Fallback: treat the whole line as the package name
+                result.append(line)
+        return result
 
 
 class DnfRepositories(FactBase):

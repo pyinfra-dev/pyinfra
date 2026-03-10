@@ -1,21 +1,38 @@
 {
-    "args": [[
-        "vim"
-    ]],
+    "args": [
+        [
+            "vim"
+        ]
+    ],
     "kwargs": {
         "present": false
     },
     "facts": {
         "rpm.RpmPackages": {
-            "vim-enhanced": ["1.2.3"]
+            "vim-enhanced": [
+                "1.2.3"
+            ]
         },
         "rpm.RpmPackageProvides": {
             "package=vim": [
-                ["vim-enhanced", "1.2.3"],
-                ["vim-enhanced", "2.3.4"],
-                ["vim-enhanced", "4.5.6"]
+                [
+                    "vim-enhanced",
+                    "1.2.3"
+                ],
+                [
+                    "vim-enhanced",
+                    "2.3.4"
+                ],
+                [
+                    "vim-enhanced",
+                    "4.5.6"
+                ]
             ]
-        }
+        },
+        "yum.YumUpgradeablePackages": {},
+        "yum.YumHeldPackages": []
     },
-    "commands": ["yum remove -y vim"]
+    "commands": [
+        "yum remove -y vim"
+    ]
 }

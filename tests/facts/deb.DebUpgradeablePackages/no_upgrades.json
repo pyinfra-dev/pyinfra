@@ -1,0 +1,6 @@
+{
+    "command": "apt list --upgradeable -qq 2>/dev/null || true",
+    "requires_command": "apt",
+    "output": [],
+    "fact": {}
+}

@@ -1,12 +1,18 @@
 {
-    "args": [["curl", "i-dont-exist"]],
+    "args": [
+        [
+            "curl",
+            "i-dont-exist"
+        ]
+    ],
     "kwargs": {
         "present": false
     },
     "facts": {
         "xbps.XbpsPackages": {
             "curl": "1"
-        }
+        },
+        "xbps.XbpsUpgradeablePackages": {}
     },
     "commands": [
         "xbps-remove -y curl"

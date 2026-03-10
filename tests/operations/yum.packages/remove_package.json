@@ -1,23 +1,33 @@
 {
-    "args": [[
-        "git",
-        "vim-enhanced",
-        "vim-common"
-    ]],
+    "args": [
+        [
+            "git",
+            "vim-enhanced",
+            "vim-common"
+        ]
+    ],
     "kwargs": {
         "present": false
     },
     "facts": {
         "rpm.RpmPackages": {
-            "git": ["2.26.2-1.fc32"],
-            "vim-enhanced": ["8.2.1081-1.fc32"],
-            "vim-common": ["8.2.1081-1.fc32"]
+            "git": [
+                "2.26.2-1.fc32"
+            ],
+            "vim-enhanced": [
+                "8.2.1081-1.fc32"
+            ],
+            "vim-common": [
+                "8.2.1081-1.fc32"
+            ]
         },
         "rpm.RpmPackageProvides": {
             "package=git": null,
             "package=vim-enhanced": null,
             "package=vim-common": null
-        }
+        },
+        "yum.YumUpgradeablePackages": {},
+        "yum.YumHeldPackages": []
     },
     "commands": [
         "yum remove -y git vim-enhanced vim-common"

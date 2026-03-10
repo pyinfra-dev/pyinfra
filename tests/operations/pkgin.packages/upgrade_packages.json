@@ -1,10 +1,13 @@
 {
-    "args": ["curl"],
+    "args": [
+        "curl"
+    ],
     "kwargs": {
         "latest": true
     },
     "facts": {
-        "pkgin.PkginPackages": {}
+        "pkgin.PkginPackages": {},
+        "pkgin.PkginUpgradeablePackages": {}
     },
     "commands": [
         "pkgin -y install curl"

@@ -3,6 +3,8 @@ from __future__ import annotations
 from pyinfra import host, state
 from pyinfra.api import operation
 from pyinfra.facts.rpm import RpmPackages
+from pyinfra.facts.util.packages import build_package_map
+from pyinfra.facts.zypper import ZypperHeldPackages, ZypperUpgradeablePackages
 
 from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 from .yum import key as yum_key
@@ -97,6 +99,22 @@ def rpm(src, present=True):
     yield from ensure_rpm(state, host, src, present, "zypper --non-interactive")
 
 
+@operation()
+def upgrade():
+    """
+    Upgrades all zypper packages that have updates available.
+    """
+
+    upgradeable = host.get_fact(ZypperUpgradeablePackages)
+    if upgradeable:
+        yield "zypper update -y"
+    else:
+        host.noop("all packages are up to date")
+
+
+_upgrade = upgrade._inner  # noqa: E305
+
+
 @operation(is_idempotent=False)
 def update():
     """
@@ -180,10 +198,16 @@ def packages(
 
     upgrade_command = "zypper update -y"
 
+    installed = host.get_fact(RpmPackages)
+    upgradeable = host.get_fact(ZypperUpgradeablePackages)
+    held = host.get_fact(ZypperHeldPackages)
+
+    current_packages = build_package_map(installed, upgradeable, set(held))
+
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(RpmPackages),
+        current_packages,
         present,
         install_command=" ".join(install_command),
         uninstall_command=" ".join(uninstall_command),

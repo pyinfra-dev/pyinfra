@@ -1,12 +1,19 @@
 {
-    "args": [["php", "i-dont-exist"]],
+    "args": [
+        [
+            "php",
+            "i-dont-exist"
+        ]
+    ],
     "kwargs": {
         "present": false
     },
     "facts": {
         "brew.BrewPackages": {
             "php": "1"
-        }
+        },
+        "brew.BrewOutdatedPackages": {},
+        "brew.BrewPinnedPackages": []
     },
     "commands": [
         "brew uninstall php"

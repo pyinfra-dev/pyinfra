@@ -1,15 +1,21 @@
 {
-    "args": [[
-        "git"
-    ]],
+    "args": [
+        [
+            "git"
+        ]
+    ],
     "kwargs": {
         "present": false,
         "extra_uninstall_args": "--force"
     },
     "facts": {
         "rpm.RpmPackages": {
-            "git": [""]
-        }
+            "git": [
+                ""
+            ]
+        },
+        "zypper.ZypperUpgradeablePackages": {},
+        "zypper.ZypperHeldPackages": []
     },
     "commands": [
         "zypper --non-interactive remove -y --force git"

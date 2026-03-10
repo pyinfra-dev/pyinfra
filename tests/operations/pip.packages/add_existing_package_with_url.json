@@ -5,6 +5,9 @@
             "pip=pip": {
                 "copier": ["9.9.0"]
             }
+        },
+        "pip.PipOutdatedPackages": {
+            "pip=pip": {}
         }
     },
     "commands": [

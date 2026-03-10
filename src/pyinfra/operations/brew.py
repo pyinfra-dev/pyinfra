@@ -8,7 +8,18 @@ import urllib.parse
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.brew import BrewCasks, BrewPackages, BrewTaps, BrewVersion, new_cask_cli
+from pyinfra.facts.brew import (
+    BrewCasks,
+    BrewOutdatedCasks,
+    BrewOutdatedPackages,
+    BrewPackages,
+    BrewPinnedPackages,
+    BrewTaps,
+    BrewVersion,
+    new_cask_cli,
+)
+
+from pyinfra.facts.util.packages import build_package_map
 
 from .util.packaging import ensure_packages
 
@@ -25,11 +36,23 @@ def update():
 _update = update  # noqa: E305
 
 
-@operation(is_idempotent=False)
+@operation()
 def upgrade():
     """
     Upgrades all brew packages.
+
+    This operation is idempotent: it checks for outdated packages first and only
+    runs ``brew upgrade`` if there are packages to upgrade.
     """
+
+    outdated = host.get_fact(BrewOutdatedPackages)
+    pinned = host.get_fact(BrewPinnedPackages)
+
+    upgradable = {name: ver for name, ver in outdated.items() if name not in pinned}
+
+    if not upgradable:
+        host.noop("all packages are up to date")
+        return
 
     yield "brew upgrade"
 
@@ -83,10 +106,15 @@ def packages(
     if upgrade:
         yield from _upgrade._inner()
 
+    installed = host.get_fact(BrewPackages)
+    outdated = host.get_fact(BrewOutdatedPackages)
+    pinned = host.get_fact(BrewPinnedPackages)
+    current_packages = build_package_map(installed, outdated, set(pinned))
+
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(BrewPackages),
+        current_packages,
         present,
         install_command="brew install",
         uninstall_command="brew uninstall",
@@ -145,10 +173,14 @@ def casks(
 
     args = cask_args()
 
+    installed = host.get_fact(BrewCasks)
+    outdated = host.get_fact(BrewOutdatedCasks) if latest else {}
+    current_packages = build_package_map(installed, outdated)
+
     yield from ensure_packages(
         host,
         casks,
-        host.get_fact(BrewCasks),
+        current_packages,
         present,
         install_command="brew %sinstall%s" % args,
         uninstall_command="brew %suninstall%s" % args,

@@ -6,7 +6,11 @@
     "facts": {
         "deb.DebPackages": {
             "git": ["1.0"]
-        }
+        },
+        "deb.DebUpgradeablePackages": {
+            "git": "2.0"
+        },
+        "deb.DebHeldPackages": []
     },
     "commands": [
         "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" install another",

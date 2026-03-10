@@ -12,6 +12,7 @@ from pyinfra import logger
 from pyinfra.api import Host, OperationValueError, State
 from pyinfra.facts.files import File
 from pyinfra.facts.rpm import RpmPackage
+from pyinfra.facts.util.packages import PackageInfo, PackageStatus
 from pyinfra.operations import files
 
 
@@ -57,12 +58,18 @@ class PkgInfo(NamedTuple):
         return shlex.quote(self.name)
 
     @classmethod
-    def from_possible_pair(cls, s: str, join: str | None) -> PkgInfo:
+    def from_possible_pair(
+        cls,
+        s: str,
+        join: str | None,
+        inst_vers_format_fn: Callable | None = None,
+    ) -> PkgInfo:
+        fn = inst_vers_format_fn or default_inst_vers_format_fn
         if join is not None:
             pieces = s.rsplit(join, 1)
-            return cls(pieces[0], pieces[1] if len(pieces) > 1 else "", join, "")
+            return cls(pieces[0], pieces[1] if len(pieces) > 1 else "", join, "", fn)
 
-        return cls(s, "", "", "")
+        return cls(s, "", "", "", fn)
 
     @classmethod
     def from_pep508(cls, s: str) -> PkgInfo | None:
@@ -98,21 +105,34 @@ class PkgInfo(NamedTuple):
 
 def _has_package(
     package: str | list[str],
-    packages: dict[str, set[str]],
+    packages: dict[str, set[str]] | dict[str, PackageInfo],
     expand_package_fact: Callable[[str], list[str | list[str]]] | None = None,
     match_any=False,
 ) -> tuple[bool, dict]:
     def in_packages(pkg_name, pkg_versions):
+        if pkg_name not in packages:
+            return False
+        value = packages[pkg_name]
+        if isinstance(value, PackageInfo):
+            if not pkg_versions:
+                return True
+            return any(version == value.installed_version for version in pkg_versions)
+        # Old format: set[str]
         if not pkg_versions:
-            return pkg_name in packages
-        return pkg_name in packages and any(
-            version in packages[pkg_name] for version in pkg_versions
-        )
+            return True
+        return any(version in value for version in pkg_versions)
 
     packages_to_check: list[str | list[str]] = [package]
     if expand_package_fact:
         if isinstance(package, list):
-            packages_to_check = expand_package_fact(package[0]) or packages_to_check
+            pkg_name = package[0]
+            expanded = expand_package_fact(pkg_name)
+            if expanded:
+                # When expansion is 1:1 to the same name, preserve version info
+                if len(expanded) == 1 and expanded[0] == pkg_name:
+                    packages_to_check = [package]
+                else:
+                    packages_to_check = expanded
         else:
             packages_to_check = expand_package_fact(package) or packages_to_check
 
@@ -133,10 +153,36 @@ def _has_package(
     return all(checks), package_name_to_versions
 
 
+def _get_package_status(
+    current_packages: dict[str, set[str]] | dict[str, PackageInfo],
+    pkg_name: str,
+) -> PackageStatus | None:
+    """Return the PackageStatus for *pkg_name*, or ``None`` for old-format dicts."""
+    if pkg_name not in current_packages:
+        return None
+    value = current_packages[pkg_name]
+    if isinstance(value, PackageInfo):
+        return value.status
+    return None
+
+
+def _format_version(
+    current_packages: dict[str, set[str]] | dict[str, PackageInfo],
+    pkg_name: str,
+) -> str:
+    """Return a human-readable version string for noop messages."""
+    if pkg_name not in current_packages:
+        return ""
+    value = current_packages[pkg_name]
+    if isinstance(value, PackageInfo):
+        return value.installed_version
+    return ",".join(value)
+
+
 def ensure_packages(
     host: Host,
     packages_to_ensure: str | list[str] | list[PkgInfo] | None,
-    current_packages: dict[str, set[str]],
+    current_packages: dict[str, set[str]] | dict[str, PackageInfo],
     present: bool,
     install_command: str,
     uninstall_command: str,
@@ -144,28 +190,43 @@ def ensure_packages(
     upgrade_command: str | None = None,
     version_join: str | None = None,
     expand_package_fact: Callable[[str], list[str | list[str]]] | None = None,
+    inst_vers_format_fn: Callable | None = None,
 ):
     """
     Handles this common scenario:
 
     + We have a list of packages(/versions/urls) to ensure
-    + We have a map of existing package -> versions
+    + We have a map of existing package -> versions (old) or PackageInfo (new)
     + We have the common command bits (install, uninstall, version "joiner")
     + Outputs commands to ensure our desired packages/versions
     + Optionally upgrades packages w/o specified version when present
 
+    When *current_packages* values are :class:`PackageInfo` objects, the richer
+    status information is used:
+
+    * **HELD** packages always produce a noop, even when ``latest=True``.
+    * **UPGRADEABLE** packages are upgraded when ``latest=True``.
+    * **INSTALLED** packages with no available upgrade produce a noop.
+
+    With the legacy ``dict[str, set[str]]`` format, behaviour is unchanged:
+    ``latest=True`` blindly adds every versionless package to the upgrade list.
+
     Args:
-        packages_to_ensure (list): list of packages or package/versions or PkgInfo's
-        current_packages (dict): dict of package names -> version
-        present (bool): whether packages should exist or not
-        install_command (str): command to prefix to list of packages to install
-        uninstall_command (str): as above for uninstalling packages
-        latest (bool): whether to upgrade installed packages when present
-        upgrade_command (str): as above for upgrading
-        version_join (str): the package manager specific "joiner", ie ``=`` for \
-            ``<apt_pkg>=<version>``.  Not allowed if (pkg, ver, url) tuples are provided.
-        expand_package_fact: fact returning packages providing a capability \
+        packages_to_ensure: list of packages or package/versions or PkgInfo's
+        current_packages: dict of package names → set[version] **or** PackageInfo
+        present: whether packages should exist or not
+        install_command: command to prefix to list of packages to install
+        uninstall_command: as above for uninstalling packages
+        latest: whether to upgrade installed packages when present
+        upgrade_command: as above for upgrading
+        version_join: the package manager specific "joiner", ie ``=`` for
+            ``<apt_pkg>=<version>``.  Not allowed if PkgInfo list is provided.
+        expand_package_fact: fact returning packages providing a capability
             (ie ``yum whatprovides``)
+        inst_vers_format_fn: optional callable ``(name, operator, version) -> str``
+            controlling how versioned packages appear in install commands. Useful
+            for managers that parse ``pkg=version`` but whose install command does
+            not support version pinning (e.g. pacman).
     """
 
     if packages_to_ensure is None:
@@ -182,7 +243,7 @@ def ensure_packages(
             raise OperationValueError("cannot specify version_join and provide list[PkgInfo]")
     else:
         packages = [
-            PkgInfo.from_possible_pair(package, version_join)
+            PkgInfo.from_possible_pair(package, version_join, inst_vers_format_fn)
             for package in cast("list[str]", packages_to_ensure)
         ]
 
@@ -201,15 +262,38 @@ def ensure_packages(
                 diff_packages.append(package.inst_vers)
                 diff_expanded_packages[package.name] = expanded_packages
             else:
-                # Present packages w/o version specified - for upgrade if latest
-                if not package.has_version:  # don't try to upgrade if a specific version requested
-                    upgrade_packages.append(package.inst_vers)
+                pkg_name = package.name
+                status = _get_package_status(current_packages, pkg_name)
 
+                # Held packages: always noop regardless of latest
+                if status == PackageStatus.HELD:
+                    host.noop(f"package {pkg_name} is held")
+                    continue
+
+                # Present packages w/o version specified — candidate for upgrade
+                if not package.has_version:
+                    if status == PackageStatus.UPGRADEABLE:
+                        # New format: confirmed upgradeable
+                        upgrade_packages.append(package.inst_vers)
+                    elif latest and status is None:
+                        # Old format: try all (backward compat)
+                        upgrade_packages.append(package.inst_vers)
+
+                # Noop messages
                 if not latest:
-                    if (pkg := package.name) in current_packages:
-                        host.noop(f"package {pkg} is installed ({','.join(current_packages[pkg])})")
+                    version_display = _format_version(current_packages, pkg_name)
+                    if version_display:
+                        host.noop(f"package {pkg_name} is installed ({version_display})")
                     else:
-                        host.noop(f"package {package.name} is installed")
+                        host.noop(f"package {pkg_name} is installed")
+                elif status == PackageStatus.INSTALLED:
+                    # latest=True but package is already up to date (new format)
+                    version_display = _format_version(current_packages, pkg_name)
+                    if version_display:
+                        host.noop(f"package {pkg_name} is up to date ({version_display})")
+                    else:
+                        host.noop(f"package {pkg_name} is up to date")
+
     if present is False:
         for package in packages:
             has_package, expanded_packages = _has_package(

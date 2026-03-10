@@ -1,0 +1,14 @@
+{
+    "command": "apt list --upgradeable -qq 2>/dev/null || true",
+    "requires_command": "apt",
+    "output": [
+        "curl/jammy-updates 7.81.0-1ubuntu1.14 amd64 [upgradable from: 7.81.0-1ubuntu1.13]",
+        "libcurl4/jammy-updates 7.81.0-1ubuntu1.14 amd64 [upgradable from: 7.81.0-1ubuntu1.13]",
+        "vim/jammy-updates 2:8.2.3995-1ubuntu2.13 amd64 [upgradable from: 2:8.2.3995-1ubuntu2.12]"
+    ],
+    "fact": {
+        "curl": "7.81.0-1ubuntu1.14",
+        "libcurl4": "7.81.0-1ubuntu1.14",
+        "vim": "2:8.2.3995-1ubuntu2.13"
+    }
+}

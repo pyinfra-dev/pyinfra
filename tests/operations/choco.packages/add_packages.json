@@ -1,7 +1,11 @@
 {
-    "args": ["notepadplusplus"],
+    "args": [
+        "notepadplusplus"
+    ],
     "facts": {
-        "choco.ChocoPackages": {}
+        "choco.ChocoPackages": {},
+        "choco.ChocoOutdatedPackages": {},
+        "choco.ChocoPinnedPackages": []
     },
     "commands": [
         "choco install -y notepadplusplus"

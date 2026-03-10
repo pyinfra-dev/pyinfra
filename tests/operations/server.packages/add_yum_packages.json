@@ -23,7 +23,9 @@
             "package=git": null,
             "package=python-devel": null,
             "package=something": null
-        }
+        },
+        "yum.YumUpgradeablePackages": {},
+        "yum.YumHeldPackages": []
     },
     "commands": [
         "yum install -y git python-devel"

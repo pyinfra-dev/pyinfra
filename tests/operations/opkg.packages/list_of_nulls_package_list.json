@@ -1,7 +1,12 @@
 {
-    "args": ["", "", ""],
+    "args": [
+        "",
+        "",
+        ""
+    ],
     "facts": {
-        "opkg.OpkgPackages": {}
+        "opkg.OpkgPackages": {},
+        "opkg.OpkgUpgradeablePackages": {}
     },
     "commands": [],
     "noop_description": "empty or invalid package list provided to opkg.packages",

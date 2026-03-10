@@ -1,0 +1,14 @@
+{
+    "command": "apk lock --list 2>/dev/null || true",
+    "requires_command": "apk",
+    "output": [
+        "vim",
+        "curl",
+        "nginx"
+    ],
+    "fact": [
+        "vim",
+        "curl",
+        "nginx"
+    ]
+}

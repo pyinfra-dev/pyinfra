@@ -100,6 +100,12 @@ class FakeFact:
     def __contains__(self, key):
         return key in self.data
 
+    def __bool__(self):
+        return bool(self.data)
+
+    def __len__(self):
+        return len(self.data)
+
     def __call__(self, *args, **kwargs):
         item = self.data
 

@@ -6,7 +6,8 @@ from __future__ import annotations
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.xbps import XbpsPackages
+from pyinfra.facts.xbps import XbpsPackages, XbpsUpgradeablePackages
+from pyinfra.facts.util.packages import build_package_map
 
 from .util.packaging import ensure_packages
 
@@ -39,6 +40,7 @@ _update = update._inner  # noqa: E305
 def packages(
     packages: str | list[str] | None = None,
     present=True,
+    latest=False,
     update=False,
     upgrade=False,
 ):
@@ -47,6 +49,7 @@ def packages(
 
     + packages: list of packages to ensure
     + present: whether the packages should be installed
+    + latest: whether to upgrade packages without a specified version
     + update: run ``xbps-install -S`` before installing packages
     + upgrade: run ``xbps-install -y -u`` before installing packages
 
@@ -68,11 +71,18 @@ def packages(
     if upgrade:
         yield from _upgrade()
 
+    installed = host.get_fact(XbpsPackages)
+    upgradeable = host.get_fact(XbpsUpgradeablePackages)
+
+    current_packages = build_package_map(installed, upgradeable)
+
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(XbpsPackages),
+        current_packages,
         present,
         install_command="xbps-install -y -u",
         uninstall_command="xbps-remove -y",
+        upgrade_command="xbps-install -y -u",
+        latest=latest,
     )

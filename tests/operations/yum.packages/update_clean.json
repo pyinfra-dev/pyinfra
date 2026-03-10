@@ -5,7 +5,9 @@
     },
     "facts": {
         "rpm.RpmPackages": {},
-        "rpm.RpmPackageProvides": {}
+        "rpm.RpmPackageProvides": {},
+        "yum.YumUpgradeablePackages": {},
+        "yum.YumHeldPackages": []
     },
     "commands": [
         "yum clean all",

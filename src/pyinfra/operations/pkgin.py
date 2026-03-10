@@ -6,7 +6,8 @@ from __future__ import annotations
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.pkgin import PkginPackages
+from pyinfra.facts.pkgin import PkginPackages, PkginUpgradeablePackages
+from pyinfra.facts.util.packages import build_package_map
 
 from .util.packaging import ensure_packages
 
@@ -78,12 +79,17 @@ def packages(
     if upgrade:
         yield from _upgrade()
 
+    installed = host.get_fact(PkginPackages)
+    upgradeable = host.get_fact(PkginUpgradeablePackages)
+
+    current_packages = build_package_map(installed, upgradeable)
+
     # TODO support glob for specific versions (it isn't as simple
     # as apt-s, as pkgin supports something like 'mysql-server>=5.6<5.7')
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(PkginPackages),
+        current_packages,
         present,
         install_command="pkgin -y install",
         uninstall_command="pkgin -y remove",

@@ -12,37 +12,19 @@ from pyinfra.api import OperationError, operation
 from pyinfra.facts.apt import (
     AptKeys,
     AptSources,
-    SimulateOperationWillChange,
     noninteractive_apt,
     parse_apt_repo,
 )
-from pyinfra.facts.deb import DebPackage, DebPackages
+from pyinfra.facts.deb import DebHeldPackages, DebPackage, DebPackages, DebUpgradeablePackages
 from pyinfra.facts.files import File
 from pyinfra.facts.gpg import GpgKey
 from pyinfra.facts.server import Date
+from pyinfra.facts.util.packages import build_package_map
 
 from . import files
 from .util.packaging import ensure_packages
 
 APT_UPDATE_FILENAME = "/var/lib/apt/periodic/update-success-stamp"
-
-
-def _simulate_then_perform(command: str):
-    changes = host.get_fact(SimulateOperationWillChange, command)
-
-    if not changes:
-        # Simulating apt-get command failed, so the actual
-        # operation will probably fail too:
-        yield noninteractive_apt(command)
-    elif (
-        changes["upgraded"] == 0
-        and changes["newly_installed"] == 0
-        and changes["removed"] == 0
-        and changes["not_upgraded"] == 0
-    ):
-        host.noop(f"{command} skipped, no changes would be performed")
-    else:
-        yield noninteractive_apt(command)
 
 
 @operation()
@@ -359,12 +341,17 @@ def upgrade(auto_remove: bool = False):
         )
     """
 
+    upgradeable = host.get_fact(DebUpgradeablePackages)
+    if not upgradeable:
+        host.noop("all packages are up to date")
+        return
+
     command = ["upgrade"]
 
     if auto_remove:
         command.append("--autoremove")
 
-    yield from _simulate_then_perform(" ".join(command))
+    yield noninteractive_apt(" ".join(command))
 
 
 _upgrade = upgrade  # noqa: E305 (for use below where update is a kwarg)
@@ -386,12 +373,17 @@ def dist_upgrade(auto_remove: bool = False):
         )
     """
 
+    upgradeable = host.get_fact(DebUpgradeablePackages)
+    if not upgradeable:
+        host.noop("all packages are up to date")
+        return
+
     command = ["dist-upgrade"]
 
     if auto_remove:
         command.append("--autoremove")
 
-    yield from _simulate_then_perform(" ".join(command))
+    yield noninteractive_apt(" ".join(command))
 
 
 @operation()
@@ -482,11 +474,17 @@ def packages(
 
     uninstall_command = " ".join(uninstall_command_args)
 
+    installed = host.get_fact(DebPackages)
+    upgradeable = host.get_fact(DebUpgradeablePackages)
+    held = host.get_fact(DebHeldPackages)
+
+    current_packages = build_package_map(installed, upgradeable, set(held))
+
     # Compare/ensure packages are present/not
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(DebPackages),
+        current_packages,
         present,
         install_command=noninteractive_apt(install_command, force=force),
         uninstall_command=noninteractive_apt(uninstall_command, force=force),

@@ -111,6 +111,101 @@ class BrewCasks(BrewPackages):
         return "brew"
 
 
+BREW_OUTDATED_REGEX = re.compile(r"^(\S+)\s+\(([^)]+)\)\s+[<!=]+\s+(\S+)")
+
+
+class BrewOutdatedPackages(FactBase):
+    """
+    Returns a dict of outdated brew packages and their available versions:
+
+    .. code:: python
+
+        {
+            "package_name": "available_version",
+        }
+    """
+
+    use_default_on_error = True
+
+    @override
+    def command(self) -> str:
+        return "brew outdated --verbose 2>/dev/null || true"
+
+    @override
+    def requires_command(self) -> str:
+        return "brew"
+
+    default = dict
+
+    @override
+    def process(self, output):
+        outdated: dict[str, str] = {}
+        for line in output:
+            match = BREW_OUTDATED_REGEX.match(line)
+            if match:
+                outdated[match.group(1)] = match.group(3)
+        return outdated
+
+
+class BrewOutdatedCasks(FactBase):
+    """
+    Returns a dict of outdated brew casks and their available versions:
+
+    .. code:: python
+
+        {
+            "cask_name": "available_version",
+        }
+    """
+
+    use_default_on_error = True
+
+    @override
+    def command(self) -> str:
+        return "brew outdated --cask --verbose 2>/dev/null || true"
+
+    @override
+    def requires_command(self) -> str:
+        return "brew"
+
+    default = dict
+
+    @override
+    def process(self, output):
+        outdated: dict[str, str] = {}
+        for line in output:
+            match = BREW_OUTDATED_REGEX.match(line)
+            if match:
+                outdated[match.group(1)] = match.group(3)
+        return outdated
+
+
+class BrewPinnedPackages(FactBase):
+    """
+    Returns a list of pinned brew packages.
+
+    .. code:: python
+
+        ["package_name", ...]
+    """
+
+    use_default_on_error = True
+
+    @override
+    def command(self) -> str:
+        return "brew list --pinned 2>/dev/null || true"
+
+    @override
+    def requires_command(self) -> str:
+        return "brew"
+
+    default = list
+
+    @override
+    def process(self, output):
+        return [line.strip() for line in output if line.strip()]
+
+
 class BrewTaps(FactBase):
     """
     Returns a list of brew taps.

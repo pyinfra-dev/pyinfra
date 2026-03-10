@@ -1,0 +1,14 @@
+{
+    "command": "dnf check-update -q 2>/dev/null; true",
+    "requires_command": "dnf",
+    "output": [
+        "bash.x86_64                      5.2.15-3.fc38               updates",
+        "glibc.x86_64                     2.37-4.fc38                 updates",
+        "python3.x86_64                   3.11.5-1.fc38               updates"
+    ],
+    "fact": {
+        "bash": "5.2.15-3.fc38",
+        "glibc": "2.37-4.fc38",
+        "python3": "3.11.5-1.fc38"
+    }
+}

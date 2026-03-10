@@ -5,8 +5,9 @@
     },
     "facts": {
         "gem.GemPackages": {
-            "rubyenv": true
-        }
+            "rubyenv": ["1.0.0"]
+        },
+        "gem.GemOutdatedPackages": {}
     },
     "commands": [
         "gem uninstall rubyenv"

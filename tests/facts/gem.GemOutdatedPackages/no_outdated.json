@@ -1,0 +1,6 @@
+{
+    "command": "gem outdated 2>/dev/null || true",
+    "requires_command": "gem",
+    "output": [],
+    "fact": {}
+}

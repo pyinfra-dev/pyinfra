@@ -1,0 +1,14 @@
+{
+    "command": "pkgin upgrade -n 2>/dev/null || true",
+    "requires_command": "pkgin",
+    "output": [
+        "bash-5.2.15 upgrade",
+        "curl-8.1.2 upgrade",
+        "nginx-1.24.0 upgrade"
+    ],
+    "fact": {
+        "bash": "5.2.15",
+        "curl": "8.1.2",
+        "nginx": "1.24.0"
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "command": "zypper locks 2>/dev/null || true",
+    "requires_command": "zypper",
+    "output": [
+        "There are no package locks defined."
+    ],
+    "fact": []
+}

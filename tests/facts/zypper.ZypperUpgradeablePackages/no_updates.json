@@ -1,0 +1,10 @@
+{
+    "command": "zypper --non-interactive list-updates 2>/dev/null || true",
+    "requires_command": "zypper",
+    "output": [
+        "Loading repository data...",
+        "Reading installed packages...",
+        "No updates found."
+    ],
+    "fact": {}
+}

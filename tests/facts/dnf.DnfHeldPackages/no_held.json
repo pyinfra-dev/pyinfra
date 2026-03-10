@@ -1,0 +1,8 @@
+{
+    "command": "dnf versionlock list 2>/dev/null || true",
+    "requires_command": "dnf",
+    "output": [
+        "Last metadata expiration check: 0:30:00 ago on Mon 01 Jan 2024."
+    ],
+    "fact": []
+}

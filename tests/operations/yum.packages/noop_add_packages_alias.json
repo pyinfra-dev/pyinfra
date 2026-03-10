@@ -1,14 +1,25 @@
 {
-    "args": [[
-        "vim"
-    ]],
+    "args": [
+        [
+            "vim"
+        ]
+    ],
     "facts": {
         "rpm.RpmPackages": {
-            "vim-enhanced": ["1.2.3"]
+            "vim-enhanced": [
+                "1.2.3"
+            ]
         },
         "rpm.RpmPackageProvides": {
-            "package=vim": [["vim-enhanced", "1.2.3"]]
-        }
+            "package=vim": [
+                [
+                    "vim-enhanced",
+                    "1.2.3"
+                ]
+            ]
+        },
+        "yum.YumUpgradeablePackages": {},
+        "yum.YumHeldPackages": []
     },
     "commands": [],
     "noop_description": "package vim is installed"

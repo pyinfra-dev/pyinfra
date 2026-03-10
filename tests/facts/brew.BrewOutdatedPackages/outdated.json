@@ -1,0 +1,14 @@
+{
+    "command": "brew outdated --verbose 2>/dev/null || true",
+    "requires_command": "brew",
+    "output": [
+        "git (2.39.1) < 2.42.0",
+        "node (18.12.1) < 20.9.0",
+        "python@3.11 (3.11.4) < 3.11.6"
+    ],
+    "fact": {
+        "git": "2.42.0",
+        "node": "20.9.0",
+        "python@3.11": "3.11.6"
+    }
+}

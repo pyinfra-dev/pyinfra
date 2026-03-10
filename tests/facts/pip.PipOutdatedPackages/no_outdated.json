@@ -1,0 +1,6 @@
+{
+    "command": "pip list --outdated --format=columns 2>/dev/null || true",
+    "requires_command": "pip",
+    "output": [],
+    "fact": {}
+}

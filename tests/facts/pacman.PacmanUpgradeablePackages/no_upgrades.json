@@ -1,0 +1,6 @@
+{
+    "command": "pacman -Qu",
+    "requires_command": "pacman",
+    "output": [],
+    "fact": {}
+}

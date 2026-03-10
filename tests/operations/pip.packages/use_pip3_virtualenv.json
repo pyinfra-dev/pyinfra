@@ -8,6 +8,9 @@
         "pip.PipPackages": {
             "pip=testdir/bin/pip3": {}
         },
+        "pip.PipOutdatedPackages": {
+            "pip=testdir/bin/pip3": {}
+        },
         "files.File": {
             "path=testdir/bin/activate": true
         }

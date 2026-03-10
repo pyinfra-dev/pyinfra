@@ -1,0 +1,7 @@
+{
+    "facts": {
+        "pkg.PkgUpgradeablePackages": {}
+    },
+    "commands": [],
+    "noop_description": "all packages are up to date"
+}

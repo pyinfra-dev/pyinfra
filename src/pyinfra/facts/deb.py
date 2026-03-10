@@ -58,6 +58,80 @@ class DebPackages(FactBase):
         return parse_packages(self.regex, output)
 
 
+class DebUpgradeablePackages(FactBase):
+    """
+    Returns a dict of upgradeable apt packages and their available versions:
+
+    .. code:: python
+
+        {
+            "package_name": "available_version",
+        }
+    """
+
+    @override
+    def command(self) -> str:
+        return "apt list --upgradeable -qq 2>/dev/null || true"
+
+    @override
+    def requires_command(self) -> str:
+        return "apt"
+
+    default = dict
+    use_default_on_error = True
+
+    @override
+    def process(self, output):
+        packages: dict[str, str] = {}
+
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+            # Format: package_name/suite version arch [upgradable from: old_version]
+            match = re.match(r"^([^/]+)/\S+\s+(\S+)", line)
+            if match:
+                packages[match.group(1)] = match.group(2)
+
+        return packages
+
+
+class DebHeldPackages(FactBase):
+    """
+    Returns a list of held dpkg package names:
+
+    .. code:: python
+
+        ["package_name", ...]
+    """
+
+    @override
+    def command(self) -> str:
+        return "dpkg --get-selections | grep 'hold$' || true"
+
+    @override
+    def requires_command(self) -> str:
+        return "dpkg"
+
+    default = list
+    use_default_on_error = True
+
+    @override
+    def process(self, output):
+        packages: list[str] = []
+
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+            # Format: package_name\thold
+            parts = line.split()
+            if parts:
+                packages.append(parts[0])
+
+        return packages
+
+
 class DebPackage(FactBase):
     """
     Returns information on a .deb archive or installed package.

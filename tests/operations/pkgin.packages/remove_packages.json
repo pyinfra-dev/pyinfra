@@ -1,12 +1,18 @@
 {
-    "args": [["curl", "i-dont-exist"]],
+    "args": [
+        [
+            "curl",
+            "i-dont-exist"
+        ]
+    ],
     "kwargs": {
         "present": false
     },
     "facts": {
         "pkgin.PkginPackages": {
             "curl": "1"
-        }
+        },
+        "pkgin.PkginUpgradeablePackages": {}
     },
     "commands": [
         "pkgin -y remove curl"

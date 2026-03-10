@@ -1,0 +1,12 @@
+{
+    "command": "brew outdated --cask --verbose 2>/dev/null || true",
+    "requires_command": "brew",
+    "output": [
+        "firefox (118.0) < 119.0",
+        "visual-studio-code (1.82.0) < 1.83.1"
+    ],
+    "fact": {
+        "firefox": "119.0",
+        "visual-studio-code": "1.83.1"
+    }
+}

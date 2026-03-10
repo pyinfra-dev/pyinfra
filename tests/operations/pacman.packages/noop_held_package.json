@@ -1,0 +1,20 @@
+{
+    "args": [["linux"]],
+    "kwargs": {
+        "latest": true
+    },
+    "facts": {
+        "pacman.PacmanUnpackGroup": {
+            "package=linux": ["linux"]
+        },
+        "pacman.PacmanPackages": {
+            "linux": ["6.1.1-1"]
+        },
+        "pacman.PacmanUpgradeablePackages": {
+            "linux": "6.1.2-1"
+        },
+        "pacman.PacmanHeldPackages": ["linux"]
+    },
+    "commands": [],
+    "noop_description": "package linux is held"
+}

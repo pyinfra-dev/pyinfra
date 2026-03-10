@@ -1,8 +1,13 @@
 {
-    "args": ["curl"],
-    "kwargs": {"update": true},
+    "args": [
+        "curl"
+    ],
+    "kwargs": {
+        "update": true
+    },
     "facts": {
-        "opkg.OpkgPackages": {}
+        "opkg.OpkgPackages": {},
+        "opkg.OpkgUpgradeablePackages": {}
     },
     "commands": [
         "opkg update",

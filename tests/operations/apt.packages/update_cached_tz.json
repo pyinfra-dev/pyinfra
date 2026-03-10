@@ -5,6 +5,8 @@
     },
     "facts": {
         "deb.DebPackages": {},
+        "deb.DebUpgradeablePackages": {},
+        "deb.DebHeldPackages": [],
         "server.Date": "datetime:2015-01-01T22:44:00+01:00",
         "files.File": {
             "path=/var/lib/apt/periodic/update-success-stamp": {

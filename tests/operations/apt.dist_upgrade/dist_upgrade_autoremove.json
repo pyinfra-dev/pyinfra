@@ -1,13 +1,9 @@
 {
     "kwargs": {"auto_remove": true},
     "facts": {
-        "apt.SimulateOperationWillChange": {
-            "command=dist-upgrade --autoremove": {
-                "upgraded": 10,
-                "newly_installed": 3,
-                "removed": 2,
-                "not_upgraded": 3
-            }
+        "deb.DebUpgradeablePackages": {
+            "vim": "2:9.0.1-r1",
+            "curl": "7.88.1-r0"
         }
     },
     "commands": [

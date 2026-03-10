@@ -1,0 +1,31 @@
+{
+    "args": ["py-pip"],
+    "kwargs": {
+        "update": true,
+        "upgrade": true
+    },
+    "facts": {
+        "server.Os": "os",
+        "server.OsVersion": "os_version",
+        "server.Arch": "arch",
+        "pkg.PkgPackages": {
+            "py-pip": ["22.0"]
+        },
+        "server.Which": {
+            "command=pkg": "/bin/pkg"
+        },
+        "files.File": {
+            "path=/etc/installurl": null
+        },
+        "pkg.PkgUpgradeablePackages": {
+            "py-pip": "23.0"
+        },
+        "pkg.PkgLockedPackages": []
+    },
+    "commands": [
+        "pkg update",
+        "pkg upgrade -y"
+    ],
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "package updates are always executed"
+}

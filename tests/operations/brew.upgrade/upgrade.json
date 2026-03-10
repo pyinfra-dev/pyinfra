@@ -1,5 +1,11 @@
 {
     "args": [],
+    "facts": {
+        "brew.BrewOutdatedPackages": {
+            "vim": "9.1"
+        },
+        "brew.BrewPinnedPackages": []
+    },
     "commands": [
         "brew upgrade"
     ]

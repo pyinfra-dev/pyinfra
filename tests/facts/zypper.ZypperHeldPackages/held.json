@@ -1,0 +1,14 @@
+{
+    "command": "zypper locks 2>/dev/null || true",
+    "requires_command": "zypper",
+    "output": [
+        "# | Name     | Type    | Repository",
+        "--+----------+---------+-----------",
+        "1 | kernel   | package | (any)",
+        "2 | nginx    | package | (any)"
+    ],
+    "fact": [
+        "kernel",
+        "nginx"
+    ]
+}

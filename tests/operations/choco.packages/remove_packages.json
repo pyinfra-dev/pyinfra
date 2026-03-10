@@ -1,12 +1,16 @@
 {
-    "args": ["notepadplusplus"],
+    "args": [
+        "notepadplusplus"
+    ],
     "kwargs": {
         "present": false
     },
     "facts": {
         "choco.ChocoPackages": {
-            "notepadplusplus": true
-        }
+            "notepadplusplus": ["8.5.4"]
+        },
+        "choco.ChocoOutdatedPackages": {},
+        "choco.ChocoPinnedPackages": []
     },
     "commands": [
         "choco uninstall -y -x notepadplusplus"

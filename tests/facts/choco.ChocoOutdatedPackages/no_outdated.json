@@ -1,0 +1,6 @@
+{
+    "command": "choco outdated -r 2>$null",
+    "shell_executable": "ps",
+    "output": [],
+    "fact": {}
+}

@@ -1,7 +1,10 @@
 {
-    "args": ["curl"],
+    "args": [
+        "curl"
+    ],
     "facts": {
-        "xbps.XbpsPackages": {}
+        "xbps.XbpsPackages": {},
+        "xbps.XbpsUpgradeablePackages": {}
     },
     "commands": [
         "xbps-install -y -u curl"

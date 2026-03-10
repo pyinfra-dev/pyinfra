@@ -1,0 +1,6 @@
+{
+    "command": "npm outdated -g --parseable 2>/dev/null || true",
+    "requires_command": "npm",
+    "output": [],
+    "fact": {}
+}

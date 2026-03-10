@@ -6,7 +6,8 @@ from __future__ import annotations
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.choco import ChocoPackages
+from pyinfra.facts.choco import ChocoOutdatedPackages, ChocoPackages, ChocoPinnedPackages
+from pyinfra.facts.util.packages import build_package_map
 
 from .util.packaging import ensure_packages
 
@@ -35,10 +36,16 @@ def packages(packages: str | list[str] | None = None, present=True, latest=False
         )
     """
 
+    installed = host.get_fact(ChocoPackages)
+    outdated = host.get_fact(ChocoOutdatedPackages)
+    pinned = host.get_fact(ChocoPinnedPackages)
+
+    current_packages = build_package_map(installed, outdated, set(pinned))
+
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(ChocoPackages),
+        current_packages,
         present,
         install_command="choco install -y",
         uninstall_command="choco uninstall -y -x",

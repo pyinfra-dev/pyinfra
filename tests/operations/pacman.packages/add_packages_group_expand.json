@@ -4,7 +4,9 @@
         "pacman.PacmanUnpackGroup": {
             "package=xorg-fonts": ["xorg-font-util", "xorg-font-encodings"]
         },
-        "pacman.PacmanPackages": {}
+        "pacman.PacmanPackages": {},
+        "pacman.PacmanUpgradeablePackages": {},
+        "pacman.PacmanHeldPackages": []
     },
     "commands": [
         "pacman --noconfirm -S xorg-fonts"

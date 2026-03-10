@@ -1,0 +1,11 @@
+{
+    "facts": {
+        "zypper.ZypperUpgradeablePackages": {
+            "vim": "9.0",
+            "curl": "7.88"
+        }
+    },
+    "commands": [
+        "zypper update -y"
+    ]
+}

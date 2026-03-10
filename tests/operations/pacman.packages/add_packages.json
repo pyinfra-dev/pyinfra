@@ -5,7 +5,9 @@
             "package=curl": ["curl"],
             "package=xorg-fonts": ["xorg-font-util", "xorg-fonts-encodings"]
         },
-        "pacman.PacmanPackages": {}
+        "pacman.PacmanPackages": {},
+        "pacman.PacmanUpgradeablePackages": {},
+        "pacman.PacmanHeldPackages": []
     },
     "commands": [
         "pacman --noconfirm -S curl xorg-fonts"

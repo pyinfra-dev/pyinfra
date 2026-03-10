@@ -13,7 +13,9 @@
             "git": [
                 ""
             ]
-        }
+        },
+        "zypper.ZypperUpgradeablePackages": {},
+        "zypper.ZypperHeldPackages": []
     },
     "commands": [
         "zypper --quiet --non-interactive remove -y git"

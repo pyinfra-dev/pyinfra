@@ -36,3 +36,46 @@ class NpmPackages(FactBase):
     @override
     def process(self, output):
         return parse_packages(NPM_REGEX, output)
+
+
+class NpmOutdatedPackages(FactBase):
+    """
+    Returns a dict of outdated npm packages and their latest available versions:
+
+    .. code:: python
+
+        {
+            "package_name": "latest_version",
+        }
+    """
+
+    default = dict
+    use_default_on_error = True
+
+    @override
+    def requires_command(self, directory=None) -> str:
+        return "npm"
+
+    @override
+    def command(self, directory=None):
+        if directory:
+            return (
+                "! test -d {0} || (cd {0} && npm outdated -g --parseable 2>/dev/null || true)"
+            ).format(directory)
+        return "npm outdated -g --parseable 2>/dev/null || true"
+
+    @override
+    def process(self, output):
+        packages: dict[str, str] = {}
+        for line in output:
+            # Format: path:current:wanted:latest:depended_by
+            parts = line.split(":")
+            if len(parts) >= 4:
+                # The path part contains the package name at the end
+                path = parts[0]
+                latest = parts[3]
+                # Extract package name from path (e.g. /usr/lib/node_modules/package)
+                name = path.rsplit("/", 1)[-1] if "/" in path else path
+                if name and latest:
+                    packages[name] = latest
+        return packages

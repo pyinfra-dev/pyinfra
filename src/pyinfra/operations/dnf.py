@@ -6,7 +6,9 @@ from __future__ import annotations
 
 from pyinfra import host, state
 from pyinfra.api import operation
+from pyinfra.facts.dnf import DnfHeldPackages, DnfUpgradeablePackages
 from pyinfra.facts.rpm import RpmPackageProvides, RpmPackages
+from pyinfra.facts.util.packages import build_package_map
 
 from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
 
@@ -123,6 +125,22 @@ def rpm(src: str, present=True):
     yield from ensure_rpm(state, host, src, present, "dnf")
 
 
+@operation()
+def upgrade():
+    """
+    Upgrades all dnf packages that have updates available.
+    """
+
+    upgradeable = host.get_fact(DnfUpgradeablePackages)
+    if upgradeable:
+        yield "dnf update -y"
+    else:
+        host.noop("all packages are up to date")
+
+
+_upgrade = upgrade._inner  # noqa: E305
+
+
 @operation(is_idempotent=False)
 def update():
     """
@@ -199,10 +217,16 @@ def packages(
     if extra_uninstall_args:
         uninstall_command.append(extra_uninstall_args)
 
+    installed = host.get_fact(RpmPackages)
+    upgradeable = host.get_fact(DnfUpgradeablePackages)
+    held = host.get_fact(DnfHeldPackages)
+
+    current_packages = build_package_map(installed, upgradeable, set(held))
+
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(RpmPackages),
+        current_packages,
         present,
         install_command=" ".join(install_command),
         uninstall_command=" ".join(uninstall_command),

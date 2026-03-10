@@ -19,7 +19,9 @@
             "package=git": null,
             "package=python-devel": null,
             "package=something": null
-        }
+        },
+        "dnf.DnfUpgradeablePackages": {},
+        "dnf.DnfHeldPackages": []
     },
     "commands": [
         "dnf install -y git python-devel"

@@ -1,7 +1,10 @@
 {
-    "args": ["curl"],
+    "args": [
+        "curl"
+    ],
     "facts": {
-        "pkgin.PkginPackages": {}
+        "pkgin.PkginPackages": {},
+        "pkgin.PkginUpgradeablePackages": {}
     },
     "commands": [
         "pkgin -y install curl"

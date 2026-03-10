@@ -1,0 +1,8 @@
+{
+    "command": "yum versionlock list 2>/dev/null || true",
+    "requires_command": "yum",
+    "output": [
+        "Loaded plugins: versionlock"
+    ],
+    "fact": []
+}

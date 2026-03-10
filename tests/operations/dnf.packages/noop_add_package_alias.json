@@ -1,12 +1,25 @@
 {
-    "args": [["vim"]],
+    "args": [
+        [
+            "vim"
+        ]
+    ],
     "facts": {
         "rpm.RpmPackages": {
-            "vim-enhanced": ["abc"]
+            "vim-enhanced": [
+                "abc"
+            ]
         },
         "rpm.RpmPackageProvides": {
-            "package=vim": [["vim-enhanced", "abc"]]
-        }
+            "package=vim": [
+                [
+                    "vim-enhanced",
+                    "abc"
+                ]
+            ]
+        },
+        "dnf.DnfUpgradeablePackages": {},
+        "dnf.DnfHeldPackages": []
     },
     "commands": [],
     "noop_description": "package vim is installed"

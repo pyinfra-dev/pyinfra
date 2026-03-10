@@ -1,0 +1,14 @@
+{
+    "command": "brew list --pinned 2>/dev/null || true",
+    "requires_command": "brew",
+    "output": [
+        "node",
+        "python@3.11",
+        "git"
+    ],
+    "fact": [
+        "node",
+        "python@3.11",
+        "git"
+    ]
+}

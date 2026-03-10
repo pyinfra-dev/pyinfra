@@ -1,0 +1,13 @@
+{
+    "command": "pkg lock -l 2>/dev/null || true",
+    "requires_command": "pkg",
+    "output": [
+        "Currently locked packages:",
+        "nginx-1.24.0_1,3: locked",
+        "python39-3.9.17: locked"
+    ],
+    "fact": [
+        "nginx",
+        "python39"
+    ]
+}

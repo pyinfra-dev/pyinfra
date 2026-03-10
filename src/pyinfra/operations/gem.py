@@ -6,7 +6,9 @@ from __future__ import annotations
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.gem import GemPackages
+from pyinfra.facts.gem import GemOutdatedPackages, GemPackages
+
+from pyinfra.facts.util.packages import build_package_map
 
 from .util.packaging import ensure_packages
 
@@ -35,10 +37,14 @@ def packages(packages: str | list[str] | None = None, present=True, latest=False
         )
     """
 
+    installed_packages = host.get_fact(GemPackages)
+    outdated_packages = host.get_fact(GemOutdatedPackages)
+    current_packages = build_package_map(installed_packages, outdated_packages)
+
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(GemPackages),
+        current_packages,
         present,
         install_command="gem install",
         uninstall_command="gem uninstall",

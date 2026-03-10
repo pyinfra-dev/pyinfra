@@ -1,0 +1,12 @@
+{
+    "command": "npm outdated -g --parseable 2>/dev/null || true",
+    "requires_command": "npm",
+    "output": [
+        "/usr/lib/node_modules/npm:9.6.7:9.6.7:10.2.0:npm",
+        "/usr/lib/node_modules/typescript:5.1.6:5.1.6:5.2.2:typescript"
+    ],
+    "fact": {
+        "npm": "10.2.0",
+        "typescript": "5.2.2"
+    }
+}

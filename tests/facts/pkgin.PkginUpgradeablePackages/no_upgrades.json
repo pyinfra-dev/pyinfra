@@ -1,0 +1,6 @@
+{
+    "command": "pkgin upgrade -n 2>/dev/null || true",
+    "requires_command": "pkgin",
+    "output": [],
+    "fact": {}
+}

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import shlex
 
 from typing_extensions import override
@@ -48,6 +49,12 @@ class PacmanPackages(FactBase):
         {
             "package_name": ["version"],
         }
+
+    .. deprecated:: 3.x
+        Use the enriched sub-facts :class:`PacmanUpgradeablePackages` and
+        :class:`PacmanHeldPackages` together with
+        :func:`~pyinfra.facts.util.packages.build_package_map` for richer
+        package status information.
     """
 
     @override
@@ -63,3 +70,68 @@ class PacmanPackages(FactBase):
     @override
     def process(self, output):
         return parse_packages(PACMAN_REGEX, output)
+
+
+class PacmanUpgradeablePackages(FactBase):
+    """
+    Returns a dict of upgradeable pacman packages:
+
+    .. code:: python
+
+        {
+            "package_name": "available_version",
+        }
+    """
+
+    @override
+    def command(self) -> str:
+        return "pacman -Qu"
+
+    @override
+    def requires_command(self, *args, **kwargs) -> str:
+        return "pacman"
+
+    default = dict
+    use_default_on_error = True
+
+    _regex = re.compile(r"^(\S+)\s+\S+\s+->\s+(\S+)$")
+
+    @override
+    def process(self, output):
+        result: dict[str, str] = {}
+        for line in output:
+            match = self._regex.match(line)
+            if match:
+                result[match.group(1)] = match.group(2)
+        return result
+
+
+class PacmanHeldPackages(FactBase):
+    """
+    Returns a list of held (ignored) pacman packages from ``/etc/pacman.conf``.
+
+    .. code:: python
+
+        ["package_name", "another_package"]
+    """
+
+    @override
+    def command(self) -> str:
+        return "grep -E '^\\s*IgnorePkg' /etc/pacman.conf || true"
+
+    @override
+    def requires_command(self, *args, **kwargs) -> str:
+        return "pacman"
+
+    default = list
+
+    _regex = re.compile(r"^\s*IgnorePkg\s*=\s*(.+?)(?:\s*#.*)?$")
+
+    @override
+    def process(self, output):
+        result: list[str] = []
+        for line in output:
+            match = self._regex.match(line)
+            if match:
+                result.extend(match.group(1).split())
+        return result

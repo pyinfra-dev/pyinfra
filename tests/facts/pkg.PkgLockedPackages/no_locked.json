@@ -1,0 +1,8 @@
+{
+    "command": "pkg lock -l 2>/dev/null || true",
+    "requires_command": "pkg",
+    "output": [
+        "Currently locked packages:"
+    ],
+    "fact": []
+}

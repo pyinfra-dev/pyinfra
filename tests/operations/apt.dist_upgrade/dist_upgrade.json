@@ -1,11 +1,11 @@
 {
     "args": [],
+    "facts": {
+        "deb.DebUpgradeablePackages": {
+            "vim": "2:9.0.1-r1"
+        }
+    },
     "commands": [
         "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" dist-upgrade"
-    ],
-    "facts": {
-        "apt.SimulateOperationWillChange": {
-            "command=dist-upgrade": {}
-        }
-    }
+    ]
 }

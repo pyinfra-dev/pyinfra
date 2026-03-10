@@ -1,5 +1,7 @@
 {
-    "args": [ "docker-ce"],
+    "args": [
+        "docker-ce"
+    ],
     "kwargs": {
         "nobest": "true"
     },
@@ -7,7 +9,9 @@
         "rpm.RpmPackages": {},
         "rpm.RpmPackageProvides": {
             "package=docker-ce": null
-        }
+        },
+        "yum.YumUpgradeablePackages": {},
+        "yum.YumHeldPackages": []
     },
     "commands": [
         "yum install -y --nobest docker-ce"

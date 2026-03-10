@@ -1,10 +1,14 @@
 {
-    "args": [ "docker-ce"],
+    "args": [
+        "docker-ce"
+    ],
     "kwargs": {
         "extra_global_install_args": "--bar"
     },
     "facts": {
-        "rpm.RpmPackages": {}
+        "rpm.RpmPackages": {},
+        "zypper.ZypperUpgradeablePackages": {},
+        "zypper.ZypperHeldPackages": []
     },
     "commands": [
         "zypper --bar --non-interactive install -y docker-ce"

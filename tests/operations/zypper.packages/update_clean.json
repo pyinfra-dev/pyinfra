@@ -4,7 +4,9 @@
         "clean": true
     },
     "facts": {
-        "rpm.RpmPackages": {}
+        "rpm.RpmPackages": {},
+        "zypper.ZypperUpgradeablePackages": {},
+        "zypper.ZypperHeldPackages": []
     },
     "commands": [
         "zypper clean --all",

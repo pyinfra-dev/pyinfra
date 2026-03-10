@@ -1,0 +1,16 @@
+{
+    "command": "zypper --non-interactive list-updates 2>/dev/null || true",
+    "requires_command": "zypper",
+    "output": [
+        "Loading repository data...",
+        "Reading installed packages...",
+        "S | Repository | Name          | Current Version | Available Version | Arch",
+        "--+------------+---------------+-----------------+-------------------+-------",
+        "v | updates    | bash          | 5.1.16-1.1      | 5.2.15-1.1        | x86_64",
+        "v | updates    | vim           | 9.0.1234-1.1    | 9.0.2000-1.1      | x86_64"
+    ],
+    "fact": {
+        "bash": "5.2.15-1.1",
+        "vim": "9.0.2000-1.1"
+    }
+}

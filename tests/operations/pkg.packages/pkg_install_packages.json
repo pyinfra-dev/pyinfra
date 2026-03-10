@@ -1,5 +1,7 @@
 {
-    "args": ["py-pip"],
+    "args": [
+        "py-pip"
+    ],
     "facts": {
         "server.Os": "os",
         "server.OsVersion": "os_version",
@@ -10,7 +12,9 @@
         },
         "files.File": {
             "path=/etc/installurl": null
-        }
+        },
+        "pkg.PkgUpgradeablePackages": {},
+        "pkg.PkgLockedPackages": []
     },
     "commands": [
         "PKG_PATH=http://ftp.os.org/pub/os/os_version/packages/arch/ pkg install -y py-pip"

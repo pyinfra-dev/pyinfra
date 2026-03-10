@@ -1,0 +1,12 @@
+{
+    "command": "dpkg --get-selections | grep 'hold$' || true",
+    "requires_command": "dpkg",
+    "output": [
+        "linux-image-generic\t\t\t\thold",
+        "grub-efi-amd64\t\t\t\thold"
+    ],
+    "fact": [
+        "linux-image-generic",
+        "grub-efi-amd64"
+    ]
+}

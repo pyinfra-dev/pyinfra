@@ -1,0 +1,6 @@
+{
+    "command": "dnf check-update -q 2>/dev/null; true",
+    "requires_command": "dnf",
+    "output": [],
+    "fact": {}
+}

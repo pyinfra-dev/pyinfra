@@ -11,7 +11,9 @@
         },
         "apk.ApkPackages": {
             "something": [""]
-        }
+        },
+        "apk.ApkUpgradeablePackages": {},
+        "apk.ApkHeldPackages": []
     },
     "commands": [
         "apk add git python-devel"

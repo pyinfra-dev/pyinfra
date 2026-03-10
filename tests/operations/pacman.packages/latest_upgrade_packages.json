@@ -1,0 +1,23 @@
+{
+    "args": [["vim", "git"]],
+    "kwargs": {
+        "latest": true
+    },
+    "facts": {
+        "pacman.PacmanUnpackGroup": {
+            "package=vim": ["vim"],
+            "package=git": ["git"]
+        },
+        "pacman.PacmanPackages": {
+            "vim": ["9.0"],
+            "git": ["2.30"]
+        },
+        "pacman.PacmanUpgradeablePackages": {
+            "vim": "9.1"
+        },
+        "pacman.PacmanHeldPackages": []
+    },
+    "commands": [
+        "pacman --noconfirm -S vim"
+    ]
+}

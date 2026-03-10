@@ -4,7 +4,9 @@
         "latest": true
     },
     "facts": {
-        "brew.BrewPackages": {}
+        "brew.BrewPackages": {},
+        "brew.BrewOutdatedPackages": {},
+        "brew.BrewPinnedPackages": []
     },
     "commands": [
         "brew install php"

@@ -1,0 +1,11 @@
+{
+    "facts": {
+        "yum.YumUpgradeablePackages": {
+            "vim": "9.0",
+            "curl": "7.88"
+        }
+    },
+    "commands": [
+        "yum update -y"
+    ]
+}

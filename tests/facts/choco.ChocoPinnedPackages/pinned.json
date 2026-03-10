@@ -1,0 +1,12 @@
+{
+    "command": "choco pin list -r 2>$null",
+    "shell_executable": "ps",
+    "output": [
+        "python|3.11.4",
+        "nodejs|18.12.1"
+    ],
+    "fact": [
+        "python",
+        "nodejs"
+    ]
+}

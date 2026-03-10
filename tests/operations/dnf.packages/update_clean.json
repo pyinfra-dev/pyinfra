@@ -5,7 +5,9 @@
     },
     "facts": {
         "rpm.RpmPackages": {},
-        "rpm.RpmPackageProvides": {}
+        "rpm.RpmPackageProvides": {},
+        "dnf.DnfUpgradeablePackages": {},
+        "dnf.DnfHeldPackages": []
     },
     "commands": [
         "dnf clean all",

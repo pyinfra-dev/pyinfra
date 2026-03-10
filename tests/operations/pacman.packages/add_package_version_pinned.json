@@ -1,0 +1,16 @@
+{
+    "args": [["vim=9.0"]],
+    "facts": {
+        "pacman.PacmanUnpackGroup": {
+            "package=vim": ["vim"]
+        },
+        "pacman.PacmanPackages": {
+            "vim": ["8.2"]
+        },
+        "pacman.PacmanUpgradeablePackages": {},
+        "pacman.PacmanHeldPackages": []
+    },
+    "commands": [
+        "pacman --noconfirm -S vim"
+    ]
+}

@@ -10,12 +10,16 @@
         },
         "pacman.PacmanPackages": {
             "curl": ["1"]
-        }
+        },
+        "pacman.PacmanUpgradeablePackages": {
+            "curl": "2"
+        },
+        "pacman.PacmanHeldPackages": []
     },
     "commands": [
         "pacman -Sy",
         "pacman --noconfirm -Su"
     ],
     "idempotent": false,
-    "disable_idempotent_warning_reason": "package upgrades are always executed"
+    "disable_idempotent_warning_reason": "package updates are always executed"
 }

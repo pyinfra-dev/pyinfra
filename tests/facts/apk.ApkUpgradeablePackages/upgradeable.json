@@ -1,0 +1,15 @@
+{
+    "command": "apk version -v -l '<'",
+    "requires_command": "apk",
+    "output": [
+        "Installed:                              Available:",
+        "busybox-1.35.0-r17                    < 1.36.1-r0",
+        "musl-1.2.3-r4                         < 1.2.4-r1",
+        "openssl-3.0.8-r0                      < 3.1.1-r0"
+    ],
+    "fact": {
+        "busybox": "1.36.1-r0",
+        "musl": "1.2.4-r1",
+        "openssl": "3.1.1-r0"
+    }
+}

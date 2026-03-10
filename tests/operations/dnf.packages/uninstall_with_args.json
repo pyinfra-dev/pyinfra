@@ -1,18 +1,24 @@
 {
-    "args": [[
-        "git"
-    ]],
+    "args": [
+        [
+            "git"
+        ]
+    ],
     "kwargs": {
         "present": false,
         "extra_uninstall_args": "--force"
     },
     "facts": {
         "rpm.RpmPackages": {
-            "git": [""]
+            "git": [
+                ""
+            ]
         },
         "rpm.RpmPackageProvides": {
             "package=git": null
-        }
+        },
+        "dnf.DnfUpgradeablePackages": {},
+        "dnf.DnfHeldPackages": []
     },
     "commands": [
         "dnf remove -y --force git"

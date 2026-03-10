@@ -1,0 +1,6 @@
+{
+    "commands": [
+        "pkg update"
+    ],
+    "idempotent": false
+}

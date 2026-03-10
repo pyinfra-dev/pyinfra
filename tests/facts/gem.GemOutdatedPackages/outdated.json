@@ -1,0 +1,14 @@
+{
+    "command": "gem outdated 2>/dev/null || true",
+    "requires_command": "gem",
+    "output": [
+        "bundler (2.3.26 < 2.4.22)",
+        "rake (13.0.6 < 13.1.0)",
+        "json (2.6.3 < 2.7.1)"
+    ],
+    "fact": {
+        "bundler": "2.4.22",
+        "rake": "13.1.0",
+        "json": "2.7.1"
+    }
+}

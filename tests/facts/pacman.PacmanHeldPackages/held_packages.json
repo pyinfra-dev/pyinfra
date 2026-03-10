@@ -1,0 +1,8 @@
+{
+    "command": "grep -E '^\\s*IgnorePkg' /etc/pacman.conf || true",
+    "requires_command": "pacman",
+    "output": [
+        "IgnorePkg = linux nvidia"
+    ],
+    "fact": ["linux", "nvidia"]
+}

@@ -11,7 +11,8 @@ from typing import List, Union
 
 from pyinfra import host
 from pyinfra.api import StringCommand, operation
-from pyinfra.facts.opkg import OpkgPackages
+from pyinfra.facts.opkg import OpkgPackages, OpkgUpgradeablePackages
+from pyinfra.facts.util.packages import build_package_map
 from pyinfra.operations.util.packaging import ensure_packages
 
 EQUALS = "="
@@ -77,10 +78,17 @@ def packages(
     if update:
         yield from _update._inner()
 
+    installed = host.get_fact(OpkgPackages)
+    raw_upgradeable = host.get_fact(OpkgUpgradeablePackages)
+    # Convert OpkgPkgUpgradeInfo to plain dict[str, str] for build_package_map
+    upgradeable = {name: info.available for name, info in raw_upgradeable.items()}
+
+    current_packages = build_package_map(installed, upgradeable)
+
     yield from ensure_packages(
         host,
         pkg_list,
-        host.get_fact(OpkgPackages),
+        current_packages,
         present,
         install_command="opkg install",
         upgrade_command="opkg upgrade",

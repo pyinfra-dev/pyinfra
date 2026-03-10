@@ -1,0 +1,15 @@
+{
+    "args": [["vim=9.0"]],
+    "facts": {
+        "pacman.PacmanUnpackGroup": {
+            "package=vim": ["vim"]
+        },
+        "pacman.PacmanPackages": {
+            "vim": ["9.0"]
+        },
+        "pacman.PacmanUpgradeablePackages": {},
+        "pacman.PacmanHeldPackages": []
+    },
+    "commands": [],
+    "noop_description": "package vim is installed (9.0)"
+}
