@@ -1,7 +1,9 @@
 {
-    "command": "for keyring in $(find \"/etc/apt/trusted.gpg.d\" -type f \\( -name '*.gpg' -o -name '*.asc' -o -name '*.kbx' \\) 2>/dev/null); do echo \"KEYRING:$keyring\"; if [[ \"$keyring\" == *.asc ]]; then gpg --with-colons \"$keyring\" 2>/dev/null || true; else gpg --list-keys --with-colons --keyring \"$keyring\" --no-default-keyring 2>/dev/null || true; fi; done",
+    "command": "find \"/etc/apt/trusted.gpg.d\" -type f \\( -name '*.gpg' -o -name '*.kbx' \\) 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --list-keys --with-colons --keyring \"$1\" --no-default-keyring 2>/dev/null || true' _ {} \\; ; find \"/etc/apt/trusted.gpg.d\" -type f -name '*.asc' 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --with-colons \"$1\" 2>/dev/null || true' _ {} \\;",
     "requires_command": "gpg",
-    "arg": ["/etc/apt/trusted.gpg.d"],
+    "arg": [
+        "/etc/apt/trusted.gpg.d"
+    ],
     "output": [
         "KEYRING:/etc/apt/trusted.gpg.d/debian-archive-bookworm-automatic.asc",
         "pub:-:4096:1:B7C5D7D6350947F8:1663251644:::-:::scSC::::::23::0:",

@@ -171,17 +171,15 @@ class GpgKeyrings(GpgFactBase):
 
         search_locations = " ".join(f'"{d}"' for d in directories)
 
-        # Generate a command that finds keyrings and lists their keys
-        # We'll use a shell script that outputs keyring path followed by key info
+        # Two separate find+exec calls to avoid bash-specific syntax:
+        # - binary keyrings (.gpg, .kbx) use --keyring / --no-default-keyring
+        # - armored keyrings (.asc) are passed directly to gpg
         return (
-            f"for keyring in $(find {search_locations} -type f \\( -name '*.gpg' "
-            f"-o -name '*.asc' -o -name '*.kbx' \\) 2>/dev/null); do "
-            f'echo "KEYRING:$keyring"; '
-            f'if [[ "$keyring" == *.asc ]]; then '
-            f'gpg --with-colons "$keyring" 2>/dev/null || true; '
-            f"else "
-            f'gpg --list-keys --with-colons --keyring "$keyring" --no-default-keyring 2>/dev/null || true; '  # noqa: E501
-            f"fi; done"
+            f"find {search_locations} -type f \\( -name '*.gpg' -o -name '*.kbx' \\) 2>/dev/null"
+            f' -exec sh -c \'echo "KEYRING:$1";'
+            f' gpg --list-keys --with-colons --keyring "$1" --no-default-keyring 2>/dev/null || true\' _ {{}} \\; ;'
+            f" find {search_locations} -type f -name '*.asc' 2>/dev/null"
+            f' -exec sh -c \'echo "KEYRING:$1"; gpg --with-colons "$1" 2>/dev/null || true\' _ {{}} \\;'
         )
 
     @override

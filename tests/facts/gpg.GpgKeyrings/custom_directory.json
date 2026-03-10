@@ -1,7 +1,9 @@
 {
-    "command": "for keyring in $(find \"/custom/keyring/path\" -type f \\( -name '*.gpg' -o -name '*.asc' -o -name '*.kbx' \\) 2>/dev/null); do echo \"KEYRING:$keyring\"; if [[ \"$keyring\" == *.asc ]]; then gpg --with-colons \"$keyring\" 2>/dev/null || true; else gpg --list-keys --with-colons --keyring \"$keyring\" --no-default-keyring 2>/dev/null || true; fi; done",
+    "command": "find \"/custom/keyring/path\" -type f \\( -name '*.gpg' -o -name '*.kbx' \\) 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --list-keys --with-colons --keyring \"$1\" --no-default-keyring 2>/dev/null || true' _ {} \\; ; find \"/custom/keyring/path\" -type f -name '*.asc' 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --with-colons \"$1\" 2>/dev/null || true' _ {} \\;",
     "requires_command": "gpg",
-    "arg": ["/custom/keyring/path"],
+    "arg": [
+        "/custom/keyring/path"
+    ],
     "output": [
         "KEYRING:/custom/keyring/path/custom.asc",
         "pub:-:4096:1:9A3B3C4D5E6F7890:1622505600:::-:::scSC::::::23::0:",
