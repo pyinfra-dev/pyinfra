@@ -1,0 +1,16 @@
+{
+    "command": "emerge -puDN @world 2>/dev/null || true",
+    "requires_command": "emerge",
+    "output": [
+        "",
+        "These are the packages that would be merged, in order:",
+        "",
+        "[ebuild     U  ] sys-apps/portage-2.3.99-r1::gentoo [2.3.89::gentoo] USE=\"native-extensions\" 1,234 KiB",
+        "[ebuild     U  ] dev-libs/openssl-3.1.0::gentoo [1.1.1k-r2::gentoo] USE=\"asm\" 500 KiB",
+        "[ebuild   R    ] sys-devel/gcc-11.2.0::gentoo USE=\"openmp\" 0 KiB"
+    ],
+    "fact": {
+        "sys-apps/portage": "2.3.99-r1",
+        "dev-libs/openssl": "3.1.0"
+    }
+}

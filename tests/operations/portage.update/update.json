@@ -1,0 +1,6 @@
+{
+    "commands": [
+        "emerge --sync"
+    ],
+    "idempotent": false
+}

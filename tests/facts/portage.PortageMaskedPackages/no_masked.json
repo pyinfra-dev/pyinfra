@@ -1,0 +1,5 @@
+{
+    "command": "grep -rh '^[^#]' /etc/portage/package.mask 2>/dev/null || true",
+    "output": [],
+    "fact": []
+}

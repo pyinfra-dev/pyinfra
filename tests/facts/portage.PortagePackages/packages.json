@@ -1,0 +1,18 @@
+{
+    "command": "qlist -Iv",
+    "requires_command": "qlist",
+    "output": [
+        "sys-devel/gcc-11.2.0",
+        "app-editors/vim-9.0.1677",
+        "x11-libs/gtk+-3.24.38",
+        "dev-libs/openssl-1.1.1k-r2",
+        "sys-apps/portage-2.3.99-r1"
+    ],
+    "fact": {
+        "sys-devel/gcc": ["11.2.0"],
+        "app-editors/vim": ["9.0.1677"],
+        "x11-libs/gtk+": ["3.24.38"],
+        "dev-libs/openssl": ["1.1.1k-r2"],
+        "sys-apps/portage": ["2.3.99-r1"]
+    }
+}

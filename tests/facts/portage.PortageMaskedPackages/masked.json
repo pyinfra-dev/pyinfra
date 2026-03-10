@@ -1,0 +1,15 @@
+{
+    "command": "grep -rh '^[^#]' /etc/portage/package.mask 2>/dev/null || true",
+    "output": [
+        ">=www-client/firefox-100.0",
+        "sys-apps/systemd",
+        "=dev-lang/python-3.8.0",
+        "<dev-libs/libxml2-2.10"
+    ],
+    "fact": [
+        "www-client/firefox",
+        "sys-apps/systemd",
+        "dev-lang/python",
+        "dev-libs/libxml2"
+    ]
+}

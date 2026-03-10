@@ -1,0 +1,15 @@
+{
+    "args": [["sys-apps/systemd", "dev-libs/openssl"]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "paludis.PaludisPackages": {
+            "sys-apps/systemd": ["249"],
+            "dev-libs/openssl": ["1.1.1k"]
+        }
+    },
+    "commands": [
+        "cave uninstall -x sys-apps/systemd dev-libs/openssl"
+    ]
+}

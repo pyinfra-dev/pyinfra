@@ -1,0 +1,5 @@
+{
+    "commands": [
+        "cave resolve -c -x world"
+    ]
+}

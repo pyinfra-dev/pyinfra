@@ -1,0 +1,11 @@
+{
+    "args": [["sys-devel/gcc", "app-editors/vim"]],
+    "facts": {
+        "portage.PortagePackages": {},
+        "portage.PortageUpgradeablePackages": {},
+        "portage.PortageMaskedPackages": []
+    },
+    "commands": [
+        "emerge sys-devel/gcc app-editors/vim"
+    ]
+}

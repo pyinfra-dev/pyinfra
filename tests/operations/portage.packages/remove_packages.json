@@ -1,0 +1,17 @@
+{
+    "args": [["sys-devel/gcc", "app-editors/vim"]],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "portage.PortagePackages": {
+            "sys-devel/gcc": ["11.2.0"],
+            "app-editors/vim": ["9.0.1677"]
+        },
+        "portage.PortageUpgradeablePackages": {},
+        "portage.PortageMaskedPackages": []
+    },
+    "commands": [
+        "emerge --depclean sys-devel/gcc app-editors/vim"
+    ]
+}

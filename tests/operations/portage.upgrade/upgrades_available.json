@@ -1,0 +1,11 @@
+{
+    "facts": {
+        "portage.PortageUpgradeablePackages": {
+            "sys-apps/portage": "2.3.99-r1",
+            "dev-libs/openssl": "3.1.0"
+        }
+    },
+    "commands": [
+        "emerge -uDN @world"
+    ]
+}

@@ -1,0 +1,6 @@
+{
+    "commands": [
+        "cave sync"
+    ],
+    "idempotent": false
+}

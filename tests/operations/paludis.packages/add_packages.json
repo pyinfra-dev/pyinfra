@@ -1,0 +1,9 @@
+{
+    "args": [["sys-apps/systemd", "dev-libs/openssl"]],
+    "facts": {
+        "paludis.PaludisPackages": {}
+    },
+    "commands": [
+        "cave resolve -x sys-apps/systemd dev-libs/openssl"
+    ]
+}

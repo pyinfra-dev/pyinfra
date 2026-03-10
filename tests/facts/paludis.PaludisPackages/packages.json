@@ -1,0 +1,14 @@
+{
+    "command": "cave print-ids -m '*/*::/' -f '%c/%p %v\\n'",
+    "requires_command": "cave",
+    "output": [
+        "sys-apps/systemd 249",
+        "dev-libs/openssl 1.1.1k",
+        "sys-devel/gcc 11.2.0"
+    ],
+    "fact": {
+        "sys-apps/systemd": ["249"],
+        "dev-libs/openssl": ["1.1.1k"],
+        "sys-devel/gcc": ["11.2.0"]
+    }
+}

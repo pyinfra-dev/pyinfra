@@ -1,0 +1,7 @@
+{
+    "facts": {
+        "portage.PortageUpgradeablePackages": {}
+    },
+    "commands": [],
+    "noop_description": "all packages are up to date"
+}

@@ -1,0 +1,22 @@
+{
+    "args": ["sys-devel/gcc"],
+    "kwargs": {
+        "update": true,
+        "upgrade": true
+    },
+    "facts": {
+        "portage.PortagePackages": {
+            "sys-devel/gcc": ["11.2.0"]
+        },
+        "portage.PortageUpgradeablePackages": {
+            "sys-devel/gcc": "12.1.0"
+        },
+        "portage.PortageMaskedPackages": []
+    },
+    "commands": [
+        "emerge --sync",
+        "emerge -uDN @world"
+    ],
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "package updates are always executed"
+}
