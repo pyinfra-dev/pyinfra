@@ -968,7 +968,7 @@ class SecurityLimits(FactBase):
 
     @override
     def command(self):
-        return "cat /etc/security/limits.conf 2>/dev/null || true"
+        return "! test -e /etc/security/limits.conf || cat /etc/security/limits.conf"
 
     default = list
 
