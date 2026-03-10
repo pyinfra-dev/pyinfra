@@ -27,6 +27,7 @@
         }
     },
     "commands": [
-        "rm -f /etc/apt/keyrings/vendor.gpg"
+        "gpg --batch --yes --no-default-keyring --keyring \"/etc/apt/keyrings/vendor.gpg\" --delete-keys ABCDEF1234567890FEDCBA0987654321ABCDEF12",
+        "gpg --batch --no-default-keyring --keyring \"/etc/apt/keyrings/vendor.gpg\" --list-keys 2>/dev/null | grep -q \"^pub\" || rm -f \"/etc/apt/keyrings/vendor.gpg\""
     ]
 }

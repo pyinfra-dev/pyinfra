@@ -74,6 +74,16 @@ def _install_key_from_keyserver(keyserver: str, keyid: str | list[str], dest: st
     )
 
 
+def _matches_keyid(existing_key_id: str, clean_key: str) -> bool:
+    """Check if existing_key_id matches a cleaned (no 0x prefix, uppercase) key ID."""
+    existing_upper = existing_key_id.upper()
+    return (
+        clean_key == existing_upper
+        or existing_upper.endswith(clean_key)
+        or existing_upper.startswith(clean_key)
+    )
+
+
 def _remove_key_from_keyrings(keyid: str | list[str], working_dirs: list[str]):
     """Remove specific keys from all keyrings in specified directories."""
     if isinstance(keyid, str):
@@ -83,31 +93,42 @@ def _remove_key_from_keyrings(keyid: str | list[str], working_dirs: list[str]):
     keyrings_info = host.get_fact(GpgKeyrings, directories=working_dirs)
 
     for keyring_path, keyring_data in keyrings_info.items():
-        # Get the keys from the GpgKeyrings fact data
+        keyring_format = keyring_data.get("format", "gpg")
         keys_in_keyring = keyring_data.get("keys", {})
 
-        # Check if any of the target keys exist in this keyring
-        keys_to_remove = []
+        # Collect fingerprints of matching keys to remove
+        fingerprints_to_remove = []
         for kid in keyid:
-            # Handle different key ID formats (short, long, with/without 0x prefix)
             clean_key = kid.replace("0x", "").replace("0X", "").upper()
+            for existing_key_id, key_info in keys_in_keyring.items():
+                if _matches_keyid(existing_key_id, clean_key):
+                    fingerprint = key_info.get("fingerprint", existing_key_id)
+                    if fingerprint not in fingerprints_to_remove:
+                        fingerprints_to_remove.append(fingerprint)
 
-            # Check for exact match or if the key ID is a suffix/prefix of any key
-            # in the keyring
-            for existing_key_id in keys_in_keyring.keys():
-                if (
-                    clean_key == existing_key_id.upper()
-                    or existing_key_id.upper().endswith(clean_key)
-                    or existing_key_id.upper().startswith(clean_key)
-                ):
-                    keys_to_remove.append(existing_key_id)
+        if not fingerprints_to_remove:
+            continue
 
-        if keys_to_remove:
-            # Remove the entire keyring file if any target keys are found
-            # This is the safest approach for keyring management
-            yield from files.file._inner(
-                path=keyring_path,
-                present=False,
+        if keyring_format == "asc":
+            # .asc (armored) files cannot be edited in-place.
+            # If only some keys match, we cannot selectively remove them.
+            if len(fingerprints_to_remove) < len(keys_in_keyring):
+                raise OperationError(
+                    f"Cannot remove individual keys from armored keyring {keyring_path!r}: "
+                    "the file contains other keys and cannot be edited in-place. "
+                    "Remove the file explicitly with present=False and no keyid."
+                )
+            yield from files.file._inner(path=keyring_path, present=False)
+        else:
+            # .gpg / .kbx: delete keys individually, then remove file if now empty
+            fingerprints_joined = " ".join(fingerprints_to_remove)
+            yield (
+                f'gpg --batch --yes --no-default-keyring --keyring "{keyring_path}"'
+                f" --delete-keys {fingerprints_joined}"
+            )
+            yield (
+                f'gpg --batch --no-default-keyring --keyring "{keyring_path}"'
+                f' --list-keys 2>/dev/null | grep -q "^pub" || rm -f "{keyring_path}"'
             )
 
 
@@ -119,32 +140,47 @@ def _remove_key_from_keyring(keyid: str | list[str], dest: str):
     # Check if the destination keyring exists and contains the target keys
     keyrings_info = host.get_fact(GpgKeyrings, directories=[str(PurePosixPath(dest).parent)])
 
-    if dest in keyrings_info:
-        keyring_data = keyrings_info[dest]
-        keys_in_keyring = keyring_data.get("keys", {})
+    if dest not in keyrings_info:
+        return
 
-        # Check if any of the target keys exist in this keyring
-        keys_found = False
-        for kid in keyid:
-            clean_key = kid.replace("0x", "").replace("0X", "").upper()
-            for existing_key_id in keys_in_keyring.keys():
-                # Check for exact match, suffix (short key ID), or prefix match
-                if (
-                    clean_key == existing_key_id.upper()
-                    or existing_key_id.upper().endswith(clean_key)
-                    or existing_key_id.upper().startswith(clean_key)
-                ):
-                    keys_found = True
-                    break
-            if keys_found:
-                break
+    keyring_data = keyrings_info[dest]
+    keyring_format = keyring_data.get("format", "gpg")
+    keys_in_keyring = keyring_data.get("keys", {})
 
-        if keys_found:
-            # Remove the entire keyring file - safest approach for keyring management
-            yield from files.file._inner(
-                path=dest,
-                present=False,
+    # Collect fingerprints of matching keys to remove
+    fingerprints_to_remove = []
+    for kid in keyid:
+        clean_key = kid.replace("0x", "").replace("0X", "").upper()
+        for existing_key_id, key_info in keys_in_keyring.items():
+            if _matches_keyid(existing_key_id, clean_key):
+                fingerprint = key_info.get("fingerprint", existing_key_id)
+                if fingerprint not in fingerprints_to_remove:
+                    fingerprints_to_remove.append(fingerprint)
+
+    if not fingerprints_to_remove:
+        return
+
+    if keyring_format == "asc":
+        # .asc (armored) files cannot be edited in-place.
+        # If only some keys match, we cannot selectively remove them.
+        if len(fingerprints_to_remove) < len(keys_in_keyring):
+            raise OperationError(
+                f"Cannot remove individual keys from armored keyring {dest!r}: "
+                "the file contains other keys and cannot be edited in-place. "
+                "Remove the file explicitly with present=False and no keyid."
             )
+        yield from files.file._inner(path=dest, present=False)
+    else:
+        # .gpg / .kbx: delete keys individually, then remove file if now empty
+        fingerprints_joined = " ".join(fingerprints_to_remove)
+        yield (
+            f'gpg --batch --yes --no-default-keyring --keyring "{dest}"'
+            f" --delete-keys {fingerprints_joined}"
+        )
+        yield (
+            f'gpg --batch --no-default-keyring --keyring "{dest}"'
+            f' --list-keys 2>/dev/null | grep -q "^pub" || rm -f "{dest}"'
+        )
 
 
 def _remove_keyring_file(dest: str):
