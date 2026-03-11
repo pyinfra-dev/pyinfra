@@ -38,6 +38,7 @@ def container(
 
     .. code:: python
 
+        from pyinfra.operations import lxd
         lxd.container(
             name="Add an ubuntu container",
             id="ubuntu19",

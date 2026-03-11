@@ -54,6 +54,12 @@ class OperationValueError(OperationError, ValueError):
     """
 
 
+class NestedOperationError(OperationError):
+    """
+    Exception raised when a nested (immediately executed) operation fails.
+    """
+
+
 class DeployError(PyinfraError):
     """
     User exception for raising in deploys or sub deploys.

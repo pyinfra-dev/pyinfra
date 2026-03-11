@@ -19,6 +19,7 @@ def agent(server: str | None = None, port: int | None = None):
 
     .. code:: python
 
+        from pyinfra.operations import puppet
         puppet.agent()
 
         # We also expect a return code of:

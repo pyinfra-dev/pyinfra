@@ -8,9 +8,15 @@ from __future__ import annotations
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.docker import DockerContainer, DockerNetwork, DockerPlugin, DockerVolume
+from pyinfra.facts.docker import (
+    DockerContainer,
+    DockerImage,
+    DockerNetwork,
+    DockerPlugin,
+    DockerVolume,
+)
 
-from .util.docker import ContainerSpec, handle_docker
+from .util.docker import ContainerSpec, handle_docker, parse_image_reference
 
 
 @operation()
@@ -21,10 +27,14 @@ def container(
     networks: list[str] | None = None,
     volumes: list[str] | None = None,
     env_vars: list[str] | None = None,
+    env_files: list[str] | None = None,
+    labels: list[str] | None = None,
     pull_always: bool = False,
     present: bool = True,
     force: bool = False,
     start: bool = True,
+    restart_policy: str | None = None,
+    auto_remove: bool = False,
 ):
     """
     Manage Docker containers
@@ -35,15 +45,20 @@ def container(
     + ports: port list to expose
     + volumes: volume list to map on container
     + env_vars: environment variable list to inject on container
+    + env_files: list of files containing environment variables to inject on container
+    + labels: Label list to attach to the container
     + pull_always: force image pull
     + force: remove a container with same name and create a new one
     + present: whether the container should be up and running
     + start: start or stop the container
+    + restart_policy: restart policy to apply when a container exits
+    + auto_remove: automatically remove the container and its associated anonymous volumes when it exits
 
     **Examples:**
 
     .. code:: python
 
+        from pyinfra.operations import docker
         # Run a container
         docker.container(
             name="Deploy Nginx container",
@@ -55,6 +70,8 @@ def container(
             networks=["proxy", "services"],
             volumes=["nginx_data:/usr/share/nginx/html"],
             pull_always=True,
+            restart_policy="unless-stopped",
+            auto_remove=True,
         )
 
         # Stop a container
@@ -78,7 +95,11 @@ def container(
         networks or list(),
         volumes or list(),
         env_vars or list(),
+        env_files or list(),
+        labels or list(),
         pull_always,
+        restart_policy,
+        auto_remove,
     )
     existent_container = host.get_fact(DockerContainer, object_id=container)
 
@@ -127,13 +148,14 @@ def container(
         )
 
 
-@operation(is_idempotent=False)
-def image(image, present=True):
+@operation()
+def image(image: str, present: bool = True, force: bool = False):
     """
     Manage Docker images
 
     + image: Image and tag ex: nginx:alpine
     + present: whether the Docker image should exist
+    + force: always pull the image if present is True
 
     **Examples:**
 
@@ -153,20 +175,55 @@ def image(image, present=True):
             present=False,
         )
     """
-
+    image_info = parse_image_reference(image)
     if present:
-        yield handle_docker(
-            resource="image",
-            command="pull",
-            image=image,
-        )
-
+        if force:
+            # always pull the image if force is True
+            yield handle_docker(
+                resource="image",
+                command="pull",
+                image=image,
+            )
+            return
+        else:
+            existent_image = host.get_fact(DockerImage, object_id=image)
+            if image_info.digest:
+                # If a digest is specified, we must ensure the exact image is present
+                if existent_image:
+                    host.noop(f"Image with digest {image_info.digest} already exists!")
+                else:
+                    yield handle_docker(
+                        resource="image",
+                        command="pull",
+                        image=image,
+                    )
+            elif image_info.tag == "latest" or not image_info.tag:
+                # If the tag is 'latest' or not specified, always pull to ensure freshness
+                yield handle_docker(
+                    resource="image",
+                    command="pull",
+                    image=image,
+                )
+            else:
+                # For other tags, check if the image exists
+                if existent_image:
+                    host.noop(f"Image with tag {image_info.tag} already exists!")
+                else:
+                    yield handle_docker(
+                        resource="image",
+                        command="pull",
+                        image=image,
+                    )
     else:
-        yield handle_docker(
-            resource="image",
-            command="remove",
-            image=image,
-        )
+        existent_image = host.get_fact(DockerImage, object_id=image)
+        if existent_image:
+            yield handle_docker(
+                resource="image",
+                command="remove",
+                image=image,
+            )
+        else:
+            host.noop("There is no {0} image!".format(image))
 
 
 @operation()

@@ -36,7 +36,7 @@ If you save this file as ``inventory.py``, you can then use it when executing py
 .. admonition:: inventories/
     :class: note
 
-    Files in the ``inventories/`` directory are not automatically joined during inventory processesing, rather this directory is a convention when wanting
+    Files in the ``inventories/`` directory are not automatically joined during inventory processing, rather this directory is a convention when wanting
     to store multiple related inventories. Code can be imported from files under ``inventories/`` in to the main ``inventory.py`` if desired.
 
 

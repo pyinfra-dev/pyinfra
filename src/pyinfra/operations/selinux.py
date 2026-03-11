@@ -39,6 +39,7 @@ def boolean(bool_name: str, value: Boolean, persistent=False):
 
     .. code:: python
 
+        from pyinfra.operations import selinux
         selinux.boolean(
             name='Allow Apache to connect to LDAP server',
             'httpd_can_network_connect',

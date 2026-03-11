@@ -1,0 +1,14 @@
+{
+    "arg": {
+        "path": "/",
+        "maxdepth": 1,
+        "args": ["-perm", "644"]
+    },
+    "command": "find / -type f -maxdepth 1 -perm 644 || true",
+    "output": [
+        "myfile"
+    ],
+    "fact": [
+        "myfile"
+    ]
+}

@@ -40,6 +40,7 @@ class ConfigDefaults:
     USE_SU_LOGIN: bool = False
     SU_SHELL: bool = False
     PRESERVE_SU_ENV: bool = False
+    SU_PASSWORD: Optional[str] = None
     # Use sudo and optional user
     SUDO: bool = False
     SUDO_USER: Optional[str] = None

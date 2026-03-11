@@ -25,6 +25,9 @@ def key(src: str):
 
     .. code:: python
 
+        from pyinfra import host
+        from pyinfra.operations import dnf
+        from pyinfra.facts.server import LinuxDistribution
         linux_id = host.get_fact(LinuxDistribution)["release_meta"].get("ID")
         yum.key(
             name="Add the Docker CentOS gpg key",
@@ -75,7 +78,7 @@ def repo(
 
         # Create the repository file from baseurl/etc
         yum.repo(
-            name="Add the Docker CentOS repo",
+            name="Add the Docker repo",
             src="DockerCE",
             baseurl="https://download.docker.com/linux/centos/7/$basearch/stable",
         )

@@ -465,6 +465,181 @@ class TestNestedOperationsApi(PatchSSHTestCase):
                 finally:
                     pyinfra.is_cli = False
 
+    def test_nested_op_failure_propagates_to_host(self):
+        """
+        Test that when an operation inside python.call fails,
+        the host is properly marked as failed.
+        Regression test for issue #1190.
+        """
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        somehost = inventory.get_host("somehost")
+        pyinfra.is_cli = True
+
+        try:
+            with ctx_state.use(state):
+                with ctx_host.use(somehost):
+
+                    def callback_with_failing_op():
+                        server.shell(commands="/bin/false")
+
+                    python.call(function=callback_with_failing_op)
+
+            with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+                fake_channel = FakeChannel(1)
+                fake_run_command.return_value = (False, FakeBuffer("", fake_channel))
+
+                with self.assertRaises(PyinfraError) as e:
+                    run_ops(state)
+
+                self.assertEqual(e.exception.args[0], "No hosts remaining!")
+
+            # Verify the host was marked as failed
+            self.assertIn(somehost, state.failed_hosts)
+            # Verify error_ops was incremented
+            self.assertEqual(state.results[somehost].error_ops, 2)  # 1xcallbcak, 1xnested op
+            self.assertEqual(state.results[somehost].success_ops, 0)
+        finally:
+            pyinfra.is_cli = False
+            disconnect_all(state)
+
+    def test_nested_op_failure_with_ignore_errors(self):
+        """
+        Test that _ignore_errors=True on python.call properly ignores
+        errors from nested operations.
+        """
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        somehost = inventory.get_host("somehost")
+        pyinfra.is_cli = True
+
+        try:
+            with ctx_state.use(state):
+                with ctx_host.use(somehost):
+
+                    def callback_with_failing_op():
+                        server.shell(commands="/bin/false")
+
+                    python.call(function=callback_with_failing_op, _ignore_errors=True)
+
+            with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+                fake_channel = FakeChannel(1)
+                fake_run_command.return_value = (False, FakeBuffer("", fake_channel))
+
+                # Should NOT raise - error is ignored
+                run_ops(state)
+
+            # Host should NOT be in failed_hosts
+            self.assertNotIn(somehost, state.failed_hosts)
+            # Error should be tracked as ignored
+            self.assertEqual(state.results[somehost].ignored_error_ops, 1)
+            self.assertEqual(state.results[somehost].success_ops, 0)
+        finally:
+            pyinfra.is_cli = False
+            disconnect_all(state)
+
+    def test_nested_op_partial_failure(self):
+        """
+        Test that when a callback has multiple operations and one fails,
+        the failure is properly tracked.
+        """
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        somehost = inventory.get_host("somehost")
+        pyinfra.is_cli = True
+
+        try:
+            with ctx_state.use(state):
+                with ctx_host.use(somehost):
+
+                    def callback_with_multiple_ops():
+                        server.shell(commands="echo success1")
+                        server.shell(commands="/bin/false")  # This one fails
+                        server.shell(commands="echo success2")
+
+                    python.call(function=callback_with_multiple_ops)
+
+            call_count = 0
+
+            def side_effect(*args, **kwargs):
+                nonlocal call_count
+                call_count += 1
+                if call_count == 2:  # Second command fails
+                    return (False, FakeBuffer("", FakeChannel(1)))
+                return (True, FakeBuffer("output", FakeChannel(0)))
+
+            with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+                fake_run_command.side_effect = side_effect
+
+                with self.assertRaises(PyinfraError):
+                    run_ops(state)
+
+            # Host should be marked as failed
+            self.assertIn(somehost, state.failed_hosts)
+            # Should have 1 success before failure, then 1 error
+            self.assertEqual(state.results[somehost].success_ops, 1)
+            self.assertEqual(state.results[somehost].error_ops, 2)
+        finally:
+            pyinfra.is_cli = False
+            disconnect_all(state)
+
+    def test_deeply_nested_op_failure(self):
+        """
+        Test that failures in deeply nested operations (callbacks within callbacks)
+        are properly propagated.
+        """
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        somehost = inventory.get_host("somehost")
+        pyinfra.is_cli = True
+
+        try:
+            with ctx_state.use(state):
+                with ctx_host.use(somehost):
+
+                    def inner_callback():
+                        server.shell(commands="/bin/false")
+
+                    def outer_callback():
+                        server.shell(commands="echo outer")
+                        python.call(function=inner_callback)
+
+                    python.call(function=outer_callback)
+
+            call_count = 0
+
+            def side_effect(*args, **kwargs):
+                nonlocal call_count
+                call_count += 1
+                if call_count == 2:  # Inner shell fails
+                    return (False, FakeBuffer("", FakeChannel(1)))
+                return (True, FakeBuffer("output", FakeChannel(0)))
+
+            with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+                fake_run_command.side_effect = side_effect
+
+                with self.assertRaises(PyinfraError):
+                    run_ops(state)
+
+            # Host should be marked as failed
+            self.assertIn(somehost, state.failed_hosts)
+            self.assertGreater(state.results[somehost].error_ops, 0)
+        finally:
+            pyinfra.is_cli = False
+            disconnect_all(state)
+
 
 class TestOperationFailures(PatchSSHTestCase):
     def test_full_op_fail(self):

@@ -1,0 +1,16 @@
+{
+    "kwargs": {
+        "image": "nginx:1.21@sha256:abcd1234567890",
+        "present": true,
+        "force": false
+    },
+    "facts": {
+        "docker.DockerImage": {
+            "object_id=nginx:1.21@sha256:abcd1234567890": []
+        }
+    },
+    "commands": [
+        "docker image pull nginx:1.21@sha256:abcd1234567890"
+    ]
+}
+

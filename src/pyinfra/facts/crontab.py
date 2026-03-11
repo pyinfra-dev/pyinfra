@@ -52,9 +52,11 @@ class CrontabFile:
 
         name_comment = "# pyinfra-name={0}".format(name)
         for cmd in self.commands:
+            if "command" not in cmd:
+                continue
             if cmd.get("command") == command:
                 return cmd
-            if cmd.get("comments") and name_comment in cmd["comments"]:
+            if name_comment in cmd.get("comments", []):
                 return cmd
         return None
 

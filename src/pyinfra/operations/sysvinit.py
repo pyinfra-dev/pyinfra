@@ -38,7 +38,7 @@ def service(
         support enabling/disabling services:
 
         + Ubuntu/Debian (``update-rc.d``)
-        + CentOS/Fedora/RHEL (``chkconfig``)
+        + Fedora/RHEL (``chkconfig``)
         + Gentoo (``rc-update``)
 
         For other distributions and more granular service control, see the
@@ -48,6 +48,7 @@ def service(
 
     .. code:: python
 
+        from pyinfra.operations import sysvinit
         sysvinit.service(
             name="Restart and enable rsyslog",
             service="rsyslog",

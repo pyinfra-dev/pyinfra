@@ -1,7 +1,12 @@
 {
   "command": "ss -lptnH 'src :53'",
   "arg": 53,
-  "requires_command": "ss",
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": "/usr/sbin/ss"
+    }
+  },
   "output": [],
   "fact": [null, null]
 }

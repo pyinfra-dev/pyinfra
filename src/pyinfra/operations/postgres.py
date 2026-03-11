@@ -53,7 +53,12 @@ def sql(
     )
 
 
-@operation()
+@operation(
+    idempotent_notice=(
+        "This operation will always execute commands when a password is provided, "
+        "as pyinfra cannot reliably validate the current password."
+    ),
+)
 def role(
     role: str,
     present: bool = True,
@@ -96,6 +101,7 @@ def role(
 
     .. code:: python
 
+        from pyinfra.operations import postgresql
         postgresql.role(
             name="Create the pyinfra PostgreSQL role",
             role="pyinfra",

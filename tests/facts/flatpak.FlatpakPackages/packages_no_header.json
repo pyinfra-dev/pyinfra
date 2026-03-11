@@ -1,0 +1,16 @@
+{
+    "command": "flatpak list --columns=application",
+    "requires_command": "flatpak",
+    "output": [
+        "com.bitwarden.desktop",
+        "com.mattermost.Desktop",
+        "org.videolan.VLC",
+        "tv.kodi.Kodi"
+    ],
+    "fact": [
+        "com.bitwarden.desktop",
+        "com.mattermost.Desktop",
+        "org.videolan.VLC",
+        "tv.kodi.Kodi"
+    ]
+}

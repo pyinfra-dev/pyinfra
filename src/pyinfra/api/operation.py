@@ -22,7 +22,7 @@ from pyinfra.context import ctx_host, ctx_state
 from .arguments import EXECUTION_KWARG_KEYS, AllArguments, pop_global_arguments
 from .arguments_typed import PyinfraOperation
 from .command import PyinfraCommand, StringCommand
-from .exceptions import OperationValueError, PyinfraError
+from .exceptions import NestedOperationError, OperationValueError, PyinfraError
 from .host import Host
 from .operations import run_host_op
 from .state import State, StateOperationHostData, StateOperationMeta, StateStage
@@ -221,7 +221,7 @@ def add_op(state: State, op_func, *args, **kwargs):
             ),
         )
 
-    hosts = kwargs.pop("host", state.inventory.iter_active_hosts())
+    hosts = kwargs.pop("host", state.inventory.get_active_hosts())
     if isinstance(hosts, Host):
         hosts = [hosts]
 
@@ -266,7 +266,9 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
         state = context.state
         host = context.host
 
-        if state.current_stage < StateStage.Prepare or state.current_stage > StateStage.Execute:
+        if pyinfra.is_cli and (
+            state.current_stage < StateStage.Prepare or state.current_stage > StateStage.Execute
+        ):
             raise Exception("Cannot call operations outside of Prepare/Execute stages")
 
         if host.in_op:
@@ -470,8 +472,11 @@ def execute_immediately(state, host, op_hash):
     op_meta = state.get_op_meta(op_hash)
     op_data = state.get_op_data_for_host(host, op_hash)
     op_data.parent_op_hash = host.executing_op_hash
+
     log_operation_start(op_meta, op_types=["nested"], prefix="")
-    run_host_op(state, host, op_hash)
+
+    if run_host_op(state, host, op_hash) is False:
+        raise NestedOperationError(op_hash)
 
 
 def _get_arg_value(arg):

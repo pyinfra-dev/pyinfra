@@ -1,0 +1,24 @@
+{
+    "kwargs": {
+        "image": "nginx@sha256:abcd1234567890",
+        "present": true,
+        "force": false
+    },
+    "facts": {
+        "docker.DockerImage": {
+            "object_id=nginx@sha256:abcd1234567890": [
+                {
+                    "Id": "sha256:e784f4560448b14a66f55c26e1b4dad2c2877cc73d001b7cd0b18e24a700a070",
+                    "RepoTags": [],
+                    "RepoDigests": [
+                        "nginx@sha256:abcd1234567890"
+                    ],
+                    "Created": "2024-05-26T22:01:24.10525839Z",
+                    "Size": 41390752
+                }
+            ]
+        }
+    },
+    "commands": [],
+    "noop_description": "Image with digest sha256:abcd1234567890 already exists!"
+}

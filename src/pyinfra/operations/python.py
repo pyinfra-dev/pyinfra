@@ -22,6 +22,7 @@ def call(function: Callable, *args, **kwargs):
 
     .. code:: python
 
+        from pyinfra.operations import python
         def my_callback(hello=None):
             command = 'echo hello'
             if hello:

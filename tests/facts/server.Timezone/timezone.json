@@ -1,0 +1,5 @@
+{
+    "command": "readlink -f /etc/localtime | sed 's|.*/zoneinfo/||'",
+    "output": ["Europe/Amsterdam"],
+    "fact": "Europe/Amsterdam"
+}

@@ -34,6 +34,7 @@ def packages(
 
     .. code:: python
 
+        from pyinfra.operations import pipx
         pipx.packages(
             name="Install ",
             packages=["pyinfra"],

@@ -74,4 +74,4 @@ class FlatpakPackages(FlatpakBaseFact):
 
     @override
     def process(self, output):
-        return [flatpak for flatpak in output[1:]]
+        return [flatpak for i, flatpak in enumerate(output) if i > 1 or flatpak != "Application ID"]

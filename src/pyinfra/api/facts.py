@@ -14,7 +14,7 @@ import inspect
 import re
 from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, Optional, Type, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, Type, TypeVar, cast
 
 import click
 import gevent
@@ -87,7 +87,7 @@ class FactBase(Generic[T]):
 
         return cast(T, None)
 
-    def process(self, output: Iterable[str]) -> T:
+    def process(self, output: list[str]) -> T:
         # NOTE: TypeVar does not support a default, so we have to cast this str -> T
         return cast(T, "\n".join(output))
 
@@ -152,7 +152,7 @@ def get_facts(state, *args, **kwargs):
     with ctx_state.use(state):
         greenlet_to_host = {
             state.pool.spawn(get_host_fact, host, *args, **kwargs): host
-            for host in state.inventory.iter_active_hosts()
+            for host in state.inventory.get_active_hosts()
         }
 
     results = {}

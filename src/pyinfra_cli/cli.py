@@ -2,6 +2,7 @@ import logging
 import sys
 import warnings
 from fnmatch import fnmatch
+from getpass import getpass
 from os import chdir as os_chdir, getcwd, path
 from typing import Iterable, List, Tuple, Union
 
@@ -116,6 +117,12 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     help="Whether to execute operations with sudo.",
 )
 @click.option("--sudo-user", help="Which user to sudo when sudoing.")
+@click.option(
+    "--same-sudo-password",
+    is_flag=True,
+    default=False,
+    help="All hosts have the same sudo password, so ask only once.",
+)
 @click.option(
     "--use-sudo-password",
     is_flag=True,
@@ -274,6 +281,7 @@ def _main(
     ssh_key,
     ssh_key_password: str,
     ssh_password: str,
+    same_sudo_password: bool,
     shell_executable,
     sudo: bool,
     sudo_user: str,
@@ -326,6 +334,7 @@ def _main(
         sudo,
         sudo_user,
         use_sudo_password,
+        same_sudo_password,
         su_user,
         parallel,
         shell_executable,
@@ -568,6 +577,7 @@ def _set_config(
     sudo,
     sudo_user,
     use_sudo_password,
+    same_sudo_password,
     su_user,
     parallel,
     shell_executable,
@@ -585,10 +595,6 @@ def _set_config(
     if path.exists(config_filename):
         exec_file(config_filename)
 
-    # Lock the current config, this allows us to restore this version after
-    # executing deploy files that may alter them.
-    config.lock_current_state()
-
     # Arg based config overrides
     if sudo:
         config.SUDO = True
@@ -597,6 +603,9 @@ def _set_config(
 
     if use_sudo_password:
         config.USE_SUDO_PASSWORD = use_sudo_password
+
+    if same_sudo_password:
+        config.SUDO_PASSWORD = getpass("sudo password: ")
 
     if su_user:
         config.SU_USER = su_user
@@ -618,6 +627,11 @@ def _set_config(
 
     if retry_delay is not None:
         config.RETRY_DELAY = retry_delay
+
+    # Lock the current config, this allows us to restore this version after
+    # executing deploy files that may alter them. This must happen after CLI
+    # args are applied so they persist across multiple deploy files.
+    config.lock_current_state()
 
     return config
 
@@ -759,6 +773,8 @@ def _prepare_exec_operations(state, config, operations):
 def _prepare_deploy_operations(state, config, operations):
     # Number of "steps" to make = number of files * number of hosts
     for i, filename in enumerate(operations):
+        config.lock_current_state()
+
         _log_styled_msg = click.style(filename, bold=True)
         logger.info("Loading: {0}".format(_log_styled_msg))
 

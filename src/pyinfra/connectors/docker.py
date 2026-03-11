@@ -26,10 +26,14 @@ if TYPE_CHECKING:
 
 class ConnectorData(TypedDict):
     docker_identifier: str
+    docker_platform: str
+    docker_architecture: str
 
 
 connector_data_meta: dict[str, DataMeta] = {
     "docker_identifier": DataMeta("ID of container or image to start from"),
+    "docker_platform": DataMeta("Platform to use for Docker image (e.g., linux/amd64)"),
+    "docker_architecture": DataMeta("Architecture to use for Docker image (e.g., amd64, arm64)"),
 }
 
 
@@ -64,6 +68,10 @@ class DockerConnector(BaseConnector):
     The Docker connector is great for testing pyinfra operations locally, rather than connecting to
     a remote host over SSH each time. This gives you a fast, local-first devloop to iterate on when
     writing deploys, operations or facts.
+
+    .. note::
+
+        For running Docker containers on remote hosts, see the :doc:`dockerssh` connector.
     """
 
     # enable the use of other docker cli compatible tools like podman
@@ -108,9 +116,29 @@ class DockerConnector(BaseConnector):
         return container_id, True
 
     def _start_docker_image(self, image_name):
+        docker_cmd_parts = [
+            self.docker_cmd,
+            "run",
+            "-d",
+        ]
+
+        if self.data.get("docker_platform"):
+            docker_cmd_parts.extend(["--platform", self.data["docker_platform"]])
+        if self.data.get("docker_architecture"):
+            docker_cmd_parts.extend(["--arch", self.data["docker_architecture"]])
+
+        docker_cmd_parts.extend(
+            [
+                image_name,
+                "tail",
+                "-f",
+                "/dev/null",
+            ]
+        )
+
         try:
             return local.shell(
-                f"{self.docker_cmd} run -d {image_name} tail -f /dev/null",
+                " ".join(docker_cmd_parts),
                 splitlines=True,
             )[-1]  # last line is the container ID
         except PyinfraError as e:
@@ -340,6 +368,10 @@ class PodmanConnector(DockerConnector):
     The Podman connector is great for testing pyinfra operations locally, rather than connecting to
     a remote host over SSH each time. This gives you a fast, local-first devloop to iterate on when
     writing deploys, operations or facts.
+
+    .. note::
+
+        For running Podman containers on remote hosts, see the :doc:`podmanssh` connector.
     """
 
     docker_cmd = "podman"

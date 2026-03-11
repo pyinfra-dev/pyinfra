@@ -1,0 +1,17 @@
+{
+    "kwargs": {
+        "update": true,
+        "cache_time": 3600
+    },
+    "facts": {
+        "deb.DebPackages": {},
+        "server.Date": "datetime:2015-01-01T22:44:00+01:00",
+        "files.File": {
+            "path=/var/lib/apt/periodic/update-success-stamp": {
+                "mtime": "datetime:2015-01-01T21:40:00"
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "apt is already up to date"
+}

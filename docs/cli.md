@@ -37,7 +37,7 @@ pyinfra INVENTORY debug-inventory
 
 ### Verbosity
 
-By default pyinfra only prints high level information (this host connected, this operation started), this can be increased as follows:
+By default, pyinfra only prints high level information (this host connected, this operation started), this can be increased as follows:
 
 + `-v`: print out facts collected as well as noop information (package X already installed)
 + `-vv`: as above plus print shell input to the remote host
@@ -77,7 +77,7 @@ pyinfra @local ...
 pyinfra my-server.net,@local ...
 
 # Execute against a Docker container
-pyinfra @docker/centos:8 ...
+pyinfra @docker/fedora:43 ...
 ```
 
 ### Limit
@@ -132,7 +132,7 @@ For example, here we ensure that `nginx` is installed on the remote servers:
 # Ubuntu example
 pyinfra inventory.py apt.packages nginx update=true _sudo=true
 
-# Centos example
+# Fedora example
 pyinfra inventory2.py yum.packages nginx _sudo=true
 ```
 

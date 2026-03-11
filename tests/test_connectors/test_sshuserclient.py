@@ -34,6 +34,11 @@ Host 192.168.1.2
     ForwardAgent yes
 """
 
+SSH_CONFIG_MULTIPLE_KNOWN_HOSTS = """
+Host 192.168.1.3
+    UserKnownHostsFile ~/.ssh/known_hosts ~/.ssh/known_hosts.infra ~/.ssh/known_hosts.webservers
+"""
+
 BAD_SSH_CONFIG_DATA = """
 &
 """
@@ -140,7 +145,7 @@ class TestSSHUserConfig(TestCase):
         assert isinstance(config.get("sock"), ProxyCommand)
         assert forward_agent is False
         assert isinstance(missing_host_key_policy, AskPolicy)
-        assert host_keys_file == "~/.ssh/known_hosts"  # OpenSSH default
+        assert host_keys_file == ("~/.ssh/known_hosts",)  # OpenSSH default
 
         (
             _,
@@ -154,7 +159,37 @@ class TestSSHUserConfig(TestCase):
         assert other_config.get("username") == "otheruser"
         assert forward_agent is True
         assert isinstance(missing_host_key_policy, AskPolicy)
-        assert host_keys_file == "~/.ssh/test3"
+        assert host_keys_file == ("~/.ssh/test3",)
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_DATA),
+        create=True,
+    )
+    @patch(
+        "pyinfra.connectors.sshuserclient.config.open",
+        mock_open(read_data=SSH_CONFIG_MULTIPLE_KNOWN_HOSTS),
+        create=True,
+    )
+    def test_load_ssh_config_multiple_known_hosts(self):
+        """Test that multiple UserKnownHostsFile entries are parsed correctly (issue #1095)."""
+        client = SSHClient()
+
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_files,
+            keep_alive,
+        ) = client.parse_config("192.168.1.3")
+
+        # Verify multiple known hosts files are parsed as a tuple
+        assert host_keys_files == (
+            "~/.ssh/known_hosts",
+            "~/.ssh/known_hosts.infra",
+            "~/.ssh/known_hosts.webservers",
+        )
 
     @patch(
         "pyinfra.connectors.sshuserclient.client.open",
@@ -232,6 +267,8 @@ class TestSSHUserConfig(TestCase):
 
     def test_missing_hostkey(self):
         client = SSHClient()
+        # Must be set to something for key saving
+        client._host_keys_filename = ""
         policy = AskPolicy()
         example_hostname = "new_host"
         example_keytype = "ecdsa-sha2-nistp256"

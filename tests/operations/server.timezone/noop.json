@@ -1,0 +1,8 @@
+{
+    "args": ["Europe/Amsterdam"],
+    "facts": {
+        "server.Timezone": "Europe/Amsterdam"
+    },
+    "commands": [],
+    "noop_description": "timezone is set"
+}

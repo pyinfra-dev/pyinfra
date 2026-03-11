@@ -52,7 +52,8 @@ def packages(
 
     .. code:: python
 
-        # Ensure packages are installed∂ (will not force package upgrade)
+        from pyinfra.operations import opkg
+        # Ensure packages are installed (will not force package upgrade)
         opkg.packages(['asterisk', 'vim'], name="Install Asterisk and Vim")
 
         # Install the latest versions of packages (always check)

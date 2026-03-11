@@ -177,8 +177,11 @@ def make_inventory(
             "nor refers to a python module"
         )
         return Inventory.empty()
-    else:
+    elif callable(inventory_func):
         return make_inventory_from_func(inventory_func, override_data)
+    else:
+        # The inventory is an iterable (list/tuple) of hosts from a module attribute
+        return make_inventory_from_iterable(inventory_func, override_data)
 
 
 def make_inventory_from_func(
@@ -232,6 +235,28 @@ def make_inventory_from_func(
         (list(combined_host_list), {}),
         override_data=override_data,
         **groups_with_data,
+    )
+
+
+def make_inventory_from_iterable(
+    hosts: List[HostType],
+    override_data: Optional[Dict[Any, Any]] = None,
+):
+    """
+    Builds a ``pyinfra.api.Inventory`` from an iterable of hosts loaded from a module attribute.
+    """
+    logger.warning("Loading inventory via module attribute is in alpha!")
+
+    if not isinstance(hosts, (list, tuple)):
+        raise TypeError(f"Inventory attribute is not a list or tuple: {type(hosts).__name__}")
+
+    for host in hosts:
+        if not isinstance(host, ALLOWED_HOST_TYPES):
+            raise TypeError(f"Invalid host in inventory: {host}")
+
+    return Inventory(
+        (list(hosts), {}),
+        override_data=override_data,
     )
 
 

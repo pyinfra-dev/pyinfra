@@ -58,6 +58,7 @@ class ConnectorArguments(TypedDict, total=False):
     _use_su_login: bool
     _preserve_su_env: bool
     _su_shell: str
+    _su_password: str
     _doas: bool
     _doas_user: str
 
@@ -70,12 +71,15 @@ class ConnectorArguments(TypedDict, total=False):
     _success_exit_codes: Iterable[int]
     _timeout: int
     _get_pty: bool
-    _stdin: Union[str, Iterable[str]]
+    _stdin: Union[str, list[str], Iterable[str]]
 
     # Retry arguments
     _retries: int
     _retry_delay: Union[int, float]
-    _retry_until: Optional[Callable[[dict], bool]]
+    _retry_until: Callable[[dict], bool]
+
+    # Temp directory argument
+    _temp_dir: str
 
 
 def generate_env(config: "Config", value: dict) -> dict:
@@ -123,6 +127,10 @@ auth_argument_meta: dict[str, ArgumentMeta] = {
         + "has nologin/similar as their login shell.",
         default=lambda config: config.SU_SHELL,
     ),
+    "_su_password": ArgumentMeta(
+        "Password to su with.",
+        default=lambda config: config.SU_PASSWORD,
+    ),
     "_doas": ArgumentMeta(
         "Execute/apply any changes with doas.",
         default=lambda config: config.DOAS,
@@ -162,6 +170,10 @@ shell_argument_meta: dict[str, ArgumentMeta] = {
     "_stdin": ArgumentMeta(
         "String or buffer to send to the stdin of any commands.",
         default=lambda _: None,
+    ),
+    "_temp_dir": ArgumentMeta(
+        "Temporary directory on the remote host for file operations.",
+        default=lambda config: config.TEMP_DIR,
     ),
 }
 

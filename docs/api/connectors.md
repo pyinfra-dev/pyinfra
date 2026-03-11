@@ -18,6 +18,8 @@ In the example below `make_names_data` is yielding a hostname, data, groups tupl
 could be stored and processed in any data structure.
 
 ```py
+from pyinfra.connectors.base import BaseConnector
+
 class InventoryConnector(BaseConnector):
     handles_execution = False
 
@@ -32,11 +34,11 @@ class InventoryConnector(BaseConnector):
         # connect to api/parse files/process data here, resulting in a list of tuples;
         gathered_hosts = [
             ('@local', {}, ['@local']),
-            ('foundhost', {'ip': 198.51.100.4}, ['remote', 'example'])
-            ]
+            ('foundhost', {'ip': '198.51.100.4'}, ['remote', 'example'])
+        ]
 
         for loop_host in gathered_hosts:
-          yield gathered_hosts[0], gathered_hosts[1], gathered_hosts[2]
+          yield loop_host[0], loop_host[1], loop_host[2]
 ```
 
 To use the inventory connector call `pyinfra @[name of connector in pyinfra.connectors] [deployment script].py`
@@ -56,7 +58,7 @@ class MyConnector(BaseConnector):
     @staticmethod
     def make_names_data(_=None):
         ...  # see above
- 
+
     def run_shell_command(
         self,
         command: StringCommand,
@@ -128,10 +130,10 @@ class MyConnector(BaseConnector):
 
 ## Where to make changes
 
-Connectors enable pyinfra to expand work done `in its 5 stages <deploy-process.html#how-pyinfra-works>`_ by providing methods which can be called at
+Connectors enable pyinfra to expand work done [in its 5 stages](../deploy-process) by providing methods which can be called at
 appropriate times.
 
-To hook in to to the various steps with the methods outlined below.
+To hook in to the various steps with the methods outlined below.
 ```
 --> Loading config...
 --> Loading inventory...
@@ -139,7 +141,7 @@ To hook in to to the various steps with the methods outlined below.
 `make_names_data` is used to supply inventory data about a host while at 'Loading inventory' stage.
 
 Its worth being aware up front that due to `make_names_data` being a `staticmethod` it has no automatic access to the parent classes attributes.
-To work around this - eg to configure an API connector - configuration will have to happen outside the function and be imported in. Two examples
+To work around this - e.g. to configure an API connector - configuration will have to happen outside the function and be imported in. Two examples
 (`getattr` and a function) are provided below.
 
 ```py
@@ -153,7 +155,7 @@ class InventoryConnector(BaseConnector):
   ...
 
   @staticmethod
-  def make_names_data(_=None)
+  def make_names_data(_=None):
     api_client = getattr(InventoryConnector, 'api_instance')
     api_settings = load_settings()
     ...
@@ -189,6 +191,60 @@ screen.
 ```
 
 `disconnect` can be used after all operations complete to clean up any connection/s remaining to the hosts being managed.
+
+
+## Implementing `run_shell_command`
+
+When implementing `run_shell_command`, connectors should use pyinfra's command wrapping utilities rather than manually constructing commands. The `make_unix_command_for_host()` function from `pyinfra.connectors.util` handles shell wrapping, sudo elevation, environment variables, working directory changes, command retries and shell executable selection.
+
+Its worth being aware that when passing `arguments` to `make_unix_command_for_host()`, connector control parameters must be filtered out. These parameters (`_success_exit_codes`, `_timeout`, `_get_pty`, `_stdin`) are defined in `pyinfra.api.arguments.ConnectorArguments` and are meant for the connector's internal logic after command generation, not for command construction itself.
+
+The recommended approach is to use `extract_control_arguments()` from `pyinfra.connectors.util` which handles this filtering for you:
+
+```py
+from pyinfra.connectors.util import extract_control_arguments, make_unix_command_for_host
+
+class MyConnector(BaseConnector):
+    handles_execution = True
+
+    def run_shell_command(
+        self,
+        command: StringCommand,
+        print_output: bool = False,
+        print_input: bool = False,
+        **arguments: Unpack["ConnectorArguments"],
+    ) -> Tuple[bool, CommandOutput]:
+        """Execute a command with proper shell wrapping."""
+
+        # Extract and remove control parameters from arguments
+        # This modifies arguments dict in place and returns the extracted params
+        control_args = extract_control_arguments(arguments)
+
+        # Generate properly wrapped command with sudo, environment, etc
+        # arguments now contains only command generation parameters
+        wrapped_command = make_unix_command_for_host(
+            self.state,
+            self.host,
+            command,
+            **arguments,
+        )
+
+        # Use control parameters for execution
+        timeout = control_args.get("_timeout")
+        success_exit_codes = control_args.get("_success_exit_codes", [0])
+
+        # Execute the wrapped command using your connector's method
+        exit_code, output = self._execute(wrapped_command, timeout=timeout)
+
+        # Check success based on exit codes
+        success = exit_code in success_exit_codes
+
+        return success, output
+```
+
+Without proper command wrapping, shell operators and complex commands will fail. For example `timeout 60 bash -c 'command' || true` executed without shell wrapping will result in `bash: ||: command not found`. PyInfra operations and fact gathering rely on shell operators (`&&`, `||`, pipes, redirects) so using `make_unix_command_for_host()` ensures your connector handles these correctly.
+
+For complete examples see pyinfra's built-in connectors in `pyinfra/connectors/docker.py`, `pyinfra/connectors/chroot.py`, `pyinfra/connectors/ssh.py` and `pyinfra/connectors/local.py`, as well as the command wrapping utilities in `pyinfra/connectors/util.py`.
 
 
 ## pyproject.toml

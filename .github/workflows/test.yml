@@ -38,6 +38,7 @@ jobs:
         uses: astral-sh/setup-uv@v6
       - run: uv sync --group test --no-default-groups
       - run: uv run mypy
+      - run: uv run python scripts/lint_arguments_sync.py
 
   spell-check:
     runs-on: ubuntu-24.04

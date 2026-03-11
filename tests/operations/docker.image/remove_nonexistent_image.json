@@ -1,0 +1,13 @@
+{
+    "kwargs": {
+        "image": "nginx:alpine",
+        "present": false
+    },
+    "facts": {
+        "docker.DockerImage": {
+            "object_id=nginx:alpine": []
+        }
+    },
+    "commands": [],
+    "noop_description": "There is no nginx:alpine image!"
+}

@@ -2,7 +2,7 @@
 
 **Note:** this example is out of date (the code is valid, but there's better ways to do it), please see [using operations: operation output & callbacks](/using-operations).
 
-pyinfra is designed around the idea of defining the end-state _before_ executing any changes on the remote server. Generally this works well but sometimes you need the output of one command to feed into another. This can be achieved by executing Python functions mid-deploy.
+pyinfra is designed around the idea of defining the end-state _before_ executing any changes on the remote server. Generally this works well, but sometimes you need the output of one command to feed into another. This can be achieved by executing Python functions mid-deploy.
 
 In this example we install a service (ZeroTier) that generates a random ID for the remote host. We then use this ID to authenticate the server with the ZeroTier API.
 

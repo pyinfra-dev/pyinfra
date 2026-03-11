@@ -4,7 +4,7 @@ import time
 import traceback
 from itertools import product
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 import click
 import gevent
@@ -17,7 +17,7 @@ from pyinfra.progress import progress_spinner
 
 from .arguments import CONNECTOR_ARGUMENT_KEYS, ConnectorArguments
 from .command import FunctionCommand, PyinfraCommand, StringCommand
-from .exceptions import PyinfraError
+from .exceptions import NestedOperationError, PyinfraError
 from .util import (
     format_exception,
     log_error_or_warning,
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 #
 
 
-def run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
+def run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
     if op_hash not in state.ops[host]:
@@ -59,7 +59,7 @@ def run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
             host.executing_op_hash = None
 
 
-def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
+def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
     op_data = state.get_op_data_for_host(host, op_hash)
     global_arguments = op_data.global_arguments
 
@@ -104,6 +104,8 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
             if isinstance(command, FunctionCommand):
                 try:
                     status = command.execute(state, host, connector_arguments)
+                except NestedOperationError:
+                    host.log_styled("Error in nested operation", fg="red", log_func=logger.error)
                 except Exception as e:
                     # Custom functions could do anything, so expect anything!
                     logger.warning(traceback.format_exc())
@@ -194,11 +196,11 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
         host_results.ops += 1
         host_results.success_ops += 1
 
-        _status_log = "Success" if executed_commands > 0 else "No changes"
+        _status_text = "Success" if executed_commands > 0 else "No changes"
         if retry_attempt > 0:
-            _status_log = f"{_status_log} on retry {retry_attempt}"
+            _status_text = f"{_status_text} on retry {retry_attempt}"
 
-        _click_log_status = click.style(_status_log, "green")
+        _click_log_status = click.style(_status_text, "green" if executed_commands > 0 else "cyan")
         logger.info("{0}{1}".format(host.print_prefix, _click_log_status))
 
         state.trigger_callbacks("operation_host_success", host, op_hash, retry_attempt)
@@ -278,7 +280,7 @@ def _run_serial_ops(state: "State"):
     Run all ops for all servers, one server at a time.
     """
 
-    for host in list(state.inventory.iter_active_hosts()):
+    for host in list(state.inventory.get_active_hosts()):
         host_operations = product([host], state.get_op_order())
         with progress_spinner(host_operations) as progress:
             try:
@@ -296,7 +298,7 @@ def _run_no_wait_ops(state: "State"):
     Run all ops for all servers at once.
     """
 
-    hosts_operations = product(state.inventory.iter_active_hosts(), state.get_op_order())
+    hosts_operations = product(state.inventory.get_active_hosts(), state.get_op_order())
     with progress_spinner(hosts_operations) as progress:
         # Spawn greenlet for each host to run *all* ops
         if state.pool is None:
@@ -308,7 +310,7 @@ def _run_no_wait_ops(state: "State"):
                 host,
                 progress=progress,
             )
-            for host in state.inventory.iter_active_hosts()
+            for host in state.inventory.get_active_hosts()
         ]
         gevent.joinall(greenlets)
 
@@ -326,9 +328,9 @@ def _run_single_op(state: "State", op_hash: str):
     failed_hosts = set()
 
     if op_meta.global_arguments["_serial"]:
-        with progress_spinner(state.inventory.iter_active_hosts()) as progress:
+        with progress_spinner(state.inventory.get_active_hosts()) as progress:
             # For each host, run the op
-            for host in state.inventory.iter_active_hosts():
+            for host in state.inventory.get_active_hosts():
                 result = _run_host_op_with_context(state, host, op_hash)
                 progress(host)
 
@@ -337,12 +339,12 @@ def _run_single_op(state: "State", op_hash: str):
 
     else:
         # Start with the whole inventory in one batch
-        batches = [list(state.inventory.iter_active_hosts())]
+        batches = [list(state.inventory.get_active_hosts())]
 
         # If parallel set break up the inventory into a series of batches
         parallel = op_meta.global_arguments["_parallel"]
         if parallel:
-            hosts = list(state.inventory.iter_active_hosts())
+            hosts = list(state.inventory.get_active_hosts())
             batches = [hosts[i : i + parallel] for i in range(0, len(hosts), parallel)]
 
         for batch in batches:

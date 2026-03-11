@@ -35,11 +35,15 @@ uv sync
 
 ### Code Style & Type Checking
 
-Code style is enforced via [ruff](https://docs.astral.sh/ruff/). Types are checked with mypy currently, and pyright is 
+Code style is enforced via [ruff](https://docs.astral.sh/ruff/). Types are checked with mypy currently, and pyright is
 recommended for local development though currently optional. There is a script to run the linting & type-checking:
 
 ```sh
+# Check formatting & types
 scripts/dev-lint.sh
+
+# Fix formatting
+scripts/dev-format.sh
 ```
 
 ### Commit Messages
@@ -64,9 +68,9 @@ uv run pytest tests/test_facts.py -k "efibootmgr.EFIBootMGR"
 uv run pytest tests/test_operations.py -k "selinux."
 ```
 
-#### End to End Tests
+#### End-to-End Tests
 
-The end to end tests are also executed via `pytest` but not selected by default, options/usage:
+The end-to-end tests are also executed via `pytest` but not selected by default, options/usage:
 
 ```sh
 # Run all the e2e tests (local, SSH, Docker)
@@ -96,5 +100,5 @@ scripts/build-public-docs.sh
 To view ([localhost:8000](http://localhost:8000)):
 
 ```sh
-python -m http.server -d docs/public/en/latest/
+uv run -m http.server -d docs/public/en/latest/
 ```

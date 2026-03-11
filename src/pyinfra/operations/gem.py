@@ -27,6 +27,7 @@ def packages(packages: str | list[str] | None = None, present=True, latest=False
 
     .. code:: python
 
+        from pyinfra.operations import gem
         # Note: Assumes that 'gem' is installed.
         gem.packages(
             name="Install rspec",

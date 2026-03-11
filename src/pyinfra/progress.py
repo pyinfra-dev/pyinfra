@@ -4,8 +4,8 @@ import platform
 import sys
 from collections import deque
 from contextlib import contextmanager
-from threading import Event, Thread
-from time import sleep
+import gevent
+from gevent.event import Event
 
 import pyinfra
 
@@ -62,7 +62,7 @@ def _print_spinner(stop_event, progress_queue):
         if not IS_WINDOWS:
             sys.stderr.write("\033[K")
 
-        sleep(WAIT_TIME)
+        gevent.sleep(WAIT_TIME)
 
 
 @contextmanager
@@ -130,17 +130,12 @@ def progress_spinner(items, prefix_message=None):
         items.remove(complete_item)
         progress_queue.append(make_progress_message())
 
-    # Kick off the spinner thread
-    spinner_thread = Thread(
-        target=_print_spinner,
-        args=(stop_event, progress_queue),
-    )
-    spinner_thread.daemon = True
-    spinner_thread.start()
+    # Kick off the spinner greenlet
+    spinner_greenlet = gevent.spawn(_print_spinner, stop_event, progress_queue)
 
     # Yield allowing the actual code the spinner waits for to run
     yield progress
 
     # Finally, stop the spinner
     stop_event.set()
-    spinner_thread.join()
+    spinner_greenlet.join()

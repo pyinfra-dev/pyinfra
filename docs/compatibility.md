@@ -27,10 +27,9 @@ To debug pyinfra within PyCharm, you need to [explicitly enable support for Geve
 pyinfra aims to be compatible with all Unix-like operating systems and is currently developed against:
 
 + Linux distros:
-    * Ubuntu 18/20
+    * Ubuntu 20/22/24
     * Debian 9/10
-    * CentOS 7/8
-    * Fedora 33
+    * Fedora 43
     * Alpine 3.8
 + BSD flavours:
     * OpenBSD 6

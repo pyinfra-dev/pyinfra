@@ -1,3 +1,5 @@
+.. arguments:
+
 Global Arguments
 ================
 

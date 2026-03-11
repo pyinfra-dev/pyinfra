@@ -158,11 +158,11 @@ class Inventory:
 
         return iter(self.hosts.values())
 
-    def iter_active_hosts(self) -> Iterator["Host"]:
+    def get_active_hosts(self) -> list["Host"]:
         """
         Iterates over active inventory hosts.
         """
-        return iter(self.state.active_hosts)
+        return list(self.state.active_hosts)
 
     def len_active_hosts(self) -> int:
         """

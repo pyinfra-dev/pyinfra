@@ -242,13 +242,19 @@ class FunctionCommand(PyinfraCommand):
             self.function(*self.args, **self.kwargs)
             return
 
-        def execute_function() -> None:
+        def execute_function() -> None | Exception:
             with ctx_config.use(state.config.copy()):
                 with ctx_host.use(host):
-                    self.function(*self.args, **self.kwargs)
+                    try:
+                        self.function(*self.args, **self.kwargs)
+                    except Exception as e:
+                        return e
+            return None
 
         greenlet = gevent.spawn(execute_function)
-        return greenlet.get()
+        exception = greenlet.get()
+        if exception is not None:
+            raise exception
 
 
 class RsyncCommand(PyinfraCommand):

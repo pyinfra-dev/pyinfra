@@ -1,0 +1,15 @@
+{
+    "kwargs": {
+        "image": "myregistry.io:5000/myapp:v1.0",
+        "present": true,
+        "force": false
+    },
+    "facts": {
+        "docker.DockerImage": {
+            "object_id=myregistry.io:5000/myapp:v1.0": []
+        }
+    },
+    "commands": [
+        "docker image pull myregistry.io:5000/myapp:v1.0"
+    ]
+}

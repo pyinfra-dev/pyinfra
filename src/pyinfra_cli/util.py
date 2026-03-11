@@ -218,7 +218,7 @@ def _parallel_load_hosts(state: "State", callback: Callable, name: str):
             return e
 
     greenlet_to_host = {
-        state.pool.spawn(load_file, host): host for host in state.inventory.iter_active_hosts()
+        state.pool.spawn(load_file, host): host for host in state.inventory.get_active_hosts()
     }
 
     with progress_spinner(greenlet_to_host.values()) as progress:

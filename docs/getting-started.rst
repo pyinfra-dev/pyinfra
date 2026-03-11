@@ -29,8 +29,11 @@ You can start pyinfra immediately with some ad-hoc command execution. The CLI al
     # Execute over SSH
     pyinfra my-server.net exec -- echo "hello world"
 
+    # Execute over SSH with options
+    pyinfra localhost --ssh-port 2222 --ssh-user vagrant exec -- echo "hello world"
+
     # Execute within a new docker container
-    pyinfra @docker/ubuntu:18.04 exec -- echo "hello world"
+    pyinfra @docker/ubuntu:22.04 exec -- echo "hello world"
 
     # Execute on the local machine (MacOS/Linux only - for now)
     pyinfra @local exec -- echo "hello world"
@@ -66,8 +69,19 @@ To get started create an ``inventory.py`` containing our hosts to target:
 
 .. code:: python
 
-    # Define a group as a list of hosts
-    my_hosts = ["my-server.net", "@docker/ubuntu:18.04"]
+     # Define a group as a list of hosts
+     my_hosts = [
+        # vagrant instance
+        ("ubuntu2204", {
+           "ssh_port": 2222,
+           "ssh_hostname": "localhost",
+           "ssh_user": "vagrant",
+           "_sudo": True
+        }),
+       "my-server.net",
+       "@docker/ubuntu:22.04"
+     ]
+
 
 Now create a ``deploy.py`` containing our operations to execute:
 
@@ -79,7 +93,7 @@ Now create a ``deploy.py`` containing our operations to execute:
     apt.packages(
         name="Ensure the vim apt package is installed",
         packages=["vim"],
-        _sudo=True,  # use sudo when installing the packages
+        update=True,
     )
 
 This can now be executed like this:

@@ -1,6 +1,6 @@
 # Data Across Multiple Environments
 
-Lets say you have an app that you wish to deploy in two environments: staging and production, with the dev VM as the default. A good layout for this would be:
+Let's say you have an app that you wish to deploy in two environments: staging and production, with the dev VM as the default. A good layout for this would be:
 
 + ``deploy.py``
 + ``inventories/production.py`` - production inventory

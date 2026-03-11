@@ -32,7 +32,8 @@ def package(
 
     .. code:: python
 
-        # Install vlc snap
+        from pyinfra.operations import snap
+        # Install vlc via snap
         snap.package(
             name="Install vlc",
             packages="vlc",

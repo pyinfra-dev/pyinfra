@@ -41,7 +41,7 @@ def add_deploy(state: "State", deploy_func: Callable[..., Any], *args, **kwargs)
             ).format(get_call_location()),
         )
 
-    hosts = kwargs.pop("host", state.inventory.iter_active_hosts())
+    hosts = kwargs.pop("host", state.inventory.get_active_hosts())
     if isinstance(hosts, Host):
         hosts = [hosts]
 
