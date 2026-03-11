@@ -1,4 +1,10 @@
-"""Operations for uv."""
+"""
+Operations for ``uv``:
+    + install, remove or upgrade Python packages
+    + install, remove or upgrade  'tools'
+    + create or remove virtual environments (venv's)
+    + ensure the uv tool executable directory is on the PATH
+"""
 
 from __future__ import annotations
 
@@ -34,13 +40,13 @@ def packages(
     extra_args: str | list[str] | None = None,
 ):
     """
-    Install/remove/update python packages using ``uv pip``
+    Install/remove/update Python packages using ``uv pip``
 
     + packages: a package or list of packages to install/uninstall
-    + requirements: path to a requirements file to install/uninstall
-    + present: whether the packages should be installed or uninstalled
-    + latest: whether to upgrade packages for which a version was not specified
-    + extra_args: zero or more additional arguments to the ``uv pip`` command
+    + requirements: optionally a path to a requirements file to install/uninstall. Default None.
+    + present: whether the packages should be installed or uninstalled. Default True.
+    + latest: whether to upgrade packages for which a version was not specified. Default False.
+    + extra_args: zero or more additional arguments to the ``uv`` command. Default None.
 
     Python Package versions:
         Package versions can be specified in the `usual manner`_, e.g. ``<pkg>==<version>``.
@@ -56,10 +62,10 @@ def packages(
             packages=["requests"],
         )
     """
-    extras = " ".join(extra_args or []) if not isinstance(extra_args, str) else extra_args
-    install_command = f"{UV_CMD} pip install --no-progress {extras}"
-    uninstall_command = f"{UV_CMD} pip uninstall --no-progress {extras}"
-    upgrade_command = f"{UV_CMD} pip install --upgrade --no-progress {extras}"
+    extras = f" {' '.join(extra_args or [])}" if not isinstance(extra_args, str) else extra_args
+    install_command = f"{UV_CMD} pip install --no-progress{extras}"
+    uninstall_command = f"{UV_CMD} pip uninstall --no-progress{extras}"
+    upgrade_command = f"{UV_CMD} pip install --upgrade --no-progress{extras}"
 
     # (un)Install requirements
     if requirements:
@@ -101,9 +107,9 @@ def pythons(
     extra_args: str | list[str] | None = None,
 ):
     """
-    Install/remove python version(s).
+    Install/remove Python version(s).
 
-    + version: a version or list of python versions
+    + version: a version or list of Python versions
     + present: whether the versions should be installed or removed. Default True.
     + managed: whether only managed or all available version should be considered. Default True.
     + extra_args: zero or more additional arguments to be passed to ``uv``. Default None.
@@ -125,7 +131,7 @@ def pythons(
     current_versions = host.get_fact(UvInstalledPythonsByVersion, managed)
 
     if versions:
-        # uv supports only one python version at a time
+        # uv supports only one Python version at a time
         for version in [versions] if isinstance(versions, str) else versions:
             yield from ensure_packages(
                 host,
@@ -136,7 +142,7 @@ def pythons(
                 uninstall_command=uninstall_command,
             )
     else:
-        host.noop("no python versions requested to be (un)installed")
+        host.noop("no Python versions requested to be (un)installed")
 
 
 @operation()
@@ -200,7 +206,7 @@ def tool_upgrade_all():
     """
     Upgrade all ``uv`` tools.
     """
-    yield f"{UV_CMD} tool --reinstall --upgrade"
+    yield f"{UV_CMD} tool upgrade --all"
 
 
 @operation()
@@ -231,16 +237,16 @@ def venv(
     Add/remove a Python venv in the specified location.
 
     + path: where to create the venv
-    + present: whether the virtualenv should exist.  Default True
-    + python: python interpreter to use. Defaults to not specified.
+    + present: whether the venv should be created or removed.  Default True
+    + python: Python interpreter to use. Defaults to not specified.
     + allow_existing: allow (and retain) existing files in the venv directory. Default False
     + clear_existing: remove all existing files in the venv directory. Default False
-    + seed: whether to seed the venv with `pip`, and pre-3.12, `setuptools` and `wheel`.
+    + seed: whether to seed the venv with ``pip``, and pre-3.12, ``setuptools`` and ``wheel``.
       Default False
     + site_packages: give the venv access to the global site-packages. Default False
-    + link-mode: method to use when installing seed packages: clone, copy, hardlink, symlink.
+    + link_mode: method to use when installing seed packages: clone, copy, hardlink or symlink.
       Default is platform-dependent
-    + extra_args: zero or more additional arguments to the `uv tool` command
+    + extra_args: zero or more additional arguments to the `'uv`' command
 
     **Example:**
 
@@ -283,4 +289,4 @@ def venv(
         if not exists:
             host.noop(f"venv does not exist at {path}")
         else:
-            yield from files.directory._inner(f"{path}/{VENV}", present=False)
+            yield from files.directory._inner(f"{path}/{VENV}", present=False)  # noqa: SLF001

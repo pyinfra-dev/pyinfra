@@ -5,6 +5,6 @@
     "facts": {
     },
     "commands": [
-        "uv tool --reinstall --upgrade"
+        "uv tool upgrade --all"
     ]
 }
