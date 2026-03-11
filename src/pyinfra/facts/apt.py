@@ -80,13 +80,7 @@ class AptRepo:
 
     def to_json(self):
         """Convert to dict for JSON serialization"""
-        return {
-            "type": self.type,
-            "url": self.url,
-            "distribution": self.distribution,
-            "components": self.components,
-            "options": self.options,
-        }
+        return dict(self.items())
 
 
 @dataclass
@@ -109,21 +103,41 @@ class AptSourcesFile:
     def from_deb822_lines(cls, lines: list[str]) -> "AptSourcesFile | None":
         """Parse deb822 stanza lines into AptSourcesFile.
 
+        Handles multi-line field values (continuation lines starting with a space
+        or tab) as defined in the deb822 specification, including inline GPG keys
+        in the Signed-By field.  Within a continuation value a bare `.` encodes
+        an empty line (per the deb822 spec).
+
         Returns None if parsing failed or repository is disabled.
         """
         if not lines:
             return None
 
         data: dict[str, str] = {}
+        current_key: str | None = None
+
         for line in lines:
-            if not line or line.startswith("#"):
+            # Pure comment lines are never continuation lines
+            if line.startswith("#"):
                 continue
-            # Field-Name: value
-            try:
+
+            # Continuation line: starts with a space or tab
+            if line and line[0] in (" ", "\t") and current_key is not None:
+                # A bare `.` encodes an empty line within the value
+                continuation = line[1:]
+                data[current_key] += "\n" + ("" if continuation == "." else continuation)
+                continue
+
+            # Empty line within the loop – stanza boundaries are handled by the caller
+            if not line.strip():
+                continue
+
+            # Regular field: Field-Name: value
+            if ":" in line:
                 key, value = line.split(":", 1)
-            except ValueError:  # malformed line
-                continue
-            data[key.strip()] = value.strip()
+                current_key = key.strip()
+                data[current_key] = value.strip()
+            # else: malformed line without ':', skip
 
         # Validate required fields
         required = ("Types", "URIs", "Suites")
@@ -135,7 +149,17 @@ class AptSourcesFile:
         if enabled_str != "yes":
             return None
 
-        # Parse fields into appropriate types
+        # Parse Signed-By: inline armored PGP key block vs. file path(s)
+        signed_by: list[str] | None = None
+        signed_by_raw = data.get("Signed-By", "").strip()
+        if signed_by_raw:
+            if "-----BEGIN PGP" in signed_by_raw:
+                # Inline OpenPGP key block — keep the entire block as a single entry
+                signed_by = [signed_by_raw]
+            else:
+                # Space- or newline-separated absolute file paths
+                signed_by = signed_by_raw.split()
+
         return cls(
             types=data.get("Types", "").split(),
             uris=data.get("URIs", "").split(),
@@ -144,7 +168,7 @@ class AptSourcesFile:
             architectures=(
                 data.get("Architectures", "").split() if data.get("Architectures") else None
             ),
-            signed_by=data.get("Signed-By", "").split() if data.get("Signed-By") else None,
+            signed_by=signed_by,
             trusted=data.get("Trusted", "").lower() if data.get("Trusted") else None,
         )
 
@@ -305,7 +329,7 @@ class AptSources(FactBase):
             "/etc/apt/sources.list.d/*.list "
             "/etc/apt/sources.list.d/*.sources; do "
             '[ -e "$f" ] || continue; '
-            'echo "##FILE $f"; '
+            'echo "##PYINFRA_FILE $f"; '
             'cat "$f"; '
             "echo; "
             "done'"
@@ -336,9 +360,9 @@ class AptSources(FactBase):
             buffer = []
 
         for line in output:
-            if line.startswith("##FILE "):
+            if line.startswith("##PYINFRA_FILE "):
                 flush()  # flush previous file buffer
-                current_file = line[7:].strip()  # remove "##FILE " prefix
+                current_file = line[15:].strip()  # remove "##PYINFRA_FILE " prefix
                 continue
             buffer.append(line)
 
