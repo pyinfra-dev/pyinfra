@@ -1,4 +1,14 @@
-"""uv Facts."""
+"""
+Present information provided by ``uv``:
+    + available and installed versions of Python
+    + installed Python packages and their versions
+    + where the installed versions of Python are stored
+    + where `tools are installed
+    + version of ``uv`` available
+
+
+See https://docs.astral.sh/uv/ for details of ``uv``
+"""
 
 import json
 from collections.abc import Iterable
@@ -11,8 +21,6 @@ from pyinfra import logger
 from pyinfra.api import StringCommand
 from pyinfra.api.facts import FactBase
 from pyinfra.facts.util.packaging import PackageVersionDict
-
-# See https://docs.astral.sh/uv/ for full details on UV
 
 UV_CMD = "uv"
 MANAGED_PYTHON = "--managed-python"
@@ -34,7 +42,7 @@ def process_json(command: str, output: Iterable[str], key: str, value: str) -> P
 
 class UvPipPackages(FactBase[PackageVersionDict]):
     """
-    Provides the installed python packages and their version.
+    Provides the installed Python packages and their version.
 
     **Example:**
 
@@ -65,10 +73,10 @@ class UvPipPackages(FactBase[PackageVersionDict]):
 
 class UvAvailablePythonsByImplementation(FactBase[PackageVersionDict]):
     """
-    Provides the implementation(s) of python available for installation along with the versions(s)
+    Provides the implementation(s) of Python available for installation along with the versions(s)
     of the implementation(s).
 
-        + is_managed: if set, only list python implementations managed by `uv`. Default True
+        + is_managed: if set, only list Python implementations managed by `uv`. Default True
 
     **Example:**
 
@@ -104,10 +112,10 @@ class UvAvailablePythonsByImplementation(FactBase[PackageVersionDict]):
 
 class UvAvailablePythonsByVersion(UvAvailablePythonsByImplementation):
     """
-    Provides the version(s) of python available for installation along with the implementation(s)
+    Provides the version(s) of Python available for installation along with the implementation(s)
     of the version(s).
 
-        + is_managed: if set, only list python implementations managed by `uv`. Default True
+        + is_managed: if set, only list Python implementations managed by `uv`. Default True
 
     **Example:**
 
@@ -125,10 +133,10 @@ class UvAvailablePythonsByVersion(UvAvailablePythonsByImplementation):
 
 class UvInstalledPythonsByImplementation(UvAvailablePythonsByImplementation):
     """
-    Provides the installed implementation(s) of python along with the versions(s) of
+    Provides the installed implementation(s) of Python along with the versions(s) of
     the implementation(s).
 
-        + is_managed: if set, only list python implementations managed by `uv`. Default True
+        + is_managed: if set, only list Python implementations managed by `uv`. Default True
 
     **Example:**
 
@@ -148,10 +156,10 @@ class UvInstalledPythonsByImplementation(UvAvailablePythonsByImplementation):
 
 class UvInstalledPythonsByVersion(UvInstalledPythonsByImplementation):
     """
-    Provides the installed versions of python along with the implementation(s) of
+    Provides the installed versions of Python along with the implementation(s) of
     the version(s).
 
-        + is_managed: if set, only list python versions managed by `uv`. Default True
+        + is_managed: if set, only list Python versions managed by `uv`. Default True
 
     **Example:**
 
@@ -169,7 +177,7 @@ class UvInstalledPythonsByVersion(UvInstalledPythonsByImplementation):
 
 class UvPythonDir(FactBase[str]):
     """
-    Provides the directory in which uv installs tools
+    Provides the directory in which uv installs Python implementations.
 
     **Example:**
 
@@ -203,7 +211,7 @@ class UvPythonDir(FactBase[str]):
 
 class UvToolDir(UvPythonDir):
     """
-    Provides the directory in which uv installs tools
+    Provides the directory in which uv installs tools.
 
     **Example:**
 
@@ -219,7 +227,7 @@ class UvToolDir(UvPythonDir):
 
 class UvTools(FactBase[PackageVersionDict]):
     """
-    Provides the tool(s) currently installed along with their version.
+    Provides the tool(s) currently installed along with their version(s).
 
     **Example:**
 
@@ -263,7 +271,7 @@ class UvTools(FactBase[PackageVersionDict]):
 
 class UvVersion(FactBase[str]):
     """
-    Provides the version of uv itself.
+    Provides the version of uv installed.
 
     **Example:**
 
