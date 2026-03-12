@@ -62,7 +62,7 @@ def packages(
             packages=["requests"],
         )
     """
-    extras = f" {' '.join(extra_args or [])}" if not isinstance(extra_args, str) else extra_args
+    extras = f" {' '.join(extra_args or []) if not isinstance(extra_args, str) else extra_args}"
     install_command = f"{UV_CMD} pip install --no-progress{extras}"
     uninstall_command = f"{UV_CMD} pip uninstall --no-progress{extras}"
     upgrade_command = f"{UV_CMD} pip install --upgrade --no-progress{extras}"

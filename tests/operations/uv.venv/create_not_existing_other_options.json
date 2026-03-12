@@ -4,15 +4,12 @@
         "present": true,
         "clear_existing": true,
         "link_mode": "symlink",
-        "site_packages": true
+        "site_packages": true,
+        "extra_args": "--offline",
     },
     "facts": {
-        "files.File": {
-            "path=/somewhere/useful/.venv/bin/activate": null
-        },
-        "files.Directory": {
-            "path=/somewhere/useful.venv": null
-        }
+        "files.File": {"path=/somewhere/useful/.venv/bin/activate": null},
+        "files.Directory": {"path=/somewhere/useful.venv": null},
     },
-    "commands": ["uv venv --clear --link-mode symlink --site-packages /somewhere/useful"]
+    "commands": ["uv venv --clear --link-mode symlink --site-packages --offline /somewhere/useful"],
 }
