@@ -4,13 +4,15 @@ Manage apt packages and repositories.
 
 from __future__ import annotations
 
+import io
 import re
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import OperationError, operation
 from pyinfra.facts.apt import (
+    AptSourcesFile,
     AptSources,
     SimulateOperationWillChange,
     noninteractive_apt,
@@ -238,6 +240,121 @@ def repo(src: str, present=True, filename: str | None = None):
         host.noop(
             f'apt repo "{src}" {"exists" if present else "does not exist"}',
         )
+
+
+@operation()
+def sources_file(
+    filename: str,
+    types: list[str] | str = "deb",
+    uris: list[str] | str | None = None,
+    suites: list[str] | str | None = None,
+    components: list[str] | str | None = None,
+    architectures: list[str] | str | None = None,
+    signed_by: str | None = None,
+    present: bool = True,
+):
+    """
+    Manage a deb822 ``.sources`` file under ``/etc/apt/sources.list.d/``.
+
+    Creates or removes a modern deb822-format sources file.  Each field that
+    accepts multiple values can be given as a list or a space-separated string.
+
+    + filename: base name for the file (without extension); the ``.sources``
+      extension is added automatically
+    + types: repository type(s) — ``"deb"``, ``"deb-src"``, or both
+    + uris: one or more repository URLs
+    + suites: one or more suite/distribution names (e.g. ``"bookworm"``)
+    + components: one or more components (e.g. ``["main", "contrib"]``)
+    + architectures: restrict to specific architectures (e.g. ``"amd64"``)
+    + signed_by: absolute path to the keyring file used for signature verification
+    + present: whether the sources file should exist
+
+    **Example:**
+
+    .. code:: python
+
+        from pyinfra.operations import apt
+
+        apt.key(
+            name="Add Docker GPG key",
+            src="https://download.docker.com/linux/debian/gpg",
+            dest="docker.gpg",
+        )
+
+        apt.sources_file(
+            name="Add Docker apt repository (deb822)",
+            filename="docker",
+            types=["deb"],
+            uris=["https://download.docker.com/linux/debian"],
+            suites=["bookworm"],
+            components=["stable"],
+            architectures=["amd64"],
+            signed_by="/etc/apt/keyrings/docker.gpg",
+        )
+    """
+    dest = f"/etc/apt/sources.list.d/{filename}.sources"
+
+    # Removal path — just delete the file
+    if not present:
+        info = host.get_fact(File, path=dest)
+        if info:
+            yield from files.file._inner(path=dest, present=False)
+        else:
+            host.noop(f'apt sources file "{dest}" does not exist')
+        return
+
+    # Normalise list arguments
+    def _as_list(val) -> list[str]:
+        if val is None:
+            return []
+        if isinstance(val, str):
+            return val.split()
+        return list(val)
+
+    types_list = _as_list(types) or ["deb"]
+    uris_list = _as_list(uris)
+    suites_list = _as_list(suites)
+    components_list = _as_list(components)
+    architectures_list = _as_list(architectures)
+
+    if not uris_list or not suites_list:
+        raise OperationError("apt.sources_file requires at least one URI and one suite")
+
+    # Build the AptSourcesFile object so we can expand it to AptRepo for idempotency check
+    sources_entry = AptSourcesFile(
+        types=types_list,
+        uris=uris_list,
+        suites=suites_list,
+        components=components_list,
+        architectures=architectures_list or None,
+        signed_by=[signed_by] if signed_by else None,
+    )
+    desired_repos = sources_entry.expand_to_repos()
+
+    # Idempotency: if every expanded repo is already present, do nothing
+    existing_sources = host.get_fact(AptSources)
+    if desired_repos and all(repo in existing_sources for repo in desired_repos):
+        host.noop(f'apt sources file "{dest}" is already configured')
+        return
+
+    # Build deb822 content
+    lines = []
+    lines.append("Types: {}".format(" ".join(types_list)))
+    lines.append("URIs: {}".format(" ".join(uris_list)))
+    lines.append("Suites: {}".format(" ".join(suites_list)))
+    if components_list:
+        lines.append("Components: {}".format(" ".join(components_list)))
+    if architectures_list:
+        lines.append("Architectures: {}".format(" ".join(architectures_list)))
+    if signed_by:
+        lines.append(f"Signed-By: {signed_by}")
+    content = "\n".join(lines) + "\n"
+
+    yield from files.put._inner(
+        src=io.StringIO(content),
+        dest=dest,
+        mode="0644",
+    )
 
 
 @operation(is_idempotent=False)
