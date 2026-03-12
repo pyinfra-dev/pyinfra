@@ -3,8 +3,13 @@ Manage packages on OpenWrt using opkg
     + ``update`` - update local copy of package information
     + ``packages`` -  install and remove packages
 
-see https://openwrt.org/docs/guide-user/additional-software/opkg
+See https://openwrt.org/docs/guide-user/additional-software/opkg
+
 OpenWrt recommends against upgrading all packages  thus there is no ``opkg.upgrade`` function
+
+**Note:** as of OpenWrt Release `2025.12`_, OpenWrt uses ``apk``.
+
+.. _2025.12: https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk
 """
 
 from typing import List, Union
