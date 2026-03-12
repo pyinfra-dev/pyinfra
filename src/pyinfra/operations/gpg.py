@@ -75,12 +75,19 @@ def _install_key_from_keyserver(keyserver: str, keyid: str | list[str], dest: st
 
 
 def _matches_keyid(existing_key_id: str, clean_key: str) -> bool:
-    """Check if existing_key_id matches a cleaned (no 0x prefix, uppercase) key ID."""
+    """Check if existing_key_id matches a cleaned (no 0x prefix, uppercase) key ID.
+
+    Supports all common GPG key ID forms:
+    - Short 8-char ID:   clean_key is a suffix of existing_key_id  (existing.endswith)
+    - Long 16-char ID:   exact match
+    - Full fingerprint:  clean_key ends with existing_key_id        (clean.endswith)
+    """
     existing_upper = existing_key_id.upper()
     return (
         clean_key == existing_upper
         or existing_upper.endswith(clean_key)
         or existing_upper.startswith(clean_key)
+        or clean_key.endswith(existing_upper)  # full fingerprint → short key ID
     )
 
 
