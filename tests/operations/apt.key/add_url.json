@@ -1,12 +1,6 @@
 {
     "args": ["http://mykey"],
     "facts": {
-        "apt.AptKeys": {},
-        "gpg.GpgKey": {
-            "src=http://mykey": {
-                "abc": {}
-            }
-        },
         "files.Directory": {
             "path=/etc/apt/keyrings": null
         },

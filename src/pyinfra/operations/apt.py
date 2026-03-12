@@ -10,9 +10,7 @@ from urllib.parse import urlparse
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.api.exceptions import OperationError
 from pyinfra.facts.apt import (
-    AptKeys,
     AptSources,
     SimulateOperationWillChange,
     noninteractive_apt,
@@ -20,13 +18,13 @@ from pyinfra.facts.apt import (
 )
 from pyinfra.facts.deb import DebPackage, DebPackages
 from pyinfra.facts.files import File
-from pyinfra.facts.gpg import GpgKey, GpgKeyrings
 from pyinfra.facts.server import Date
 from pyinfra.operations import files, gpg
 
 from .util.packaging import ensure_packages
 
 APT_UPDATE_FILENAME = "/var/lib/apt/periodic/update-success-stamp"
+APT_KEYRING_DIRS = ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
 
 
 def _simulate_then_perform(command: str):
@@ -47,9 +45,9 @@ def _simulate_then_perform(command: str):
         yield noninteractive_apt(command)
 
 
-def _sanitize_apt_keyring_name(name: str) -> str:
+def _sanitize_keyring_part(name: str) -> str:
     """
-    Produce a filesystem-friendly name from an URL host/basename or a local filename.
+    Produce a filesystem-friendly segment from a URL host, basename, or key ID.
     """
     name = name.strip().lower()
     name = re.sub(r"[^\w.-]+", "_", name)
@@ -57,70 +55,35 @@ def _sanitize_apt_keyring_name(name: str) -> str:
     return name or "apt-keyring"
 
 
-def _derive_dest_from_src_and_keyids(
-    src: str | None, keyids: list[str] | None, dest: str | None
-) -> str:
+def _derive_dest_from_src_and_keyids(src: str | None, keyids: list[str] | None) -> str:
     """
-    Compute a stable destination path in /etc/apt/keyrings/.
-    Priority:
-      1) explicit dest if provided
-      2) from src (URL host + basename, or local basename)
-      3) from keyids (joined)
-      4) fallback "apt-keyring.gpg"
-    """
-    if dest:
-        # Ensure it ends with .gpg and is absolute under /etc/apt/keyrings
-        if not dest.endswith(".gpg"):
-            dest += ".gpg"
-        if not dest.startswith("/"):
-            dest = f"/etc/apt/keyrings/{dest}"
-        return dest
+    Compute a stable destination path in /etc/apt/keyrings/ from a source or key IDs.
 
+    Priority:
+      1) from src (URL domain + basename, or local basename)
+      2) from keyids (joined)
+      3) fallback "apt-keyring.gpg"
+    """
     base = None
     if src:
         parsed = urlparse(src)
         if parsed.scheme and parsed.netloc:
-            host_name = _sanitize_apt_keyring_name(parsed.netloc.replace(":", "_"))
-            bn = _sanitize_apt_keyring_name(
+            domain_part = _sanitize_keyring_part(parsed.netloc.replace(":", "_"))
+            bn = _sanitize_keyring_part(
                 (parsed.path.rsplit("/", 1)[-1] or "key").replace(".asc", "").replace(".gpg", "")
             )
-            base = f"{host_name}-{bn}"
+            base = f"{domain_part}-{bn}"
         else:
-            bn = _sanitize_apt_keyring_name(
+            bn = _sanitize_keyring_part(
                 src.rsplit("/", 1)[-1].replace(".asc", "").replace(".gpg", "")
             )
             base = bn or "key"
     elif keyids:
-        base = "keyserver-" + _sanitize_apt_keyring_name("-".join(keyids))
+        base = "keyserver-" + _sanitize_keyring_part("-".join(keyids))
     else:
         base = "apt-keyring"
 
     return f"/etc/apt/keyrings/{base}.gpg"
-
-
-def _get_apt_keys_comprehensive() -> dict[str, str]:
-    """
-    Get all GPG keys available in APT directories using the GpgKeyrings fact.
-    This provides more comprehensive coverage than AptKeys fact.
-    Falls back gracefully if GpgKeyrings data is not available.
-
-    Returns:
-        dict: Key ID -> keyring file path mapping
-    """
-    try:
-        apt_directories = ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
-        keyrings_info = host.get_fact(GpgKeyrings, directories=apt_directories)
-
-        all_keys = {}
-        for keyring_path, keyring_data in keyrings_info.items():
-            keys = keyring_data.get("keys", {})
-            for key_id in keys.keys():
-                all_keys[key_id] = keyring_path
-
-        return all_keys
-    except (KeyError, AttributeError):
-        # Fallback to empty dict if GpgKeyrings fact is not available (e.g., in tests)
-        return {}
 
 
 @operation()
@@ -132,26 +95,27 @@ def key(
     present: bool = True,
 ):
     """
-    Add or remove apt GPG keys using modern keyring management.
+    Add or remove APT GPG keys using modern keyring management (no ``apt-key``).
 
-    This operation manages GPG keys for APT repos without using the deprecated apt-key command.
-    Keys are stored in /etc/apt/keyrings/ and can be referenced in source lists via signed-by=.
+    Keys are written to ``/etc/apt/keyrings/`` and can be referenced in source entries
+    via ``signed-by=``. The destination filename is derived automatically from the source
+    URL or key IDs when not specified explicitly.
 
-    Args:
-        src: filename or URL to a key (ASCII .asc or binary .gpg)
-        keyserver: keyserver URL for fetching keys by ID
-        keyid: key ID or list of key IDs (required with keyserver, optional for removal)
-        dest: optional keyring path ('.gpg' will be enforced, defaults under /etc/apt/keyrings)
-        present: whether the key should be present (True) or absent (False)
+    + src: filename or URL to a key (``.asc`` ASCII-armored or binary ``.gpg``)
+    + keyserver: keyserver URL for fetching keys by ID
+    + keyid: key ID or list of key IDs (required with ``keyserver``, optional for removal)
+    + dest: destination filename or absolute path — ``.gpg`` extension is enforced;
+      relative names are resolved under ``/etc/apt/keyrings/``
+    + present: whether the key should be present (default: ``True``) or removed
 
-    Behavior:
-        - Installation: Idempotent via AptKeys - if key IDs are already present, nothing changes
-        - Removal: Uses GpgKeyrings fact to find and remove keys from APT directories
-        - If src is ASCII (.asc), it will be dearmored; if binary (.gpg), it's copied as-is
-        - Keyserver flow uses temporary GNUPGHOME, then exports to destination keyring
+    .. note::
+        ASCII-armored keys (``.asc``) are automatically dearmored on installation.
+        Keyserver fetches use a temporary ``GNUPGHOME`` and export binary keyrings.
+        Removal without ``keyid`` deletes the whole keyring file; with ``keyid`` it
+        removes individual keys and prunes empty files.
 
     .. warning::
-        ``apt-key`` is deprecated in Debian. This operation follows modern keyring management:
+        ``apt-key`` is deprecated in Debian. This operation follows the modern approach:
         https://wiki.debian.org/DebianRepository/UseThirdParty
 
     **Examples:**
@@ -187,64 +151,34 @@ def key(
         )
     """
 
-    # Handle removal operations using the GPG infrastructure
-    if present is False:
-        # Use the GPG operation for removal, but restrict to APT directories
-        apt_working_dirs = ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
+    # Special case: remove by key ID without explicit destination → search all APT keyring dirs
+    if not present and keyid and not dest and not src and not keyserver:
         yield from gpg.key._inner(
-            dest=dest,
             keyid=keyid,
             present=False,
-            working_dirs=apt_working_dirs,
+            working_dirs=APT_KEYRING_DIRS,
         )
         return
 
-    # Installation logic (existing code)
-    # Get comprehensive view of all keys in APT directories
-    existing_keys_comprehensive = _get_apt_keys_comprehensive()
-    # Also get the legacy AptKeys fact for compatibility
-    existing_keys = host.get_fact(AptKeys)
+    # Resolve destination path under /etc/apt/keyrings/
+    if dest and not dest.startswith("/"):
+        dest = f"/etc/apt/keyrings/{dest}"
+    elif not dest:
+        if src:
+            dest = _derive_dest_from_src_and_keyids(src, None)
+        elif keyserver and keyid:
+            keyid_list = [keyid] if isinstance(keyid, str) else keyid
+            dest = _derive_dest_from_src_and_keyids(None, keyid_list)
+        else:
+            dest = "/etc/apt/keyrings/apt-key.gpg"
 
-    # Combine both sources of key information for complete coverage
-    all_available_keys = set(existing_keys_comprehensive.keys()) | set(existing_keys.keys())
-
-    # Check idempotency for src branch
-    if src:
-        key_data = host.get_fact(GpgKey, src=src)  # Parses the key(s) from src to extract key IDs
-        keyids_from_src = list(key_data.keys()) if key_data else []
-
-        # If we don't know the IDs (eg. unreachable URL), we cannot determine idempotency
-        # -> try to install.
-        # Otherwise, skip if all key IDs are already present.
-        if keyids_from_src and all(kid in all_available_keys for kid in keyids_from_src):
-            host.noop(f"All keys from {src} are already available in the apt keychain")
-            return
-
-        dest_path = _derive_dest_from_src_and_keyids(src, keyids_from_src or None, dest)
-
-    # Check idempotency for keyserver branch
-    elif keyserver:
-        if not keyid:
-            raise OperationError("`keyid` must be provided with `keyserver`")
-
-        if isinstance(keyid, str):
-            keyid = [keyid]
-
-        needed_keys = sorted(set(keyid) - all_available_keys)
-        if not needed_keys:
-            host.noop(f"Keys {', '.join(keyid)} are already available in the apt keychain")
-            return
-
-        dest_path = _derive_dest_from_src_and_keyids(None, needed_keys, dest)
-        # Only install the needed keys
-        keyid = needed_keys
-
-    # Use the generic GPG operation to install the key
+    # Delegate everything to gpg.key with APT-specific defaults
     yield from gpg.key._inner(
         src=src,
-        dest=dest_path,
+        dest=dest,
         keyserver=keyserver,
         keyid=keyid,
+        present=present,
         dearmor=True,
         mode="0644",
     )

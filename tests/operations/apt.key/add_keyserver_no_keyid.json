@@ -2,12 +2,7 @@
     "kwargs": {
         "keyserver": "key-server.net"
     },
-    "facts": {
-        "apt.AptKeys": {},
-        "files.Directory": {
-            "path=/etc/apt/keyrings": null
-        }
-    },
+    "facts": {},
     "exception": {
         "name": "OperationError",
         "message": "`keyid` must be provided with `keyserver`"

@@ -382,28 +382,31 @@ class AptKeys(GpgKeyrings):
     .. code:: python
 
         {
-            "KEY-ID": {
+            "3B4FE6ACC0B21F32": {
+                "validity": "-",
                 "length": 4096,
-                "uid": "Oxygem <hello@oxygem.com>"
+                "subkeys": {},
+                "fingerprint": "790BC7277767219C42C86F933B4FE6ACC0B21F32",
+                "uid_hash": "B7A02867A0C1D32B594B36C00E20C8C57E397748",
+                "uid": "Ubuntu Archive Automatic Signing Key (2012) <ftpmaster@ubuntu.com>"
             },
         }
     """
 
     @override
-    def command(self, directories=None) -> str:
-        # Default to APT-specific directories if none specified
-        if directories is None:
-            directories = ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
-
-        return super().command(directories)
+    def command(self, directories: list[str] | None = None) -> str:
+        return super().command(
+            directories or ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
+        )
 
     @override
     def process(self, output):
         # Get the full keyring structure from parent
         keyrings_data = super().process(output)
 
-        # Flatten to match traditional AptKeys format (just key_id -> key_details)
-        flattened_keys = {}
+        # Flatten to match the traditional AptKeys format: {key_id: key_details}
+        # Note: if the same key ID appears in multiple keyring files, the last one wins.
+        flattened_keys: dict = {}
         for keyring_path, keyring_info in keyrings_data.items():
             if "keys" in keyring_info:
                 flattened_keys.update(keyring_info["keys"])
