@@ -9,6 +9,7 @@ Operations for ``uv``:
 from __future__ import annotations
 
 import shlex
+from typing import Literal
 
 from pyinfra import host
 from pyinfra.api.command import QuoteString, StringCommand
@@ -237,7 +238,7 @@ def venv(
     python: str | None = None,
     allow_existing: bool = False,
     clear_existing: bool = False,
-    link_mode: str | None = None,
+    link_mode: Literal["clone", "copy", "hardlink", "symlink"] | None = None,
     seed: bool = False,
     site_packages: bool = False,
     extra_args: str | list[str] | None = None,
