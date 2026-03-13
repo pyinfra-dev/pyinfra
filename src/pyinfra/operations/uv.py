@@ -30,6 +30,11 @@ VENV = ".venv"
 VENV_INDICATOR = f"{VENV}/bin/activate"
 
 
+
+
+def addable_extras(extra_args: str | list[str] | None) -> str:
+    return f" {' '.join(extra_args or []) if not isinstance(extra_args, str) else extra_args}"
+
 @operation()
 def packages(
     packages: str | list[str],
@@ -62,7 +67,7 @@ def packages(
             packages=["requests"],
         )
     """
-    extras = f" {' '.join(extra_args or []) if not isinstance(extra_args, str) else extra_args}"
+    extras = addable_extras(extra_args)
     install_command = f"{UV_CMD} pip install --no-progress{extras}"
     uninstall_command = f"{UV_CMD} pip uninstall --no-progress{extras}"
     upgrade_command = f"{UV_CMD} pip install --upgrade --no-progress{extras}"
@@ -98,6 +103,7 @@ def packages(
         host.noop("neither packages nor requirements requested to be (un)installed")
 
 
+
 @operation()
 def pythons(
     versions: str | list[str],
@@ -124,10 +130,10 @@ def pythons(
             present=True
         )
     """
-    extras = " ".join(extra_args or []) if not isinstance(extra_args, str) else extra_args
+    extras = addable_extras(extra_args)
     mgd_str = MANAGED_PYTHON if managed else ""
-    install_command = f"{UV_CMD} python install --no-progress {mgd_str} {extras}"
-    uninstall_command = f"{UV_CMD} python uninstall --no-progress {mgd_str} {extras}"
+    install_command = f"{UV_CMD} python install --no-progress {mgd_str}{extras}"
+    uninstall_command = f"{UV_CMD} python uninstall --no-progress {mgd_str}{extras}"
     current_versions = host.get_fact(UvInstalledPythonsByVersion, managed)
 
     if versions:
@@ -175,10 +181,10 @@ def tools(
             present=True
         )
     """
-    extras = " ".join(extra_args or []) if not isinstance(extra_args, str) else extra_args
-    install_command = f"{UV_CMD} tool install --no-progress {extras}"
-    uninstall_command = f"{UV_CMD} tool uninstall --no-progress {extras}"
-    upgrade_command = f"{UV_CMD} tool install --upgrade --no-progress {extras}"
+    extras = addable_extras(extra_args)
+    install_command = f"{UV_CMD} tool install --no-progress{extras}"
+    uninstall_command = f"{UV_CMD} tool uninstall --no-progress{extras}"
+    upgrade_command = f"{UV_CMD} tool install --upgrade --no-progress{extras}"
 
     already_installed = {pkg.lower(): version for pkg, version in host.get_fact(UvTools).items()}
 
