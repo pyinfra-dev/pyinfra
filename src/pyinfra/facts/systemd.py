@@ -41,6 +41,11 @@ def _make_systemctl_cmd(user_mode=False, machine=None, user_name=None):
     return StringCommand(*systemctl_cmd)
 
 
+SYSTEMD_ACTIVE_STATE_KEY = "ActiveState"
+SYSTEMD_ACTIVE_STATES = ("active", "activating", "reloading")
+SYSTEMD_FAILED_STATES = ("failed",)
+
+
 class SystemdStatus(FactBase[Dict[str, bool]]):
     """
     Returns a dictionary map of systemd units to booleans indicating whether they are active.
@@ -65,6 +70,9 @@ class SystemdStatus(FactBase[Dict[str, bool]]):
 
     state_key = "SubState"
     state_values = ["running", "waiting", "exited", "listening", "mounted"]
+    active_state_key = SYSTEMD_ACTIVE_STATE_KEY
+    active_state_values = SYSTEMD_ACTIVE_STATES
+    failed_state_values = SYSTEMD_FAILED_STATES
 
     @override
     def command(
@@ -87,14 +95,22 @@ class SystemdStatus(FactBase[Dict[str, bool]]):
         elif isinstance(services, Iterable):
             service_strs = [QuoteString(s) for s in services]
 
+        properties = [
+            "Id",
+            self.state_key,
+        ]
+        if self.state_key == "SubState":
+            properties.append(self.active_state_key)
+
+        property_args: list[str] = []
+        for property_name in properties:
+            property_args.extend(["--property", property_name])
+
         return StringCommand(
             fact_cmd,
             "show",
             "--all",
-            "--property",
-            "Id",
-            "--property",
-            self.state_key,
+            *property_args,
             *service_strs,
         )
 
@@ -103,6 +119,8 @@ class SystemdStatus(FactBase[Dict[str, bool]]):
         services: Dict[str, bool] = {}
 
         current_unit = None
+        active_states: Dict[str, str] = {}
+        sub_states: Dict[str, str] = {}
         for line in output:
             line = line.strip()
 
@@ -117,7 +135,25 @@ class SystemdStatus(FactBase[Dict[str, bool]]):
                 continue
 
             if key == self.state_key and current_unit:
-                services[current_unit] = value in self.state_values
+                if self.state_key == "SubState":
+                    sub_states[current_unit] = value
+                else:
+                    services[current_unit] = value in self.state_values
+                continue
+
+            if key == self.active_state_key and current_unit:
+                active_states[current_unit] = value
+
+        if self.state_key == "SubState":
+            for unit in set(sub_states) | set(active_states):
+                active_state = active_states.get(unit)
+                sub_state = sub_states.get(unit)
+                if active_state in self.failed_state_values:
+                    services[unit] = False
+                elif active_state in self.active_state_values:
+                    services[unit] = True
+                else:
+                    services[unit] = sub_state in self.state_values
 
         return services
 

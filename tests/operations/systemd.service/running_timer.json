@@ -8,6 +8,6 @@
         }
     },
     "commands": [
-        "systemctl start some-timer.timer"
+        "systemctl start some-timer.timer && systemctl is-active --quiet some-timer.timer"
     ]
 }

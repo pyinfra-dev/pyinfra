@@ -8,6 +8,6 @@
         }
     },
     "commands": [
-        "systemctl start redis-server.service"
+        "systemctl start redis-server.service && systemctl is-active --quiet redis-server.service"
     ]
 }
