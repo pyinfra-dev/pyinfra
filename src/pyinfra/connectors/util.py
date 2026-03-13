@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 
 SUDO_ASKPASS_ENV_VAR = "PYINFRA_SUDO_PASSWORD"
+SU_ASKPASS_ENV_VAR = "PYINFRA_SU_PASSWORD"
 
 
 SUDO_ASKPASS_COMMAND = r"""
@@ -237,6 +238,11 @@ def remove_any_sudo_askpass_file(host) -> None:
         host.run_shell_command("rm -f {0}".format(sudo_askpass_path))
         host.connector_data["sudo_askpass_path"] = None
 
+    su_askpass_path = host.connector_data.get("su_askpass_path")
+    if su_askpass_path:
+        host.run_shell_command("rm -f {0}".format(su_askpass_path))
+        host.connector_data["su_askpass_path"] = None
+
 
 @memoize
 def _show_use_su_login_warning() -> None:
@@ -273,25 +279,39 @@ def _ensure_sudo_askpass_set_for_host(host: "Host"):
     host.connector_data["sudo_askpass_path"] = shlex.quote(output.stdout_lines[0])
 
 
+def _ensure_su_askpass_set_for_host(host: "Host"):
+    if host.connector_data.get("su_askpass_path"):
+        return
+    _, output = host.run_shell_command(
+        SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SU_ASKPASS_ENV_VAR)
+    )
+    host.connector_data["su_askpass_path"] = shlex.quote(output.stdout_lines[0])
+
+
 def make_unix_command_for_host(
     state: "State",
     host: "Host",
     command: StringCommand,
     **command_arguments,
 ) -> StringCommand:
-    if not command_arguments.get("_sudo"):
-        # If no sudo, we've nothing to do here
-        return make_unix_command(command, **command_arguments)
+    # Handle sudo password
+    if command_arguments.get("_sudo"):
+        # If the sudo password is not set in the direct arguments,
+        # set it from the connector data value.
+        if "_sudo_password" not in command_arguments or not command_arguments["_sudo_password"]:
+            command_arguments["_sudo_password"] = host.connector_data.get("prompted_sudo_password")
 
-    # If the sudo password is not set in the direct arguments,
-    # set it from the connector data value.
-    if "_sudo_password" not in command_arguments or not command_arguments["_sudo_password"]:
-        command_arguments["_sudo_password"] = host.connector_data.get("prompted_sudo_password")
+        if command_arguments.get("_sudo_password"):
+            # Ensure the askpass path is correctly set and passed through
+            _ensure_sudo_askpass_set_for_host(host)
+            command_arguments["_sudo_askpass_path"] = host.connector_data["sudo_askpass_path"]
 
-    if command_arguments["_sudo_password"]:
-        # Ensure the askpass path is correctly set and passed through
-        _ensure_sudo_askpass_set_for_host(host)
-        command_arguments["_sudo_askpass_path"] = host.connector_data["sudo_askpass_path"]
+    # Handle su password
+    if command_arguments.get("_su_user"):
+        if command_arguments.get("_su_password"):
+            _ensure_su_askpass_set_for_host(host)
+            command_arguments["_su_askpass_path"] = host.connector_data["su_askpass_path"]
+
     return make_unix_command(command, **command_arguments)
 
 
@@ -309,6 +329,8 @@ def make_unix_command(
     _use_su_login=False,
     _su_shell=None,
     _preserve_su_env=False,
+    _su_password="",
+    _su_askpass_path=None,
     # Sudo config
     _sudo=False,
     _sudo_user=None,
@@ -375,6 +397,16 @@ def make_unix_command(
             command_bits.extend(("-u", _sudo_user))
 
     if _su_user:
+        if _su_password and _su_askpass_path:
+            command_bits.extend(
+                [
+                    "env",
+                    MaskString("{0}={1}".format(SU_ASKPASS_ENV_VAR, shlex.quote(_su_password))),
+                    _su_askpass_path,
+                    "|",
+                ],
+            )
+
         command_bits.append("su")
 
         if _use_su_login:

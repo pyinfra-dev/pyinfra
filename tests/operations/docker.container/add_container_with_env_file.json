@@ -1,0 +1,19 @@
+{
+    "kwargs": {
+        "container": "nginx",
+        "image": "nginx:alpine",
+        "present": "true",
+        "start": false,
+        "env_files": [
+            "a_file.env"
+        ]
+    },
+    "facts": {
+        "docker.DockerContainer": {
+            "object_id=nginx": []
+        }
+    },
+    "commands": [
+        "docker container create --name nginx --env-file a_file.env nginx:alpine"
+    ]
+}

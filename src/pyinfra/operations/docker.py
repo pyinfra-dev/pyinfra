@@ -27,6 +27,7 @@ def container(
     networks: list[str] | None = None,
     volumes: list[str] | None = None,
     env_vars: list[str] | None = None,
+    env_files: list[str] | None = None,
     labels: list[str] | None = None,
     pull_always: bool = False,
     present: bool = True,
@@ -34,6 +35,7 @@ def container(
     start: bool = True,
     restart_policy: str | None = None,
     auto_remove: bool = False,
+    dns: list[str] | None = None,
 ):
     """
     Manage Docker containers
@@ -44,6 +46,7 @@ def container(
     + ports: port list to expose
     + volumes: volume list to map on container
     + env_vars: environment variable list to inject on container
+    + env_files: list of files containing environment variables to inject on container
     + labels: Label list to attach to the container
     + pull_always: force image pull
     + force: remove a container with same name and create a new one
@@ -51,6 +54,7 @@ def container(
     + start: start or stop the container
     + restart_policy: restart policy to apply when a container exits
     + auto_remove: automatically remove the container and its associated anonymous volumes when it exits
+    + dns: list of dns servers to be used by the container
 
     **Examples:**
 
@@ -93,10 +97,12 @@ def container(
         networks or list(),
         volumes or list(),
         env_vars or list(),
+        env_files or list(),
         labels or list(),
         pull_always,
         restart_policy,
         auto_remove,
+        dns or list(),
     )
     existent_container = host.get_fact(DockerContainer, object_id=container)
 

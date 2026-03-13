@@ -240,7 +240,9 @@ def _get_fact(
             requires_command,
             ">/dev/null",
             "||",
+            "(",
             command,
+            ")",
         )
 
     status = False

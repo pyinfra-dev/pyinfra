@@ -1,3 +1,45 @@
+# v3.7
+
+Thank you to all contributors - particular shout out to @wowi42 for an incredible run of PRs!
+
+Core:
+
+- api.facts: fix `requires_command` shell operator precedence with compound commands (#1579) (@wowi42)
+
+Operations/facts:
+
+- operations.docker: add support for env files (#1572) (@EricDriussi)
+- operations.docker: add support for dns (#1590) (@EricDriussi)
+- operations.files.sync: support symlinks
+- facts.server.Port: add UDP support and multi-platform backends (#1550) (@wowi42)
+- facts.hardware.Memory: use LANG=C while calling vmstat (#1553) (@soltysek)
+- facts.hardware: add `CpuInfo` fact (#1577) (@soltysek)
+- facts.server.Sysctl: fix non-zero exit code causing empty result (#1578) (@wowi42)
+- facts.runit.RunitManaged: handle missing service directory gracefully (#1580) (@wowi42)
+- facts.hardware.Memory: fix FreeBSD support by summing page categories (#1584) (@wowi42)
+- facts.server.SecurityLimits: handle missing limits.conf (#1582) (@wowi42)
+- facts.server.Port: fix `ss` command for Alpine/BusyBox compatibility (#1586) (@wowi42)
+- facts.iptables: add `requires_command` to all iptables facts (#1587) (@wowi42)
+- facts.opkg: add `requires_command` and stop hardcoding /bin/opkg (#1588) (@wowi42)
+- facts.choco: add `requires_command` to `ChocoPackages` and `ChocoVersion` (#1589) (@wowi42)
+
+Connectors:
+
+- connectors: `@podmanssh` connector for remote Podman container operations (#1547) (@elazar)
+- connectors.ssh: exclude `_chdir` from global arguments used when removing temporary file (fix #1426) (#1429) (@morrison12)
+- connectors.ssh: don't include password in SSH exception authentication data (#1538) (@oliverhr)
+
+CLI:
+
+- cli: use gevent for the progress spinner
+- cli: add `--ssh-password-prompt` flag for interactive SSH password input (#1585) (@wowi42)
+
+Other:
+
+- global arguments: `_su_password` argument for su password authentication (#1573) (@wowi42)
+- operations+facts: `server.timezone` and `server.Timezone` fact (#1575) (@wowi42)
+- scripts: add `generate_changelog.py`
+
 # v3.6.1
 
 Thank you to all contributors. A solid bugfix release including some rather old bugs at this point.

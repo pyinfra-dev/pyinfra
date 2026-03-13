@@ -163,10 +163,12 @@ class ContainerSpec:
     networks: list[str] = field(default_factory=list)
     volumes: list[str] = field(default_factory=list)
     env_vars: list[str] = field(default_factory=list)
+    env_files: list[str] = field(default_factory=list)
     labels: list[str] = field(default_factory=list)
     pull_always: bool = False
     restart_policy: str | None = None
     auto_remove: bool = False
+    dns: list[str] = field(default_factory=list)
 
     def container_create_args(self):
         args = []
@@ -182,6 +184,9 @@ class ContainerSpec:
         for env_var in self.env_vars:
             args.append("-e {0}".format(env_var))
 
+        for env_file in self.env_files:
+            args.append("--env-file {0}".format(env_file))
+
         for label in self.labels:
             args.append("--label {0}".format(label))
 
@@ -193,6 +198,9 @@ class ContainerSpec:
 
         if self.auto_remove:
             args.append("--rm")
+
+        for dns in self.dns:
+            args.append("--dns {0}".format(dns))
 
         args.append(self.image)
 

@@ -1,7 +1,12 @@
 {
-  "command": "ss -lptnH 'src :53'",
+  "command": "ss -lptn | grep ':53 ' || true",
   "arg": 53,
-  "requires_command": "ss",
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": "/usr/sbin/ss"
+    }
+  },
   "output": [],
   "fact": [null, null]
 }

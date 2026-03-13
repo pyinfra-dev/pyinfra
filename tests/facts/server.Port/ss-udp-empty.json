@@ -1,0 +1,12 @@
+{
+  "command": "ss -lpun | grep ':53 ' || true",
+  "arg": {"port": 53, "protocol": "udp"},
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": "/usr/sbin/ss"
+    }
+  },
+  "output": [],
+  "fact": [null, null]
+}

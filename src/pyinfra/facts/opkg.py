@@ -66,6 +66,10 @@ class OpkgConf(FactBase):
 
     """
 
+    @override
+    def requires_command(self) -> str:
+        return "opkg"
+
     regex = re.compile(
         r"""
                        ^(?:\s*)
@@ -133,6 +137,10 @@ class OpkgFeeds(FactBase):
     default = dict
 
     @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    @override
     def command(self) -> str:
         return "cat /etc/opkg/distfeeds.conf; echo CUSTOM; cat /etc/opkg/customfeeds.conf"
 
@@ -172,8 +180,12 @@ class OpkgInstallableArchitectures(FactBase):
     default = dict
 
     @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    @override
     def command(self) -> str:
-        return "/bin/opkg print-architecture"
+        return "opkg print-architecture"
 
     @override
     def process(self, output):
@@ -205,8 +217,12 @@ class OpkgPackages(FactBase):
     default = dict
 
     @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    @override
     def command(self) -> str:
-        return "/bin/opkg list-installed"
+        return "opkg list-installed"
 
     @override
     def process(self, output):
@@ -230,8 +246,12 @@ class OpkgUpgradeablePackages(FactBase):
     use_default_on_error = True
 
     @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    @override
     def command(self) -> str:
-        return "/bin/opkg list-upgradable"  # yes, really spelled that way
+        return "opkg list-upgradable"  # yes, really spelled that way
 
     @override
     def process(self, output):

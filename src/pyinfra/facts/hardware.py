@@ -7,6 +7,127 @@ from typing_extensions import override
 from pyinfra.api import FactBase, ShortFactBase
 
 
+class CpuInfo(FactBase):
+    """
+    Returns dict of information returned by lscpu command.
+
+    .. code:: python
+
+        {
+            "Architecture": "x86_64",
+            "CPU op-mode(s)": "32-bit, 64-bit",
+            "Address sizes": "36 bits physical, 48 bits virtual",
+            "Byte Order": "Little Endian",
+            "CPU(s)": "4",
+            "On-line CPU(s) list": "0-3",
+            "Vendor ID": "GenuineIntel",
+            "Model name": "Intel(R) Atom(TM) CPU N2800   @ 1.86GHz",
+            "CPU family": "6",
+            "Model": "54",
+            "Thread(s) per core": "2",
+            "Core(s) per socket": "2",
+            "Socket(s)": "1",
+            "Stepping": "1",
+            "CPU(s) scaling MHz": "48%",
+            "CPU max MHz": "1862,0000",
+            "CPU min MHz": "798,0000",
+            "BogoMIPS": "3735,20",
+            "Flags": [
+                "fpu",
+                "vme",
+                "de",
+                "pse",
+                "tsc",
+                "msr",
+                "pae",
+                "mce",
+                "cx8",
+                "apic",
+                "sep",
+                "mtrr",
+                "pge",
+                "mca",
+                "cmov",
+                "pat",
+                "pse36",
+                "clflush",
+                "dts",
+                "acpi",
+                "mmx",
+                "fxsr",
+                "sse",
+                "sse2",
+                "ss",
+                "ht",
+                "tm",
+                "pbe",
+                "syscall",
+                "nx",
+                "lm",
+                "constant_tsc",
+                "arch_perfmon",
+                "pebs",
+                "bts",
+                "nopl",
+                "nonstop_tsc",
+                "cpuid",
+                "aperfmperf",
+                "pni",
+                "dtes64",
+                "monitor",
+                "ds_cpl",
+                "est",
+                "tm2",
+                "ssse3",
+                "cx16",
+                "xt",
+                "pr",
+                "pdcm",
+                "movbe",
+                "lahf_lm",
+                "dtherm",
+                "arat"
+            ],
+            "L1d cache": "48 KiB (2 instances)",
+            "L1i cache": "64 KiB (2 instances)",
+            "L2 cache": "1 MiB (2 instances)",
+            "NUMA node(s)": "1",
+            "NUMA node0 CPU(s)": "0-3",
+            "Vulnerability Itlb multihit": "Not affected",
+            "Vulnerability L1tf": "Not affected",
+            "Vulnerability Mds": "Not affected",
+            "Vulnerability Meltdown": "Not affected",
+            "Vulnerability Spec store bypass": "Not affected",
+            "Vulnerability Spectre v1": "Not affected",
+            "Vulnerability Spectre v2": "Not affected",
+            "Vulnerability Srbds": "Not affected",
+            "Vulnerability Tsx async abort": "Not affected"
+        }
+    """
+
+    @override
+    def command(self) -> str:
+        return "LANG=C lscpu"
+
+    @override
+    def requires_command(self) -> str:
+        return "lscpu"
+
+    @override
+    def process(self, output):
+        if output:
+            cpu_info = {}
+            for info in output:
+                info_data = info.split(":")
+                if "flag" in info_data[0].strip().lower():
+                    data = info_data[1].strip().split()
+                else:
+                    data = info_data[1].strip()
+                cpu_info[info_data[0].strip()] = data
+            return cpu_info
+        return None
+
+
 class Cpus(FactBase[int]):
     """
     Returns the number of CPUs on this server.
@@ -35,7 +156,7 @@ class Memory(FactBase):
 
     @override
     def command(self) -> str:
-        return "vmstat -s"
+        return "LANG=C vmstat -s"
 
     @override
     def process(self, output):
@@ -59,6 +180,19 @@ class Memory(FactBase):
         if not total_memory:
             bytes_per_page = data.get("bytes per page")
             pages_managed = data.get("pages managed")
+
+            # FreeBSD doesn't report "pages managed", sum page categories instead
+            if not pages_managed:
+                page_keys = (
+                    "pages active",
+                    "pages inactive",
+                    "pages wired down",
+                    "pages free",
+                    "pages in the laundry queue",
+                )
+                page_counts = [data.get(k, 0) for k in page_keys]
+                if any(page_counts):
+                    pages_managed = sum(page_counts)
 
             if bytes_per_page and pages_managed:
                 total_memory = (pages_managed * bytes_per_page) / 1024

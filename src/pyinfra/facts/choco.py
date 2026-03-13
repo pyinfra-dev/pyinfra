@@ -21,6 +21,10 @@ class ChocoPackages(FactBase):
     """
 
     @override
+    def requires_command(self) -> str:
+        return "choco"
+
+    @override
     def command(self) -> str:
         return "choco list"
 
@@ -37,6 +41,10 @@ class ChocoVersion(FactBase):
     """
     Returns the choco (Chocolatey) version.
     """
+
+    @override
+    def requires_command(self) -> str:
+        return "choco"
 
     @override
     def command(self) -> str:

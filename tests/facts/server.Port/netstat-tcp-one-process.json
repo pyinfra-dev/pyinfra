@@ -1,0 +1,17 @@
+{
+  "command": "netstat -tlnp 2>/dev/null | awk '$4 ~ /:80$/'",
+  "arg": {"port": 80, "protocol": "tcp"},
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": null
+    }
+  },
+  "output": [
+    "tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      1234/nginx"
+  ],
+  "fact": [
+    "nginx",
+    1234
+  ]
+}

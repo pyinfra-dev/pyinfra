@@ -1,0 +1,17 @@
+{
+  "command": "netstat -tlnp 2>/dev/null | awk '$4 ~ /:22$/'",
+  "arg": {"port": 22, "protocol": "tcp"},
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": null
+    }
+  },
+  "output": [
+    "tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      2316/sshd [listener"
+  ],
+  "fact": [
+    "sshd",
+    2316
+  ]
+}

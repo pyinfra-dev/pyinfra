@@ -68,7 +68,10 @@ class RunitManaged(FactBase):
     @override
     def command(self, service=None, svdir="/var/service"):
         if service is None:
-            return 'cd "{0}" && find -mindepth 1 -maxdepth 1 -type l -printf "%f\n"'.format(svdir)
+            return (
+                '[ -d "{0}" ] && cd "{0}" '
+                '&& find -mindepth 1 -maxdepth 1 -type l -printf "%f\\n" || true'
+            ).format(svdir)
         else:
             return 'cd "{0}" && test -h "{1}" && echo "{1}" || true'.format(svdir, service)
 

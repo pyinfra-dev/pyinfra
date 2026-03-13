@@ -34,6 +34,7 @@ class PyinfraOperation(Generic[P], Protocol):
         _use_su_login: bool = False,
         _preserve_su_env: bool = False,
         _su_shell: None | str = None,
+        _su_password: None | str = None,
         _doas: bool = False,
         _doas_user: None | str = None,
         # Shell arguments

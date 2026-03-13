@@ -1,0 +1,46 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["/somedir/", "/home/somedir"],
+    "kwargs": {},
+    "local_files": {
+        "files": {},
+        "dirs": {
+            "somedir": {
+                "files": {
+                    "realfile.txt": null
+                },
+                "dirs": {},
+                "links": {
+                    "link_to_file": "../otherfile.txt",
+                    "link_to_dir": "/absolute/target/dir"
+                }
+            }
+        }
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/somedir/realfile.txt": null,
+            "path=/home/somedir/link_to_file": null,
+            "path=/home/somedir/link_to_dir": null
+        },
+        "files.Directory": {
+            "path=/home/somedir/realfile.txt": null,
+            "path=/home/somedir/link_to_file": null,
+            "path=/home/somedir/link_to_dir": null,
+            "path=/home/somedir": null
+        },
+        "files.Link": {
+            "path=/home/somedir": false,
+            "path=/home/somedir/link_to_file": null,
+            "path=/home/somedir/link_to_dir": null
+        }
+    },
+    "commands": [
+        "mkdir -p /home/somedir",
+        "chmod 755 /home/somedir",
+        "ln -s ../otherfile.txt /home/somedir/link_to_file",
+        "ln -s /absolute/target/dir /home/somedir/link_to_dir",
+        ["upload", "/somedir/realfile.txt", "/home/somedir/realfile.txt"],
+        "chmod 644 /home/somedir/realfile.txt"
+    ]
+}

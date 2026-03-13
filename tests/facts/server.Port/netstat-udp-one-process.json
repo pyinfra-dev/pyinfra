@@ -1,0 +1,17 @@
+{
+  "command": "netstat -ulnp 2>/dev/null | awk '$4 ~ /:53$/'",
+  "arg": {"port": 53, "protocol": "udp"},
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": null
+    }
+  },
+  "output": [
+    "udp        0      0 0.0.0.0:53              0.0.0.0:*                           1234/named"
+  ],
+  "fact": [
+    "named",
+    1234
+  ]
+}

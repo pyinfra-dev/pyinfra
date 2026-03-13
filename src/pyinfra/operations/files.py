@@ -50,6 +50,7 @@ from pyinfra.facts.files import (
     FileContents,
     FindFiles,
     FindInFile,
+    FindLinks,
     Flags,
     Link,
     Md5File,
@@ -563,15 +564,16 @@ def sync(
 ):
     """
     Syncs a local directory with a remote one, with delete support. Note that delete will
-    remove extra files on the remote side, but not extra directories.
+    remove extra files and symlinks on the remote side, but not extra directories.
 
     + src: local directory to sync
     + dest: remote directory to sync to
     + user: user to own the files and directories
     + group: group to own the files and directories
-    + mode: permissions of the files
+    + mode: permissions of the files (also used as fallback for directories if ``dir_mode``
+      is not specified)
     + dir_mode: permissions of the directories
-    + delete: delete remote files not present locally
+    + delete: delete remote files and symlinks not present locally
     + exclude: string or list/tuple of strings to match & exclude files (eg ``*.pyc``)
     + exclude_dir: string or list/tuple of strings to match & exclude directories (eg node_modules)
     + add_deploy_dir: interpret src as relative to deploy directory instead of current directory
@@ -594,6 +596,11 @@ def sync(
       Since fnmatch does not treat path separators (``/`` or ``\\``) as special characters,
       excluding all directories matching a given name, however deep under ``src`` they are,
       can be done for example with ``exclude_dir=["__pycache__", "*/__pycache__"]``
+
+    Symlinks:
+        Local symlinks (both to files and directories) are synced to the remote as symlinks,
+        preserving the link target as-is (relative or absolute). Symlinked directories are not
+        traversed. When ``delete=True``, remote symlinks not present locally are also removed.
 
     """
     original_src = src  # Keep a copy to reference in errors
@@ -618,15 +625,31 @@ def sync(
             exclude_dir = [exclude_dir]
 
     put_files = []
+    put_links = []  # List of (remote_path, link_target) tuples
     ensure_dirnames = []
-    for dirpath, dirnames, filenames in os.walk(src, topdown=True):
+    for dirpath, dirnames, filenames in os.walk(src, topdown=True, followlinks=False):
         remote_dirpath = Path(os.path.normpath(os.path.relpath(dirpath, src))).as_posix()
 
-        # Filter excluded dirs
+        # Filter excluded dirs and detect directory symlinks
         for child_dir in dirnames[:]:
             child_path = os.path.normpath(os.path.join(remote_dirpath, child_dir))
             if exclude_dir and any(fnmatch(child_path, match) for match in exclude_dir):
                 dirnames.remove(child_dir)
+                continue
+
+            # Check if this directory is actually a symlink
+            local_dir_path = os.path.join(dirpath, child_dir)
+            if os.path.islink(local_dir_path):
+                remote_link_path = unix_path_join(
+                    *[
+                        item
+                        for item in (dest, remote_dirpath, child_dir)
+                        if item and item != os.path.curdir
+                    ]
+                )
+                link_target = os.readlink(local_dir_path)
+                put_links.append((remote_link_path, link_target))
+                dirnames.remove(child_dir)  # Don't traverse into symlinked directories
 
         if remote_dirpath and remote_dirpath != os.path.curdir:
             ensure_dirnames.append((remote_dirpath, get_path_permissions_mode(dirpath)))
@@ -645,7 +668,13 @@ def sync(
                     if item and item != os.path.curdir
                 ]
             )
-            put_files.append((full_filename, remote_full_filename))
+
+            # Check if this is a symlink
+            if os.path.islink(full_filename):
+                link_target = os.readlink(full_filename)
+                put_links.append((remote_full_filename, link_target))
+            else:
+                put_files.append((full_filename, remote_full_filename))
 
     # Ensure the destination directory - if the destination is a link, ensure
     # the link target is a directory.
@@ -658,7 +687,7 @@ def sync(
         path=dest_to_ensure,
         user=user,
         group=group,
-        mode=dir_mode or get_path_permissions_mode(src),
+        mode=dir_mode or mode or get_path_permissions_mode(src),
     )
 
     # Ensure any remote dirnames
@@ -667,7 +696,19 @@ def sync(
             path=unix_path_join(dest, dir_path_curr),
             user=user,
             group=group,
-            mode=dir_mode or dir_mode_curr,
+            mode=dir_mode or mode or dir_mode_curr,
+        )
+
+    # Create symlinks on remote (do this after directories but before files
+    # so that symlinks to directories are created before we try to put files in them)
+    for remote_link, link_target in put_links:
+        yield from link._inner(
+            path=remote_link,
+            target=link_target,
+            user=user,
+            group=group,
+            create_remote_dir=False,  # handled above
+            # Note: symlink permissions are typically ignored on most Unix systems
         )
 
     # Put each file combination
@@ -682,10 +723,14 @@ def sync(
             create_remote_dir=False,  # handled above
         )
 
-    # Delete any extra files
+    # Delete any extra files and symlinks
     if delete:
         remote_filenames = set(host.get_fact(FindFiles, path=dest) or [])
+        remote_links = set(host.get_fact(FindLinks, path=dest) or [])
         wanted_filenames = set([remote_filename for _, remote_filename in put_files])
+        wanted_links = set([remote_link for remote_link, _ in put_links])
+
+        # Delete extra files
         files_to_delete = remote_filenames - wanted_filenames
         for filename in files_to_delete:
             # Should we exclude this file?
@@ -693,6 +738,15 @@ def sync(
                 continue
 
             yield from file._inner(path=filename, present=False)
+
+        # Delete extra symlinks
+        links_to_delete = remote_links - wanted_links
+        for linkname in links_to_delete:
+            # Should we exclude this link?
+            if exclude and any(fnmatch(linkname, match) for match in exclude):
+                continue
+
+            yield from link._inner(path=linkname, present=False)
 
 
 @memoize

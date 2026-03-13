@@ -58,6 +58,7 @@ class ConnectorArguments(TypedDict, total=False):
     _use_su_login: bool
     _preserve_su_env: bool
     _su_shell: str
+    _su_password: str
     _doas: bool
     _doas_user: str
 
@@ -125,6 +126,10 @@ auth_argument_meta: dict[str, ArgumentMeta] = {
         + "Only available under Linux, for use when using `su` with a user that "
         + "has nologin/similar as their login shell.",
         default=lambda config: config.SU_SHELL,
+    ),
+    "_su_password": ArgumentMeta(
+        "Password to su with.",
+        default=lambda config: config.SU_PASSWORD,
     ),
     "_doas": ArgumentMeta(
         "Execute/apply any changes with doas.",

@@ -92,6 +92,10 @@ class IptablesRules(FactBase):
     default = list
 
     @override
+    def requires_command(self) -> str:
+        return "iptables-save"
+
+    @override
     def command(self, table="filter"):
         return "iptables-save -t {0}".format(table)
 
@@ -121,6 +125,10 @@ class Ip6tablesRules(IptablesRules):
     """
 
     @override
+    def requires_command(self) -> str:
+        return "ip6tables-save"
+
+    @override
     def command(self, table="filter"):
         return "ip6tables-save -t {0}".format(table)
 
@@ -137,6 +145,10 @@ class IptablesChains(FactBase):
     """
 
     default = dict
+
+    @override
+    def requires_command(self) -> str:
+        return "iptables-save"
 
     @override
     def command(self, table="filter"):
@@ -166,6 +178,10 @@ class Ip6tablesChains(IptablesChains):
             "NAME": "POLICY",
         }
     """
+
+    @override
+    def requires_command(self) -> str:
+        return "ip6tables-save"
 
     @override
     def command(self, table="filter"):

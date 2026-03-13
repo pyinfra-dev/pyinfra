@@ -1,5 +1,6 @@
 {
-    "command": "/bin/opkg list-installed",
+    "command": "opkg list-installed",
+    "requires_command": "opkg",
     "output": [
         "urandom-seed - 1.0-1",
         "urngd - 2020-01-21-c7f7b6b6-1",

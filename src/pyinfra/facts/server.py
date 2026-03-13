@@ -156,6 +156,20 @@ class Command(FactBase[str]):
         return command
 
 
+class Timezone(FactBase[str]):
+    """
+    Returns the current system timezone (e.g. ``Europe/Amsterdam``).
+    """
+
+    @override
+    def command(self) -> str:
+        return "readlink -f /etc/localtime | sed 's|.*/zoneinfo/||'"
+
+    @override
+    def process(self, output: list[str]) -> str:
+        return output[0]
+
+
 class Which(FactBase[Optional[str]]):
     """
     Returns the path of a given command according to `command -v`, if available.
@@ -298,18 +312,79 @@ class Mounts(FactBase[Dict[str, MountsDict]]):
 
 class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
     """
-    Returns the process occuping a port and its PID
+    Returns the process occupying a port and its PID.
+
+    Supports TCP and UDP protocols via the ``protocol`` argument (default ``"tcp"``).
+    Uses ``ss`` on Linux (with ``netstat`` fallback) and ``sockstat`` on FreeBSD.
+
+    .. code:: python
+
+        # TCP (default)
+        host.get_fact(Port, port=80)
+        # UDP
+        host.get_fact(Port, port=53, protocol="udp")
     """
 
     @override
-    def command(self, port: int) -> str:
-        return f"ss -lptnH 'src :{port}'"
+    def command(self, port: int, protocol: str = "tcp") -> str:
+        self._kernel = host.get_fact(Kernel)
+
+        if self._kernel.strip() == "FreeBSD":
+            self._tool = "sockstat"
+            return f"sockstat -l -p {port} -P {protocol}"
+
+        # Linux - prefer ss, fall back to netstat
+        self._has_ss = host.get_fact(Which, "ss")
+        if self._has_ss:
+            self._tool = "ss"
+            proto_flag = "t" if protocol == "tcp" else "u"
+            return f"ss -lp{proto_flag}n | grep ':{port} ' || true"
+        else:
+            self._tool = "netstat"
+            proto_flag = "t" if protocol == "tcp" else "u"
+            return f"netstat -{proto_flag}lnp 2>/dev/null | awk '$4 ~ /:{port}$/'"
 
     @override
     def process(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
+        if self._tool == "ss":
+            return self._process_ss(output)
+        elif self._tool == "netstat":
+            return self._process_netstat(output)
+        elif self._tool == "sockstat":
+            return self._process_sockstat(output)
+        return None, None
+
+    def _process_ss(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
         for line in output:
-            proc, pid = line.split('"')[1], int(line.split("pid=")[1].split(",")[0])
+            if '"' not in line or "pid=" not in line:
+                continue
+            proc = line.split('"')[1]
+            pid = int(line.split("pid=")[1].split(",")[0])
             return (proc, pid)
+        return None, None
+
+    def _process_netstat(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split()
+            for part in parts:
+                if "/" in part:
+                    pid_str, proc = part.split("/", 1)
+                    if pid_str.isdigit():
+                        return (proc, int(pid_str))
+                    break
+        return None, None
+
+    def _process_sockstat(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
+        for line in output:
+            line = line.strip()
+            if not line or line.startswith("USER"):
+                continue
+            parts = line.split()
+            if len(parts) >= 3:
+                return (parts[1], int(parts[2]))
         return None, None
 
 
@@ -454,8 +529,8 @@ class Sysctl(FactBase):
     @override
     def command(self, keys=None):
         if keys is None:
-            return "sysctl -a"
-        return f"sysctl {' '.join(keys)}"
+            return "sysctl -a 2>/dev/null || true"
+        return f"sysctl {' '.join(keys)} 2>/dev/null || true"
 
     @override
     def process(self, output):
@@ -895,7 +970,7 @@ class SecurityLimits(FactBase):
 
     @override
     def command(self):
-        return "cat /etc/security/limits.conf"
+        return "! test -e /etc/security/limits.conf || cat /etc/security/limits.conf"
 
     default = list
 
@@ -926,10 +1001,12 @@ class RebootRequired(FactBase[bool]):
     Returns a boolean indicating whether the system requires a reboot.
 
     On Linux systems:
+
     - Checks /var/run/reboot-required and /var/run/reboot-required.pkgs
     - On Alpine Linux, compares installed kernel with running kernel
 
     On FreeBSD systems:
+
     - Compares running kernel version with installed kernel version
     """
 

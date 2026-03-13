@@ -1,5 +1,5 @@
 {
-    "command": "sysctl -a",
+    "command": "sysctl -a 2>/dev/null || true",
     "output": [
         "net.ipv4.tcp_adv_win_scale = -2",
         "vm.nr_hugepages_mempolicy = 0",
