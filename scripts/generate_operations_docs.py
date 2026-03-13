@@ -124,15 +124,17 @@ def build_operations_docs():
             args_string = signature(func).format(
                 max_width=MODULE_DEF_LINE_MAX, quote_annotation_strings=False
             )
-            args_string = f"{args_string[1:-2]},\n    **kwargs" if args_string != "()" else "**kwargs"
-            args_string = args_string.replace("   ", "        ")
+            args_string = (
+                f"{args_string[:-2]},\n    **kwargs,\n" if args_string != "()" else "**kwargs,"
+            )
+            args_string = f"{args_string.replace('   ', '        ')}    )"
 
             # Attach the code block
             lines.append(
                 """
 .. code:: python
 
-    {0}.{1}({2})
+    {0}.{1}{2}
 
 """.strip().format(
                     module_name,
@@ -140,7 +142,6 @@ def build_operations_docs():
                     args_string,
                 ),
             )
-
             # Append any remaining docstring
             if doc:
                 lines.append("")
