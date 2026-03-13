@@ -206,7 +206,7 @@ def tools(
 
 
 @operation()
-def tool_upgrade_all(*,extra_args: str | list[str] | None = None):
+def tools_upgrade_all(*,extra_args: str | list[str] | None = None):
     """
     Upgrade all ``uv`` tools.
 
@@ -217,7 +217,7 @@ def tool_upgrade_all(*,extra_args: str | list[str] | None = None):
 
 
 @operation()
-def tool_update_shell():
+def tools_update_shell():
     """
     Ensure that the ``uv`` tool executable directory is on the `PATH`.
     """
