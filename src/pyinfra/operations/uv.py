@@ -8,6 +8,8 @@ Operations for ``uv``:
 
 from __future__ import annotations
 
+import shlex
+
 from pyinfra import host
 from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.operation import operation
@@ -31,7 +33,7 @@ VENV_INDICATOR = f"{VENV}/bin/activate"
 
 
 def addable_extras(extra_args: str | list[str] | None) -> str:
-    return f" {' '.join(extra_args or []) if not isinstance(extra_args, str) else extra_args}"
+    return f" {' '.join(shlex.quote(e) for e in (extra_args or [])) if not isinstance(extra_args, str) else extra_args}"
 
 
 @operation()
@@ -206,7 +208,7 @@ def tools(
 
 
 @operation()
-def tools_upgrade_all(*,extra_args: str | list[str] | None = None):
+def tools_upgrade_all(*, extra_args: str | list[str] | None = None):
     """
     Upgrade all ``uv`` tools.
 
@@ -284,12 +286,15 @@ def venv(
             if seed:
                 cmd_list.append("--seed")
             if link_mode:
-                cmd_list.extend(["--link-mode", link_mode])
+                cmd_list.extend(["--link-mode", QuoteString(link_mode)])
             if site_packages:
                 cmd_list.append("--site-packages")
             if python:
-                cmd_list.extend(["--python", python])
-            cmd_list.extend(extra_args or [] if not isinstance(extra_args, str) else [extra_args])
+                cmd_list.extend(["--python", QuoteString(python)])
+            cmd_list.extend(
+                QuoteString(e)
+                for e in ((extra_args or []) if not isinstance(extra_args, str) else [extra_args])
+            )
             cmd_list.append(QuoteString(path))
             yield StringCommand(*cmd_list)
     else:
