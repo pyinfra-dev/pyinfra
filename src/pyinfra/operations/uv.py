@@ -30,10 +30,9 @@ VENV = ".venv"
 VENV_INDICATOR = f"{VENV}/bin/activate"
 
 
-
-
 def addable_extras(extra_args: str | list[str] | None) -> str:
     return f" {' '.join(extra_args or []) if not isinstance(extra_args, str) else extra_args}"
+
 
 @operation()
 def packages(
@@ -101,7 +100,6 @@ def packages(
 
     if (not requirements) and (not packages):
         host.noop("neither packages nor requirements requested to be (un)installed")
-
 
 
 @operation()
@@ -208,11 +206,14 @@ def tools(
 
 
 @operation()
-def tool_upgrade_all():
+def tool_upgrade_all(*,extra_args: str | list[str] | None = None):
     """
     Upgrade all ``uv`` tools.
+
+        + extra_args: zero or more additional arguments to ``uv``. Default None.
     """
-    yield f"{UV_CMD} tool upgrade --all"
+    extras = addable_extras(extra_args)
+    yield f"{UV_CMD} tool upgrade --all{extras}"
 
 
 @operation()
