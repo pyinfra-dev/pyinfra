@@ -133,7 +133,6 @@ markers = [
 ]
 
 [tool.coverage.run]
-concurrency = ["gevent"]
 
 [tool.coverage.report]
 show_missing = true
