@@ -125,7 +125,7 @@ def build_operations_docs():
                 max_width=MODULE_DEF_LINE_MAX, quote_annotation_strings=False
             )
             args_string = (
-                f"{args_string[:-2]},\n    **kwargs,\n" if args_string != "()" else "**kwargs,"
+                f"{args_string[:-1]},\n    **kwargs,\n" if args_string != "()" else "**kwargs,"
             )
             args_string = f"{args_string.replace('   ', '        ')}    )"
 
