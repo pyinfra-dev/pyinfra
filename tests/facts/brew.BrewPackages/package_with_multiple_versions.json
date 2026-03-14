@@ -1,0 +1,13 @@
+{
+    "command": "brew list --versions",
+    "requires_command": "brew",
+    "output": [
+        "python@3.13 3.13.2",
+        "python@3.14 3.14.3"
+    ],
+    "fact": {
+        "python": [
+            "3.13.2", "3.14.3"
+        ]
+    }
+}

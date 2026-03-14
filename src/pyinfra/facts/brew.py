@@ -9,7 +9,8 @@ from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
 
-BREW_REGEX = r"^([^\s]+)\s([0-9\._+a-z\-]+)"
+PKG_VERSION_SEP = "@"
+BREW_REGEX = rf"^([^{PKG_VERSION_SEP}]+)(?:{PKG_VERSION_SEP}[0-9\.]+)?\s([0-9\._+a-z\-]+)"
 
 
 def new_cask_cli(version):

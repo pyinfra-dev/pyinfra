@@ -8,7 +8,14 @@ import urllib.parse
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.brew import BrewCasks, BrewPackages, BrewTaps, BrewVersion, new_cask_cli
+from pyinfra.facts.brew import (
+    PKG_VERSION_SEP,
+    BrewCasks,
+    BrewPackages,
+    BrewTaps,
+    BrewVersion,
+    new_cask_cli,
+)
 
 from .util.packaging import ensure_packages
 
@@ -153,7 +160,7 @@ def casks(
         install_command="brew %sinstall%s" % args,
         uninstall_command="brew %suninstall%s" % args,
         upgrade_command="brew %supgrade%s" % args,
-        version_join="@",
+        version_join=PKG_VERSION_SEP,
         latest=latest,
     )
 
