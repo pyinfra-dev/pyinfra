@@ -1,30 +1,32 @@
 #!/usr/bin/env python
 
 import sys
-from glob import glob
 from importlib import import_module
 from inspect import getfullargspec, getmembers, isclass
 from os import makedirs, path
+from pathlib import Path
 from types import FunctionType, MethodType
 
 from pyinfra.api.facts import FactBase, ShortFactBase
 
 sys.path.append(".")
-from docs.utils import format_doc_line, title_line  # noqa: E402
+from docs.utils import (
+    format_doc_line,
+    title_line,
+    including_sub_modules,
+    get_module_names,
+    remove_dups,
+)  # noqa: E402
 
 
 def build_facts_docs():
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, "..", "docs"))
-    facts_dir = path.join(this_dir, "..", "src", "pyinfra", "facts", "*.py")
+    pyinfra_dir = Path(docs_dir).parent / "src" / "pyinfra"
 
     makedirs(path.join(docs_dir, "facts"), exist_ok=True)
 
-    fact_module_names = [
-        path.basename(name)[:-3] for name in glob(facts_dir) if not name.endswith("__init__.py")
-    ]
-
-    for module_name in sorted(fact_module_names):
+    for module_name in sorted(get_module_names(pyinfra_dir / "facts")):
         lines = []
         print("--> Doing fact module: {0}".format(module_name))
         module = import_module("pyinfra.facts.{0}".format(module_name))
@@ -37,22 +39,27 @@ def build_facts_docs():
         if module.__doc__:
             lines.append(module.__doc__)
 
-        if path.exists(path.join(this_dir, "..", "pyinfra", "operations", f"{module_name}.py")):
+        ops_paths = {
+            pyinfra_dir / "operations" / name for name in [module_name, f"{module_name}.py"]
+        }
+        if any(p.exists() for p in ops_paths):
             lines.append(f"See also: :doc:`../operations/{module_name}`.")
             lines.append("")
 
-        fact_classes = [
+        all_fact_classes = [
             (key, value)
-            for key, value in getmembers(module)
+            for m in including_sub_modules(module)
+            for key, value in getmembers(m)
             if (
                 isclass(value)
                 and (issubclass(value, FactBase) or issubclass(value, ShortFactBase))
-                and value.__module__ == module.__name__
+                and value.__module__.startswith(m.__name__)
                 and value is not FactBase
                 and not value.__name__.endswith("Base")  # hacky!
             )
         ]
 
+        fact_classes = remove_dups(all_fact_classes)
         for fact, cls in fact_classes:
             # FactClass -> fact_accessor on host object
             name = fact
