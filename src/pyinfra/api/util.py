@@ -30,6 +30,7 @@ FILE_SHAS: Dict[Any, Any] = {}
 
 PYINFRA_INSTALL_DIR = path.normpath(path.join(path.dirname(__file__), ".."))
 
+
 def ansi_color(text: str, fg: Optional[str] = None, bold: bool = False, **kwargs) -> str:
     codes = []
     if bold:
@@ -46,14 +47,15 @@ def ansi_color(text: str, fg: Optional[str] = None, bold: bool = False, **kwargs
         codes.append("36")
     elif fg == "magenta":
         codes.append("35")
-    
+
     if not codes and not text:
         return ""
     if not codes:
         return str(text)
-    
+
     code_str = ";".join(codes)
     return f"\033[{code_str}m{text}\033[0m"
+
 
 def get_file_path(state: "State", filename: str):
     if path.isabs(filename):
