@@ -6,6 +6,7 @@ from os import listdir, path
 from unittest import TestCase
 from unittest.mock import patch
 
+import distro
 from testgen import TestGenerator
 
 from pyinfra.api import FileDownloadCommand, FileUploadCommand, FunctionCommand, StringCommand
@@ -88,6 +89,11 @@ def assert_commands(commands, wanted_commands):
 def make_operation_tests(arg):
     # Get the operation we're testing against
     module_name, op_name = arg.rsplit(".", 1)
+
+    # Some operations only work on certain distros, so we skip them
+    if module_name == "apt" and distro.id() not in ("debian", "ubuntu", "raspbian"):
+        return
+
     module = import_module("pyinfra.operations.{0}".format(module_name))
     op = getattr(module, op_name)
 
