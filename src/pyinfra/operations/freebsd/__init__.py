@@ -6,7 +6,7 @@ def __getattr__(name):
         # On-demand import of fact modules, so we don't have to import them all at once
         # this forces py3.7>=, but that's fine as py2 is EOL and py3.6 is also EOL
         # Also, Pyinfra is py3.11>=, so this is not a breaking change.
-        return importlib.import_module(f".{name}", __name__)
+        return importlib.import_module(f".{name}", __package__)
     except ImportError:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
