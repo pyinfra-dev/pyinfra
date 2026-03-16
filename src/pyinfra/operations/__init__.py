@@ -1,62 +1,13 @@
 import importlib
 from glob import glob
 from os import path
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from . import (
-        apk,
-        apt,
-        brew,
-        bsdinit,
-        cargo,
-        choco,
-        crontab,
-        dnf,
-        docker,
-        files,
-        flatpak,
-        gem,
-        git,
-        iptables,
-        launchd,
-        lxd,
-        mysql,
-        npm,
-        openrc,
-        opkg,
-        pacman,
-        pip,
-        pipx,
-        pkg,
-        pkgin,
-        postgres,
-        postgresql,
-        puppet,
-        python,
-        runit,
-        selinux,
-        server,
-        snap,
-        ssh,
-        systemd,
-        sysvinit,
-        upstart,
-        vzctl,
-        xbps,
-        yum,
-        zfs,
-        zypper,
-    )
 
 # Lazily discover and build __all__
+# Can be further optimized by using a hardcoded set
+# but this would be the worse decision ever
 _module_filenames = glob(path.join(path.dirname(__file__), "*.py"))
 __all__ = sorted(
-    [
-        path.basename(name)[:-3]
-        for name in _module_filenames
-        if not name.endswith("__init__.py")
-    ]
+    set(path.basename(name)[:-3] for name in _module_filenames if not name.endswith("__init__.py"))
 )
 
 
