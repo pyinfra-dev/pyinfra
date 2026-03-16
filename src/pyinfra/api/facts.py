@@ -16,7 +16,6 @@ from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
 from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, Type, TypeVar, cast
 
-import click
 import gevent
 from paramiko import SSHException
 from typing_extensions import override
@@ -26,6 +25,7 @@ from pyinfra.api import StringCommand
 from pyinfra.api.arguments import all_global_arguments, pop_global_arguments
 from pyinfra.api.exceptions import FactProcessError
 from pyinfra.api.util import (
+    ansi_color,
     get_kwargs_str,
     log_error_or_warning,
     log_host_command_error,
@@ -303,7 +303,7 @@ def _get_fact(
         log_message = "{0}{1}".format(
             host.print_prefix,
             "Loaded fact {0}{1}".format(
-                click.style(name, bold=True),
+                ansi_color(name, bold=True),
                 f" ({get_kwargs_str(kwargs)})" if kwargs else "",
             ),
         )
