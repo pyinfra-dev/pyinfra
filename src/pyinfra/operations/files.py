@@ -14,7 +14,6 @@ from io import StringIO
 from pathlib import Path
 from typing import IO, Any, Union
 
-import click
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
 from pyinfra import host, logger, state
@@ -31,6 +30,7 @@ from pyinfra.api import (
 )
 from pyinfra.api.command import make_formatted_string_command
 from pyinfra.api.util import (
+    ansi_color,
     get_call_location,
     get_file_io,
     get_file_md5,
@@ -1087,7 +1087,7 @@ def put(
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
         if state.config.DIFF:
-            host.log(f"Will create {click.style(dest, bold=True)}", logger.info)
+            host.log(f"Will create {ansi_color(dest, bold=True)}", logger.info)
 
             with get_file_io(src, "r") as f:
                 desired_lines = f.readlines()
@@ -1134,7 +1134,7 @@ def put(
                 else:
                     current_lines = []
 
-                host.log(f"Will modify {click.style(dest, bold=True)}", logger.info)
+                host.log(f"Will modify {ansi_color(dest, bold=True)}", logger.info)
 
                 with get_file_io(src, "r") as f:
                     desired_lines = f.readlines()

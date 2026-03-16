@@ -6,9 +6,8 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Callable, Generator
 
-import click
-
 from pyinfra.api import QuoteString, StringCommand
+from pyinfra.api.util import ansi_color
 
 
 class MetadataTimeField(Enum):
@@ -241,7 +240,7 @@ def generate_color_diff(
                 continue
             if tag in {"replace", "delete"}:
                 for line in current_lines[i1:i2]:
-                    yield click.style("- " + line.rstrip(), "red")
+                    yield ansi_color("- " + line.rstrip(), "red")
             if tag in {"replace", "insert"}:
                 for line in desired_lines[j1:j2]:
-                    yield click.style("+ " + line.rstrip(), "green")
+                    yield ansi_color("+ " + line.rstrip(), "green")
