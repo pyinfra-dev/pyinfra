@@ -122,7 +122,7 @@ def build_operations_docs():
             # get signature, remove parens, append (or set) kwargs for global arguments and
             # expand spacing so params are indented wrt to the operation name
             args_string = signature(func).format(
-                max_width=MODULE_DEF_LINE_MAX, quote_annotation_strings=False
+                max_width=MODULE_DEF_LINE_MAX,
             )
             args_string = (
                 f"{args_string[:-1]},\n    **kwargs,\n" if args_string != "()" else "**kwargs,"
