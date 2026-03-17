@@ -27,7 +27,7 @@ def including_sub_modules(module: ModuleType) -> Generator[ModuleType]:
             and value.__name__.startswith(module_name)
             and (not key.startswith("__"))
         ):
-            yield value
+            yield from including_sub_modules(value)
 
 
 def get_module_names(
