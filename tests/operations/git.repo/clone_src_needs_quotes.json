@@ -1,0 +1,15 @@
+{
+    "args": ["https://example.com/repo; cat /etc/passwd", "/home/myrepo"],
+    "kwargs": {
+        "pull": false
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": null
+        }
+    },
+    "commands": [
+        "cd /home/myrepo && git clone 'https://example.com/repo; cat /etc/passwd' ."
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "args": ["kern.evil; whoami", "some value"],
+    "facts": {
+        "server.Sysctl": {
+            "keys=['kern.evil; whoami']": {}
+        }
+    },
+    "commands": [
+        "sysctl 'kern.evil; whoami'='some value'"
+    ]
+}

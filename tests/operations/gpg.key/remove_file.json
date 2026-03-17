@@ -1,0 +1,14 @@
+{
+    "kwargs": {
+        "dest": "/etc/apt/keyrings/test.gpg",
+        "present": false
+    },
+    "facts": {
+        "files.File": {
+            "path=/etc/apt/keyrings/test.gpg": {"mode": 644}
+        }
+    },
+    "commands": [
+        "rm -f /etc/apt/keyrings/test.gpg"
+    ]
+}

@@ -1,0 +1,14 @@
+{
+    "args": ["/data dir; rm -rf /"],
+    "kwargs": {
+        "mounted": false
+    },
+    "facts": {
+        "server.Mounts": {
+            "/data dir; rm -rf /": {}
+        }
+    },
+    "commands": [
+        "umount '/data dir; rm -rf /'"
+    ]
+}

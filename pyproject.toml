@@ -13,7 +13,7 @@ license-files = ["LICENSE.md"]
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "gevent>=1.5",
-    "paramiko>=2.7,<4", # 2.7 (2019) adds OpenSSH key format + Match SSH config
+    "paramiko>=2.7,<5", # 2.7 (2019) adds OpenSSH key format + Match SSH config
     "click>2",
     "jinja2>3,<4",
     "python-dateutil>2,<3",
@@ -22,6 +22,7 @@ dependencies = [
     "packaging>=16.1",
     "pydantic>=2.11,<3",
     "typing-extensions; python_version < '3.11'", # Backport of typing for Unpack (added 3.11)
+    "types-paramiko>=2.7,<5",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
