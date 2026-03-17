@@ -11,6 +11,8 @@ pyinfra executes in five of stages:
 
 Every time you run pyinfra it steps through each of these stages with the goal of updating the inventory to match the commands or state provided. Most of these stages are simple to reason about. The one exception to this is the **prepare**, or change detection, phase which is used to define the order operations are executed.
 
+.. _deploy-process-detects-changes:
+
 How pyinfra Detects Changes & Orders Operations
 ---------------------------------------------------
 
@@ -63,6 +65,8 @@ To make this possible we have to first execute the code to generate the order an
 
 When does this matter?
 ----------------------
+
+.. _deploy-process-using-host-facts:
 
 Using Host Facts
 ~~~~~~~~~~~~~~~~
