@@ -1,0 +1,7 @@
+{
+    "args": ["evil; rm -rf /", "echo safe"],
+    "commands": [
+        "ssh -p 22 'evil; rm -rf /' 'echo safe'"
+    ],
+    "idempotent": false
+}

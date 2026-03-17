@@ -3,6 +3,7 @@ extend-exclude = [
     "tests/facts/apt.SimulateOperationWillChange/upgrade.json",
     "tests/facts/opkg.OpkgPackages/opkg_packages.json",
     "tests/words.txt",
+    "tests/facts/gpg.GpgKeyrings/*.json",  # GPG keyring test files contain hex key IDs
 ]
 
 [default]

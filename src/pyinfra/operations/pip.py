@@ -5,6 +5,8 @@ a virtualenv (virtual environment).
 
 from __future__ import annotations
 
+import shlex
+
 from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.facts.files import File
@@ -59,10 +61,10 @@ def virtualenv(
             command = ["virtualenv"]
 
             if venv:
-                command = [python or "python", "-m", "venv"]
+                command = [shlex.quote(python) if python else "python", "-m", "venv"]
 
             if python and not venv:
-                command.append("-p {0}".format(python))
+                command.append("-p {0}".format(shlex.quote(python)))
 
             if site_packages:
                 command.append("--system-site-packages")
@@ -72,7 +74,7 @@ def virtualenv(
             elif always_copy and venv:
                 command.append("--copies")
 
-            command.append(path)
+            command.append(shlex.quote(path))
 
             yield " ".join(command)
         else:
@@ -168,7 +170,7 @@ def packages(
 
         # And update pip path
         virtualenv = virtualenv.rstrip("/")
-        pip = "{0}/bin/{1}".format(virtualenv, pip)
+        pip = "{0}/bin/{1}".format(shlex.quote(virtualenv), pip)
 
     install_command_args = [pip, "install"]
     if extra_install_args:
@@ -181,9 +183,11 @@ def packages(
     # (un)Install requirements
     if requirements is not None:
         if present:
-            yield "{0} -r {1}".format(upgrade_command if latest else install_command, requirements)
+            yield "{0} -r {1}".format(
+                upgrade_command if latest else install_command, shlex.quote(requirements)
+            )
         else:
-            yield "{0} -r {1}".format(uninstall_command, requirements)
+            yield "{0} -r {1}".format(uninstall_command, shlex.quote(requirements))
 
     # Handle passed in packages
     if packages:

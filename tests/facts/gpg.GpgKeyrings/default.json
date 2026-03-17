@@ -1,0 +1,48 @@
+{
+    "command": "find \"/etc/apt/trusted.gpg.d\" \"/etc/apt/keyrings\" \"/usr/share/keyrings\" -type f \\( -name '*.gpg' -o -name '*.kbx' \\) 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --list-keys --with-colons --keyring \"$1\" --no-default-keyring 2>/dev/null || true' _ {} \\; ; find \"/etc/apt/trusted.gpg.d\" \"/etc/apt/keyrings\" \"/usr/share/keyrings\" -type f -name '*.asc' 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --with-colons \"$1\" 2>/dev/null || true' _ {} \\;",
+    "requires_command": "gpg",
+    "arg": [
+        [
+            "/etc/apt/trusted.gpg.d",
+            "/etc/apt/keyrings",
+            "/usr/share/keyrings"
+        ]
+    ],
+    "output": [
+        "KEYRING:/etc/apt/keyrings/docker.gpg",
+        "tru:t:1:1601454628:0:3:1:5",
+        "pub:-:4096:1:ABCD1234EFGH5678:1336770936:::-:::scSC::::::23::0:",
+        "fpr:::::::::ABCD1234EFGH5678IJKL9012MNOP3456QRST7890:",
+        "uid:-::::1336770936::ABC123DEF456::Docker Release (CE deb) <docker@docker.com>::::::::::0:",
+        "KEYRING:/etc/apt/trusted.gpg.d/ubuntu-keyring.asc",
+        "pub:-:4096:1:1234ABCD5678EFGH:1336774248:::-:::scSC::::::23::0:",
+        "uid:-::::1336774248::::Ubuntu Archive Signing Key <ubuntu-archive@lists.ubuntu.com>::::::::::0:"
+    ],
+    "fact": {
+        "/etc/apt/keyrings/docker.gpg": {
+            "format": "gpg",
+            "keys": {
+                "ABCD1234EFGH5678": {
+                    "validity": "-",
+                    "length": 4096,
+                    "subkeys": {},
+                    "fingerprint": "ABCD1234EFGH5678IJKL9012MNOP3456QRST7890",
+                    "uid_hash": "ABC123DEF456",
+                    "uid": "Docker Release (CE deb) <docker@docker.com>"
+                }
+            }
+        },
+        "/etc/apt/trusted.gpg.d/ubuntu-keyring.asc": {
+            "format": "asc",
+            "keys": {
+                "1234ABCD5678EFGH": {
+                    "validity": "-",
+                    "length": 4096,
+                    "subkeys": {},
+                    "uid_hash": "",
+                    "uid": "Ubuntu Archive Signing Key <ubuntu-archive@lists.ubuntu.com>"
+                }
+            }
+        }
+    }
+}
