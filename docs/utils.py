@@ -37,7 +37,7 @@ def get_module_names(
     exclude_file: str | list[str] | None = None,
 ) -> list[str]:
     """Return file names of all modules found in src_dir."""
-    exclude_path = set(exclude_dir or ["util"])
+    exclude_path = set(exclude_dir or ["util", "__pycache__"])
     exclude_name = set(exclude_file or ["__init__.py"])
 
     module_names = [
