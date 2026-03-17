@@ -1,3 +1,6 @@
+---
+orphan: true
+---
 # Groups & Roles
 
 Deploying complex projects usually involves multiple groups of servers, for example database & web servers. It is useful to separate the deploy into multiple files.

@@ -56,13 +56,13 @@ Now you can install pyinfra as a tool, or add it to your project's dependencies.
 
 First install [pipx](https://pipx.pypa.io/stable/installation/) if you haven't already.
 
-#### Install pyinfra
+#### Install pyinfra via pipx
 
    ```sh
    pipx install pyinfra
    ```
 
-#### Verify Installation
+#### Verify pipx Installation
 
    ```sh
    pyinfra --version
@@ -83,13 +83,13 @@ First install [pipx](https://pipx.pypa.io/stable/installation/) if you haven't a
    env\Scripts\activate
    ```
 
-#### Install pyinfra
+#### Install pyinfra via pip
 
    ```sh
    pip install pyinfra
    ```
 
-#### Verify Installation
+#### Verify pip Installation
 
    ```sh
    pyinfra --version
@@ -117,7 +117,7 @@ First install [pipx](https://pipx.pypa.io/stable/installation/) if you haven't a
   - C++/CLI support for v142...
   - C++ Modules for v142...
 
-#### Install pyinfra
+#### Install pyinfra on Windows
 
    ```sh
    python -m venv env

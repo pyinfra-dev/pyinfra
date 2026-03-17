@@ -1,3 +1,6 @@
+---
+orphan: true
+---
 # Dynamic Inventories & Data
 
 One of the biggest features of pyinfra is that it's configured in regular Python. This means inventory, data and deploy files can use Python code and modules. As a result it is possible to generate inventory and group data for a deploy.

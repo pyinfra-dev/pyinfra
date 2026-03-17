@@ -9,7 +9,7 @@ occurs during fact collection. Additionally, a ``requires_command`` variable can
 on the host to collect the fact. If this command is not present on the host, the fact will be set to the default, or empty if no ``default`` function
 is available.
 
-### Importing & Using Facts
+## Importing & Using Facts
 
 Like operations, facts are imported from Python modules and executed by calling `Host.get_fact`. For example:
 
@@ -20,7 +20,7 @@ from pyinfra.facts.server import Which
 host.get_fact(Which, command='htop')
 ```
 
-### Example: getting swap status
+## Example: getting swap status
 
 This fact returns a boolean indicating whether swap is enabled. For this fact the ``command`` is declared as a class attribute.
 
@@ -44,7 +44,7 @@ This fact could then be used like so:
 is_swap_enabled = host.get_fact(SwapEnabled)
 ```
 
-### Example: getting the list of files in a directory
+## Example: getting the list of files in a directory
 
 This fact returns a list of files found in a given directory. For this fact the ``command`` is declared as a class method, indicating the fact takes arguments.
 
@@ -70,7 +70,7 @@ This fact could then be used like so:
 list_of_files = host.get_fact(FindFiles, path='/somewhere')
 ```
 
-### Example: getting any output from a command
+## Example: getting any output from a command
 
 This fact returns the raw output of any command. For this fact the ``command`` is declared as a class method, indicating the fact takes arguments.
 
