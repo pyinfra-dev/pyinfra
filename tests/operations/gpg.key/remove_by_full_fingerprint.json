@@ -1,0 +1,33 @@
+{
+    "kwargs": {
+        "dest": "/etc/apt/keyrings/vendor.gpg",
+        "keyid": "0xAABBCCDD11223344AABBCCDD112233440011CAFE",
+        "present": false
+    },
+    "facts": {
+        "gpg.GpgKeyrings": {
+            "directories=['/etc/apt/keyrings']": {
+                "/etc/apt/keyrings/vendor.gpg": {
+                    "format": "gpg",
+                    "keys": {
+                        "112233440011CAFE": {
+                            "validity": "-",
+                            "length": 4096,
+                            "subkeys": {},
+                            "fingerprint": "AABBCCDD11223344AABBCCDD112233440011CAFE",
+                            "uid_hash": "ABC123DEF456",
+                            "uid": "Vendor Key <vendor@example.com>"
+                        }
+                    }
+                }
+            }
+        },
+        "files.File": {
+            "path=/etc/apt/keyrings/vendor.gpg": {"mode": 644}
+        }
+    },
+    "commands": [
+        "gpg --batch --yes --no-default-keyring --keyring \"/etc/apt/keyrings/vendor.gpg\" --delete-keys AABBCCDD11223344AABBCCDD112233440011CAFE",
+        "gpg --batch --no-default-keyring --keyring \"/etc/apt/keyrings/vendor.gpg\" --list-keys 2>/dev/null | grep -q \"^pub\" || rm -f \"/etc/apt/keyrings/vendor.gpg\""
+    ]
+}

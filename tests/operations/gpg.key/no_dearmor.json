@@ -1,0 +1,24 @@
+{
+    "args": [],
+    "kwargs": {
+        "src": "/tmp/local-key.gpg",
+        "dest": "/etc/apt/keyrings/test.gpg",
+        "dearmor": false
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/etc/apt/keyrings": null
+        },
+        "files.File": {
+            "path=/etc/apt/keyrings/test.gpg": null
+        }
+    },
+    "commands": [
+        "mkdir -p /etc/apt/keyrings",
+        "chmod 755 /etc/apt/keyrings",
+        "cp \"/tmp/local-key.gpg\" \"/etc/apt/keyrings/test.gpg\"",
+        "mkdir -p /etc/apt/keyrings",
+        "touch /etc/apt/keyrings/test.gpg",
+        "chmod 644 /etc/apt/keyrings/test.gpg"
+    ]
+}
