@@ -9,6 +9,7 @@ from os import getcwd, path, stat
 from socket import error as socket_error, timeout as timeout_error
 from typing import IO, TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
 
+import click
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, Template
 from paramiko import SSHException
 from typeguard import TypeCheckError, check_type
@@ -29,32 +30,6 @@ TEMPLATES: Dict[str, Template] = {}
 FILE_SHAS: Dict[Any, Any] = {}
 
 PYINFRA_INSTALL_DIR = path.normpath(path.join(path.dirname(__file__), ".."))
-
-
-def ansi_color(text: str, fg: Optional[str] = None, bold: bool = False, **kwargs) -> str:
-    codes = []
-    if bold:
-        codes.append("1")
-    if fg == "red":
-        codes.append("31")
-    elif fg == "green":
-        codes.append("32")
-    elif fg == "yellow":
-        codes.append("33")
-    elif fg == "blue":
-        codes.append("34")
-    elif fg == "cyan":
-        codes.append("36")
-    elif fg == "magenta":
-        codes.append("35")
-
-    if not codes and not text:
-        return ""
-    if not codes:
-        return str(text)
-
-    code_str = ";".join(codes)
-    return f"\033[{code_str}m{text}\033[0m"
 
 
 def get_file_path(state: "State", filename: str):
@@ -213,7 +188,7 @@ def format_exception(e: Exception) -> str:
 def print_host_combined_output(host: "Host", output: "CommandOutput") -> None:
     for line in output:
         if line.buffer_name == "stderr":
-            logger.error(f"{host.print_prefix}{ansi_color(line.line, 'red')}")
+            logger.error(f"{host.print_prefix}{click.style(line.line, 'red')}")
         else:
             logger.error(f"{host.print_prefix}{line.line}")
 
@@ -233,14 +208,14 @@ def log_operation_start(
 
     logger.info(
         "{0} {1} {2}".format(
-            ansi_color(
+            click.style(
                 "{0}Starting{1}operation:".format(
                     prefix,
                     " {0} ".format(", ".join(op_types)) if op_types else " ",
                 ),
                 "blue",
             ),
-            ansi_color(", ".join(op_meta.names), bold=True),
+            click.style(", ".join(op_meta.names), bold=True),
             args,
         ),
     )
@@ -272,14 +247,14 @@ def log_error_or_warning(
         log_func(
             "{0}{1}".format(
                 host.print_prefix,
-                ansi_color(exc_text, log_color),
+                click.style(exc_text, log_color),
             ),
         )
 
     log_func(
         "{0}{1}{2}".format(
             host.print_prefix,
-            ansi_color(log_text, log_color),
+            click.style(log_text, log_color),
             description,
         ),
     )
@@ -290,7 +265,7 @@ def log_host_command_error(host: "Host", e: Exception, timeout: int | None = 0) 
         logger.error(
             "{0}{1}".format(
                 host.print_prefix,
-                ansi_color(
+                click.style(
                     "Command timed out after {0}s".format(
                         timeout,
                     ),
@@ -303,7 +278,7 @@ def log_host_command_error(host: "Host", e: Exception, timeout: int | None = 0) 
         logger.error(
             "{0}{1}".format(
                 host.print_prefix,
-                ansi_color(
+                click.style(
                     "Command socket/SSH error: {0}".format(format_exception(e)),
                     "red",
                 ),
@@ -314,7 +289,7 @@ def log_host_command_error(host: "Host", e: Exception, timeout: int | None = 0) 
         logger.error(
             "{0}{1}".format(
                 host.print_prefix,
-                ansi_color(
+                click.style(
                     "Command IO error: {0}".format(format_exception(e)),
                     "red",
                 ),

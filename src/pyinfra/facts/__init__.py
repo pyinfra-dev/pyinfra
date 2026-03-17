@@ -2,10 +2,6 @@ import importlib
 from glob import glob
 from os import path
 
-# Lazily discover and build __all__
-# Can be further optimized by using a hardcoded set
-# but this would be the worse decision ever
-#
 # This way it also hits a warning for LSPs, yet it might still be better.
 _module_filenames = glob(path.join(path.dirname(__file__), "*.py"))
 __all__ = sorted(
