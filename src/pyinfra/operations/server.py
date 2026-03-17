@@ -316,6 +316,17 @@ def mount(
 
     mounts = host.get_fact(Mounts)
     is_mounted = path in mounts
+    mounted_path = path
+
+    # If path not found directly, check by device as fallback.
+    # Handles cases where the path representation differs between user input
+    # and /proc/self/mountinfo (e.g. relative vs absolute paths).
+    if not is_mounted and device:
+        for mp, info in mounts.items():
+            if info.get("device") == device:
+                is_mounted = True
+                mounted_path = mp
+                break
 
     # Want mount but don't have?
     if mounted and not is_mounted:
@@ -332,25 +343,25 @@ def mount(
 
     # Want no mount but mounted?
     elif mounted is False and is_mounted:
-        yield "umount {0}".format(shlex.quote(path))
+        yield "umount {0}".format(shlex.quote(mounted_path))
 
     # Want mount and is mounted! Check the options
     elif is_mounted and mounted and options:
-        mounted_options = mounts[path]["options"]
+        mounted_options = mounts[mounted_path]["options"]
         needed_options = set(options) - set(mounted_options)
         if needed_options:
             if host.get_fact(Kernel).strip() == "FreeBSD":
-                fs_type = mounts[path]["type"]
-                device = mounts[path]["device"]
+                fs_type = mounts[mounted_path]["type"]
+                device = mounts[mounted_path]["device"]
 
                 yield "mount -o update,{options} -t {fs_type} {device} {path}".format(
                     options=options_string,
                     fs_type=fs_type,
                     device=shlex.quote(device),
-                    path=shlex.quote(path),
+                    path=shlex.quote(mounted_path),
                 )
             else:
-                yield "mount -o remount,{0} {1}".format(options_string, shlex.quote(path))
+                yield "mount -o remount,{0} {1}".format(options_string, shlex.quote(mounted_path))
 
     else:
         host.noop(
