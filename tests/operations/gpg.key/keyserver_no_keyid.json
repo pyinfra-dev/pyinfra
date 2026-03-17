@@ -1,0 +1,12 @@
+{
+    "args": [],
+    "kwargs": {
+        "keyserver": "hkps://keyserver.ubuntu.com",
+        "dest": "/etc/apt/keyrings/test.gpg"
+    },
+    "exception": {
+        "names": ["OperationError"],
+        "message": "`keyid` must be provided with `keyserver`"
+    },
+    "facts": {}
+}

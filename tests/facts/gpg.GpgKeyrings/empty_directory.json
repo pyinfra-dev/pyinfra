@@ -1,0 +1,9 @@
+{
+    "command": "find \"/empty/directory\" -type f \\( -name '*.gpg' -o -name '*.kbx' \\) 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --list-keys --with-colons --keyring \"$1\" --no-default-keyring 2>/dev/null || true' _ {} \\; ; find \"/empty/directory\" -type f -name '*.asc' 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --with-colons \"$1\" 2>/dev/null || true' _ {} \\;",
+    "requires_command": "gpg",
+    "arg": [
+        "/empty/directory"
+    ],
+    "output": [],
+    "fact": {}
+}

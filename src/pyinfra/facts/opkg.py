@@ -5,8 +5,11 @@ Gather the information provided by ``opkg`` on OpenWrt systems:
     + list of installed packages
     + list of packages with available upgrades
 
+See https://openwrt.org/docs/guide-user/additional-software/opkg
 
-    see https://openwrt.org/docs/guide-user/additional-software/opkg
+**Note:** as of OpenWrt Release `2025.12`_, OpenWrt uses ``apk``.
+
+.. _2025.12: https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk
 """
 
 import re
